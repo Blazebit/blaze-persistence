@@ -26,8 +26,17 @@ import com.blazebit.persistence.ReturningDeleteCriteriaBuilder;
  */
 public class ReturningDeleteCollectionCriteriaBuilderImpl<T, Y> extends AbstractDeleteCollectionCriteriaBuilder<T, ReturningDeleteCriteriaBuilder<T, Y>, Y> implements ReturningDeleteCriteriaBuilder<T, Y> {
 
-    public ReturningDeleteCollectionCriteriaBuilderImpl(MainQuery mainQuery, Class<T> clazz, String alias, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener, String collectionName) {
-        super(mainQuery, false, clazz, alias, cteName, cteClass, result, listener, collectionName);
+    public ReturningDeleteCollectionCriteriaBuilderImpl(MainQuery mainQuery, QueryContext queryContext, Class<T> clazz, String alias, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener, String collectionName) {
+        super(mainQuery, queryContext, false, clazz, alias, cteName, cteClass, result, listener, collectionName);
+    }
+
+    public ReturningDeleteCollectionCriteriaBuilderImpl(AbstractDeleteCollectionCriteriaBuilder<T, ReturningDeleteCriteriaBuilder<T, Y>, Y> builder, MainQuery mainQuery, QueryContext queryContext) {
+        super(builder, mainQuery, queryContext);
+    }
+
+    @Override
+    AbstractCommonQueryBuilder<T, ReturningDeleteCriteriaBuilder<T, Y>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, BaseFinalSetOperationBuilderImpl<T, ?, ?>> copy(QueryContext queryContext) {
+        return new ReturningDeleteCollectionCriteriaBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext);
     }
 
     @Override

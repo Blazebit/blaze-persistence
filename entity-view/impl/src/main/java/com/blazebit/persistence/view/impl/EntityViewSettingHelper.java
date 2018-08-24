@@ -185,7 +185,12 @@ public final class EntityViewSettingHelper {
                     throw new UnsupportedOperationException("Filtering by a subquery that is applied on an entity view with a custom root is not yet supported!");
                 }
 
-                filterProvider.apply(cb, subqueryAttribute.getSubqueryAlias(), subqueryAttribute.getSubqueryExpression(), provider);
+                Expression expr = ef.createSimpleExpression(subqueryAttribute.getSubqueryExpression(), false);
+                SimpleQueryGenerator generator = new PrefixingQueryGenerator(Arrays.asList(entityViewRoot));
+                StringBuilder sb = new StringBuilder();
+                generator.setQueryBuffer(sb);
+                expr.accept(generator);
+                filterProvider.apply(cb, subqueryAttribute.getSubqueryAlias(), sb.toString(), provider);
             }
         } else {
             String mapping = (String) key;

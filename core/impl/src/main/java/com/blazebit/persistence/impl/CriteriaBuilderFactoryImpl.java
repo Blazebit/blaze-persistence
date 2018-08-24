@@ -223,11 +223,11 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
     @SuppressWarnings("unchecked")
     public <T> StartOngoingSetOperationCriteriaBuilder<T, LeafOngoingFinalSetOperationCriteriaBuilder<T>> startSet(EntityManager entityManager, Class<T> resultClass) {
         MainQuery mainQuery = createMainQuery(entityManager);
-        FinalSetOperationCriteriaBuilderImpl<T> parentFinalSetOperationBuilder = new FinalSetOperationCriteriaBuilderImpl<T>(mainQuery, true, resultClass, null, false, null);
-        OngoingFinalSetOperationCriteriaBuilderImpl<T> subFinalSetOperationBuilder = new OngoingFinalSetOperationCriteriaBuilderImpl<T>(mainQuery, false, resultClass, null, true, parentFinalSetOperationBuilder.getSubListener());
+        FinalSetOperationCriteriaBuilderImpl<T> parentFinalSetOperationBuilder = new FinalSetOperationCriteriaBuilderImpl<T>(mainQuery, null, true, resultClass, null, false, null);
+        OngoingFinalSetOperationCriteriaBuilderImpl<T> subFinalSetOperationBuilder = new OngoingFinalSetOperationCriteriaBuilderImpl<T>(mainQuery, null, false, resultClass, null, true, parentFinalSetOperationBuilder.getSubListener());
         
-        LeafOngoingSetOperationCriteriaBuilderImpl<T> leafCb = new LeafOngoingSetOperationCriteriaBuilderImpl<T>(mainQuery, false, resultClass, parentFinalSetOperationBuilder.getSubListener(), parentFinalSetOperationBuilder);
-        StartOngoingSetOperationCriteriaBuilderImpl<T, LeafOngoingFinalSetOperationCriteriaBuilder<T>> cb = new StartOngoingSetOperationCriteriaBuilderImpl<T, LeafOngoingFinalSetOperationCriteriaBuilder<T>>(mainQuery, false, resultClass, subFinalSetOperationBuilder.getSubListener(), subFinalSetOperationBuilder, leafCb);
+        LeafOngoingSetOperationCriteriaBuilderImpl<T> leafCb = new LeafOngoingSetOperationCriteriaBuilderImpl<T>(mainQuery, null, false, resultClass, parentFinalSetOperationBuilder.getSubListener(), parentFinalSetOperationBuilder);
+        StartOngoingSetOperationCriteriaBuilderImpl<T, LeafOngoingFinalSetOperationCriteriaBuilder<T>> cb = new StartOngoingSetOperationCriteriaBuilderImpl<T, LeafOngoingFinalSetOperationCriteriaBuilder<T>>(mainQuery, null, false, resultClass, subFinalSetOperationBuilder.getSubListener(), subFinalSetOperationBuilder, leafCb);
         
         // TODO: This is such an ugly hack, but I don't know how else to fix this generics issue for now
         subFinalSetOperationBuilder.setEndSetResult((T) leafCb);

@@ -27,7 +27,11 @@ import com.blazebit.persistence.InsertCriteriaBuilder;
 public class InsertCriteriaBuilderImpl<T> extends BaseInsertCriteriaBuilderImpl<T, InsertCriteriaBuilder<T>, Void> implements InsertCriteriaBuilder<T> {
 
     public InsertCriteriaBuilderImpl(MainQuery mainQuery, Class<T> clazz) {
-        super(mainQuery, true, clazz, null, null, null, null);
+        super(mainQuery, null, true, clazz, null, null, null, null);
     }
 
+    @Override
+    AbstractCommonQueryBuilder<T, InsertCriteriaBuilder<T>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, BaseFinalSetOperationBuilderImpl<T, ?, ?>> copy(QueryContext queryContext) {
+        throw new UnsupportedOperationException("This should only be used on CTEs!");
+    }
 }

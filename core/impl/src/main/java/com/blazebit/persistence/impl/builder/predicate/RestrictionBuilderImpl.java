@@ -121,7 +121,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         if (start == null) {
             throw new NullPointerException("start");
         }
-        return startBuilder(new BetweenBuilderImpl<T>(result, leftExpression, parameterManager.addParameterExpression(start, clause), expressionFactory, parameterManager, this, subqueryInitFactory, clause));
+        return startBuilder(new BetweenBuilderImpl<T>(result, leftExpression, parameterManager.addParameterExpression(start, clause, subqueryInitFactory.getQueryBuilder()), expressionFactory, parameterManager, this, subqueryInitFactory, clause));
     }
 
     @Override
@@ -132,7 +132,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     @Override
     public SubqueryInitiator<BetweenBuilder<T>> betweenSubquery() {
         BetweenBuilder<T> betweenBuilder = startBuilder(new BetweenBuilderImpl<T>(result, leftExpression, null, expressionFactory, parameterManager, this, subqueryInitFactory, clause));
-        return subqueryInitFactory.createSubqueryInitiator(betweenBuilder, (SubqueryBuilderListener<BetweenBuilder<T>>) betweenStartSubqueryBuilderListener, false);
+        return subqueryInitFactory.createSubqueryInitiator(betweenBuilder, (SubqueryBuilderListener<BetweenBuilder<T>>) betweenStartSubqueryBuilderListener, false, clause);
     }
 
     @Override
@@ -140,7 +140,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     public SubqueryInitiator<BetweenBuilder<T>> betweenSubquery(String subqueryAlias, String expression) {
         leftSuperExprSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression, true));
         BetweenBuilder<T> betweenBuilder = startBuilder(new BetweenBuilderImpl<T>(result, leftExpression, null, expressionFactory, parameterManager, this, subqueryInitFactory, clause));
-        return subqueryInitFactory.createSubqueryInitiator(betweenBuilder, (SubqueryBuilderListener<BetweenBuilder<T>>) leftSuperExprSubqueryPredicateBuilderListener, false);
+        return subqueryInitFactory.createSubqueryInitiator(betweenBuilder, (SubqueryBuilderListener<BetweenBuilder<T>>) leftSuperExprSubqueryPredicateBuilderListener, false, clause);
     }
 
     @Override
@@ -154,23 +154,23 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     @Override
     public SubqueryBuilder<BetweenBuilder<T>> betweenSubquery(FullQueryBuilder<?, ?> criteriaBuilder) {
         BetweenBuilder<T> betweenBuilder = startBuilder(new BetweenBuilderImpl<T>(result, leftExpression, null, expressionFactory, parameterManager, this, subqueryInitFactory, clause));
-        return subqueryInitFactory.createSubqueryBuilder(betweenBuilder, (SubqueryBuilderListener<BetweenBuilder<T>>) betweenStartSubqueryBuilderListener, false, criteriaBuilder);
+        return subqueryInitFactory.createSubqueryBuilder(betweenBuilder, (SubqueryBuilderListener<BetweenBuilder<T>>) betweenStartSubqueryBuilderListener, false, criteriaBuilder, clause);
     }
 
     @Override
     public SubqueryBuilder<BetweenBuilder<T>> betweenSubquery(String subqueryAlias, String expression, FullQueryBuilder<?, ?> criteriaBuilder) {
         leftSuperExprSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression, true));
         BetweenBuilder<T> betweenBuilder = startBuilder(new BetweenBuilderImpl<T>(result, leftExpression, null, expressionFactory, parameterManager, this, subqueryInitFactory, clause));
-        return subqueryInitFactory.createSubqueryBuilder(betweenBuilder, (SubqueryBuilderListener<BetweenBuilder<T>>) leftSuperExprSubqueryPredicateBuilderListener, false, criteriaBuilder);
+        return subqueryInitFactory.createSubqueryBuilder(betweenBuilder, (SubqueryBuilderListener<BetweenBuilder<T>>) leftSuperExprSubqueryPredicateBuilderListener, false, criteriaBuilder, clause);
     }
 
     private <X> MultipleSubqueryInitiator<X> simpleMultipleBuilder(X result, Expression expr) {
-        MultipleSubqueryInitiator<X> initiator = new MultipleSubqueryInitiatorImpl<X>(result, expr, null, subqueryInitFactory);
+        MultipleSubqueryInitiator<X> initiator = new MultipleSubqueryInitiatorImpl<X>(result, expr, null, subqueryInitFactory, clause);
         return initiator;
     }
     
     private <X> MultipleSubqueryInitiator<X> simpleMultipleBuilder(X result, Expression expr, ExpressionBuilderEndedListener listener) {
-        MultipleSubqueryInitiator<X> initiator = new MultipleSubqueryInitiatorImpl<X>(result, expr, listener, subqueryInitFactory);
+        MultipleSubqueryInitiator<X> initiator = new MultipleSubqueryInitiatorImpl<X>(result, expr, listener, subqueryInitFactory, clause);
         return initiator;
     }
 
@@ -179,7 +179,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         if (start == null) {
             throw new NullPointerException("start");
         }
-        return startBuilder(new BetweenBuilderImpl<T>(result, leftExpression, parameterManager.addParameterExpression(start, clause), expressionFactory, parameterManager, this, subqueryInitFactory, clause, true));
+        return startBuilder(new BetweenBuilderImpl<T>(result, leftExpression, parameterManager.addParameterExpression(start, clause, subqueryInitFactory.getQueryBuilder()), expressionFactory, parameterManager, this, subqueryInitFactory, clause, true));
     }
 
     @Override
@@ -190,7 +190,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     @Override
     public SubqueryInitiator<BetweenBuilder<T>> notBetweenSubquery() {
         BetweenBuilder<T> betweenBuilder = startBuilder(new BetweenBuilderImpl<T>(result, leftExpression, null, expressionFactory, parameterManager, this, subqueryInitFactory, clause, true));
-        return subqueryInitFactory.createSubqueryInitiator(betweenBuilder, (SubqueryBuilderListener<BetweenBuilder<T>>) betweenStartSubqueryBuilderListener, false);
+        return subqueryInitFactory.createSubqueryInitiator(betweenBuilder, (SubqueryBuilderListener<BetweenBuilder<T>>) betweenStartSubqueryBuilderListener, false, clause);
     }
 
     @Override
@@ -198,7 +198,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     public SubqueryInitiator<BetweenBuilder<T>> notBetweenSubquery(String subqueryAlias, String expression) {
         leftSuperExprSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression, true));
         BetweenBuilder<T> betweenBuilder = startBuilder(new BetweenBuilderImpl<T>(result, leftExpression, null, expressionFactory, parameterManager, this, subqueryInitFactory, clause, true));
-        return subqueryInitFactory.createSubqueryInitiator(betweenBuilder, (SubqueryBuilderListener<BetweenBuilder<T>>) leftSuperExprSubqueryPredicateBuilderListener, false);
+        return subqueryInitFactory.createSubqueryInitiator(betweenBuilder, (SubqueryBuilderListener<BetweenBuilder<T>>) leftSuperExprSubqueryPredicateBuilderListener, false, clause);
     }
 
     @Override
@@ -212,14 +212,14 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     @Override
     public SubqueryBuilder<BetweenBuilder<T>> notBetweenSubquery(FullQueryBuilder<?, ?> criteriaBuilder) {
         BetweenBuilder<T> betweenBuilder = startBuilder(new BetweenBuilderImpl<T>(result, leftExpression, null, expressionFactory, parameterManager, this, subqueryInitFactory, clause, true));
-        return subqueryInitFactory.createSubqueryBuilder(betweenBuilder, (SubqueryBuilderListener<BetweenBuilder<T>>) betweenStartSubqueryBuilderListener, false, criteriaBuilder);
+        return subqueryInitFactory.createSubqueryBuilder(betweenBuilder, (SubqueryBuilderListener<BetweenBuilder<T>>) betweenStartSubqueryBuilderListener, false, criteriaBuilder, clause);
     }
 
     @Override
     public SubqueryBuilder<BetweenBuilder<T>> notBetweenSubquery(String subqueryAlias, String expression, FullQueryBuilder<?, ?> criteriaBuilder) {
         leftSuperExprSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression, true));
         BetweenBuilder<T> betweenBuilder = startBuilder(new BetweenBuilderImpl<T>(result, leftExpression, null, expressionFactory, parameterManager, this, subqueryInitFactory, clause, true));
-        return subqueryInitFactory.createSubqueryBuilder(betweenBuilder, (SubqueryBuilderListener<BetweenBuilder<T>>) leftSuperExprSubqueryPredicateBuilderListener, false, criteriaBuilder);
+        return subqueryInitFactory.createSubqueryBuilder(betweenBuilder, (SubqueryBuilderListener<BetweenBuilder<T>>) leftSuperExprSubqueryPredicateBuilderListener, false, criteriaBuilder, clause);
     }
 
     @Override
@@ -232,7 +232,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         if (value == null) {
             throw new NullPointerException("value");
         }
-        return chain(new EqPredicate(leftExpression, parameterManager.addParameterExpression(value, clause)));
+        return chain(new EqPredicate(leftExpression, parameterManager.addParameterExpression(value, clause, subqueryInitFactory.getQueryBuilder())));
     }
 
     @Override
@@ -275,7 +275,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         if (value == null) {
             throw new NullPointerException("value");
         }
-        return chain(new EqPredicate(leftExpression, parameterManager.addParameterExpression(value, clause), true));
+        return chain(new EqPredicate(leftExpression, parameterManager.addParameterExpression(value, clause, subqueryInitFactory.getQueryBuilder()), true));
     }
 
     @Override
@@ -318,7 +318,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         if (value == null) {
             throw new NullPointerException("value");
         }
-        return chain(new GtPredicate(leftExpression, parameterManager.addParameterExpression(value, clause)));
+        return chain(new GtPredicate(leftExpression, parameterManager.addParameterExpression(value, clause, subqueryInitFactory.getQueryBuilder())));
     }
 
     @Override
@@ -361,7 +361,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         if (value == null) {
             throw new NullPointerException("value");
         }
-        return chain(new GePredicate(leftExpression, parameterManager.addParameterExpression(value, clause)));
+        return chain(new GePredicate(leftExpression, parameterManager.addParameterExpression(value, clause, subqueryInitFactory.getQueryBuilder())));
     }
 
     @Override
@@ -404,7 +404,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         if (value == null) {
             throw new NullPointerException("value");
         }
-        return chain(new LtPredicate(leftExpression, parameterManager.addParameterExpression(value, clause)));
+        return chain(new LtPredicate(leftExpression, parameterManager.addParameterExpression(value, clause, subqueryInitFactory.getQueryBuilder())));
     }
 
     @Override
@@ -447,7 +447,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         if (value == null) {
             throw new NullPointerException("value");
         }
-        return chain(new LePredicate(leftExpression, parameterManager.addParameterExpression(value, clause)));
+        return chain(new LePredicate(leftExpression, parameterManager.addParameterExpression(value, clause, subqueryInitFactory.getQueryBuilder())));
     }
 
     @Override
@@ -497,7 +497,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         if (values == null) {
             throw new NullPointerException("values");
         }
-        return chain(new InPredicate(leftExpression, parameterManager.addParameterExpression(values, clause)));
+        return chain(new InPredicate(leftExpression, parameterManager.addParameterExpression(values, clause, subqueryInitFactory.getQueryBuilder())));
     }
 
     @Override
@@ -522,7 +522,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         if (values == null) {
             throw new NullPointerException("values");
         }
-        InPredicate inPredicate = new InPredicate(leftExpression, parameterManager.addParameterExpression(values, clause));
+        InPredicate inPredicate = new InPredicate(leftExpression, parameterManager.addParameterExpression(values, clause, subqueryInitFactory.getQueryBuilder()));
         inPredicate.setNegated(true);
         return chain(inPredicate);
     }
@@ -586,14 +586,14 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     public SubqueryInitiator<T> in() {
         verifyBuilderEnded();
         this.predicate = new InPredicate(leftExpression);
-        return subqueryInitFactory.createSubqueryInitiator(result, this, false);
+        return subqueryInitFactory.createSubqueryInitiator(result, this, false, clause);
     }
 
     @Override
     public SubqueryInitiator<T> notIn() {
         verifyBuilderEnded();
         this.predicate = new InPredicate(true, leftExpression);
-        return subqueryInitFactory.createSubqueryInitiator(result, this, false);
+        return subqueryInitFactory.createSubqueryInitiator(result, this, false, clause);
     }
 
     @Override
@@ -620,14 +620,14 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     public SubqueryBuilder<T> in(FullQueryBuilder<?, ?> criteriaBuilder) {
         verifyBuilderEnded();
         this.predicate = new InPredicate(leftExpression);
-        return subqueryInitFactory.createSubqueryBuilder(result, this, false, criteriaBuilder);
+        return subqueryInitFactory.createSubqueryBuilder(result, this, false, criteriaBuilder, clause);
     }
 
     @Override
     public SubqueryBuilder<T> notIn(FullQueryBuilder<?, ?> criteriaBuilder) {
         verifyBuilderEnded();
         this.predicate = new InPredicate(true, leftExpression);
-        return subqueryInitFactory.createSubqueryBuilder(result, this, false, criteriaBuilder);
+        return subqueryInitFactory.createSubqueryBuilder(result, this, false, criteriaBuilder, clause);
     }
 
     private SubqueryInitiator<T> in(String subqueryAlias, String expression, boolean negated) {
@@ -645,7 +645,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
             }
 
         };
-        return subqueryInitFactory.createSubqueryInitiator(result, rightSuperExprSubqueryBuilderListener, false);
+        return subqueryInitFactory.createSubqueryInitiator(result, rightSuperExprSubqueryBuilderListener, false, clause);
     }
 
     private SubqueryBuilder<T> in(String subqueryAlias, String expression, boolean negated, FullQueryBuilder<?, ?> criteriaBuilder) {
@@ -663,7 +663,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
             }
 
         };
-        return subqueryInitFactory.createSubqueryBuilder(result, rightSuperExprSubqueryBuilderListener, false, criteriaBuilder);
+        return subqueryInitFactory.createSubqueryBuilder(result, rightSuperExprSubqueryBuilderListener, false, criteriaBuilder, clause);
     }
 
     @Override
@@ -689,7 +689,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
                 listener.onBuilderEnded(RestrictionBuilderImpl.this);
             }
             
-        }, subqueryInitFactory);
+        }, subqueryInitFactory, clause);
     }
 
     @Override

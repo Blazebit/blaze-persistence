@@ -27,6 +27,11 @@ import com.blazebit.persistence.DeleteCriteriaBuilder;
 public class DeleteCollectionCriteriaBuilderImpl<T> extends AbstractDeleteCollectionCriteriaBuilder<T, DeleteCriteriaBuilder<T>, Void> implements DeleteCriteriaBuilder<T> {
 
     public DeleteCollectionCriteriaBuilderImpl(MainQuery mainQuery, Class<T> deleteOwnerClass, String alias, String collectionName) {
-        super(mainQuery, true, deleteOwnerClass, alias, null, null, null, null, collectionName);
+        super(mainQuery, null, true, deleteOwnerClass, alias, null, null, null, null, collectionName);
+    }
+
+    @Override
+    AbstractCommonQueryBuilder<T, DeleteCriteriaBuilder<T>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, BaseFinalSetOperationBuilderImpl<T, ?, ?>> copy(QueryContext queryContext) {
+        throw new UnsupportedOperationException("This should only be used on CTEs!");
     }
 }

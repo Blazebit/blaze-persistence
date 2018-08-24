@@ -34,6 +34,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformerFactory impleme
     protected final CorrelationProviderFactory correlationProviderFactory;
     protected final String attributePath;
     protected final String[] fetches;
+    protected final boolean correlatesThis;
     protected final int batchSize;
     protected final int viewRootIndex;
     protected final int embeddingViewIndex;
@@ -42,12 +43,13 @@ public abstract class AbstractCorrelatedBatchTupleListTransformerFactory impleme
     protected final Class<?> correlationBasisEntity;
 
     public AbstractCorrelatedBatchTupleListTransformerFactory(Correlator correlator, ManagedViewType<?> viewRootType, ManagedViewType<?> embeddingViewType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
-                                                              int viewRootIndex, int embeddingViewIndex, int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity) {
+                                                              boolean correlatesThis, int viewRootIndex, int embeddingViewIndex, int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity) {
         this.correlator = correlator;
         this.viewRootType = viewRootType;
         this.embeddingViewType = embeddingViewType;
         this.correlationResult = correlationResult;
         this.correlationProviderFactory = correlationProviderFactory;
+        this.correlatesThis = correlatesThis;
         this.viewRootIndex = viewRootIndex;
         this.embeddingViewIndex = embeddingViewIndex;
         this.tupleIndex = tupleIndex;

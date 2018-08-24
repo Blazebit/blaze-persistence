@@ -26,8 +26,17 @@ import com.blazebit.persistence.ReturningUpdateCriteriaBuilder;
  */
 public class ReturningUpdateCollectionCriteriaBuilderImpl<T, Y> extends AbstractUpdateCollectionCriteriaBuilder<T, ReturningUpdateCriteriaBuilder<T, Y>, Y> implements ReturningUpdateCriteriaBuilder<T, Y> {
 
-    public ReturningUpdateCollectionCriteriaBuilderImpl(MainQuery mainQuery, Class<T> clazz, String alias, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener, String collectionName) {
-        super(mainQuery, false, clazz, alias, cteName, cteClass, result, listener, collectionName);
+    public ReturningUpdateCollectionCriteriaBuilderImpl(MainQuery mainQuery, QueryContext queryContext, Class<T> clazz, String alias, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener, String collectionName) {
+        super(mainQuery, queryContext, false, clazz, alias, cteName, cteClass, result, listener, collectionName);
+    }
+
+    public ReturningUpdateCollectionCriteriaBuilderImpl(ReturningUpdateCollectionCriteriaBuilderImpl<T, Y> builder, MainQuery mainQuery, QueryContext queryContext) {
+        super(builder, mainQuery, queryContext);
+    }
+
+    @Override
+    AbstractCommonQueryBuilder<T, ReturningUpdateCriteriaBuilder<T, Y>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, BaseFinalSetOperationBuilderImpl<T, ?, ?>> copy(QueryContext queryContext) {
+        return new ReturningUpdateCollectionCriteriaBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext);
     }
 
     @Override

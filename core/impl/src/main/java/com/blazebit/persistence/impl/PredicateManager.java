@@ -64,12 +64,12 @@ public abstract class PredicateManager<T> extends AbstractManager<ExpressionModi
 
     PredicateManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         super(queryGenerator, parameterManager, subqueryInitFactory);
-        this.rootPredicate = new RootPredicate(parameterManager, getClauseType());
+        this.rootPredicate = new RootPredicate(parameterManager, getClauseType(), subqueryInitFactory.getQueryBuilder());
         this.expressionFactory = expressionFactory;
     }
 
     void applyFrom(PredicateManager predicateManager) {
-        rootPredicate.getPredicate().getChildren().addAll(subqueryInitFactory.reattachSubqueries(predicateManager.rootPredicate.getPredicate().clone(true)).getChildren());
+        rootPredicate.getPredicate().getChildren().addAll(subqueryInitFactory.reattachSubqueries(predicateManager.rootPredicate.getPredicate().clone(true), getClauseType()).getChildren());
     }
 
     @SuppressWarnings("unchecked")
@@ -86,7 +86,7 @@ public abstract class PredicateManager<T> extends AbstractManager<ExpressionModi
 
     void restrictExpression(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder, Predicate predicate) {
         rootPredicate.verifyBuilderEnded();
-        parameterManager.collectParameterRegistrations(predicate, getClauseType());
+        parameterManager.collectParameterRegistrations(predicate, getClauseType(), subqueryInitFactory.getQueryBuilder());
 
         List<Predicate> children = rootPredicate.getPredicate().getChildren();
         children.clear();
@@ -103,13 +103,13 @@ public abstract class PredicateManager<T> extends AbstractManager<ExpressionModi
     SubqueryInitiator<RestrictionBuilder<T>> restrict(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder) {
         @SuppressWarnings("unchecked")
         RestrictionBuilder<T> restrictionBuilder = (RestrictionBuilder<T>) rootPredicate.startBuilder(new RestrictionBuilderImpl<T>((T) builder, rootPredicate, subqueryInitFactory, expressionFactory, parameterManager, getClauseType()));
-        return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, leftSubqueryPredicateBuilderListener, false);
+        return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, leftSubqueryPredicateBuilderListener, false, getClauseType());
     }
 
     SubqueryBuilder<RestrictionBuilder<T>> restrict(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder, FullQueryBuilder<?, ?> criteriaBuilder) {
         @SuppressWarnings("unchecked")
         RestrictionBuilder<T> restrictionBuilder = (RestrictionBuilder<T>) rootPredicate.startBuilder(new RestrictionBuilderImpl<T>((T) builder, rootPredicate, subqueryInitFactory, expressionFactory, parameterManager, getClauseType()));
-        return subqueryInitFactory.createSubqueryBuilder(restrictionBuilder, leftSubqueryPredicateBuilderListener, false, criteriaBuilder);
+        return subqueryInitFactory.createSubqueryBuilder(restrictionBuilder, leftSubqueryPredicateBuilderListener, false, criteriaBuilder, getClauseType());
     }
 
     MultipleSubqueryInitiator<RestrictionBuilder<T>> restrictSubqueries(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder, String expression) {
@@ -117,13 +117,13 @@ public abstract class PredicateManager<T> extends AbstractManager<ExpressionModi
         @SuppressWarnings("unchecked")
         RestrictionBuilderImpl<T> restrictionBuilder = rootPredicate.startBuilder(new RestrictionBuilderImpl<T>((T) builder, rootPredicate, subqueryInitFactory, expressionFactory, parameterManager, getClauseType()));
         // We don't need a listener or marker here, because the resulting restriction builder can only be ended, when the initiator is ended
-        MultipleSubqueryInitiator<RestrictionBuilder<T>> initiator = new MultipleSubqueryInitiatorImpl<RestrictionBuilder<T>>(restrictionBuilder, expr, new RestrictionBuilderExpressionBuilderListener(restrictionBuilder), subqueryInitFactory);
+        MultipleSubqueryInitiator<RestrictionBuilder<T>> initiator = new MultipleSubqueryInitiatorImpl<RestrictionBuilder<T>>(restrictionBuilder, expr, new RestrictionBuilderExpressionBuilderListener(restrictionBuilder), subqueryInitFactory, getClauseType());
         return initiator;
     }
 
     <X> MultipleSubqueryInitiator<X> restrictExpressionSubqueries(X builder, Predicate predicate) {
         rootPredicate.verifyBuilderEnded();
-        parameterManager.collectParameterRegistrations(predicate, getClauseType());
+        parameterManager.collectParameterRegistrations(predicate, getClauseType(), subqueryInitFactory.getQueryBuilder());
 
         MultipleSubqueryInitiator<X> initiator = new MultipleSubqueryInitiatorImpl<X>(builder, predicate, new ExpressionBuilderEndedListener() {
             
@@ -135,7 +135,7 @@ public abstract class PredicateManager<T> extends AbstractManager<ExpressionModi
                 currentMultipleSubqueryInitiator = null;
             }
             
-        }, subqueryInitFactory);
+        }, subqueryInitFactory, getClauseType());
         currentMultipleSubqueryInitiator = initiator;
         return initiator;
     }
@@ -145,7 +145,7 @@ public abstract class PredicateManager<T> extends AbstractManager<ExpressionModi
         Expression expr = expressionFactory.createSimpleExpression(expression, true);
         superExprLeftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expr);
         RestrictionBuilder<T> restrictionBuilder = (RestrictionBuilder<T>) rootPredicate.startBuilder(new RestrictionBuilderImpl<T>((T) builder, rootPredicate, subqueryInitFactory, expressionFactory, parameterManager, getClauseType()));
-        return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, superExprLeftSubqueryPredicateBuilderListener, false);
+        return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, superExprLeftSubqueryPredicateBuilderListener, false, getClauseType());
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -153,27 +153,27 @@ public abstract class PredicateManager<T> extends AbstractManager<ExpressionModi
         Expression expr = expressionFactory.createSimpleExpression(expression, true);
         superExprLeftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expr);
         RestrictionBuilder<T> restrictionBuilder = (RestrictionBuilder<T>) rootPredicate.startBuilder(new RestrictionBuilderImpl<T>((T) builder, rootPredicate, subqueryInitFactory, expressionFactory, parameterManager, getClauseType()));
-        return subqueryInitFactory.createSubqueryBuilder(restrictionBuilder, superExprLeftSubqueryPredicateBuilderListener, false, criteriaBuilder);
+        return subqueryInitFactory.createSubqueryBuilder(restrictionBuilder, superExprLeftSubqueryPredicateBuilderListener, false, criteriaBuilder, getClauseType());
     }
 
     SubqueryInitiator<T> restrictExists(T result) {
         rightSubqueryPredicateBuilderListener = rootPredicate.startBuilder(new RightHandsideSubqueryPredicateBuilder<T>(rootPredicate, new ExistsPredicate()));
-        return subqueryInitFactory.createSubqueryInitiator(result, rightSubqueryPredicateBuilderListener, true);
+        return subqueryInitFactory.createSubqueryInitiator(result, rightSubqueryPredicateBuilderListener, true, getClauseType());
     }
 
     SubqueryInitiator<T> restrictNotExists(T result) {
         rightSubqueryPredicateBuilderListener = rootPredicate.startBuilder(new RightHandsideSubqueryPredicateBuilder<T>(rootPredicate, new ExistsPredicate(true)));
-        return subqueryInitFactory.createSubqueryInitiator(result, rightSubqueryPredicateBuilderListener, true);
+        return subqueryInitFactory.createSubqueryInitiator(result, rightSubqueryPredicateBuilderListener, true, getClauseType());
     }
 
     SubqueryBuilder<T> restrictExists(T result, FullQueryBuilder<?, ?> criteriaBuilder) {
         rightSubqueryPredicateBuilderListener = rootPredicate.startBuilder(new RightHandsideSubqueryPredicateBuilder<T>(rootPredicate, new ExistsPredicate()));
-        return subqueryInitFactory.createSubqueryBuilder(result, rightSubqueryPredicateBuilderListener, true, criteriaBuilder);
+        return subqueryInitFactory.createSubqueryBuilder(result, rightSubqueryPredicateBuilderListener, true, criteriaBuilder, getClauseType());
     }
 
     SubqueryBuilder<T> restrictNotExists(T result, FullQueryBuilder<?, ?> criteriaBuilder) {
         rightSubqueryPredicateBuilderListener = rootPredicate.startBuilder(new RightHandsideSubqueryPredicateBuilder<T>(rootPredicate, new ExistsPredicate(true)));
-        return subqueryInitFactory.createSubqueryBuilder(result, rightSubqueryPredicateBuilderListener, true, criteriaBuilder);
+        return subqueryInitFactory.createSubqueryBuilder(result, rightSubqueryPredicateBuilderListener, true, criteriaBuilder, getClauseType());
     }
 
     @Override

@@ -44,7 +44,7 @@ public abstract class AbstractQueryBuilder<T, X extends Queryable<T, X>, Z, W, F
     }
 
     public AbstractQueryBuilder(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, String alias, FinalSetReturn finalSetOperationBuilder) {
-        super(mainQuery, isMainQuery, DbmsStatementType.SELECT, clazz, alias, finalSetOperationBuilder);
+        super(mainQuery, null, isMainQuery, DbmsStatementType.SELECT, clazz, alias, finalSetOperationBuilder);
     }
 
     @Override

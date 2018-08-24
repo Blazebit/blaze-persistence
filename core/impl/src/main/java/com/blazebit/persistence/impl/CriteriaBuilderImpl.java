@@ -110,9 +110,9 @@ public class CriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T, Criteria
         BuilderListener<Object> newListener = finalSetOperationBuilder == null ? null : finalSetOperationBuilder.getSubListener();
         
         if (nested) {
-            return new OngoingFinalSetOperationCriteriaBuilderImpl<T>(mainQuery, wasMainQuery, resultType, operator, nested, newListener);
+            return new OngoingFinalSetOperationCriteriaBuilderImpl<T>(mainQuery, queryContext, wasMainQuery, resultType, operator, nested, newListener);
         } else {
-            return new FinalSetOperationCriteriaBuilderImpl<T>(mainQuery, wasMainQuery, resultType, operator, nested, newListener);
+            return new FinalSetOperationCriteriaBuilderImpl<T>(mainQuery, queryContext, wasMainQuery, resultType, operator, nested, newListener);
         }
     }
 
@@ -130,7 +130,7 @@ public class CriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T, Criteria
     @SuppressWarnings("unchecked")
     private LeafOngoingSetOperationCriteriaBuilderImpl<T> createLeaf(BaseFinalSetOperationCriteriaBuilderImpl<T, ?> finalSetOperationBuilder) {
         BuilderListener<Object> newListener = finalSetOperationBuilder.getSubListener();
-        LeafOngoingSetOperationCriteriaBuilderImpl<T> next = new LeafOngoingSetOperationCriteriaBuilderImpl<T>(mainQuery, false, resultType, newListener, (FinalSetOperationCriteriaBuilderImpl<T>) finalSetOperationBuilder);
+        LeafOngoingSetOperationCriteriaBuilderImpl<T> next = new LeafOngoingSetOperationCriteriaBuilderImpl<T>(mainQuery, queryContext, false, resultType, newListener, (FinalSetOperationCriteriaBuilderImpl<T>) finalSetOperationBuilder);
         newListener.onBuilderStarted(next);
         return next;
     }
@@ -141,7 +141,7 @@ public class CriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T, Criteria
         finalSetOperationBuilder.setEndSetResult((T) endSetResult);
         
         BuilderListener<Object> newListener = finalSetOperationBuilder.getSubListener();
-        StartOngoingSetOperationCriteriaBuilderImpl<T, Y> next = new StartOngoingSetOperationCriteriaBuilderImpl<T, Y>(mainQuery, false, resultType, newListener, (OngoingFinalSetOperationCriteriaBuilderImpl<T>) finalSetOperationBuilder, endSetResult);
+        StartOngoingSetOperationCriteriaBuilderImpl<T, Y> next = new StartOngoingSetOperationCriteriaBuilderImpl<T, Y>(mainQuery, queryContext, false, resultType, newListener, (OngoingFinalSetOperationCriteriaBuilderImpl<T>) finalSetOperationBuilder, endSetResult);
         newListener.onBuilderStarted(next);
         return next;
     }

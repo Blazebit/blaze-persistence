@@ -39,13 +39,20 @@ public abstract class BaseSubqueryBuilderImpl<T, X, Y extends BaseOngoingSetOper
     protected final SubqueryBuilderListener<T> listener;
     protected final SubqueryBuilderListenerImpl<T> subListener;
 
-    public BaseSubqueryBuilderImpl(MainQuery mainQuery, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, T result, SubqueryBuilderListener<T> listener, BaseFinalSetOperationSubqueryBuilderImpl<T, ?> finalSetOperationBuilder) {
-        super(mainQuery, false, DbmsStatementType.SELECT, Tuple.class, null, aliasManager, parentJoinManager, expressionFactory, finalSetOperationBuilder, true);
+    public BaseSubqueryBuilderImpl(MainQuery mainQuery, QueryContext queryContext, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, T result, SubqueryBuilderListener<T> listener, BaseFinalSetOperationSubqueryBuilderImpl<T, ?> finalSetOperationBuilder) {
+        super(mainQuery, queryContext, false, DbmsStatementType.SELECT, Tuple.class, null, aliasManager, parentJoinManager, expressionFactory, finalSetOperationBuilder, true);
         this.result = result;
         this.listener = listener;
         this.subListener = new SubqueryBuilderListenerImpl<T>();
     }
-    
+
+    public BaseSubqueryBuilderImpl(BaseSubqueryBuilderImpl<T, X, Y, Z> builder, MainQuery mainQuery, QueryContext queryContext) {
+        super(builder, mainQuery, queryContext);
+        this.result = null;
+        this.listener = null;
+        this.subListener = null;
+    }
+
     public SubqueryBuilderListenerImpl<T> getSubListener() {
         return subListener;
     }
@@ -84,16 +91,16 @@ public abstract class BaseSubqueryBuilderImpl<T, X, Y extends BaseOngoingSetOper
         T newResult = finalSetOperationBuilder == null ? result : finalSetOperationBuilder.getResult();
         
         if (isSubquery) {
-            return new OngoingFinalSetOperationSubqueryBuilderImpl<T>(mainQuery, newResult, operator, nested, newListener, newInitiator);
+            return new OngoingFinalSetOperationSubqueryBuilderImpl<T>(mainQuery, queryContext, newResult, operator, nested, newListener, newInitiator);
         } else {
-            return new FinalSetOperationSubqueryBuilderImpl<T>(mainQuery, newResult, operator, nested, newListener, newInitiator);
+            return new FinalSetOperationSubqueryBuilderImpl<T>(mainQuery, queryContext, newResult, operator, nested, newListener, newInitiator);
         }
     }
 
     @SuppressWarnings("unchecked")
     protected LeafOngoingSetOperationSubqueryBuilderImpl<T> createLeaf(BaseFinalSetOperationSubqueryBuilderImpl<T, ?> finalSetOperationBuilder) {
         SubqueryBuilderListener<T> newListener = finalSetOperationBuilder.getSubListener();
-        LeafOngoingSetOperationSubqueryBuilderImpl<T> next = new LeafOngoingSetOperationSubqueryBuilderImpl<T>(mainQuery, aliasManager.getParent(), joinManager.getParent(), expressionFactory, result, newListener, (FinalSetOperationSubqueryBuilderImpl<T>) finalSetOperationBuilder);
+        LeafOngoingSetOperationSubqueryBuilderImpl<T> next = new LeafOngoingSetOperationSubqueryBuilderImpl<T>(mainQuery, queryContext, aliasManager.getParent(), joinManager.getParent(), expressionFactory, result, newListener, (FinalSetOperationSubqueryBuilderImpl<T>) finalSetOperationBuilder);
         newListener.onBuilderStarted(next);
         return next;
     }
@@ -104,7 +111,7 @@ public abstract class BaseSubqueryBuilderImpl<T, X, Y extends BaseOngoingSetOper
         finalSetOperationBuilder.setEndSetResult((T) endSetResult);
         
         SubqueryBuilderListener<T> newListener = finalSetOperationBuilder.getSubListener();
-        StartOngoingSetOperationSubqueryBuilderImpl<T, W> next = new StartOngoingSetOperationSubqueryBuilderImpl<T, W>(mainQuery, aliasManager.getParent(), joinManager.getParent(), expressionFactory, result, newListener, (OngoingFinalSetOperationSubqueryBuilderImpl<T>) finalSetOperationBuilder, endSetResult);
+        StartOngoingSetOperationSubqueryBuilderImpl<T, W> next = new StartOngoingSetOperationSubqueryBuilderImpl<T, W>(mainQuery, queryContext, aliasManager.getParent(), joinManager.getParent(), expressionFactory, result, newListener, (OngoingFinalSetOperationSubqueryBuilderImpl<T>) finalSetOperationBuilder, endSetResult);
         newListener.onBuilderStarted(next);
         return next;
     }
@@ -115,7 +122,7 @@ public abstract class BaseSubqueryBuilderImpl<T, X, Y extends BaseOngoingSetOper
         finalSetOperationBuilder.setEndSetResult((T) endSetResult);
 
         SubqueryBuilderListener<T> newListener = finalSetOperationBuilder.getSubListener();
-        OngoingSetOperationSubqueryBuilderImpl<T, W> next = new OngoingSetOperationSubqueryBuilderImpl<T, W>(mainQuery, aliasManager.getParent(), joinManager.getParent(), expressionFactory, result, newListener, (OngoingFinalSetOperationSubqueryBuilderImpl<T>) finalSetOperationBuilder, endSetResult);
+        OngoingSetOperationSubqueryBuilderImpl<T, W> next = new OngoingSetOperationSubqueryBuilderImpl<T, W>(mainQuery, queryContext, aliasManager.getParent(), joinManager.getParent(), expressionFactory, result, newListener, (OngoingFinalSetOperationSubqueryBuilderImpl<T>) finalSetOperationBuilder, endSetResult);
         newListener.onBuilderStarted(next);
         return next;
     }

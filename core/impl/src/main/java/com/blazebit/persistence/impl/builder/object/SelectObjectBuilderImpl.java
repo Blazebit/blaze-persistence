@@ -22,6 +22,7 @@ import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.BuilderChainingException;
+import com.blazebit.persistence.impl.ClauseType;
 import com.blazebit.persistence.impl.MultipleSubqueryInitiatorImpl;
 import com.blazebit.persistence.impl.SelectObjectBuilderEndedListener;
 import com.blazebit.persistence.impl.SubqueryBuilderListenerImpl;
@@ -128,7 +129,7 @@ public class SelectObjectBuilderImpl<T extends FullQueryBuilder<?, T>> extends S
     public SubqueryInitiator<SelectObjectBuilder<T>> withSubquery(String alias) {
         verifySubqueryBuilderEnded();
         subqueryAlias = alias;
-        return startSubqueryInitiator(subqueryInitFactory.createSubqueryInitiator((SelectObjectBuilder<T>) this, this, false));
+        return startSubqueryInitiator(subqueryInitFactory.createSubqueryInitiator((SelectObjectBuilder<T>) this, this, false, ClauseType.SELECT));
     }
 
     @Override
@@ -141,7 +142,7 @@ public class SelectObjectBuilderImpl<T extends FullQueryBuilder<?, T>> extends S
         verifySubqueryBuilderEnded();
         this.subqueryAlias = selectAlias;
         SubqueryBuilderListenerImpl<SelectObjectBuilder<T>> superExpressionSubqueryListener = new SuperExpressionSubqueryBuilderListener<SelectObjectBuilder<T>>(subqueryAlias, expressionFactory.createArithmeticExpression(expression));
-        return startSubqueryInitiator(subqueryInitFactory.createSubqueryInitiator((SelectObjectBuilder<T>) this, superExpressionSubqueryListener, false));
+        return startSubqueryInitiator(subqueryInitFactory.createSubqueryInitiator((SelectObjectBuilder<T>) this, superExpressionSubqueryListener, false, ClauseType.SELECT));
     }
 
     @Override
@@ -177,7 +178,7 @@ public class SelectObjectBuilderImpl<T extends FullQueryBuilder<?, T>> extends S
     public SubqueryBuilder<SelectObjectBuilder<T>> withSubquery(String alias, FullQueryBuilder<?, ?> criteriaBuilder) {
         verifySubqueryBuilderEnded();
         subqueryAlias = alias;
-        return startSubqueryBuilder(subqueryInitFactory.createSubqueryBuilder(this, this, false, criteriaBuilder));
+        return startSubqueryBuilder(subqueryInitFactory.createSubqueryBuilder(this, this, false, criteriaBuilder, ClauseType.SELECT));
     }
 
     @Override
@@ -185,7 +186,7 @@ public class SelectObjectBuilderImpl<T extends FullQueryBuilder<?, T>> extends S
         verifySubqueryBuilderEnded();
         this.subqueryAlias = selectAlias;
         SubqueryBuilderListenerImpl<SelectObjectBuilder<T>> superExpressionSubqueryListener = new SuperExpressionSubqueryBuilderListener<SelectObjectBuilder<T>>(subqueryAlias, expressionFactory.createArithmeticExpression(expression));
-        return startSubqueryBuilder(subqueryInitFactory.createSubqueryBuilder(this, superExpressionSubqueryListener, false, criteriaBuilder));
+        return startSubqueryBuilder(subqueryInitFactory.createSubqueryBuilder(this, superExpressionSubqueryListener, false, criteriaBuilder, ClauseType.SELECT));
     }
 
     @Override
@@ -230,7 +231,7 @@ public class SelectObjectBuilderImpl<T extends FullQueryBuilder<?, T>> extends S
 
     private MultipleSubqueryInitiator<SelectObjectBuilder<T>> startMultipleSubqueryInitiator(Expression expression) {
         verifySubqueryBuilderEnded();
-        MultipleSubqueryInitiator<SelectObjectBuilder<T>> initiator = new MultipleSubqueryInitiatorImpl<SelectObjectBuilder<T>>(this, expression, this, subqueryInitFactory);
+        MultipleSubqueryInitiator<SelectObjectBuilder<T>> initiator = new MultipleSubqueryInitiatorImpl<SelectObjectBuilder<T>>(this, expression, this, subqueryInitFactory, ClauseType.SELECT);
         multipleSubqueryStartMarker = initiator;
         return initiator;
     }

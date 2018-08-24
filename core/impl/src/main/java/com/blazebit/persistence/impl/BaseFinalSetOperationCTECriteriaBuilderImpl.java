@@ -28,21 +28,29 @@ import com.blazebit.persistence.spi.SetOperationType;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public class BaseFinalSetOperationCTECriteriaBuilderImpl<T, X extends BaseFinalSetOperationBuilder<T, X>> extends BaseFinalSetOperationBuilderImpl<T, X, BaseFinalSetOperationCTECriteriaBuilderImpl<T, X>> implements BaseOngoingFinalSetOperationBuilder<T, X>, CTEInfoBuilder {
+public abstract class BaseFinalSetOperationCTECriteriaBuilderImpl<T, X extends BaseFinalSetOperationBuilder<T, X>> extends BaseFinalSetOperationBuilderImpl<T, X, BaseFinalSetOperationCTECriteriaBuilderImpl<T, X>> implements BaseOngoingFinalSetOperationBuilder<T, X>, CTEInfoBuilder {
 
     protected final T result;
     protected final CTEBuilderListener listener;
     protected final FullSelectCTECriteriaBuilderImpl<?> initiator;
     protected final CTEBuilderListenerImpl subListener;
     
-    public BaseFinalSetOperationCTECriteriaBuilderImpl(MainQuery mainQuery, Class<T> clazz, T result, SetOperationType operator, boolean nested, CTEBuilderListener listener, FullSelectCTECriteriaBuilderImpl<?> initiator) {
-        super(mainQuery, false, clazz, operator, nested, result);
+    public BaseFinalSetOperationCTECriteriaBuilderImpl(MainQuery mainQuery, QueryContext queryContext, Class<T> clazz, T result, SetOperationType operator, boolean nested, CTEBuilderListener listener, FullSelectCTECriteriaBuilderImpl<?> initiator) {
+        super(mainQuery, queryContext, false, clazz, operator, nested, result);
         this.result = result;
         this.listener = listener;
         this.initiator = initiator;
         this.subListener = new CTEBuilderListenerImpl();
     }
-    
+
+    public BaseFinalSetOperationCTECriteriaBuilderImpl(BaseFinalSetOperationBuilderImpl<T, X, BaseFinalSetOperationCTECriteriaBuilderImpl<T, X>> builder, MainQuery mainQuery, QueryContext queryContext) {
+        super(builder, mainQuery, queryContext);
+        this.result = null;
+        this.listener = null;
+        this.initiator = null;
+        this.subListener = null;
+    }
+
     public FullSelectCTECriteriaBuilderImpl<?> getInitiator() {
         return initiator;
     }

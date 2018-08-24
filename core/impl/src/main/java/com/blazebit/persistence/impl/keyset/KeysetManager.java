@@ -17,6 +17,7 @@
 package com.blazebit.persistence.impl.keyset;
 
 import com.blazebit.persistence.Keyset;
+import com.blazebit.persistence.impl.AbstractCommonQueryBuilder;
 import com.blazebit.persistence.impl.ClauseType;
 import com.blazebit.persistence.impl.OrderByExpression;
 import com.blazebit.persistence.impl.ParameterManager;
@@ -40,13 +41,15 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
 
     private static final String KEY_SET_PARAMETER_NAME = "_keysetParameter";
 
+    private final AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder;
     private final ResolvingQueryGenerator queryGenerator;
     private final ParameterManager parameterManager;
     private final JpaProvider jpaProvider;
     private final DbmsDialect dbmsDialect;
     private List<OrderByExpression> orderByExpressions;
 
-    public KeysetManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, JpaProvider jpaProvider, DbmsDialect dbmsDialect) {
+    public KeysetManager(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder, ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, JpaProvider jpaProvider, DbmsDialect dbmsDialect) {
+        this.queryBuilder = queryBuilder;
         this.queryGenerator = queryGenerator;
         this.parameterManager = parameterManager;
         this.jpaProvider = jpaProvider;
@@ -397,12 +400,12 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
             sb.append('?');
             String parameterName = Integer.toString(position + positionalOffset);
             sb.append(parameterName);
-            parameterManager.addParameterMapping(parameterName, keyElement, ClauseType.WHERE);
+            parameterManager.addParameterMapping(parameterName, keyElement, ClauseType.WHERE, queryBuilder);
         } else {
             sb.append(":");
             String parameterName = new StringBuilder(KEY_SET_PARAMETER_NAME).append('_').append(position).toString();
             sb.append(parameterName);
-            parameterManager.addParameterMapping(parameterName, keyElement, ClauseType.WHERE);
+            parameterManager.addParameterMapping(parameterName, keyElement, ClauseType.WHERE, queryBuilder);
         }
     }
 

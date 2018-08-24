@@ -109,6 +109,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
     private final JoinOnBuilderEndedListener joinOnBuilderListener;
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final ExpressionFactory expressionFactory;
+    private final AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder;
 
     // helper collections for join rendering
     private final Set<JoinNode> collectionJoinNodes = Collections.newSetFromMap(new IdentityHashMap<JoinNode, Boolean>());
@@ -118,7 +119,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
     // Setting to force entity joins being rendered as cross joins. Needed for recursive CTEs with DB2..
     private boolean emulateJoins;
 
-    JoinManager(MainQuery mainQuery, ResolvingQueryGenerator queryGenerator, AliasManager aliasManager, JoinManager parent, ExpressionFactory expressionFactory) {
+    JoinManager(MainQuery mainQuery, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder, ResolvingQueryGenerator queryGenerator, AliasManager aliasManager, JoinManager parent, ExpressionFactory expressionFactory) {
         super(queryGenerator, mainQuery.parameterManager, null);
         this.mainQuery = mainQuery;
         this.aliasManager = aliasManager;
@@ -126,8 +127,9 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         this.parent = parent;
         this.joinRestrictionKeyword = " " + mainQuery.jpaProvider.getOnClause() + " ";
         this.joinOnBuilderListener = new JoinOnBuilderEndedListener();
-        this.subqueryInitFactory = new SubqueryInitiatorFactory(mainQuery, aliasManager, this);
+        this.subqueryInitFactory = new SubqueryInitiatorFactory(mainQuery, queryBuilder, aliasManager, this);
         this.expressionFactory = expressionFactory;
+        this.queryBuilder = queryBuilder;
     }
 
     Map<JoinNode, JoinNode> applyFrom(JoinManager joinManager) {
@@ -140,7 +142,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 ParameterManager.ParameterImpl<?> param = joinManager.parameterManager.getParameter(node.getAlias());
                 ValuesParameterBinder binder = ((ParameterManager.ValuesParameterWrapper) param.getParameterValue()).getBinder();
 
-                parameterManager.registerValuesParameter(rootNode.getAlias(), null, binder.getParameterNames(), binder.getPathExpressions());
+                parameterManager.registerValuesParameter(rootNode.getAlias(), null, binder.getParameterNames(), binder.getPathExpressions(), queryBuilder);
                 entityFunctionNodes.add(rootNode);
             }
         }
@@ -207,7 +209,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         nodeMapping.put(oldNode, node);
 
         if (oldNode.getOnPredicate() != null) {
-            node.setOnPredicate(subqueryInitFactory.reattachSubqueries(oldNode.getOnPredicate().clone(true)));
+            node.setOnPredicate(subqueryInitFactory.reattachSubqueries(oldNode.getOnPredicate().clone(true), ClauseType.JOIN));
         }
 
         for (JoinTreeNode oldTreeNode : oldNode.getNodes().values()) {
@@ -348,7 +350,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         ValueRetriever<Object, Object>[] pathExpressions = new ValueRetriever[attributeSet.size()];
 
         String[] attributes = initializeValuesParameter(clazz, identifiableReference, rootAlias, attributeSet, parameterNames, pathExpressions);
-        parameterManager.registerValuesParameter(rootAlias, valueClazz, parameterNames, pathExpressions);
+        parameterManager.registerValuesParameter(rootAlias, valueClazz, parameterNames, pathExpressions, queryBuilder);
 
         JoinAliasInfo rootAliasInfo = new JoinAliasInfo(rootAlias, rootAlias, true, true, aliasManager);
         JoinNode rootNode = JoinNode.createValuesRootNode(managedType, typeName, valueCount, idAttributeName, castedParameter, attributes, rootAliasInfo);
@@ -1744,7 +1746,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             }
 
             // Don't forget to update the clause dependencies, but only for normal attribute accesses, that way paginated queries can prevent joins in certain cases
-            if (fromClause != null && !singleValuedAssociationIdExpression) {
+            if (fromClause != null) {
                 try {
                     result.baseNode.updateClauseDependencies(fromClause, false, new LinkedHashSet<JoinNode>());
                 } catch (IllegalStateException ex) {

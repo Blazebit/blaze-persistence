@@ -103,7 +103,7 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAn
 
     @Override
     public T value(Object value) {
-        return chain(createPredicate(leftExpression, parameterManager.addParameterExpression(value, clauseType), PredicateQuantifier.ONE));
+        return chain(createPredicate(leftExpression, parameterManager.addParameterExpression(value, clauseType, subqueryInitFactory.getQueryBuilder()), PredicateQuantifier.ONE));
     }
 
     @Override
@@ -120,7 +120,7 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAn
                 chain(createPredicate(leftExpression, builder.getExpression(), PredicateQuantifier.ONE));
             }
             
-        }, subqueryInitFactory);
+        }, subqueryInitFactory, clauseType);
     }
 
     /* case when functions */
@@ -206,30 +206,30 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAn
     @Override
     public SubqueryInitiator<T> all() {
         chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ALL));
-        return subqueryInitFactory.createSubqueryInitiator(result, this, false);
+        return subqueryInitFactory.createSubqueryInitiator(result, this, false, clauseType);
     }
 
     @Override
     public SubqueryInitiator<T> any() {
         chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ANY));
-        return subqueryInitFactory.createSubqueryInitiator(result, this, false);
+        return subqueryInitFactory.createSubqueryInitiator(result, this, false, clauseType);
     }
 
     @Override
     public SubqueryBuilder<T> all(FullQueryBuilder<?, ?> criteriaBuilder) {
         chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ALL));
-        return subqueryInitFactory.createSubqueryBuilder(result, this, false, criteriaBuilder);
+        return subqueryInitFactory.createSubqueryBuilder(result, this, false, criteriaBuilder, clauseType);
     }
 
     @Override
     public SubqueryBuilder<T> any(FullQueryBuilder<?, ?> criteriaBuilder) {
         chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ANY));
-        return subqueryInitFactory.createSubqueryBuilder(result, this, false, criteriaBuilder);
+        return subqueryInitFactory.createSubqueryBuilder(result, this, false, criteriaBuilder, clauseType);
     }
 
     public SubqueryBuilder<T> one(FullQueryBuilder<?, ?> criteriaBuilder) {
         chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
-        return subqueryInitFactory.createSubqueryBuilder(result, this, false, criteriaBuilder);
+        return subqueryInitFactory.createSubqueryBuilder(result, this, false, criteriaBuilder, clauseType);
     }
 
     @Override
@@ -329,7 +329,7 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAn
 
     protected SubqueryInitiator<T> getSubqueryInitiator() {
         if (subqueryInitiator == null) {
-            subqueryInitiator = subqueryInitFactory.createSubqueryInitiator(result, this, false);
+            subqueryInitiator = subqueryInitFactory.createSubqueryInitiator(result, this, false, clauseType);
         }
         return subqueryInitiator;
     }

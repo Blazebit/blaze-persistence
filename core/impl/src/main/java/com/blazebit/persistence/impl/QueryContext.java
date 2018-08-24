@@ -18,16 +18,24 @@ package com.blazebit.persistence.impl;
 
 /**
  *
- * @author Moritz Becker
- * @since 1.0.0
+ * @author Christian Beikov
+ * @since 1.3.0
  */
-public enum ClauseType {
-    SELECT,
-    WHERE,
-    GROUP_BY,
-    ORDER_BY,
-    HAVING,
-    JOIN,
-    SET,
-    CTE
+public class QueryContext {
+
+    private final AbstractCommonQueryBuilder<?, ?, ?, ?, ?> parent;
+    private final ClauseType parentClause;
+
+    public QueryContext(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> parent, ClauseType parentClause) {
+        this.parent = parent;
+        this.parentClause = parentClause;
+    }
+
+    public AbstractCommonQueryBuilder<?, ?, ?, ?, ?> getParent() {
+        return parent;
+    }
+
+    public ClauseType getParentClause() {
+        return parentClause;
+    }
 }

@@ -78,7 +78,7 @@ public class CaseWhenOrThenBuilderImpl<T extends CaseWhenBuilder<?>> extends Pre
     @Override
     public SubqueryInitiator<RestrictionBuilder<CaseWhenOrThenBuilder<T>>> orSubquery() {
         RestrictionBuilder<CaseWhenOrThenBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<CaseWhenOrThenBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager, clauseType));
-        return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, leftSubqueryPredicateBuilderListener, false);
+        return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, leftSubqueryPredicateBuilderListener, false, clauseType);
     }
 
     @Override
@@ -86,13 +86,13 @@ public class CaseWhenOrThenBuilderImpl<T extends CaseWhenBuilder<?>> extends Pre
         @SuppressWarnings({ "rawtypes", "unchecked" })
         SubqueryBuilderListenerImpl<RestrictionBuilder<CaseWhenOrThenBuilder<T>>> superExprLeftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression, true));
         RestrictionBuilder<CaseWhenOrThenBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<CaseWhenOrThenBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager, clauseType));
-        return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, superExprLeftSubqueryPredicateBuilderListener, false);
+        return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, superExprLeftSubqueryPredicateBuilderListener, false, clauseType);
     }
 
     @Override
     public SubqueryBuilder<RestrictionBuilder<CaseWhenOrThenBuilder<T>>> orSubquery(FullQueryBuilder<?, ?> criteriaBuilder) {
         RestrictionBuilder<CaseWhenOrThenBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<CaseWhenOrThenBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager, clauseType));
-        return subqueryInitFactory.createSubqueryBuilder(restrictionBuilder, leftSubqueryPredicateBuilderListener, false, criteriaBuilder);
+        return subqueryInitFactory.createSubqueryBuilder(restrictionBuilder, leftSubqueryPredicateBuilderListener, false, criteriaBuilder, clauseType);
     }
 
     @Override
@@ -100,7 +100,7 @@ public class CaseWhenOrThenBuilderImpl<T extends CaseWhenBuilder<?>> extends Pre
         @SuppressWarnings({ "rawtypes", "unchecked" })
         SubqueryBuilderListenerImpl<RestrictionBuilder<CaseWhenOrThenBuilder<T>>> superExprLeftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression, true));
         RestrictionBuilder<CaseWhenOrThenBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<CaseWhenOrThenBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager, clauseType));
-        return subqueryInitFactory.createSubqueryBuilder(restrictionBuilder, superExprLeftSubqueryPredicateBuilderListener, false, criteriaBuilder);
+        return subqueryInitFactory.createSubqueryBuilder(restrictionBuilder, superExprLeftSubqueryPredicateBuilderListener, false, criteriaBuilder, clauseType);
     }
 
     @Override
@@ -112,32 +112,32 @@ public class CaseWhenOrThenBuilderImpl<T extends CaseWhenBuilder<?>> extends Pre
         verifyBuilderEnded();
         RestrictionBuilder<CaseWhenOrThenBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<CaseWhenOrThenBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager, clauseType));
         // We don't need a listener or marker here, because the resulting restriction builder can only be ended, when the initiator is ended
-        MultipleSubqueryInitiator<RestrictionBuilder<CaseWhenOrThenBuilder<T>>> initiator = new MultipleSubqueryInitiatorImpl<RestrictionBuilder<CaseWhenOrThenBuilder<T>>>(restrictionBuilder, expression, null, subqueryInitFactory);
+        MultipleSubqueryInitiator<RestrictionBuilder<CaseWhenOrThenBuilder<T>>> initiator = new MultipleSubqueryInitiatorImpl<RestrictionBuilder<CaseWhenOrThenBuilder<T>>>(restrictionBuilder, expression, null, subqueryInitFactory, clauseType);
         return initiator;
     }
 
     @Override
     public SubqueryInitiator<CaseWhenOrThenBuilder<T>> orExists() {
         SubqueryBuilderListenerImpl<CaseWhenOrThenBuilder<T>> rightSubqueryPredicateBuilderListener = startBuilder(new RightHandsideSubqueryPredicateBuilder<CaseWhenOrThenBuilder<T>>(this, new ExistsPredicate()));
-        return subqueryInitFactory.createSubqueryInitiator((CaseWhenOrThenBuilder<T>) this, rightSubqueryPredicateBuilderListener, true);
+        return subqueryInitFactory.createSubqueryInitiator((CaseWhenOrThenBuilder<T>) this, rightSubqueryPredicateBuilderListener, true, clauseType);
     }
 
     @Override
     public SubqueryInitiator<CaseWhenOrThenBuilder<T>> orNotExists() {
         SubqueryBuilderListenerImpl<CaseWhenOrThenBuilder<T>> rightSubqueryPredicateBuilderListener = startBuilder(new RightHandsideSubqueryPredicateBuilder<CaseWhenOrThenBuilder<T>>(this, new ExistsPredicate(true)));
-        return subqueryInitFactory.createSubqueryInitiator((CaseWhenOrThenBuilder<T>) this, rightSubqueryPredicateBuilderListener, true);
+        return subqueryInitFactory.createSubqueryInitiator((CaseWhenOrThenBuilder<T>) this, rightSubqueryPredicateBuilderListener, true, clauseType);
     }
 
     @Override
     public SubqueryBuilder<CaseWhenOrThenBuilder<T>> orExists(FullQueryBuilder<?, ?> criteriaBuilder) {
         SubqueryBuilderListenerImpl<CaseWhenOrThenBuilder<T>> rightSubqueryPredicateBuilderListener = startBuilder(new RightHandsideSubqueryPredicateBuilder<CaseWhenOrThenBuilder<T>>(this, new ExistsPredicate()));
-        return subqueryInitFactory.createSubqueryBuilder((CaseWhenOrThenBuilder<T>) this, rightSubqueryPredicateBuilderListener, true, criteriaBuilder);
+        return subqueryInitFactory.createSubqueryBuilder((CaseWhenOrThenBuilder<T>) this, rightSubqueryPredicateBuilderListener, true, criteriaBuilder, clauseType);
     }
 
     @Override
     public SubqueryBuilder<CaseWhenOrThenBuilder<T>> orNotExists(FullQueryBuilder<?, ?> criteriaBuilder) {
         SubqueryBuilderListenerImpl<CaseWhenOrThenBuilder<T>> rightSubqueryPredicateBuilderListener = startBuilder(new RightHandsideSubqueryPredicateBuilder<CaseWhenOrThenBuilder<T>>(this, new ExistsPredicate(true)));
-        return subqueryInitFactory.createSubqueryBuilder((CaseWhenOrThenBuilder<T>) this, rightSubqueryPredicateBuilderListener, true, criteriaBuilder);
+        return subqueryInitFactory.createSubqueryBuilder((CaseWhenOrThenBuilder<T>) this, rightSubqueryPredicateBuilderListener, true, criteriaBuilder, clauseType);
     }
 
     @Override
@@ -168,7 +168,7 @@ public class CaseWhenOrThenBuilderImpl<T extends CaseWhenBuilder<?>> extends Pre
         if (whenClause != null) {
             throw new IllegalStateException("Method then/thenExpression called multiple times");
         }
-        whenClause = new WhenClauseExpression(predicate, parameterManager.addParameterExpression(value, clauseType));
+        whenClause = new WhenClauseExpression(predicate, parameterManager.addParameterExpression(value, clauseType, subqueryInitFactory.getQueryBuilder()));
         listener.onBuilderEnded(this);
         return result;
     }

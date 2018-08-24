@@ -27,6 +27,15 @@ import com.blazebit.persistence.UpdateCriteriaBuilder;
 public class UpdateCollectionCriteriaBuilderImpl<T> extends AbstractUpdateCollectionCriteriaBuilder<T, UpdateCriteriaBuilder<T>, Void> implements UpdateCriteriaBuilder<T> {
 
     public UpdateCollectionCriteriaBuilderImpl(MainQuery mainQuery, Class<T> updateOwnerClass, String alias, String collectionName) {
-        super(mainQuery, true, updateOwnerClass, alias, null, null, null, null, collectionName);
+        super(mainQuery, null, true, updateOwnerClass, alias, null, null, null, null, collectionName);
+    }
+
+    public UpdateCollectionCriteriaBuilderImpl(AbstractUpdateCollectionCriteriaBuilder<T, UpdateCriteriaBuilder<T>, Void> builder, MainQuery mainQuery, QueryContext queryContext) {
+        super(builder, mainQuery, queryContext);
+    }
+
+    @Override
+    AbstractCommonQueryBuilder<T, UpdateCriteriaBuilder<T>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, BaseFinalSetOperationBuilderImpl<T, ?, ?>> copy(QueryContext queryContext) {
+        return new UpdateCollectionCriteriaBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext);
     }
 }

@@ -76,10 +76,10 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
     protected final Map<String, String> columnBindingMap;
 
     @SuppressWarnings("unchecked")
-    public AbstractModificationCriteriaBuilder(MainQuery mainQuery, boolean isMainQuery, DbmsStatementType statementType, Class<T> clazz, String alias, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener) {
+    public AbstractModificationCriteriaBuilder(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, DbmsStatementType statementType, Class<T> clazz, String alias, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener) {
         // NOTE: using tuple here because this class is used for the join manager and tuple is definitively not an entity
         // but in case of the insert criteria, the appropriate return type which is convenient because update and delete don't have a return type
-        super(mainQuery, isMainQuery, statementType, (Class<T>) Tuple.class, null);
+        super(mainQuery, queryContext, isMainQuery, statementType, (Class<T>) Tuple.class, null);
 
         // set defaults
         if (alias != null) {
@@ -112,9 +112,25 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         }
     }
 
+    public AbstractModificationCriteriaBuilder(AbstractModificationCriteriaBuilder<T, X, Y> builder, MainQuery mainQuery, QueryContext queryContext) {
+        super(builder, mainQuery, queryContext);
+        this.entityType = builder.entityType;
+        this.entityAlias = builder.entityAlias;
+        this.result = null;
+        this.listener = null;
+
+        this.cteType = builder.cteType;
+        this.cteName = builder.cteName;
+        this.isReturningEntityAliasAllowed = builder.isReturningEntityAliasAllowed;
+        this.returningAttributes = builder.returningAttributes == null ? null : new LinkedHashMap<>(builder.returningAttributes);
+        this.returningAttributeBindingMap = new LinkedHashMap<>(builder.returningAttributeBindingMap);
+        this.attributeEntries = builder.attributeEntries;
+        this.columnBindingMap = builder.columnBindingMap == null ? null : new LinkedHashMap<>(builder.columnBindingMap);
+    }
+
     @Override
     public FullSelectCTECriteriaBuilder<X> with(Class<?> cteClass) {
-        if (!dbmsDialect.supportsWithClauseInModificationQuery()) {
+        if (!mainQuery.dbmsDialect.supportsWithClauseInModificationQuery()) {
             throw new UnsupportedOperationException("The database does not support a with clause in modification queries!");
         }
         
@@ -123,7 +139,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
 
     @Override
     public SelectRecursiveCTECriteriaBuilder<X> withRecursive(Class<?> cteClass) {
-        if (!dbmsDialect.supportsWithClauseInModificationQuery()) {
+        if (!mainQuery.dbmsDialect.supportsWithClauseInModificationQuery()) {
             throw new UnsupportedOperationException("The database does not support a with clause in modification queries!");
         }
         
@@ -132,7 +148,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
 
     @Override
     public ReturningModificationCriteriaBuilderFactory<X> withReturning(Class<?> cteClass) {
-        if (!dbmsDialect.supportsWithClauseInModificationQuery()) {
+        if (!mainQuery.dbmsDialect.supportsWithClauseInModificationQuery()) {
             throw new UnsupportedOperationException("The database does not support a with clause in modification queries!");
         }
         
@@ -224,7 +240,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
 
         Map<DbmsModificationState, String> includedModificationStates = new HashMap<DbmsModificationState, String>();
         // TODO: this needs to include the modification states based on what the dbms uses as default
-        boolean defaultOld = !(dbmsDialect instanceof DB2DbmsDialect);
+        boolean defaultOld = !(mainQuery.dbmsDialect instanceof DB2DbmsDialect);
         
         if (defaultOld) {
             for (Map.Entry<String, DbmsModificationState> entry : versionEntities.entrySet()) {
@@ -257,7 +273,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
 
         Map<String, String> tableNameRemappings = new HashMap<String, String>();
         // TODO: this needs to include the modification states based on what the dbms uses as default, so use a DbmsDialect method
-        boolean defaultOld = !(dbmsDialect instanceof DB2DbmsDialect);
+        boolean defaultOld = !(mainQuery.dbmsDialect instanceof DB2DbmsDialect);
         
         if (defaultOld) {
             for (Map.Entry<String, DbmsModificationState> entry : versionEntities.entrySet()) {
@@ -579,7 +595,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             }
             
             // TODO: actually we should also check if the attribute is a @GeneratedValue
-            if (!dbmsDialect.supportsReturningColumns() && !JpaMetamodelUtils.getSingleIdAttribute(entityType).equals(lastPathElem)) {
+            if (!mainQuery.dbmsDialect.supportsReturningColumns() && !JpaMetamodelUtils.getSingleIdAttribute(entityType).equals(lastPathElem)) {
                 throw new IllegalArgumentException("Returning the query attribute [" + lastPathElem.getName() + "] is not supported by the dbms, only generated keys can be returned!");
             }
 

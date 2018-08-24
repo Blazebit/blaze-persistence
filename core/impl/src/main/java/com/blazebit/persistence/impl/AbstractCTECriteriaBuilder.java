@@ -63,8 +63,8 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
     protected final CTEBuilderListenerImpl subListener;
     private CTEInfo info;
 
-    public AbstractCTECriteriaBuilder(MainQuery mainQuery, String cteName, Class<Object> clazz, Y result, CTEBuilderListener listener, BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?> finalSetOperationBuilder) {
-        super(mainQuery, false, DbmsStatementType.SELECT, clazz, null, finalSetOperationBuilder, false);
+    public AbstractCTECriteriaBuilder(MainQuery mainQuery, QueryContext queryContext, String cteName, Class<Object> clazz, Y result, CTEBuilderListener listener, BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?> finalSetOperationBuilder) {
+        super(mainQuery, queryContext, false, DbmsStatementType.SELECT, clazz, null, finalSetOperationBuilder, false);
         this.result = result;
         this.listener = listener;
 
@@ -75,7 +75,20 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
         this.columnBindingMap = new LinkedHashMap<String, String>(attributeEntries.size());
         this.subListener = new CTEBuilderListenerImpl();
     }
-    
+
+    public AbstractCTECriteriaBuilder(AbstractCTECriteriaBuilder<Y, X, Z, W> builder, MainQuery mainQuery, QueryContext queryContext) {
+        super(builder, mainQuery, queryContext);
+        this.result = null;
+        this.listener = null;
+
+        this.cteType = builder.cteType;
+        this.attributeEntries = builder.attributeEntries;
+        this.cteName = builder.cteName;
+        this.bindingMap = new LinkedHashMap<>(builder.bindingMap);
+        this.columnBindingMap = new LinkedHashMap<>(builder.columnBindingMap);
+        this.subListener = null;
+    }
+
     public CTEBuilderListenerImpl getSubListener() {
         return subListener;
     }
@@ -259,16 +272,16 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
         Y newResult = finalSetOperationBuilder == null ? result : (Y) finalSetOperationBuilder.getResult();
         
         if (isSubquery) {
-            return new OngoingFinalSetOperationCTECriteriaBuilderImpl<Object>(mainQuery, (Class<Object>) cteType.getJavaType(), newResult, operator, nested, newListener, initiator);
+            return new OngoingFinalSetOperationCTECriteriaBuilderImpl<Object>(mainQuery, queryContext, (Class<Object>) cteType.getJavaType(), newResult, operator, nested, newListener, initiator);
         } else {
-            return new FinalSetOperationCTECriteriaBuilderImpl<Object>(mainQuery, (Class<Object>) cteType.getJavaType(), newResult, operator, nested, newListener, initiator);
+            return new FinalSetOperationCTECriteriaBuilderImpl<Object>(mainQuery, queryContext, (Class<Object>) cteType.getJavaType(), newResult, operator, nested, newListener, initiator);
         }
     }
 
     @SuppressWarnings("unchecked")
     protected LeafOngoingSetOperationCTECriteriaBuilderImpl<Y> createLeaf(BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?> finalSetOperationBuilder) {
         CTEBuilderListener newListener = finalSetOperationBuilder.getSubListener();
-        LeafOngoingSetOperationCTECriteriaBuilderImpl<Y> next = new LeafOngoingSetOperationCTECriteriaBuilderImpl<Y>(mainQuery, cteName, (Class<Object>) cteType.getJavaType(), result, newListener, (FinalSetOperationCTECriteriaBuilderImpl<Object>) finalSetOperationBuilder);
+        LeafOngoingSetOperationCTECriteriaBuilderImpl<Y> next = new LeafOngoingSetOperationCTECriteriaBuilderImpl<Y>(mainQuery, queryContext, cteName, (Class<Object>) cteType.getJavaType(), result, newListener, (FinalSetOperationCTECriteriaBuilderImpl<Object>) finalSetOperationBuilder);
         newListener.onBuilderStarted(next);
         return next;
     }
@@ -279,7 +292,7 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
         finalSetOperationBuilder.setEndSetResult((T) endSetResult);
         
         CTEBuilderListener newListener = finalSetOperationBuilder.getSubListener();
-        StartOngoingSetOperationCTECriteriaBuilderImpl<Y, T> next = new StartOngoingSetOperationCTECriteriaBuilderImpl<Y, T>(mainQuery, cteName, (Class<Object>) cteType.getJavaType(), result, newListener, (OngoingFinalSetOperationCTECriteriaBuilderImpl<Object>) finalSetOperationBuilder, endSetResult);
+        StartOngoingSetOperationCTECriteriaBuilderImpl<Y, T> next = new StartOngoingSetOperationCTECriteriaBuilderImpl<Y, T>(mainQuery, queryContext, cteName, (Class<Object>) cteType.getJavaType(), result, newListener, (OngoingFinalSetOperationCTECriteriaBuilderImpl<Object>) finalSetOperationBuilder, endSetResult);
         newListener.onBuilderStarted(next);
         return next;
     }
@@ -290,7 +303,7 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
         finalSetOperationBuilder.setEndSetResult((T) endSetResult);
 
         CTEBuilderListener newListener = finalSetOperationBuilder.getSubListener();
-        OngoingSetOperationCTECriteriaBuilderImpl<Y, T> next = new OngoingSetOperationCTECriteriaBuilderImpl<Y, T>(mainQuery, cteName, (Class<Object>) cteType.getJavaType(), result, newListener, (OngoingFinalSetOperationCTECriteriaBuilderImpl<Object>) finalSetOperationBuilder, endSetResult);
+        OngoingSetOperationCTECriteriaBuilderImpl<Y, T> next = new OngoingSetOperationCTECriteriaBuilderImpl<Y, T>(mainQuery, queryContext, cteName, (Class<Object>) cteType.getJavaType(), result, newListener, (OngoingFinalSetOperationCTECriteriaBuilderImpl<Object>) finalSetOperationBuilder, endSetResult);
         newListener.onBuilderStarted(next);
         return next;
     }

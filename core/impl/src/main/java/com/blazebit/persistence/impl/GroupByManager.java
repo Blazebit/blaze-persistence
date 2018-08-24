@@ -57,7 +57,7 @@ public class GroupByManager extends AbstractManager<ExpressionModifier> {
 
     void applyFrom(GroupByManager groupByManager) {
         for (NodeInfo info : groupByManager.groupByInfos) {
-            groupBy(subqueryInitFactory.reattachSubqueries(info.getExpression().clone(true)));
+            groupBy(subqueryInitFactory.reattachSubqueries(info.getExpression().clone(true), ClauseType.GROUP_BY));
         }
     }
 

@@ -32,9 +32,19 @@ public class OngoingSetOperationCriteriaBuilderImpl<T, Z> extends AbstractCriter
 
     private final Z endSetResult;
 
-    public OngoingSetOperationCriteriaBuilderImpl(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, BuilderListener<Object> listener, OngoingFinalSetOperationCriteriaBuilderImpl<T> finalSetOperationBuilder, Z endSetResult) {
-        super(mainQuery, isMainQuery, clazz, null, listener, finalSetOperationBuilder);
+    public OngoingSetOperationCriteriaBuilderImpl(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, Class<T> clazz, BuilderListener<Object> listener, OngoingFinalSetOperationCriteriaBuilderImpl<T> finalSetOperationBuilder, Z endSetResult) {
+        super(mainQuery, queryContext, isMainQuery, clazz, null, listener, finalSetOperationBuilder);
         this.endSetResult = endSetResult;
+    }
+
+    public OngoingSetOperationCriteriaBuilderImpl(AbstractCommonQueryBuilder<T, ?, ?, ?, ?> builder, MainQuery mainQuery, QueryContext queryContext) {
+        super(builder, mainQuery, queryContext);
+        this.endSetResult = null;
+    }
+
+    @Override
+    AbstractCommonQueryBuilder<T, OngoingSetOperationCriteriaBuilder<T, Z>, OngoingSetOperationCriteriaBuilder<T, Z>, StartOngoingSetOperationCriteriaBuilder<T, MiddleOngoingSetOperationCriteriaBuilder<T, Z>>, BaseFinalSetOperationCriteriaBuilderImpl<T, ?>> copy(QueryContext queryContext) {
+        return new OngoingSetOperationCriteriaBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext);
     }
 
     @Override

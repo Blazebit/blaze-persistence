@@ -33,17 +33,25 @@ public class CorrelatedSubqueryEmbeddingViewJpqlMacro extends CorrelatedSubquery
     private static final String CORRELATION_EMBEDDING_VIEW_ID_PARAM_PREFIX = "correlationEmbeddingViewIdParam_";
 
     private final CorrelatedSubqueryViewRootJpqlMacro viewRootJpqlMacro;
+    private final String idPath;
     private String embeddingViewPath;
     private boolean embeddingViewPathSet;
 
-    public CorrelatedSubqueryEmbeddingViewJpqlMacro(FullQueryBuilder<?, ?> criteriaBuilder, Map<String, Object> optionalParameters, boolean batchedViewRoot, Class<?> viewRootEntityType, String viewRootIdPath, String viewRootExpression, CorrelatedSubqueryViewRootJpqlMacro viewRootJpqlMacro) {
+    public CorrelatedSubqueryEmbeddingViewJpqlMacro(FullQueryBuilder<?, ?> criteriaBuilder, Map<String, Object> optionalParameters, boolean batchedViewRoot, Class<?> viewRootEntityType, String viewRootIdPath, String viewRootExpression, boolean batchedIdValues, CorrelatedSubqueryViewRootJpqlMacro viewRootJpqlMacro) {
         super(criteriaBuilder, optionalParameters, batchedViewRoot, viewRootEntityType, viewRootIdPath, viewRootExpression);
         this.viewRootJpqlMacro = viewRootJpqlMacro;
+        // When id values rather than "this" is batched, we need to use "value" rather than the id path
+        this.idPath = batchedIdValues ? "value" : viewRootIdPath;
     }
 
     @Override
     public boolean usesEmbeddingView() {
         return embeddingViewPath != null || viewRootExpression != null;
+    }
+
+    @Override
+    protected String getViewRootIdPath() {
+        return idPath;
     }
 
     @Override

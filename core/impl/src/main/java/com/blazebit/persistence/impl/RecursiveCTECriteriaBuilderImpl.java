@@ -32,16 +32,29 @@ public class RecursiveCTECriteriaBuilderImpl<Y> extends AbstractCTECriteriaBuild
     protected boolean unionAll;
     protected SelectCTECriteriaBuilderImpl<Y> recursiveCteBuilder;
 
-    public RecursiveCTECriteriaBuilderImpl(MainQuery mainQuery, String cteName, Class<Object> clazz, Y result, final CTEBuilderListener listener) {
-        super(mainQuery, cteName, clazz, result, listener, null);
+    public RecursiveCTECriteriaBuilderImpl(MainQuery mainQuery, QueryContext queryContext, String cteName, Class<Object> clazz, Y result, final CTEBuilderListener listener) {
+        super(mainQuery, queryContext, cteName, clazz, result, listener, null);
         this.clazz = clazz;
+    }
+
+    public RecursiveCTECriteriaBuilderImpl(RecursiveCTECriteriaBuilderImpl<Y> builder, MainQuery mainQuery, QueryContext queryContext) {
+        super(builder, mainQuery, queryContext);
+        this.clazz = builder.clazz;
+        this.done = builder.done;
+        this.unionAll = builder.unionAll;
+        this.recursiveCteBuilder = builder.recursiveCteBuilder.copy(queryContext);
+    }
+
+    @Override
+    AbstractCommonQueryBuilder<Object, SelectRecursiveCTECriteriaBuilder<Y>, SelectCTECriteriaBuilder<Y>, Void, BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?>> copy(QueryContext queryContext) {
+        return new RecursiveCTECriteriaBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext);
     }
 
     @Override
     public SelectCTECriteriaBuilderImpl<Y> union() {
         verifyBuilderEnded();
         unionAll = false;
-        recursiveCteBuilder = new SelectCTECriteriaBuilderImpl<Y>(mainQuery, cteName, clazz, result, this, !mainQuery.dbmsDialect.supportsJoinsInRecursiveCte());
+        recursiveCteBuilder = new SelectCTECriteriaBuilderImpl<Y>(mainQuery, queryContext, cteName, clazz, result, this, !mainQuery.dbmsDialect.supportsJoinsInRecursiveCte());
         return recursiveCteBuilder;
     }
 
@@ -49,7 +62,7 @@ public class RecursiveCTECriteriaBuilderImpl<Y> extends AbstractCTECriteriaBuild
     public SelectCTECriteriaBuilderImpl<Y> unionAll() {
         verifyBuilderEnded();
         unionAll = true;
-        recursiveCteBuilder = new SelectCTECriteriaBuilderImpl<Y>(mainQuery, cteName, clazz, result, this, !mainQuery.dbmsDialect.supportsJoinsInRecursiveCte());
+        recursiveCteBuilder = new SelectCTECriteriaBuilderImpl<Y>(mainQuery, queryContext, cteName, clazz, result, this, !mainQuery.dbmsDialect.supportsJoinsInRecursiveCte());
         return recursiveCteBuilder;
     }
 

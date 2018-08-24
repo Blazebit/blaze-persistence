@@ -44,6 +44,21 @@ class CTEInfo {
         this.recursiveCriteriaBuilder = recursiveCriteriaBuilder;
     }
 
+    CTEInfo copy(CTEManager cteManager) {
+        CTEInfo cteInfo = new CTEInfo(
+                name,
+                cteType,
+                attributes,
+                columnNames,
+                recursive,
+                unionAll,
+                nonRecursiveCriteriaBuilder.copy(cteManager.getQueryContext()),
+                recursive ? recursiveCriteriaBuilder.copy(cteManager.getQueryContext()) : null
+        );
+
+        return cteInfo;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;

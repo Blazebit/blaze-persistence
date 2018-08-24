@@ -37,6 +37,7 @@ public class CTEManager extends CTEBuilderListenerImpl {
 
     private final MainQuery mainQuery;
     private final Map<Class<?>, CTEInfo> ctes;
+    private QueryContext queryContext;
     private boolean recursive = false;
 
     CTEManager(MainQuery mainQuery) {
@@ -44,13 +45,31 @@ public class CTEManager extends CTEBuilderListenerImpl {
         this.ctes = new LinkedHashMap<>();
     }
 
+    void init(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {
+        if (queryContext == null) {
+            this.queryContext = new QueryContext(queryBuilder, ClauseType.CTE);
+        }
+    }
+
     void applyFrom(CTEManager cteManager) {
         if (cteManager.recursive) {
             recursive = true;
         }
-        ctes.putAll(cteManager.ctes);
+        for (Map.Entry<Class<?>, CTEInfo> entry : cteManager.ctes.entrySet()) {
+            CTEInfo cteInfo = entry.getValue().copy(this);
+            mainQuery.parameterManager.collectParameterRegistrations(cteInfo.nonRecursiveCriteriaBuilder, ClauseType.CTE);
+            if (cteInfo.recursive) {
+                mainQuery.parameterManager.collectParameterRegistrations(cteInfo.recursiveCriteriaBuilder, ClauseType.CTE);
+            }
+
+            ctes.put(entry.getKey(), cteInfo);
+        }
     }
-    
+
+    QueryContext getQueryContext() {
+        return queryContext;
+    }
+
     Collection<CTEInfo> getCtes() {
         return ctes.values();
     }
@@ -116,13 +135,13 @@ public class CTEManager extends CTEBuilderListenerImpl {
     @SuppressWarnings("unchecked")
     <Y> StartOngoingSetOperationCTECriteriaBuilder<Y, LeafOngoingFinalSetOperationCTECriteriaBuilder<Y>> withStartSet(Class<?> cteClass, Y result) {
         String cteName = cteClass.getSimpleName();
-        FinalSetOperationCTECriteriaBuilderImpl<Y> parentFinalSetOperationBuilder = new FinalSetOperationCTECriteriaBuilderImpl<Y>(mainQuery, (Class<Y>) cteClass, result, null, false, this, null);
-        OngoingFinalSetOperationCTECriteriaBuilderImpl<Y> subFinalSetOperationBuilder = new OngoingFinalSetOperationCTECriteriaBuilderImpl<Y>(mainQuery, (Class<Y>) cteClass, null, null, true, parentFinalSetOperationBuilder.getSubListener(), null);
+        FinalSetOperationCTECriteriaBuilderImpl<Y> parentFinalSetOperationBuilder = new FinalSetOperationCTECriteriaBuilderImpl<Y>(mainQuery, queryContext, (Class<Y>) cteClass, result, null, false, this, null);
+        OngoingFinalSetOperationCTECriteriaBuilderImpl<Y> subFinalSetOperationBuilder = new OngoingFinalSetOperationCTECriteriaBuilderImpl<Y>(mainQuery, queryContext, (Class<Y>) cteClass, null, null, true, parentFinalSetOperationBuilder.getSubListener(), null);
         this.onBuilderStarted(parentFinalSetOperationBuilder);
         
-        LeafOngoingSetOperationCTECriteriaBuilderImpl<Y> leafCb = new LeafOngoingSetOperationCTECriteriaBuilderImpl<Y>(mainQuery, cteName, (Class<Object>) cteClass, result, parentFinalSetOperationBuilder.getSubListener(), (FinalSetOperationCTECriteriaBuilderImpl<Object>) parentFinalSetOperationBuilder);
+        LeafOngoingSetOperationCTECriteriaBuilderImpl<Y> leafCb = new LeafOngoingSetOperationCTECriteriaBuilderImpl<Y>(mainQuery, queryContext, cteName, (Class<Object>) cteClass, result, parentFinalSetOperationBuilder.getSubListener(), (FinalSetOperationCTECriteriaBuilderImpl<Object>) parentFinalSetOperationBuilder);
         StartOngoingSetOperationCTECriteriaBuilderImpl<Y, LeafOngoingSetOperationCTECriteriaBuilderImpl<Y>> cb = new StartOngoingSetOperationCTECriteriaBuilderImpl<Y, LeafOngoingSetOperationCTECriteriaBuilderImpl<Y>>(
-                mainQuery, cteName, (Class<Object>) cteClass, result, subFinalSetOperationBuilder.getSubListener(), (OngoingFinalSetOperationCTECriteriaBuilderImpl<Object>) subFinalSetOperationBuilder, leafCb
+                mainQuery, queryContext, cteName, (Class<Object>) cteClass, result, subFinalSetOperationBuilder.getSubListener(), (OngoingFinalSetOperationCTECriteriaBuilderImpl<Object>) subFinalSetOperationBuilder, leafCb
         );
         
         subFinalSetOperationBuilder.setOperationManager.setStartQueryBuilder(cb);
@@ -138,7 +157,7 @@ public class CTEManager extends CTEBuilderListenerImpl {
     @SuppressWarnings("unchecked")
     <Y> FullSelectCTECriteriaBuilder<Y> with(Class<?> cteClass, Y result) {
         String cteName = cteClass.getSimpleName();
-        FullSelectCTECriteriaBuilderImpl<Y> cteBuilder = new FullSelectCTECriteriaBuilderImpl<Y>(mainQuery, cteName, (Class<Object>) cteClass, result, this);
+        FullSelectCTECriteriaBuilderImpl<Y> cteBuilder = new FullSelectCTECriteriaBuilderImpl<Y>(mainQuery, queryContext, cteName, (Class<Object>) cteClass, result, this);
         this.onBuilderStarted(cteBuilder);
         return cteBuilder;
     }
@@ -147,7 +166,7 @@ public class CTEManager extends CTEBuilderListenerImpl {
     <Y> SelectRecursiveCTECriteriaBuilder<Y> withRecursive(Class<?> cteClass, Y result) {
         String cteName = cteClass.getSimpleName();
         recursive = true;
-        RecursiveCTECriteriaBuilderImpl<Y> cteBuilder = new RecursiveCTECriteriaBuilderImpl<Y>(mainQuery, cteName, (Class<Object>) cteClass, result, this);
+        RecursiveCTECriteriaBuilderImpl<Y> cteBuilder = new RecursiveCTECriteriaBuilderImpl<Y>(mainQuery, queryContext, cteName, (Class<Object>) cteClass, result, this);
         this.onBuilderStarted(cteBuilder);
         return cteBuilder;
     }
@@ -162,6 +181,10 @@ public class CTEManager extends CTEBuilderListenerImpl {
     public void onBuilderEnded(CTEInfoBuilder builder) {
         super.onBuilderEnded(builder);
         CTEInfo cteInfo = builder.createCTEInfo();
+        mainQuery.parameterManager.collectParameterRegistrations(cteInfo.nonRecursiveCriteriaBuilder, ClauseType.CTE);
+        if (cteInfo.recursive) {
+            mainQuery.parameterManager.collectParameterRegistrations(cteInfo.recursiveCriteriaBuilder, ClauseType.CTE);
+        }
         ctes.put(cteInfo.cteType.getJavaType(), cteInfo);
     }
 

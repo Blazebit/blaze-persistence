@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
 
+import com.blazebit.persistence.CTEBuilder;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
@@ -48,6 +49,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
     private static final String CORRELATION_PARAM_PREFIX = "correlationParam_";
 
     protected final int batchSize;
+    protected final boolean correlatesThis;
     protected final BatchCorrelationMode expectBatchCorrelationMode;
 
     protected String correlationParamName;
@@ -58,9 +60,10 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
     protected Query query;
 
     public AbstractCorrelatedBatchTupleListTransformer(ExpressionFactory ef, Correlator correlator, ManagedViewType<?> viewRootType, ManagedViewType<?> embeddingViewType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
-                                                       int viewRootIndex, int embeddingViewIndex, int tupleIndex, int defaultBatchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
+                                                       boolean correlatesThis, int viewRootIndex, int embeddingViewIndex, int tupleIndex, int defaultBatchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
         super(ef, correlator, viewRootType, embeddingViewType, correlationResult, correlationProviderFactory, attributePath, fetches, viewRootIndex, embeddingViewIndex, tupleIndex, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
         this.batchSize = entityViewConfiguration.getBatchSize(attributePath, defaultBatchSize);
+        this.correlatesThis = correlatesThis;
         this.expectBatchCorrelationMode = entityViewConfiguration.getExpectBatchCorrelationValues(attributePath);
     }
 
@@ -93,10 +96,12 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
         Class<?> correlationBasisEntityType;
         String viewRootExpression;
         String embeddingViewExpression;
+        boolean batchedIdValues = false;
         if (batchCorrelationMode == BatchCorrelationMode.VALUES) {
             correlationBasisEntityType = correlationBasisEntity;
             viewRootExpression = null;
-            embeddingViewExpression = null;
+            batchedIdValues = correlatesThis && correlationBasisEntity == null;
+            embeddingViewExpression = correlatesThis ? CORRELATION_KEY_ALIAS : null;
         } else if (batchCorrelationMode == BatchCorrelationMode.VIEW_ROOTS) {
             correlationBasisEntityType = viewRootEntityClass;
             viewRootExpression = CORRELATION_KEY_ALIAS;
@@ -108,8 +113,11 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
         }
 
         this.criteriaBuilder = queryBuilder.getCriteriaBuilderFactory().create(queryBuilder.getEntityManager(), Object[].class);
+        if (queryBuilder instanceof CTEBuilder<?>) {
+            this.criteriaBuilder.withCtesFrom((CTEBuilder<?>) queryBuilder);
+        }
         this.viewRootJpqlMacro = new CorrelatedSubqueryViewRootJpqlMacro(criteriaBuilder, optionalParameters, viewRootExpression != null, viewRootEntityClass, viewRootIdAttributePath, viewRootExpression);
-        this.embeddingViewJpqlMacro = new CorrelatedSubqueryEmbeddingViewJpqlMacro(criteriaBuilder, optionalParameters, embeddingViewExpression != null, embeddingViewEntityClass, embeddingViewIdAttributePath, embeddingViewExpression, viewRootJpqlMacro);
+        this.embeddingViewJpqlMacro = new CorrelatedSubqueryEmbeddingViewJpqlMacro(criteriaBuilder, optionalParameters, embeddingViewExpression != null, embeddingViewEntityClass, embeddingViewIdAttributePath, embeddingViewExpression, batchedIdValues, viewRootJpqlMacro);
         this.criteriaBuilder.registerMacro("view_root", viewRootJpqlMacro);
         this.criteriaBuilder.registerMacro("embedding_view", embeddingViewJpqlMacro);
 
@@ -120,6 +128,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
         if (batchSize > 1) {
             if (batchCorrelationMode == BatchCorrelationMode.VALUES) {
                 this.correlationParamName = CORRELATION_KEY_ALIAS;
+                // TODO: when using EMBEDDING_VIEW, we could make use of correlationBasis instead of binding parameters separately
             } else {
                 this.correlationParamName = generateCorrelationParamName();
             }
@@ -168,7 +177,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
         }
 
         // If a view macro is used, we have to decide whether we do batches for each view id or correlation param
-        if (embeddingViewJpqlMacro.usesViewMacro()) {
+        if (embeddingViewJpqlMacro.usesViewMacroNonId() || !correlatesThis && embeddingViewJpqlMacro.usesViewMacro()) {
             transformViewMacroAware(tuples, correlationParams, tupleOffset, correlationRoot, embeddingViewJpqlMacro, BatchCorrelationMode.EMBEDDING_VIEWS, embeddingViewType, embeddingViewIndex);
         } else if (viewRootJpqlMacro.usesViewMacro()) {
             transformViewMacroAware(tuples, correlationParams, tupleOffset, correlationRoot, viewRootJpqlMacro, BatchCorrelationMode.VIEW_ROOTS, viewRootType, viewRootIndex);
@@ -211,7 +220,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
                         } else {
                             defaultKey = correlationParams.get(0);
                         }
-                        batchLoad(correlationValues, correlationParams, null, defaultKey, viewRootJpqlMacro, batchSize > 1);
+                        batchLoad(correlationValues, correlationParams, null, defaultKey, viewRootJpqlMacro, BatchCorrelationMode.VALUES);
                     }
                 } else {
                     tupleIndexValue.add(tuple);
@@ -219,7 +228,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
             }
 
             if (correlationParams.realSize() > 0) {
-                batchLoad(correlationValues, correlationParams, null, null, viewRootJpqlMacro, batchSize > 1);
+                batchLoad(correlationValues, correlationParams, null, null, viewRootJpqlMacro, BatchCorrelationMode.VALUES);
             }
 
             fillDefaultValues(Collections.singletonMap(null, correlationValues));
@@ -304,13 +313,13 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
                         } else {
                             defaultKey = correlationParams.get(0);
                         }
-                        batchLoad(batchValues, correlationParams, viewRootIds, defaultKey, macro, true);
+                        batchLoad(batchValues, correlationParams, viewRootIds, defaultKey, macro, correlationMode);
                     }
                 }
 
                 if (correlationParams.realSize() > 0) {
                     viewRootIds.add(batchEntry.getKey());
-                    batchLoad(batchValues, correlationParams, viewRootIds, null, macro, true);
+                    batchLoad(batchValues, correlationParams, viewRootIds, null, macro, correlationMode);
                 }
             }
 
@@ -344,7 +353,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
                             correlationParams.add(batchEntry.getKey());
                         }
                         Object defaultKey = viewRootIds.get(0);
-                        batchLoad(batchValues, correlationParams, viewRootIds, defaultKey, macro, false);
+                        batchLoad(batchValues, correlationParams, viewRootIds, defaultKey, macro, correlationMode);
                     }
                 }
 
@@ -354,7 +363,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
                     } else {
                         correlationParams.add(batchEntry.getKey());
                     }
-                    batchLoad(batchValues, correlationParams, viewRootIds, null, macro, false);
+                    batchLoad(batchValues, correlationParams, viewRootIds, null, macro, correlationMode);
                 }
             }
 
@@ -362,9 +371,9 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
         }
     }
 
-    private void batchLoad(Map<Object, TuplePromise> correlationValues, FixedArrayList batchParameters, FixedArrayList viewRootIds, Object defaultKey, CorrelatedSubqueryViewRootJpqlMacro macro, boolean batchCorrelationValues) {
+    private void batchLoad(Map<Object, TuplePromise> correlationValues, FixedArrayList batchParameters, FixedArrayList viewRootIds, Object defaultKey, CorrelatedSubqueryViewRootJpqlMacro macro, BatchCorrelationMode batchCorrelationMode) {
         batchParameters.clearRest();
-        if (batchCorrelationValues) {
+        if (batchSize > 1 && batchCorrelationMode == BatchCorrelationMode.VALUES) {
             query.setParameter(correlationParamName, batchParameters);
         } else {
             query.setParameter(correlationParamName, batchParameters.get(0));

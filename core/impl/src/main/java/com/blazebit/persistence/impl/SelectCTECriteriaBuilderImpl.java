@@ -28,9 +28,18 @@ import java.util.List;
  */
 public class SelectCTECriteriaBuilderImpl<Y> extends AbstractCTECriteriaBuilder<Y, SelectCTECriteriaBuilder<Y>, Void, Void> implements SelectCTECriteriaBuilder<Y> {
 
-    public SelectCTECriteriaBuilderImpl(MainQuery mainQuery, String cteName, Class<Object> clazz, Y result, CTEBuilderListener listener, boolean emulateJoins) {
-        super(mainQuery, cteName, clazz, result, listener, null);
+    public SelectCTECriteriaBuilderImpl(MainQuery mainQuery, QueryContext queryContext, String cteName, Class<Object> clazz, Y result, CTEBuilderListener listener, boolean emulateJoins) {
+        super(mainQuery, queryContext, cteName, clazz, result, listener, null);
         joinManager.setEmulateJoins(emulateJoins);
+    }
+
+    public SelectCTECriteriaBuilderImpl(AbstractCTECriteriaBuilder<Y, SelectCTECriteriaBuilder<Y>, Void, Void> builder, MainQuery mainQuery, QueryContext queryContext) {
+        super(builder, mainQuery, queryContext);
+    }
+
+    @Override
+    SelectCTECriteriaBuilderImpl<Y> copy(QueryContext queryContext) {
+        return new SelectCTECriteriaBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext);
     }
 
     @Override

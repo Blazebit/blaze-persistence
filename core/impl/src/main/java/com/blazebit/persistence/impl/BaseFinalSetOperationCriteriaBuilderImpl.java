@@ -26,17 +26,23 @@ import com.blazebit.persistence.spi.SetOperationType;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public class BaseFinalSetOperationCriteriaBuilderImpl<T, X extends BaseFinalSetOperationBuilder<T, X>> extends BaseFinalSetOperationBuilderImpl<T, X, BaseFinalSetOperationCriteriaBuilderImpl<T, X>> implements BaseOngoingFinalSetOperationBuilder<T, X> {
+public abstract class BaseFinalSetOperationCriteriaBuilderImpl<T, X extends BaseFinalSetOperationBuilder<T, X>> extends BaseFinalSetOperationBuilderImpl<T, X, BaseFinalSetOperationCriteriaBuilderImpl<T, X>> implements BaseOngoingFinalSetOperationBuilder<T, X> {
 
     private final BuilderListener<Object> listener;
     private final BuilderListenerImpl<Object> subListener;
     
-    public BaseFinalSetOperationCriteriaBuilderImpl(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, SetOperationType operator, boolean nested, BuilderListener<Object> listener, T endSetResult) {
-        super(mainQuery, isMainQuery, clazz, operator, nested, endSetResult);
+    public BaseFinalSetOperationCriteriaBuilderImpl(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, Class<T> clazz, SetOperationType operator, boolean nested, BuilderListener<Object> listener, T endSetResult) {
+        super(mainQuery, queryContext, isMainQuery, clazz, operator, nested, endSetResult);
         this.listener = listener;
         this.subListener = new BuilderListenerImpl<Object>();
     }
-    
+
+    public BaseFinalSetOperationCriteriaBuilderImpl(BaseFinalSetOperationBuilderImpl<T, X, BaseFinalSetOperationCriteriaBuilderImpl<T, X>> builder, MainQuery mainQuery, QueryContext queryContext) {
+        super(builder, mainQuery, queryContext);
+        this.listener = null;
+        this.subListener = null;
+    }
+
     public BuilderListener<Object> getListener() {
         return listener;
     }

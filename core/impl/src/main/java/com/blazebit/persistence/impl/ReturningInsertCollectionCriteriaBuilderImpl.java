@@ -26,8 +26,17 @@ import com.blazebit.persistence.ReturningInsertCriteriaBuilder;
  */
 public class ReturningInsertCollectionCriteriaBuilderImpl<T, Y> extends AbstractInsertCollectionCriteriaBuilder<T, ReturningInsertCriteriaBuilder<T, Y>, Y> implements ReturningInsertCriteriaBuilder<T, Y> {
 
-    public ReturningInsertCollectionCriteriaBuilderImpl(MainQuery mainQuery, Class<T> clazz, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener, String collectionName) {
-        super(mainQuery, false, clazz, cteName, cteClass, result, listener, collectionName);
+    public ReturningInsertCollectionCriteriaBuilderImpl(MainQuery mainQuery, QueryContext queryContext, Class<T> clazz, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener, String collectionName) {
+        super(mainQuery, queryContext, false, clazz, cteName, cteClass, result, listener, collectionName);
+    }
+
+    public ReturningInsertCollectionCriteriaBuilderImpl(AbstractInsertCollectionCriteriaBuilder<T, ReturningInsertCriteriaBuilder<T, Y>, Y> builder, MainQuery mainQuery, QueryContext queryContext) {
+        super(builder, mainQuery, queryContext);
+    }
+
+    @Override
+    AbstractCommonQueryBuilder<T, ReturningInsertCriteriaBuilder<T, Y>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, BaseFinalSetOperationBuilderImpl<T, ?, ?>> copy(QueryContext queryContext) {
+        return new ReturningInsertCollectionCriteriaBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext);
     }
 
     @Override

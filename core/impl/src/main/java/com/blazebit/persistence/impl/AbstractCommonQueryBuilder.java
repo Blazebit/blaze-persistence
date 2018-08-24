@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.CTEBuilder;
 import com.blazebit.persistence.CaseWhenStarterBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.From;
@@ -77,8 +78,6 @@ import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
-import com.blazebit.persistence.spi.JpaProvider;
-import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.JpqlMacro;
 import com.blazebit.persistence.spi.ServiceProvider;
 import com.blazebit.persistence.spi.SetOperationType;
@@ -127,6 +126,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     protected static final Logger LOG = Logger.getLogger(AbstractCommonQueryBuilder.class.getName());
 
     protected final MainQuery mainQuery;
+    protected final QueryContext queryContext;
     /* This might change when transitioning to a set operation */
     protected boolean isMainQuery;
     
@@ -152,10 +152,6 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     // This builder will be passed in when using set operations
     protected FinalSetReturn finalSetOperationBuilder;
     protected boolean setOperationEnded;
-
-    protected final DbmsDialect dbmsDialect;
-    protected final JpaProvider jpaProvider;
-    protected final Map<String, JpqlFunction> registeredFunctions;
 
     protected final AliasManager aliasManager;
     protected final ExpressionFactory expressionFactory;
@@ -189,6 +185,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     @SuppressWarnings("unchecked")
     protected AbstractCommonQueryBuilder(AbstractCommonQueryBuilder<QueryResultType, ?, ?, ?, ?> builder) {
         this.mainQuery = builder.mainQuery;
+        this.queryContext = builder.queryContext;
         this.isMainQuery = builder.isMainQuery;
         this.cbf = builder.cbf;
         this.statementType = builder.statementType;
@@ -203,9 +200,6 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.queryGenerator = builder.queryGenerator;
         this.em = builder.em;
         this.finalSetOperationBuilder = (FinalSetReturn) builder.finalSetOperationBuilder;
-        this.dbmsDialect = builder.dbmsDialect;
-        this.jpaProvider = builder.jpaProvider;
-        this.registeredFunctions = builder.registeredFunctions;
         this.subqueryInitFactory = builder.subqueryInitFactory;
         this.embeddableSplittingVisitor = builder.embeddableSplittingVisitor;
         this.groupByExpressionGatheringVisitor = builder.groupByExpressionGatheringVisitor;
@@ -215,8 +209,56 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.transformerGroups = builder.transformerGroups;
         this.resultType = builder.resultType;
     }
+
+    /**
+     * Create fully copy of builder. Intended for CTEs only.
+     *
+     * @param builder
+     */
+    @SuppressWarnings("unchecked")
+    protected AbstractCommonQueryBuilder(AbstractCommonQueryBuilder<QueryResultType, ?, ?, ?, ?> builder, MainQuery mainQuery, QueryContext queryContext) {
+        this.mainQuery = mainQuery;
+        if (isMainQuery) {
+            mainQuery.cteManager.init(this);
+        }
+        this.queryContext = queryContext;
+        this.isMainQuery = builder.isMainQuery;
+        this.statementType = builder.statementType;
+        this.cbf = mainQuery.cbf;
+        this.parameterManager = mainQuery.parameterManager;
+        this.em = mainQuery.em;
+
+        this.aliasManager = new AliasManager(queryContext.getParent().aliasManager);
+        this.expressionFactory = builder.expressionFactory;
+        this.queryGenerator = new ResolvingQueryGenerator(this.aliasManager, parameterManager, mainQuery.parameterTransformerFactory, mainQuery.jpaProvider, mainQuery.registeredFunctions);
+        this.joinManager = new JoinManager(mainQuery, this, queryGenerator, this.aliasManager, queryContext.getParent().joinManager, expressionFactory);
+        this.fromClassExplicitlySet = builder.fromClassExplicitlySet;
+
+        this.subqueryInitFactory = joinManager.getSubqueryInitFactory();
+        SplittingVisitor splittingVisitor = new SplittingVisitor(mainQuery.metamodel);
+        this.embeddableSplittingVisitor = new EmbeddableSplittingVisitor(mainQuery.metamodel, splittingVisitor);
+        this.groupByExpressionGatheringVisitor = new GroupByExpressionGatheringVisitor(false, mainQuery.dbmsDialect);
+        this.functionalDependencyAnalyzerVisitor = new FunctionalDependencyAnalyzerVisitor(mainQuery.metamodel, splittingVisitor);
+
+        this.whereManager = new WhereManager<BuilderType>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
+        this.groupByManager = new GroupByManager(queryGenerator, parameterManager, subqueryInitFactory, functionalDependencyAnalyzerVisitor);
+        this.havingManager = new HavingManager<BuilderType>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory, groupByExpressionGatheringVisitor);
+
+        this.selectManager = new SelectManager<QueryResultType>(queryGenerator, parameterManager, this.joinManager, this.aliasManager, subqueryInitFactory, expressionFactory, mainQuery.jpaProvider, mainQuery, groupByExpressionGatheringVisitor, builder.resultType);
+        this.orderByManager = new OrderByManager(queryGenerator, parameterManager, subqueryInitFactory, this.joinManager, this.aliasManager, embeddableSplittingVisitor, functionalDependencyAnalyzerVisitor, mainQuery.metamodel, mainQuery.jpaProvider, groupByExpressionGatheringVisitor);
+        this.keysetManager = new KeysetManager(this, queryGenerator, parameterManager, mainQuery.jpaProvider, mainQuery.dbmsDialect);
+
+        final SizeTransformationVisitor sizeTransformationVisitor = new SizeTransformationVisitor(mainQuery, subqueryInitFactory, joinManager, mainQuery.jpaProvider);
+        this.transformerGroups = Arrays.<ExpressionTransformerGroup<?>>asList(
+                new SimpleTransformerGroup(new OuterFunctionVisitor(joinManager)),
+                new SimpleTransformerGroup(new SubqueryRecursiveExpressionVisitor()),
+                new SizeTransformerGroup(sizeTransformationVisitor, orderByManager, selectManager, joinManager, groupByManager));
+        this.resultType = builder.resultType;
+
+        applyFrom(builder, true);
+    }
     
-    protected AbstractCommonQueryBuilder(MainQuery mainQuery, boolean isMainQuery, DbmsStatementType statementType, Class<QueryResultType> resultClazz, String alias, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, FinalSetReturn finalSetOperationBuilder, boolean implicitFromClause) {
+    protected AbstractCommonQueryBuilder(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, DbmsStatementType statementType, Class<QueryResultType> resultClazz, String alias, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, FinalSetReturn finalSetOperationBuilder, boolean implicitFromClause) {
         if (mainQuery == null) {
             throw new NullPointerException("mainQuery");
         }
@@ -228,19 +270,20 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         }
         
         this.mainQuery = mainQuery;
+        if (isMainQuery) {
+            mainQuery.cteManager.init(this);
+        }
+        this.queryContext = queryContext;
         this.isMainQuery = isMainQuery;
         this.statementType = statementType;
         this.cbf = mainQuery.cbf;
         this.parameterManager = mainQuery.parameterManager;
         this.em = mainQuery.em;
-        this.dbmsDialect = mainQuery.dbmsDialect;
-        this.jpaProvider = mainQuery.jpaProvider;
-        this.registeredFunctions = mainQuery.registeredFunctions;
 
         this.aliasManager = new AliasManager(aliasManager);
         this.expressionFactory = expressionFactory;
-        this.queryGenerator = new ResolvingQueryGenerator(this.aliasManager, parameterManager, mainQuery.parameterTransformerFactory, jpaProvider, registeredFunctions);
-        this.joinManager = new JoinManager(mainQuery, queryGenerator, this.aliasManager, parentJoinManager, expressionFactory);
+        this.queryGenerator = new ResolvingQueryGenerator(this.aliasManager, parameterManager, mainQuery.parameterTransformerFactory, mainQuery.jpaProvider, mainQuery.registeredFunctions);
+        this.joinManager = new JoinManager(mainQuery, this, queryGenerator, this.aliasManager, parentJoinManager, expressionFactory);
 
         if (implicitFromClause) {
             // set defaults
@@ -264,18 +307,18 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.subqueryInitFactory = joinManager.getSubqueryInitFactory();
         SplittingVisitor splittingVisitor = new SplittingVisitor(mainQuery.metamodel);
         this.embeddableSplittingVisitor = new EmbeddableSplittingVisitor(mainQuery.metamodel, splittingVisitor);
-        this.groupByExpressionGatheringVisitor = new GroupByExpressionGatheringVisitor(false, dbmsDialect);
+        this.groupByExpressionGatheringVisitor = new GroupByExpressionGatheringVisitor(false, mainQuery.dbmsDialect);
         this.functionalDependencyAnalyzerVisitor = new FunctionalDependencyAnalyzerVisitor(mainQuery.metamodel, splittingVisitor);
 
         this.whereManager = new WhereManager<BuilderType>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
         this.groupByManager = new GroupByManager(queryGenerator, parameterManager, subqueryInitFactory, functionalDependencyAnalyzerVisitor);
         this.havingManager = new HavingManager<BuilderType>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory, groupByExpressionGatheringVisitor);
 
-        this.selectManager = new SelectManager<QueryResultType>(queryGenerator, parameterManager, this.joinManager, this.aliasManager, subqueryInitFactory, expressionFactory, jpaProvider, mainQuery, groupByExpressionGatheringVisitor, resultClazz);
-        this.orderByManager = new OrderByManager(queryGenerator, parameterManager, subqueryInitFactory, this.joinManager, this.aliasManager, embeddableSplittingVisitor, functionalDependencyAnalyzerVisitor, mainQuery.metamodel, jpaProvider, groupByExpressionGatheringVisitor);
-        this.keysetManager = new KeysetManager(queryGenerator, parameterManager, jpaProvider, dbmsDialect);
+        this.selectManager = new SelectManager<QueryResultType>(queryGenerator, parameterManager, this.joinManager, this.aliasManager, subqueryInitFactory, expressionFactory, mainQuery.jpaProvider, mainQuery, groupByExpressionGatheringVisitor, resultClazz);
+        this.orderByManager = new OrderByManager(queryGenerator, parameterManager, subqueryInitFactory, this.joinManager, this.aliasManager, embeddableSplittingVisitor, functionalDependencyAnalyzerVisitor, mainQuery.metamodel, mainQuery.jpaProvider, groupByExpressionGatheringVisitor);
+        this.keysetManager = new KeysetManager(this, queryGenerator, parameterManager, mainQuery.jpaProvider, mainQuery.dbmsDialect);
 
-        final SizeTransformationVisitor sizeTransformationVisitor = new SizeTransformationVisitor(mainQuery, subqueryInitFactory, joinManager, jpaProvider);
+        final SizeTransformationVisitor sizeTransformationVisitor = new SizeTransformationVisitor(mainQuery, subqueryInitFactory, joinManager, mainQuery.jpaProvider);
         this.transformerGroups = Arrays.<ExpressionTransformerGroup<?>>asList(
                 new SimpleTransformerGroup(new OuterFunctionVisitor(joinManager)),
                 new SimpleTransformerGroup(new SubqueryRecursiveExpressionVisitor()),
@@ -285,18 +328,45 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.finalSetOperationBuilder = finalSetOperationBuilder;
     }
 
-    public AbstractCommonQueryBuilder(MainQuery mainQuery, boolean isMainQuery, DbmsStatementType statementType, Class<QueryResultType> resultClazz, String alias, FinalSetReturn finalSetOperationBuilder, boolean implicitFromClause) {
-        this(mainQuery, isMainQuery, statementType, resultClazz, alias, null, null, mainQuery.expressionFactory, finalSetOperationBuilder, implicitFromClause);
+    public AbstractCommonQueryBuilder(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, DbmsStatementType statementType, Class<QueryResultType> resultClazz, String alias, FinalSetReturn finalSetOperationBuilder, boolean implicitFromClause) {
+        this(mainQuery, queryContext, isMainQuery, statementType, resultClazz, alias, null, null, mainQuery.expressionFactory, finalSetOperationBuilder, implicitFromClause);
     }
 
-    public AbstractCommonQueryBuilder(MainQuery mainQuery, boolean isMainQuery, DbmsStatementType statementType, Class<QueryResultType> resultClazz, String alias, FinalSetReturn finalSetOperationBuilder) {
-        this(mainQuery, isMainQuery, statementType, resultClazz, alias, null, null, mainQuery.expressionFactory, finalSetOperationBuilder, true);
+    public AbstractCommonQueryBuilder(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, DbmsStatementType statementType, Class<QueryResultType> resultClazz, String alias, FinalSetReturn finalSetOperationBuilder) {
+        this(mainQuery, queryContext, isMainQuery, statementType, resultClazz, alias, null, null, mainQuery.expressionFactory, finalSetOperationBuilder, true);
     }
 
-    public AbstractCommonQueryBuilder(MainQuery mainQuery, boolean isMainQuery, DbmsStatementType statementType, Class<QueryResultType> resultClazz, String alias) {
-        this(mainQuery, isMainQuery, statementType, resultClazz, alias, null);
+    public AbstractCommonQueryBuilder(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, DbmsStatementType statementType, Class<QueryResultType> resultClazz, String alias) {
+        this(mainQuery, queryContext, isMainQuery, statementType, resultClazz, alias, null);
     }
-    
+
+    abstract AbstractCommonQueryBuilder<QueryResultType, BuilderType, SetReturn, SubquerySetReturn, FinalSetReturn> copy(QueryContext queryContext);
+
+    void applyFrom(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder, boolean fixedSelect) {
+        if (isMainQuery) {
+            parameterManager.copyFrom(builder.parameterManager);
+            mainQuery.cteManager.applyFrom(builder.mainQuery.cteManager);
+        }
+        aliasManager.applyFrom(builder.aliasManager);
+        Map<JoinNode, JoinNode> nodeMapping = joinManager.applyFrom(builder.joinManager);
+        whereManager.applyFrom(builder.whereManager);
+        havingManager.applyFrom(builder.havingManager);
+        groupByManager.applyFrom(builder.groupByManager);
+        orderByManager.applyFrom(builder.orderByManager);
+
+        setFirstResult(builder.firstResult);
+        setMaxResults(builder.maxResults);
+
+        // TODO: select aliases that are ordered by?
+
+        selectManager.setDefaultSelect(nodeMapping, builder.selectManager.getSelectInfos());
+        if (fixedSelect) {
+            selectManager.unserDefaultSelect();
+        }
+        // No need to copy the finalSetOperationBuilder as that is only necessary for further builders which isn't possible after copying
+        collectParameters();
+    }
+
     public CriteriaBuilderFactory getCriteriaBuilderFactory() {
         return cbf;
     }
@@ -314,7 +384,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         } else if (EntityManager.class.equals(serviceClass)) {
             return (T) em;
         } else if (DbmsDialect.class.equals(serviceClass)) {
-            return (T) dbmsDialect;
+            return (T) mainQuery.dbmsDialect;
         } else if (SubqueryExpressionFactory.class.equals(serviceClass)) {
             return (T) mainQuery.subqueryExpressionFactory;
         } else if (ExpressionFactory.class.equals(serviceClass)) {
@@ -370,7 +440,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     @SuppressWarnings("unchecked")
     public StartOngoingSetOperationCTECriteriaBuilder<BuilderType, LeafOngoingFinalSetOperationCTECriteriaBuilder<BuilderType>> withStartSet(Class<?> cteClass) {
-        if (!dbmsDialect.supportsWithClause()) {
+        if (!mainQuery.dbmsDialect.supportsWithClause()) {
             throw new UnsupportedOperationException("The database does not support the with clause!");
         }
 
@@ -380,7 +450,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     @SuppressWarnings("unchecked")
     public FullSelectCTECriteriaBuilder<BuilderType> with(Class<?> cteClass) {
-        if (!dbmsDialect.supportsWithClause()) {
+        if (!mainQuery.dbmsDialect.supportsWithClause()) {
             throw new UnsupportedOperationException("The database does not support the with clause!");
         }
 
@@ -388,9 +458,26 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return mainQuery.cteManager.with(cteClass, (BuilderType) this);
     }
 
+    public BuilderType withCtesFrom(CTEBuilder<?> cteBuilder) {
+        MainQuery mainQuery = ((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) cteBuilder).mainQuery;
+        if (this.mainQuery == mainQuery) {
+            throw new IllegalStateException("Can't copy the CTEs from itself back into itself!");
+        }
+        if (mainQuery.cteManager.hasCtes()) {
+            if (!mainQuery.dbmsDialect.supportsWithClause()) {
+                throw new UnsupportedOperationException("The database does not support the with clause!");
+            }
+
+            prepareForModification();
+            this.parameterManager.applyToCteFrom(mainQuery.parameterManager);
+            this.mainQuery.cteManager.applyFrom(mainQuery.cteManager);
+        }
+        return (BuilderType) this;
+    }
+
     @SuppressWarnings("unchecked")
     public SelectRecursiveCTECriteriaBuilder<BuilderType> withRecursive(Class<?> cteClass) {
-        if (!dbmsDialect.supportsWithClause()) {
+        if (!mainQuery.dbmsDialect.supportsWithClause()) {
             throw new UnsupportedOperationException("The database does not support the with clause!");
         }
 
@@ -400,10 +487,10 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     @SuppressWarnings("unchecked")
     public ReturningModificationCriteriaBuilderFactory<BuilderType> withReturning(Class<?> cteClass) {
-        if (!dbmsDialect.supportsWithClause()) {
+        if (!mainQuery.dbmsDialect.supportsWithClause()) {
             throw new UnsupportedOperationException("The database does not support the with clause!");
         }
-        if (!dbmsDialect.supportsModificationQueryInWithClause()) {
+        if (!mainQuery.dbmsDialect.supportsModificationQueryInWithClause()) {
             throw new UnsupportedOperationException("The database does not support modification queries in the with clause!");
         }
 
@@ -1485,7 +1572,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         // NOTE: If it turns out to be problematic, I can imagine introducing a synthetic SELECT item that is removed in the end for this purpose
         joinManager.reorderSimpleValuesClauses();
 
-        final JoinVisitor joinVisitor = new JoinVisitor(mainQuery, parentVisitor, joinManager, parameterManager, !jpaProvider.supportsSingleValuedAssociationIdExpressions());
+        final JoinVisitor joinVisitor = new JoinVisitor(mainQuery, parentVisitor, joinManager, parameterManager, !mainQuery.jpaProvider.supportsSingleValuedAssociationIdExpressions());
         final List<JoinNode> fetchableNodes = new ArrayList<>();
         final JoinNodeVisitor joinNodeVisitor = new OnClauseJoinNodeVisitor(joinVisitor) {
 
@@ -1558,6 +1645,30 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         joinVisitor.setJoinWithObjectLeafAllowed(true);
         // No need to implicit join again if no mutation occurs
         implicitJoinsApplied = true;
+    }
+
+    protected void collectParameters() {
+        ParameterRegistrationVisitor parameterRegistrationVisitor = parameterManager.getParameterRegistrationVisitor();
+        ClauseType oldClauseType = parameterRegistrationVisitor.getClauseType();
+        AbstractCommonQueryBuilder<?, ?, ?, ?, ?> oldQueryBuilder = parameterRegistrationVisitor.getQueryBuilder();
+        try {
+            parameterRegistrationVisitor.setQueryBuilder(this);
+            parameterRegistrationVisitor.setClauseType(ClauseType.SELECT);
+            selectManager.acceptVisitor(parameterRegistrationVisitor);
+            parameterRegistrationVisitor.setClauseType(ClauseType.JOIN);
+            joinManager.acceptVisitor(new OnClauseJoinNodeVisitor(parameterRegistrationVisitor));
+            parameterRegistrationVisitor.setClauseType(ClauseType.WHERE);
+            whereManager.acceptVisitor(parameterRegistrationVisitor);
+            parameterRegistrationVisitor.setClauseType(ClauseType.GROUP_BY);
+            groupByManager.acceptVisitor(parameterRegistrationVisitor);
+            parameterRegistrationVisitor.setClauseType(ClauseType.HAVING);
+            havingManager.acceptVisitor(parameterRegistrationVisitor);
+            parameterRegistrationVisitor.setClauseType(ClauseType.ORDER_BY);
+            orderByManager.acceptVisitor(parameterRegistrationVisitor);
+        } finally {
+            parameterRegistrationVisitor.setClauseType(oldClauseType);
+            parameterRegistrationVisitor.setQueryBuilder(oldQueryBuilder);
+        }
     }
 
     protected void applyVisitor(VisitorAdapter expressionVisitor) {
@@ -1950,7 +2061,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     protected List<CTENode> getCteNodes(boolean isSubquery) {
         List<CTENode> cteNodes = new ArrayList<CTENode>();
         // NOTE: Delete statements could cause CTEs to be generated for the cascading deletes
-        if (!isMainQuery || isSubquery || !dbmsDialect.supportsWithClause() || !mainQuery.cteManager.hasCtes() && statementType != DbmsStatementType.DELETE || statementType != DbmsStatementType.SELECT && !mainQuery.dbmsDialect.supportsWithClauseInModificationQuery()) {
+        if (!isMainQuery || isSubquery || !mainQuery.dbmsDialect.supportsWithClause() || !mainQuery.cteManager.hasCtes() && statementType != DbmsStatementType.DELETE || statementType != DbmsStatementType.SELECT && !mainQuery.dbmsDialect.supportsWithClauseInModificationQuery()) {
             return cteNodes;
         }
 
@@ -1975,7 +2086,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 modificationStates = cteInfo.nonRecursiveCriteriaBuilder.getModificationStates(explicitVersionEntities);
                 recursiveQuery = cteInfo.recursiveCriteriaBuilder.getQuery(modificationStates);
 
-                if (!dbmsDialect.supportsJoinsInRecursiveCte() && cteInfo.recursiveCriteriaBuilder.joinManager.hasNonEmulatableJoins()) {
+                if (!mainQuery.dbmsDialect.supportsJoinsInRecursiveCte() && cteInfo.recursiveCriteriaBuilder.joinManager.hasNonEmulatableJoins()) {
                     throw new IllegalStateException("The dbms dialect does not support joins in the recursive part of a CTE!");
                 }
 
@@ -1991,7 +2102,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             String head;
             String[] aliases;
 
-            if (dbmsDialect.supportsWithClauseHead()) {
+            if (mainQuery.dbmsDialect.supportsWithClauseHead()) {
                 sb.setLength(0);
                 sb.append(cteName);
                 sb.append('(');
@@ -2025,7 +2136,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             }
 
             String nonRecursiveWithClauseSuffix = null;
-            if (!cteInfo.recursive && !dbmsDialect.supportsNonRecursiveWithClause()) {
+            if (!cteInfo.recursive && !mainQuery.dbmsDialect.supportsNonRecursiveWithClause()) {
                 sb.setLength(0);
                 sb.append("\nUNION ALL\n");
                 sb.append("SELECT ");
@@ -2076,7 +2187,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             query.setMaxResults(maxResults);
         }
         if (isCacheable()) {
-            jpaProvider.setCacheable(query);
+            mainQuery.jpaProvider.setCacheable(query);
         }
 
         return applyObjectBuilder(query);

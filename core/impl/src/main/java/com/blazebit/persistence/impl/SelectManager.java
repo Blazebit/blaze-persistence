@@ -321,7 +321,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         clearDefaultSelects();
 
         subqueryBuilderListener = new SelectSubqueryBuilderListener<X>(selectAlias);
-        SubqueryInitiator<X> initiator = subqueryInitFactory.createSubqueryInitiator(builder, (SubqueryBuilderListener<X>) subqueryBuilderListener, false);
+        SubqueryInitiator<X> initiator = subqueryInitFactory.createSubqueryInitiator(builder, (SubqueryBuilderListener<X>) subqueryBuilderListener, false, ClauseType.SELECT);
         subqueryBuilderListener.onInitiatorStarted(initiator);
         return initiator;
     }
@@ -332,7 +332,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         clearDefaultSelects();
 
         subqueryBuilderListener = new SuperExpressionSelectSubqueryBuilderListener<X>(subqueryAlias, expression, selectAlias);
-        SubqueryInitiator<X> initiator = subqueryInitFactory.createSubqueryInitiator(builder, (SubqueryBuilderListener<X>) subqueryBuilderListener, false);
+        SubqueryInitiator<X> initiator = subqueryInitFactory.createSubqueryInitiator(builder, (SubqueryBuilderListener<X>) subqueryBuilderListener, false, ClauseType.SELECT);
         subqueryBuilderListener.onInitiatorStarted(initiator);
         return initiator;
     }
@@ -348,7 +348,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
                 select(builder.getExpression(), selectAlias);
             }
             
-        }, subqueryInitFactory);
+        }, subqueryInitFactory, ClauseType.SELECT);
         return initiator;
     }
 
@@ -358,7 +358,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         clearDefaultSelects();
 
         subqueryBuilderListener = new SelectSubqueryBuilderListener<X>(selectAlias);
-        SubqueryBuilderImpl<X> subqueryBuilder = subqueryInitFactory.createSubqueryBuilder(builder, (SubqueryBuilderListener<X>) subqueryBuilderListener, false, criteriaBuilder);
+        SubqueryBuilderImpl<X> subqueryBuilder = subqueryInitFactory.createSubqueryBuilder(builder, (SubqueryBuilderListener<X>) subqueryBuilderListener, false, criteriaBuilder, ClauseType.SELECT);
         subqueryBuilderListener.onBuilderStarted((SubqueryInternalBuilder) subqueryBuilder);
         return subqueryBuilder;
     }
@@ -369,7 +369,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         clearDefaultSelects();
 
         subqueryBuilderListener = new SuperExpressionSelectSubqueryBuilderListener<X>(subqueryAlias, expression, selectAlias);
-        SubqueryBuilderImpl<X> subqueryBuilder = subqueryInitFactory.createSubqueryBuilder(builder, (SubqueryBuilderListener<X>) subqueryBuilderListener, false, criteriaBuilder);
+        SubqueryBuilderImpl<X> subqueryBuilder = subqueryInitFactory.createSubqueryBuilder(builder, (SubqueryBuilderListener<X>) subqueryBuilderListener, false, criteriaBuilder, ClauseType.SELECT);
         subqueryBuilderListener.onBuilderStarted((SubqueryInternalBuilder) subqueryBuilder);
         return subqueryBuilder;
     }
@@ -476,7 +476,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         for (int i = 0; i < selectInfos.size(); i++) {
             SelectInfo selectInfo = selectInfos.get(i);
             String selectAlias = selectInfo.getAlias();
-            Expression expr = subqueryInitFactory.reattachSubqueries(selectInfo.getExpression().clone(false));
+            Expression expr = subqueryInitFactory.reattachSubqueries(selectInfo.getExpression().clone(false), ClauseType.SELECT);
             if (nodeMapping != null) {
                 selectInfo.getExpression().accept(visitor);
             }
@@ -497,6 +497,10 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
 
     boolean isDistinct() {
         return this.distinct;
+    }
+
+    void unserDefaultSelect() {
+        hasDefaultSelect = false;
     }
 
     private void clearDefaultSelects() {

@@ -35,12 +35,13 @@ public class PrefixingQueryGenerator extends SimpleQueryGenerator {
     private final String prefix;
     private final String aliasToSkip;
     private final String aliasToReplaceWithSkipAlias;
+    private final String secondAliasToSkip;
 
     public PrefixingQueryGenerator(List<String> prefixParts) {
-        this(prefixParts, null, null);
+        this(prefixParts, null, null, null);
     }
 
-    public PrefixingQueryGenerator(List<String> prefixParts, String aliasToSkip, String aliasToReplaceWithSkipAlias) {
+    public PrefixingQueryGenerator(List<String> prefixParts, String aliasToSkip, String aliasToReplaceWithSkipAlias, String secondAliasToSkip) {
         StringBuilder prefixSb = new StringBuilder();
         
         if (prefixParts != null && !prefixParts.isEmpty()) {
@@ -54,6 +55,7 @@ public class PrefixingQueryGenerator extends SimpleQueryGenerator {
         this.prefix = prefixSb.toString();
         this.aliasToSkip = aliasToSkip;
         this.aliasToReplaceWithSkipAlias = Objects.equals(aliasToSkip, aliasToReplaceWithSkipAlias) ? null : aliasToReplaceWithSkipAlias;
+        this.secondAliasToSkip = secondAliasToSkip;
     }
 
     @Override
@@ -64,7 +66,12 @@ public class PrefixingQueryGenerator extends SimpleQueryGenerator {
         } else {
             final PathElementExpression firstElement = expressions.get(0);
             final int size = expressions.size();
-            // This is something special to support the embedding_view macro in subviews that where the parent view is correlated
+            // The second alias is skipped unconditionally
+            if (size == 1 && secondAliasToSkip != null && firstElement instanceof PropertyExpression && secondAliasToSkip.equals(((PropertyExpression) firstElement).getProperty())) {
+                super.visit(expression);
+                return;
+            }
+            // This is something special to support the embedding_view macro in subviews where the parent view is correlated
             // Since the correlated alias will not be a prefix of the subview mapping prefix, we have to replace that properly
             if (aliasToReplaceWithSkipAlias != null && firstElement instanceof PropertyExpression && aliasToReplaceWithSkipAlias.equals(((PropertyExpression) firstElement).getProperty())) {
                 sb.append(aliasToSkip);

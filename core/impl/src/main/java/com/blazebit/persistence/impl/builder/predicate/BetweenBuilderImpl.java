@@ -76,7 +76,7 @@ public class BetweenBuilderImpl<T> extends SubqueryBuilderListenerImpl<T> implem
         if (end == null) {
             throw new NullPointerException("end");
         }
-        return chain(new BetweenPredicate(left, start, parameterManager.addParameterExpression(end, clauseType), negated));
+        return chain(new BetweenPredicate(left, start, parameterManager.addParameterExpression(end, clauseType, subqueryInitFactory.getQueryBuilder()), negated));
     }
 
     @Override
@@ -87,7 +87,7 @@ public class BetweenBuilderImpl<T> extends SubqueryBuilderListenerImpl<T> implem
     @Override
     public SubqueryInitiator<T> andSubqery() {
         verifySubqueryBuilderEnded();
-        return startSubqueryInitiator(subqueryInitFactory.createSubqueryInitiator(result, this, false));
+        return startSubqueryInitiator(subqueryInitFactory.createSubqueryInitiator(result, this, false, clauseType));
     }
 
     @Override
@@ -103,13 +103,13 @@ public class BetweenBuilderImpl<T> extends SubqueryBuilderListenerImpl<T> implem
             }
 
         };
-        return startSubqueryInitiator(subqueryInitFactory.createSubqueryInitiator(result, superExpressionSubqueryListener, false));
+        return startSubqueryInitiator(subqueryInitFactory.createSubqueryInitiator(result, superExpressionSubqueryListener, false, clauseType));
     }
 
     @Override
     public SubqueryBuilder<T> andSubqery(FullQueryBuilder<?, ?> criteriaBuilder) {
         verifySubqueryBuilderEnded();
-        return startSubqueryBuilder(subqueryInitFactory.createSubqueryBuilder(result, this, false, criteriaBuilder));
+        return startSubqueryBuilder(subqueryInitFactory.createSubqueryBuilder(result, this, false, criteriaBuilder, clauseType));
     }
 
     @Override
@@ -125,7 +125,7 @@ public class BetweenBuilderImpl<T> extends SubqueryBuilderListenerImpl<T> implem
             }
 
         };
-        return startSubqueryBuilder(subqueryInitFactory.createSubqueryBuilder(result, superExpressionSubqueryListener, false, criteriaBuilder));
+        return startSubqueryBuilder(subqueryInitFactory.createSubqueryBuilder(result, superExpressionSubqueryListener, false, criteriaBuilder, clauseType));
     }
 
     @Override
@@ -143,7 +143,7 @@ public class BetweenBuilderImpl<T> extends SubqueryBuilderListenerImpl<T> implem
                 listener.onBuilderEnded(BetweenBuilderImpl.this);
             }
             
-        }, subqueryInitFactory);
+        }, subqueryInitFactory, clauseType);
         return initiator;
     }
 

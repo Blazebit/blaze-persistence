@@ -41,8 +41,9 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     private final X result;
     private final SubqueryBuilderListener<X> listener;
     private final boolean inExists;
+    private final QueryContext queryContext;
 
-    public SubqueryInitiatorImpl(MainQuery mainQuery, AliasManager aliasManager, JoinManager parentJoinManager, X result, SubqueryBuilderListener<X> listener, boolean inExists) {
+    public SubqueryInitiatorImpl(MainQuery mainQuery, QueryContext queryContext, AliasManager aliasManager, JoinManager parentJoinManager, X result, SubqueryBuilderListener<X> listener, boolean inExists) {
         this.mainQuery = mainQuery;
         this.aliasManager = aliasManager;
         this.parentJoinManager = parentJoinManager;
@@ -50,6 +51,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
         this.result = result;
         this.listener = listener;
         this.inExists = inExists;
+        this.queryContext = queryContext;
     }
 
     @Override
@@ -59,7 +61,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
 
     @Override
     public SubqueryBuilder<X> from(Class<?> clazz, String alias) {
-        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
         if (inExists) {
             subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createArithmeticExpression("1"))));
         }
@@ -75,7 +77,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
 
     @Override
     public SubqueryBuilder<X> from(String correlationPath, String alias) {
-        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
         if (inExists) {
             subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createArithmeticExpression("1"))));
         }
@@ -86,13 +88,13 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
 
     @Override
     public StartOngoingSetOperationSubqueryBuilder<X, LeafOngoingFinalSetOperationSubqueryBuilder<X>> startSet() {
-        FinalSetOperationSubqueryBuilderImpl<X> parentFinalSetOperationBuilder = new FinalSetOperationSubqueryBuilderImpl<X>(mainQuery, result, null, false, listener, null);
-        OngoingFinalSetOperationSubqueryBuilderImpl<X> subFinalSetOperationBuilder = new OngoingFinalSetOperationSubqueryBuilderImpl<X>(mainQuery, null, null, true, parentFinalSetOperationBuilder.getSubListener(), null);
+        FinalSetOperationSubqueryBuilderImpl<X> parentFinalSetOperationBuilder = new FinalSetOperationSubqueryBuilderImpl<X>(mainQuery, queryContext, result, null, false, listener, null);
+        OngoingFinalSetOperationSubqueryBuilderImpl<X> subFinalSetOperationBuilder = new OngoingFinalSetOperationSubqueryBuilderImpl<X>(mainQuery, queryContext, null, null, true, parentFinalSetOperationBuilder.getSubListener(), null);
         listener.onBuilderStarted(parentFinalSetOperationBuilder);
         
-        LeafOngoingSetOperationSubqueryBuilderImpl<X> leafCb = new LeafOngoingSetOperationSubqueryBuilderImpl<X>(mainQuery, aliasManager, parentJoinManager, expressionFactory, result, parentFinalSetOperationBuilder.getSubListener(), parentFinalSetOperationBuilder);
+        LeafOngoingSetOperationSubqueryBuilderImpl<X> leafCb = new LeafOngoingSetOperationSubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, expressionFactory, result, parentFinalSetOperationBuilder.getSubListener(), parentFinalSetOperationBuilder);
         StartOngoingSetOperationSubqueryBuilderImpl<X, LeafOngoingFinalSetOperationSubqueryBuilder<X>> cb = new StartOngoingSetOperationSubqueryBuilderImpl<X, LeafOngoingFinalSetOperationSubqueryBuilder<X>>(
-                mainQuery, aliasManager, parentJoinManager, expressionFactory, result, subFinalSetOperationBuilder.getSubListener(), subFinalSetOperationBuilder, leafCb
+                mainQuery, queryContext, aliasManager, parentJoinManager, expressionFactory, result, subFinalSetOperationBuilder.getSubListener(), subFinalSetOperationBuilder, leafCb
         );
         
         subFinalSetOperationBuilder.setOperationManager.setStartQueryBuilder(cb);
@@ -110,7 +112,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
 
     @Override
     public SubqueryBuilder<X> fromOld(Class<?> entityClass, String alias) {
-        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
         if (inExists) {
             subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createArithmeticExpression("1"))));
         }
@@ -126,7 +128,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
 
     @Override
     public SubqueryBuilder<X> fromNew(Class<?> entityClass, String alias) {
-        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
         if (inExists) {
             subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createArithmeticExpression("1"))));
         }
@@ -137,7 +139,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
 
     @Override
     public SubqueryBuilder<X> fromValues(Class<?> valueClass, String alias, int valueCount) {
-        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
         if (inExists) {
             subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createArithmeticExpression("1"))));
         }
@@ -148,7 +150,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
 
     @Override
     public SubqueryBuilder<X> fromIdentifiableValues(Class<?> valueClass, String alias, int valueCount) {
-        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
         if (inExists) {
             subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createArithmeticExpression("1"))));
         }
