@@ -188,7 +188,13 @@
             </dependency>
             <dependency>
                 <groupId>com.blazebit</groupId>
-                <artifactId>blaze-persistence-integration-spring-data-2.x</artifactId>
+                <artifactId>blaze-persistence-integration-spring-data-2.0</artifactId>
+                <version>${project.version}</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-spring-data-2.1</artifactId>
                 <version>${project.version}</version>
                 <scope>compile</scope>
             </dependency>

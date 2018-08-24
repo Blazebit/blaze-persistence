@@ -26,6 +26,7 @@ Not yet released
 * Support keyset pagination with non-basic attribute types like e.g. enums
 * Fetch just a singular id if possible when using an object type as correlation basis
 * Omit joins that are only used in the select clause when removing the default select after query copying
+* Add support for Spring Data 2.1 with a new integration module
 
 ### Bug fixes
 
@@ -54,6 +55,7 @@ Not yet released
 * `BlazeCriteriaUpdate` does not implement `Executable` anymore. Use `BlazeCriteriaUpdate.createCriteriaBuilder(EntityManager)` which returns a `Executable`
 * DeltaSpike Data `KeysetPageRequest(KeysetPageable, Sort, int, int)` constructor was changed to match the order as defined in the `PageRequest`
 * Spring Data `KeysetPageRequest(KeysetPageable, Sort, int, int)` constructor was changed to match the order as defined in the `PageRequest`
+* Spring Data 2.0 integration maven artifact name is now `blaze-persistence-integration-spring-data-2.0` instead of `blaze-persistence-integration-spring-data-2.x`
 
 ## 1.3.0-Alpha2
 

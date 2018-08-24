@@ -26,8 +26,6 @@ import com.blazebit.persistence.criteria.BlazeCriteria;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.spring.data.base.query.KeysetAwarePageImpl;
-import com.blazebit.persistence.spring.data.repository.EntityViewRepository;
-import com.blazebit.persistence.spring.data.repository.EntityViewSpecificationExecutor;
 import com.blazebit.persistence.spring.data.repository.KeysetPageable;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
@@ -72,7 +70,7 @@ import static org.springframework.data.jpa.repository.query.QueryUtils.getQueryS
  * @author Christian Beikov
  * @since 1.2.0
  */
-public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Serializable> implements EntityViewRepository<V, ID>, EntityViewSpecificationExecutor<V, E> {
+public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Serializable> {
 
     private static final String ID_MUST_NOT_BE_NULL = "The given id must not be null!";
     private static final String DELETE_ALL_QUERY_STRING = "delete from %s x";
@@ -242,16 +240,8 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
         entityManager.createQuery(getQueryString(DELETE_ALL_QUERY_STRING, entityInformation.getEntityName())).executeUpdate();
     }
 
-    public V getOne(ID id) {
-        return findOne(id);
-    }
-
-    public <S extends E> S findOne(Example<S> example) {
-        try {
-            return getQuery(new ExampleSpecification<>(example), example.getProbeType(), (Sort) null).getSingleResult();
-        } catch (NoResultException e) {
-            return null;
-        }
+    public E getOne(ID id) {
+        return (E) findOne(id);
     }
 
     public <S extends E> long count(Example<S> example) {
@@ -279,23 +269,23 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
         return pageable == null ? new KeysetAwarePageImpl<>(query.getResultList()) : new KeysetAwarePageImpl<>((PagedList<S>) query.getResultList(), pageable);
     }
 
-    public List<V> findAll(Sort sort) {
+    public List<E> findAll(Sort sort) {
         return getQuery(null, sort).getResultList();
     }
 
-    public Page<V> findAll(Pageable pageable) {
+    public Page<E> findAll(Pageable pageable) {
         if (null == pageable) {
-            return new PageImpl<>(findAll());
+            return (Page<E>) new PageImpl<>(findAll());
         }
 
-        return findAll((Specification<E>) null, pageable);
+        return (Page<E>) findAll((Specification<E>) null, pageable);
     }
 
     /**
      * @author Christian Beikov
      * @since 1.2.0
      */
-    private static class ExampleSpecification<T> implements Specification<T> {
+    protected static class ExampleSpecification<T> implements Specification<T> {
 
         private final Example<T> example;
 
@@ -310,11 +300,6 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
         }
     }
 
-    public V findById(ID id) {
-        return findOne(id);
-    }
-
-    @Override
     public V findOne(ID id) {
         Assert.notNull(id, ID_MUST_NOT_BE_NULL);
 
@@ -341,7 +326,6 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
         }
     }
 
-    @Override
     public long count() {
         TypedQuery<Long> countQuery = getCountQuery(null, getDomainClass());
         return countQuery.getSingleResult();
@@ -351,7 +335,6 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
         return exists(id);
     }
 
-    @Override
     public boolean exists(ID id) {
         Assert.notNull(id, ID_MUST_NOT_BE_NULL);
 
@@ -372,7 +355,6 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
         }
     }
 
-    @Override
     public List<V> findAll() {
         return getQuery(null, getDomainClass(), null, null, false).getResultList();
     }
@@ -381,7 +363,6 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
         return findAll(idIterable);
     }
 
-    @Override
     public List<V> findAll(Iterable<ID> idIterable) {
         Assert.notNull(idIterable, ID_MUST_NOT_BE_NULL);
 
@@ -416,21 +397,10 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
                 .getName();
     }
 
-    @Override
-    public V findOne(Specification<E> spec) {
-        try {
-            return getQuery(spec, (Sort) null).getSingleResult();
-        } catch (NoResultException e) {
-            return null;
-        }
-    }
-
-    @Override
     public List<V> findAll(Specification<E> spec) {
-        return getQuery(spec, (Sort) null).getResultList();
+        return (List<V>) getQuery(spec, (Sort) null).getResultList();
     }
 
-    @Override
     public Page<V> findAll(Specification<E> spec, Pageable pageable) {
         TypedQuery<V> query = getQuery(spec, pageable);
         if (pageable == null) {
@@ -446,12 +416,10 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
         return new KeysetAwarePageImpl<>(resultList, pageable);
     }
 
-    @Override
     public List<V> findAll(Specification<E> spec, Sort sort) {
-        return getQuery(spec, sort).getResultList();
+        return (List<V>) getQuery(spec, sort).getResultList();
     }
 
-    @Override
     public long count(Specification<E> spec) {
         return executeCountQuery(getCountQuery(spec, getDomainClass()));
     }
@@ -466,8 +434,8 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
         return (TypedQuery<S>) this.getQuery(spec, domainClass, pageable, sort, false);
     }
 
-    protected TypedQuery<V> getQuery(Specification<E> spec, Sort sort) {
-        return this.getQuery(spec, getDomainClass(), null, sort, false);
+    protected TypedQuery<E> getQuery(Specification<E> spec, Sort sort) {
+        return (TypedQuery<E>) this.getQuery(spec, getDomainClass(), null, sort, false);
     }
 
     protected <S extends E> TypedQuery<S> getQuery(Specification<S> spec, Class<S> domainClass, Sort sort) {

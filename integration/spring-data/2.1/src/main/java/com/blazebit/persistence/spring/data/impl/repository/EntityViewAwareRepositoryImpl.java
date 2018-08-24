@@ -19,53 +19,62 @@ package com.blazebit.persistence.spring.data.impl.repository;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.spring.data.base.repository.AbstractEntityViewAwareRepository;
 import com.blazebit.persistence.spring.data.repository.EntityViewRepository;
-import com.blazebit.persistence.spring.data.repository.EntityViewSpecificationExecutor;
 import com.blazebit.persistence.view.EntityViewManager;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.support.CrudMethodMetadata;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
+import org.springframework.data.jpa.repository.support.JpaRepositoryImplementation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import java.io.Serializable;
+import java.util.Optional;
 
 /**
  * @author Christian Beikov
  * @since 1.3.0
  */
 @Transactional(readOnly = true)
-public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> extends AbstractEntityViewAwareRepository<V, E, ID> implements EntityViewRepository<V, ID>, EntityViewSpecificationExecutor<V, E> {
+public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> extends AbstractEntityViewAwareRepository<E, E, ID> implements JpaRepositoryImplementation<E, ID>, EntityViewRepository<E, ID>/*, EntityViewSpecificationExecutor<V, E>*/ { // Can't implement that interface because of clashing methods
 
     public EntityViewAwareRepositoryImpl(JpaEntityInformation<E, ?> entityInformation, EntityManager entityManager, CriteriaBuilderFactory cbf, EntityViewManager evm, Class<V> entityViewClass) {
-        super(entityInformation, entityManager, cbf, evm, entityViewClass);
+        super(entityInformation, entityManager, cbf, evm, (Class<E>) entityViewClass);
     }
 
-    public <S extends E> S findOne(Example<S> example) {
+    @Override
+    public <S extends E> Optional<S> findOne(Example<S> example) {
         try {
-            return getQuery(new ExampleSpecification<>(example), example.getProbeType(), (Sort) null).getSingleResult();
+            return Optional.of(getQuery(new ExampleSpecification<>(example), example.getProbeType(), (Sort) null).getSingleResult());
         } catch (NoResultException e) {
-            return null;
+            return Optional.empty();
         }
     }
 
     @Override
-    public V findOne(Specification<E> spec) {
+    public Optional<E> findOne(Specification<E> spec) {
         try {
-            return (V) getQuery(spec, (Sort) null).getSingleResult();
+            return Optional.of((E) getQuery(spec, (Sort) null).getSingleResult());
         } catch (NoResultException e) {
-            return null;
+            return Optional.empty();
         }
     }
 
-    public E findById(ID id) {
-        return (E) findOne(id);
+    @Override
+    public Optional<E> findById(ID id) {
+        return Optional.of((E) findOne(id));
+    }
+
+    @Override
+    public void setRepositoryMethodMetadata(CrudMethodMetadata crudMethodMetadata) {
+        // Ignore the Spring data version of the CrudMethodMetadata
     }
 
     @Override
     protected int getOffset(Pageable pageable) {
-        return pageable.getOffset();
+        return (int) pageable.getOffset();
     }
 }

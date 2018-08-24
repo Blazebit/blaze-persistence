@@ -196,7 +196,7 @@
                 <dependency>
                     <groupId>org.springframework.data</groupId>
                     <artifactId>spring-data-jpa</artifactId>
-                    <version>1.11.10.RELEASE</version>
+                    <version>${version.spring-data-1.x}</version>
                 </dependency>
                 <dependency>
                     <groupId>org.aspectj</groupId>
@@ -219,7 +219,7 @@
                 <dependency>
                     <groupId>org.springframework.data</groupId>
                     <artifactId>spring-data-jpa</artifactId>
-                    <version>2.0.4.RELEASE</version>
+                    <version>${version.spring-data-2.0}</version>
                 </dependency>
                 <dependency>
                     <groupId>org.aspectj</groupId>
@@ -228,7 +228,40 @@
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.x</artifactId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.0</artifactId>
+                </dependency>
+            </dependencies>
+            <repositories>
+                <repository>
+                    <id>spring-milestones</id>
+                    <name>Spring Milestones</name>
+                    <url>https://repo.spring.io/libs-milestone</url>
+                    <snapshots>
+                        <enabled>false</enabled>
+                    </snapshots>
+                </repository>
+            </repositories>
+        </profile>
+        <profile>
+            <id>spring-data-2.1.x</id>
+            <properties>
+                <version.spring>5.0.4.RELEASE</version.spring>
+                <version.spring.boot>2.0.0.RELEASE</version.spring.boot>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.springframework.data</groupId>
+                    <artifactId>spring-data-jpa</artifactId>
+                    <version>${version.spring-data-2.1}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.aspectj</groupId>
+                    <artifactId>aspectjweaver</artifactId>
+                    <version>1.9.0.RC4</version>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.1</artifactId>
                 </dependency>
             </dependencies>
             <repositories>

@@ -100,7 +100,7 @@ Older releases can be found on https://github.com/Blazebit/blaze-persistence/rel
 <!-- Spring Data 2.x integration module -->
 <dependency>
     <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-spring-data-2.x</artifactId>
+    <artifactId>blaze-persistence-integration-spring-data-2.0</artifactId>
     <version>${blaze-persistence.version}</version>
 </dependency>
 

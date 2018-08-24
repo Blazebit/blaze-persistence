@@ -8,8 +8,8 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <name>Blazebit Persistence Integration Spring-Data 2.x</name>
-    <artifactId>blaze-persistence-integration-spring-data-2.x</artifactId>
+    <name>Blazebit Persistence Integration Spring-Data 2.0</name>
+    <artifactId>blaze-persistence-integration-spring-data-2.0</artifactId>
 
     <properties>
         <module.name>com.blazebit.persistence.integration.spring.data.impl</module.name>
@@ -36,7 +36,7 @@
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-jpa</artifactId>
-            <version>${version.spring-data-2.x}</version>
+            <version>${version.spring-data-2.0}</version>
             <scope>provided</scope>
         </dependency>
 

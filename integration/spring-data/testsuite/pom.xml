@@ -15,6 +15,8 @@
         <module.name>com.blazebit.persistence.integration.spring.data.testsuite</module.name>
         <spring.activeProfiles />
         <test.argLine />
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>1.8</maven.compiler.source>
     </properties>
 
     <dependencyManagement>
@@ -1868,12 +1870,37 @@
                 <dependency>
                     <groupId>org.springframework.data</groupId>
                     <artifactId>spring-data-jpa</artifactId>
-                    <version>${version.spring-data-2.x}</version>
+                    <version>${version.spring-data-2.0}</version>
                     <scope>provided</scope>
                 </dependency>
                 <dependency>
                     <groupId>com.blazebit</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.x</artifactId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.0</artifactId>
+                    <scope>compile</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>spring-data-2.1.x</id>
+            <properties>
+                <version.spring>5.0.4.RELEASE</version.spring>
+            </properties>
+            <repositories>
+                <repository>
+                    <id>spring-libs-milestone</id>
+                    <url>https://repo.spring.io/libs-milestone</url>
+                </repository>
+            </repositories>
+            <dependencies>
+                <dependency>
+                    <groupId>org.springframework.data</groupId>
+                    <artifactId>spring-data-jpa</artifactId>
+                    <version>${version.spring-data-2.1}</version>
+                    <scope>provided</scope>
+                </dependency>
+                <dependency>
+                    <groupId>com.blazebit</groupId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.1</artifactId>
                     <scope>compile</scope>
                 </dependency>
             </dependencies>
