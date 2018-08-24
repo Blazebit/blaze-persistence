@@ -35,6 +35,15 @@ public interface CTEBuilder<T extends CTEBuilder<T>> {
     public FullSelectCTECriteriaBuilder<T> with(Class<?> cteClass);
 
     /**
+     * Copies the CTEs from the given CTE builder into this CTE builder.
+     *
+     * @param cteBuilder The CTE builder from which to copy CTEs
+     * @return This for method chaining
+     * @since 1.3.0
+     */
+    public T withCtesFrom(CTEBuilder<?> cteBuilder);
+
+    /**
      * Creates a builder for a CTE with a nested set operation builder.
      * Doing this is like starting a nested query that will be connected via a set operation.
      *

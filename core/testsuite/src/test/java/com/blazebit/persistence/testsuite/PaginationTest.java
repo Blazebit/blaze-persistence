@@ -179,6 +179,26 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
+    public void testSelectIndexedWithParameterForceIdQuery() {
+        String expectedCountQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d JOIN d.owner owner_1 WHERE owner_1.name = :param_0";
+        String expectedIdQuery = "SELECT d.id FROM Document d JOIN d.owner owner_1 WHERE owner_1.name = :param_0 GROUP BY " + groupBy("d.id", "d.id") + " ORDER BY d.id ASC";
+        String expectedObjectQuery = "SELECT " + joinAliasValue("contacts_contactNr_1", "name") + " FROM Document d " +
+                "LEFT JOIN d.contacts contacts_contactNr_1"
+                + onClause("KEY(contacts_contactNr_1) = :contactNr")
+                + " WHERE d.id IN :ids ORDER BY d.id ASC";
+        PaginatedCriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d")
+                .where("owner.name").eq("Karl1")
+                .select("contacts[:contactNr].name")
+                .orderByAsc("id")
+                .page(0, 1)
+                .withForceIdQuery(true);
+        assertEquals(expectedCountQuery, cb.getPageCountQueryString());
+        assertEquals(expectedIdQuery, cb.getPageIdQueryString());
+        assertEquals(expectedObjectQuery, cb.getQueryString());
+        cb.setParameter("contactNr", 1).getResultList();
+    }
+
+    @Test
     public void testSelectEmptyResultList() {
         PaginatedCriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d")
                 .where("name").isNull()

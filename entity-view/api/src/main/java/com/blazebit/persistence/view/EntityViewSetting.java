@@ -306,6 +306,20 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> {
     }
 
     /**
+     * Adds the given attribute sorter to the attribute sorters of this setting.
+     * Note that the attribute sorter order is retained.
+     *
+     * @param attributeName The name of the attribute sorter
+     * @param sorter        The sorter for the attribute sorter
+     * @return <code>this</code> for method chaining
+     * @since 1.3.0
+     */
+    public EntityViewSetting<T, Q> withAttributeSorter(String attributeName, Sorter sorter) {
+        addAttributeSorter(attributeName, sorter);
+        return this;
+    }
+
+    /**
      * Returns true if sorters have been added, otherwise false.
      *
      * @return true if sorters have been added, otherwise false
@@ -348,6 +362,20 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> {
     }
 
     /**
+     * Adds the attribute's default attribute filter to the attribute filters of this setting
+     * or overwrites the filter value of an existing default attribute filter.
+     *
+     * @param attributeName The name of the attribute filter
+     * @param filterValue   The filter value for the attribute filter
+     * @return <code>this</code> for method chaining
+     * @since 1.3.0
+     */
+    public EntityViewSetting<T, Q> withAttributeFilter(String attributeName, Object filterValue) {
+        addAttributeFilter(attributeName, filterValue);
+        return this;
+    }
+
+    /**
      * Adds the attribute's attribute filter with the given name to the attribute filters of this setting
      * or overwrites the filter value of an existing attribute filter with the same attribute name and filter name.
      *
@@ -358,6 +386,21 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> {
     public void addAttributeFilter(String attributeName, String filterName, Object filterValue) {
         checkExistingFiltersForAttribute(attributeName, filterName);
         this.attributeFilters.put(attributeName, new AttributeFilterActivation(filterName, filterValue));
+    }
+
+    /**
+     * Adds the attribute's attribute filter with the given name to the attribute filters of this setting
+     * or overwrites the filter value of an existing attribute filter with the same attribute name and filter name.
+     *
+     * @param attributeName The attribute name
+     * @param filterName    The filter name
+     * @param filterValue   The filter value for the attribute filter
+     * @return <code>this</code> for method chaining
+     * @since 1.3.0
+     */
+    public EntityViewSetting<T, Q> withAttributeFilter(String attributeName, String filterName, Object filterValue) {
+        addAttributeFilter(attributeName, filterName, filterValue);
+        return this;
     }
 
     private void checkExistingFiltersForAttribute(String attributeName, String attributeFilterName) {
@@ -394,6 +437,18 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> {
      */
     public void addViewFilter(String filterName) {
         this.viewNamedFilters.add(filterName);
+    }
+
+    /**
+     * Enables and adds the view filter with the given name in this setting.
+     *
+     * @param filterName The name of the view filter
+     * @return <code>this</code> for method chaining
+     * @since 1.3.0
+     */
+    public EntityViewSetting<T, Q> withViewFilter(String filterName) {
+        addViewFilter(filterName);
+        return this;
     }
 
     /**
@@ -436,6 +491,20 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> {
     }
 
     /**
+     * Adds the given optional parameter to the optional parameters of this
+     * setting.
+     *
+     * @param parameterName The name of the optional parameter
+     * @param value         The value of the optional parameter
+     * @return <code>this</code> for method chaining
+     * @since 1.3.0
+     */
+    public EntityViewSetting<T, Q> withOptionalParameter(String parameterName, Object value) {
+        addOptionalParameter(parameterName, value);
+        return this;
+    }
+
+    /**
      * Returns true if optional parameters have been added, otherwise false.
      *
      * @return true if optional parameters have been added, otherwise false
@@ -458,12 +527,23 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> {
      * If a property or hint is not recognized, it is silently ignored.
      * @param propertyName name of property or hint
      * @param value  value for property or hint
-     * @throws IllegalArgumentException if the second argument is
-     *         not valid for the implementation
      * @since 1.2.0
      */
     public void setProperty(String propertyName, Object value) {
         properties.put(propertyName, value);
+    }
+
+    /**
+     * Set a entity view property or hint.
+     * If a property or hint is not recognized, it is silently ignored.
+     * @param propertyName name of property or hint
+     * @param value  value for property or hint
+     * @return <code>this</code> for method chaining
+     * @since 1.3.0
+     */
+    public EntityViewSetting<T, Q> withProperty(String propertyName, Object value) {
+        setProperty(propertyName, value);
+        return this;
     }
 
     /**

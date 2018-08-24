@@ -359,7 +359,7 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
         }
         final EntityType<?> startType = (EntityType<?>) nodeType;
 
-        Subquery countSubquery = (Subquery) subqueryInitFactory.createSubqueryInitiator(null, new SubqueryBuilderListenerImpl<>(), false)
+        Subquery countSubquery = (Subquery) subqueryInitFactory.createSubqueryInitiator(null, new SubqueryBuilderListenerImpl<>(), false, getClause())
                 .from(sizeArg.getPathReference().toString())
                 .select("COUNT(*)");
 

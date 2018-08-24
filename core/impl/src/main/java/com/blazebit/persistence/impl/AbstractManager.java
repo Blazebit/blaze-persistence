@@ -41,11 +41,11 @@ public abstract class AbstractManager<T extends ExpressionModifier> {
     }
 
     protected void registerParameterExpressions(Expression expression) {
-        parameterManager.collectParameterRegistrations(expression, getClauseType());
+        parameterManager.collectParameterRegistrations(expression, getClauseType(), subqueryInitFactory.getQueryBuilder());
     }
 
     protected void unregisterParameterExpressions(Expression expression) {
-        parameterManager.collectParameterUnregistrations(expression, getClauseType());
+        parameterManager.collectParameterUnregistrations(expression, getClauseType(), subqueryInitFactory.getQueryBuilder());
     }
 
     protected void build(StringBuilder sb, Set<String> clauses) {

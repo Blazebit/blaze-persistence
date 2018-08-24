@@ -159,28 +159,33 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                 this.correlationProvider = null;
                 this.correlationResult = null;
                 this.correlationBasis = null;
+                this.correlated = null;
+                this.correlationKeyAlias = null;
+                this.correlationExpression = null;
             } else {
                 ExtendedManagedType<?> managedType = context.getEntityMetamodel().getManagedType(ExtendedManagedType.class, declaringType.getEntityClass());
                 ExtendedAttribute<?, ?> attribute = managedType.getAttributes().get(this.mapping);
 
+                this.correlationKeyAlias = "__correlationAlias";
                 // If the mapping is a deep path expression i.e. contains a dot but no parenthesis, we try to find a mapped by attribute by a prefix
                 int index;
                 if (attribute == null && (index = this.mapping.indexOf('.')) != -1 && this.mapping.indexOf('(') == -1
                         && (attribute = managedType.getAttributes().get(this.mapping.substring(0, index))) != null && attribute.getMappedBy() != null) {
-                    this.correlationProvider = CorrelationProviderHelper.createCorrelationProvider(attribute.getElementClass(), "__correlationAlias", attribute.getMappedBy() + " IN __correlationAlias", context);
+                    this.correlated = attribute.getElementClass();
+                    this.correlationExpression = attribute.getMappedBy() + " IN __correlationAlias";
                     this.correlationResult = this.mapping.substring(index + 1);
                 } else if (attribute != null && attribute.getMappedBy() != null) {
-                    this.correlationProvider = CorrelationProviderHelper.createCorrelationProvider(attribute.getElementClass(), "__correlationAlias", attribute.getMappedBy() + " IN __correlationAlias", context);
+                    this.correlated = attribute.getElementClass();
+                    this.correlationExpression = attribute.getMappedBy() + " IN __correlationAlias";
                     this.correlationResult = "";
                 } else {
-                    this.correlationProvider = CorrelationProviderHelper.createCorrelationProvider(declaringType.getEntityClass(), "__correlationAlias", "this IN __correlationAlias", context);
+                    this.correlated = declaringType.getEntityClass();
+                    this.correlationExpression = "this IN __correlationAlias";
                     this.correlationResult = this.mapping;
                 }
                 this.correlationBasis = "this";
+                this.correlationProvider = CorrelationProviderHelper.createCorrelationProvider(correlated, correlationKeyAlias, correlationExpression, context);
             }
-            this.correlated = null;
-            this.correlationKeyAlias = null;
-            this.correlationExpression = null;
         } else if (mappingAnnotation instanceof MappingParameter) {
             this.mapping = ((MappingParameter) mappingAnnotation).value();
             this.fetches = EMPTY;
@@ -398,6 +403,18 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     public boolean isUpdateMappable() {
         return updateMappable;
+    }
+
+    public Class<?> getCorrelated() {
+        return correlated;
+    }
+
+    public String getCorrelationKeyAlias() {
+        return correlationKeyAlias;
+    }
+
+    public String getCorrelationExpression() {
+        return correlationExpression;
     }
 
     public abstract boolean needsDirtyTracker();

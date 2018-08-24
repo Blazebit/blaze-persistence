@@ -36,8 +36,8 @@ public class CorrelatedCollectionBatchTupleListTransformerFactory extends Abstra
     private final boolean recording;
 
     public CorrelatedCollectionBatchTupleListTransformerFactory(Correlator correlator, ManagedViewType<?> viewRoot, ManagedViewType<?> embeddingViewType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
-                                                                int viewRootIndex, int embeddingViewIndex, int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, CollectionInstantiator collectionInstantiator, boolean filterNulls, boolean recording) {
-        super(correlator, viewRoot, embeddingViewType, correlationResult, correlationProviderFactory, attributePath, fetches, viewRootIndex, embeddingViewIndex, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity);
+                                                                boolean correlatesThis, int viewRootIndex, int embeddingViewIndex, int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, CollectionInstantiator collectionInstantiator, boolean filterNulls, boolean recording) {
+        super(correlator, viewRoot, embeddingViewType, correlationResult, correlationProviderFactory, attributePath, fetches, correlatesThis, viewRootIndex, embeddingViewIndex, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity);
         this.collectionInstantiator = collectionInstantiator;
         this.filterNulls = filterNulls;
         this.recording = recording;
@@ -45,7 +45,7 @@ public class CorrelatedCollectionBatchTupleListTransformerFactory extends Abstra
 
     @Override
     public TupleListTransformer create(Map<String, Object> optionalParameters, EntityViewConfiguration config) {
-        return new CorrelatedCollectionBatchTupleListTransformer(config.getExpressionFactory(), correlator, viewRootType, embeddingViewType, correlationResult, correlationProviderFactory, attributePath, fetches, viewRootIndex, embeddingViewIndex, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, config, collectionInstantiator, filterNulls, recording);
+        return new CorrelatedCollectionBatchTupleListTransformer(config.getExpressionFactory(), correlator, viewRootType, embeddingViewType, correlationResult, correlationProviderFactory, attributePath, fetches, correlatesThis, viewRootIndex, embeddingViewIndex, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, config, collectionInstantiator, filterNulls, recording);
     }
 
 }

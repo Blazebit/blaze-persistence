@@ -27,7 +27,11 @@ import com.blazebit.persistence.DeleteCriteriaBuilder;
 public class DeleteCriteriaBuilderImpl<T> extends BaseDeleteCriteriaBuilderImpl<T, DeleteCriteriaBuilder<T>, Void> implements DeleteCriteriaBuilder<T> {
 
     public DeleteCriteriaBuilderImpl(MainQuery mainQuery, Class<T> clazz, String alias) {
-        super(mainQuery, true, clazz, alias, null, null, null, null);
+        super(mainQuery, null, true, clazz, alias, null, null, null, null);
     }
 
+    @Override
+    AbstractCommonQueryBuilder<T, DeleteCriteriaBuilder<T>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, BaseFinalSetOperationBuilderImpl<T, ?, ?>> copy(QueryContext queryContext) {
+        throw new UnsupportedOperationException("This should only be used on CTEs!");
+    }
 }

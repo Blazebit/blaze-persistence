@@ -27,7 +27,11 @@ import com.blazebit.persistence.UpdateCriteriaBuilder;
 public class UpdateCriteriaBuilderImpl<T> extends BaseUpdateCriteriaBuilderImpl<T, UpdateCriteriaBuilder<T>, Void> implements UpdateCriteriaBuilder<T> {
 
     public UpdateCriteriaBuilderImpl(MainQuery mainQuery, Class<T> clazz, String alias) {
-        super(mainQuery, true, clazz, alias, null, null, null, null);
+        super(mainQuery, null, true, clazz, alias, null, null, null, null);
     }
 
+    @Override
+    AbstractCommonQueryBuilder<T, UpdateCriteriaBuilder<T>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, BaseFinalSetOperationBuilderImpl<T, ?, ?>> copy(QueryContext queryContext) {
+        throw new UnsupportedOperationException("This should only be used on CTEs!");
+    }
 }

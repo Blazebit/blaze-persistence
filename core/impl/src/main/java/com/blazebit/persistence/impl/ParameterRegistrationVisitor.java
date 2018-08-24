@@ -30,6 +30,7 @@ public class ParameterRegistrationVisitor extends VisitorAdapter {
     private final ParameterManager parameterManager;
     private ClauseType clauseType;
     private ClauseType secondClauseType;
+    private AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder;
 
     public ParameterRegistrationVisitor(ParameterManager parameterManager) {
         this.parameterManager = parameterManager;
@@ -41,9 +42,9 @@ public class ParameterRegistrationVisitor extends VisitorAdapter {
         if (AbstractFullQueryBuilder.ID_PARAM_NAME.equals(expression.getName())) {
             throw new IllegalArgumentException("The parameter name '" + expression.getName() + "' is reserved - use a different name");
         } else {
-            parameterManager.registerParameterName(expression.getName(), expression.isCollectionValued(), clauseType);
+            parameterManager.registerParameterName(expression.getName(), expression.isCollectionValued(), clauseType, queryBuilder);
             if (secondClauseType != null) {
-                parameterManager.registerParameterName(expression.getName(), expression.isCollectionValued(), secondClauseType);
+                parameterManager.registerParameterName(expression.getName(), expression.isCollectionValued(), secondClauseType, queryBuilder);
             }
         }
     }
@@ -58,7 +59,19 @@ public class ParameterRegistrationVisitor extends VisitorAdapter {
         secondClauseType = oldClauseType;
     }
 
+    public ClauseType getClauseType() {
+        return clauseType;
+    }
+
     public void setClauseType(ClauseType clauseType) {
         this.clauseType = clauseType;
+    }
+
+    public AbstractCommonQueryBuilder<?, ?, ?, ?, ?> getQueryBuilder() {
+        return queryBuilder;
+    }
+
+    public void setQueryBuilder(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {
+        this.queryBuilder = queryBuilder;
     }
 }

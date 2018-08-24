@@ -48,7 +48,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -110,28 +109,18 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
     }
 
     @Override
+    AbstractCommonQueryBuilder<T, X, Z, W, FinalSetReturn> copy(QueryContext queryContext) {
+        throw new UnsupportedOperationException("This should only be used on CTEs!");
+    }
+
+    @Override
     public <Y> FullQueryBuilder<Y, ?> copy(Class<Y> resultClass) {
         prepareAndCheck();
         MainQuery mainQuery = cbf.createMainQuery(getEntityManager());
         CriteriaBuilderImpl<Y> newBuilder = new CriteriaBuilderImpl<Y>(mainQuery, true, resultClass, null);
         newBuilder.fromClassExplicitlySet = true;
 
-        newBuilder.parameterManager.applyFrom(parameterManager);
-        mainQuery.cteManager.applyFrom(this.mainQuery.cteManager);
-        newBuilder.aliasManager.applyFrom(aliasManager);
-        Map<JoinNode, JoinNode> nodeMapping = newBuilder.joinManager.applyFrom(joinManager);
-        newBuilder.whereManager.applyFrom(whereManager);
-        newBuilder.havingManager.applyFrom(havingManager);
-        newBuilder.groupByManager.applyFrom(groupByManager);
-        newBuilder.orderByManager.applyFrom(orderByManager);
-
-        newBuilder.setFirstResult(firstResult);
-        newBuilder.setMaxResults(maxResults);
-
-        // TODO: set operations?
-        // TODO: select aliases that are ordered by?
-
-        newBuilder.selectManager.setDefaultSelect(nodeMapping, selectManager.getSelectInfos());
+        newBuilder.applyFrom(this, false);
 
         return newBuilder;
     }
@@ -166,15 +155,15 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         int countEndIdx;
         boolean isResultUnique;
         if (countAll) {
-            if (jpaProvider.supportsCountStar()) {
+            if (mainQuery.jpaProvider.supportsCountStar()) {
                 sbSelectFrom.append("COUNT(*)");
             } else {
-                sbSelectFrom.append(jpaProvider.getCustomFunctionInvocation("count_star", 0)).append(')');
+                sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation("count_star", 0)).append(')');
             }
             countEndIdx = sbSelectFrom.length() - 1;
             isResultUnique = true;
         } else {
-            sbSelectFrom.append(jpaProvider.getCustomFunctionInvocation(AbstractCountFunction.FUNCTION_NAME, 1));
+            sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(AbstractCountFunction.FUNCTION_NAME, 1));
             sbSelectFrom.append("'DISTINCT',");
 
             isResultUnique = appendIdentifierExpressions(sbSelectFrom);
@@ -211,10 +200,10 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
             // It is result unique when it contains the query root primary key or a unique key that of a uniqueness preserving association of that
             if (!hasCollectionJoinUsages && isResultUnique) {
                 String countStar;
-                if (jpaProvider.supportsCountStar()) {
+                if (mainQuery.jpaProvider.supportsCountStar()) {
                     countStar = "COUNT(*";
                 } else {
-                    countStar = jpaProvider.getCustomFunctionInvocation("count_star", 0);
+                    countStar = mainQuery.jpaProvider.getCustomFunctionInvocation("count_star", 0);
                 }
                 for (int i = countStartIdx, j = 0; i < countEndIdx; i++, j++) {
                     if (j < countStar.length()) {
@@ -323,7 +312,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, COUNT_QUERY_CLAUSE_EXCLUSIONS)) {
             TypedQuery<Long> countQuery = em.createQuery(countQueryString, Long.class);
             if (isCacheable()) {
-                jpaProvider.setCacheable(countQuery);
+                mainQuery.jpaProvider.setCacheable(countQuery);
             }
             parameterManager.parameterizeQuery(countQuery);
             return countQuery;

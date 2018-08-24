@@ -26,8 +26,17 @@ import com.blazebit.persistence.ReturningInsertCriteriaBuilder;
  */
 public class ReturningInsertCriteriaBuilderImpl<T, Y> extends BaseInsertCriteriaBuilderImpl<T, ReturningInsertCriteriaBuilder<T, Y>, Y> implements ReturningInsertCriteriaBuilder<T, Y> {
 
-    public ReturningInsertCriteriaBuilderImpl(MainQuery mainQuery, Class<T> clazz, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener) {
-        super(mainQuery, false, clazz, cteName, cteClass, result, listener);
+    public ReturningInsertCriteriaBuilderImpl(MainQuery mainQuery, QueryContext queryContext, Class<T> clazz, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener) {
+        super(mainQuery, queryContext, false, clazz, cteName, cteClass, result, listener);
+    }
+
+    public ReturningInsertCriteriaBuilderImpl(BaseInsertCriteriaBuilderImpl<T, ReturningInsertCriteriaBuilder<T, Y>, Y> builder, MainQuery mainQuery, QueryContext queryContext) {
+        super(builder, mainQuery, queryContext);
+    }
+
+    @Override
+    AbstractCommonQueryBuilder<T, ReturningInsertCriteriaBuilder<T, Y>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, BaseFinalSetOperationBuilderImpl<T, ?, ?>> copy(QueryContext queryContext) {
+        return new ReturningInsertCriteriaBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext);
     }
 
     @Override

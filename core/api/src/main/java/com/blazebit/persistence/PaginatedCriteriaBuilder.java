@@ -102,6 +102,23 @@ public interface PaginatedCriteriaBuilder<T> extends FullQueryBuilder<T, Paginat
     public boolean isWithCountQuery();
 
     /**
+     * Forces the use of an id query even if the pagination would not need it.
+     *
+     * @param withForceIdQuery true to force id query use, false otherwise
+     * @return The query builder for chaining calls
+     * @since 1.3.0
+     */
+    public PaginatedCriteriaBuilder<T> withForceIdQuery(boolean withForceIdQuery);
+
+    /**
+     * Returns whether id query use is forced.
+     *
+     * @return true when id query use is forced, false otherwise
+     * @since 1.3.0
+     */
+    public boolean isWithForceIdQuery();
+
+    /**
      * Sets the offset for the highest keyset which influences which element of a page is returned by {@link KeysetPage#getHighest()}.
      * This is usually used when loading N + 1 rows to know there are further rows but only needing N rows.
      *

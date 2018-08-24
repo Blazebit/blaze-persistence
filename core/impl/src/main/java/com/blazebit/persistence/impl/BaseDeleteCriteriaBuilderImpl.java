@@ -25,10 +25,14 @@ import com.blazebit.persistence.spi.DbmsStatementType;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public class BaseDeleteCriteriaBuilderImpl<T, X extends BaseDeleteCriteriaBuilder<T, X>, Y> extends AbstractModificationCriteriaBuilder<T, X, Y> implements BaseDeleteCriteriaBuilder<T, X> {
+public abstract class BaseDeleteCriteriaBuilderImpl<T, X extends BaseDeleteCriteriaBuilder<T, X>, Y> extends AbstractModificationCriteriaBuilder<T, X, Y> implements BaseDeleteCriteriaBuilder<T, X> {
 
-    public BaseDeleteCriteriaBuilderImpl(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, String alias, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener) {
-        super(mainQuery, isMainQuery, DbmsStatementType.DELETE, clazz, alias, cteName, cteClass, result, listener);
+    public BaseDeleteCriteriaBuilderImpl(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, Class<T> clazz, String alias, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener) {
+        super(mainQuery, queryContext, isMainQuery, DbmsStatementType.DELETE, clazz, alias, cteName, cteClass, result, listener);
+    }
+
+    public BaseDeleteCriteriaBuilderImpl(AbstractModificationCriteriaBuilder<T, X, Y> builder, MainQuery mainQuery, QueryContext queryContext) {
+        super(builder, mainQuery, queryContext);
     }
 
     @Override

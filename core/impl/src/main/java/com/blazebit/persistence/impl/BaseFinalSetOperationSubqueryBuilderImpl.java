@@ -33,7 +33,7 @@ import com.blazebit.persistence.spi.SetOperationType;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public class BaseFinalSetOperationSubqueryBuilderImpl<T, X extends BaseFinalSetOperationBuilder<T, X>> extends BaseFinalSetOperationBuilderImpl<T, X, BaseFinalSetOperationSubqueryBuilderImpl<T, X>> implements BaseOngoingFinalSetOperationBuilder<T, X>, SubqueryInternalBuilder<T> {
+public abstract class BaseFinalSetOperationSubqueryBuilderImpl<T, X extends BaseFinalSetOperationBuilder<T, X>> extends BaseFinalSetOperationBuilderImpl<T, X, BaseFinalSetOperationSubqueryBuilderImpl<T, X>> implements BaseOngoingFinalSetOperationBuilder<T, X>, SubqueryInternalBuilder<T> {
 
     protected final T result;
     protected final SubqueryBuilderListener<T> listener;
@@ -42,12 +42,20 @@ public class BaseFinalSetOperationSubqueryBuilderImpl<T, X extends BaseFinalSetO
     protected final SubqueryBuilderListenerImpl<T> subListener;
     
     @SuppressWarnings("unchecked")
-    public BaseFinalSetOperationSubqueryBuilderImpl(MainQuery mainQuery, T result, SetOperationType operator, boolean nested, SubqueryBuilderListener<T> listener, SubqueryBuilderImpl<?> initiator) {
-        super(mainQuery, false, (Class<T>) Tuple.class, operator, nested, result);
+    public BaseFinalSetOperationSubqueryBuilderImpl(MainQuery mainQuery, QueryContext queryContext, T result, SetOperationType operator, boolean nested, SubqueryBuilderListener<T> listener, SubqueryBuilderImpl<?> initiator) {
+        super(mainQuery, queryContext, false, (Class<T>) Tuple.class, operator, nested, result);
         this.result = result;
         this.listener = listener;
         this.initiator = initiator;
         this.subListener = new SubqueryBuilderListenerImpl<T>();
+    }
+
+    public BaseFinalSetOperationSubqueryBuilderImpl(BaseFinalSetOperationBuilderImpl<T, X, BaseFinalSetOperationSubqueryBuilderImpl<T, X>> builder, MainQuery mainQuery, QueryContext queryContext) {
+        super(builder, mainQuery, queryContext);
+        this.result = null;
+        this.listener = null;
+        this.initiator = null;
+        this.subListener = null;
     }
 
     public SubqueryBuilderListener<T> getListener() {

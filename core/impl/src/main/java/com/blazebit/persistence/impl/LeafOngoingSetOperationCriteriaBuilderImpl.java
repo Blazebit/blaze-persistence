@@ -30,8 +30,17 @@ import com.blazebit.persistence.spi.SetOperationType;
  */
 public class LeafOngoingSetOperationCriteriaBuilderImpl<T> extends AbstractCriteriaBuilder<T, LeafOngoingSetOperationCriteriaBuilder<T>, LeafOngoingSetOperationCriteriaBuilder<T>, StartOngoingSetOperationCriteriaBuilder<T, LeafOngoingFinalSetOperationCriteriaBuilder<T>>> implements LeafOngoingSetOperationCriteriaBuilder<T>, LeafOngoingFinalSetOperationCriteriaBuilder<T> {
 
-    public LeafOngoingSetOperationCriteriaBuilderImpl(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, BuilderListener<Object> listener, FinalSetOperationCriteriaBuilderImpl<T> finalSetOperationBuilder) {
-        super(mainQuery, isMainQuery, clazz, null, listener, finalSetOperationBuilder);
+    public LeafOngoingSetOperationCriteriaBuilderImpl(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, Class<T> clazz, BuilderListener<Object> listener, FinalSetOperationCriteriaBuilderImpl<T> finalSetOperationBuilder) {
+        super(mainQuery, queryContext, isMainQuery, clazz, null, listener, finalSetOperationBuilder);
+    }
+
+    public LeafOngoingSetOperationCriteriaBuilderImpl(AbstractCommonQueryBuilder<T, ?, ?, ?, ?> builder, MainQuery mainQuery, QueryContext queryContext) {
+        super(builder, mainQuery, queryContext);
+    }
+
+    @Override
+    AbstractCommonQueryBuilder<T, LeafOngoingSetOperationCriteriaBuilder<T>, LeafOngoingSetOperationCriteriaBuilder<T>, StartOngoingSetOperationCriteriaBuilder<T, LeafOngoingFinalSetOperationCriteriaBuilder<T>>, BaseFinalSetOperationCriteriaBuilderImpl<T, ?>> copy(QueryContext queryContext) {
+        return new LeafOngoingSetOperationCriteriaBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext);
     }
 
     @Override

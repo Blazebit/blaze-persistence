@@ -42,16 +42,21 @@ import com.blazebit.persistence.spi.DbmsStatementType;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCriteriaBuilder<T, X>, Y> extends AbstractModificationCriteriaBuilder<T, X, Y> implements BaseInsertCriteriaBuilder<T, X>, SelectBuilder<X> {
+public abstract class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCriteriaBuilder<T, X>, Y> extends AbstractModificationCriteriaBuilder<T, X, Y> implements BaseInsertCriteriaBuilder<T, X>, SelectBuilder<X> {
 
     protected final Map<String, Integer> bindingMap = new TreeMap<String, Integer>();
 
-    public BaseInsertCriteriaBuilderImpl(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener) {
-        super(mainQuery, isMainQuery, DbmsStatementType.INSERT, clazz, null, cteName, cteClass, result, listener);
+    public BaseInsertCriteriaBuilderImpl(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, Class<T> clazz, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener) {
+        super(mainQuery, queryContext, isMainQuery, DbmsStatementType.INSERT, clazz, null, cteName, cteClass, result, listener);
         
-        if (!jpaProvider.supportsInsertStatement()) {
+        if (!mainQuery.jpaProvider.supportsInsertStatement()) {
             throw new IllegalStateException("JPA provider does not support insert statements!");
         }
+    }
+
+    public BaseInsertCriteriaBuilderImpl(BaseInsertCriteriaBuilderImpl<T, X, Y> builder, MainQuery mainQuery, QueryContext queryContext) {
+        super(builder, mainQuery, queryContext);
+        bindingMap.putAll(builder.bindingMap);
     }
 
     @Override
@@ -63,7 +68,7 @@ public class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCriteriaBuilde
     @SuppressWarnings("unchecked")
     public X bind(String attributeName, Object value) {
         addBind(attributeName);
-        selectManager.select(parameterManager.addParameterExpression(value, ClauseType.SELECT), null);
+        selectManager.select(parameterManager.addParameterExpression(value, ClauseType.SELECT, this), null);
         
         return (X) this;
     }
@@ -146,7 +151,7 @@ public class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCriteriaBuilde
 
     @Override
     public Query getQuery() {
-        if (jpaProvider.supportsInsertStatement()) {
+        if (mainQuery.jpaProvider.supportsInsertStatement()) {
             return super.getQuery();
         } else {
             // TODO: implement

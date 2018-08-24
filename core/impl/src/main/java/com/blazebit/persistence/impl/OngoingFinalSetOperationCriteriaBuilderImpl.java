@@ -27,8 +27,16 @@ import com.blazebit.persistence.spi.SetOperationType;
  */
 public class OngoingFinalSetOperationCriteriaBuilderImpl<T> extends BaseFinalSetOperationCriteriaBuilderImpl<T, OngoingFinalSetOperationCriteriaBuilder<T>> implements OngoingFinalSetOperationCriteriaBuilder<T> {
     
-    public OngoingFinalSetOperationCriteriaBuilderImpl(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, SetOperationType operator, boolean nested, BuilderListener<Object> listener) {
-        super(mainQuery, isMainQuery, clazz, operator, nested, listener, null);
+    public OngoingFinalSetOperationCriteriaBuilderImpl(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, Class<T> clazz, SetOperationType operator, boolean nested, BuilderListener<Object> listener) {
+        super(mainQuery, queryContext, isMainQuery, clazz, operator, nested, listener, null);
     }
-    
+
+    public OngoingFinalSetOperationCriteriaBuilderImpl(BaseFinalSetOperationBuilderImpl<T, OngoingFinalSetOperationCriteriaBuilder<T>, BaseFinalSetOperationCriteriaBuilderImpl<T, OngoingFinalSetOperationCriteriaBuilder<T>>> builder, MainQuery mainQuery, QueryContext queryContext) {
+        super(builder, mainQuery, queryContext);
+    }
+
+    @Override
+    AbstractCommonQueryBuilder<T, OngoingFinalSetOperationCriteriaBuilder<T>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, BaseFinalSetOperationCriteriaBuilderImpl<T, OngoingFinalSetOperationCriteriaBuilder<T>>> copy(QueryContext queryContext) {
+        return new OngoingFinalSetOperationCriteriaBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext);
+    }
 }

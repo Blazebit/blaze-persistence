@@ -27,6 +27,9 @@ Not yet released
 * Fetch just a singular id if possible when using an object type as correlation basis
 * Omit joins that are only used in the select clause when removing the default select after query copying
 * Add support for Spring Data 2.1 with a new integration module
+* Introduced `EntityViewSettingProcessor` to allow customizing `EntityViewSetting` used in Spring Data repositories
+* Add `with*` methods to `EntityViewSetting` for easy method chaining
+* Allow to force the use of an id query with `withForceIdQuery` on `PaginatedCriteriaBuilder`
 
 ### Bug fixes
 

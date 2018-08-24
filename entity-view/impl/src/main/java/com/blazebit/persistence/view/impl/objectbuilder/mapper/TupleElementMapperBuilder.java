@@ -168,13 +168,19 @@ public class TupleElementMapperBuilder {
         return getMapping(mappingPrefix, mapping);
     }
 
-    private String getMapping(String prefixParts, String mapping) {
+    public String getMappingWithSkipAlias(String mapping, String skippedAlias) {
         StringBuilder sb = new StringBuilder();
-        applyMapping(sb, prefixParts, mapping);
+        applyMapping(sb, mappingPrefix, mapping, skippedAlias);
         return sb.toString().intern();
     }
 
-    private void applyMapping(StringBuilder sb, String prefixParts, String mapping) {
+    private String getMapping(String prefixParts, String mapping) {
+        StringBuilder sb = new StringBuilder();
+        applyMapping(sb, prefixParts, mapping, null);
+        return sb.toString().intern();
+    }
+
+    private void applyMapping(StringBuilder sb, String prefixParts, String mapping, String skippedAlias) {
         if (mapping.isEmpty()) {
             if (prefixParts != null && !prefixParts.isEmpty()) {
                 sb.append(AbstractAttribute.stripThisFromMapping(prefixParts));
@@ -185,7 +191,7 @@ public class TupleElementMapperBuilder {
         if (prefixParts != null && !prefixParts.isEmpty()) {
             Expression expr = ef.createSimpleExpression(mapping, false);
             EmbeddingViewJpqlMacro embeddingViewJpqlMacro = (EmbeddingViewJpqlMacro) ef.getDefaultMacroConfiguration().get("EMBEDDING_VIEW").getState()[0];
-            SimpleQueryGenerator generator = new PrefixingQueryGenerator(Collections.singletonList(prefixParts), embeddingViewJpqlMacro.getEmbeddingViewPath(), CorrelatedSubqueryEmbeddingViewJpqlMacro.CORRELATION_EMBEDDING_VIEW_ALIAS);
+            SimpleQueryGenerator generator = new PrefixingQueryGenerator(Collections.singletonList(prefixParts), embeddingViewJpqlMacro.getEmbeddingViewPath(), CorrelatedSubqueryEmbeddingViewJpqlMacro.CORRELATION_EMBEDDING_VIEW_ALIAS, skippedAlias);
             generator.setQueryBuffer(sb);
             expr.accept(generator);
         } else {
@@ -216,7 +222,7 @@ public class TupleElementMapperBuilder {
             sb.append("KEY(");
         }
 
-        applyMapping(sb, prefixParts, mapping);
+        applyMapping(sb, prefixParts, mapping, null);
 
         if (isKey) {
             sb.append(')');

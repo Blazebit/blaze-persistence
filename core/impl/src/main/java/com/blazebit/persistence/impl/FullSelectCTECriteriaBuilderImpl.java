@@ -30,10 +30,19 @@ import com.blazebit.persistence.spi.SetOperationType;
  */
 public class FullSelectCTECriteriaBuilderImpl<T> extends AbstractCTECriteriaBuilder<T, FullSelectCTECriteriaBuilder<T>, LeafOngoingSetOperationCTECriteriaBuilder<T>, StartOngoingSetOperationCTECriteriaBuilder<T, LeafOngoingFinalSetOperationCTECriteriaBuilder<T>>> implements FullSelectCTECriteriaBuilder<T> {
 
-    public FullSelectCTECriteriaBuilderImpl(MainQuery mainQuery, String cteName, Class<Object> clazz, T result, CTEBuilderListener listener) {
-        super(mainQuery, cteName, clazz, result, listener, null);
+    public FullSelectCTECriteriaBuilderImpl(MainQuery mainQuery, QueryContext queryContext, String cteName, Class<Object> clazz, T result, CTEBuilderListener listener) {
+        super(mainQuery, queryContext, cteName, clazz, result, listener, null);
     }
-    
+
+    public FullSelectCTECriteriaBuilderImpl(AbstractCTECriteriaBuilder<T, FullSelectCTECriteriaBuilder<T>, LeafOngoingSetOperationCTECriteriaBuilder<T>, StartOngoingSetOperationCTECriteriaBuilder<T, LeafOngoingFinalSetOperationCTECriteriaBuilder<T>>> builder, MainQuery mainQuery, QueryContext queryContext) {
+        super(builder, mainQuery, queryContext);
+    }
+
+    @Override
+    AbstractCommonQueryBuilder<Object, FullSelectCTECriteriaBuilder<T>, LeafOngoingSetOperationCTECriteriaBuilder<T>, StartOngoingSetOperationCTECriteriaBuilder<T, LeafOngoingFinalSetOperationCTECriteriaBuilder<T>>, BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?>> copy(QueryContext queryContext) {
+        return new FullSelectCTECriteriaBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext);
+    }
+
     @Override
     protected BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?> createFinalSetOperationBuilder(SetOperationType operator, boolean nested) {
         return createFinalSetOperationBuilder(operator, nested, nested, this);

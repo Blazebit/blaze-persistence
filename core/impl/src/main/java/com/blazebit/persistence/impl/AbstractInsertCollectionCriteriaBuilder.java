@@ -51,15 +51,20 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseInsertCriteriaBuilder<T, X>, Y> extends BaseInsertCriteriaBuilderImpl<T, X, Y> {
+public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseInsertCriteriaBuilder<T, X>, Y> extends BaseInsertCriteriaBuilderImpl<T, X, Y> {
 
     private static final String COLLECTION_BASE_QUERY_ALIAS = "_collection";
     private final String collectionName;
 
-    public AbstractInsertCollectionCriteriaBuilder(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener, String collectionName) {
-        super(mainQuery, isMainQuery, clazz, cteName, cteClass, result, listener);
+    public AbstractInsertCollectionCriteriaBuilder(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, Class<T> clazz, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener, String collectionName) {
+        super(mainQuery, queryContext, isMainQuery, clazz, cteName, cteClass, result, listener);
         this.collectionName = collectionName;
         // TODO: validate the collection name exists
+    }
+
+    public AbstractInsertCollectionCriteriaBuilder(AbstractInsertCollectionCriteriaBuilder<T, X, Y> builder, MainQuery mainQuery, QueryContext queryContext) {
+        super(builder, mainQuery, queryContext);
+        this.collectionName = builder.collectionName;
     }
 
     @Override
@@ -170,7 +175,7 @@ public class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseInsertCrit
         String insertExampleSql = extendedQuerySupport.getSql(em, insertExampleQuery);
         String ownerAlias = extendedQuerySupport.getSqlAlias(em, insertExampleQuery, entityAlias);
         String targetAlias = extendedQuerySupport.getSqlAlias(em, insertExampleQuery, COLLECTION_BASE_QUERY_ALIAS);
-        JoinTable joinTable = jpaProvider.getJoinTable(entityType, collectionName);
+        JoinTable joinTable = mainQuery.jpaProvider.getJoinTable(entityType, collectionName);
         int joinTableIndex = SqlUtils.indexOfTableName(insertExampleSql, joinTable.getTableName());
         String collectionAlias = SqlUtils.extractAlias(insertExampleSql, joinTableIndex + joinTable.getTableName().length());
         String[] selectItemExpressions = SqlUtils.getSelectItemExpressions(insertExampleSql, SqlUtils.indexOfSelect(insertExampleSql));

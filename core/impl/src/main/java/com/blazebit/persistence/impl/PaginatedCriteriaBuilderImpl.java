@@ -72,6 +72,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
     private boolean keysetExtraction;
     private boolean withCountQuery = true;
+    private boolean withForceIdQuery = false;
     private int highestOffset = 0;
     private final KeysetPage keysetPage;
     private final ResolvedExpression[] identifierExpressions;
@@ -186,6 +187,17 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     }
 
     @Override
+    public PaginatedCriteriaBuilder<T> withForceIdQuery(boolean withForceIdQuery) {
+        this.withForceIdQuery = withForceIdQuery;
+        return this;
+    }
+
+    @Override
+    public boolean isWithForceIdQuery() {
+        return withForceIdQuery;
+    }
+
+    @Override
     public PaginatedCriteriaBuilder<T> withHighestKeysetOffset(int offset) {
         this.highestOffset = offset;
         return this;
@@ -211,7 +223,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, COUNT_QUERY_CLAUSE_EXCLUSIONS)) {
             TypedQuery<X> countQuery = em.createQuery(countQueryString, resultType);
             if (isCacheable()) {
-                jpaProvider.setCacheable(countQuery);
+                mainQuery.jpaProvider.setCacheable(countQuery);
             }
             parameterManager.parameterizeQuery(countQuery);
             return countQuery;
@@ -258,7 +270,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         TypedQuery<?> idQuery = null;
         TypedQuery<T> objectQuery;
         KeysetExtractionObjectBuilder<T> objectBuilder;
-        if (hasCollections) {
+        if (hasCollections || withForceIdQuery) {
             String idQueryString = getPageIdQueryStringWithoutCheck();
             idQuery = getIdQuery(idQueryString, normalQueryMode, keyRestrictedLeftJoins);
             objectQuery = getObjectQueryById(normalQueryMode, keyRestrictedLeftJoins);
@@ -337,7 +349,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     }
 
     private String getPageIdQueryStringWithoutCheck() {
-        if (cachedIdQueryString == null && hasCollections) {
+        if (cachedIdQueryString == null && (hasCollections || withForceIdQuery)) {
             cachedIdQueryString = buildPageIdQueryString(false);
         }
 
@@ -345,7 +357,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     }
 
     protected String getExternalPageIdQueryString() {
-        if (cachedExternalIdQueryString == null && hasCollections) {
+        if (cachedExternalIdQueryString == null && (hasCollections || withForceIdQuery)) {
             cachedExternalIdQueryString = buildPageIdQueryString(true);
         }
 
@@ -361,7 +373,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     @Override
     protected String getBaseQueryString() {
         if (cachedQueryString == null) {
-            if (hasCollections) {
+            if ((hasCollections || withForceIdQuery)) {
                 cachedQueryString = buildBaseQueryString(false);
             } else {
                 cachedQueryString = buildObjectQueryString(false);
@@ -373,7 +385,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
     protected String getExternalQueryString() {
         if (cachedExternalQueryString == null) {
-            if (hasCollections) {
+            if ((hasCollections || withForceIdQuery)) {
                 cachedExternalQueryString = buildBaseQueryString(true);
             } else {
                 cachedExternalQueryString = buildObjectQueryString(true);
@@ -440,7 +452,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
 
         // initialize index mappings that we use to avoid putting keyset expressions into select clauses multiple times
-        if (hasCollections) {
+        if (hasCollections || withForceIdQuery) {
             ResolvedExpression[] identifierExpressionsToUse = getIdentifierExpressionsToUse();
             Map<String, Integer> identifierExpressionStringMap = new HashMap<>(identifierExpressionsToUse.length);
 
@@ -546,7 +558,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, NO_CLAUSE_EXCLUSION)) {
             query = (TypedQuery<T>) em.createQuery(queryString, expectedResultType);
             if (isCacheable()) {
-                jpaProvider.setCacheable(query);
+                mainQuery.jpaProvider.setCacheable(query);
             }
             parameterManager.parameterizeQuery(query);
         } else {
@@ -595,7 +607,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, ID_QUERY_CLAUSE_EXCLUSIONS)) {
             TypedQuery<Object[]> idQuery = em.createQuery(idQueryString, Object[].class);
             if (isCacheable()) {
-                jpaProvider.setCacheable(idQuery);
+                mainQuery.jpaProvider.setCacheable(idQuery);
             }
             parameterManager.parameterizeQuery(idQuery);
             return idQuery;
@@ -630,7 +642,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, OBJECT_QUERY_CLAUSE_EXCLUSIONS)) {
             TypedQuery<T> query = (TypedQuery<T>) em.createQuery(getBaseQueryString(), selectManager.getExpectedQueryResultType());
             if (isCacheable()) {
-                jpaProvider.setCacheable(query);
+                mainQuery.jpaProvider.setCacheable(query);
             }
             parameterManager.parameterizeQuery(query, skippedParameterPrefix);
             return applyObjectBuilder(query);
@@ -671,10 +683,10 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     @Override
     protected void appendPageCountQueryStringExtensions(StringBuilder sbSelectFrom) {
         if (entityId != null) {
-            parameterManager.addParameterMapping(ENTITY_PAGE_POSITION_PARAMETER_NAME, entityId, ClauseType.SELECT);
+            parameterManager.addParameterMapping(ENTITY_PAGE_POSITION_PARAMETER_NAME, entityId, ClauseType.SELECT, this);
 
             sbSelectFrom.append(", ");
-            sbSelectFrom.append(jpaProvider.getCustomFunctionInvocation(PagePositionFunction.FUNCTION_NAME, 2));
+            sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(PagePositionFunction.FUNCTION_NAME, 2));
 
             sbSelectFrom.append('(');
             appendSimplePageIdQueryString(sbSelectFrom);

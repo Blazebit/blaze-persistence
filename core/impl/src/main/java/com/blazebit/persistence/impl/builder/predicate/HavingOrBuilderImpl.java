@@ -113,31 +113,31 @@ public class HavingOrBuilderImpl<T> extends PredicateBuilderEndedListenerImpl im
     @Override
     public SubqueryInitiator<HavingOrBuilder<T>> havingExists() {
         rightSubqueryPredicateBuilderListener = startBuilder(new RightHandsideSubqueryPredicateBuilder<HavingOrBuilder<T>>(this, new ExistsPredicate()));
-        return subqueryInitFactory.createSubqueryInitiator((HavingOrBuilder<T>) this, rightSubqueryPredicateBuilderListener, true);
+        return subqueryInitFactory.createSubqueryInitiator((HavingOrBuilder<T>) this, rightSubqueryPredicateBuilderListener, true, ClauseType.HAVING);
     }
 
     @Override
     public SubqueryInitiator<HavingOrBuilder<T>> havingNotExists() {
         rightSubqueryPredicateBuilderListener = startBuilder(new RightHandsideSubqueryPredicateBuilder<HavingOrBuilder<T>>(this, new ExistsPredicate(true)));
-        return subqueryInitFactory.createSubqueryInitiator((HavingOrBuilder<T>) this, rightSubqueryPredicateBuilderListener, true);
+        return subqueryInitFactory.createSubqueryInitiator((HavingOrBuilder<T>) this, rightSubqueryPredicateBuilderListener, true, ClauseType.HAVING);
     }
 
     @Override
     public SubqueryBuilder<HavingOrBuilder<T>> havingExists(FullQueryBuilder<?, ?> criteriaBuilder) {
         rightSubqueryPredicateBuilderListener = startBuilder(new RightHandsideSubqueryPredicateBuilder<HavingOrBuilder<T>>(this, new ExistsPredicate()));
-        return subqueryInitFactory.createSubqueryBuilder((HavingOrBuilder<T>) this, rightSubqueryPredicateBuilderListener, true, criteriaBuilder);
+        return subqueryInitFactory.createSubqueryBuilder((HavingOrBuilder<T>) this, rightSubqueryPredicateBuilderListener, true, criteriaBuilder, ClauseType.HAVING);
     }
 
     @Override
     public SubqueryBuilder<HavingOrBuilder<T>> havingNotExists(FullQueryBuilder<?, ?> criteriaBuilder) {
         rightSubqueryPredicateBuilderListener = startBuilder(new RightHandsideSubqueryPredicateBuilder<HavingOrBuilder<T>>(this, new ExistsPredicate(true)));
-        return subqueryInitFactory.createSubqueryBuilder((HavingOrBuilder<T>) this, rightSubqueryPredicateBuilderListener, true, criteriaBuilder);
+        return subqueryInitFactory.createSubqueryBuilder((HavingOrBuilder<T>) this, rightSubqueryPredicateBuilderListener, true, criteriaBuilder, ClauseType.HAVING);
     }
 
     @Override
     public SubqueryInitiator<RestrictionBuilder<HavingOrBuilder<T>>> havingSubquery() {
         RestrictionBuilder<HavingOrBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<HavingOrBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager, ClauseType.HAVING));
-        return subqueryInitFactory.createSubqueryInitiator((RestrictionBuilder<HavingOrBuilder<T>>) restrictionBuilder, leftSubqueryPredicateBuilderListener, false);
+        return subqueryInitFactory.createSubqueryInitiator((RestrictionBuilder<HavingOrBuilder<T>>) restrictionBuilder, leftSubqueryPredicateBuilderListener, false, ClauseType.HAVING);
     }
 
     @Override
@@ -146,7 +146,7 @@ public class HavingOrBuilderImpl<T> extends PredicateBuilderEndedListenerImpl im
         Expression expr = expressionFactory.createSimpleExpression(expression, true);
         superExprLeftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expr);
         RestrictionBuilder<HavingOrBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<HavingOrBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager, ClauseType.HAVING));
-        return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, superExprLeftSubqueryPredicateBuilderListener, false);
+        return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, superExprLeftSubqueryPredicateBuilderListener, false, ClauseType.HAVING);
     }
 
     @Override
@@ -154,14 +154,14 @@ public class HavingOrBuilderImpl<T> extends PredicateBuilderEndedListenerImpl im
         Expression expr = expressionFactory.createSimpleExpression(expression, true);
         RestrictionBuilderImpl<HavingOrBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<HavingOrBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager, ClauseType.HAVING));
         // We don't need a listener or marker here, because the resulting restriction builder can only be ended, when the initiator is ended
-        MultipleSubqueryInitiator<RestrictionBuilder<HavingOrBuilder<T>>> initiator = new MultipleSubqueryInitiatorImpl<RestrictionBuilder<HavingOrBuilder<T>>>(restrictionBuilder, expr, new RestrictionBuilderExpressionBuilderListener(restrictionBuilder), subqueryInitFactory);
+        MultipleSubqueryInitiator<RestrictionBuilder<HavingOrBuilder<T>>> initiator = new MultipleSubqueryInitiatorImpl<RestrictionBuilder<HavingOrBuilder<T>>>(restrictionBuilder, expr, new RestrictionBuilderExpressionBuilderListener(restrictionBuilder), subqueryInitFactory, ClauseType.HAVING);
         return initiator;
     }
 
     @Override
     public SubqueryBuilder<RestrictionBuilder<HavingOrBuilder<T>>> havingSubquery(FullQueryBuilder<?, ?> criteriaBuilder) {
         RestrictionBuilder<HavingOrBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<HavingOrBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager, ClauseType.HAVING));
-        return subqueryInitFactory.createSubqueryBuilder((RestrictionBuilder<HavingOrBuilder<T>>) restrictionBuilder, leftSubqueryPredicateBuilderListener, false, criteriaBuilder);
+        return subqueryInitFactory.createSubqueryBuilder((RestrictionBuilder<HavingOrBuilder<T>>) restrictionBuilder, leftSubqueryPredicateBuilderListener, false, criteriaBuilder, ClauseType.HAVING);
     }
 
     @Override
@@ -169,7 +169,7 @@ public class HavingOrBuilderImpl<T> extends PredicateBuilderEndedListenerImpl im
         Expression expr = expressionFactory.createSimpleExpression(expression, true);
         superExprLeftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expr);
         RestrictionBuilder<HavingOrBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<HavingOrBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager, ClauseType.HAVING));
-        return subqueryInitFactory.createSubqueryBuilder(restrictionBuilder, superExprLeftSubqueryPredicateBuilderListener, false, criteriaBuilder);
+        return subqueryInitFactory.createSubqueryBuilder(restrictionBuilder, superExprLeftSubqueryPredicateBuilderListener, false, criteriaBuilder, ClauseType.HAVING);
     }
 
     @Override

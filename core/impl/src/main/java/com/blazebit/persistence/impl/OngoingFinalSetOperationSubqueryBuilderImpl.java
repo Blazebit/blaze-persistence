@@ -27,8 +27,16 @@ import com.blazebit.persistence.spi.SetOperationType;
  */
 public class OngoingFinalSetOperationSubqueryBuilderImpl<T> extends BaseFinalSetOperationSubqueryBuilderImpl<T, OngoingFinalSetOperationSubqueryBuilder<T>> implements OngoingFinalSetOperationSubqueryBuilder<T> {
 
-    public OngoingFinalSetOperationSubqueryBuilderImpl(MainQuery mainQuery, T result, SetOperationType operator, boolean nested, SubqueryBuilderListener<T> listener, SubqueryBuilderImpl<?> initiator) {
-        super(mainQuery, result, operator, nested, listener, initiator);
+    public OngoingFinalSetOperationSubqueryBuilderImpl(MainQuery mainQuery, QueryContext queryContext, T result, SetOperationType operator, boolean nested, SubqueryBuilderListener<T> listener, SubqueryBuilderImpl<?> initiator) {
+        super(mainQuery, queryContext, result, operator, nested, listener, initiator);
     }
-    
+
+    public OngoingFinalSetOperationSubqueryBuilderImpl(BaseFinalSetOperationBuilderImpl<T, OngoingFinalSetOperationSubqueryBuilder<T>, BaseFinalSetOperationSubqueryBuilderImpl<T, OngoingFinalSetOperationSubqueryBuilder<T>>> builder, MainQuery mainQuery, QueryContext queryContext) {
+        super(builder, mainQuery, queryContext);
+    }
+
+    @Override
+    AbstractCommonQueryBuilder<T, OngoingFinalSetOperationSubqueryBuilder<T>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, BaseFinalSetOperationSubqueryBuilderImpl<T, OngoingFinalSetOperationSubqueryBuilder<T>>> copy(QueryContext queryContext) {
+        return new OngoingFinalSetOperationSubqueryBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext);
+    }
 }

@@ -34,9 +34,9 @@ import java.util.Map;
  */
 public class CorrelatedSubqueryViewRootJpqlMacro implements ViewRootJpqlMacro {
 
+    public static final String CORRELATION_VIEW_ROOT_ALIAS = "correlationViewRootAlias_";
     private static final String CORRELATION_VIEW_ROOT_PARAM_PREFIX = "correlationViewRootParam_";
     private static final String CORRELATION_VIEW_ROOT_ID_PARAM_PREFIX = "correlationViewRootIdParam_";
-    private static final String CORRELATION_VIEW_ROOT_ALIAS = "correlationViewRootAlias_";
 
     protected final FullQueryBuilder<?, ?> criteriaBuilder;
     protected final Map<String, Object> optionalParameters;
@@ -49,6 +49,7 @@ public class CorrelatedSubqueryViewRootJpqlMacro implements ViewRootJpqlMacro {
     protected String viewRootParamName;
     protected String viewRootIdParamName;
     protected boolean used;
+    protected boolean nonIdUsed;
 
     public CorrelatedSubqueryViewRootJpqlMacro(FullQueryBuilder<?, ?> criteriaBuilder, Map<String, Object> optionalParameters, boolean batchedViewRoot, Class<?> viewRootEntityType, String viewRootIdPath, String viewRootExpression) {
         this.criteriaBuilder = criteriaBuilder;
@@ -114,6 +115,10 @@ public class CorrelatedSubqueryViewRootJpqlMacro implements ViewRootJpqlMacro {
         return used;
     }
 
+    public boolean usesViewMacroNonId() {
+        return nonIdUsed;
+    }
+
     public void addIdParamPredicate(FullQueryBuilder<?, ?> criteriaBuilder) {
         if (viewRootExpression != null && viewRootExpression.charAt(0) != ':') {
             if (viewRootParamName != null) {
@@ -175,6 +180,10 @@ public class CorrelatedSubqueryViewRootJpqlMacro implements ViewRootJpqlMacro {
         }
     }
 
+    protected String getViewRootIdPath() {
+        return viewRootIdPath;
+    }
+
     @Override
     public void render(FunctionRenderContext context) {
         if (context.getArgumentsSize() > 1) {
@@ -189,12 +198,16 @@ public class CorrelatedSubqueryViewRootJpqlMacro implements ViewRootJpqlMacro {
                     // Using the plain id or accessing a sub-component of the id is allowed
                     context.addChunk(viewRootExpression);
                     context.addChunk(".");
-                    context.addArgument(0);
+                    context.addChunk(getViewRootIdPath());
                 } else {
+                    String alias;
                     if (batchedViewRoot) {
-                        addViewRootNode();
+                        alias = addViewRootNode();
+                    } else {
+                        alias = viewRootExpression;
                     }
-                    context.addChunk(viewRootExpression);
+                    this.nonIdUsed = true;
+                    context.addChunk(alias);
                     context.addChunk(".");
                     context.addArgument(0);
                 }
@@ -204,12 +217,14 @@ public class CorrelatedSubqueryViewRootJpqlMacro implements ViewRootJpqlMacro {
                     context.addChunk(getIdParamName());
                 } else {
                     String alias = addViewRootNode();
+                    this.nonIdUsed = true;
                     context.addChunk(alias);
                     context.addChunk(".");
                     context.addArgument(0);
                 }
             }
         } else {
+            this.used = true;
             if (viewRootExpression != null) {
                 context.addChunk(viewRootExpression);
             } else {

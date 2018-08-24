@@ -34,15 +34,17 @@ public class MultipleSubqueryInitiatorImpl<T> extends SubqueryBuilderListenerImp
     private final T result;
     private final ExpressionBuilderEndedListener listener;
     private final SubqueryInitiatorFactory subqueryInitFactory;
+    private final ClauseType clauseType;
     private Expression expression;
     private String subqueryAlias;
     private SubqueryInitiator<?> subqueryStartMarker;
     
-    public MultipleSubqueryInitiatorImpl(T result, Expression expression, ExpressionBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory) {
+    public MultipleSubqueryInitiatorImpl(T result, Expression expression, ExpressionBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory, ClauseType clauseType) {
         this.result = result;
         this.expression = expression;
         this.listener = listener;
         this.subqueryInitFactory = subqueryInitFactory;
+        this.clauseType = clauseType;
     }
 
     @Override
@@ -51,7 +53,7 @@ public class MultipleSubqueryInitiatorImpl<T> extends SubqueryBuilderListenerImp
         verifySubqueryBuilderEnded();
         this.subqueryAlias = subqueryAlias;
         // The cast with the type parameter sucks but I don't want to spend too much time with that right now 
-        return startSubqueryInitiator(subqueryInitFactory.createSubqueryInitiator(this, this, false));
+        return startSubqueryInitiator(subqueryInitFactory.createSubqueryInitiator(this, this, false, clauseType));
     }
 
     @Override
@@ -59,7 +61,7 @@ public class MultipleSubqueryInitiatorImpl<T> extends SubqueryBuilderListenerImp
         verifySubqueryBuilderEnded();
         this.subqueryAlias = subqueryAlias;
         // The cast with the type parameter sucks but I don't want to spend too much time with that right now
-        return startSubqueryBuilder(subqueryInitFactory.createSubqueryBuilder(this, this, false, criteriaBuilder));
+        return startSubqueryBuilder(subqueryInitFactory.createSubqueryBuilder(this, this, false, criteriaBuilder, clauseType));
     }
 
     @Override

@@ -23,6 +23,8 @@ import com.blazebit.persistence.StartOngoingSetOperationSubqueryBuilder;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.spi.SetOperationType;
 
+import javax.persistence.Tuple;
+
 /**
  *
  * @param <T> The query result type
@@ -31,8 +33,17 @@ import com.blazebit.persistence.spi.SetOperationType;
  */
 public class LeafOngoingSetOperationSubqueryBuilderImpl<T> extends BaseSubqueryBuilderImpl<T, LeafOngoingSetOperationSubqueryBuilder<T>, LeafOngoingSetOperationSubqueryBuilder<T>, StartOngoingSetOperationSubqueryBuilder<T, LeafOngoingFinalSetOperationSubqueryBuilder<T>>> implements LeafOngoingSetOperationSubqueryBuilder<T>, LeafOngoingFinalSetOperationSubqueryBuilder<T> {
 
-    public LeafOngoingSetOperationSubqueryBuilderImpl(MainQuery mainQuery, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, T result, SubqueryBuilderListener<T> listener, FinalSetOperationSubqueryBuilderImpl<T> finalSetOperationBuilder) {
-        super(mainQuery, aliasManager, parentJoinManager, expressionFactory, result, listener, finalSetOperationBuilder);
+    public LeafOngoingSetOperationSubqueryBuilderImpl(MainQuery mainQuery, QueryContext queryContext, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, T result, SubqueryBuilderListener<T> listener, FinalSetOperationSubqueryBuilderImpl<T> finalSetOperationBuilder) {
+        super(mainQuery, queryContext, aliasManager, parentJoinManager, expressionFactory, result, listener, finalSetOperationBuilder);
+    }
+
+    public LeafOngoingSetOperationSubqueryBuilderImpl(BaseSubqueryBuilderImpl<T, LeafOngoingSetOperationSubqueryBuilder<T>, LeafOngoingSetOperationSubqueryBuilder<T>, StartOngoingSetOperationSubqueryBuilder<T, LeafOngoingFinalSetOperationSubqueryBuilder<T>>> builder, MainQuery mainQuery, QueryContext queryContext) {
+        super(builder, mainQuery, queryContext);
+    }
+
+    @Override
+    AbstractCommonQueryBuilder<Tuple, LeafOngoingSetOperationSubqueryBuilder<T>, LeafOngoingSetOperationSubqueryBuilder<T>, StartOngoingSetOperationSubqueryBuilder<T, LeafOngoingFinalSetOperationSubqueryBuilder<T>>, BaseFinalSetOperationSubqueryBuilderImpl<T, ?>> copy(QueryContext queryContext) {
+        return new LeafOngoingSetOperationSubqueryBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext);
     }
 
     @Override

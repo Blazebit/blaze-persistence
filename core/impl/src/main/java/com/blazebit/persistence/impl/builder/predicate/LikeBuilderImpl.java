@@ -89,7 +89,7 @@ public class LikeBuilderImpl<T> extends SubqueryAndExpressionBuilderListener<T> 
         if (value == null) {
             throw new NullPointerException("value");
         }
-        patternExpression = parameterManager.addParameterExpression(value, clauseType);
+        patternExpression = parameterManager.addParameterExpression(value, clauseType, subqueryInitFactory.getQueryBuilder());
         return escapeBuilderEndedListener.startBuilder(new EscapeBuilderImpl<T>(escapeBuilderEndedListener, result));
     }
 
@@ -106,7 +106,7 @@ public class LikeBuilderImpl<T> extends SubqueryAndExpressionBuilderListener<T> 
     public MultipleSubqueryInitiator<EscapeBuilder<T>> subqueries(String expression) {
         Expression expr = expressionFactory.createStringExpression(expression);
         ExpressionToEscapeBuilderEndedListener listener = new ExpressionToEscapeBuilderEndedListener();
-        return new MultipleSubqueryInitiatorImpl<EscapeBuilder<T>>(new EscapeBuilderImpl<T>(listener, result), expr, listener, subqueryInitFactory);
+        return new MultipleSubqueryInitiatorImpl<EscapeBuilder<T>>(new EscapeBuilderImpl<T>(listener, result), expr, listener, subqueryInitFactory, clauseType);
     }
 
     /**

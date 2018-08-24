@@ -34,33 +34,40 @@ import java.util.Arrays;
 public class SubqueryInitiatorFactory {
 
     private final MainQuery mainQuery;
+    private final AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder;
     private final AliasManager aliasManager;
     private final JoinManager parentJoinManager;
     private final SubqueryReattachingTransformationVisitor subqueryTransformationVisitor;
 
-    public SubqueryInitiatorFactory(MainQuery mainQuery, AliasManager aliasManager, JoinManager parentJoinManager) {
+    public SubqueryInitiatorFactory(MainQuery mainQuery, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder, AliasManager aliasManager, JoinManager parentJoinManager) {
         this.mainQuery = mainQuery;
+        this.queryBuilder = queryBuilder;
         this.aliasManager = aliasManager;
         this.parentJoinManager = parentJoinManager;
         this.subqueryTransformationVisitor = new SubqueryReattachingTransformationVisitor();
     }
 
-    public <T> SubqueryInitiator<T> createSubqueryInitiator(T result, SubqueryBuilderListener<T> listener, boolean inExists) {
-        return new SubqueryInitiatorImpl<T>(mainQuery, aliasManager, parentJoinManager, result, listener, inExists);
+    public AbstractCommonQueryBuilder<?, ?, ?, ?, ?> getQueryBuilder() {
+        return queryBuilder;
     }
 
-    public <T> SubqueryBuilderImpl<T> createSubqueryBuilder(T result, SubqueryBuilderListener<T> listener, boolean inExists, FullQueryBuilder<?, ?> criteriaBuilder) {
+    public <T> SubqueryInitiator<T> createSubqueryInitiator(T result, SubqueryBuilderListener<T> listener, boolean inExists, ClauseType clause) {
+        return new SubqueryInitiatorImpl<T>(mainQuery, new QueryContext(queryBuilder, clause), aliasManager, parentJoinManager, result, listener, inExists);
+    }
+
+    public <T> SubqueryBuilderImpl<T> createSubqueryBuilder(T result, SubqueryBuilderListener<T> listener, boolean inExists, FullQueryBuilder<?, ?> criteriaBuilder, ClauseType clause) {
         // TODO: paginated criteria builder?
-        return createSubqueryBuilder(result, listener, inExists, (AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) criteriaBuilder);
+        return createSubqueryBuilder(result, listener, inExists, (AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) criteriaBuilder, clause);
     }
 
-    public <T> SubqueryBuilderImpl<T> createSubqueryBuilder(T result, SubqueryBuilderListener<T> listener, boolean inExists, SubqueryBuilderImpl<?> subqueryBuilder) {
-        return createSubqueryBuilder(result, listener, inExists, (AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) subqueryBuilder);
+    public <T> SubqueryBuilderImpl<T> createSubqueryBuilder(T result, SubqueryBuilderListener<T> listener, boolean inExists, SubqueryBuilderImpl<?> subqueryBuilder, ClauseType clause) {
+        return createSubqueryBuilder(result, listener, inExists, (AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) subqueryBuilder, clause);
     }
 
-    private <T> SubqueryBuilderImpl<T> createSubqueryBuilder(T result, SubqueryBuilderListener<T> listener, boolean inExists, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder) {
-        SubqueryBuilderImpl<T> subqueryBuilder = new SubqueryBuilderImpl<T>(mainQuery, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
+    private <T> SubqueryBuilderImpl<T> createSubqueryBuilder(T result, SubqueryBuilderListener<T> listener, boolean inExists, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder, ClauseType clause) {
+        SubqueryBuilderImpl<T> subqueryBuilder = new SubqueryBuilderImpl<T>(mainQuery, new QueryContext(queryBuilder, clause), aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
 
+        subqueryBuilder.parameterManager.applyFrom(builder.mainQuery.parameterManager, builder);
         mainQuery.cteManager.applyFrom(builder.mainQuery.cteManager);
         subqueryBuilder.joinManager.applyFrom(builder.joinManager);
         subqueryBuilder.whereManager.applyFrom(builder.whereManager);
@@ -79,6 +86,8 @@ public class SubqueryInitiatorFactory {
             subqueryBuilder.selectManager.setDefaultSelect(null, builder.selectManager.getSelectInfos());
         }
 
+        subqueryBuilder.collectParameters();
+
         if (listener != null) {
             listener.onBuilderStarted(subqueryBuilder);
         }
@@ -86,7 +95,8 @@ public class SubqueryInitiatorFactory {
         return subqueryBuilder;
     }
 
-    public <T extends Expression> T reattachSubqueries(T expression) {
+    public <T extends Expression> T reattachSubqueries(T expression, ClauseType clauseType) {
+        subqueryTransformationVisitor.clauseType = clauseType;
         return (T) expression.accept(subqueryTransformationVisitor);
     }
 
@@ -97,6 +107,7 @@ public class SubqueryInitiatorFactory {
     class SubqueryReattachingTransformationVisitor extends InplaceModificationResultVisitorAdapter {
 
         private boolean inExists;
+        private ClauseType clauseType;
 
         @Override
         public Expression visit(ExistsPredicate predicate) {
@@ -111,7 +122,7 @@ public class SubqueryInitiatorFactory {
         @Override
         public Expression visit(SubqueryExpression expression) {
             AbstractCommonQueryBuilder<?, ?, ?, ?, ?> subqueryBuilder = (AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) expression.getSubquery();
-            SubqueryBuilderImpl<?> builder = createSubqueryBuilder(null, null, inExists, subqueryBuilder);
+            SubqueryBuilderImpl<?> builder = createSubqueryBuilder(null, null, inExists, subqueryBuilder, clauseType);
             return new SubqueryExpression(builder);
         }
     }

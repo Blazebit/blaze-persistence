@@ -47,18 +47,24 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperationBuilder<T, X>, Y extends BaseFinalSetOperationBuilderImpl<T, X, Y>> extends AbstractCommonQueryBuilder<T, X, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, Y> implements BaseFinalSetOperationBuilder<T, X>, BaseOngoingFinalSetOperationBuilder<T, X> {
+public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperationBuilder<T, X>, Y extends BaseFinalSetOperationBuilderImpl<T, X, Y>> extends AbstractCommonQueryBuilder<T, X, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, Y> implements BaseFinalSetOperationBuilder<T, X>, BaseOngoingFinalSetOperationBuilder<T, X> {
 
     protected T endSetResult;
     
     protected final SetOperationManager setOperationManager;
     protected final List<DefaultOrderByElement> orderByElements;
 
-    public BaseFinalSetOperationBuilderImpl(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, SetOperationType operator, boolean nested, T endSetResult) {
-        super(mainQuery, isMainQuery, DbmsStatementType.SELECT, clazz, null, null, false);
+    public BaseFinalSetOperationBuilderImpl(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, Class<T> clazz, SetOperationType operator, boolean nested, T endSetResult) {
+        super(mainQuery, queryContext, isMainQuery, DbmsStatementType.SELECT, clazz, null, null, false);
         this.endSetResult = endSetResult;
         this.setOperationManager = new SetOperationManager(operator, nested);
         this.orderByElements = new ArrayList<DefaultOrderByElement>(0);
+    }
+
+    public BaseFinalSetOperationBuilderImpl(BaseFinalSetOperationBuilderImpl<T, X, Y> builder, MainQuery mainQuery, QueryContext queryContext) {
+        super(builder, mainQuery, queryContext);
+        this.setOperationManager = new SetOperationManager(builder.setOperationManager, queryContext);
+        this.orderByElements = new ArrayList<>(builder.orderByElements);
     }
 
     @Override
@@ -165,7 +171,8 @@ public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperation
 
     @Override
     protected void prepareAndCheck() {
-        // nothing to do here
+        // nothing to do here, except setting this to non-null to avoid exceptions
+        this.nodesToFetch = Collections.emptySet();
     }
 
     public void verifyBuilderEnded(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> currentBuilder) {

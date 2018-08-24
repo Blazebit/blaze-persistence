@@ -27,6 +27,8 @@ import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.spi.SetOperationType;
 
+import javax.persistence.Tuple;
+
 /**
  *
  * @author Christian Beikov
@@ -35,8 +37,17 @@ import com.blazebit.persistence.spi.SetOperationType;
  */
 public class SubqueryBuilderImpl<T> extends BaseSubqueryBuilderImpl<T, SubqueryBuilder<T>, LeafOngoingSetOperationSubqueryBuilder<T>, StartOngoingSetOperationSubqueryBuilder<T, LeafOngoingFinalSetOperationSubqueryBuilder<T>>> implements SubqueryBuilder<T>, SubqueryInternalBuilder<T> {
 
-    public SubqueryBuilderImpl(MainQuery mainQuery, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, T result, SubqueryBuilderListener<T> listener) {
-        super(mainQuery, aliasManager, parentJoinManager, expressionFactory, result, listener, null);
+    public SubqueryBuilderImpl(MainQuery mainQuery, QueryContext queryContext, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, T result, SubqueryBuilderListener<T> listener) {
+        super(mainQuery, queryContext, aliasManager, parentJoinManager, expressionFactory, result, listener, null);
+    }
+
+    public SubqueryBuilderImpl(BaseSubqueryBuilderImpl<T, SubqueryBuilder<T>, LeafOngoingSetOperationSubqueryBuilder<T>, StartOngoingSetOperationSubqueryBuilder<T, LeafOngoingFinalSetOperationSubqueryBuilder<T>>> builder, MainQuery mainQuery, QueryContext queryContext) {
+        super(builder, mainQuery, queryContext);
+    }
+
+    @Override
+    AbstractCommonQueryBuilder<Tuple, SubqueryBuilder<T>, LeafOngoingSetOperationSubqueryBuilder<T>, StartOngoingSetOperationSubqueryBuilder<T, LeafOngoingFinalSetOperationSubqueryBuilder<T>>, BaseFinalSetOperationSubqueryBuilderImpl<T, ?>> copy(QueryContext queryContext) {
+        return new SubqueryBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext);
     }
 
     @Override

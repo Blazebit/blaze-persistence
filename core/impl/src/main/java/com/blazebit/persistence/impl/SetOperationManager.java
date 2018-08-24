@@ -38,7 +38,17 @@ public class SetOperationManager {
     SetOperationManager(SetOperationType operator, boolean nested) {
         this.operator = operator;
         this.nested = nested;
-        this.setOperations = new ArrayList<AbstractCommonQueryBuilder<?, ?, ?, ?, ?>>();
+        this.setOperations = new ArrayList<>();
+    }
+
+    SetOperationManager(SetOperationManager original, QueryContext queryContext) {
+        this.operator = original.operator;
+        this.nested = original.nested;
+        this.startQueryBuilder = original.startQueryBuilder.copy(queryContext);
+        this.setOperations = new ArrayList<>(original.setOperations.size());
+        for (AbstractCommonQueryBuilder<?, ?, ?, ?, ?> setOperation : original.setOperations) {
+            setOperations.add(setOperation.copy(queryContext));
+        }
     }
 
     List<AbstractCommonQueryBuilder<?, ?, ?, ?, ?>> getSetOperations() {

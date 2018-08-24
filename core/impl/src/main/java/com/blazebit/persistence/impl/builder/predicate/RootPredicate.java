@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl.builder.predicate;
 
+import com.blazebit.persistence.impl.AbstractCommonQueryBuilder;
 import com.blazebit.persistence.impl.ClauseType;
 import com.blazebit.persistence.impl.ParameterManager;
 import com.blazebit.persistence.parser.expression.Expression;
@@ -35,11 +36,13 @@ public class RootPredicate extends PredicateBuilderEndedListenerImpl implements 
     private final CompoundPredicate predicate;
     private final ParameterManager parameterManager;
     private final ClauseType clauseType;
+    private final AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder;
 
-    public RootPredicate(ParameterManager parameterManager, ClauseType clauseType) {
+    public RootPredicate(ParameterManager parameterManager, ClauseType clauseType, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {
         this.predicate = new CompoundPredicate(CompoundPredicate.BooleanOperator.AND);
         this.parameterManager = parameterManager;
         this.clauseType = clauseType;
+        this.queryBuilder = queryBuilder;
     }
 
     @Override
@@ -48,7 +51,7 @@ public class RootPredicate extends PredicateBuilderEndedListenerImpl implements 
         Predicate predicate = builder.getPredicate();
 
         // register parameter expressions
-        parameterManager.collectParameterRegistrations(predicate, clauseType);
+        parameterManager.collectParameterRegistrations(predicate, clauseType, queryBuilder);
         this.predicate.getChildren().add(predicate);
     }
 

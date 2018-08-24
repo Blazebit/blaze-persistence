@@ -54,18 +54,23 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseUpdateCriteriaBuilder<T, X>, Y> extends BaseUpdateCriteriaBuilderImpl<T, X, Y> {
+public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseUpdateCriteriaBuilder<T, X>, Y> extends BaseUpdateCriteriaBuilderImpl<T, X, Y> {
 
     private final String collectionName;
 
     private List<String> cachedBaseQueryStrings;
 
-    public AbstractUpdateCollectionCriteriaBuilder(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, String alias, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener, String collectionName) {
-        super(mainQuery, isMainQuery, clazz, alias, cteName, cteClass, result, listener);
+    public AbstractUpdateCollectionCriteriaBuilder(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, Class<T> clazz, String alias, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener, String collectionName) {
+        super(mainQuery, queryContext, isMainQuery, clazz, alias, cteName, cteClass, result, listener);
         this.collectionName = collectionName;
         // Add the join here so that references in the where clause go the the expected join node
         // Also, this validates the collection actually exists
         joinManager.join(entityAlias + "." + collectionName, CollectionUpdateModificationQuerySpecification.COLLECTION_BASE_QUERY_ALIAS, JoinType.LEFT, false, true);
+    }
+
+    public AbstractUpdateCollectionCriteriaBuilder(AbstractUpdateCollectionCriteriaBuilder<T, X, Y> builder, MainQuery mainQuery, QueryContext queryContext) {
+        super(builder, mainQuery, queryContext);
+        this.collectionName = builder.collectionName;
     }
 
     @Override
@@ -211,7 +216,7 @@ public class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseUpdateCrit
         String sql = extendedQuerySupport.getSql(em, baseQuery);
         String ownerAlias = extendedQuerySupport.getSqlAlias(em, baseQuery, entityAlias);
         String targetAlias = extendedQuerySupport.getSqlAlias(em, baseQuery, CollectionUpdateModificationQuerySpecification.COLLECTION_BASE_QUERY_ALIAS);
-        JoinTable joinTable = jpaProvider.getJoinTable(entityType, collectionName);
+        JoinTable joinTable = mainQuery.jpaProvider.getJoinTable(entityType, collectionName);
         int joinTableIndex = SqlUtils.indexOfTableName(sql, joinTable.getTableName());
         String collectionAlias = SqlUtils.extractAlias(sql, joinTableIndex + joinTable.getTableName().length());
 
