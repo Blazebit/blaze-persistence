@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.parser;
+package com.blazebit.persistence.spi;
 
 import javax.persistence.metamodel.Attribute;
 import java.util.List;
@@ -29,6 +29,11 @@ public class AttributePath {
     private final List<Attribute<?, ?>> attributes;
     private final Class<?> attributeClass;
 
+    /**
+     * Construct a new {@code AttributePath}.
+     * @param attributes List of attribute segments
+     * @param attributeClass The attribute class
+     */
     public AttributePath(List<Attribute<?, ?>> attributes, Class<?> attributeClass) {
         this.attributes = attributes;
         this.attributeClass = attributeClass;

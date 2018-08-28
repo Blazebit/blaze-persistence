@@ -471,7 +471,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
             if (type.isJpaManaged()) {
                 Set<Attribute<?, ?>> attributes = (Set) type.getManagedType().getAttributes();
                 Map<AttributeAccessor, BasicAttributeFlusher> componentFlushers = new HashMap<>(attributes.size());
-                buildComponentFlushers(evm.getMetamodel().getEntityMetamodel(), type.getJavaType(), attributeName + "_", attributeMapping + ".", "", attributes, componentFlushers);
+                buildComponentFlushers(evm, type.getJavaType(), attributeName + "_", attributeMapping + ".", "", attributes, componentFlushers);
                 componentFlusherEntries = componentFlushers.entrySet().toArray(new Map.Entry[componentFlushers.size()]);
             }
             TypeDescriptor typeDescriptor = TypeDescriptor.forType(evm, idAttribute, type);
@@ -480,7 +480,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
     }
 
     @SuppressWarnings("unchecked")
-    private static void buildComponentFlushers(EntityMetamodel metamodel, Class<?> rootType, String attributePrefix, String mappingPrefix, String accessorPrefix, Set<Attribute<?, ?>> attributes, Map<AttributeAccessor, BasicAttributeFlusher> componentFlushers) {
+    private static void buildComponentFlushers(EntityViewManagerImpl evm, Class<?> rootType, String attributePrefix, String mappingPrefix, String accessorPrefix, Set<Attribute<?, ?>> attributes, Map<AttributeAccessor, BasicAttributeFlusher> componentFlushers) {
         for (Attribute<?, ?> attribute : attributes) {
             if (!(attribute instanceof SingularAttribute<?, ?>)) {
                 throw new IllegalArgumentException("Plural attributes in embedded ids aren't supported yet! Remove attribute " + attribute.getName() + " of type " + attribute.getDeclaringType().getJavaType().getName());
@@ -491,7 +491,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                 String attributeMapping = mappingPrefix + attribute.getName();
                 String parameterName = attributeName;
                 String updateFragment = attributeMapping;
-                AttributeAccessor attributeAccessor = Accessors.forEntityMapping(metamodel, rootType, accessorPrefix + attribute.getName());
+                AttributeAccessor attributeAccessor = Accessors.forEntityMapping(evm, rootType, accessorPrefix + attribute.getName());
 
                 componentFlushers.put(attributeAccessor, new BasicAttributeFlusher<>(
                         attributeName,
@@ -521,7 +521,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                     subAttributes = (Set) Collections.singleton(JpaMetamodelUtils.getSingleIdAttribute((IdentifiableType<?>) managedType));
                 }
                 buildComponentFlushers(
-                        metamodel,
+                        evm,
                         rootType,
                         attributePrefix + attribute.getName() + ".",
                         mappingPrefix + attribute.getName() + ".",

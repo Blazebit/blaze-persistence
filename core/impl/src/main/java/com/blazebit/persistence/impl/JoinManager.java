@@ -61,6 +61,7 @@ import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
+import com.blazebit.persistence.spi.JpaMetamodelAccessor;
 import com.blazebit.persistence.spi.JpaProvider;
 
 import javax.persistence.metamodel.Attribute;
@@ -2347,13 +2348,14 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 lazy = true;
             }
         } else {
+            JpaMetamodelAccessor jpaMetamodelAccessor = mainQuery.jpaProvider.getJpaMetamodelAccessor();
             AttributeHolder attributeHolder = JpaUtils.getAttributeForJoining(metamodel, baseNodeType, expressionFactory.createJoinPathExpression(attributeName), baseNode.getAlias());
             Attribute<?, ?> attr = attributeHolder.getAttribute();
             if (attr == null) {
                 throw new IllegalArgumentException("Field with name " + attributeName + " was not found within class " + JpaMetamodelUtils.getTypeName(baseNodeType));
             }
-            if (JpaMetamodelUtils.isJoinable(attr)) {
-                if (JpaMetamodelUtils.isCompositeNode(attr)) {
+            if (jpaMetamodelAccessor.isJoinable(attr)) {
+                if (jpaMetamodelAccessor.isCompositeNode(attr)) {
                     throw new IllegalArgumentException("No object leaf allowed but " + attributeName + " is an object leaf");
                 } else {
                     final JoinResult newBaseNodeResult = implicitJoinSingle(baseNode, attributeName, false);
@@ -2386,13 +2388,14 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
     private JoinResult createOrUpdateNode(JoinNode baseNode, List<String> joinRelationAttributes, String treatType, String alias, JoinType joinType, boolean implicit, boolean defaultJoin) {
         Type<?> baseNodeType = baseNode.getNodeType();
         String joinRelationName = StringUtils.join(".", joinRelationAttributes);
+        JpaMetamodelAccessor jpaMetamodelAccessor = mainQuery.jpaProvider.getJpaMetamodelAccessor();
         AttributeHolder attrJoinResult = JpaUtils.getAttributeForJoining(metamodel, baseNodeType, expressionFactory.createJoinPathExpression(joinRelationName), baseNode.getAlias());
         Attribute<?, ?> attr = attrJoinResult.getAttribute();
         if (attr == null) {
             throw new IllegalArgumentException("Field with name " + joinRelationName + " was not found within class " + JpaMetamodelUtils.getTypeName(baseNodeType));
         }
 
-        if (!JpaMetamodelUtils.isJoinable(attr)) {
+        if (!jpaMetamodelAccessor.isJoinable(attr)) {
             if (LOG.isLoggable(Level.FINE)) {
                 LOG.fine(new StringBuilder("Field with name ").append(joinRelationName)
                         .append(" of class ")

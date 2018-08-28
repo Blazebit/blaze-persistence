@@ -8,7 +8,9 @@ Not yet released
 
 ### New features
 
-None yet
+* Support for binding Embeddables directly to embeddable path expressions in CTE's
+* Support for binding associations that are part of an entities identifier
+* Support for binding associations mapped by compound or foreign keys
 
 ### Bug fixes
 

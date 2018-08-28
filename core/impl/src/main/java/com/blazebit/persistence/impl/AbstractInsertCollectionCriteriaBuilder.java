@@ -28,13 +28,13 @@ import com.blazebit.persistence.impl.query.CustomSQLQuery;
 import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.impl.query.ReturningCollectionInsertModificationQuerySpecification;
-import com.blazebit.persistence.parser.AttributePath;
+import com.blazebit.persistence.spi.AttributePath;
 import com.blazebit.persistence.parser.QualifiedAttribute;
-import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 import com.blazebit.persistence.spi.JoinTable;
+import com.blazebit.persistence.spi.JpaMetamodelAccessor;
 
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
@@ -86,7 +86,8 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
 
     @Override
     protected void addBind(String attributeName) {
-        AttributePath attributePath = JpaMetamodelUtils.getJoinTableCollectionAttributePath(getMetamodel(), entityType, attributeName, collectionName);
+        JpaMetamodelAccessor jpaMetamodelAccessor = mainQuery.jpaProvider.getJpaMetamodelAccessor();
+        AttributePath attributePath = jpaMetamodelAccessor.getJoinTableCollectionAttributePath(getMetamodel(), entityType, attributeName, collectionName);
         StringBuilder sb = new StringBuilder();
         List<Attribute<?, ?>> attributes = attributePath.getAttributes();
         Attribute<?, ?> attribute = attributes.get(0);

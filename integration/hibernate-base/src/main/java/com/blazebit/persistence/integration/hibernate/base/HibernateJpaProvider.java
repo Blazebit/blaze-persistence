@@ -17,7 +17,9 @@
 package com.blazebit.persistence.integration.hibernate.base;
 
 import com.blazebit.persistence.JoinType;
+import com.blazebit.persistence.integration.jpa.JpaMetamodelAccessorImpl;
 import com.blazebit.persistence.spi.JoinTable;
+import com.blazebit.persistence.spi.JpaMetamodelAccessor;
 import com.blazebit.persistence.spi.JpaProvider;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.CascadingAction;
@@ -874,8 +876,14 @@ public class HibernateJpaProvider implements JpaProvider {
         boolean supportsNaturalIdAccessOptimization = false;
         AbstractEntityPersister entityPersister = getEntityPersister(owner);
         Type propertyType = entityPersister.getPropertyType(attributeName);
-        org.hibernate.type.EntityType entityType = (org.hibernate.type.EntityType) propertyType;
+
+        // For nested embedded id's, the nested id is mapped as a component type
+        if (propertyType instanceof ComponentType) {
+            return Arrays.asList(((ComponentType) propertyType).getPropertyNames());
+        }
+
         List<String> identifierOrUniqueKeyPropertyNames;
+        org.hibernate.type.EntityType entityType = (org.hibernate.type.EntityType) propertyType;
         Type identifierOrUniqueKeyType = entityType.getIdentifierOrUniqueKeyType(entityPersister.getFactory());
 
         if (identifierOrUniqueKeyType instanceof EmbeddedComponentType) {
@@ -915,4 +923,10 @@ public class HibernateJpaProvider implements JpaProvider {
         }
         return persistenceUnitUtil.getIdentifier(entity);
     }
+
+    @Override
+    public JpaMetamodelAccessor getJpaMetamodelAccessor() {
+        return JpaMetamodelAccessorImpl.INSTANCE;
+    }
+
 }

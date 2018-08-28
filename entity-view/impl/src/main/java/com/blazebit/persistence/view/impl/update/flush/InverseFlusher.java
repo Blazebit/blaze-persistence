@@ -132,7 +132,7 @@ public final class InverseFlusher<E> {
                             )
                     );
                     parentEntityOnChildEntityMapper = (Mapper<Object, Object>) Mappers.forEntityAttributeMapping(
-                            evm.getMetamodel().getEntityMetamodel(),
+                            evm,
                             viewType.getEntityClass(),
                             childViewType.getEntityClass(),
                             attribute.getWritableMappedByMappings()
@@ -151,7 +151,7 @@ public final class InverseFlusher<E> {
                     Class<?> childType = elementType.getJavaType();
                     elementEntityClass = childType;
                     parentEntityOnChildViewMapper = (Mapper<Object, Object>) Mappers.forEntityAttributeMapping(
-                            evm.getMetamodel().getEntityMetamodel(),
+                            evm,
                             viewType.getEntityClass(),
                             childType,
                             attribute.getWritableMappedByMappings()
@@ -162,7 +162,7 @@ public final class InverseFlusher<E> {
                     ViewType<?> childViewType = (ViewType<?>) elementType;
                     elementEntityClass = childViewType.getEntityClass();
                     parentReferenceAttributeAccessor = Accessors.forEntityMapping(
-                            evm.getMetamodel().getEntityMetamodel(),
+                            evm,
                             childViewType.getEntityClass(),
                             attribute.getMappedBy()
                     );
@@ -188,7 +188,7 @@ public final class InverseFlusher<E> {
                     Class<?> childType = elementType.getJavaType();
                     elementEntityClass = childType;
                     parentReferenceAttributeAccessor = Accessors.forEntityMapping(
-                            evm.getMetamodel().getEntityMetamodel(),
+                            evm,
                             childType,
                             attribute.getMappedBy()
                     );

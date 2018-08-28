@@ -54,12 +54,12 @@ public final class Mappers {
         return new SimpleMapper<>(accessor);
     }
 
-    public static <S, T> Mapper<S, T> forEntityAttributeMapping(EntityMetamodel metamodel, Class<S> sourceEntityClass, Class<T> targetEntityClass, Map<String, String> mapping) {
+    public static <S, T> Mapper<S, T> forEntityAttributeMapping(EntityViewManagerImpl evm, Class<S> sourceEntityClass, Class<T> targetEntityClass, Map<String, String> mapping) {
         List<AttributeAccessor> source = new ArrayList<>(mapping.size());
         List<AttributeAccessor> target = new ArrayList<>(mapping.size());
         for (Map.Entry<String, String> entry : mapping.entrySet()) {
-            source.add(Accessors.forEntityMapping(metamodel, sourceEntityClass, entry.getKey()));
-            target.add(Accessors.forEntityMapping(metamodel, targetEntityClass, entry.getValue()));
+            source.add(Accessors.forEntityMapping(evm, sourceEntityClass, entry.getKey()));
+            target.add(Accessors.forEntityMapping(evm, targetEntityClass, entry.getValue()));
         }
 
         return new AttributeMapper<>(source, target);
@@ -111,7 +111,7 @@ public final class Mappers {
         List<AttributeAccessor> target = new ArrayList<>(mapping.size());
         for (Map.Entry<String, String> entry : mapping.entrySet()) {
             source.add(Accessors.forViewAttributePath(evm, sourceViewType, entry.getKey(), true));
-            target.add(Accessors.forEntityMapping(metamodel, targetEntityClass, entry.getValue()));
+            target.add(Accessors.forEntityMapping(evm, targetEntityClass, entry.getValue()));
         }
 
         return new AttributeMapper<>(source, target);
@@ -122,7 +122,7 @@ public final class Mappers {
         List<AttributeAccessor> source = new ArrayList<>(mapping.size());
         List<AttributeAccessor> target = new ArrayList<>(mapping.size());
         for (Map.Entry<String, String> entry : mapping.entrySet()) {
-            source.add(Accessors.forEntityMapping(metamodel, sourceEntityClass, entry.getKey()));
+            source.add(Accessors.forEntityMapping(evm, sourceEntityClass, entry.getKey()));
             target.add(Accessors.forEntityMappingAsViewAccessor(evm, targetViewType, entry.getValue(), false));
         }
 
@@ -132,7 +132,7 @@ public final class Mappers {
     public static <S, T> Mapper<S, T> forViewConvertToViewAttributeMapping(EntityViewManagerImpl evm, ViewType<S> sourceViewType, ViewType<T> targetViewType, String mappedBy, Mapper<S, T> additionalMapper) {
         List<Mapper<S, T>> mappers = new ArrayList<>();
         AttributeAccessor entityAccessor = Accessors.forEntityMapping(
-                evm.getCriteriaBuilderFactory().getService(EntityMetamodel.class),
+                evm,
                 sourceViewType.getEntityClass(),
                 ((MappingAttribute<?, ?>) sourceViewType.getIdAttribute()).getMapping()
         );

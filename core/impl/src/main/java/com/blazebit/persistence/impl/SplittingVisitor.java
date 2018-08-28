@@ -22,7 +22,7 @@ import com.blazebit.persistence.parser.expression.LazyCopyingResultVisitorAdapte
 import com.blazebit.persistence.parser.expression.PathElementExpression;
 import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.expression.PropertyExpression;
-import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
+import com.blazebit.persistence.spi.JpaProvider;
 
 import javax.persistence.metamodel.Type;
 import java.util.ArrayList;
@@ -36,11 +36,13 @@ import java.util.List;
 public class SplittingVisitor extends LazyCopyingResultVisitorAdapter {
 
     private final EntityMetamodel metamodel;
+    private final JpaProvider jpaProvider;
     private PathExpression expressionToSplit;
     private String subAttribute;
 
-    public SplittingVisitor(EntityMetamodel metamodel) {
+    public SplittingVisitor(EntityMetamodel metamodel, JpaProvider jpaProvider) {
         this.metamodel = metamodel;
+        this.jpaProvider = jpaProvider;
     }
 
     @Override
@@ -53,7 +55,7 @@ public class SplittingVisitor extends LazyCopyingResultVisitorAdapter {
 
             String field = expression.getField() + "." + subAttribute;
             JoinNode node = (JoinNode) expression.getBaseNode();
-            Class<?> fieldClass = JpaMetamodelUtils.getAttributePath(metamodel, node.getManagedType(), field).getAttributeClass();
+            Class<?> fieldClass = jpaProvider.getJpaMetamodelAccessor().getAttributePath(metamodel, node.getManagedType(), field).getAttributeClass();
             Type<?> fieldType = metamodel.type(fieldClass);
 
             return new PathExpression(

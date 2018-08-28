@@ -235,7 +235,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.fromClassExplicitlySet = builder.fromClassExplicitlySet;
 
         this.subqueryInitFactory = joinManager.getSubqueryInitFactory();
-        SplittingVisitor splittingVisitor = new SplittingVisitor(mainQuery.metamodel);
+        SplittingVisitor splittingVisitor = new SplittingVisitor(mainQuery.metamodel, mainQuery.jpaProvider);
         this.embeddableSplittingVisitor = new EmbeddableSplittingVisitor(mainQuery.metamodel, splittingVisitor);
         this.groupByExpressionGatheringVisitor = new GroupByExpressionGatheringVisitor(false, mainQuery.dbmsDialect);
         this.functionalDependencyAnalyzerVisitor = new FunctionalDependencyAnalyzerVisitor(mainQuery.metamodel, splittingVisitor);
@@ -305,7 +305,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         }
 
         this.subqueryInitFactory = joinManager.getSubqueryInitFactory();
-        SplittingVisitor splittingVisitor = new SplittingVisitor(mainQuery.metamodel);
+        SplittingVisitor splittingVisitor = new SplittingVisitor(mainQuery.metamodel, mainQuery.jpaProvider);
         this.embeddableSplittingVisitor = new EmbeddableSplittingVisitor(mainQuery.metamodel, splittingVisitor);
         this.groupByExpressionGatheringVisitor = new GroupByExpressionGatheringVisitor(false, mainQuery.dbmsDialect);
         this.functionalDependencyAnalyzerVisitor = new FunctionalDependencyAnalyzerVisitor(mainQuery.metamodel, splittingVisitor);

@@ -17,7 +17,9 @@
 package com.blazebit.persistence.integration.eclipselink;
 
 import com.blazebit.persistence.JoinType;
+import com.blazebit.persistence.integration.jpa.JpaMetamodelAccessorImpl;
 import com.blazebit.persistence.spi.JoinTable;
+import com.blazebit.persistence.spi.JpaMetamodelAccessor;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.reflection.ReflectionUtils;
 import org.eclipse.persistence.internal.jpa.metamodel.AttributeImpl;
@@ -444,4 +446,10 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     public Object getIdentifier(Object entity) {
         return persistenceUnitUtil.getIdentifier(entity);
     }
+
+    @Override
+    public JpaMetamodelAccessor getJpaMetamodelAccessor() {
+        return JpaMetamodelAccessorImpl.INSTANCE;
+    }
+
 }

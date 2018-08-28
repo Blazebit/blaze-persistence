@@ -456,6 +456,13 @@ public interface JpaProvider {
     public Object getIdentifier(Object entity);
 
     /**
+     * Returns the JpaMetamodelAccessor for this JPA vendor.
+     * @return the JpaMetamodelAccessor for this JPA vendor
+     * @since 1.3.0
+     */
+    public JpaMetamodelAccessor getJpaMetamodelAccessor();
+
+    /**
      * The possible locations of a constraint.
      *
      * @author Christian Beikov

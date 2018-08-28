@@ -16,18 +16,15 @@
 
 package com.blazebit.persistence.parser.util;
 
-import com.blazebit.persistence.parser.AttributePath;
 import com.blazebit.persistence.parser.EntityMetamodel;
-import com.blazebit.persistence.parser.ListIndexAttribute;
-import com.blazebit.persistence.parser.MapKeyAttribute;
 import com.blazebit.reflection.ReflectionUtils;
 
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.MapAttribute;
-import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
@@ -36,7 +33,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -352,222 +348,12 @@ public class JpaMetamodelUtils {
         return true;
     }
 
-    public static AttributePath getAttributePath(Metamodel metamodel, ManagedType<?> type, String attributePath) {
-        List<Attribute<?, ?>> attrPath;
-
-        if (attributePath.indexOf('.') == -1) {
-            attrPath = new ArrayList<Attribute<?, ?>>(1);
-            Attribute<?, ?> attribute = type.getAttribute(attributePath);
-            if (attribute == null) {
-                // Well, some implementations might not be fully spec compliant..
-                throw new IllegalArgumentException("Attribute '" + attributePath + "' does not exist on '" + getTypeName(type) + "'!");
-            }
-
-            attrPath.add(attribute);
-            return new AttributePath(attrPath, resolveFieldClass(type.getJavaType(), attribute));
-        } else {
-            attrPath = new ArrayList<Attribute<?, ?>>();
+    public static List<String> getEmbeddedPropertyNames(EmbeddableType<?> embeddedType) {
+        List<String> attributes = new ArrayList<>();
+        for (Attribute<?,?> attribute : embeddedType.getAttributes()) {
+            attributes.add(attribute.getName());
         }
-
-        String[] attributeParts = attributePath.split("\\.");
-        ManagedType<?> currentType = type;
-        Class<?> currentClass = type.getJavaType();
-
-        for (int i = 0; i < attributeParts.length; i++) {
-            Attribute<?, ?> attr = null;
-            if (currentType == null) {
-                // dereference basic
-                break;
-            }
-            attr = getAttribute(currentType, attributeParts[i]);
-            if (attr == null) {
-                attrPath.clear();
-                break;
-            }
-
-            currentClass = resolveFieldClass(currentClass, attr);
-            if (attr instanceof PluralAttribute<?, ?, ?>) {
-                PluralAttribute<?, ?, ?> pluralAttr = (PluralAttribute<?, ?, ?>) attr;
-                Type<?> elementType = pluralAttr.getElementType();
-                if (elementType.getPersistenceType() == Type.PersistenceType.EMBEDDABLE) {
-                    currentType = metamodel.embeddable(currentClass);
-                } else if (elementType.getPersistenceType() == Type.PersistenceType.BASIC) {
-                    currentType = null;
-                } else {
-                    currentType = metamodel.entity(currentClass);
-                }
-            } else if (attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED) {
-                currentType = metamodel.embeddable(currentClass);
-            } else if (attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.BASIC) {
-                currentType = null;
-            } else {
-                currentType = metamodel.entity(currentClass);
-            }
-
-            attrPath.add(attr);
-        }
-
-        if (attrPath.isEmpty()) {
-            throw new IllegalArgumentException("Path " + attributePath + " does not exist on entity " + getTypeName(type));
-        }
-
-        return new AttributePath(attrPath, currentClass);
+        return attributes;
     }
 
-    public static AttributePath getBasicAttributePath(Metamodel metamodel, ManagedType<?> type, String attributePath) {
-        List<Attribute<?, ?>> attrPath;
-
-        if (attributePath.indexOf('.') == -1) {
-            attrPath = new ArrayList<Attribute<?, ?>>(1);
-            Attribute<?, ?> attribute = type.getAttribute(attributePath);
-            if (attribute == null) {
-                // Well, some implementations might not be fully spec compliant..
-                throw new IllegalArgumentException("Attribute '" + attributePath + "' does not exist on '" + getTypeName(type) + "'!");
-            }
-
-            attrPath.add(attribute);
-            return new AttributePath(attrPath, resolveFieldClass(type.getJavaType(), attribute));
-        } else {
-            attrPath = new ArrayList<Attribute<?, ?>>();
-        }
-
-        String[] attributeParts = attributePath.split("\\.");
-        ManagedType<?> currentType = type;
-        Class<?> currentClass = type.getJavaType();
-
-        boolean joinableAllowed = true;
-        for (int i = 0; i < attributeParts.length; i++) {
-            Attribute<?, ?> attr = null;
-            if (currentType == null) {
-                // dereference basic
-                break;
-            }
-            attr = getAttribute(currentType, attributeParts[i]);
-            if (attr == null) {
-                attrPath.clear();
-                break;
-            }
-
-            currentClass = resolveFieldClass(currentClass, attr);
-            if (attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED) {
-                currentType = metamodel.embeddable(currentClass);
-            } else if (attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.BASIC) {
-                currentType = null;
-            } else if (isJoinable(attr) && joinableAllowed) {
-                joinableAllowed = false;
-                if (i + 1 < attributeParts.length) {
-                    currentType = metamodel.entity(currentClass);
-                    // look ahead
-                    Attribute<?, ?> nextAttr = getAttribute(currentType, attributeParts[i + 1]);
-                    if (!getSingleIdAttribute((EntityType<?>) currentType).getName().equals(nextAttr.getName())) {
-                        throw new IllegalArgumentException("Path joining not allowed in returning expression: " + attributePath);
-                    }
-                }
-            } else {
-                throw new IllegalArgumentException("Path joining not allowed in returning expression: " + attributePath);
-            }
-
-            attrPath.add(attr);
-        }
-
-        if (attrPath.isEmpty()) {
-            throw new IllegalArgumentException("Path " + attributePath + " does not exist on entity " + getTypeName(type));
-        }
-
-        return new AttributePath(attrPath, currentClass);
-    }
-
-    public static AttributePath getJoinTableCollectionAttributePath(Metamodel metamodel, EntityType<?> type, String attributePath, String collectionName) {
-        String trimmedPath = attributePath.trim();
-        String indexStart = "index(";
-        String keyStart = "key(";
-        int collectionArgumentStart;
-        Attribute<?, ?> collectionFunction;
-        if (trimmedPath.regionMatches(true, 0, indexStart, 0, indexStart.length())) {
-            collectionArgumentStart = indexStart.length();
-            collectionFunction = new ListIndexAttribute<>(type.getList(collectionName));
-        } else if (trimmedPath.regionMatches(true, 0, keyStart, 0, keyStart.length())) {
-            collectionArgumentStart = keyStart.length();
-            collectionFunction = new MapKeyAttribute<>(type.getMap(collectionName));
-        } else {
-            int dotIndex = trimmedPath.indexOf('.');
-            if (!trimmedPath.equals(collectionName) && (dotIndex == -1 || !trimmedPath.substring(0, dotIndex).equals(collectionName))) {
-                SingularAttribute<?, ?> idAttribute = getSingleIdAttribute(type);
-                if (!idAttribute.getName().equals(attributePath)) {
-                    throw new IllegalArgumentException("Only access to the owner type's id attribute '" + idAttribute.getName() + "' is allowed. Invalid access to different attribute through the expression: " + attributePath);
-                }
-                return new AttributePath(new ArrayList<Attribute<?, ?>>(Collections.singletonList(idAttribute)), resolveFieldClass(type.getJavaType(), idAttribute));
-            }
-
-            Attribute<?, ?> collectionAttribute = getAttribute(type, collectionName);
-            Class<?> targetClass = resolveFieldClass(type.getJavaType(), collectionAttribute);
-            if (dotIndex == -1) {
-                return new AttributePath(new ArrayList<Attribute<?, ?>>(Collections.singletonList(collectionAttribute)), resolveFieldClass(targetClass, collectionAttribute));
-            }
-
-            String collectionElementAttributeName = trimmedPath.substring(dotIndex + 1);
-            ManagedType<?> targetManagedType = metamodel.managedType(targetClass);
-            if (targetManagedType instanceof EntityType<?>) {
-                EntityType<?> targetEntityType = (EntityType<?>) targetManagedType;
-                SingularAttribute<?, ?> idAttribute = getSingleIdAttribute(targetEntityType);
-                String actualIdAttributeName = idAttribute.getName();
-                if (!actualIdAttributeName.equals(collectionElementAttributeName)) {
-                    throw new IllegalArgumentException("Only access to the target element type's id attribute '" + actualIdAttributeName + "' is allowed. Invalid access to different attribute through the expression: " + attributePath);
-                }
-                return new AttributePath(new ArrayList<>(Arrays.asList(collectionAttribute, idAttribute)), resolveFieldClass(targetClass, idAttribute));
-            } else {
-                Attribute<?, ?> attribute = null;
-                Throwable cause = null;
-                try {
-                    attribute = targetManagedType.getAttribute(collectionElementAttributeName);
-                } catch (IllegalArgumentException ex) {
-                    cause = ex;
-                }
-                if (attribute == null) {
-                    throw new IllegalArgumentException("Couldn't find attribute '" + collectionElementAttributeName + "' on managed type '" + targetClass.getName() + "'. Invalid access through the expression: " + attributePath, cause);
-                }
-                return new AttributePath(new ArrayList<>(Arrays.asList(collectionAttribute, attribute)), resolveFieldClass(targetClass, attribute));
-            }
-        }
-
-        // assume the last character is the closing parenthesis
-        String collectionAttributeName = trimmedPath.substring(collectionArgumentStart, trimmedPath.length() - 1);
-        if (!collectionAttributeName.equals(collectionName)) {
-            throw new IllegalArgumentException("Collection functions are only allowed to be used with the collection '" + collectionName + "'!. Invalid use in the expression: " + attributePath);
-        }
-
-        return new AttributePath(new ArrayList<Attribute<?, ?>>(Collections.singletonList(collectionFunction)), collectionFunction.getJavaType());
-    }
-
-    public static boolean isJoinable(Attribute<?, ?> attr) {
-        if (attr.isCollection()) {
-            return true;
-        }
-        SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) attr;
-        // This is a special case for datanucleus... apparently an embedded id is an ONE_TO_ONE association although I think it should be an embedded
-        // TODO: create a test case for datanucleus and report the problem
-        if (singularAttribute.isId()) {
-            return false;
-        }
-        return attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.MANY_TO_ONE
-            || attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.ONE_TO_ONE;
-    }
-
-    public static boolean isCompositeNode(Attribute<?, ?> attr) {
-        if (attr.isCollection()) {
-            PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) attr;
-            if (pluralAttribute.getElementType().getPersistenceType() == Type.PersistenceType.BASIC) {
-                return false;
-            }
-            return true;
-        }
-        SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) attr;
-        // This is a special case for datanucleus... apparently an embedded id is an ONE_TO_ONE association although I think it should be an embedded
-        // TODO: create a test case for datanucleus and report the problem
-        if (singularAttribute.isId()) {
-            return false;
-        }
-        return attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.MANY_TO_ONE
-                || attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.ONE_TO_ONE;
-    }
 }

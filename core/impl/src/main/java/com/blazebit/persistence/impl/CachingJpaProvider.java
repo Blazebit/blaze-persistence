@@ -20,6 +20,7 @@ import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.spi.JoinTable;
+import com.blazebit.persistence.spi.JpaMetamodelAccessor;
 import com.blazebit.persistence.spi.JpaProvider;
 
 import javax.persistence.EntityManager;
@@ -311,5 +312,10 @@ public final class CachingJpaProvider implements JpaProvider {
     @Override
     public Object getIdentifier(Object entity) {
         return jpaProvider.getIdentifier(entity);
+    }
+
+    @Override
+    public JpaMetamodelAccessor getJpaMetamodelAccessor() {
+        return jpaProvider.getJpaMetamodelAccessor();
     }
 }
