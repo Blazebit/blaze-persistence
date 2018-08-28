@@ -16,8 +16,7 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.persistence.parser.AttributePath;
-import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
+import com.blazebit.persistence.spi.AttributePath;
 import com.blazebit.persistence.view.CascadeType;
 import com.blazebit.persistence.view.InverseRemoveStrategy;
 import com.blazebit.persistence.view.MappingCorrelated;
@@ -308,7 +307,7 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
         }
 
         try {
-            AttributePath basicAttributePath = JpaMetamodelUtils.getAttributePath(context.getEntityMetamodel(), managedType, mapping);
+            AttributePath basicAttributePath = context.getJpaProvider().getJpaMetamodelAccessor().getAttributePath(context.getEntityMetamodel(), managedType, mapping);
             List<Attribute<?, ?>> attributes = basicAttributePath.getAttributes();
             for (int i = 0; i < attributes.size() - 1; i++) {
                 if (attributes.get(i).getDeclaringType().getPersistenceType() != Type.PersistenceType.EMBEDDABLE) {

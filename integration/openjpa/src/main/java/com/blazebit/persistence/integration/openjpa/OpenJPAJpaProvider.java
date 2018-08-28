@@ -17,7 +17,9 @@
 package com.blazebit.persistence.integration.openjpa;
 
 import com.blazebit.persistence.JoinType;
+import com.blazebit.persistence.integration.jpa.JpaMetamodelAccessorImpl;
 import com.blazebit.persistence.spi.JoinTable;
+import com.blazebit.persistence.spi.JpaMetamodelAccessor;
 import com.blazebit.persistence.spi.JpaProvider;
 import org.apache.openjpa.persistence.OpenJPAQuery;
 
@@ -333,6 +335,11 @@ public class OpenJPAJpaProvider implements JpaProvider {
     @Override
     public Object getIdentifier(Object entity) {
         return persistenceUnitUtil.getIdentifier(entity);
+    }
+
+    @Override
+    public JpaMetamodelAccessor getJpaMetamodelAccessor() {
+        return JpaMetamodelAccessorImpl.INSTANCE;
     }
 
 }

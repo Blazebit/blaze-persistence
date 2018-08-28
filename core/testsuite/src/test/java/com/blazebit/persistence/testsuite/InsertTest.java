@@ -324,7 +324,7 @@ public class InsertTest extends AbstractCoreTest {
                 cb.where("p.name").eq("P2s document");
                 cb.orderByAsc("p.id");
 
-                String expected = "WITH PersonCTE(id, name, age, idx, owner) AS(\n"
+                String expected = "WITH PersonCTE(id, name, age, idx, owner.id) AS(\n"
                         + "SELECT p.id, CONCAT(p.name,'s document'), p.age, 1, p.id FROM Person p\n"
                         + ")\n"
                         + "INSERT INTO Document(age, idx, name, owner)\n"
@@ -365,7 +365,7 @@ public class InsertTest extends AbstractCoreTest {
                 cb.orderByAsc("p.id");
                 cb.setMaxResults(1);
 
-                String expected = "WITH PersonCTE(id, name, age, idx, owner) AS(\n"
+                String expected = "WITH PersonCTE(id, name, age, idx, owner.id) AS(\n"
                         + "SELECT p.id, CONCAT(p.name,'s document'), p.age, 1, p.id FROM Person p\n"
                         + ")\n"
                         + "INSERT INTO Document(age, idx, name, owner)\n"

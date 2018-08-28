@@ -21,7 +21,7 @@ import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.ReturningBuilder;
 import com.blazebit.persistence.ReturningObjectBuilder;
 import com.blazebit.persistence.ReturningResult;
-import com.blazebit.persistence.parser.AttributePath;
+import com.blazebit.persistence.spi.AttributePath;
 import com.blazebit.persistence.parser.QualifiedAttribute;
 import com.blazebit.persistence.parser.SimpleQueryGenerator;
 import com.blazebit.persistence.parser.expression.Expression;
@@ -32,11 +32,11 @@ import com.blazebit.persistence.impl.query.CustomReturningSQLTypedQuery;
 import com.blazebit.persistence.impl.query.CustomSQLQuery;
 import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.impl.query.ReturningCollectionUpdateModificationQuerySpecification;
-import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 import com.blazebit.persistence.spi.JoinTable;
+import com.blazebit.persistence.spi.JpaMetamodelAccessor;
 
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
@@ -76,7 +76,8 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
     @Override
     protected String checkAttribute(String attributeName) {
         // Assert the attribute exists and "clean" the attribute path
-        AttributePath attributePath = JpaMetamodelUtils.getJoinTableCollectionAttributePath(getMetamodel(), entityType, attributeName, collectionName);
+        JpaMetamodelAccessor jpaMetamodelAccessor = mainQuery.jpaProvider.getJpaMetamodelAccessor();
+        AttributePath attributePath = jpaMetamodelAccessor.getJoinTableCollectionAttributePath(getMetamodel(), entityType, attributeName, collectionName);
         StringBuilder sb = new StringBuilder();
         for (Attribute<?, ?> attribute : attributePath.getAttributes()) {
             // Replace the collection name with the alias for easier processing

@@ -179,7 +179,7 @@ public class CTETest extends AbstractCoreTest {
             .where("e.parent").isNull()
         .end();
         String expected = ""
-                + "WITH " + TestAdvancedCTE1.class.getSimpleName() + "(id, embeddable.name, embeddable.description, embeddable.recursiveEntity, level, parent) AS(\n"
+                + "WITH " + TestAdvancedCTE1.class.getSimpleName() + "(id, embeddable.name, embeddable.description, embeddable.recursiveEntity.id, level, parent.id) AS(\n"
                 // NOTE: The parent relation select gets transformed to an id select!
                 + "SELECT e.id, e.name, 'desc', e.id, 0, e.parent.id FROM RecursiveEntity e WHERE e.parent IS NULL"
                 + "\n)\n"
@@ -306,7 +306,7 @@ public class CTETest extends AbstractCoreTest {
             .bind("parent").select("e.parent")
         .end();
         String expected = ""
-                + "WITH RECURSIVE " + TestAdvancedCTE1.class.getSimpleName() + "(id, embeddable.name, embeddable.description, embeddable.recursiveEntity, level, parentId) AS(\n"
+                + "WITH RECURSIVE " + TestAdvancedCTE1.class.getSimpleName() + "(id, embeddable.name, embeddable.description, embeddable.recursiveEntity.id, level, parentId) AS(\n"
                 + "SELECT e.id, e.name, 'desc', e.id, 0, e.parent.id FROM RecursiveEntity e WHERE e.parent IS NULL"
                 + "\nUNION ALL\n"
                 // NOTE: The parent relation select gets transformed to an id select!
@@ -611,10 +611,10 @@ public class CTETest extends AbstractCoreTest {
         .end()
         .orderByAsc("id");
         String expected = ""
-                + "WITH " + TestAdvancedCTE1.class.getSimpleName() + "(id, embeddable.name, embeddable.description, embeddable.recursiveEntity, level, parent) AS(\n"
+                + "WITH " + TestAdvancedCTE1.class.getSimpleName() + "(id, embeddable.name, embeddable.description, embeddable.recursiveEntity.id, level, parent.id) AS(\n"
                 + "SELECT e.id, e.name, 'desc', e.id, 0, e.parent.id FROM RecursiveEntity e\n"
-                + "), " + TestAdvancedCTE2.class.getSimpleName() + "(id, embeddable) AS(\n" +
-                "SELECT testAdvancedCTE1.id, testAdvancedCTE1.embeddable FROM TestAdvancedCTE1 testAdvancedCTE1\n" +
+                + "), " + TestAdvancedCTE2.class.getSimpleName() + "(id, embeddable.description, embeddable.name, embeddable.recursiveEntity.id) AS(\n" +
+                "SELECT testAdvancedCTE1.id, testAdvancedCTE1.embeddable.description, testAdvancedCTE1.embeddable.name, testAdvancedCTE1.embeddable.recursiveEntity.id FROM TestAdvancedCTE1 testAdvancedCTE1\n" +
                 ")\n"
                 + "SELECT testAdvancedCTE2 FROM TestAdvancedCTE2 testAdvancedCTE2 ORDER BY testAdvancedCTE2.id ASC";
 

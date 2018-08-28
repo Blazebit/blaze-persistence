@@ -18,6 +18,7 @@ package com.blazebit.persistence.integration.datanucleus;
 
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.spi.JoinTable;
+import com.blazebit.persistence.spi.JpaMetamodelAccessor;
 import com.blazebit.persistence.spi.JpaProvider;
 import org.datanucleus.ExecutionContext;
 import org.datanucleus.api.jpa.metamodel.AttributeImpl;
@@ -446,4 +447,10 @@ public class DataNucleusJpaProvider implements JpaProvider {
     public Object getIdentifier(Object entity) {
         return persistenceUnitUtil.getIdentifier(entity);
     }
+
+    @Override
+    public JpaMetamodelAccessor getJpaMetamodelAccessor() {
+        return DataNucleusJpaMetamodelAccessor.INSTANCE;
+    }
+
 }

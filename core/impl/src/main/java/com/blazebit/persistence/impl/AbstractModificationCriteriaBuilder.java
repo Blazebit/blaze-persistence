@@ -32,13 +32,14 @@ import com.blazebit.persistence.impl.query.CustomSQLQuery;
 import com.blazebit.persistence.impl.query.ModificationQuerySpecification;
 import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.impl.query.ReturningModificationQuerySpecification;
-import com.blazebit.persistence.parser.AttributePath;
+import com.blazebit.persistence.spi.AttributePath;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.spi.JoinTable;
+import com.blazebit.persistence.spi.JpaMetamodelAccessor;
 
 import javax.persistence.Query;
 import javax.persistence.Tuple;
@@ -327,7 +328,8 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             throw new IllegalArgumentException("Invalid empty attribute");
         }
 
-        AttributePath attrPath = JpaMetamodelUtils.getBasicAttributePath(getMetamodel(), entityType, attribute);
+        JpaMetamodelAccessor jpaMetamodelAccessor = mainQuery.jpaProvider.getJpaMetamodelAccessor();
+        AttributePath attrPath = jpaMetamodelAccessor.getBasicAttributePath(getMetamodel(), entityType, attribute);
 
         if (!type.isAssignableFrom(attrPath.getAttributeClass())) {
             throw new IllegalArgumentException("The given expected field type is not of the expected type: " + attrPath.getAttributeClass().getName());
@@ -426,7 +428,8 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             modificationQueryAttribute = idAttribute.getName();
         }
 
-        List<Attribute<?, ?>> attributePath = JpaMetamodelUtils.getBasicAttributePath(getMetamodel(), entityType, modificationQueryAttribute).getAttributes();
+        JpaMetamodelAccessor jpaMetamodelAccessor = mainQuery.jpaProvider.getJpaMetamodelAccessor();
+        List<Attribute<?, ?>> attributePath = jpaMetamodelAccessor.getBasicAttributePath(getMetamodel(), entityType, modificationQueryAttribute).getAttributes();
         if (returningAttributes.put(modificationQueryAttribute, attributePath) != null) {
             throw new IllegalArgumentException("The entity attribute [" + modificationQueryAttribute + "] has already been returned!");
         }
@@ -465,7 +468,8 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             Attribute<?, ?> idAttribute = JpaMetamodelUtils.getSingleIdAttribute(entityType);
             modificationQueryAttribute = idAttribute.getName();
         } else {
-            AttributePath queryAttributePath = JpaMetamodelUtils.getBasicAttributePath(getMetamodel(), entityType, modificationQueryAttribute);
+            JpaMetamodelAccessor jpaMetamodelAccessor = mainQuery.jpaProvider.getJpaMetamodelAccessor();
+            AttributePath queryAttributePath = jpaMetamodelAccessor.getBasicAttributePath(getMetamodel(), entityType, modificationQueryAttribute);
             queryAttrType = queryAttributePath.getAttributeClass();
         }
 
@@ -512,8 +516,9 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             if (attributes[i].isEmpty()) {
                 throw new IllegalArgumentException("empty attribute at position " + i);
             }
-            
-            attrs.add(JpaMetamodelUtils.getBasicAttributePath(getMetamodel(), entityType, attributes[i]).getAttributes());
+
+            JpaMetamodelAccessor jpaMetamodelAccessor = mainQuery.jpaProvider.getJpaMetamodelAccessor();
+            attrs.add(jpaMetamodelAccessor.getBasicAttributePath(getMetamodel(), entityType, attributes[i]).getAttributes());
         }
         
         return attrs;
@@ -599,7 +604,8 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
                 throw new IllegalArgumentException("Returning the query attribute [" + lastPathElem.getName() + "] is not supported by the dbms, only generated keys can be returned!");
             }
 
-            if (JpaMetamodelUtils.isJoinable(lastPathElem)) {
+            JpaMetamodelAccessor jpaMetamodelAccessor = mainQuery.jpaProvider.getJpaMetamodelAccessor();
+            if (jpaMetamodelAccessor.isJoinable(lastPathElem)) {
                 sb.append(entityAlias).append('.');
                 // We have to map *-to-one relationships to their ids
                 EntityType<?> type = mainQuery.metamodel.entity(JpaMetamodelUtils.resolveFieldClass(entityType.getJavaType(), lastPathElem));

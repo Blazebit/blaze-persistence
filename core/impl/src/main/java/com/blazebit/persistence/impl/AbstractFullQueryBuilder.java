@@ -38,6 +38,7 @@ import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
+import com.blazebit.persistence.spi.JpaMetamodelAccessor;
 
 import javax.persistence.TypedQuery;
 import javax.persistence.metamodel.EmbeddableType;
@@ -419,7 +420,8 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
                 sb.setLength(0);
                 rootNode.appendDeReference(sb, attributeName);
                 PathExpression expression = (PathExpression) rootNode.createExpression(attributeName);
-                expression.setPathReference(new SimplePathReference(rootNode, attributeName, getMetamodel().type(JpaMetamodelUtils.getAttributePath(getMetamodel(), rootNode.getManagedType(), attributeName).getAttributeClass())));
+                JpaMetamodelAccessor jpaMetamodelAccessor = mainQuery.jpaProvider.getJpaMetamodelAccessor();
+                expression.setPathReference(new SimplePathReference(rootNode, attributeName, getMetamodel().type(jpaMetamodelAccessor.getAttributePath(getMetamodel(), rootNode.getManagedType(), attributeName).getAttributeClass())));
                 resolvedExpressions.add(new ResolvedExpression(sb.toString(), expression));
             }
         }

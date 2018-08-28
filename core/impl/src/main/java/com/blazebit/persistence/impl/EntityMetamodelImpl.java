@@ -124,15 +124,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
                     }
                     collectColumnNames(e, attributeMap, attribute.getName(), parents, embeddableType, temporaryExtendedManagedTypes);
                 } else if (isAssociation(attribute) && !attribute.isCollection() && !jpaProvider.isForeignJoinColumn(e, attribute.getName())) {
-                    List<String> identifierOrUniqueKeyEmbeddedPropertyNames = jpaProvider.getIdentifierOrUniqueKeyEmbeddedPropertyNames(e, attribute.getName());
-
-                    for (String name : identifierOrUniqueKeyEmbeddedPropertyNames) {
-                        EntityType<?> fieldEntityType = delegate.entity(fieldType);
-                        Attribute<?, ?> idAttribute = JpaMetamodelUtils.getAttribute(fieldEntityType, name);
-                        Class<?> idType = JpaMetamodelUtils.resolveFieldClass(fieldType, idAttribute);
-                        String idPath = attribute.getName() + "." + name;
-                        attributeMap.put(idPath, new AttributeEntry(jpaProvider, e, idAttribute, idPath, idType, Arrays.asList(attribute, idAttribute)));
-                    }
+                    collectIdColumns(attribute.getName(), e, e, attributeMap, attribute, fieldType);
                 }
 
                 attributeMap.put(attribute.getName(), new AttributeEntry(jpaProvider, e, attribute, attribute.getName(), fieldType, parents));
@@ -202,6 +194,22 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         }
 
         return Collections.unmodifiableMap(attributes);
+    }
+
+    private void collectIdColumns(String prefix, EntityType<?> ownerType, EntityType<?> currentType, Map<String, AttributeEntry<?, ?>> attributeMap, Attribute<?, ?> attribute, Class<?> fieldType) {
+        List<String> identifierOrUniqueKeyEmbeddedPropertyNames = jpaProvider.getIdentifierOrUniqueKeyEmbeddedPropertyNames(currentType, attribute.getName());
+
+        for (String name : identifierOrUniqueKeyEmbeddedPropertyNames) {
+            EntityType<?> fieldEntityType = delegate.entity(fieldType);
+            Attribute<?, ?> idAttribute = JpaMetamodelUtils.getAttribute(fieldEntityType, name);
+            Class<?> idType = JpaMetamodelUtils.resolveFieldClass(fieldType, idAttribute);
+            String idPath = prefix + "." + name;
+            attributeMap.put(idPath, new AttributeEntry(jpaProvider, ownerType, idAttribute, idPath, idType, Arrays.asList(attribute, idAttribute)));
+
+            if (isAssociation(idAttribute) && !idAttribute.isCollection() && !jpaProvider.isForeignJoinColumn(ownerType, idAttribute.getName())) {
+                collectIdColumns(idPath, ownerType, fieldEntityType, attributeMap, idAttribute, idType);
+            }
+        }
     }
 
     private void detectCascadingDeleteCycles(TemporaryExtendedManagedType ownerManagedType, Map<String, TemporaryExtendedManagedType> extendedManagedTypes, Set<Class<?>> cascadingDeleteCycleSet, Class<?> ownerClass, AttributeEntry<?, ?> attributeEntry, Map<Class<?>, Type<?>> classToType) {

@@ -170,11 +170,11 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
 
     private Type<?> getType(Type<?> baseType, Attribute<?, ?> attribute) {
         Class<?> baseClass = baseType.getJavaType();
+
         if (baseClass != null) {
-            if (attribute.getJavaMember() instanceof Field) {
-                return metamodel.type(ReflectionUtils.getResolvedFieldType(baseClass, (Field) attribute.getJavaMember()));
-            } else if (attribute.getJavaMember() instanceof Method) {
-                return metamodel.type(ReflectionUtils.getResolvedMethodReturnType(baseClass, (Method) attribute.getJavaMember()));
+            Class<?> clazz = JpaMetamodelUtils.resolveFieldClass(baseType.getJavaType(), attribute);
+            if (clazz != null) {
+                return metamodel.type(clazz);
             }
         }
         if (attribute instanceof PluralAttribute<?, ?, ?>) {

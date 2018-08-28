@@ -27,8 +27,8 @@ import com.blazebit.persistence.parser.SimpleQueryGenerator;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.SubqueryExpression;
 import com.blazebit.persistence.parser.expression.VisitorAdapter;
-import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.spi.JpaMetamodelAccessor;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -193,7 +193,8 @@ public abstract class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCrite
 
     protected String checkAttribute(String attributeName) {
         // Just do that to assert the attribute exists
-        JpaMetamodelUtils.getBasicAttributePath(getMetamodel(), entityType, attributeName);
+        JpaMetamodelAccessor jpaMetamodelAccessor = mainQuery.jpaProvider.getJpaMetamodelAccessor();
+        jpaMetamodelAccessor.getBasicAttributePath(getMetamodel(), entityType, attributeName);
         Expression attributeExpression = setAttributes.get(attributeName);
         
         if (attributeExpression != null) {
