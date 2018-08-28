@@ -43,7 +43,9 @@ import com.blazebit.persistence.parser.expression.TrimExpression;
 import com.blazebit.persistence.parser.expression.TypeFunctionExpression;
 import com.blazebit.persistence.parser.expression.WhenClauseExpression;
 import com.blazebit.persistence.parser.predicate.BooleanLiteral;
+import com.blazebit.persistence.parser.predicate.CompoundPredicate;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
+import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 
 import javax.persistence.metamodel.Attribute;
@@ -70,6 +72,7 @@ import java.util.Set;
  */
 class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
 
+    private final ConstantifiedJoinNodeAttributeCollector constantifiedJoinNodeAttributeCollector;
     private final Map<Object, Set<String>> uniquenessMissingJoinNodeAttributes;
     private final Map<Object, List<ResolvedExpression>> uniquenessFormingJoinNodeExpressions;
     private final Map<Object, List<ResolvedExpression>> functionalDependencyRootExpressions;
@@ -80,18 +83,24 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
 
     public FunctionalDependencyAnalyzerVisitor(EntityMetamodel metamodel, SplittingVisitor splittingVisitor) {
         super(metamodel, splittingVisitor);
+        this.constantifiedJoinNodeAttributeCollector = new ConstantifiedJoinNodeAttributeCollector(metamodel);
         this.uniquenessMissingJoinNodeAttributes = new HashMap<>();
         this.uniquenessFormingJoinNodeExpressions = new HashMap<>();
         this.functionalDependencyRootExpressions = new LinkedHashMap<>();
     }
 
-    public void clear() {
+    public void reset() {
+        constantifiedJoinNodeAttributeCollector.reset();
+    }
+
+    public void clear(CompoundPredicate rootPredicate) {
         super.clear();
         uniquenessMissingJoinNodeAttributes.clear();
         uniquenessFormingJoinNodeExpressions.clear();
         functionalDependencyRootExpressions.clear();
         resultUnique = false;
         lastJoinNode = null;
+        constantifiedJoinNodeAttributeCollector.collectConstantifiedJoinNodeAttributes(rootPredicate);
     }
 
     public boolean analyzeFormsUniqueTuple(Expression expression) {
@@ -121,8 +130,8 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
         return unique;
     }
 
-    public ResolvedExpression[] getFunctionalDependencyRootExpressions(ResolvedExpression[] expressions) {
-        clear();
+    public ResolvedExpression[] getFunctionalDependencyRootExpressions(CompoundPredicate rootPredicate, ResolvedExpression[] expressions) {
+        clear(rootPredicate);
         for (int i = 0; i < expressions.length; i++) {
             currentResolvedExpression = expressions[i];
             if (analyzeFormsUniqueTuple(expressions[i].getExpression())) {
@@ -229,23 +238,40 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
             Attribute<?, ?> attribute = baseNode.getManagedType().getAttribute(associationName);
             baseNodeKey = new AbstractMap.SimpleEntry<>(baseNode, associationName);
             if (attribute.getPersistentAttributeType() != Attribute.PersistentAttributeType.ONE_TO_ONE) {
-                registerFunctionalDependencyRootExpression(baseNodeKey);
-                return false;
+                boolean nonConstantParent = true;
+                Set<String> constantifiedAttributes = constantifiedJoinNodeAttributeCollector.getConstantifiedJoinNodeAttributes().get(baseNode);
+                if (constantifiedAttributes != null) {
+                    ExtendedManagedType<?> extendedManagedType;
+                    if (baseNode.getManagedType().getJavaType() == null) {
+                        extendedManagedType = metamodel.getManagedType(ExtendedManagedType.class, JpaMetamodelUtils.getTypeName(baseNode.getManagedType()));
+                    } else {
+                        extendedManagedType = metamodel.getManagedType(ExtendedManagedType.class, baseNode.getManagedType().getJavaType());
+                    }
+                    Set<String> orderedAttributes = new HashSet<>();
+                    for (SingularAttribute<?, ?> singularAttribute : extendedManagedType.getIdAttributes()) {
+                        addAttributes("", singularAttribute, orderedAttributes);
+                    }
+
+                    // If the identifiers are constantified, we don't care if this is a one-to-one
+                    orderedAttributes.removeAll(constantifiedAttributes);
+                    if (orderedAttributes.isEmpty() || orderedAttributes.size() == 1 && equalsAny(orderedAttributes.iterator().next(), extendedManagedType.getAttribute(expr.getField()).getColumnEquivalentAttributes())) {
+                        nonConstantParent = false;
+                        managedType = metamodel.getManagedType(ExtendedManagedType.class, JpaMetamodelUtils.resolveFieldClass(baseNode.getJavaType(), attribute));
+                    }
+                }
+                if (nonConstantParent) {
+                    registerFunctionalDependencyRootExpression(baseNodeKey);
+                    return false;
+                }
+            } else {
+                managedType = metamodel.getManagedType(ExtendedManagedType.class, JpaMetamodelUtils.resolveFieldClass(baseNode.getJavaType(), attribute));
             }
-            managedType = metamodel.getManagedType(ExtendedManagedType.class, JpaMetamodelUtils.resolveFieldClass(baseNode.getJavaType(), attribute));
         }
 
         registerFunctionalDependencyRootExpression(baseNodeKey);
 
         // First we initialize the names of the id attributes as set for the join node
-        Set<String> orderedAttributes = uniquenessMissingJoinNodeAttributes.get(baseNodeKey);
-        if (orderedAttributes == null) {
-            orderedAttributes = new HashSet<>();
-            for (SingularAttribute<?, ?> singularAttribute : managedType.getIdAttributes()) {
-                addAttributes("", singularAttribute, orderedAttributes);
-            }
-            uniquenessMissingJoinNodeAttributes.put(baseNodeKey, orderedAttributes);
-        }
+        Set<String> orderedAttributes = getUniquenessMissingAttributes(baseNodeKey, managedType);
 
         // We remove for every id attribute from the initialized set of id attribute names
         String prefix = isEmbeddedIdPart ? pathReference.getField().substring(0, dotIndex + 1) : "";
@@ -265,7 +291,6 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
         }
 
         // But even now that we order by all id attribute parts, we still have to make sure this join node is uniqueness preserving
-
         while (baseNode.getParent() != null) {
             if (baseNode.getParentTreeNode() == null) {
                 // Don't assume uniqueness when encountering a cross or entity join
@@ -274,19 +299,82 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
             } else {
                 attr = baseNode.getParentTreeNode().getAttribute();
                 // Only one-to-one relation joins i.e. joins having a unique key with unique key equality predicate are uniqueness preserving
+                baseNode = baseNode.getParent();
 
-                // TODO: With #610 we could actually also support ManyToOne relations here if there is a unique key with constant equality predicate for the parent node which is a root node
-                // This is relevant for queries like `select e.manyToOne.id, e.manyToOne.name from Entity e order by e.manyToOne.id`
-                // Normally, the expression `e.manyToOne.id` wouldn't be considered unique, unless there is a unique key with constant equality predicate
-                // i.e. a predicate like `e.id = 1` that essentially "constantifies" the parent join node
                 if (attr.getPersistentAttributeType() != Attribute.PersistentAttributeType.ONE_TO_ONE) {
+                    Set<String> constantifiedAttributes = constantifiedJoinNodeAttributeCollector.getConstantifiedJoinNodeAttributes().get(baseNode);
+                    if (constantifiedAttributes != null) {
+                        // If there are constantified attributes for the node, we check if they cover the identifier
+                        // This is relevant for queries like `select e.manyToOne.id, e.manyToOne.name from Entity e order by e.manyToOne.id`
+                        // Normally, the expression `e.manyToOne.id` wouldn't be considered unique, unless there is a unique key with constant equality predicate
+                        // i.e. a predicate like `e.id = 1` that essentially "constantifies" the parent join node
+                        ExtendedManagedType<?> extendedManagedType;
+                        if (baseNode.getManagedType().getJavaType() == null) {
+                            extendedManagedType = metamodel.getManagedType(ExtendedManagedType.class, JpaMetamodelUtils.getTypeName(baseNode.getManagedType()));
+                        } else {
+                            extendedManagedType = metamodel.getManagedType(ExtendedManagedType.class, baseNode.getManagedType().getJavaType());
+                        }
+                        orderedAttributes = new HashSet<>();
+                        for (SingularAttribute<?, ?> singularAttribute : extendedManagedType.getIdAttributes()) {
+                            addAttributes("", singularAttribute, orderedAttributes);
+                        }
+
+                        // If the identifiers are constantified, we don't care if this is a one-to-one
+                        if (constantifiedAttributes.containsAll(orderedAttributes)) {
+                            continue;
+                        }
+                    }
+
                     return false;
                 }
-                baseNode = baseNode.getParent();
             }
         }
 
         return true;
+    }
+
+    private boolean equalsAny(String attribute, Set<? extends ExtendedAttribute<?, ?>> columnEquivalentAttributes) {
+        StringBuilder sb = null;
+        for (ExtendedAttribute<?, ?> columnEquivalentAttribute : columnEquivalentAttributes) {
+            List<Attribute<?, ?>> attributePath = columnEquivalentAttribute.getAttributePath();
+            String attributeName;
+            if (attributePath.size() == 1) {
+                attributeName = attributePath.get(0).getName();
+            } else {
+                if (sb == null) {
+                    sb = new StringBuilder();
+                } else {
+                    sb.setLength(0);
+                }
+                sb.append(attributePath.get(0).getName());
+                for (int i = 1; i < attributePath.size(); i++) {
+                    sb.append('.');
+                    sb.append(attributePath.get(i).getName());
+                }
+                attributeName = sb.toString();
+            }
+            if (attribute.equals(attributeName)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private Set<String> getUniquenessMissingAttributes(Object baseNodeKey, ExtendedManagedType<?> managedType) {
+        Set<String> orderedAttributes = uniquenessMissingJoinNodeAttributes.get(baseNodeKey);
+        if (orderedAttributes == null) {
+            orderedAttributes = new HashSet<>();
+            for (SingularAttribute<?, ?> singularAttribute : managedType.getIdAttributes()) {
+                addAttributes("", singularAttribute, orderedAttributes);
+            }
+            Set<String> constantifiedAttributes = constantifiedJoinNodeAttributeCollector.getConstantifiedJoinNodeAttributes().get(baseNodeKey);
+            if (constantifiedAttributes != null) {
+                orderedAttributes.removeAll(constantifiedAttributes);
+            }
+            uniquenessMissingJoinNodeAttributes.put(baseNodeKey, orderedAttributes);
+        }
+        return orderedAttributes;
     }
 
     private boolean removeAttribute(String prefix, SingularAttribute<?, ?> singularAttribute, Set<String> orderedAttributes) {
@@ -296,7 +384,6 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
         } else {
             attributeName = prefix + singularAttribute.getName();
         }
-
 
         if (singularAttribute.getType() instanceof EmbeddableType<?>) {
             String newPrefix = attributeName + ".";

@@ -43,8 +43,8 @@ public class CriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T, Criteria
     }
 
     @Override
-    protected void prepareForModification() {
-        super.prepareForModification();
+    protected void prepareForModification(ClauseType changedClause) {
+        super.prepareForModification(changedClause);
         cachedQueryRootCountQueryString = null;
         cachedExternalQueryRootCountQueryString = null;
     }

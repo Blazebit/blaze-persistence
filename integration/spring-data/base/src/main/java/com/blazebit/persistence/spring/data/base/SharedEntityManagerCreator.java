@@ -73,6 +73,7 @@ public abstract class SharedEntityManagerCreator {
 	private static final Set<String> queryTerminatingMethods = new HashSet<>(8);
 
 	static {
+		transactionRequiringMethods.add("getTransaction");
 		transactionRequiringMethods.add("joinTransaction");
 		transactionRequiringMethods.add("flush");
 		transactionRequiringMethods.add("persist");
@@ -248,11 +249,6 @@ public abstract class SharedEntityManagerCreator {
 			else if (method.getName().equals("close")) {
 				// Handle close method: suppress, not valid.
 				return null;
-			}
-			else if (method.getName().equals("getTransaction")) {
-				throw new IllegalStateException(
-						"Not allowed to create transaction on shared EntityManager - " +
-						"use Spring transactions or EJB CMT instead");
 			}
 
 			// Determine current EntityManager: either the transactional one

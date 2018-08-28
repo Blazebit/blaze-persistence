@@ -73,7 +73,7 @@ class EmbeddableSplittingVisitor extends AbortableVisitorAdapter {
         this.splittedOffExpressions = new ArrayList<>();
     }
 
-    public void clear() {
+    protected void clear() {
         splittedOffExpressions.clear();
     }
 

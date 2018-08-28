@@ -42,6 +42,7 @@ import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -180,7 +181,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         Map<Object, ExtendedManagedTypeImpl<?>> extendedManagedTypes = new HashMap<>(temporaryExtendedManagedTypes.size());
         for (Map.Entry<String, TemporaryExtendedManagedType> entry : temporaryExtendedManagedTypes.entrySet()) {
             TemporaryExtendedManagedType value = entry.getValue();
-            ExtendedManagedTypeImpl<?> extendedManagedType = new ExtendedManagedTypeImpl(value.managedType, value.cascadingDeleteCycle, Collections.unmodifiableMap(value.attributes));
+            ExtendedManagedTypeImpl<?> extendedManagedType = new ExtendedManagedTypeImpl(value.managedType, value.cascadingDeleteCycle, initAttributes(value.attributes));
             extendedManagedTypes.put(entry.getKey(), extendedManagedType);
             if (value.managedType.getJavaType() != null) {
                 extendedManagedTypes.put(value.managedType.getJavaType(), extendedManagedType);
@@ -193,6 +194,14 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         this.classMap = Collections.unmodifiableMap(classToType);
         this.cteMap = Collections.unmodifiableMap(cteToType);
         this.extendedManagedTypes = Collections.unmodifiableMap(extendedManagedTypes);
+    }
+
+    private Map<String, AttributeEntry<?,?>> initAttributes(Map<String, AttributeEntry<?,?>> attributes) {
+        for (AttributeEntry<?, ?> attributeEntry : attributes.values()) {
+            attributeEntry.initColumnEquivalentAttributes(attributes.values());
+        }
+
+        return Collections.unmodifiableMap(attributes);
     }
 
     private void detectCascadingDeleteCycles(TemporaryExtendedManagedType ownerManagedType, Map<String, TemporaryExtendedManagedType> extendedManagedTypes, Set<Class<?>> cascadingDeleteCycleSet, Class<?> ownerClass, AttributeEntry<?, ?> attributeEntry, Map<Class<?>, Type<?>> classToType) {
@@ -580,6 +589,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         private final String[] columnNames;
         private final String[] columnTypes;
         private final ConcurrentMap<EntityType<?>, Map<String, String>> inverseAttributeCache = new ConcurrentHashMap<>();
+        private final Set<ExtendedAttribute<X, ?>> columnEquivalentAttributes = new HashSet<>();
 
         public AttributeEntry(JpaProvider jpaProvider, ManagedType<X> ownerType, Attribute<X, Y> attribute, String attributeName, Class<Y> fieldType, List<Attribute<?, ?>> parents) {
             this.jpaProvider = jpaProvider;
@@ -722,6 +732,19 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         @Override
         public String[] getColumnTypes() {
             return columnTypes;
+        }
+
+        @Override
+        public Set<ExtendedAttribute<X, ?>> getColumnEquivalentAttributes() {
+            return columnEquivalentAttributes;
+        }
+
+        public void initColumnEquivalentAttributes(Collection<AttributeEntry<?, ?>> attributeEntries) {
+            for (AttributeEntry<?, ?> attributeEntry : attributeEntries) {
+                if (attributeEntry != this && Arrays.equals(columnNames, attributeEntry.columnNames)) {
+                    columnEquivalentAttributes.add((ExtendedAttribute<X, ?>) attributeEntry);
+                }
+            }
         }
 
         public AttributeEntry<X, Y> withCascadingDeleteCycle() {

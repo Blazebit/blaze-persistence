@@ -50,6 +50,6 @@ public class UnorderedSetCollectionInstantiator  extends AbstractCollectionInsta
 
     @Override
     public RecordingSet<Set<?>, ?> createRecordingCollection(int size) {
-        return new RecordingSet(createCollection(size), allowedSubtypes, updatable, optimize);
+        return new RecordingSet(createCollection(size), false, allowedSubtypes, updatable, optimize);
     }
 }

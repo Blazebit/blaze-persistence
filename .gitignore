@@ -61,3 +61,4 @@ integration/hibernate/.classpath
 integration/hibernate/.factorypath
 integration/hibernate/target/
 /core/impl/nbactions.xml
+*/**/dependency-reduced-pom.xml

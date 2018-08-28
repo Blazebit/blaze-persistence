@@ -59,6 +59,8 @@ matrix:
         - docker
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 SPRING_DATA=spring-data-2.0.x DELTASPIKE=deltaspike-1.8
       jdk: oraclejdk8
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 SPRING_DATA=spring-data-2.1.x DELTASPIKE=deltaspike-1.8
+      jdk: oraclejdk8
 #    - env: JPAPROVIDER=hibernate-5.2 RDBMS=sqlite
 #      jdk: oraclejdk8
 #    - env: JPAPROVIDER=hibernate-5.2 RDBMS=firebird
@@ -444,6 +446,10 @@ matrix:
       before_install:
         - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
         - . ./install-jdk.sh -F 11 -L BCL
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=12
+      before_install:
+      - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
+      - . ./install-jdk.sh -F 12 -L GPL
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=10 BUILD_JDK=10
       before_install:
         - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
@@ -452,6 +458,10 @@ matrix:
       before_install:
         - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
         - . ./install-jdk.sh -F 11 -L BCL
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=12 BUILD_JDK=12
+      before_install:
+      - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
+      - . ./install-jdk.sh -F 12 -L GPL
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=9
       before_install:
         - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
@@ -499,6 +509,8 @@ matrix:
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=10 BUILD_JDK=10
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=11 BUILD_JDK=11
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=11
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=12 BUILD_JDK=12
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=12
 #    - env: JPAPROVIDER=datanucleus-5.1 RDBMS=h2 JDK=9
 #      before_install:
 #        - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh

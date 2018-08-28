@@ -684,7 +684,12 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
             return wasDirty;
         } finally {
             if (shouldPersist) {
-                context.getInitialStateResetter().addPersistedView(updatableProxy, oldId);
+                if (idFlusher == null) {
+                    // Embeddables don't have an id
+                    context.getInitialStateResetter().addPersistedView(updatableProxy);
+                } else {
+                    context.getInitialStateResetter().addPersistedView(updatableProxy, oldId);
+                }
 
                 if (successful && deferredFlushers != null) {
                     deferredFlushEntity(context, entity, updatableProxy, deferredFlushers);
@@ -752,7 +757,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
             }
         } else {
             if (context.addRemovedObject(entityView)) {
-                remove(context, entity, entityView, entityView.$$_getId(), entityView.$$_getVersion(), false);
+                remove(context, entity, entityView, entityView.$$_getId(), entityView.$$_getVersion(), true);
             }
         }
         return Collections.emptyList();

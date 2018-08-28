@@ -16,15 +16,23 @@
 
 package com.blazebit.persistence.view.impl.mapper;
 
+import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.parser.EntityMetamodel;
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.accessor.Accessors;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
+import com.blazebit.persistence.view.impl.entity.EntityTupleizer;
+import com.blazebit.persistence.view.impl.macro.MutableEmbeddingViewJpqlMacro;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
+import com.blazebit.persistence.view.impl.update.DefaultEntityTupleizer;
 import com.blazebit.persistence.view.metamodel.BasicType;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingAttribute;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
+import com.blazebit.persistence.view.metamodel.Type;
+import com.blazebit.persistence.view.metamodel.ViewType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -72,12 +80,12 @@ public final class Mappers {
     public static <S, T> Mapper<S, T> forViewToEntityAttributeMapping(EntityViewManagerImpl evm, ManagedViewType<S> sourceViewType, Class<T> targetEntityClass) {
         Set<MethodAttribute<?, ?>> attributes = (Set<MethodAttribute<?, ?>>) (Set) sourceViewType.getAttributes();
         Map<String, String> mappings = new HashMap<>(attributes.size());
-        buildMappings("", "", attributes, mappings);
+        buildViewToEntityMappings("", "", attributes, mappings);
         return forViewToEntityAttributeMapping(evm, sourceViewType, targetEntityClass, mappings);
     }
 
     @SuppressWarnings("unchecked")
-    private static void buildMappings(String attributePrefix, String mappingPrefix, Set<MethodAttribute<?, ?>> attributes, Map<String, String> mappings) {
+    private static void buildViewToEntityMappings(String attributePrefix, String mappingPrefix, Set<MethodAttribute<?, ?>> attributes, Map<String, String> mappings) {
         for (MethodAttribute<?, ?> attribute : attributes) {
             if (!(attribute instanceof SingularAttribute<?, ?>)) {
                 throw new IllegalArgumentException("Plural attributes aren't supported yet for view to entity mappings!");
@@ -87,7 +95,7 @@ public final class Mappers {
                 mappings.put(attributePrefix + attribute.getName(), mappingPrefix + ((MappingAttribute<?, ?>) attr).getMapping());
             } else {
                 ManagedViewType<?> viewType = (ManagedViewType<?>) attr.getType();
-                buildMappings(
+                buildViewToEntityMappings(
                         attributePrefix + attribute.getName() + ".",
                         mappingPrefix + ((MappingAttribute<?, ?>) attr).getMapping() + ".",
                         (Set<MethodAttribute<?, ?>>) (Set) viewType.getAttributes(),
@@ -120,4 +128,48 @@ public final class Mappers {
 
         return new AttributeMapper<>(source, target);
     }
+
+    public static <S, T> Mapper<S, T> forViewConvertToViewAttributeMapping(EntityViewManagerImpl evm, ViewType<S> sourceViewType, ViewType<T> targetViewType, String mappedBy, Mapper<S, T> additionalMapper) {
+        List<Mapper<S, T>> mappers = new ArrayList<>();
+        AttributeAccessor entityAccessor = Accessors.forEntityMapping(
+                evm.getCriteriaBuilderFactory().getService(EntityMetamodel.class),
+                sourceViewType.getEntityClass(),
+                ((MappingAttribute<?, ?>) sourceViewType.getIdAttribute()).getMapping()
+        );
+        ExpressionFactory ef = evm.getCriteriaBuilderFactory().getService(ExpressionFactory.class);
+        for (MethodAttribute<?, ?> attribute : targetViewType.getAttributes()) {
+            if (attribute.isUpdatable() && attribute instanceof MappingAttribute<?, ?> && attribute instanceof SingularAttribute<?, ?>) {
+                if (mappedBy.equals(((MappingAttribute) attribute).getMapping())) {
+                    ViewType<?> attributeType = (ViewType<?>) ((SingularAttribute<?, ?>) attribute).getType();
+                    Type<?> attributeViewIdType = ((SingularAttribute<?, ?>) attributeType.getIdAttribute()).getType();
+                    EntityTupleizer entityTupleizer = null;
+                    ObjectBuilder<?> idViewBuilder = null;
+                    if (attributeViewIdType instanceof ManagedViewType<?>) {
+                        entityTupleizer = new DefaultEntityTupleizer(evm, (ManagedViewType<?>) attributeViewIdType);
+                        idViewBuilder = (ObjectBuilder<Object>) evm.getTemplate(
+                                ef,
+                                (ManagedViewTypeImplementor<?>) attributeViewIdType,
+                                null,
+                                attributeViewIdType.getJavaType().getSimpleName(),
+                                null,
+                                null,
+                                new MutableEmbeddingViewJpqlMacro(),
+                                0
+                        ).createObjectBuilder(null, null, null, 0);
+                    }
+                    mappers.add(new ReferenceViewAttributeMapper<S, T>(evm, entityAccessor, attributeType.getJavaType(), entityTupleizer, Accessors.forMutableViewAttribute(evm, attribute), idViewBuilder));
+                }
+            }
+        }
+
+        if (mappers.isEmpty()) {
+            return additionalMapper;
+        }
+
+        if (additionalMapper != null) {
+            mappers.add(additionalMapper);
+        }
+        return new CompositeMapper<>(mappers.toArray(new Mapper[mappers.size()]));
+    }
+
 }

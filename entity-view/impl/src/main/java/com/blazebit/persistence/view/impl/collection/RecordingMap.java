@@ -25,7 +25,9 @@ import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -46,6 +48,7 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
     protected final boolean updatable;
     private final boolean optimize;
     private final boolean hashBased;
+    private final boolean ordered;
     private BasicDirtyTracker parent;
     private int parentIndex;
     private boolean dirty;
@@ -57,19 +60,21 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
     // We remember the iterator so we can do a proper hash based collection replacement
     private transient RecordingEntrySetReplacingIterator<K, V> currentIterator;
 
-    protected RecordingMap(C delegate, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize, boolean hashBased) {
+    protected RecordingMap(C delegate, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize, boolean hashBased, boolean ordered) {
         this.delegate = delegate;
         this.allowedSubtypes = allowedSubtypes;
         this.updatable = updatable;
         this.optimize = optimize;
         this.hashBased = hashBased;
+        this.ordered = ordered;
     }
 
-    public RecordingMap(C delegate, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize) {
+    public RecordingMap(C delegate, boolean ordered, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize) {
         this.delegate = delegate;
         this.allowedSubtypes = allowedSubtypes;
         this.updatable = updatable;
         this.optimize = optimize;
+        this.ordered = ordered;
         this.hashBased = true;
     }
 
@@ -224,6 +229,86 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
         this.removedKeys = removedKeys;
         this.addedElements = addedElements;
         this.removedElements = removedElements;
+        if (ordered) {
+            List<Object> objects = new ArrayList<>(delegate.size() * 2);
+            for (Map.Entry<K, V> entry : delegate.entrySet()) {
+                K key = entry.getKey();
+                V value = entry.getValue();
+                for (K oldKey : addedKeys.keySet()) {
+                    if (oldKey.equals(key) && key != oldKey) {
+                        if (key instanceof DirtyTracker) {
+                            ((DirtyTracker) key).$$_unsetParent();
+                        }
+                        if (oldKey instanceof DirtyTracker) {
+                            ((DirtyTracker) oldKey).$$_setParent(this, 1);
+                        }
+                        key = oldKey;
+                        break;
+                    }
+                }
+                objects.add(key);
+                for (V oldValue : addedElements.keySet()) {
+                    if (oldValue.equals(value) && value != oldValue) {
+                        if (value instanceof DirtyTracker) {
+                            ((DirtyTracker) value).$$_unsetParent();
+                        }
+                        if (oldValue instanceof DirtyTracker) {
+                            ((DirtyTracker) oldValue).$$_setParent(this, 2);
+                        }
+                        value = oldValue;
+                        break;
+                    }
+                }
+                objects.add(value);
+            }
+            delegate.clear();
+            for (int i = 0; i < objects.size(); i += 2) {
+                delegate.put((K) objects.get(i), (V) objects.get(i + 1));
+            }
+        } else {
+            Iterator<Map.Entry<K, V>> iterator = delegate.entrySet().iterator();
+            Map<K, V> newValues = new HashMap<>();
+            while (iterator.hasNext()) {
+                Map.Entry<K, V> entry = iterator.next();
+                boolean removed = false;
+                K oldKey = entry.getKey();
+                for (K k : addedKeys.keySet()) {
+                    if (k.equals(entry.getKey()) && entry.getKey() != k) {
+                        if (oldKey instanceof DirtyTracker) {
+                            ((DirtyTracker) oldKey).$$_unsetParent();
+                        }
+                        if (k instanceof DirtyTracker) {
+                            ((DirtyTracker) k).$$_setParent(this, 1);
+                        }
+                        oldKey = k;
+                        iterator.remove();
+                        removed = true;
+                        break;
+                    }
+                }
+                V oldValue = entry.getValue();
+                for (V v : addedElements.keySet()) {
+                    if (v.equals(entry.getValue()) && entry.getValue() != v) {
+                        if (oldValue instanceof DirtyTracker) {
+                            ((DirtyTracker) oldValue).$$_unsetParent();
+                        }
+                        if (v instanceof DirtyTracker) {
+                            ((DirtyTracker) v).$$_setParent(this, 2);
+                        }
+                        oldValue = v;
+                        if (!removed) {
+                            iterator.remove();
+                            removed = true;
+                        }
+                        break;
+                    }
+                }
+                if (removed) {
+                    newValues.put(oldKey, oldValue);
+                }
+            }
+            delegate.putAll(newValues);
+        }
     }
 
     public List<MapAction<C>> resetActions(UpdateContext context) {

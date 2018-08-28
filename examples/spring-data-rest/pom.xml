@@ -245,8 +245,8 @@
         <profile>
             <id>spring-data-2.1.x</id>
             <properties>
-                <version.spring>5.0.4.RELEASE</version.spring>
-                <version.spring.boot>2.0.0.RELEASE</version.spring.boot>
+                <version.spring>5.1.0.RC2</version.spring>
+                <version.spring.boot>2.1.0.M2</version.spring.boot>
             </properties>
             <dependencies>
                 <dependency>
@@ -274,6 +274,16 @@
                     </snapshots>
                 </repository>
             </repositories>
+            <pluginRepositories>
+                <pluginRepository>
+                    <id>spring-milestones</id>
+                    <name>Spring Milestones</name>
+                    <url>https://repo.spring.io/libs-milestone</url>
+                    <snapshots>
+                        <enabled>false</enabled>
+                    </snapshots>
+                </pluginRepository>
+            </pluginRepositories>
         </profile>
     </profiles>
 </project>

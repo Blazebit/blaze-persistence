@@ -50,6 +50,6 @@ public class OrderedSetCollectionInstantiator  extends AbstractCollectionInstant
 
     @Override
     public RecordingSet<Set<?>, ?> createRecordingCollection(int size) {
-        return new RecordingSet(createCollection(size), allowedSubtypes, updatable, optimize);
+        return new RecordingSet(createCollection(size), true, allowedSubtypes, updatable, optimize);
     }
 }

@@ -160,7 +160,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
 
         if (keysetMode != oldMode) {
-            prepareForModification();
+            prepareForModification(ClauseType.WHERE);
         }
     }
 
@@ -396,8 +396,8 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     }
 
     @Override
-    protected void prepareForModification() {
-        super.prepareForModification();
+    protected void prepareForModification(ClauseType changedClause) {
+        super.prepareForModification(changedClause);
         cachedIdQueryString = null;
         cachedExternalIdQueryString = null;
     }
@@ -442,7 +442,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
 
         // Paginated criteria builders always need the last order by expression to be unique
-        List<OrderByExpression> orderByExpressions = orderByManager.getOrderByExpressions(false, hasGroupBy ? Arrays.asList(getIdentifierExpressions()) : Collections.<ResolvedExpression>emptyList());
+        List<OrderByExpression> orderByExpressions = orderByManager.getOrderByExpressions(false, whereManager.rootPredicate.getPredicate(), hasGroupBy ? Arrays.asList(getIdentifierExpressions()) : Collections.<ResolvedExpression>emptyList());
         if (!orderByExpressions.get(orderByExpressions.size() - 1).isResultUnique()) {
             throw new IllegalStateException("The order by items of the query builder are not guaranteed to produce unique tuples! Consider also ordering by the entity identifier!");
         }

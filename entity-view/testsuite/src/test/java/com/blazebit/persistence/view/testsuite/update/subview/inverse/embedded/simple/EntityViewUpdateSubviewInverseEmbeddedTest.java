@@ -151,7 +151,7 @@ public class EntityViewUpdateSubviewInverseEmbeddedTest extends AbstractEntityVi
 
         // Then
         // After update, the position is replaced with the declaration type
-        assertFalse(newOrder.getPositions().iterator().next() instanceof UpdatableLegacyOrderPositionView);
+       assertFalse(newOrder.getPositions().iterator().next() instanceof UpdatableLegacyOrderPositionView);
         restartTransaction();
         LegacyOrder legacyOrder = em.find(LegacyOrder.class, newOrder.getId());
         Assert.assertEquals(1, legacyOrder.getPositions().size());

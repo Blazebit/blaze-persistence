@@ -30,7 +30,7 @@ import java.util.Set;
 public class RecordingList<E> extends RecordingCollection<List<E>, E> implements List<E> {
 
     public RecordingList(List<E> delegate, boolean indexed, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize) {
-        super(delegate, indexed, allowedSubtypes, updatable, optimize);
+        super(delegate, indexed, indexed, allowedSubtypes, updatable, optimize);
     }
 
     void addAddAllAction(int index, Collection<? extends E> c) {

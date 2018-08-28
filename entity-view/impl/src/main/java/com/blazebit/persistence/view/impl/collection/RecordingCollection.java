@@ -46,6 +46,7 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
     protected final Set<Class<?>> allowedSubtypes;
     protected final boolean updatable;
     protected final boolean indexed;
+    private final boolean ordered;
     private final boolean optimize;
     private final boolean hashBased;
     private BasicDirtyTracker parent;
@@ -57,20 +58,22 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
     // We remember the iterator so we can do a proper hash based collection replacement
     private transient RecordingReplacingIterator<E> currentIterator;
 
-    protected RecordingCollection(C delegate, boolean indexed, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize, boolean hashBased) {
+    protected RecordingCollection(C delegate, boolean indexed, boolean ordered, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize, boolean hashBased) {
         this.delegate = delegate;
         this.allowedSubtypes = allowedSubtypes;
         this.updatable = updatable;
         this.indexed = indexed;
+        this.ordered = ordered;
         this.optimize = optimize;
         this.hashBased = hashBased;
     }
 
-    public RecordingCollection(C delegate, boolean indexed, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize) {
+    public RecordingCollection(C delegate, boolean indexed, boolean ordered, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize) {
         this.delegate = delegate;
         this.allowedSubtypes = allowedSubtypes;
         this.updatable = updatable;
         this.indexed = indexed;
+        this.ordered = ordered;
         this.optimize = optimize;
         this.hashBased = false;
     }
@@ -228,6 +231,44 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
         this.actions = actions;
         this.addedElements = addedElements;
         this.removedElements = removedElements;
+        if (ordered) {
+            List<E> objects = new ArrayList<>(delegate.size());
+            for (E elem : delegate) {
+                for (E oldElem : addedElements.keySet()) {
+                    if (oldElem.equals(elem) && elem != oldElem) {
+                        if (elem instanceof DirtyTracker) {
+                            ((DirtyTracker) oldElem).$$_unsetParent();
+                        }
+                        if (oldElem instanceof DirtyTracker) {
+                            ((DirtyTracker) oldElem).$$_setParent(this, 1);
+                        }
+                        elem = oldElem;
+                        break;
+                    }
+                }
+                objects.add(elem);
+            }
+            delegate.clear();
+            delegate.addAll(objects);
+        } else {
+            Iterator<E> iterator = delegate.iterator();
+            while (iterator.hasNext()) {
+                E elem = iterator.next();
+                for (E oldElem : addedElements.keySet()) {
+                    if (oldElem.equals(elem) && elem != oldElem) {
+                        if (elem instanceof DirtyTracker) {
+                            ((DirtyTracker) oldElem).$$_unsetParent();
+                        }
+                        if (oldElem instanceof DirtyTracker) {
+                            ((DirtyTracker) oldElem).$$_setParent(this, 1);
+                        }
+                        iterator.remove();
+                        break;
+                    }
+                }
+            }
+            delegate.addAll(addedElements.keySet());
+        }
     }
 
     public List<CollectionAction<C>> resetActions(UpdateContext context) {

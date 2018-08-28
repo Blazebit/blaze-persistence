@@ -20,12 +20,12 @@
 
     <parent>
         <groupId>com.blazebit</groupId>
-        <artifactId>blazebit-parent</artifactId>
-        <version>11</version>
+        <artifactId>blaze-persistence-parent</artifactId>
+        <version>1.3.0-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <artifactId>blaze-persistence-bom</artifactId>
-    <version>1.3.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Blazebit Persistence Bill of Materials</name>

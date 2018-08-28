@@ -91,7 +91,11 @@ public class InverseViewToEntityMapper<E> implements InverseElementToEntityMappe
             elementEntity = entityLoader.toEntity(context, null);
 
             parentEntityOnChildEntityMapper.map(newParent, elementEntity);
-            if (nestedGraphNode != null) {
+            if (nestedGraphNode == null) {
+                if (parentEntityOnChildViewMapperListener != null) {
+                    parentEntityOnChildViewMapperListener.run();
+                }
+            } else {
                 nestedGraphNode.flushEntity(context, (E) elementEntity, null, child, parentEntityOnChildViewMapperListener);
             }
             elementViewToEntityMapper.applyToEntity(context, elementEntity, child);
@@ -99,7 +103,11 @@ public class InverseViewToEntityMapper<E> implements InverseElementToEntityMappe
             elementEntity = entityLoader.toEntity(context, id);
 
             parentEntityOnChildEntityMapper.map(newParent, elementEntity);
-            if (nestedGraphNode != null) {
+            if (nestedGraphNode == null) {
+                if (parentEntityOnChildViewMapperListener != null) {
+                    parentEntityOnChildViewMapperListener.run();
+                }
+            } else {
                 nestedGraphNode.flushEntity(context, (E) elementEntity, null, child, parentEntityOnChildViewMapperListener);
             }
             elementViewToEntityMapper.applyToEntity(context, elementEntity, child);

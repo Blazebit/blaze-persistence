@@ -49,6 +49,8 @@ Not yet released
 * Fix parameter handling in custom functions for EclipseLink when rendering parameters as chunks
 * Fix identity problems of updatable subviews for embeddables
 * Fix wrong order of keysets in the keyset page returned from a _previous page request_
+* Fix some problems with inverse collection flushing and setting the parent on existing view fields
+* Fix a few problems with state resetting of updatable entity views on transaction rollback
 
 ### Backwards-incompatible changes
 

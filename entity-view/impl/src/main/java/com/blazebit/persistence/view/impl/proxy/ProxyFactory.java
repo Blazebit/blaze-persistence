@@ -1979,10 +1979,10 @@ public class ProxyFactory {
                                         sb.append("),");
                                     } else if (pluralAttribute.isOrdered()) {
                                         sb.append("new ").append(RecordingMap.class.getName()).append('(');
-                                        sb.append("(java.util.Map) new java.util.LinkedHashMap(),");
+                                        sb.append("(java.util.Map) new java.util.LinkedHashMap(),true,");
                                     } else {
                                         sb.append("new ").append(RecordingMap.class.getName()).append('(');
-                                        sb.append("(java.util.Map) new java.util.HashMap(),");
+                                        sb.append("(java.util.Map) new java.util.HashMap(),false,");
                                     }
                                     break;
                                 case SET:
@@ -1995,10 +1995,10 @@ public class ProxyFactory {
                                         sb.append("),");
                                     } else if (pluralAttribute.isOrdered()) {
                                         sb.append("new ").append(RecordingSet.class.getName()).append('(');
-                                        sb.append("(java.util.Set) new java.util.LinkedHashSet(),");
+                                        sb.append("(java.util.Set) new java.util.LinkedHashSet(),true,");
                                     } else {
                                         sb.append("new ").append(RecordingSet.class.getName()).append('(');
-                                        sb.append("(java.util.Set) new java.util.HashSet(),");
+                                        sb.append("(java.util.Set) new java.util.HashSet(),false,");
                                     }
                                     break;
                                 case LIST:
@@ -2008,7 +2008,7 @@ public class ProxyFactory {
                                     break;
                                 default:
                                     sb.append("new ").append(RecordingCollection.class.getName()).append('(');
-                                    sb.append("(java.util.Collection) new java.util.ArrayList(),false,");
+                                    sb.append("(java.util.Collection) new java.util.ArrayList(),false,false,");
                                     break;
                             }
                             sb.append(attributeFields[i].getDeclaringClass().getName()).append('#');

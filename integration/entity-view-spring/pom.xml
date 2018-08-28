@@ -28,7 +28,6 @@
 
     <properties>
         <module.name>com.blazebit.persistence.integration.view.spring</module.name>
-        <version.spring>4.3.3.RELEASE</version.spring>
     </properties>
 
     <dependencyManagement>
@@ -115,4 +114,62 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!-- Profiles for various Spring-Data versions -->
+        <profile>
+            <id>spring-data-1.11.x</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <version.spring>4.3.3.RELEASE</version.spring>
+            </properties>
+
+            <dependencies>
+                <dependency>
+                    <groupId>org.springframework.data</groupId>
+                    <artifactId>spring-data-jpa</artifactId>
+                    <version>${version.spring-data-1.x}</version>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>spring-data-2.0.x</id>
+            <properties>
+                <version.spring>5.0.4.RELEASE</version.spring>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.springframework.data</groupId>
+                    <artifactId>spring-data-jpa</artifactId>
+                    <version>${version.spring-data-2.0}</version>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>spring-data-2.1.x</id>
+            <properties>
+                <version.spring>5.1.0.RC2</version.spring>
+                <maven.compiler.target>1.8</maven.compiler.target>
+                <maven.compiler.source>1.8</maven.compiler.source>
+            </properties>
+            <repositories>
+                <repository>
+                    <id>spring-libs-milestone</id>
+                    <url>https://repo.spring.io/libs-milestone</url>
+                </repository>
+            </repositories>
+            <dependencies>
+                <dependency>
+                    <groupId>org.springframework.data</groupId>
+                    <artifactId>spring-data-jpa</artifactId>
+                    <version>${version.spring-data-2.1}</version>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 </project>

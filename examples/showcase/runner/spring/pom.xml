@@ -319,7 +319,7 @@
         <profile>
             <id>spring-data-2.1.x</id>
             <properties>
-                <version.spring>5.0.4.RELEASE</version.spring>
+                <version.spring>5.1.0.RC2</version.spring>
             </properties>
             <repositories>
                 <repository>

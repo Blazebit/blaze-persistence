@@ -50,6 +50,6 @@ public class OrderedCollectionInstantiator  extends AbstractCollectionInstantiat
 
     @Override
     public RecordingCollection<Collection<?>, ?> createRecordingCollection(int size) {
-        return new RecordingCollection(createCollection(size), false, allowedSubtypes, updatable, optimize);
+        return new RecordingCollection(createCollection(size), false, true, allowedSubtypes, updatable, optimize);
     }
 }

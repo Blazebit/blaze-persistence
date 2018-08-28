@@ -41,14 +41,14 @@ public class UpdateCollectionElementAttributeFlusher<E, V> extends CollectionEle
         int orphanRemovalStartIndex = context.getOrphanRemovalDeleters().size();
         Query q = null;
         if (viewToEntityMapper != null) {
-            q = viewToEntityMapper.createUpdateQuery(context, element, nestedGraphNode);
-
             if (!nestedGraphNode.supportsQueryFlush()) {
                 nestedGraphNode.flushEntity(context, null, (V) element, (V) element, null);
             } else {
+                q = viewToEntityMapper.createUpdateQuery(context, element, nestedGraphNode);
                 nestedGraphNode.flushQuery(context, parameterPrefix, q, null, (V) element, ownerAwareDeleter);
             }
         } else {
+            q = viewToEntityMapper.createUpdateQuery(context, element, nestedGraphNode);
             nestedGraphNode.flushQuery(context, parameterPrefix, q, null, (V) element, ownerAwareDeleter);
         }
         if (q != null) {

@@ -45,6 +45,6 @@ public class UnorderedMapInstantiator extends AbstractMapInstantiator<Map<?, ?>,
 
     @Override
     public RecordingMap<Map<?, ?>, ?, ?> createRecordingCollection(int size) {
-        return new RecordingMap(createCollection(size), allowedSubtypes, updatable, optimize);
+        return new RecordingMap(createCollection(size), false, allowedSubtypes, updatable, optimize);
     }
 }

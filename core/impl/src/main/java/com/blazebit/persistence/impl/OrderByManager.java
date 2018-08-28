@@ -22,6 +22,7 @@ import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.expression.modifier.ExpressionModifier;
 import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
+import com.blazebit.persistence.parser.predicate.CompoundPredicate;
 import com.blazebit.persistence.spi.JpaProvider;
 
 import java.util.ArrayList;
@@ -116,7 +117,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
         }
     }
 
-    List<OrderByExpression> getOrderByExpressions(boolean hasCollections, Collection<ResolvedExpression> groupByClauses) {
+    List<OrderByExpression> getOrderByExpressions(boolean hasCollections, CompoundPredicate rootPredicate, Collection<ResolvedExpression> groupByClauses) {
         if (orderByInfos.isEmpty()) {
             return Collections.emptyList();
         }
@@ -139,7 +140,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
 
         StringBuilder expressionStringBuilder = new StringBuilder();
         queryGenerator.setQueryBuffer(expressionStringBuilder);
-        functionalDependencyAnalyzerVisitor.clear();
+        functionalDependencyAnalyzerVisitor.clear(rootPredicate);
         for (int i = 0; i < size; i++) {
             final OrderByInfo orderByInfo = infos.get(i);
             String expressionString = orderByInfo.getExpressionString();

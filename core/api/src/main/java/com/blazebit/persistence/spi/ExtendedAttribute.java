@@ -22,6 +22,7 @@ import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * This is a wrapper around the JPA {@link javax.persistence.metamodel.Attribute} that allows additionally efficient access to properties of the metamodel.
@@ -143,5 +144,13 @@ public interface ExtendedAttribute<X, Y> {
      * @return The SQL column type names for the attribute
      */
     public String[] getColumnTypes();
+
+    /**
+     * Returns the attributes that have equivalent SQL column names.
+     *
+     * @return The attributes that have equivalent SQL column names
+     * @since 1.3.0
+     */
+    public Set<ExtendedAttribute<X, ?>> getColumnEquivalentAttributes();
 }
 

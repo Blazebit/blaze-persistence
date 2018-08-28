@@ -102,8 +102,8 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
     }
 
     @Override
-    protected void prepareForModification() {
-        super.prepareForModification();
+    protected void prepareForModification(ClauseType changedClause) {
+        super.prepareForModification(changedClause);
         cachedBaseQueryStrings = null;
     }
 

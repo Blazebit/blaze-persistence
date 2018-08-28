@@ -748,21 +748,18 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 }
             }
             if (!rootNode.getNodes().isEmpty()) {
-                applyJoins(sb, rootNode.getAliasInfo(), rootNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes);
-                valuesNode = null;
+                valuesNode = applyJoins(sb, rootNode.getAliasInfo(), rootNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes);
             }
             for (JoinNode treatedNode : rootNode.getTreatedJoinNodes().values()) {
                 if (!treatedNode.getNodes().isEmpty()) {
-                    applyJoins(sb, treatedNode.getAliasInfo(), treatedNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes);
-                    valuesNode = null;
+                    valuesNode = applyJoins(sb, treatedNode.getAliasInfo(), treatedNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes);
                 }
             }
             if (!rootNode.getEntityJoinNodes().isEmpty()) {
                 // TODO: Fix this with #216
                 boolean isCollection = true;
                 if (mainQuery.jpaProvider.supportsEntityJoin() && !emulateJoins) {
-                    applyJoins(sb, rootNode.getAliasInfo(), new ArrayList<>(rootNode.getEntityJoinNodes()), isCollection, clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes);
-                    valuesNode = null;
+                    valuesNode = applyJoins(sb, rootNode.getAliasInfo(), new ArrayList<>(rootNode.getEntityJoinNodes()), isCollection, clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes);
                 } else {
                     Set<JoinNode> entityNodes = rootNode.getEntityJoinNodes();
                     for (JoinNode entityNode : entityNodes) {
@@ -816,12 +813,10 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
                         renderedJoins.add(entityNode);
                         if (!entityNode.getNodes().isEmpty()) {
-                            applyJoins(sb, entityNode.getAliasInfo(), entityNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes);
-                            valuesNode = null;
+                            valuesNode = applyJoins(sb, entityNode.getAliasInfo(), entityNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes);
                         }
                         for (JoinNode treatedNode : entityNode.getTreatedJoinNodes().values()) {
-                            applyJoins(sb, treatedNode.getAliasInfo(), treatedNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes);
-                            valuesNode = null;
+                            valuesNode = applyJoins(sb, treatedNode.getAliasInfo(), treatedNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes);
                         }
                     }
                 }
@@ -921,19 +916,19 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         }
     }
 
-    private void renderJoinNode(StringBuilder sb, JoinAliasInfo joinBase, JoinNode node, String aliasPrefix, boolean renderFetches, Set<JoinNode> nodesToFetch, List<String> whereConjuncts, JoinNode valuesNode) {
+    private JoinNode renderJoinNode(StringBuilder sb, JoinAliasInfo joinBase, JoinNode node, String aliasPrefix, boolean renderFetches, Set<JoinNode> nodesToFetch, List<String> whereConjuncts, JoinNode valuesNode) {
         if (!renderedJoins.contains(node)) {
             // We determine the nodes that should be fetched by analyzing the fetch owners during implicit joining
             final boolean fetch = nodesToFetch.contains(node) && renderFetches;
             // Don't render key joins unless fetching is specified on it
             if (node.isQualifiedJoin() && !fetch) {
                 renderedJoins.add(node);
-                return;
+                return valuesNode;
             }
             // We only render treat joins, but not treated join nodes. These treats are just "optional casts" that don't affect joining
             if (node.isTreatedJoinNode()) {
                 renderedJoins.add(node);
-                return;
+                return valuesNode;
             }
             switch (node.getJoinType()) {
                 case INNER:
@@ -980,6 +975,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             if (valuesNode != null) {
                 renderValuesClausePredicate(sb, valuesNode, valuesNode.getAlias());
                 sb.append(" AND ");
+                valuesNode = null;
             }
 
             if (node.getOnPredicate() != null && !node.getOnPredicate().getChildren().isEmpty()) {
@@ -1003,6 +999,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 sb.append(')');
             }
         }
+        return valuesNode;
     }
 
     private void renderCorrelationJoinPath(StringBuilder sb, JoinAliasInfo joinBase, JoinNode node) {
@@ -1105,10 +1102,10 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         }
     }
 
-    private void renderReverseDependency(StringBuilder sb, JoinNode dependency, String aliasPrefix, boolean renderFetches, Set<JoinNode> nodesToFetch, List<String> whereConjuncts, JoinNode valuesNode) {
+    private JoinNode renderReverseDependency(StringBuilder sb, JoinNode dependency, String aliasPrefix, boolean renderFetches, Set<JoinNode> nodesToFetch, List<String> whereConjuncts, JoinNode valuesNode) {
         if (dependency.getParent() != null) {
             if (dependency.getParent() != valuesNode) {
-                renderReverseDependency(sb, dependency.getParent(), aliasPrefix, renderFetches, nodesToFetch, whereConjuncts, valuesNode);
+                valuesNode = renderReverseDependency(sb, dependency.getParent(), aliasPrefix, renderFetches, nodesToFetch, whereConjuncts, valuesNode);
             }
             if (!dependency.getDependencies().isEmpty()) {
                 markedJoinNodes.add(dependency);
@@ -1130,29 +1127,30 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                             throw new IllegalStateException(errorSb.toString());
                         }
                         // render reverse dependencies
-                        renderReverseDependency(sb, dep, aliasPrefix, renderFetches, nodesToFetch, whereConjuncts, valuesNode);
+                        valuesNode = renderReverseDependency(sb, dep, aliasPrefix, renderFetches, nodesToFetch, whereConjuncts, valuesNode);
                     }
                 } finally {
                     markedJoinNodes.remove(dependency);
                 }
             }
-            if (dependency.getParent() != valuesNode) {
-                renderJoinNode(sb, dependency.getParent().getAliasInfo(), dependency, aliasPrefix, renderFetches, nodesToFetch, whereConjuncts, null);
-            }
+            valuesNode = renderJoinNode(sb, dependency.getParent().getAliasInfo(), dependency, aliasPrefix, renderFetches, nodesToFetch, whereConjuncts, valuesNode);
         }
+
+        return valuesNode;
     }
 
-    private void applyJoins(StringBuilder sb, JoinAliasInfo joinBase, Map<String, JoinTreeNode> nodes, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes, boolean renderFetches, boolean ignoreCardinality, Set<JoinNode> nodesToFetch, List<String> whereConjuncts, JoinNode valuesNode, Set<JoinNode> alwaysIncludedNodes) {
+    private JoinNode applyJoins(StringBuilder sb, JoinAliasInfo joinBase, Map<String, JoinTreeNode> nodes, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes, boolean renderFetches, boolean ignoreCardinality, Set<JoinNode> nodesToFetch, List<String> whereConjuncts, JoinNode valuesNode, Set<JoinNode> alwaysIncludedNodes) {
         for (Map.Entry<String, JoinTreeNode> nodeEntry : nodes.entrySet()) {
             JoinTreeNode treeNode = nodeEntry.getValue();
             List<JoinNode> stack = new ArrayList<JoinNode>();
             stack.addAll(treeNode.getJoinNodes().descendingMap().values());
 
-            applyJoins(sb, joinBase, stack, treeNode.isCollection(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes);
+            valuesNode = applyJoins(sb, joinBase, stack, treeNode.isCollection(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes);
         }
+        return valuesNode;
     }
 
-    private void applyJoins(StringBuilder sb, JoinAliasInfo joinBase, List<JoinNode> stack, boolean isCollection, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes, boolean renderFetches, boolean ignoreCardinality, Set<JoinNode> nodesToFetch, List<String> whereConjuncts, JoinNode valuesNode, Set<JoinNode> alwaysIncludedNodes) {
+    private JoinNode applyJoins(StringBuilder sb, JoinAliasInfo joinBase, List<JoinNode> stack, boolean isCollection, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes, boolean renderFetches, boolean ignoreCardinality, Set<JoinNode> nodesToFetch, List<String> whereConjuncts, JoinNode valuesNode, Set<JoinNode> alwaysIncludedNodes) {
         while (!stack.isEmpty()) {
             JoinNode node = stack.remove(stack.size() - 1);
             // If the clauses in which a join node occurs are all excluded or the join node is not mandatory for the cardinality, we skip it
@@ -1165,7 +1163,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
             // We have to render any dependencies this join node has before actually rendering itself
             if (!node.getDependencies().isEmpty()) {
-                renderReverseDependency(sb, node, aliasPrefix, renderFetches, nodesToFetch, whereConjuncts, valuesNode);
+                valuesNode = renderReverseDependency(sb, node, aliasPrefix, renderFetches, nodesToFetch, whereConjuncts, valuesNode);
             }
 
             // Collect the join nodes referring to collections
@@ -1175,14 +1173,14 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             }
 
             // Finally render this join node
-            renderJoinNode(sb, joinBase, node, aliasPrefix, renderFetches, nodesToFetch, whereConjuncts, valuesNode);
-            valuesNode = null;
+            valuesNode = renderJoinNode(sb, joinBase, node, aliasPrefix, renderFetches, nodesToFetch, whereConjuncts, valuesNode);
 
             // Render child nodes recursively
             if (!node.getNodes().isEmpty()) {
-                applyJoins(sb, node.getAliasInfo(), node.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes);
+                valuesNode = applyJoins(sb, node.getAliasInfo(), node.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes);
             }
         }
+        return valuesNode;
     }
 
     private boolean isExternal(PathExpression path) {

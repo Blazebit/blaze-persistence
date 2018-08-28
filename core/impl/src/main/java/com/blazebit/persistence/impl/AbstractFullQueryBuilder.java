@@ -100,8 +100,8 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
     }
 
     @Override
-    protected void prepareForModification() {
-        super.prepareForModification();
+    protected void prepareForModification(ClauseType changedClause) {
+        super.prepareForModification(changedClause);
         cachedCountQueryString = null;
         cachedExternalCountQueryString = null;
         cachedIdentifierExpressionsToUseNonRootJoinNodes = null;
@@ -250,7 +250,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
             if (identifierExpressions == entityIdentifierExpressions) {
                 uniqueIdentifierExpressions = identifierExpressions;
             } else {
-                uniqueIdentifierExpressions = functionalDependencyAnalyzerVisitor.getFunctionalDependencyRootExpressions(identifierExpressions);
+                uniqueIdentifierExpressions = functionalDependencyAnalyzerVisitor.getFunctionalDependencyRootExpressions(whereManager.rootPredicate.getPredicate(), identifierExpressions);
             }
         }
 
@@ -435,7 +435,8 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         joinManager.implicitJoin(expression, false, null, null, null, false, false, false, false);
         StringBuilder sb = new StringBuilder();
 
-        functionalDependencyAnalyzerVisitor.clear();
+        implicitJoinWhereClause();
+        functionalDependencyAnalyzerVisitor.clear(whereManager.rootPredicate.getPredicate());
         functionalDependencyAnalyzerVisitor.analyzeFormsUniqueTuple(expression);
         queryGenerator.setQueryBuffer(sb);
         if (functionalDependencyAnalyzerVisitor.getSplittedOffExpressions().isEmpty()) {
@@ -487,7 +488,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
     }
 
     private PaginatedCriteriaBuilder<T> pageBy(int firstRow, int pageSize, ResolvedExpression[] identifierExpressions) {
-        prepareForModification();
+        prepareForModification(ClauseType.GROUP_BY);
         if (selectManager.isDistinct()) {
             throw new IllegalStateException("Cannot paginate a DISTINCT query");
         }
@@ -500,7 +501,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
     }
 
     private PaginatedCriteriaBuilder<T> pageByAndNavigate(Object entityId, int pageSize, ResolvedExpression[] identifierExpressions) {
-        prepareForModification();
+        prepareForModification(ClauseType.GROUP_BY);
         if (selectManager.isDistinct()) {
             throw new IllegalStateException("Cannot paginate a DISTINCT query");
         }
@@ -514,7 +515,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
     }
 
     private PaginatedCriteriaBuilder<T> pageBy(KeysetPage keysetPage, int firstRow, int pageSize, ResolvedExpression[] identifierExpressions) {
-        prepareForModification();
+        prepareForModification(ClauseType.GROUP_BY);
         if (selectManager.isDistinct()) {
             throw new IllegalStateException("Cannot paginate a DISTINCT query");
         }
@@ -574,7 +575,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
 
     @Override
     public <Y> SelectObjectBuilder<? extends FullQueryBuilder<Y, ?>> selectNew(Class<Y> clazz) {
-        prepareForModification();
+        prepareForModification(ClauseType.SELECT);
         if (clazz == null) {
             throw new NullPointerException("clazz");
         }
@@ -585,7 +586,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
 
     @Override
     public <Y> SelectObjectBuilder<? extends FullQueryBuilder<Y, ?>> selectNew(Constructor<Y> constructor) {
-        prepareForModification();
+        prepareForModification(ClauseType.SELECT);
         if (constructor == null) {
             throw new NullPointerException("constructor");
         }
@@ -597,7 +598,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
     @Override
     @SuppressWarnings("unchecked")
     public <Y> FullQueryBuilder<Y, ?> selectNew(ObjectBuilder<Y> objectBuilder) {
-        prepareForModification();
+        prepareForModification(ClauseType.SELECT);
         if (objectBuilder == null) {
             throw new NullPointerException("objectBuilder");
         }
@@ -610,7 +611,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
     @Override
     @SuppressWarnings("unchecked")
     public X fetch(String path) {
-        prepareForModification();
+        prepareForModification(ClauseType.JOIN);
         verifyBuilderEnded();
         joinManager.implicitJoin(expressionFactory.createPathExpression(path), true, null, null, null, false, false, true, false, true);
         return (X) this;
@@ -619,7 +620,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
     @Override
     @SuppressWarnings("unchecked")
     public X fetch(String... paths) {
-        prepareForModification();
+        prepareForModification(ClauseType.JOIN);
         verifyBuilderEnded();
 
         for (String path : paths) {
@@ -671,7 +672,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
 
     @SuppressWarnings("unchecked")
     private X join(String path, String alias, JoinType type, boolean fetch, boolean defaultJoin) {
-        prepareForModification();
+        prepareForModification(ClauseType.JOIN);
         if (path == null) {
             throw new NullPointerException("path");
         }

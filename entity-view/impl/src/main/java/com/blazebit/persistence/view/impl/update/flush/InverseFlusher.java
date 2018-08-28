@@ -119,11 +119,17 @@ public final class InverseFlusher<E> {
                 if (childTypeDescriptor.isSubview()) {
                     ViewType<?> childViewType = (ViewType<?>) elementType;
                     elementEntityClass = childViewType.getEntityClass();
-                    parentEntityOnChildViewMapper = (Mapper<Object, Object>) Mappers.forEntityAttributeMappingConvertToViewAttributeMapping(
+                    parentEntityOnChildViewMapper = (Mapper<Object, Object>) Mappers.forViewConvertToViewAttributeMapping(
                             evm,
-                            viewType.getEntityClass(),
-                            childViewType,
-                            attribute.getWritableMappedByMappings()
+                            (ViewType<Object>) viewType,
+                            (ViewType<Object>) childViewType,
+                            attribute.getMappedBy(),
+                            (Mapper<Object, Object>) Mappers.forEntityAttributeMappingConvertToViewAttributeMapping(
+                                    evm,
+                                    viewType.getEntityClass(),
+                                    childViewType,
+                                    attribute.getWritableMappedByMappings()
+                            )
                     );
                     parentEntityOnChildEntityMapper = (Mapper<Object, Object>) Mappers.forEntityAttributeMapping(
                             evm.getMetamodel().getEntityMetamodel(),
@@ -171,6 +177,13 @@ public final class InverseFlusher<E> {
                             true
                     );
                     parentEntityOnChildEntityMapper = Mappers.forAccessor(parentReferenceAttributeAccessor);
+                    parentEntityOnChildViewMapper = (Mapper<Object, Object>) Mappers.forViewConvertToViewAttributeMapping(
+                            evm,
+                            (ViewType<Object>) viewType,
+                            childViewType,
+                            attribute.getMappedBy(),
+                            null
+                    );
                 } else if (childTypeDescriptor.isJpaEntity()) {
                     Class<?> childType = elementType.getJavaType();
                     elementEntityClass = childType;
@@ -299,19 +312,6 @@ public final class InverseFlusher<E> {
         return view == null ? null : (E) parentReferenceViewToEntityMapper.applyToEntity(context, null, view);
     }
 
-    public void flushQuerySetElement(UpdateContext context, Iterable<?> elements, Object view, String parameterPrefix) {
-        E entity = getParentEntityReference(context, view);
-        if (childViewToEntityMapper != null) {
-            for (Object element : elements) {
-                flushQuerySetEntityOnViewElement(context, element, entity, parameterPrefix, null);
-            }
-        } else {
-            for (Object element : elements) {
-                flushQuerySetEntityOnEntityElement(context, element, entity, parameterPrefix, null);
-            }
-        }
-    }
-
     public void flushQuerySetElement(UpdateContext context, Object element, Object view, String parameterPrefix, DirtyAttributeFlusher<?, E, Object> nestedGraphNode) {
         if (childViewToEntityMapper != null) {
             flushQuerySetEntityOnViewElement(context, element, getParentEntityReference(context, view), parameterPrefix, nestedGraphNode);
@@ -330,9 +330,6 @@ public final class InverseFlusher<E> {
 
     private void flushQuerySetEntityOnViewElement(UpdateContext context, Object element, E newValue, String parameterPrefix, DirtyAttributeFlusher<?, E, Object> nestedGraphNode) {
         flushQuerySetEntityOnElement(context, element, newValue, parameterPrefix, nestedGraphNode, childViewToEntityMapper);
-        if (parentEntityOnChildViewMapper != null) {
-            parentEntityOnChildViewMapper.map(newValue, element);
-        }
     }
 
     private void flushQuerySetEntityOnEntityElement(UpdateContext context, Object element, E newValue, String parameterPrefix, DirtyAttributeFlusher<?, E, Object> nestedGraphNode) {
