@@ -76,7 +76,6 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
     private boolean hasSizeSelect;
     private SelectObjectBuilderImpl<?> selectObjectBuilder;
     private ObjectBuilder<T> objectBuilder;
-    private int objectBuilderStartIndex;
     private SubqueryBuilderListenerImpl<?> subqueryBuilderListener;
     // needed for tuple/alias matching
     private final Map<String, Integer> selectAliasToPositionMap = new HashMap<String, Integer>();
@@ -123,10 +122,6 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
             return (ObjectBuilder<T>) new TupleObjectBuilder(selectInfos, selectAliasToPositionMap);
         }
         return objectBuilder;
-    }
-
-    public int getObjectBuilderStartIndex() {
-        return objectBuilderStartIndex;
     }
 
     public List<SelectInfo> getSelectInfos() {
@@ -426,7 +421,6 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
             throw new IllegalStateException("Only one selectNew is allowed");
         }
 
-        objectBuilderStartIndex = selectInfos.size();
         selectObjectBuilder = selectObjectBuilderEndedListener.startBuilder(new SelectObjectBuilderImpl(builder, selectObjectBuilderEndedListener, subqueryInitFactory, expressionFactory));
         objectBuilder = new ClassObjectBuilder(clazz);
         return (SelectObjectBuilder) selectObjectBuilder;
@@ -441,7 +435,6 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
             throw new IllegalStateException("Only one selectNew is allowed");
         }
 
-        objectBuilderStartIndex = selectInfos.size();
         selectObjectBuilder = selectObjectBuilderEndedListener.startBuilder(new SelectObjectBuilderImpl(builder, selectObjectBuilderEndedListener, subqueryInitFactory, expressionFactory));
         objectBuilder = new ConstructorObjectBuilder(constructor);
         return (SelectObjectBuilder) selectObjectBuilder;
@@ -456,7 +449,6 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
             throw new IllegalStateException("Only one selectNew is allowed");
         }
 
-        objectBuilderStartIndex = selectInfos.size();
         objectBuilder.applySelects(builder);
         this.objectBuilder = (ObjectBuilder<T>) objectBuilder;
     }

@@ -294,6 +294,11 @@ public final class CachingJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsJoinElementCollectionsOnCorrelatedInverseAssociations() {
+        return jpaProvider.supportsJoinElementCollectionsOnCorrelatedInverseAssociations();
+    }
+
+    @Override
     public void setCacheable(Query query) {
         jpaProvider.setCacheable(query);
     }

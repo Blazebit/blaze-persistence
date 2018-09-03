@@ -115,7 +115,7 @@
             <property name="max" value="270"/>
         </module>
         <module name="ParameterNumber">
-            <property name="max" value="21"/>
+            <property name="max" value="22"/>
         </module>
 
         <!-- Checks for blocks. You know, those {}'s         -->

@@ -74,6 +74,7 @@ public class CorrelatedSubqueryViewRootJpqlMacro implements ViewRootJpqlMacro {
             setEntityParam(query, viewRootParamName, viewRootId);
         }
         if (viewRootIdParamName != null) {
+            criteriaBuilder.setParameter(viewRootIdParamName, viewRootId);
             query.setParameter(viewRootIdParamName, viewRootId);
         }
     }
@@ -89,9 +90,11 @@ public class CorrelatedSubqueryViewRootJpqlMacro implements ViewRootJpqlMacro {
                 }
             }
 
+            criteriaBuilder.setParameter(paramName, viewRootEntities);
             query.setParameter(paramName, viewRootEntities);
         } else {
             Object viewRootEntity = em.getReference(viewRootEntityType, viewRootId);
+            criteriaBuilder.setParameter(paramName, viewRootEntity);
             query.setParameter(paramName, viewRootEntity);
         }
 

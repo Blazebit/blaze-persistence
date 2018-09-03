@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
 
 import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
+import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformerFactory;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
@@ -28,6 +29,7 @@ import com.blazebit.persistence.view.metamodel.ManagedViewType;
 public abstract class AbstractCorrelatedSubselectTupleListTransformerFactory implements TupleListTransformerFactory {
 
     protected final Correlator correlator;
+    protected final EntityViewManagerImpl evm;
     protected final ManagedViewType<?> viewRootType;
     protected final ManagedViewType<?> embeddingViewType;
     protected final String viewRootAlias;
@@ -44,9 +46,10 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformerFactory imp
     protected final Class<?> correlationBasisType;
     protected final Class<?> correlationBasisEntity;
 
-    public AbstractCorrelatedSubselectTupleListTransformerFactory(Correlator correlator, ManagedViewType<?> viewRootType, String viewRootAlias, ManagedViewType<?> embeddingViewType, String embeddingViewPath, String correlationResult, String correlationBasisExpression, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
-                                                                  int viewRootIndex, int embeddingViewIndex, int correlationBasisIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity) {
+    public AbstractCorrelatedSubselectTupleListTransformerFactory(Correlator correlator, EntityViewManagerImpl evm, ManagedViewType<?> viewRootType, String viewRootAlias, ManagedViewType<?> embeddingViewType, String embeddingViewPath, String correlationResult, String correlationBasisExpression, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory,
+                                                                  String attributePath, String[] fetches, int viewRootIndex, int embeddingViewIndex, int correlationBasisIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity) {
         this.correlator = correlator;
+        this.evm = evm;
         this.viewRootType = viewRootType;
         this.embeddingViewType = embeddingViewType;
         this.viewRootAlias = viewRootAlias;

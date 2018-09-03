@@ -393,6 +393,11 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsJoinElementCollectionsOnCorrelatedInverseAssociations() {
+        return true;
+    }
+
+    @Override
     public void setCacheable(Query query) {
         query.setHint("eclipselink.query-results-cache", true);
     }

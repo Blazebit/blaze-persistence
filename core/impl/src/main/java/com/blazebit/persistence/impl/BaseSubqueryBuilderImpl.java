@@ -73,7 +73,9 @@ public abstract class BaseSubqueryBuilderImpl<T, X, Y extends BaseOngoingSetOper
         prepareAndCheck();
         CorrelatedExpressionGatheringVisitor visitor = new CorrelatedExpressionGatheringVisitor(aliasManager);
         applyVisitor(visitor);
-        return visitor.getExpressions();
+        Set<Expression> expressions = visitor.getExpressions();
+        joinManager.collectCorrelatedRootExpressions(expressions);
+        return expressions;
     }
 
     public T getResult() {

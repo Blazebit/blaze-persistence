@@ -31,6 +31,7 @@ Not yet released
 * Introduced `EntityViewSettingProcessor` to allow customizing `EntityViewSetting` used in Spring Data repositories
 * Add `with*` methods to `EntityViewSetting` for easy method chaining
 * Allow to force the use of an id query with `withForceIdQuery` on `PaginatedCriteriaBuilder`
+* Added workaround for [HHH-12942](https://hibernate.atlassian.net/browse/HHH-12942)
 
 ### Bug fixes
 
@@ -51,6 +52,7 @@ Not yet released
 * Fix wrong order of keysets in the keyset page returned from a _previous page request_
 * Fix some problems with inverse collection flushing and setting the parent on existing view fields
 * Fix a few problems with state resetting of updatable entity views on transaction rollback
+* Fix query generation problems in JPA Criteria implementation when using correlated roots in subqueries
 
 ### Backwards-incompatible changes
 

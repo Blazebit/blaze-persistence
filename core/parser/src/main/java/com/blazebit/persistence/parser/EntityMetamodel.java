@@ -41,6 +41,8 @@ public interface EntityMetamodel extends Metamodel {
 
     public <X> Type<X> type(Class<X> cls);
 
+    public <T> T getManagedType(Class<T> cls, ManagedType<?> managedType);
+
     public <T> T getManagedType(Class<T> cls, Class<?> managedType);
 
     public <T> T getManagedType(Class<T> cls, String managedTypeName);

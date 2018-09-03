@@ -35,24 +35,28 @@ public class UpdatableSubviewTupleTransformer implements TupleTransformer {
     private final int consumeEndIndex;
     private final ObjectBuilder<Object[]> objectBuilder;
 
-    public UpdatableSubviewTupleTransformer(ViewTypeObjectBuilderTemplate<Object[]> template, ObjectBuilder<Object[]> objectBuilder) {
+    public UpdatableSubviewTupleTransformer(ViewTypeObjectBuilderTemplate<Object[]> template, ObjectBuilder<Object[]> objectBuilder, boolean nullIfEmpty) {
         this.template = template;
         this.consumeStartIndex = template.getTupleOffset() + 1;
         this.consumeEndIndex = template.getTupleOffset() + template.getMappers().length;
         this.objectBuilder = objectBuilder;
-        int[] idPositions = template.getIdPositions();
-        int i;
-        for (i = idPositions.length - 1; i >= 0; i--) {
-            if (idPositions[i] >= 0) {
-                break;
+        if (nullIfEmpty) {
+            int[] idPositions = template.getIdPositions();
+            int i;
+            for (i = idPositions.length - 1; i >= 0; i--) {
+                if (idPositions[i] >= 0) {
+                    break;
+                }
             }
+            this.nullCheckObjectIndex = idPositions[i];
+        } else {
+            this.nullCheckObjectIndex = -1;
         }
-        this.nullCheckObjectIndex = idPositions[i];
     }
 
     @Override
     public Object[] transform(Object[] tuple, UpdatableViewMap updatableViewMap) {
-        if (tuple[nullCheckObjectIndex] != null) {
+        if (nullCheckObjectIndex == -1 || tuple[nullCheckObjectIndex] != null) {
             Object id = new TupleId(template.getIdPositions(), tuple);
             UpdatableViewMap.UpdatableViewKey key = new UpdatableViewMap.UpdatableViewKey(template.getViewClass(), id);
             Object o = updatableViewMap.get(key);

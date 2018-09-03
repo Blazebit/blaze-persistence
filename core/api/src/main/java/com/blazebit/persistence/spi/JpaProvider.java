@@ -421,6 +421,14 @@ public interface JpaProvider {
     public boolean supportsJoinTableCleanupOnDelete();
 
     /**
+     * Indicates whether the provider supports correlating inverse associations.
+     *
+     * @return true if supported, else false
+     * @since 1.3.0
+     */
+    public boolean supportsJoinElementCollectionsOnCorrelatedInverseAssociations();
+
+    /**
      * Enables query result caching for the given query.
      *
      * @param query Enables query result caching for the query

@@ -447,6 +447,16 @@ public class EntityMetamodelImpl implements EntityMetamodel {
 
     @Override
     @SuppressWarnings("unchecked")
+    public <T> T getManagedType(Class<T> cls, ManagedType<?> managedType) {
+        if (managedType.getJavaType() == null) {
+            return getManagedType(cls, JpaMetamodelUtils.getTypeName(managedType));
+        } else {
+            return getManagedType(cls, managedType.getJavaType());
+        }
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
     public <T> T getManagedType(Class<T> cls, Class<?> managedType) {
         ExtendedManagedType<?> extendedManagedType = getEntry(managedType);
         if (cls == ExtendedManagedType.class) {

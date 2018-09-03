@@ -91,11 +91,18 @@ public final class CollectionOperations {
             if (removeAction != null) {
                 objectsToAdd = removeAction.onAddObjects(objectsToAdd);
             }
-            if (!objectsToAdd.isEmpty()) {
+            if (objectsToAdd.isEmpty()) {
+                if (objectsToAdd != addedElements) {
+                    addedElements.retainAll(objectsToAdd);
+                }
+            } else {
                 // Merge newly added elements into existing add action
                 if (addAction != null) {
                     addAction.onAddObjects(objectsToAdd);
                 } else {
+                    if (objectsToAdd != addedElements) {
+                        addedElements.retainAll(objectsToAdd);
+                    }
                     return true;
                 }
             }
@@ -115,11 +122,18 @@ public final class CollectionOperations {
             if (retainAction != null) {
                 retainAction.onRemoveObjects(objectsToRemove);
             }
-            if (!objectsToRemove.isEmpty()) {
+            if (objectsToRemove.isEmpty()) {
+                if (objectsToRemove != removedElements) {
+                    removedElements.retainAll(objectsToRemove);
+                }
+            } else {
                 // Merge newly removed elements into existing remove action
                 if (removeAction != null) {
                     removeAction.onRemoveObjects(objectsToRemove);
                 } else {
+                    if (objectsToRemove != removedElements) {
+                        removedElements.retainAll(objectsToRemove);
+                    }
                     return removeIndex;
                 }
             }

@@ -88,6 +88,7 @@ public class HibernateJpaProvider implements JpaProvider {
     private final boolean needsBrokenAssociationToIdRewriteInOnClause;
     private final boolean supportsCollectionTableCleanupOnDelete;
     private final boolean supportsJoinTableCleanupOnDelete;
+    private final boolean supportsJoinElementCollectionsOnCorrelatedInverseAssociations;
 
     static {
         Class<?> typeClass = null;
@@ -163,6 +164,8 @@ public class HibernateJpaProvider implements JpaProvider {
             // Going to make this configurable in Hibernate in a future version
             this.supportsCollectionTableCleanupOnDelete = false;
             this.supportsJoinTableCleanupOnDelete = true;
+            // See https://hibernate.atlassian.net/browse/HHH-12942 for details
+            this.supportsJoinElementCollectionsOnCorrelatedInverseAssociations = false;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -201,6 +204,11 @@ public class HibernateJpaProvider implements JpaProvider {
     @Override
     public boolean supportsJoinTableCleanupOnDelete() {
         return supportsJoinTableCleanupOnDelete;
+    }
+
+    @Override
+    public boolean supportsJoinElementCollectionsOnCorrelatedInverseAssociations() {
+        return supportsJoinElementCollectionsOnCorrelatedInverseAssociations;
     }
 
     @Override

@@ -26,6 +26,8 @@ import javax.persistence.Tuple;
 import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.JpqlMacro;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Test;
 
@@ -431,6 +433,25 @@ public class SubqueryTest extends AbstractCoreTest {
                 + onClause("KEY(localized_1_1) = 1") +
                 " WHERE (SELECT p.name FROM Person p "
                 + "WHERE LENGTH(" + joinAliasValue("localized_1_1") + ") > :param_0) LIKE :param_1";
+        assertEquals(expectedQuery, crit.getQueryString());
+        crit.getResultList();
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testJoinElementCollectionsOnCorrelatedInverseAssociations() {
+        CriteriaBuilder<Integer> crit = cbf.create(em, Integer.class)
+                .from(Document.class, "d")
+                .select("1");
+        crit.whereExists()
+                .from("d.partners", "p")
+                .where("LENGTH(localized[1])").gt(1)
+        .end();
+
+        String expectedQuery = "SELECT 1 FROM Document d"
+                + " WHERE EXISTS (SELECT 1 FROM Person p LEFT JOIN p.localized localized_1_1"
+                + onClause("KEY(localized_1_1) = 1")
+                + " WHERE p.partnerDocument.id = d.id AND LENGTH(" + joinAliasValue("localized_1_1") + ") > :param_0)";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }

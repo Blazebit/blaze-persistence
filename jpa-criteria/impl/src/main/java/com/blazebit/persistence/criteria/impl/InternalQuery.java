@@ -508,6 +508,7 @@ public class InternalQuery<T> implements Serializable {
 
                 for (BlazeJoin<?, ?> j : joins) {
                     AbstractJoin<?, ?> join = (AbstractJoin<?, ?>) j;
+                    join.prepareAlias(context);
                     EntityType<?> treatJoinType = join.getTreatJoinType();
                     String path = getPath(r.getAlias(), j, treatJoinType);
                     if (cb == null) {

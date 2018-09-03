@@ -59,6 +59,7 @@ import com.blazebit.persistence.impl.util.Keywords;
 import com.blazebit.persistence.parser.util.ExpressionUtils;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.DbmsModificationState;
+import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.spi.JpaProvider;
 
@@ -73,6 +74,7 @@ import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -272,6 +274,22 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 joinNodeIterator.remove();
             } else {
                 removeSelectOnlyNodes(candidateNodes, subNode);
+            }
+        }
+    }
+
+    public void collectCorrelatedRootExpressions(Collection<Expression> expressions) {
+        int size = rootNodes.size();
+        for (int i = 0; i < size; i++) {
+            JoinNode rootNode = rootNodes.get(i);
+            if (rootNode.getCorrelationParent() != null) {
+                ExtendedManagedType<?> extendedManagedType = metamodel.getManagedType(ExtendedManagedType.class, rootNode.getCorrelationParent().getManagedType());
+                for (SingularAttribute<?, ?> idAttribute : extendedManagedType.getIdAttributes()) {
+                    List<PathElementExpression> pathElementExpressions = new ArrayList<>(2);
+                    pathElementExpressions.add(new PropertyExpression(rootNode.getCorrelationParent().getAlias()));
+                    pathElementExpressions.add(new PropertyExpression(idAttribute.getName()));
+                    expressions.add(new PathExpression(pathElementExpressions, new SimplePathReference(rootNode.getCorrelationParent(), idAttribute.getName(), idAttribute.getType()), false, false));
+                }
             }
         }
     }
@@ -713,7 +731,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 sb.append(')');
             } else {
                 if (correlationParent != null) {
-                    renderCorrelationJoinPath(sb, correlationParent.getAliasInfo(), rootNode);
+                    renderCorrelationJoinPath(sb, correlationParent.getAliasInfo(), rootNode, whereConjuncts);
                 } else {
                     EntityType<?> type = rootNode.getEntityType();
                     sb.append(type.getName());
@@ -1002,10 +1020,31 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         return valuesNode;
     }
 
-    private void renderCorrelationJoinPath(StringBuilder sb, JoinAliasInfo joinBase, JoinNode node) {
+    private void renderCorrelationJoinPath(StringBuilder sb, JoinAliasInfo joinBase, JoinNode node, List<String> whereConjuncts) {
+        final boolean renderTreat = mainQuery.jpaProvider.supportsTreatJoin() &&
+                (!mainQuery.jpaProvider.supportsSubtypeRelationResolving() || node.getJoinType() == JoinType.INNER);
+        if (!mainQuery.jpaProvider.supportsJoinElementCollectionsOnCorrelatedInverseAssociations() && node.hasElementCollectionJoins() || node.getTreatType() != null && !renderTreat && !mainQuery.jpaProvider.supportsSubtypeRelationResolving()) {
+            ExtendedManagedType extendedManagedType = metamodel.getManagedType(ExtendedManagedType.class, node.getCorrelationParent().getManagedType());
+            ExtendedAttribute attribute = extendedManagedType.getAttribute(node.getCorrelationPath());
+            if (attribute.getMappedBy() != null) {
+                sb.append(node.getEntityType().getName());
+                StringBuilder whereSb = new StringBuilder();
+                node.appendAlias(whereSb, false);
+                whereSb.append('.').append(attribute.getMappedBy());
+                boolean singleValuedAssociationId = mainQuery.jpaProvider.supportsSingleValuedAssociationIdExpressions() && extendedManagedType.getIdAttributes().size() == 1;
+                if (singleValuedAssociationId) {
+                    whereSb.append('.').append(extendedManagedType.getIdAttribute().getName());
+                }
+                whereSb.append(" = ");
+                node.getCorrelationParent().appendAlias(whereSb, false);
+                if (singleValuedAssociationId) {
+                    whereSb.append('.').append(extendedManagedType.getIdAttribute().getName());
+                }
+                whereConjuncts.add(whereSb.toString());
+                return;
+            }
+        }
         if (node.getTreatType() != null) {
-            final boolean renderTreat = mainQuery.jpaProvider.supportsTreatJoin() &&
-                    (!mainQuery.jpaProvider.supportsSubtypeRelationResolving() || node.getJoinType() == JoinType.INNER);
             if (renderTreat) {
                 sb.append("TREAT(");
                 renderAlias(sb, joinBase.getJoinNode(), mainQuery.jpaProvider.supportsRootTreat());

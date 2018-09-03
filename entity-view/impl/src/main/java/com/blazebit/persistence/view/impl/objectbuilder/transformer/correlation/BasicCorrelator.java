@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
 
 import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.macro.EmbeddingViewJpqlMacro;
 
@@ -28,8 +29,9 @@ import com.blazebit.persistence.view.impl.macro.EmbeddingViewJpqlMacro;
 public final class BasicCorrelator implements Correlator {
 
     @Override
-    public void finish(FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration entityViewConfiguration, int tupleOffset, String correlationRoot, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
+    public ObjectBuilder<?> finish(FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration entityViewConfiguration, int tupleSuffix, String correlationRoot, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
         criteriaBuilder.select(correlationRoot);
+        return null;
     }
 
 }

@@ -722,6 +722,16 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         return qualificationExpression != null;
     }
 
+    public boolean hasElementCollectionJoins() {
+        for (JoinTreeNode treeNode : nodes.values()) {
+            if (treeNode.getAttribute().getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /**
      * @author Christian Beikov
      * @since 1.2.0
