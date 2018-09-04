@@ -149,7 +149,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
             com.blazebit.persistence.view.metamodel.SingularAttribute<?, ?> viewIdAttribute = (com.blazebit.persistence.view.metamodel.SingularAttribute<?, ?>) view.getIdAttribute();
             if (view.getIdAttribute().isSubview()) {
                 ManagedViewTypeImplementor<?> viewIdType = (ManagedViewTypeImplementor<?>) viewIdAttribute.getType();
-                boolean updateMappable = isUpdateMappable((Set<AbstractMethodAttribute<?, ?>>) (Set) viewIdType.getAttributes());
+                boolean updateMappable = isUpdateMappable((Set) viewIdType.getAttributes());
                 if (updateMappable) {
                     viewIdMapper = createViewIdMapper(evm, view);
                     tupleizer = new DefaultEntityTupleizer(evm, viewIdType);
@@ -469,7 +469,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
             // If the id is an embedded id, we need to flush individual components for subviews, so we need to determine the component flushers
             Map.Entry<AttributeAccessor, BasicAttributeFlusher>[] componentFlusherEntries = null;
             if (type.isJpaManaged()) {
-                Set<Attribute<?, ?>> attributes = (Set<Attribute<?, ?>>) (Set) type.getManagedType().getAttributes();
+                Set<Attribute<?, ?>> attributes = (Set) type.getManagedType().getAttributes();
                 Map<AttributeAccessor, BasicAttributeFlusher> componentFlushers = new HashMap<>(attributes.size());
                 buildComponentFlushers(evm.getMetamodel().getEntityMetamodel(), type.getJavaType(), attributeName + "_", attributeMapping + ".", "", attributes, componentFlushers);
                 componentFlusherEntries = componentFlushers.entrySet().toArray(new Map.Entry[componentFlushers.size()]);
@@ -516,9 +516,9 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                 ManagedType<?> managedType = (ManagedType<?>) attr.getType();
                 Set<Attribute<?, ?>> subAttributes;
                 if (managedType instanceof EmbeddableType<?>) {
-                    subAttributes = (Set<Attribute<?, ?>>) (Set) managedType.getAttributes();
+                    subAttributes = (Set) managedType.getAttributes();
                 } else {
-                    subAttributes = (Set<Attribute<?, ?>>) (Set) Collections.singleton(JpaMetamodelUtils.getSingleIdAttribute((IdentifiableType<?>) managedType));
+                    subAttributes = (Set) Collections.singleton(JpaMetamodelUtils.getSingleIdAttribute((IdentifiableType<?>) managedType));
                 }
                 buildComponentFlushers(
                         metamodel,
@@ -526,7 +526,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                         attributePrefix + attribute.getName() + ".",
                         mappingPrefix + attribute.getName() + ".",
                         accessorPrefix + attribute.getName() + ".",
-                        (Set<Attribute<?, ?>>) (Set) subAttributes,
+                        (Set) subAttributes,
                         componentFlushers
                 );
             }
@@ -630,7 +630,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
         }
 
         @SuppressWarnings("unchecked")
-        DirtyAttributeFlusher<?, Object, Object> flusher = (DirtyAttributeFlusher<?, Object, Object>) (DirtyAttributeFlusher) getNestedDirtyFlusher(context, updatableProxy, (DirtyAttributeFlusher) null);
+        DirtyAttributeFlusher<?, Object, Object> flusher = getNestedDirtyFlusher(context, updatableProxy, (DirtyAttributeFlusher) null);
 
         // If nothing is dirty, we don't have to do anything
         if (flusher == null) {
@@ -868,7 +868,8 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
 
                     if (requiresComponentWiseSetInUpdate && attributeIdAttributeType instanceof EmbeddableType<?>) {
                         // If the identifier used for the association is an embeddable, we must collect the individual attribute components since updates don't work on embeddables directly
-                        Set<Attribute<?, ?>> idAttributeComponents = (Set<Attribute<?, ?>>) ((EmbeddableType<?>) attributeIdAttributeType).getAttributes();
+                        Set<Attribute<?, ?>> idAttributeComponents = (Set) ((EmbeddableType<?>) attributeIdAttributeType)
+                            .getAttributes();
                         idComponentMappings = new ArrayList<>(idAttributeComponents.size());
                         for (Attribute<?, ?> idAttributeComponent : idAttributeComponents) {
                             idComponentMappings.add(attributeMapping + "." + idMapping + "." + idAttributeComponent);
