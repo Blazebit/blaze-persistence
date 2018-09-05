@@ -103,7 +103,7 @@ public final class EntityViewSettingHelper {
                 if (idAttribute.isSubview()) {
                     String prefix = getMapping(entityViewRoot, idAttribute, ef);
                     ManagedViewTypeImplementor<?> type = (ManagedViewTypeImplementor<?>) ((SingularAttribute<?, ?>) idAttribute).getType();
-                    Set<MethodAttribute<?, ?>> attributes = (Set<MethodAttribute<?, ?>>) type.getAttributes();
+                    Set<MethodAttribute<?, ?>> attributes = (Set) type.getAttributes();
                     Iterator<MethodAttribute<?, ?>> iterator = attributes.iterator();
                     firstExpression = getMapping(prefix, iterator.next(), ef);
                     if (iterator.hasNext()) {
