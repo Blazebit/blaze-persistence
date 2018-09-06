@@ -65,7 +65,7 @@ public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> extend
 
     @Override
     public Optional<E> findById(ID id) {
-        return Optional.of((E) findOne(id));
+        return Optional.ofNullable((E) findOne(id));
     }
 
     @Override

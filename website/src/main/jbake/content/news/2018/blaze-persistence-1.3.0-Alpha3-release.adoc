@@ -1,0 +1,34 @@
+= Blaze-Persistence 1.3.0-Alpha3 Release
+Christian Beikov
+2018-09-06 0
+:description: Blaze-Persistence version 1.3.0-Alpha3 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+Blaze-Persistence version 1.3.0-Alpha3 adds many new features and fixes quite a few issues!
+
+Originally, we didn't even plan to push out another Alpha release, but we added so many new features and fixed quite a few annoying bugs, that we decided to push out another version instead of letting you wait for the final release.
+
+Unfortunately we had to do some backwards-incompatible changes to the jpa-criteria module as we wrongly made JPA `CriteriaQuery` dependent on an `EntityManager` which prevented caching. The only difference is that the `EntityManager` will now have to be passed to a `createCriteriaBuilder` method that was added to the JPA extension interface `BlazeCriteriaQuery` instead of passing it during query creation via the `BlazeCriteria` utility class.
+
+To support varying page sizes and thus also offsets that aren't calculatable based on the `page` and `pageSize`, we introduced new constructors for `KeysetPageRequest` and changed the semantics of existing ones in the Spring Data and DeltaSpike Data modules. If you constructed `KeysetPageRequest` manually, please review if the constructor that you use fits your needs. Since the DeltaSpike Data integration brings it's own `PageRequest` API, you are also affected of this change when you construct a `PageRequest` with the DeltaSpike Data integration.
+
+The most notable features and bug fixes are:
+
+* https://github.com/Blazebit/blaze-persistence/issues/612[*#612*, window="_blank"] Initial Hibernate 5.4 support
+* https://github.com/Blazebit/blaze-persistence/issues/648[*#648*, window="_blank"] Support for Spring Data 2.1
+* https://github.com/Blazebit/blaze-persistence/issues/305[*#305*, window="_blank"] Problems with the use of the `VALUES` clause and parameters in the select clause have been fixed
+* https://github.com/Blazebit/blaze-persistence/issues/622[*#622*, window="_blank"] Introduced `EntityViewSettingProcessor` to allow customizing `EntityViewSetting` used in Spring Data repositories+++<!-- PREVIEW-SUFFIX --><!-- </p></li></ul></div> --><!-- PREVIEW-END -->+++
+* https://github.com/Blazebit/blaze-persistence/issues/568[*#568*, window="_blank"], https://github.com/Blazebit/blaze-persistence/issues/194[*#194*, window="_blank"] Add support for `GROUP BY` with `PaginatedCriteriaBuilder`
+* https://github.com/Blazebit/blaze-persistence/issues/444[*#444*, window="_blank"] Support `@EmbeddedId` and `@IdClass` attributes when using keyset pagination
+
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#130-Alpha3[changelog, window="_blank"] for a full list of changes and improvements.
+
+A big thank you is going out to https://github.com/heruan[Giovanni Lovato, window="_blank"] for pushing forward the Spring Data integration, testing edge cases with embeddables and improving the Eclipse development experience.
+Thanks to https://github.com/JWGmeligMeyling[Jan-Willem Gmelig Meyling, window="_blank"] we now also have an integration for the upcoming Hibernate 5.4 release!
+
+The last few issues that are planned for the final 1.3.0 release still need some work. We are currently planning to finish everything up by the end of September.
