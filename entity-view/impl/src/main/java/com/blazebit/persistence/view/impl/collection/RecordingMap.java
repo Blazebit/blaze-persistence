@@ -480,37 +480,57 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
         for (Object o : addedKeys) {
             // Only consider a key to be added if it hasn't been removed before
             if (this.removedKeys.remove(o) == null) {
-                this.addedKeys.put((K) o, (K) o);
-            }
-            if (parent != null && o instanceof BasicDirtyTracker) {
-                ((BasicDirtyTracker) o).$$_setParent(this, 1);
+                if (this.addedKeys.put((K) o, (K) o) == null) {
+                    if (parent != null && o instanceof BasicDirtyTracker) {
+                        ((BasicDirtyTracker) o).$$_setParent(this, 1);
+                    }
+                }
+            } else {
+                if (parent != null && o instanceof BasicDirtyTracker) {
+                    ((BasicDirtyTracker) o).$$_setParent(this, 1);
+                }
             }
         }
         for (Object o : removedKeys) {
             // Only consider a key to be removed if it hasn't been added before
             if (this.addedKeys.remove(o) == null) {
-                this.removedKeys.put((K) o, (K) o);
-            }
-            if (o instanceof BasicDirtyTracker) {
-                ((BasicDirtyTracker) o).$$_unsetParent();
+                if (this.removedKeys.put((K) o, (K) o) == null) {
+                    if (o instanceof BasicDirtyTracker) {
+                        ((BasicDirtyTracker) o).$$_unsetParent();
+                    }
+                }
+            } else {
+                if (o instanceof BasicDirtyTracker) {
+                    ((BasicDirtyTracker) o).$$_unsetParent();
+                }
             }
         }
         for (Object o : addedElements) {
             // Only consider an element to be added if it hasn't been removed before
             if (this.removedElements.remove(o) == null) {
-                this.addedElements.put((V) o, (V) o);
-            }
-            if (parent != null && o instanceof BasicDirtyTracker) {
-                ((BasicDirtyTracker) o).$$_setParent(this, 2);
+                if (this.addedElements.put((V) o, (V) o) == null) {
+                    if (parent != null && o instanceof BasicDirtyTracker) {
+                        ((BasicDirtyTracker) o).$$_setParent(this, 2);
+                    }
+                }
+            } else {
+                if (parent != null && o instanceof BasicDirtyTracker) {
+                    ((BasicDirtyTracker) o).$$_setParent(this, 2);
+                }
             }
         }
         for (Object o : removedElements) {
             // Only consider an element to be removed if it hasn't been added before
             if (this.addedElements.remove(o) == null) {
-                this.removedElements.put((V) o, (V) o);
-            }
-            if (o instanceof BasicDirtyTracker) {
-                ((BasicDirtyTracker) o).$$_unsetParent();
+                if (this.removedElements.put((V) o, (V) o) == null) {
+                    if (o instanceof BasicDirtyTracker) {
+                        ((BasicDirtyTracker) o).$$_unsetParent();
+                    }
+                }
+            } else {
+                if (o instanceof BasicDirtyTracker) {
+                    ((BasicDirtyTracker) o).$$_unsetParent();
+                }
             }
         }
         $$_markDirty(-1);

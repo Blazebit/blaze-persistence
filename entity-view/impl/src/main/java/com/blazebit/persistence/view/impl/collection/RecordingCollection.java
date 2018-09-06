@@ -334,19 +334,29 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
         for (Object o : addedElements) {
             // Only consider an element to be added if it hasn't been removed before
             if (this.removedElements.remove(o) == null) {
-                this.addedElements.put((E) o, (E) o);
-            }
-            if (parent != null && o instanceof BasicDirtyTracker) {
-                ((BasicDirtyTracker) o).$$_setParent(this, 1);
+                if (this.addedElements.put((E) o, (E) o) == null) {
+                    if (parent != null && o instanceof BasicDirtyTracker) {
+                        ((BasicDirtyTracker) o).$$_setParent(this, 1);
+                    }
+                }
+            } else {
+                if (parent != null && o instanceof BasicDirtyTracker) {
+                    ((BasicDirtyTracker) o).$$_setParent(this, 1);
+                }
             }
         }
         for (Object o : removedElements) {
             // Only consider an element to be removed if it hasn't been added before
             if (this.addedElements.remove(o) == null) {
-                this.removedElements.put((E) o, (E) o);
-            }
-            if (o instanceof BasicDirtyTracker) {
-                ((BasicDirtyTracker) o).$$_unsetParent();
+                if (this.removedElements.put((E) o, (E) o) == null) {
+                    if (o instanceof BasicDirtyTracker) {
+                        ((BasicDirtyTracker) o).$$_unsetParent();
+                    }
+                }
+            } else {
+                if (o instanceof BasicDirtyTracker) {
+                    ((BasicDirtyTracker) o).$$_unsetParent();
+                }
             }
         }
         $$_markDirty(-1);

@@ -56,10 +56,10 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
     protected final String embeddingViewIdExpression;
     protected final int embeddingViewIdMapperCount;
     protected final int maximumViewMapperCount;
-    protected final int keyIndex;
     protected final String correlationBasisExpression;
     protected final String correlationKeyExpression;
 
+    protected int keyIndex;
     protected FullQueryBuilder<?, ?> criteriaBuilder;
     protected CorrelatedSubqueryViewRootJpqlMacro viewRootJpqlMacro;
     protected MutableEmbeddingViewJpqlMacro embeddingViewJpqlMacro;
@@ -75,7 +75,6 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
         this.embeddingViewIdExpression = viewRootAlias.equals(embeddingViewPath) ? viewRootAlias + "." + getEntityIdName(embeddingViewType.getEntityClass()) : viewRootAlias + "." + embeddingViewPath + "." + getEntityIdName(embeddingViewType.getEntityClass());
         this.embeddingViewIdMapperCount = viewIdMapperCount(embeddingViewType);
         this.maximumViewMapperCount = Math.max(1, Math.max(viewRootIdMapperCount, embeddingViewIdMapperCount));
-        this.keyIndex = maximumViewMapperCount + 1;
         this.correlationBasisExpression = correlationBasisExpression;
         this.correlationKeyExpression = correlationKeyExpression;
     }
@@ -155,10 +154,13 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
 
         if (usesEmbeddingView) {
             maximumSlotsFilled = embeddingViewIdMapperCount == 0 ? 1 : embeddingViewIdMapperCount;
+            this.keyIndex = (maximumViewMapperCount - maximumSlotsFilled) + 2;
         } else if (usesViewRoot) {
             maximumSlotsFilled = viewRootIdMapperCount == 0 ? 1 : viewRootIdMapperCount;
+            this.keyIndex = (maximumViewMapperCount - maximumSlotsFilled) + 2;
         } else {
             maximumSlotsFilled = 0;
+            this.keyIndex = maximumViewMapperCount + 1;
         }
 
         for (int i = maximumSlotsFilled; i < maximumViewMapperCount; i++) {
