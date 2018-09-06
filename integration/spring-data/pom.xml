@@ -33,7 +33,7 @@
     <modules>
         <module>base</module>
         <module>1.x</module>
-        <module>2.x</module>
+        <module>2.0</module>
         <module>2.1</module>
         <module>rest</module>
         <module>testsuite</module>
