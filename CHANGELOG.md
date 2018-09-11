@@ -17,6 +17,7 @@ Not yet released
 ### Bug fixes
 
 * Using non-bags in entity views will now properly deduplicate elements
+* Fix support for exists repository methods in Spring Data repositories
 
 ### Backwards-incompatible changes
 

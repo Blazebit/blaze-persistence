@@ -22,11 +22,15 @@ import com.blazebit.persistence.spi.JoinTable;
 import com.blazebit.persistence.spi.JpaMetamodelAccessor;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.reflection.ReflectionUtils;
+import org.eclipse.persistence.internal.helper.DatabaseField;
 import org.eclipse.persistence.internal.jpa.metamodel.AttributeImpl;
 import org.eclipse.persistence.internal.jpa.metamodel.ManagedTypeImpl;
 import org.eclipse.persistence.jpa.JpaEntityManager;
+import org.eclipse.persistence.mappings.AggregateCollectionMapping;
 import org.eclipse.persistence.mappings.CollectionMapping;
 import org.eclipse.persistence.mappings.DatabaseMapping;
+import org.eclipse.persistence.mappings.DirectCollectionMapping;
+import org.eclipse.persistence.mappings.DirectMapMapping;
 import org.eclipse.persistence.mappings.ForeignReferenceMapping;
 import org.eclipse.persistence.mappings.ManyToManyMapping;
 import org.eclipse.persistence.mappings.OneToOneMapping;
@@ -46,6 +50,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Vector;
 
 /**
  *
@@ -264,18 +269,95 @@ public class EclipseLinkJpaProvider implements JpaProvider {
             CollectionMapping collectionMapping = (CollectionMapping) mapping;
             if (collectionMapping instanceof ManyToManyMapping) {
                 ManyToManyMapping manyToManyMapping = (ManyToManyMapping) collectionMapping;
-                Map<String, String> idColumnMapping = new HashMap<>();
-                Map<String, String> keyMapping = null;
-                Map<String, String> targetIdColumnMapping = new HashMap<>();
+                Vector<DatabaseField> sourceKeyFields = manyToManyMapping.getSourceKeyFields();
+                Vector<DatabaseField> sourceRelationKeyFields = manyToManyMapping.getSourceRelationKeyFields();
+                Vector<DatabaseField> targetKeyFields = manyToManyMapping.getTargetKeyFields();
+                Vector<DatabaseField> targetRelationKeyFields = manyToManyMapping.getTargetRelationKeyFields();
+
+                Map<String, String> idColumnMapping = new HashMap<>(sourceKeyFields.size());
+                Map<String, String> targetIdColumnMapping = new HashMap<>(targetKeyFields.size());
+
+                for (int i = 0; i < sourceKeyFields.size(); i++) {
+                    idColumnMapping.put(sourceKeyFields.get(i).getName(), sourceRelationKeyFields.get(i).getName());
+                }
+                for (int i = 0; i < targetKeyFields.size(); i++) {
+                    targetIdColumnMapping.put(targetKeyFields.get(i).getName(), targetRelationKeyFields.get(i).getName());
+                }
+
                 return new JoinTable(
                         manyToManyMapping.getRelationTable().getName(),
                         idColumnMapping,
-                        keyMapping,
+                        keyMapping(manyToManyMapping.getContainerPolicy().getIdentityFieldsForMapKey()),
+                        targetIdColumnMapping
+                );
+            } else if (collectionMapping instanceof DirectCollectionMapping) {
+                DirectCollectionMapping directCollectionMapping = (DirectCollectionMapping) collectionMapping;
+                Vector<DatabaseField> sourceKeyFields = directCollectionMapping.getSourceKeyFields();
+                Vector<DatabaseField> referenceKeyFields = directCollectionMapping.getReferenceKeyFields();
+
+                Map<String, String> idColumnMapping = new HashMap<>(sourceKeyFields.size());
+                Map<String, String> targetIdColumnMapping = Collections.emptyMap();
+
+                for (int i = 0; i < sourceKeyFields.size(); i++) {
+                    idColumnMapping.put(sourceKeyFields.get(i).getName(), referenceKeyFields.get(i).getName());
+                }
+                return new JoinTable(
+                        directCollectionMapping.getReferenceTableName(),
+                        idColumnMapping,
+                        keyMapping(directCollectionMapping.getContainerPolicy().getIdentityFieldsForMapKey()),
+                        targetIdColumnMapping
+                );
+            } else if (collectionMapping instanceof DirectMapMapping) {
+                DirectMapMapping directMapMapping = (DirectMapMapping) collectionMapping;
+                Vector<DatabaseField> sourceKeyFields = directMapMapping.getSourceKeyFields();
+                Vector<DatabaseField> referenceKeyFields = directMapMapping.getReferenceKeyFields();
+
+                Map<String, String> idColumnMapping = new HashMap<>(sourceKeyFields.size());
+                Map<String, String> targetIdColumnMapping = Collections.emptyMap();
+
+                for (int i = 0; i < sourceKeyFields.size(); i++) {
+                    idColumnMapping.put(sourceKeyFields.get(i).getName(), referenceKeyFields.get(i).getName());
+                }
+                return new JoinTable(
+                        directMapMapping.getReferenceTableName(),
+                        idColumnMapping,
+                        keyMapping(directMapMapping.getContainerPolicy().getIdentityFieldsForMapKey()),
+                        targetIdColumnMapping
+                );
+            } else if (collectionMapping instanceof AggregateCollectionMapping) {
+                AggregateCollectionMapping aggregateCollectionMapping = (AggregateCollectionMapping) collectionMapping;
+                Vector<DatabaseField> sourceKeyFields = aggregateCollectionMapping.getSourceKeyFields();
+                Vector<DatabaseField> targetForeignKeyFields = aggregateCollectionMapping.getTargetForeignKeyFields();
+
+                Map<String, String> idColumnMapping = new HashMap<>(sourceKeyFields.size());
+                Map<String, String> targetIdColumnMapping = Collections.emptyMap();
+                String tableName = null;
+
+                for (int i = 0; i < sourceKeyFields.size(); i++) {
+                    tableName = targetForeignKeyFields.get(i).getTableName();
+                    idColumnMapping.put(sourceKeyFields.get(i).getName(), targetForeignKeyFields.get(i).getName());
+                }
+                return new JoinTable(
+                        tableName,
+                        idColumnMapping,
+                        keyMapping(aggregateCollectionMapping.getContainerPolicy().getIdentityFieldsForMapKey()),
                         targetIdColumnMapping
                 );
             }
         }
         return null;
+    }
+
+    private static Map<String, String> keyMapping(List<DatabaseField> identityFieldsForMapKey) {
+        if (identityFieldsForMapKey == null || identityFieldsForMapKey.isEmpty()) {
+            return null;
+        } else {
+            Map<String, String> keyMapping = new HashMap<>(identityFieldsForMapKey.size());
+            for (DatabaseField databaseField : identityFieldsForMapKey) {
+                keyMapping.put(databaseField.getName(), databaseField.getName());
+            }
+            return keyMapping;
+        }
     }
 
     @Override

@@ -114,7 +114,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  *
@@ -464,7 +463,6 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 boolean mapKey = pluralAttribute.isIndexed() && pluralAttribute instanceof MapAttribute<?, ?, ?>;
                 int startIndex = tupleOffset + mapperBuilder.mapperIndex();
                 int mapValueStartIndex = startIndex + 1;
-                Set<Class<?>> allowedSubtypes = attribute.getAllowedSubtypes();
 
                 if (listKey) {
                     if (pluralAttribute.isCorrelated()) {

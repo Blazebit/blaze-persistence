@@ -123,8 +123,26 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
             return new SlicedExecution(getQueryMethod().getParameters());
         } else if (getQueryMethod().isPageQuery()) {
             return new PagedExecution(getQueryMethod().getParameters());
+        } else if (isDelete(this.tree)) {
+            return new DeleteExecution(getEntityManager());
+        } else if (this.tree.isExistsProjection()) {
+            return new ExistsExecution();
         } else {
-            return isDelete(this.tree) ? new DeleteExecution(getEntityManager()) : super.getExecution();
+            return super.getExecution();
+        }
+    }
+
+    /**
+     * {@link JpaQueryExecution} performing an exists check on the query.
+     *
+     * @author Christian Beikov
+     * @since 1.3.0
+     */
+    private static class ExistsExecution extends JpaQueryExecution {
+
+        @Override
+        protected Object doExecute(AbstractJpaQuery repositoryQuery, Object[] values) {
+            return !((AbstractPartTreeBlazePersistenceQuery) repositoryQuery).createQuery(values).getResultList().isEmpty();
         }
     }
 
@@ -210,7 +228,6 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
          */
         @Override
         protected Object doExecute(AbstractJpaQuery jpaQuery, Object[] values) {
-
             Query query = ((AbstractPartTreeBlazePersistenceQuery) jpaQuery).createQuery(values);
             List<?> resultList = query.getResultList();
 
