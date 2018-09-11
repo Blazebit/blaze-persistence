@@ -347,12 +347,13 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
     public abstract Map<String, String> getWritableMappedByMappings();
 
     protected final Set<Class<?>> createAllowedSubtypesSet() {
+        Set<Type<?>> readOnlyAllowedSubtypes = getReadOnlyAllowedSubtypes();
         Set<Type<?>> persistAllowedSubtypes = getPersistCascadeAllowedSubtypes();
         Set<Type<?>> updateAllowedSubtypes = getUpdateCascadeAllowedSubtypes();
-        Set<Class<?>> allowedSubtypes = new HashSet<>(persistAllowedSubtypes.size() + updateAllowedSubtypes.size() + 1);
-        // Always add the element type to the allowed subtypes
-        // This is especially important as it might be a read only type
-        allowedSubtypes.add(getElementType().getJavaType());
+        Set<Class<?>> allowedSubtypes = new HashSet<>(readOnlyAllowedSubtypes.size() + persistAllowedSubtypes.size() + updateAllowedSubtypes.size());
+        for (Type<?> t : readOnlyAllowedSubtypes) {
+            allowedSubtypes.add(t.getJavaType());
+        }
         for (Type<?> t : persistAllowedSubtypes) {
             allowedSubtypes.add(t.getJavaType());
         }

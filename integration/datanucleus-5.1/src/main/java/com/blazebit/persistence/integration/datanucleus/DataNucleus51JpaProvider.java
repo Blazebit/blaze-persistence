@@ -295,7 +295,9 @@ public class DataNucleus51JpaProvider implements JpaProvider {
                 }
             } else if (metaData.getOrderMetaData() != null) {
                 String columnName = metaData.getOrderMetaData().getColumnName();
-                keyMapping = Collections.singletonMap(columnName, columnName);
+                if (columnName != null) {
+                    keyMapping = Collections.singletonMap(columnName, columnName);
+                }
             }
 
             String tableName;
@@ -303,8 +305,25 @@ public class DataNucleus51JpaProvider implements JpaProvider {
             Map<String, String> targetIdColumnMapping;
             if (metaData.getJoinMetaData().getTable() == null) {
                 tableName = metaData.getTable();
-                idColumnMapping = Collections.emptyMap();
-                targetIdColumnMapping = Collections.emptyMap();
+                ColumnMetaData[] joinMetaData;
+                ColumnMetaData[] elementMetaData;
+
+                if (metaData.getJoinMetaData() == null || (joinMetaData = metaData.getJoinMetaData().getColumnMetaData()) == null) {
+                    idColumnMapping = Collections.emptyMap();
+                } else {
+                    idColumnMapping = new HashMap<>(joinMetaData.length);
+                    for (int i = 0; i < joinMetaData.length; i++) {
+                        idColumnMapping.put(joinMetaData[i].getName(), joinMetaData[i].getTarget());
+                    }
+                }
+                if (metaData.getElementMetaData() == null || (elementMetaData = metaData.getElementMetaData().getColumnMetaData()) == null) {
+                    targetIdColumnMapping = Collections.emptyMap();
+                } else {
+                    targetIdColumnMapping = new HashMap<>(elementMetaData.length);
+                    for (int i = 0; i < elementMetaData.length; i++) {
+                        targetIdColumnMapping.put(elementMetaData[i].getName(), elementMetaData[i].getTarget());
+                    }
+                }
             } else {
                 tableName = metaData.getJoinMetaData().getTable();
                 ColumnMetaData[] primaryKeyColumnMetaData = metaData.getJoinMetaData().getPrimaryKeyMetaData().getColumnMetaData();

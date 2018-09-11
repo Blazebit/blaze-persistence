@@ -80,9 +80,11 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
     private Set<Class<?>> cascadePersistSubtypeClasses;
     private Set<Class<?>> cascadeUpdateSubtypeClasses;
 
+    private Map<ViewMapping, Boolean> readOnlySubtypeMappings;
     private Map<ViewMapping, Boolean> cascadeSubtypeMappings;
     private Map<ViewMapping, Boolean> cascadePersistSubtypeMappings;
     private Map<ViewMapping, Boolean> cascadeUpdateSubtypeMappings;
+    private Set<ManagedViewTypeImplementor<?>> readOnlySubtypes;
     private Set<ManagedViewTypeImplementor<?>> cascadeSubtypes;
     private Set<ManagedViewTypeImplementor<?>> cascadePersistSubtypes;
     private Set<ManagedViewTypeImplementor<?>> cascadeUpdateSubtypes;
@@ -178,6 +180,25 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
         this.inverseRemoveStrategy = inverseRemoveStrategy;
     }
 
+    public Set<ManagedViewTypeImplementor<?>> getReadOnlySubtypes(MetamodelBuildingContext context) {
+        if (readOnlySubtypes != null) {
+            return readOnlySubtypes;
+        }
+        Set<ManagedViewTypeImplementor<?>> subtypes = initializeCascadeSubtypes(readOnlySubtypeMappings, context);
+        com.blazebit.persistence.view.metamodel.Type<?> elementType = getElementType(context);
+        if (elementType == null) {
+            elementType = getType(context);
+        }
+        if (elementType instanceof ManagedViewTypeImplementor<?>) {
+            if (subtypes.isEmpty()) {
+                subtypes = Collections.<ManagedViewTypeImplementor<?>>singleton((ManagedViewTypeImplementor<?>) elementType);
+            } else {
+                subtypes.add((ManagedViewTypeImplementor<?>) elementType);
+            }
+        }
+        return readOnlySubtypes = subtypes;
+    }
+
     public Set<ManagedViewTypeImplementor<?>> getCascadeSubtypes(MetamodelBuildingContext context) {
         if (cascadeSubtypes != null) {
             return cascadeSubtypes;
@@ -240,7 +261,8 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
             if (attributeViewMapping != null && (isUpdatable == Boolean.TRUE || getDeclaringView().isUpdatable())) {
                 if (hasSetter || isCollection && (cascadeTypes.contains(CascadeType.PERSIST) || attributeViewMapping.isCreatable())) {
                     // But only if the attribute is explicitly or implicitly updatable
-                    this.cascadeSubtypeMappings = initializeDependentCascadeSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass());
+                    this.readOnlySubtypeMappings = initializeDependentSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass(), true);
+                    this.cascadeSubtypeMappings = initializeDependentSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass(), false);
                 } else {
                     this.cascadeSubtypeMappings = Collections.emptyMap();
                 }
@@ -250,9 +272,10 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
             this.cascadePersistSubtypeMappings = Collections.emptyMap();
             this.cascadeUpdateSubtypeMappings = Collections.emptyMap();
         } else if (isUpdatable == Boolean.TRUE) {
-            this.cascadeSubtypeMappings = initializeDependentCascadeSubtypeMappings(context, cascadeSubtypeClasses);
-            this.cascadePersistSubtypeMappings = initializeDependentCascadeSubtypeMappings(context, cascadePersistSubtypeClasses);
-            this.cascadeUpdateSubtypeMappings = initializeDependentCascadeSubtypeMappings(context, cascadeUpdateSubtypeClasses);
+            this.readOnlySubtypeMappings = initializeDependentSubtypeMappings(context, cascadeSubtypeClasses, true);
+            this.cascadeSubtypeMappings = initializeDependentSubtypeMappings(context, cascadeSubtypeClasses, false);
+            this.cascadePersistSubtypeMappings = initializeDependentSubtypeMappings(context, cascadePersistSubtypeClasses, false);
+            this.cascadeUpdateSubtypeMappings = initializeDependentSubtypeMappings(context, cascadeUpdateSubtypeClasses, false);
         }
     }
 
@@ -377,7 +400,7 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
         return error;
     }
 
-    private Map<ViewMapping, Boolean> initializeDependentCascadeSubtypeMappings(MetamodelBuildingContext context, Set<Class<?>> subtypes) {
+    private Map<ViewMapping, Boolean> initializeDependentSubtypeMappings(MetamodelBuildingContext context, Set<Class<?>> subtypes, boolean readOnly) {
         if (subtypes.size() == 0) {
             return Collections.emptyMap();
         }
@@ -387,7 +410,7 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
             ViewMapping subtypeMapping = context.getViewMapping(type);
             if (subtypeMapping == null) {
                 unknownSubviewType(type);
-            } else {
+            } else if (!readOnly || !subtypeMapping.isUpdatable() && !subtypeMapping.isCreatable()) {
                 subtypeMapping.initializeViewMappings(context, null);
                 subtypeMappings.put(subtypeMapping, Boolean.TRUE);
             }
@@ -396,7 +419,7 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
         return subtypeMappings;
     }
 
-    private Map<ViewMapping, Boolean> initializeDependentCascadeSubtypeMappingsAuto(final MetamodelBuildingContext context, final Class<?> clazz) {
+    private Map<ViewMapping, Boolean> initializeDependentSubtypeMappingsAuto(final MetamodelBuildingContext context, final Class<?> clazz, boolean readOnly) {
         Set<Class<?>> subtypes = context.findSubtypes(clazz);
         if (subtypes.size() == 0) {
             return Collections.emptyMap();
@@ -407,7 +430,7 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
             final ViewMapping subtypeMapping = context.getViewMapping(type);
             if (subtypeMapping == null) {
                 unknownSubviewType(type);
-            } else {
+            } else if (!readOnly || !subtypeMapping.isUpdatable() && !subtypeMapping.isCreatable()) {
                 // We can't initialize a potential subtype mapping here immediately, but have to wait until the current view mapping is fully initialized
                 // This avoids access to partly initialized view mappings
                 viewMapping.onInitializeViewMappingsFinished(new Runnable() {

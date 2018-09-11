@@ -52,6 +52,7 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
     private final boolean updateCascaded;
     private final boolean deleteCascaded;
     private final boolean orphanRemoval;
+    private final Set<Type<?>> readOnlySubtypes;
     private final Set<Type<?>> persistSubtypes;
     private final Set<Type<?>> updateSubtypes;
     private final Set<Class<?>> allowedSubtypes;
@@ -90,6 +91,8 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
         }
         boolean definesDeleteCascading = mapping.getCascadeTypes().contains(CascadeType.DELETE);
         boolean allowsDeleteCascading = updatable || mapping.getCascadeTypes().contains(CascadeType.AUTO);
+
+        this.readOnlySubtypes = (Set<Type<?>>) (Set) mapping.getReadOnlySubtypes(context);
 
         if (updatable) {
             this.persistSubtypes = determinePersistSubtypeSet(elementType, mapping.getCascadeSubtypes(context), mapping.getCascadePersistSubtypes(context), context);
@@ -255,6 +258,11 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
     @Override
     public boolean isOrphanRemoval() {
         return orphanRemoval;
+    }
+
+    @Override
+    public Set<Type<?>> getReadOnlyAllowedSubtypes() {
+        return readOnlySubtypes;
     }
 
     @Override

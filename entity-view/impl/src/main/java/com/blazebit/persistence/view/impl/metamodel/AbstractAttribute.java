@@ -406,9 +406,11 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             ExtendedManagedType<?> managedType = context.getEntityMetamodel().getManagedType(ExtendedManagedType.class, getDeclaringType().getJpaManagedType());
             ExtendedAttribute<?, ?> attribute = managedType.getAttributes().get(getMapping());
             if (attribute != null && attribute.getAttribute() instanceof javax.persistence.metamodel.PluralAttribute<?, ?, ?>) {
+                // TODO: we should add that information to ExtendedAttribute
                 return (((javax.persistence.metamodel.PluralAttribute<?, ?, ?>) attribute.getAttribute()).getCollectionType() != javax.persistence.metamodel.PluralAttribute.CollectionType.MAP)
                         && (attribute.getMappedBy() != null || !attribute.isBag())
-                        && (attribute.getJoinTable() == null || attribute.getJoinTable().getKeyColumnMappings() == null);
+                        && (attribute.getJoinTable() == null || attribute.getJoinTable().getKeyColumnMappings() == null)
+                        && !MetamodelUtils.isIndexedList(context.getEntityMetamodel(), context.getExpressionFactory(), managedType.getType().getJavaType(), getMapping());
             }
         }
 

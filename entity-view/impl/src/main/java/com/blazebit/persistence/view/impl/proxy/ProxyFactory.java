@@ -87,7 +87,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -2149,28 +2148,20 @@ public class ProxyFactory {
     }
 
     private String addAllowedSubtypeField(CtClass declaringClass, AbstractMethodAttribute<?, ?> attribute) throws NotFoundException, CannotCompileException {
-        StringBuilder subtypeArrayBuilder = new StringBuilder();
+        Set<Class<?>> allowedSubtypes = attribute.getAllowedSubtypes();
+        String subtypeArray;
+        if (!allowedSubtypes.isEmpty()) {
+            StringBuilder subtypeArrayBuilder = new StringBuilder();
+            for (Class<?> c : allowedSubtypes) {
+                subtypeArrayBuilder.append(c.getName());
+                subtypeArrayBuilder.append(", ");
+            }
 
-        Set<Class<?>> allowedSubtypes = new HashSet<>();
-        if (attribute.isCollection()) {
-            allowedSubtypes.add(((PluralAttribute<?, ?, ?>) attribute).getElementType().getJavaType());
+            subtypeArrayBuilder.setLength(subtypeArrayBuilder.length() - 2);
+            subtypeArray = subtypeArrayBuilder.toString();
         } else {
-            allowedSubtypes.add(attribute.getJavaType());
+            subtypeArray = "";
         }
-        for (Type<?> t : attribute.getPersistCascadeAllowedSubtypes()) {
-            allowedSubtypes.add(t.getJavaType());
-        }
-        for (Type<?> t : attribute.getUpdateCascadeAllowedSubtypes()) {
-            allowedSubtypes.add(t.getJavaType());
-        }
-
-        for (Class<?> c : allowedSubtypes) {
-            subtypeArrayBuilder.append(c.getName());
-            subtypeArrayBuilder.append(", ");
-        }
-
-        subtypeArrayBuilder.setLength(subtypeArrayBuilder.length() - 2);
-        String subtypeArray = subtypeArrayBuilder.toString();
 
         try {
             declaringClass.getDeclaredField(attribute.getName() + "_$$_subtypes");
@@ -2181,15 +2172,20 @@ public class ProxyFactory {
         StringBuilder fieldSb = new StringBuilder();
         fieldSb.append("private static final java.util.Set ");
         fieldSb.append(attribute.getName());
-        fieldSb.append("_$$_subtypes = new java.util.HashSet(java.util.Arrays.asList(new java.lang.Class[]{ ");
+        fieldSb.append("_$$_subtypes = ");
 
-        for (Class<?> c : allowedSubtypes) {
-            fieldSb.append(c.getName());
-            fieldSb.append(".class, ");
+        if (!allowedSubtypes.isEmpty()) {
+            fieldSb.append("new java.util.HashSet(java.util.Arrays.asList(new java.lang.Class[]{ ");
+            for (Class<?> c : allowedSubtypes) {
+                fieldSb.append(c.getName());
+                fieldSb.append(".class, ");
+            }
+
+            fieldSb.setLength(fieldSb.length() - 2);
+            fieldSb.append(" }));");
+        } else {
+            fieldSb.append("java.util.Collections.emptySet();");
         }
-
-        fieldSb.setLength(fieldSb.length() - 2);
-        fieldSb.append(" }));");
         CtField allowedSubtypesField = CtField.make(fieldSb.toString(), declaringClass);
         declaringClass.addField(allowedSubtypesField);
         return subtypeArray;
