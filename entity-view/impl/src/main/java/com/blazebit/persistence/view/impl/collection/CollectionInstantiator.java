@@ -27,6 +27,10 @@ public interface CollectionInstantiator {
 
     public boolean allowsDuplicates();
 
+    public boolean requiresPostConstruct();
+
+    public void postConstruct(Collection<?> collection);
+
     public Collection<?> createCollection(int size);
 
     public Collection<?> createJpaCollection(int size);

@@ -21,6 +21,8 @@ import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 
 import java.util.Collection;
+import java.util.IdentityHashMap;
+import java.util.List;
 
 /**
  *
@@ -37,7 +39,23 @@ public class CollectionTupleListTransformer extends AbstractNonIndexedTupleListT
         this.collectionInstantiator = collectionInstantiator;
         this.dirtyTracking = dirtyTracking;
     }
-    
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<Object[]> transform(List<Object[]> tuples) {
+        tuples = super.transform(tuples);
+        if (collectionInstantiator.requiresPostConstruct()) {
+            IdentityHashMap<Collection<?>, Boolean> handledCollections = new IdentityHashMap<>(tuples.size());
+            for (Object[] tuple : tuples) {
+                Collection<Object> collection = (Collection<Object>) tuple[startIndex];
+                if (handledCollections.put(collection, Boolean.TRUE) == null) {
+                    collectionInstantiator.postConstruct(collection);
+                }
+            }
+        }
+        return tuples;
+    }
+
     @Override
     protected Object createCollection() {
         if (dirtyTracking) {

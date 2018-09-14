@@ -40,7 +40,7 @@ public abstract class AbstractParameterCollectionAttribute<X, Y> extends Abstrac
 
     public AbstractParameterCollectionAttribute(MappingConstructorImpl<X> mappingConstructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context) {
         super(mappingConstructor, mapping, context);
-        this.collectionInstantiator = createCollectionInstantiator(null, isIndexed(), isSorted(), isOrdered(), getComparator());
+        this.collectionInstantiator = createCollectionInstantiator(context, null, isIndexed(), isSorted(), isOrdered(), getComparator());
     }
 
     @Override

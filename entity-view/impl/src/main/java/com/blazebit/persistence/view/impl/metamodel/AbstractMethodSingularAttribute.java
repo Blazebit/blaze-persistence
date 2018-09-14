@@ -231,6 +231,11 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
     }
 
     @Override
+    protected boolean isForcedUnique() {
+        return false;
+    }
+
+    @Override
     protected PluralAttribute.CollectionType getCollectionType() {
         throw new UnsupportedOperationException("Singular attribute");
     }

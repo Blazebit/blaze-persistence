@@ -67,6 +67,7 @@ public class AbstractAnnotationAttributeMappingReader {
             } else {
                 attributeMapping.setContainerDefault();
             }
+            attributeMapping.setForceUniqueness(collectionMapping.forceUnique());
         } else {
             // List types have to be resolved during building against the metamodel
             if (collectionType != List.class) {

@@ -42,7 +42,7 @@ public abstract class AbstractParameterListAttribute<X, Y> extends AbstractParam
     public AbstractParameterListAttribute(MappingConstructorImpl<X> mappingConstructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context) {
         super(mappingConstructor, mapping, context);
         this.isIndexed = mapping.determineIndexed(context, context.getEntityMetamodel().getManagedType(mappingConstructor.getDeclaringType().getEntityClass()));
-        this.collectionInstantiator = createCollectionInstantiator(null, isIndexed(), isSorted(), isOrdered(), getComparator());
+        this.collectionInstantiator = createCollectionInstantiator(context, null, isIndexed(), isSorted(), isOrdered(), getComparator());
     }
 
     @Override

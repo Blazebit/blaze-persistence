@@ -32,6 +32,15 @@ public abstract class AbstractCollectionInstantiator implements CollectionInstan
     }
 
     @Override
+    public boolean requiresPostConstruct() {
+        return false;
+    }
+
+    @Override
+    public void postConstruct(Collection<?> collection) {
+    }
+
+    @Override
     public final Collection<?> createJpaCollection(int size) {
         return collectionFactory.createCollection(size);
     }

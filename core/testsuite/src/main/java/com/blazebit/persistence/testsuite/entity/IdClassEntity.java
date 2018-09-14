@@ -44,6 +44,7 @@ public class IdClassEntity implements Serializable {
     private String key2;
     private Integer value;
     private Set<IdClassEntity> children = new HashSet<>();
+    private Set<IdClassEntity> children2 = new HashSet<>();
 
     public IdClassEntity() {
     }
@@ -98,5 +99,21 @@ public class IdClassEntity implements Serializable {
 
     public void setChildren(Set<IdClassEntity> children) {
         this.children = children;
+    }
+
+    @ManyToMany
+    @JoinTable(name = "id_class_entity_children2", joinColumns = {
+            @JoinColumn(name = "child_key1", nullable = false, referencedColumnName = "key1"),
+            @JoinColumn(name = "child_key2", nullable = false, referencedColumnName = "key2")
+    }, inverseJoinColumns = {
+            @JoinColumn(name = "parent_key1", nullable = false, referencedColumnName = "key1"),
+            @JoinColumn(name = "parent_key2", nullable = false, referencedColumnName = "key2")
+    })
+    public Set<IdClassEntity> getChildren2() {
+        return children2;
+    }
+
+    public void setChildren2(Set<IdClassEntity> children2) {
+        this.children2 = children2;
     }
 }

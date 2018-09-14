@@ -74,6 +74,14 @@ public interface PluralAttribute<X, C, E> extends Attribute<X, C> {
      * @return true if the collection is sorted, false otherwise
      */
     public boolean isSorted();
+
+    /**
+     * Returns whether this collection is forcefully deduplicated on load or not.
+     *
+     * @return true if the collection is forcefully deduplicated on load, false otherwise
+     * @since 1.3.0
+     */
+    public boolean isForcedUnique();
     
     /**
      * Returns the comparator that should be used for sorting.

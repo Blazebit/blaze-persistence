@@ -60,4 +60,11 @@ public @interface CollectionMapping {
      * @return true if the index should be ignored, false otherwise
      */
     boolean ignoreIndex() default false;
+
+    /**
+     * Specifies whether the elements should be forcefully deduplicated if the collection allows duplicates or not.
+     *
+     * @return true if the elements should be forcefully depduplicated, false otherwise
+     */
+    boolean forceUnique() default false;
 }

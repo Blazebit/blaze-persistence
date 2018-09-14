@@ -74,7 +74,7 @@ public class CorrelatedCollectionSubselectTupleListTransformer extends AbstractC
         for (Map.Entry<Object, Map<Object, Collection<Object>>> entry : collections.entrySet()) {
             Map<Object, TuplePromise> tuplePromiseMap = correlationValues.get(entry.getKey());
             for (Map.Entry<Object, Collection<Object>> correlationEntry : entry.getValue().entrySet()) {
-                tuplePromiseMap.get(correlationEntry.getKey()).onResult(correlationEntry.getValue(), this);
+                tuplePromiseMap.get(correlationEntry.getKey()).onResult(postConstruct(correlationEntry.getValue()), this);
             }
         }
     }
@@ -93,34 +93,18 @@ public class CorrelatedCollectionSubselectTupleListTransformer extends AbstractC
     }
 
     @Override
-    protected Object createDefaultResult() {
-        if (recording) {
-            return collectionInstantiator.createRecordingCollection(0);
-        } else {
-            return collectionInstantiator.createCollection(0);
-        }
+    protected boolean isRecording() {
+        return recording;
     }
 
-    protected Collection<Object> createCollection(Collection<? extends Object> list) {
-        Collection<Object> result;
-        Collection<Object> collection;
-        if (recording) {
-            RecordingCollection<?, ?> recordingCollection = collectionInstantiator.createRecordingCollection(list.size());
-            collection = (Collection<Object>) recordingCollection.getDelegate();
-            result = (Collection<Object>) recordingCollection;
-        } else {
-            result = collection = (Collection<Object>) collectionInstantiator.createCollection(list.size());
-        }
-        if (filterNulls) {
-            for (Object o : list) {
-                if (o != null) {
-                    collection.add(o);
-                }
-            }
-        } else {
-            collection.addAll(list);
-        }
-        return result;
+    @Override
+    protected boolean isFilterNulls() {
+        return filterNulls;
+    }
+
+    @Override
+    protected CollectionInstantiator getCollectionInstantiator() {
+        return collectionInstantiator;
     }
 
 }

@@ -62,6 +62,7 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
     // Basic configs
     protected ContainerBehavior containerBehavior;
     protected Class<? extends Comparator<?>> comparatorClass;
+    protected boolean forceUniqueness;
 
     // Other configs
     protected Integer defaultBatchSize;
@@ -150,6 +151,16 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
     public void setContainerSorted(Class<? extends Comparator<?>> comparatorClass) {
         this.containerBehavior = ContainerBehavior.SORTED;
         this.comparatorClass = comparatorClass;
+    }
+
+    @Override
+    public boolean isForceUniqueness() {
+        return forceUniqueness;
+    }
+
+    @Override
+    public void setForceUniqueness(boolean forceUniqueness) {
+        this.forceUniqueness = forceUniqueness;
     }
 
     @Override

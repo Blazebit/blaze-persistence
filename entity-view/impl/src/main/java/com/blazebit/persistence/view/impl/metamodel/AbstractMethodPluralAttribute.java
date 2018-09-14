@@ -58,6 +58,7 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
     private final Map<ManagedViewType<? extends Y>, String> elementInheritanceSubtypes;
     private final boolean sorted;
     private final boolean ordered;
+    private final boolean forcedUnique;
     private final Class<Comparator<Object>> comparatorClass;
     private final Comparator<Object> comparator;
 
@@ -177,6 +178,7 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
         this.sorted = mapping.isSorted();
         
         this.ordered = mapping.getContainerBehavior() == AttributeMapping.ContainerBehavior.ORDERED;
+        this.forcedUnique = mapping.isForceUniqueness() || determineForcedUnique(context);
         this.comparatorClass = (Class<Comparator<Object>>) mapping.getComparatorClass();
         this.comparator = MetamodelUtils.getComparator(comparatorClass);
     }
@@ -308,6 +310,11 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
     @Override
     public boolean isOrdered() {
         return ordered;
+    }
+
+    @Override
+    public boolean isForcedUnique() {
+        return forcedUnique;
     }
 
     @Override

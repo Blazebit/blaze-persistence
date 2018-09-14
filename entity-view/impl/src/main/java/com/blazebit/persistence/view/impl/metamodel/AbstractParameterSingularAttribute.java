@@ -53,6 +53,11 @@ public abstract class AbstractParameterSingularAttribute<X, Y> extends AbstractP
     }
 
     @Override
+    protected boolean isForcedUnique() {
+        return false;
+    }
+
+    @Override
     protected PluralAttribute.CollectionType getCollectionType() {
         throw new UnsupportedOperationException("Singular attribute");
     }
