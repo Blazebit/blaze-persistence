@@ -101,6 +101,8 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
 
     protected abstract boolean isDelete(PartTree tree);
 
+    protected abstract boolean isExists(PartTree tree);
+
     protected abstract int getOffset(Pageable pageable);
 
     protected abstract int getLimit(Pageable pageable);
@@ -125,7 +127,7 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
             return new PagedExecution(getQueryMethod().getParameters());
         } else if (isDelete(this.tree)) {
             return new DeleteExecution(getEntityManager());
-        } else if (this.tree.isExistsProjection()) {
+        } else if (isExists(this.tree)) {
             return new ExistsExecution();
         } else {
             return super.getExecution();

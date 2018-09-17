@@ -20,6 +20,7 @@ import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.spring.data.base.repository.AbstractEntityViewAwareRepository;
 import com.blazebit.persistence.spring.data.repository.EntityViewRepository;
 import com.blazebit.persistence.view.EntityViewManager;
+import com.infradna.tool.bridge_method_injector.WithBridgeMethods;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -46,6 +47,7 @@ public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> extend
     }
 
     @Override
+    @WithBridgeMethods(value = Object.class, adapterMethod = "convert")
     public <S extends E> Optional<S> findOne(Example<S> example) {
         try {
             return Optional.of(getQuery(new ExampleSpecification<>(example), example.getProbeType(), (Sort) null).getSingleResult());
@@ -55,6 +57,7 @@ public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> extend
     }
 
     @Override
+    @WithBridgeMethods(value = Object.class, adapterMethod = "convert")
     public Optional<E> findOne(Specification<E> spec) {
         try {
             return Optional.of((E) getQuery(spec, (Sort) null).getSingleResult());
@@ -64,8 +67,13 @@ public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> extend
     }
 
     @Override
+    @WithBridgeMethods(value = Object.class, adapterMethod = "convert")
     public Optional<E> findById(ID id) {
         return Optional.ofNullable((E) findOne(id));
+    }
+
+    private Object convert(Optional<Object> optional, Class<?> targetType) {
+        return optional.orElse(null);
     }
 
     @Override
