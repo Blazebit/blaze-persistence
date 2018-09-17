@@ -37,6 +37,10 @@
             <id>spring-libs-milestone</id>
             <url>https://repo.spring.io/libs-milestone</url>
         </repository>
+        <repository>
+            <id>repo.jenkins-ci.org</id>
+            <url>http://repo.jenkins-ci.org/public/</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -44,6 +48,13 @@
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-jpa</artifactId>
             <version>${version.spring-data-2.1}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.infradna.tool</groupId>
+            <artifactId>bridge-method-annotation</artifactId>
+            <version>${version.bridge-injector}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -126,6 +137,11 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.infradna.tool</groupId>
+                <artifactId>bridge-method-injector</artifactId>
+                <version>${version.bridge-injector}</version>
             </plugin>
         </plugins>
     </build>

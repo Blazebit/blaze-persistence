@@ -53,6 +53,11 @@ public class PartTreeBlazePersistenceQuery extends AbstractPartTreeBlazePersiste
     }
 
     @Override
+    protected boolean isExists(PartTree tree) {
+        return tree.isExistsProjection();
+    }
+
+    @Override
     protected int getOffset(Pageable pageable) {
         if (pageable == null) {
             return 0;

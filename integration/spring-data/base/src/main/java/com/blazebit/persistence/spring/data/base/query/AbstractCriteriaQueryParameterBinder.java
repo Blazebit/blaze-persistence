@@ -18,8 +18,10 @@ package com.blazebit.persistence.spring.data.base.query;
 import org.springframework.data.repository.query.Parameters;
 import org.springframework.util.Assert;
 
+import javax.persistence.Parameter;
 import javax.persistence.Query;
 import javax.persistence.criteria.CriteriaQuery;
+import java.io.Serializable;
 import java.util.Date;
 import java.util.Iterator;
 
@@ -66,18 +68,27 @@ public abstract class AbstractCriteriaQueryParameterBinder extends ParameterBind
             return;
         }
 
-        // Christian Beikov: Parameters are now set by name or position instead of by the ParameterExpression object
+        // Christian Beikov: Parameters are now set by name or position instead of by the ParameterExpression object if possible
         if (parameter.isTemporalParameter()) {
             if (metadata.getExpression().getPosition() == null) {
-                query.setParameter(metadata.getExpression().getName(), (Date) metadata.prepare(value),
-                        parameter.getTemporalType());
+                if (metadata.getExpression().getName() == null) {
+                    query.setParameter((Parameter) metadata.getExpression(), (Date) metadata.prepare(value),
+                            parameter.getTemporalType());
+                } else {
+                    query.setParameter(metadata.getExpression().getName(), (Date) metadata.prepare(value),
+                            parameter.getTemporalType());
+                }
             } else {
                 query.setParameter(metadata.getExpression().getPosition(), (Date) metadata.prepare(value),
                         parameter.getTemporalType());
             }
         } else {
             if (metadata.getExpression().getPosition() == null) {
-                query.setParameter(metadata.getExpression().getName(), metadata.prepare(value));
+                if (metadata.getExpression().getName() == null) {
+                    query.setParameter(metadata.getExpression(), metadata.prepare(value));
+                } else {
+                    query.setParameter(metadata.getExpression().getName(), metadata.prepare(value));
+                }
             } else {
                 query.setParameter(metadata.getExpression().getPosition(), metadata.prepare(value));
             }

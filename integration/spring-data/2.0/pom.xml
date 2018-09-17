@@ -32,6 +32,13 @@
         </dependencies>
     </dependencyManagement>
 
+    <repositories>
+        <repository>
+            <id>repo.jenkins-ci.org</id>
+            <url>http://repo.jenkins-ci.org/public/</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.data</groupId>
@@ -40,6 +47,12 @@
             <scope>provided</scope>
         </dependency>
 
+        <dependency>
+            <groupId>com.infradna.tool</groupId>
+            <artifactId>bridge-method-annotation</artifactId>
+            <version>${version.bridge-injector}</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>com.blazebit</groupId>
             <artifactId>blaze-persistence-entity-view-api</artifactId>
@@ -119,6 +132,11 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.infradna.tool</groupId>
+                <artifactId>bridge-method-injector</artifactId>
+                <version>${version.bridge-injector}</version>
             </plugin>
         </plugins>
     </build>
