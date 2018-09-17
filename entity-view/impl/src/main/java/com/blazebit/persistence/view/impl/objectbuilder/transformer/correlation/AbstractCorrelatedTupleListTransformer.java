@@ -26,6 +26,8 @@ import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.PrefixingQueryGenerator;
+import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
+import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformer;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
@@ -111,7 +113,52 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
         }
     }
 
-    protected abstract Object createDefaultResult();
+    protected boolean isRecording() {
+        return false;
+    }
+
+    protected boolean isFilterNulls() {
+        return false;
+    }
+
+    protected CollectionInstantiator getCollectionInstantiator() {
+        return null;
+    }
+
+    protected Collection<Object> postConstruct(Collection<Object> value) {
+        getCollectionInstantiator().postConstruct(value);
+        return value;
+    }
+
+    protected Object createDefaultResult() {
+        if (isRecording()) {
+            return getCollectionInstantiator().createRecordingCollection(0);
+        } else {
+            return getCollectionInstantiator().createCollection(0);
+        }
+    }
+
+    protected Collection<Object> createCollection(Collection<? extends Object> list) {
+        Collection<Object> result;
+        Collection<Object> collection;
+        if (isRecording()) {
+            RecordingCollection<?, ?> recordingCollection = getCollectionInstantiator().createRecordingCollection(list.size());
+            collection = (Collection<Object>) recordingCollection.getDelegate();
+            result = (Collection<Object>) recordingCollection;
+        } else {
+            result = collection = (Collection<Object>) getCollectionInstantiator().createCollection(list.size());
+        }
+        if (isFilterNulls()) {
+            for (Object o : list) {
+                if (o != null) {
+                    collection.add(o);
+                }
+            }
+        } else {
+            collection.addAll(list);
+        }
+        return result;
+    }
 
     protected void populateParameters(FullQueryBuilder<?, ?> queryBuilder) {
         FullQueryBuilder<?, ?> mainBuilder = entityViewConfiguration.getCriteriaBuilder();

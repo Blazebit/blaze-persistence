@@ -18,6 +18,10 @@ package com.blazebit.persistence.view.impl.collection;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 /**
@@ -30,17 +34,50 @@ public class OrderedCollectionInstantiator  extends AbstractCollectionInstantiat
     private final Set<Class<?>> allowedSubtypes;
     private final boolean updatable;
     private final boolean optimize;
+    private final boolean forceUnique;
+    private final Comparator<Object> comparator;
 
-    public OrderedCollectionInstantiator(PluralObjectFactory<Collection<?>> collectionFactory, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize) {
+    public OrderedCollectionInstantiator(PluralObjectFactory<Collection<?>> collectionFactory, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize, boolean forceUnique, Comparator<?> comparator) {
         super(collectionFactory);
         this.allowedSubtypes = allowedSubtypes;
         this.updatable = updatable;
         this.optimize = optimize;
+        this.forceUnique = forceUnique;
+        this.comparator = (Comparator<Object>) comparator;
     }
 
     @Override
     public boolean allowsDuplicates() {
         return true;
+    }
+
+    @Override
+    public boolean requiresPostConstruct() {
+        return forceUnique || comparator != null;
+    }
+
+    @Override
+    public void postConstruct(Collection<?> collection) {
+        ArrayList<Object> list;
+        if (collection instanceof RecordingCollection<?, ?>) {
+            list = (ArrayList<Object>) ((RecordingCollection<?, Object>) collection).getDelegate();
+        } else {
+            list = (ArrayList<Object>) collection;
+        }
+        if (forceUnique) {
+            Set<Object> set = new HashSet<>(list.size());
+            Iterator<Object> iter = list.iterator();
+
+            while (iter.hasNext()) {
+                Object o = iter.next();
+                if (!set.add(o)) {
+                    iter.remove();
+                }
+            }
+        }
+        if (comparator != null) {
+            Collections.sort(list, comparator);
+        }
     }
 
     @Override

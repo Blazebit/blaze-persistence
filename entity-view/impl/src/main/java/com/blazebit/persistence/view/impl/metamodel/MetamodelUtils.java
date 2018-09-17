@@ -168,6 +168,6 @@ public final class MetamodelUtils {
             return mapping;
         }
         
-        return new CollectionMappingLiteral(Comparator.class, false, false);
+        return new CollectionMappingLiteral(Comparator.class, false, false, false);
     }
 }

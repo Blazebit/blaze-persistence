@@ -401,6 +401,22 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                 || getKeyType() instanceof ManagedViewTypeImpl<?> && ((ManagedViewTypeImplementor<?>) getKeyType()).hasJoinFetchedCollections();
     }
 
+    protected boolean determineForcedUnique(MetamodelBuildingContext context) {
+        if (isCollection() && getMapping() != null && getMapping().indexOf('.') == -1) {
+            ExtendedManagedType<?> managedType = context.getEntityMetamodel().getManagedType(ExtendedManagedType.class, getDeclaringType().getJpaManagedType());
+            ExtendedAttribute<?, ?> attribute = managedType.getAttributes().get(getMapping());
+            if (attribute != null && attribute.getAttribute() instanceof javax.persistence.metamodel.PluralAttribute<?, ?, ?>) {
+                // TODO: we should add that information to ExtendedAttribute
+                return (((javax.persistence.metamodel.PluralAttribute<?, ?, ?>) attribute.getAttribute()).getCollectionType() != javax.persistence.metamodel.PluralAttribute.CollectionType.MAP)
+                        && (attribute.getMappedBy() != null || !attribute.isBag())
+                        && (attribute.getJoinTable() == null || attribute.getJoinTable().getKeyColumnMappings() == null)
+                        && !MetamodelUtils.isIndexedList(context.getEntityMetamodel(), context.getExpressionFactory(), managedType.getType().getJavaType(), getMapping());
+            }
+        }
+
+        return false;
+    }
+
     public boolean isUpdateMappable() {
         return updateMappable;
     }
@@ -833,6 +849,8 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     protected abstract boolean isIndexed();
 
+    protected abstract boolean isForcedUnique();
+
     protected abstract PluralAttribute.CollectionType getCollectionType();
 
     protected abstract Type<?> getElementType();
@@ -854,23 +872,32 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     public abstract MapInstantiator getMapInstantiator();
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    protected final CollectionInstantiator createCollectionInstantiator(PluralObjectFactory<? extends Collection<?>> collectionFactory, boolean indexed, boolean sorted, boolean ordered, Comparator comparator) {
+    protected final CollectionInstantiator createCollectionInstantiator(MetamodelBuildingContext context, PluralObjectFactory<? extends Collection<?>> collectionFactory, boolean indexed, boolean sorted, boolean ordered, Comparator comparator) {
         if (indexed) {
-            return new ListCollectionInstantiator((PluralObjectFactory<Collection<?>>) collectionFactory, getAllowedSubtypes(), isUpdatable(), true, isOptimizeCollectionActionsEnabled());
+            if (isForcedUnique()) {
+                context.addError("Forcing uniqueness for indexed attribute is invalid at the " + getLocation());
+            }
+            if (comparator != null) {
+                context.addError("Comparator can't be defined for indexed attribute at the " + getLocation());
+            }
+            return new ListCollectionInstantiator((PluralObjectFactory<Collection<?>>) collectionFactory, getAllowedSubtypes(), isUpdatable(), true, isOptimizeCollectionActionsEnabled(), false, null);
         } else {
             if (sorted) {
                 return new SortedSetCollectionInstantiator((PluralObjectFactory<Collection<?>>) collectionFactory, getAllowedSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled(), comparator);
             } else {
                 if (getCollectionType() == PluralAttribute.CollectionType.SET) {
+                    if (comparator != null) {
+                        context.addError("Comparator can't be defined for non-sorted set attribute at the " + getLocation());
+                    }
                     if (ordered) {
                         return new OrderedSetCollectionInstantiator((PluralObjectFactory<Collection<?>>) collectionFactory, getAllowedSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled());
                     } else {
                         return new UnorderedSetCollectionInstantiator((PluralObjectFactory<Collection<?>>) collectionFactory, getAllowedSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled());
                     }
                 } else if (getCollectionType() == PluralAttribute.CollectionType.LIST) {
-                    return new ListCollectionInstantiator((PluralObjectFactory<Collection<?>>) collectionFactory, getAllowedSubtypes(), isUpdatable(), false, isOptimizeCollectionActionsEnabled());
+                    return new ListCollectionInstantiator((PluralObjectFactory<Collection<?>>) collectionFactory, getAllowedSubtypes(), isUpdatable(), false, isOptimizeCollectionActionsEnabled(), isForcedUnique(), comparator);
                 } else {
-                    return new OrderedCollectionInstantiator((PluralObjectFactory<Collection<?>>) collectionFactory, getAllowedSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled());
+                    return new OrderedCollectionInstantiator((PluralObjectFactory<Collection<?>>) collectionFactory, getAllowedSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled(), isForcedUnique(), comparator);
                 }
             }
         }

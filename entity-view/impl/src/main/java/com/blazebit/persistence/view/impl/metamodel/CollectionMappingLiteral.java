@@ -32,12 +32,14 @@ public class CollectionMappingLiteral implements CollectionMapping {
     private final Class<? extends Comparator> comparator;
     private final boolean ordered;
     private final boolean ignoreIndex;
+    private final boolean forceUnique;
 
     @SuppressWarnings("rawtypes")
-    public CollectionMappingLiteral(Class<? extends Comparator> comparator, boolean ordered, boolean ignoreIndex) {
+    public CollectionMappingLiteral(Class<? extends Comparator> comparator, boolean ordered, boolean ignoreIndex, boolean forceUnique) {
         this.comparator = comparator;
         this.ordered = ordered;
         this.ignoreIndex = ignoreIndex;
+        this.forceUnique = forceUnique;
     }
 
     @Override
@@ -54,6 +56,11 @@ public class CollectionMappingLiteral implements CollectionMapping {
     @Override
     public boolean ignoreIndex() {
         return ignoreIndex;
+    }
+
+    @Override
+    public boolean forceUnique() {
+        return forceUnique;
     }
 
     @Override

@@ -571,7 +571,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
                 entityViewRoot = "TREAT(" + entityViewRoot + " AS " + metamodel.getEntityMetamodel().getEntity(viewType.getJavaType()).getName() + ")";
             } else {
                 throw new IllegalArgumentException("The given view type with the entity type '" + viewType.getEntityClass().getName()
-                        + "' can not be applied to the query builder with result type '" + criteriaBuilder.getResultType().getName() + "'");
+                        + "' can not be applied to the query builder with result type '" + rootType.getName() + "'");
             }
         }
 

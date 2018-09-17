@@ -72,6 +72,22 @@ public interface EntityViewAttributeMapping {
     public void setContainerSorted(Class<? extends Comparator<?>> comparatorClass);
 
     /**
+     * Specifies whether elements should be forcefully deduplicated if the collection allows duplicates or not.
+     *
+     * @return true if uniqueness of element should be forced, false otherwise
+     * @since 1.3.0
+     */
+    public boolean isForceUniqueness();
+
+    /**
+     * Sets whether elements should be forcefully deduplicated if the collection allows duplicates or not.
+     *
+     * @param forceUniqueness true if uniqueness of element should be forced, false otherwise
+     * @since 1.3.0
+     */
+    public void setForceUniqueness(boolean forceUniqueness);
+
+    /**
      * Returns the comparator class, or <code>null</code> if there none.
      *
      * @return The comparator class

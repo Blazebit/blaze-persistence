@@ -11,10 +11,12 @@ Not yet released
 * Support for binding Embeddables directly to embeddable path expressions in CTE's
 * Support for binding associations that are part of an entities identifier
 * Support for binding associations mapped by compound or foreign keys
+* Using a comparator with `List` and `Collection` types in entity views will sort the collection after load
+* Add option to force deduplication of elements in non-sets to `@CollectionMapping`
 
 ### Bug fixes
 
-None yet
+* Using non-bags in entity views will now properly deduplicate elements
 
 ### Backwards-incompatible changes
 

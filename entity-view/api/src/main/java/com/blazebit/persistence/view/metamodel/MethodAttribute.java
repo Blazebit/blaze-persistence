@@ -112,6 +112,14 @@ public interface MethodAttribute<X, Y> extends Attribute<X, Y> {
     public boolean isOrphanRemoval();
 
     /**
+     * Returns the read-only subtypes that are allowed to be assigned to this attribute.
+     *
+     * @return The allowed read-only subtypes for assigning
+     * @since 1.3.0
+     */
+    public Set<Type<?>> getReadOnlyAllowedSubtypes();
+
+    /**
      * Returns the subtypes that are allowed to be used when cascading {@link com.blazebit.persistence.view.CascadeType#PERSIST} events.
      *
      * @return The allowed subtypes for persist events

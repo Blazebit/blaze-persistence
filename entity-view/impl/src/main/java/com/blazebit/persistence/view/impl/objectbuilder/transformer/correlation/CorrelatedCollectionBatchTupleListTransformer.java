@@ -69,7 +69,7 @@ public class CorrelatedCollectionBatchTupleListTransformer extends AbstractCorre
         }
 
         for (Map.Entry<Object, Collection<Object>> entry : collections.entrySet()) {
-            correlationValues.get(entry.getKey()).onResult(entry.getValue(), this);
+            correlationValues.get(entry.getKey()).onResult(postConstruct(entry.getValue()), this);
         }
     }
 
@@ -87,34 +87,17 @@ public class CorrelatedCollectionBatchTupleListTransformer extends AbstractCorre
     }
 
     @Override
-    protected Object createDefaultResult() {
-        if (recording) {
-            return collectionInstantiator.createRecordingCollection(0);
-        } else {
-            return collectionInstantiator.createCollection(0);
-        }
+    protected boolean isRecording() {
+        return recording;
     }
 
-    private Collection<Object> createCollection(Collection<? extends Object> list) {
-        Collection<Object> result;
-        Collection<Object> collection;
-        if (recording) {
-            RecordingCollection<?, ?> recordingCollection = collectionInstantiator.createRecordingCollection(list.size());
-            collection = (Collection<Object>) recordingCollection.getDelegate();
-            result = (Collection<Object>) recordingCollection;
-        } else {
-            result = collection = (Collection<Object>) collectionInstantiator.createCollection(list.size());
-        }
-        if (filterNulls) {
-            for (Object o : list) {
-                if (o != null) {
-                    collection.add(o);
-                }
-            }
-        } else {
-            collection.addAll(list);
-        }
-        return result;
+    @Override
+    protected boolean isFilterNulls() {
+        return filterNulls;
     }
 
+    @Override
+    protected CollectionInstantiator getCollectionInstantiator() {
+        return collectionInstantiator;
+    }
 }
