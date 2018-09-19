@@ -82,7 +82,7 @@ public class CalendarBasicUserType implements BasicUserType<Calendar>, VersionBa
 
     @Override
     public Calendar deepClone(Calendar object) {
-        return (Calendar) object.clone();
+        return object == null ? null : (Calendar) object.clone();
     }
 
     @Override

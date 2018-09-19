@@ -197,6 +197,8 @@ public final class InverseFlusher<E> {
             }
 
             DirtyAttributeFlusher<?, Object, Object> parentReferenceAttributeFlusher = new ParentReferenceAttributeFlusher<>(
+                    evm,
+                    viewType.getEntityClass(),
                     attributeLocation,
                     attribute.getMappedBy(),
                     attribute.getWritableMappedByMappings(),

@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.accessor;
 
+import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.spi.AttributePath;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
@@ -226,7 +227,8 @@ public final class Accessors {
     }
 
     public static AttributeAccessor forEntityMapping(EntityViewManagerImpl evm, Class<?> entityClass, String mapping) {
-        AttributePath path = evm.getJpaProvider().getJpaMetamodelAccessor().getBasicAttributePath(evm.getMetamodel().getEntityMetamodel(), evm.getMetamodel().getEntityMetamodel().managedType(entityClass), mapping);
+        EntityMetamodel entityMetamodel = evm.getMetamodel().getEntityMetamodel();
+        AttributePath path = evm.getJpaProvider().getJpaMetamodelAccessor().getBasicAttributePath(entityMetamodel, entityMetamodel.managedType(entityClass), mapping);
         List<Attribute<?, ?>> attributes = path.getAttributes();
 
         if (attributes.size() == 1) {

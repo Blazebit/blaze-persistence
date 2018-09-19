@@ -24,7 +24,10 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import java.io.Serializable;
+import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -35,6 +38,7 @@ public class LegacyOrderPosition implements Serializable {
     private LegacyOrderPositionId id;
     private LegacyOrder order;
     private String articleNumber;
+    private Calendar creationDate;
     private Set<LegacyOrderPositionDefault> defaults = new HashSet<>();
 
     public LegacyOrderPosition() {
@@ -84,6 +88,15 @@ public class LegacyOrderPosition implements Serializable {
 
     public void setDefaults(Set<LegacyOrderPositionDefault> defaults) {
         this.defaults = defaults;
+    }
+
+    @Temporal(TemporalType.TIMESTAMP)
+    public Calendar getCreationDate() {
+        return creationDate;
+    }
+
+    public void setCreationDate(Calendar creationDate) {
+        this.creationDate = creationDate;
     }
 
     @Override

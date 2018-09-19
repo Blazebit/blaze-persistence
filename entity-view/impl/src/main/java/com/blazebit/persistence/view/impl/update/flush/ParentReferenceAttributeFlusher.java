@@ -16,12 +16,15 @@
 
 package com.blazebit.persistence.view.impl.update.flush;
 
+import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
+import com.blazebit.persistence.view.impl.accessor.Accessors;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.mapper.Mapper;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 
 import javax.persistence.Query;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -35,20 +38,27 @@ public class ParentReferenceAttributeFlusher<E, V> extends BasicAttributeFlusher
     private final Map<String, String> writableMappings;
     private final Mapper<V, E> mapper;
     private final String[] updateQueryFragments;
+    private final Map.Entry<String, AttributeAccessor>[] parameterAccessors;
 
-    public ParentReferenceAttributeFlusher(String attributeName, String mapping, Map<String, String> writableMappings, TypeDescriptor typeDescriptor, AttributeAccessor attributeAccessor, Mapper<V, E> mapper) {
+    public ParentReferenceAttributeFlusher(EntityViewManagerImpl evm, Class<?> parentEntityClass, String attributeName, String mapping, Map<String, String> writableMappings, TypeDescriptor typeDescriptor, AttributeAccessor attributeAccessor, Mapper<V, E> mapper) {
         super(attributeName, mapping, true, false, true, false, false, false, null, typeDescriptor, mapping, mapping, attributeAccessor, null, null, null, null);
         this.writableMappings = writableMappings;
         this.mapper = mapper;
         if (writableMappings != null) {
             List<String> fragments = new ArrayList<>(writableMappings.size() * 2);
-            for (String s : writableMappings.values()) {
+            Map<String, AttributeAccessor> accessors = new HashMap<>(writableMappings.size());
+            for (Map.Entry<String, String> entry : writableMappings.entrySet()) {
+                String s = entry.getValue();
+                String parameterName = s.replace('.', '_');
                 fragments.add(s);
-                fragments.add(s.replace('.', '_'));
+                fragments.add(parameterName);
+                accessors.put(parameterName, Accessors.forEntityMapping(evm, parentEntityClass, entry.getKey()));
             }
             this.updateQueryFragments = fragments.toArray(new String[fragments.size()]);
+            this.parameterAccessors = (Map.Entry<String, AttributeAccessor>[]) accessors.entrySet().toArray(new Map.Entry[accessors.size()]);
         } else {
             this.updateQueryFragments = null;
+            this.parameterAccessors = null;
         }
     }
 
@@ -56,13 +66,21 @@ public class ParentReferenceAttributeFlusher<E, V> extends BasicAttributeFlusher
     public void appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix, String separator) {
         if (writableMappings != null) {
             if (mappingPrefix == null) {
-                for (int i = 0; i < updateQueryFragments.length; i += 2) {
+                sb.append(updateQueryFragments[0]);
+                sb.append(" = :");
+                sb.append(updateQueryFragments[1]);
+                for (int i = 2; i < updateQueryFragments.length; i += 2) {
+                    sb.append(separator);
                     sb.append(updateQueryFragments[i]);
                     sb.append(" = :");
                     sb.append(updateQueryFragments[i + 1]);
                 }
             } else {
-                for (int i = 0; i < updateQueryFragments.length; i += 2) {
+                sb.append(mappingPrefix).append(updateQueryFragments[0]);
+                sb.append(" = :");
+                sb.append(parameterPrefix).append(updateQueryFragments[1]);
+                for (int i = 2; i < updateQueryFragments.length; i += 2) {
+                    sb.append(separator);
                     sb.append(mappingPrefix).append(updateQueryFragments[i]);
                     sb.append(" = :");
                     sb.append(parameterPrefix).append(updateQueryFragments[i + 1]);
@@ -76,13 +94,16 @@ public class ParentReferenceAttributeFlusher<E, V> extends BasicAttributeFlusher
     @Override
     public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
         if (query != null && writableMappings != null) {
-            String parameter;
-            if (parameterPrefix == null) {
-                parameter = parameterName;
-            } else {
-                parameter = parameterPrefix + parameterName;
+            for (int i = 0; i < parameterAccessors.length; i++) {
+                Map.Entry<String, AttributeAccessor> parameterAccessor = parameterAccessors[i];
+                String parameter;
+                if (parameterPrefix == null) {
+                    parameter = parameterAccessor.getKey();
+                } else {
+                    parameter = parameterPrefix + parameterAccessor.getKey();
+                }
+                query.setParameter(parameter, parameterAccessor.getValue().getValue(value));
             }
-            query.setParameter(parameter, value);
         } else {
             super.flushQuery(context, parameterPrefix, query, view, value, ownerAwareDeleter);
         }
