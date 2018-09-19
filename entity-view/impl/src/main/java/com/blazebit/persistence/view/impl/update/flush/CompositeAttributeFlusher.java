@@ -492,16 +492,16 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
         final boolean shouldPersist = persist == Boolean.TRUE || persist == null && updatableProxy.$$_isNew();
         final boolean doPersist = shouldPersist && persistable;
         final Object oldId = determineOldId(context, updatableProxy, postReplaceListener);
+        int parentIndex = updatableProxy.$$_getParentIndex();
+        DirtyTracker parent = updatableProxy.$$_getParent();
+        RecordingCollection<?, Object> recordingCollection = null;
+        RecordingMap<?, Object, Object> recordingMap = null;
+        Object removedValue = null;
+        Set<Object> removedKeys = null;
         List<Integer> deferredFlushers = null;
         boolean successful = false;
         try {
             Object id = updatableProxy.$$_getId();
-            int parentIndex = updatableProxy.$$_getParentIndex();
-            DirtyTracker parent = updatableProxy.$$_getParent();
-            RecordingCollection<?, Object> recordingCollection = null;
-            RecordingMap<?, Object, Object> recordingMap = null;
-            Object removedValue = null;
-            Set<Object> removedKeys = null;
 
             if (doPersist) {
                 // In case of nested attributes, the entity instance we get is the container of the attribute
@@ -637,6 +637,26 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                     id = idViewBuilder.build(tuple);
                 }
                 viewIdAccessor.setValue(updatableProxy, id);
+            }
+            successful = true;
+            return wasDirty;
+        } finally {
+            if (shouldPersist) {
+                if (idFlusher == null) {
+                    // Embeddables don't have an id
+                    context.getInitialStateResetter().addPersistedView(updatableProxy);
+                } else {
+                    context.getInitialStateResetter().addPersistedView(updatableProxy, oldId);
+                }
+
+                if (successful && deferredFlushers != null) {
+                    deferredFlushEntity(context, entity, updatableProxy, deferredFlushers);
+                }
+            } else if (successful && deferredFlushers != null) {
+                deferredFlushEntity(context, entity, updatableProxy, deferredFlushers);
+            }
+
+            if (doPersist) {
                 Object newObject = updatableProxy;
                 if (persistViewMapper != null) {
                     newObject = persistViewMapper.map(newObject);
@@ -676,26 +696,9 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                 } else if (parent != null && persistViewMapper != null) {
                     // In case of a singular attribute, we replace the mutable state object to signal the parent flusher
                     // SubviewAttributeFlusher is the parent, that uses this object for setting the actual and initial state
-                    ((MutableStateTrackable) parent).$$_getMutableState()[updatableProxy.$$_getParentIndex()] = newObject;
+                    ((MutableStateTrackable) parent).$$_getMutableState()[parentIndex] = newObject;
                     updatableProxy.$$_unsetParent();
                 }
-            }
-            successful = true;
-            return wasDirty;
-        } finally {
-            if (shouldPersist) {
-                if (idFlusher == null) {
-                    // Embeddables don't have an id
-                    context.getInitialStateResetter().addPersistedView(updatableProxy);
-                } else {
-                    context.getInitialStateResetter().addPersistedView(updatableProxy, oldId);
-                }
-
-                if (successful && deferredFlushers != null) {
-                    deferredFlushEntity(context, entity, updatableProxy, deferredFlushers);
-                }
-            } else if (successful && deferredFlushers != null) {
-                deferredFlushEntity(context, entity, updatableProxy, deferredFlushers);
             }
         }
     }

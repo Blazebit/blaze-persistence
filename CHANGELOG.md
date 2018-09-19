@@ -19,6 +19,7 @@ Not yet released
 * Using non-bags in entity views will now properly deduplicate elements
 * Fix support for exists repository methods in Spring Data repositories
 * Fix problems with count queries that require parameters in Spring Data repositories
+* Properly set parent id on converted creatable subviews contained in inverse collections 
 
 ### Backwards-incompatible changes
 

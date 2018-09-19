@@ -613,8 +613,6 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
             query = context.getEntityManager().createQuery(queryString);
             if (idFlusher != null) {
                 idFlusher.flushQuery(context, WHERE_CLAUSE_PREFIX, query, updatableProxy, updatableProxy.$$_getId(), null);
-            } else {
-                query.setParameter((String) null, updatableProxy.$$_getId());
             }
             if (needsOptimisticLocking) {
                 versionFlusher.flushQueryInitialVersion(context, WHERE_CLAUSE_PREFIX, query, updatableProxy, updatableProxy.$$_getVersion());

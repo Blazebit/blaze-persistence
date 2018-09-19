@@ -62,7 +62,14 @@ public class InverseViewToEntityMapper<E> implements InverseElementToEntityMappe
         this.parentEntityOnChildViewMapper = parentEntityOnChildViewMapper;
         this.parentEntityOnChildEntityMapper = parentEntityOnChildEntityMapper;
         this.updatePrefixString = "UPDATE " + entityType.getName() + " e SET ";
-        this.updatePostfixString = " WHERE e." + JpaMetamodelUtils.getSingleIdAttribute(entityType).getName() + " = :" + ID_PARAM_NAME;
+        if (idAttributeFlusher == null) {
+            this.updatePostfixString = " WHERE e." + JpaMetamodelUtils.getSingleIdAttribute(entityType).getName() + " = :" + ID_PARAM_NAME;
+        } else {
+            StringBuilder sb = new StringBuilder();
+            sb.append(" WHERE ");
+            idAttributeFlusher.appendUpdateQueryFragment(null, sb, "e.", "_", " AND ");
+            this.updatePostfixString = sb.toString();
+        }
         this.parentReferenceAttributeFlusher = parentReferenceAttributeFlusher;
         this.idAttributeFlusher = idAttributeFlusher;
         this.fullUpdateQueryString = createQueryString(null, parentReferenceAttributeFlusher);
@@ -154,7 +161,11 @@ public class InverseViewToEntityMapper<E> implements InverseElementToEntityMappe
         Query query = null;
         if (queryString != null) {
             query = context.getEntityManager().createQuery(queryString);
-            query.setParameter(ID_PARAM_NAME, viewIdAccessor.getValue(view));
+            if (idAttributeFlusher == null) {
+                query.setParameter(ID_PARAM_NAME, viewIdAccessor.getValue(view));
+            } else {
+                idAttributeFlusher.flushQuery(context, "_", query, view, viewIdAccessor.getValue(view), null);
+            }
         }
 
         return query;

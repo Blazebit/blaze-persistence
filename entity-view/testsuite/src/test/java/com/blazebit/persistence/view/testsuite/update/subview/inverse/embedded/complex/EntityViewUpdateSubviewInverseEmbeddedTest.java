@@ -32,6 +32,7 @@ import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionDefault
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionDefaultId;
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionId;
 import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateTest;
+import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.complex.model.CreatableLegacyOrderPositionView;
 import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.complex.model.LegacyOrderIdView;
 import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.complex.model.LegacyOrderPositionDefaultIdView;
 import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.complex.model.LegacyOrderPositionIdView;
@@ -44,6 +45,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import java.util.Calendar;
 import java.util.Iterator;
 
 /**
@@ -85,6 +87,7 @@ public class EntityViewUpdateSubviewInverseEmbeddedTest extends AbstractEntityVi
         cfg.addEntityView(LegacyOrderPositionDefaultIdView.Id.class);
         cfg.addEntityView(UpdatableLegacyOrderView.class);
         cfg.addEntityView(UpdatableLegacyOrderPositionView.class);
+        cfg.addEntityView(CreatableLegacyOrderPositionView.class);
         cfg.addEntityView(UpdatableLegacyOrderPositionDefaultView.class);
     }
 
@@ -95,7 +98,7 @@ public class EntityViewUpdateSubviewInverseEmbeddedTest extends AbstractEntityVi
         update(newOrder);
 
         // When
-        UpdatableLegacyOrderPositionView position = evm.create(UpdatableLegacyOrderPositionView.class);
+        CreatableLegacyOrderPositionView position = evm.create(CreatableLegacyOrderPositionView.class);
         position.getId().setPositionId(0);
         position.setArticleNumber("123");
         newOrder.getPositions().add(position);
@@ -112,7 +115,8 @@ public class EntityViewUpdateSubviewInverseEmbeddedTest extends AbstractEntityVi
     public void testAddNewElementToCollectionAndUpdate() {
         // Given
         UpdatableLegacyOrderView newOrder = evm.create(UpdatableLegacyOrderView.class);
-        UpdatableLegacyOrderPositionView position = evm.create(UpdatableLegacyOrderPositionView.class);
+        CreatableLegacyOrderPositionView position = evm.create(CreatableLegacyOrderPositionView.class);
+        position.setCreationDate(Calendar.getInstance());
         position.getId().setPositionId(0);
         position.setArticleNumber("123");
         newOrder.getPositions().add(position);
@@ -121,9 +125,12 @@ public class EntityViewUpdateSubviewInverseEmbeddedTest extends AbstractEntityVi
         position.getDefaults().add(positionDefault);
         update(newOrder);
 
+        // Then 1
+        Assert.assertNotNull(newOrder.getPositions().iterator().next().getDefaults().iterator().next().getId().getOrderId());
+
         // When
         newOrder.getPositions().iterator().next().getDefaults().iterator().next().setValue("NEW");
-        position = evm.create(UpdatableLegacyOrderPositionView.class);
+        position = evm.create(CreatableLegacyOrderPositionView.class);
         position.getId().setPositionId(1);
         position.setArticleNumber("123");
         newOrder.getPositions().add(position);
@@ -132,7 +139,7 @@ public class EntityViewUpdateSubviewInverseEmbeddedTest extends AbstractEntityVi
         position.getDefaults().add(positionDefault);
         update(newOrder);
 
-        // Then
+        // Then 2
         restartTransaction();
         LegacyOrder legacyOrder = em.find(LegacyOrder.class, newOrder.getId());
         Assert.assertEquals(2, legacyOrder.getPositions().size());
