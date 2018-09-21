@@ -199,7 +199,7 @@ public class JpaMetamodelAccessorImpl implements JpaMetamodelAccessor {
             Attribute<?, ?> collectionAttribute = com.blazebit.persistence.parser.util.JpaMetamodelUtils.getAttribute(type, collectionName);
             Class<?> targetClass = com.blazebit.persistence.parser.util.JpaMetamodelUtils.resolveFieldClass(type.getJavaType(), collectionAttribute);
             if (dotIndex == -1) {
-                return new AttributePath(new ArrayList<Attribute<?, ?>>(Collections.singletonList(collectionAttribute)), com.blazebit.persistence.parser.util.JpaMetamodelUtils.resolveFieldClass(targetClass, collectionAttribute));
+                return new AttributePath(new ArrayList<Attribute<?, ?>>(Collections.singletonList(collectionAttribute)), targetClass);
             }
 
             String collectionElementAttributeName = trimmedPath.substring(dotIndex + 1);

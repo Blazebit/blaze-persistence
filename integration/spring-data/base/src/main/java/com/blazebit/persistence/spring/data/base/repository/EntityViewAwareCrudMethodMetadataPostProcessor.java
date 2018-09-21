@@ -22,6 +22,7 @@ import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.reflection.ReflectionUtils;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.springframework.aop.ProxyMethodInvocation;
 import org.springframework.aop.TargetSource;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.aop.interceptor.ExposeInvocationInterceptor;
@@ -117,7 +118,7 @@ public class EntityViewAwareCrudMethodMetadataPostProcessor implements Repositor
      */
     private static final class CrudMethodMetadataPopulatingMethodInterceptor implements MethodInterceptor {
 
-        private final ConcurrentMap<Method, EntityViewAwareCrudMethodMetadata> metadataCache = new ConcurrentHashMap<>();
+        private final ConcurrentMap<EntityViewMetadataCacheKey, EntityViewAwareCrudMethodMetadata> metadataCache = new ConcurrentHashMap<>();
         private final EntityViewManager evm;
 
         private CrudMethodMetadataPopulatingMethodInterceptor(EntityViewManager evm) {
@@ -136,11 +137,12 @@ public class EntityViewAwareCrudMethodMetadataPostProcessor implements Repositor
                 return invocation.proceed();
             }
 
-            EntityViewAwareCrudMethodMetadata methodMetadata = metadataCache.get(method);
+            EntityViewMetadataCacheKey cacheKey = new EntityViewMetadataCacheKey(method, ((ProxyMethodInvocation) invocation).getProxy().getClass());
+            EntityViewAwareCrudMethodMetadata methodMetadata = metadataCache.get(cacheKey);
 
             if (methodMetadata == null) {
-                methodMetadata = new EntityViewAwareDefaultCrudMethodMetadata(method, evm);
-                EntityViewAwareCrudMethodMetadata tmp = metadataCache.putIfAbsent(method, methodMetadata);
+                methodMetadata = new EntityViewAwareDefaultCrudMethodMetadata(cacheKey.proxyClass, method, evm);
+                EntityViewAwareCrudMethodMetadata tmp = metadataCache.putIfAbsent(cacheKey, methodMetadata);
 
                 if (tmp != null) {
                     methodMetadata = tmp;
@@ -154,6 +156,42 @@ public class EntityViewAwareCrudMethodMetadataPostProcessor implements Repositor
             } finally {
                 TransactionSynchronizationManager.unbindResource(method);
             }
+        }
+    }
+
+    /**
+     * Cache key for entity view metadata.
+     *
+     * @author Christian Beikov
+     * @since 1.3.0
+     */
+    private static class EntityViewMetadataCacheKey {
+        private final Method method;
+        private final Class<?> proxyClass;
+
+        public EntityViewMetadataCacheKey(Method method, Class<?> proxyClass) {
+            this.method = method;
+            this.proxyClass = proxyClass;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof EntityViewMetadataCacheKey)) {
+                return false;
+            }
+
+            EntityViewMetadataCacheKey that = (EntityViewMetadataCacheKey) o;
+            return method.equals(that.method) && proxyClass.equals(that.proxyClass);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = method.hashCode();
+            result = 31 * result + proxyClass.hashCode();
+            return result;
         }
     }
 
@@ -173,25 +211,38 @@ public class EntityViewAwareCrudMethodMetadataPostProcessor implements Repositor
 
         /**
          * Creates a new {@link EntityViewAwareDefaultCrudMethodMetadata} for the given {@link Method}.
-         *
+         *  @param repositoryClass The repository class
          * @param method must not be {@literal null}.
-         * @param evm
+         * @param evm the {@link EntityViewManager}
          */
-        public EntityViewAwareDefaultCrudMethodMetadata(Method method, EntityViewManager evm) {
+        public EntityViewAwareDefaultCrudMethodMetadata(Class<?> repositoryClass, Method method, EntityViewManager evm) {
             Assert.notNull(method, "Method must not be null!");
 
-            this.lockModeType = findLockModeType(method);
-            this.queryHints = findQueryHints(method);
-            this.entityGraph = findEntityGraph(method);
-            this.entityViewClass = findEntityViewClass(method, evm);
+            Method annotationTargetMethod = findAnnotationTargetMethod(method);
+            this.lockModeType = findLockModeType(annotationTargetMethod);
+            this.queryHints = findQueryHints(annotationTargetMethod);
+            this.entityGraph = findEntityGraph(annotationTargetMethod);
+            this.entityViewClass = findEntityViewClass(repositoryClass, method, evm);
             this.method = method;
         }
 
-        private static Class<?> findEntityViewClass(Method method, EntityViewManager evm) {
-            Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(method.getDeclaringClass(), method);
+        private static Method findAnnotationTargetMethod(Method method) {
+            if (method.isBridge() || method.isSynthetic()) {
+                try {
+                    return method.getDeclaringClass().getMethod(method.getName(), method.getParameterTypes());
+                } catch (NoSuchMethodException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            return method;
+        }
+
+        private static Class<?> findEntityViewClass(Class<?> repositoryClass, Method methodToAnalyze, EntityViewManager evm) {
             Class<?> entityViewClass;
+            Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(repositoryClass, methodToAnalyze);
             if (typeArguments.length == 0) {
-                entityViewClass = ReflectionUtils.getResolvedMethodReturnType(method.getDeclaringClass(), method);
+                entityViewClass = ReflectionUtils.getResolvedMethodReturnType(repositoryClass, methodToAnalyze);
             } else {
                 entityViewClass = typeArguments[typeArguments.length - 1];
             }

@@ -27,10 +27,12 @@ import java.util.List;
 public class EmbeddableAttributeFetchGraphNode<X extends EmbeddableAttributeFetchGraphNode<X, T>, T extends FetchGraphNode<?>> implements FetchGraphNode<X> {
 
     protected final String attributeName;
+    protected final String mapping;
     protected final T nestedGraphNode;
 
-    public EmbeddableAttributeFetchGraphNode(String attributeName, T nestedGraphNode) {
+    public EmbeddableAttributeFetchGraphNode(String attributeName, String mapping, T nestedGraphNode) {
         this.attributeName = attributeName;
+        this.mapping = mapping;
         this.nestedGraphNode = nestedGraphNode;
     }
 
@@ -42,7 +44,7 @@ public class EmbeddableAttributeFetchGraphNode<X extends EmbeddableAttributeFetc
     @Override
     public void appendFetchJoinQueryFragment(String base, StringBuilder sb) {
         if (nestedGraphNode != null) {
-            String newBase = base + "." + attributeName;
+            String newBase = base + "." + mapping;
             nestedGraphNode.appendFetchJoinQueryFragment(newBase, sb);
         }
     }
@@ -69,7 +71,7 @@ public class EmbeddableAttributeFetchGraphNode<X extends EmbeddableAttributeFetc
             return this;
         }
 
-        return new EmbeddableAttributeFetchGraphNode(attributeName, fetchGraphNode);
+        return new EmbeddableAttributeFetchGraphNode(attributeName, mapping, fetchGraphNode);
     }
 
 }

@@ -613,15 +613,16 @@ public class ViewTypeObjectBuilderTemplate<T> {
         TupleIdDescriptor subviewIdDescriptor;
 
         if (managedViewType instanceof ViewType<?>) {
-            subviewIdDescriptor = new TupleIdDescriptor();
+            // When the attribute is update mappable i.e. a subset mapping, we already have the proper parent id set
+            // When the attribute is not update mappable i.e. joining over other associations, we use its parent's parent id
+            if (((AbstractAttribute<?, ?>) mappingAttribute).isUpdateMappable()) {
+                subviewIdDescriptor = new TupleIdDescriptor();
+            } else {
+                subviewIdDescriptor = new TupleIdDescriptor(tupleIdDescriptor);
+            }
         } else {
             subviewIdDescriptor = new TupleIdDescriptor(tupleIdDescriptor);
-            // We encode the negative attribute or parameter index to identify the correct embeddable role
-            if (mappingAttribute instanceof AbstractMethodAttribute<?, ?>) {
-                subviewIdDescriptor.addIdPosition(-((AbstractMethodAttribute<?, ?>) mappingAttribute).getAttributeIndex());
-            } else {
-                subviewIdDescriptor.addIdPosition(-((ParameterAttribute<?, ?>) mappingAttribute).getIndex());
-            }
+            subviewIdDescriptor.addIdPosition(flatViewIdPosition(mappingAttribute));
         }
 
         Map<ManagedViewTypeImplementor<? extends Object[]>, String> inheritanceSubtypeMappings;
@@ -666,15 +667,16 @@ public class ViewTypeObjectBuilderTemplate<T> {
             TupleIdDescriptor subviewIdDescriptor;
 
             if (managedViewType instanceof ViewType<?>) {
-                subviewIdDescriptor = new TupleIdDescriptor();
+                // When the attribute is update mappable i.e. a subset mapping, we already have the proper parent id set
+                // When the attribute is not update mappable i.e. joining over other associations, we use its parent's parent id
+                if (attribute.isUpdateMappable()) {
+                    subviewIdDescriptor = new TupleIdDescriptor();
+                } else {
+                    subviewIdDescriptor = new TupleIdDescriptor(tupleIdDescriptor);
+                }
             } else {
                 subviewIdDescriptor = new TupleIdDescriptor(tupleIdDescriptor);
-                // We encode the negative attribute or parameter index to identify the correct embeddable role
-                if (attribute instanceof AbstractMethodAttribute<?, ?>) {
-                    subviewIdDescriptor.addIdPosition(-((AbstractMethodAttribute<?, ?>) attribute).getAttributeIndex());
-                } else {
-                    subviewIdDescriptor.addIdPosition(-((ParameterAttribute<?, ?>) attribute).getIndex());
-                }
+                subviewIdDescriptor.addIdPosition(flatViewIdPosition(attribute));
             }
 
             Map<ManagedViewTypeImplementor<? extends Object[]>, String> inheritanceSubtypeMappings;
@@ -848,6 +850,22 @@ public class ViewTypeObjectBuilderTemplate<T> {
         } else {
             return false;
         }
+    }
+
+    private static int flatViewIdPosition(Attribute<?, ?> mappingAttribute) {
+        // We encode the negative attribute or parameter index to identify the correct embeddable role
+        int index;
+        if (mappingAttribute instanceof AbstractMethodAttribute<?, ?>) {
+            index = ((AbstractMethodAttribute<?, ?>) mappingAttribute).getAttributeIndex();
+        } else {
+            index = ((ParameterAttribute<?, ?>) mappingAttribute).getIndex();
+        }
+
+        if (index == 0) {
+            // Use the minimum value to represent the "negative" of zero
+            return Integer.MIN_VALUE;
+        }
+        return -index;
     }
 
     private MappingConstructorImpl<Object[]> getSubviewMappingConstructor(ManagedViewTypeImplementor<Object[]> managedViewType) {

@@ -37,5 +37,6 @@
         <module>2.1</module>
         <module>rest</module>
         <module>testsuite</module>
+        <module>asm-debug-all</module>
     </modules>
 </project>

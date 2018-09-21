@@ -44,9 +44,9 @@ public class EmbeddableAttributeFlusher<E, V> extends EmbeddableAttributeFetchGr
     private final AttributeAccessor viewAttributeAccessor;
     private final EmbeddableUpdaterBasedViewToEntityMapper viewToEntityMapper;
 
-    public EmbeddableAttributeFlusher(String attributeName, String updateFragment, String parameterName, boolean optimisticLockProtected, boolean passThrough, boolean supportsQueryFlush, AttributeAccessor entityAttributeAccessor, AttributeAccessor viewAttributeAccessor, EmbeddableUpdaterBasedViewToEntityMapper viewToEntityMapper) {
+    public EmbeddableAttributeFlusher(String attributeName, String mapping, String updateFragment, String parameterName, boolean optimisticLockProtected, boolean passThrough, boolean supportsQueryFlush, AttributeAccessor entityAttributeAccessor, AttributeAccessor viewAttributeAccessor, EmbeddableUpdaterBasedViewToEntityMapper viewToEntityMapper) {
         // TODO: QUERY flushing in FULL mode currently won't work with multiple flat view subtypes for an attribute. So be careful here..
-        super(attributeName, (DirtyAttributeFlusher<?, E, V>) viewToEntityMapper.getFullGraphNode());
+        super(attributeName, mapping, (DirtyAttributeFlusher<?, E, V>) viewToEntityMapper.getFullGraphNode());
         this.updateFragment = updateFragment;
         this.parameterName = parameterName;
         this.optimisticLockProtected = optimisticLockProtected;
@@ -58,7 +58,7 @@ public class EmbeddableAttributeFlusher<E, V> extends EmbeddableAttributeFetchGr
     }
 
     private EmbeddableAttributeFlusher(EmbeddableAttributeFlusher<E, V> original, DirtyAttributeFlusher<?, E, V> nestedFlusher) {
-        super(original.attributeName, nestedFlusher);
+        super(original.attributeName, original.mapping, nestedFlusher);
         this.updateFragment = original.updateFragment;
         this.parameterName = original.parameterName;
         this.optimisticLockProtected = original.optimisticLockProtected;

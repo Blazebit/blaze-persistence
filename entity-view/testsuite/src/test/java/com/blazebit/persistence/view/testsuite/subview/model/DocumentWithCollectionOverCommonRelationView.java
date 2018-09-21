@@ -16,27 +16,27 @@
 
 package com.blazebit.persistence.view.testsuite.subview.model;
 
+import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.Mapping;
-import com.blazebit.persistence.view.MappingParameter;
-import com.blazebit.persistence.testsuite.entity.Document;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
  *
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.3.0
  */
 @EntityView(Document.class)
-public interface DocumentRelatedView {
+public interface DocumentWithCollectionOverCommonRelationView {
     
     @IdMapping
     public Long getId();
 
-    public Set<SimplePersonSubView> getPartners();
+    public String getName();
+
+    @Mapping("responsiblePerson.favoriteDocuments")
+    public Set<DocumentRelatedView> getResponsiblePersonFavorites();
 
 }

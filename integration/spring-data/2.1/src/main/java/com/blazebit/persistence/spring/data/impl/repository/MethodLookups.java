@@ -59,7 +59,8 @@ interface MethodLookups {
 
         MethodPredicate direct = (invoked, candidate) -> candidate.getName().equals(invoked.getName())
                 && candidate.getParameterCount() == invoked.getParameterCount()
-                && Arrays.equals(candidate.getParameterTypes(), invoked.getParameterTypes());
+                && Arrays.equals(candidate.getParameterTypes(), invoked.getParameterTypes())
+                && candidate.getReturnType().equals(invoked.getMethod().getReturnType());
 
         return () -> Collections.singletonList(direct);
     }

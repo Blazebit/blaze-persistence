@@ -455,6 +455,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
             }
             return new EmbeddableAttributeFlusher<>(
                     attributeName,
+                    attributeMapping,
                     updateFragment,
                     parameterName,
                     false,
@@ -838,6 +839,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
 
                     return new EmbeddableAttributeFlusher<>(
                             attributeName,
+                            attributeMapping,
                             updateFragment,
                             parameterName,
                             optimisticLockProtected,
