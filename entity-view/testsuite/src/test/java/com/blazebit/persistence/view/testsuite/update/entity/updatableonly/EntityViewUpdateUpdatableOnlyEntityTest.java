@@ -54,7 +54,7 @@ public class EntityViewUpdateUpdatableOnlyEntityTest extends AbstractEntityViewU
 
         // Then
         // Assert that not only the document is loaded
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
             fullFetch(builder);
@@ -75,7 +75,7 @@ public class EntityViewUpdateUpdatableOnlyEntityTest extends AbstractEntityViewU
 
         // Then
         // Since the responsiblePerson changed we don't need to load the old responsiblePerson
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
             fullFetch(builder);
@@ -96,7 +96,7 @@ public class EntityViewUpdateUpdatableOnlyEntityTest extends AbstractEntityViewU
 
         // Then
         // Since the responsiblePerson changed we don't need to load the old responsiblePerson
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
             fullFetch(builder);
@@ -119,7 +119,7 @@ public class EntityViewUpdateUpdatableOnlyEntityTest extends AbstractEntityViewU
 
         // Then
         // Since updates aren't cascaded, the responsiblePerson does not need to be loaded
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
@@ -128,9 +128,6 @@ public class EntityViewUpdateUpdatableOnlyEntityTest extends AbstractEntityViewU
         } else {
             if (isFullMode()) {
                 fullFetch(builder);
-                if (version) {
-                    versionUpdate(builder);
-                }
             }
         }
 
@@ -149,7 +146,7 @@ public class EntityViewUpdateUpdatableOnlyEntityTest extends AbstractEntityViewU
         // Then
         // Since the responsiblePerson changed we don't need to load the old responsiblePerson
         // Since the new responsiblePerson is null, we don't need to do anything further
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
             fullFetch(builder);
@@ -168,9 +165,6 @@ public class EntityViewUpdateUpdatableOnlyEntityTest extends AbstractEntityViewU
         } else {
             if (isFullMode()) {
                 fullFetch(afterBuilder);
-                if (version) {
-                    versionUpdate(afterBuilder);
-                }
             }
         }
         afterBuilder.validate();
@@ -186,7 +180,7 @@ public class EntityViewUpdateUpdatableOnlyEntityTest extends AbstractEntityViewU
         } catch (PersistenceException | IllegalStateException ex) {
             // Then
             assertTrue(ex.getMessage().contains("transient"));
-            AssertStatementBuilder builder = assertQuerySequence();
+            AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
             if (!isQueryStrategy()) {
                 if (isFullMode()) {

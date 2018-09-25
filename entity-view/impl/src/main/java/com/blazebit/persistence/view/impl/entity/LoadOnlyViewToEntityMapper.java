@@ -73,10 +73,19 @@ public class LoadOnlyViewToEntityMapper implements ViewToEntityMapper {
 
     @Override
     public Object applyToEntity(UpdateContext context, Object entity, Object view) {
+        return loadEntity(context, view);
+    }
+
+    @Override
+    public Object flushToEntity(UpdateContext context, Object entity, Object view) {
+        return loadEntity(context, view);
+    }
+
+    @Override
+    public Object loadEntity(UpdateContext context, Object view) {
         if (view == null) {
             return null;
         }
-
         Object id = null;
         if (viewIdAccessor != null) {
             id = viewIdAccessor.getValue(view);

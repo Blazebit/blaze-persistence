@@ -75,6 +75,11 @@ public class EntityViewUpdateSubviewGraphTest extends AbstractEntityViewUpdateDo
     }
 
     @Override
+    protected String[] getFetchedCollections() {
+        return new String[] { "people" };
+    }
+
+    @Override
     protected void prepareData(EntityManager em) {
         super.prepareData(em);
 
@@ -101,26 +106,17 @@ public class EntityViewUpdateSubviewGraphTest extends AbstractEntityViewUpdateDo
         // Then
         AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        if (isFullMode()) {
-            fullFetch(builder);
-        } else {
-            // Only need to load the "people" to add an element
-            // Since "partners" is an inverse collection, we transform the add to an update
-            builder.assertSelect()
-                    .fetching(Document.class)
-                    .fetching(Document.class, "people")
-                    .fetching(Person.class)
-                .and();
-        }
-
         if (isQueryStrategy()) {
             if (isFullMode()) {
+                builder.delete(Document.class, "people")
+                        .insert(Document.class, "people")
+                        .insert(Document.class, "people");
+                builder.delete(Person.class, "favoriteDocuments");
                 builder.update(Person.class)
+                        .update(Person.class)
                         .update(Person.class);
             }
-            builder.assertUpdate()
-                    .forEntity(Person.class)
-                    .and();
+            builder.update(Person.class);
 
             if (isFullMode()) {
                 builder.update(Person.class)
@@ -130,17 +126,28 @@ public class EntityViewUpdateSubviewGraphTest extends AbstractEntityViewUpdateDo
                         .update(Person.class)
                         .update(Person.class);
             }
-            if (version) {
+            if (version || isFullMode()) {
                 builder.update(Document.class);
             }
         } else {
+            if (isFullMode()) {
+                fullFetch(builder);
+            } else {
+                // Only need to load the "people" to add an element
+                // Since "partners" is an inverse collection, we transform the add to an update
+                builder.assertSelect()
+                        .fetching(Document.class)
+                        .fetching(Document.class, "people")
+                        .fetching(Person.class)
+                        .and();
+            }
+
             if (!isFullMode() && version) {
                 builder.update(Document.class);
             }
 
-            builder.assertUpdate()
-                    .forEntity(Person.class)
-                    .and();
+            builder.update(Person.class);
+            builder.select(Person.class);
 
             if (isFullMode()) {
                 builder.assertSelect()
@@ -152,17 +159,13 @@ public class EntityViewUpdateSubviewGraphTest extends AbstractEntityViewUpdateDo
                 if (version) {
                     builder.update(Document.class);
                 }
-            } else {
-                builder.select(Person.class);
             }
         }
 
-        builder.assertInsert()
-                    .forRelation(Document.class, "people")
-                .and()
+        builder.insert(Document.class, "people")
                 .validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertSubviewEquals(doc1.getPeople(), docView.getPeople());
     }
 
@@ -185,20 +188,21 @@ public class EntityViewUpdateSubviewGraphTest extends AbstractEntityViewUpdateDo
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
-                fullFetch(builder);
+                builder.delete(Document.class, "people")
+                        .insert(Document.class, "people")
+                        .insert(Document.class, "people")
+                        .insert(Document.class, "people");
+                builder.delete(Person.class, "favoriteDocuments");
+                builder.update(Person.class);
             }
 
-            builder.assertUpdate()
-                    .forEntity(Person.class)
-                    .and();
+            builder.update(Person.class);
 
             if (isFullMode()) {
                 builder.update(Person.class)
                         .update(Person.class);
             }
-            builder.assertUpdate()
-                    .forEntity(Document.class)
-                    .and();
+            builder.update(Document.class);
             if (isFullMode()) {
                 builder.update(Person.class)
                         .update(Document.class)
@@ -206,7 +210,7 @@ public class EntityViewUpdateSubviewGraphTest extends AbstractEntityViewUpdateDo
                         .update(Person.class)
                         .update(Person.class);
             }
-            if (version) {
+            if (version || isFullMode()) {
                 builder.update(Document.class);
             }
         } else {
@@ -241,7 +245,12 @@ public class EntityViewUpdateSubviewGraphTest extends AbstractEntityViewUpdateDo
         AssertStatementBuilder afterBuilder = assertQueriesAfterUpdate(docView);
         if (isFullMode()) {
             if (isQueryStrategy()) {
-                fullFetch(afterBuilder)
+                afterBuilder.delete(Document.class, "people")
+                        .insert(Document.class, "people")
+                        .insert(Document.class, "people")
+                        .insert(Document.class, "people");
+                afterBuilder.delete(Person.class, "favoriteDocuments");
+                afterBuilder.update(Person.class)
                         .update(Person.class)
                         .update(Person.class)
                         .update(Person.class)
@@ -251,9 +260,7 @@ public class EntityViewUpdateSubviewGraphTest extends AbstractEntityViewUpdateDo
                         .update(Person.class)
                         .update(Person.class)
                         .update(Person.class);
-                if (version) {
-                    afterBuilder.update(Document.class);
-                }
+                afterBuilder.update(Document.class);
             } else {
                 fullFetch(afterBuilder);
                 if (version) {
@@ -263,36 +270,6 @@ public class EntityViewUpdateSubviewGraphTest extends AbstractEntityViewUpdateDo
         }
         afterBuilder.validate();
         assertSubviewEquals(doc1.getPeople(), docView.getPeople());
-    }
-
-    public void assertSimpleSubviewEquals(Collection<Person> persons, Collection<UpdatableFriendPersonView> personSubviews) {
-        if (persons == null) {
-            assertNull(personSubviews);
-            return;
-        }
-
-        assertNotNull(personSubviews);
-        assertEquals(persons.size(), personSubviews.size());
-        for (Person p : persons) {
-            boolean found = false;
-            for (UpdatableFriendPersonView pSub : personSubviews) {
-                if (p.getName().equals(pSub.getName())) {
-                    found = true;
-                    if (p.getFriend() == null) {
-                        assertNull(pSub.getFriend());
-                    } else {
-                        assertNotNull(pSub.getFriend());
-                        assertEquals(p.getFriend().getId(), pSub.getFriend().getId());
-                        assertEquals(p.getFriend().getName(), pSub.getFriend().getName());
-                    }
-                    break;
-                }
-            }
-
-            if (!found) {
-                Assert.fail("Could not find a person subview instance with the name: " + p.getName());
-            }
-        }
     }
 
     public void assertSubviewEquals(Collection<Person> persons, Collection<UpdatableNestedPersonView> personSubviews) {
@@ -352,7 +329,12 @@ public class EntityViewUpdateSubviewGraphTest extends AbstractEntityViewUpdateDo
 
     @Override
     protected AssertStatementBuilder fullUpdate(AssertStatementBuilder builder) {
-        fullFetch(builder)
+        builder.delete(Document.class, "people")
+                .insert(Document.class, "people")
+                .insert(Document.class, "people")
+                .insert(Document.class, "people")
+                .delete(Person.class, "favoriteDocuments")
+                .update(Person.class)
                 .update(Person.class)
                 .update(Person.class)
                 .update(Person.class)
@@ -362,9 +344,7 @@ public class EntityViewUpdateSubviewGraphTest extends AbstractEntityViewUpdateDo
                 .update(Person.class)
                 .update(Person.class)
                 .update(Person.class);
-        if (version) {
-            builder.update(Document.class);
-        }
+        builder.update(Document.class);
 
         return builder;
     }

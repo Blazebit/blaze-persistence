@@ -40,10 +40,10 @@ public abstract class AbstractParameterPluralAttribute<X, C, Y> extends Abstract
     private final Comparator<Object> comparator;
 
     @SuppressWarnings("unchecked")
-    public AbstractParameterPluralAttribute(MappingConstructorImpl<X> mappingConstructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context) {
-        super(mappingConstructor, mapping, context);
-        this.elementType = (Type<Y>) mapping.getElementType(context);
-        this.elementInheritanceSubtypes = (Map<ManagedViewType<? extends Y>, String>) (Map<?, ?>) mapping.getElementInheritanceSubtypes(context);
+    public AbstractParameterPluralAttribute(MappingConstructorImpl<X> mappingConstructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
+        super(mappingConstructor, mapping, context, embeddableMapping);
+        this.elementType = (Type<Y>) mapping.getElementType(context, embeddableMapping);
+        this.elementInheritanceSubtypes = (Map<ManagedViewType<? extends Y>, String>) (Map<?, ?>) mapping.getElementInheritanceSubtypes(context, embeddableMapping);
         this.sorted = mapping.isSorted();
 
         this.ordered = mapping.getContainerBehavior() == AttributeMapping.ContainerBehavior.ORDERED;

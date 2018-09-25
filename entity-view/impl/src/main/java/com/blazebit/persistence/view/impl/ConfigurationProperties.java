@@ -135,6 +135,15 @@ public final class ConfigurationProperties {
      */
     public static final String UPDATER_FLUSH_STRATEGY = "com.blazebit.persistence.view.updater.flush_strategy";
 
+    /**
+     * A boolean flag to make it possible to disable the strict validation that disallows the use of an updatable entity view type for owned relationships.
+     * By default the use is disallowed i.e. the default value is <code>true</code>, but since there might be strange models out there, it possible to allow this.
+     * Valid values for this property are <code>true</code> or <code>false</code>.
+     *
+     * @since 1.3.0
+     */
+    public static final String UPDATER_DISALLOW_OWNED_UPDATABLE_SUBVIEW = "com.blazebit.persistence.view.updater.disallow_owned_updatable_subview";
+
     private ConfigurationProperties() {
     }
 }

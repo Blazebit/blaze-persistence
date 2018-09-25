@@ -114,7 +114,7 @@ public class CollectionRoleInsertTest extends AbstractCoreTest {
         try {
             criteria.bind("name");
         } catch (IllegalArgumentException ex) {
-            assertTrue(ex.getMessage().contains("Only access to the owner type's id attribute"));
+            assertTrue(ex.getMessage().contains("The attribute [name] does not exist or can't be bound"));
         }
     }
 
@@ -129,8 +129,8 @@ public class CollectionRoleInsertTest extends AbstractCoreTest {
                 criteria.bind("INDEX(indexedNodes)").select("1");
                 criteria.bind("indexedNodes.id").select("4");
 
-                assertEquals("INSERT INTO Root.indexedNodes(INDEX(_collection), _collection.id, root.id)\n"
-                        + "SELECT 1, 4, 1"
+                assertEquals("INSERT INTO Root.indexedNodes(INDEX(indexedNodes), id, indexedNodes.id)\n"
+                        + "SELECT 1, 1, 4"
                         + " FROM Integer(1 VALUES) valuesAlias"
                         + " WHERE TREAT_INTEGER(valuesAlias.value) = :valuesAlias_value_0", criteria.getQueryString());
                 int updated = criteria.executeUpdate();
@@ -162,8 +162,8 @@ public class CollectionRoleInsertTest extends AbstractCoreTest {
                 criteria.bind("INDEX(indexedNodes)").select("1");
                 criteria.bind("indexedNodes.id").select("4");
 
-                assertEquals("INSERT INTO Root.indexedNodes(INDEX(_collection), _collection.id, root.id)\n"
-                        + "SELECT 1, 4, 1"
+                assertEquals("INSERT INTO Root.indexedNodes(INDEX(indexedNodes), id, indexedNodes.id)\n"
+                        + "SELECT 1, 1, 4"
                         + " FROM Integer(1 VALUES) valuesAlias"
                         + " WHERE TREAT_INTEGER(valuesAlias.value) = :valuesAlias_value_0", criteria.getQueryString());
                 ReturningResult<Tuple> returningResult = criteria.executeWithReturning("indexedNodes.id");
@@ -192,8 +192,8 @@ public class CollectionRoleInsertTest extends AbstractCoreTest {
                 criteria.bind("INDEX(indexedNodesMany)").select("1");
                 criteria.bind("indexedNodesMany.id").select("4");
 
-                assertEquals("INSERT INTO Root.indexedNodesMany(INDEX(_collection), _collection.id, root.id)\n"
-                        + "SELECT 1, 4, 1"
+                assertEquals("INSERT INTO Root.indexedNodesMany(INDEX(indexedNodesMany), id, indexedNodesMany.id)\n"
+                        + "SELECT 1, 1, 4"
                         + " FROM Integer(1 VALUES) valuesAlias"
                         + " WHERE TREAT_INTEGER(valuesAlias.value) = :valuesAlias_value_0", criteria.getQueryString());
                 int updated = criteria.executeUpdate();
@@ -221,8 +221,8 @@ public class CollectionRoleInsertTest extends AbstractCoreTest {
                 criteria.bind("INDEX(indexedNodesManyDuplicate)").select("1");
                 criteria.bind("indexedNodesManyDuplicate.id").select("4");
 
-                assertEquals("INSERT INTO Root.indexedNodesManyDuplicate(INDEX(_collection), _collection.id, root.id)\n"
-                        + "SELECT 1, 4, 1"
+                assertEquals("INSERT INTO Root.indexedNodesManyDuplicate(INDEX(indexedNodesManyDuplicate), id, indexedNodesManyDuplicate.id)\n"
+                        + "SELECT 1, 1, 4"
                         + " FROM Integer(1 VALUES) valuesAlias"
                         + " WHERE TREAT_INTEGER(valuesAlias.value) = :valuesAlias_value_0", criteria.getQueryString());
                 int updated = criteria.executeUpdate();
@@ -251,8 +251,8 @@ public class CollectionRoleInsertTest extends AbstractCoreTest {
                 criteria.bind("indexedNodesElementCollection.value").select("'B'");
                 criteria.bind("indexedNodesElementCollection.value2").select("'P'");
 
-                assertEquals("INSERT INTO Root.indexedNodesElementCollection(INDEX(_collection), _collection.value, _collection.value2, root.id)\n"
-                        + "SELECT 1, 'B', 'P', 1"
+                assertEquals("INSERT INTO Root.indexedNodesElementCollection(INDEX(indexedNodesElementCollection), id, indexedNodesElementCollection.value, indexedNodesElementCollection.value2)\n"
+                        + "SELECT 1, 1, 'B', 'P'"
                         + " FROM Integer(1 VALUES) valuesAlias"
                         + " WHERE TREAT_INTEGER(valuesAlias.value) = :valuesAlias_value_0", criteria.getQueryString());
                 int updated = criteria.executeUpdate();
@@ -281,8 +281,8 @@ public class CollectionRoleInsertTest extends AbstractCoreTest {
                 criteria.bind("KEY(keyedNodes)").select("'b'");
                 criteria.bind("keyedNodes.id").select("5");
 
-                assertEquals("INSERT INTO Root.keyedNodes(KEY(_collection), _collection.id, root.id)\n"
-                        + "SELECT 'b', 5, 1"
+                assertEquals("INSERT INTO Root.keyedNodes(KEY(keyedNodes), id, keyedNodes.id)\n"
+                        + "SELECT 'b', 1, 5"
                         + " FROM Integer(1 VALUES) valuesAlias"
                         + " WHERE TREAT_INTEGER(valuesAlias.value) = :valuesAlias_value_0", criteria.getQueryString());
                 int updated = criteria.executeUpdate();
@@ -310,8 +310,8 @@ public class CollectionRoleInsertTest extends AbstractCoreTest {
                 criteria.bind("KEY(keyedNodesMany)").select("'b'");
                 criteria.bind("keyedNodesMany.id").select("5");
 
-                assertEquals("INSERT INTO Root.keyedNodesMany(KEY(_collection), _collection.id, root.id)\n"
-                        + "SELECT 'b', 5, 1"
+                assertEquals("INSERT INTO Root.keyedNodesMany(KEY(keyedNodesMany), id, keyedNodesMany.id)\n"
+                        + "SELECT 'b', 1, 5"
                         + " FROM Integer(1 VALUES) valuesAlias"
                         + " WHERE TREAT_INTEGER(valuesAlias.value) = :valuesAlias_value_0", criteria.getQueryString());
                 int updated = criteria.executeUpdate();
@@ -339,8 +339,8 @@ public class CollectionRoleInsertTest extends AbstractCoreTest {
                 criteria.bind("KEY(keyedNodesManyDuplicate)").select("'b'");
                 criteria.bind("keyedNodesManyDuplicate.id").select("5");
 
-                assertEquals("INSERT INTO Root.keyedNodesManyDuplicate(KEY(_collection), _collection.id, root.id)\n"
-                        + "SELECT 'b', 5, 1"
+                assertEquals("INSERT INTO Root.keyedNodesManyDuplicate(KEY(keyedNodesManyDuplicate), id, keyedNodesManyDuplicate.id)\n"
+                        + "SELECT 'b', 1, 5"
                         + " FROM Integer(1 VALUES) valuesAlias"
                         + " WHERE TREAT_INTEGER(valuesAlias.value) = :valuesAlias_value_0", criteria.getQueryString());
                 int updated = criteria.executeUpdate();
@@ -369,8 +369,8 @@ public class CollectionRoleInsertTest extends AbstractCoreTest {
                 criteria.bind("keyedNodesElementCollection.value").select("'B'");
                 criteria.bind("keyedNodesElementCollection.value2").select("'P'");
 
-                assertEquals("INSERT INTO Root.keyedNodesElementCollection(KEY(_collection), _collection.value, _collection.value2, root.id)\n"
-                        + "SELECT 'b', 'B', 'P', 1"
+                assertEquals("INSERT INTO Root.keyedNodesElementCollection(KEY(keyedNodesElementCollection), id, keyedNodesElementCollection.value, keyedNodesElementCollection.value2)\n"
+                        + "SELECT 'b', 1, 'B', 'P'"
                         + " FROM Integer(1 VALUES) valuesAlias"
                         + " WHERE TREAT_INTEGER(valuesAlias.value) = :valuesAlias_value_0", criteria.getQueryString());
                 int updated = criteria.executeUpdate();

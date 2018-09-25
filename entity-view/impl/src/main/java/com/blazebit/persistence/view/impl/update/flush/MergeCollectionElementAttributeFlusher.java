@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.view.impl.update.flush;
 
+import com.blazebit.persistence.view.impl.collection.RecordingCollection;
+import com.blazebit.persistence.view.impl.collection.RecordingReplacingIterator;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 
 import javax.persistence.Query;
@@ -42,18 +44,35 @@ public class MergeCollectionElementAttributeFlusher<E, V> extends CollectionElem
     }
 
     @Override
-    public void appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix, String separator) {
+    public boolean appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix, String separator) {
+        return false;
     }
 
     @Override
-    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
-        context.getEntityManager().merge(element);
+    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
+        RecordingReplacingIterator<Object> recordingIterator = (RecordingReplacingIterator<Object>) ((RecordingCollection<?, ?>) value).recordingIterator();
+        try {
+            while (recordingIterator.hasNext()) {
+                if (recordingIterator.next() == element) {
+                    break;
+                }
+            }
+            Object newObject = context.getEntityManager().merge(element);
+            recordingIterator.replace();
+            recordingIterator.add(newObject);
+
+            while (recordingIterator.hasNext()) {
+                recordingIterator.next();
+            }
+        } finally {
+            ((RecordingCollection<?, ?>) value).resetRecordingIterator();
+        }
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public boolean flushEntity(UpdateContext context, E entity, Object view, V value, Runnable postReplaceListener) {
-        context.getEntityManager().merge(element);
+    public boolean flushEntity(UpdateContext context, E entity, Object ownerView, Object view, V value, Runnable postReplaceListener) {
+        flushQuery(context, null, null, null, view, value, null);
         return true;
     }
 

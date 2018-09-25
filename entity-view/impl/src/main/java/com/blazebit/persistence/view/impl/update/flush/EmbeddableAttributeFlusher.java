@@ -98,7 +98,7 @@ public class EmbeddableAttributeFlusher<E, V> extends EmbeddableAttributeFetchGr
     }
 
     @Override
-    public void appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix, String separator) {
+    public boolean appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix, String separator) {
         String mapping;
         String parameter;
         if (mappingPrefix == null) {
@@ -112,13 +112,14 @@ public class EmbeddableAttributeFlusher<E, V> extends EmbeddableAttributeFetchGr
             sb.append(mapping);
             sb.append(" = :");
             sb.append(parameter);
+            return true;
         } else {
-            nestedGraphNode.appendUpdateQueryFragment(context, sb, mapping, parameter, separator);
+            return nestedGraphNode.appendUpdateQueryFragment(context, sb, mapping, parameter, separator);
         }
     }
 
     @Override
-    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
+    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
         try {
             String parameter;
             if (parameterPrefix == null) {
@@ -129,7 +130,7 @@ public class EmbeddableAttributeFlusher<E, V> extends EmbeddableAttributeFetchGr
             if (supportsQueryFlush) {
                 query.setParameter(parameter, viewToEntityMapper.applyToEntity(context, null, value));
             } else {
-                nestedGraphNode.flushQuery(context, parameter, query, view, value, ownerAwareDeleter);
+                nestedGraphNode.flushQuery(context, parameter, query, ownerView, view, value, ownerAwareDeleter);
             }
         } finally {
             if (value instanceof MutableStateTrackable) {
@@ -141,7 +142,7 @@ public class EmbeddableAttributeFlusher<E, V> extends EmbeddableAttributeFetchGr
 
     @Override
     @SuppressWarnings("unchecked")
-    public boolean flushEntity(UpdateContext context, E entity, Object view, V value, Runnable postReplaceListener) {
+    public boolean flushEntity(UpdateContext context, E entity, Object ownerView, Object view, V value, Runnable postReplaceListener) {
         E embeddableValue = null;
         if (entity != null) {
             embeddableValue = (E) entityAttributeAccessor.getValue(entity);
@@ -159,7 +160,7 @@ public class EmbeddableAttributeFlusher<E, V> extends EmbeddableAttributeFetchGr
                     entityAttributeAccessor.setValue(entity, embeddableValue);
                 }
             }
-            return nestedGraphNode.flushEntity(context, embeddableValue, value, value, postReplaceListener);
+            return nestedGraphNode.flushEntity(context, embeddableValue, ownerView, value, value, postReplaceListener);
         } else {
             if (entity != null) {
                 entityAttributeAccessor.setValue(entity, viewToEntityMapper.applyToEntity(context, embeddableValue, value));
@@ -222,7 +223,7 @@ public class EmbeddableAttributeFlusher<E, V> extends EmbeddableAttributeFetchGr
 
     @Override
     public boolean requiresFlushAfterPersist(V value) {
-        return false;
+        return nestedGraphNode != null && nestedGraphNode.requiresFlushAfterPersist(value);
     }
 
     @Override

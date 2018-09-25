@@ -66,6 +66,11 @@ public class EntityViewUpdateNestedMutableFlatViewMapsTest extends AbstractEntit
         cfg.addEntityView(UpdatableNameObjectContainerView.class);
     }
 
+    @Override
+    protected String[] getFetchedCollections() {
+        return new String[] { "nameContainerMap" };
+    }
+
     @Test
     public void testUpdateCollectionElement() {
         // Given
@@ -80,24 +85,18 @@ public class EntityViewUpdateNestedMutableFlatViewMapsTest extends AbstractEntit
         // Then
         // Assert that the document and the people are loaded i.e. a full fetch
         // Finally the person is updated because the primary name changed
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         fullFetch(builder);
         if (version) {
             builder.update(Document.class);
         }
 
-        if (supportsMapInplaceUpdate()) {
-            builder.assertUpdate()
-                    .forRelation(Document.class, "nameContainerMap")
-                    .and();
+        if (supportsIndexedInplaceUpdate() && (!isQueryStrategy() || isQueryStrategy() && !isFullMode())) {
+            builder.update(Document.class, "nameContainerMap");
         } else {
-            builder.assertDelete()
-                    .forRelation(Document.class, "nameContainerMap")
-                    .and()
-                    .assertInsert()
-                    .forRelation(Document.class, "nameContainerMap")
-                    .and();
+            builder.delete(Document.class, "nameContainerMap")
+                    .insert(Document.class, "nameContainerMap");
 
         }
 
@@ -141,10 +140,9 @@ public class EntityViewUpdateNestedMutableFlatViewMapsTest extends AbstractEntit
 
     @Override
     protected AssertStatementBuilder fullUpdate(AssertStatementBuilder builder) {
-        fullFetch(builder);
-        if (version) {
-            builder.update(Document.class);
-        }
+        builder.delete(Document.class, "nameContainerMap")
+                .insert(Document.class, "nameContainerMap");
+        builder.update(Document.class);
         return builder;
     }
 

@@ -18,6 +18,8 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.spi.JpaProvider;
 
+import javax.persistence.Query;
+
 /**
  * @author Christian Beikov
  * @since 1.2.0
@@ -28,6 +30,11 @@ public class AssociationToIdParameterTransformer implements ParameterValueTransf
 
     public AssociationToIdParameterTransformer(JpaProvider jpaProvider) {
         this.jpaProvider = jpaProvider;
+    }
+
+    @Override
+    public ParameterValueTransformer forQuery(Query query) {
+        return this;
     }
 
     @Override

@@ -87,21 +87,21 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
 
     private static final Class[] EMPTY = new Class[0];
 
+    protected PathPosition currentPosition;
+    protected List<PathPosition> pathPositions;
     private final EntityMetamodel metamodel;
     private final String skipBaseNodeAlias;
-    private PathPosition currentPosition;
-    private List<PathPosition> pathPositions;
 
     /**
      * @author Christian Beikov
      * @since 1.0.0
      */
-    private static class PathPosition {
+    protected static class PathPosition {
 
-        private Type<?> currentClass;
-        private Type<?> valueClass;
-        private Type<?> keyClass;
-        private Attribute<?, ?> attribute;
+        public Type<?> currentClass;
+        public Type<?> valueClass;
+        public Type<?> keyClass;
+        public Attribute<?, ?> attribute;
 
         PathPosition(Type<?> currentClass, Attribute<?, ?> attribute) {
             this.currentClass = currentClass;
@@ -516,11 +516,11 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
         invalid(predicate);
     }
 
-    private void invalid(Object o) {
+    protected final void invalid(Object o) {
         throw new IllegalArgumentException("Illegal occurence of [" + o + "] in path chain resolver!");
     }
 
-    private void invalid(Object o, String reason) {
+    protected final void invalid(Object o, String reason) {
         throw new IllegalArgumentException("Illegal occurence of [" + o + "] in path chain resolver! " + reason);
     }
 

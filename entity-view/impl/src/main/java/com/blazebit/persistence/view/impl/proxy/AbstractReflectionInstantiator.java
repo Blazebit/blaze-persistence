@@ -18,11 +18,22 @@ package com.blazebit.persistence.view.impl.proxy;
 
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
+import com.blazebit.persistence.view.impl.type.PrimitiveBooleanTypeConverter;
+import com.blazebit.persistence.view.impl.type.PrimitiveByteTypeConverter;
+import com.blazebit.persistence.view.impl.type.PrimitiveCharTypeConverter;
+import com.blazebit.persistence.view.impl.type.PrimitiveDoubleTypeConverter;
+import com.blazebit.persistence.view.impl.type.PrimitiveFloatTypeConverter;
+import com.blazebit.persistence.view.impl.type.PrimitiveIntTypeConverter;
+import com.blazebit.persistence.view.impl.type.PrimitiveLongTypeConverter;
+import com.blazebit.persistence.view.impl.type.PrimitiveShortTypeConverter;
 import com.blazebit.persistence.view.spi.type.BasicDirtyTracker;
 import com.blazebit.persistence.view.spi.type.BasicUserType;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -31,12 +42,27 @@ import java.util.List;
  */
 public abstract class AbstractReflectionInstantiator<T> implements ObjectInstantiator<T> {
 
+    private static final Map<Class<?>, TypeConverter<Object, Object>> PRIMITIVE_TYPE_CONVERTERS;
+
+    static {
+        Map<Class<?>, TypeConverter<Object, Object>> primitiveTypeConverters = new HashMap<>();
+        primitiveTypeConverters.put(boolean.class, PrimitiveBooleanTypeConverter.INSTANCE);
+        primitiveTypeConverters.put(byte.class, PrimitiveByteTypeConverter.INSTANCE);
+        primitiveTypeConverters.put(char.class, PrimitiveCharTypeConverter.INSTANCE);
+        primitiveTypeConverters.put(short.class, PrimitiveShortTypeConverter.INSTANCE);
+        primitiveTypeConverters.put(int.class, PrimitiveIntTypeConverter.INSTANCE);
+        primitiveTypeConverters.put(long.class, PrimitiveLongTypeConverter.INSTANCE);
+        primitiveTypeConverters.put(float.class, PrimitiveFloatTypeConverter.INSTANCE);
+        primitiveTypeConverters.put(double.class, PrimitiveDoubleTypeConverter.INSTANCE);
+        PRIMITIVE_TYPE_CONVERTERS = primitiveTypeConverters;
+    }
+
     protected final MutableBasicUserTypeEntry[] mutableBasicUserTypes;
     protected final TypeConverterEntry[] typeConverters;
 
-    public AbstractReflectionInstantiator(List<MutableBasicUserTypeEntry> mutableBasicUserTypes, List<TypeConverterEntry> typeConverterEntries) {
+    public AbstractReflectionInstantiator(List<MutableBasicUserTypeEntry> mutableBasicUserTypes, List<TypeConverterEntry> typeConverterEntries, Class<?>[] parameterTypes) {
         this.mutableBasicUserTypes = mutableBasicUserTypes.toArray(new MutableBasicUserTypeEntry[mutableBasicUserTypes.size()]);
-        this.typeConverters = typeConverterEntries.toArray(new TypeConverterEntry[typeConverterEntries.size()]);
+        this.typeConverters = withPrimitiveConverters(typeConverterEntries, parameterTypes);
     }
 
     /**
@@ -99,5 +125,26 @@ public abstract class AbstractReflectionInstantiator<T> implements ObjectInstant
     protected Class<T> getProxyClass(EntityViewManager entityViewManager, ProxyFactory proxyFactory, ManagedViewTypeImplementor<T> viewType, ManagedViewTypeImplementor<T> viewTypeBase) {
         return (Class<T>) proxyFactory.getProxy(entityViewManager, viewType, viewTypeBase);
     }
+
+    static TypeConverterEntry[] withPrimitiveConverters(List<TypeConverterEntry> typeConverterEntries, Class<?>[] parameterTypes) {
+        List<TypeConverterEntry> primitiveConverters = new ArrayList<>(parameterTypes.length);
+        for (int i = 0; i < parameterTypes.length; i++) {
+            Class<?> parameterType = parameterTypes[i];
+            if (parameterType.isPrimitive()) {
+                primitiveConverters.add(new TypeConverterEntry(i, PRIMITIVE_TYPE_CONVERTERS.get(parameterType)));
+            }
+        }
+
+        TypeConverterEntry[] array = new TypeConverterEntry[typeConverterEntries.size() + primitiveConverters.size()];
+        int index = 0;
+        for (TypeConverterEntry typeConverterEntry : typeConverterEntries) {
+            array[index++] = typeConverterEntry;
+        }
+        for (TypeConverterEntry typeConverterEntry : primitiveConverters) {
+            array[index++] = typeConverterEntry;
+        }
+        return array;
+    }
+
     
 }

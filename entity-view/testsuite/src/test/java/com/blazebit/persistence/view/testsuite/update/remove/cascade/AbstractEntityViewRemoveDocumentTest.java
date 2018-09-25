@@ -140,8 +140,7 @@ public abstract class AbstractEntityViewRemoveDocumentTest<T> extends AbstractEn
     }
 
     @Override
-    protected void restartTransactionAndReload() {
-        restartTransaction();
+    protected void reload() {
         // Load into PC, then access via find
         cbf.create(em, Person.class)
                 .where("id").in(ids(p1, p2, p3, p4, p5, p6))

@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl.collection;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 
+import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -32,15 +33,18 @@ import java.util.Map;
 public class ListRemoveAction<C extends List<E>, E> implements ListAction<C> {
 
     private final int index;
+    private final boolean last;
     private final Object removedElementInView;
     
-    public ListRemoveAction(int index, List<?> delegate) {
+    public ListRemoveAction(int index, boolean last, List<?> delegate) {
         this.index = index;
+        this.last = last;
         this.removedElementInView = delegate.get(index);
     }
 
-    private ListRemoveAction(int index, Object removedElementInView) {
+    private ListRemoveAction(int index, boolean last, Object removedElementInView) {
         this.index = index;
+        this.last = last;
         this.removedElementInView = removedElementInView;
     }
 
@@ -50,6 +54,11 @@ public class ListRemoveAction<C extends List<E>, E> implements ListAction<C> {
         if (removeListener != null && removeElement != null) {
             removeListener.onCollectionRemove(context, removedElementInView);
         }
+    }
+
+    @Override
+    public void undo(C collection, Collection<?> removedObjects, Collection<?> addedObjects) {
+        collection.add(index, (E) removedElementInView);
     }
 
     @Override
@@ -79,12 +88,40 @@ public class ListRemoveAction<C extends List<E>, E> implements ListAction<C> {
     }
 
     @Override
+    public List<Map.Entry<Object, Integer>> getInsertedObjectEntries() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public List<Map.Entry<Object, Integer>> getAppendedObjectEntries() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public List<Map.Entry<Object, Integer>> getRemovedObjectEntries() {
+        if (last) {
+            return Collections.emptyList();
+        } else {
+            return Collections.<Map.Entry<Object, Integer>>singletonList(new AbstractMap.SimpleEntry<Object, Integer>(removedElementInView, index));
+        }
+    }
+
+    @Override
+    public List<Map.Entry<Object, Integer>> getTrimmedObjectEntries() {
+        if (last) {
+            return Collections.<Map.Entry<Object, Integer>>singletonList(new AbstractMap.SimpleEntry<Object, Integer>(removedElementInView, index));
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
     public CollectionAction<C> replaceObject(Object oldElem, Object elem) {
         if (oldElem != removedElementInView) {
             return this;
         }
 
-        return new ListRemoveAction(index, elem);
+        return new ListRemoveAction(index, last, elem);
     }
 
     @Override
@@ -97,7 +134,7 @@ public class ListRemoveAction<C extends List<E>, E> implements ListAction<C> {
             return this;
         }
 
-        return new ListRemoveAction(index, newElement);
+        return new ListRemoveAction(index, last, newElement);
     }
 
     @Override

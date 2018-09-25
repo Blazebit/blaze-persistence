@@ -22,16 +22,16 @@ import javax.persistence.Column;
 import javax.persistence.Embeddable;
 
 @Embeddable
-public class EmbeddableTestEntitySimpleEmbeddable implements Serializable {
+public class EmbeddableTestEntitySimpleEmbeddable2 implements Serializable {
 
     private static final long serialVersionUID = 1L;
     
     private String name;
 
-    public EmbeddableTestEntitySimpleEmbeddable() {
+    public EmbeddableTestEntitySimpleEmbeddable2() {
     }
     
-    public EmbeddableTestEntitySimpleEmbeddable(String name) {
+    public EmbeddableTestEntitySimpleEmbeddable2(String name) {
         this.name = name;
     }
 
@@ -60,7 +60,7 @@ public class EmbeddableTestEntitySimpleEmbeddable implements Serializable {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        EmbeddableTestEntitySimpleEmbeddable other = (EmbeddableTestEntitySimpleEmbeddable) obj;
+        EmbeddableTestEntitySimpleEmbeddable2 other = (EmbeddableTestEntitySimpleEmbeddable2) obj;
         if (name == null) {
             if (other.name != null)
                 return false;

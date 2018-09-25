@@ -73,7 +73,7 @@ public class EntityViewUpdateNestedMutableOnlySubviewTest extends AbstractEntity
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
@@ -123,7 +123,7 @@ public class EntityViewUpdateNestedMutableOnlySubviewTest extends AbstractEntity
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
@@ -172,9 +172,6 @@ public class EntityViewUpdateNestedMutableOnlySubviewTest extends AbstractEntity
                         .update(Document.class);
             } else {
                 fullFetch(afterBuilder);
-                if (version) {
-                    versionUpdate(afterBuilder);
-                }
             }
         }
         afterBuilder.validate();

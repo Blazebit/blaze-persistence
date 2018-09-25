@@ -41,8 +41,8 @@ public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute
     private final int index;
     private final MappingConstructor<X> declaringConstructor;
 
-    public AbstractParameterAttribute(MappingConstructorImpl<X> constructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context) {
-        super(constructor.getDeclaringType(), mapping, context);
+    public AbstractParameterAttribute(MappingConstructorImpl<X> constructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
+        super(constructor.getDeclaringType(), mapping, context, embeddableMapping);
         this.index = mapping.getIndex();
         this.declaringConstructor = constructor;
 
@@ -90,6 +90,31 @@ public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute
     @Override
     public boolean isUpdatable() {
         return false;
+    }
+
+    @Override
+    public boolean isMutable() {
+        return false;
+    }
+
+    @Override
+    public String getMappedBy() {
+        return null;
+    }
+
+    @Override
+    protected boolean isDisallowOwnedUpdatableSubview() {
+        return false;
+    }
+
+    @Override
+    public boolean isUpdateCascaded() {
+        return false;
+    }
+
+    @Override
+    public Set<com.blazebit.persistence.view.metamodel.Type<?>> getUpdateCascadeAllowedSubtypes() {
+        return Collections.emptySet();
     }
 
     @Override

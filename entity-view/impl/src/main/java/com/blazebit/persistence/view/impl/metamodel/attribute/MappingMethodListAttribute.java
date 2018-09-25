@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
+import com.blazebit.persistence.view.impl.metamodel.EmbeddableOwner;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 import com.blazebit.persistence.view.impl.metamodel.MethodAttributeMapping;
@@ -31,8 +32,8 @@ import java.util.List;
 public class MappingMethodListAttribute<X, Y> extends AbstractMethodListAttribute<X, Y> implements MappingAttribute<X, List<Y>> {
 
 
-    public MappingMethodListAttribute(ManagedViewTypeImplementor<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int attributeIndex, int dirtyStateIndex) {
-        super(viewType, mapping, context, attributeIndex, dirtyStateIndex);
+    public MappingMethodListAttribute(ManagedViewTypeImplementor<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int attributeIndex, int dirtyStateIndex, EmbeddableOwner embeddableMapping) {
+        super(viewType, mapping, context, attributeIndex, dirtyStateIndex, embeddableMapping);
     }
 
     @Override

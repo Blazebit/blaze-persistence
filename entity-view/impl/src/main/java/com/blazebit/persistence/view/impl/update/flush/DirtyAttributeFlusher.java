@@ -32,7 +32,7 @@ public interface DirtyAttributeFlusher<T extends DirtyAttributeFlusher<T, E, V>,
 
     public DirtyAttributeFlusher<T, E, V> getDirtyFlusher(UpdateContext context, Object view, Object initial, Object current);
 
-    public void appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix, String separator);
+    public boolean appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix, String separator);
 
     public void appendFetchJoinQueryFragment(String base, StringBuilder sb);
 
@@ -42,9 +42,9 @@ public interface DirtyAttributeFlusher<T extends DirtyAttributeFlusher<T, E, V>,
 
     public Object getNewInitialValue(UpdateContext context, V clonedValue, V currentValue);
     
-    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter);
+    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter);
 
-    public boolean flushEntity(UpdateContext context, E entity, Object view, V value, Runnable postReplaceListener);
+    public boolean flushEntity(UpdateContext context, E entity, Object ownerView, Object view, V value, Runnable postReplaceListener);
 
     public void removeFromEntity(UpdateContext context, E entity);
 

@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.reflection.ReflectionUtils;
 
+import javax.persistence.Query;
 import javax.persistence.metamodel.Attribute;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -76,6 +77,11 @@ public class AssociationFromIdParameterTransformer implements ParameterValueTran
             }
         }
         return transformer;
+    }
+
+    @Override
+    public ParameterValueTransformer forQuery(Query query) {
+        return this;
     }
 
     @Override

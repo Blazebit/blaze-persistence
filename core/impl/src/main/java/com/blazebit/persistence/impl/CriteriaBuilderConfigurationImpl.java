@@ -162,6 +162,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -169,6 +170,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.TimeZone;
 
 /**
  *
@@ -260,7 +262,35 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         registerNamedType("Time", Time.class);
         registerNamedType("Date", java.sql.Date.class);
         registerNamedType("Timestamp", Timestamp.class);
+        registerNamedType("TimeZone", TimeZone.class);
         registerNamedType("Calendar", Calendar.class);
+        registerNamedType("GregorianCalendar", GregorianCalendar.class);
+
+        registerNamedType("Class", java.lang.Class.class);
+        registerNamedType("Currency", java.util.Currency.class);
+        registerNamedType("Locale", java.util.Locale.class);
+        registerNamedType("UUID", java.util.UUID.class);
+        registerNamedType("URL", java.net.URL.class);
+
+        // Java 8 time types
+        try {
+            registerNamedType("LocalDate", Class.forName("java.time.LocalDate"));
+            registerNamedType("LocalTime", Class.forName("java.time.LocalTime"));
+            registerNamedType("LocalDateTime", Class.forName("java.time.LocalDateTime"));
+            registerNamedType("OffsetTime", Class.forName("java.time.OffsetTime"));
+            registerNamedType("OffsetDateTime", Class.forName("java.time.OffsetDateTime"));
+            registerNamedType("ZonedDateTime", Class.forName("java.time.ZonedDateTime"));
+            registerNamedType("Duration", Class.forName("java.time.Duration"));
+            registerNamedType("Instant", Class.forName("java.time.Instant"));
+            registerNamedType("MonthDay", Class.forName("java.time.MonthDay"));
+            registerNamedType("Year", Class.forName("java.time.Year"));
+            registerNamedType("YearMonth", Class.forName("java.time.YearMonth"));
+            registerNamedType("Period", Class.forName("java.time.Period"));
+            registerNamedType("ZoneId", Class.forName("java.time.ZoneId"));
+            registerNamedType("ZoneOffset", Class.forName("java.time.ZoneOffset"));
+        } catch (ClassNotFoundException ex) {
+            // If they aren't found, we ignore them
+        }
 
         // cast
 
@@ -588,12 +618,14 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         return macros.keySet();
     }
 
+    @Override
     public CriteriaBuilderConfiguration registerNamedType(String name, Class<?> type) {
         treatTypes.put(name, type);
         registerFunction(new JpqlFunctionGroup("treat_" + name.toLowerCase(), new TreatFunction(type)));
         return this;
     }
 
+    @Override
     public Map<String, Class<?>> getNamedTypes() {
         return treatTypes;
     }

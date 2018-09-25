@@ -61,6 +61,11 @@ public class EntityViewUpdateSimpleMutableFlatViewMapsTest extends AbstractEntit
         cfg.addEntityView(UpdatableNameObjectView.class);
     }
 
+    @Override
+    protected String[] getFetchedCollections() {
+        return new String[] { "nameMap" };
+    }
+
     @Test
     public void testUpdateCollectionElement() {
         // Given
@@ -75,23 +80,22 @@ public class EntityViewUpdateSimpleMutableFlatViewMapsTest extends AbstractEntit
         // Then
         // Assert that the document and the people are loaded i.e. a full fetch
         // Finally the person is updated because the primary name changed
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        fullFetch(builder);
-        if (version) {
+        if (isQueryStrategy()) {
+        } else {
+            fullFetch(builder);
+        }
+        if (version || isQueryStrategy() && isFullMode()) {
             builder.update(Document.class);
         }
-        if (supportsMapInplaceUpdate()) {
+        if (supportsIndexedInplaceUpdate() && (!isQueryStrategy() || isQueryStrategy() && !isFullMode())) {
             builder.assertUpdate()
                     .forRelation(Document.class, "nameMap")
                     .and();
         } else {
-            builder.assertDelete()
-                    .forRelation(Document.class, "nameMap")
-                    .and()
-                    .assertInsert()
-                    .forRelation(Document.class, "nameMap")
-                    .and();
+            builder.delete(Document.class, "nameMap")
+                    .insert(Document.class, "nameMap");
 
         }
         builder.validate();
@@ -136,10 +140,9 @@ public class EntityViewUpdateSimpleMutableFlatViewMapsTest extends AbstractEntit
 
     @Override
     protected AssertStatementBuilder fullUpdate(AssertStatementBuilder builder) {
-        fullFetch(builder);
-        if (version) {
-            builder.update(Document.class);
-        }
+        builder.delete(Document.class, "nameMap")
+                .insert(Document.class, "nameMap");
+        builder.update(Document.class);
         return builder;
     }
 

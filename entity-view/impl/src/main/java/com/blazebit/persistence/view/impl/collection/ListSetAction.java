@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl.collection;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 
+import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -32,17 +33,20 @@ import java.util.Map;
 public class ListSetAction<C extends List<E>, E> implements ListAction<C> {
 
     final int index;
+    final boolean last;
     final E element;
     final E removedElementInView;
     
-    public ListSetAction(int index, E element, List<?> delegate) {
+    public ListSetAction(int index, boolean last, E element, List<?> delegate) {
         this.index = index;
+        this.last = last;
         this.element = element;
-        this.removedElementInView = (E) delegate.get(index);
+        this.removedElementInView = delegate == null ? null : (E) delegate.get(index);
     }
 
-    private ListSetAction(int index, E element, E removedElementInView) {
+    private ListSetAction(int index, boolean last, E element, E removedElementInView) {
         this.index = index;
+        this.last = last;
         this.element = element;
         this.removedElementInView = removedElementInView;
     }
@@ -63,6 +67,11 @@ public class ListSetAction<C extends List<E>, E> implements ListAction<C> {
     }
 
     @Override
+    public void undo(C collection, Collection<?> removedObjects, Collection<?> addedObjects) {
+        collection.set(index, removedElementInView);
+    }
+
+    @Override
     public boolean containsObject(C collection, Object o) {
         return element == o;
     }
@@ -74,7 +83,7 @@ public class ListSetAction<C extends List<E>, E> implements ListAction<C> {
 
     @Override
     public Collection<Object> getRemovedObjects() {
-        return Collections.<Object>singleton(removedElementInView);
+        return removedElementInView == null ? Collections.emptySet() : Collections.<Object>singleton(removedElementInView);
     }
 
     @Override
@@ -88,16 +97,52 @@ public class ListSetAction<C extends List<E>, E> implements ListAction<C> {
     }
 
     @Override
+    public List<Map.Entry<Object, Integer>> getInsertedObjectEntries() {
+        if (last) {
+            return Collections.emptyList();
+        } else {
+            return Collections.<Map.Entry<Object, Integer>>singletonList(new AbstractMap.SimpleEntry<Object, Integer>(element, index));
+        }
+    }
+
+    @Override
+    public List<Map.Entry<Object, Integer>> getAppendedObjectEntries() {
+        if (last) {
+            return Collections.<Map.Entry<Object, Integer>>singletonList(new AbstractMap.SimpleEntry<Object, Integer>(element, index));
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
+    public List<Map.Entry<Object, Integer>> getRemovedObjectEntries() {
+        if (last) {
+            return Collections.emptyList();
+        } else {
+            return Collections.<Map.Entry<Object, Integer>>singletonList(new AbstractMap.SimpleEntry<Object, Integer>(removedElementInView, index));
+        }
+    }
+
+    @Override
+    public List<Map.Entry<Object, Integer>> getTrimmedObjectEntries() {
+        if (last) {
+            return Collections.<Map.Entry<Object, Integer>>singletonList(new AbstractMap.SimpleEntry<Object, Integer>(removedElementInView, index));
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
     @SuppressWarnings("unchecked")
     public CollectionAction<C> replaceObject(Object oldElem, Object elem) {
         if (element == oldElem) {
             if (removedElementInView == oldElem) {
-                return new ListSetAction(index, elem, elem);
+                return new ListSetAction(index, last, elem, elem);
             } else {
-                return new ListSetAction(index, elem, removedElementInView);
+                return new ListSetAction(index, last, elem, removedElementInView);
             }
         } else if (removedElementInView == oldElem) {
-            return new ListSetAction(index, element, elem);
+            return new ListSetAction(index, last, element, elem);
         } else {
             return null;
         }
@@ -120,15 +165,17 @@ public class ListSetAction<C extends List<E>, E> implements ListAction<C> {
             newRemovedElement = removedElementInView;
         }
 
-        return new ListSetAction(index, newElement, newRemovedElement);
+        return new ListSetAction(index, last, newElement, newRemovedElement);
     }
 
     @Override
     public void addAction(List<CollectionAction<C>> actions, Collection<Object> addedElements, Collection<Object> removedElements) {
         CollectionAction<C> lastAction;
+        // Multiple set operations are coalesced into a single one
         if (!actions.isEmpty() && (lastAction = actions.get(actions.size() - 1)) instanceof ListSetAction<?, ?>) {
             if (index == ((ListSetAction<?, ?>) lastAction).index) {
-                actions.set(actions.size() - 1, this);
+                // Don't forget to retain the original removed element
+                actions.set(actions.size() - 1, (CollectionAction<C>) new ListSetAction<>(index, last, element, ((ListSetAction<?, ?>) lastAction).removedElementInView));
                 return;
             }
         }

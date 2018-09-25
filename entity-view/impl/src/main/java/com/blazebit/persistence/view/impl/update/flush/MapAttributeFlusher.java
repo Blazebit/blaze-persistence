@@ -17,6 +17,8 @@
 package com.blazebit.persistence.view.impl.update.flush;
 
 import com.blazebit.persistence.DeleteCriteriaBuilder;
+import com.blazebit.persistence.InsertCriteriaBuilder;
+import com.blazebit.persistence.UpdateCriteriaBuilder;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
@@ -30,21 +32,27 @@ import com.blazebit.persistence.view.impl.collection.MapInstantiator;
 import com.blazebit.persistence.view.impl.collection.MapPutAction;
 import com.blazebit.persistence.view.impl.collection.MapPutAllAction;
 import com.blazebit.persistence.view.impl.collection.MapRemoveAction;
+import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.impl.collection.RecordingMap;
 import com.blazebit.persistence.view.impl.entity.MapViewToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
+import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.spi.type.BasicUserType;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import javax.persistence.Tuple;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -68,10 +76,11 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
     private final BasicDirtyChecker<Object> keyDirtyChecker;
 
     @SuppressWarnings("unchecked")
-    public MapAttributeFlusher(String attributeName, String mapping, Class<?> ownerEntityClass, String ownerIdAttributeName, FlushStrategy flushStrategy, AttributeAccessor attributeMapper, InitialValueAttributeAccessor viewAttributeAccessor, boolean optimisticLockProtected, boolean collectionUpdatable,
-                               CollectionRemoveListener keyCascadeDeleteListener, CollectionRemoveListener elementCascadeDeleteListener, CollectionRemoveListener keyRemoveListener, CollectionRemoveListener elementRemoveListener,
+    public MapAttributeFlusher(String attributeName, String mapping, Class<?> ownerEntityClass, String ownerIdAttributeName, String ownerMapping, DirtyAttributeFlusher<?, ?, ?> ownerIdFlusher, DirtyAttributeFlusher<?, ?, ?> elementFlusher, boolean supportsCollectionDml, FlushStrategy flushStrategy, AttributeAccessor attributeMapper, InitialValueAttributeAccessor viewAttributeAccessor,
+                               boolean optimisticLockProtected, boolean collectionUpdatable, CollectionRemoveListener keyCascadeDeleteListener, CollectionRemoveListener elementCascadeDeleteListener, CollectionRemoveListener keyRemoveListener, CollectionRemoveListener elementRemoveListener,
                                boolean viewOnlyDeleteCascaded, boolean jpaProviderDeletesCollection, TypeDescriptor keyDescriptor, TypeDescriptor elementDescriptor, MapViewToEntityMapper mapper, MapViewToEntityMapper loadOnlyMapper, MapInstantiator<?, ?> mapInstantiator) {
-        super(attributeName, mapping, collectionUpdatable || elementDescriptor.isMutable(), ownerEntityClass, ownerIdAttributeName, flushStrategy, attributeMapper, viewAttributeAccessor, optimisticLockProtected, collectionUpdatable, viewOnlyDeleteCascaded, jpaProviderDeletesCollection, elementCascadeDeleteListener, elementRemoveListener, elementDescriptor);
+        super(attributeName, mapping, collectionUpdatable || elementDescriptor.isMutable(), ownerEntityClass, ownerIdAttributeName, ownerMapping, ownerIdFlusher, elementFlusher, supportsCollectionDml, flushStrategy, attributeMapper, viewAttributeAccessor, optimisticLockProtected, collectionUpdatable, viewOnlyDeleteCascaded, jpaProviderDeletesCollection, elementCascadeDeleteListener,
+                elementRemoveListener, elementDescriptor);
         this.mapInstantiator = mapInstantiator;
         this.keyDescriptor = keyDescriptor;
         if (keyDescriptor.isSubview() || keyDescriptor.isJpaEntity()) {
@@ -181,8 +190,44 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
     }
 
     @Override
-    protected void invokeCollectionAction(UpdateContext context, V targetCollection, List<? extends MapAction<?>> collectionActions) {
-        if (targetCollection == null) {
+    protected boolean isIndexed() {
+        return true;
+    }
+
+    @Override
+    protected void addElementFlushActions(UpdateContext context, TypeDescriptor typeDescriptor, List<MapAction<?>> actions, V current) {
+        final ViewToEntityMapper mapper = typeDescriptor.getViewToEntityMapper();
+        OUTER: for (Map.Entry<?, ?> entry : current.entrySet()) {
+            Object o = entry.getValue();
+            if (o instanceof MutableStateTrackable) {
+                MutableStateTrackable element = (MutableStateTrackable) o;
+                @SuppressWarnings("unchecked")
+                DirtyAttributeFlusher<?, E, V> flusher = (DirtyAttributeFlusher<?, E, V>) (DirtyAttributeFlusher) mapper.getNestedDirtyFlusher(context, element, (DirtyAttributeFlusher) null);
+                if (flusher != null) {
+                    // Skip the element flusher if the key was already added before
+                    boolean wasElementAdded = false;
+                    for (MapAction<?> action : actions) {
+                        if (action.getAddedKeys().contains(entry.getKey())) {
+                            continue OUTER;
+                        }
+                        if (action.getAddedElements().contains(element)) {
+                            wasElementAdded = true;
+                        }
+                    }
+
+                    if (wasElementAdded) {
+                        actions.add(new MapPutAction(entry.getKey(), element, Collections.emptyMap()));
+                    } else {
+                        actions.add(new MapPutAction(entry.getKey(), element, current));
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
+    protected void invokeCollectionAction(UpdateContext context, Object ownerView, Object view, V targetCollection, Object value, List<? extends MapAction<?>> collectionActions) {
+        if (mapping == null) {
             // When the target collection is null this means that there is no collection role in the entity
             // This happens for correlated attributes and we will just provide an empty collection for applying actions
             targetCollection = createMap(0);
@@ -190,8 +235,12 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                 action.doAction(targetCollection, context, loadOnlyMapper, keyRemoveListener, removeListener);
             }
         } else {
-            for (MapAction<V> action : (List<MapAction<V>>) (List<?>) collectionActions) {
-                action.doAction(targetCollection, context, loadOnlyMapper, keyRemoveListener, removeListener);
+            if (flushStrategy == FlushStrategy.QUERY) {
+                flushCollectionOperations(context, ownerView, view, (V) value, null, collectionActions);
+            } else {
+                for (MapAction<V> action : (List<MapAction<V>>) (List<?>) collectionActions) {
+                    action.doAction(targetCollection, context, loadOnlyMapper, keyRemoveListener, removeListener);
+                }
             }
         }
     }
@@ -224,11 +273,363 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public boolean flushEntity(UpdateContext context, E entity, Object view, V value, Runnable postReplaceListener) {
+    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object ownerView, Object view, V current, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
+        if (!supportsQueryFlush()) {
+            throw new UnsupportedOperationException("Query flush not supported for configuration!");
+        }
+
         if (flushOperation != null) {
-            replaceWithRecordingCollection(context, view, value, collectionActions);
-            invokeFlushOperation(context, view, entity, value);
+            if (!(current instanceof RecordingMap<?, ?, ?>)) {
+                List<MapAction<Map<?, ?>>> actions = new ArrayList<>();
+                actions.add(new MapClearAction());
+                if (current != null && !current.isEmpty()) {
+                    actions.add(new MapPutAllAction(current, Collections.emptyMap()));
+                }
+                current = replaceWithRecordingCollection(context, view, current, actions);
+            }
+            invokeFlushOperation(context, ownerView, view, null, current);
+        } else {
+            boolean isRecording = current instanceof RecordingMap<?, ?, ?>;
+            if (isRecording) {
+                RecordingMap<Map<?, ?>, ?, ?> recordingCollection = (RecordingMap<Map<?, ?>, ?, ?>) current;
+                if (entityAttributeMapper == null) {
+                    // We have a correlation mapping here
+                    if (recordingCollection.hasActions()) {
+                        recordingCollection.resetActions(context);
+                    }
+                }
+
+                Map<Object, Object> embeddables = null;
+                if (elementDescriptor.shouldFlushMutations()) {
+                    if (elementDescriptor.shouldJpaPersistOrMerge()) {
+                        mergeAndRequeue(context, recordingCollection, (Map<Object, Object>) recordingCollection.getDelegate());
+                    } else if (elementDescriptor.isSubview() && (elementDescriptor.isIdentifiable() || isIndexed())) {
+                        embeddables = flushCollectionViewElements(context, current);
+                    }
+                }
+
+                if (entityAttributeMapper != null && collectionUpdatable) {
+                    V initial = (V) viewAttributeAccessor.getInitialValue(view);
+                    if (initial instanceof RecordingMap<?, ?, ?>) {
+                        initial = (V) ((RecordingMap) initial).getInitialVersion();
+                    }
+                    if (recordingCollection.hasActions()) {
+                        recordingCollection.resetActions(context);
+                    }
+                    // If the initial object was null like it happens during full flushing, we can only replace the collection
+                    if (initial == null) {
+                        replaceCollection(context, ownerView, view, null, current, FlushStrategy.QUERY);
+                    } else {
+                        flushCollectionOperations(context, ownerView, view, initial, current, embeddables, (FusedMapActions) null);
+                    }
+                }
+            } else {
+                EqualityChecker equalityChecker;
+                if (elementDescriptor.isSubview()) {
+                    equalityChecker = EqualsEqualityChecker.INSTANCE;
+                } else {
+                    equalityChecker = new IdentityEqualityChecker(elementDescriptor.getBasicUserType());
+                }
+                V initial = (V) viewAttributeAccessor.getInitialValue(view);
+                if (initial instanceof RecordingMap<?, ?, ?>) {
+                    initial = (V) ((RecordingMap) initial).getInitialVersion();
+                }
+                List<MapAction<Map<Object, Object>>> actions;
+                if (initial == null || !elementDescriptor.supportsDeepEqualityCheck() || elementDescriptor.getBasicUserType() != null && !elementDescriptor.getBasicUserType().supportsDeepCloning()) {
+                    actions = replaceActions(current);
+                } else {
+                    actions = determineCollectionActions(context, initial, current, equalityChecker);
+                }
+                current = replaceWithRecordingCollection(context, view, current, actions);
+
+                Map<Object, Object> embeddables = null;
+                if (elementDescriptor.shouldFlushMutations()) {
+                    if (elementDescriptor.shouldJpaPersistOrMerge()) {
+                        mergeAndRequeue(context, null, (Map<Object, Object>) current);
+                    } else if (elementDescriptor.isSubview() && (elementDescriptor.isIdentifiable() || isIndexed())) {
+                        embeddables = flushCollectionViewElements(context, current);
+                    }
+                }
+
+                if (entityAttributeMapper != null && collectionUpdatable) {
+                    // If the initial object was null like it happens during full flushing, we can only replace the collection
+                    if (initial == null) {
+                        replaceCollection(context, ownerView, view, null, current, FlushStrategy.QUERY);
+                    } else {
+                        flushCollectionOperations(context, ownerView, view, initial, current, embeddables, (FusedMapActions) null);
+                    }
+                }
+            }
+        }
+    }
+
+    protected final DeleteCriteriaBuilder<?> createCollectionDeleter(UpdateContext context) {
+        DeleteCriteriaBuilder<?> deleteCb = context.getEntityViewManager().getCriteriaBuilderFactory().deleteCollection(context.getEntityManager(), ownerEntityClass, "e", getMapping());
+        deleteCb.setWhereExpression(ownerIdWhereFragment);
+        return deleteCb;
+    }
+
+    protected Map<Object, Object> appendRemoveSpecific(UpdateContext context, DeleteCriteriaBuilder<?> deleteCb, FusedMapActions fusedCollectionActions) {
+        deleteCb.where("KEY(e." + getMapping() + ")").in(fusedCollectionActions.getRemovedKeys(context));
+        return fusedCollectionActions.getRemoved();
+    }
+
+    protected boolean deleteElements(UpdateContext context, Object ownerView, Object view, V value, boolean removeSpecific, FusedMapActions fusedCollectionActions) {
+        DeleteCriteriaBuilder<?> deleteCb = null;
+        boolean removedAll = true;
+        Map<Object, Object> removedObjects = Collections.emptyMap();
+        if (fusedCollectionActions != null) {
+            if (fusedCollectionActions.getRemoveCount() > 0) {
+                deleteCb = createCollectionDeleter(context);
+                if (removeSpecific) {
+                    removedObjects = appendRemoveSpecific(context, deleteCb, fusedCollectionActions);
+                    removedAll = false;
+                }
+            } else {
+                removedAll = false;
+            }
+        } else {
+            deleteCb = createCollectionDeleter(context);
+        }
+
+        if (deleteCb != null) {
+            Query deleteQuery = deleteCb.getQuery();
+            ownerIdFlusher.flushQuery(context, null, deleteQuery, ownerView, view, ownerIdFlusher.getViewAttributeAccessor().getValue(ownerView), null);
+            deleteQuery.executeUpdate();
+            if (removedAll) {
+                return true;
+            }
+            processRemovedObjects(context, removedObjects);
+        }
+
+        // TODO: Think about allowing to use batching when we implement #657
+
+        return false;
+    }
+
+    protected void addElements(UpdateContext context, Object ownerView, Object view, Map<Object, Object> removedAllObjects, boolean flushAtOnce, V value, Map<Object, Object> embeddablesToUpdate, FusedMapActions fusedCollectionActions) {
+        Map<Object, Object> appends;
+        String mapping = getMapping();
+        if (fusedCollectionActions == null || !removedAllObjects.isEmpty()) {
+            appends = (Map<Object, Object>) value;
+            Iterator<Map.Entry<Object, Object>> iterator = removedAllObjects.entrySet().iterator();
+            List<Object> removeWrappers = null;
+            while (iterator.hasNext()) {
+                Map.Entry<Object, Object> entry = iterator.next();
+                Object currentValue = value.get(entry.getKey());
+                if (currentValue != null) {
+                    if (!currentValue.equals(entry.getValue())) {
+                        if (removeWrappers == null) {
+                            removeWrappers = new ArrayList<>();
+                        }
+                        removeWrappers.add(new FusedMapActions.RemoveWrapper(entry.getKey()));
+                    }
+                    iterator.remove();
+                }
+            }
+            if (removeWrappers != null) {
+                for (Object removeWrapper : removeWrappers) {
+                    removedAllObjects.put(removeWrapper, null);
+                }
+            }
+        } else {
+            Map<Object, Object> replaces = fusedCollectionActions.getReplaces();
+            if (replaces.size() != 0 || embeddablesToUpdate != null && !embeddablesToUpdate.isEmpty()) {
+                UpdateCriteriaBuilder<?> updateCb = context.getEntityViewManager().getCriteriaBuilderFactory().updateCollection(context.getEntityManager(), ownerEntityClass, "e", mapping);
+                updateCb.setExpression(mapping, ":element");
+                updateCb.setWhereExpression(ownerIdWhereFragment);
+                updateCb.where("KEY(" + mapping + ")").eqExpression(":key");
+                Query query = updateCb.getQuery();
+
+                if (replaces.size() != 0) {
+                    ownerIdFlusher.flushQuery(context, null, query, ownerView, view, ownerIdFlusher.getViewAttributeAccessor().getValue(ownerView), null);
+                    boolean checkTransient = elementDescriptor.isJpaEntity() && !elementDescriptor.shouldJpaPersist();
+                    ViewToEntityMapper keyViewToEntityMapper = keyDescriptor.getLoadOnlyViewToEntityMapper();
+                    ViewToEntityMapper valueViewToEntityMapper = elementDescriptor.getLoadOnlyViewToEntityMapper();
+                    for (Map.Entry<Object, Object> replace : replaces.entrySet()) {
+                        Object k = replace.getKey();
+                        Object v = replace.getValue();
+                        if (keyViewToEntityMapper == null) {
+                            if (checkTransient && keyDescriptor.getBasicUserType().shouldPersist(k)) {
+                                throw new IllegalStateException("Collection " + attributeName + " references an unsaved transient instance - save the transient instance before flushing: " + k);
+                            }
+                        } else {
+                            k = keyViewToEntityMapper.applyToEntity(context, null, k);
+                        }
+                        if (valueViewToEntityMapper == null) {
+                            if (checkTransient && elementDescriptor.getBasicUserType().shouldPersist(v)) {
+                                throw new IllegalStateException("Collection " + attributeName + " references an unsaved transient instance - save the transient instance before flushing: " + v);
+                            }
+                        } else {
+                            v = valueViewToEntityMapper.applyToEntity(context, null, v);
+                        }
+
+                        query.setParameter("key", k);
+                        query.setParameter("element", v);
+                        query.executeUpdate();
+                    }
+                }
+                if (embeddablesToUpdate != null && !embeddablesToUpdate.isEmpty()) {
+                    for (Map.Entry<Object, Object> entry : embeddablesToUpdate.entrySet()) {
+                        query.setParameter("key", entry.getKey());
+                        query.setParameter("element", entry.getValue());
+                        query.executeUpdate();
+                    }
+                }
+            }
+
+            appends = fusedCollectionActions.getAdded();
+        }
+
+        if (appends.size() > 0) {
+            InsertCriteriaBuilder<?> insertCb = context.getEntityViewManager().getCriteriaBuilderFactory().insertCollection(context.getEntityManager(), ownerEntityClass, mapping);
+
+            String keyEntityIdAttributeName = keyDescriptor.getEntityIdAttributeName();
+            if (keyEntityIdAttributeName == null) {
+                insertCb.fromValues((Class<Object>) keyDescriptor.getJpaType(), "key", 1);
+            } else {
+                insertCb.fromIdentifiableValues((Class<Object>) keyDescriptor.getJpaType(), "key", 1);
+            }
+
+            String entityIdAttributeName = elementDescriptor.getEntityIdAttributeName();
+            if (entityIdAttributeName == null) {
+                insertCb.fromValues((Class<Object>) elementDescriptor.getJpaType(), "val", 1);
+            } else {
+                insertCb.fromIdentifiableValues((Class<Object>) elementDescriptor.getJpaType(), "val", 1);
+            }
+            insertCb.bind("KEY(" + mapping + ")").select("key");
+            for (int i = 0; i < ownerIdBindFragments.length; i += 2) {
+                insertCb.bind(ownerIdBindFragments[i]).select(ownerIdBindFragments[i + 1]);
+            }
+            insertCb.bind(mapping).select("val");
+            Query query = insertCb.getQuery();
+            ownerIdFlusher.flushQuery(context, null, query, ownerView, view, ownerIdFlusher.getViewAttributeAccessor().getValue(ownerView), null);
+
+            // TODO: Use batching when we implement #657
+            Object[] singletonKeyArray = new Object[1];
+            Object[] singletonValueArray = new Object[1];
+            List<Object> singletonKeyList = Arrays.asList(singletonKeyArray);
+            List<Object> singletonValueList = Arrays.asList(singletonValueArray);
+            ViewToEntityMapper keyViewToEntityMapper = keyDescriptor.getLoadOnlyViewToEntityMapper();
+            ViewToEntityMapper valueViewToEntityMapper = elementDescriptor.getLoadOnlyViewToEntityMapper();
+            boolean checkTransient = elementDescriptor.isJpaEntity() && !elementDescriptor.shouldJpaPersist();
+            for (Map.Entry<Object, Object> entry : appends.entrySet()) {
+                Object k = entry.getKey();
+                Object v = entry.getValue();
+                if (k != null && v != null) {
+                    if (keyViewToEntityMapper == null) {
+                        if (checkTransient && keyDescriptor.getBasicUserType().shouldPersist(k)) {
+                            throw new IllegalStateException("Collection " + attributeName + " references an unsaved transient instance - save the transient instance before flushing: " + k);
+                        }
+                        singletonKeyArray[0] = k;
+                    } else {
+                        singletonKeyArray[0] = keyViewToEntityMapper.applyToEntity(context, null, k);
+                    }
+                    if (valueViewToEntityMapper == null) {
+                        if (checkTransient && elementDescriptor.getBasicUserType().shouldPersist(v)) {
+                            throw new IllegalStateException("Collection " + attributeName + " references an unsaved transient instance - save the transient instance before flushing: " + v);
+                        }
+                        singletonValueArray[0] = v;
+                    } else {
+                        singletonValueArray[0] = valueViewToEntityMapper.applyToEntity(context, null, v);
+                    }
+                    query.setParameter("key", singletonKeyList);
+                    query.setParameter("val", singletonValueList);
+                    query.executeUpdate();
+                }
+            }
+        }
+    }
+
+    protected void flushCollectionOperations(UpdateContext context, Object ownerView, Object view, V value, Map<Object, Object> embeddablesToUpdate, List<? extends MapAction<?>> collectionActions) {
+        FusedMapActions fusedCollectionActions = null;
+        // We can't selectively delete/add if duplicates are allowed. Bags always need to be recreated
+        if (canFlushSeparateCollectionOperations()) {
+            if (collectionActions.isEmpty()) {
+                if (embeddablesToUpdate != null) {
+                    addElements(context, ownerView, view, Collections.emptyMap(), true, value, embeddablesToUpdate, null);
+                }
+                return;
+            } else if (!(collectionActions.get(0) instanceof MapClearAction<?, ?, ?>)) {
+                // The replace action is handled specially
+                fusedCollectionActions = getFusedOperations(collectionActions);
+            }
+        }
+        flushCollectionOperations(context, ownerView, view, null, value, embeddablesToUpdate, fusedCollectionActions);
+    }
+
+    protected void flushCollectionOperations(UpdateContext context, Object ownerView, Object view, V initial, V value, Map<Object, Object> embeddablesToUpdate, FusedMapActions fusedCollectionActions) {
+        boolean removeSpecific = fusedCollectionActions != null && fusedCollectionActions.operationCount() < value.size() + 1;
+        Map<Object, Object> removedAllObjects;
+        if (deleteElements(context, ownerView, view, value, removeSpecific, fusedCollectionActions)) {
+            if (fusedCollectionActions == null) {
+                if (initial == null) {
+                    removedAllObjects = Collections.emptyMap();
+                } else {
+                    removedAllObjects = new IdentityHashMap<>(initial);
+                }
+            } else {
+                removedAllObjects = new IdentityHashMap<>(fusedCollectionActions.getRemoved());
+            }
+        } else {
+            removedAllObjects = Collections.emptyMap();
+        }
+        addElements(context, ownerView, view, removedAllObjects, true, value, embeddablesToUpdate, fusedCollectionActions);
+        processRemovedObjects(context, removedAllObjects);
+    }
+
+    private void processRemovedObjects(UpdateContext context, Map<Object, Object> removedObjects) {
+        if (keyRemoveListener != null || removeListener != null) {
+            for (Map.Entry<Object, Object> entry : removedObjects.entrySet()) {
+                if (keyRemoveListener != null && !(entry.getKey() instanceof FusedMapActions.RemoveWrapper)) {
+                    keyRemoveListener.onCollectionRemove(context, entry.getKey());
+                }
+                if (removeListener != null && entry.getValue() != null) {
+                    removeListener.onCollectionRemove(context, entry.getValue());
+                }
+            }
+        }
+    }
+
+    private Map<Object, Object> flushCollectionViewElements(UpdateContext context, V value) {
+        ViewToEntityMapper keyMapper = mapper.getKeyMapper();
+        ViewToEntityMapper valueMapper = mapper.getValueMapper();
+        final Iterator<Map.Entry<Object, Object>> iter = getRecordingIterator(value);
+        Map<Object, Object> embeddables = null;
+        if ((!keyDescriptor.isIdentifiable() || !elementDescriptor.isIdentifiable()) && mapping != null) {
+            embeddables = new LinkedHashMap<>();
+        }
+        try {
+            while (iter.hasNext()) {
+                Map.Entry<Object, Object> entry = iter.next();
+                Object k = entry.getKey();
+                Object v = entry.getValue();
+
+                Object newKey = k;
+                if (keyMapper != null) {
+                    newKey = keyMapper.applyToEntity(context, null, k);
+                }
+                Object newValue = v;
+                if (valueMapper != null) {
+                    newValue = valueMapper.applyToEntity(context, null, v);
+                }
+                if (embeddables != null) {
+                    // Only query flushing of an element collection can bring us here
+                    embeddables.put(newKey, newValue);
+                }
+            }
+        } finally {
+            resetRecordingIterator(value);
+        }
+        return embeddables;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public boolean flushEntity(UpdateContext context, E entity, Object ownerView, Object view, V value, Runnable postReplaceListener) {
+        if (flushOperation != null) {
+            value = replaceWithRecordingCollection(context, view, value, collectionActions);
+            invokeFlushOperation(context, ownerView, view, entity, value);
             return true;
         }
         if (collectionUpdatable) {
@@ -247,25 +648,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                             || elementDescriptor.isSubview() && elementDescriptor.shouldFlushMutations() && elementDescriptor.isIdentifiable()
                             && (!keyDescriptor.isSubview() || !keyDescriptor.shouldFlushMutations() || keyDescriptor.isIdentifiable())) {
                         // Prevent entering this fast path when any of the two types would require a flush but isn't identifiable
-                        ViewToEntityMapper keyMapper = mapper.getKeyMapper();
-                        ViewToEntityMapper valueMapper = mapper.getValueMapper();
-                        final Iterator<Map.Entry<Object, Object>> iter = getRecordingIterator(value);
-                        try {
-                            while (iter.hasNext()) {
-                                Map.Entry<Object, Object> entry = iter.next();
-                                Object k = entry.getKey();
-                                Object v = entry.getValue();
-
-                                if (keyMapper != null) {
-                                    keyMapper.applyToEntity(context, null, k);
-                                }
-                                if (valueMapper != null) {
-                                    valueMapper.applyToEntity(context, null, v);
-                                }
-                            }
-                        } finally {
-                            resetRecordingIterator(value);
-                        }
+                        flushCollectionViewElements(context, value);
                         wasDirty = true;
                     } else {
                         if (fetch && elementDescriptor.supportsDeepEqualityCheck() && entityAttributeMapper != null) {
@@ -303,21 +686,22 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                         }
                     }
                 }
-                if (!replace && entityAttributeMapper != null) {
-                    Map<?, ?> map = (Map<?, ?>) entityAttributeMapper.getValue(entity);
-                    if (map == null) {
-                        replace = true;
-                    } else {
+                if (!replace) {
+                    if (entityAttributeMapper == null) {
+                        // When having a correlated attribute, we consider is being dirty when it changed
                         wasDirty |= recordingMap.hasActions();
-                        recordingMap.replay(map, context, loadOnlyMapper, keyRemoveListener, removeListener);
+                    } else {
+                        Map<?, ?> map = (Map<?, ?>) entityAttributeMapper.getValue(entity);
+                        if (map == null) {
+                            replace = true;
+                        } else {
+                            wasDirty |= recordingMap.hasActions();
+                            recordingMap.replay(map, context, loadOnlyMapper, keyRemoveListener, removeListener);
+                        }
                     }
                 }
             } else {
-                actions = new ArrayList<>();
-                actions.add(new MapClearAction());
-                if (value != null && !value.isEmpty()) {
-                    actions.add(new MapPutAllAction(value, Collections.emptyMap()));
-                }
+                actions = replaceActions(value);
                 value = replaceWithRecordingCollection(context, view, value, actions);
 
                 if (fetch) {
@@ -335,25 +719,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                                 wasDirty |= mergeAndRequeue(context, null, (Map<Object, Object>) value);
                             } else if (keyDescriptor.isSubview() || elementDescriptor.isSubview()) {
                                 if (elementDescriptor.isIdentifiable()) {
-                                    ViewToEntityMapper keyMapper = mapper.getKeyMapper();
-                                    ViewToEntityMapper valueMapper = mapper.getValueMapper();
-                                    final Iterator<Map.Entry<Object, Object>> iter = getRecordingIterator(value);
-                                    try {
-                                        while (iter.hasNext()) {
-                                            Map.Entry<Object, Object> entry = iter.next();
-                                            Object k = entry.getKey();
-                                            Object v = entry.getValue();
-
-                                            if (keyMapper != null) {
-                                                keyMapper.applyToEntity(context, null, k);
-                                            }
-                                            if (valueMapper != null) {
-                                                valueMapper.applyToEntity(context, null, v);
-                                            }
-                                        }
-                                    } finally {
-                                        resetRecordingIterator(value);
-                                    }
+                                    flushCollectionViewElements(context, value);
                                     wasDirty = true;
                                 } else {
                                     replace = true;
@@ -367,25 +733,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                                 wasDirty |= mergeAndRequeue(context, null, (Map<Object, Object>) value);
                             } else if (elementDescriptor.isSubview()) {
                                 if (elementDescriptor.isIdentifiable()) {
-                                    ViewToEntityMapper keyMapper = mapper.getKeyMapper();
-                                    ViewToEntityMapper valueMapper = mapper.getValueMapper();
-                                    final Iterator<Map.Entry<Object, Object>> iter = getRecordingIterator(value);
-                                    try {
-                                        while (iter.hasNext()) {
-                                            Map.Entry<Object, Object> entry = iter.next();
-                                            Object k = entry.getKey();
-                                            Object v = entry.getValue();
-
-                                            if (keyMapper != null) {
-                                                keyMapper.applyToEntity(context, null, k);
-                                            }
-                                            if (valueMapper != null) {
-                                                valueMapper.applyToEntity(context, null, v);
-                                            }
-                                        }
-                                    } finally {
-                                        resetRecordingIterator(value);
-                                    }
+                                    flushCollectionViewElements(context, value);
                                 }
                             } else if (!elementDescriptor.supportsDeepEqualityCheck()) {
                                 replace = true;
@@ -397,24 +745,29 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                         }
                     }
 
-                    if (!replace && entityAttributeMapper != null) {
-                        // When we know the collection was fetched, we can try to "merge" the changes into the JPA collection
-                        // If either of the collections is empty, we simply do the replace logic
-                        Map<Object, Object> jpaCollection = (Map<Object, Object>) entityAttributeMapper.getValue(entity);
-                        if (jpaCollection == null || jpaCollection.isEmpty()) {
-                            replace = true;
+                    if (!replace) {
+                        if (entityAttributeMapper == null) {
+                            // When having a correlated attribute, we consider is being dirty when it changed
+                            wasDirty = true;
                         } else {
-                            actions = determineJpaCollectionActions(context, (V) jpaCollection, value, elementEqualityChecker);
-
-                            if (actions.size() > value.size()) {
-                                // More collection actions means more statements are issued
-                                // We'd rather replace in such a case
+                            // When we know the collection was fetched, we can try to "merge" the changes into the JPA collection
+                            // If either of the collections is empty, we simply do the replace logic
+                            Map<Object, Object> jpaCollection = (Map<Object, Object>) entityAttributeMapper.getValue(entity);
+                            if (jpaCollection == null || jpaCollection.isEmpty()) {
                                 replace = true;
                             } else {
-                                for (MapAction<Map<Object, Object>> action : actions) {
-                                    action.doAction(jpaCollection, context, loadOnlyMapper, keyRemoveListener, removeListener);
+                                actions = determineJpaCollectionActions(context, (V) jpaCollection, value, elementEqualityChecker);
+
+                                if (actions.size() > value.size()) {
+                                    // More collection actions means more statements are issued
+                                    // We'd rather replace in such a case
+                                    replace = true;
+                                } else {
+                                    for (MapAction<Map<Object, Object>> action : actions) {
+                                        action.doAction(jpaCollection, context, loadOnlyMapper, keyRemoveListener, removeListener);
+                                    }
+                                    wasDirty |= !actions.isEmpty();
                                 }
-                                wasDirty |= !actions.isEmpty();
                             }
                         }
                     }
@@ -424,15 +777,15 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
             }
 
             if (replace) {
-                replaceCollection(context, entity, value);
+                replaceCollection(context, ownerView, view, entity, value, FlushStrategy.ENTITY);
                 return true;
             }
             return wasDirty;
         } else if (keyDescriptor.shouldFlushMutations() || elementDescriptor.shouldFlushMutations()) {
-            return mergeCollectionElements(context, view, entity, value);
+            return mergeCollectionElements(context, ownerView, view, entity, value);
         } else {
             // Only pass through is possible here
-            replaceCollection(context, entity, value);
+            replaceCollection(context, ownerView, view, entity, value, FlushStrategy.ENTITY);
             return true;
         }
     }
@@ -453,6 +806,15 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
         if (value instanceof RecordingMap<?, ?, ?> && (mapper.getKeyMapper() != null || mapper.getValueMapper() != null)) {
             ((RecordingMap<?, ?, ?>) value).resetRecordingIterator();
         }
+    }
+
+    protected List<MapAction<Map<Object, Object>>> replaceActions(V value) {
+        List<MapAction<Map<Object, Object>>> actions = new ArrayList<>();
+        actions.add(new MapClearAction());
+        if (value != null && !value.isEmpty()) {
+            actions.add(new MapPutAllAction(value, Collections.emptyMap()));
+        }
+        return actions;
     }
 
     @Override
@@ -601,6 +963,11 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
     }
 
     @Override
+    protected boolean canFlushSeparateCollectionOperations() {
+        return true;
+    }
+
+    @Override
     public boolean requiresDeleteCascadeAfterRemove() {
         return false;
     }
@@ -664,15 +1031,15 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
     }
 
     @Override
-    protected boolean mergeCollectionElements(UpdateContext context, Object view, E entity, V value) {
+    protected boolean mergeCollectionElements(UpdateContext context, Object ownerView, Object view, E entity, V value) {
         if (elementFlushers != null) {
             if (flushStrategy == FlushStrategy.ENTITY) {
                 for (CollectionElementAttributeFlusher<E, V> elementFlusher : elementFlushers) {
-                    elementFlusher.flushEntity(context, entity, view, value, null);
+                    elementFlusher.flushEntity(context, entity, ownerView, view, value, null);
                 }
             } else {
                 for (CollectionElementAttributeFlusher<E, V> elementFlusher : elementFlushers) {
-                    elementFlusher.flushQuery(context, null, null, view, value, null);
+                    elementFlusher.flushQuery(context, null, null, ownerView, view, value, null);
                 }
             }
             return !elementFlushers.isEmpty();
@@ -729,34 +1096,51 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
     }
 
     @Override
-    protected void replaceCollection(UpdateContext context, E entity, V value) {
-        if (entityAttributeMapper != null) {
-            if (keyDescriptor.isSubview() || elementDescriptor.isSubview()) {
-                Map<Object, Object> newMap = (Map<Object, Object>) createJpaMap(value.size());
-                ViewToEntityMapper keyMapper = mapper.getKeyMapper();
-                ViewToEntityMapper valueMapper = mapper.getValueMapper();
-                final Iterator<Map.Entry<Object, Object>> iter = getRecordingIterator(value);
-                try {
-                    while (iter.hasNext()) {
-                        Map.Entry<Object, Object> entry = iter.next();
-                        Object k = entry.getKey();
-                        Object v = entry.getValue();
-
-                        if (keyMapper != null) {
-                            k = keyMapper.applyToEntity(context, null, k);
-                        }
-                        if (valueMapper != null) {
-                            v = valueMapper.applyToEntity(context, null, v);
-                        }
-
-                        newMap.put(k, v);
-                    }
-                } finally {
-                    resetRecordingIterator(value);
-                }
-                entityAttributeMapper.setValue(entity, newMap);
+    protected void replaceCollection(UpdateContext context, Object ownerView, Object view, E entity, V value, FlushStrategy flushStrategy) {
+        if (flushStrategy == FlushStrategy.QUERY) {
+            Map<Object, Object> removedAllObjects;
+            if (deleteElements(context, ownerView, view, value, false, null)) {
+                // TODO: We should load the initial value
+                removedAllObjects = Collections.emptyMap();
             } else {
-                entityAttributeMapper.setValue(entity, value);
+                removedAllObjects = Collections.emptyMap();
+            }
+            addElements(context, ownerView, view, removedAllObjects, true, value, null, null);
+            processRemovedObjects(context, removedAllObjects);
+        } else {
+            if (entityAttributeMapper != null) {
+                if (keyDescriptor.isSubview() || elementDescriptor.isSubview()) {
+                    Map<Object, Object> newMap;
+                    if (value == null) {
+                        newMap = (Map<Object, Object>) createJpaMap(0);
+                    } else {
+                        newMap = (Map<Object, Object>) createJpaMap(value.size());
+                        ViewToEntityMapper keyMapper = mapper.getKeyMapper();
+                        ViewToEntityMapper valueMapper = mapper.getValueMapper();
+                        final Iterator<Map.Entry<Object, Object>> iter = getRecordingIterator(value);
+                        try {
+                            while (iter.hasNext()) {
+                                Map.Entry<Object, Object> entry = iter.next();
+                                Object k = entry.getKey();
+                                Object v = entry.getValue();
+
+                                if (keyMapper != null) {
+                                    k = keyMapper.applyToEntity(context, null, k);
+                                }
+                                if (valueMapper != null) {
+                                    v = valueMapper.applyToEntity(context, null, v);
+                                }
+
+                                newMap.put(k, v);
+                            }
+                        } finally {
+                            resetRecordingIterator(value);
+                        }
+                    }
+                    entityAttributeMapper.setValue(entity, newMap);
+                } else {
+                    entityAttributeMapper.setValue(entity, value);
+                }
             }
         }
     }
@@ -959,6 +1343,9 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                     }
                     return partialFlusher(false, PluralFlushOperation.COLLECTION_REPLACE_ONLY, Collections.EMPTY_LIST, Collections.<CollectionElementAttributeFlusher<E, V>>emptyList());
                 }
+                if (initial instanceof RecordingCollection<?, ?>) {
+                    initial = ((RecordingCollection<?, ?>) initial).getInitialVersion();
+                }
 
                 if (keyDescriptor.shouldFlushMutations()) {
                     if (keyDescriptor.supportsDirtyCheck()) {
@@ -968,10 +1355,43 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                             if (elementDescriptor.supportsDirtyCheck()) {
                                 // Check elements for dirtyness
                                 return determineDirtyFlusherForNewCollection(context, (V) initial, (V) current);
-                            } else if (elementDescriptor.supportsDeepEqualityCheck() || elementDescriptor.isJpaEntity()) {
-                                // If we can determine equality, we fetch and merge the elements
-                                // We also fetch if we have entities since we assume map rarely change drastically
-                                return this;
+                            } else if (elementDescriptor.supportsDeepEqualityCheck()) {
+                                if (canFlushSeparateCollectionOperations() && elementDescriptor.getBasicUserType() != null && elementDescriptor.getBasicUserType().supportsDeepCloning()) {
+                                    // If we can determine equality, we fetch and merge or replace the elements
+                                    EqualityChecker equalityChecker;
+                                    if (elementDescriptor.isSubview()) {
+                                        equalityChecker = EqualsEqualityChecker.INSTANCE;
+                                    } else {
+                                        equalityChecker = new IdentityEqualityChecker(elementDescriptor.getBasicUserType());
+                                    }
+                                    List<MapAction<Map<Object, Object>>> actions;
+                                    if (initial == null) {
+                                        actions = replaceActions((V) current);
+                                    } else {
+                                        actions = determineCollectionActions(context, (V) initial, (V) current, equalityChecker);
+                                    }
+                                    if (actions.isEmpty()) {
+                                        return null;
+                                    }
+                                    return partialFlusher(true, PluralFlushOperation.COLLECTION_REPLAY_ONLY, actions, Collections.<CollectionElementAttributeFlusher<E, V>>emptyList());
+                                } else {
+                                    return this;
+                                }
+                            } else if (elementDescriptor.isJpaEntity()) {
+                                // When we have a JPA entity, we fetch everything
+                                EqualityChecker equalityChecker;
+                                if (elementDescriptor.isSubview()) {
+                                    equalityChecker = EqualsEqualityChecker.INSTANCE;
+                                } else {
+                                    equalityChecker = new IdentityEqualityChecker(elementDescriptor.getBasicUserType());
+                                }
+                                List<MapAction<Map<Object, Object>>> actions;
+                                if (initial == null) {
+                                    actions = replaceActions((V) current);
+                                } else {
+                                    actions = determineCollectionActions(context, (V) initial, (V) current, equalityChecker);
+                                }
+                                return partialFlusher(true, PluralFlushOperation.COLLECTION_REPLAY_AND_ELEMENT, actions, getElementFlushers(context, (V) current, actions));
                             } else {
                                 // Always reset the actions as that indicates changes
                                 if (current instanceof RecordingMap<?, ?, ?>) {
@@ -1001,10 +1421,43 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                     if (elementDescriptor.supportsDirtyCheck()) {
                         // Check elements for dirtyness
                         return determineDirtyFlusherForNewCollection(context, (V) initial, (V) current);
-                    } else if (elementDescriptor.supportsDeepEqualityCheck() || elementDescriptor.isJpaEntity()) {
-                        // If we can determine equality, we fetch and merge the elements
-                        // We also fetch if we have entities since we assume map rarely change drastically
-                        return this;
+                    } else if (elementDescriptor.supportsDeepEqualityCheck()) {
+                        if (canFlushSeparateCollectionOperations() && elementDescriptor.getBasicUserType() != null && elementDescriptor.getBasicUserType().supportsDeepCloning()) {
+                            // If we can determine equality, we fetch and merge or replace the elements
+                            EqualityChecker equalityChecker;
+                            if (elementDescriptor.isSubview()) {
+                                equalityChecker = EqualsEqualityChecker.INSTANCE;
+                            } else {
+                                equalityChecker = new IdentityEqualityChecker(elementDescriptor.getBasicUserType());
+                            }
+                            List<MapAction<Map<Object, Object>>> actions;
+                            if (initial == null) {
+                                actions = replaceActions((V) current);
+                            } else {
+                                actions = determineCollectionActions(context, (V) initial, (V) current, equalityChecker);
+                            }
+                            if (actions.isEmpty()) {
+                                return null;
+                            }
+                            return partialFlusher(true, PluralFlushOperation.COLLECTION_REPLAY_ONLY, actions, Collections.<CollectionElementAttributeFlusher<E, V>>emptyList());
+                        } else {
+                            return this;
+                        }
+                    } else if (elementDescriptor.isJpaEntity()) {
+                        // When we have a JPA entity, we fetch everything
+                        EqualityChecker equalityChecker;
+                        if (elementDescriptor.isSubview()) {
+                            equalityChecker = EqualsEqualityChecker.INSTANCE;
+                        } else {
+                            equalityChecker = new IdentityEqualityChecker(elementDescriptor.getBasicUserType());
+                        }
+                        List<MapAction<Map<Object, Object>>> actions;
+                        if (initial == null) {
+                            actions = replaceActions((V) current);
+                        } else {
+                            actions = determineCollectionActions(context, (V) initial, (V) current, equalityChecker);
+                        }
+                        return partialFlusher(true, PluralFlushOperation.COLLECTION_REPLAY_AND_ELEMENT, actions, getElementFlushers(context, (V) current, actions));
                     } else {
                         // Always reset the actions as that indicates changes
                         if (current instanceof RecordingMap<?, ?, ?>) {
@@ -1021,6 +1474,10 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                 if (initial == null || !(initial instanceof RecordingMap<?, ?, ?>) && ((Map<?, ?>) initial).isEmpty()) {
                     return null;
                 }
+                if (current instanceof RecordingMap<?, ?, ?> && !((RecordingMap<?, ?, ?>) current).hasActions() && ((RecordingMap<?, ?, ?>) current).isEmpty()) {
+                    // But skip doing anything if the collections kept being empty
+                    return null;
+                }
 
                 if (keyDescriptor.shouldFlushMutations()) {
                     if (keyDescriptor.supportsDirtyCheck()) {
@@ -1034,13 +1491,14 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                                 }
                             } else if (elementDescriptor.supportsDeepEqualityCheck() || elementDescriptor.isJpaEntity()) {
                                 // If we can determine equality, we fetch and merge the elements
-                                // We also fetch if we have entities since we assume map rarely change drastically
-                                if (current instanceof RecordingMap<?, ?, ?> && !((RecordingMap<?, ?, ?>) current).hasActions() && ((RecordingMap<?, ?, ?>) current).isEmpty()) {
-                                    // But skip doing anything if the collections kept being empty
-                                    return null;
-                                } else {
-                                    return this;
+                                // We also fetch if we have entities since we assume map rarely change drastically else {
+                                if (current instanceof RecordingMap<?, ?, ?>) {
+                                    List<? extends MapAction<?>> actions = ((RecordingMap<?, ?, ?>) current).resetActions(context);
+                                    if (elementDescriptor.isIdentifiable()) {
+                                        return partialFlusher(true, PluralFlushOperation.COLLECTION_REPLAY_AND_ELEMENT, actions, getElementFlushers(context, (V) current, actions));
+                                    }
                                 }
+                                return this;
                             } else {
                                 // Always reset the actions as that indicates changes
                                 if (current instanceof RecordingMap<?, ?, ?>) {
@@ -1074,12 +1532,13 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                         } else if (elementDescriptor.supportsDeepEqualityCheck() || elementDescriptor.isJpaEntity()) {
                             // If we can determine equality, we fetch and merge the elements
                             // We also fetch if we have entities since we assume map rarely change drastically
-                            if (current instanceof RecordingMap<?, ?, ?> && !((RecordingMap<?, ?, ?>) current).hasActions() && ((RecordingMap<?, ?, ?>) current).isEmpty()) {
-                                // But skip doing anything if the collections kept being empty
-                                return null;
-                            } else {
-                                return this;
+                            if (current instanceof RecordingMap<?, ?, ?>) {
+                                List<? extends MapAction<?>> actions = ((RecordingMap<?, ?, ?>) current).resetActions(context);
+                                if (elementDescriptor.isIdentifiable()) {
+                                    return partialFlusher(true, PluralFlushOperation.COLLECTION_REPLAY_AND_ELEMENT, actions, getElementFlushers(context, (V) current, actions));
+                                }
                             }
+                            return this;
                         } else {
                             // Always reset the actions as that indicates changes
                             if (current instanceof RecordingMap<?, ?, ?>) {
@@ -1098,7 +1557,6 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                         }
                     }
                 }
-
             }
         } else {
             // Not updatable
@@ -1130,7 +1588,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
         List<MapAction<Map<Object, Object>>> collectionActions = determineCollectionActions(context, initial, current, equalityChecker);
 
         // If nothing changed in the collection and no changes should be flushed, we are done
-        if (collectionActions.size() == 0 && !keyDescriptor.shouldFlushMutations() && !elementDescriptor.shouldFlushMutations()) {
+        if (collectionActions.size() == 0 && (!keyDescriptor.shouldFlushMutations() || keyDescriptor.supportsDirtyCheck()) && (!elementDescriptor.shouldFlushMutations() || elementDescriptor.supportsDirtyCheck())) {
             // Always reset the actions as that indicates changes
             if (current instanceof RecordingMap<?, ?, ?>) {
                 ((RecordingMap<?, ?, ?>) current).resetActions(context);
@@ -1158,7 +1616,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
             }
             // If we determine possible collection actions, we try to apply them, but if not
             if (elementDescriptor.shouldFlushMutations()) {
-                List<CollectionElementAttributeFlusher<E, V>> elementFlushers = getElementFlushers(context, current);
+                List<CollectionElementAttributeFlusher<E, V>> elementFlushers = getElementFlushers(context, current, collectionActions);
                 // A "null" element flusher list is given when a fetch and compare is more appropriate
                 if (elementFlushers == null) {
                     return this;
@@ -1307,12 +1765,26 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
     }
 
     @Override
-    protected final List<CollectionElementAttributeFlusher<E, V>> getElementFlushers(UpdateContext context, V current) {
+    protected CollectionElementAttributeFlusher<E, V> createPersistFlusher(TypeDescriptor typeDescriptor, Object element) {
+        return new PersistCollectionElementAttributeFlusher<E, V>(element, optimisticLockProtected);
+    }
+
+    @Override
+    protected CollectionElementAttributeFlusher<E, V> createMergeFlusher(TypeDescriptor typeDescriptor, Object element) {
+        if (typeDescriptor == keyDescriptor) {
+            return new MergeMapKeyAttributeFlusher<>(element, optimisticLockProtected);
+        } else {
+            return new MergeMapValueAttributeFlusher<E, V>(element, optimisticLockProtected);
+        }
+    }
+
+    @Override
+    protected List<CollectionElementAttributeFlusher<E, V>> getElementFlushers(UpdateContext context, V current, List<? extends MapAction<?>> actions) {
         List<CollectionElementAttributeFlusher<E, V>> elementFlushers = new ArrayList<>();
-        if (determineElementFlushers(context, keyDescriptor, elementFlushers, current.keySet())) {
+        if (determineElementFlushers(context, keyDescriptor, elementFlushers, current.keySet(), actions, current)) {
             return null;
         }
-        if (determineElementFlushers(context, elementDescriptor, elementFlushers, current.values())) {
+        if (determineElementFlushers(context, elementDescriptor, elementFlushers, current.values(), actions, current)) {
             return null;
         }
 
@@ -1335,19 +1807,23 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
     @Override
     protected DirtyAttributeFlusher<MapAttributeFlusher<E, V>, E, V> getDirtyFlusherForRecordingCollection(UpdateContext context, V initial, RecordingMap<?, ?, ?> collection) {
         if (collection.hasActions()) {
-            if (keyDescriptor.shouldFlushMutations() || elementDescriptor.shouldFlushMutations()) {
+            List<? extends MapAction<?>> actions = collection.resetActions(context);
+            if (keyDescriptor.shouldFlushMutations() && !keyDescriptor.isIdentifiable()) {
+                // When having non-identifiable mutable keys we can only replace
+                return this;
+            } else if (elementDescriptor.shouldFlushMutations()) {
                 // When no mapper is given, we have basic types so we need to fetch and merge accordingly
-                if (keyDescriptor.isBasic() || elementDescriptor.isBasic()) {
+                if (elementDescriptor.isBasic()) {
                     return this;
                 }
-                List<CollectionElementAttributeFlusher<E, V>> elementFlushers = getElementFlushers(context, (V) collection);
+                List<CollectionElementAttributeFlusher<E, V>> elementFlushers = getElementFlushers(context, (V) collection, actions);
                 // A "null" element flusher list is given when a fetch and compare is more appropriate
                 if (elementFlushers == null) {
                     return this;
                 }
-                return getReplayAndElementFlusher(context, initial, (V) collection, collection.resetActions(context), elementFlushers);
+                return getReplayAndElementFlusher(context, initial, (V) collection, actions, elementFlushers);
             } else {
-                return getReplayOnlyFlusher(context, initial, (V) collection, collection.resetActions(context));
+                return getReplayOnlyFlusher(context, initial, (V) collection, actions);
             }
         }
 
@@ -1363,6 +1839,11 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
 
         // No outstanding actions and elements are not mutable, so we are done here
         return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    protected FusedMapActions getFusedOperations(List<? extends MapAction<?>> collectionActions) {
+        return new FusedMapActions(keyDescriptor.getLoadOnlyViewToEntityMapper(), collectionActions);
     }
 
 }

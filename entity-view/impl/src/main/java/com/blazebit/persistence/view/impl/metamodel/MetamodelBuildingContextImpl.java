@@ -83,6 +83,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
     private final Map<Class<?>, ViewMapping> viewMappings;
     private final Set<String> errors;
 
+    private final boolean disallowOwnedUpdatableSubview;
     private final FlushMode flushModeOverride;
     private final Map<String, FlushMode> flushModeOverrides;
     private final FlushStrategy flushStrategyOverride;
@@ -98,6 +99,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
         this.proxyFactory = proxyFactory;
         this.viewMappings = viewMappings;
         this.errors = errors;
+        this.disallowOwnedUpdatableSubview = "true".equals(properties.getProperty(ConfigurationProperties.UPDATER_DISALLOW_OWNED_UPDATABLE_SUBVIEW));
         this.flushModeOverride = getFlushMode(properties.getProperty(ConfigurationProperties.UPDATER_FLUSH_MODE), "global property '" + ConfigurationProperties.UPDATER_FLUSH_MODE + "'");
         this.flushModeOverrides = getFlushModeOverrides(properties);
         this.flushStrategyOverride = getFlushStrategy(properties.getProperty(ConfigurationProperties.UPDATER_FLUSH_STRATEGY), "global property '" + ConfigurationProperties.UPDATER_FLUSH_STRATEGY + "'");
@@ -384,6 +386,11 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
         macros.put("embedding_view", new JpqlMacroAdapter(new TypeValidationEmbeddingViewJpqlMacro(), cachingExpressionFactory));
         MacroConfiguration macroConfiguration = originalMacroConfiguration.with(macros);
         return new MacroConfigurationExpressionFactory(cachingExpressionFactory, macroConfiguration);
+    }
+
+    @Override
+    public boolean isDisallowOwnedUpdatableSubview() {
+        return disallowOwnedUpdatableSubview;
     }
 
     @Override

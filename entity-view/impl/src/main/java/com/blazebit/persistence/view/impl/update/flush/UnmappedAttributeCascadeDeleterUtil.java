@@ -38,7 +38,7 @@ public class UnmappedAttributeCascadeDeleterUtil {
     public static List<UnmappedAttributeCascadeDeleter> createUnmappedCascadeDeleters(EntityViewManagerImpl evm, Class<?> entityClass, String ownerIdAttributeName) {
         EntityMetamodel entityMetamodel = evm.getMetamodel().getEntityMetamodel();
         ExtendedManagedType<?> extendedManagedType = entityMetamodel.getManagedType(ExtendedManagedType.class, entityClass);
-        Map<String, ? extends ExtendedAttribute<?, ?>> attributes = extendedManagedType.getAttributes();
+        Map<String, ? extends ExtendedAttribute<?, ?>> attributes = extendedManagedType.getOwnedAttributes();
         List<UnmappedAttributeCascadeDeleter> deleters = new ArrayList<>(attributes.size());
 
         for (Map.Entry<String, ? extends ExtendedAttribute<?, ?>> entry : attributes.entrySet()) {

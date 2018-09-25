@@ -249,7 +249,7 @@ public class SubqueryTest extends AbstractCoreTest {
                 .from("d.people")
                 .where("partnerDocument").eqExpression("d")
                 .end();
-        String expectedQuery = "SELECT d FROM Document d WHERE d.owner IN (SELECT person FROM d.people person WHERE person.partnerDocument = d)";
+        String expectedQuery = "SELECT d FROM Document d WHERE d.owner IN (SELECT person FROM " + correlationPath(Document.class, "d.people", "person", "id = d.id AND", " WHERE") + " person.partnerDocument = d)";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }
@@ -262,7 +262,19 @@ public class SubqueryTest extends AbstractCoreTest {
                 .from("OUTER(people)")
                 .where("partnerDocument").eqExpression("d")
                 .end();
-        String expectedQuery = "SELECT d FROM Document d WHERE d.owner IN (SELECT person FROM d.people person WHERE person.partnerDocument = d)";
+        String peopleCorrelation = correlationPath(Document.class, "d.people", "person", "id = d.id");
+        String where = " WHERE ";
+        String peopleCorrelationWhere = "";
+        int idx;
+        if ((idx = peopleCorrelation.indexOf(where)) != -1) {
+            peopleCorrelationWhere = peopleCorrelation.substring(idx + where.length());
+            peopleCorrelation = peopleCorrelation.substring(0, idx);
+        }
+        String expectedQuery = "SELECT d FROM Document d WHERE d.owner IN (SELECT person FROM " + peopleCorrelation + " WHERE ";
+        if (!peopleCorrelationWhere.isEmpty()) {
+            expectedQuery += peopleCorrelationWhere + " AND ";
+        }
+        expectedQuery += "person.partnerDocument = d)";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }
@@ -282,7 +294,19 @@ public class SubqueryTest extends AbstractCoreTest {
                 .from("TEST(people)")
                 .where("partnerDocument").eqExpression("d")
                 .end();
-        String expectedQuery = "SELECT d FROM Document d WHERE d.owner IN (SELECT person FROM d.people person WHERE person.partnerDocument = d)";
+        String peopleCorrelation = correlationPath(Document.class, "d.people", "person", "id = d.id");
+        String where = " WHERE ";
+        String peopleCorrelationWhere = "";
+        int idx;
+        if ((idx = peopleCorrelation.indexOf(where)) != -1) {
+            peopleCorrelationWhere = peopleCorrelation.substring(idx + where.length());
+            peopleCorrelation = peopleCorrelation.substring(0, idx);
+        }
+        String expectedQuery = "SELECT d FROM Document d WHERE d.owner IN (SELECT person FROM " + peopleCorrelation + " WHERE ";
+        if (!peopleCorrelationWhere.isEmpty()) {
+            expectedQuery += peopleCorrelationWhere + " AND ";
+        }
+        expectedQuery += "person.partnerDocument = d)";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }
@@ -294,7 +318,18 @@ public class SubqueryTest extends AbstractCoreTest {
                     .from("d.owner.ownedDocuments", "dSub")
                     .where("dSub").notEqExpression("d")
                 .end();
-        String expectedQuery = "SELECT d FROM Document d JOIN d.owner owner_1 WHERE EXISTS (SELECT 1 FROM owner_1.ownedDocuments dSub WHERE dSub <> d)";
+        String correlationPath = correlationPath("owner_1.ownedDocuments", Document.class, "dSub", "owner.id = owner_1.id");
+        String correlationPathWhere = "";
+        int idx;
+        if ((idx = correlationPath.indexOf(" WHERE ")) != -1) {
+            correlationPathWhere = correlationPath.substring(idx + " WHERE ".length());
+            correlationPath = correlationPath.substring(0, idx);
+        }
+        String expectedQuery = "SELECT d FROM Document d JOIN d.owner owner_1 WHERE EXISTS (SELECT 1 FROM " + correlationPath + " WHERE ";
+        if (!correlationPathWhere.isEmpty()) {
+            expectedQuery += correlationPathWhere + " AND ";
+        }
+        expectedQuery += "dSub <> d)";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }
@@ -314,14 +349,35 @@ public class SubqueryTest extends AbstractCoreTest {
                 .leftJoin("person.partnerDocument", "personDoc")
                 .where("contactDoc").eqExpression("d")
                 .end();
+        String peopleCorrelation = correlationPath(Document.class, "d.people", "person", "id = d.id");
+        String partnersCorrelation = correlationPath("d.partners", Person.class, "partner", "partnerDocument.id = d.id");
+        String where = " WHERE ";
+        String peopleCorrelationWhere = "";
+        String partnersCorrelationWhere = "";
+        int idx;
+        if ((idx = peopleCorrelation.indexOf(where)) != -1) {
+            peopleCorrelationWhere = peopleCorrelation.substring(idx + where.length());
+            peopleCorrelation = peopleCorrelation.substring(0, idx);
+        }
+        if ((idx = partnersCorrelation.indexOf(where)) != -1) {
+            partnersCorrelationWhere = partnersCorrelation.substring(idx + where.length());
+            partnersCorrelation = partnersCorrelation.substring(0, idx);
+        }
         String expectedQuery = "SELECT d FROM Document d WHERE d.owner IN (SELECT " + joinAliasValue("contact") + " " +
-                "FROM d.people person " +
-                "LEFT JOIN person.partnerDocument personDoc, " +
-                "d.partners partner " +
-                "LEFT JOIN partner.partnerDocument partnerDoc, " +
+                "FROM " + peopleCorrelation +
+                " LEFT JOIN person.partnerDocument personDoc, " +
+                partnersCorrelation +
+                " LEFT JOIN partner.partnerDocument partnerDoc, " +
                 "d.contacts contact " +
                 "LEFT JOIN contact.partnerDocument contactDoc " +
-                "WHERE contactDoc = d)";
+                "WHERE ";
+        if (!peopleCorrelationWhere.isEmpty()) {
+            expectedQuery += peopleCorrelationWhere + " AND ";
+        }
+        if (!partnersCorrelationWhere.isEmpty()) {
+            expectedQuery += partnersCorrelationWhere + " AND ";
+        }
+        expectedQuery += "contactDoc = d)";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }
@@ -449,10 +505,18 @@ public class SubqueryTest extends AbstractCoreTest {
                 .where("LENGTH(localized[1])").gt(1)
         .end();
 
+        String p = correlationPath("d.partners", Person.class, "p", "partnerDocument.id = d.id");
+        String wherePart = " WHERE ";
+        int whereIndex = p.indexOf(wherePart);
+        if (whereIndex != -1) {
+            wherePart += p.substring(whereIndex + wherePart.length()) + " AND ";
+            p = p.substring(0, whereIndex);
+        }
+        wherePart += "LENGTH("+ joinAliasValue("localized_1_1") + ") > :param_0";
         String expectedQuery = "SELECT 1 FROM Document d"
-                + " WHERE EXISTS (SELECT 1 FROM Person p LEFT JOIN p.localized localized_1_1"
+                + " WHERE EXISTS (SELECT 1 FROM " + p + " LEFT JOIN p.localized localized_1_1"
                 + onClause("KEY(localized_1_1) = 1")
-                + " WHERE p.partnerDocument.id = d.id AND LENGTH(" + joinAliasValue("localized_1_1") + ") > :param_0)";
+                + wherePart + ")";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }

@@ -77,33 +77,40 @@ public class EntityViewUpdateMutableNestedEmbeddableCollectionsTest extends Abst
         // Then
         AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
+        int fullDiff = 0;
         if (isFullMode()) {
-            fullFetch(builder);
-            // Since we detect nothing changed, there is no need to flush for version increments
-            // See com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityEmbeddable.elementCollection2
-            // Apparently, Hibernate has problems with handling this correctly
-            builder.assertDelete()
-                    .forRelation(EmbeddableTestEntity.class, "embeddable.elementCollection2")
-                    .and();
+            if (isQueryStrategy()) {
+                builder.delete(EmbeddableTestEntity.class, "embeddable.oneToMany2")
+                        .insert(EmbeddableTestEntity.class, "embeddable.oneToMany2");
+                if (version) {
+                    builder.update(EmbeddableTestEntity.class);
+                }
+               fullDiff = 1;
+            } else {
+                fullFetch(builder);
+            }
         }
 
         builder.validate();
-        assertVersionDiff(oldVersion, docView.getVersion(), 0, 0);
+        assertVersionDiff(oldVersion, docView.getVersion(), 0, fullDiff);
 
         AssertStatementBuilder afterBuilder = assertQueriesAfterUpdate(docView);
 
         if (isFullMode()) {
-            fullFetch(afterBuilder);
-            // Since we detect nothing changed, there is no need to flush for version increments
-            // See com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityEmbeddable.elementCollection2
-            // Apparently, Hibernate has problems with handling this correctly
-            afterBuilder.assertDelete()
-                    .forRelation(EmbeddableTestEntity.class, "embeddable.elementCollection2")
-                    .and();
+            if (isQueryStrategy()) {
+                afterBuilder.delete(EmbeddableTestEntity.class, "embeddable.oneToMany2")
+                        .insert(EmbeddableTestEntity.class, "embeddable.oneToMany2");
+                if (version) {
+                    afterBuilder.update(EmbeddableTestEntity.class);
+                }
+                fullDiff = 2;
+            } else {
+                fullFetch(afterBuilder);
+            }
         }
 
         afterBuilder.validate();
-        assertVersionDiff(oldVersion, docView.getVersion(), 0, 0);
+        assertVersionDiff(oldVersion, docView.getVersion(), 0, fullDiff);
         assertSubviewEquals(entity1.getEmbeddable().getOneToMany2(), docView.getEmbeddable().getOneToMany2());
     }
 
@@ -117,62 +124,50 @@ public class EntityViewUpdateMutableNestedEmbeddableCollectionsTest extends Abst
         // Then
         AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        if (isFullMode()) {
-            fullFetch(builder);
-
-            if (version) {
-                builder.update(EmbeddableTestEntity.class);
+        if (isQueryStrategy()) {
+            if (isFullMode()) {
+                builder.delete(EmbeddableTestEntity.class, "embeddable.oneToMany2");
             }
         } else {
-            if (preferLoadingAndDiffingOverRecreate()) {
+            if (isFullMode()) {
                 fullFetch(builder);
-
-                if (version) {
-                    builder.update(EmbeddableTestEntity.class);
-                }
             } else {
-                builder.select(EmbeddableTestEntity.class);
+                if (preferLoadingAndDiffingOverRecreate()) {
+                    fullFetch(builder);
 
-                if (version) {
-                    builder.update(EmbeddableTestEntity.class);
+                } else {
+                    builder.select(EmbeddableTestEntity.class);
+
+                    assertReplaceAnd(builder);
                 }
-                assertReplaceAnd(builder);
             }
         }
 
-        if (!isQueryStrategy()) {
-            // See com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityEmbeddable.elementCollection2
-            // Apparently, Hibernate has problems with handling this correctly
-            builder.assertDelete()
-                    .forRelation(EmbeddableTestEntity.class, "embeddable.elementCollection2")
-                    .and();
+        if (version) {
+            builder.update(EmbeddableTestEntity.class);
         }
 
-        builder.assertInsert()
-                    .forRelation(EmbeddableTestEntity.class, "embeddable.oneToMany2")
-                .and()
+        builder.insert(EmbeddableTestEntity.class, "embeddable.oneToMany2")
                 .validate();
         assertVersionDiff(oldVersion, docView.getVersion(), 1, 1);
 
         AssertStatementBuilder afterBuilder = assertQueriesAfterUpdate(docView);
 
+        int fullDiff = 1;
         if (isFullMode()) {
-            fullFetch(afterBuilder);
-            // Since we detect nothing changed, there is no need to flush for version increments
-            if (!isQueryStrategy()) {
-                // Note that we delete the collection twice, because entity1 and entity2 are in the persistence context
-                // See com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityEmbeddable.elementCollection2
-                // Apparently, Hibernate has problems with handling this correctly
-                afterBuilder.assertDelete()
-                        .forRelation(EmbeddableTestEntity.class, "embeddable.elementCollection2")
-                        .and();
-                afterBuilder.assertDelete()
-                        .forRelation(EmbeddableTestEntity.class, "embeddable.elementCollection2")
-                        .and();
+            if (isQueryStrategy()) {
+                afterBuilder.delete(EmbeddableTestEntity.class, "embeddable.oneToMany2")
+                        .insert(EmbeddableTestEntity.class, "embeddable.oneToMany2");
+                if (version) {
+                    afterBuilder.update(EmbeddableTestEntity.class);
+                }
+                fullDiff = 2;
+            } else {
+                fullFetch(afterBuilder);
             }
         }
 
-        assertVersionDiff(oldVersion, docView.getVersion(), 1, 1);
+        assertVersionDiff(oldVersion, docView.getVersion(), 1, fullDiff);
 
         afterBuilder.validate();
         assertSubviewEquals(entity1.getEmbeddable().getOneToMany2(), docView.getEmbeddable().getOneToMany2());
@@ -188,36 +183,25 @@ public class EntityViewUpdateMutableNestedEmbeddableCollectionsTest extends Abst
         // Then
         AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        if (isFullMode()) {
-            fullFetch(builder);
-
-            if (version) {
-                builder.update(EmbeddableTestEntity.class);
+        if (isQueryStrategy()) {
+            if (isFullMode()) {
+                builder.delete(EmbeddableTestEntity.class, "embeddable.oneToMany2");
             }
         } else {
-            if (preferLoadingAndDiffingOverRecreate()) {
+            if (isFullMode()) {
                 fullFetch(builder);
-
-                if (version) {
-                    builder.update(EmbeddableTestEntity.class);
-                }
             } else {
-                builder.select(EmbeddableTestEntity.class);
-
-                if (version) {
-                    builder.update(EmbeddableTestEntity.class);
+                if (preferLoadingAndDiffingOverRecreate()) {
+                    fullFetch(builder);
+                } else {
+                    builder.select(EmbeddableTestEntity.class);
+                    assertReplaceAnd(builder);
                 }
-                assertReplaceAnd(builder);
             }
         }
 
-
-        if (!isQueryStrategy()) {
-            // See com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityEmbeddable.elementCollection2
-            // Apparently, Hibernate has problems with handling this correctly
-            builder.assertDelete()
-                    .forRelation(EmbeddableTestEntity.class, "embeddable.elementCollection2")
-                    .and();
+        if (version) {
+            builder.update(EmbeddableTestEntity.class);
         }
 
         builder.assertInsert()
@@ -227,23 +211,21 @@ public class EntityViewUpdateMutableNestedEmbeddableCollectionsTest extends Abst
 
         AssertStatementBuilder afterBuilder = assertQueriesAfterUpdate(docView);
 
+        int fullDiff = 1;
         if (isFullMode()) {
-            fullFetch(afterBuilder);
-            // Since we detect nothing changed, there is no need to flush for version increments
-            if (!isQueryStrategy()) {
-                // Note that we delete the collection twice, because entity1 and entity2 are in the persistence context
-                // See com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityEmbeddable.elementCollection2
-                // Apparently, Hibernate has problems with handling this correctly
-                afterBuilder.assertDelete()
-                        .forRelation(EmbeddableTestEntity.class, "embeddable.elementCollection2")
-                        .and();
-                afterBuilder.assertDelete()
-                        .forRelation(EmbeddableTestEntity.class, "embeddable.elementCollection2")
-                        .and();
+            if (isQueryStrategy()) {
+                afterBuilder.delete(EmbeddableTestEntity.class, "embeddable.oneToMany2")
+                        .insert(EmbeddableTestEntity.class, "embeddable.oneToMany2");
+                if (version) {
+                    afterBuilder.update(EmbeddableTestEntity.class);
+                }
+                fullDiff = 2;
+            } else {
+                fullFetch(afterBuilder);
             }
         }
 
-        assertVersionDiff(oldVersion, docView.getVersion(), 1, 1);
+        assertVersionDiff(oldVersion, docView.getVersion(), 1, fullDiff);
 
         afterBuilder.validate();
         assertSubviewEquals(entity1.getEmbeddable().getOneToMany2(), docView.getEmbeddable().getOneToMany2());
@@ -312,12 +294,8 @@ public class EntityViewUpdateMutableNestedEmbeddableCollectionsTest extends Abst
     }
 
     private AssertStatementBuilder assertReplaceAnd(AssertStatementBuilder builder) {
-        return builder.assertDelete()
-                    .forRelation(EmbeddableTestEntity.class, "embeddable.oneToMany2")
-                .and()
-                .assertInsert()
-                    .forRelation(EmbeddableTestEntity.class, "embeddable.oneToMany2")
-                .and();
+        return builder.delete(EmbeddableTestEntity.class, "embeddable.oneToMany2")
+                .insert(EmbeddableTestEntity.class, "embeddable.oneToMany2");
     }
 
     private void assertSubviewEquals(Set<EmbeddableTestEntity> entities, Set<SimpleEmbeddableEntityView> views) {
@@ -339,12 +317,6 @@ public class EntityViewUpdateMutableNestedEmbeddableCollectionsTest extends Abst
         if (!unmatched.isEmpty()) {
             Assert.fail("Unmatched views: " + unmatched);
         }
-    }
-
-    @Override
-    protected boolean isQueryStrategy() {
-        // Collection changes always need to be applied on the entity model, can't do that via a query
-        return false;
     }
 
     @Override

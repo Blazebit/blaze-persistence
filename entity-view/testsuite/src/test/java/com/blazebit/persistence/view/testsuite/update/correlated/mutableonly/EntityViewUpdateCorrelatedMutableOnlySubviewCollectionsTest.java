@@ -62,6 +62,11 @@ public class EntityViewUpdateCorrelatedMutableOnlySubviewCollectionsTest extends
         cfg.addEntityView(UpdatablePersonView.class);
     }
 
+    @Override
+    protected String[] getFetchedCollections() {
+        return new String[] { "partners" };
+    }
+
     @Test
     public void testUpdateReplaceCollection() {
         // Given
@@ -78,7 +83,7 @@ public class EntityViewUpdateCorrelatedMutableOnlySubviewCollectionsTest extends
     }
 
     private void validateMutableOnlyNoChange(UpdatableDocumentWithCollectionsView docView) {
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
         if (isFullMode()) {
             fullFetch(builder);
         }
@@ -120,7 +125,7 @@ public class EntityViewUpdateCorrelatedMutableOnlySubviewCollectionsTest extends
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         fullFetch(builder);
 
@@ -143,8 +148,8 @@ public class EntityViewUpdateCorrelatedMutableOnlySubviewCollectionsTest extends
             builder.update(Person.class);
         }
 
-        assertNoUpdateAndReload(docView);
-        assertSubviewEquals(doc1.getPeople(), docView.getPartners());
+        assertNoUpdateAndReload(docView, true);
+        assertSubviewEquals(doc1.getPartners(), docView.getPartners());
         assertEquals("newPerson", p1.getName());
     }
 

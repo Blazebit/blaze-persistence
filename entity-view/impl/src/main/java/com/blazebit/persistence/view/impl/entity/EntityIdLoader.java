@@ -40,6 +40,11 @@ public class EntityIdLoader implements EntityLoader {
     }
 
     @Override
+    public Class<?> getEntityClass() {
+        return entityIdConstructor.getDeclaringClass();
+    }
+
+    @Override
     public Object getEntityId(UpdateContext context, Object entity) {
         return entity;
     }

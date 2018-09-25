@@ -111,7 +111,7 @@ public class CollectionRoleUpdateTest extends AbstractCoreTest {
         try {
             criteria.set("name", "BLA");
         } catch (IllegalArgumentException ex) {
-            assertTrue(ex.getMessage().contains("Only access to the owner type's id attribute"));
+            assertTrue(ex.getMessage().contains("The attribute [name] does not exist or can't be bound"));
         }
     }
 
@@ -128,7 +128,7 @@ public class CollectionRoleUpdateTest extends AbstractCoreTest {
                 criteria.where("r.indexedNodes.id").eq(2);
 
                 assertEquals("UPDATE Root(indexedNodes) r"
-                        + " SET INDEX(_collection) = :param_0,_collection.id = :param_1"
+                        + " SET INDEX(indexedNodes) = :param_0,r.indexedNodes.id = :param_1"
                         + " WHERE INDEX(_collection) = :param_2 AND r.id = :param_3 AND _collection.id = :param_4", criteria.getQueryString());
                 int updated = criteria.executeUpdate();
                 Root r = getRoot(em);
@@ -158,7 +158,7 @@ public class CollectionRoleUpdateTest extends AbstractCoreTest {
                 criteria.where("r.id").eq(1);
 
                 assertEquals("UPDATE Root(indexedNodes) r"
-                        + " SET INDEX(_collection) = :param_0,_collection.id = :param_1"
+                        + " SET INDEX(indexedNodes) = :param_0,r.indexedNodes.id = :param_1"
                         + " WHERE INDEX(_collection) = :param_2 AND r.id = :param_3", criteria.getQueryString());
                 ReturningResult<Tuple> returningResult = criteria.executeWithReturning("indexedNodes.id");
                 Root r = getRoot(em);
@@ -188,7 +188,7 @@ public class CollectionRoleUpdateTest extends AbstractCoreTest {
                 criteria.where("r.indexedNodesMany.id").eq(2);
 
                 assertEquals("UPDATE Root(indexedNodesMany) r"
-                        + " SET INDEX(_collection) = :param_0,_collection.id = :param_1"
+                        + " SET INDEX(indexedNodesMany) = :param_0,r.indexedNodesMany.id = :param_1"
                         + " WHERE INDEX(_collection) = :param_2 AND r.id = :param_3 AND _collection.id = :param_4", criteria.getQueryString());
                 int updated = criteria.executeUpdate();
                 Root r = getRoot(em);
@@ -217,7 +217,7 @@ public class CollectionRoleUpdateTest extends AbstractCoreTest {
                 criteria.where("r.indexedNodesManyDuplicate.id").eq(2);
 
                 assertEquals("UPDATE Root(indexedNodesManyDuplicate) r"
-                        + " SET INDEX(_collection) = :param_0,_collection.id = :param_1"
+                        + " SET INDEX(indexedNodesManyDuplicate) = :param_0,r.indexedNodesManyDuplicate.id = :param_1"
                         + " WHERE INDEX(_collection) = :param_2 AND r.id = :param_3 AND _collection.id = :param_4", criteria.getQueryString());
                 int updated = criteria.executeUpdate();
                 Root r = getRoot(em);
@@ -248,7 +248,7 @@ public class CollectionRoleUpdateTest extends AbstractCoreTest {
                 criteria.where("r.indexedNodesElementCollection.value2").eq("b");
 
                 assertEquals("UPDATE Root(indexedNodesElementCollection) r"
-                        + " SET INDEX(_collection) = :param_0,_collection.value = :param_1,_collection.value2 = :param_2"
+                        + " SET INDEX(indexedNodesElementCollection) = :param_0,r.indexedNodesElementCollection.value = :param_1,r.indexedNodesElementCollection.value2 = :param_2"
                         + " WHERE INDEX(_collection) = :param_3 AND r.id = :param_4 AND _collection.value = :param_5 AND _collection.value2 = :param_6", criteria.getQueryString());
                 int updated = criteria.executeUpdate();
                 Root r = getRoot(em);
@@ -278,7 +278,7 @@ public class CollectionRoleUpdateTest extends AbstractCoreTest {
                 criteria.where("r.keyedNodes.id").eq(3);
 
                 assertEquals("UPDATE Root(keyedNodes) r"
-                        + " SET KEY(_collection) = :param_0,_collection.id = :param_1"
+                        + " SET KEY(keyedNodes) = :param_0,r.keyedNodes.id = :param_1"
                         + " WHERE KEY(_collection) = :param_2 AND r.id = :param_3 AND _collection.id = :param_4", criteria.getQueryString());
                 int updated = criteria.executeUpdate();
                 Root r = getRoot(em);
@@ -307,7 +307,7 @@ public class CollectionRoleUpdateTest extends AbstractCoreTest {
                 criteria.where("r.keyedNodesMany.id").eq(3);
 
                 assertEquals("UPDATE Root(keyedNodesMany) r"
-                        + " SET KEY(_collection) = :param_0,_collection.id = :param_1"
+                        + " SET KEY(keyedNodesMany) = :param_0,r.keyedNodesMany.id = :param_1"
                         + " WHERE KEY(_collection) = :param_2 AND r.id = :param_3 AND _collection.id = :param_4", criteria.getQueryString());
                 int updated = criteria.executeUpdate();
                 Root r = getRoot(em);
@@ -336,7 +336,7 @@ public class CollectionRoleUpdateTest extends AbstractCoreTest {
                 criteria.where("r.keyedNodesManyDuplicate.id").eq(3);
 
                 assertEquals("UPDATE Root(keyedNodesManyDuplicate) r"
-                        + " SET KEY(_collection) = :param_0,_collection.id = :param_1"
+                        + " SET KEY(keyedNodesManyDuplicate) = :param_0,r.keyedNodesManyDuplicate.id = :param_1"
                         + " WHERE KEY(_collection) = :param_2 AND r.id = :param_3 AND _collection.id = :param_4", criteria.getQueryString());
                 int updated = criteria.executeUpdate();
                 Root r = getRoot(em);
@@ -367,7 +367,7 @@ public class CollectionRoleUpdateTest extends AbstractCoreTest {
                 criteria.where("r.keyedNodesElementCollection.value2").eq("b");
 
                 assertEquals("UPDATE Root(keyedNodesElementCollection) r"
-                        + " SET KEY(_collection) = :param_0,_collection.value = :param_1,_collection.value2 = :param_2"
+                        + " SET KEY(keyedNodesElementCollection) = :param_0,r.keyedNodesElementCollection.value = :param_1,r.keyedNodesElementCollection.value2 = :param_2"
                         + " WHERE KEY(_collection) = :param_3 AND r.id = :param_4 AND _collection.value = :param_5 AND _collection.value2 = :param_6", criteria.getQueryString());
                 int updated = criteria.executeUpdate();
                 Root r = getRoot(em);

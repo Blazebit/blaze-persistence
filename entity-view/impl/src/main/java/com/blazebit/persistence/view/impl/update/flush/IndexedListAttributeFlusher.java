@@ -16,24 +16,34 @@
 
 package com.blazebit.persistence.view.impl.update.flush;
 
+import com.blazebit.persistence.DeleteCriteriaBuilder;
+import com.blazebit.persistence.InsertCriteriaBuilder;
+import com.blazebit.persistence.UpdateCriteriaBuilder;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.InverseRemoveStrategy;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.accessor.InitialValueAttributeAccessor;
 import com.blazebit.persistence.view.impl.collection.CollectionAction;
-import com.blazebit.persistence.view.impl.collection.CollectionAddAllAction;
+import com.blazebit.persistence.view.impl.collection.CollectionClearAction;
 import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
+import com.blazebit.persistence.view.impl.collection.ListAction;
+import com.blazebit.persistence.view.impl.collection.ListAddAction;
+import com.blazebit.persistence.view.impl.collection.ListAddAllAction;
 import com.blazebit.persistence.view.impl.collection.ListRemoveAction;
+import com.blazebit.persistence.view.impl.collection.ListSetAction;
 import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.impl.collection.RecordingList;
 import com.blazebit.persistence.view.impl.collection.CollectionRemoveListener;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
+import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.spi.type.BasicUserType;
 
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -44,10 +54,13 @@ import java.util.Objects;
  * @since 1.2.0
  */
 public class IndexedListAttributeFlusher<E, V extends List<?>> extends CollectionAttributeFlusher<E, V> {
+
     @SuppressWarnings("unchecked")
-    public IndexedListAttributeFlusher(String attributeName, String mapping, Class<?> ownerEntityClass, String ownerIdAttributeName, FlushStrategy flushStrategy, AttributeAccessor attributeMapper, InitialValueAttributeAccessor viewAttributeAccessor, boolean optimisticLockProtected, boolean collectionUpdatable,
-                                       boolean viewOnlyDeleteCascaded, boolean jpaProviderDeletesCollection, CollectionRemoveListener cascadeDeleteListener, CollectionRemoveListener removeListener, CollectionInstantiator collectionInstantiator, TypeDescriptor elementDescriptor, InverseFlusher<E> inverseFlusher, InverseRemoveStrategy inverseRemoveStrategy) {
-        super(attributeName, mapping, ownerEntityClass, ownerIdAttributeName, flushStrategy, attributeMapper, viewAttributeAccessor, optimisticLockProtected, collectionUpdatable, viewOnlyDeleteCascaded, jpaProviderDeletesCollection, cascadeDeleteListener, removeListener, collectionInstantiator, elementDescriptor, inverseFlusher, inverseRemoveStrategy);
+    public IndexedListAttributeFlusher(String attributeName, String mapping, Class<?> ownerEntityClass, String ownerIdAttributeName, String ownerMapping, DirtyAttributeFlusher<?, ?, ?> ownerIdFlusher, DirtyAttributeFlusher<?, ?, ?> elementFlusher, boolean supportsCollectionDml, FlushStrategy flushStrategy, AttributeAccessor attributeMapper, InitialValueAttributeAccessor viewAttributeAccessor,
+                                       boolean optimisticLockProtected, boolean collectionUpdatable, boolean viewOnlyDeleteCascaded, boolean jpaProviderDeletesCollection, CollectionRemoveListener cascadeDeleteListener, CollectionRemoveListener removeListener, CollectionInstantiator collectionInstantiator, TypeDescriptor elementDescriptor, InverseFlusher<E> inverseFlusher,
+                                       InverseRemoveStrategy inverseRemoveStrategy) {
+        super(attributeName, mapping, ownerEntityClass, ownerIdAttributeName, ownerMapping, ownerIdFlusher, elementFlusher, supportsCollectionDml, flushStrategy, attributeMapper, viewAttributeAccessor, optimisticLockProtected, collectionUpdatable, viewOnlyDeleteCascaded, jpaProviderDeletesCollection, cascadeDeleteListener, removeListener, collectionInstantiator, elementDescriptor,
+                inverseFlusher, inverseRemoveStrategy);
     }
 
     public IndexedListAttributeFlusher(IndexedListAttributeFlusher<E, V> original, boolean fetch) {
@@ -155,6 +168,183 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
     }
 
     @Override
+    protected List<CollectionAction<Collection<?>>> replaceActions(V value) {
+        List<CollectionAction<Collection<?>>> actions = new ArrayList<>();
+        actions.add(new CollectionClearAction());
+        if (value != null && !value.isEmpty()) {
+            actions.add(new ListAddAllAction(0, true, value));
+        }
+        return actions;
+    }
+
+    @Override
+    protected Collection<Object> appendRemoveSpecific(UpdateContext context, DeleteCriteriaBuilder<?> deleteCb, FusedCollectionActions fusedCollectionActions) {
+        deleteCb.where("INDEX(e." + getMapping() + ")").in(fusedCollectionActions.getRemoved(context));
+        return fusedCollectionActions.getRemoved();
+    }
+
+    @Override
+    protected void addElements(UpdateContext context, Object ownerView, Object view, Collection<Object> removedAllObjects, boolean flushAtOnce, V value, List<Object> embeddablesToUpdate, FusedCollectionActions fusedCollectionActions) {
+        Collection<Object> appends;
+        int appendIndex;
+        String mapping = getMapping();
+        if (fusedCollectionActions == null || !removedAllObjects.isEmpty()) {
+            appends = (Collection<Object>) value;
+            removedAllObjects.removeAll(appends);
+            appendIndex = 0;
+        } else {
+            FusedCollectionIndexActions indexActions = (FusedCollectionIndexActions) fusedCollectionActions;
+            List<FusedCollectionIndexActions.IndexTranslateOperation> translations = indexActions.getTranslations();
+            if (translations.size() != 0) {
+                UpdateCriteriaBuilder<?> updateCb = context.getEntityViewManager().getCriteriaBuilderFactory().updateCollection(context.getEntityManager(), ownerEntityClass, "e", mapping);
+                updateCb.setExpression("INDEX(" + mapping + ")", "INDEX(" + mapping + ") + :offset");
+                updateCb.setWhereExpression(ownerIdWhereFragment);
+                updateCb.where("INDEX(" + mapping + ")").geExpression(":minIdx");
+                updateCb.where("INDEX(" + mapping + ")").ltExpression(":maxIdx");
+                Query query = updateCb.getQuery();
+                ownerIdFlusher.flushQuery(context, null, query, ownerView, view, ownerIdFlusher.getViewAttributeAccessor().getValue(ownerView), null);
+                for (int i = 0; i < translations.size(); i++) {
+                    FusedCollectionIndexActions.IndexTranslateOperation translation = translations.get(i);
+                    query.setParameter("minIdx", translation.getStartIndex());
+                    query.setParameter("maxIdx", translation.getEndIndex());
+                    query.setParameter("offset", translation.getOffset());
+                    query.executeUpdate();
+                }
+            }
+
+            List<FusedCollectionIndexActions.ReplaceOperation> replaces = indexActions.getReplaces();
+            if (replaces.size() != 0 || embeddablesToUpdate != null && !embeddablesToUpdate.isEmpty()) {
+                UpdateCriteriaBuilder<?> updateCb = context.getEntityViewManager().getCriteriaBuilderFactory().updateCollection(context.getEntityManager(), ownerEntityClass, "e", mapping);
+                updateCb.setExpression(mapping, ":element");
+                updateCb.setWhereExpression(ownerIdWhereFragment);
+                updateCb.where("INDEX(" + mapping + ")").eqExpression(":idx");
+                Query query = updateCb.getQuery();
+
+                if (replaces.size() != 0) {
+                    ownerIdFlusher.flushQuery(context, null, query, ownerView, view, ownerIdFlusher.getViewAttributeAccessor().getValue(ownerView), null);
+                    boolean checkTransient = elementDescriptor.isJpaEntity() && !elementDescriptor.shouldJpaPersist();
+                    if (elementDescriptor.getViewToEntityMapper() == null) {
+                        for (int i = 0; i < replaces.size(); i++) {
+                            FusedCollectionIndexActions.ReplaceOperation replace = replaces.get(i);
+                            if (checkTransient && elementDescriptor.getBasicUserType().shouldPersist(replace.getNewObject())) {
+                                throw new IllegalStateException("Collection " + attributeName + " references an unsaved transient instance - save the transient instance before flushing: " + replace.getNewObject());
+                            }
+                            query.setParameter("idx", replace.getIndex());
+                            query.setParameter("element", replace.getNewObject());
+                            query.executeUpdate();
+                        }
+                    } else {
+                        ViewToEntityMapper loadOnlyViewToEntityMapper = elementDescriptor.getLoadOnlyViewToEntityMapper();
+                        for (int i = 0; i < replaces.size(); i++) {
+                            FusedCollectionIndexActions.ReplaceOperation replace = replaces.get(i);
+                            query.setParameter("idx", replace.getIndex());
+                            query.setParameter("element", loadOnlyViewToEntityMapper.applyToEntity(context, null, replace.getNewObject()));
+                            query.executeUpdate();
+                        }
+                    }
+                }
+                if (embeddablesToUpdate != null && !embeddablesToUpdate.isEmpty()) {
+                    for (int i = 0; i < embeddablesToUpdate.size(); i++) {
+                        query.setParameter("idx", i);
+                        query.setParameter("element", embeddablesToUpdate.get(i));
+                        query.executeUpdate();
+                    }
+                }
+            }
+
+            appends = indexActions.getAdded(context);
+            appendIndex = indexActions.getAppendIndex();
+            removedAllObjects.removeAll(indexActions.getAdded());
+        }
+
+        if (appends.size() > 1 || appends.size() == 1 && appends.iterator().next() != null) {
+            InsertCriteriaBuilder<?> insertCb = context.getEntityViewManager().getCriteriaBuilderFactory().insertCollection(context.getEntityManager(), ownerEntityClass, mapping);
+
+            String entityIdAttributeName = elementDescriptor.getEntityIdAttributeName();
+            if (entityIdAttributeName == null) {
+                insertCb.fromValues((Class<Object>) elementDescriptor.getJpaType(), "val", 1);
+            } else {
+                insertCb.fromIdentifiableValues((Class<Object>) elementDescriptor.getJpaType(), "val", 1);
+            }
+            insertCb.bind("INDEX(" + mapping + ")").select("FUNCTION('TREAT_INTEGER', :idx)");
+            for (int i = 0; i < ownerIdBindFragments.length; i += 2) {
+                insertCb.bind(ownerIdBindFragments[i]).select(ownerIdBindFragments[i + 1]);
+            }
+            insertCb.bind(mapping).select("val");
+            Query query = insertCb.getQuery();
+            ownerIdFlusher.flushQuery(context, null, query, ownerView, view, ownerIdFlusher.getViewAttributeAccessor().getValue(ownerView), null);
+
+            // TODO: Use batching when we implement #657
+            Object[] singletonArray = new Object[1];
+            List<Object> singletonList = Arrays.asList(singletonArray);
+            if (elementDescriptor.getViewToEntityMapper() == null) {
+                boolean checkTransient = elementDescriptor.isJpaEntity() && !elementDescriptor.shouldJpaPersist();
+                for (Object object : appends) {
+                    if (object != null) {
+                        if (checkTransient && elementDescriptor.getBasicUserType().shouldPersist(object)) {
+                            throw new IllegalStateException("Collection " + attributeName + " references an unsaved transient instance - save the transient instance before flushing: " + object);
+                        }
+                        singletonArray[0] = object;
+                        query.setParameter("idx", appendIndex++);
+                        query.setParameter("val", singletonList);
+                        query.executeUpdate();
+                    }
+                }
+            } else {
+                ViewToEntityMapper loadOnlyViewToEntityMapper = elementDescriptor.getLoadOnlyViewToEntityMapper();
+                for (Object object : appends) {
+                    if (object != null) {
+                        singletonArray[0] = loadOnlyViewToEntityMapper.applyToEntity(context, null, object);
+                        query.setParameter("idx", appendIndex++);
+                        query.setParameter("val", singletonList);
+                        query.executeUpdate();
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
+    protected boolean canFlushSeparateCollectionOperations() {
+        return true;
+    }
+
+    @Override
+    protected boolean isIndexed() {
+        return true;
+    }
+
+    @Override
+    protected void addElementFlushActions(UpdateContext context, TypeDescriptor typeDescriptor, List<CollectionAction<?>> actions, V current) {
+        final ViewToEntityMapper mapper = typeDescriptor.getViewToEntityMapper();
+        OUTER: for (int i = 0; i < current.size(); i++) {
+            Object o = current.get(i);
+            if (o instanceof MutableStateTrackable) {
+                MutableStateTrackable element = (MutableStateTrackable) o;
+                @SuppressWarnings("unchecked")
+                DirtyAttributeFlusher<?, E, V> flusher = (DirtyAttributeFlusher<?, E, V>) (DirtyAttributeFlusher) mapper.getNestedDirtyFlusher(context, element, (DirtyAttributeFlusher) null);
+                if (flusher != null) {
+                    // Skip the element flusher if the element was already added before
+                    for (CollectionAction<?> action : actions) {
+                        if (action.getAddedObjects().contains(element)) {
+                            continue OUTER;
+                        }
+                    }
+
+                    // Using last = false is intentional to actually get a proper update instead of a delete and insert
+                    actions.add(new ListSetAction<>(i, false, element, null));
+                }
+            }
+        }
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    protected FusedCollectionActions getFusedOperations(List<? extends CollectionAction<?>> collectionActions) {
+        return new FusedCollectionIndexActions((List<? extends ListAction<?>>) (List) collectionActions);
+    }
+
+    @Override
     protected List<CollectionAction<Collection<?>>> determineJpaCollectionActions(UpdateContext context, V jpaCollection, V value, EqualityChecker equalityChecker) {
         // We try to find a common prefix and from that on, we infer actions
         List<CollectionAction<Collection<?>>> actions = new ArrayList<>();
@@ -174,8 +364,11 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
                 }
             } else {
                 // JPA element was removed, remove all following elements and Keep the same index 'i'
-                for (int j = i; j < jpaSize; j++) {
-                    actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(i, jpaCollection));
+                if (i < jpaSize) {
+                    for (int j = i; j < jpaSize - 1; j++) {
+                        actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(i, false, jpaCollection));
+                    }
+                    actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(i, true, jpaCollection));
                 }
 
                 // Break since there are no more elements to check
@@ -184,12 +377,17 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
             }
         }
         // Remove remaining elements in the list that couldn't be matched
-        for (int i = lastUnmatchedIndex; i < jpaSize; i++) {
-            actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(lastUnmatchedIndex, jpaCollection));
+        if (lastUnmatchedIndex < jpaSize) {
+            for (int i = lastUnmatchedIndex; i < jpaSize - 1; i++) {
+                actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(lastUnmatchedIndex, false, jpaCollection));
+            }
+            actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(lastUnmatchedIndex, true, jpaCollection));
         }
         // Add new elements that are not matched
         if (lastUnmatchedIndex < value.size()) {
-            actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new CollectionAddAllAction<>(value.subList(lastUnmatchedIndex, value.size()), true));
+            for (int i = lastUnmatchedIndex; i < value.size(); i++) {
+                actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListAddAction<>(lastUnmatchedIndex, true, value.get(i)));
+            }
         }
 
         return actions;
@@ -199,62 +397,75 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
     protected List<CollectionAction<Collection<?>>> determineCollectionActions(UpdateContext context, V initial, V current, EqualityChecker equalityChecker) {
         // We try to find a common prefix and from that on, we infer actions
         List<CollectionAction<Collection<?>>> actions = new ArrayList<>();
-        int initialSize = initial.size();
         int lastUnmatchedIndex = 0;
 
-        if (elementDescriptor.isSubview() && elementDescriptor.isIdentifiable()) {
-            final AttributeAccessor subviewIdAccessor = elementDescriptor.getViewToEntityMapper().getViewIdAccessor();
+        if (initial != null && !initial.isEmpty()) {
+            int initialSize = initial.size();
+            if (elementDescriptor.isSubview() && elementDescriptor.isIdentifiable()) {
+                final AttributeAccessor subviewIdAccessor = elementDescriptor.getViewToEntityMapper().getViewIdAccessor();
 
-            for (int i = 0; i < initialSize; i++) {
-                Object initialViewId = subviewIdAccessor.getValue(initial.get(i));
-                if (i < current.size()) {
-                    Object currentViewId = subviewIdAccessor.getValue(current.get(i));
-                    if (!initialViewId.equals(currentViewId)) {
-                        break;
+                for (int i = 0; i < initialSize; i++) {
+                    Object initialViewId = subviewIdAccessor.getValue(initial.get(i));
+                    if (i < current.size()) {
+                        Object currentViewId = subviewIdAccessor.getValue(current.get(i));
+                        if (!initialViewId.equals(currentViewId)) {
+                            break;
+                        } else {
+                            lastUnmatchedIndex++;
+                        }
                     } else {
-                        lastUnmatchedIndex++;
-                    }
-                } else {
-                    // remove all following elements and Keep the same index 'i'
-                    for (int j = i; j < initialSize; j++) {
-                        actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(i, initial));
-                    }
+                        // remove all following elements and Keep the same index 'i'
+                        if (i < initialSize) {
+                            for (int j = i; j < initialSize - 1; j++) {
+                                actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(i, false, initial));
+                            }
+                            actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(i, true, initial));
+                        }
 
-                    // Break since there are no more elements to check
-                    lastUnmatchedIndex = initialSize;
-                    break;
+                        // Break since there are no more elements to check
+                        lastUnmatchedIndex = initialSize;
+                        break;
+                    }
+                }
+            } else {
+                for (int i = 0; i < initialSize; i++) {
+                    Object initialElement = initial.get(i);
+                    if (i < current.size()) {
+                        Object viewElement = current.get(i);
+                        if (!equalityChecker.isEqual(context, initialElement, viewElement)) {
+                            break;
+                        } else {
+                            lastUnmatchedIndex++;
+                        }
+                    } else {
+                        // remove all following elements and Keep the same index 'i'
+                        if (i < initialSize) {
+                            for (int j = i; j < initialSize - 1; j++) {
+                                actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(i, false, initial));
+                            }
+                            actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(i, true, initial));
+                        }
+
+                        // Break since there are no more elements to check
+                        lastUnmatchedIndex = initialSize;
+                        break;
+                    }
                 }
             }
-        } else {
-            for (int i = 0; i < initialSize; i++) {
-                Object initialElement = initial.get(i);
-                if (i < current.size()) {
-                    Object viewElement = current.get(i);
-                    if (!equalityChecker.isEqual(context, initialElement, viewElement)) {
-                        break;
-                    } else {
-                        lastUnmatchedIndex++;
-                    }
-                } else {
-                    // remove all following elements and Keep the same index 'i'
-                    for (int j = i; j < initialSize; j++) {
-                        actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(i, initial));
-                    }
 
-                    // Break since there are no more elements to check
-                    lastUnmatchedIndex = initialSize;
-                    break;
+            // Remove remaining elements in the list that couldn't be matched
+            if (lastUnmatchedIndex < initialSize) {
+                for (int i = lastUnmatchedIndex; i < initialSize - 1; i++) {
+                    actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(lastUnmatchedIndex, false, initial));
                 }
+                actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(lastUnmatchedIndex, true, initial));
             }
-        }
-
-        // Remove remaining elements in the list that couldn't be matched
-        for (int i = lastUnmatchedIndex; i < initialSize; i++) {
-            actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(lastUnmatchedIndex, initial));
         }
         // Add new elements that are not matched
         if (lastUnmatchedIndex < current.size()) {
-            actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new CollectionAddAllAction<>(current.subList(lastUnmatchedIndex, current.size()), true));
+            for (int i = lastUnmatchedIndex; i < current.size(); i++) {
+                actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListAddAction<>(lastUnmatchedIndex, true, current.get(i)));
+            }
         }
 
         return actions;

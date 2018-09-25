@@ -86,7 +86,7 @@ public class InverseEntityToEntityMapper<E> implements InverseElementToEntityMap
         }
 
         if (nestedGraphNode != null) {
-            nestedGraphNode.flushEntity(context, null, null, child, null);
+            nestedGraphNode.flushEntity(context, null, child, null, child, null);
         }
     }
 

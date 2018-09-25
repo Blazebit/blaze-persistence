@@ -38,7 +38,7 @@ public class AssertInsertStatement extends AbstractAssertStatement {
             if (!query.startsWith("with ") || (insertIndex = query.indexOf(")\ninsert ")) == -1) {
                 query = stripReturningClause(query);
                 insertIndex = -2;
-                if (!query.startsWith("delete ")) {
+                if (!query.startsWith("insert ")) {
                     Assert.fail("Query is not an insert statement: " + query);
                     return;
                 }

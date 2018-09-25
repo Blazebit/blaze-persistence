@@ -55,12 +55,13 @@ public class EntityViewUpdateUpdatableOnlyEntityCollectionsTest extends Abstract
 
         // Then
         // Since entities are not mutable we can detect nothing changed
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isFullMode()) {
-            fullFetch(builder);
-            if (version) {
-                versionUpdate(builder);
+            if (isQueryStrategy()) {
+                fullUpdate(builder);
+            } else {
+                fullFetch(builder);
             }
         }
 
@@ -78,15 +79,19 @@ public class EntityViewUpdateUpdatableOnlyEntityCollectionsTest extends Abstract
         // Then
         // Assert that the document and the people are loaded i.e. a full fetch
         // Finally a single relation insert is done. In partial modes that don't do fetching, a collection recreation is done
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        if (preferLoadingAndDiffingOverRecreate()) {
-            fullFetch(builder);
-        } else {
+        if (isFullMode()) {
+            if (isQueryStrategy()) {
+                builder.delete(Document.class, "people")
+                        .insert(Document.class, "people");
+            } else {
+                fullFetch(builder);
+            }
+        } else if (!isQueryStrategy()) {
             fullFetch(builder);
         }
-
-        if (version) {
+        if (version || isQueryStrategy() && isFullMode()) {
             versionUpdate(builder);
         }
         builder.assertInsert()
@@ -107,25 +112,19 @@ public class EntityViewUpdateUpdatableOnlyEntityCollectionsTest extends Abstract
         // Assert that the document and the people are loaded in full mode i.e. a full fetch
         // When fetching like in full mode, we can do a proper diff and see that a single insert is enough
         // But partial strategies currently favor not fetching, but collection recreations instead
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        if (preferLoadingAndDiffingOverRecreate()) {
-            fullFetch(builder);
-        } else {
-            if (isFullMode()) {
-                fullFetch(builder);
+        if (isFullMode()) {
+            if (isQueryStrategy()) {
+                builder.delete(Document.class, "people")
+                        .insert(Document.class, "people");
             } else {
-                builder.select(Document.class)
-                        .assertDelete()
-                            .forRelation(Document.class, "people")
-                        .and()
-                        .assertInsert()
-                            .forRelation(Document.class, "people")
-                        .and();
+                fullFetch(builder);
             }
+        } else if (!isQueryStrategy()) {
+            fullFetch(builder);
         }
-
-        if (version) {
+        if (version || isQueryStrategy() && isFullMode()) {
             versionUpdate(builder);
         }
         builder.assertInsert()
@@ -145,10 +144,19 @@ public class EntityViewUpdateUpdatableOnlyEntityCollectionsTest extends Abstract
         // Then
         // Assert that the document and the people are loaded i.e. a full fetch
         // Finally a single relation insert is done but no update for the person
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        fullFetch(builder);
-        if (version) {
+        if (isFullMode()) {
+            if (isQueryStrategy()) {
+                builder.delete(Document.class, "people")
+                        .insert(Document.class, "people");
+            } else {
+                fullFetch(builder);
+            }
+        } else if (!isQueryStrategy()) {
+            fullFetch(builder);
+        }
+        if (version || isQueryStrategy() && isFullMode()) {
             versionUpdate(builder);
         }
         builder.assertInsert()
@@ -168,30 +176,23 @@ public class EntityViewUpdateUpdatableOnlyEntityCollectionsTest extends Abstract
         // Assert that the document and the people are loaded in full mode i.e. a full fetch
         // When fetching like in full mode, we can do a proper diff and see that a single insert is enough
         // But partial strategies currently favor not fetching, but collection recreations instead
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        if (preferLoadingAndDiffingOverRecreate()) {
-            fullFetch(builder);
-        } else {
-            if (isFullMode()) {
-                fullFetch(builder);
+        if (isFullMode()) {
+            if (isQueryStrategy()) {
+                builder.delete(Document.class, "people")
+                        .insert(Document.class, "people");
             } else {
-                builder.select(Document.class)
-                        .assertDelete()
-                            .forRelation(Document.class, "people")
-                        .and()
-                        .assertInsert()
-                            .forRelation(Document.class, "people")
-                        .and();
+                fullFetch(builder);
             }
+        } else if (!isQueryStrategy()) {
+            fullFetch(builder);
         }
-
-        if (version) {
+        if (version || isQueryStrategy() && isFullMode()) {
             versionUpdate(builder);
         }
-        builder.assertInsert()
-                .forRelation(Document.class, "people")
-                .and();
+
+        builder.insert(Document.class, "people");
         builder.validate();
 
         assertNoUpdateAndReload(docView);
@@ -207,12 +208,15 @@ public class EntityViewUpdateUpdatableOnlyEntityCollectionsTest extends Abstract
         // Then
         // Assert that the document and the people are loaded in full mode i.e. a full fetch
         // Since no collection was changed, no insters or updates are done
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isFullMode()) {
-            fullFetch(builder);
-            if (version) {
+            if (isQueryStrategy()) {
+                builder.delete(Document.class, "people")
+                        .insert(Document.class, "people");
                 versionUpdate(builder);
+            } else {
+                fullFetch(builder);
             }
         }
 
@@ -230,17 +234,20 @@ public class EntityViewUpdateUpdatableOnlyEntityCollectionsTest extends Abstract
         // Then
         // Assert that the document and the people are loaded i.e. a full fetch
         // Finally a single relation insert is done for the null element if supported
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        fullFetch(builder);
-        if (version) {
-            versionUpdate(builder);
+        if (isFullMode()) {
+            if (isQueryStrategy()) {
+                builder.delete(Document.class, "people")
+                        .insert(Document.class, "people");
+            } else {
+                fullFetch(builder);
+            }
+        } else if (!isQueryStrategy()) {
+            fullFetch(builder);
         }
-
-        if (supportsNullCollectionElements()) {
-            builder.assertInsert()
-                .forRelation(Document.class, "people")
-            .and();
+        if (version || isQueryStrategy() && isFullMode()) {
+            versionUpdate(builder);
         }
 
         builder.validate();
@@ -262,14 +269,16 @@ public class EntityViewUpdateUpdatableOnlyEntityCollectionsTest extends Abstract
         // Then
         // Assert that only the document is loaded
         // Since only an existing person was update, only a single update is generated
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isFullMode()) {
-            fullFetch(builder);
-        } else {
+            if (!isQueryStrategy()) {
+                fullFetch(builder);
+            }
+        } else if (!isQueryStrategy()) {
             builder.select(Document.class);
         }
-        if (version) {
+        if (version || isQueryStrategy() && isFullMode()) {
             versionUpdate(builder);
         }
 
@@ -281,9 +290,11 @@ public class EntityViewUpdateUpdatableOnlyEntityCollectionsTest extends Abstract
         AssertStatementBuilder afterBuilder = assertQueriesAfterUpdate(docView);
 
         if (isFullMode()) {
-            fullFetch(afterBuilder);
-            if (version) {
+            if (isQueryStrategy()) {
+                afterBuilder.delete(Document.class, "people");
                 versionUpdate(afterBuilder);
+            } else {
+                fullFetch(afterBuilder);
             }
         }
 
@@ -301,23 +312,18 @@ public class EntityViewUpdateUpdatableOnlyEntityCollectionsTest extends Abstract
         } catch (PersistenceException | IllegalStateException ex) {
             // Then
             assertTrue(ex.getMessage().contains("transient"));
-            AssertStatementBuilder builder = assertQuerySequence();
+            if (!isQueryStrategy()) {
+                AssertStatementBuilder builder = assertUnorderedQuerySequence();
+                fullFetch(builder);
 
-            fullFetch(builder);
-
-            if (version) {
-                versionUpdate(builder);
+                if (version) {
+                    versionUpdate(builder);
+                }
+                builder.validate();
             }
-            builder.validate();
             restartTransactionAndReload();
             assertEquals(1, doc1.getPeople().size());
         }
-    }
-
-    @Override
-    protected boolean isQueryStrategy() {
-        // Collection changes always need to be applied on the entity model, can't do that via a query
-        return false;
     }
 
     @Override
@@ -332,5 +338,26 @@ public class EntityViewUpdateUpdatableOnlyEntityCollectionsTest extends Abstract
     @Override
     protected AssertStatementBuilder versionUpdate(AssertStatementBuilder builder) {
         return builder.update(Document.class);
+    }
+
+    @Override
+    protected AssertStatementBuilder fullUpdate(AssertStatementBuilder builder) {
+        if (isFullMode()) {
+            if (isQueryStrategy()) {
+                builder.delete(Document.class, "people")
+                        .insert(Document.class, "people");
+                if (doc1.getPeople().size() > 1) {
+                    builder.insert(Document.class, "people");
+                }
+            } else {
+                fullFetch(builder);
+            }
+            if (version || isQueryStrategy()) {
+                versionUpdate(builder);
+            }
+        } else if (!isQueryStrategy()) {
+            builder.select(Document.class);
+        }
+        return builder;
     }
 }

@@ -64,6 +64,11 @@ public class EntityViewUpdateNestedMutableSubviewMapsTest extends AbstractEntity
         cfg.addEntityView(UpdatableFriendPersonView.class);
     }
 
+    @Override
+    protected String[] getFetchedCollections() {
+        return new String[] { "contacts" };
+    }
+
     @Test
     public void testUpdateAddToCollection() {
         // Given
@@ -76,37 +81,39 @@ public class EntityViewUpdateNestedMutableSubviewMapsTest extends AbstractEntity
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        if (isFullMode()) {
-            if (isQueryStrategy()) {
-                fullUpdate(builder);
-            } else {
-                fullFetch(builder)
-                        .select(Person.class);
-
-                if (version) {
-                    builder.update(Document.class);
-                }
+        if (isQueryStrategy()) {
+            if (isFullMode()) {
+                assertReplaceAnd(builder);
+                builder.update(Person.class)
+                        .update(Person.class)
+                        .update(Person.class)
+                        .update(Person.class);
             }
         } else {
-            builder.assertSelect()
-                    .fetching(Document.class)
-                    .fetching(Document.class, "contacts")
-                    .fetching(Person.class)
-                    .fetching(Person.class)
-                .and();
-
-            if (version) {
-                builder.update(Document.class);
+            if (isFullMode()) {
+                fullFetch(builder);
+                builder.assertSelect()
+                        .fetching(Person.class)
+                        .fetching(Person.class)
+                        .and();
+            } else {
+                builder.assertSelect()
+                        .fetching(Document.class)
+                        .fetching(Document.class, "contacts")
+                        .fetching(Person.class)
+                        .and();
             }
         }
+        if (version || isQueryStrategy() && isFullMode()) {
+            builder.update(Document.class);
+        }
 
-        builder.assertInsert()
-                    .forRelation(Document.class, "contacts")
+        builder.insert(Document.class, "contacts")
                 .validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertSubviewEquals(doc1.getContacts(), docView.getContacts());
     }
 
@@ -123,36 +130,40 @@ public class EntityViewUpdateNestedMutableSubviewMapsTest extends AbstractEntity
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        if (isFullMode()) {
-            if (isQueryStrategy()) {
-                fullUpdate(builder);
-            } else {
-                fullFetch(builder)
-                        .select(Person.class);
-
-                if (version) {
-                    builder.update(Document.class);
-                }
+        if (isQueryStrategy()) {
+            if (isFullMode()) {
+                assertReplaceAnd(builder);
+                builder.update(Person.class)
+                        .update(Person.class)
+                        .update(Person.class)
+                        .update(Person.class);
             }
         } else {
-            builder.assertSelect()
-                    .fetching(Document.class)
-                    .fetching(Document.class, "contacts")
-                    .fetching(Person.class)
-                .and();
-
-            if (version) {
-                builder.update(Document.class);
+            if (isFullMode()) {
+                fullFetch(builder);
+                builder.assertSelect()
+                        .fetching(Person.class)
+                        .fetching(Person.class)
+                        .and();
+            } else {
+                builder.assertSelect()
+                        .fetching(Document.class)
+                        .fetching(Document.class, "contacts")
+                        .fetching(Person.class)
+                        .and();
             }
+        }
+        if (version || isQueryStrategy() && isFullMode()) {
+            builder.update(Document.class);
         }
 
         builder.assertInsert()
                     .forRelation(Document.class, "contacts")
                 .validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertSubviewEquals(doc1.getContacts(), docView.getContacts());
     }
 
@@ -169,39 +180,34 @@ public class EntityViewUpdateNestedMutableSubviewMapsTest extends AbstractEntity
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
-            fullFetch(builder);
             if (isFullMode()) {
+                builder.update(Person.class)
+                        .update(Person.class)
+                        .update(Person.class)
+                        .update(Person.class);
+                assertReplaceAnd(builder);
+            } else {
                 builder.update(Person.class);
-                builder.update(Person.class);
-                builder.update(Person.class);
-
-            }
-            builder.update(Person.class);
-            if (version) {
-                builder.update(Document.class);
             }
         } else {
-            fullFetch(builder)
-                    .assertSelect()
+            fullFetch(builder);
+            builder.assertSelect()
                     .fetching(Person.class)
                     .fetching(Person.class)
                     .and();
-
-            if (version) {
-                builder.update(Document.class);
-            }
             builder.update(Person.class);
         }
+        if (version || isQueryStrategy() && isFullMode()) {
+            builder.update(Document.class);
+        }
 
-        builder.assertInsert()
-                    .forRelation(Document.class, "contacts")
-                .and()
+        builder.insert(Document.class, "contacts")
                 .validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertSubviewEquals(doc1.getContacts(), docView.getContacts());
         assertEquals("newPerson", p4.getName());
     }
@@ -220,38 +226,34 @@ public class EntityViewUpdateNestedMutableSubviewMapsTest extends AbstractEntity
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
-            fullFetch(builder);
             if (isFullMode()) {
+                assertReplaceAnd(builder);
+                builder.update(Person.class)
+                        .update(Person.class)
+                        .update(Person.class)
+                        .update(Person.class);
+            } else {
                 builder.update(Person.class);
-                builder.update(Person.class);
-                builder.update(Person.class);
-            }
-            builder.update(Person.class);
-
-            if (version) {
-                builder.update(Document.class);
             }
         } else {
-            fullFetch(builder)
-                    .assertSelect()
+            fullFetch(builder);
+            builder.assertSelect()
                     .fetching(Person.class)
                     .fetching(Person.class)
                     .and();
-            if (version) {
-                builder.update(Document.class);
-            }
             builder.update(Person.class);
         }
+        if (version || isQueryStrategy() && isFullMode()) {
+            builder.update(Document.class);
+        }
 
-        builder.assertInsert()
-                    .forRelation(Document.class, "contacts")
-                .and()
+        builder.insert(Document.class, "contacts")
                 .validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertSubviewEquals(doc1.getContacts(), docView.getContacts());
         assertEquals("newPerson", p4.getName());
     }
@@ -268,41 +270,45 @@ public class EntityViewUpdateNestedMutableSubviewMapsTest extends AbstractEntity
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
-                fullFetch(builder)
-                        .update(Person.class);
+                builder.update(Person.class);
+                assertReplaceAnd(builder);
             }
 
             builder.update(Person.class);
-
-            if (version) {
-                builder.update(Document.class);
-            }
         } else {
             if (isFullMode()) {
-                fullFetch(builder)
-                        .select(Person.class);
+                fullFetch(builder);
+                if (isFullMode()) {
+                    builder.assertSelect()
+                            .fetching(Person.class)
+                            .and();
+                }
             } else {
                 builder.assertSelect()
                         .fetching(Document.class)
                         .fetching(Document.class, "contacts")
                         .fetching(Person.class)
                         .and();
+                if (isFullMode()) {
+                    builder.assertSelect()
+                            .fetching(Person.class)
+                            .fetching(Person.class)
+                            .and();
+                }
             }
-
-            if (version) {
-                builder.update(Document.class);
-            }
-
             builder.update(Person.class);
+        }
+        if (version || isQueryStrategy() && isFullMode()) {
+            builder.update(Document.class);
         }
 
         builder.validate();
 
-        assertNoCollectionUpdateFullAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertSubviewEquals(doc1.getContacts(), docView.getContacts());
         assertEquals(p4.getId(), p1.getFriend().getId());
     }
@@ -320,31 +326,26 @@ public class EntityViewUpdateNestedMutableSubviewMapsTest extends AbstractEntity
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
-                fullFetch(builder);
                 builder.update(Person.class);
+                assertReplaceAnd(builder);
             }
 
             builder.update(Person.class);
-            if (version) {
-                builder.update(Document.class);
-            }
         } else {
             fullFetch(builder);
-
-            if (version) {
-                builder.update(Document.class);
-            }
-
             builder.update(Person.class);
+        }
+        if (version || isQueryStrategy() && isFullMode()) {
+            builder.update(Document.class);
         }
 
         builder.validate();
 
-        assertNoCollectionUpdateFullAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertEquals(p3.getId(), p1.getFriend().getId());
         assertEquals("newFriend", p3.getName());
         assertSubviewEquals(doc1.getContacts(), docView.getContacts());
@@ -363,19 +364,15 @@ public class EntityViewUpdateNestedMutableSubviewMapsTest extends AbstractEntity
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
-                fullFetch(builder);
+                assertReplaceAnd(builder);
             }
 
-            builder.update(Person.class)
-                    .update(Person.class);
-
-            if (version) {
-                builder.update(Document.class);
-            }
+            builder.update(Person.class);
+            builder.update(Person.class);
         } else {
             if (isFullMode()) {
                 fullFetch(builder);
@@ -386,20 +383,19 @@ public class EntityViewUpdateNestedMutableSubviewMapsTest extends AbstractEntity
                         .fetching(Person.class)
                         .and();
             }
-
-            builder.select(Person.class);
-
-            if (version) {
-                builder.update(Document.class);
-            }
-
-            builder.update(Person.class)
-                    .update(Person.class);
+            builder.assertSelect()
+                    .fetching(Person.class)
+                    .and();
+            builder.update(Person.class);
+            builder.update(Person.class);
+        }
+        if (version || isQueryStrategy() && isFullMode()) {
+            builder.update(Document.class);
         }
 
         builder.validate();
 
-        assertNoCollectionUpdateFullAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertSubviewEquals(doc1.getContacts(), docView.getContacts());
         assertEquals(p4.getId(), p1.getFriend().getId());
         assertEquals("newFriend", p4.getName());
@@ -416,17 +412,14 @@ public class EntityViewUpdateNestedMutableSubviewMapsTest extends AbstractEntity
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
-                fullFetch(builder);
+                assertReplaceAnd(builder);
             }
 
             builder.update(Person.class);
-            if (version) {
-                builder.update(Document.class);
-            }
         } else {
             if (isFullMode()) {
                 fullFetch(builder);
@@ -437,12 +430,10 @@ public class EntityViewUpdateNestedMutableSubviewMapsTest extends AbstractEntity
                         .fetching(Person.class)
                         .and();
             }
-
-            if (version) {
-                builder.update(Document.class);
-            }
-
             builder.update(Person.class);
+        }
+        if (version || isQueryStrategy() && isFullMode()) {
+            builder.update(Document.class);
         }
         builder.validate();
 
@@ -488,11 +479,9 @@ public class EntityViewUpdateNestedMutableSubviewMapsTest extends AbstractEntity
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
-                fullFetch(afterBuilder)
-                        .update(Person.class);
-                if (version) {
-                    versionUpdate(afterBuilder);
-                }
+                afterBuilder.update(Person.class);
+                assertReplaceAnd(afterBuilder);
+                versionUpdate(afterBuilder);
             }
         } else {
             if (isFullMode()) {
@@ -506,27 +495,9 @@ public class EntityViewUpdateNestedMutableSubviewMapsTest extends AbstractEntity
         afterBuilder.validate();
     }
 
-    private void assertNoCollectionUpdateFullAndReload(UpdatableDocumentWithMapsView docView) {
-        AssertStatementBuilder afterBuilder = assertQueriesAfterUpdate(docView);
-
-        if (isQueryStrategy()) {
-            if (isFullMode()) {
-                fullFetch(afterBuilder).update(Person.class)
-                        .update(Person.class);
-                if (version) {
-                    versionUpdate(afterBuilder);
-                }
-            }
-        } else {
-            if (isFullMode()) {
-                fullFetch(afterBuilder);
-                if (version) {
-                    versionUpdate(afterBuilder);
-                }
-            }
-        }
-
-        afterBuilder.validate();
+    private AssertStatementBuilder assertReplaceAnd(AssertStatementBuilder builder) {
+        return builder.delete(Document.class, "contacts")
+                .insert(Document.class, "contacts");
     }
 
     @Override
@@ -541,14 +512,15 @@ public class EntityViewUpdateNestedMutableSubviewMapsTest extends AbstractEntity
 
     @Override
     protected AssertStatementBuilder fullUpdate(AssertStatementBuilder builder) {
-        fullFetch(builder)
-                .update(Person.class)
-                .update(Person.class)
-                .update(Person.class)
+        builder.update(Person.class)
                 .update(Person.class);
-        if (version) {
-            builder.update(Document.class);
+        assertReplaceAnd(builder);
+        if (doc1.getContacts().size() > 1) {
+            builder.insert(Document.class, "contacts")
+                    .update(Person.class)
+                    .update(Person.class);
         }
+        builder.update(Document.class);
         return builder;
     }
 

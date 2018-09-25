@@ -87,6 +87,15 @@ public class CollectionAddAllAction<C extends Collection<E>, E> implements Colle
     }
 
     @Override
+    public void undo(C collection, Collection<?> removedObjects, Collection<?> addedObjects) {
+        for (E element : elements) {
+            if (addedObjects.contains(element)) {
+                collection.remove(element);
+            }
+        }
+    }
+
+    @Override
     public boolean containsObject(C collection, Object o) {
         for (Object element : elements) {
             if (element == o) {

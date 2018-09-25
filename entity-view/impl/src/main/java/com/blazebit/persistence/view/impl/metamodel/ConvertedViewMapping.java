@@ -50,12 +50,12 @@ public class ConvertedViewMapping implements ViewMapping {
 
     @Override
     @SuppressWarnings("unchecked")
-    public ManagedViewTypeImplementor<?> getManagedViewType(MetamodelBuildingContext context) {
+    public ManagedViewTypeImplementor<?> getManagedViewType(MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
         if (convertedViewType != null) {
             return convertedViewType;
         }
 
-        ManagedViewTypeImplementor<?> viewType = delegate.getManagedViewType(context);
+        ManagedViewTypeImplementor<?> viewType = delegate.getManagedViewType(context, embeddableMapping);
         if (viewType instanceof FlatViewType<?>) {
             return convertedViewType = new ConvertedFlatViewType((FlatViewTypeImplementor<?>) viewType, convertedType, converter);
         } else {

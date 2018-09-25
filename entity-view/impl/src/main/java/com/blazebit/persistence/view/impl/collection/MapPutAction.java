@@ -73,6 +73,13 @@ public class MapPutAction<C extends Map<K, V>, K, V> implements MapAction<C> {
     }
 
     @Override
+    public void undo(C map, Collection<?> removedKeys, Collection<?> addedKeys, Collection<?> removedElements, Collection<?> addedElements) {
+        if (addedKeys.contains(key) || addedElements.contains(value)) {
+            map.put(key, removedValueInView);
+        }
+    }
+
+    @Override
     public Collection<Object> getAddedKeys() {
         return (Collection<Object>) Collections.singleton(key);
     }

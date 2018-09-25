@@ -38,17 +38,17 @@ public class InverseCollectionElementAttributeFlusher<E, V> extends CollectionEl
     }
 
     @Override
-    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
+    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
         if (strategy == Strategy.REMOVE) {
             inverseFlusher.removeElement(context, null, element);
         } else if (strategy != Strategy.IGNORE) {
-            inverseFlusher.flushQuerySetElement(context, (V)  element, view, strategy == Strategy.SET_NULL ? null : view, parameterPrefix, (DirtyAttributeFlusher<?, E, Object>) nestedGraphNode);
+            inverseFlusher.flushQuerySetElement(context, (V)  element, ownerView, strategy == Strategy.SET_NULL ? null : ownerView, parameterPrefix, (DirtyAttributeFlusher<?, E, Object>) nestedGraphNode);
         }
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public boolean flushEntity(UpdateContext context, E entity, Object view, V value, Runnable postReplaceListener) {
+    public boolean flushEntity(UpdateContext context, E entity, Object ownerView, Object view, V value, Runnable postReplaceListener) {
         if (strategy == Strategy.REMOVE) {
             inverseFlusher.removeElement(context, entity, element);
         } else if (strategy != Strategy.IGNORE) {

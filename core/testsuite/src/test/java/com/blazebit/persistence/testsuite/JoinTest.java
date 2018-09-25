@@ -36,6 +36,7 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.DocumentForEntityKeyMaps;
 import com.blazebit.persistence.testsuite.entity.PersonForEntityKeyMaps;
+import com.blazebit.persistence.testsuite.entity.Version;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -479,14 +480,15 @@ public class JoinTest extends AbstractCoreTest {
     }
     
     // NOTE: DB2 9.7 which is what we've got on Travis CI does not support subqueries in the on clause. See http://www-01.ibm.com/support/knowledgecenter/SSEPGG_9.7.0/com.ibm.db2.luw.messages.sql.doc/doc/msql00338n.html?cp=SSEPGG_9.7.0
+    // NOTE: Hibernate < 5.1 need to refer to other from clause elements which isn't supported until 5.1
     @Test
-    @Category({ NoDB2.class })
+    @Category({ NoDB2.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
     public void testSizeInOnClause() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d")
             .leftJoinOn("d.partners", "p").on("SIZE(d.versions)").gtExpression("2").end();
         
         final String expected = "SELECT d FROM Document d LEFT JOIN d.partners p"
-                + onClause("(SELECT " + countStar() + " FROM d.versions version) > 2");
+                + onClause("(SELECT " + countStar() + " FROM " + correlationPath("d.versions", Version.class,"version", "document.id = d.id") + ") > 2");
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
     }

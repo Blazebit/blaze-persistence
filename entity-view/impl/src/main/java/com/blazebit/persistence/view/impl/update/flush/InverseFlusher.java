@@ -104,7 +104,7 @@ public final class InverseFlusher<E> {
         this.childEntityToEntityMapper = childEntityToEntityMapper;
     }
 
-    public static <E> InverseFlusher<E> forAttribute(EntityViewManagerImpl evm, ManagedViewType<?> viewType, AbstractMethodAttribute<?, ?> attribute, TypeDescriptor childTypeDescriptor) {
+    public static <E> InverseFlusher<E> forAttribute(EntityViewManagerImpl evm, ManagedViewType<?> viewType, AbstractMethodAttribute<?, ?> attribute, TypeDescriptor childTypeDescriptor, EntityViewUpdaterImpl owner, String ownerMapping) {
         if (attribute.getMappedBy() != null) {
             String attributeLocation = attribute.getLocation();
             Type<?> elementType = attribute instanceof PluralAttribute<?, ?, ?> ? ((PluralAttribute<?, ?, ?>) attribute).getElementType() : ((SingularAttribute<?, ?>) attribute).getType();
@@ -150,11 +150,14 @@ public final class InverseFlusher<E> {
                             attributeLocation,
                             evm,
                             childViewType.getJavaType(),
+                            attribute.getReadOnlyAllowedSubtypes(),
                             attribute.getPersistCascadeAllowedSubtypes(),
                             attribute.getUpdateCascadeAllowedSubtypes(),
                             new ReferenceEntityLoader(evm, childViewType, EntityViewUpdaterImpl.createViewIdMapper(evm, childViewType)),
                             Accessors.forViewId(evm, childViewType, true),
-                            true
+                            true,
+                            owner,
+                            ownerMapping
                     );
                 } else if (childTypeDescriptor.isJpaEntity()) {
                     Class<?> childType = elementType.getJavaType();
@@ -163,6 +166,12 @@ public final class InverseFlusher<E> {
                             evm,
                             viewType.getEntityClass(),
                             childType,
+                            attribute.getWritableMappedByMappings()
+                    );
+                    parentEntityOnChildEntityAddMapper = parentEntityOnChildEntityRemoveMapper = (Mapper<Object, Object>) Mappers.forEntityAttributeMapping(
+                            evm,
+                            viewType.getEntityClass(),
+                            elementEntityClass,
                             attribute.getWritableMappedByMappings()
                     );
                 }
@@ -179,11 +188,14 @@ public final class InverseFlusher<E> {
                             attributeLocation,
                             evm,
                             childViewType.getJavaType(),
+                            attribute.getReadOnlyAllowedSubtypes(),
                             attribute.getPersistCascadeAllowedSubtypes(),
                             attribute.getUpdateCascadeAllowedSubtypes(),
                             new ReferenceEntityLoader(evm, childViewType, EntityViewUpdaterImpl.createViewIdMapper(evm, childViewType)),
                             Accessors.forViewId(evm, childViewType, true),
-                            true
+                            true,
+                            owner,
+                            ownerMapping
                     );
                     parentEntityOnChildEntityAddMapper = parentEntityOnChildEntityRemoveMapper = Mappers.forAccessor(parentReferenceAttributeAccessor);
                     parentEntityOnChildViewMapper = (Mapper<Object, Object>) Mappers.forViewConvertToViewAttributeMapping(
@@ -201,6 +213,7 @@ public final class InverseFlusher<E> {
                             childType,
                             attribute.getMappedBy()
                     );
+                    parentEntityOnChildEntityAddMapper = parentEntityOnChildEntityRemoveMapper = Mappers.forAccessor(parentReferenceAttributeAccessor);
                     parentEntityOnChildViewMapper = Mappers.forAccessor(parentReferenceAttributeAccessor);
                 }
             }
@@ -221,7 +234,7 @@ public final class InverseFlusher<E> {
                         null,
                         null,
                         null,
-                        TypeDescriptor.forInverseCollectionAttribute(new EntityBasicUserType(evm.getJpaProvider()))
+                        TypeDescriptor.forInverseCollectionAttribute(viewType.getEntityClass(), new EntityBasicUserType(evm.getJpaProvider()))
                 );
             } else {
                 parentEntityOnChildEntityRemoveMapper = new NullMapper<>(parentEntityOnChildEntityRemoveMapper);
@@ -378,9 +391,9 @@ public final class InverseFlusher<E> {
             int orphanRemovalStartIndex = context.getOrphanRemovalDeleters().size();
             Query q = elementToEntityMapper.createInverseUpdateQuery(context, element, nestedGraphNode, parentReferenceAttributeFlusher);
             if (nestedGraphNode != null) {
-                nestedGraphNode.flushQuery(context, parameterPrefix, q, null, element, null);
+                nestedGraphNode.flushQuery(context, parameterPrefix, q, element, null, element, null);
             }
-            parentReferenceAttributeFlusher.flushQuery(context, parameterPrefix, q, null, newValue, null);
+            parentReferenceAttributeFlusher.flushQuery(context, parameterPrefix, q, null, null, newValue, null);
             if (q != null) {
                 int updated = q.executeUpdate();
 

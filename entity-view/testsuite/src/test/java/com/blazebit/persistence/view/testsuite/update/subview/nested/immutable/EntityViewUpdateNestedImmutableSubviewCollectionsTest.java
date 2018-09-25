@@ -59,6 +59,11 @@ public class EntityViewUpdateNestedImmutableSubviewCollectionsTest extends Abstr
     }
 
     @Override
+    protected String[] getFetchedCollections() {
+        return new String[] { "people" };
+    }
+
+    @Override
     protected void registerViewTypes(EntityViewConfiguration cfg) {
         cfg.addEntityView(UpdatableResponsiblePersonView.class);
         cfg.addEntityView(FriendPersonView.class);
@@ -76,21 +81,22 @@ public class EntityViewUpdateNestedImmutableSubviewCollectionsTest extends Abstr
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
-
-        fullFetch(builder);
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
+                assertReplaceAnd(builder);
                 builder.update(Person.class).update(Person.class);
             }
         } else {
+            fullFetch(builder);
+
             if (isFullMode()) {
                 // In full mode we need to select the added element for cascading the update
                 builder.select(Person.class);
             }
         }
-        if (version) {
+        if (version || isFullMode() && isQueryStrategy()) {
             builder.update(Document.class);
         }
 
@@ -98,7 +104,7 @@ public class EntityViewUpdateNestedImmutableSubviewCollectionsTest extends Abstr
                     .forRelation(Document.class, "people")
                 .validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertSubviewEquals(doc1.getPeople(), docView.getPeople());
     }
 
@@ -115,21 +121,22 @@ public class EntityViewUpdateNestedImmutableSubviewCollectionsTest extends Abstr
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
-
-        fullFetch(builder);
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
+                assertReplaceAnd(builder);
                 builder.update(Person.class).update(Person.class);
             }
         } else {
+            fullFetch(builder);
+
             if (isFullMode()) {
                 // In full mode we need to select the added element for cascading the update
                 builder.select(Person.class);
             }
         }
-        if (version) {
+        if (version || isFullMode() && isQueryStrategy()) {
             builder.update(Document.class);
         }
 
@@ -137,7 +144,7 @@ public class EntityViewUpdateNestedImmutableSubviewCollectionsTest extends Abstr
                     .forRelation(Document.class, "people")
                 .validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertSubviewEquals(doc1.getPeople(), docView.getPeople());
     }
 
@@ -154,21 +161,22 @@ public class EntityViewUpdateNestedImmutableSubviewCollectionsTest extends Abstr
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
-
-        fullFetch(builder);
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
+                assertReplaceAnd(builder);
                 builder.update(Person.class).update(Person.class);
             }
         } else {
+            fullFetch(builder);
+
             if (isFullMode()) {
                 // In full mode we need to select the added element for cascading the update
                 builder.select(Person.class);
             }
         }
-        if (version) {
+        if (version || isFullMode() && isQueryStrategy()) {
             builder.update(Document.class);
         }
 
@@ -177,7 +185,7 @@ public class EntityViewUpdateNestedImmutableSubviewCollectionsTest extends Abstr
                 .and()
                 .validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertEquals("pers4", p4.getName());
         docView.getPeople().get(1).getFriend().setName("pers4");
         assertSubviewEquals(doc1.getPeople(), docView.getPeople());
@@ -197,21 +205,22 @@ public class EntityViewUpdateNestedImmutableSubviewCollectionsTest extends Abstr
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
-
-        fullFetch(builder);
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
+                assertReplaceAnd(builder);
                 builder.update(Person.class).update(Person.class);
             }
         } else {
+            fullFetch(builder);
+
             if (isFullMode()) {
                 // In full mode we need to select the added element for cascading the update
                 builder.select(Person.class);
             }
         }
-        if (version) {
+        if (version || isFullMode() && isQueryStrategy()) {
             builder.update(Document.class);
         }
 
@@ -220,7 +229,7 @@ public class EntityViewUpdateNestedImmutableSubviewCollectionsTest extends Abstr
                 .and()
                 .validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertEquals("pers4", p4.getName());
         docView.getPeople().get(1).getFriend().setName("pers4");
         assertSubviewEquals(doc1.getPeople(), docView.getPeople());
@@ -238,14 +247,14 @@ public class EntityViewUpdateNestedImmutableSubviewCollectionsTest extends Abstr
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
-                fullFetch(builder);
+                assertReplaceAnd(builder);
             }
             builder.update(Person.class);
-            if (version) {
+            if (version || isFullMode()) {
                 builder.update(Document.class);
             }
         } else {
@@ -276,14 +285,12 @@ public class EntityViewUpdateNestedImmutableSubviewCollectionsTest extends Abstr
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
-                fullFetch(builder).update(Person.class);
-                if (version) {
-                    versionUpdate(builder);
-                }
+                assertReplaceAnd(builder).update(Person.class);
+                versionUpdate(builder);
             }
         } else {
             if (isFullMode()) {
@@ -316,14 +323,14 @@ public class EntityViewUpdateNestedImmutableSubviewCollectionsTest extends Abstr
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
-                fullFetch(builder);
+                assertReplaceAnd(builder);
             }
             builder.update(Person.class);
-            if (version) {
+            if (version || isFullMode()) {
                 builder.update(Document.class);
             }
         } else {
@@ -354,14 +361,14 @@ public class EntityViewUpdateNestedImmutableSubviewCollectionsTest extends Abstr
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
-                fullFetch(builder);
+                assertReplaceAnd(builder);
             }
             builder.update(Person.class);
-            if (version) {
+            if (version || isFullMode()) {
                 builder.update(Document.class);
             }
         } else {
@@ -414,10 +421,8 @@ public class EntityViewUpdateNestedImmutableSubviewCollectionsTest extends Abstr
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
-                fullFetch(afterBuilder).update(Person.class);
-                if (version) {
-                    versionUpdate(afterBuilder);
-                }
+                assertReplaceAnd(afterBuilder).update(Person.class);
+                versionUpdate(afterBuilder);
             }
         } else {
             if (isFullMode()) {
@@ -431,6 +436,15 @@ public class EntityViewUpdateNestedImmutableSubviewCollectionsTest extends Abstr
         afterBuilder.validate();
     }
 
+    private AssertStatementBuilder assertReplaceAnd(AssertStatementBuilder builder) {
+        builder.delete(Document.class, "people")
+                .insert(Document.class, "people");
+        if (doc1.getPeople().size() > 1) {
+            builder.insert(Document.class, "people");
+        }
+        return builder;
+    }
+
     @Override
     protected AssertStatementBuilder fullFetch(AssertStatementBuilder builder) {
         return builder.assertSelect()
@@ -442,12 +456,10 @@ public class EntityViewUpdateNestedImmutableSubviewCollectionsTest extends Abstr
 
     @Override
     protected AssertStatementBuilder fullUpdate(AssertStatementBuilder builder) {
-        fullFetch(builder)
+        assertReplaceAnd(builder)
                 .update(Person.class)
                 .update(Person.class);
-        if (version) {
-            builder.update(Document.class);
-        }
+        builder.update(Document.class);
         return builder;
     }
 

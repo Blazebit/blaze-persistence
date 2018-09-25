@@ -143,6 +143,11 @@ public abstract class AbstractDeleteCollectionCriteriaBuilder<T, X extends BaseD
         String deleteSql = "delete from " + joinTable.getTableName();
         Map<String, String> columnExpressionRemappings = new HashMap<>(joinTable.getIdColumnMappings().size());
         columnExpressionRemappings.put(collectionAlias + ".", joinTable.getTableName() + ".");
+
+        String[] discriminatorColumnCheck = mainQuery.jpaProvider.getDiscriminatorColumnCheck(entityType);
+        if (discriminatorColumnCheck != null) {
+            columnExpressionRemappings.put(ownerAlias + "." + discriminatorColumnCheck[0] + "=" + discriminatorColumnCheck[1], "1=1");
+        }
         for (Map.Entry<String, String> entry : joinTable.getIdColumnMappings().entrySet()) {
             columnExpressionRemappings.put(ownerAlias + "." + entry.getValue(), joinTable.getTableName() + "." + entry.getKey());
         }

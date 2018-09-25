@@ -35,7 +35,7 @@ public class ConstructorReflectionInstantiator<T> extends AbstractReflectionInst
 
     public ConstructorReflectionInstantiator(MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory, ManagedViewTypeImplementor<T> viewType, ManagedViewTypeImplementor<T> viewTypeBase, Class<?>[] parameterTypes,
                                              EntityViewManager entityViewManager, List<MutableBasicUserTypeEntry> mutableBasicUserTypes, List<TypeConverterEntry> typeConverterEntries) {
-        super(mutableBasicUserTypes, typeConverterEntries);
+        super(mutableBasicUserTypes, typeConverterEntries, parameterTypes);
         Class<T> proxyClazz = getProxyClass(entityViewManager, proxyFactory, viewType, viewTypeBase);
         Constructor<T> javaConstructor;
 

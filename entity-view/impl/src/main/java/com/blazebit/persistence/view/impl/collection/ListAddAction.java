@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl.collection;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 
+import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -32,10 +33,12 @@ import java.util.Map;
 public class ListAddAction<C extends List<E>, E> implements ListAction<C> {
 
     private final int index;
+    private final boolean append;
     private final E element;
     
-    public ListAddAction(int index, E element) {
+    public ListAddAction(int index, boolean append, E element) {
         this.index = index;
+        this.append = append;
         this.element = element;
     }
 
@@ -47,6 +50,11 @@ public class ListAddAction<C extends List<E>, E> implements ListAction<C> {
         } else {
             list.add(index, element);
         }
+    }
+
+    @Override
+    public void undo(C collection, Collection<?> removedObjects, Collection<?> addedObjects) {
+        collection.remove(index);
     }
 
     @Override
@@ -78,12 +86,40 @@ public class ListAddAction<C extends List<E>, E> implements ListAction<C> {
     }
 
     @Override
+    public List<Map.Entry<Object, Integer>> getInsertedObjectEntries() {
+        if (append) {
+            return Collections.emptyList();
+        } else {
+            return Collections.<Map.Entry<Object, Integer>>singletonList(new AbstractMap.SimpleEntry<Object, Integer>(element, index));
+        }
+    }
+
+    @Override
+    public List<Map.Entry<Object, Integer>> getAppendedObjectEntries() {
+        if (append) {
+            return Collections.<Map.Entry<Object, Integer>>singletonList(new AbstractMap.SimpleEntry<Object, Integer>(element, index));
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
+    public List<Map.Entry<Object, Integer>> getRemovedObjectEntries() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public List<Map.Entry<Object, Integer>> getTrimmedObjectEntries() {
+        return Collections.emptyList();
+    }
+
+    @Override
     @SuppressWarnings("unchecked")
     public CollectionAction<C> replaceObject(Object oldElem, Object elem) {
         if (element != oldElem) {
             return null;
         }
-        return new ListAddAction(index, elem);
+        return new ListAddAction(index, append, elem);
     }
 
     @Override
@@ -97,7 +133,7 @@ public class ListAddAction<C extends List<E>, E> implements ListAction<C> {
         if (newElement == null) {
             return this;
         }
-        return new ListAddAction(index, newElement);
+        return new ListAddAction(index, append, newElement);
     }
 
     @Override

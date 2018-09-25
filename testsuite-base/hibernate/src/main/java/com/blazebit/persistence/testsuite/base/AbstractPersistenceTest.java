@@ -134,7 +134,7 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
         return major < 5 || major == 5 && minor < 1 || major == 5 && minor == 1 && fix < 0;
     }
 
-    protected boolean supportsMapInplaceUpdate() {
+    protected boolean supportsIndexedInplaceUpdate() {
         // Hibernate 4 doesn't support inplace updates
         return isHibernate5();
     }

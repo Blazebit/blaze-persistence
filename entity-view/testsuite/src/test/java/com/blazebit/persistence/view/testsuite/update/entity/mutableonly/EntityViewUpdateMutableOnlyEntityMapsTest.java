@@ -78,10 +78,14 @@ public class EntityViewUpdateMutableOnlyEntityMapsTest extends AbstractEntityVie
         // Then
         // Assert that the document and the people are loaded i.e. a full fetch
         // Since only an existing person was update, only a single update is generated
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        fullFetch(builder);
-        if (version) {
+        if (isQueryStrategy()) {
+            builder.select(Person.class);
+        } else {
+            fullFetch(builder);
+        }
+        if (version || isQueryStrategy() && isFullMode()) {
             versionUpdate(builder);
         }
         builder.update(Person.class)
@@ -89,8 +93,12 @@ public class EntityViewUpdateMutableOnlyEntityMapsTest extends AbstractEntityVie
 
         // Unfortunately, even after an update, we have to reload the entity to merge again
         AssertStatementBuilder afterBuilder = assertQueriesAfterUpdate(docView);
-        fullFetch(afterBuilder);
-        if (version) {
+        if (isQueryStrategy()) {
+            afterBuilder.select(Person.class);
+        } else {
+            fullFetch(afterBuilder);
+        }
+        if (version || isQueryStrategy() && isFullMode()) {
             versionUpdate(afterBuilder);
         }
         afterBuilder.validate();
@@ -118,12 +126,6 @@ public class EntityViewUpdateMutableOnlyEntityMapsTest extends AbstractEntityVie
         } catch (UnsupportedOperationException ex) {
             assertTrue(ex.getMessage().contains("Collection is not updatable"));
         }
-    }
-
-    @Override
-    protected boolean isQueryStrategy() {
-        // Collection changes always need to be applied on the entity model, can't do that via a query
-        return false;
     }
 
     @Override

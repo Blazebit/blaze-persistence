@@ -305,7 +305,7 @@ The logical SQL for this _kittens copying query_ looks like
 
 [source,sql]
 ----
-INSERT INTO Cat.kittens(id, _collection.id)
+INSERT INTO Cat.kittens(id, kittens.id)
 SELECT :param_1, kittens_1.id
 FROM Cat c
 LEFT JOIN c.kittens kittens_1

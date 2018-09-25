@@ -20,6 +20,7 @@ import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntity;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityEmbeddable;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityId;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityNestedEmbeddable;
+import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntitySub;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.NameObject;
 import com.blazebit.persistence.view.FlushMode;
@@ -56,6 +57,7 @@ public abstract class AbstractEntityViewUpdateNestedEmbeddableEntityTest<T> exte
     protected Class<?>[] getEntityClasses() {
         return new Class<?>[]{
                 EmbeddableTestEntity.class,
+                EmbeddableTestEntitySub.class,
                 IntIdEntity.class,
                 EmbeddableTestEntityEmbeddable.class,
                 EmbeddableTestEntityId.class,
@@ -99,13 +101,12 @@ public abstract class AbstractEntityViewUpdateNestedEmbeddableEntityTest<T> exte
     }
 
     @Override
-    protected void restartTransactionAndReload() {
-        restartTransaction();
+    protected void reload() {
         // Load into PC, then access via find
         cbf.create(em, IntIdEntity.class)
                 .getResultList();
         cbf.create(em, EmbeddableTestEntity.class)
-                .fetch("embeddable.manyToOne", "embeddable.manyToMany", "embeddable.oneToMany", "embeddable.elementCollection", "embeddable.nestedEmbeddable.nestedOneToMany")
+                .fetch("embeddable.manyToOne", "embeddable.manyToMany", "embeddable.oneToMany", "embeddable.oneToMany2", "embeddable.elementCollection", "embeddable.nestedEmbeddable.nestedOneToMany")
                 .getResultList();
         entity1 = em.find(EmbeddableTestEntity.class, entity1.getId());
         entity2 = em.find(EmbeddableTestEntity.class, entity2.getId());

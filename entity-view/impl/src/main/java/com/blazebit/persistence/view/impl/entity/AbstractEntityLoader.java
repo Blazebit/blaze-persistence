@@ -65,6 +65,11 @@ public abstract class AbstractEntityLoader implements EntityLoader {
     }
 
     @Override
+    public Class<?> getEntityClass() {
+        return entityClass;
+    }
+
+    @Override
     public Object getEntityId(UpdateContext context, Object entity) {
         if (entityIdAccessor == null) {
             return null;

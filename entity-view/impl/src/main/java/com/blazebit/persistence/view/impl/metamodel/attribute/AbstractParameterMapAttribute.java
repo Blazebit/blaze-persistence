@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl.metamodel.attribute;
 import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
 import com.blazebit.persistence.view.impl.collection.MapInstantiator;
 import com.blazebit.persistence.view.impl.metamodel.AbstractParameterPluralAttribute;
+import com.blazebit.persistence.view.impl.metamodel.EmbeddableOwner;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.MappingConstructorImpl;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
@@ -41,10 +42,10 @@ public abstract class AbstractParameterMapAttribute<X, K, V> extends AbstractPar
     private final MapInstantiator mapInstantiator;
 
     @SuppressWarnings("unchecked")
-    public AbstractParameterMapAttribute(MappingConstructorImpl<X> mappingConstructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context) {
-        super(mappingConstructor, mapping, context);
-        this.keyType = (Type<K>) mapping.getKeyType(context);
-        this.keyInheritanceSubtypes = (Map<ManagedViewType<? extends K>, String>) (Map<?, ?>) mapping.getKeyInheritanceSubtypes(context);
+    public AbstractParameterMapAttribute(MappingConstructorImpl<X> mappingConstructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
+        super(mappingConstructor, mapping, context, embeddableMapping);
+        this.keyType = (Type<K>) mapping.getKeyType(context, embeddableMapping);
+        this.keyInheritanceSubtypes = (Map<ManagedViewType<? extends K>, String>) (Map<?, ?>) mapping.getKeyInheritanceSubtypes(context, embeddableMapping);
         this.mapInstantiator = createMapInstantiator(null, isSorted(), isOrdered(), getComparator());
     }
 

@@ -81,7 +81,7 @@ public class EntityViewUpdateMutableBasicTest extends AbstractEntityViewUpdateBa
         // Then
         assertVersionDiff(oldVersion, docView.getVersion(), 1, 1);
         fullFetchUpdateAndReload(docView);
-        assertVersionDiff(oldVersion, docView.getVersion(), 1, 2);
+        assertVersionDiff(oldVersion, docView.getVersion(), 1, isQueryStrategy() ? 2 : 1);
         assertEquals("newDoc", docView.getName());
         assertEquals(doc1.getName(), docView.getName());
         assertEquals(doc1.getVersion(), docView.getVersion());
@@ -110,7 +110,7 @@ public class EntityViewUpdateMutableBasicTest extends AbstractEntityViewUpdateBa
         // Then
         assertVersionDiff(oldVersion, docView.getVersion(), 1, 1);
         fullFetchUpdateAndReload(docView);
-        assertVersionDiff(oldVersion, docView.getVersion(), 1, 2);
+        assertVersionDiff(oldVersion, docView.getVersion(), 1, isQueryStrategy() ? 2 : 1);
         assertEquals(0, doc1.getLastModified().getTime());
         assertEquals(doc1.getVersion(), docView.getVersion());
     }
@@ -138,14 +138,14 @@ public class EntityViewUpdateMutableBasicTest extends AbstractEntityViewUpdateBa
         // Then
         assertVersionDiff(oldVersion, docView.getVersion(), 1, 1);
         fullFetchUpdateAndReload(docView);
-        assertVersionDiff(oldVersion, docView.getVersion(), 1, 2);
+        assertVersionDiff(oldVersion, docView.getVersion(), 1, isQueryStrategy() ? 2 : 1);
         assertEquals(0, doc1.getLastModified().getTime());
         assertEquals(doc1.getVersion(), docView.getVersion());
     }
 
     private void fullFetchUpdateAndReload(UpdatableDocumentBasicView docView) {
         // Assert that not only the document is loaded and finally also updated
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
             fullFetch(builder);

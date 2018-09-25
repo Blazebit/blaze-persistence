@@ -41,6 +41,11 @@ public abstract class AbstractEntityViewUpdateEntityCollectionsTest<T extends Up
         return MODE_STRATEGY_VERSION_COMBINATIONS;
     }
 
+    @Override
+    protected String[] getFetchedCollections() {
+        return new String[] { "people" };
+    }
+
     public T replaceCollection() {
         // Given
         final T docView = getDoc1View();

@@ -26,13 +26,16 @@ import com.blazebit.persistence.view.CascadeType;
 import com.blazebit.persistence.view.CreatableEntityView;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.EntityViewSetting;
+import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.UpdatableEntityView;
 import com.blazebit.persistence.view.UpdatableMapping;
 import com.blazebit.persistence.view.ViewConstructor;
+import com.blazebit.persistence.view.impl.ConfigurationProperties;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
+import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -165,7 +168,6 @@ public class EntityViewMetamodelTest extends AbstractEntityViewTest {
         evm.find(em, DocumentUpdateView.class, 1L);
     }
 
-
     @Test
     public void nonUpdatableEntityAttributeDefaults() {
         ViewMetamodel metamodel = build(DocumentViewWithEntityTypes.class);
@@ -251,7 +253,11 @@ public class EntityViewMetamodelTest extends AbstractEntityViewTest {
 
     @Test
     public void nonUpdatableMutableViewAttributeDefaults() {
-        ViewMetamodel metamodel = build(DocumentViewWithMutableViewTypes.class, PersonUpdateView.class);
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        cfg.setProperty(ConfigurationProperties.PROXY_EAGER_LOADING, "true");
+        cfg.setProperty(ConfigurationProperties.UPDATER_EAGER_LOADING, "true");
+        cfg.setProperty(ConfigurationProperties.UPDATER_DISALLOW_OWNED_UPDATABLE_SUBVIEW, "false");
+        ViewMetamodel metamodel = build(cfg, DocumentViewWithMutableViewTypes.class, PersonUpdateView.class);
         ManagedViewType<?> docViewType = metamodel.managedView(DocumentViewWithMutableViewTypes.class);
         // Collections are only considered being updatable if the element type is "persistable"
         assertFalse(docViewType.getAttribute("partners").isUpdatable());
@@ -285,7 +291,11 @@ public class EntityViewMetamodelTest extends AbstractEntityViewTest {
 
     @Test
     public void updatableMutableViewAttributeDefaults() {
-        ViewMetamodel metamodel = build(DocumentViewWithUpdatableMutableViewTypes.class, PersonUpdateView.class);
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        cfg.setProperty(ConfigurationProperties.PROXY_EAGER_LOADING, "true");
+        cfg.setProperty(ConfigurationProperties.UPDATER_EAGER_LOADING, "true");
+        cfg.setProperty(ConfigurationProperties.UPDATER_DISALLOW_OWNED_UPDATABLE_SUBVIEW, "false");
+        ViewMetamodel metamodel = build(cfg, DocumentViewWithUpdatableMutableViewTypes.class, PersonUpdateView.class);
         ManagedViewType<?> docViewType = metamodel.managedView(DocumentViewWithUpdatableMutableViewTypes.class);
         // By default, the collection relations are not updatable
         assertTrue(docViewType.getAttribute("partners").isUpdatable());
@@ -319,7 +329,11 @@ public class EntityViewMetamodelTest extends AbstractEntityViewTest {
 
     @Test
     public void updatableMutableAndCreatableView() {
-        ViewMetamodel metamodel = build(DocumentViewWithUpdatableMutableAndCreatableViewTypes.class, PersonCreateAndUpdateView.class);
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        cfg.setProperty(ConfigurationProperties.PROXY_EAGER_LOADING, "true");
+        cfg.setProperty(ConfigurationProperties.UPDATER_EAGER_LOADING, "true");
+        cfg.setProperty(ConfigurationProperties.UPDATER_DISALLOW_OWNED_UPDATABLE_SUBVIEW, "false");
+        ViewMetamodel metamodel = build(cfg, DocumentViewWithUpdatableMutableAndCreatableViewTypes.class, PersonCreateAndUpdateView.class);
         ManagedViewType<?> docViewType = metamodel.managedView(DocumentViewWithUpdatableMutableAndCreatableViewTypes.class);
         // By default, the collection relations are not updatable
         assertTrue(docViewType.getAttribute("partners").isUpdatable());
@@ -396,7 +410,11 @@ public class EntityViewMetamodelTest extends AbstractEntityViewTest {
 
     @Test
     public void updatableMutableViewWithManualCascade() {
-        ViewMetamodel metamodel = build(DocumentViewWithUpdatableMutableViewTypesAndCreateCascade.class, PersonUpdateView.class);
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        cfg.setProperty(ConfigurationProperties.PROXY_EAGER_LOADING, "true");
+        cfg.setProperty(ConfigurationProperties.UPDATER_EAGER_LOADING, "true");
+        cfg.setProperty(ConfigurationProperties.UPDATER_DISALLOW_OWNED_UPDATABLE_SUBVIEW, "false");
+        ViewMetamodel metamodel = build(cfg, DocumentViewWithUpdatableMutableViewTypesAndCreateCascade.class, PersonUpdateView.class);
         ManagedViewType<?> docViewType = metamodel.managedView(DocumentViewWithUpdatableMutableViewTypesAndCreateCascade.class);
         // By default, the collection relations are not updatable
         assertTrue(docViewType.getAttribute("partners").isUpdatable());

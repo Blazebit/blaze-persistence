@@ -62,6 +62,11 @@ public class EntityViewUpdateCorrelatedUpdatableOnlySubviewCollectionsTest exten
         cfg.addEntityView(UpdatablePersonView.class);
     }
 
+    @Override
+    protected String[] getFetchedCollections() {
+        return new String[] { "partners" };
+    }
+
     @Test
     public void testUpdateReplaceCollection() {
         // Given
@@ -73,7 +78,7 @@ public class EntityViewUpdateCorrelatedUpdatableOnlySubviewCollectionsTest exten
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isFullMode()) {
             if (isQueryStrategy()) {
@@ -104,7 +109,7 @@ public class EntityViewUpdateCorrelatedUpdatableOnlySubviewCollectionsTest exten
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode() || version) {
@@ -121,7 +126,7 @@ public class EntityViewUpdateCorrelatedUpdatableOnlySubviewCollectionsTest exten
 
         builder.validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertEquals(doc1.getPartners().size(), docView.getPartners().size() - 1);
         docView.getPartners().remove(newPerson);
         assertSubviewEquals(doc1.getPartners(), docView.getPartners());
@@ -140,7 +145,7 @@ public class EntityViewUpdateCorrelatedUpdatableOnlySubviewCollectionsTest exten
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode() || version) {
@@ -175,7 +180,7 @@ public class EntityViewUpdateCorrelatedUpdatableOnlySubviewCollectionsTest exten
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode() || version) {
@@ -191,7 +196,7 @@ public class EntityViewUpdateCorrelatedUpdatableOnlySubviewCollectionsTest exten
         }
 
         builder.validate();
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertEquals(doc1.getPartners().size(), docView.getPartners().size() - 1);
         docView.getPartners().remove(newPerson);
         assertEquals(doc1.getPartners().size(), docView.getPartners().size());
@@ -212,7 +217,7 @@ public class EntityViewUpdateCorrelatedUpdatableOnlySubviewCollectionsTest exten
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode() || version) {
@@ -247,16 +252,13 @@ public class EntityViewUpdateCorrelatedUpdatableOnlySubviewCollectionsTest exten
 
         // Then
         // Nothing is loaded since nothing that should be cascaded changed
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isFullMode()) {
             if (isQueryStrategy()) {
                 builder.update(Document.class);
             } else {
                 fullFetch(builder);
-                if (version) {
-                    builder.update(Document.class);
-                }
             }
         }
         builder.validate();

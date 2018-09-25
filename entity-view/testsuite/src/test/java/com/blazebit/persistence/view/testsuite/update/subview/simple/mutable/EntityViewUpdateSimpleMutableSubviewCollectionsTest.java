@@ -62,6 +62,11 @@ public class EntityViewUpdateSimpleMutableSubviewCollectionsTest extends Abstrac
         cfg.addEntityView(UpdatablePersonView.class);
     }
 
+    @Override
+    protected String[] getFetchedCollections() {
+        return new String[] { "people" };
+    }
+
     @Test
     public void testUpdateReplaceCollection() {
         // Given
@@ -76,14 +81,17 @@ public class EntityViewUpdateSimpleMutableSubviewCollectionsTest extends Abstrac
         // Assert that the document and the people are loaded in full mode.
         // During dirty detection we should be able to figure out that nothing changed
         // So partial modes wouldn't load anything and both won't cause any updates
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isFullMode()) {
-            fullFetch(builder);
             if (isQueryStrategy()) {
+                builder.delete(Document.class, "people")
+                        .insert(Document.class, "people");
                 builder.update(Person.class);
+            } else {
+                fullFetch(builder);
             }
-            if (version) {
+            if (version || isQueryStrategy()) {
                 builder.update(Document.class);
             }
         }
@@ -93,11 +101,10 @@ public class EntityViewUpdateSimpleMutableSubviewCollectionsTest extends Abstrac
         AssertStatementBuilder afterBuilder = assertQueriesAfterUpdate(docView);
         if (isQueryStrategy()) {
             if (isFullMode()) {
-                fullFetch(afterBuilder)
+                afterBuilder.delete(Document.class, "people")
+                        .insert(Document.class, "people")
                     .update(Person.class);
-                if (version) {
-                    afterBuilder.update(Document.class);
-                }
+                afterBuilder.update(Document.class);
             }
         } else {
             if (isFullMode()) {
@@ -127,11 +134,15 @@ public class EntityViewUpdateSimpleMutableSubviewCollectionsTest extends Abstrac
         // Assert that the document and the people are loaded, but only a relation insert is done
         // The full mode also has to load the person that is added and apply the changes
         // But since nothing is changed, no update is subsequently generated
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        fullFetch(builder);
+        if (!isQueryStrategy()) {
+            fullFetch(builder);
+        }
         if (isFullMode()) {
             if (isQueryStrategy()) {
+                builder.delete(Document.class, "people")
+                        .insert(Document.class, "people");
                 builder.update(Person.class)
                         .update(Person.class);
             } else {
@@ -139,7 +150,7 @@ public class EntityViewUpdateSimpleMutableSubviewCollectionsTest extends Abstrac
             }
         }
 
-        if (version) {
+        if (version || isQueryStrategy() && isFullMode()) {
             builder.update(Document.class);
         }
 
@@ -147,7 +158,7 @@ public class EntityViewUpdateSimpleMutableSubviewCollectionsTest extends Abstrac
                 .forRelation(Document.class, "people")
                 .validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertSubviewEquals(doc1.getPeople(), docView.getPeople());
     }
 
@@ -168,11 +179,15 @@ public class EntityViewUpdateSimpleMutableSubviewCollectionsTest extends Abstrac
         // Since we load the people in the full mode, we do a proper diff and can compute that only a single item was added
         // The full mode also has to load the person that is added and apply the changes
         // But since nothing is changed, no update is subsequently generated
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        fullFetch(builder);
+        if (!isQueryStrategy()) {
+            fullFetch(builder);
+        }
         if (isFullMode()) {
             if (isQueryStrategy()) {
+                builder.delete(Document.class, "people")
+                        .insert(Document.class, "people");
                 builder.update(Person.class)
                         .update(Person.class);
             } else {
@@ -180,7 +195,7 @@ public class EntityViewUpdateSimpleMutableSubviewCollectionsTest extends Abstrac
             }
         }
 
-        if (version) {
+        if (version || isQueryStrategy() && isFullMode()) {
             builder.update(Document.class);
         }
 
@@ -188,7 +203,7 @@ public class EntityViewUpdateSimpleMutableSubviewCollectionsTest extends Abstrac
                     .forRelation(Document.class, "people")
                 .validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertSubviewEquals(doc1.getPeople(), docView.getPeople());
     }
 
@@ -208,21 +223,22 @@ public class EntityViewUpdateSimpleMutableSubviewCollectionsTest extends Abstrac
         // Assert that the document and the people are loaded i.e. a full fetch
         // In addition, the new person is loaded because it is dirty
         // Finally a single relation insert is done and an update to the person is done
-        AssertStatementBuilder builder = assertQuerySequence();
-
-        fullFetch(builder);
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
+                builder.delete(Document.class, "people")
+                        .insert(Document.class, "people");
                 builder.update(Person.class);
             }
 
             builder.update(Person.class);
 
-            if (version) {
+            if (version || isFullMode()) {
                 builder.update(Document.class);
             }
         } else {
+            fullFetch(builder);
             builder.select(Person.class);
             if (version) {
                 builder.update(Document.class);
@@ -235,7 +251,7 @@ public class EntityViewUpdateSimpleMutableSubviewCollectionsTest extends Abstrac
                 .forRelation(Document.class, "people")
                 .validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertSubviewEquals(doc1.getPeople(), docView.getPeople());
         assertEquals("newPerson", p2.getName());
     }
@@ -257,21 +273,23 @@ public class EntityViewUpdateSimpleMutableSubviewCollectionsTest extends Abstrac
         // Assert that the document and the people are loaded i.e. a full fetch
         // In addition, the new person is loaded because it is dirty
         // Finally a single relation insert is done and an update to the person is done
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        fullFetch(builder);
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
+                builder.delete(Document.class, "people")
+                        .insert(Document.class, "people");
                 builder.update(Person.class);
             }
 
             builder.update(Person.class);
 
-            if (version) {
+            if (version || isFullMode()) {
                 builder.update(Document.class);
             }
         } else {
+            fullFetch(builder);
             builder.select(Person.class);
             if (version) {
                 builder.update(Document.class);
@@ -284,7 +302,7 @@ public class EntityViewUpdateSimpleMutableSubviewCollectionsTest extends Abstrac
                 .forRelation(Document.class, "people")
                 .validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertSubviewEquals(doc1.getPeople(), docView.getPeople());
         assertEquals("newPerson", p2.getName());
     }
@@ -323,10 +341,18 @@ public class EntityViewUpdateSimpleMutableSubviewCollectionsTest extends Abstrac
 
     @Override
     protected AssertStatementBuilder fullUpdate(AssertStatementBuilder builder) {
-        fullFetch(builder)
-                .update(Person.class)
+        if (isQueryStrategy()) {
+            builder.delete(Document.class, "people")
+                    .insert(Document.class, "people");
+            if (doc1.getPeople().size() > 1) {
+                builder.insert(Document.class, "people");
+            }
+        } else {
+            fullFetch(builder);
+        }
+        builder.update(Person.class)
                 .update(Person.class);
-        if (version) {
+        if (version | isQueryStrategy() && isFullMode()) {
             versionUpdate(builder);
         }
         return builder;

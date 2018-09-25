@@ -33,7 +33,7 @@ public class ParentCollectionReferenceAttributeFlusher<E, V extends Collection<?
 
     public ParentCollectionReferenceAttributeFlusher(String attributeName, String mapping, FlushStrategy flushStrategy, AttributeAccessor entityAttributeAccessor, InitialValueAttributeAccessor viewAttributeAccessor,
                                                      CollectionRemoveListener cascadeDeleteListener, CollectionRemoveListener removeListener, TypeDescriptor elementDescriptor) {
-        super(attributeName, mapping, null, null, flushStrategy, entityAttributeAccessor, viewAttributeAccessor, false, true, false, false, cascadeDeleteListener, removeListener, null, elementDescriptor, null, null);
+        super(attributeName, mapping, null, null, null, null, null, false, flushStrategy, entityAttributeAccessor, viewAttributeAccessor, false, true, false, false, cascadeDeleteListener, removeListener, null, elementDescriptor, null, null);
     }
 
     @Override
@@ -43,7 +43,7 @@ public class ParentCollectionReferenceAttributeFlusher<E, V extends Collection<?
 
     @Override
     @SuppressWarnings("unchecked")
-    public boolean flushEntity(UpdateContext context, E entity, Object view, V value, Runnable postReplaceListener) {
+    public boolean flushEntity(UpdateContext context, E entity, Object ownerView, Object view, V value, Runnable postReplaceListener) {
         Collection<Object> collection = (Collection<Object>) entityAttributeMapper.getValue(value);
         collection.add(entity);
         return true;

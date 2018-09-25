@@ -16,9 +16,12 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
+import com.blazebit.persistence.view.metamodel.ManagedViewType;
+
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -31,11 +34,13 @@ public class ConstrainedAttribute<T extends AbstractAttribute<?, ?>> {
 
     private final T attribute;
     private final List<Map.Entry<String, T>> selectionConstrainedAttributes;
+    private final Map<ManagedViewType<?>, T> subAttributes;
 
     @SuppressWarnings("unchecked")
     public ConstrainedAttribute(String constraint, T attribute) {
         this.attribute = attribute;
         this.selectionConstrainedAttributes = new ArrayList<>();
+        this.subAttributes = new HashMap<>();
         addSelectionConstraint(constraint, attribute);
     }
 
@@ -51,8 +56,20 @@ public class ConstrainedAttribute<T extends AbstractAttribute<?, ?>> {
         return selectionConstrainedAttributes;
     }
 
-    public void addSelectionConstraint(String constraint, T attribute) {
-        this.selectionConstrainedAttributes.add(new AbstractMap.SimpleEntry<>(constraint, attribute));
+    public T getSubAttribute(ManagedViewType<?> viewType) {
+        T attribute = subAttributes.get(viewType);
+        if (attribute == null) {
+            return this.attribute;
+        }
+
+        return attribute;
     }
 
+    public void addSelectionConstraint(String constraint, T attribute) {
+        selectionConstrainedAttributes.add(new AbstractMap.SimpleEntry<>(constraint, attribute));
+    }
+
+    public void addSubAttribute(ManagedViewType<?> viewType, T attribute) {
+        subAttributes.put(viewType, attribute);
+    }
 }

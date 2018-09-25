@@ -65,6 +65,11 @@ public class EntityViewUpdateNestedCreatableSubviewCollectionsTest extends Abstr
         cfg.addEntityView(PersonCreateView.class);
     }
 
+    @Override
+    protected String[] getFetchedCollections() {
+        return new String[] { "people" };
+    }
+
     @Test
     public void testUpdateWithPersonCreateView() {
         final UpdatableDocumentWithCollectionsView docView = getDoc1View();
@@ -78,37 +83,23 @@ public class EntityViewUpdateNestedCreatableSubviewCollectionsTest extends Abstr
 
         // Then
         // Assert that only the document is loaded, as we don't need to load the old person
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
-            if (isFullMode()) {
-                fullFetch(builder);
-            }
-            builder.insert(Person.class);
-            builder.update(Person.class);
-            if (version) {
-                builder.update(Document.class);
-            }
+
         } else {
-            if (isFullMode()) {
-                fullFetch(builder);
-            } else {
-//                builder.select(Document.class);
-                // Adding elements to a list requires full fetching
-                fullFetch(builder);
-            }
+            fullFetch(builder);
+        }
 
-
-            builder.insert(Person.class);
-            if (version) {
-                builder.update(Document.class);
-            }
-            builder.update(Person.class);
+        builder.insert(Person.class);
+        builder.update(Person.class);
+        if (version || isQueryStrategy() && isFullMode()) {
+            builder.update(Document.class);
         }
 
         builder.validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertEquals(doc1.getPeople().get(0).getFriend().getId(), personCreateView.getId());
         assertEquals("newPers", doc1.getPeople().get(0).getFriend().getName());
         assertSubviewEquals(doc1.getPeople(), docView.getPeople());
@@ -155,12 +146,8 @@ public class EntityViewUpdateNestedCreatableSubviewCollectionsTest extends Abstr
 
     @Override
     protected AssertStatementBuilder fullUpdate(AssertStatementBuilder builder) {
-        fullFetch(builder)
-                .update(Person.class);
-        if (version) {
-            versionUpdate(builder);
-        }
-
+        versionUpdate(builder);
+        builder.update(Person.class);
         return builder;
     }
 

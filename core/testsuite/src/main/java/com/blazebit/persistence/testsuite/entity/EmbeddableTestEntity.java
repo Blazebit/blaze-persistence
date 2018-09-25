@@ -16,15 +16,16 @@
 
 package com.blazebit.persistence.testsuite.entity;
 
-import java.io.Serializable;
-
+import javax.persistence.DiscriminatorValue;
 import javax.persistence.Embedded;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.Table;
+import java.io.Serializable;
 
 @Entity
 @Table(name = "emb_tst_ent")
+@DiscriminatorValue("base")
 public class EmbeddableTestEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;

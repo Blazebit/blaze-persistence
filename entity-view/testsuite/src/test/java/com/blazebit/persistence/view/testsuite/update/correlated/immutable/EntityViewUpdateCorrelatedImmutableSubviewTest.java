@@ -69,7 +69,7 @@ public class EntityViewUpdateCorrelatedImmutableSubviewTest extends AbstractEnti
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
             fullFetch(builder);
@@ -96,7 +96,7 @@ public class EntityViewUpdateCorrelatedImmutableSubviewTest extends AbstractEnti
 
         // Then
         // Assert that no update happens since the subview is not considered updatable
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
@@ -105,9 +105,6 @@ public class EntityViewUpdateCorrelatedImmutableSubviewTest extends AbstractEnti
         } else {
             if (isFullMode()) {
                 fullFetch(builder);
-                if (version) {
-                    builder.update(Document.class);
-                }
             }
         }
         builder.validate();
@@ -129,7 +126,7 @@ public class EntityViewUpdateCorrelatedImmutableSubviewTest extends AbstractEnti
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
@@ -138,9 +135,6 @@ public class EntityViewUpdateCorrelatedImmutableSubviewTest extends AbstractEnti
         } else {
             if (isFullMode()) {
                 fullFetch(builder);
-                if (version) {
-                    builder.update(Document.class);
-                }
             }
         }
         builder.validate();
@@ -161,7 +155,7 @@ public class EntityViewUpdateCorrelatedImmutableSubviewTest extends AbstractEnti
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
@@ -170,9 +164,6 @@ public class EntityViewUpdateCorrelatedImmutableSubviewTest extends AbstractEnti
         } else {
             if (isFullMode()) {
                 fullFetch(builder);
-                if (version) {
-                    builder.update(Document.class);
-                }
             }
         }
 
@@ -194,7 +185,7 @@ public class EntityViewUpdateCorrelatedImmutableSubviewTest extends AbstractEnti
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
@@ -203,9 +194,6 @@ public class EntityViewUpdateCorrelatedImmutableSubviewTest extends AbstractEnti
         } else {
             if (isFullMode()) {
                 fullFetch(builder);
-                if (version) {
-                    builder.update(Document.class);
-                }
             }
         }
         builder.validate();

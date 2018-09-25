@@ -39,15 +39,17 @@ public class CollectionUpdateModificationQuerySpecification<T> extends Modificat
 
     private final Query updateExampleQuery;
     private final String updateSql;
+    private final String discriminatorPredicate;
     private final List<Query> setExpressionContainingUpdateQueries;
     private final Map<String, String> columnOnlyRemappings;
     private final Map<String, String> columnExpressionRemappings;
 
     public CollectionUpdateModificationQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Query exampleQuery, Set<Parameter<?>> parameters, Set<String> parameterListNames, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes, boolean isEmbedded, String[] returningColumns,
-                                                          Map<DbmsModificationState, String> includedModificationStates, Map<String, String> returningAttributeBindingMap, Query updateExampleQuery, String updateSql, List<Query> setExpressionContainingUpdateQueries, Map<String, String> columnOnlyRemappings, Map<String, String> columnExpressionRemappings) {
+                                                          Map<DbmsModificationState, String> includedModificationStates, Map<String, String> returningAttributeBindingMap, Query updateExampleQuery, String updateSql, String discriminatorPredicate, List<Query> setExpressionContainingUpdateQueries, Map<String, String> columnOnlyRemappings, Map<String, String> columnExpressionRemappings) {
         super(commonQueryBuilder, baseQuery, exampleQuery, parameters, parameterListNames, recursive, ctes, shouldRenderCteNodes, isEmbedded, returningColumns, includedModificationStates, returningAttributeBindingMap);
         this.updateExampleQuery = updateExampleQuery;
         this.updateSql = updateSql;
+        this.discriminatorPredicate = discriminatorPredicate;
         this.setExpressionContainingUpdateQueries = setExpressionContainingUpdateQueries;
         this.columnOnlyRemappings = columnOnlyRemappings;
         this.columnExpressionRemappings = columnExpressionRemappings;
@@ -68,7 +70,7 @@ public class CollectionUpdateModificationQuerySpecification<T> extends Modificat
         for (Query updateQuery : setExpressionContainingUpdateQueries) {
             participatingQueries.add(updateQuery);
             String setExpressionSql = extendedQuerySupport.getSql(em, updateQuery);
-            int assignIndex = SqlUtils.indexOfWhere(setExpressionSql) + " where ".length();
+            int assignIndex = SqlUtils.indexOfWhere(setExpressionSql) + " where ".length() + discriminatorPredicate.length();
             // TODO: fix this for row values/embeddables which might have parenthesis around or use OR
             int columnOnlyRemappingStartIndex = setClauseSqlSb.length();
             int columnOnlyRemappingEndIndex = columnOnlyRemappingStartIndex + (setExpressionSql.indexOf('=', assignIndex) - assignIndex);

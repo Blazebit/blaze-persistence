@@ -121,7 +121,7 @@ public class CorrelatedSubqueryEmbeddingViewJpqlMacro extends CorrelatedSubquery
             throw new IllegalArgumentException("The EMBEDDING_VIEW macro allows maximally one argument: <expression>!");
         }
         if (viewRootJpqlMacro.usesViewMacro()) {
-            throw new UnsupportedOperationException("It's not yet support to use the EMBEDDING_VIEW macro along with the VIEW_ROOT macro in correlations!");
+            throw new UnsupportedOperationException("It's not yet supported to use the EMBEDDING_VIEW macro along with the VIEW_ROOT macro in correlations!");
         }
         super.render(context);
     }

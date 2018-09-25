@@ -73,7 +73,7 @@ public class EntityViewUpdateSimpleMutableOnlySubviewTest extends AbstractEntity
         // Then
         // Since only the document changed we don't need to load the owner
         // Just assert the update is properly done
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
@@ -123,7 +123,7 @@ public class EntityViewUpdateSimpleMutableOnlySubviewTest extends AbstractEntity
 
         // Then
         // Since we update the old responsiblePerson, load it along with the document for updating it later
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             builder.update(Person.class);

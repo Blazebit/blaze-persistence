@@ -144,3 +144,27 @@ e.g. `com.blazebit.persistence.view.updater.flush_strategy.com.test.MyUpdatableC
 | Default | none
 | Applicable | Configuration only
 |====================
+
+==== UPDATER_DISALLOW_OWNED_UPDATABLE_SUBVIEW
+
+Defines whether the use of an updatable entity view type for owned relationships is disallowed.
+By default the use is disallowed i.e. the default value is `true`, but since there might be strange models out there, it is possible to allow this.
+
+The main reason to disallow this, is that this kind of usage would break the idea of a separate model per use case, but there is also technical reason.
+Updatable entity views are only allowed to have a single _parent_ object due to the way dirty tracking is implemented. This is not necessarily a limitation,
+but was simply done this way because the developers believe in the model per use case approach and want to encourage this way of working.
+
+During loading of entity views, tuples are transformed into entity views. Updatable entity views are de-duplicated i.e. if another tuple would be transformed,
+it uses the existing object instead. During construction of an entity view all it's child views are registered for dirty tracking.
+Since an updatable view may only have one parent, and owned *ToOne relationships do not guarantee that the relationship object will only have one parent,
+this will result in a runtime exception depending on the data.
+
+Beware that allowing updatable entity view types for *ToOne relationships might lead to these exceptions at runtime if the relationship isn't logically a OneToOne.
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.view.updater.disallow_owned_updatable_subview
+| Type | boolean
+| Default | true
+| Applicable | Configuration only
+|====================

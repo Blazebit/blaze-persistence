@@ -70,7 +70,7 @@ public class EntityViewUpdateSimpleUpdatableOnlySubviewTest extends AbstractEnti
 
         // Then
         // Assert that only the document is loaded and finally also updated
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
             fullFetch(builder);
@@ -98,7 +98,7 @@ public class EntityViewUpdateSimpleUpdatableOnlySubviewTest extends AbstractEnti
         // Then
         // Assert that only the document is loaded and finally also updated
         // There is no need to actually load the person
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
             fullFetch(builder);
@@ -126,7 +126,7 @@ public class EntityViewUpdateSimpleUpdatableOnlySubviewTest extends AbstractEnti
         // Then
         // Assert that only the document is loaded and finally also updated
         // But the person is not updated
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
             fullFetch(builder);
@@ -152,7 +152,7 @@ public class EntityViewUpdateSimpleUpdatableOnlySubviewTest extends AbstractEnti
 
         // Then
         // Nothing is loaded since nothing that should be cascaded changed
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
@@ -161,10 +161,6 @@ public class EntityViewUpdateSimpleUpdatableOnlySubviewTest extends AbstractEnti
         } else {
             if (isFullMode()) {
                 fullFetch(builder);
-
-                if (version) {
-                    builder.update(Document.class);
-                }
             }
         }
         builder.validate();
@@ -185,7 +181,7 @@ public class EntityViewUpdateSimpleUpdatableOnlySubviewTest extends AbstractEnti
 
         // Then
         // Assert that only the document is loaded and finally also updated
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
             fullFetch(builder);

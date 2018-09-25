@@ -197,6 +197,11 @@ public class DataNucleusJpaProvider implements JpaProvider {
     }
 
     @Override
+    public String[] getDiscriminatorColumnCheck(EntityType<?> entityType) {
+        return null;
+    }
+
+    @Override
     public boolean isForeignJoinColumn(EntityType<?> ownerType, String attributeName) {
         ManagedTypeImpl<?> managedType = (ManagedTypeImpl<?>) ownerType;
         String[] parts = attributeName.split("\\.");
@@ -252,7 +257,17 @@ public class DataNucleusJpaProvider implements JpaProvider {
     }
 
     @Override
+    public String[] getColumnNames(EntityType<?> ownerType, String elementCollectionPath, String attributeName) {
+        return EMPTY;
+    }
+
+    @Override
     public String[] getColumnTypes(EntityType<?> ownerType, String attributeName) {
+        return EMPTY;
+    }
+
+    @Override
+    public String[] getColumnTypes(EntityType<?> ownerType, String elementCollectionPath, String attributeName) {
         return EMPTY;
     }
 
@@ -344,8 +359,10 @@ public class DataNucleusJpaProvider implements JpaProvider {
 
             return new JoinTable(
                     tableName,
+                    null,
                     idColumnMapping,
                     keyMapping,
+                    null,
                     targetIdColumnMapping
             );
         }
@@ -375,9 +392,19 @@ public class DataNucleusJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean isOrphanRemoval(ManagedType<?> ownerType, String elementCollectionPath, String attributeName) {
+        return false;
+    }
+
+    @Override
     public boolean isDeleteCascaded(ManagedType<?> ownerType, String attributeName) {
         AttributeImpl<?, ?> attribute = getAttribute(ownerType, attributeName);
         return attribute != null && attribute.getMetadata().isCascadeDelete();
+    }
+
+    @Override
+    public boolean isDeleteCascaded(ManagedType<?> ownerType, String elementCollectionPath, String attributeName) {
+        return false;
     }
 
     @Override
@@ -432,8 +459,18 @@ public class DataNucleusJpaProvider implements JpaProvider {
     }
 
     @Override
-    public boolean supportsJoinElementCollectionsOnCorrelatedInverseAssociations() {
-        return true;
+    public boolean needsCorrelationPredicateWhenCorrelatingWithWhereClause() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsSingleValuedAssociationNaturalIdExpressions() {
+        return false;
+    }
+
+    @Override
+    public boolean needsElementCollectionIdCutoff() {
+        return false;
     }
 
     @Override
@@ -459,6 +496,11 @@ public class DataNucleusJpaProvider implements JpaProvider {
                 return attributeNames;
             }
         }
+        return Collections.emptyList();
+    }
+
+    @Override
+    public List<String> getIdentifierOrUniqueKeyEmbeddedPropertyNames(EntityType<?> owner, String elementCollectionPath, String attributeName) {
         return Collections.emptyList();
     }
 

@@ -67,21 +67,26 @@ public class EntityViewUpdateMutableBasicMapsTest extends AbstractEntityViewUpda
         // Then
         // Assert that the document and the strings are loaded in full mode.
         // During dirty detection we should be able to figure out that nothing changed
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isFullMode()) {
-            fullFetch(builder);
+            if (isQueryStrategy()) {
+                builder.delete(Document.class, "stringMap")
+                    .insert(Document.class, "stringMap");
+            } else {
+                fullFetch(builder);
+            }
 
-            if (version) {
+            if (isQueryStrategy()) {
                 builder.update(Document.class);
             }
         }
 
         builder.validate();
 
-        assertVersionDiff(oldVersion, docView.getVersion(), 0, 1);
+        assertVersionDiff(oldVersion, docView.getVersion(), 0, isQueryStrategy() ? 1 : 0);
         assertNoUpdateAndReload(docView);
-        assertVersionDiff(oldVersion, docView.getVersion(), 0, 2);
+        assertVersionDiff(oldVersion, docView.getVersion(), 0, isQueryStrategy() ? 2 : 0);
         assertEquals(doc1.getStringMap(), docView.getStringMap());
         assertEquals(doc1.getVersion(), docView.getVersion());
     }
@@ -95,11 +100,17 @@ public class EntityViewUpdateMutableBasicMapsTest extends AbstractEntityViewUpda
 
         // Then
         // Assert that the document and the strings are loaded, but only a relation insert is done
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        fullFetch(builder);
+        if (isQueryStrategy()) {
+            if (isFullMode()) {
+                assertReplaceAnd(builder);
+            }
+        } else {
+            fullFetch(builder);
+        }
 
-        if (version) {
+        if (version || isQueryStrategy() && isFullMode()) {
             builder.update(Document.class);
         }
 
@@ -109,7 +120,7 @@ public class EntityViewUpdateMutableBasicMapsTest extends AbstractEntityViewUpda
 
         assertVersionDiff(oldVersion, docView.getVersion(), 1, 1);
         assertNoUpdateAndReload(docView);
-        assertVersionDiff(oldVersion, docView.getVersion(), 1, 2);
+        assertVersionDiff(oldVersion, docView.getVersion(), 1, isQueryStrategy() ? 2 : 1);
         assertEquals(doc1.getStringMap(), docView.getStringMap());
         assertEquals(doc1.getVersion(), docView.getVersion());
     }
@@ -124,19 +135,25 @@ public class EntityViewUpdateMutableBasicMapsTest extends AbstractEntityViewUpda
         // Then
         // In partial mode, only the document is loaded. In full mode, the strings are also loaded
         // Since we load the strings in the full mode, we do a proper diff and can compute that only a single item was added
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        if (isFullMode()) {
-            fullFetch(builder);
+        if (isQueryStrategy()) {
+            if (isFullMode()) {
+                assertReplaceAnd(builder);
+            }
         } else {
-            if (preferLoadingAndDiffingOverRecreate()) {
+            if (isFullMode()) {
                 fullFetch(builder);
             } else {
-                assertReplaceAnd(builder);
+                if (preferLoadingAndDiffingOverRecreate()) {
+                    fullFetch(builder);
+                } else {
+                    assertReplaceAnd(builder);
+                }
             }
         }
 
-        if (version) {
+        if (version || isQueryStrategy() && isFullMode()) {
             builder.update(Document.class);
         }
 
@@ -146,7 +163,7 @@ public class EntityViewUpdateMutableBasicMapsTest extends AbstractEntityViewUpda
 
         assertVersionDiff(oldVersion, docView.getVersion(), 1, 1);
         assertNoUpdateAndReload(docView);
-        assertVersionDiff(oldVersion, docView.getVersion(), 1, 2);
+        assertVersionDiff(oldVersion, docView.getVersion(), 1, isQueryStrategy() ? 2 : 1);
         assertEquals(doc1.getStringMap(), docView.getStringMap());
         assertEquals(doc1.getVersion(), docView.getVersion());
     }
@@ -181,18 +198,8 @@ public class EntityViewUpdateMutableBasicMapsTest extends AbstractEntityViewUpda
     }
 
     private AssertStatementBuilder assertReplaceAnd(AssertStatementBuilder builder) {
-        return builder.assertDelete()
-                    .forRelation(Document.class, "stringMap")
-                .and()
-                .assertInsert()
-                    .forRelation(Document.class, "stringMap")
-                .and();
-    }
-
-    @Override
-    protected boolean isQueryStrategy() {
-        // Collection changes always need to be applied on the entity model, can't do that via a query
-        return false;
+        return builder.delete(Document.class, "stringMap")
+            .insert(Document.class, "stringMap");
     }
 
     @Override
@@ -205,6 +212,10 @@ public class EntityViewUpdateMutableBasicMapsTest extends AbstractEntityViewUpda
 
     @Override
     protected AssertStatementBuilder fullUpdate(AssertStatementBuilder builder) {
+        assertReplaceAnd(builder);
+        if (doc1.getStringMap().size() > 1) {
+            builder.insert(Document.class, "stringMap");
+        }
         return builder.assertUpdate()
                 .forEntity(Document.class)
                 .and();

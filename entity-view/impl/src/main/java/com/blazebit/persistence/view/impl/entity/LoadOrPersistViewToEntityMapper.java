@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.entity;
 
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
+import com.blazebit.persistence.view.impl.update.EntityViewUpdaterImpl;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.metamodel.Type;
@@ -31,19 +32,28 @@ import java.util.Set;
  */
 public class LoadOrPersistViewToEntityMapper extends AbstractViewToEntityMapper {
 
-    public LoadOrPersistViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, Class<?> viewTypeClass, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes, EntityLoader entityLoader, AttributeAccessor viewIdAccessor, boolean persistAllowed) {
-        super(attributeLocation, evm, viewTypeClass, persistAllowedSubtypes, updateAllowedSubtypes, entityLoader, viewIdAccessor, persistAllowed);
+    public LoadOrPersistViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, Class<?> viewTypeClass, Set<Type<?>> readOnlyAllowedSubtypes, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes, EntityLoader entityLoader, AttributeAccessor viewIdAccessor, boolean persistAllowed, EntityViewUpdaterImpl owner, String ownerMapping) {
+        super(attributeLocation, evm, viewTypeClass, readOnlyAllowedSubtypes, persistAllowedSubtypes, updateAllowedSubtypes, entityLoader, viewIdAccessor, persistAllowed, owner, ownerMapping);
     }
 
     @Override
     public Object applyToEntity(UpdateContext context, Object entity, Object view) {
+        Object object = flushToEntity(context, entity, view);
+        if (object == null) {
+            return loadEntity(context, view);
+        }
+
+        return object;
+    }
+
+    @Override
+    public Object flushToEntity(UpdateContext context, Object entity, Object view) {
         if (view == null) {
             return null;
         }
 
-        Object id = null;
         if (viewIdAccessor != null) {
-            id = viewIdAccessor.getValue(view);
+            Object id = viewIdAccessor.getValue(view);
 
             if (shouldPersist(view, id)) {
                 return persist(context, entity, view);
@@ -51,14 +61,26 @@ public class LoadOrPersistViewToEntityMapper extends AbstractViewToEntityMapper 
 
             Class<?> viewTypeClass = getViewTypeClass(view);
             // If the view is read only, just skip to loading
-            if (this.viewTypeClass != viewTypeClass) {
+            if (!viewTypeClasses.contains(viewTypeClass)) {
                 // If not, check if it was persisted before
                 if (persistAllowed && persistUpdater.containsKey(viewTypeClass) && !((EntityViewProxy) view).$$_isNew()) {
                     // If that create view object was previously persisted, we won't persist it again, nor update, but just load it
                 } else {
-                    throw new IllegalArgumentException("Couldn't load entity object for attribute '" + attributeLocation + "'. Expected subview of the type '" + this.viewTypeClass.getName() + "' but got: " + view);
+                    throw new IllegalArgumentException("Couldn't load entity object for attribute '" + attributeLocation + "'. Expected subview of on of the types " + names(viewTypeClasses) + " but got: " + view);
                 }
             }
+        }
+        return null;
+    }
+
+    @Override
+    public Object loadEntity(UpdateContext context, Object view) {
+        if (view == null) {
+            return null;
+        }
+        Object id = null;
+        if (viewIdAccessor != null) {
+            id = viewIdAccessor.getValue(view);
         }
         return entityLoader.toEntity(context, id);
     }

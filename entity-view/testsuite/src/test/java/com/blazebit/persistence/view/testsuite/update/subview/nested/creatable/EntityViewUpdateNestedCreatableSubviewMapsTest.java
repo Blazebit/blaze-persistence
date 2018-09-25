@@ -65,6 +65,11 @@ public class EntityViewUpdateNestedCreatableSubviewMapsTest extends AbstractEnti
         cfg.addEntityView(PersonCreateView.class);
     }
 
+    @Override
+    protected String[] getFetchedCollections() {
+        return new String[] { "contacts" };
+    }
+
     @Test
     public void testUpdateWithPersonCreateView() {
         final UpdatableDocumentWithMapsView docView = getDoc1View();
@@ -78,15 +83,12 @@ public class EntityViewUpdateNestedCreatableSubviewMapsTest extends AbstractEnti
 
         // Then
         // Assert that only the document is loaded, as we don't need to load the old person
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
-            if (isFullMode()) {
-                fullFetch(builder);
-            }
             builder.insert(Person.class);
             builder.update(Person.class);
-            if (version) {
+            if (version || isFullMode()) {
                 builder.update(Document.class);
             }
         } else {
@@ -107,7 +109,7 @@ public class EntityViewUpdateNestedCreatableSubviewMapsTest extends AbstractEnti
 
         builder.validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertEquals(doc1.getContacts().get(1).getFriend().getId(), personCreateView.getId());
         assertEquals("newPers", doc1.getContacts().get(1).getFriend().getName());
         assertSubviewEquals(doc1.getContacts(), docView.getContacts());
@@ -156,11 +158,8 @@ public class EntityViewUpdateNestedCreatableSubviewMapsTest extends AbstractEnti
 
     @Override
     protected AssertStatementBuilder fullUpdate(AssertStatementBuilder builder) {
-        fullFetch(builder)
-                .update(Person.class);
-        if (version) {
-            versionUpdate(builder);
-        }
+        builder.update(Person.class);
+        versionUpdate(builder);
 
         return builder;
     }

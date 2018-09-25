@@ -21,6 +21,8 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.entity.EntityMetamodel;
+import org.hibernate.type.ComponentType;
+import org.hibernate.type.Type;
 
 import javax.persistence.PersistenceUnitUtil;
 import javax.persistence.metamodel.ManagedType;
@@ -48,8 +50,8 @@ public class HibernateJpa21Provider extends HibernateJpaProvider {
         }
     }
 
-    public HibernateJpa21Provider(PersistenceUnitUtil persistenceUnitUtil, String dbms, Map<String, EntityPersister> entityPersisters, Map<String, CollectionPersister> collectionPersisters, int major, int minor, int fix) {
-        super(persistenceUnitUtil, dbms, entityPersisters, collectionPersisters, major, minor, fix);
+    public HibernateJpa21Provider(PersistenceUnitUtil persistenceUnitUtil, String dbms, Map<String, EntityPersister> entityPersisters, Map<String, CollectionPersister> collectionPersisters, int major, int minor, int fix, String type) {
+        super(persistenceUnitUtil, dbms, entityPersisters, collectionPersisters, major, minor, fix, type);
     }
 
     @Override
@@ -71,6 +73,37 @@ public class HibernateJpa21Provider extends HibernateJpaProvider {
     }
 
     @Override
+    public boolean isOrphanRemoval(ManagedType<?> ownerType, String elementCollectionPath, String attributeName) {
+        Type elementType = getCollectionPersister(ownerType, elementCollectionPath).getElementType();
+        if (!(elementType instanceof ComponentType)) {
+            // This can only happen for collection/join table target attributes, where it is irrelevant
+            return false;
+        }
+        ComponentType componentType = (ComponentType) elementType;
+        String subAttribute = attributeName.substring(elementCollectionPath.length() + 1);
+        // Component types only store direct properties, so we have to go deeper
+        String[] propertyParts = subAttribute.split("\\.");
+        int propertyIndex = 0;
+        for (; propertyIndex < propertyParts.length - 1; propertyIndex++) {
+            int index = componentType.getPropertyIndex(propertyParts[propertyIndex]);
+            Type propertyType = componentType.getSubtypes()[index];
+            if (propertyType instanceof ComponentType) {
+                componentType = (ComponentType) propertyType;
+            } else {
+                // The association property is just as good as the id property of the association for our purposes
+                // So we stop here and query the association property instead
+                break;
+            }
+        }
+
+        try {
+            return (boolean) HAS_ORPHAN_DELETE_METHOD.invoke(componentType.getCascadeStyle(propertyIndex));
+        } catch (Exception ex) {
+            throw new RuntimeException("Could not access orphan removal information. Please report your version of hibernate so we can provide support for it!", ex);
+        }
+    }
+
+    @Override
     public boolean isDeleteCascaded(ManagedType<?> ownerType, String attributeName) {
         AbstractEntityPersister entityPersister = getEntityPersister(ownerType);
         if (entityPersister != null) {
@@ -86,6 +119,36 @@ public class HibernateJpa21Provider extends HibernateJpaProvider {
         }
 
         return false;
+    }
+
+    @Override
+    public boolean isDeleteCascaded(ManagedType<?> ownerType, String elementCollectionPath, String attributeName) {
+        Type elementType = getCollectionPersister(ownerType, elementCollectionPath).getElementType();
+        if (!(elementType instanceof ComponentType)) {
+            // This can only happen for collection/join table target attributes, where it is irrelevant
+            return false;
+        }
+        ComponentType componentType = (ComponentType) elementType;
+        String subAttribute = attributeName.substring(elementCollectionPath.length() + 1);
+        // Component types only store direct properties, so we have to go deeper
+        String[] propertyParts = subAttribute.split("\\.");
+        int propertyIndex = 0;
+        for (; propertyIndex < propertyParts.length - 1; propertyIndex++) {
+            int index = componentType.getPropertyIndex(propertyParts[propertyIndex]);
+            Type propertyType = componentType.getSubtypes()[index];
+            if (propertyType instanceof ComponentType) {
+                componentType = (ComponentType) propertyType;
+            } else {
+                // The association property is just as good as the id property of the association for our purposes
+                // So we stop here and query the association property instead
+                break;
+            }
+        }
+        try {
+            return (boolean) DO_CASCADE_METHOD.invoke(componentType.getCascadeStyle(propertyIndex), DELETE_CASCADE);
+        } catch (Exception ex) {
+            throw new RuntimeException("Could not access orphan removal information. Please report your version of hibernate so we can provide support for it!", ex);
+        }
     }
 
     @Override

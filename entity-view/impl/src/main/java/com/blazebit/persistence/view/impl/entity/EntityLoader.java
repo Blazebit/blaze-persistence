@@ -25,6 +25,8 @@ import com.blazebit.persistence.view.impl.update.UpdateContext;
  */
 public interface EntityLoader {
 
+    public Class<?> getEntityClass();
+
     public Object toEntity(UpdateContext context, Object id);
 
     public Object getEntityId(UpdateContext context, Object entity);

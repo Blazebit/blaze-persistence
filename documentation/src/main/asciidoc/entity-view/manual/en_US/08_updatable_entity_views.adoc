@@ -82,10 +82,11 @@ Still, the object can safely make use of the primary key based equals-hashCode i
 === API usage
 
 An updatable as well as an creatable entity view is flushed by invoking link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#update(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.update(EntityManager em, Object view)`]
-and will flush changes according to the flush strategy and mode. Changes to collections are flushed depending on the collection mapping.
+and will flush changes according to the flush strategy and mode. Changes to collections are flushed depending on the collection mapping, flush strategy and JPA provider support.
 
-// TODO: this will change when we manage collections ourselves
-If the entity for which a collection is mapped _owns_ the collection i.e. no use of _mappedBy_, the changes will be applied to an entity reference.
+The query flush strategy requires support for collection DML queries which is currently only provided with Hibernate.
+
+If the provider doesn't support collection DML, or you choose to do entity flushing, the owning entity is loaded and changes are applied to that.
 For collections that are _not owned_ by the containing entity i.e. use a _mappedBy_, changes will be applied by creating/updating/deleting the target entities.
 
 Creatable entity views are constructed via link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#create(java.lang.Class)[`EntityViewManager.create(Class type)`] and
@@ -563,7 +564,6 @@ WHERE cat.id = :id
 ==== Subview mappings
 
 Just like *ToOne relationships can be mapped in entities, it is possible to map these relationships as subviews.
-It is not required for such subview type to be updatable, in fact, it is encouraged to use a subview type that best fits the modeled use case.
 
 In general, {projectname} distinguishes between two concepts regarding _updatability_
 
@@ -599,6 +599,20 @@ interface CatUpdateView {
 Even if the `PersonView` had a `setName()` method, changes done to that attribute would not be flushed, since `PersonView` is not updatable(`@UpdatableEntityView`).
 
 Having only an updatable relationship role is very common, because it is rarely necessary to do cascading updates.
+It is so common, that by default, the subview types used for _owned_ *ToOne relationships are not allowed to be updatable i.e. annotated with `@UpdatableEntityView` as that would break the idea of updatable views per use-case.
+
+An owned *ToOne relationship is a _link_ to an existing object which shouldn't normally be altered as part of the object owning the *ToOne relationship.
+To illustrate this, let's consider the entities `Cat` and `Person`. A `Cat` might have a `@ManyToOne` relationship called *owner* that refers to `Person`.
+When considering the use case of _editing a cat_, one would normally expect to be able to change attributes like the name or age, maybe even the owner _link_,
+but never any attributes of the _linked owner_. Changing attributes of linked objects is usually a separate use case which deserves a separate model.
+
+One can always convert from one entity view model to another with link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#convert(java.lang.Class,%20java.lang.Object,%20com.blazebit.persistence.view.ConvertOption...)[EntityViewManager.convert(Class, Object, ConvertOption...)],
+so it is not necessary to reload the data to be able to initiate another use case.
+The important part is that the altering of *ToOne _linked objects_ is another use case and is by default not allowed to be done within an updatable entity view.
+
+An inverse OneToOne relationship is not _owned_ and thus not _linked_ which is why it is possible to have an updatable subview type for these relationships.
+As there might be models out there, that do not fit this requirement, it is possible to disable this strict check via link:{entity_view_doc}#updater_disallow_owned_updatable_subview[configuration property].
+
 Note that it is also possible to just make the entity view type `PersonView` updatable(annotate `@UpdatableEntityView`) without the setter `setOwner()`.
 That way, the relationship role wouldn't be allowed to change, but the changes to the underlying `Person` would be cascaded.
 
@@ -673,9 +687,6 @@ Currently, a collection attribute is considered to be _updatable_ if a setter fo
 
 WARNING: At this point, collections can not be remapped automatically yet, so you have to use the same collection type as in the entity model.
 
-Updates to owned collection are currently simply _replayed_ on the collection of an entity reference.
-Note that currently only inverse collections are considered _not owned_ i.e. don't require loading the real collection for doing updates.
-
 [source,java]
 ----
 @UpdatableEntityView
@@ -715,7 +726,17 @@ cat.getKittens().add(newKitten);
 ----
 
 Since the `kittens` collection is dirty i.e. a new kitten was added and the collection is _owned_ by the `Cat` entity, it will be loaded along with the `Cat`.
-If `kittens` were an inverse collection, it wouldn't need loading during flushing as adding the new kitten would be a matter of issuing an update query or persisting an entity.
+
+If you use query flushing, instead of loading and adding, the new kitten will be added via a collection DML statement
+
+[source,sql]
+----
+INSERT INTO Cat.kittens(id, kittens.id)
+SELECT :ownerId, :kittenId
+FROM Integer(1 VALUES)
+----
+
+If `kittens` were an inverse collection, it wouldn't need loading during flushing even with the entity flush strategy as adding the new kitten would be a matter of issuing an update query or persisting an entity.
 
 [[updatable-mappings-inverse]]
 ==== Inverse mappings
@@ -779,7 +800,7 @@ UPDATE Cat c SET owner = NULL WHERE c.id = :someKittenId
 The only difference between correlated mappings and other mappings is that there is no relationship that is updated.
 Cascading will happen the same way for entities, updatable and creatable entity views.
 
-Although there is no relationship to update for correlation mappings, adding or removing elements to a correlated attribute with updatable type,
+Although there is no relationship to update for correlation mappings, adding or removing elements to a correlated attribute with updatable types,
 will be constrained by _updatability_ like normal mappings. If a correlated attribute isn't updatable by means of `@UpdatableMapping(updatable = false)`,
 setting a value or adding/removing to a collection will fail.
 

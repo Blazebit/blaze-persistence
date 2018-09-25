@@ -109,6 +109,15 @@ public class CollectionRemoveAllAction<C extends Collection<E>, E> implements Co
     }
 
     @Override
+    public void undo(C collection, Collection<?> removedObjects, Collection<?> addedObjects) {
+        for (Object element : elements) {
+            if (removedObjects.contains(element)) {
+                collection.add((E) element);
+            }
+        }
+    }
+
+    @Override
     public boolean containsObject(C collection, Object o) {
         for (Object element : elements) {
             if (element == o) {

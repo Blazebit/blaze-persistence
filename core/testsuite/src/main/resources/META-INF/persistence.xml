@@ -30,6 +30,7 @@
         <class>com.blazebit.persistence.testsuite.entity.DocumentNodeCTE</class>
         <class>com.blazebit.persistence.testsuite.entity.DocumentTupleEntity</class>
         <class>com.blazebit.persistence.testsuite.entity.EmbeddableTestEntity</class>
+        <class>com.blazebit.persistence.testsuite.entity.EmbeddableTestEntitySub</class>
         <class>com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityContainer</class>
         <class>com.blazebit.persistence.testsuite.entity.IdHolderCTE</class>
         <class>com.blazebit.persistence.testsuite.entity.IndexedNode</class>

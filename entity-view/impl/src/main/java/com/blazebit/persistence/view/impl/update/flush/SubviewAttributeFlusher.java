@@ -136,14 +136,16 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
     }
 
     @Override
-    public void appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix, String separator) {
+    public boolean appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix, String separator) {
         if (update && (updatable || isPassThrough()) && inverseFlusher == null) {
             if (mappingPrefix == null) {
-                elementIdFlusher.appendUpdateQueryFragment(context, sb, mapping + ".", parameterName + "_", separator);
+                return elementIdFlusher.appendUpdateQueryFragment(context, sb, mapping + ".", parameterName + "_", separator);
             } else {
-                elementIdFlusher.appendUpdateQueryFragment(context, sb, mappingPrefix + mapping + ".", parameterPrefix + parameterName + "_", separator);
+                return elementIdFlusher.appendUpdateQueryFragment(context, sb, mappingPrefix + mapping + ".", parameterPrefix + parameterName + "_", separator);
             }
         }
+
+        return false;
     }
 
     @Override
@@ -157,7 +159,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
     }
 
     @Override
-    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
+    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
         V finalValue;
         if (flushOperation == null) {
             finalValue = value;
@@ -192,7 +194,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
                 } else {
                     int orphanRemovalStartIndex = context.getOrphanRemovalDeleters().size();
                     Query q = viewToEntityMapper.createUpdateQuery(context, finalValue, nestedFlusher);
-                    nestedFlusher.flushQuery(context, parameterPrefix, q, null, finalValue, ownerAwareDeleter);
+                    nestedFlusher.flushQuery(context, parameterPrefix, q, finalValue, null, finalValue, ownerAwareDeleter);
                     if (q != null) {
                         int updated = q.executeUpdate();
 
@@ -211,9 +213,9 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
                 if (inverseFlusher == null) {
                     Object realValue = v == null ? null : subviewIdAccessor.getValue(finalValue);
                     if (parameterPrefix == null) {
-                        elementIdFlusher.flushQuery(context, parameterName + "_", query, null, realValue, ownerAwareDeleter);
+                        elementIdFlusher.flushQuery(context, parameterName + "_", query, finalValue, null, realValue, ownerAwareDeleter);
                     } else {
-                        elementIdFlusher.flushQuery(context, parameterPrefix + parameterName + "_", query, null, realValue, ownerAwareDeleter);
+                        elementIdFlusher.flushQuery(context, parameterPrefix + parameterName + "_", query, finalValue, null, realValue, ownerAwareDeleter);
                     }
                 }
             }
@@ -234,7 +236,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
                 } else {
                     int orphanRemovalStartIndex = context.getOrphanRemovalDeleters().size();
                     Query q = viewToEntityMapper.createUpdateQuery(context, value, nestedFlusher);
-                    nestedFlusher.flushQuery(context, parameterPrefix, q, null, value, ownerAwareDeleter);
+                    nestedFlusher.flushQuery(context, parameterPrefix, q, value, null, value, ownerAwareDeleter);
                     if (q != null) {
                         int updated = q.executeUpdate();
 
@@ -252,9 +254,9 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
                 if (inverseFlusher == null) {
                     Object realValue = v == null ? null : subviewIdAccessor.getValue(value);
                     if (parameterPrefix == null) {
-                        elementIdFlusher.flushQuery(context, parameterName + "_", query, null, realValue, ownerAwareDeleter);
+                        elementIdFlusher.flushQuery(context, parameterName + "_", query, value, null, realValue, ownerAwareDeleter);
                     } else {
-                        elementIdFlusher.flushQuery(context, parameterPrefix + parameterName + "_", query, null, realValue, ownerAwareDeleter);
+                        elementIdFlusher.flushQuery(context, parameterPrefix + parameterName + "_", query, value, null, realValue, ownerAwareDeleter);
                     }
                 }
             }
@@ -273,7 +275,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
             if (nestedFlusher != null && nestedFlusher != viewToEntityMapper.getFullGraphNode()) {
                 int orphanRemovalStartIndex = context.getOrphanRemovalDeleters().size();
                 Query q = viewToEntityMapper.createUpdateQuery(context, realValue, nestedFlusher);
-                nestedFlusher.flushQuery(context, parameterPrefix, q, null, realValue, ownerAwareDeleter);
+                nestedFlusher.flushQuery(context, parameterPrefix, q, realValue, null, realValue, ownerAwareDeleter);
                 if (q != null) {
                     int updated = q.executeUpdate();
 
@@ -295,7 +297,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
 
     @Override
     @SuppressWarnings("unchecked")
-    public boolean flushEntity(UpdateContext context, E entity, Object view, V value, Runnable postReplaceListener) {
+    public boolean flushEntity(UpdateContext context, E entity, Object ownerView, Object view, V value, Runnable postReplaceListener) {
         V finalValue;
         if (flushOperation != null) {
             finalValue = this.value;
@@ -327,7 +329,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
                 if (update && inverseFlusher != null) {
                     inverseFlusher.flushEntitySetElement(context, finalValue, entity, entity, (DirtyAttributeFlusher<?, E, Object>) (DirtyAttributeFlusher<?, ?, ?>) nestedFlusher);
                 } else {
-                    nestedFlusher.flushEntity(context, null, null, finalValue, null);
+                    nestedFlusher.flushEntity(context, null, finalValue, null, finalValue, null);
                 }
             } else if (update && inverseFlusher != null) {
                 if (finalValue instanceof MutableStateTrackable) {
@@ -355,12 +357,17 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
                     inverseFlusher.flushEntitySetElement(context, finalValue, entity, entity, (DirtyAttributeFlusher<?, E, Object>) (DirtyAttributeFlusher<?, ?, ?>) nestedFlusher);
                     wasDirty |= true;
                 } else {
-                    wasDirty |= nestedFlusher.flushEntity(context, null, null, finalValue, null);
+                    wasDirty |= nestedFlusher.flushEntity(context, null, finalValue, null, finalValue, null);
                 }
             } else if (update && inverseFlusher != null) {
                 inverseFlusher.flushEntitySetElement(context, finalValue, entity, entity, null);
             }
-            Object v = viewToEntityMapper.applyToEntity(context, null, finalValue);
+            Object v = viewToEntityMapper.flushToEntity(context, null, finalValue);
+            if (v == null) {
+                v = viewToEntityMapper.loadEntity(context, finalValue);
+            } else {
+                wasDirty = true;
+            }
             if (update) {
                 if (!wasDirty) {
                     Object oldVal = entity == null ? null : entityAttributeAccessor.getValue(entity);
@@ -368,7 +375,12 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
                     Object newId = v == null ? null : viewToEntityMapper.getEntityIdAccessor().getValue(v);
                     wasDirty = !Objects.equals(oldId, newId);
                 }
-                entityAttributeAccessor.setValue(entity, v);
+                if (wasDirty) {
+                    entityAttributeAccessor.setValue(entity, v);
+                }
+            } else if (updatable) {
+                // If this is a correlated subview, we still signal a version update if the reference was changed
+                wasDirty |= !Objects.equals(viewAttributeAccessor.getInitialValue(view), finalValue);
             }
             // If the view is creatable, the CompositeAttributeFlusher re-maps the view object and puts the new object to the mutable state array
             Object newValue = viewAttributeAccessor.getMutableStateValue(view);
@@ -378,13 +390,15 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
         } else {
             V realValue = (V) viewAttributeAccessor.getValue(view);
             if (nestedFlusher != null && nestedFlusher != viewToEntityMapper.getFullGraphNode()) {
-                wasDirty |= nestedFlusher.flushEntity(context, null, null, realValue, null);
+                wasDirty |= nestedFlusher.flushEntity(context, null, realValue, null, realValue, null);
             } else {
                 // We don't care if the underlying real value is different from the initial value if we don't have an entity attribute accessor
                 // That represents a correlated attribute so we will only do cascading
                 if (realValue != null && (entityAttributeAccessor == null || (finalValue == realValue || viewIdEqual(finalValue, realValue)) && jpaAndViewIdEqual(entityAttributeAccessor.getValue(entity), realValue))) {
-                    viewToEntityMapper.applyToEntity(context, null, realValue);
-                    wasDirty = true;
+                    Object v = viewToEntityMapper.flushToEntity(context, null, realValue);
+                    if (v != null) {
+                        wasDirty = true;
+                    }
                 }
             }
             if (view != null && finalValue != realValue && viewIdEqual(finalValue, realValue)) {

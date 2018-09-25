@@ -72,7 +72,7 @@ public class EntityViewRemoveNestedSubviewTest extends AbstractEntityViewRemoveD
         remove(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence().unordered();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
             // Hibernate loads the entities before deleting?
@@ -110,7 +110,7 @@ public class EntityViewRemoveNestedSubviewTest extends AbstractEntityViewRemoveD
         remove(UpdatableDocumentView.class, doc1.getId());
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence().unordered();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
             // Hibernate loads the entities before deleting?

@@ -25,8 +25,10 @@ import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -307,6 +309,34 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
             delegate.addAll(addedElements.keySet());
         }
         $$_markDirty(-1);
+    }
+
+    protected C copyDelegate() {
+        if (ordered) {
+            if (hashBased) {
+                return (C) new LinkedHashSet<>(delegate);
+            } else {
+                return (C) new ArrayList<>(delegate);
+            }
+        } else {
+            if (hashBased) {
+                return (C) new HashSet<>(delegate);
+            } else {
+                return (C) new ArrayList<>(delegate);
+            }
+        }
+    }
+
+    public C getInitialVersion() {
+        if (actions == null || actions.isEmpty()) {
+            return (C) this;
+        }
+        C collection = copyDelegate();
+        for (int i = actions.size() - 1; i >= 0; i--) {
+            CollectionAction<C> action = actions.get(i);
+            action.undo(collection, removedElements.keySet(), addedElements.keySet());
+        }
+        return collection;
     }
 
     public List<CollectionAction<C>> resetActions(UpdateContext context) {

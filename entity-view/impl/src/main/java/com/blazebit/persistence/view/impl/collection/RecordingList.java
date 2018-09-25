@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.collection;
 
 import java.util.AbstractList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
@@ -33,9 +34,71 @@ public class RecordingList<E> extends RecordingCollection<List<E>, E> implements
         super(delegate, indexed, indexed, allowedSubtypes, updatable, optimize);
     }
 
+    @Override
+    void addAddAction(E e) {
+        addAddAction(size(), e);
+    }
+
+    @Override
+    void addRemoveAction(Object o) {
+        if (indexed) {
+            addRemoveAction(indexOf(o));
+        } else {
+            super.addRemoveAction(o);
+        }
+    }
+
+    @Override
+    void addAddAllAction(Collection<? extends E> c) {
+        addAddAllAction(size(), c);
+    }
+
+    @Override
+    public boolean removeAll(Collection<?> c) {
+        if (indexed) {
+            checkType(c, "Removing");
+            boolean modified = false;
+            for (Object o : c) {
+                if (remove(indexOf(o)) != null) {
+                    modified = true;
+                }
+            }
+            return modified;
+        } else {
+            return super.removeAll(c);
+        }
+    }
+
+    @Override
+    public void clear() {
+        int size = delegate.size();
+        // Always remove the last element to benefit from tail removals
+        for (int i = size - 1; i > 0; i--) {
+            addRemoveAction(i);
+        }
+        delegate.clear();
+    }
+
+    @Override
+    public boolean retainAll(Collection<?> c) {
+        if (indexed) {
+            boolean modified = false;
+            Iterator<E> it = listIterator();
+            while (it.hasNext()) {
+                if (!c.contains(it.next())) {
+                    it.remove();
+                    modified = true;
+                }
+            }
+            return modified;
+        } else {
+            return super.retainAll(c);
+        }
+    }
+
     void addAddAllAction(int index, Collection<? extends E> c) {
         if (indexed) {
-            addAction(new ListAddAllAction<List<E>, E>(index, c));
+            addAction(new ListAddAllAction<List<E>, E>(index, delegate.size() == index, c));
         } else {
             addAddAllAction(c);
         }
@@ -50,7 +113,7 @@ public class RecordingList<E> extends RecordingCollection<List<E>, E> implements
 
     void addSetAction(int index, E element) {
         if (indexed) {
-            addAction(new ListSetAction<List<E>, E>(index, element, delegate));
+            addAction(new ListSetAction<List<E>, E>(index, delegate.size() == index - 1, element, delegate));
         } else {
             addRemoveAction(index);
             addAddAction(element);
@@ -66,9 +129,9 @@ public class RecordingList<E> extends RecordingCollection<List<E>, E> implements
 
     void addAddAction(int index, E element) {
         if (indexed) {
-            addAction(new ListAddAction<List<E>, E>(index, element));
+            addAction(new ListAddAction<List<E>, E>(index, delegate.size() == index, element));
         } else {
-            addAddAction(element);
+            super.addAddAction(element);
         }
     }
 
@@ -81,7 +144,7 @@ public class RecordingList<E> extends RecordingCollection<List<E>, E> implements
 
     void addRemoveAction(int index) {
         if (indexed) {
-            addAction(new ListRemoveAction<List<E>, E>(index, delegate));
+            addAction(new ListRemoveAction<List<E>, E>(index, index == delegate.size() - 1, delegate));
         } else {
             addRemoveAction(delegate.get(index));
         }

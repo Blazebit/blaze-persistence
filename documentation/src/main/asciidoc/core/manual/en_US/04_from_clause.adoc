@@ -434,7 +434,7 @@ The join alias that must be defined for a `VALUES` clause is reused as alias for
 ----
 CriteriaBuilder<String> cb = cbf.create(em, String.class)
     .fromValues(String.class, "myValue", 10)
-    .select("myValue.value")
+    .select("myValue")
     .setParameter("myValue", valueCollection);
 ----
 
@@ -468,7 +468,7 @@ In order to access the actual value in an expression, the `value` property of th
 Collection<String> valueCollection = Arrays.asList("value1", "value2");
 CriteriaBuilder<String> cb = cbf.create(em, String.class)
     .fromValues(String.class, "myValue", valueCollection)
-    .select("myValue.value");
+    .select("myValue");
 ----
 
 The resulting logical JPQL doesn't include individual parameters, but specifies the count of the values. The alias of the values clause from item also represents the parameter name.

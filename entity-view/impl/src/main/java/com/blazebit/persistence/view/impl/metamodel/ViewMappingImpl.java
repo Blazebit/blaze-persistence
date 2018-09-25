@@ -31,6 +31,7 @@ import javax.persistence.metamodel.SingularAttribute;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -91,6 +92,7 @@ public class ViewMappingImpl implements ViewMapping {
     private boolean finished;
     private final List<Runnable> finishListeners = new ArrayList<>();
     private ManagedViewTypeImplementor<?> viewType;
+    private Map<EmbeddableOwner, ManagedViewTypeImplementor<?>> embeddableViewTypeMap;
 
     public ViewMappingImpl(Class<?> entityViewClass, Class<?> entityClass, String name, MetamodelBootContext context) {
         this.entityViewClass = entityViewClass;
@@ -415,7 +417,6 @@ public class ViewMappingImpl implements ViewMapping {
         }
 
         boolean error = false;
-        dependencies.add(entityViewClass);
 
         for (InheritanceViewMapping inheritanceViewMapping : inheritanceViewMappings) {
             for (ViewMapping subtypeMapping : inheritanceViewMapping.getInheritanceSubtypeMappings().keySet()) {
@@ -430,6 +431,7 @@ public class ViewMappingImpl implements ViewMapping {
             }
         }
 
+        dependencies.add(entityViewClass);
         // We keep the inheritance subtype classes in the dependencies for the attribute validation
         dependencies.addAll(inheritanceSubtypeClasses);
 
@@ -470,7 +472,16 @@ public class ViewMappingImpl implements ViewMapping {
     }
 
     @Override
-    public ManagedViewTypeImplementor<?> getManagedViewType(MetamodelBuildingContext context) {
+    public ManagedViewTypeImplementor<?> getManagedViewType(MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
+        ManagedViewTypeImplementor<?> viewType;
+        if (idAttribute != null) {
+            viewType = this.viewType;
+        } else {
+            if (embeddableViewTypeMap == null) {
+                embeddableViewTypeMap = new HashMap<>(1);
+            }
+            viewType = embeddableViewTypeMap.get(embeddableMapping);
+        }
         if (viewType == null) {
             if (entityClass == null) {
                 context.addError("The persistence unit metamodel doesn't contain the entity class configured in view mapping for entity view class: " + entityViewClass.getName());
@@ -554,10 +565,16 @@ public class ViewMappingImpl implements ViewMapping {
             }
 
             if (idAttribute != null) {
-                return viewType = new ViewTypeImpl<Object>(this, managedType, context);
+                viewType = new ViewTypeImpl<Object>(this, managedType, context);
             } else {
-                return viewType = new FlatViewTypeImpl<Object>(this, managedType, context);
+                viewType = new FlatViewTypeImpl<Object>(this, managedType, context, embeddableMapping);
             }
+        }
+
+        if (idAttribute != null) {
+            this.viewType = viewType;
+        } else {
+            embeddableViewTypeMap.put(embeddableMapping, viewType);
         }
 
         return viewType;

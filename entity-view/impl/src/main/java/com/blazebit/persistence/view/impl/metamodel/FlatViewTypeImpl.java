@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
+import com.blazebit.persistence.view.metamodel.FlatViewType;
+
 import javax.persistence.metamodel.ManagedType;
 
 /**
@@ -25,8 +27,8 @@ import javax.persistence.metamodel.ManagedType;
  */
 public class FlatViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements FlatViewTypeImplementor<X> {
 
-    public FlatViewTypeImpl(ViewMapping viewMapping, ManagedType<?> managedType, MetamodelBuildingContext context) {
-        super(viewMapping, managedType, context);
+    public FlatViewTypeImpl(ViewMapping viewMapping, ManagedType<?> managedType, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
+        super(viewMapping, managedType, context, embeddableMapping);
     }
 
     @Override
@@ -37,5 +39,15 @@ public class FlatViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements FlatV
     @Override
     public MappingType getMappingType() {
         return MappingType.FLAT_VIEW;
+    }
+
+    @Override
+    public int hashCode() {
+        return getJavaType().hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof FlatViewType<?> && getJavaType().equals(((FlatViewType<?>) obj).getJavaType());
     }
 }

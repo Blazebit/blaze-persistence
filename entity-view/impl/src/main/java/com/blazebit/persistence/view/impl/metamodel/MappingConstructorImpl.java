@@ -46,7 +46,7 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
     private final boolean hasJoinFetchedCollections;
 
     @SuppressWarnings("unchecked")
-    public MappingConstructorImpl(ManagedViewTypeImplementor<X> viewType, String name, ConstructorMapping mapping, MetamodelBuildingContext context) {
+    public MappingConstructorImpl(ManagedViewTypeImplementor<X> viewType, String name, ConstructorMapping mapping, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
         this.name = name;
         this.declaringType = viewType;
         this.javaConstructor = (Constructor<X>) mapping.getConstructor();
@@ -58,7 +58,7 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
         boolean hasJoinFetchedCollections = false;
 
         for (int i = 0; i < parameterCount; i++) {
-            AbstractParameterAttribute<? super X, ?> parameter = parameterMappings.get(i).getParameterAttribute(this, context);
+            AbstractParameterAttribute<? super X, ?> parameter = parameterMappings.get(i).getParameterAttribute(this, context, embeddableMapping);
             hasJoinFetchedCollections = hasJoinFetchedCollections || parameter.hasJoinFetchedCollections();
             parameters.add(parameter);
             overallParameters.add(parameter);
@@ -194,18 +194,28 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
         }
     }
 
-    public void checkParameters(ManagedType<?> managedType, Map<String, List<String>> collectionMappings, MetamodelBuildingContext context) {
+    public void checkParameters(ManagedType<?> managedType, Map<String, List<String>> collectionMappings, Map<String, List<String>> collectionMappingSingulars, MetamodelBuildingContext context) {
         for (AbstractParameterAttribute<? super X, ?> parameter : parameters) {
             parameter.checkAttribute(managedType, context);
 
-            for (String mapping : parameter.getCollectionJoinMappings(managedType, context)) {
-                List<String> locations = collectionMappings.get(mapping);
-                if (locations == null) {
-                    locations = new ArrayList<String>(2);
-                    collectionMappings.put(mapping, locations);
+            for (Map.Entry<String, Boolean> entry : parameter.getCollectionJoinMappings(managedType, context).entrySet()) {
+                if (entry.getValue()) {
+                    List<String> locations = collectionMappingSingulars.get(entry.getKey());
+                    if (locations == null) {
+                        locations = new ArrayList<>(2);
+                        collectionMappingSingulars.put(entry.getKey(), locations);
+                    }
+
+                    locations.add("Parameter with the index '" + parameter.getIndex() + "' of the constructor '" + parameter.getDeclaringConstructor().getJavaConstructor() + "'");
+                } else {
+                    List<String> locations = collectionMappings.get(entry.getKey());
+                    if (locations == null) {
+                        locations = new ArrayList<>(2);
+                        collectionMappings.put(entry.getKey(), locations);
+                    }
+
+                    locations.add("Parameter with the index '" + parameter.getIndex() + "' of the constructor '" + parameter.getDeclaringConstructor().getJavaConstructor() + "'");
                 }
-                
-                locations.add("Parameter with the index '" + parameter.getIndex() + "' of the constructor '" + parameter.getDeclaringConstructor().getJavaConstructor() + "'");
             }
         }
     }

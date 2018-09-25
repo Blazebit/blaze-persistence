@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.CollectionTable;
+import javax.persistence.DiscriminatorValue;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embedded;
 import javax.persistence.EmbeddedId;
@@ -34,38 +35,38 @@ import javax.persistence.MapKeyColumn;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "emb_tst_ent")
-public class EmbeddableTestEntity implements Serializable {
+@Table(name = "emb_tst_ent2")
+public class EmbeddableTestEntity2 implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private EmbeddableTestEntityId id = new EmbeddableTestEntityId();
-    private EmbeddableTestEntityEmbeddable embeddable = new EmbeddableTestEntityEmbeddable();
-    private Set<EmbeddableTestEntitySimpleEmbeddable> embeddableSet = new HashSet<EmbeddableTestEntitySimpleEmbeddable>(0);
-    private Map<String, EmbeddableTestEntitySimpleEmbeddable> embeddableMap = new HashMap<String, EmbeddableTestEntitySimpleEmbeddable>(0);
+    private EmbeddableTestEntityId2 id = new EmbeddableTestEntityId2();
+    private EmbeddableTestEntityEmbeddable2 embeddable = new EmbeddableTestEntityEmbeddable2();
+    private Set<EmbeddableTestEntitySimpleEmbeddable2> embeddableSet = new HashSet<EmbeddableTestEntitySimpleEmbeddable2>(0);
+    private Map<String, EmbeddableTestEntitySimpleEmbeddable2> embeddableMap = new HashMap<String, EmbeddableTestEntitySimpleEmbeddable2>(0);
 
-    public EmbeddableTestEntity() {
+    public EmbeddableTestEntity2() {
     }
-    public EmbeddableTestEntity(IntIdEntity intIdEntity, String key) {
+    public EmbeddableTestEntity2(IntIdEntity intIdEntity, String key) {
         id.setIntIdEntity(intIdEntity);
         id.setKey(key);
     }
 
     @EmbeddedId
-    public EmbeddableTestEntityId getId() {
+    public EmbeddableTestEntityId2 getId() {
         return id;
     }
 
-    public void setId(EmbeddableTestEntityId id) {
+    public void setId(EmbeddableTestEntityId2 id) {
         this.id = id;
     }
     
     @Embedded
-    public EmbeddableTestEntityEmbeddable getEmbeddable() {
+    public EmbeddableTestEntityEmbeddable2 getEmbeddable() {
         return embeddable;
     }
     
-    public void setEmbeddable(EmbeddableTestEntityEmbeddable embeddable) {
+    public void setEmbeddable(EmbeddableTestEntityEmbeddable2 embeddable) {
         this.embeddable = embeddable;
     }
 
@@ -74,11 +75,11 @@ public class EmbeddableTestEntity implements Serializable {
             @JoinColumn(name = "emb_tst_ent_key", referencedColumnName = "test_key"),
             @JoinColumn(name = "emb_tst_ent_int_id_ent", referencedColumnName = "int_id_ent")
     })
-    public Set<EmbeddableTestEntitySimpleEmbeddable> getEmbeddableSet() {
+    public Set<EmbeddableTestEntitySimpleEmbeddable2> getEmbeddableSet() {
         return embeddableSet;
     }
     
-    public void setEmbeddableSet(Set<EmbeddableTestEntitySimpleEmbeddable> embeddableSet) {
+    public void setEmbeddableSet(Set<EmbeddableTestEntitySimpleEmbeddable2> embeddableSet) {
         this.embeddableSet = embeddableSet;
     }
 
@@ -88,11 +89,11 @@ public class EmbeddableTestEntity implements Serializable {
             @JoinColumn(name = "emb_tst_ent_key", referencedColumnName = "test_key"),
             @JoinColumn(name = "emb_tst_ent_int_id_ent", referencedColumnName = "int_id_ent")
     })
-    public Map<String, EmbeddableTestEntitySimpleEmbeddable> getEmbeddableMap() {
+    public Map<String, EmbeddableTestEntitySimpleEmbeddable2> getEmbeddableMap() {
         return embeddableMap;
     }
     
-    public void setEmbeddableMap(Map<String, EmbeddableTestEntitySimpleEmbeddable> embeddableMap) {
+    public void setEmbeddableMap(Map<String, EmbeddableTestEntitySimpleEmbeddable2> embeddableMap) {
         this.embeddableMap = embeddableMap;
     }
 
@@ -110,9 +111,9 @@ public class EmbeddableTestEntity implements Serializable {
             return true;
         if (obj == null)
             return false;
-        if (!(obj instanceof EmbeddableTestEntity))
+        if (!(obj instanceof EmbeddableTestEntity2))
             return false;
-        EmbeddableTestEntity other = (EmbeddableTestEntity) obj;
+        EmbeddableTestEntity2 other = (EmbeddableTestEntity2) obj;
         if (getId() == null) {
             if (other.getId() != null)
                 return false;

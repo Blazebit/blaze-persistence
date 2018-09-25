@@ -28,6 +28,7 @@ import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityContainer;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityEmbeddable;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityEmbeddable_;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityNestedEmbeddable;
+import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntitySub;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntity_;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.NameObject;
@@ -56,6 +57,7 @@ public class JoinMapKeyEmbeddableTest extends AbstractCoreTest {
         return new Class<?>[]{
                 IntIdEntity.class,
                 EmbeddableTestEntity.class,
+                EmbeddableTestEntitySub.class,
                 EmbeddableTestEntityContainer.class,
                 EmbeddableTestEntityEmbeddable.class,
                 NameObject.class,

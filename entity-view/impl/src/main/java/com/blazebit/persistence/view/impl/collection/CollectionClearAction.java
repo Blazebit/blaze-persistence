@@ -42,6 +42,11 @@ public class CollectionClearAction<C extends Collection<E>, E> implements Collec
     }
 
     @Override
+    public void undo(C collection, Collection<?> removedObjects, Collection<?> addedObjects) {
+        throw new UnsupportedOperationException("Can't undo clear!");
+    }
+
+    @Override
     public boolean containsObject(C collection, Object o) {
         // Trivially, a clear action contains all objects
         return true;

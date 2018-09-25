@@ -18,10 +18,9 @@ package com.blazebit.persistence.view.testsuite.fetch.embedded.model;
 
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.view.Mapping;
-import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntity;
-import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntitySimpleEmbeddable;
+import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntity2;
+import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntitySimpleEmbeddable2;
 
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -35,18 +34,18 @@ public interface EmbeddableTestEntityFetchAsEntityView extends EmbeddableTestEnt
     String getName();
 
     @Mapping(value = "embeddable.manyToOne")
-    EmbeddableTestEntity getManyToOne();
+    EmbeddableTestEntity2 getManyToOne();
 
     @Mapping(value = "embeddable.oneToMany")
-    Set<EmbeddableTestEntity> getOneToMany();
+    Set<EmbeddableTestEntity2> getOneToMany();
 
     @Mapping(value = "embeddable.elementCollection")
     Set<IntIdEntity> getElementCollection();
 
     @Mapping(value = "embeddableSet")
-    Set<EmbeddableTestEntitySimpleEmbeddable> getEmbeddableSet();
+    Set<EmbeddableTestEntitySimpleEmbeddable2> getEmbeddableSet();
 
     @Mapping(value = "embeddableMap")
-    Set<EmbeddableTestEntitySimpleEmbeddable> getEmbeddableMap();
+    Set<EmbeddableTestEntitySimpleEmbeddable2> getEmbeddableMap();
 
 }

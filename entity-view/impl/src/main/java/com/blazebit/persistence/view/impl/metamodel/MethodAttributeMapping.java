@@ -73,7 +73,7 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
     private Boolean isOrphanRemoval;
     private Boolean isOptimisticLockProtected;
     private String mappedBy;
-    private boolean mappedByResolved;
+    private Map<EmbeddableOwner, String> embeddableMappedByMap;
     private InverseRemoveStrategy inverseRemoveStrategy;
     private Set<CascadeType> cascadeTypes = Collections.singleton(CascadeType.AUTO);
     private Set<Class<?>> cascadeSubtypeClasses;
@@ -88,6 +88,10 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
     private Set<ManagedViewTypeImplementor<?>> cascadeSubtypes;
     private Set<ManagedViewTypeImplementor<?>> cascadePersistSubtypes;
     private Set<ManagedViewTypeImplementor<?>> cascadeUpdateSubtypes;
+    private Map<EmbeddableOwner, Set<ManagedViewTypeImplementor<?>>> embeddableReadOnlySubtypesMap;
+    private Map<EmbeddableOwner, Set<ManagedViewTypeImplementor<?>>> embeddableCascadeSubtypesMap;
+    private Map<EmbeddableOwner, Set<ManagedViewTypeImplementor<?>>> embeddableCascadePersistSubtypesMap;
+    private Map<EmbeddableOwner, Set<ManagedViewTypeImplementor<?>>> embeddableCascadeUpdateSubtypesMap;
 
     // TODO: attribute filter config
 
@@ -164,7 +168,6 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
     @Override
     public void setMappedBy(String mappedBy) {
         this.mappedBy = mappedBy;
-        this.mappedByResolved = true;
     }
 
     @Override
@@ -180,14 +183,23 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
         this.inverseRemoveStrategy = inverseRemoveStrategy;
     }
 
-    public Set<ManagedViewTypeImplementor<?>> getReadOnlySubtypes(MetamodelBuildingContext context) {
+    public Set<ManagedViewTypeImplementor<?>> getReadOnlySubtypes(MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
+        Set<ManagedViewTypeImplementor<?>> readOnlySubtypes;
+        if (embeddableMapping == null) {
+            readOnlySubtypes = this.readOnlySubtypes;
+        } else {
+            if (embeddableReadOnlySubtypesMap == null) {
+                embeddableReadOnlySubtypesMap = new HashMap<>(1);
+            }
+            readOnlySubtypes = embeddableReadOnlySubtypesMap.get(embeddableMapping);
+        }
         if (readOnlySubtypes != null) {
             return readOnlySubtypes;
         }
-        Set<ManagedViewTypeImplementor<?>> subtypes = initializeCascadeSubtypes(readOnlySubtypeMappings, context);
-        com.blazebit.persistence.view.metamodel.Type<?> elementType = getElementType(context);
+        Set<ManagedViewTypeImplementor<?>> subtypes = initializeCascadeSubtypes(readOnlySubtypeMappings, context, embeddableMapping);
+        com.blazebit.persistence.view.metamodel.Type<?> elementType = getElementType(context, embeddableMapping);
         if (elementType == null) {
-            elementType = getType(context);
+            elementType = getType(context, embeddableMapping);
         }
         if (elementType instanceof ManagedViewTypeImplementor<?>) {
             if (subtypes.isEmpty()) {
@@ -196,37 +208,82 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
                 subtypes.add((ManagedViewTypeImplementor<?>) elementType);
             }
         }
-        return readOnlySubtypes = subtypes;
+        if (embeddableMapping == null) {
+            this.readOnlySubtypes = subtypes;
+        } else {
+            embeddableReadOnlySubtypesMap.put(embeddableMapping, subtypes);
+        }
+
+        return subtypes;
     }
 
-    public Set<ManagedViewTypeImplementor<?>> getCascadeSubtypes(MetamodelBuildingContext context) {
-        if (cascadeSubtypes != null) {
+    public Set<ManagedViewTypeImplementor<?>> getCascadeSubtypes(MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
+        if (embeddableMapping == null) {
+            if (cascadeSubtypes != null) {
+                return cascadeSubtypes;
+            }
+            return cascadeSubtypes = initializeCascadeSubtypes(cascadeSubtypeMappings, context, embeddableMapping);
+        } else {
+            if (embeddableCascadeSubtypesMap == null) {
+                embeddableCascadeSubtypesMap = new HashMap<>(1);
+            }
+            Set<ManagedViewTypeImplementor<?>> cascadeSubtypes = embeddableCascadeSubtypesMap.get(embeddableMapping);
+            if (cascadeSubtypes != null) {
+                return cascadeSubtypes;
+            }
+            cascadeSubtypes = initializeCascadeSubtypes(cascadeSubtypeMappings, context, embeddableMapping);
+            embeddableCascadeSubtypesMap.put(embeddableMapping, cascadeSubtypes);
             return cascadeSubtypes;
         }
-        return cascadeSubtypes = initializeCascadeSubtypes(cascadeSubtypeMappings, context);
     }
 
-    public Set<ManagedViewTypeImplementor<?>> getCascadePersistSubtypes(MetamodelBuildingContext context) {
-        if (cascadePersistSubtypes != null) {
+    public Set<ManagedViewTypeImplementor<?>> getCascadePersistSubtypes(MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
+        if (embeddableMapping == null) {
+            if (cascadePersistSubtypes != null) {
+                return cascadePersistSubtypes;
+            }
+            return cascadePersistSubtypes = initializeCascadeSubtypes(cascadePersistSubtypeMappings, context, embeddableMapping);
+        } else {
+            if (embeddableCascadePersistSubtypesMap == null) {
+                embeddableCascadePersistSubtypesMap = new HashMap<>(1);
+            }
+            Set<ManagedViewTypeImplementor<?>> cascadePersistSubtypes = embeddableCascadePersistSubtypesMap.get(embeddableMapping);
+            if (cascadePersistSubtypes != null) {
+                return cascadePersistSubtypes;
+            }
+            cascadePersistSubtypes = initializeCascadeSubtypes(cascadePersistSubtypeMappings, context, embeddableMapping);
+            embeddableCascadePersistSubtypesMap.put(embeddableMapping, cascadePersistSubtypes);
             return cascadePersistSubtypes;
         }
-        return cascadePersistSubtypes = initializeCascadeSubtypes(cascadePersistSubtypeMappings, context);
     }
 
-    public Set<ManagedViewTypeImplementor<?>> getCascadeUpdateSubtypes(MetamodelBuildingContext context) {
-        if (cascadeUpdateSubtypes != null) {
+    public Set<ManagedViewTypeImplementor<?>> getCascadeUpdateSubtypes(MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
+        if (embeddableMapping == null) {
+            if (cascadeUpdateSubtypes != null) {
+                return cascadeUpdateSubtypes;
+            }
+            return cascadeUpdateSubtypes = initializeCascadeSubtypes(cascadeUpdateSubtypeMappings, context, embeddableMapping);
+        } else {
+            if (embeddableCascadeUpdateSubtypesMap == null) {
+                embeddableCascadeUpdateSubtypesMap = new HashMap<>(1);
+            }
+            Set<ManagedViewTypeImplementor<?>> cascadeUpdateSubtypes = embeddableCascadeUpdateSubtypesMap.get(embeddableMapping);
+            if (cascadeUpdateSubtypes != null) {
+                return cascadeUpdateSubtypes;
+            }
+            cascadeUpdateSubtypes = initializeCascadeSubtypes(cascadeUpdateSubtypeMappings, context, embeddableMapping);
+            embeddableCascadeUpdateSubtypesMap.put(embeddableMapping, cascadeUpdateSubtypes);
             return cascadeUpdateSubtypes;
         }
-        return cascadeUpdateSubtypes = initializeCascadeSubtypes(cascadeUpdateSubtypeMappings, context);
     }
 
-    private Set<ManagedViewTypeImplementor<?>> initializeCascadeSubtypes(Map<ViewMapping, Boolean> subtypeMappings, MetamodelBuildingContext context) {
+    private Set<ManagedViewTypeImplementor<?>> initializeCascadeSubtypes(Map<ViewMapping, Boolean> subtypeMappings, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
         if (subtypeMappings == null || subtypeMappings.isEmpty()) {
             return Collections.emptySet();
         }
         Set<ManagedViewTypeImplementor<?>> subtypes = new HashSet<>(subtypeMappings.size());
         for (ViewMapping mapping : subtypeMappings.keySet()) {
-            subtypes.add(mapping.getManagedViewType(context));
+            subtypes.add(mapping.getManagedViewType(context, embeddableMapping));
         }
         return subtypes;
     }
@@ -238,6 +295,10 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
 
     public static String getLocation(String attributeName, Method method) {
         return "attribute " + attributeName + "[" + methodReference(method) + "]";
+    }
+
+    public boolean hasExplicitCascades() {
+        return !isEmpty(cascadeSubtypeClasses) || !isEmpty(cascadePersistSubtypeClasses) || !isEmpty(cascadeUpdateSubtypeClasses);
     }
 
     @Override
@@ -306,12 +367,28 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
         return error;
     }
 
-    public String determineMappedBy(ManagedType<?> managedType, String mapping, MetamodelBuildingContext context) {
-        if (mappedByResolved) {
+    public String determineMappedBy(ManagedType<?> managedType, String mapping, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
+        String mappedBy;
+        if (embeddableMapping == null) {
+            mappedBy = this.mappedBy;
+        } else {
+            if (embeddableMappedByMap == null) {
+                embeddableMappedByMap = new HashMap<>(1);
+            }
+            mappedBy = embeddableMappedByMap.get(embeddableMapping);
+        }
+        if (mappedBy != null) {
+            if (mappedBy.isEmpty()) {
+                return null;
+            }
             return mappedBy;
         }
 
-        mappedByResolved = true;
+        if (embeddableMapping == null) {
+            this.mappedBy = "";
+        } else {
+            embeddableMappedByMap.put(embeddableMapping, "");
+        }
 
         if (mapping == null || mapping.isEmpty()) {
             return null;
@@ -321,24 +398,22 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
             return null;
         }
 
-        // If we find a non-simple path, we don't even try to find a mapped by mapping
-        for (int i = 0; i < mapping.length(); i++) {
-            final char c = mapping.charAt(i);
-            if (!Character.isJavaIdentifierPart(c) && c != '.') {
-                return null;
-            }
-        }
-
         try {
             AttributePath basicAttributePath = context.getJpaProvider().getJpaMetamodelAccessor().getAttributePath(context.getEntityMetamodel(), managedType, mapping);
             List<Attribute<?, ?>> attributes = basicAttributePath.getAttributes();
-            for (int i = 0; i < attributes.size() - 1; i++) {
+            for (int i = 1; i < attributes.size(); i++) {
                 if (attributes.get(i).getDeclaringType().getPersistenceType() != Type.PersistenceType.EMBEDDABLE) {
                     // If the mapping goes over a non-embeddable, we can't determine a mapped by attribute name
                     return null;
                 }
             }
-            return mappedBy = context.getJpaProvider().getMappedBy((EntityType<?>) managedType, mapping);
+            mappedBy = context.getJpaProvider().getMappedBy((EntityType<?>) managedType, mapping);
+            if (embeddableMapping == null) {
+                this.mappedBy = mappedBy;
+            } else {
+                embeddableMappedByMap.put(embeddableMapping, mappedBy);
+            }
+            return mappedBy;
         } catch (IllegalArgumentException ex) {
             // if the mapping is invalid, we skip the determination as the error will be analyzed further at a later stage
             return null;
@@ -491,11 +566,27 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
 
     // If you change something here don't forget to also update ParameterAttributeMapping#getParameterAttribute
     @SuppressWarnings("unchecked")
-    public <X> AbstractMethodAttribute<? super X, ?> getMethodAttribute(ManagedViewTypeImplementor<X> viewType, int attributeIndex, int dirtyStateIndex, MetamodelBuildingContext context) {
+    public <X> AbstractMethodAttribute<? super X, ?> getMethodAttribute(ManagedViewTypeImplementor<X> viewType, int attributeIndex, int dirtyStateIndex, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
+        AbstractAttribute<?, ?> attribute;
+        if (embeddableMapping == null) {
+            attribute = this.attribute;
+        } else {
+            if (embeddableAttributeMap == null) {
+                embeddableAttributeMap = new HashMap<>(1);
+            }
+            attribute = embeddableAttributeMap.get(embeddableMapping);
+        }
         if (attribute == null) {
             if (mapping instanceof MappingParameter) {
-                mappedByResolved = true;
-                attribute = new MappingMethodSingularAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex);
+                if (embeddableMapping == null) {
+                    mappedBy = "";
+                } else {
+                    if (embeddableMappedByMap == null) {
+                        embeddableMappedByMap = new HashMap<>(1);
+                    }
+                    embeddableMappedByMap.put(embeddableMapping, "");
+                }
+                attribute = new MappingMethodSingularAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex, embeddableMapping);
                 return (AbstractMethodAttribute<? super X, ?>) attribute;
             }
 
@@ -504,28 +595,28 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
             if (isCollection) {
                 if (Collection.class == declaredTypeClass) {
                     if (correlated) {
-                        attribute = new CorrelatedMethodCollectionAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex);
+                        attribute = new CorrelatedMethodCollectionAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex, embeddableMapping);
                     } else {
-                        attribute = new MappingMethodCollectionAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex);
+                        attribute = new MappingMethodCollectionAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex, embeddableMapping);
                     }
                 } else if (List.class == declaredTypeClass) {
                     if (correlated) {
-                        attribute = new CorrelatedMethodListAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex);
+                        attribute = new CorrelatedMethodListAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex, embeddableMapping);
                     } else {
-                        attribute = new MappingMethodListAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex);
+                        attribute = new MappingMethodListAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex, embeddableMapping);
                     }
                 } else if (Set.class == declaredTypeClass || SortedSet.class == declaredTypeClass || NavigableSet.class == declaredTypeClass) {
                     if (correlated) {
-                        attribute = new CorrelatedMethodSetAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex);
+                        attribute = new CorrelatedMethodSetAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex, embeddableMapping);
                     } else {
-                        attribute = new MappingMethodSetAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex);
+                        attribute = new MappingMethodSetAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex, embeddableMapping);
                     }
                 } else if (Map.class == declaredTypeClass || SortedMap.class == declaredTypeClass || NavigableMap.class == declaredTypeClass) {
                     if (correlated) {
                         context.addError("The mapping defined on method '" + viewType.getJavaType().getName() + "." + method.getName() + "' uses a Map type with a correlated mapping which is unsupported!");
                         attribute = null;
                     } else {
-                        attribute = new MappingMethodMapAttribute<X, Object, Object>(viewType, this, context, attributeIndex, dirtyStateIndex);
+                        attribute = new MappingMethodMapAttribute<X, Object, Object>(viewType, this, context, attributeIndex, dirtyStateIndex, embeddableMapping);
                     }
                 } else {
                     context.addError("The mapping defined on method '" + viewType.getJavaType().getName() + "." + method.getName() + "' uses a an unknown collection type: " + declaredTypeClass);
@@ -534,13 +625,19 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
                 if (mapping instanceof MappingSubquery) {
                     attribute = new SubqueryMethodSingularAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex);
                 } else if (correlated) {
-                    attribute = new CorrelatedMethodSingularAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex);
+                    attribute = new CorrelatedMethodSingularAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex, embeddableMapping);
                 } else {
-                    attribute = new MappingMethodSingularAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex);
+                    attribute = new MappingMethodSingularAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex, embeddableMapping);
                 }
             }
         } else if (dirtyStateIndex != -1) {
             throw new IllegalStateException("Already constructed attribute with dirtyStateIndex " + ((AbstractMethodAttribute<?, ?>) attribute).getDirtyStateIndex() + " but now a different index " + dirtyStateIndex + " is requested!");
+        }
+
+        if (embeddableMapping == null) {
+            this.attribute = attribute;
+        } else {
+            embeddableAttributeMap.put(embeddableMapping, attribute);
         }
 
         return (AbstractMethodAttribute<? super X, ?>) attribute;

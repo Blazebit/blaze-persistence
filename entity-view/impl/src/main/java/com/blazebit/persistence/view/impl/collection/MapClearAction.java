@@ -47,6 +47,11 @@ public class MapClearAction<C extends Map<K, V>, K, V> implements MapAction<C> {
     }
 
     @Override
+    public void undo(C map, Collection<?> removedKeys, Collection<?> addedKeys, Collection<?> removedElements, Collection<?> addedElements) {
+        throw new UnsupportedOperationException("Can't undo clear!");
+    }
+
+    @Override
     public Collection<Object> getAddedKeys() {
         return Collections.emptyList();
     }

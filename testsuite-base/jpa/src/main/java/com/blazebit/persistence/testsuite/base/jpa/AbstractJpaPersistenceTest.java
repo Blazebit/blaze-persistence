@@ -374,7 +374,7 @@ public abstract class AbstractJpaPersistenceTest {
 
     protected abstract boolean supportsInverseSetCorrelationJoinsSubtypesWhenJoined();
 
-    protected boolean supportsMapInplaceUpdate() {
+    protected boolean supportsIndexedInplaceUpdate() {
         return false;
     }
 
@@ -582,12 +582,12 @@ public abstract class AbstractJpaPersistenceTest {
         }
     }
 
-    public AssertStatementBuilder assertQuerySequence() {
+    public AssertStatementBuilder assertOrderedQuerySequence() {
         return new AssertStatementBuilder(getRelationalModelAccessor(), QueryInspectorListener.EXECUTED_QUERIES);
     }
 
     public AssertStatementBuilder assertUnorderedQuerySequence() {
-        return assertQuerySequence().unordered();
+        return assertOrderedQuerySequence().unordered();
     }
 
     protected RelationalModelAccessor getRelationalModelAccessor() {

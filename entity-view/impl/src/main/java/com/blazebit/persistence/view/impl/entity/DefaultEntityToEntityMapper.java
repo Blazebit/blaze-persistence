@@ -35,7 +35,7 @@ public class DefaultEntityToEntityMapper extends AbstractEntityToEntityMapper {
     private final BasicUserType<Object> basicUserType;
     private final BasicDirtyChecker<Object> dirtyChecker;
 
-    public DefaultEntityToEntityMapper(boolean shouldPersist, boolean shouldMerge, BasicUserType<?> basicUserType, EntityLoaderFetchGraphNode<?> entityLoaderFetchGraphNode, UnmappedAttributeCascadeDeleter deleter) {
+    public DefaultEntityToEntityMapper(boolean shouldPersist, boolean shouldMerge, Class<?> jpaType, BasicUserType<?> basicUserType, EntityLoaderFetchGraphNode<?> entityLoaderFetchGraphNode, UnmappedAttributeCascadeDeleter deleter) {
         super(entityLoaderFetchGraphNode, deleter);
         this.shouldPersist = shouldPersist;
         this.shouldMerge = shouldMerge;
@@ -50,6 +50,7 @@ public class DefaultEntityToEntityMapper extends AbstractEntityToEntityMapper {
                 shouldPersist,
                 shouldMerge,
                 null,
+                jpaType,
                 null,
                 (BasicUserType<Object>) basicUserType,
                 null,

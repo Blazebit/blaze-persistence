@@ -17,7 +17,9 @@
 package com.blazebit.persistence.impl.util;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Utility class to extract information from SQL queries.
@@ -30,6 +32,7 @@ public class SqlUtils {
     private static final String SELECT = "select ";
     private static final String SET = " set ";
     private static final String FROM = " from ";
+    private static final String JOIN = " join ";
     private static final String WITH = "with ";
     private static final String WHERE = " where ";
     private static final String ORDER_BY = " order by ";
@@ -39,6 +42,7 @@ public class SqlUtils {
     private static final PatternFinder SELECT_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(SELECT));
     private static final PatternFinder SET_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(SET));
     private static final PatternFinder FROM_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(FROM));
+    private static final PatternFinder JOIN_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(JOIN));
     private static final PatternFinder WITH_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(WITH));
     private static final PatternFinder WHERE_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(WHERE));
     private static final PatternFinder ORDER_BY_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(ORDER_BY));
@@ -407,7 +411,7 @@ public class SqlUtils {
                     brackets--;
 
                     if (brackets == 0) {
-                        return new int[]{fromFinalTableIndex + FROM_FINAL_TABLE.length(), i};
+                        return new int[] { fromFinalTableIndex + FROM_FINAL_TABLE.length(), i };
                     }
                 }
             }
@@ -443,6 +447,94 @@ public class SqlUtils {
         }
 
         return index + 1;
+    }
+
+    public static int findJoinStartIndex(StringBuilder sqlSb, int aliasIndex) {
+        // Then we step back token-wise until we have found the tokens "(left|inner|cross)? outer? join"
+        int[] tokenRange = SqlUtils.rtrimBackwardsToFirstWhitespace(sqlSb, aliasIndex);
+        return findJoinStartIndex(sqlSb, tokenRange[0] - 1, EnumSet.of(JoinToken.JOIN));
+    }
+
+    public static int findJoinStartIndex(StringBuilder sqlSb, int tokenEnd, Set<JoinToken> allowedTokens) {
+        int[] tokenRange;
+        do {
+            tokenRange = SqlUtils.rtrimBackwardsToFirstWhitespace(sqlSb, tokenEnd);
+            tokenEnd = tokenRange[0] - 1;
+            JoinToken token = JoinToken.valueOf(sqlSb.substring(tokenRange[0], tokenRange[1]).trim().toUpperCase());
+            if (allowedTokens.contains(token)) {
+                allowedTokens = token.previous();
+            } else {
+                return tokenRange[1];
+            }
+        } while (!allowedTokens.isEmpty());
+
+        return tokenRange[0];
+    }
+
+    /**
+     * @author Christian Beikov
+     * @since 1.3.0
+     */
+    enum JoinToken {
+        LEFT,
+        INNER,
+        RIGHT,
+        CROSS,
+        OUTER {
+            @Override
+            Set<JoinToken> previous() {
+                return EnumSet.of(LEFT, RIGHT);
+            }
+        },
+        JOIN {
+            @Override
+            Set<JoinToken> previous() {
+                return EnumSet.of(LEFT, INNER, RIGHT, OUTER, CROSS);
+            }
+        };
+
+        Set<JoinToken> previous() {
+            return EnumSet.noneOf(JoinToken.class);
+        }
+    }
+
+    public static int findEndOfOnClause(StringBuilder sqlSb, int predicateStartIndex, int whereIndex) {
+        int joinIndex = JOIN_FINDER.indexIn(sqlSb, predicateStartIndex);
+        int end;
+        if (joinIndex == -1 || joinIndex > whereIndex) {
+            end = whereIndex;
+        } else {
+            end = findJoinStartIndex(sqlSb, joinIndex, JoinToken.JOIN.previous());
+        }
+        int potentialEndIndex = end;
+        QuoteMode mode = QuoteMode.NONE;
+        for (int i = predicateStartIndex; i < end; i++) {
+            char c = sqlSb.charAt(i);
+            mode = mode.onCharBackwards(c);
+
+            if (mode == QuoteMode.NONE) {
+                if (c == '(') {
+                    // While we are in a subcontext, consider the whole query
+                    end = whereIndex;
+                } else if (c == ')') {
+                    // When we leave the context, reset the end to the potential end index
+                    if (i < potentialEndIndex) {
+                        end = potentialEndIndex;
+                    } else {
+                        // If the found end index was in the subcontext, find the next join index
+                        joinIndex = JOIN_FINDER.indexIn(sqlSb, i);
+                        if (joinIndex == -1) {
+                            // If there is none, we break out
+                            return whereIndex;
+                        } else {
+                            end = potentialEndIndex = findJoinStartIndex(sqlSb, joinIndex, JoinToken.JOIN.previous());
+                        }
+                    }
+                }
+            }
+        }
+
+        return end;
     }
 
     /**

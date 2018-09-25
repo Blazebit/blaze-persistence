@@ -221,6 +221,15 @@ public interface JpaProvider {
     public boolean supportsCountStar();
 
     /**
+     * Returns an array with the column name of the discriminator of the given entity type and the discriminator value, or null.
+     *
+     * @param entityType The entity type
+     * @return The column name of the discriminator and the discriminator value, or null
+     * @since 1.3.0
+     */
+    public String[] getDiscriminatorColumnCheck(EntityType<?> entityType);
+
+    /**
      * Whether the join columns for the given attribute are in a foreign table.
      *
      * @param ownerType The owner of the attribute
@@ -249,6 +258,17 @@ public interface JpaProvider {
     public String[] getColumnNames(EntityType<?> ownerType, String attributeName);
 
     /**
+     * Returns the column names of the attribute of the given entity type within the element collection.
+     *
+     * @param ownerType The owner of the attribute
+     * @param elementCollectionPath The path to the element collection within which the attribute is contained
+     * @param attributeName The attribute name
+     * @return The column names of the attribute
+     * @since 1.3.0
+     */
+    public String[] getColumnNames(EntityType<?> ownerType, String elementCollectionPath, String attributeName);
+
+    /**
      * Returns the SQL column type names of the given attribute of the given entity type.
      *
      * @param ownerType The owner of the attribute
@@ -256,6 +276,17 @@ public interface JpaProvider {
      * @return The SQL column type names for the attribute
      */
     public String[] getColumnTypes(EntityType<?> ownerType, String attributeName);
+
+    /**
+     * Returns the SQL column type names of the given attribute of the given entity type within the element collection.
+     *
+     * @param ownerType The owner of the attribute
+     * @param elementCollectionPath The path to the element collection within which the attribute is contained
+     * @param attributeName The attribute name
+     * @return The SQL column type names for the attribute
+     * @since 1.3.0
+     */
+    public String[] getColumnTypes(EntityType<?> ownerType, String elementCollectionPath, String attributeName);
 
     /**
      * Returns where to put treat filters for a treat joined association of this attribute.
@@ -321,6 +352,17 @@ public interface JpaProvider {
     public boolean isOrphanRemoval(ManagedType<?> ownerType, String attributeName);
 
     /**
+     * Whether orphan removal is activated for the given attribute within the element collection.
+     *
+     * @param ownerType The declaring type of the attribute to check
+     * @param elementCollectionPath The path to the element collection within which the attribute is contained
+     * @param attributeName The name of the attribute to check
+     * @return True if orphan removal is activated, else false
+     * @since 1.3.0
+     */
+    public boolean isOrphanRemoval(ManagedType<?> ownerType, String elementCollectionPath, String attributeName);
+
+    /**
      * Whether delete cascading is activated for the given attribute.
      *
      * @param ownerType The declaring type of the attribute to check
@@ -328,6 +370,17 @@ public interface JpaProvider {
      * @return True if delete cascading is activated, else false
      */
     public boolean isDeleteCascaded(ManagedType<?> ownerType, String attributeName);
+
+    /**
+     * Whether delete cascading is activated for the given attribute within the element collection.
+     *
+     * @param ownerType The declaring type of the attribute to check
+     * @param elementCollectionPath The path to the element collection within which the attribute is contained
+     * @param attributeName The name of the attribute to check
+     * @return True if delete cascading is activated, else false
+     * @since 1.3.0
+     */
+    public boolean isDeleteCascaded(ManagedType<?> ownerType, String elementCollectionPath, String attributeName);
 
     /**
      * Returns whether the entity with the id is contained in the entity managers persistence context.
@@ -423,10 +476,27 @@ public interface JpaProvider {
     /**
      * Indicates whether the provider supports correlating inverse associations.
      *
+     * @return true if needed, else false
+     * @since 1.3.0
+     */
+    public boolean needsCorrelationPredicateWhenCorrelatingWithWhereClause();
+
+    /**
+     * Indicates whether the provider supports optimized natural id access.
+     *
      * @return true if supported, else false
      * @since 1.3.0
      */
-    public boolean supportsJoinElementCollectionsOnCorrelatedInverseAssociations();
+    public boolean supportsSingleValuedAssociationNaturalIdExpressions();
+
+    /**
+     * Indicates whether the provider needs to cutoff id properties when used as subpath of element collections.
+     * This is to be able to workaround https://hibernate.atlassian.net/browse/HHH-13045 .
+     *
+     * @return true if needed, else false
+     * @since 1.3.0
+     */
+    public boolean needsElementCollectionIdCutoff();
 
     /**
      * Enables query result caching for the given query.
@@ -445,6 +515,17 @@ public interface JpaProvider {
      * @since 1.2.1
      */
     public List<String> getIdentifierOrUniqueKeyEmbeddedPropertyNames(EntityType<?> owner, String attributeName);
+
+    /**
+     * Get the identifier or unique key inverse properties of an association attribute within an element collection.
+     *
+     * @param owner The owning entity type
+     * @param elementCollectionPath The path to the element collection within which the attribute is contained
+     * @param attributeName The association attribute
+     * @return the identifier or unique key inverse properties of the association attribute
+     * @since 1.3.0
+     */
+    public List<String> getIdentifierOrUniqueKeyEmbeddedPropertyNames(EntityType<?> owner, String elementCollectionPath, String attributeName);
 
     /**
      * Returns the identifier of the entity object.

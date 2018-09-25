@@ -109,7 +109,7 @@ public class InverseViewToEntityMapper<E> implements InverseElementToEntityMappe
                     parentEntityOnChildViewMapperListener.run();
                 }
             } else {
-                nestedGraphNode.flushEntity(context, (E) elementEntity, null, child, parentEntityOnChildViewMapperListener);
+                nestedGraphNode.flushEntity(context, (E) elementEntity, child, null, child, parentEntityOnChildViewMapperListener);
             }
             elementViewToEntityMapper.applyToEntity(context, elementEntity, child);
         } else {
@@ -125,7 +125,7 @@ public class InverseViewToEntityMapper<E> implements InverseElementToEntityMappe
                     parentEntityOnChildViewMapperListener.run();
                 }
             } else {
-                nestedGraphNode.flushEntity(context, (E) elementEntity, null, child, parentEntityOnChildViewMapperListener);
+                nestedGraphNode.flushEntity(context, (E) elementEntity, child, null, child, parentEntityOnChildViewMapperListener);
             }
             elementViewToEntityMapper.applyToEntity(context, elementEntity, child);
         }
@@ -174,7 +174,7 @@ public class InverseViewToEntityMapper<E> implements InverseElementToEntityMappe
             if (idAttributeFlusher == null) {
                 query.setParameter(ID_PARAM_NAME, viewIdAccessor.getValue(view));
             } else {
-                idAttributeFlusher.flushQuery(context, "_", query, view, viewIdAccessor.getValue(view), null);
+                idAttributeFlusher.flushQuery(context, "_", query, view, view, viewIdAccessor.getValue(view), null);
             }
         }
 

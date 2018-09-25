@@ -18,6 +18,7 @@ package com.blazebit.persistence.testsuite;
 
 import static org.junit.Assert.assertEquals;
 
+import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntitySub;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -56,6 +57,7 @@ public class UpdateEmbeddableComplexTest extends AbstractCoreTest {
         return new Class<?>[] {
             IntIdEntity.class,
             EmbeddableTestEntity.class,
+            EmbeddableTestEntitySub.class,
             EmbeddableTestEntityEmbeddable.class,
             EmbeddableTestEntityId.class
         };

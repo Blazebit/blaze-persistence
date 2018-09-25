@@ -21,16 +21,17 @@ import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.update.EntityViewUpdater;
+import com.blazebit.persistence.view.impl.update.EntityViewUpdaterImpl;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.update.flush.DirtyAttributeFlusher;
 import com.blazebit.persistence.view.impl.update.flush.FetchGraphNode;
-import com.blazebit.persistence.view.metamodel.FlatViewType;
 import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
 import javax.persistence.Query;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -42,9 +43,8 @@ import java.util.Set;
 public abstract class AbstractViewToEntityMapper implements ViewToEntityMapper {
 
     protected final String attributeLocation;
-    protected final Class<?> viewTypeClass;
+    protected final Set<Class<?>> viewTypeClasses;
     protected final boolean isEmbeddable;
-    protected final boolean isFlatView;
     protected final EntityViewUpdater defaultUpdater;
     protected final Map<Class<?>, EntityViewUpdater> persistUpdater;
     protected final Map<Class<?>, EntityViewUpdater> updateUpdater;
@@ -55,29 +55,36 @@ public abstract class AbstractViewToEntityMapper implements ViewToEntityMapper {
     protected final AttributeAccessor entityIdAccessor;
     protected final boolean persistAllowed;
 
-    public AbstractViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, Class<?> viewTypeClass, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes, EntityLoader entityLoader, AttributeAccessor viewIdAccessor, boolean persistAllowed) {
+    public AbstractViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, Class<?> viewTypeClass, Set<Type<?>> readOnlyAllowedSubtypes, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes, EntityLoader entityLoader, AttributeAccessor viewIdAccessor, boolean persistAllowed, EntityViewUpdaterImpl owner, String ownerMapping) {
         this.attributeLocation = attributeLocation;
-        this.viewTypeClass = viewTypeClass;
         ManagedViewTypeImplementor<?> managedViewTypeImplementor = evm.getMetamodel().managedView(viewTypeClass);
         this.isEmbeddable = evm.getMetamodel().getEntityMetamodel().getEntity(managedViewTypeImplementor.getEntityClass()) == null;
-        this.isFlatView = managedViewTypeImplementor instanceof FlatViewType<?>;
         Map<Class<?>, EntityViewUpdater> persistUpdater = new HashMap<>();
         Map<Class<?>, EntityViewUpdater> updateUpdater = new HashMap<>();
         Map<Class<?>, EntityViewUpdater> removeUpdater = new HashMap<>();
 
         for (Type<?> t : persistAllowedSubtypes) {
-            EntityViewUpdater updater = evm.getUpdater((ManagedViewTypeImplementor<?>) t, managedViewTypeImplementor);
+            EntityViewUpdater updater = evm.getUpdater((ManagedViewTypeImplementor<?>) t, managedViewTypeImplementor, owner, ownerMapping);
             persistUpdater.put(t.getJavaType(), updater);
             removeUpdater.put(t.getJavaType(), updater);
         }
         for (Type<?> t : updateAllowedSubtypes) {
-            EntityViewUpdater updater = evm.getUpdater((ManagedViewTypeImplementor<?>) t, null);
+            EntityViewUpdater updater = evm.getUpdater((ManagedViewTypeImplementor<?>) t, null, owner, ownerMapping);
             updateUpdater.put(t.getJavaType(), updater);
             removeUpdater.put(t.getJavaType(), updater);
         }
 
-        this.defaultUpdater = evm.getUpdater(managedViewTypeImplementor, null);
+        this.defaultUpdater = evm.getUpdater(managedViewTypeImplementor, null, owner, ownerMapping);
         removeUpdater.put(viewTypeClass, defaultUpdater);
+        Set<Class<?>> viewTypeClasses = new HashSet<>();
+        for (Type<?> readOnlyType : readOnlyAllowedSubtypes) {
+            viewTypeClasses.add(readOnlyType.getJavaType());
+            if (readOnlyType instanceof ManagedViewTypeImplementor<?>) {
+                removeUpdater.put(readOnlyType.getJavaType(), evm.getUpdater((ManagedViewTypeImplementor<?>) readOnlyType, null, owner, ownerMapping));
+            }
+        }
+
+        this.viewTypeClasses = Collections.unmodifiableSet(viewTypeClasses);
         this.persistUpdater = Collections.unmodifiableMap(persistUpdater);
         this.updateUpdater = Collections.unmodifiableMap(updateUpdater);
         this.removeUpdater = Collections.unmodifiableMap(removeUpdater);
@@ -172,7 +179,7 @@ public abstract class AbstractViewToEntityMapper implements ViewToEntityMapper {
             Class<?> viewTypeClass = getViewTypeClass(view);
             EntityViewUpdater updater = persistUpdater.get(viewTypeClass);
             if (updater == null) {
-                throw new IllegalStateException("Couldn't persist object for " + attributeLocation + ". Expected subviews of the types " + persistUpdater.keySet() + " but got: " + view);
+                throw new IllegalStateException("Couldn't persist object for " + attributeLocation + ". Expected subviews of the types " + names(persistUpdater.keySet()) + " but got: " + view);
             }
             if (entity != null) {
                 return updater.executePersist(context, entity, (MutableStateTrackable) view);
@@ -185,8 +192,8 @@ public abstract class AbstractViewToEntityMapper implements ViewToEntityMapper {
     }
 
     protected boolean shouldPersist(Object view, Object id) {
-        // Flat view types are always considered to be "persisted"
-        if (isFlatView) {
+        // View for embeddable types are always considered to be "persisted"
+        if (isEmbeddable) {
             return true;
         }
 
@@ -201,6 +208,18 @@ public abstract class AbstractViewToEntityMapper implements ViewToEntityMapper {
         }
 
         return view.getClass();
+    }
+
+    protected static String names(Set<Class<?>> viewTypeClasses) {
+        StringBuilder sb = new StringBuilder();
+        sb.append('[');
+        for (Class<?> aClass : viewTypeClasses) {
+            sb.append(aClass.getName());
+            sb.append(", ");
+        }
+        sb.setLength(sb.length() - 2);
+        sb.append(']');
+        return sb.toString();
     }
 
     @Override

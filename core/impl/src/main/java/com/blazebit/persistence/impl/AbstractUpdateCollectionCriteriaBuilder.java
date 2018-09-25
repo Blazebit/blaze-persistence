@@ -21,8 +21,6 @@ import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.ReturningBuilder;
 import com.blazebit.persistence.ReturningObjectBuilder;
 import com.blazebit.persistence.ReturningResult;
-import com.blazebit.persistence.spi.AttributePath;
-import com.blazebit.persistence.parser.QualifiedAttribute;
 import com.blazebit.persistence.parser.SimpleQueryGenerator;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.impl.function.entity.ValuesEntity;
@@ -34,19 +32,23 @@ import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.impl.query.ReturningCollectionUpdateModificationQuerySpecification;
 import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.DbmsModificationState;
+import com.blazebit.persistence.spi.ExtendedAttribute;
+import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 import com.blazebit.persistence.spi.JoinTable;
-import com.blazebit.persistence.spi.JpaMetamodelAccessor;
 
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
-import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.ListAttribute;
+import javax.persistence.metamodel.MapAttribute;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  *
@@ -57,6 +59,9 @@ import java.util.Set;
 public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseUpdateCriteriaBuilder<T, X>, Y> extends BaseUpdateCriteriaBuilderImpl<T, X, Y> {
 
     private final String collectionName;
+    private final String keyFunctionExpression;
+    private final Map<String, ExtendedAttribute> collectionAttributeEntries;
+    private final Map<String, String> collectionColumnBindingMap;
 
     private List<String> cachedBaseQueryStrings;
 
@@ -66,40 +71,56 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
         // Add the join here so that references in the where clause go the the expected join node
         // Also, this validates the collection actually exists
         joinManager.join(entityAlias + "." + collectionName, CollectionUpdateModificationQuerySpecification.COLLECTION_BASE_QUERY_ALIAS, JoinType.LEFT, false, true);
+        ExtendedManagedType<?> extendedManagedType = mainQuery.metamodel.getManagedType(ExtendedManagedType.class, entityType);
+        ExtendedAttribute<?, ?> extendedAttribute = extendedManagedType.getAttribute(collectionName);
+        Map<String, ExtendedAttribute> collectionAttributeEntries = JpaUtils.getCollectionAttributeEntries(mainQuery.metamodel, entityType, extendedAttribute);
+        if (extendedAttribute.getAttribute() instanceof MapAttribute<?, ?, ?>) {
+            keyFunctionExpression = "key(" + collectionName + ")";
+        } else if (extendedAttribute.getAttribute() instanceof ListAttribute<?, ?> && !mainQuery.jpaProvider.isBag(entityType, collectionName)) {
+            keyFunctionExpression = "index(" + collectionName + ")";
+        } else {
+            keyFunctionExpression = null;
+        }
+        this.collectionColumnBindingMap = new LinkedHashMap<>(collectionAttributeEntries.size());
+        this.collectionAttributeEntries = collectionAttributeEntries;
     }
 
     public AbstractUpdateCollectionCriteriaBuilder(AbstractUpdateCollectionCriteriaBuilder<T, X, Y> builder, MainQuery mainQuery, QueryContext queryContext) {
         super(builder, mainQuery, queryContext);
         this.collectionName = builder.collectionName;
+        this.keyFunctionExpression = builder.keyFunctionExpression;
+        this.collectionColumnBindingMap = builder.collectionColumnBindingMap;
+        this.collectionAttributeEntries = builder.collectionAttributeEntries;
     }
 
     @Override
-    protected String checkAttribute(String attributeName) {
-        // Assert the attribute exists and "clean" the attribute path
-        JpaMetamodelAccessor jpaMetamodelAccessor = mainQuery.jpaProvider.getJpaMetamodelAccessor();
-        AttributePath attributePath = jpaMetamodelAccessor.getJoinTableCollectionAttributePath(getMetamodel(), entityType, attributeName, collectionName);
-        StringBuilder sb = new StringBuilder();
-        for (Attribute<?, ?> attribute : attributePath.getAttributes()) {
-            // Replace the collection name with the alias for easier processing
-            if (attribute instanceof QualifiedAttribute) {
-                sb.append(((QualifiedAttribute) attribute).getQualificationExpression());
-                sb.append('(');
-                sb.append(CollectionUpdateModificationQuerySpecification.COLLECTION_BASE_QUERY_ALIAS);
-                sb.append(')');
-            } else if (collectionName.equals(attribute.getName())) {
-                sb.append(CollectionUpdateModificationQuerySpecification.COLLECTION_BASE_QUERY_ALIAS);
-            } else {
-                sb.append(attribute.getName());
-            }
-            sb.append('.');
-        }
-        attributeName = sb.substring(0, sb.length() - 1);
-        Expression attributeExpression = setAttributes.get(attributeName);
+    protected void addAttribute(String attributeName) {
+        if (attributeName.equalsIgnoreCase(keyFunctionExpression)) {
+            Integer attributeBindIndex = setAttributeBindingMap.get(attributeName);
 
-        if (attributeExpression != null) {
+            if (attributeBindIndex != null) {
+                throw new IllegalArgumentException("The attribute [" + attributeName + "] has already been bound!");
+            }
+
+            setAttributeBindingMap.put(attributeName, selectManager.getSelectInfos().size());
+            return;
+        }
+        ExtendedAttribute attributeEntry = collectionAttributeEntries.get(attributeName);
+        if (attributeEntry == null) {
+            Set<String> set = new TreeSet<>(collectionAttributeEntries.keySet());
+            if (keyFunctionExpression != null) {
+                set.add(keyFunctionExpression);
+            }
+            throw new IllegalArgumentException("The attribute [" + attributeName + "] does not exist or can't be bound! Allowed attributes are: " + set);
+        }
+
+        Integer attributeBindIndex = setAttributeBindingMap.get(attributeName);
+
+        if (attributeBindIndex != null) {
             throw new IllegalArgumentException("The attribute [" + attributeName + "] has already been bound!");
         }
-        return attributeName;
+
+        setAttributeBindingMap.put(attributeName, selectManager.getSelectInfos().size());
     }
 
     @Override
@@ -135,8 +156,20 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
             cachedBaseQueryStrings = new ArrayList<>();
             StringBuilder sbSetExpressionQuery = new StringBuilder();
 
-            for (Map.Entry<String, Expression> attributeEntry : setAttributes.entrySet()) {
-                fillCachedBaseQueryStrings(sbSetExpressionQuery, attributeEntry.getKey(), attributeEntry.getValue());
+            List<SelectInfo> selectInfos = selectManager.getSelectInfos();
+            for (Map.Entry<String, Integer> attributeEntry : setAttributeBindingMap.entrySet()) {
+                String expression = attributeEntry.getKey();
+                int collectionIndex = expression.indexOf(collectionName);
+                if (collectionIndex == -1) {
+                    expression = entityAlias + '.' + expression;
+                } else {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(expression, 0, collectionIndex);
+                    sb.append(CollectionUpdateModificationQuerySpecification.COLLECTION_BASE_QUERY_ALIAS);
+                    sb.append(expression, collectionIndex + collectionName.length(), expression.length());
+                    expression = sb.toString();
+                }
+                fillCachedBaseQueryStrings(sbSetExpressionQuery, expression, selectInfos.get(attributeEntry.getValue()).getExpression());
             }
         }
     }
@@ -169,6 +202,16 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
     protected boolean appendSetElementEntityPrefix(String trimmedPath) {
         // Prevent collection aliases to be prefixed
         return !trimmedPath.startsWith(CollectionUpdateModificationQuerySpecification.COLLECTION_BASE_QUERY_ALIAS) && super.appendSetElementEntityPrefix(trimmedPath);
+    }
+
+    @Override
+    protected void prepareAndCheck() {
+        if (!needsCheck) {
+            return;
+        }
+
+        JpaUtils.expandBindings(entityType, setAttributeBindingMap, collectionColumnBindingMap, collectionAttributeEntries, ClauseType.SET, this);
+        super.prepareAndCheck();
     }
 
     @Override
@@ -228,6 +271,12 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
         Map<String, String> columnOnlyRemappings = new HashMap<>();
         Map<String, String> columnExpressionRemappings = new HashMap<>();
 
+        String[] discriminatorColumnCheck = mainQuery.jpaProvider.getDiscriminatorColumnCheck(entityType);
+        String discriminatorPredicate = "";
+        if (discriminatorColumnCheck != null) {
+            discriminatorPredicate = ownerAlias + "." + discriminatorColumnCheck[0] + "=" + discriminatorColumnCheck[1] + " and";
+            columnExpressionRemappings.put(ownerAlias + "." + discriminatorColumnCheck[0] + "=" + discriminatorColumnCheck[1], "1=1");
+        }
         if (joinTable.getKeyColumnMappings() != null) {
             for (Map.Entry<String, String> entry : joinTable.getKeyColumnMappings().entrySet()) {
                 columnOnlyRemappings.put(collectionAlias + "." + entry.getValue(), entry.getKey());
@@ -267,6 +316,7 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
                     returningAttributeBindingMap,
                     getUpdateExampleQuery(),
                     updateSql,
+                    discriminatorPredicate,
                     setExpressionContainingUpdateQueries,
                     columnOnlyRemappings,
                     columnExpressionRemappings
@@ -287,6 +337,7 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
                     returningAttributeBindingMap,
                     getUpdateExampleQuery(),
                     updateSql,
+                    discriminatorPredicate,
                     setExpressionContainingUpdateQueries,
                     columnOnlyRemappings,
                     columnExpressionRemappings,

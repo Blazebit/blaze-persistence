@@ -69,7 +69,7 @@ public class EntityViewUpdateCorrelatedMutableOnlySubviewTest extends AbstractEn
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
@@ -118,7 +118,7 @@ public class EntityViewUpdateCorrelatedMutableOnlySubviewTest extends AbstractEn
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             builder.update(Person.class);

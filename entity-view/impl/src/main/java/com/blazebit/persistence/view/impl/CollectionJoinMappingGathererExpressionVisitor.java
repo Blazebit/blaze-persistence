@@ -51,7 +51,7 @@ public class CollectionJoinMappingGathererExpressionVisitor extends VisitorAdapt
     public CollectionJoinMappingGathererExpressionVisitor(ManagedType<?> managedType, Metamodel metamodel) {
         this.metamodel = metamodel;
         this.managedType = managedType;
-        this.paths = new ArrayList<String>();
+        this.paths = new ArrayList<>();
     }
     
     public List<String> getPaths() {

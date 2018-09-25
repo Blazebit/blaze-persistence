@@ -43,6 +43,11 @@ public abstract class AbstractEntityViewUpdateEmbeddableCollectionsTest<T extend
         super(mode, strategy, version, viewType);
     }
 
+    @Override
+    protected String[] getFetchedCollections() {
+        return new String[] { "names" };
+    }
+
     public T updateReplaceCollection() {
         // Given
         final T docView = getDoc1View();

@@ -27,17 +27,17 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 @Embeddable
-public class EmbeddableTestEntityId implements Serializable {
+public class EmbeddableTestEntityId2 implements Serializable {
 
     private static final long serialVersionUID = 1L;
     
     private IntIdEntity intIdEntity;
     private String key;
 
-    public EmbeddableTestEntityId() {
+    public EmbeddableTestEntityId2() {
     }
 
-    public EmbeddableTestEntityId(IntIdEntity intIdEntity, String key) {
+    public EmbeddableTestEntityId2(IntIdEntity intIdEntity, String key) {
         this.intIdEntity = intIdEntity;
         this.key = key;
     }
@@ -80,7 +80,7 @@ public class EmbeddableTestEntityId implements Serializable {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        EmbeddableTestEntityId other = (EmbeddableTestEntityId) obj;
+        EmbeddableTestEntityId2 other = (EmbeddableTestEntityId2) obj;
         if (intIdEntity == null) {
             if (other.intIdEntity != null)
                 return false;

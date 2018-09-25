@@ -32,6 +32,8 @@ public interface CollectionAction<T extends Collection<?>> {
 
     public void doAction(T collection, UpdateContext context, ViewToEntityMapper mapper, CollectionRemoveListener removeListener);
 
+    public void undo(T collection, Collection<?> removedObjects, Collection<?> addedObjects);
+
     public boolean containsObject(T collection, Object o);
 
     public Collection<Object> getAddedObjects();

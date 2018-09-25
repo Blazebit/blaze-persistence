@@ -63,6 +63,11 @@ public class EntityViewUpdateSimpleCreatableSubviewMapsTest extends AbstractEnti
         cfg.addEntityView(PersonCreateView.class);
     }
 
+    @Override
+    protected String[] getFetchedCollections() {
+        return new String[] { "contacts" };
+    }
+
     @Test
     public void testUpdateWithPersonCreateView() {
         final UpdatableDocumentWithMapsView docView = getDoc1View();
@@ -76,10 +81,13 @@ public class EntityViewUpdateSimpleCreatableSubviewMapsTest extends AbstractEnti
 
         // Then
         // Assert that only the document is loaded, as we don't need to load the old person
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        if (isFullMode()) {
-            fullFetch(builder);
+        if (isQueryStrategy()) {
+            if (isFullMode()) {
+                builder.delete(Document.class, "contacts")
+                        .insert(Document.class, "contacts");
+            }
         } else {
 //            builder.select(Document.class);
             // Adding elements to a list requires full fetching
@@ -88,15 +96,13 @@ public class EntityViewUpdateSimpleCreatableSubviewMapsTest extends AbstractEnti
 
         builder.insert(Person.class);
 
-        if (version) {
+        if (version || isQueryStrategy() && isFullMode()) {
             builder.update(Document.class);
         }
-        builder.assertInsert()
-                    .forRelation(Document.class, "contacts")
-                .and()
+        builder.insert(Document.class, "contacts")
                 .validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertEquals(doc1.getContacts().get(2).getId(), personCreateView.getId());
         assertEquals("newPers", doc1.getContacts().get(2).getName());
         assertSubviewEquals(doc1.getContacts(), docView.getContacts());
@@ -128,9 +134,11 @@ public class EntityViewUpdateSimpleCreatableSubviewMapsTest extends AbstractEnti
     }
 
     @Override
-    protected boolean isQueryStrategy() {
-        // Collection changes always need to be applied on the entity model, can't do that via a query
-        return false;
+    protected AssertStatementBuilder fullUpdate(AssertStatementBuilder builder) {
+        builder.delete(Document.class, "contacts")
+                .insert(Document.class, "contacts")
+                .insert(Document.class, "contacts");
+        return versionUpdate(builder);
     }
 
     @Override

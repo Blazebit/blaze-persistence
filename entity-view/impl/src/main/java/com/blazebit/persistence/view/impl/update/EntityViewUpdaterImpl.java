@@ -23,6 +23,7 @@ import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.spi.JoinTable;
+import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.InverseRemoveStrategy;
@@ -92,12 +93,12 @@ import javax.persistence.Query;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.SingularAttribute;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -126,7 +127,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
     private final String fullUpdateQueryString;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public EntityViewUpdaterImpl(EntityViewManagerImpl evm, ManagedViewTypeImplementor<?> viewType, ManagedViewTypeImplementor<?> declaredViewType) {
+    public EntityViewUpdaterImpl(EntityViewManagerImpl evm, ManagedViewTypeImplementor<?> viewType, ManagedViewTypeImplementor<?> declaredViewType, EntityViewUpdaterImpl owner, String ownerMapping) {
         Class<?> entityClass = viewType.getEntityClass();
         this.fullFlush = viewType.getFlushMode() == FlushMode.FULL;
         this.flushStrategy = viewType.getFlushStrategy();
@@ -250,7 +251,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
         UnmappedAttributeCascadeDeleter[] cascadeDeleteUnmappedFlushers = null;
         UnmappedAttributeCascadeDeleter[][] flusherWiseCascadeDeleteUnmappedFlushers = null;
         // Exclude it and version attributes from unmapped attributes as they can't have join tables
-        Map<String, ExtendedAttribute> joinTableUnmappedEntityAttributes = new TreeMap<>(entityMetamodel.getManagedType(ExtendedManagedType.class, entityClass).getAttributes());
+        Map<String, ExtendedAttribute> joinTableUnmappedEntityAttributes = new TreeMap<>(entityMetamodel.getManagedType(ExtendedManagedType.class, entityClass).getOwnedAttributes());
         if (jpaIdAttribute != null) {
             joinTableUnmappedEntityAttributes.remove(jpaIdAttribute.getName());
         }
@@ -275,7 +276,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                 if (methodAttribute.getMapping() != null) {
                     joinTableUnmappedEntityAttributes.remove(methodAttribute.getMapping());
                 }
-                DirtyAttributeFlusher flusher = createAttributeFlusher(evm, viewType, idAttributeName, flushStrategy, methodAttribute);
+                DirtyAttributeFlusher flusher = createAttributeFlusher(evm, viewType, idAttributeName, flushStrategy, methodAttribute, idFlusher, owner, ownerMapping);
                 if (flusher != null) {
                     if (sb != null) {
                         int endIndex = sb.length();
@@ -424,10 +425,13 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                 evm,
                 viewIdType.getJavaType(),
                 Collections.<Type<?>>singleton(viewIdType),
+                Collections.<Type<?>>singleton(viewIdType),
                 Collections.<Type<?>>emptySet(),
                 new ReferenceEntityLoader(evm, viewIdType, null),
                 true,
-                viewIdType.isUpdatable() ? null : (Mapper<Object, Object>) Mappers.forViewToEntityAttributeMapping(evm, viewIdType, viewIdType.getEntityClass())
+                viewIdType.isUpdatable() ? null : (Mapper<Object, Object>) Mappers.forViewToEntityAttributeMapping(evm, viewIdType, viewIdType.getEntityClass()),
+                null,
+                null
         );
     }
 
@@ -472,16 +476,16 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
             if (type.isJpaManaged()) {
                 Set<Attribute<?, ?>> attributes = (Set) type.getManagedType().getAttributes();
                 Map<AttributeAccessor, BasicAttributeFlusher> componentFlushers = new HashMap<>(attributes.size());
-                buildComponentFlushers(evm, type.getJavaType(), attributeName + "_", attributeMapping + ".", "", attributes, componentFlushers);
+                buildComponentFlushers(evm, viewType.getEntityClass(), type.getJavaType(), attributeName + "_", attributeMapping + ".", "", attributes, componentFlushers);
                 componentFlusherEntries = componentFlushers.entrySet().toArray(new Map.Entry[componentFlushers.size()]);
             }
-            TypeDescriptor typeDescriptor = TypeDescriptor.forType(evm, idAttribute, type);
+            TypeDescriptor typeDescriptor = TypeDescriptor.forType(evm, null, idAttribute, type, null, null);
             return new BasicAttributeFlusher<>(attributeName, attributeMapping, true, false, true, false, false, false, componentFlusherEntries, typeDescriptor, updateFragment, parameterName, entityAttributeAccessor, viewAttributeAccessor, null, null, null);
         }
     }
 
     @SuppressWarnings("unchecked")
-    private static void buildComponentFlushers(EntityViewManagerImpl evm, Class<?> rootType, String attributePrefix, String mappingPrefix, String accessorPrefix, Set<Attribute<?, ?>> attributes, Map<AttributeAccessor, BasicAttributeFlusher> componentFlushers) {
+    private static void buildComponentFlushers(EntityViewManagerImpl evm, Class<?> entityClass, Class<?> rootType, String attributePrefix, String mappingPrefix, String accessorPrefix, Set<Attribute<?, ?>> attributes, Map<AttributeAccessor, BasicAttributeFlusher> componentFlushers) {
         for (Attribute<?, ?> attribute : attributes) {
             if (!(attribute instanceof SingularAttribute<?, ?>)) {
                 throw new IllegalArgumentException("Plural attributes in embedded ids aren't supported yet! Remove attribute " + attribute.getName() + " of type " + attribute.getDeclaringType().getJavaType().getName());
@@ -519,15 +523,20 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                 if (managedType instanceof EmbeddableType<?>) {
                     subAttributes = (Set) managedType.getAttributes();
                 } else {
-                    subAttributes = (Set) Collections.singleton(JpaMetamodelUtils.getSingleIdAttribute((IdentifiableType<?>) managedType));
+                    subAttributes = new HashSet<>();
+                    EntityType<?> entity = evm.getMetamodel().getEntityMetamodel().getEntity(entityClass);
+                    for (String propertyName : evm.getJpaProvider().getIdentifierOrUniqueKeyEmbeddedPropertyNames(entity, mappingPrefix + attribute.getName())) {
+                        subAttributes.add(managedType.getAttribute(propertyName));
+                    }
                 }
                 buildComponentFlushers(
                         evm,
+                        entityClass,
                         rootType,
-                        attributePrefix + attribute.getName() + ".",
+                        attributePrefix + attribute.getName() + "_",
                         mappingPrefix + attribute.getName() + ".",
                         accessorPrefix + attribute.getName() + ".",
-                        (Set) subAttributes,
+                        subAttributes,
                         componentFlushers
                 );
             }
@@ -574,8 +583,8 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
     }
     
     @Override
-    public void executeUpdate(UpdateContext context, MutableStateTrackable updatableProxy) {
-        update(context, null, updatableProxy);
+    public boolean executeUpdate(UpdateContext context, MutableStateTrackable updatableProxy) {
+        return update(context, null, updatableProxy);
     }
 
     @Override
@@ -600,8 +609,15 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
             int initialLength = sb.length();
             flusher.appendUpdateQueryFragment(context, sb, null, null, ", ");
             if (sb.length() == initialLength) {
-                queryString = null;
-                needsOptimisticLocking = false;
+                // If we still need optimistic locking, we just append a flush for the version increment
+                if (needsOptimisticLocking = fullFlusher.hasVersionFlusher() && flusher.isOptimisticLockProtected()) {
+                    versionFlusher.appendUpdateQueryFragment(context, sb, null, null, ", ");
+                    sb.append(updatePostfixString);
+                    queryString = sb.toString();
+                } else {
+                    queryString = null;
+                    needsOptimisticLocking = false;
+                }
             } else {
                 sb.append(updatePostfixString);
                 queryString = sb.toString();
@@ -613,7 +629,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
         if (queryString != null) {
             query = context.getEntityManager().createQuery(queryString);
             if (idFlusher != null) {
-                idFlusher.flushQuery(context, WHERE_CLAUSE_PREFIX, query, updatableProxy, updatableProxy.$$_getId(), null);
+                idFlusher.flushQuery(context, WHERE_CLAUSE_PREFIX, query, updatableProxy, updatableProxy, updatableProxy.$$_getId(), null);
             }
             if (needsOptimisticLocking) {
                 versionFlusher.flushQueryInitialVersion(context, WHERE_CLAUSE_PREFIX, query, updatableProxy, updatableProxy.$$_getVersion());
@@ -623,7 +639,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
         return query;
     }
 
-    private void update(UpdateContext context, Object entity, MutableStateTrackable updatableProxy) {
+    private boolean update(UpdateContext context, Object entity, MutableStateTrackable updatableProxy) {
         if (!rootUpdateAllowed && entity == null) {
             throw new IllegalArgumentException("Updating instances of the view type [" + updatableProxy.getClass().getName() + "] is not allowed because no entity id is known!");
         }
@@ -633,17 +649,16 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
 
         // If nothing is dirty, we don't have to do anything
         if (flusher == null) {
-            return;
+            return false;
         }
 
         try {
-            // TODO: Flush strategy AUTO should do flushEntity when entity is known to be fetched already
             if (flushStrategy == FlushStrategy.ENTITY || !flusher.supportsQueryFlush()) {
-                flusher.flushEntity(context, entity, updatableProxy, updatableProxy, null);
+                return flusher.flushEntity(context, entity, updatableProxy, updatableProxy, updatableProxy, null);
             } else {
                 int orphanRemovalStartIndex = context.getOrphanRemovalDeleters().size();
                 Query query = createUpdateQuery(context, updatableProxy, flusher);
-                flusher.flushQuery(context, null, query, updatableProxy, updatableProxy, null);
+                flusher.flushQuery(context, null, query, updatableProxy, updatableProxy, updatableProxy, null);
                 if (query != null) {
                     int updated = query.executeUpdate();
 
@@ -652,6 +667,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                     }
                 }
                 context.removeOrphans(orphanRemovalStartIndex);
+                return true;
             }
         } finally {
             context.getInitialStateResetter().addUpdatedView(updatableProxy);
@@ -666,7 +682,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
 
     @Override
     public Object executePersist(UpdateContext context, Object entity, MutableStateTrackable updatableProxy) {
-        fullFlusher.flushEntity(context, entity, updatableProxy, updatableProxy, null);
+        fullFlusher.flushEntity(context, entity, updatableProxy, updatableProxy, updatableProxy, null);
         return entity;
     }
 
@@ -684,7 +700,271 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
     }
 
     @SuppressWarnings({"unchecked", "checkstyle:methodlength"})
-    private static DirtyAttributeFlusher createAttributeFlusher(EntityViewManagerImpl evm, ManagedViewTypeImplementor<?> viewType, String idAttributeName, FlushStrategy flushStrategy, AbstractMethodAttribute<?, ?> attribute) {
+    private DirtyAttributeFlusher<?, ?, ?> createAttributeFlusher(EntityViewManagerImpl evm, ManagedViewTypeImplementor<?> viewType, String idAttributeName, FlushStrategy flushStrategy, AbstractMethodAttribute<?, ?> attribute, DirtyAttributeFlusher<?, ?, ?> ownerIdFlusher, EntityViewUpdaterImpl owner, String ownerMapping) {
+        if (attribute.isCollection()) {
+            String idMapping;
+            if (owner == null) {
+                idMapping = idAttributeName;
+            } else {
+                if (owner.idFlusher instanceof EmbeddableAttributeFlusher<?, ?>) {
+                    idMapping = ((EmbeddableAttributeFlusher<Object, Object>) owner.idFlusher).getMapping();
+                } else {
+                    idMapping = ((BasicAttributeFlusher<Object, Object>) owner.idFlusher).getMapping();
+                }
+            }
+            return createPluralAttributeFlusher(evm, viewType, idMapping, flushStrategy, attribute, owner == null ? ownerIdFlusher : owner.idFlusher, owner, ownerMapping);
+        } else {
+            return createSingularAttributeFlusher(evm, viewType, attribute, owner, ownerMapping);
+        }
+    }
+
+    private DirtyAttributeFlusher<?, ?, ?> createPluralAttributeFlusher(EntityViewManagerImpl evm, ManagedViewTypeImplementor<?> viewType, String idAttributeName, FlushStrategy flushStrategy, AbstractMethodAttribute<?, ?> attribute, DirtyAttributeFlusher<?, ?, ?> ownerIdFlusher, EntityViewUpdaterImpl owner, String ownerMapping) {
+        EntityMetamodel entityMetamodel = evm.getMetamodel().getEntityMetamodel();
+        Class<?> entityClass = viewType.getEntityClass();
+        String attributeName = attribute.getName();
+        String attributeMapping = attribute.getMapping();
+        AttributeAccessor entityAttributeAccessor = Accessors.forEntityMapping(evm, attribute);
+        boolean cascadeDelete = attribute.isDeleteCascaded();
+        boolean viewOnlyDeleteCascaded = cascadeDelete && !entityMetamodel.getManagedType(ExtendedManagedType.class, entityClass).getAttribute(attributeMapping).isDeleteCascaded();
+        boolean optimisticLockProtected = attribute.isOptimisticLockProtected();
+        JpaProvider jpaProvider = evm.getJpaProvider();
+        PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) attribute;
+        InitialValueAttributeAccessor viewAttributeAccessor = Accessors.forMutableViewAttribute(evm, attribute);
+        TypeDescriptor elementDescriptor = TypeDescriptor.forType(evm, this, attribute, pluralAttribute.getElementType(), owner, ownerMapping);
+        boolean collectionUpdatable = attribute.isUpdatable();
+        CollectionRemoveListener elementRemoveListener = createOrphanRemoveListener(attribute, elementDescriptor);
+        CollectionRemoveListener elementCascadeDeleteListener = createCascadeDeleteListener(attribute, elementDescriptor);
+        boolean jpaProviderDeletesCollection;
+        boolean supportsCollectionDml = jpaProvider.supportsInsertStatement();
+
+        if (elementDescriptor.getEntityIdAttributeName() != null) {
+            jpaProviderDeletesCollection = jpaProvider.supportsJoinTableCleanupOnDelete();
+        } else {
+            jpaProviderDeletesCollection = jpaProvider.supportsCollectionTableCleanupOnDelete();
+        }
+
+        if (attribute instanceof MapAttribute<?, ?, ?>) {
+            MapAttribute<?, ?, ?> mapAttribute = (MapAttribute<?, ?, ?>) attribute;
+            TypeDescriptor keyDescriptor = TypeDescriptor.forType(evm, this, attribute, mapAttribute.getKeyType(), owner, ownerMapping);
+            // TODO: currently there is no possibility to set this
+            CollectionRemoveListener keyRemoveListener = null;
+            CollectionRemoveListener keyCascadeDeleteListener = null;
+
+            if (collectionUpdatable || keyDescriptor.shouldFlushMutations() || elementDescriptor.shouldFlushMutations() || shouldPassThrough(evm, viewType, attribute)) {
+                MapViewToEntityMapper mapper = new SimpleMapViewToEntityMapper(keyDescriptor.getViewToEntityMapper(), elementDescriptor.getViewToEntityMapper());
+                MapViewToEntityMapper loadOnlyMapper = new SimpleMapViewToEntityMapper(keyDescriptor.getLoadOnlyViewToEntityMapper(), elementDescriptor.getLoadOnlyViewToEntityMapper());
+
+                MapInstantiator<?, ?> mapInstantiator = attribute.getMapInstantiator();
+                return new MapAttributeFlusher<Object, RecordingMap<Map<?, ?>, ?, ?>>(
+                        attributeName,
+                        attributeMapping,
+                        owner == null ? entityClass : owner.fullEntityLoader.getEntityClass(),
+                        idAttributeName,
+                        ownerMapping,
+                        ownerIdFlusher,
+                        createPluralAttributeSubFlusher(evm, viewType, attribute, "element", mapAttribute.getElementType(), owner, ownerMapping),
+                        supportsCollectionDml,
+                        flushStrategy,
+                        entityAttributeAccessor,
+                        viewAttributeAccessor,
+                        optimisticLockProtected,
+                        collectionUpdatable,
+                        keyCascadeDeleteListener,
+                        elementCascadeDeleteListener,
+                        keyRemoveListener,
+                        elementRemoveListener,
+                        viewOnlyDeleteCascaded,
+                        jpaProviderDeletesCollection,
+                        keyDescriptor,
+                        elementDescriptor,
+                        mapper,
+                        loadOnlyMapper,
+                        mapInstantiator
+                );
+            } else {
+                return null;
+            }
+        } else {
+            if (collectionUpdatable || elementDescriptor.shouldFlushMutations() || shouldPassThrough(evm, viewType, attribute)) {
+                InverseFlusher<Object> inverseFlusher = InverseFlusher.forAttribute(evm, viewType, attribute, elementDescriptor, owner, ownerMapping);
+                InverseRemoveStrategy inverseRemoveStrategy = attribute.getInverseRemoveStrategy();
+
+                CollectionInstantiator collectionInstantiator = attribute.getCollectionInstantiator();
+                if (pluralAttribute.isIndexed()) {
+                    return new IndexedListAttributeFlusher<Object, RecordingList<List<?>>>(
+                            attributeName,
+                            attributeMapping,
+                            owner == null ? entityClass : owner.fullEntityLoader.getEntityClass(),
+                            idAttributeName,
+                            ownerMapping,
+                            ownerIdFlusher,
+                            createPluralAttributeSubFlusher(evm, viewType, attribute, "element", pluralAttribute.getElementType(), owner, ownerMapping),
+                            supportsCollectionDml,
+                            flushStrategy,
+                            entityAttributeAccessor,
+                            viewAttributeAccessor,
+                            optimisticLockProtected,
+                            collectionUpdatable,
+                            viewOnlyDeleteCascaded,
+                            jpaProviderDeletesCollection,
+                            elementCascadeDeleteListener,
+                            elementRemoveListener,
+                            collectionInstantiator,
+                            elementDescriptor,
+                            inverseFlusher,
+                            inverseRemoveStrategy
+                    );
+                } else {
+                    return new CollectionAttributeFlusher(
+                            attributeName,
+                            attributeMapping,
+                            owner == null ? entityClass : owner.fullEntityLoader.getEntityClass(),
+                            idAttributeName,
+                            ownerMapping,
+                            ownerIdFlusher,
+                            createPluralAttributeSubFlusher(evm, viewType, attribute, "element", pluralAttribute.getElementType(), owner, ownerMapping),
+                            supportsCollectionDml,
+                            flushStrategy,
+                            entityAttributeAccessor,
+                            viewAttributeAccessor,
+                            optimisticLockProtected,
+                            collectionUpdatable,
+                            viewOnlyDeleteCascaded,
+                            jpaProviderDeletesCollection,
+                            elementCascadeDeleteListener,
+                            elementRemoveListener,
+                            collectionInstantiator,
+                            elementDescriptor,
+                            inverseFlusher,
+                            inverseRemoveStrategy
+                    );
+                }
+            } else {
+                return null;
+            }
+        }
+    }
+
+    private DirtyAttributeFlusher<?, ?, ?> createPluralAttributeSubFlusher(EntityViewManagerImpl evm, ManagedViewTypeImplementor<?> viewType, AbstractMethodAttribute<?, ?> attribute, String name, Type<?> type, EntityViewUpdaterImpl owner, String ownerMapping) {
+        EntityMetamodel entityMetamodel = evm.getMetamodel().getEntityMetamodel();
+        String attributeName = attribute.getName() + "_" + name;
+        String attributeMapping = attribute.getMapping();
+        String attributeLocation = attribute.getLocation();
+        Set<Type<?>> readOnlyAllowedSubtypes = attribute.getReadOnlyAllowedSubtypes();
+        Set<Type<?>> persistAllowedSubtypes = attribute.getPersistCascadeAllowedSubtypes();
+        Set<Type<?>> updateAllowedSubtypes = attribute.getUpdateCascadeAllowedSubtypes();
+        if (type instanceof ManagedViewType<?>) {
+            ManagedViewType<?> subviewType = (ManagedViewType<?>) type;
+            if (entityMetamodel.getEntity(subviewType.getEntityClass()) == null) {
+                // A singular attribute where the subview refers to an embeddable type
+                EmbeddableUpdaterBasedViewToEntityMapper viewToEntityMapper = new EmbeddableUpdaterBasedViewToEntityMapper(
+                        attributeLocation,
+                        evm,
+                        subviewType.getJavaType(),
+                        readOnlyAllowedSubtypes,
+                        persistAllowedSubtypes,
+                        updateAllowedSubtypes,
+                        new ReferenceEntityLoader(evm, subviewType, createViewIdMapper(evm, subviewType)),
+                        false,
+                        null,
+                        owner,
+                        ownerMapping
+                );
+
+                String parameterName = attributeName + "_";
+                String updateFragment = attributeMapping + ".";
+
+                return new EmbeddableAttributeFlusher<>(
+                        attributeName,
+                        attributeMapping,
+                        updateFragment,
+                        parameterName,
+                        false,
+                        false,
+                        false,
+                        null,
+                        null,
+                        viewToEntityMapper
+                );
+            } else {
+                ViewTypeImplementor<?> attributeViewType = (ViewTypeImplementor<?>) subviewType;
+                InitialValueAttributeAccessor viewAttributeAccessor = Accessors.forMutableViewAttribute(evm, attribute);
+                AttributeAccessor subviewIdAccessor = Accessors.forViewId(evm, attributeViewType, true);
+
+                String idMapping = ((MappingAttribute) attributeViewType.getIdAttribute()).getMapping();
+                Attribute<?, ?> attributeIdAttribute = attributeViewType.getJpaManagedType().getAttribute(idMapping);
+                javax.persistence.metamodel.Type<?> attributeIdAttributeType = entityMetamodel.type(JpaMetamodelUtils.resolveFieldClass(attributeViewType.getEntityClass(), attributeIdAttribute));
+                List<String> idComponentMappings;
+                boolean requiresComponentWiseSetInUpdate = true;
+
+                if (requiresComponentWiseSetInUpdate && attributeIdAttributeType instanceof EmbeddableType<?>) {
+                    // If the identifier used for the association is an embeddable, we must collect the individual attribute components since updates don't work on embeddables directly
+                    Set<Attribute<?, ?>> idAttributeComponents = (Set) ((EmbeddableType<?>) attributeIdAttributeType)
+                            .getAttributes();
+                    idComponentMappings = new ArrayList<>(idAttributeComponents.size());
+                    for (Attribute<?, ?> idAttributeComponent : idAttributeComponents) {
+                        idComponentMappings.add(attributeMapping + "." + idMapping + "." + idAttributeComponent);
+                    }
+                } else {
+                    idComponentMappings = Collections.singletonList(attributeMapping + "." + idMapping);
+                }
+
+                String[] idAttributeMappings = idComponentMappings.toArray(new String[idComponentMappings.size()]);
+
+                ViewToEntityMapper viewToEntityMapper = createViewToEntityMapper(attributeLocation, evm, attributeViewType, false, false, readOnlyAllowedSubtypes, persistAllowedSubtypes, updateAllowedSubtypes, owner, ownerMapping);
+                String parameterName = attributeName;
+
+                return new SubviewAttributeFlusher<>(
+                        attributeName,
+                        attributeMapping,
+                        false,
+                        true,
+                        false,
+                        false,
+                        false,
+                        subviewType.getConverter(),
+                        false,
+                        idAttributeMappings,
+                        parameterName,
+                        false,
+                        null,
+                        viewAttributeAccessor,
+                        subviewIdAccessor,
+                        viewToEntityMapper,
+                        null,
+                        null
+                );
+            }
+        } else {
+            TypeDescriptor elementDescriptor = TypeDescriptor.forType(evm, this, attribute, type, owner, ownerMapping);
+            String parameterName = attributeName;
+            String updateFragment = attributeMapping;
+
+            // TODO: Why?
+            boolean supportsQueryFlush = !elementDescriptor.isJpaEmbeddable();
+            return new BasicAttributeFlusher<>(
+                    attributeName,
+                    attributeMapping,
+                    supportsQueryFlush,
+                    false,
+                    true,
+                    false,
+                    false,
+                    false,
+                    null,
+                    elementDescriptor,
+                    updateFragment,
+                    parameterName,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+            );
+        }
+    }
+
+    private DirtyAttributeFlusher<?, ?, ?> createSingularAttributeFlusher(EntityViewManagerImpl evm, ManagedViewTypeImplementor<?> viewType, AbstractMethodAttribute<?, ?> attribute, EntityViewUpdaterImpl owner, String ownerMapping) {
         EntityMetamodel entityMetamodel = evm.getMetamodel().getEntityMetamodel();
         Class<?> entityClass = viewType.getEntityClass();
         String attributeName = attribute.getName();
@@ -696,113 +976,11 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
         boolean cascadeDelete = attribute.isDeleteCascaded();
         boolean viewOnlyDeleteCascaded = cascadeDelete && !entityMetamodel.getManagedType(ExtendedManagedType.class, entityClass).getAttribute(attributeMapping).isDeleteCascaded();
         boolean optimisticLockProtected = attribute.isOptimisticLockProtected();
+        Set<Type<?>> readOnlyAllowedSubtypes = attribute.getReadOnlyAllowedSubtypes();
         Set<Type<?>> persistAllowedSubtypes = attribute.getPersistCascadeAllowedSubtypes();
         Set<Type<?>> updateAllowedSubtypes = attribute.getUpdateCascadeAllowedSubtypes();
-
-        if (attribute.isCollection()) {
-            PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) attribute;
-            InitialValueAttributeAccessor viewAttributeAccessor = Accessors.forMutableViewAttribute(evm, attribute);
-            TypeDescriptor elementDescriptor = TypeDescriptor.forType(evm, attribute, pluralAttribute.getElementType());
-            boolean collectionUpdatable = attribute.isUpdatable();
-            CollectionRemoveListener elementRemoveListener = createOrphanRemoveListener(attribute, elementDescriptor);
-            CollectionRemoveListener elementCascadeDeleteListener = createCascadeDeleteListener(attribute, elementDescriptor);
-            boolean jpaProviderDeletesCollection;
-
-            if (elementDescriptor.getEntityIdAttributeName() != null) {
-                jpaProviderDeletesCollection = evm.getJpaProvider().supportsJoinTableCleanupOnDelete();
-            } else {
-                jpaProviderDeletesCollection = evm.getJpaProvider().supportsCollectionTableCleanupOnDelete();
-            }
-
-            if (attribute instanceof MapAttribute<?, ?, ?>) {
-                MapAttribute<?, ?, ?> mapAttribute = (MapAttribute<?, ?, ?>) attribute;
-                TypeDescriptor keyDescriptor = TypeDescriptor.forType(evm, attribute, mapAttribute.getKeyType());
-                // TODO: currently there is no possibility to set this
-                CollectionRemoveListener keyRemoveListener = null;
-                CollectionRemoveListener keyCascadeDeleteListener = null;
-
-                if (collectionUpdatable || keyDescriptor.shouldFlushMutations() || elementDescriptor.shouldFlushMutations() || shouldPassThrough(evm, viewType, attribute)) {
-                    MapViewToEntityMapper mapper = new SimpleMapViewToEntityMapper(keyDescriptor.getViewToEntityMapper(), elementDescriptor.getViewToEntityMapper());
-                    MapViewToEntityMapper loadOnlyMapper = new SimpleMapViewToEntityMapper(keyDescriptor.getLoadOnlyViewToEntityMapper(), elementDescriptor.getLoadOnlyViewToEntityMapper());
-
-                    MapInstantiator<?, ?> mapInstantiator = attribute.getMapInstantiator();
-                    return new MapAttributeFlusher<Object, RecordingMap<Map<?, ?>, ?, ?>>(
-                            attributeName,
-                            attributeMapping,
-                            entityClass,
-                            idAttributeName,
-                            flushStrategy,
-                            entityAttributeAccessor,
-                            viewAttributeAccessor,
-                            optimisticLockProtected,
-                            collectionUpdatable,
-                            keyCascadeDeleteListener,
-                            elementCascadeDeleteListener,
-                            keyRemoveListener,
-                            elementRemoveListener,
-                            viewOnlyDeleteCascaded,
-                            jpaProviderDeletesCollection,
-                            keyDescriptor,
-                            elementDescriptor,
-                            mapper,
-                            loadOnlyMapper,
-                            mapInstantiator
-                    );
-                } else {
-                    return null;
-                }
-            } else {
-                if (collectionUpdatable || elementDescriptor.shouldFlushMutations() || shouldPassThrough(evm, viewType, attribute)) {
-                    InverseFlusher<Object> inverseFlusher = InverseFlusher.forAttribute(evm, viewType, attribute, elementDescriptor);
-                    InverseRemoveStrategy inverseRemoveStrategy = attribute.getInverseRemoveStrategy();
-
-                    CollectionInstantiator collectionInstantiator = attribute.getCollectionInstantiator();
-                    if (pluralAttribute.isIndexed()) {
-                        return new IndexedListAttributeFlusher<Object, RecordingList<List<?>>>(
-                                attributeName,
-                                attributeMapping,
-                                entityClass,
-                                idAttributeName,
-                                flushStrategy,
-                                entityAttributeAccessor,
-                                viewAttributeAccessor,
-                                optimisticLockProtected,
-                                collectionUpdatable,
-                                viewOnlyDeleteCascaded,
-                                jpaProviderDeletesCollection,
-                                elementCascadeDeleteListener,
-                                elementRemoveListener,
-                                collectionInstantiator,
-                                elementDescriptor,
-                                inverseFlusher,
-                                inverseRemoveStrategy
-                        );
-                    } else {
-                        return new CollectionAttributeFlusher(
-                                attributeName,
-                                attributeMapping,
-                                entityClass,
-                                idAttributeName,
-                                flushStrategy,
-                                entityAttributeAccessor,
-                                viewAttributeAccessor,
-                                optimisticLockProtected,
-                                collectionUpdatable,
-                                viewOnlyDeleteCascaded,
-                                jpaProviderDeletesCollection,
-                                elementCascadeDeleteListener,
-                                elementRemoveListener,
-                                collectionInstantiator,
-                                elementDescriptor,
-                                inverseFlusher,
-                                inverseRemoveStrategy
-                        );
-                    }
-                } else {
-                    return null;
-                }
-            }
-        } else if (attribute.isSubview()) {
+        JpaProvider jpaProvider = evm.getJpaProvider();
+        if (attribute.isSubview()) {
             boolean shouldFlushUpdates = cascadeUpdate && !updateAllowedSubtypes.isEmpty();
             boolean shouldFlushPersists = cascadePersist && !persistAllowedSubtypes.isEmpty();
 
@@ -818,15 +996,18 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                             attributeLocation,
                             evm,
                             subviewType.getJavaType(),
+                            readOnlyAllowedSubtypes,
                             persistAllowedSubtypes,
                             updateAllowedSubtypes,
                             new ReferenceEntityLoader(evm, subviewType, createViewIdMapper(evm, subviewType)),
                             shouldFlushPersists,
-                            null
+                            null,
+                            owner == null ? this : owner,
+                            ownerMapping == null ? attributeMapping : ownerMapping + "." + attributeMapping
                     );
 
                     CompositeAttributeFlusher nestedFlusher = (CompositeAttributeFlusher) viewToEntityMapper.getFullGraphNode();
-                    boolean supportsQueryFlush = nestedFlusher.supportsQueryFlush() && evm.getJpaProvider().supportsUpdateSetEmbeddable();
+                    boolean supportsQueryFlush = nestedFlusher.supportsQueryFlush() && jpaProvider.supportsUpdateSetEmbeddable();
                     String parameterName;
                     String updateFragment;
                     if (supportsQueryFlush) {
@@ -854,7 +1035,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                     ViewTypeImplementor<?> attributeViewType = (ViewTypeImplementor<?>) subviewType;
                     InitialValueAttributeAccessor viewAttributeAccessor = Accessors.forMutableViewAttribute(evm, attribute);
                     AttributeAccessor subviewIdAccessor = Accessors.forViewId(evm, attributeViewType, true);
-                    InverseFlusher<Object> inverseFlusher = InverseFlusher.forAttribute(evm, viewType, attribute, TypeDescriptor.forType(evm, attribute, subviewType));
+                    InverseFlusher<Object> inverseFlusher = InverseFlusher.forAttribute(evm, viewType, attribute, TypeDescriptor.forType(evm, this, attribute, subviewType, owner, ownerMapping), owner, ownerMapping);
                     InverseRemoveStrategy inverseRemoveStrategy = attribute.getInverseRemoveStrategy();
                     ViewToEntityMapper viewToEntityMapper;
                     boolean fetch = shouldFlushUpdates;
@@ -869,7 +1050,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                     if (requiresComponentWiseSetInUpdate && attributeIdAttributeType instanceof EmbeddableType<?>) {
                         // If the identifier used for the association is an embeddable, we must collect the individual attribute components since updates don't work on embeddables directly
                         Set<Attribute<?, ?>> idAttributeComponents = (Set) ((EmbeddableType<?>) attributeIdAttributeType)
-                            .getAttributes();
+                                .getAttributes();
                         idComponentMappings = new ArrayList<>(idAttributeComponents.size());
                         for (Attribute<?, ?> idAttributeComponent : idAttributeComponents) {
                             idComponentMappings.add(attributeMapping + "." + idMapping + "." + idAttributeComponent);
@@ -881,7 +1062,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                     String[] idAttributeMappings = idComponentMappings.toArray(new String[idComponentMappings.size()]);
 
                     if (attribute.isUpdatable()) {
-                        viewToEntityMapper = createViewToEntityMapper(attributeLocation, evm, attributeViewType, cascadePersist, cascadeUpdate, persistAllowedSubtypes, updateAllowedSubtypes);
+                        viewToEntityMapper = createViewToEntityMapper(attributeLocation, evm, attributeViewType, cascadePersist, cascadeUpdate, readOnlyAllowedSubtypes, persistAllowedSubtypes, updateAllowedSubtypes, owner, ownerMapping);
                         parameterName = attributeName;
                     } else {
                         if (shouldFlushUpdates) {
@@ -889,33 +1070,42 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                                     attributeLocation,
                                     evm,
                                     subviewType.getJavaType(),
+                                    readOnlyAllowedSubtypes,
                                     persistAllowedSubtypes,
                                     updateAllowedSubtypes,
                                     new ReferenceEntityLoader(evm, subviewType, createViewIdMapper(evm, subviewType)),
                                     Accessors.forViewId(evm, attributeViewType, true),
-                                    shouldFlushPersists
+                                    shouldFlushPersists,
+                                    owner,
+                                    ownerMapping
                             );
                         } else if (shouldFlushPersists) {
                             viewToEntityMapper = new CreateOnlyViewToEntityMapper(
                                     attributeLocation,
                                     evm,
                                     subviewType.getJavaType(),
+                                    readOnlyAllowedSubtypes,
                                     persistAllowedSubtypes,
                                     updateAllowedSubtypes,
                                     null,
                                     null,
-                                    shouldFlushPersists
+                                    shouldFlushPersists,
+                                    owner,
+                                    ownerMapping
                             );
                         } else {
                             viewToEntityMapper = new LoadOrPersistViewToEntityMapper(
                                     attributeLocation,
                                     evm,
                                     subviewType.getJavaType(),
+                                    readOnlyAllowedSubtypes,
                                     persistAllowedSubtypes,
                                     updateAllowedSubtypes,
                                     new ReferenceEntityLoader(evm, subviewType, createViewIdMapper(evm, subviewType)),
                                     null,
-                                    shouldFlushPersists
+                                    shouldFlushPersists,
+                                    owner,
+                                    ownerMapping
                             );
                         }
                     }
@@ -945,14 +1135,14 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                 return null;
             }
         } else {
-            BasicType<?> attributeType = (BasicType<?>) ((com.blazebit.persistence.view.metamodel.SingularAttribute<?, ?>) attribute).getType();
-            TypeDescriptor elementDescriptor = TypeDescriptor.forType(evm, attribute, attributeType);
+            BasicTypeImpl<?> attributeType = (BasicTypeImpl<?>) ((com.blazebit.persistence.view.metamodel.SingularAttribute<?, ?>) attribute).getType();
+            TypeDescriptor elementDescriptor = TypeDescriptor.forType(evm, this, attribute, attributeType, owner, ownerMapping);
             // Basic attributes like String, Integer but also JPA managed types
             boolean updatable = attribute.isUpdatable();
 
             if (updatable || elementDescriptor.shouldFlushMutations() || shouldPassThrough(evm, viewType, attribute)) {
                 // Basic attributes can normally be updated by queries
-                InverseFlusher<Object> inverseFlusher = InverseFlusher.forAttribute(evm, viewType, attribute, elementDescriptor);
+                InverseFlusher<Object> inverseFlusher = InverseFlusher.forAttribute(evm, viewType, attribute, elementDescriptor, owner, ownerMapping);
                 InverseRemoveStrategy inverseRemoveStrategy = attribute.getInverseRemoveStrategy();
                 String parameterName = attributeName;
                 String updateFragment = attributeMapping;
@@ -980,8 +1170,35 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                     viewAttributeAccessor = Accessors.forViewAttribute(evm, attribute, true);
                 }
 
-                boolean supportsQueryFlush = !elementDescriptor.isJpaEmbeddable() || evm.getJpaProvider().supportsUpdateSetEmbeddable();
-                return new BasicAttributeFlusher<>(attributeName, attributeMapping, supportsQueryFlush, optimisticLockProtected, updatable, cascadeDelete, attribute.isOrphanRemoval(), viewOnlyDeleteCascaded, null, elementDescriptor, updateFragment, parameterName, entityAttributeAccessor, viewAttributeAccessor, deleter, inverseFlusher, inverseRemoveStrategy);
+                Map.Entry<AttributeAccessor, BasicAttributeFlusher>[] componentFlusherEntries = null;
+                if (elementDescriptor.isJpaEmbeddable()) {
+                    if (!jpaProvider.supportsUpdateSetEmbeddable()) {
+                        Set<Attribute<?, ?>> attributes = (Set) attributeType.getManagedType().getAttributes();
+                        Map<AttributeAccessor, BasicAttributeFlusher> componentFlushers = new HashMap<>(attributes.size());
+                        buildComponentFlushers(evm, viewType.getEntityClass(), attributeType.getJavaType(), attributeName + "_", attributeMapping + ".", "", attributes, componentFlushers);
+                        componentFlusherEntries = componentFlushers.entrySet().toArray(new Map.Entry[componentFlushers.size()]);
+                    }
+                }
+
+                return new BasicAttributeFlusher<>(
+                        attributeName,
+                        attributeMapping,
+                        true,
+                        optimisticLockProtected,
+                        updatable,
+                        cascadeDelete,
+                        attribute.isOrphanRemoval(),
+                        viewOnlyDeleteCascaded,
+                        componentFlusherEntries,
+                        elementDescriptor,
+                        updateFragment,
+                        parameterName,
+                        entityAttributeAccessor,
+                        viewAttributeAccessor,
+                        deleter,
+                        inverseFlusher,
+                        inverseRemoveStrategy
+                );
             } else {
                 return null;
             }
@@ -1019,9 +1236,9 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                 && attribute.isUpdateMappable();
     }
 
-    private static ViewToEntityMapper createViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, ViewType<?> viewType, boolean cascadePersist, boolean cascadeUpdate, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes) {
+    private static ViewToEntityMapper createViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, ViewType<?> viewType, boolean cascadePersist, boolean cascadeUpdate, Set<Type<?>> readOnlyAllowedSubtypes, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes, EntityViewUpdaterImpl owner, String ownerMapping) {
         EntityLoader entityLoader = new ReferenceEntityLoader(evm, viewType, createViewIdMapper(evm, viewType));
-        AttributeAccessor viewIdAccessor = viewIdAccessor = Accessors.forViewId(evm, viewType, true);
+        AttributeAccessor viewIdAccessor = Accessors.forViewId(evm, viewType, true);
 
         Class<?> viewTypeClass = viewType.getJavaType();
         boolean mutable = viewType.isUpdatable() || viewType.isCreatable() || !persistAllowedSubtypes.isEmpty() || !updateAllowedSubtypes.isEmpty();
@@ -1030,22 +1247,29 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                     attributeLocation,
                     evm,
                     viewTypeClass,
+                    readOnlyAllowedSubtypes,
                     persistAllowedSubtypes,
                     updateAllowedSubtypes,
                     entityLoader,
                     viewIdAccessor,
-                    cascadePersist);
+                    cascadePersist,
+                    owner,
+                    ownerMapping
+            );
         }
 
         return new UpdaterBasedViewToEntityMapper(
                 attributeLocation,
                 evm,
                 viewTypeClass,
+                readOnlyAllowedSubtypes,
                 persistAllowedSubtypes,
                 updateAllowedSubtypes,
                 entityLoader,
                 viewIdAccessor,
-                cascadePersist
+                cascadePersist,
+                owner,
+                ownerMapping
         );
     }
 

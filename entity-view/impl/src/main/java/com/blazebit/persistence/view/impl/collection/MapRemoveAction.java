@@ -65,6 +65,13 @@ public class MapRemoveAction<C extends Map<K, V>, K, V> implements MapAction<C> 
     }
 
     @Override
+    public void undo(C map, Collection<?> removedKeys, Collection<?> addedKeys, Collection<?> removedElements, Collection<?> addedElements) {
+        if (removedKeys.contains(key) || removedElements.contains(removedElementInView)) {
+            map.put((K) key, removedElementInView);
+        }
+    }
+
+    @Override
     public Collection<Object> getAddedKeys() {
         return Collections.emptyList();
     }

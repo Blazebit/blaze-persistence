@@ -44,7 +44,7 @@ import com.blazebit.persistence.spi.DbmsStatementType;
  */
 public abstract class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCriteriaBuilder<T, X>, Y> extends AbstractModificationCriteriaBuilder<T, X, Y> implements BaseInsertCriteriaBuilder<T, X>, SelectBuilder<X> {
 
-    protected final Map<String, Integer> bindingMap = new TreeMap<String, Integer>();
+    protected final Map<String, Integer> bindingMap = new TreeMap<>();
 
     public BaseInsertCriteriaBuilderImpl(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, Class<T> clazz, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener) {
         super(mainQuery, queryContext, isMainQuery, DbmsStatementType.INSERT, clazz, null, cteName, cteClass, result, listener);
@@ -60,8 +60,8 @@ public abstract class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCrite
     }
 
     @Override
-    protected void appendSelectClause(StringBuilder sbSelectFrom) {
-        selectManager.buildSelect(sbSelectFrom, true);
+    protected void appendSelectClause(StringBuilder sbSelectFrom, boolean externalRepresentation) {
+        selectManager.buildSelect(sbSelectFrom, true, externalRepresentation);
     }
 
     @Override
@@ -97,6 +97,9 @@ public abstract class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCrite
     
     @Override
     protected void prepareAndCheck() {
+        if (!needsCheck) {
+            return;
+        }
         List<String> attributes = new ArrayList<String>(bindingMap.size());
         List<SelectInfo> originalSelectInfos = new ArrayList<SelectInfo>(selectManager.getSelectInfos());
         List<SelectInfo> newSelectInfos = selectManager.getSelectInfos();
@@ -111,7 +114,11 @@ public abstract class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCrite
             newSelectInfos.add(selectInfo);
             attributeEntry.setValue(newPosition);
         }
+        expandBindings();
         super.prepareAndCheck();
+    }
+
+    protected void expandBindings() {
     }
 
     @Override

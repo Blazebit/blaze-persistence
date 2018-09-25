@@ -89,8 +89,7 @@ public class EntityViewUpdateSubviewInverseEmbeddedTest extends AbstractEntityVi
 
 
     @Override
-    protected void restartTransactionAndReload() {
-        restartTransaction();
+    protected void reload() {
         doc1 = em.find(DocumentForSimpleOneToOne.class, doc1.getId());
         doc2 = em.find(DocumentForSimpleOneToOne.class, doc2.getId());
     }

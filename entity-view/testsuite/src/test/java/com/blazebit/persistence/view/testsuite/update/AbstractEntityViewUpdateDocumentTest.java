@@ -16,19 +16,16 @@
 
 package com.blazebit.persistence.view.testsuite.update;
 
-import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.NameObject;
 import com.blazebit.persistence.testsuite.entity.NameObjectContainer;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 
 import javax.persistence.EntityManager;
 import java.util.Date;
-import java.util.List;
 
 /**
  *
@@ -126,14 +123,17 @@ public abstract class AbstractEntityViewUpdateDocumentTest<T> extends AbstractEn
         });
     }
 
+    protected String[] getFetchedCollections() {
+        return new String[] { };
+    }
+
     @Override
-    protected void restartTransactionAndReload() {
-        restartTransaction();
+    protected void reload() {
         // Load into PC, then access via find
         cbf.create(em, Person.class)
-                .where("id").in(p1.getId(), p2.getId(), p3.getId(), p4.getId())
                 .getResultList();
         cbf.create(em, Document.class)
+                .fetch(getFetchedCollections())
                 .where("id").in(doc1.getId(), doc2.getId())
                 .getResultList();
         doc1 = em.find(Document.class, doc1.getId());

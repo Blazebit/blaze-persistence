@@ -51,7 +51,8 @@ public class SubqueryTest extends AbstractCoreTest {
         cq.select(root.get(Document_.id));
 
         CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
-        assertEquals("SELECT document.id FROM Document document WHERE EXISTS (SELECT subPerson FROM document.people subPerson)", criteriaBuilder.getQueryString());
+
+        assertEquals("SELECT document.id FROM Document document WHERE EXISTS (SELECT subPerson FROM " + correlationPath(Document.class, "document.people", "subPerson", "id = document.id") + ")", criteriaBuilder.getQueryString());
         assertEquals(1, subquery.getCorrelatedJoins().size());
         assertEquals(root, correlatedRoot.getCorrelationParent());
         assertTrue(correlatedRoot.isCorrelated());
@@ -100,7 +101,8 @@ public class SubqueryTest extends AbstractCoreTest {
         cq.select(root.get(Document_.id));
 
         CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
-        assertEquals("SELECT document.id FROM Document document JOIN document.people person WHERE EXISTS (SELECT person FROM person.ownedDocuments subDoc WHERE subDoc.age > 1L)", criteriaBuilder.getQueryString());
+
+        assertEquals("SELECT document.id FROM Document document JOIN document.people person WHERE EXISTS (SELECT person FROM " + correlationPath("person.ownedDocuments", Document.class, "subDoc", "owner.id = person.id AND subDoc.age > 1L", " WHERE subDoc.age > 1L") + ")", criteriaBuilder.getQueryString());
         assertEquals(1, subquery.getCorrelatedJoins().size());
         assertEquals(people, correlatedRoot.getCorrelationParent());
         assertTrue(correlatedRoot.isCorrelated());
@@ -121,7 +123,7 @@ public class SubqueryTest extends AbstractCoreTest {
         cq.select(root.get(Document_.id));
 
         CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
-        assertEquals("SELECT document.id FROM Document document WHERE EXISTS (SELECT subPerson FROM document.people subPerson)", criteriaBuilder.getQueryString());
+        assertEquals("SELECT document.id FROM Document document WHERE EXISTS (SELECT subPerson FROM " + correlationPath(Document.class, "document.people", "subPerson", "id = document.id") + ")", criteriaBuilder.getQueryString());
         assertEquals(1, subquery.getCorrelatedJoins().size());
         assertEquals(root, correlatedRoot.getCorrelationParent());
         assertTrue(correlatedRoot.isCorrelated());

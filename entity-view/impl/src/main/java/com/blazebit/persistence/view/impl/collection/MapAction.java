@@ -32,6 +32,8 @@ public interface MapAction<T extends Map<?, ?>> {
 
     public void doAction(T map, UpdateContext context, MapViewToEntityMapper mapper, CollectionRemoveListener keyRemoveListener, CollectionRemoveListener valueRemoveListener);
 
+    public void undo(T map, Collection<?> removedKeys, Collection<?> addedKeys, Collection<?> removedElements, Collection<?> addedElements);
+
     public Collection<Object> getAddedKeys();
 
     public Collection<Object> getRemovedKeys();

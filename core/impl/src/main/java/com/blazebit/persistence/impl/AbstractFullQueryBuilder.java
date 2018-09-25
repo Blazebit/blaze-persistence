@@ -176,12 +176,13 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         }
 
         List<String> whereClauseConjuncts = new ArrayList<>();
+        List<String> optionalWhereClauseConjuncts = new ArrayList<>();
         // The count query does not have any fetch owners
         Set<JoinNode> countNodesToFetch = Collections.emptySet();
 
         if (countAll) {
-            joinManager.buildClause(sbSelectFrom, NO_CLAUSE_EXCLUSION, null, false, externalRepresentation, false, whereClauseConjuncts, null, explicitVersionEntities, countNodesToFetch, Collections.EMPTY_SET);
-            whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, null);
+            joinManager.buildClause(sbSelectFrom, NO_CLAUSE_EXCLUSION, null, false, externalRepresentation, false, optionalWhereClauseConjuncts, whereClauseConjuncts, null, explicitVersionEntities, countNodesToFetch, Collections.EMPTY_SET);
+            whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, null);
         } else {
             // Collect usage of collection join nodes to optimize away the count distinct
             // Note that we always exclude the nodes with group by dependency. We consider just the ones from the identifiers
@@ -192,10 +193,10 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
             } else {
                 identifierExpressionsToUseNonRootJoinNodes = Collections.EMPTY_SET;
             }
-            Set<JoinNode> collectionJoinNodes = joinManager.buildClause(sbSelectFrom, COUNT_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, null, true, externalRepresentation, true, whereClauseConjuncts, null, explicitVersionEntities, countNodesToFetch, identifierExpressionsToUseNonRootJoinNodes);
+            Set<JoinNode> collectionJoinNodes = joinManager.buildClause(sbSelectFrom, COUNT_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, null, true, externalRepresentation, true, optionalWhereClauseConjuncts, whereClauseConjuncts, null, explicitVersionEntities, countNodesToFetch, identifierExpressionsToUseNonRootJoinNodes);
             boolean hasCollectionJoinUsages = collectionJoinNodes.size() > 0;
 
-            whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, null);
+            whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, null);
 
             // Instead of a count distinct, we render a count(*) if we have no collection joins and the identifier expression is result unique
             // It is result unique when it contains the query root primary key or a unique key that of a uniqueness preserving association of that
@@ -418,7 +419,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
                 addAttributes(attributeName + ".", subAttributes, resolvedExpressions, sb, rootNode);
             } else {
                 sb.setLength(0);
-                rootNode.appendDeReference(sb, attributeName);
+                rootNode.appendDeReference(sb, attributeName, false);
                 PathExpression expression = (PathExpression) rootNode.createExpression(attributeName);
                 JpaMetamodelAccessor jpaMetamodelAccessor = mainQuery.jpaProvider.getJpaMetamodelAccessor();
                 expression.setPathReference(new SimplePathReference(rootNode, attributeName, getMetamodel().type(jpaMetamodelAccessor.getAttributePath(getMetamodel(), rootNode.getManagedType(), attributeName).getAttributeClass())));

@@ -71,7 +71,7 @@ public class EntityViewUpdateNestedMutableFlatViewTest extends AbstractEntityVie
         // Then
         // Since the owner's name changed we, have to load the document and the owner
         // We apply the change which results in an update
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
             fullFetch(builder);

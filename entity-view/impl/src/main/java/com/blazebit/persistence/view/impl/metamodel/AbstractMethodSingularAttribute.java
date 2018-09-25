@@ -29,6 +29,7 @@ import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.spi.type.VersionBasicUserType;
 import com.blazebit.reflection.ReflectionUtils;
 
+import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.ManagedType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -50,6 +51,7 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
     private final InverseRemoveStrategy inverseRemoveStrategy;
     private final boolean updatable;
     private final boolean mutable;
+    private final boolean disallowOwnedUpdatableSubview;
     private final boolean optimisticLockProtected;
     private final boolean persistCascaded;
     private final boolean updateCascaded;
@@ -62,9 +64,18 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
     private final Map<ManagedViewType<? extends Y>, String> inheritanceSubtypes;
 
     @SuppressWarnings("unchecked")
-    public AbstractMethodSingularAttribute(ManagedViewTypeImplementor<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int attributeIndex, int dirtyStateIndex) {
-        super(viewType, mapping, attributeIndex, context);
-        this.type = (Type<Y>) mapping.getType(context);
+    public AbstractMethodSingularAttribute(ManagedViewTypeImplementor<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int attributeIndex, int dirtyStateIndex, EmbeddableOwner embeddableMapping) {
+        super(viewType, mapping, attributeIndex, context, embeddableMapping);
+        if (updateMappableAttribute != null && updateMappableAttribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED) {
+            if (embeddableMapping == null) {
+                embeddableMapping = new EmbeddableOwner(viewType.getJpaManagedType().getJavaType(), this.mapping);
+            } else {
+                embeddableMapping = embeddableMapping.withSubMapping(this.mapping);
+            }
+        } else {
+            embeddableMapping = null;
+        }
+        this.type = (Type<Y>) mapping.getType(context, embeddableMapping);
         if (mapping.isVersion()) {
             if (!(type instanceof BasicType<?>) || !(((BasicType<?>) type).getUserType() instanceof VersionBasicUserType<?>)) {
                 context.addError("Illegal non-version capable type '" + type + "' used for @Version attribute on the " + mapping.getErrorLocation() + "!");
@@ -96,10 +107,10 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
         boolean definesDeleteCascading = mapping.getCascadeTypes().contains(CascadeType.DELETE);
         boolean allowsDeleteCascading = updatable || mapping.getCascadeTypes().contains(CascadeType.AUTO);
 
-        this.readOnlySubtypes = (Set<Type<?>>) (Set) mapping.getReadOnlySubtypes(context);
+        this.readOnlySubtypes = (Set<Type<?>>) (Set) mapping.getReadOnlySubtypes(context, embeddableMapping);
 
         if (updatable) {
-            this.persistSubtypes = determinePersistSubtypeSet(type, mapping.getCascadeSubtypes(context), mapping.getCascadePersistSubtypes(context), context);
+            this.persistSubtypes = determinePersistSubtypeSet(type, mapping.getCascadeSubtypes(context, embeddableMapping), mapping.getCascadePersistSubtypes(context, embeddableMapping), context);
             this.persistCascaded = mapping.getCascadeTypes().contains(CascadeType.PERSIST)
                     || mapping.getCascadeTypes().contains(CascadeType.AUTO) && !persistSubtypes.isEmpty();
         } else {
@@ -107,15 +118,27 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
             this.persistSubtypes = Collections.emptySet();
         }
 
+        ManagedType<?> managedType = context.getEntityMetamodel().getManagedType(declaringType.getEntityClass());
+        this.mappedBy = mapping.determineMappedBy(managedType, this.mapping, context, embeddableMapping);
+        this.disallowOwnedUpdatableSubview = context.isDisallowOwnedUpdatableSubview() && type instanceof ManagedViewType<?> && mappedBy == null
+                && updateMappableAttribute != null && updateMappableAttribute.getPersistentAttributeType() != javax.persistence.metamodel.Attribute.PersistentAttributeType.EMBEDDED;
+
         // The declaring type must be mutable, otherwise attributes can't have cascading
         if (mapping.isId() || mapping.isVersion() || !declaringType.isUpdatable() && !declaringType.isCreatable()) {
             this.updateCascaded = false;
             this.updateSubtypes = Collections.emptySet();
         } else {
             // TODO: maybe allow to override mutability?
-            Set<Type<?>> updateCascadeAllowedSubtypes = determineUpdateSubtypeSet(type, mapping.getCascadeSubtypes(context), mapping.getCascadeUpdateSubtypes(context), context);
+            Set<Type<?>> updateCascadeAllowedSubtypes;
+            // Don't initialize automatic cascade update mappings comprised of updatable types when we disallow updatable types
+            // If the declared type is updatable, we still initialize the subtypes, as we will throw during the validation phase instead
+            if (disallowOwnedUpdatableSubview && !mapping.hasExplicitCascades() && !((ManagedViewType<?>) type).isUpdatable()) {
+                updateCascadeAllowedSubtypes = Collections.emptySet();
+            } else {
+                updateCascadeAllowedSubtypes = determineUpdateSubtypeSet(type, mapping.getCascadeSubtypes(context, embeddableMapping), mapping.getCascadeUpdateSubtypes(context, embeddableMapping), context);
+            }
             boolean updateCascaded = mapping.getCascadeTypes().contains(CascadeType.UPDATE)
-                    || mapping.getCascadeTypes().contains(CascadeType.AUTO) && !updateCascadeAllowedSubtypes.isEmpty();
+                    || mapping.getCascadeTypes().contains(CascadeType.AUTO) && (updateMappableAttribute != null || isCorrelated()) && !updateCascadeAllowedSubtypes.isEmpty();
             if (updateCascaded) {
                 this.updateCascaded = true;
                 this.updateSubtypes = updateCascadeAllowedSubtypes;
@@ -126,6 +149,10 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
         }
 
         this.mutable = determineMutable(type);
+
+        if (disallowOwnedUpdatableSubview && mapping.getCascadeTypes().contains(CascadeType.UPDATE)) {
+            context.addError("UPDATE cascading configuration for owned relationship attribute '" + updateMappableAttribute.getName() + "' is illegal. Remove the definition found on the " + mapping.getErrorLocation() + "!");
+        }
 
         if (!mapping.getCascadeTypes().contains(CascadeType.AUTO)) {
             if (type instanceof BasicType<?> && context.getEntityMetamodel().getEntity(type.getJavaType()) == null
@@ -139,15 +166,12 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
 
         this.allowedSubtypes = createAllowedSubtypesSet();
         this.optimisticLockProtected = determineOptimisticLockProtected(mapping, context, mutable);
-        this.inheritanceSubtypes = (Map<ManagedViewType<? extends Y>, String>) (Map<?, ?>) mapping.getInheritanceSubtypes(context);
+        this.inheritanceSubtypes = (Map<ManagedViewType<? extends Y>, String>) (Map<?, ?>) mapping.getInheritanceSubtypes(context, embeddableMapping);
         this.dirtyStateIndex = determineDirtyStateIndex(dirtyStateIndex);
         if (this.dirtyStateIndex == -1) {
-            this.mappedBy = null;
             this.inverseRemoveStrategy = null;
             this.writableMappedByMapping = null;
         } else {
-            ManagedType<?> managedType = context.getEntityMetamodel().getManagedType(declaringType.getEntityClass());
-            this.mappedBy = mapping.determineMappedBy(managedType, this.mapping, context);
             if (this.mappedBy == null) {
                 this.inverseRemoveStrategy = null;
                 this.writableMappedByMapping = null;
@@ -201,6 +225,11 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
 
         // We exclude entity types from this since there is no clear intent
         return hasSetter;
+    }
+
+    @Override
+    protected boolean isDisallowOwnedUpdatableSubview() {
+        return disallowOwnedUpdatableSubview;
     }
 
     @Override

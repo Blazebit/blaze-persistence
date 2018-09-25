@@ -62,6 +62,11 @@ public class EntityViewUpdateSimpleMutableOnlySubviewCollectionsTest extends Abs
         cfg.addEntityView(UpdatablePersonView.class);
     }
 
+    @Override
+    protected String[] getFetchedCollections() {
+        return new String[] { "people" };
+    }
+
     @Test
     public void testUpdateReplaceCollection() {
         // Given
@@ -78,7 +83,7 @@ public class EntityViewUpdateSimpleMutableOnlySubviewCollectionsTest extends Abs
     }
 
     private void validateMutableOnlyNoChange(UpdatableDocumentWithCollectionsView docView) {
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
         if (isFullMode()) {
             fullFetch(builder);
         }

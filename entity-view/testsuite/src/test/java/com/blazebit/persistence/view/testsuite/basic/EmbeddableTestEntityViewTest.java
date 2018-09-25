@@ -20,6 +20,7 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
+import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntitySub;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewManager;
@@ -34,9 +35,9 @@ import com.blazebit.persistence.view.testsuite.basic.model.EmbeddableTestEntityS
 import com.blazebit.persistence.view.testsuite.basic.model.EmbeddableTestEntityView;
 import com.blazebit.persistence.view.testsuite.basic.model.EmbeddableTestEntityViewWithSubview;
 import com.blazebit.persistence.view.testsuite.basic.model.IntIdEntityView;
-import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntity;
-import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntityId;
-import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntitySimpleEmbeddable;
+import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntity2;
+import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntityId2;
+import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntitySimpleEmbeddable2;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -65,7 +66,8 @@ public class EmbeddableTestEntityViewTest extends AbstractEntityViewTest {
     @Override
     protected Class<?>[] getEntityClasses() {
         return new Class<?>[]{
-            EmbeddableTestEntity.class,
+            EmbeddableTestEntity2.class,
+            EmbeddableTestEntitySub.class,
             IntIdEntity.class
         };
     }
@@ -84,8 +86,8 @@ public class EmbeddableTestEntityViewTest extends AbstractEntityViewTest {
         evm = cfg.createEntityViewManager(cbf);
     }
 
-    private EmbeddableTestEntity entity1;
-    private EmbeddableTestEntity entity2;
+    private EmbeddableTestEntity2 entity1;
+    private EmbeddableTestEntity2 entity2;
 
     @Before
     public void setUp() {
@@ -94,19 +96,19 @@ public class EmbeddableTestEntityViewTest extends AbstractEntityViewTest {
             @Override
             public void work(EntityManager em) {
                 IntIdEntity intIdEntity1 = new IntIdEntity("1");
-                entity1 = new EmbeddableTestEntity();
-                entity1.setId(new EmbeddableTestEntityId(intIdEntity1, "1"));
-                entity1.getEmbeddableSet().add(new EmbeddableTestEntitySimpleEmbeddable("1"));
-                entity1.getEmbeddableMap().put("key1", new EmbeddableTestEntitySimpleEmbeddable("1"));
+                entity1 = new EmbeddableTestEntity2();
+                entity1.setId(new EmbeddableTestEntityId2(intIdEntity1, "1"));
+                entity1.getEmbeddableSet().add(new EmbeddableTestEntitySimpleEmbeddable2("1"));
+                entity1.getEmbeddableMap().put("key1", new EmbeddableTestEntitySimpleEmbeddable2("1"));
                 entity1.getEmbeddable().setName("1");
                 entity1.getEmbeddable().setManyToOne(null);
                 entity1.getEmbeddable().getElementCollection().put("1", intIdEntity1);
 
                 IntIdEntity intIdEntity2 = new IntIdEntity("2");
-                entity2 = new EmbeddableTestEntity();
-                entity2.setId(new EmbeddableTestEntityId(intIdEntity2, "2"));
-                entity2.getEmbeddableSet().add(new EmbeddableTestEntitySimpleEmbeddable("2"));
-                entity2.getEmbeddableMap().put("key2", new EmbeddableTestEntitySimpleEmbeddable("2"));
+                entity2 = new EmbeddableTestEntity2();
+                entity2.setId(new EmbeddableTestEntityId2(intIdEntity2, "2"));
+                entity2.getEmbeddableSet().add(new EmbeddableTestEntitySimpleEmbeddable2("2"));
+                entity2.getEmbeddableMap().put("key2", new EmbeddableTestEntitySimpleEmbeddable2("2"));
                 entity2.getEmbeddable().setName("2");
                 entity2.getEmbeddable().setManyToOne(entity1);
                 entity2.getEmbeddable().getElementCollection().put("2", intIdEntity2);
@@ -118,11 +120,11 @@ public class EmbeddableTestEntityViewTest extends AbstractEntityViewTest {
             }
         });
             
-        entity1 = cbf.create(em, EmbeddableTestEntity.class)
+        entity1 = cbf.create(em, EmbeddableTestEntity2.class)
             .fetch("id.intIdEntity", "embeddableSet", "embeddableMap", "embeddable.manyToOne", "embeddable.oneToMany", "embeddable.elementCollection")
             .where("id").eq(entity1.getId())
             .getSingleResult();
-        entity2 = cbf.create(em, EmbeddableTestEntity.class)
+        entity2 = cbf.create(em, EmbeddableTestEntity2.class)
             .fetch("id.intIdEntity", "embeddableSet", "embeddableMap", "embeddable.manyToOne", "embeddable.oneToMany", "embeddable.elementCollection")
             .where("id").eq(entity2.getId())
             .getSingleResult();
@@ -130,7 +132,7 @@ public class EmbeddableTestEntityViewTest extends AbstractEntityViewTest {
 
     @Test
     public void testEmbeddableViewWithEntityRelations() {
-        CriteriaBuilder<EmbeddableTestEntity> criteria = cbf.create(em, EmbeddableTestEntity.class, "e")
+        CriteriaBuilder<EmbeddableTestEntity2> criteria = cbf.create(em, EmbeddableTestEntity2.class, "e")
             .orderByAsc("id");
         EntityViewSetting<EmbeddableTestEntityView, CriteriaBuilder<EmbeddableTestEntityView>> setting = EntityViewSetting.create(EmbeddableTestEntityView.class);
         setting.addOptionalParameter("optionalInteger", 1);
@@ -144,7 +146,7 @@ public class EmbeddableTestEntityViewTest extends AbstractEntityViewTest {
 
     @Test
     public void testEmbeddableViewWithSubViewRelations() {
-        CriteriaBuilder<EmbeddableTestEntity> criteria = cbf.create(em, EmbeddableTestEntity.class, "e")
+        CriteriaBuilder<EmbeddableTestEntity2> criteria = cbf.create(em, EmbeddableTestEntity2.class, "e")
             .orderByAsc("id");
         EntityViewSetting<EmbeddableTestEntityViewWithSubview, CriteriaBuilder<EmbeddableTestEntityViewWithSubview>> setting = EntityViewSetting.create(EmbeddableTestEntityViewWithSubview.class);
         setting.addOptionalParameter("optionalInteger", 1);
@@ -163,12 +165,12 @@ public class EmbeddableTestEntityViewTest extends AbstractEntityViewTest {
                 EntityViewSetting.create(EmbeddableTestEntityIdView.Id.class);
 
         // Query
-        CriteriaBuilder<EmbeddableTestEntity> cb = cbf.create(em, EmbeddableTestEntity.class);
+        CriteriaBuilder<EmbeddableTestEntity2> cb = cbf.create(em, EmbeddableTestEntity2.class);
         evm.applySetting(setting, cb, "id")
                 .getResultList();
     }
     
-    private void assertEqualViewEquals(EmbeddableTestEntity entity, EmbeddableTestEntityView view) {
+    private void assertEqualViewEquals(EmbeddableTestEntity2 entity, EmbeddableTestEntityView view) {
         assertEquals(entity.getId(), view.getId());
         assertEquals(entity.getId().getIntIdEntity(), view.getIdIntIdEntity());
         assertEquals(entity.getId().getIntIdEntity().getId(), view.getIdIntIdEntityId());
@@ -180,7 +182,7 @@ public class EmbeddableTestEntityViewTest extends AbstractEntityViewTest {
         assertEquals(entity.getEmbeddable().getElementCollection(), view.getEmbeddableElementCollection());
         
         Set<String> set1 = new HashSet<String>();
-        for (EmbeddableTestEntitySimpleEmbeddable elem : entity.getEmbeddableSet()) {
+        for (EmbeddableTestEntitySimpleEmbeddable2 elem : entity.getEmbeddableSet()) {
             set1.add(elem.getName());
         }
         
@@ -192,7 +194,7 @@ public class EmbeddableTestEntityViewTest extends AbstractEntityViewTest {
         assertEquals(set1, set2);
         
         Map<String, String> map1 = new HashMap<String, String>();
-        for (Map.Entry<String, EmbeddableTestEntitySimpleEmbeddable> entry : entity.getEmbeddableMap().entrySet()) {
+        for (Map.Entry<String, EmbeddableTestEntitySimpleEmbeddable2> entry : entity.getEmbeddableMap().entrySet()) {
             map1.put(entry.getKey(), entry.getValue().getName());
         }
         
@@ -204,7 +206,7 @@ public class EmbeddableTestEntityViewTest extends AbstractEntityViewTest {
         assertEquals(map1, map2);
     }
     
-    private void assertEqualViewEquals(EmbeddableTestEntity entity, EmbeddableTestEntityViewWithSubview view) {
+    private void assertEqualViewEquals(EmbeddableTestEntity2 entity, EmbeddableTestEntityViewWithSubview view) {
         assertEquals(entity.getId(), view.getId());
         if (entity.getId().getIntIdEntity() == null) {
             assertNull(view.getIdIntIdEntity());
@@ -222,7 +224,7 @@ public class EmbeddableTestEntityViewTest extends AbstractEntityViewTest {
         }
         
         assertEquals(entity.getEmbeddable().getOneToMany().size(), view.getEmbeddableOneToManyView().size());
-        OUTER: for (EmbeddableTestEntity child : entity.getEmbeddable().getOneToMany()) {
+        OUTER: for (EmbeddableTestEntity2 child : entity.getEmbeddable().getOneToMany()) {
             for (EmbeddableTestEntitySubView childView : view.getEmbeddableOneToManyView()) {
                 if (child.getId().equals(childView.getId())) {
                     continue OUTER;
@@ -238,7 +240,7 @@ public class EmbeddableTestEntityViewTest extends AbstractEntityViewTest {
         }
         
         Set<String> set1 = new HashSet<String>();
-        for (EmbeddableTestEntitySimpleEmbeddable elem : entity.getEmbeddableSet()) {
+        for (EmbeddableTestEntitySimpleEmbeddable2 elem : entity.getEmbeddableSet()) {
             set1.add(elem.getName());
         }
         
@@ -250,7 +252,7 @@ public class EmbeddableTestEntityViewTest extends AbstractEntityViewTest {
         assertEquals(set1, set2);
         
         Map<String, String> map1 = new HashMap<String, String>();
-        for (Map.Entry<String, EmbeddableTestEntitySimpleEmbeddable> entry : entity.getEmbeddableMap().entrySet()) {
+        for (Map.Entry<String, EmbeddableTestEntitySimpleEmbeddable2> entry : entity.getEmbeddableMap().entrySet()) {
             map1.put(entry.getKey(), entry.getValue().getName());
         }
         

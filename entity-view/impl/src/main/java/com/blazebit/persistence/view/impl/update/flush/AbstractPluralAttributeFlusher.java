@@ -28,6 +28,7 @@ import com.blazebit.persistence.view.spi.type.BasicUserType;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -40,6 +41,13 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
 
     protected final Class<?> ownerEntityClass;
     protected final String ownerIdAttributeName;
+    protected final String ownerMapping;
+    protected final DirtyAttributeFlusher<?, Object, Object> ownerIdFlusher;
+    protected final boolean supportsCollectionDml;
+    protected final String ownerIdWhereFragment;
+    protected final String[] ownerIdBindFragments;
+    protected final String[] elementBindFragments;
+    protected final DirtyAttributeFlusher<?, Object, Object> elementFlusher;
     protected final FlushStrategy flushStrategy;
     protected final AttributeAccessor entityAttributeMapper;
     protected final InitialValueAttributeAccessor viewAttributeAccessor;
@@ -57,11 +65,34 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
     protected final List<CollectionElementAttributeFlusher<E, V>> elementFlushers;
 
     @SuppressWarnings("unchecked")
-    public AbstractPluralAttributeFlusher(String attributeName, String mapping, boolean fetch, Class<?> ownerEntityClass, String ownerIdAttributeName, FlushStrategy flushStrategy, AttributeAccessor entityAttributeMapper, InitialValueAttributeAccessor viewAttributeAccessor, boolean optimisticLockProtected, boolean collectionUpdatable,
-                                          boolean viewOnlyDeleteCascaded, boolean jpaProviderDeletesCollection, CollectionRemoveListener cascadeDeleteListener, CollectionRemoveListener removeListener, TypeDescriptor elementDescriptor) {
+    public AbstractPluralAttributeFlusher(String attributeName, String mapping, boolean fetch, Class<?> ownerEntityClass, String ownerIdAttributeName, String ownerMapping, DirtyAttributeFlusher<?, ?, ?> ownerIdFlusher, DirtyAttributeFlusher<?, ?, ?> elementFlusher, boolean supportsCollectionDml, FlushStrategy flushStrategy, AttributeAccessor entityAttributeMapper,
+                                          InitialValueAttributeAccessor viewAttributeAccessor, boolean optimisticLockProtected, boolean collectionUpdatable, boolean viewOnlyDeleteCascaded, boolean jpaProviderDeletesCollection, CollectionRemoveListener cascadeDeleteListener, CollectionRemoveListener removeListener, TypeDescriptor elementDescriptor) {
         super(attributeName, mapping, fetch, elementDescriptor.getViewToEntityMapper() == null ? null : elementDescriptor.getViewToEntityMapper().getFullGraphNode());
         this.ownerEntityClass = ownerEntityClass;
         this.ownerIdAttributeName = ownerIdAttributeName;
+        this.ownerMapping = ownerMapping;
+        this.ownerIdFlusher = (DirtyAttributeFlusher<?, Object, Object>) ownerIdFlusher;
+        this.supportsCollectionDml = supportsCollectionDml;
+        this.elementFlusher = (DirtyAttributeFlusher<?, Object, Object>) elementFlusher;
+        if (ownerIdFlusher == null) {
+            this.ownerIdWhereFragment = null;
+            this.ownerIdBindFragments = null;
+            this.elementBindFragments = null;
+        } else {
+            StringBuilder sb = new StringBuilder();
+            ownerIdFlusher.appendUpdateQueryFragment(null, sb, null, null, " AND ");
+            this.ownerIdWhereFragment = sb.toString();
+            sb.setLength(0);
+            ownerIdFlusher.appendUpdateQueryFragment(null, sb, null, null, ",");
+            String[] fragments = sb.toString().split("\\s*(=|,)\\s*");
+            for (int i = 1; i < fragments.length; i += 2) {
+                fragments[i] = "FUNCTION('TREAT_INTEGER', " + fragments[i] + ")";
+            }
+            this.ownerIdBindFragments = fragments;
+            sb.setLength(0);
+            ownerIdFlusher.appendUpdateQueryFragment(null, sb, null, null, ",");
+            this.elementBindFragments = sb.toString().split("\\s*(=|,)\\s*");
+        }
         this.flushStrategy = flushStrategy;
         this.entityAttributeMapper = entityAttributeMapper;
         this.viewAttributeAccessor = viewAttributeAccessor;
@@ -103,6 +134,13 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
         super(original.attributeName, original.mapping, fetch, elementFlushers == null ? original.nestedGraphNode : computeElementFetchGraphNode(elementFlushers));
         this.ownerEntityClass = original.ownerEntityClass;
         this.ownerIdAttributeName = original.ownerIdAttributeName;
+        this.ownerMapping = original.ownerMapping;
+        this.ownerIdFlusher = original.ownerIdFlusher;
+        this.supportsCollectionDml = original.supportsCollectionDml;
+        this.ownerIdWhereFragment = original.ownerIdWhereFragment;
+        this.ownerIdBindFragments = original.ownerIdBindFragments;
+        this.elementFlusher = original.elementFlusher;
+        this.elementBindFragments = original.elementBindFragments;
         this.flushStrategy = original.flushStrategy;
         this.entityAttributeMapper = original.entityAttributeMapper;
         this.viewAttributeAccessor = original.viewAttributeAccessor;
@@ -124,21 +162,52 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
         if (elementFlushers == null || elementFlushers.isEmpty()) {
             return null;
         }
-        CollectionElementAttributeFlusher<E, V> elementAttributeFlusher = elementFlushers.get(0);
-        if (elementFlushers.size() == 1) {
-            return elementAttributeFlusher;
+        CollectionElementAttributeFlusher<E, V> elementAttributeFlusher = null;
+        List<CollectionElementAttributeFlusher<E, V>> filteredElementFlushers = null;
+        for (int i = 0; i < elementFlushers.size(); i++) {
+            CollectionElementAttributeFlusher<E, V> flusher = elementFlushers.get(i);
+            if (flusher instanceof MergeCollectionElementAttributeFlusher<?, ?>) {
+                if (filteredElementFlushers == null) {
+                    filteredElementFlushers = new ArrayList<>();
+                    for (int j = 0; j < i; j++) {
+                        filteredElementFlushers.add(elementFlushers.get(j));
+                    }
+                }
+            } else {
+                if (elementAttributeFlusher == null) {
+                    elementAttributeFlusher = flusher;
+                }
+                if (filteredElementFlushers != null) {
+                    filteredElementFlushers.add(flusher);
+                }
+            }
+        }
+        if (filteredElementFlushers == null) {
+            if (elementFlushers.size() == 1) {
+                return elementAttributeFlusher;
+            }
+        } else {
+            if (filteredElementFlushers.isEmpty()) {
+                return null;
+            }
+            if (filteredElementFlushers.size() == 1) {
+                return elementAttributeFlusher;
+            }
+            elementFlushers = filteredElementFlushers;
         }
         return elementAttributeFlusher.mergeWith(elementFlushers);
     }
 
     @Override
-    public void appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix, String separator) {
+    public boolean appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix, String separator) {
+        return true;
     }
 
     @Override
     public boolean supportsQueryFlush() {
-        // TODO: Maybe also when collectionUpdatable is false?
-        return mapping == null || flushStrategy != FlushStrategy.ENTITY && !fetch && flushOperation == PluralFlushOperation.ELEMENT_ONLY;
+        // When we have no mapping, this is a correlated attribute, so there are no collection operations, only cascades
+        // When dirty checking figured out we only have element flushes, we also don't have collection operations
+        return supportsCollectionDml || mapping == null || flushStrategy != FlushStrategy.ENTITY && (!collectionUpdatable || !fetch && flushOperation == PluralFlushOperation.ELEMENT_ONLY);
     }
 
     @Override
@@ -147,18 +216,18 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
     }
 
     @Override
-    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
+    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
         if (!supportsQueryFlush()) {
             throw new UnsupportedOperationException("Query flush not supported for configuration!");
         }
 
         for (CollectionElementAttributeFlusher<E, V> elementFlusher : elementFlushers) {
-            elementFlusher.flushQuery(context, null, null, view, value, ownerAwareDeleter);
+            elementFlusher.flushQuery(context, null, null, ownerView, view, value, ownerAwareDeleter);
         }
     }
 
     protected final V getEntityAttributeValue(E entity) {
-        if (entityAttributeMapper == null) {
+        if (entityAttributeMapper == null || entity == null) {
             return null;
         }
         V value = (V) entityAttributeMapper.getValue(entity);
@@ -172,48 +241,56 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
 
     protected abstract V createJpaCollection();
 
+    protected final String getMapping() {
+        if (ownerMapping == null) {
+            return mapping;
+        } else {
+            return ownerMapping + "." + mapping;
+        }
+    }
+
     @SuppressWarnings("unchecked")
-    protected void invokeFlushOperation(UpdateContext context, Object view, E entity, V value) {
+    protected void invokeFlushOperation(UpdateContext context, Object ownerView, Object view, E entity, V value) {
         switch (flushOperation) {
             case COLLECTION_REPLAY_AND_ELEMENT:
                 if (flushStrategy == FlushStrategy.ENTITY) {
                     for (CollectionElementAttributeFlusher<E, V> elementFlusher : elementFlushers) {
-                        elementFlusher.flushEntity(context, entity, view, value, null);
+                        elementFlusher.flushEntity(context, entity, ownerView, view, value, null);
                     }
                 } else {
                     for (CollectionElementAttributeFlusher<E, V> elementFlusher : elementFlushers) {
-                        elementFlusher.flushQuery(context, null, null, view, value, null);
+                        elementFlusher.flushQuery(context, null, null, ownerView, view, value, null);
                     }
                 }
-                invokeCollectionAction(context, getEntityAttributeValue(entity), collectionActions);
+                invokeCollectionAction(context, ownerView, view, getEntityAttributeValue(entity), value, collectionActions);
                 return;
             case COLLECTION_REPLAY_ONLY:
-                invokeCollectionAction(context, getEntityAttributeValue(entity), collectionActions);
+                invokeCollectionAction(context, ownerView, view, getEntityAttributeValue(entity), value, collectionActions);
                 return;
             case COLLECTION_REPLACE_AND_ELEMENT:
                 if (flushStrategy == FlushStrategy.ENTITY) {
                     for (CollectionElementAttributeFlusher<E, V> elementFlusher : elementFlushers) {
-                        elementFlusher.flushEntity(context, entity, view, value, null);
+                        elementFlusher.flushEntity(context, entity, ownerView, view, value, null);
                     }
                 } else {
                     for (CollectionElementAttributeFlusher<E, V> elementFlusher : elementFlushers) {
-                        elementFlusher.flushQuery(context, null, null, view, value, null);
+                        elementFlusher.flushQuery(context, null, null, ownerView, view, value, null);
                     }
                 }
-                replaceCollection(context, entity, value);
+                replaceCollection(context, ownerView, view, entity, value, flushStrategy);
                 return;
             case COLLECTION_REPLACE_ONLY:
-                replaceCollection(context, entity, value);
+                replaceCollection(context, ownerView, view, entity, value, flushStrategy);
                 return;
             case ELEMENT_ONLY:
-                mergeCollectionElements(context, view, entity, value);
+                mergeCollectionElements(context, ownerView, view, entity, value);
                 return;
             default:
                 throw new UnsupportedOperationException("Unsupported flush operation: " + flushOperation);
         }
     }
 
-    protected abstract void invokeCollectionAction(UpdateContext context, V targetCollection, List<? extends A> collectionActions);
+    protected abstract void invokeCollectionAction(UpdateContext context, Object ownerView, Object view, V targetCollection, Object value, List<? extends A> collectionActions);
 
     protected abstract V replaceWithRecordingCollection(UpdateContext context, Object view, V value, List<? extends A> actions);
 
@@ -268,19 +345,30 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
         }
     }
 
-    protected abstract boolean mergeCollectionElements(UpdateContext context, Object view, E entity, V value);
+    protected abstract boolean mergeCollectionElements(UpdateContext context, Object ownerView, Object view, E entity, V value);
 
-    protected abstract void replaceCollection(UpdateContext context, E entity, V value);
+    protected abstract void replaceCollection(UpdateContext context, Object ownerView, Object view, E entity, V value, FlushStrategy flushStrategy);
+
+    protected abstract boolean isIndexed();
+
+    protected abstract void addElementFlushActions(UpdateContext context, TypeDescriptor elementDescriptor, List<A> actions, V current);
 
     @SuppressWarnings("unchecked")
     protected final DirtyAttributeFlusher<X, E, V> getElementOnlyFlusher(UpdateContext context, V current) {
-        List<CollectionElementAttributeFlusher<E, V>> elementFlushers = getElementFlushers(context, current);
+        List<A> actions = new ArrayList<>();
+        List<CollectionElementAttributeFlusher<E, V>> elementFlushers = getElementFlushers(context, current, actions);
         // A "null" element flusher list is given when a fetch and compare is more appropriate
         if (elementFlushers == null) {
+            if (!actions.isEmpty()) {
+                return partialFlusher(true, PluralFlushOperation.COLLECTION_REPLAY_ONLY, actions, Collections.EMPTY_LIST);
+            }
             return this;
         }
 
         if (elementFlushers.isEmpty()) {
+            if (!actions.isEmpty()) {
+                return partialFlusher(true, PluralFlushOperation.COLLECTION_REPLAY_ONLY, actions, Collections.EMPTY_LIST);
+            }
             return null;
         }
 
@@ -312,7 +400,7 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
 
     @SuppressWarnings("unchecked")
     protected final DirtyAttributeFlusher<X, E, V> getReplaceOrMergeAndElementFlusher(UpdateContext context, V initial, V current) {
-        List<CollectionElementAttributeFlusher<E, V>> elementFlushers = getElementFlushers(context, current);
+        List<CollectionElementAttributeFlusher<E, V>> elementFlushers = getElementFlushers(context, current, null);
         // A "null" element flusher list is given when a fetch and compare is more appropriate
         if (elementFlushers == null) {
             return this;
@@ -357,14 +445,14 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
         return partialFlusher(true, PluralFlushOperation.COLLECTION_REPLAY_AND_ELEMENT, collectionActions, elementFlushers);
     }
 
-    protected abstract List<CollectionElementAttributeFlusher<E, V>> getElementFlushers(UpdateContext context, V current);
+    protected abstract List<CollectionElementAttributeFlusher<E, V>> getElementFlushers(UpdateContext context, V current, List<? extends A> actions);
 
-    protected final boolean determineElementFlushers(UpdateContext context, TypeDescriptor typeDescriptor, List<CollectionElementAttributeFlusher<E, V>> elementFlushers, Iterable<?> current) {
+    protected final boolean determineElementFlushers(UpdateContext context, TypeDescriptor typeDescriptor, List<CollectionElementAttributeFlusher<E, V>> elementFlushers, Iterable<?> values, List<? extends A> actions, V current) {
         if (typeDescriptor.shouldFlushMutations()) {
             if (typeDescriptor.isSubview()) {
                 final ViewToEntityMapper mapper = typeDescriptor.getViewToEntityMapper();
                 if (typeDescriptor.isIdentifiable()) {
-                    for (Object o : current) {
+                    for (Object o : values) {
                         if (o instanceof MutableStateTrackable) {
                             MutableStateTrackable element = (MutableStateTrackable) o;
                             @SuppressWarnings("unchecked")
@@ -375,33 +463,33 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
                         }
                     }
                 } else {
-                    for (Object o : current) {
-                        if (o instanceof MutableStateTrackable) {
-                            MutableStateTrackable element = (MutableStateTrackable) o;
-                            @SuppressWarnings("unchecked")
-                            DirtyAttributeFlusher<?, E, V> flusher = (DirtyAttributeFlusher<?, E, V>) (DirtyAttributeFlusher) mapper.getNestedDirtyFlusher(context, element, (DirtyAttributeFlusher) null);
-                            if (flusher != null) {
-                                // We can't merge flat view elements separately so we need to replace the element in the collection
-                                // This is signalled by returning null
-                                return true;
+                    if (typeDescriptor.supportsDirtyCheck() && !typeDescriptor.isIdentifiable() && isIndexed()) {
+                        addElementFlushActions(context, typeDescriptor, (List<A>) actions, current);
+                    } else {
+                        for (Object o : values) {
+                            if (o instanceof MutableStateTrackable) {
+                                MutableStateTrackable element = (MutableStateTrackable) o;
+                                @SuppressWarnings("unchecked")
+                                DirtyAttributeFlusher<?, E, V> flusher = (DirtyAttributeFlusher<?, E, V>) (DirtyAttributeFlusher) mapper.getNestedDirtyFlusher(context, element, (DirtyAttributeFlusher) null);
+                                if (flusher != null) {
+                                    // We can't merge flat view elements separately so we need to replace the element in the collection
+                                    // This is signalled by returning null
+                                    return true;
+                                }
                             }
                         }
                     }
-
                 }
             } else if (typeDescriptor.isJpaEntity()) {
-                for (Object element : current) {
+                for (Object element : values) {
                     if (typeDescriptor.getBasicUserType().shouldPersist(element) && typeDescriptor.shouldJpaPersist()) {
-                        elementFlushers.add(new PersistCollectionElementAttributeFlusher<E, V>(element, optimisticLockProtected));
-                    } else if (typeDescriptor.shouldJpaMerge()) {
-                        // We can't replace the original object efficiently in the backing collection which is required because em.merge returns a new object
-                        // And since merges need the current state, we rather fetch the collection and merge/persist only during the actual flushing
-                        // This is signalled by returning null
-                        return true;
+                        elementFlushers.add(createPersistFlusher(typeDescriptor, element));
+                    } else if (element != null && typeDescriptor.shouldJpaMerge()) {
+                        elementFlushers.add(createMergeFlusher(typeDescriptor, element));
                     }
                 }
             } else if (typeDescriptor.getBasicUserType().supportsDirtyChecking()) {
-                for (Object element : current) {
+                for (Object element : values) {
                     String[] dirtyProperties = typeDescriptor.getBasicUserType().getDirtyProperties(element);
                     if (dirtyProperties != null) {
                         // We can't merge basic elements separately so we need to replace the element in the collection
@@ -409,6 +497,10 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
                         return true;
                     }
                 }
+            } else if (canFlushSeparateCollectionOperations()) {
+                // We can't merge basic elements separately so we need to replace the element in the collection
+                // This is signalled by returning null
+                return true;
             } else {
                 throw new IllegalArgumentException("Element flushers for non-identifiable type not determinable: " + typeDescriptor);
             }
@@ -416,6 +508,12 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
 
         return false;
     }
+
+    protected abstract boolean canFlushSeparateCollectionOperations();
+
+    protected abstract CollectionElementAttributeFlusher<E, V> createPersistFlusher(TypeDescriptor typeDescriptor, Object element);
+
+    protected abstract CollectionElementAttributeFlusher<E, V> createMergeFlusher(TypeDescriptor typeDescriptor, Object element);
 
     protected abstract AbstractPluralAttributeFlusher<X, A, R, E, V> partialFlusher(boolean fetch, PluralFlushOperation operation, List<? extends A> collectionActions, List<CollectionElementAttributeFlusher<E, V>> elementFlushers);
 

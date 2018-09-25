@@ -18,8 +18,8 @@ package com.blazebit.persistence.view.testsuite.basic.model;
 
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.Mapping;
-import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntity;
-import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntityId;
+import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntity2;
+import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntityId2;
 
 import java.io.Serializable;
 
@@ -28,10 +28,10 @@ import java.io.Serializable;
  * @author Christian Beikov
  * @since 1.2.1
  */
-@EntityView(EmbeddableTestEntity.class)
+@EntityView(EmbeddableTestEntity2.class)
 public interface EmbeddableTestEntityIdView extends IdHolderView<EmbeddableTestEntityIdView.Id> {
 
-    @EntityView(EmbeddableTestEntityId.class)
+    @EntityView(EmbeddableTestEntityId2.class)
     interface Id extends Serializable {
         @Mapping("intIdEntity.id")
         Integer getIntIdEntityId();

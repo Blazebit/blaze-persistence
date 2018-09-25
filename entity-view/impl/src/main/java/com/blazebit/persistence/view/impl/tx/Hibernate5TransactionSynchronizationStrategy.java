@@ -64,7 +64,12 @@ public class Hibernate5TransactionSynchronizationStrategy implements Transaction
     @Override
     public void registerSynchronization(Synchronization synchronization) {
         try {
-            registerSynchronization.invoke(synchronizationRegistry, synchronization);
+            SynchronizationRegistry registry = SynchronizationRegistry.getRegistry(synchronizationRegistry);
+            if (registry == null) {
+                registry = new SynchronizationRegistry(synchronizationRegistry);
+                registerSynchronization.invoke(synchronizationRegistry, registry);
+            }
+            registry.addSynchronization(synchronization);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

@@ -22,13 +22,13 @@ import com.blazebit.persistence.view.impl.accessor.InitialValueAttributeAccessor
 import com.blazebit.persistence.view.impl.entity.EntityLoaderFetchGraphNode;
 import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.view.spi.type.BasicUserType;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 
 import javax.persistence.Query;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  *
@@ -147,8 +147,12 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
         return attributeName;
     }
 
+    public String getMapping() {
+        return mapping;
+    }
+
     @Override
-    public void appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix, String separator) {
+    public boolean appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix, String separator) {
         // It must be updatable and the value must have changed
         if ((updatable || isPassThrough()) && (flushOperation == null || update) && inverseFlusher == null) {
             if (updateFragment != null) {
@@ -169,8 +173,11 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
                         componentFlushers[i].getValue().appendUpdateQueryFragment(context, sb, mappingPrefix, parameterPrefix, separator);
                     }
                 }
+                return true;
             }
         }
+
+        return false;
     }
 
     @Override
@@ -217,7 +224,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
     }
 
     @Override
-    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
+    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
         V finalValue;
         if (flushOperation == null) {
             finalValue = value;
@@ -229,13 +236,13 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
         // Orphan removal is only valid for entity types
         if (doUpdate && orphanRemoval) {
             Object oldValue = initialValueViewAttributeAccessor.getInitialValue(view);
-            if (!Objects.equals(oldValue, finalValue)) {
+            if (!elementDescriptor.getBasicUserType().isEqual(oldValue, finalValue)) {
                 context.getEntityManager().remove(oldValue);
             }
         }
         if (doUpdate && inverseFlusher != null) {
             Object oldValue = initialValueViewAttributeAccessor.getInitialValue(view);
-            if (oldValue != null && !Objects.equals(oldValue, finalValue)) {
+            if (oldValue != null && !elementDescriptor.getBasicUserType().isEqual(oldValue, finalValue)) {
                 if (inverseRemoveStrategy == InverseCollectionElementAttributeFlusher.Strategy.SET_NULL) {
                     inverseFlusher.flushQuerySetElement(context, oldValue, view, null, null, null);
                 } else {
@@ -259,7 +266,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
             } else {
                 for (int i = 0; i < componentFlushers.length; i++) {
                     Object val = componentFlushers[i].getKey().getValue(finalValue);
-                    componentFlushers[i].getValue().flushQuery(context, parameterPrefix, query, view, val, ownerAwareDeleter);
+                    componentFlushers[i].getValue().flushQuery(context, parameterPrefix, query, ownerView, view, val, ownerAwareDeleter);
                 }
             }
         }
@@ -330,7 +337,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
     }
 
     @Override
-    public boolean flushEntity(UpdateContext context, E entity, Object view, V value, Runnable postReplaceListener) {
+    public boolean flushEntity(UpdateContext context, E entity, Object ownerView, Object view, V value, Runnable postReplaceListener) {
         V finalValue;
         if (flushOperation == null) {
             finalValue = value;
@@ -342,13 +349,13 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
         // Orphan removal is only valid for entity types
         if (doUpdate && orphanRemoval) {
             Object oldValue = initialValueViewAttributeAccessor.getInitialValue(view);
-            if (!Objects.equals(oldValue, finalValue)) {
+            if (!elementDescriptor.getBasicUserType().isEqual(oldValue, finalValue)) {
                 context.getEntityManager().remove(oldValue);
             }
         }
         if (doUpdate && inverseFlusher != null) {
             Object oldValue = initialValueViewAttributeAccessor.getInitialValue(view);
-            if (oldValue != null && !Objects.equals(oldValue, finalValue)) {
+            if (oldValue != null && !elementDescriptor.getBasicUserType().isEqual(oldValue, finalValue)) {
                 if (inverseRemoveStrategy == InverseCollectionElementAttributeFlusher.Strategy.SET_NULL) {
                     inverseFlusher.flushEntitySetElement(context, oldValue, entity, null, null);
                 } else {
@@ -359,19 +366,44 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
                 inverseFlusher.flushEntitySetElement(context, finalValue, entity, entity, null);
             }
         }
+        boolean wasDirty = false;
+        if (finalValue != null) {
+            if (elementDescriptor.shouldFlushMutations()) {
+                if (elementDescriptor.supportsDirtyCheck()) {
+                    BasicUserType<Object> basicUserType = elementDescriptor.getBasicUserType();
+                    wasDirty = basicUserType.getDirtyProperties(finalValue) != null;
+                } else if (elementDescriptor.shouldJpaPersistOrMerge()) {
+                    wasDirty = true;
+                }
+            }
+        }
         finalValue = persistOrMerge(context, entity, view, finalValue);
         if (doUpdate) {
-            entityAttributeAccessor.setValue(entity, finalValue);
-            return true;
+            if (!wasDirty && elementDescriptor.getBasicUserType() != null && (elementDescriptor.getBasicUserType().supportsDeepEqualChecking() || !elementDescriptor.shouldFlushMutations())) {
+                Object oldVal = entity == null ? null : entityAttributeAccessor.getValue(entity);
+                if (oldVal == null || finalValue == null) {
+                    wasDirty = oldVal != finalValue;
+                } else if (!elementDescriptor.getBasicUserType().supportsDeepEqualChecking()) {
+                    wasDirty = !elementDescriptor.getBasicUserType().isEqual(oldVal, finalValue);
+                } else {
+                    wasDirty = !elementDescriptor.getBasicUserType().isDeepEqual(oldVal, finalValue);
+                }
+                if (wasDirty) {
+                    entityAttributeAccessor.setValue(entity, finalValue);
+                }
+            } else {
+                entityAttributeAccessor.setValue(entity, finalValue);
+                wasDirty = true;
+            }
         }
 
-        return false;
+        return wasDirty;
     }
 
     public void flushEntityComponents(UpdateContext context, E entity, V value) {
         for (int i = 0; i < componentFlushers.length; i++) {
             Object val = componentFlushers[i].getKey().getValue(value);
-            componentFlushers[i].getValue().flushEntity(context, entity, null, val, null);
+            componentFlushers[i].getValue().flushEntity(context, entity, null, null, val, null);
         }
     }
 

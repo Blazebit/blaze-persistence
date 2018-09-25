@@ -41,9 +41,6 @@ public class ViewCollectionRemoveListener implements CollectionRemoveListener {
 
     @Override
     public void onCollectionRemove(UpdateContext context, Object element) {
-        // TODO: Remove this when implementing https://github.com/Blazebit/blaze-persistence/issues/509
-        // This is only necessary because of the fallback to entity flushing when updatable collections are present
-        context.getEntityManager().flush();
         context.getInitialStateResetter().addRemovedView((EntityViewProxy) element);
         viewToEntityMapper.remove(context, element);
     }

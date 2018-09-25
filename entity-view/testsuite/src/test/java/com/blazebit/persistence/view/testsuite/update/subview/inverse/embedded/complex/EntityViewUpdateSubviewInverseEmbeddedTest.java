@@ -176,8 +176,7 @@ public class EntityViewUpdateSubviewInverseEmbeddedTest extends AbstractEntityVi
     }
 
     @Override
-    protected void restartTransactionAndReload() {
-        restartTransaction();
+    protected void reload() {
     }
 
     @Override

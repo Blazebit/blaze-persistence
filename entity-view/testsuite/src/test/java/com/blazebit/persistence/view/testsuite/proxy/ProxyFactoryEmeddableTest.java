@@ -22,6 +22,7 @@ import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntity;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityEmbeddable;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityId;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityNestedEmbeddable;
+import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntitySub;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.NameObject;
 import com.blazebit.persistence.view.EntityViewManager;
@@ -53,6 +54,7 @@ public class ProxyFactoryEmeddableTest extends AbstractEntityViewTest {
         return new Class<?>[]{
                 EmbeddableTestEntity.class,
                 EmbeddableTestEntityId.class,
+                EmbeddableTestEntitySub.class,
                 EmbeddableTestEntityEmbeddable.class,
                 EmbeddableTestEntityNestedEmbeddable.class,
                 IntIdEntity.class,

@@ -94,22 +94,24 @@ public class EntityViewUpdateMutableEmbeddableCollectionsTest extends AbstractEn
         assertMutableChangeModel(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isFullMode()) {
-            fullFetch(builder);
+            if (!isQueryStrategy()) {
+                fullFetch(builder);
+            }
 
-            if (version) {
+            if (!registerType && version || isQueryStrategy()) {
                 builder.update(Document.class);
             }
-            if (!registerType) {
+            if (!registerType || isQueryStrategy()) {
                 assertReplaceAnd(builder);
             }
         } else {
-            if (registerType && preferLoadingAndDiffingOverRecreate()) {
-                fullFetch(builder);
-            } else {
-                builder.select(Document.class);
+            if (!registerType) {
+                if (!isQueryStrategy()) {
+                    builder.select(Document.class);
+                }
                 if (version) {
                     builder.update(Document.class);
                 }
@@ -119,7 +121,7 @@ public class EntityViewUpdateMutableEmbeddableCollectionsTest extends AbstractEn
 
         builder.validate();
         if (registerType) {
-            assertVersionDiff(oldVersion, docView.getVersion(), 0, 1);
+            assertVersionDiff(oldVersion, docView.getVersion(), 0, isQueryStrategy() ? 1 : 0);
         } else {
             assertVersionDiff(oldVersion, docView.getVersion(), 1, 1);
         }
@@ -127,18 +129,22 @@ public class EntityViewUpdateMutableEmbeddableCollectionsTest extends AbstractEn
         AssertStatementBuilder afterBuilder = assertQueriesAfterUpdate(docView);
 
         if (isFullMode()) {
-            fullFetch(afterBuilder);
-            if (version) {
+            if (isQueryStrategy()) {
+                assertReplaceAnd(afterBuilder);
+            } else {
+                fullFetch(afterBuilder);
+                if (!registerType) {
+                    assertReplaceAnd(afterBuilder);
+                }
+            }
+            if (version && !registerType || isQueryStrategy()) {
                 afterBuilder.update(Document.class);
             }
-            if (!registerType) {
-                assertReplaceAnd(afterBuilder);
-            }
         } else {
-            if (registerType && preferLoadingAndDiffingOverRecreate()) {
-                fullFetch(afterBuilder);
-            } else {
-                afterBuilder.select(Document.class);
+            if (!registerType) {
+                if (!isQueryStrategy()) {
+                    afterBuilder.select(Document.class);
+                }
                 if (version) {
                     afterBuilder.update(Document.class);
                 }
@@ -148,7 +154,7 @@ public class EntityViewUpdateMutableEmbeddableCollectionsTest extends AbstractEn
 
         afterBuilder.validate();
         if (registerType) {
-            assertVersionDiff(oldVersion, docView.getVersion(), 0, 2);
+            assertVersionDiff(oldVersion, docView.getVersion(), 0, isQueryStrategy() ? 2 : 0);
         } else {
             assertVersionDiff(oldVersion, docView.getVersion(), 2, 2);
         }
@@ -163,26 +169,32 @@ public class EntityViewUpdateMutableEmbeddableCollectionsTest extends AbstractEn
         assertChangesUpdateAndFlush(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isFullMode()) {
-            fullFetch(builder);
+            if (!isQueryStrategy()) {
+                fullFetch(builder);
+            }
 
-            if (version) {
+            if (version || isQueryStrategy()) {
                 builder.update(Document.class);
             }
-            if (!registerType) {
+            if (!registerType || isQueryStrategy()) {
                 assertReplaceAnd(builder);
             }
         } else {
             if (registerType && preferLoadingAndDiffingOverRecreate()) {
-                fullFetch(builder);
+                if (!isQueryStrategy()) {
+                    fullFetch(builder);
+                }
 
                 if (version) {
                     builder.update(Document.class);
                 }
             } else {
-                builder.select(Document.class);
+                if (!isQueryStrategy()) {
+                    builder.select(Document.class);
+                }
 
                 if (version) {
                     builder.update(Document.class);
@@ -199,18 +211,22 @@ public class EntityViewUpdateMutableEmbeddableCollectionsTest extends AbstractEn
         AssertStatementBuilder afterBuilder = assertQueriesAfterUpdate(docView);
 
         if (isFullMode()) {
-            fullFetch(afterBuilder);
-            if (version) {
+            if (isQueryStrategy()) {
+                assertReplaceAnd(afterBuilder);
+            } else {
+                fullFetch(afterBuilder);
+                if (!registerType) {
+                    assertReplaceAnd(afterBuilder);
+                }
+            }
+            if (version && !registerType || isQueryStrategy()) {
                 afterBuilder.update(Document.class);
             }
-            if (!registerType) {
-                assertReplaceAnd(afterBuilder);
-            }
         } else {
-            if (registerType && preferLoadingAndDiffingOverRecreate()) {
-                fullFetch(afterBuilder);
-            } else {
-                afterBuilder.select(Document.class);
+            if (!registerType) {
+                if (!isQueryStrategy()) {
+                    afterBuilder.select(Document.class);
+                }
                 if (version) {
                     afterBuilder.update(Document.class);
                 }
@@ -218,13 +234,11 @@ public class EntityViewUpdateMutableEmbeddableCollectionsTest extends AbstractEn
             }
         }
 
-        if (!registerType) {
-            afterBuilder.assertInsert()
-                        .forRelation(Document.class, "names")
-                    .and();
+        if (!registerType || isQueryStrategy() && isFullMode()) {
+            afterBuilder.insert(Document.class, "names");
             assertVersionDiff(oldVersion, docView.getVersion(), 2, 2);
         } else {
-            assertVersionDiff(oldVersion, docView.getVersion(), 1, 2);
+            assertVersionDiff(oldVersion, docView.getVersion(), 1, isQueryStrategy() ? 2 : 1);
         }
 
         afterBuilder.validate();
@@ -239,26 +253,32 @@ public class EntityViewUpdateMutableEmbeddableCollectionsTest extends AbstractEn
         assertChangesUpdateAndFlush(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isFullMode()) {
-            fullFetch(builder);
+            if (!isQueryStrategy()) {
+                fullFetch(builder);
+            }
 
-            if (version) {
+            if (version || isQueryStrategy()) {
                 builder.update(Document.class);
             }
-            if (!registerType) {
+            if (!registerType || isQueryStrategy()) {
                 assertReplaceAnd(builder);
             }
         } else {
             if (registerType && preferLoadingAndDiffingOverRecreate()) {
-                fullFetch(builder);
+                if (!isQueryStrategy()) {
+                    fullFetch(builder);
+                }
 
                 if (version) {
                     builder.update(Document.class);
                 }
             } else {
-                builder.select(Document.class);
+                if (!isQueryStrategy()) {
+                    builder.select(Document.class);
+                }
 
                 if (version) {
                     builder.update(Document.class);
@@ -275,18 +295,22 @@ public class EntityViewUpdateMutableEmbeddableCollectionsTest extends AbstractEn
         AssertStatementBuilder afterBuilder = assertQueriesAfterUpdate(docView);
 
         if (isFullMode()) {
-            fullFetch(afterBuilder);
-            if (version) {
+            if (isQueryStrategy()) {
+                assertReplaceAnd(afterBuilder);
+            } else {
+                fullFetch(afterBuilder);
+                if (!registerType) {
+                    assertReplaceAnd(afterBuilder);
+                }
+            }
+            if (version && !registerType || isQueryStrategy()) {
                 afterBuilder.update(Document.class);
             }
-            if (!registerType) {
-                assertReplaceAnd(afterBuilder);
-            }
         } else {
-            if (registerType && preferLoadingAndDiffingOverRecreate()) {
-                fullFetch(afterBuilder);
-            } else {
-                afterBuilder.select(Document.class);
+            if (!registerType) {
+                if (!isQueryStrategy()) {
+                    afterBuilder.select(Document.class);
+                }
                 if (version) {
                     afterBuilder.update(Document.class);
                 }
@@ -294,13 +318,11 @@ public class EntityViewUpdateMutableEmbeddableCollectionsTest extends AbstractEn
             }
         }
 
-        if (!registerType) {
-            afterBuilder.assertInsert()
-                        .forRelation(Document.class, "names")
-                    .and();
+        if (!registerType || isQueryStrategy() && isFullMode()) {
+            afterBuilder.insert(Document.class, "names");
             assertVersionDiff(oldVersion, docView.getVersion(), 2, 2);
         } else {
-            assertVersionDiff(oldVersion, docView.getVersion(), 1, 2);
+            assertVersionDiff(oldVersion, docView.getVersion(), 1, isQueryStrategy() ? 2 : 1);
         }
 
         afterBuilder.validate();
@@ -430,12 +452,6 @@ public class EntityViewUpdateMutableEmbeddableCollectionsTest extends AbstractEn
                 .assertInsert()
                     .forRelation(Document.class, "names")
                 .and();
-    }
-
-    @Override
-    protected boolean isQueryStrategy() {
-        // Collection changes always need to be applied on the entity model, can't do that via a query
-        return false;
     }
 
     @Override

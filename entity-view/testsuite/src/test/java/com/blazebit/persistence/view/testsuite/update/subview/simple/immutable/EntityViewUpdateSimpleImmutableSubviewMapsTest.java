@@ -62,6 +62,11 @@ public class EntityViewUpdateSimpleImmutableSubviewMapsTest extends AbstractEnti
         cfg.addEntityView(PersonView.class);
     }
 
+    @Override
+    protected String[] getFetchedCollections() {
+        return new String[] { "contacts" };
+    }
+
     @Test
     public void testUpdateReplaceCollection() {
         // Given
@@ -76,13 +81,14 @@ public class EntityViewUpdateSimpleImmutableSubviewMapsTest extends AbstractEnti
         // Assert that the document and the people are loaded in full mode.
         // During dirty detection we should be able to figure out that nothing changed
         // So partial modes wouldn't load anything and both won't cause any updates
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isFullMode()) {
-            fullFetch(builder);
-
-            if (version) {
-                builder.update(Document.class);
+            if (isQueryStrategy()) {
+                assertReplaceAnd(builder);
+                versionUpdate(builder);
+            } else {
+                fullFetch(builder);
             }
         }
 
@@ -105,16 +111,21 @@ public class EntityViewUpdateSimpleImmutableSubviewMapsTest extends AbstractEnti
 
         // Then
         // Assert that the document and the people are loaded, but only a relation insert is done
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        fullFetch(builder);
+        if (isQueryStrategy()) {
+            if (isFullMode()) {
+                assertReplaceAnd(builder);
+            }
+        } else {
+            fullFetch(builder);
+        }
 
-        if (version) {
+        if (version || isQueryStrategy() && isFullMode()) {
             builder.update(Document.class);
         }
 
-        builder.assertInsert()
-                .forRelation(Document.class, "contacts")
+        builder.insert(Document.class, "contacts")
                 .validate();
 
         assertNoUpdateAndReload(docView);
@@ -136,24 +147,29 @@ public class EntityViewUpdateSimpleImmutableSubviewMapsTest extends AbstractEnti
         // Then
         // In partial mode, only the document is loaded. In full mode, the people are also loaded
         // Since we load the people in the full mode, we do a proper diff and can compute that only a single item was added
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        if (isFullMode()) {
-            fullFetch(builder);
+        if (isQueryStrategy()) {
+            if (isFullMode()) {
+                assertReplaceAnd(builder);
+            }
         } else {
-            if (preferLoadingAndDiffingOverRecreate()) {
+            if (isFullMode()) {
                 fullFetch(builder);
             } else {
-                assertReplaceAnd(builder);
+                if (preferLoadingAndDiffingOverRecreate()) {
+                    fullFetch(builder);
+                } else {
+                    assertReplaceAnd(builder);
+                }
             }
         }
 
-        if (version) {
+        if (version || isQueryStrategy() && isFullMode()) {
             builder.update(Document.class);
         }
 
-        builder.assertInsert()
-                    .forRelation(Document.class, "contacts")
+        builder.insert(Document.class, "contacts")
                 .validate();
         assertNoUpdateAndReload(docView);
         assertSubviewEquals(doc1.getContacts(), docView.getContacts());
@@ -185,18 +201,19 @@ public class EntityViewUpdateSimpleImmutableSubviewMapsTest extends AbstractEnti
     }
 
     private AssertStatementBuilder assertReplaceAnd(AssertStatementBuilder builder) {
-        return builder.assertDelete()
-                    .forRelation(Document.class, "contacts")
-                .and()
-                .assertInsert()
-                    .forRelation(Document.class, "contacts")
-                .and();
+        builder.delete(Document.class, "contacts")
+                .insert(Document.class, "contacts");
+        if (doc1.getContacts().size() > 1) {
+            builder.insert(Document.class, "contacts");
+        }
+        return builder;
     }
 
     @Override
-    protected boolean isQueryStrategy() {
-        // Collection changes always need to be applied on the entity model, can't do that via a query
-        return false;
+    protected AssertStatementBuilder fullUpdate(AssertStatementBuilder builder) {
+        assertReplaceAnd(builder);
+        versionUpdate(builder);
+        return builder;
     }
 
     @Override
