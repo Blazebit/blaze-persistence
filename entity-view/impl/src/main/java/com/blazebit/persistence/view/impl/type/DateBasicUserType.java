@@ -57,12 +57,12 @@ public class DateBasicUserType implements BasicUserType<Date>, VersionBasicUserT
 
     @Override
     public boolean isEqual(Date initial, Date current) {
-        return initial.equals(current);
+        return initial.getTime() == current.getTime();
     }
 
     @Override
     public boolean isDeepEqual(Date initial, Date current) {
-        return initial.equals(current);
+        return initial.getTime() == current.getTime();
     }
 
     @Override

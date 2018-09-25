@@ -103,7 +103,7 @@ public class OracleDbmsDialect extends DefaultDbmsDialect {
 
     @Override
     public String cast(String expression, String sqlType) {
-        if ("clob".equals("sqlType")) {
+        if ("clob".equals(sqlType)) {
             return "to_clob(" + expression + ")";
         }
         return super.cast(expression, sqlType);

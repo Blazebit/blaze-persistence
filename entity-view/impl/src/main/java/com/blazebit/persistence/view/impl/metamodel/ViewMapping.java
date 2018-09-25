@@ -70,7 +70,7 @@ public interface ViewMapping extends Comparable<ViewMapping>, EntityViewMapping 
 
     void initializeViewMappings(MetamodelBuildingContext context, Runnable finishListener);
 
-    ManagedViewTypeImplementor<?> getManagedViewType(MetamodelBuildingContext context);
+    ManagedViewTypeImplementor<?> getManagedViewType(MetamodelBuildingContext context, EmbeddableOwner embeddableMapping);
 
     MethodAttributeMapping getIdAttribute();
 

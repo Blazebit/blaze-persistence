@@ -43,7 +43,7 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewTypeI
     private final Map<String, ViewFilterMapping> viewFilters;
 
     public ViewTypeImpl(ViewMapping viewMapping, ManagedType<?> managedType, MetamodelBuildingContext context) {
-        super(viewMapping, managedType, context);
+        super(viewMapping, managedType, context, null);
 
         String name = viewMapping.getName();
 
@@ -71,11 +71,11 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewTypeI
         }
 
         this.viewFilters = Collections.unmodifiableMap(viewFilters);
-        this.idAttribute = viewMapping.getIdAttribute().getMethodAttribute(this, -1, -1, context);
+        this.idAttribute = viewMapping.getIdAttribute().getMethodAttribute(this, -1, -1, context, null);
 
         if (getLockMode() != LockMode.NONE) {
             if (viewMapping.getVersionAttribute() != null) {
-                this.versionAttribute = viewMapping.getVersionAttribute().getMethodAttribute(this, -1, -1, context);
+                this.versionAttribute = viewMapping.getVersionAttribute().getMethodAttribute(this, -1, -1, context, null);
             } else {
                 this.versionAttribute = null;
             }

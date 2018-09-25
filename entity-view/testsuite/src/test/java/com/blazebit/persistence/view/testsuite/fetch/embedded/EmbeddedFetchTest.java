@@ -25,6 +25,7 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
+import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntitySub;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewManager;
@@ -33,9 +34,10 @@ import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.impl.ConfigurationProperties;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
-import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntity;
-import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntityEmbeddable;
-import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntitySimpleEmbeddable;
+import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntity2;
+import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntityEmbeddable2;
+import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntityId2;
+import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntitySimpleEmbeddable2;
 import com.blazebit.persistence.view.testsuite.fetch.embedded.model.EmbeddableTestEntityEmbeddableFetchSubView;
 import com.blazebit.persistence.view.testsuite.fetch.embedded.model.EmbeddableTestEntityFetchAsEntityView;
 import com.blazebit.persistence.view.testsuite.fetch.embedded.model.EmbeddableTestEntityFetchAsEntityViewJoin;
@@ -69,10 +71,10 @@ import java.util.Set;
 @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoEclipselink.class })
 public class EmbeddedFetchTest extends AbstractEntityViewTest {
 
-    protected EmbeddableTestEntity doc1;
-    protected EmbeddableTestEntity doc2;
-    protected EmbeddableTestEntity doc3;
-    protected EmbeddableTestEntity doc4;
+    protected EmbeddableTestEntity2 doc1;
+    protected EmbeddableTestEntity2 doc2;
+    protected EmbeddableTestEntity2 doc3;
+    protected EmbeddableTestEntity2 doc4;
 
     @Override
     public void setUpOnce() {
@@ -88,20 +90,20 @@ public class EmbeddedFetchTest extends AbstractEntityViewTest {
                 em.persist(id2);
                 em.persist(id3);
                 em.persist(id4);
-                doc1 = new EmbeddableTestEntity(id1, "doc1");
-                doc2 = new EmbeddableTestEntity(id2, "doc2");
-                doc3 = new EmbeddableTestEntity(id3, "doc3");
-                doc4 = new EmbeddableTestEntity(id4, "doc4");
+                doc1 = new EmbeddableTestEntity2(id1, "doc1");
+                doc2 = new EmbeddableTestEntity2(id2, "doc2");
+                doc3 = new EmbeddableTestEntity2(id3, "doc3");
+                doc4 = new EmbeddableTestEntity2(id4, "doc4");
 
-                doc1.getEmbeddableSet().add(new EmbeddableTestEntitySimpleEmbeddable("doc1"));
-                doc2.getEmbeddableSet().add(new EmbeddableTestEntitySimpleEmbeddable("doc2"));
-                doc3.getEmbeddableSet().add(new EmbeddableTestEntitySimpleEmbeddable("doc3"));
-                doc4.getEmbeddableSet().add(new EmbeddableTestEntitySimpleEmbeddable("doc4"));
+                doc1.getEmbeddableSet().add(new EmbeddableTestEntitySimpleEmbeddable2("doc1"));
+                doc2.getEmbeddableSet().add(new EmbeddableTestEntitySimpleEmbeddable2("doc2"));
+                doc3.getEmbeddableSet().add(new EmbeddableTestEntitySimpleEmbeddable2("doc3"));
+                doc4.getEmbeddableSet().add(new EmbeddableTestEntitySimpleEmbeddable2("doc4"));
 
-                doc1.getEmbeddableMap().put("doc1", new EmbeddableTestEntitySimpleEmbeddable("doc1"));
-                doc2.getEmbeddableMap().put("doc2", new EmbeddableTestEntitySimpleEmbeddable("doc2"));
-                doc3.getEmbeddableMap().put("doc3", new EmbeddableTestEntitySimpleEmbeddable("doc3"));
-                doc4.getEmbeddableMap().put("doc4", new EmbeddableTestEntitySimpleEmbeddable("doc4"));
+                doc1.getEmbeddableMap().put("doc1", new EmbeddableTestEntitySimpleEmbeddable2("doc1"));
+                doc2.getEmbeddableMap().put("doc2", new EmbeddableTestEntitySimpleEmbeddable2("doc2"));
+                doc3.getEmbeddableMap().put("doc3", new EmbeddableTestEntitySimpleEmbeddable2("doc3"));
+                doc4.getEmbeddableMap().put("doc4", new EmbeddableTestEntitySimpleEmbeddable2("doc4"));
 
                 em.persist(doc1);
                 em.persist(doc2);
@@ -129,24 +131,26 @@ public class EmbeddedFetchTest extends AbstractEntityViewTest {
     @Override
     protected Class<?>[] getEntityClasses() {
         return new Class<?>[]{
-                EmbeddableTestEntity.class,
-                EmbeddableTestEntityEmbeddable.class,
+                EmbeddableTestEntity2.class,
+                EmbeddableTestEntityId2.class,
+                EmbeddableTestEntitySub.class,
+                EmbeddableTestEntityEmbeddable2.class,
                 IntIdEntity.class
         };
     }
 
     @Before
     public void setUp() {
-        doc1 = cbf.create(em, EmbeddableTestEntity.class).where("id.key").eq("doc1").fetch("embeddableSet").fetch("embeddableMap")
+        doc1 = cbf.create(em, EmbeddableTestEntity2.class).where("id.key").eq("doc1").fetch("embeddableSet").fetch("embeddableMap")
                 .fetch("embeddable.oneToMany").fetch("embeddable.manyToOne").fetch("embeddable.elementCollection")
                 .getResultList().get(0);
-        doc2 = cbf.create(em, EmbeddableTestEntity.class).where("id.key").eq("doc2").fetch("embeddableSet").fetch("embeddableMap")
+        doc2 = cbf.create(em, EmbeddableTestEntity2.class).where("id.key").eq("doc2").fetch("embeddableSet").fetch("embeddableMap")
                 .fetch("embeddable.oneToMany").fetch("embeddable.manyToOne").fetch("embeddable.elementCollection")
                 .getResultList().get(0);
-        doc3 = cbf.create(em, EmbeddableTestEntity.class).where("id.key").eq("doc3").fetch("embeddableSet").fetch("embeddableMap")
+        doc3 = cbf.create(em, EmbeddableTestEntity2.class).where("id.key").eq("doc3").fetch("embeddableSet").fetch("embeddableMap")
                 .fetch("embeddable.oneToMany").fetch("embeddable.manyToOne").fetch("embeddable.elementCollection")
                 .getResultList().get(0);
-        doc4 = cbf.create(em, EmbeddableTestEntity.class).where("id.key").eq("doc4").fetch("embeddableSet").fetch("embeddableMap")
+        doc4 = cbf.create(em, EmbeddableTestEntity2.class).where("id.key").eq("doc4").fetch("embeddableSet").fetch("embeddableMap")
                 .fetch("embeddable.oneToMany").fetch("embeddable.manyToOne").fetch("embeddable.elementCollection")
                 .getResultList().get(0);
     }
@@ -255,7 +259,7 @@ public class EmbeddedFetchTest extends AbstractEntityViewTest {
         cfg.addEntityView(EmbeddableTestEntityEmbeddableFetchSubView.class);
         EntityViewManager evm = cfg.createEntityViewManager(cbf);
 
-        CriteriaBuilder<EmbeddableTestEntity> criteria = cbf.create(em, EmbeddableTestEntity.class, "d").orderByAsc("id.key");
+        CriteriaBuilder<EmbeddableTestEntity2> criteria = cbf.create(em, EmbeddableTestEntity2.class, "d").orderByAsc("id.key");
         EntityViewSetting<T, CriteriaBuilder<T>> setting = EntityViewSetting.create(entityView);
         if (batchSize != null) {
             setting.setProperty(ConfigurationProperties.DEFAULT_BATCH_SIZE + ".manyToOne", batchSize);
@@ -278,7 +282,7 @@ public class EmbeddedFetchTest extends AbstractEntityViewTest {
         }
     }
 
-    private void assertEquals(EmbeddableTestEntity doc, EmbeddableTestEntityFetchAsEntityView view) {
+    private void assertEquals(EmbeddableTestEntity2 doc, EmbeddableTestEntityFetchAsEntityView view) {
         assertSimpleEquals(doc, view);
         Assert.assertEquals(doc.getEmbeddable().getName(), view.getName());
 
@@ -292,7 +296,7 @@ public class EmbeddedFetchTest extends AbstractEntityViewTest {
         Assert.assertEquals(doc.getEmbeddable().getManyToOne(), view.getManyToOne());
     }
 
-    private void assertEquals(EmbeddableTestEntity doc, EmbeddableTestEntityFetchAsViewView view) {
+    private void assertEquals(EmbeddableTestEntity2 doc, EmbeddableTestEntityFetchAsViewView view) {
         assertSimpleEquals(doc, view);
         Assert.assertEquals(doc.getEmbeddable().getName(), view.getName());
 
@@ -304,13 +308,13 @@ public class EmbeddedFetchTest extends AbstractEntityViewTest {
         assertSimpleEquals(doc.getEmbeddable().getManyToOne(), view.getManyToOne());
     }
 
-    private void assertSimpleEquals(EmbeddableTestEntity doc, EmbeddableTestEntitySimpleFetchView view) {
+    private void assertSimpleEquals(EmbeddableTestEntity2 doc, EmbeddableTestEntitySimpleFetchView view) {
         Assert.assertEquals(doc.getId().getKey(), view.getId().getKey());
     }
 
-    private void assertSetEquals(Set<EmbeddableTestEntitySimpleEmbeddable> entities, Set<EmbeddableTestEntityEmbeddableFetchSubView> views) {
+    private void assertSetEquals(Set<EmbeddableTestEntitySimpleEmbeddable2> entities, Set<EmbeddableTestEntityEmbeddableFetchSubView> views) {
         Assert.assertEquals(entities.size(), views.size());
-        OUTER: for (EmbeddableTestEntitySimpleEmbeddable entity : entities) {
+        OUTER: for (EmbeddableTestEntitySimpleEmbeddable2 entity : entities) {
             for (EmbeddableTestEntityEmbeddableFetchSubView view : views) {
                 if (view.getName().equals(entity.getName())) {
                     continue OUTER;
@@ -321,9 +325,9 @@ public class EmbeddedFetchTest extends AbstractEntityViewTest {
         }
     }
 
-    private void assertEntityEquals(Set<EmbeddableTestEntity> entities, Set<EmbeddableTestEntitySimpleFetchView> views) {
+    private void assertEntityEquals(Set<EmbeddableTestEntity2> entities, Set<EmbeddableTestEntitySimpleFetchView> views) {
         Assert.assertEquals(entities.size(), views.size());
-        OUTER: for (EmbeddableTestEntity entity : entities) {
+        OUTER: for (EmbeddableTestEntity2 entity : entities) {
             for (EmbeddableTestEntitySimpleFetchView view : views) {
                 if (view.getId().getKey().equals(entity.getId().getKey())) {
                     continue OUTER;
@@ -346,9 +350,9 @@ public class EmbeddedFetchTest extends AbstractEntityViewTest {
         }
     }
 
-    private void assertElementCollectionEquals(Map<String, EmbeddableTestEntitySimpleEmbeddable> entities, Set<EmbeddableTestEntityEmbeddableFetchSubView> views) {
+    private void assertElementCollectionEquals(Map<String, EmbeddableTestEntitySimpleEmbeddable2> entities, Set<EmbeddableTestEntityEmbeddableFetchSubView> views) {
         Assert.assertEquals(entities.size(), views.size());
-        OUTER: for (Map.Entry<String, EmbeddableTestEntitySimpleEmbeddable> entry : entities.entrySet()) {
+        OUTER: for (Map.Entry<String, EmbeddableTestEntitySimpleEmbeddable2> entry : entities.entrySet()) {
             for (EmbeddableTestEntityEmbeddableFetchSubView view : views) {
                 if (view.getName().equals(entry.getValue().getName())) {
                     continue OUTER;

@@ -45,7 +45,6 @@ public class JpaMetamodelAccessorImpl implements JpaMetamodelAccessor {
     protected JpaMetamodelAccessorImpl() {
     }
 
-
     @Override
     public AttributePath getAttributePath(Metamodel metamodel, ManagedType<?> type, String attributePath) {
         List<Attribute<?, ?>> attrPath;
@@ -61,7 +60,7 @@ public class JpaMetamodelAccessorImpl implements JpaMetamodelAccessor {
             attrPath.add(attribute);
             return new AttributePath(attrPath, com.blazebit.persistence.parser.util.JpaMetamodelUtils.resolveFieldClass(type.getJavaType(), attribute));
         } else {
-            attrPath = new ArrayList<Attribute<?, ?>>();
+            attrPath = new ArrayList<>();
         }
 
         String[] attributeParts = attributePath.split("\\.");

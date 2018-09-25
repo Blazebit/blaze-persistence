@@ -22,6 +22,7 @@ import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
+import java.util.Collections;
 
 /**
  *
@@ -31,6 +32,7 @@ import java.util.Arrays;
 public class ConvertReflectionInstantiator<T> implements ObjectInstantiator<T> {
 
     private final Constructor<T> constructor;
+    private final AbstractReflectionInstantiator.TypeConverterEntry[] typeConverterEntries;
 
     public ConvertReflectionInstantiator(ProxyFactory proxyFactory, ManagedViewType<T> viewType, Class<?>[] parameterTypes, EntityViewManager entityViewManager) {
         @SuppressWarnings("unchecked")
@@ -44,11 +46,18 @@ public class ConvertReflectionInstantiator<T> implements ObjectInstantiator<T> {
         }
 
         this.constructor = javaConstructor;
+        this.typeConverterEntries = AbstractReflectionInstantiator.withPrimitiveConverters(Collections.<AbstractReflectionInstantiator.TypeConverterEntry>emptyList(), parameterTypes);
     }
 
     @Override
     public T newInstance(Object[] tuple) {
         try {
+            // TODO: move this into proxy generated code by setting user types on a static AtomicReferenceArray
+            // type conversion
+            for (int i = 0; i < typeConverterEntries.length; i++) {
+                AbstractReflectionInstantiator.TypeConverterEntry entry = typeConverterEntries[i];
+                tuple[entry.index] = entry.typeConverter.convertToViewType(tuple[entry.index]);
+            }
             return constructor.newInstance(tuple);
         } catch (Exception ex) {
             String[] types = new String[tuple.length];

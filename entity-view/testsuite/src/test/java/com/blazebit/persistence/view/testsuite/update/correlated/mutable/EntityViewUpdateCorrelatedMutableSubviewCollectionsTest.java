@@ -64,6 +64,11 @@ public class EntityViewUpdateCorrelatedMutableSubviewCollectionsTest extends Abs
         cfg.addEntityView(DocumentIdView.class);
     }
 
+    @Override
+    protected String[] getFetchedCollections() {
+        return new String[] { "partners" };
+    }
+
     @Test
     public void testUpdateReplaceCollection() {
         // Given
@@ -149,7 +154,7 @@ public class EntityViewUpdateCorrelatedMutableSubviewCollectionsTest extends Abs
         builder.update(Person.class);
         builder.validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertSubviewEquals(doc1.getPartners(), docView.getPartners());
     }
 
@@ -195,7 +200,7 @@ public class EntityViewUpdateCorrelatedMutableSubviewCollectionsTest extends Abs
         builder.update(Person.class);
         builder.validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertSubviewEquals(doc1.getPartners(), docView.getPartners());
     }
 
@@ -241,7 +246,7 @@ public class EntityViewUpdateCorrelatedMutableSubviewCollectionsTest extends Abs
         builder.update(Person.class);
         builder.validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertSubviewEquals(doc1.getPartners(), docView.getPartners());
         assertEquals("newPerson", p2.getName());
     }
@@ -289,7 +294,7 @@ public class EntityViewUpdateCorrelatedMutableSubviewCollectionsTest extends Abs
         builder.update(Person.class);
         builder.validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertSubviewEquals(doc1.getPartners(), docView.getPartners());
         assertEquals("newPerson", p2.getName());
     }

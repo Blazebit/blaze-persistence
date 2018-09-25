@@ -47,6 +47,11 @@ public class EntityViewUpdateMutableEntityTest extends AbstractEntityViewUpdateE
         super(mode, strategy, version, UpdatableDocumentEntityView.class);
     }
 
+    @Override
+    protected String[] getFetchedCollections() {
+        return new String[] { "responsiblePerson" };
+    }
+
     @Test
     public void testSimpleUpdate() {
         // Given & When
@@ -56,7 +61,7 @@ public class EntityViewUpdateMutableEntityTest extends AbstractEntityViewUpdateE
         // Assert that not only the document is loaded, but also always the responsiblePerson
         // This might be unexpected for partial strategies
         // but since we don't know if entities are dirty, we need to be conservative and load the object
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             builder.assertSelect()
@@ -102,7 +107,7 @@ public class EntityViewUpdateMutableEntityTest extends AbstractEntityViewUpdateE
         // Then
         // Since the responsiblePerson changed we don't need to load the old responsiblePerson
         // Unfortunately, the new responsiblePerson has to be loaded by the JPA provider since it has to be merged
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
             if (isFullMode()) {
@@ -147,7 +152,7 @@ public class EntityViewUpdateMutableEntityTest extends AbstractEntityViewUpdateE
         // Then
         // Since the responsiblePerson changed we don't need to load the old responsiblePerson
         // Unfortunately, the new responsiblePerson has to be loaded by the JPA provider since it has to be merged
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
             if (isFullMode()) {
@@ -195,20 +200,22 @@ public class EntityViewUpdateMutableEntityTest extends AbstractEntityViewUpdateE
 
         // Then
         // Since we update the old responsiblePerson, load it along with the document for updating it later
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             builder.assertSelect()
                     .fetching(Person.class)
                     .and();
+
+            if (isFullMode() || version) {
+                builder.update(Document.class);
+            }
         } else {
             fullFetch(builder);
-        }
 
-        if (isQueryStrategy() && isFullMode()) {
-            builder.update(Document.class);
-        } else if (version) {
-            builder.update(Document.class);
+            if (version) {
+                builder.update(Document.class);
+            }
         }
 
         builder.update(Person.class);
@@ -247,7 +254,7 @@ public class EntityViewUpdateMutableEntityTest extends AbstractEntityViewUpdateE
         // Then
         // Since the responsiblePerson changed we don't need to load the old responsiblePerson
         // Since the new responsiblePerson is null, we don't need to do anything further
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
             if (isFullMode()) {
@@ -287,7 +294,7 @@ public class EntityViewUpdateMutableEntityTest extends AbstractEntityViewUpdateE
         // Then
         // Since the responsiblePerson changed we don't need to load the old responsiblePerson
         // The new responsiblePerson will be persisted
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
             if (isFullMode()) {

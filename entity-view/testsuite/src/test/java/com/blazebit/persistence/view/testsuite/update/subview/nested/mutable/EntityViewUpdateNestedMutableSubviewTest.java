@@ -72,7 +72,7 @@ public class EntityViewUpdateNestedMutableSubviewTest extends AbstractEntityView
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
@@ -107,7 +107,7 @@ public class EntityViewUpdateNestedMutableSubviewTest extends AbstractEntityView
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
@@ -154,7 +154,7 @@ public class EntityViewUpdateNestedMutableSubviewTest extends AbstractEntityView
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             builder.update(Person.class)
@@ -201,7 +201,7 @@ public class EntityViewUpdateNestedMutableSubviewTest extends AbstractEntityView
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
@@ -239,7 +239,7 @@ public class EntityViewUpdateNestedMutableSubviewTest extends AbstractEntityView
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             builder.update(Person.class);
@@ -274,9 +274,6 @@ public class EntityViewUpdateNestedMutableSubviewTest extends AbstractEntityView
                         .update(Document.class);
             } else {
                 fullFetch(afterBuilder);
-                if (version) {
-                    afterBuilder.update(Document.class);
-                }
             }
         }
         afterBuilder.validate();

@@ -21,6 +21,7 @@ import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.mapper.Mapper;
 import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.update.EntityViewUpdater;
+import com.blazebit.persistence.view.impl.update.EntityViewUpdaterImpl;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.update.flush.DirtyAttributeFlusher;
 import com.blazebit.persistence.view.metamodel.Type;
@@ -36,8 +37,8 @@ public class EmbeddableUpdaterBasedViewToEntityMapper extends AbstractViewToEnti
 
     private final Mapper<Object, Object> idViewToEntityMapper;
 
-    public EmbeddableUpdaterBasedViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, Class<?> viewTypeClass, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes, EntityLoader entityLoader, boolean persistAllowed, Mapper<Object, Object> idViewToEntityMapper) {
-        super(attributeLocation, evm, viewTypeClass, persistAllowedSubtypes, updateAllowedSubtypes, entityLoader, null, persistAllowed);
+    public EmbeddableUpdaterBasedViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, Class<?> viewTypeClass, Set<Type<?>> readOnlyAllowedSubtypes, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes, EntityLoader entityLoader, boolean persistAllowed, Mapper<Object, Object> idViewToEntityMapper, EntityViewUpdaterImpl owner, String ownerMapping) {
+        super(attributeLocation, evm, viewTypeClass, readOnlyAllowedSubtypes, persistAllowedSubtypes, updateAllowedSubtypes, entityLoader, null, persistAllowed, owner, ownerMapping);
         this.idViewToEntityMapper = idViewToEntityMapper;
     }
 
@@ -106,6 +107,16 @@ public class EmbeddableUpdaterBasedViewToEntityMapper extends AbstractViewToEnti
 
     public Object createEmbeddable(UpdateContext context) {
         return entityLoader.toEntity(context, null);
+    }
+
+    @Override
+    public Object flushToEntity(UpdateContext context, Object entity, Object view) {
+        return applyToEntity(context, entity, view);
+    }
+
+    @Override
+    public Object loadEntity(UpdateContext context, Object view) {
+        return null;
     }
 
     @Override

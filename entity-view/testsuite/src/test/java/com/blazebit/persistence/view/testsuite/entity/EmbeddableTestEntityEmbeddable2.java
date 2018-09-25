@@ -35,16 +35,16 @@ import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 
 @Embeddable
-public class EmbeddableTestEntityEmbeddable implements Serializable {
+public class EmbeddableTestEntityEmbeddable2 implements Serializable {
 
     private static final long serialVersionUID = 1L;
     
     private String name;
-    private EmbeddableTestEntity manyToOne;
-    private Set<EmbeddableTestEntity> oneToMany = new HashSet<EmbeddableTestEntity>(0);
+    private EmbeddableTestEntity2 manyToOne;
+    private Set<EmbeddableTestEntity2> oneToMany = new HashSet<EmbeddableTestEntity2>(0);
     private Map<String, IntIdEntity> elementCollection = new HashMap<String, IntIdEntity>(0);
 
-    public EmbeddableTestEntityEmbeddable() {
+    public EmbeddableTestEntityEmbeddable2() {
     }
 
     @Column(name = "emb_tst_ent_name")
@@ -62,27 +62,27 @@ public class EmbeddableTestEntityEmbeddable implements Serializable {
             @JoinColumn(name = "emb_tst_ent_key", referencedColumnName = "test_key"),
             @JoinColumn(name = "emb_tst_ent_int_id_ent", referencedColumnName = "int_id_ent")
     })
-    public EmbeddableTestEntity getManyToOne() {
+    public EmbeddableTestEntity2 getManyToOne() {
         return manyToOne;
     }
     
-    public void setManyToOne(EmbeddableTestEntity manyToOne) {
+    public void setManyToOne(EmbeddableTestEntity2 manyToOne) {
         this.manyToOne = manyToOne;
     }
 
     @OneToMany(mappedBy = "embeddable.manyToOne")
-    public Set<EmbeddableTestEntity> getOneToMany() {
+    public Set<EmbeddableTestEntity2> getOneToMany() {
         return oneToMany;
     }
 
-    public void setOneToMany(Set<EmbeddableTestEntity> oneToMany) {
+    public void setOneToMany(Set<EmbeddableTestEntity2> oneToMany) {
         this.oneToMany = oneToMany;
     }
 
     // Fixed size because mysql has size limitations
     @OneToMany
     @MapKeyColumn(name = "emb_ts_ent_elem_coll_key", nullable = false, length = 20)
-    @JoinTable(name = "emb_ts_ent_elem_coll", joinColumns = {
+    @JoinTable(name = "emb_ts_ent2_elem_coll", joinColumns = {
             @JoinColumn(name = "emb_tst_ent_key", referencedColumnName = "test_key"),
             @JoinColumn(name = "emb_tst_ent_int_id_ent", referencedColumnName = "int_id_ent")
     }, inverseJoinColumns = @JoinColumn(name = "int_id_ent"))

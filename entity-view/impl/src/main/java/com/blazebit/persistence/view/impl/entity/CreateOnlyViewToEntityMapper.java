@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.entity;
 
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
+import com.blazebit.persistence.view.impl.update.EntityViewUpdaterImpl;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.metamodel.Type;
 
@@ -30,8 +31,8 @@ import java.util.Set;
  */
 public class CreateOnlyViewToEntityMapper extends AbstractViewToEntityMapper {
 
-    public CreateOnlyViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, Class<?> viewTypeClass, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes, EntityLoader entityLoader, AttributeAccessor viewIdAccessor, boolean persistAllowed) {
-        super(attributeLocation, evm, viewTypeClass, persistAllowedSubtypes, updateAllowedSubtypes, entityLoader, viewIdAccessor, persistAllowed);
+    public CreateOnlyViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, Class<?> viewTypeClass, Set<Type<?>> readOnlyAllowedSubtypes, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes, EntityLoader entityLoader, AttributeAccessor viewIdAccessor, boolean persistAllowed, EntityViewUpdaterImpl owner, String ownerMapping) {
+        super(attributeLocation, evm, viewTypeClass, readOnlyAllowedSubtypes, persistAllowedSubtypes, updateAllowedSubtypes, entityLoader, viewIdAccessor, persistAllowed, owner, ownerMapping);
     }
 
     @Override
@@ -41,6 +42,20 @@ public class CreateOnlyViewToEntityMapper extends AbstractViewToEntityMapper {
         }
 
         return entity;
+    }
+
+    @Override
+    public Object flushToEntity(UpdateContext context, Object entity, Object view) {
+        if (entity == null) {
+            return persist(context, entity, view);
+        }
+
+        return entity;
+    }
+
+    @Override
+    public Object loadEntity(UpdateContext context, Object view) {
+        return persist(context, null, view);
     }
 
     @Override

@@ -57,10 +57,18 @@ public class EntityViewUpdateMutableEntityCollectionsTest extends AbstractEntity
         // Then
         // Since entities are mutable, assert that the document and the people are loaded always loaded.
         // During dirty detection we should be able to figure out that the collection didn't change
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        fullFetch(builder);
-        if (version) {
+        if (isQueryStrategy()) {
+            builder.select(Person.class);
+            if (isFullMode()) {
+                builder.delete(Document.class, "people")
+                        .insert(Document.class, "people");
+            }
+        } else {
+            fullFetch(builder);
+        }
+        if (version || isQueryStrategy() && isFullMode()) {
             builder.update(Document.class);
         }
 
@@ -68,8 +76,16 @@ public class EntityViewUpdateMutableEntityCollectionsTest extends AbstractEntity
 
         // Unfortunately, even after an update, we have to reload the entity to merge again
         AssertStatementBuilder afterBuilder = assertQueriesAfterUpdate(docView);
-        fullFetch(afterBuilder);
-        if (version) {
+        if (isQueryStrategy()) {
+            afterBuilder.select(Person.class);
+            if (isFullMode()) {
+                afterBuilder.delete(Document.class, "people")
+                        .insert(Document.class, "people");
+            }
+        } else {
+            fullFetch(afterBuilder);
+        }
+        if (version || isQueryStrategy() && isFullMode()) {
             afterBuilder.update(Document.class);
         }
         afterBuilder.validate();
@@ -84,21 +100,39 @@ public class EntityViewUpdateMutableEntityCollectionsTest extends AbstractEntity
         // Then
         // Assert that the document and the people are loaded i.e. a full fetch
         // In addition, the new person is loaded because of the merge invocation, but only a single relation insert is done
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        fullFetch(builder)
-                .select(Person.class);
-        if (version) {
+        if (isQueryStrategy()) {
+            builder.select(Person.class);
+            builder.select(Person.class);
+            if (isFullMode()) {
+                builder.delete(Document.class, "people")
+                        .insert(Document.class, "people");
+            }
+        } else {
+            fullFetch(builder)
+                    .select(Person.class);
+        }
+        if (version || isQueryStrategy() && isFullMode()) {
             builder.update(Document.class);
         }
-        builder.assertInsert()
-                .forRelation(Document.class, "people")
+        builder.insert(Document.class, "people")
                 .validate();
 
         // Unfortunately, even after an update, we have to reload the entity to merge again
         AssertStatementBuilder afterBuilder = assertQueriesAfterUpdate(docView);
-        fullFetch(afterBuilder);
-        if (version) {
+        if (isQueryStrategy()) {
+            afterBuilder.select(Person.class);
+            afterBuilder.select(Person.class);
+            if (isFullMode()) {
+                afterBuilder.delete(Document.class, "people")
+                        .insert(Document.class, "people")
+                        .insert(Document.class, "people");
+            }
+        } else {
+            fullFetch(afterBuilder);
+        }
+        if (version || isQueryStrategy() && isFullMode()) {
             afterBuilder.update(Document.class);
         }
         afterBuilder.validate();
@@ -113,21 +147,39 @@ public class EntityViewUpdateMutableEntityCollectionsTest extends AbstractEntity
         // Then
         // Assert that the document and the people are loaded i.e. a full fetch
         // In addition, the new person is loaded because of the merge invocation, but only a single relation insert is done
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        fullFetch(builder)
-                .select(Person.class);
-        if (version) {
+        if (isQueryStrategy()) {
+            builder.select(Person.class);
+            builder.select(Person.class);
+            if (isFullMode()) {
+                builder.delete(Document.class, "people")
+                        .insert(Document.class, "people");
+            }
+        } else {
+            fullFetch(builder)
+                    .select(Person.class);
+        }
+        if (version || isQueryStrategy() && isFullMode()) {
             builder.update(Document.class);
         }
-        builder.assertInsert()
-                .forRelation(Document.class, "people")
+        builder.insert(Document.class, "people")
                 .validate();
 
         // Unfortunately, even after an update, we have to reload the entity to merge again
         AssertStatementBuilder afterBuilder = assertQueriesAfterUpdate(docView);
-        fullFetch(afterBuilder);
-        if (version) {
+        if (isQueryStrategy()) {
+            afterBuilder.select(Person.class);
+            afterBuilder.select(Person.class);
+            if (isFullMode()) {
+                afterBuilder.delete(Document.class, "people")
+                        .insert(Document.class, "people")
+                        .insert(Document.class, "people");
+            }
+        } else {
+            fullFetch(afterBuilder);
+        }
+        if (version || isQueryStrategy() && isFullMode()) {
             afterBuilder.update(Document.class);
         }
         afterBuilder.validate();
@@ -143,22 +195,40 @@ public class EntityViewUpdateMutableEntityCollectionsTest extends AbstractEntity
         // Assert that the document and the people are loaded i.e. a full fetch
         // In addition, the new person is loaded because of the merge invocation
         // Finally a single relation insert is done and an update to the person is done
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        fullFetch(builder)
-                .select(Person.class);
-        if (version) {
+        if (isQueryStrategy()) {
+            builder.select(Person.class);
+            builder.select(Person.class);
+            if (isFullMode()) {
+                builder.delete(Document.class, "people")
+                        .insert(Document.class, "people");
+            }
+        } else {
+            fullFetch(builder)
+                    .select(Person.class);
+        }
+        if (version || isQueryStrategy() && isFullMode()) {
             builder.update(Document.class);
         }
         builder.update(Person.class)
-                .assertInsert()
-                .forRelation(Document.class, "people")
+                .insert(Document.class, "people")
                 .validate();
 
         // Unfortunately, even after an update, we have to reload the entity to merge again
         AssertStatementBuilder afterBuilder = assertQueriesAfterUpdate(docView);
-        fullFetch(afterBuilder);
-        if (version) {
+        if (isQueryStrategy()) {
+            afterBuilder.select(Person.class);
+            afterBuilder.select(Person.class);
+            if (isFullMode()) {
+                afterBuilder.delete(Document.class, "people")
+                        .insert(Document.class, "people")
+                        .insert(Document.class, "people");
+            }
+        } else {
+            fullFetch(afterBuilder);
+        }
+        if (version || isQueryStrategy() && isFullMode()) {
             afterBuilder.update(Document.class);
         }
         afterBuilder.validate();
@@ -175,22 +245,40 @@ public class EntityViewUpdateMutableEntityCollectionsTest extends AbstractEntity
         // Assert that the document and the people are loaded i.e. a full fetch
         // In addition, the new person is loaded because of the merge invocation
         // Finally a single relation insert is done and an update to the person is done
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        fullFetch(builder)
-                .select(Person.class);
-        if (version) {
+        if (isQueryStrategy()) {
+            builder.select(Person.class);
+            builder.select(Person.class);
+            if (isFullMode()) {
+                builder.delete(Document.class, "people")
+                        .insert(Document.class, "people");
+            }
+        } else {
+            fullFetch(builder)
+                    .select(Person.class);
+        }
+        if (version || isQueryStrategy() && isFullMode()) {
             builder.update(Document.class);
         }
         builder.update(Person.class)
-                .assertInsert()
-                .forRelation(Document.class, "people")
+                .insert(Document.class, "people")
                 .validate();
 
         // Unfortunately, even after an update, we have to reload the entity to merge again
         AssertStatementBuilder afterBuilder = assertQueriesAfterUpdate(docView);
-        fullFetch(afterBuilder);
-        if (version) {
+        if (isQueryStrategy()) {
+            afterBuilder.select(Person.class);
+            afterBuilder.select(Person.class);
+            if (isFullMode()) {
+                afterBuilder.delete(Document.class, "people")
+                        .insert(Document.class, "people")
+                        .insert(Document.class, "people");
+            }
+        } else {
+            fullFetch(afterBuilder);
+        }
+        if (version || isQueryStrategy() && isFullMode()) {
             afterBuilder.update(Document.class);
         }
         afterBuilder.validate();
@@ -206,10 +294,18 @@ public class EntityViewUpdateMutableEntityCollectionsTest extends AbstractEntity
         // Then
         // Assert that the document and the people are loaded i.e. a full fetch
         // Since only an existing person was update, only a single update is generated
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        fullFetch(builder);
-        if (version) {
+        if (isQueryStrategy()) {
+            builder.select(Person.class);
+            if (isFullMode()) {
+                builder.delete(Document.class, "people")
+                        .insert(Document.class, "people");
+            }
+        } else {
+            fullFetch(builder);
+        }
+        if (version || isQueryStrategy() && isFullMode()) {
             builder.update(Document.class);
         }
         builder.update(Person.class)
@@ -217,8 +313,16 @@ public class EntityViewUpdateMutableEntityCollectionsTest extends AbstractEntity
 
         // Unfortunately, even after an update, we have to reload the entity to merge again
         AssertStatementBuilder afterBuilder = assertQueriesAfterUpdate(docView);
-        fullFetch(afterBuilder);
-        if (version) {
+        if (isQueryStrategy()) {
+            afterBuilder.select(Person.class);
+            if (isFullMode()) {
+                afterBuilder.delete(Document.class, "people")
+                        .insert(Document.class, "people");
+            }
+        } else {
+            fullFetch(afterBuilder);
+        }
+        if (version || isQueryStrategy() && isFullMode()) {
             afterBuilder.update(Document.class);
         }
         afterBuilder.validate();
@@ -234,25 +338,39 @@ public class EntityViewUpdateMutableEntityCollectionsTest extends AbstractEntity
         // Then
         // Assert that the document and the people are loaded i.e. a full fetch
         // Finally a single relation insert is done for the null element if supported
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        fullFetch(builder);
-        if (version) {
+        if (isQueryStrategy()) {
+            builder.select(Person.class);
+            if (isFullMode()) {
+                builder.delete(Document.class, "people")
+                        .insert(Document.class, "people");
+            }
+        } else {
+            fullFetch(builder);
+        }
+        if (version || isQueryStrategy() && isFullMode()) {
             builder.update(Document.class);
         }
 
         if (supportsNullCollectionElements()) {
-            builder.assertInsert()
-                .forRelation(Document.class, "people")
-            .and();
+            builder.insert(Document.class, "people");
         }
 
         builder.validate();
 
         // Unfortunately, even after an update, we have to reload the entity to merge again
         AssertStatementBuilder afterBuilder = assertQueriesAfterUpdate(docView);
-        fullFetch(afterBuilder);
-        if (version) {
+        if (isQueryStrategy()) {
+            afterBuilder.select(Person.class);
+            if (isFullMode()) {
+                afterBuilder.delete(Document.class, "people")
+                        .insert(Document.class, "people");
+            }
+        } else {
+            fullFetch(afterBuilder);
+        }
+        if (version || isQueryStrategy() && isFullMode()) {
             afterBuilder.update(Document.class);
         }
         afterBuilder.validate();
@@ -270,27 +388,36 @@ public class EntityViewUpdateMutableEntityCollectionsTest extends AbstractEntity
         // Then
         // Assert that only the document is loaded
         // Since only an existing person was update, only a single update is generated
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        if (isFullMode()) {
-            fullFetch(builder);
+        if (isQueryStrategy()) {
+            if (version || isFullMode()) {
+                builder.update(Document.class);
+            }
         } else {
-            builder.select(Document.class);
-        }
-        if (version) {
-            builder.update(Document.class);
+            if (isFullMode()) {
+                fullFetch(builder);
+            } else {
+                builder.select(Document.class);
+            }
+            if (version) {
+                builder.update(Document.class);
+            }
         }
 
-        builder.assertDelete()
-                    .forRelation(Document.class, "people")
+        builder.delete(Document.class, "people")
                 .validate();
 
         // Since the collection is empty we don't have to care for collection element changes
         AssertStatementBuilder afterBuilder = assertQueriesAfterUpdate(docView);
 
         if (isFullMode()) {
-            fullFetch(afterBuilder);
-            if (version) {
+            if (isQueryStrategy()) {
+                afterBuilder.delete(Document.class, "people");
+            } else {
+                fullFetch(afterBuilder);
+            }
+            if (version || isQueryStrategy()) {
                 afterBuilder.update(Document.class);
             }
         }
@@ -309,29 +436,47 @@ public class EntityViewUpdateMutableEntityCollectionsTest extends AbstractEntity
         // Assert that the document and the people are loaded i.e. a full fetch
         // In addition, the new person is loaded because of the merge invocation
         // Finally the person is persisted and a single relation insert is done
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        fullFetch(builder)
-                .insert(Person.class);
-        if (version) {
+        if (isQueryStrategy()) {
+            builder.select(Person.class);
+            if (isFullMode()) {
+                builder.delete(Document.class, "people")
+                        .insert(Document.class, "people");
+            }
+        } else {
+            fullFetch(builder);
+        }
+        builder.insert(Person.class);
+
+        if (version || isQueryStrategy() && isFullMode()) {
             builder.update(Document.class);
         }
-        builder.assertInsert()
-                    .forRelation(Document.class, "people")
+        builder.insert(Document.class, "people")
                 .validate();
 
         // Unfortunately, even after an update, we have to reload the entity to merge again
         // This time we even have to re-load owned associations because they aren't lazy and could be dirty
         AssertStatementBuilder afterBuilder = assertQueriesAfterUpdate(docView);
-        fullFetch(afterBuilder)
-                .assertSelect()
+        if (isQueryStrategy()) {
+            afterBuilder.select(Person.class);
+            afterBuilder.select(Person.class);
+            if (isFullMode()) {
+                afterBuilder.delete(Document.class, "people")
+                        .insert(Document.class, "people")
+                        .insert(Document.class, "people");
+            }
+        } else {
+            fullFetch(afterBuilder);
+        }
+        afterBuilder.assertSelect()
                     .fetching(Person.class, "favoriteDocuments")
                     .fetching(Document.class)
                 .and()
                 .assertSelect()
                     .fetching(Person.class, "localized")
                 .and();
-        if (version) {
+        if (version || isQueryStrategy() && isFullMode()) {
             afterBuilder.update(Document.class);
         }
         if (doesJpaMergeOfRecentlyPersistedEntityForceUpdate()) {
@@ -348,12 +493,6 @@ public class EntityViewUpdateMutableEntityCollectionsTest extends AbstractEntity
             assertEquals("newPerson", nextPerson.getName());
             assertEquals("pers1", iter.next().getName());
         }
-    }
-
-    @Override
-    protected boolean isQueryStrategy() {
-        // Collection changes always need to be applied on the entity model, can't do that via a query
-        return false;
     }
 
     @Override

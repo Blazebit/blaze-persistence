@@ -261,7 +261,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 ConstrainedTupleElementMapper.addMappers(mappingList, parameterMappingList, tupleTransformatorFactory, builders);
                 // TODO: if we want to support inheritance with updatable entity views, we should collect mutable basic types here too
             } else {
-                AbstractMethodAttribute<? super T, ?> attribute = constrainedAttribute.getAttribute();
+                AbstractMethodAttribute<? super T, ?> attribute = constrainedAttribute.getSubAttribute(managedViewType);
 
                 if (attribute instanceof SingularAttribute<?, ?>) {
                     SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) attribute;

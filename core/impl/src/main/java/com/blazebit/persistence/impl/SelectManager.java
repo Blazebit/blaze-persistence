@@ -260,7 +260,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         groupByExpressionGatheringVisitor.clear();
     }
 
-    void buildSelect(StringBuilder sb, boolean isInsertInto) {
+    void buildSelect(StringBuilder sb, boolean isInsertInto, boolean externalRepresentation) {
         sb.append("SELECT ");
 
         if (distinct) {
@@ -271,7 +271,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         int size = selectInfos.size();
         if (size == 0) {
             JoinNode rootNode = joinManager.getRootNodeOrFail("Empty select not allowed when having multiple roots!");
-            rootNode.appendAlias(sb);
+            rootNode.appendAlias(sb, externalRepresentation);
         } else {
             // we must not replace select alias since we would loose the original expressions
             queryGenerator.setClauseType(ClauseType.SELECT);
@@ -395,18 +395,30 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
     }
 
     void select(Expression expr, String selectAlias) {
+        select(expr, selectAlias, -1);
+    }
+
+    void select(Expression expr, String selectAlias, int index) {
         verifyBuilderEnded();
         clearDefaultSelects();
-        selectInternal(expr, selectAlias);
+        selectInternal(expr, selectAlias, index);
     }
 
     private void selectInternal(Expression expr, String selectAlias) {
+        selectInternal(expr, selectAlias, -1);
+    }
+
+    private void selectInternal(Expression expr, String selectAlias, int index) {
         SelectInfo selectInfo = new SelectInfo(expr, selectAlias, aliasManager);
         if (selectAlias != null) {
             aliasManager.registerAliasInfo(selectInfo);
             selectAliasToPositionMap.put(selectAlias, selectAliasToPositionMap.size());
         }
-        selectInfos.add(selectInfo);
+        if (index == -1) {
+            selectInfos.add(selectInfo);
+        } else {
+            selectInfos.add(index, selectInfo);
+        }
         hasSizeSelect = hasSizeSelect || ExpressionUtils.containsSizeExpression(selectInfo.getExpression());
 
         registerParameterExpressions(expr);

@@ -75,7 +75,7 @@ public class EntityViewUpdateNestedCreatableSubviewTest extends AbstractEntityVi
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
@@ -109,7 +109,7 @@ public class EntityViewUpdateNestedCreatableSubviewTest extends AbstractEntityVi
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             builder.update(Person.class);
@@ -143,7 +143,7 @@ public class EntityViewUpdateNestedCreatableSubviewTest extends AbstractEntityVi
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             builder.update(Person.class);
@@ -176,19 +176,16 @@ public class EntityViewUpdateNestedCreatableSubviewTest extends AbstractEntityVi
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
-                builder.update(Person.class)
+                builder.update(Person.class) // Update the friend reference
                     .update(Document.class);
             }
         } else {
             if (isFullMode()) {
                 fullFetch(builder);
-                if (version) {
-                    builder.update(Document.class);
-                }
             }
         }
 
@@ -209,7 +206,7 @@ public class EntityViewUpdateNestedCreatableSubviewTest extends AbstractEntityVi
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             builder.update(Person.class);
@@ -243,7 +240,7 @@ public class EntityViewUpdateNestedCreatableSubviewTest extends AbstractEntityVi
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
 

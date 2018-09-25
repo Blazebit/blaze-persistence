@@ -49,6 +49,7 @@ public class PaginationEmbeddedIdTest extends AbstractCoreTest {
         return new Class<?>[]{
                 IntIdEntity.class,
                 EmbeddableTestEntity.class,
+                EmbeddableTestEntitySub.class,
                 EmbeddableTestEntityContainer.class
         };
     }

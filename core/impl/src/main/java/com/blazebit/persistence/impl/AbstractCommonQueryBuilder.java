@@ -719,7 +719,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new IllegalArgumentException("Only identifiable types allowed!");
         }
 
-        joinManager.addRootValues(valuesClazz, valueClass, alias, valueCount, treatFunction, castedParameter, true);
+        joinManager.addRootValues(valuesClazz, valueClass, alias, valueCount, treatFunction, castedParameter, true, null);
         fromClassExplicitlySet = true;
 
         return (BuilderType) this;
@@ -735,22 +735,35 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         }
 
         Class<?> valuesClazz = valueClass;
+        String valueClazzAttributeName = null;
         ManagedType<?> type = mainQuery.metamodel.getManagedType(valueClass);
         String typeName = null;
         String castedParameter = null;
         if (type == null) {
             typeName = cbf.getNamedTypes().get(valueClass);
             if (typeName == null) {
-                throw new IllegalArgumentException("Unsupported non-managed type for VALUES clause: " + valueClass.getName());
+                throw new IllegalArgumentException("Unsupported non-managed type for VALUES clause: " + valueClass.getName() + ". You can register the type via com.blazebit.persistence.spi.CriteriaBuilderConfiguration.registerNamedType. Please report this so that we can add the type definition as well!");
             }
 
             String sqlType = mainQuery.dbmsDialect.getSqlType(valueClass);
             castedParameter = mainQuery.dbmsDialect.cast("?", sqlType);
             valuesClazz = ValuesEntity.class;
         } else if (!(type instanceof EntityType)) {
-            throw new IllegalArgumentException("Unsupported use of embeddable type [" + valueClass + "] for values clause! Use the entity type and fromIdentifiableValues instead or introduce a CTE entity containing just the embeddable to be able to query it!");
+            ExtendedManagedType<?> extendedManagedType = mainQuery.metamodel.getManagedType(ExtendedManagedType.class, valueClass);
+            Map.Entry<? extends EntityType<?>, String> entry = extendedManagedType.getEmbeddableSingularOwner();
+            boolean singular = true;
+            if (entry == null) {
+//                singular = false;
+//                entry = extendedManagedType.getEmbeddablePluralOwner();
+                throw new IllegalArgumentException("Unsupported plural-only use of embeddable type [" + valueClass + "] for values clause! Please introduce a CTE entity containing just the embeddable to be able to query it!");
+            }
+            if (entry == null) {
+                throw new IllegalArgumentException("Unsupported use of embeddable type [" + valueClass + "] for values clause! Use the entity type and fromIdentifiableValues instead or introduce a CTE entity containing just the embeddable to be able to query it!");
+            }
+            valuesClazz = entry.getKey().getJavaType();
+            valueClazzAttributeName = entry.getValue();
         }
-        joinManager.addRootValues(valuesClazz, valueClass, alias, valueCount, typeName, castedParameter, false);
+        joinManager.addRootValues(valuesClazz, valueClass, alias, valueCount, typeName, castedParameter, false, valueClazzAttributeName);
         fromClassExplicitlySet = true;
 
         return (BuilderType) this;
@@ -1833,7 +1846,8 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         String dummyTable = mainQuery.dbmsDialect.getDummyTable();
 
         for (JoinNode node : joinManager.getEntityFunctionNodes()) {
-            Class<?> clazz = node.getJavaType();
+            Class<?> clazz = node.getInternalEntityType().getJavaType();
+            String valueClazzAttributeName = node.getValueClazzAttributeName();
             int valueCount = node.getValueCount();
             boolean identifiableReference = node.getValuesIdName() != null;
             String rootAlias = node.getAlias();
@@ -1843,7 +1857,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             // We construct an example query representing the values clause with a SELECT clause that selects the fields in the right order which we need to construct SQL
             // that uses proper aliases and filters null values which are there in the first place to pad up parameters in case we don't reach the desired value count
             StringBuilder valuesSb = new StringBuilder(20 + valueCount * attributes.length * 3);
-            Query valuesExampleQuery = getValuesExampleQuery(clazz, valueCount, identifiableReference, rootAlias, castedParameter, attributes, valuesSb, strategy, dummyTable, node);
+            Query valuesExampleQuery = getValuesExampleQuery(clazz, valueCount, identifiableReference, valueClazzAttributeName, rootAlias, castedParameter, attributes, valuesSb, strategy, dummyTable, node);
 
             String exampleQuerySql = mainQuery.cbf.getExtendedQuerySupport().getSql(mainQuery.em, valuesExampleQuery);
             String exampleQuerySqlAlias = mainQuery.cbf.getExtendedQuerySupport().getSqlAlias(mainQuery.em, valuesExampleQuery, "e");
@@ -1949,7 +1963,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return sb.toString();
     }
 
-    private Query getValuesExampleQuery(Class<?> clazz, int valueCount, boolean identifiableReference, String prefix, String castedParameter, String[] attributes, StringBuilder valuesSb, ValuesStrategy strategy, String dummyTable, JoinNode valuesNode) {
+    private Query getValuesExampleQuery(Class<?> clazz, int valueCount, boolean identifiableReference, String valueClazzAttributeName, String prefix, String castedParameter, String[] attributes, StringBuilder valuesSb, ValuesStrategy strategy, String dummyTable, JoinNode valuesNode) {
         String[] attributeParameter = new String[attributes.length];
         // This size estimation roughly assumes a maximum attribute name length of 15
         StringBuilder sb = new StringBuilder(50 + valueCount * prefix.length() * attributes.length * 50);
@@ -1967,10 +1981,15 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             sb.append(attributes[0]);
             sb.append(',');
         } else {
-            Map<String, ExtendedAttribute> mapping =  mainQuery.metamodel.getManagedType(ExtendedManagedType.class, clazz).getAttributes();
+            Map<String, ExtendedAttribute> mapping =  mainQuery.metamodel.getManagedType(ExtendedManagedType.class, clazz).getOwnedAttributes();
             StringBuilder paramBuilder = new StringBuilder();
             for (int i = 0; i < attributes.length; i++) {
-                ExtendedAttribute entry = mapping.get(attributes[i]);
+                ExtendedAttribute entry;
+                if (valueClazzAttributeName == null) {
+                    entry = mapping.get(attributes[i]);
+                } else {
+                    entry = mapping.get(valueClazzAttributeName + "." + attributes[i]);
+                }
                 Attribute attribute = entry.getAttribute();
                 String[] columnTypes = entry.getColumnTypes();
                 attributeParameter[i] = getCastedParameters(paramBuilder, mainQuery.dbmsDialect, columnTypes);
@@ -1982,12 +2001,18 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                     ManagedType<?> managedAttributeType = mainQuery.metamodel.managedType(entry.getElementClass());
                     for (Attribute<?, ?> attributeTypeIdAttribute : JpaMetamodelUtils.getIdAttributes((IdentifiableType<?>) managedAttributeType)) {
                         sb.append("e.");
+                        if (valueClazzAttributeName != null) {
+                            sb.append(valueClazzAttributeName).append('.');
+                        }
                         sb.append(attributes[i]);
                         sb.append('.');
                         sb.append(attributeTypeIdAttribute.getName());
                     }
                 } else {
                     sb.append("e.");
+                    if (valueClazzAttributeName != null) {
+                        sb.append(valueClazzAttributeName).append('.');
+                    }
                     sb.append(attributes[i]);
                 }
 
@@ -1999,7 +2024,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         sb.append("FROM ");
         sb.append(clazz.getName());
         sb.append(" e WHERE ");
-        joinManager.renderValuesClausePredicate(sb, valuesNode, "e");
+        joinManager.renderValuesClausePredicate(sb, valuesNode, "e", false);
 
         if (strategy == ValuesStrategy.SELECT_VALUES || strategy == ValuesStrategy.VALUES) {
             valuesSb.append("(VALUES ");
@@ -2330,10 +2355,14 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         boolean originalExternalRepresentation = queryGenerator.isExternalRepresentation();
         queryGenerator.setExternalRepresentation(externalRepresentation);
         try {
-            appendSelectClause(sbSelectFrom);
+            appendSelectClause(sbSelectFrom, externalRepresentation);
             List<String> whereClauseEndConjuncts = this instanceof Subquery ? new ArrayList<String>() : null;
-            List<String> whereClauseConjuncts = appendFromClause(sbSelectFrom, whereClauseEndConjuncts, externalRepresentation);
-            appendWhereClause(sbSelectFrom, whereClauseConjuncts, whereClauseEndConjuncts);
+
+            List<String> whereClauseConjuncts = new ArrayList<>();
+            List<String> optionalWhereClauseConjuncts = new ArrayList<>();
+            joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, externalRepresentation, false, optionalWhereClauseConjuncts, whereClauseConjuncts, whereClauseEndConjuncts, explicitVersionEntities, nodesToFetch, Collections.EMPTY_SET);
+
+            appendWhereClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, whereClauseEndConjuncts);
             appendGroupByClause(sbSelectFrom);
             appendOrderByClause(sbSelectFrom);
             if (externalRepresentation && !isMainQuery) {
@@ -2360,35 +2389,29 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         buildBaseQueryString(sbSelectFrom, true);
     }
 
-    protected void appendSelectClause(StringBuilder sbSelectFrom) {
-        selectManager.buildSelect(sbSelectFrom, false);
-    }
-
-    protected List<String> appendFromClause(StringBuilder sbSelectFrom, List<String> whereClauseEndConjuncts, boolean externalRepresentation) {
-        List<String> whereClauseConjuncts = new ArrayList<>();
-        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, externalRepresentation, false, whereClauseConjuncts, whereClauseEndConjuncts, explicitVersionEntities, nodesToFetch, Collections.EMPTY_SET);
-        return whereClauseConjuncts;
+    protected void appendSelectClause(StringBuilder sbSelectFrom, boolean externalRepresentation) {
+        selectManager.buildSelect(sbSelectFrom, false, externalRepresentation);
     }
 
     protected void appendWhereClause(StringBuilder sbSelectFrom, boolean externalRepresentation) {
         boolean originalExternalRepresentation = queryGenerator.isExternalRepresentation();
         queryGenerator.setExternalRepresentation(externalRepresentation);
         try {
-            appendWhereClause(sbSelectFrom, Collections.<String>emptyList(), Collections.<String>emptyList());
+            appendWhereClause(sbSelectFrom, Collections.<String>emptyList(), Collections.<String>emptyList(), Collections.<String>emptyList());
         } finally {
             queryGenerator.setExternalRepresentation(originalExternalRepresentation);
         }
     }
 
-    protected void appendWhereClause(StringBuilder sbSelectFrom, List<String> whereClauseConjuncts, List<String> whereClauseEndConjuncts) {
+    protected void appendWhereClause(StringBuilder sbSelectFrom, List<String> whereClauseConjuncts, List<String> optionalWhereClauseConjuncts, List<String> whereClauseEndConjuncts) {
         KeysetLink keysetLink = keysetManager.getKeysetLink();
         if (keysetLink == null || keysetLink.getKeysetMode() == KeysetMode.NONE) {
-            whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, whereClauseEndConjuncts);
+            whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, whereClauseEndConjuncts);
         } else {
             sbSelectFrom.append(" WHERE ");
 
             if (whereManager.hasPredicates()) {
-                whereManager.buildClausePredicate(sbSelectFrom, whereClauseConjuncts, whereClauseEndConjuncts);
+                whereManager.buildClausePredicate(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, whereClauseEndConjuncts);
                 sbSelectFrom.append(" AND ");
             }
 

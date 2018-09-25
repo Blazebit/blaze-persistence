@@ -157,6 +157,35 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
         }
     }
 
+    protected String correlationPath(String correlationPath, Class<?> entityClass, String alias, String predicate) {
+        return correlationPath(null, correlationPath, entityClass, alias, predicate, "");
+    }
+
+    protected String correlationPath(String correlationPath, Class<?> entityClass, String alias, String predicate, String normalSuffix) {
+        return correlationPath(null, correlationPath, entityClass, alias, predicate, normalSuffix);
+    }
+
+    protected String correlationPath(Class<?> ownerEntity, String correlationPath, String alias, String predicate) {
+        return correlationPath(ownerEntity, correlationPath, null, alias, predicate, "");
+    }
+
+    protected String correlationPath(Class<?> ownerEntity, String correlationPath, String alias, String predicate, String normalSuffix) {
+        return correlationPath(ownerEntity, correlationPath, null, alias, predicate, normalSuffix);
+    }
+
+    protected String correlationPath(Class<?> ownerEntity, String correlationPath, Class<?> entityClass, String alias, String predicate, String normalSuffix) {
+        if (jpaProvider.needsCorrelationPredicateWhenCorrelatingWithWhereClause()) {
+            String attribute = correlationPath.substring(correlationPath.indexOf('.') + 1);
+            if (ownerEntity != null) {
+                return ownerEntity.getSimpleName() + " _synthetic_" + alias + " JOIN _synthetic_" + alias + "." + attribute + " " + alias + " WHERE _synthetic_" + alias + "." + predicate;
+            } else {
+                return entityClass.getSimpleName() + " " + alias + " WHERE " + alias + "." + predicate;
+            }
+        } else {
+            return correlationPath + " " + alias + normalSuffix;
+        }
+    }
+
     protected String countPaginated(String string, boolean distinct) {
         StringBuilder sb = new StringBuilder(20 + string.length());
         sb.append(function("COUNT_TUPLE", "'DISTINCT'", string));

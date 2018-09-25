@@ -76,6 +76,9 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
     protected ViewMapping typeMapping;
     protected ViewMapping keyViewMapping;
     protected ViewMapping elementViewMapping;
+    protected Map<EmbeddableOwner, Type<?>> embeddableTypeMap;
+    protected Map<EmbeddableOwner, Type<?>> embeddableKeyTypeMap;
+    protected Map<EmbeddableOwner, Type<?>> embeddableElementTypeMap;
 
     protected InheritanceViewMapping inheritanceSubtypeMappings;
     protected InheritanceViewMapping keyInheritanceSubtypeMappings;
@@ -83,8 +86,12 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
     protected Map<ManagedViewTypeImplementor<?>, String> inheritanceSubtypes;
     protected Map<ManagedViewTypeImplementor<?>, String> keyInheritanceSubtypes;
     protected Map<ManagedViewTypeImplementor<?>, String> elementInheritanceSubtypes;
+    protected Map<EmbeddableOwner, Map<ManagedViewTypeImplementor<?>, String>> embeddableInheritanceSubtypesMap;
+    protected Map<EmbeddableOwner, Map<ManagedViewTypeImplementor<?>, String>> embeddableKeyInheritanceSubtypesMap;
+    protected Map<EmbeddableOwner, Map<ManagedViewTypeImplementor<?>, String>> embeddableElementInheritanceSubtypesMap;
 
     protected AbstractAttribute<?, ?> attribute;
+    protected Map<EmbeddableOwner, AbstractAttribute<?, ?>> embeddableAttributeMap;
 
     public AttributeMapping(ViewMapping viewMapping, Annotation mapping, MetamodelBootContext context, boolean isCollection, Class<?> declaredTypeClass, Class<?> declaredKeyTypeClass, Class<?> declaredElementTypeClass,
                             java.lang.reflect.Type declaredType, java.lang.reflect.Type declaredKeyType, java.lang.reflect.Type declaredElementType, Map<Class<?>, String> inheritanceSubtypeClassMappings, Map<Class<?>, String> keyInheritanceSubtypeClassMappings, Map<Class<?>, String> elementInheritanceSubtypeClassMappings) {
@@ -188,7 +195,7 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
         return containerBehavior == ContainerBehavior.SORTED;
     }
 
-    public abstract String determineMappedBy(ManagedType<?> managedType, String mapping, MetamodelBuildingContext context);
+    public abstract String determineMappedBy(ManagedType<?> managedType, String mapping, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping);
 
     public abstract Map<String, String> determineWritableMappedByMappings(ManagedType<?> managedType, String mappedBy, MetamodelBuildingContext context);
 
@@ -231,8 +238,8 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
         return declaredElementTypeClass;
     }
 
-    public Class<?> getJavaType(MetamodelBuildingContext context) {
-        Type<?> t = getType(context);
+    public Class<?> getJavaType(MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
+        Type<?> t = getType(context, embeddableMapping);
         if (t == null) {
             return null;
         }
@@ -279,59 +286,155 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
         return baseTypes;
     }
 
-    public Type<?> getType(MetamodelBuildingContext context) {
-        if (type != null) {
-            return type;
+    public Type<?> getType(MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
+        if (embeddableMapping == null) {
+            if (type != null) {
+                return type;
+            }
+            if (typeMapping == null) {
+                return type = context.getBasicType(viewMapping, declaredType, declaredTypeClass, getBaseTypes(getPossibleTargetTypes(context)));
+            }
+            return type = typeMapping.getManagedViewType(context, embeddableMapping);
+        } else {
+            if (embeddableTypeMap == null) {
+                embeddableTypeMap = new HashMap<>(1);
+            }
+            Type<?> t = embeddableTypeMap.get(embeddableMapping);
+            if (t != null) {
+                return t;
+            }
+            if (typeMapping == null) {
+                t = context.getBasicType(viewMapping, declaredType, declaredTypeClass, getBaseTypes(getPossibleTargetTypes(context)));
+            } else {
+                t = typeMapping.getManagedViewType(context, embeddableMapping);
+            }
+
+            embeddableTypeMap.put(embeddableMapping, t);
+            return t;
         }
-        if (typeMapping == null) {
-            return type = context.getBasicType(viewMapping, declaredType, declaredTypeClass, getBaseTypes(getPossibleTargetTypes(context)));
-        }
-        return type = typeMapping.getManagedViewType(context);
     }
 
-    public Type<?> getKeyType(MetamodelBuildingContext context) {
-        if (keyType != null) {
-            return keyType;
+    public Type<?> getKeyType(MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
+        if (embeddableMapping == null) {
+            if (keyType != null) {
+                return keyType;
+            }
+            if (keyViewMapping == null) {
+                return keyType = context.getBasicType(viewMapping, declaredKeyType, declaredKeyTypeClass, getKeyTypes(getPossibleTargetTypes(context)));
+            }
+            return keyType = keyViewMapping.getManagedViewType(context, embeddableMapping);
+        } else {
+            if (embeddableKeyTypeMap == null) {
+                embeddableKeyTypeMap = new HashMap<>(1);
+            }
+            Type<?> t = embeddableKeyTypeMap.get(embeddableMapping);
+            if (t != null) {
+                return t;
+            }
+            if (keyViewMapping == null) {
+                t = context.getBasicType(viewMapping, declaredKeyType, declaredKeyTypeClass, getKeyTypes(getPossibleTargetTypes(context)));
+            } else {
+                t = keyViewMapping.getManagedViewType(context, embeddableMapping);
+            }
+
+            embeddableKeyTypeMap.put(embeddableMapping, t);
+            return t;
         }
-        if (keyViewMapping == null) {
-            return keyType = context.getBasicType(viewMapping, declaredKeyType, declaredKeyTypeClass, getKeyTypes(getPossibleTargetTypes(context)));
-        }
-        return keyType = keyViewMapping.getManagedViewType(context);
     }
 
-    public Type<?> getElementType(MetamodelBuildingContext context) {
-        if (elementType != null) {
-            return elementType;
+    public Type<?> getElementType(MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
+        if (embeddableMapping == null) {
+            if (elementType != null) {
+                return elementType;
+            }
+            if (elementViewMapping == null) {
+                return elementType = context.getBasicType(viewMapping, declaredElementType, declaredElementTypeClass, getElementTypes(getPossibleTargetTypes(context)));
+            }
+            return elementType = elementViewMapping.getManagedViewType(context, embeddableMapping);
+        } else {
+            if (embeddableElementTypeMap == null) {
+                embeddableElementTypeMap = new HashMap<>(1);
+            }
+            Type<?> t = embeddableElementTypeMap.get(embeddableMapping);
+            if (t != null) {
+                return t;
+            }
+            if (elementViewMapping == null) {
+                t = context.getBasicType(viewMapping, declaredElementType, declaredElementTypeClass, getElementTypes(getPossibleTargetTypes(context)));
+            } else {
+                t = elementViewMapping.getManagedViewType(context, embeddableMapping);
+            }
+
+            embeddableElementTypeMap.put(embeddableMapping, t);
+            return t;
         }
-        if (elementViewMapping == null) {
-            return elementType = context.getBasicType(viewMapping, declaredElementType, declaredElementTypeClass, getElementTypes(getPossibleTargetTypes(context)));
-        }
-        return elementType = elementViewMapping.getManagedViewType(context);
     }
 
-    public Map<ManagedViewTypeImplementor<?>, String> getInheritanceSubtypes(MetamodelBuildingContext context) {
-        if (inheritanceSubtypes != null) {
-            return inheritanceSubtypes;
+    public Map<ManagedViewTypeImplementor<?>, String> getInheritanceSubtypes(MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
+        if (embeddableMapping == null) {
+            if (inheritanceSubtypes != null) {
+                return inheritanceSubtypes;
+            }
+            return inheritanceSubtypes = initializeInheritanceSubtypes(inheritanceSubtypeMappings, typeMapping, context, embeddableMapping);
+        } else {
+            if (embeddableInheritanceSubtypesMap == null) {
+                embeddableInheritanceSubtypesMap = new HashMap<>(1);
+            }
+            Map<ManagedViewTypeImplementor<?>, String> subtypes = embeddableInheritanceSubtypesMap.get(embeddableMapping);
+            if (subtypes != null) {
+                return subtypes;
+            }
+
+            subtypes = initializeInheritanceSubtypes(inheritanceSubtypeMappings, typeMapping, context, embeddableMapping);
+            embeddableInheritanceSubtypesMap.put(embeddableMapping, subtypes);
+            return subtypes;
         }
-        return inheritanceSubtypes = initializeInheritanceSubtypes(inheritanceSubtypeMappings, typeMapping, context);
     }
 
-    public Map<ManagedViewTypeImplementor<?>, String> getKeyInheritanceSubtypes(MetamodelBuildingContext context) {
-        if (keyInheritanceSubtypes != null) {
-            return keyInheritanceSubtypes;
+    public Map<ManagedViewTypeImplementor<?>, String> getKeyInheritanceSubtypes(MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
+        if (embeddableMapping == null) {
+            if (keyInheritanceSubtypes != null) {
+                return keyInheritanceSubtypes;
+            }
+            return keyInheritanceSubtypes = initializeInheritanceSubtypes(keyInheritanceSubtypeMappings, keyViewMapping, context, embeddableMapping);
+        } else {
+            if (embeddableKeyInheritanceSubtypesMap == null) {
+                embeddableKeyInheritanceSubtypesMap = new HashMap<>(1);
+            }
+            Map<ManagedViewTypeImplementor<?>, String> subtypes = embeddableKeyInheritanceSubtypesMap.get(embeddableMapping);
+            if (subtypes != null) {
+                return subtypes;
+            }
+
+            subtypes = initializeInheritanceSubtypes(keyInheritanceSubtypeMappings, keyViewMapping, context, embeddableMapping);
+            embeddableKeyInheritanceSubtypesMap.put(embeddableMapping, subtypes);
+            return subtypes;
         }
-        return keyInheritanceSubtypes = initializeInheritanceSubtypes(keyInheritanceSubtypeMappings, keyViewMapping, context);
     }
 
-    public Map<ManagedViewTypeImplementor<?>, String> getElementInheritanceSubtypes(MetamodelBuildingContext context) {
-        if (elementInheritanceSubtypes != null) {
-            return elementInheritanceSubtypes;
+    public Map<ManagedViewTypeImplementor<?>, String> getElementInheritanceSubtypes(MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
+        if (embeddableMapping == null) {
+            if (elementInheritanceSubtypes != null) {
+                return elementInheritanceSubtypes;
+            }
+            return elementInheritanceSubtypes = initializeInheritanceSubtypes(elementInheritanceSubtypeMappings, elementViewMapping, context, embeddableMapping);
+        } else {
+            if (embeddableElementInheritanceSubtypesMap == null) {
+                embeddableElementInheritanceSubtypesMap = new HashMap<>(1);
+            }
+            Map<ManagedViewTypeImplementor<?>, String> subtypes = embeddableElementInheritanceSubtypesMap.get(embeddableMapping);
+            if (subtypes != null) {
+                return subtypes;
+            }
+
+            subtypes = initializeInheritanceSubtypes(elementInheritanceSubtypeMappings, elementViewMapping, context, embeddableMapping);
+            embeddableElementInheritanceSubtypesMap.put(embeddableMapping, subtypes);
+            return subtypes;
         }
-        return elementInheritanceSubtypes = initializeInheritanceSubtypes(elementInheritanceSubtypeMappings, elementViewMapping, context);
     }
 
     @SuppressWarnings("unchecked")
-    private Map<ManagedViewTypeImplementor<?>, String> initializeInheritanceSubtypes(InheritanceViewMapping inheritanceSubtypeMappings, ViewMapping viewMapping, MetamodelBuildingContext context) {
+    private Map<ManagedViewTypeImplementor<?>, String> initializeInheritanceSubtypes(InheritanceViewMapping inheritanceSubtypeMappings, ViewMapping viewMapping, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
         if (viewMapping == null || inheritanceSubtypeMappings == null || inheritanceSubtypeMappings.getInheritanceSubtypeMappings().isEmpty()) {
             return Collections.emptyMap();
         }
@@ -345,10 +448,10 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
                     mapping = "";
                 }
             }
-            map.put(mappingEntry.getKey().getManagedViewType(context), mapping);
+            map.put(mappingEntry.getKey().getManagedViewType(context, embeddableMapping), mapping);
         }
-        if (map.equals(viewMapping.getManagedViewType(context).getInheritanceSubtypeConfiguration())) {
-            return (Map<ManagedViewTypeImplementor<?>, String>) (Map<?, ?>) viewMapping.getManagedViewType(context).getInheritanceSubtypeConfiguration();
+        if (map.equals(viewMapping.getManagedViewType(context, embeddableMapping).getInheritanceSubtypeConfiguration())) {
+            return (Map<ManagedViewTypeImplementor<?>, String>) (Map<?, ?>) viewMapping.getManagedViewType(context, embeddableMapping).getInheritanceSubtypeConfiguration();
         } else {
             return Collections.unmodifiableMap(map);
         }

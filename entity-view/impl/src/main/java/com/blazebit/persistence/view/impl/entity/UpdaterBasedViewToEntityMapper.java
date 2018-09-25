@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.entity;
 
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
+import com.blazebit.persistence.view.impl.update.EntityViewUpdaterImpl;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.update.EntityViewUpdater;
@@ -35,8 +36,8 @@ import java.util.Set;
  */
 public class UpdaterBasedViewToEntityMapper extends AbstractViewToEntityMapper {
 
-    public UpdaterBasedViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, Class<?> viewTypeClass, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes, EntityLoader entityLoader, AttributeAccessor viewIdAccessor, boolean persistAllowed) {
-        super(attributeLocation, evm, viewTypeClass, persistAllowedSubtypes, updateAllowedSubtypes, entityLoader, viewIdAccessor, persistAllowed);
+    public UpdaterBasedViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, Class<?> viewTypeClass, Set<Type<?>> readOnlyAllowedSubtypes, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes, EntityLoader entityLoader, AttributeAccessor viewIdAccessor, boolean persistAllowed, EntityViewUpdaterImpl owner, String ownerMapping) {
+        super(attributeLocation, evm, viewTypeClass, readOnlyAllowedSubtypes, persistAllowedSubtypes, updateAllowedSubtypes, entityLoader, viewIdAccessor, persistAllowed, owner, ownerMapping);
     }
 
     @Override
@@ -81,7 +82,7 @@ public class UpdaterBasedViewToEntityMapper extends AbstractViewToEntityMapper {
             }
             EntityViewUpdater updater = persistUpdater.get(viewTypeClass);
             if (updater == null) {
-                throw new IllegalStateException("Couldn't persist object for attribute '" + attributeLocation + "'. Expected subviews of the types " + persistUpdater.keySet() + " but got: " + current);
+                throw new IllegalStateException("Couldn't persist object for attribute '" + attributeLocation + "'. Expected subviews of the types " + names(persistUpdater.keySet()) + " but got: " + current);
             }
 
             return updater.getNestedDirtyFlusher(context, current, fullFlusher);
@@ -89,10 +90,10 @@ public class UpdaterBasedViewToEntityMapper extends AbstractViewToEntityMapper {
 
         EntityViewUpdater updater = updateUpdater.get(viewTypeClass);
         if (updater == null) {
-            if (this.viewTypeClass == viewTypeClass) {
+            if (viewTypeClasses.contains(viewTypeClass)) {
                 return null;
             }
-            throw new IllegalStateException("Couldn't update object for attribute '" + attributeLocation + "'. Expected subviews of the types " + updateUpdater.keySet() + " but got: " + current);
+            throw new IllegalStateException("Couldn't update object for attribute '" + attributeLocation + "'. Expected subviews of the types " + names(updateUpdater.keySet()) + " but got: " + current);
         }
 
         return updater.getNestedDirtyFlusher(context, current, fullFlusher);
@@ -100,6 +101,16 @@ public class UpdaterBasedViewToEntityMapper extends AbstractViewToEntityMapper {
 
     @Override
     public Object applyToEntity(UpdateContext context, Object entity, Object view) {
+        Object object = flushToEntity(context, entity, view);
+        if (object == null) {
+            return loadEntity(context, view);
+        }
+
+        return object;
+    }
+
+    @Override
+    public Object flushToEntity(UpdateContext context, Object entity, Object view) {
         if (view == null) {
             return null;
         }
@@ -116,18 +127,33 @@ public class UpdaterBasedViewToEntityMapper extends AbstractViewToEntityMapper {
         Class<?> viewTypeClass = getViewTypeClass(view);
         EntityViewUpdater updater = updateUpdater.get(viewTypeClass);
         if (updater == null) {
-            if (this.viewTypeClass == viewTypeClass) {
-                return entityLoader.toEntity(context, id);
+            if (viewTypeClasses.contains(viewTypeClass)) {
+                return null;
             }
             if (persistAllowed && persistUpdater.containsKey(viewTypeClass) && !((EntityViewProxy) view).$$_isNew()) {
                 // If that create view object was previously persisted, we won't persist it again, nor update, but just load it
-                return entityLoader.toEntity(context, id);
+                return null;
             } else {
-                throw new IllegalStateException("Couldn't update object for attribute '" + attributeLocation + "'. Expected subviews of the types " + persistUpdater.keySet() + " but got: " + view);
+                throw new IllegalStateException("Couldn't update object for attribute '" + attributeLocation + "'. Expected subviews of the types " + names(persistUpdater.keySet()) + " but got: " + view);
             }
         }
 
-        updater.executeUpdate(context, (MutableStateTrackable) view);
+        if (updater.executeUpdate(context, (MutableStateTrackable) view)) {
+            return entityLoader.toEntity(context, id);
+        }
+
+        return null;
+    }
+
+    @Override
+    public Object loadEntity(UpdateContext context, Object view) {
+        if (view == null) {
+            return null;
+        }
+        Object id = null;
+        if (viewIdAccessor != null) {
+            id = viewIdAccessor.getValue(view);
+        }
         return entityLoader.toEntity(context, id);
     }
 

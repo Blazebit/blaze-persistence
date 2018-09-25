@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl.metamodel.attribute;
 import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
 import com.blazebit.persistence.view.impl.collection.MapInstantiator;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodPluralAttribute;
+import com.blazebit.persistence.view.impl.metamodel.EmbeddableOwner;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 import com.blazebit.persistence.view.impl.metamodel.MethodAttributeMapping;
@@ -40,10 +41,10 @@ public abstract class AbstractMethodMapAttribute<X, K, V> extends AbstractMethod
     private final MapInstantiator mapInstantiator;
 
     @SuppressWarnings("unchecked")
-    public AbstractMethodMapAttribute(ManagedViewTypeImplementor<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int attributeIndex, int dirtyStateIndex) {
-        super(viewType, mapping, context, attributeIndex, dirtyStateIndex);
-        this.keyType = (Type<K>) mapping.getKeyType(context);
-        this.keyInheritanceSubtypes = (Map<ManagedViewType<? extends K>, String>) (Map<?, ?>) mapping.getKeyInheritanceSubtypes(context);
+    public AbstractMethodMapAttribute(ManagedViewTypeImplementor<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int attributeIndex, int dirtyStateIndex, EmbeddableOwner embeddableMapping) {
+        super(viewType, mapping, context, attributeIndex, dirtyStateIndex, embeddableMapping);
+        this.keyType = (Type<K>) mapping.getKeyType(context, embeddableMapping);
+        this.keyInheritanceSubtypes = (Map<ManagedViewType<? extends K>, String>) (Map<?, ?>) mapping.getKeyInheritanceSubtypes(context, embeddableMapping);
         this.mapInstantiator = createMapInstantiator(createMapFactory(context), isSorted(), isOrdered(), getComparator());
     }
 

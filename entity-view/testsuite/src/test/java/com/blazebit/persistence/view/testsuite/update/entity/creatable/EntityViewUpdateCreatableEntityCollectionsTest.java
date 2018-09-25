@@ -57,11 +57,16 @@ public class EntityViewUpdateCreatableEntityCollectionsTest extends AbstractEnti
         // Then
         // We only fetch the document and the collection in full mode
         // During dirty detection we can figure out that effectively nothing changed
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isFullMode()) {
-            fullFetch(builder);
-            if (version) {
+            if (isQueryStrategy()) {
+                builder.delete(Document.class, "people")
+                        .insert(Document.class, "people");
+            } else {
+                fullFetch(builder);
+            }
+            if (version || isQueryStrategy()) {
                 versionUpdate(builder);
             }
         }
@@ -69,7 +74,7 @@ public class EntityViewUpdateCreatableEntityCollectionsTest extends AbstractEnti
         builder.validate();
 
         // No need for an update since it isn't dirty
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertEquals(doc1.getPeople(), docView.getPeople());
     }
 
@@ -81,18 +86,25 @@ public class EntityViewUpdateCreatableEntityCollectionsTest extends AbstractEnti
         // Then
         // Assert that the document and the people are loaded i.e. a full fetch
         // The added person is not loaded, only a single relation insert is done
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        fullFetch(builder);
+        if (isQueryStrategy()) {
+            if (isFullMode()) {
+                builder.delete(Document.class, "people")
+                        .insert(Document.class, "people");
+            }
+        } else {
+            fullFetch(builder);
+        }
 
-        if (version) {
+        if (version || isQueryStrategy() && isFullMode()) {
             builder.update(Document.class);
         }
         builder.assertInsert()
                 .forRelation(Document.class, "people")
             .validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertEquals(doc1.getPeople(), docView.getPeople());
     }
 
@@ -104,11 +116,18 @@ public class EntityViewUpdateCreatableEntityCollectionsTest extends AbstractEnti
         // Then
         // Assert that the document and the people are loaded i.e. a full fetch
         // The added person is not loaded, only a single relation insert is done
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        fullFetch(builder);
+        if (isQueryStrategy()) {
+            if (isFullMode()) {
+                builder.delete(Document.class, "people")
+                        .insert(Document.class, "people");
+            }
+        } else {
+            fullFetch(builder);
+        }
 
-        if (version) {
+        if (version || isQueryStrategy() && isFullMode()) {
             builder.update(Document.class);
         }
 
@@ -117,7 +136,7 @@ public class EntityViewUpdateCreatableEntityCollectionsTest extends AbstractEnti
             .validate();
 
         // No need for an update since it isn't dirty
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertEquals(doc1.getPeople(), docView.getPeople());
     }
 
@@ -129,11 +148,18 @@ public class EntityViewUpdateCreatableEntityCollectionsTest extends AbstractEnti
         // Then
         // Assert that the document and the people are loaded i.e. a full fetch
         // The added person is not loaded, only a single relation insert is done
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        fullFetch(builder);
+        if (isQueryStrategy()) {
+            if (isFullMode()) {
+                builder.delete(Document.class, "people")
+                        .insert(Document.class, "people");
+            }
+        } else {
+            fullFetch(builder);
+        }
 
-        if (version) {
+        if (version || isQueryStrategy() && isFullMode()) {
             builder.update(Document.class);
         }
 
@@ -141,7 +167,7 @@ public class EntityViewUpdateCreatableEntityCollectionsTest extends AbstractEnti
                     .forRelation(Document.class, "people")
                 .validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertEquals(doc1.getPeople(), docView.getPeople());
         assertEquals("pers2", p2.getName());
     }
@@ -154,11 +180,18 @@ public class EntityViewUpdateCreatableEntityCollectionsTest extends AbstractEnti
         // Then
         // Assert that the document and the people are loaded i.e. a full fetch
         // Finally a single relation insert is done but without an update
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        fullFetch(builder);
+        if (isQueryStrategy()) {
+            if (isFullMode()) {
+                builder.delete(Document.class, "people")
+                        .insert(Document.class, "people");
+            }
+        } else {
+            fullFetch(builder);
+        }
 
-        if (version) {
+        if (version || isQueryStrategy() && isFullMode()) {
             builder.update(Document.class);
         }
 
@@ -167,7 +200,7 @@ public class EntityViewUpdateCreatableEntityCollectionsTest extends AbstractEnti
             .validate();
 
         // No need for an update since it isn't dirty
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertEquals(doc1.getPeople(), docView.getPeople());
         assertEquals("pers2", p2.getName());
     }
@@ -193,11 +226,18 @@ public class EntityViewUpdateCreatableEntityCollectionsTest extends AbstractEnti
         // Then
         // Assert that the document and the people are loaded i.e. a full fetch
         // Finally a single relation insert is done for the null element if supported
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        fullFetch(builder);
+        if (isQueryStrategy()) {
+            if (isFullMode()) {
+                builder.delete(Document.class, "people")
+                        .insert(Document.class, "people");
+            }
+        } else {
+            fullFetch(builder);
+        }
 
-        if (version) {
+        if (version || isQueryStrategy() && isFullMode()) {
             builder.update(Document.class);
         }
 
@@ -210,7 +250,7 @@ public class EntityViewUpdateCreatableEntityCollectionsTest extends AbstractEnti
         builder.validate();
 
         // Since we don't need to merge elements, no need reload the collection
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
 
         if (supportsNullCollectionElements()) {
             assertEquals(doc1.getPeople(), docView.getPeople());
@@ -225,15 +265,15 @@ public class EntityViewUpdateCreatableEntityCollectionsTest extends AbstractEnti
         // Then
         // Assert that only the document is loaded
         // Since only an existing person was update, only a single update is generated
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        if (isFullMode()) {
+        if (isFullMode() && !isQueryStrategy()) {
             fullFetch(builder);
-        } else {
+        } else if (!isQueryStrategy()) {
             builder.select(Document.class);
         }
 
-        if (version) {
+        if (version || isQueryStrategy() && isFullMode()) {
             builder.update(Document.class);
         }
 
@@ -242,7 +282,7 @@ public class EntityViewUpdateCreatableEntityCollectionsTest extends AbstractEnti
                 .validate();
 
         // Since we don't need to merge elements, no need reload the collection
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertNullCollection(docView.getPeople());
         assertEquals(0, doc1.getPeople().size());
     }
@@ -256,21 +296,28 @@ public class EntityViewUpdateCreatableEntityCollectionsTest extends AbstractEnti
         // Assert that the document and the people are loaded i.e. a full fetch
         // In addition, the new person is loaded because of the merge invocation
         // Finally the person is persisted and a single relation insert is done
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        fullFetch(builder)
-                .insert(Person.class);
+        if (isQueryStrategy()) {
+            if (isFullMode()) {
+                builder.delete(Document.class, "people")
+                        .insert(Document.class, "people");
+            }
+        } else {
+            fullFetch(builder);
+        }
 
-        if (version) {
+        if (version || isQueryStrategy() && isFullMode()) {
             builder.update(Document.class);
         }
 
+        builder.insert(Person.class);
         builder.assertInsert()
                 .forRelation(Document.class, "people")
             .validate();
 
         // Since we don't need to merge elements, no need reload the collection
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertEquals(doc1.getPeople(), docView.getPeople());
         Iterator<Person> iter = doc1.getPeople().iterator();
         Person nextPerson = iter.next();
@@ -281,12 +328,6 @@ public class EntityViewUpdateCreatableEntityCollectionsTest extends AbstractEnti
             assertEquals("newPerson", nextPerson.getName());
             assertEquals("pers1", iter.next().getName());
         }
-    }
-
-    @Override
-    protected boolean isQueryStrategy() {
-        // Collection changes always need to be applied on the entity model, can't do that via a query
-        return false;
     }
 
     @Override
@@ -301,5 +342,28 @@ public class EntityViewUpdateCreatableEntityCollectionsTest extends AbstractEnti
     @Override
     protected AssertStatementBuilder versionUpdate(AssertStatementBuilder builder) {
         return builder.update(Document.class);
+    }
+
+    @Override
+    protected AssertStatementBuilder fullUpdate(AssertStatementBuilder builder) {
+        if (isFullMode()) {
+            if (isQueryStrategy()) {
+                builder.delete(Document.class, "people");
+                if (doc1.getPeople().size() > 0) {
+                    builder.insert(Document.class, "people");
+                    if (doc1.getPeople().size() > 1) {
+                        builder.insert(Document.class, "people");
+                    }
+                }
+            } else {
+                fullFetch(builder);
+            }
+            if (version || isQueryStrategy()) {
+                versionUpdate(builder);
+            }
+        } else if (!isQueryStrategy()) {
+            fullFetch(builder);
+        }
+        return builder;
     }
 }

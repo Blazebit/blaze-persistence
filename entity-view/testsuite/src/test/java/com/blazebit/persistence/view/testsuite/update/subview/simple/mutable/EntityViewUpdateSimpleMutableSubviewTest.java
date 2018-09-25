@@ -72,7 +72,7 @@ public class EntityViewUpdateSimpleMutableSubviewTest extends AbstractEntityView
         // Then
         // Since only the document changed we don't need to load the owner
         // Just assert the update is properly done
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
@@ -108,7 +108,7 @@ public class EntityViewUpdateSimpleMutableSubviewTest extends AbstractEntityView
         // Then
         // Since the owner changed we don't need to load the old owner
         // The new owner also doesn't have to be loaded, except in full mode
-        AssertStatementBuilder builder = assertQuerySequence();;
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();;
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
@@ -145,7 +145,7 @@ public class EntityViewUpdateSimpleMutableSubviewTest extends AbstractEntityView
         // Then
         // Since the owner changed we don't need to load the old owner
         // Now the new owner has to be loaded as it is updated as well
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             builder.update(Person.class)
@@ -180,7 +180,7 @@ public class EntityViewUpdateSimpleMutableSubviewTest extends AbstractEntityView
 
         // Then
         // Since we update the old responsiblePerson, load it along with the document for updating it later
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             builder.update(Person.class);
@@ -214,7 +214,7 @@ public class EntityViewUpdateSimpleMutableSubviewTest extends AbstractEntityView
 
         // Then
         // Assert that only the document is loaded and finally also updated
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
             if (isFullMode()) {
@@ -233,9 +233,6 @@ public class EntityViewUpdateSimpleMutableSubviewTest extends AbstractEntityView
                 afterBuilder.update(Document.class);
             } else {
                 fullFetch(afterBuilder);
-                if (version) {
-                    afterBuilder.update(Document.class);
-                }
             }
         }
         afterBuilder.validate();

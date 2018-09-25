@@ -64,6 +64,7 @@ public class TypeDescriptor {
     private final boolean cascadePersist;
     private final boolean cascadeUpdate;
     private final String entityIdAttributeName;
+    private final Class<?> jpaType;
     private final TypeConverter<Object, Object> converter;
     private final BasicUserType<Object> basicUserType;
     private final EntityToEntityMapper entityToEntityMapper;
@@ -71,7 +72,7 @@ public class TypeDescriptor {
     private final ViewToEntityMapper loadOnlyViewToEntityMapper;
 
     public TypeDescriptor(boolean mutable, boolean identifiable, boolean jpaManaged, boolean jpaEntity, boolean shouldJpaMerge, boolean shouldJpaPersist, boolean cascadePersist, boolean cascadeUpdate, String entityIdAttributeName,
-                          TypeConverter<Object, Object> converter, BasicUserType<Object> basicUserType, EntityToEntityMapper entityToEntityMapper, ViewToEntityMapper viewToEntityMapper, ViewToEntityMapper loadOnlyViewToEntityMapper) {
+                          Class<?> jpaType, TypeConverter<Object, Object> converter, BasicUserType<Object> basicUserType, EntityToEntityMapper entityToEntityMapper, ViewToEntityMapper viewToEntityMapper, ViewToEntityMapper loadOnlyViewToEntityMapper) {
         this.mutable = mutable;
         this.identifiable = identifiable;
         this.jpaManaged = jpaManaged;
@@ -81,6 +82,7 @@ public class TypeDescriptor {
         this.cascadePersist = cascadePersist;
         this.cascadeUpdate = cascadeUpdate;
         this.entityIdAttributeName = entityIdAttributeName;
+        this.jpaType = jpaType;
         this.converter = converter;
         this.basicUserType = basicUserType;
         this.entityToEntityMapper = entityToEntityMapper;
@@ -88,11 +90,12 @@ public class TypeDescriptor {
         this.loadOnlyViewToEntityMapper = loadOnlyViewToEntityMapper;
     }
 
-    public static TypeDescriptor forType(EntityViewManagerImpl evm, AbstractMethodAttribute<?, ?> attribute, Type<?> type) {
+    public static TypeDescriptor forType(EntityViewManagerImpl evm, EntityViewUpdaterImpl updater, AbstractMethodAttribute<?, ?> attribute, Type<?> type, EntityViewUpdaterImpl owner, String ownerMapping) {
         EntityMetamodel entityMetamodel = evm.getMetamodel().getEntityMetamodel();
         String attributeLocation = attribute.getLocation();
         boolean cascadePersist = attribute.isPersistCascaded();
         boolean cascadeUpdate = attribute.isUpdateCascaded();
+        Set<Type<?>> readOnlyAllowedSubtypes = attribute.getReadOnlyAllowedSubtypes();
         Set<Type<?>> persistAllowedSubtypes = attribute.getPersistCascadeAllowedSubtypes();
         Set<Type<?>> updateAllowedSubtypes = attribute.getUpdateCascadeAllowedSubtypes();
         EntityToEntityMapper entityToEntityMapper = null;
@@ -107,8 +110,10 @@ public class TypeDescriptor {
         TypeConverter<Object, Object> converter = (TypeConverter<Object, Object>) type.getConverter();
         BasicUserType<Object> basicUserType;
         String entityIdAttributeName = null;
+        Class<?> jpaType;
         // TODO: currently we only check if the declared type is mutable, but we have to let the collection flusher which types are considered updatable/creatable
         if (type instanceof BasicType<?>) {
+            jpaType = type.getJavaType();
             basicUserType = (BasicUserType<Object>) ((BasicType<?>) type).getUserType();
             mutable = basicUserType.isMutable();
             identifiable = jpaEntity || !jpaManaged;
@@ -139,18 +144,21 @@ public class TypeDescriptor {
                 entityToEntityMapper = new DefaultEntityToEntityMapper(
                         cascadePersist,
                         cascadeUpdate,
+                        jpaType,
                         basicUserType,
                         new DefaultEntityLoaderFetchGraphNode(
                             evm, attribute.getName(), (EntityType<?>) managedType, fetchGraph
                         ),
-                        deleter);
+                        deleter
+                );
             }
         } else {
             ManagedViewType<?> elementType = (ManagedViewType<?>) type;
+            jpaType = elementType.getEntityClass();
             basicUserType = null;
             mutable = elementType.isUpdatable() || elementType.isCreatable() || !persistAllowedSubtypes.isEmpty() || !updateAllowedSubtypes.isEmpty();
-            viewToEntityMapper = createViewToEntityMapper(attributeLocation, evm, elementType, cascadePersist, cascadeUpdate, persistAllowedSubtypes, updateAllowedSubtypes);
-            loadOnlyViewToEntityMapper = createLoadOnlyViewToEntityMapper(attributeLocation, evm, elementType, cascadePersist, cascadeUpdate, persistAllowedSubtypes, updateAllowedSubtypes);
+            viewToEntityMapper = createViewToEntityMapper(evm, updater, attribute.getMapping(), attributeLocation, elementType, cascadePersist, cascadeUpdate, readOnlyAllowedSubtypes, persistAllowedSubtypes, updateAllowedSubtypes, owner, ownerMapping);
+            loadOnlyViewToEntityMapper = createLoadOnlyViewToEntityMapper(attributeLocation, evm, elementType, cascadePersist, cascadeUpdate, readOnlyAllowedSubtypes, persistAllowedSubtypes, updateAllowedSubtypes, owner, ownerMapping);
             identifiable = viewToEntityMapper.getViewIdAccessor() != null;
             SingularAttribute idAttribute = evm.getMetamodel().getEntityMetamodel().getManagedType(ExtendedManagedType.class, elementType.getEntityClass()).getIdAttribute();
             if (idAttribute != null) {
@@ -172,6 +180,7 @@ public class TypeDescriptor {
                 shouldFlushPersists,
                 shouldFlushUpdates,
                 entityIdAttributeName,
+                jpaType,
                 converter,
                 basicUserType,
                 entityToEntityMapper,
@@ -194,12 +203,13 @@ public class TypeDescriptor {
                 null,
                 null,
                 null,
+                null,
                 viewToEntityMapper,
                 viewToEntityMapper
         );
     }
 
-    public static TypeDescriptor forInverseCollectionAttribute(BasicUserType<?> basicUserType) {
+    public static TypeDescriptor forInverseCollectionAttribute(Class<?> entityClass, BasicUserType<?> basicUserType) {
         return new TypeDescriptor(
                 false,
                 true,
@@ -210,6 +220,7 @@ public class TypeDescriptor {
                 false,
                 false,
                 null,
+                entityClass,
                 null,
                 (BasicUserType<Object>) basicUserType,
                 null,
@@ -228,6 +239,7 @@ public class TypeDescriptor {
                 false,
                 false,
                 false,
+                null,
                 null,
                 null,
                 null,
@@ -271,7 +283,8 @@ public class TypeDescriptor {
         return fetchGraph;
     }
 
-    private static ViewToEntityMapper createViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, ManagedViewType<?> viewType, boolean cascadePersist, boolean cascadeUpdate, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes) {
+    private static ViewToEntityMapper createViewToEntityMapper(EntityViewManagerImpl evm, EntityViewUpdaterImpl updater, String attributeMapping, String attributeLocation, ManagedViewType<?> viewType, boolean cascadePersist, boolean cascadeUpdate,
+                                                               Set<Type<?>> readOnlyAllowedSubtypes, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes, EntityViewUpdaterImpl owner, String ownerMapping) {
         EntityLoader entityLoader = new ReferenceEntityLoader(evm, viewType, EntityViewUpdaterImpl.createViewIdMapper(evm, viewType));
         AttributeAccessor viewIdAccessor = null;
         if (viewType instanceof ViewType<?>) {
@@ -283,11 +296,14 @@ public class TypeDescriptor {
                     attributeLocation,
                     evm,
                     viewTypeClass,
+                    readOnlyAllowedSubtypes,
                     persistAllowedSubtypes,
                     updateAllowedSubtypes,
                     entityLoader,
                     viewIdAccessor,
-                    cascadePersist
+                    cascadePersist,
+                    owner,
+                    ownerMapping
             );
         }
 
@@ -296,27 +312,33 @@ public class TypeDescriptor {
                     attributeLocation,
                     evm,
                     viewTypeClass,
+                    readOnlyAllowedSubtypes,
                     persistAllowedSubtypes,
                     updateAllowedSubtypes,
                     entityLoader,
                     cascadePersist,
-                    null
+                    null,
+                    owner == null ? updater : owner,
+                    ownerMapping == null ? attributeMapping : ownerMapping + "." + attributeMapping
             );
         } else {
             return new UpdaterBasedViewToEntityMapper(
                     attributeLocation,
                     evm,
                     viewTypeClass,
+                    readOnlyAllowedSubtypes,
                     persistAllowedSubtypes,
                     updateAllowedSubtypes,
                     entityLoader,
                     viewIdAccessor,
-                    cascadePersist
+                    cascadePersist,
+                    owner,
+                    ownerMapping
             );
         }
     }
 
-    private static ViewToEntityMapper createLoadOnlyViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, ManagedViewType<?> viewType, boolean cascadePersist, boolean cascadeUpdate, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes) {
+    private static ViewToEntityMapper createLoadOnlyViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, ManagedViewType<?> viewType, boolean cascadePersist, boolean cascadeUpdate, Set<Type<?>> readOnlyAllowedSubtypes, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes, EntityViewUpdaterImpl owner, String ownerMapping) {
         EntityLoader entityLoader = new ReferenceEntityLoader(evm, viewType, EntityViewUpdaterImpl.createViewIdMapper(evm, viewType));
         AttributeAccessor viewIdAccessor = null;
 
@@ -329,11 +351,14 @@ public class TypeDescriptor {
                     attributeLocation,
                     evm,
                     viewTypeClass,
+                    readOnlyAllowedSubtypes,
                     persistAllowedSubtypes,
                     updateAllowedSubtypes,
                     entityLoader,
                     cascadePersist,
-                    null
+                    null,
+                    owner,
+                    ownerMapping
             );
         } else {
             Class<?> viewTypeClass = viewType.getJavaType();
@@ -341,13 +366,20 @@ public class TypeDescriptor {
                     attributeLocation,
                     evm,
                     viewTypeClass,
+                    readOnlyAllowedSubtypes,
                     persistAllowedSubtypes,
                     updateAllowedSubtypes,
                     entityLoader,
                     viewIdAccessor,
-                    cascadePersist
+                    cascadePersist,
+                    owner,
+                    ownerMapping
             );
         }
+    }
+
+    public Class<?> getJpaType() {
+        return jpaType;
     }
 
     public boolean isJpaEmbeddable() {
@@ -375,7 +407,7 @@ public class TypeDescriptor {
     }
 
     public boolean supportsDeepEqualityCheck() {
-        return basicUserType == null || basicUserType != null && basicUserType.supportsDeepEqualChecking();
+        return basicUserType == null || basicUserType.supportsDeepEqualChecking();
     }
 
     public boolean supportsDirtyCheck() {

@@ -85,6 +85,15 @@ public class MapRemoveAllValuesAction<C extends Map<K, V>, K, V> implements MapA
         }
     }
 
+    @Override
+    public void undo(C map, Collection<?> removedKeys, Collection<?> addedKeys, Collection<?> removedElements, Collection<?> addedElements) {
+        for (Map.Entry<K, V> entry : removedObjectsInView.entrySet()) {
+            if (removedKeys.contains(entry.getKey()) || removedElements.contains(entry.getValue())) {
+                map.put(entry.getKey(), entry.getValue());
+            }
+        }
+    }
+
     private void removeByValue(UpdateContext context, C map, Object originalValue, V value, CollectionRemoveListener keyRemoveListener, CollectionRemoveListener valueRemoveListener) {
         Iterator<Map.Entry<K, V>> iter = map.entrySet().iterator();
         while (iter.hasNext()) {

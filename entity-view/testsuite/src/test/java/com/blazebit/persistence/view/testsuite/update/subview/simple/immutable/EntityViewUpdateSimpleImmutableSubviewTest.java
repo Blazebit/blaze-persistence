@@ -70,7 +70,7 @@ public class EntityViewUpdateSimpleImmutableSubviewTest extends AbstractEntityVi
 
         // Then
         // Assert that only the document is loaded and finally also updated
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
             fullFetch(builder);
@@ -98,7 +98,7 @@ public class EntityViewUpdateSimpleImmutableSubviewTest extends AbstractEntityVi
         // Then
         // Assert that only the document is loaded and finally also updated
         // There is no need to actually load the person
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
             fullFetch(builder);
@@ -124,7 +124,7 @@ public class EntityViewUpdateSimpleImmutableSubviewTest extends AbstractEntityVi
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
             fullFetch(builder);
@@ -149,7 +149,7 @@ public class EntityViewUpdateSimpleImmutableSubviewTest extends AbstractEntityVi
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
@@ -158,10 +158,6 @@ public class EntityViewUpdateSimpleImmutableSubviewTest extends AbstractEntityVi
         } else {
             if (isFullMode()) {
                 fullFetch(builder);
-
-                if (version) {
-                    builder.update(Document.class);
-                }
             }
         }
 
@@ -184,7 +180,7 @@ public class EntityViewUpdateSimpleImmutableSubviewTest extends AbstractEntityVi
 
         // Then
         // Assert that only the document is loaded and finally also updated
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
             fullFetch(builder);

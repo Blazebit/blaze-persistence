@@ -38,6 +38,10 @@ public class AbstractEntityViewTest extends AbstractCoreTest {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.setProperty(ConfigurationProperties.PROXY_EAGER_LOADING, "true");
         cfg.setProperty(ConfigurationProperties.UPDATER_EAGER_LOADING, "true");
+        return build(cfg, classes);
+    }
+
+    protected ViewMetamodel build(EntityViewConfiguration cfg, Class<?>... classes) {
         for (Class<?> c : classes) {
             cfg.addEntityView(c);
         }

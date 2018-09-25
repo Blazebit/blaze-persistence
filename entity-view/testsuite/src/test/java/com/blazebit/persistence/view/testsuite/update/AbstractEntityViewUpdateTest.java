@@ -23,6 +23,7 @@ import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.change.ChangeModel;
 import com.blazebit.persistence.view.change.SingularChangeModel;
+import com.blazebit.persistence.view.impl.ConfigurationProperties;
 import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.impl.collection.RecordingMap;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
@@ -35,7 +36,6 @@ import org.junit.Before;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.*;
@@ -130,6 +130,7 @@ public abstract class AbstractEntityViewUpdateTest<T> extends AbstractEntityView
         restartTransactionAndReload();
 
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        cfg.setProperty(ConfigurationProperties.UPDATER_DISALLOW_OWNED_UPDATABLE_SUBVIEW, "false");
         cfg.addEntityView(viewType);
         for (Class<?> view : views) {
             cfg.addEntityView(view);
@@ -191,9 +192,19 @@ public abstract class AbstractEntityViewUpdateTest<T> extends AbstractEntityView
         em.getTransaction().begin();
     }
 
-    protected abstract void restartTransactionAndReload();
-    
+    protected final void restartTransactionAndReload() {
+        restartTransaction();
+        reload();
+        em.clear();
+    }
+
+    protected abstract void reload();
+
     protected void assertNoUpdateAndReload(T docView) {
+        assertNoUpdateAndReload(docView, false);
+    }
+    
+    protected void assertNoUpdateAndReload(T docView, boolean withVersion) {
         restartTransactionAndReload();
         clearQueries();
         update(docView);
@@ -203,7 +214,7 @@ public abstract class AbstractEntityViewUpdateTest<T> extends AbstractEntityView
                 fullUpdate(afterBuilder);
             } else {
                 fullFetch(afterBuilder);
-                if (version) {
+                if (withVersion && version) {
                     versionUpdate(afterBuilder);
                 }
             }
@@ -216,7 +227,7 @@ public abstract class AbstractEntityViewUpdateTest<T> extends AbstractEntityView
         restartTransactionAndReload();
         clearQueries();
         update(docView);
-        fullFetch(assertQuerySequence()).validate();
+        fullFetch(assertUnorderedQuerySequence()).validate();
     }
 
     protected AssertStatementBuilder assertQueriesAfterUpdate(T docView) {
@@ -239,7 +250,7 @@ public abstract class AbstractEntityViewUpdateTest<T> extends AbstractEntityView
     }
 
     protected void validateNoChange(T docView) {
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {

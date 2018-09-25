@@ -91,6 +91,15 @@ public class MapPutAllAction<C extends Map<K, V>, K, V> implements MapAction<C> 
     }
 
     @Override
+    public void undo(C map, Collection<?> removedKeys, Collection<?> addedKeys, Collection<?> removedElements, Collection<?> addedElements) {
+        for (Map.Entry<K, V> entry : removedObjectsInView.entrySet()) {
+            if (addedKeys.contains(entry.getKey()) || addedElements.contains(entry.getValue())) {
+                map.put(entry.getKey(), entry.getValue());
+            }
+        }
+    }
+
+    @Override
     public Collection<Object> getAddedKeys() {
         return (Collection<Object>) elements.keySet();
     }

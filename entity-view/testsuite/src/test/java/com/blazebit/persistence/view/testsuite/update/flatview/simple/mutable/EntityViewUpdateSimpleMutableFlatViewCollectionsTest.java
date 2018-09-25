@@ -61,6 +61,11 @@ public class EntityViewUpdateSimpleMutableFlatViewCollectionsTest extends Abstra
         cfg.addEntityView(UpdatableNameObjectView.class);
     }
 
+    @Override
+    protected String[] getFetchedCollections() {
+        return new String[] { "names" };
+    }
+
     @Test
     public void testUpdateCollectionElement() {
         // Given
@@ -75,19 +80,22 @@ public class EntityViewUpdateSimpleMutableFlatViewCollectionsTest extends Abstra
         // Then
         // Assert that the document and the people are loaded i.e. a full fetch
         // Finally the person is updated because the primary name changed
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        fullFetch(builder);
+        if (!isQueryStrategy()) {
+            fullFetch(builder);
+        }
 
-        if (version) {
+        if (version || isFullMode() && isQueryStrategy()) {
             builder.update(Document.class);
         }
-        builder.assertDelete()
-                    .forRelation(Document.class, "names")
-                .and()
-                .assertInsert()
-                    .forRelation(Document.class, "names")
-                .validate();
+        if (isFullMode() || !isQueryStrategy() && !supportsIndexedInplaceUpdate()) {
+            builder.delete(Document.class, "names")
+                    .insert(Document.class, "names");
+        } else {
+            builder.update(Document.class, "names");
+        }
+        builder.validate();
 
         assertNoUpdateAndReload(docView);
         assertEquals("newPers", doc1.getNames().get(0).getPrimaryName());
@@ -127,10 +135,9 @@ public class EntityViewUpdateSimpleMutableFlatViewCollectionsTest extends Abstra
 
     @Override
     protected AssertStatementBuilder fullUpdate(AssertStatementBuilder builder) {
-        fullFetch(builder);
-        if (version) {
-            builder.update(Document.class);
-        }
+        builder.delete(Document.class, "names")
+                .insert(Document.class, "names");
+        builder.update(Document.class);
         return builder;
     }
 

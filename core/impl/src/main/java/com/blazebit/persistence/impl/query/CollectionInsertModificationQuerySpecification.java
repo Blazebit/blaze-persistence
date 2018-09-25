@@ -17,12 +17,14 @@
 package com.blazebit.persistence.impl.query;
 
 import com.blazebit.persistence.impl.AbstractCommonQueryBuilder;
+import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.DbmsModificationState;
 
 import javax.persistence.Parameter;
 import javax.persistence.Query;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,13 +38,15 @@ public class CollectionInsertModificationQuerySpecification<T> extends Modificat
 
     private final Query insertExampleQuery;
     private final String insertSql;
+    private final int cutoffColumns;
 
     public CollectionInsertModificationQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Query exampleQuery, Set<Parameter<?>> parameters, Set<String> parameterListNames,
                                                           List<String> keyRestrictedLeftJoinAliases, List<EntityFunctionNode> entityFunctionNodes, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes,
-                                                          boolean isEmbedded, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates, Map<String, String> returningAttributeBindingMap, Query insertExampleQuery, String insertSql) {
+                                                          boolean isEmbedded, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates, Map<String, String> returningAttributeBindingMap, Query insertExampleQuery, String insertSql, int cutoffColumns) {
         super(commonQueryBuilder, baseQuery, exampleQuery, parameters, parameterListNames, keyRestrictedLeftJoinAliases, entityFunctionNodes, recursive, ctes, shouldRenderCteNodes, isEmbedded, returningColumns, includedModificationStates, returningAttributeBindingMap);
         this.insertExampleQuery = insertExampleQuery;
         this.insertSql = insertSql;
+        this.cutoffColumns = cutoffColumns;
     }
 
     @Override
@@ -55,6 +59,45 @@ public class CollectionInsertModificationQuerySpecification<T> extends Modificat
 
         String sql = extendedQuerySupport.getSql(em, baseQuery);
         StringBuilder sqlSb = applySqlTransformations(sql);
+        if (cutoffColumns > 0) {
+            final List<String> tableAliasesToRemove = new ArrayList<>();
+            // Kind of a hack to reuse existing code to be able to cutoff columns at the end of the select list
+            String[] selectItemPositions = SqlUtils.getSelectItems(sqlSb, 0, new SqlUtils.SelectItemExtractor() {
+                @Override
+                public String extract(StringBuilder sb, int index, int currentPosition) {
+                    int dotIndex = sb.indexOf(".");
+                    if (dotIndex == -1) {
+                        tableAliasesToRemove.add("");
+                    } else {
+                        tableAliasesToRemove.add(sb.substring(0, dotIndex).trim());
+                    }
+                    return Integer.toString(currentPosition);
+                }
+            });
+            int removeStart = Integer.parseInt(selectItemPositions[selectItemPositions.length - (cutoffColumns + 1)]);
+            int removeEnd = Integer.parseInt(selectItemPositions[selectItemPositions.length - 1]);
+            sqlSb.replace(removeStart, removeEnd, "");
+
+            int whereIndex = SqlUtils.indexOfWhere(sqlSb);
+            // For every table alias we found in the select items that we removed due to the cutoff, we delete the joins
+            Set<String> processedAliases = new HashSet<>();
+            for (int i = tableAliasesToRemove.size() - cutoffColumns; i < tableAliasesToRemove.size(); i++) {
+                String tableAlias = tableAliasesToRemove.get(i);
+                if (!processedAliases.add(tableAlias)) {
+                    continue;
+                }
+                String aliasOnPart = " " + tableAlias + " on ";
+                int aliasIndex = sqlSb.indexOf(aliasOnPart, removeStart);
+                if (aliasIndex > -1 && aliasIndex < whereIndex) {
+                    // First, let's find the end of the on clause
+                    int onClauseStart = aliasIndex + aliasOnPart.length();
+                    int onClauseEnd = SqlUtils.findEndOfOnClause(sqlSb, onClauseStart, whereIndex);
+                    int joinStartIndex = SqlUtils.findJoinStartIndex(sqlSb, aliasIndex);
+                    sqlSb.replace(joinStartIndex, onClauseEnd, "");
+                    whereIndex -= onClauseEnd - joinStartIndex;
+                }
+            }
+        }
         sqlSb.insert(0, insertSql);
         sqlSb.insert(insertSql.length(), ' ');
 

@@ -49,6 +49,14 @@ public interface ExtendedAttribute<X, Y> {
     public List<Attribute<?, ?>> getAttributePath();
 
     /**
+     * Returns the path from the owning entity type to this attribute as string.
+     *
+     * @return The path to the attribute as string
+     * @since 1.3.0
+     */
+    public String getAttributePathString();
+
+    /**
      * Returns the element type of the attribute.
      *
      * @return The element type

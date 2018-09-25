@@ -52,6 +52,11 @@ public class EntityViewUpdateRollbackCollectionsTest extends AbstractEntityViewU
         return MODE_STRATEGY_VERSION_COMBINATIONS;
     }
 
+    @Override
+    protected String[] getFetchedCollections() {
+        return new String[] { "strings" };
+    }
+
     @Test
     public void testUpdateAddToCollection() {
         // Given
@@ -72,16 +77,21 @@ public class EntityViewUpdateRollbackCollectionsTest extends AbstractEntityViewU
 
         // Then 2
         // Assert that the document and the strings are loaded, but only a relation insert is done
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        fullFetch(builder);
+        if (isQueryStrategy()) {
+            if (isFullMode()) {
+                assertReplaceAnd(builder);
+            }
+        } else {
+            fullFetch(builder);
+        }
 
-        if (version) {
+        if (version || isFullMode() && isQueryStrategy()) {
             builder.update(Document.class);
         }
 
-        builder.assertInsert()
-                .forRelation(Document.class, "strings")
+        builder.insert(Document.class, "strings")
                 .validate();
 
         assertNoUpdateAndReload(docView);
@@ -110,19 +120,17 @@ public class EntityViewUpdateRollbackCollectionsTest extends AbstractEntityViewU
         // Then 2
         // In partial mode, only the document is loaded. In full mode, the strings are also loaded
         // Since we load the strings in the full mode, we do a proper diff and can compute that only a single item was added
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        if (isFullMode()) {
-            fullFetch(builder);
-        } else {
-            if (preferLoadingAndDiffingOverRecreate()) {
-                fullFetch(builder);
-            } else {
+        if (isQueryStrategy()) {
+            if (isFullMode()) {
                 assertReplaceAnd(builder);
             }
+        } else {
+            fullFetch(builder);
         }
 
-        if (version) {
+        if (version || isFullMode() && isQueryStrategy()) {
             builder.update(Document.class);
         }
 
@@ -134,12 +142,12 @@ public class EntityViewUpdateRollbackCollectionsTest extends AbstractEntityViewU
     }
 
     private AssertStatementBuilder assertReplaceAnd(AssertStatementBuilder builder) {
-        return builder.assertDelete()
-                    .forRelation(Document.class, "strings")
-                .and()
-                .assertInsert()
-                    .forRelation(Document.class, "strings")
-                .and();
+        builder.delete(Document.class, "strings")
+                .insert(Document.class, "strings");
+        if (doc1.getStrings().size() > 1) {
+            builder.insert(Document.class, "strings");
+        }
+        return builder;
     }
 
     @Override
@@ -152,11 +160,8 @@ public class EntityViewUpdateRollbackCollectionsTest extends AbstractEntityViewU
 
     @Override
     protected AssertStatementBuilder fullUpdate(AssertStatementBuilder builder) {
-        if (version) {
-            return versionUpdate(fullFetch(builder));
-        } else {
-            return fullFetch(builder);
-        }
+         assertReplaceAnd(builder);
+         return versionUpdate(builder);
     }
 
     @Override

@@ -63,7 +63,7 @@ public class ParentReferenceAttributeFlusher<E, V> extends BasicAttributeFlusher
     }
 
     @Override
-    public void appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix, String separator) {
+    public boolean appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix, String separator) {
         if (writableMappings != null) {
             if (mappingPrefix == null) {
                 sb.append(updateQueryFragments[0]);
@@ -86,13 +86,15 @@ public class ParentReferenceAttributeFlusher<E, V> extends BasicAttributeFlusher
                     sb.append(parameterPrefix).append(updateQueryFragments[i + 1]);
                 }
             }
+
+            return true;
         } else {
-            super.appendUpdateQueryFragment(context, sb, mappingPrefix, parameterPrefix, separator);
+            return super.appendUpdateQueryFragment(context, sb, mappingPrefix, parameterPrefix, separator);
         }
     }
 
     @Override
-    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
+    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
         if (query != null && writableMappings != null) {
             for (int i = 0; i < parameterAccessors.length; i++) {
                 Map.Entry<String, AttributeAccessor> parameterAccessor = parameterAccessors[i];
@@ -105,12 +107,12 @@ public class ParentReferenceAttributeFlusher<E, V> extends BasicAttributeFlusher
                 query.setParameter(parameter, parameterAccessor.getValue().getValue(value));
             }
         } else {
-            super.flushQuery(context, parameterPrefix, query, view, value, ownerAwareDeleter);
+            super.flushQuery(context, parameterPrefix, query, ownerView, view, value, ownerAwareDeleter);
         }
     }
 
     @Override
-    public boolean flushEntity(UpdateContext context, E entity, Object view, V value, Runnable postReplaceListener) {
+    public boolean flushEntity(UpdateContext context, E entity, Object ownerView, Object view, V value, Runnable postReplaceListener) {
         mapper.map(value, entity);
         return true;
     }

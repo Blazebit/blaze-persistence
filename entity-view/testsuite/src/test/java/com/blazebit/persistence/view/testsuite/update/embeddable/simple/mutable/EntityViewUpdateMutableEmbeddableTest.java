@@ -114,14 +114,10 @@ public class EntityViewUpdateMutableEmbeddableTest extends AbstractEntityViewUpd
 
         // Then
         // Assert that not only the document is loaded and finally also updated
-        AssertStatementBuilder builder = assertQuerySequence();
-        // In partial mode with knowing the type we can determine the embeddable didn't change
-        // So we can still use an update query since we don't need to include that attribute in the query
-        boolean canUpdateQueryOnly = super.isQueryStrategy() && (
-                jpaProvider.supportsUpdateSetEmbeddable() || !isFullMode() && registerType
-                );
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        if (!canUpdateQueryOnly) {
+        if (isQueryStrategy()) {
+        } else {
             fullFetch(builder);
         }
 
@@ -132,7 +128,7 @@ public class EntityViewUpdateMutableEmbeddableTest extends AbstractEntityViewUpd
             // When we register a type that can check for the dirtyness, we can skip the reload
             assertVersionDiff(oldVersion, docView.getVersion(), 1, 1);
             assertNoUpdateAndReload(docView);
-            assertVersionDiff(oldVersion, docView.getVersion(), 1, 2);
+            assertVersionDiff(oldVersion, docView.getVersion(), 1, isQueryStrategy() ? 2 : 1);
         } else {
             // Unfortunately we have to reload the document since we don't know if the embeddable is dirty
             assertVersionDiff(oldVersion, docView.getVersion(), 1, 1);
@@ -169,7 +165,7 @@ public class EntityViewUpdateMutableEmbeddableTest extends AbstractEntityViewUpd
         // Then
         assertVersionDiff(oldVersion, docView.getVersion(), 1, 1);
         fullFetchUpdateAndReload(docView);
-        assertVersionDiff(oldVersion, docView.getVersion(), 1, 2);
+        assertVersionDiff(oldVersion, docView.getVersion(), 1, registerType && !isQueryStrategy() ? 1 : 2);
         assertEquals("newPrimaryName", doc1.getNameObject().getPrimaryName());
         assertEquals("newSecondaryName", doc1.getNameObject().getSecondaryName());
     }
@@ -200,7 +196,7 @@ public class EntityViewUpdateMutableEmbeddableTest extends AbstractEntityViewUpd
         // Then
         assertVersionDiff(oldVersion, docView.getVersion(), 1, 1);
         fullFetchUpdateAndReload(docView);
-        assertVersionDiff(oldVersion, docView.getVersion(), 1, 2);
+        assertVersionDiff(oldVersion, docView.getVersion(), 1, registerType && !isQueryStrategy() ? 1 : 2);
         assertEquals("newPrimaryName", doc1.getNameObject().getPrimaryName());
         assertEquals("newSecondaryName", doc1.getNameObject().getSecondaryName());
     }
@@ -259,7 +255,7 @@ public class EntityViewUpdateMutableEmbeddableTest extends AbstractEntityViewUpd
 
     private void fullFetchUpdateAndReload(UpdatableDocumentEmbeddableView docView) {
         // Assert that not only the document is loaded and finally also updated
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
             fullFetch(builder);
@@ -299,21 +295,22 @@ public class EntityViewUpdateMutableEmbeddableTest extends AbstractEntityViewUpd
             }
         } else {
             if (version) {
-                afterBuilder.select(Document.class)
-                        .update(Document.class);
+                if (!isQueryStrategy()) {
+                    afterBuilder.select(Document.class);
+                }
+                afterBuilder.update(Document.class);
             } else {
                 if (!registerType) {
-                    fullFetch(afterBuilder);
+                    if (isQueryStrategy()) {
+                        afterBuilder.update(Document.class);
+                    } else {
+                        fullFetch(afterBuilder);
+                    }
                 }
             }
         }
         afterBuilder.validate();
         restartTransactionAndReload();
-    }
-
-    @Override
-    protected boolean isQueryStrategy() {
-        return jpaProvider.supportsUpdateSetEmbeddable() && super.isQueryStrategy();
     }
 
     @Override

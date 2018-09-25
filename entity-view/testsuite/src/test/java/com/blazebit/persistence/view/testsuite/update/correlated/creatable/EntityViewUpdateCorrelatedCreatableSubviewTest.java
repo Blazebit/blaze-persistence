@@ -75,7 +75,7 @@ public class EntityViewUpdateCorrelatedCreatableSubviewTest extends AbstractEnti
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
             if (isFullMode()) {
@@ -105,7 +105,7 @@ public class EntityViewUpdateCorrelatedCreatableSubviewTest extends AbstractEnti
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isFullMode()) {
             if (!isQueryStrategy()) {
@@ -134,7 +134,7 @@ public class EntityViewUpdateCorrelatedCreatableSubviewTest extends AbstractEnti
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isFullMode()) {
             if (!isQueryStrategy()) {
@@ -162,7 +162,7 @@ public class EntityViewUpdateCorrelatedCreatableSubviewTest extends AbstractEnti
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
@@ -171,10 +171,6 @@ public class EntityViewUpdateCorrelatedCreatableSubviewTest extends AbstractEnti
         } else {
             if (isFullMode()) {
                 fullFetch(builder);
-
-                if (version) {
-                    builder.update(Document.class);
-                }
             }
         }
 
@@ -196,7 +192,7 @@ public class EntityViewUpdateCorrelatedCreatableSubviewTest extends AbstractEnti
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isFullMode()) {
             if (!isQueryStrategy()) {
@@ -225,7 +221,7 @@ public class EntityViewUpdateCorrelatedCreatableSubviewTest extends AbstractEnti
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
             if (isFullMode()) {

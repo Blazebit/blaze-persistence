@@ -21,14 +21,12 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
-import com.blazebit.persistence.testsuite.entity.Version;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.update.remove.orphan.AbstractEntityViewOrphanRemoveDocumentTest;
 import com.blazebit.persistence.view.testsuite.update.remove.orphan.nested.model.FriendPersonCreateView;
 import com.blazebit.persistence.view.testsuite.update.remove.orphan.nested.model.FriendPersonView;
-import com.blazebit.persistence.view.testsuite.update.remove.orphan.nested.model.UpdatableDocumentView;
 import com.blazebit.persistence.view.testsuite.update.remove.orphan.nested.model.UpdatableDocumentWithCollectionsView;
 import com.blazebit.persistence.view.testsuite.update.remove.orphan.nested.model.UpdatableResponsiblePersonView;
 import org.junit.Test;
@@ -139,9 +137,14 @@ public class EntityViewOrphanRemoveNestedSubviewCollectionsTest extends Abstract
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence().unordered();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        if (!isQueryStrategy()) {
+        if (isQueryStrategy()) {
+            if (isFullMode()) {
+                builder.update(Person.class);
+                builder.insert(Document.class, "people");
+            }
+        } else {
             // Hibernate loads the entities before deleting?
             builder.assertSelect()
                         .fetching(Document.class)
@@ -149,29 +152,16 @@ public class EntityViewOrphanRemoveNestedSubviewCollectionsTest extends Abstract
                         .fetching(Person.class)
                     .and()
                     .select(Person.class);
-        } else if (isQueryStrategy()) {
-            // This is just temporary until #507 is fixed
-            builder.assertSelect()
-                        .fetching(Document.class)
-                        .fetching(Document.class, "people")
-                        .fetching(Person.class)
-                    .and();
-
-            if (isFullMode()) {
-                builder.update(Person.class);
-            }
         }
 
-        if (version) {
+        if (version || isQueryStrategy() && isFullMode()) {
             builder.update(Document.class);
         }
         deletePersonOwned(builder, true);
         deletePersonOwned(builder, true);
         builder.delete(Person.class);
         builder.delete(Person.class);
-        builder.assertDelete()
-                .forRelation(Document.class, "people")
-            .and();
+        builder.delete(Document.class, "people");
         builder.validate();
 
         restartTransactionAndReload();
@@ -181,27 +171,30 @@ public class EntityViewOrphanRemoveNestedSubviewCollectionsTest extends Abstract
     }
 
     public AssertStatementBuilder assertUpdateAndRemove() {
-        AssertStatementBuilder builder = assertQuerySequence().unordered();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        if (isFullMode() || !isQueryStrategy()) {
+        if (isQueryStrategy()) {
+            if (isFullMode()) {
+                builder.delete(Document.class, "people");
+                for (Person person : doc1.getPeople()) {
+                    builder.insert(Document.class, "people");
+                }
+            }
+        } else {
             // Hibernate loads the entities before deleting?
             builder.assertSelect()
                         .fetching(Document.class)
                         .fetching(Document.class, "people")
                         .fetching(Person.class)
                     .and();
-            if (!isQueryStrategy()) {
-                builder.select(Person.class);
-            }
+            builder.select(Person.class);
         }
 
         if (isFullMode() && isQueryStrategy()) {
             builder.update(Person.class);
         }
 
-        // Since we switch to entity flushing because of the collection, we avoid the document flush even in full mode
-        // This will be fixed with #507
-        if (version) { // || isQueryStrategy() && isFullMode()) {
+        if (version || isQueryStrategy() && isFullMode()) {
             builder.update(Document.class);
         }
 

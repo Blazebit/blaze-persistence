@@ -62,6 +62,11 @@ public class EntityViewUpdateSimpleMutableSubviewMapsTest extends AbstractEntity
         cfg.addEntityView(UpdatablePersonView.class);
     }
 
+    @Override
+    protected String[] getFetchedCollections() {
+        return new String[] { "contacts" };
+    }
+
     @Test
     public void testUpdateReplaceCollection() {
         // Given
@@ -76,15 +81,16 @@ public class EntityViewUpdateSimpleMutableSubviewMapsTest extends AbstractEntity
         // Assert that the document and the people are loaded in full mode.
         // During dirty detection we should be able to figure out that nothing changed
         // So partial modes wouldn't load anything and both won't cause any updates
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isFullMode()) {
-            fullFetch(builder);
             if (isQueryStrategy()) {
                 builder.update(Person.class);
-            }
-            if (version) {
                 builder.update(Document.class);
+                builder.delete(Document.class, "contacts")
+                        .insert(Document.class, "contacts");
+            } else {
+                fullFetch(builder);
             }
         }
 
@@ -108,29 +114,30 @@ public class EntityViewUpdateSimpleMutableSubviewMapsTest extends AbstractEntity
         // Assert that the document and the people are loaded, but only a relation insert is done
         // The full mode also has to load the person that is added and apply the changes
         // But since nothing is changed, no update is subsequently generated
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        fullFetch(builder);
         if (isQueryStrategy()) {
             if (isFullMode()) {
                 builder.update(Person.class)
                         .update(Person.class);
+                builder.delete(Document.class, "contacts")
+                        .insert(Document.class, "contacts");
             }
         } else {
+            fullFetch(builder);
             if (isFullMode()) {
                 builder.select(Person.class);
             }
         }
 
-        if (version) {
+        if (version || isQueryStrategy() && isFullMode()) {
             builder.update(Document.class);
         }
 
-        builder.assertInsert()
-                .forRelation(Document.class, "contacts")
+        builder.insert(Document.class, "contacts")
                 .validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertSubviewEquals(doc1.getContacts(), docView.getContacts());
     }
 
@@ -151,29 +158,30 @@ public class EntityViewUpdateSimpleMutableSubviewMapsTest extends AbstractEntity
         // Since we load the people in the full mode, we do a proper diff and can compute that only a single item was added
         // The full mode also has to load the person that is added and apply the changes
         // But since nothing is changed, no update is subsequently generated
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        fullFetch(builder);
         if (isQueryStrategy()) {
             if (isFullMode()) {
                 builder.update(Person.class)
                         .update(Person.class);
+                builder.delete(Document.class, "contacts")
+                        .insert(Document.class, "contacts");
             }
         } else {
+            fullFetch(builder);
             if (isFullMode()) {
                 builder.select(Person.class);
             }
         }
 
-        if (version) {
+        if (version || isQueryStrategy() && isFullMode()) {
             builder.update(Document.class);
         }
 
-        builder.assertInsert()
-                    .forRelation(Document.class, "contacts")
+        builder.insert(Document.class, "contacts")
                 .validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertSubviewEquals(doc1.getContacts(), docView.getContacts());
     }
 
@@ -193,33 +201,30 @@ public class EntityViewUpdateSimpleMutableSubviewMapsTest extends AbstractEntity
         // Assert that the document and the people are loaded i.e. a full fetch
         // In addition, the new person is loaded because it is dirty
         // Finally a single relation insert is done and an update to the person is done
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        fullFetch(builder);
         if (isQueryStrategy()) {
             if (isFullMode()) {
                 builder.update(Person.class);
+                builder.delete(Document.class, "contacts")
+                        .insert(Document.class, "contacts");
             }
 
             builder.update(Person.class);
-
-            if (version) {
-                builder.update(Document.class);
-            }
         } else {
+            fullFetch(builder);
             builder.select(Person.class);
-            if (version) {
-                builder.update(Document.class);
-            }
-
             builder.update(Person.class);
         }
 
-        builder.assertInsert()
-                .forRelation(Document.class, "contacts")
+        if (version || isQueryStrategy() && isFullMode()) {
+            builder.update(Document.class);
+        }
+
+        builder.insert(Document.class, "contacts")
                 .validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertSubviewEquals(doc1.getContacts(), docView.getContacts());
         assertEquals("newPerson", p2.getName());
     }
@@ -241,33 +246,30 @@ public class EntityViewUpdateSimpleMutableSubviewMapsTest extends AbstractEntity
         // Assert that the document and the people are loaded i.e. a full fetch
         // In addition, the new person is loaded because it is dirty
         // Finally a single relation insert is done and an update to the person is done
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        fullFetch(builder);
         if (isQueryStrategy()) {
             if (isFullMode()) {
                 builder.update(Person.class);
+                builder.delete(Document.class, "contacts")
+                        .insert(Document.class, "contacts");
             }
 
             builder.update(Person.class);
-
-            if (version) {
-                builder.update(Document.class);
-            }
         } else {
+            fullFetch(builder);
             builder.select(Person.class);
-            if (version) {
-                builder.update(Document.class);
-            }
-
             builder.update(Person.class);
         }
 
-        builder.assertInsert()
-                .forRelation(Document.class, "contacts")
+        if (version || isQueryStrategy() && isFullMode()) {
+            builder.update(Document.class);
+        }
+
+        builder.insert(Document.class, "contacts")
                 .validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertSubviewEquals(doc1.getContacts(), docView.getContacts());
         assertEquals("newPerson", p2.getName());
     }
@@ -308,12 +310,12 @@ public class EntityViewUpdateSimpleMutableSubviewMapsTest extends AbstractEntity
 
     @Override
     protected AssertStatementBuilder fullUpdate(AssertStatementBuilder builder) {
-        fullFetch(builder)
-                .update(Person.class)
+        builder.update(Person.class)
                 .update(Person.class);
-        if (version) {
-            versionUpdate(builder);
-        }
+        builder.delete(Document.class, "contacts")
+                .insert(Document.class, "contacts")
+                .insert(Document.class, "contacts");
+        versionUpdate(builder);
         return builder;
     }
 

@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl.metamodel.attribute;
 import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
 import com.blazebit.persistence.view.impl.collection.MapInstantiator;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodPluralAttribute;
+import com.blazebit.persistence.view.impl.metamodel.EmbeddableOwner;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 import com.blazebit.persistence.view.impl.metamodel.MethodAttributeMapping;
@@ -37,8 +38,8 @@ public abstract class AbstractMethodSetAttribute<X, Y> extends AbstractMethodPlu
 
     private final CollectionInstantiator collectionInstantiator;
 
-    public AbstractMethodSetAttribute(ManagedViewTypeImplementor<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int attributeIndex, int dirtyStateIndex) {
-        super(viewType, mapping, context, attributeIndex, dirtyStateIndex);
+    public AbstractMethodSetAttribute(ManagedViewTypeImplementor<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int attributeIndex, int dirtyStateIndex, EmbeddableOwner embeddableMapping) {
+        super(viewType, mapping, context, attributeIndex, dirtyStateIndex, embeddableMapping);
         this.collectionInstantiator = createCollectionInstantiator(context, createCollectionFactory(context), isIndexed(), isSorted(), isOrdered(), getComparator());
     }
 

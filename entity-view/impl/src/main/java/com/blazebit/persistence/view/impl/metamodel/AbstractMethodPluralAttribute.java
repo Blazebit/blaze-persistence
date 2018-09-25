@@ -64,8 +64,8 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
     private final Comparator<Object> comparator;
 
     @SuppressWarnings("unchecked")
-    public AbstractMethodPluralAttribute(ManagedViewTypeImplementor<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int attributeIndex, int dirtyStateIndex) {
-        super(viewType, mapping, attributeIndex, context);
+    public AbstractMethodPluralAttribute(ManagedViewTypeImplementor<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int attributeIndex, int dirtyStateIndex, EmbeddableOwner embeddableMapping) {
+        super(viewType, mapping, attributeIndex, context, embeddableMapping);
         // Id and version can't be plural attributes
         if (mapping.isId()) {
             context.addError("Attribute annotated with @IdMapping must use a singular type. Plural type found at attribute on the " + mapping.getErrorLocation() + "!");
@@ -73,7 +73,7 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
         if (mapping.isVersion()) {
             context.addError("Attribute annotated with @Version must use a singular type. Plural type found at attribute on the " + mapping.getErrorLocation() + "!");
         }
-        this.elementType = (Type<Y>) mapping.getElementType(context);
+        this.elementType = (Type<Y>) mapping.getElementType(context, embeddableMapping);
 
         // The declaring type must be mutable, otherwise attributes can't be considered updatable
         if (mapping.getUpdatable() == null) {
@@ -92,10 +92,10 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
         boolean definesDeleteCascading = mapping.getCascadeTypes().contains(CascadeType.DELETE);
         boolean allowsDeleteCascading = updatable || mapping.getCascadeTypes().contains(CascadeType.AUTO);
 
-        this.readOnlySubtypes = (Set<Type<?>>) (Set) mapping.getReadOnlySubtypes(context);
+        this.readOnlySubtypes = (Set<Type<?>>) (Set) mapping.getReadOnlySubtypes(context, embeddableMapping);
 
         if (updatable) {
-            this.persistSubtypes = determinePersistSubtypeSet(elementType, mapping.getCascadeSubtypes(context), mapping.getCascadePersistSubtypes(context), context);
+            this.persistSubtypes = determinePersistSubtypeSet(elementType, mapping.getCascadeSubtypes(context, embeddableMapping), mapping.getCascadePersistSubtypes(context, embeddableMapping), context);
             this.persistCascaded = mapping.getCascadeTypes().contains(CascadeType.PERSIST)
                     || mapping.getCascadeTypes().contains(CascadeType.AUTO) && !persistSubtypes.isEmpty();
         } else {
@@ -109,7 +109,7 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
             this.updateSubtypes = Collections.emptySet();
         } else {
             // TODO: maybe allow to override mutability?
-            Set<Type<?>> updateCascadeAllowedSubtypes = determineUpdateSubtypeSet(elementType, mapping.getCascadeSubtypes(context), mapping.getCascadeUpdateSubtypes(context), context);
+            Set<Type<?>> updateCascadeAllowedSubtypes = determineUpdateSubtypeSet(elementType, mapping.getCascadeSubtypes(context, embeddableMapping), mapping.getCascadeUpdateSubtypes(context, embeddableMapping), context);
             boolean updateCascaded = mapping.getCascadeTypes().contains(CascadeType.UPDATE)
                     || mapping.getCascadeTypes().contains(CascadeType.AUTO) && !updateCascadeAllowedSubtypes.isEmpty();
             if (updateCascaded) {
@@ -135,15 +135,23 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
 
         this.allowedSubtypes = createAllowedSubtypesSet();
         this.optimisticLockProtected = determineOptimisticLockProtected(mapping, context, mutable);
-        this.elementInheritanceSubtypes = (Map<ManagedViewType<? extends Y>, String>) (Map<?, ?>) mapping.getElementInheritanceSubtypes(context);
+        this.elementInheritanceSubtypes = (Map<ManagedViewType<? extends Y>, String>) (Map<?, ?>) mapping.getElementInheritanceSubtypes(context, embeddableMapping);
         this.dirtyStateIndex = determineDirtyStateIndex(dirtyStateIndex);
         if (this.dirtyStateIndex == -1) {
             this.mappedBy = null;
             this.inverseRemoveStrategy = null;
             this.writableMappedByMapping = null;
         } else {
-            ManagedType<?> managedType = context.getEntityMetamodel().getManagedType(declaringType.getEntityClass());
-            this.mappedBy = mapping.determineMappedBy(managedType, this.mapping, context);
+            ManagedType<?> managedType;
+            String mappingPath;
+            if (embeddableMapping == null) {
+                mappingPath = this.mapping;
+                managedType = context.getEntityMetamodel().getManagedType(declaringType.getEntityClass());
+            } else {
+                mappingPath = embeddableMapping.getEmbeddableMapping() + "." + this.mapping;
+                managedType = context.getEntityMetamodel().getManagedType(embeddableMapping.getEntityClass());
+            }
+            this.mappedBy = mapping.determineMappedBy(managedType, mappingPath, context, embeddableMapping);
             if (this.mappedBy == null) {
                 this.inverseRemoveStrategy = null;
                 this.writableMappedByMapping = null;
@@ -203,6 +211,11 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
 
         // We exclude entity types from this since there is no clear intent
         return hasSetter;
+    }
+
+    @Override
+    protected boolean isDisallowOwnedUpdatableSubview() {
+        return false;
     }
 
     @Override

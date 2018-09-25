@@ -66,6 +66,11 @@ public class EntityViewUpdateCorrelatedCreatableSubviewCollectionsTest extends A
         cfg.addEntityView(DocumentIdView.class);
     }
 
+    @Override
+    protected String[] getFetchedCollections() {
+        return new String[] { "partners" };
+    }
+
     @Test
     public void testUpdateWithPersonCreateView() {
         final UpdatableDocumentWithCollectionsView docView = getDoc1View();
@@ -91,7 +96,7 @@ public class EntityViewUpdateCorrelatedCreatableSubviewCollectionsTest extends A
         }
         builder.validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         Iterator<Person> iterator = doc1.getPartners().iterator();
         Person p = iterator.next();
         if (!p.getId().equals(personCreateView.getId())) {

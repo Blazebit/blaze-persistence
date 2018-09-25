@@ -57,7 +57,7 @@ public class EntityViewUpdateMutableOnlyEntityTest extends AbstractEntityViewUpd
         // Assert that not only the document is loaded, but also always the responsiblePerson
         // This might be unexpected for partial strategies
         // but since we don't know if entities are dirty, we need to be conservative and load the object
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             builder.assertSelect()
@@ -85,8 +85,8 @@ public class EntityViewUpdateMutableOnlyEntityTest extends AbstractEntityViewUpd
             afterBuilder.assertSelect()
                     .fetching(Document.class, Person.class)
                     .and();
-            if (isFullMode() && version) {
-                versionUpdate(afterBuilder);
+            if (version) {
+                afterBuilder.update(Document.class);
             }
         }
         afterBuilder.validate();
@@ -112,7 +112,7 @@ public class EntityViewUpdateMutableOnlyEntityTest extends AbstractEntityViewUpd
 
         // Then
         // Since we update the old responsiblePerson, load it along with the document for updating it later
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             builder.assertSelect()
@@ -125,7 +125,7 @@ public class EntityViewUpdateMutableOnlyEntityTest extends AbstractEntityViewUpd
             }
         } else {
             fullFetch(builder);
-            if (isFullMode() && version) {
+            if (version) {
                 versionUpdate(builder);
             }
         }
@@ -147,8 +147,8 @@ public class EntityViewUpdateMutableOnlyEntityTest extends AbstractEntityViewUpd
             afterBuilder.assertSelect()
                     .fetching(Document.class, Person.class)
                     .and();
-            if (isFullMode() && version) {
-                versionUpdate(afterBuilder);
+            if (version) {
+                afterBuilder.update(Document.class);
             }
         }
         afterBuilder.validate();

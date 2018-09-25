@@ -56,8 +56,8 @@ public abstract class CollectionElementAttributeFlusher<E, V> extends Collection
     }
 
     @Override
-    public void appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix, String separator) {
-        nestedGraphNode.appendUpdateQueryFragment(context, sb, mappingPrefix, parameterPrefix, separator);
+    public boolean appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix, String separator) {
+        return nestedGraphNode.appendUpdateQueryFragment(context, sb, mappingPrefix, parameterPrefix, separator);
     }
 
     @Override
@@ -71,14 +71,14 @@ public abstract class CollectionElementAttributeFlusher<E, V> extends Collection
     }
 
     @Override
-    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
-        nestedGraphNode.flushQuery(context, parameterPrefix, null, null, (V) element, ownerAwareDeleter);
+    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
+        nestedGraphNode.flushQuery(context, parameterPrefix, null, element, null, (V) element, ownerAwareDeleter);
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public boolean flushEntity(UpdateContext context, E entity, Object view, V value, Runnable postReplaceListener) {
-        return nestedGraphNode.flushEntity(context, null, null, (V) element, null);
+    public boolean flushEntity(UpdateContext context, E entity, Object ownerView, Object view, V value, Runnable postReplaceListener) {
+        return nestedGraphNode.flushEntity(context, null, element, null, (V) element, null);
     }
 
     @Override

@@ -8,14 +8,17 @@ Not yet released
 
 ### New features
 
-* Support for binding Embeddables directly to embeddable path expressions in CTE's
+* Support for binding embeddables directly to embeddable path expressions in CTEs
 * Support for binding associations that are part of an entities identifier
 * Support for binding associations mapped by compound or foreign keys
 * Using a comparator with `List` and `Collection` types in entity views will sort the collection after load
 * Add option to force deduplication of elements in non-sets to `@CollectionMapping`
+* Support `VALUES` clause with embeddable and most basic types
+* Support for binding embeddable parameters in CTEs, insert and update queries
 * Properly implement dirty state transfer when converting one entity view to another
 * Added validation for `equals`/`hashCode` implementations of JPA managed types that are used within entity views which can be disabled with the property `com.blazebit.persistence.view.managed_type_validation_disabled`
 * Add support for DeltaSpike Data 1.9
+* Make use of Collection DML API when using the `QUERY` flush strategy in updatable entity views
 
 ### Bug fixes
 
@@ -23,10 +26,13 @@ Not yet released
 * Fix support for exists repository methods in Spring Data repositories
 * Fix problems with count queries that require parameters in Spring Data repositories
 * Properly set parent id on converted creatable subviews contained in inverse collections
+* Fix type variable related issues with Spring Data Repositories
+* Properly set parent id on converted creatable subviews contained in inverse collections
 * Fix entity view build time validation error with certain inheritance mappings
 * Fix problems with objects of wrong types being returned from standard repository methods with Spring Data 2.0+
 * Fix various little issues related to embeddable handling in updatable entity views
 * Fix support for mapping the inverse side of a `ManyToMany` as updatable collection
+* Fix cycle detection for certain polymorphic entity view graphs
 
 ### Backwards-incompatible changes
 

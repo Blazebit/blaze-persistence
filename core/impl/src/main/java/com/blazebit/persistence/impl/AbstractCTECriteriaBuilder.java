@@ -77,10 +77,10 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
         this.listener = listener;
 
         this.cteType = mainQuery.metamodel.entity(clazz);
-        this.attributeEntries = mainQuery.metamodel.getManagedType(ExtendedManagedType.class, clazz).getAttributes();
+        this.attributeEntries = mainQuery.metamodel.getManagedType(ExtendedManagedType.class, clazz).getOwnedAttributes();
         this.cteName = cteName;
-        this.bindingMap = new LinkedHashMap<String, Integer>(attributeEntries.size());
-        this.columnBindingMap = new LinkedHashMap<String, String>(attributeEntries.size());
+        this.bindingMap = new LinkedHashMap<>(attributeEntries.size());
+        this.columnBindingMap = new LinkedHashMap<>(attributeEntries.size());
         this.subListener = new CTEBuilderListenerImpl();
     }
 
@@ -214,7 +214,7 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
             final String attributeName = attributeQueue.remove();
             Integer tupleIndex = bindingMap.get(attributeName);
 
-            final ExtendedAttribute attributeEntry = attributeEntries.get(attributeName);
+            final ExtendedAttribute<?, ?> attributeEntry = attributeEntries.get(attributeName);
             final List<Attribute<?, ?>> attributePath = attributeEntry.getAttributePath();
             final JpaMetamodelAccessor jpaMetamodelAccessor = mainQuery.jpaProvider.getJpaMetamodelAccessor();
             final Attribute<?, ?> lastAttribute = attributePath.get(attributePath.size() - 1);

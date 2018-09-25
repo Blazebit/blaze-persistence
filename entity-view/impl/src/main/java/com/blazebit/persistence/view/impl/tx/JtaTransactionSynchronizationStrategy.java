@@ -45,7 +45,12 @@ public class JtaTransactionSynchronizationStrategy implements TransactionSynchro
 
     @Override
     public void registerSynchronization(Synchronization synchronization) {
-        synchronizationRegistry.registerInterposedSynchronization(synchronization);
+        SynchronizationRegistry registry = (SynchronizationRegistry) synchronizationRegistry.getResource(SynchronizationRegistry.class.getName());
+        if (registry == null) {
+            registry = new SynchronizationRegistry();
+            synchronizationRegistry.registerInterposedSynchronization(registry);
+        }
+        registry.addSynchronization(synchronization);
     }
 
 }

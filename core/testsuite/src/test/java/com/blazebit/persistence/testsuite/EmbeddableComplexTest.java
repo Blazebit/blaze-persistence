@@ -57,6 +57,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
         return new Class<?>[]{
             IntIdEntity.class,
             EmbeddableTestEntity.class,
+            EmbeddableTestEntitySub.class,
             EmbeddableTestEntityContainer.class,
             EmbeddableTestEntityEmbeddable.class,
             NameObject.class,
@@ -112,8 +113,8 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     public void testSelectEmbeddedIdCollectionSize(){
         CriteriaBuilder<EmbeddableTestEntity> cb = cbf.create(em, EmbeddableTestEntity.class, "e");
         cb.select("SIZE(e.embeddable.oneToMany)");
-        
-        String expected = "SELECT (SELECT " + countStar() + " FROM e.embeddable.oneToMany embeddableTestEntity) FROM EmbeddableTestEntity e";
+
+        String expected = "SELECT (SELECT " + countStar() + " FROM " + correlationPath("e.embeddable.oneToMany", EmbeddableTestEntity.class, "embeddableTestEntity", "embeddable.manyToOne.id = e.id") + ") FROM EmbeddableTestEntity e";
         assertEquals(expected, cb.getQueryString());
         cb.getResultList();
     }
@@ -219,7 +220,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
         CriteriaBuilder<EmbeddableTestEntity> crit = cbf.create(em, EmbeddableTestEntity.class, "e")
                 .select("SIZE(e.embeddable.oneToMany)");
         
-        assertEquals("SELECT (SELECT " + countStar() + " FROM e.embeddable.oneToMany embeddableTestEntity) FROM EmbeddableTestEntity e", crit.getQueryString());
+        assertEquals("SELECT (SELECT " + countStar() + " FROM " + correlationPath("e.embeddableTestEntities", EmbeddableTestEntity.class, "embeddableTestEntity", "embeddable.manyToOne.id = e.id") + ") FROM EmbeddableTestEntity e", crit.getQueryString());
         crit.getResultList();
     }
     

@@ -88,21 +88,12 @@ public class EntityViewUpdateMutableNestedEmbeddableTest extends AbstractEntityV
         }
 
         builder.update(EmbeddableTestEntity.class)
-                .assertDelete()
-                    .forRelation(EmbeddableTestEntity.class, "embeddable.elementCollection")
-                .and()
-                .assertDelete()
-                    .forRelation(EmbeddableTestEntity.class, "embeddable.elementCollection2")
-                .and()
-                .assertDelete()
-                    .forRelation(EmbeddableTestEntity.class, "embeddable.manyToMany")
-                .and()
-                .assertDelete()
-                    .forRelation(EmbeddableTestEntity.class, "embeddable.oneToMany2")
-                .and()
-                .assertDelete()
-                    .forRelation(EmbeddableTestEntity.class, "embeddable.nestedEmbeddable.nestedOneToMany")
-                .and()
+                .delete(EmbeddableTestEntity.class, "embeddable.elementCollection")
+                .delete(EmbeddableTestEntity.class, "embeddable.elementCollection2")
+                .delete(EmbeddableTestEntity.class, "embeddable.elementCollection3")
+                .delete(EmbeddableTestEntity.class, "embeddable.manyToMany")
+                .delete(EmbeddableTestEntity.class, "embeddable.oneToMany2")
+                .delete(EmbeddableTestEntity.class, "embeddable.nestedEmbeddable.nestedOneToMany")
                 .validate();
 
         // When we register a type that can check for the dirtyness, we can skip the reload
@@ -120,21 +111,13 @@ public class EntityViewUpdateMutableNestedEmbeddableTest extends AbstractEntityV
 
             // Since the embeddable was set to null and hibernate initializes the element anyway, we set null on the entity during full flushing
             // This triggers full deletes of associations contained in the embeddable when using the entity flush mode
-            afterBuilder.assertDelete()
-                        .forRelation(EmbeddableTestEntity.class, "embeddable.elementCollection")
-                    .and()
-                    .assertDelete()
-                        .forRelation(EmbeddableTestEntity.class, "embeddable.elementCollection2")
-                    .and()
-                    .assertDelete()
-                        .forRelation(EmbeddableTestEntity.class, "embeddable.manyToMany")
-                    .and()
-                    .assertDelete()
-                        .forRelation(EmbeddableTestEntity.class, "embeddable.oneToMany2")
-                    .and()
-                    .assertDelete()
-                        .forRelation(EmbeddableTestEntity.class, "embeddable.nestedEmbeddable.nestedOneToMany")
-                    .and();
+            afterBuilder
+                    .delete(EmbeddableTestEntity.class, "embeddable.elementCollection")
+                    .delete(EmbeddableTestEntity.class, "embeddable.elementCollection2")
+                    .delete(EmbeddableTestEntity.class, "embeddable.elementCollection3")
+                    .delete(EmbeddableTestEntity.class, "embeddable.manyToMany")
+                    .delete(EmbeddableTestEntity.class, "embeddable.oneToMany2")
+                    .delete(EmbeddableTestEntity.class, "embeddable.nestedEmbeddable.nestedOneToMany");
         }
         afterBuilder.validate();
         assertVersionDiff(oldVersion, entView.getVersion(), 1, 2);
@@ -195,45 +178,16 @@ public class EntityViewUpdateMutableNestedEmbeddableTest extends AbstractEntityV
 
     private void fullFetchUpdateAndReload(UpdatableEmbeddableEntityView docView) {
         // Assert that not only the document is loaded and finally also updated
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
             fullFetch(builder);
         }
 
         builder.update(EmbeddableTestEntity.class);
-
-        if (!isQueryStrategy()) {
-            // See com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityEmbeddable.elementCollection2
-            // Apparently, Hibernate has problems with handling this correctly
-            builder.assertDelete()
-                        .forRelation(EmbeddableTestEntity.class, "embeddable.elementCollection2")
-                    .and();
-        }
-
         builder.validate();
 
-//        assertNoUpdateAndReload(docView);
-        AssertStatementBuilder afterBuilder = assertQueriesAfterUpdate(docView);
-
-        if (isFullMode()) {
-            if (isQueryStrategy()) {
-                fullUpdate(afterBuilder);
-            } else {
-                fullFetch(afterBuilder);
-//                if (version) {
-//                    versionUpdate(afterBuilder);
-//                }
-
-                // See com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityEmbeddable.elementCollection2
-                // Apparently, Hibernate has problems with handling this correctly
-                afterBuilder.assertDelete()
-                        .forRelation(EmbeddableTestEntity.class, "embeddable.elementCollection2")
-                        .and();
-            }
-        }
-        afterBuilder.validate();
-        restartTransactionAndReload();
+        assertNoUpdateAndReload(docView);
     }
 
     protected void assertNoUpdateFullFetchAndReload(UpdatableEmbeddableEntityView docView) {
@@ -267,9 +221,7 @@ public class EntityViewUpdateMutableNestedEmbeddableTest extends AbstractEntityV
 
     @Override
     protected AssertStatementBuilder fullUpdate(AssertStatementBuilder builder) {
-        return builder.assertUpdate()
-                .forEntity(EmbeddableTestEntity.class)
-                .and();
+        return builder.update(EmbeddableTestEntity.class);
     }
 
     @Override

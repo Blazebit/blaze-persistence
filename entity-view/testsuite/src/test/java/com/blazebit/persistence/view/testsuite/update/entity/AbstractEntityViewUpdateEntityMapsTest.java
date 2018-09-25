@@ -41,6 +41,11 @@ public abstract class AbstractEntityViewUpdateEntityMapsTest<T extends Updatable
         return MODE_STRATEGY_VERSION_COMBINATIONS;
     }
 
+    @Override
+    protected String[] getFetchedCollections() {
+        return new String[] { "contacts" };
+    }
+
     public T replaceCollection() {
         // Given
         final T docView = getDoc1View();

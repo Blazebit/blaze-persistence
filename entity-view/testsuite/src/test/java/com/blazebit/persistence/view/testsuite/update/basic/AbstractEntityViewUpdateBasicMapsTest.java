@@ -42,6 +42,11 @@ public abstract class AbstractEntityViewUpdateBasicMapsTest<T extends UpdatableD
         super(mode, strategy, version, viewType);
     }
 
+    @Override
+    protected String[] getFetchedCollections() {
+        return new String[] { "stringMap" };
+    }
+
     public T updateReplaceCollection() {
         // Given
         final T docView = getDoc1View();

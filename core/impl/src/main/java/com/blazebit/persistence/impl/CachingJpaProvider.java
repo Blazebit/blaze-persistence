@@ -50,6 +50,11 @@ public final class CachingJpaProvider implements JpaProvider {
     }
 
     @Override
+    public String[] getDiscriminatorColumnCheck(EntityType<?> entityType) {
+        return jpaProvider.getDiscriminatorColumnCheck(entityType);
+    }
+
+    @Override
     public boolean isForeignJoinColumn(EntityType<?> ownerType, String attributeName) {
         ExtendedAttribute attribute = (ExtendedAttribute) entityMetamodel.getManagedType(ExtendedManagedType.class, ownerType.getName()).getAttributes().get(attributeName);
         return attribute != null && attribute.isForeignJoinColumn();
@@ -78,8 +83,18 @@ public final class CachingJpaProvider implements JpaProvider {
     }
 
     @Override
+    public String[] getColumnNames(EntityType<?> ownerType, String elementCollectionPath, String attributeName) {
+        return getColumnNames(ownerType, attributeName);
+    }
+
+    @Override
     public String[] getColumnTypes(EntityType<?> ownerType, String attributeName) {
         return entityMetamodel.getManagedType(ExtendedManagedType.class, ownerType.getName()).getAttribute(attributeName).getColumnTypes();
+    }
+
+    @Override
+    public String[] getColumnTypes(EntityType<?> ownerType, String elementCollectionPath, String attributeName) {
+        return getColumnTypes(ownerType, attributeName);
     }
 
     @Override
@@ -111,6 +126,11 @@ public final class CachingJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean isOrphanRemoval(ManagedType<?> ownerType, String elementCollectionPath, String attributeName) {
+        return isOrphanRemoval(ownerType, attributeName);
+    }
+
+    @Override
     public boolean isDeleteCascaded(ManagedType<?> ownerType, String attributeName) {
         ExtendedManagedType managedType;
         if (ownerType instanceof EntityType<?>) {
@@ -122,6 +142,10 @@ public final class CachingJpaProvider implements JpaProvider {
         return attribute != null && attribute.isDeleteCascaded();
     }
 
+    @Override
+    public boolean isDeleteCascaded(ManagedType<?> ownerType, String elementCollectionPath, String attributeName) {
+        return isDeleteCascaded(ownerType, attributeName);
+    }
     // Simple delegates
 
     @Override
@@ -295,8 +319,18 @@ public final class CachingJpaProvider implements JpaProvider {
     }
 
     @Override
-    public boolean supportsJoinElementCollectionsOnCorrelatedInverseAssociations() {
-        return jpaProvider.supportsJoinElementCollectionsOnCorrelatedInverseAssociations();
+    public boolean needsCorrelationPredicateWhenCorrelatingWithWhereClause() {
+        return jpaProvider.needsCorrelationPredicateWhenCorrelatingWithWhereClause();
+    }
+
+    @Override
+    public boolean supportsSingleValuedAssociationNaturalIdExpressions() {
+        return jpaProvider.supportsSingleValuedAssociationNaturalIdExpressions();
+    }
+
+    @Override
+    public boolean needsElementCollectionIdCutoff() {
+        return jpaProvider.needsElementCollectionIdCutoff();
     }
 
     @Override
@@ -306,7 +340,14 @@ public final class CachingJpaProvider implements JpaProvider {
 
     @Override
     public List<String> getIdentifierOrUniqueKeyEmbeddedPropertyNames(EntityType<?> owner, String attributeName) {
+        // TODO: cache this via extended metamodel
         return jpaProvider.getIdentifierOrUniqueKeyEmbeddedPropertyNames(owner, attributeName);
+    }
+
+    @Override
+    public List<String> getIdentifierOrUniqueKeyEmbeddedPropertyNames(EntityType<?> owner, String elementCollectionPath, String attributeName) {
+        // TODO: cache this via extended metamodel
+        return jpaProvider.getIdentifierOrUniqueKeyEmbeddedPropertyNames(owner, elementCollectionPath, attributeName);
     }
 
     @Override

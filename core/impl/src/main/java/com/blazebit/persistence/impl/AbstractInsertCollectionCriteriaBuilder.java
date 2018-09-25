@@ -28,22 +28,24 @@ import com.blazebit.persistence.impl.query.CustomSQLQuery;
 import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.impl.query.ReturningCollectionInsertModificationQuerySpecification;
-import com.blazebit.persistence.spi.AttributePath;
-import com.blazebit.persistence.parser.QualifiedAttribute;
 import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.DbmsModificationState;
+import com.blazebit.persistence.spi.ExtendedAttribute;
+import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 import com.blazebit.persistence.spi.JoinTable;
-import com.blazebit.persistence.spi.JpaMetamodelAccessor;
 
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
-import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.ListAttribute;
+import javax.persistence.metamodel.MapAttribute;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  *
@@ -55,16 +57,33 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
 
     private static final String COLLECTION_BASE_QUERY_ALIAS = "_collection";
     private final String collectionName;
+    private final String keyFunctionExpression;
+    private final Map<String, ExtendedAttribute> collectionAttributeEntries;
+    private final Map<String, String> collectionColumnBindingMap;
 
     public AbstractInsertCollectionCriteriaBuilder(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, Class<T> clazz, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener, String collectionName) {
         super(mainQuery, queryContext, isMainQuery, clazz, cteName, cteClass, result, listener);
         this.collectionName = collectionName;
-        // TODO: validate the collection name exists
+        ExtendedManagedType<?> extendedManagedType = mainQuery.metamodel.getManagedType(ExtendedManagedType.class, entityType);
+        ExtendedAttribute<?, ?> extendedAttribute = extendedManagedType.getAttribute(collectionName);
+        Map<String, ExtendedAttribute> collectionAttributeEntries = JpaUtils.getCollectionAttributeEntries(mainQuery.metamodel, entityType, extendedAttribute);
+        if (extendedAttribute.getAttribute() instanceof MapAttribute<?, ?, ?>) {
+            keyFunctionExpression = "key(" + collectionName + ")";
+        } else if (extendedAttribute.getAttribute() instanceof ListAttribute<?, ?> && !extendedAttribute.isBag()) {
+            keyFunctionExpression = "index(" + collectionName + ")";
+        } else {
+            keyFunctionExpression = null;
+        }
+        this.collectionColumnBindingMap = new LinkedHashMap<>(collectionAttributeEntries.size());
+        this.collectionAttributeEntries = collectionAttributeEntries;
     }
 
     public AbstractInsertCollectionCriteriaBuilder(AbstractInsertCollectionCriteriaBuilder<T, X, Y> builder, MainQuery mainQuery, QueryContext queryContext) {
         super(builder, mainQuery, queryContext);
         this.collectionName = builder.collectionName;
+        this.keyFunctionExpression = builder.keyFunctionExpression;
+        this.collectionColumnBindingMap = builder.collectionColumnBindingMap;
+        this.collectionAttributeEntries = builder.collectionAttributeEntries;
     }
 
     @Override
@@ -86,29 +105,25 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
 
     @Override
     protected void addBind(String attributeName) {
-        JpaMetamodelAccessor jpaMetamodelAccessor = mainQuery.jpaProvider.getJpaMetamodelAccessor();
-        AttributePath attributePath = jpaMetamodelAccessor.getJoinTableCollectionAttributePath(getMetamodel(), entityType, attributeName, collectionName);
-        StringBuilder sb = new StringBuilder();
-        List<Attribute<?, ?>> attributes = attributePath.getAttributes();
-        Attribute<?, ?> attribute = attributes.get(0);
-        // Replace the collection name with the alias for easier processing
-        if (attribute instanceof QualifiedAttribute) {
-            sb.append(((QualifiedAttribute) attribute).getQualificationExpression());
-            sb.append('(');
-            sb.append(COLLECTION_BASE_QUERY_ALIAS);
-            sb.append(')');
-        } else if (collectionName.equals(attribute.getName())) {
-            sb.append(COLLECTION_BASE_QUERY_ALIAS);
-        } else {
-            sb.append(entityAlias).append('.');
-            sb.append(attribute.getName());
+        if (attributeName.equalsIgnoreCase(keyFunctionExpression)) {
+            Integer attributeBindIndex = bindingMap.get(attributeName);
+
+            if (attributeBindIndex != null) {
+                throw new IllegalArgumentException("The attribute [" + attributeName + "] has already been bound!");
+            }
+
+            bindingMap.put(attributeName, selectManager.getSelectInfos().size());
+            return;
         }
-        for (int i = 1; i < attributes.size(); i++) {
-            attribute = attributes.get(i);
-            sb.append('.');
-            sb.append(attribute.getName());
+        ExtendedAttribute attributeEntry = collectionAttributeEntries.get(attributeName);
+        if (attributeEntry == null) {
+            Set<String> set = new TreeSet<>(collectionAttributeEntries.keySet());
+            if (keyFunctionExpression != null) {
+                set.add(keyFunctionExpression);
+            }
+            throw new IllegalArgumentException("The attribute [" + attributeName + "] does not exist or can't be bound! Allowed attributes are: " + set);
         }
-        attributeName = sb.toString();
+
         Integer attributeBindIndex = bindingMap.get(attributeName);
 
         if (attributeBindIndex != null) {
@@ -116,6 +131,11 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
         }
 
         bindingMap.put(attributeName, selectManager.getSelectInfos().size());
+    }
+
+    @Override
+    protected void expandBindings() {
+        JpaUtils.expandBindings(entityType, bindingMap, collectionColumnBindingMap, collectionAttributeEntries, ClauseType.SELECT, this);
     }
 
     @Override
@@ -185,6 +205,10 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
         // This is used to replace references to id columns properly in the final sql query
         Map<String, String> columnExpressionRemappings = new HashMap<>(selectItemExpressions.length);
 
+        String[] discriminatorColumnCheck = mainQuery.jpaProvider.getDiscriminatorColumnCheck(entityType);
+        if (discriminatorColumnCheck != null) {
+            columnExpressionRemappings.put(ownerAlias + "." + discriminatorColumnCheck[0] + "=" + discriminatorColumnCheck[1], "1=1");
+        }
         if (joinTable.getKeyColumnMappings() != null) {
             for (Map.Entry<String, String> entry : joinTable.getKeyColumnMappings().entrySet()) {
                 columnExpressionRemappings.put(collectionAlias + "." + entry.getValue(), entry.getKey());
@@ -197,10 +221,17 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
             columnExpressionRemappings.put(targetAlias + "." + entry.getValue(), entry.getKey());
         }
 
+        int cutoffColumns = 0;
         StringBuilder insertSqlSb = new StringBuilder();
         insertSqlSb.append("insert into ").append(joinTable.getTableName()).append("(");
         for (String selectItemExpression : selectItemExpressions) {
-            insertSqlSb.append(columnExpressionRemappings.get(selectItemExpression.trim())).append(',');
+            String columnExpression = columnExpressionRemappings.get(selectItemExpression.trim());
+            // It should never be null, but the workaround for https://hibernate.atlassian.net/browse/HHH-13045 requires us to filter out the entity fetch columns
+            if (columnExpression == null) {
+                cutoffColumns++;
+            } else {
+                insertSqlSb.append(columnExpression).append(',');
+            }
         }
         insertSqlSb.setCharAt(insertSqlSb.length() - 1, ')');
 
@@ -221,7 +252,8 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
                     includedModificationStates,
                     returningAttributeBindingMap,
                     getInsertExecutorQuery(),
-                    insertSqlSb.toString()
+                    insertSqlSb.toString(),
+                    cutoffColumns
             );
         } else {
             return new ReturningCollectionInsertModificationQuerySpecification(
@@ -241,6 +273,7 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
                     returningAttributeBindingMap,
                     getInsertExecutorQuery(),
                     insertSqlSb.toString(),
+                    cutoffColumns,
                     objectBuilder
             );
         }
@@ -252,7 +285,15 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
 
         sb.append("SELECT ");
         for (Map.Entry<String, Integer> entry : bindingMap.entrySet()) {
-            sb.append(entry.getKey());
+            String expression = entry.getKey();
+            int collectionIndex = expression.indexOf(collectionName);
+            if (collectionIndex == -1) {
+                sb.append(entityAlias).append('.').append(expression);
+            } else {
+                sb.append(expression, 0, collectionIndex);
+                sb.append(COLLECTION_BASE_QUERY_ALIAS);
+                sb.append(expression, collectionIndex + collectionName.length(), expression.length());
+            }
             sb.append(',');
         }
 

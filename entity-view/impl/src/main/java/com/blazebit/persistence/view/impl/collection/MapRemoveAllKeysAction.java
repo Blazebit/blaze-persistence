@@ -98,6 +98,15 @@ public class MapRemoveAllKeysAction<C extends Map<K, V>, K, V> implements MapAct
     }
 
     @Override
+    public void undo(C map, Collection<?> removedKeys, Collection<?> addedKeys, Collection<?> removedElements, Collection<?> addedElements) {
+        for (Map.Entry<K, V> entry : removedObjectsInView.entrySet()) {
+            if (removedKeys.contains(entry.getKey()) || removedElements.contains(entry.getValue())) {
+                map.put(entry.getKey(), entry.getValue());
+            }
+        }
+    }
+
+    @Override
     public Collection<Object> getAddedKeys() {
         return Collections.emptyList();
     }

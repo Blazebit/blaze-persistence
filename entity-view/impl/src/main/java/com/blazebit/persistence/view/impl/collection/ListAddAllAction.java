@@ -16,9 +16,10 @@
 
 package com.blazebit.persistence.view.impl.collection;
 
-import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
+import com.blazebit.persistence.view.impl.update.UpdateContext;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -33,16 +34,19 @@ import java.util.Map;
 public class ListAddAllAction<C extends List<E>, E> implements ListAction<C> {
 
     private final int index;
+    private final boolean append;
     private final List<? extends E> elements;
     
-    public ListAddAllAction(int index, Collection<? extends E> collection) {
+    public ListAddAllAction(int index, boolean append, Collection<? extends E> collection) {
         this.index = index;
+        this.append = append;
         this.elements = new ArrayList<E>(collection);
     }
 
-    private ListAddAllAction(List<? extends E> collection, int index) {
+    private ListAddAllAction(List<? extends E> collection, int index, boolean append) {
         this.index = index;
         this.elements = collection;
+        this.append = append;
     }
 
     @Override
@@ -58,6 +62,13 @@ public class ListAddAllAction<C extends List<E>, E> implements ListAction<C> {
             }
         } else {
             list.addAll(index, elements);
+        }
+    }
+
+    @Override
+    public void undo(C collection, Collection<?> removedObjects, Collection<?> addedObjects) {
+        for (int i = index + elements.size() - 1; i >= index; i--) {
+            collection.remove(i);
         }
     }
 
@@ -98,6 +109,42 @@ public class ListAddAllAction<C extends List<E>, E> implements ListAction<C> {
     }
 
     @Override
+    public List<Map.Entry<Object, Integer>> getInsertedObjectEntries() {
+        if (append) {
+            return Collections.emptyList();
+        } else {
+            List<Map.Entry<Object, Integer>> list = new ArrayList<>(elements.size());
+            for (int i = 0; i < elements.size(); i++) {
+                list.add(new AbstractMap.SimpleEntry<Object, Integer>(elements.get(i), index + i));
+            }
+            return list;
+        }
+    }
+
+    @Override
+    public List<Map.Entry<Object, Integer>> getAppendedObjectEntries() {
+        if (append) {
+            List<Map.Entry<Object, Integer>> list = new ArrayList<>(elements.size());
+            for (int i = 0; i < elements.size(); i++) {
+                list.add(new AbstractMap.SimpleEntry<Object, Integer>(elements.get(i), index + i));
+            }
+            return list;
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
+    public List<Map.Entry<Object, Integer>> getRemovedObjectEntries() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public List<Map.Entry<Object, Integer>> getTrimmedObjectEntries() {
+        return Collections.emptyList();
+    }
+
+    @Override
     @SuppressWarnings("unchecked")
     public CollectionAction<C> replaceObject(Object oldElem, Object elem) {
         List<Object> newElements = RecordingUtils.replaceElements(elements, oldElem, elem);
@@ -105,7 +152,7 @@ public class ListAddAllAction<C extends List<E>, E> implements ListAction<C> {
         if (newElements == null) {
             return null;
         }
-        return new ListAddAllAction(newElements, index);
+        return new ListAddAllAction(index, append, newElements);
     }
 
     @Override
@@ -114,9 +161,9 @@ public class ListAddAllAction<C extends List<E>, E> implements ListAction<C> {
         List<Object> newElements = RecordingUtils.replaceElements(elements, objectMapping);
 
         if (newElements == null) {
-            return new ListAddAllAction<>(index, elements);
+            return new ListAddAllAction<>(index, append, elements);
         }
-        return new ListAddAllAction(newElements, index);
+        return new ListAddAllAction(newElements, index, append);
     }
 
     @Override

@@ -354,7 +354,8 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
         // Create combined query parameters
         List<String> queryStrings = new ArrayList<>(participatingQueries.size());
-        QueryParamEntry queryParametersEntry = createQueryParameters(em, participatingQueries, queryStrings);
+        Set<String> querySpaces = new HashSet<>();
+        QueryParamEntry queryParametersEntry = createQueryParameters(em, participatingQueries, queryStrings, querySpaces);
         QueryParameters queryParameters = queryParametersEntry.queryParameters;
 
         QueryPlanCacheKey cacheKey = createCacheKey(queryStrings);
@@ -365,7 +366,8 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             prepareQueryPlan(queryPlan, queryParametersEntry.specifications, finalSql, session, null, false, serviceProvider.getService(DbmsDialect.class));
             queryPlan = putQueryPlanIfAbsent(sfi, cacheKey, queryPlan);
         }
-        
+
+        autoFlush(querySpaces, session);
         return hibernateAccess.performList(queryPlan, session, queryParameters);
     }
 
@@ -392,7 +394,8 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
         // Create combined query parameters
         List<String> queryStrings = new ArrayList<>(participatingQueries.size());
-        QueryParamEntry queryParametersEntry = createQueryParameters(em, participatingQueries, queryStrings);
+        Set<String> querySpaces = new HashSet<>();
+        QueryParamEntry queryParametersEntry = createQueryParameters(em, participatingQueries, queryStrings, querySpaces);
         QueryParameters queryParameters = queryParametersEntry.queryParameters;
 
         QueryPlanCacheKey cacheKey = createCacheKey(queryStrings, firstResult, maxResults);
@@ -403,7 +406,9 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             prepareQueryPlan(queryPlan, queryParametersEntry.specifications, finalSql, session, baseQuery, true, dbmsDialect);
             queryPlan = putQueryPlanIfAbsent(sfi, cacheKey, queryPlan);
         }
-        
+
+        autoFlush(querySpaces, session);
+
         if (queryPlan.getReturnMetadata() == null) {
             return hibernateAccess.performExecuteUpdate(queryPlan, session, queryParameters);
         }
@@ -450,7 +455,8 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
         // Create combined query parameters
         List<String> queryStrings = new ArrayList<>(participatingQueries.size());
-        QueryParamEntry queryParametersEntry = createQueryParameters(em, participatingQueries, queryStrings);
+        Set<String> querySpaces = new HashSet<>();
+        QueryParamEntry queryParametersEntry = createQueryParameters(em, participatingQueries, queryStrings, querySpaces);
         QueryParameters queryParameters = queryParametersEntry.queryParameters;
         
         // Create plan for example query
@@ -498,10 +504,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
              */
             hibernateAccess.checkTransactionSynchStatus(session);
             queryParameters.validateParameters();
-            AutoFlushEvent event = new AutoFlushEvent(queryPlan.getQuerySpaces(), (EventSource) session);
-            for (AutoFlushEventListener listener : listeners(sfi, EventType.AUTO_FLUSH) ) {
-                listener.onAutoFlush( event );
-            }
+            autoFlush(querySpaces, session);
 
             List<Object[]> results = Collections.EMPTY_LIST;
             boolean success = false;
@@ -533,6 +536,13 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             return returningResult;
         } catch (Exception e1) {
             throw new RuntimeException(e1);
+        }
+    }
+
+    public void autoFlush(Set<String> querySpaces, SessionImplementor sessionImplementor) {
+        AutoFlushEvent event = new AutoFlushEvent(querySpaces, (EventSource) sessionImplementor);
+        for (AutoFlushEventListener listener : sessionImplementor.getFactory().getServiceRegistry().getService(EventListenerRegistry.class).getEventListenerGroup(EventType.AUTO_FLUSH).listeners()) {
+            listener.onAutoFlush(event);
         }
     }
 
@@ -631,12 +641,8 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         
         return sb.substring(0, i + 1);
     }
-
-    private <E> Iterable<E> listeners(SessionFactoryImplementor factory, EventType<E> type) {
-        return factory.getServiceRegistry().getService(EventListenerRegistry.class).getEventListenerGroup(type).listeners();
-    }
     
-    private QueryParamEntry createQueryParameters(EntityManager em, List<Query> participatingQueries, List<String> queryStrings) {
+    private QueryParamEntry createQueryParameters(EntityManager em, List<Query> participatingQueries, List<String> queryStrings, Set<String> querySpaces) {
         List<ParameterSpecification> parameterSpecifications = new ArrayList<ParameterSpecification>();
         
         List<Type> types = new ArrayList<Type>();
@@ -651,7 +657,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         String comment = null;
         List<String> queryHints = null;
 
-        for (QueryParamEntry queryParamEntry : getQueryParamEntries(em, participatingQueries)) {
+        for (QueryParamEntry queryParamEntry : getQueryParamEntries(em, participatingQueries, querySpaces)) {
             queryStrings.add(queryParamEntry.queryString);
 
             QueryParameters participatingQueryParameters = queryParamEntry.queryParameters;
@@ -743,7 +749,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         return hibernateAccess.wrapSession(session, dbmsDialect, columns, returningSqlTypes, returningResult);
     }
     
-    private List<QueryParamEntry> getQueryParamEntries(EntityManager em, List<Query> queries) {
+    private List<QueryParamEntry> getQueryParamEntries(EntityManager em, List<Query> queries, Set<String> querySpaces) {
         SessionImplementor session = em.unwrap(SessionImplementor.class);
         SessionFactoryImplementor sfi = session.getFactory();
         List<QueryParamEntry> result = new ArrayList<QueryParamEntry>(queries.size());
@@ -769,6 +775,9 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             if (queryPlan.getTranslators().length > 1) {
                 throw new IllegalArgumentException("No support for multiple translators yet!");
             }
+
+            querySpaces.addAll(queryPlan.getQuerySpaces());
+
             QueryTranslator queryTranslator = queryPlan.getTranslators()[0];
             QueryParameters queryParameters;
             List<ParameterSpecification> specifications;

@@ -20,8 +20,8 @@ import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.FetchStrategy;
 import com.blazebit.persistence.view.Mapping;
-import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntity;
-import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntitySimpleEmbeddable;
+import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntity2;
+import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntitySimpleEmbeddable2;
 
 import java.util.Set;
 
@@ -30,25 +30,25 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.3.0
  */
-@EntityView(EmbeddableTestEntity.class)
+@EntityView(EmbeddableTestEntity2.class)
 public interface EmbeddableTestEntityFetchAsEntityViewJoin extends EmbeddableTestEntityFetchAsEntityView {
 
     @Mapping(value = "embeddable.name", fetch = FetchStrategy.JOIN)
     String getName();
 
     @Mapping(value = "embeddable.manyToOne", fetch = FetchStrategy.JOIN)
-    EmbeddableTestEntity getManyToOne();
+    EmbeddableTestEntity2 getManyToOne();
 
     @Mapping(value = "embeddable.oneToMany", fetch = FetchStrategy.JOIN)
-    Set<EmbeddableTestEntity> getOneToMany();
+    Set<EmbeddableTestEntity2> getOneToMany();
 
     @Mapping(value = "embeddable.elementCollection", fetch = FetchStrategy.JOIN)
     Set<IntIdEntity> getElementCollection();
 
     @Mapping(value = "embeddableSet", fetch = FetchStrategy.JOIN)
-    Set<EmbeddableTestEntitySimpleEmbeddable> getEmbeddableSet();
+    Set<EmbeddableTestEntitySimpleEmbeddable2> getEmbeddableSet();
 
     @Mapping(value = "embeddableMap", fetch = FetchStrategy.JOIN)
-    Set<EmbeddableTestEntitySimpleEmbeddable> getEmbeddableMap();
+    Set<EmbeddableTestEntitySimpleEmbeddable2> getEmbeddableMap();
 
 }

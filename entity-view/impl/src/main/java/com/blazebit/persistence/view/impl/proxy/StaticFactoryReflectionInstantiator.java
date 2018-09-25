@@ -35,7 +35,7 @@ public class StaticFactoryReflectionInstantiator<T> extends AbstractReflectionIn
 
     public StaticFactoryReflectionInstantiator(MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory, ManagedViewTypeImplementor<T> viewType, ManagedViewTypeImplementor<T> viewTypeBase, int inheritanceConfigurationIndex, Class<?>[] parameterTypes,
                                                EntityViewManager entityViewManager, List<MutableBasicUserTypeEntry> mutableBasicUserTypes, List<TypeConverterEntry> typeConverterEntries) {
-        super(mutableBasicUserTypes, typeConverterEntries);
+        super(mutableBasicUserTypes, typeConverterEntries, parameterTypes);
         Class<T> proxyClazz = getProxyClass(entityViewManager, proxyFactory, viewType, viewTypeBase);
         Method factoryMethod;
 

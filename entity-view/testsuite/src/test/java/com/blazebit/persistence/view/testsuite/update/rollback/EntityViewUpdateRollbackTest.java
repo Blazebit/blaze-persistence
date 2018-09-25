@@ -20,6 +20,7 @@ import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuil
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateDocumentTest;
@@ -29,6 +30,8 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
 import java.util.Date;
 
 import static org.junit.Assert.assertEquals;
@@ -103,6 +106,34 @@ public class EntityViewUpdateRollbackTest extends AbstractEntityViewUpdateDocume
         assertEquals(date.getTime(), docView.getLastModified().getTime());
         assertEquals(doc1.getName(), docView.getName());
         assertEquals(doc1.getLastModified().getTime(), docView.getLastModified().getTime());
+    }
+
+    @Test
+    public void testMultiUpdateRollback() {
+        // Given
+        final UpdatableDocumentRollbackView docView = getDoc1View();
+
+        // When
+        docView.setName("newDoc");
+        assertEquals("doc1", evm.getChangeModel(docView).get("name").getInitialState());
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                EntityTransaction tx = em.getTransaction();
+                evm.update(em, docView);
+                assertEquals("newDoc", evm.getChangeModel(docView).get("name").getInitialState());
+                em.flush();
+                docView.setName("newNewDoc");
+                assertEquals("newDoc", evm.getChangeModel(docView).get("name").getInitialState());
+                evm.update(em, docView);
+                assertEquals("newNewDoc", evm.getChangeModel(docView).get("name").getInitialState());
+                em.flush();
+                tx.setRollbackOnly();
+            }
+        });
+        assertEquals("doc1", evm.getChangeModel(docView).get("name").getInitialState());
+        assertEquals("newNewDoc", evm.getChangeModel(docView).get("name").getCurrentState());
+        assertEquals("newNewDoc", docView.getName());
     }
 
     @Override

@@ -76,7 +76,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
     private final boolean hasJoinFetchedCollections;
 
     @SuppressWarnings("unchecked")
-    public ManagedViewTypeImpl(ViewMapping viewMapping, ManagedType<?> managedType, MetamodelBuildingContext context) {
+    public ManagedViewTypeImpl(ViewMapping viewMapping, ManagedType<?> managedType, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
         this.javaType = (Class<X>) viewMapping.getEntityViewClass();
         this.jpaManagedType = managedType;
         this.postCreateMethod = viewMapping.getPostCreateMethod();
@@ -147,14 +147,14 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
                 // The id and the version always have -1 as dirty state index because they can't be dirty in the traditional sense
                 // Id can only be set on "new" objects and shouldn't be mutable, version acts as optimistic concurrency version
                 if (mapping.isId()) {
-                    attribute = mapping.getMethodAttribute(this, 0, -1, context);
+                    attribute = mapping.getMethodAttribute(this, 0, -1, context, embeddableMapping);
                     index--;
                 } else {
-                    attribute = mapping.getMethodAttribute(this, index, -1, context);
+                    attribute = mapping.getMethodAttribute(this, index, -1, context, embeddableMapping);
                 }
             } else {
                 // Note that the dirty state index is only a "suggested" index, but the implementation can choose not to use it
-                attribute = mapping.getMethodAttribute(this, index, dirtyStateIndex, context);
+                attribute = mapping.getMethodAttribute(this, index, dirtyStateIndex, context, embeddableMapping);
                 if (attribute.getDirtyStateIndex() != -1) {
                     mutableAttributes.add(attribute);
                     dirtyStateIndex++;
@@ -182,15 +182,15 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
             overallInheritanceSubtypeMappings.putAll(inheritanceViewMapping.getInheritanceSubtypeMappings());
         }
 
-        this.overallInheritanceSubtypeConfiguration = new InheritanceSubtypeConfiguration<>(this, viewMapping, -1, new InheritanceViewMapping(overallInheritanceSubtypeMappings), context);
-        this.defaultInheritanceSubtypeConfiguration = new InheritanceSubtypeConfiguration<>(this, viewMapping, 0, viewMapping.getDefaultInheritanceViewMapping(), context, overallInheritanceSubtypeConfiguration);
+        this.overallInheritanceSubtypeConfiguration = new InheritanceSubtypeConfiguration<>(this, viewMapping, -1, new InheritanceViewMapping(overallInheritanceSubtypeMappings), context, embeddableMapping);
+        this.defaultInheritanceSubtypeConfiguration = new InheritanceSubtypeConfiguration<>(this, viewMapping, 0, viewMapping.getDefaultInheritanceViewMapping(), context, embeddableMapping, overallInheritanceSubtypeConfiguration);
 
         inheritanceSubtypeConfigurations.put(defaultInheritanceSubtypeConfiguration.inheritanceSubtypeConfiguration, defaultInheritanceSubtypeConfiguration);
         int configurationIndex = 1;
         for (InheritanceViewMapping inheritanceViewMapping : viewMapping.getInheritanceViewMappings()) {
             // Skip the default as it is handled a few lines before
             if (inheritanceViewMapping != viewMapping.getDefaultInheritanceViewMapping()) {
-                InheritanceSubtypeConfiguration<X> subtypeConfiguration = new InheritanceSubtypeConfiguration<>(this, viewMapping, configurationIndex, inheritanceViewMapping, context, overallInheritanceSubtypeConfiguration);
+                InheritanceSubtypeConfiguration<X> subtypeConfiguration = new InheritanceSubtypeConfiguration<>(this, viewMapping, configurationIndex, inheritanceViewMapping, context, embeddableMapping, overallInheritanceSubtypeConfiguration);
                 inheritanceSubtypeConfigurations.put(subtypeConfiguration.inheritanceSubtypeConfiguration, subtypeConfiguration);
                 configurationIndex++;
             }
@@ -208,7 +208,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
             if (constructorIndex.containsKey(constructorName)) {
                 constructorName += constructorIndex.size();
             }
-            MappingConstructorImpl<X> mappingConstructor = new MappingConstructorImpl<X>(this, constructorName, constructor, context);
+            MappingConstructorImpl<X> mappingConstructor = new MappingConstructorImpl<X>(this, constructorName, constructor, context, embeddableMapping);
             constructors.put(entry.getKey(), mappingConstructor);
             constructorIndex.put(constructorName, mappingConstructor);
         }
@@ -240,61 +240,69 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
         // and the first collection will already cause a "fold" of the results for materializing the collection in the entity view
         // We could theoretically try to defer the "fold" action, but the current model makes this pretty hard. The obvious workaround is to map a plural subview attribute
         // and put all mappings into that. This will guarantee that the "fold" action only happens after all properties have been processed
-        Map<String, List<String>> collectionMappings = new HashMap<String, List<String>>();
+        Map<String, List<String>> collectionMappings = new HashMap<>();
+        Map<String, List<String>> collectionMappingSingulars = new HashMap<>();
 
         for (AbstractMethodAttribute<? super X, ?> attribute : attributes.values()) {
             attribute.checkAttribute(jpaManagedType, context);
 
-            for (String mapping : attribute.getCollectionJoinMappings(jpaManagedType, context)) {
-                List<String> locations = collectionMappings.get(mapping);
-                if (locations == null) {
-                    locations = new ArrayList<>(2);
-                    collectionMappings.put(mapping, locations);
-                }
+            for (Map.Entry<String, Boolean> entry : attribute.getCollectionJoinMappings(jpaManagedType, context).entrySet()) {
+                if (entry.getValue()) {
+                    List<String> locations = collectionMappingSingulars.get(entry.getKey());
+                    if (locations == null) {
+                        locations = new ArrayList<>(2);
+                        collectionMappingSingulars.put(entry.getKey(), locations);
+                    }
 
-                locations.add("Attribute '" + attribute.getName() + "' in entity view '" + javaType.getName() + "'");
+                    locations.add("Attribute '" + attribute.getName() + "' in entity view '" + javaType.getName() + "'");
+                } else {
+                    List<String> locations = collectionMappings.get(entry.getKey());
+                    if (locations == null) {
+                        locations = new ArrayList<>(2);
+                        collectionMappings.put(entry.getKey(), locations);
+                    }
+
+                    locations.add("Attribute '" + attribute.getName() + "' in entity view '" + javaType.getName() + "'");
+                }
             }
         }
         
         if (!constructorIndex.isEmpty()) {
             for (MappingConstructorImpl<X> constructor : constructorIndex.values()) {
-                Map<String, List<String>> constructorCollectionMappings = new HashMap<String, List<String>>();
+                Map<String, List<String>> constructorCollectionMappings = new HashMap<>();
                 
                 for (Map.Entry<String, List<String>> entry : collectionMappings.entrySet()) {
-                    constructorCollectionMappings.put(entry.getKey(), new ArrayList<String>(entry.getValue()));
+                    constructorCollectionMappings.put(entry.getKey(), new ArrayList<>(entry.getValue()));
                 }
                 
-                constructor.checkParameters(jpaManagedType, constructorCollectionMappings, context);
-
-                StringBuilder sb = new StringBuilder();
-                for (Map.Entry<String, List<String>> locationsEntry : constructorCollectionMappings.entrySet()) {
-                    List<String> locations = locationsEntry.getValue();
-                    if (locations.size() > 1) {
-                        sb.setLength(0);
-                        sb.append("Invalid multiple usages of the plural mapping '" + locationsEntry.getKey() + "'. Consider mapping the plural attribute only once with a subview. Problematic uses");
-                        
-                        for (String location : locations) {
-                            sb.append("\n - ");
-                            sb.append(location);
-                        }
-                        context.addError(sb.toString());
-                    }
-                }
+                constructor.checkParameters(jpaManagedType, constructorCollectionMappings, collectionMappingSingulars, context);
+                reportCollectionMappingErrors(context, collectionMappings, collectionMappingSingulars);
             }
         } else {
-            StringBuilder sb = new StringBuilder();
-            for (Map.Entry<String, List<String>> locationsEntry : collectionMappings.entrySet()) {
-                List<String> locations = locationsEntry.getValue();
-                if (locations.size() > 1) {
-                    sb.setLength(0);
-                    sb.append("Invalid multiple usages of the plural mapping '" + locationsEntry.getKey() + "'. Consider mapping the plural attribute only once with a subview. Problematic uses");
-                    
-                    for (String location : locations) {
+            reportCollectionMappingErrors(context, collectionMappings, collectionMappingSingulars);
+        }
+    }
+
+    private static void reportCollectionMappingErrors(MetamodelBuildingContext context, Map<String, List<String>> collectionMappings, Map<String, List<String>> collectionMappingSingulars) {
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<String, List<String>> locationsEntry : collectionMappings.entrySet()) {
+            List<String> locations = locationsEntry.getValue();
+            List<String> singularLocations = null;
+            if (locations.size() > 1 || (singularLocations = collectionMappingSingulars.get(locationsEntry.getKey())) != null) {
+                sb.setLength(0);
+                sb.append("Invalid multiple JOIN fetch usages of the plural mapping '" + locationsEntry.getKey() + "'. Consider mapping the plural attribute only once as a subview or use a different fetch strategy. Problematic uses");
+
+                for (String location : locations) {
+                    sb.append("\n - ");
+                    sb.append(location);
+                }
+                if (singularLocations != null) {
+                    for (String location : singularLocations) {
                         sb.append("\n - ");
                         sb.append(location);
                     }
-                    context.addError(sb.toString());
                 }
+                context.addError(sb.toString());
             }
         }
     }
@@ -562,15 +570,15 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
         private final Map<AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<? super X, ?>>> attributesClosure;
         private final Map<ManagedViewTypeImplementor<? extends X>, int[]> overallPositionAssignments;
 
-        public InheritanceSubtypeConfiguration(ManagedViewTypeImpl<X> baseType, ViewMapping baseTypeViewMapping, int configurationIndex, InheritanceViewMapping inheritanceViewMapping, MetamodelBuildingContext context) {
-            this(baseType, baseTypeViewMapping, configurationIndex, inheritanceViewMapping, context, null);
+        public InheritanceSubtypeConfiguration(ManagedViewTypeImpl<X> baseType, ViewMapping baseTypeViewMapping, int configurationIndex, InheritanceViewMapping inheritanceViewMapping, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
+            this(baseType, baseTypeViewMapping, configurationIndex, inheritanceViewMapping, context, embeddableMapping, null);
         }
 
-        public InheritanceSubtypeConfiguration(ManagedViewTypeImpl<X> baseType, ViewMapping baseTypeViewMapping, int configurationIndex, InheritanceViewMapping inheritanceViewMapping, MetamodelBuildingContext context, InheritanceSubtypeConfiguration<X> overallConfiguration) {
+        public InheritanceSubtypeConfiguration(ManagedViewTypeImpl<X> baseType, ViewMapping baseTypeViewMapping, int configurationIndex, InheritanceViewMapping inheritanceViewMapping, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping, InheritanceSubtypeConfiguration<X> overallConfiguration) {
             this.baseType = baseType;
             this.configurationIndex = configurationIndex;
-            ManagedViewTypeImpl<? extends X>[] orderedInheritanceSubtypes = createOrderedSubtypes(inheritanceViewMapping, context);
-            this.inheritanceSubtypeConfiguration = createInheritanceSubtypeConfiguration(inheritanceViewMapping, context);
+            ManagedViewTypeImpl<? extends X>[] orderedInheritanceSubtypes = createOrderedSubtypes(inheritanceViewMapping, context, embeddableMapping);
+            this.inheritanceSubtypeConfiguration = createInheritanceSubtypeConfiguration(inheritanceViewMapping, context, embeddableMapping);
             this.inheritanceSubtypes = Collections.unmodifiableSet(inheritanceSubtypeConfiguration.keySet());
             this.inheritanceDiscriminatorMapping = createInheritanceDiscriminatorMapping(orderedInheritanceSubtypes);
             this.attributesClosure = createSubtypeAttributesClosure(orderedInheritanceSubtypes);
@@ -658,14 +666,14 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
         }
 
         @SuppressWarnings("unchecked")
-        private ManagedViewTypeImpl<? extends X>[] createOrderedSubtypes(InheritanceViewMapping inheritanceViewMapping, MetamodelBuildingContext context) {
+        private ManagedViewTypeImpl<? extends X>[] createOrderedSubtypes(InheritanceViewMapping inheritanceViewMapping, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
             ManagedViewTypeImpl<? extends X>[] orderedSubtypes = new ManagedViewTypeImpl[inheritanceViewMapping.getInheritanceSubtypeMappings().size()];
             int i = 0;
             for (ViewMapping mapping : inheritanceViewMapping.getInheritanceSubtypeMappings().keySet()) {
                 if (mapping.getEntityViewClass() == baseType.javaType) {
                     orderedSubtypes[i++] = baseType;
                 } else {
-                    orderedSubtypes[i++] = (ManagedViewTypeImpl<X>) mapping.getManagedViewType(context);
+                    orderedSubtypes[i++] = (ManagedViewTypeImpl<X>) mapping.getManagedViewType(context, embeddableMapping);
                 }
             }
 
@@ -673,7 +681,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
         }
 
         @SuppressWarnings("unchecked")
-        private Map<ManagedViewTypeImplementor<? extends X>, String> createInheritanceSubtypeConfiguration(InheritanceViewMapping inheritanceViewMapping, MetamodelBuildingContext context) {
+        private Map<ManagedViewTypeImplementor<? extends X>, String> createInheritanceSubtypeConfiguration(InheritanceViewMapping inheritanceViewMapping, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
             Map<ManagedViewTypeImplementor<? extends X>, String> configuration = new LinkedHashMap<>(inheritanceViewMapping.getInheritanceSubtypeMappings().size());
 
             for (Map.Entry<ViewMapping, String> mappingEntry : inheritanceViewMapping.getInheritanceSubtypeMappings().entrySet()) {
@@ -688,7 +696,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
                 if (mappingEntry.getKey().getEntityViewClass() == baseType.javaType) {
                     configuration.put(baseType, mapping);
                 } else {
-                    configuration.put((ManagedViewTypeImplementor<? extends X>) mappingEntry.getKey().getManagedViewType(context), mapping);
+                    configuration.put((ManagedViewTypeImplementor<? extends X>) mappingEntry.getKey().getManagedViewType(context, embeddableMapping), mapping);
                 }
             }
 
@@ -792,11 +800,12 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
                         // Try to find the attribute on some of the super types to see if it is specialized
                         ConstrainedAttribute<AbstractMethodAttribute<? super X, ?>> superTypeAttribute = findAttribute(subtypesAttributesClosure, subtypes, subtypeIndex, attribute.getName());
                         if (superTypeAttribute != null) {
-                            if (!attribute.getJavaMethod().equals(superTypeAttribute.getAttribute().getJavaMethod())) {
+                            if (attribute.getJavaMethod().equals(superTypeAttribute.getAttribute().getJavaMethod())) {
+                                superTypeAttribute.addSubAttribute(subtype, attribute);
+                            } else {
                                 // This attribute was overridden/specialized in a subtype
                                 superTypeAttribute.addSelectionConstraint(inheritanceSubtypeConfiguration.get(subtype), attribute);
                             }
-                            // Otherwise the attribute came from the parent so we ignore it
                         } else {
                             subtypesAttributesClosure.put(new AttributeKey(subtypeIndex, attribute.getName()), new ConstrainedAttribute<AbstractMethodAttribute<? super X, ?>>(inheritanceSubtypeConfiguration.get(subtype), attribute));
                         }

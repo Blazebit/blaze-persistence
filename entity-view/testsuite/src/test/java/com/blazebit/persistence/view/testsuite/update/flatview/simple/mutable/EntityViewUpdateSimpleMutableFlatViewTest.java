@@ -69,7 +69,7 @@ public class EntityViewUpdateSimpleMutableFlatViewTest extends AbstractEntityVie
         // Then
         // Since the only the documents primaryName changed we only need to load the document
         // In full mode, the person also has to be loaded
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
             if (isFullMode()) {
@@ -100,7 +100,7 @@ public class EntityViewUpdateSimpleMutableFlatViewTest extends AbstractEntityVie
         // Then
         // Since the owner's name changed we, have to load the document and the owner
         // We apply the change which results in an update
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
             fullFetch(builder);

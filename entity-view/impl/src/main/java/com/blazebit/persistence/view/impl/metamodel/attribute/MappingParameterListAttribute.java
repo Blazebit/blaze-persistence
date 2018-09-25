@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
+import com.blazebit.persistence.view.impl.metamodel.EmbeddableOwner;
 import com.blazebit.persistence.view.impl.metamodel.MappingConstructorImpl;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 import com.blazebit.persistence.view.impl.metamodel.ParameterAttributeMapping;
@@ -30,8 +31,8 @@ import java.util.List;
  */
 public class MappingParameterListAttribute<X, Y> extends AbstractParameterListAttribute<X, Y> implements MappingAttribute<X, List<Y>> {
 
-    public MappingParameterListAttribute(MappingConstructorImpl<X> mappingConstructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context) {
-        super(mappingConstructor, mapping, context);
+    public MappingParameterListAttribute(MappingConstructorImpl<X> mappingConstructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
+        super(mappingConstructor, mapping, context, embeddableMapping);
     }
 
     @Override

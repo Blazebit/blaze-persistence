@@ -101,7 +101,7 @@ public class ParameterAttributeMapping extends AttributeMapping implements Entit
     }
 
     @Override
-    public String determineMappedBy(ManagedType<?> managedType, String mapping, MetamodelBuildingContext context) {
+    public String determineMappedBy(ManagedType<?> managedType, String mapping, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
         return null;
     }
 
@@ -121,10 +121,10 @@ public class ParameterAttributeMapping extends AttributeMapping implements Entit
 
     // If you change something here don't forget to also update MethodAttributeMapping#getMethodAttribute
     @SuppressWarnings("unchecked")
-    public <X> AbstractParameterAttribute<? super X, ?> getParameterAttribute(MappingConstructorImpl<X> constructor, MetamodelBuildingContext context) {
+    public <X> AbstractParameterAttribute<? super X, ?> getParameterAttribute(MappingConstructorImpl<X> constructor, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
         if (attribute == null) {
             if (mapping instanceof MappingParameter) {
-                attribute = new MappingParameterSingularAttribute<X, Object>(constructor, this, context);
+                attribute = new MappingParameterSingularAttribute<X, Object>(constructor, this, context, embeddableMapping);
                 return (AbstractParameterAttribute<? super X, ?>) attribute;
             }
 
@@ -133,27 +133,27 @@ public class ParameterAttributeMapping extends AttributeMapping implements Entit
             if (isCollection) {
                 if (Collection.class == declaredTypeClass) {
                     if (correlated) {
-                        attribute = new CorrelatedParameterCollectionAttribute<X, Object>(constructor, this, context);
+                        attribute = new CorrelatedParameterCollectionAttribute<X, Object>(constructor, this, context, embeddableMapping);
                     } else {
-                        attribute = new MappingParameterCollectionAttribute<X, Object>(constructor, this, context);
+                        attribute = new MappingParameterCollectionAttribute<X, Object>(constructor, this, context, embeddableMapping);
                     }
                 } else if (List.class == declaredTypeClass) {
                     if (correlated) {
-                        attribute = new CorrelatedParameterListAttribute<X, Object>(constructor, this, context);
+                        attribute = new CorrelatedParameterListAttribute<X, Object>(constructor, this, context, embeddableMapping);
                     } else {
-                        attribute = new MappingParameterListAttribute<X, Object>(constructor, this, context);
+                        attribute = new MappingParameterListAttribute<X, Object>(constructor, this, context, embeddableMapping);
                     }
                 } else if (Set.class == declaredTypeClass || SortedSet.class == declaredTypeClass || NavigableSet.class == declaredTypeClass) {
                     if (correlated) {
-                        attribute = new CorrelatedParameterSetAttribute<X, Object>(constructor, this, context);
+                        attribute = new CorrelatedParameterSetAttribute<X, Object>(constructor, this, context, embeddableMapping);
                     } else {
-                        attribute = new MappingParameterSetAttribute<X, Object>(constructor, this, context);
+                        attribute = new MappingParameterSetAttribute<X, Object>(constructor, this, context, embeddableMapping);
                     }
                 } else if (Map.class == declaredTypeClass || SortedMap.class == declaredTypeClass || NavigableMap.class == declaredTypeClass) {
                     if (correlated) {
                         context.addError("Parameter with the index '" + index + "' of the constructor '" + constructor.getJavaConstructor() + "' uses a Map type with a correlated mapping which is unsupported!");
                     } else {
-                        attribute = new MappingParameterMapAttribute<X, Object, Object>(constructor, this, context);
+                        attribute = new MappingParameterMapAttribute<X, Object, Object>(constructor, this, context, embeddableMapping);
                     }
                 } else {
                     context.addError("Parameter with the index '" + index + "' of the constructor '" + constructor.getJavaConstructor() + "' uses an unknown collection type: " + declaredTypeClass);
@@ -162,9 +162,9 @@ public class ParameterAttributeMapping extends AttributeMapping implements Entit
                 if (mapping instanceof MappingSubquery) {
                     attribute = new SubqueryParameterSingularAttribute<X, Object>(constructor, this, context);
                 } else if (correlated) {
-                    attribute = new CorrelatedParameterSingularAttribute<X, Object>(constructor, this, context);
+                    attribute = new CorrelatedParameterSingularAttribute<X, Object>(constructor, this, context, embeddableMapping);
                 } else {
-                    attribute = new MappingParameterSingularAttribute<X, Object>(constructor, this, context);
+                    attribute = new MappingParameterSingularAttribute<X, Object>(constructor, this, context, embeddableMapping);
                 }
             }
         }

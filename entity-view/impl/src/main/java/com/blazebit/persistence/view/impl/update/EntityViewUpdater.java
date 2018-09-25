@@ -36,7 +36,7 @@ public interface EntityViewUpdater {
 
     public <T extends DirtyAttributeFlusher<T, E, V>, E, V> DirtyAttributeFlusher<T, E, V> getNestedDirtyFlusher(UpdateContext context, MutableStateTrackable current, DirtyAttributeFlusher<T, E, V> fullFlusher);
 
-    public void executeUpdate(UpdateContext context, MutableStateTrackable updatableProxy);
+    public boolean executeUpdate(UpdateContext context, MutableStateTrackable updatableProxy);
 
     public Object executeUpdate(UpdateContext context, Object entity, MutableStateTrackable updatableProxy);
 

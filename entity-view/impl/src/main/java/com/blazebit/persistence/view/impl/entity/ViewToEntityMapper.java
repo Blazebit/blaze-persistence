@@ -44,4 +44,8 @@ public interface ViewToEntityMapper extends ElementToEntityMapper {
 
     public EntityViewUpdater getUpdater(Object view);
 
+    public Object flushToEntity(UpdateContext context, Object entity, Object view);
+
+    public Object loadEntity(UpdateContext context, Object view);
+
 }

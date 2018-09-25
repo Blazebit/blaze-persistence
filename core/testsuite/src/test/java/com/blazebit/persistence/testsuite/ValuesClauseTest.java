@@ -74,7 +74,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
             public void work(EntityManager em) {
                 p1 = new Person("p1");
                 d1 = new Document("doc1", 1);
-
+                d1.setNameObject(new NameObject("123", "abc"));
                 d1.setOwner(p1);
 
                 em.persist(p1);
@@ -95,18 +95,41 @@ public class ValuesClauseTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.fromValues(Long.class, "allowedAge", Collections.singleton(1L));
         cb.from(Document.class, "doc");
-        cb.where("doc.age").eqExpression("allowedAge.value");
+        cb.where("doc.age").eqExpression("allowedAge");
         cb.select("doc.name");
-        cb.select("allowedAge.value");
+        cb.select("allowedAge");
 
         String expected = ""
-                + "SELECT doc.name, TREAT_LONG(allowedAge.value) FROM Document doc, Long(1 VALUES) allowedAge WHERE TREAT_LONG(allowedAge.value) = :allowedAge_value_0 AND doc.age = TREAT_LONG(allowedAge.value)";
+                + "SELECT doc.name, allowedAge FROM Document doc, Long(1 VALUES) allowedAge WHERE TREAT_LONG(allowedAge.value) = :allowedAge_value_0 AND doc.age = allowedAge";
         
         assertEquals(expected, cb.getQueryString());
         List<Tuple> resultList = cb.getResultList();
         assertEquals(1, resultList.size());
         assertEquals("doc1", resultList.get(0).get(0));
         assertEquals(1L, resultList.get(0).get(1));
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testValuesEntityFunctionWithEmbeddable() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
+        cb.fromValues(NameObject.class, "embeddable", Collections.singleton(new NameObject("abc", "123")));
+        cb.from(Document.class, "doc");
+        cb.where("doc.nameObject.primaryName").eqExpression("embeddable.secondaryName");
+        cb.where("doc.nameObject.secondaryName").eqExpression("embeddable.primaryName");
+        cb.select("doc.name");
+        cb.select("embeddable");
+
+        String expected = ""
+                + "SELECT doc.name, embeddable FROM Document doc, NameObject(1 VALUES) embeddable" +
+                " WHERE embeddable.intIdEntity = :embeddable_intIdEntity_0 OR embeddable.primaryName = :embeddable_primaryName_0 OR embeddable.secondaryName = :embeddable_secondaryName_0" +
+                " AND doc.nameObject.primaryName = embeddable.secondaryName AND doc.nameObject.secondaryName = embeddable.primaryName";
+
+        assertEquals(expected, cb.getQueryString());
+        List<Tuple> resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+        assertEquals("doc1", resultList.get(0).get(0));
+        assertEquals(new NameObject("abc", "123"), resultList.get(0).get(1));
     }
 
     // Test for #305
@@ -116,13 +139,13 @@ public class ValuesClauseTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.fromValues(Long.class, "allowedAge", Arrays.asList(1L, 2L));
         cb.from(Document.class, "doc");
-        cb.where("doc.age").eqExpression("allowedAge.value");
+        cb.where("doc.age").eqExpression("allowedAge");
         cb.select("CASE WHEN doc.name = :param THEN doc.name ELSE '' END");
-        cb.select("allowedAge.value");
+        cb.select("allowedAge");
 
         String expected = ""
-                + "SELECT CASE WHEN doc.name = :param THEN doc.name ELSE '' END, TREAT_LONG(allowedAge.value) FROM Document doc, Long(2 VALUES) allowedAge " +
-                "WHERE TREAT_LONG(allowedAge.value) = :allowedAge_value_0 OR TREAT_LONG(allowedAge.value) = :allowedAge_value_1 AND doc.age = TREAT_LONG(allowedAge.value)";
+                + "SELECT CASE WHEN doc.name = :param THEN doc.name ELSE '' END, allowedAge FROM Document doc, Long(2 VALUES) allowedAge " +
+                "WHERE TREAT_LONG(allowedAge.value) = :allowedAge_value_0 OR TREAT_LONG(allowedAge.value) = :allowedAge_value_1 AND doc.age = allowedAge";
 
         assertEquals(expected, cb.getQueryString());
         cb.setParameter("param", "doc1");
@@ -141,8 +164,8 @@ public class ValuesClauseTest extends AbstractCoreTest {
         cb.select("CASE WHEN doc.name = :param THEN doc.name ELSE '' END");
         cb.selectSubquery()
                 .fromValues(Long.class, "allowedAge", Arrays.asList(1L, 2L))
-                .select("CASE WHEN doc.name = :param THEN allowedAge.value ELSE 2L END")
-                .where("doc.age").eqExpression("allowedAge.value")
+                .select("CASE WHEN doc.name = :param THEN allowedAge ELSE 2L END")
+                .where("doc.age").eqExpression("allowedAge")
                 .end();
 
         // We can't check the JPQL here because it contains SQL as literal text :|
@@ -159,9 +182,9 @@ public class ValuesClauseTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.fromValues(Long.class, "allowedAge", Arrays.asList(1L, 2L));
         cb.from(Document.class, "doc");
-        cb.where("doc.age").eqExpression("allowedAge.value");
+        cb.where("doc.age").eqExpression("allowedAge");
         cb.select("doc.name");
-        cb.select("allowedAge.value");
+        cb.select("allowedAge");
 
         TypedQuery<Tuple> query = cb.getQuery();
         assertEquals(1, query.getParameters().size());
@@ -185,16 +208,16 @@ public class ValuesClauseTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.fromValues(Long.class, "allowedAge", Arrays.asList(1L, 2L, 3L));
         cb.leftJoinOn(Document.class, "doc")
-            .on("doc.age").eqExpression("allowedAge.value")
+            .on("doc.age").eqExpression("allowedAge")
         .end();
-        cb.select("allowedAge.value");
+        cb.select("allowedAge");
         cb.select("doc.name");
-        cb.orderByAsc("allowedAge.value");
+        cb.orderByAsc("allowedAge");
 
         String expected = ""
-                + "SELECT TREAT_LONG(allowedAge.value), doc.name FROM Long(3 VALUES) allowedAge LEFT JOIN Document doc" +
-                onClause("TREAT_LONG(allowedAge.value) = :allowedAge_value_0 OR TREAT_LONG(allowedAge.value) = :allowedAge_value_1 OR TREAT_LONG(allowedAge.value) = :allowedAge_value_2 AND doc.age = TREAT_LONG(allowedAge.value)") +
-                " ORDER BY TREAT_LONG(allowedAge.value) ASC";
+                + "SELECT allowedAge, doc.name FROM Long(3 VALUES) allowedAge LEFT JOIN Document doc" +
+                onClause("TREAT_LONG(allowedAge.value) = :allowedAge_value_0 OR TREAT_LONG(allowedAge.value) = :allowedAge_value_1 OR TREAT_LONG(allowedAge.value) = :allowedAge_value_2 AND doc.age = allowedAge") +
+                " ORDER BY allowedAge ASC";
 
         assertEquals(expected, cb.getQueryString());
         List<Tuple> resultList = cb.getResultList();

@@ -41,6 +41,7 @@ import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.reflection.ReflectionUtils;
 
+import javax.persistence.metamodel.Attribute;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Collection;
@@ -65,8 +66,8 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
     private final Method javaMethod;
     private final Map<String, AttributeFilterMapping> filterMappings;
 
-    protected AbstractMethodAttribute(ManagedViewTypeImplementor<X> viewType, MethodAttributeMapping mapping, int attributeIndex, MetamodelBuildingContext context) {
-        super(viewType, mapping, context);
+    protected AbstractMethodAttribute(ManagedViewTypeImplementor<X> viewType, MethodAttributeMapping mapping, int attributeIndex, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
+        super(viewType, mapping, context, embeddableMapping);
         this.attributeIndex = attributeIndex;
         this.name = mapping.getName();
         this.javaMethod = mapping.getMethod();
@@ -220,15 +221,15 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
                         return null;
                 }
             }
-            UpdatableExpressionVisitor visitor = new UpdatableExpressionVisitor(getDeclaringType().getEntityClass());
+            UpdatableExpressionVisitor visitor = new UpdatableExpressionVisitor(context.getEntityMetamodel(), getDeclaringType().getEntityClass());
             try {
                 context.getExpressionFactory().createPathExpression(mapping).accept(visitor);
-                Map<Method, Class<?>[]> possibleTargets = visitor.getPossibleTargets();
+                Map<Attribute<?, ?>, javax.persistence.metamodel.Type<?>> possibleTargets = visitor.getPossibleTargets();
 
                 if (possibleTargets.size() > 1) {
                     context.addError("Multiple possible target type for the mapping in the " + getLocation() + ": " + possibleTargets);
                 }
-                return possibleTargets.values().iterator().next()[0];
+                return possibleTargets.values().iterator().next().getJavaType();
             } catch (SyntaxErrorException ex) {
                 try {
                     context.getExpressionFactory().createSimpleExpression(mapping, false);

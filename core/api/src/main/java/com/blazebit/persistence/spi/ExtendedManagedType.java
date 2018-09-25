@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.spi;
 
+import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.SingularAttribute;
 import java.util.Map;
@@ -36,6 +37,22 @@ public interface ExtendedManagedType<X> {
      * @return The managed type
      */
     public ManagedType<X> getType();
+
+    /**
+     * Returns an entity type and path that owns this embeddable type via a singular attribute or null if there is none.
+     *
+     * @return An entity type and path that owns this embeddable type via a singular attribute or null if there is none
+     * @since 1.3.0
+     */
+    public Map.Entry<EntityType<?>, String> getEmbeddableSingularOwner();
+
+    /**
+     * Returns an entity type and path that owns this embeddable type via a plural attribute or null if there is none.
+     *
+     * @return An entity type and path that owns this embeddable type via a plural attribute or null if there is none
+     * @since 1.3.0
+     */
+    public Map.Entry<EntityType<?>, String> getEmbeddablePluralOwner();
 
     /**
      * Returns whether the type has a cascading delete cycle.
@@ -65,6 +82,14 @@ public interface ExtendedManagedType<X> {
      * @return The extended attributes
      */
     public Map<String, ExtendedAttribute<X, ?>> getAttributes();
+
+    /**
+     * Returns the owned extended attributes of the managed type.
+     *
+     * @return The owned extended attributes
+     * @since 1.3.0
+     */
+    public Map<String, ExtendedAttribute<X, ?>> getOwnedAttributes();
 
     /**
      * Returns the extended attribute of the managed type for the given attribute name.

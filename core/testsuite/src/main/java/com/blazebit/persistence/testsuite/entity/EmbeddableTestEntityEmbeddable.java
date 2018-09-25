@@ -16,12 +16,6 @@
 
 package com.blazebit.persistence.testsuite.entity;
 
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
 import javax.persistence.CollectionTable;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
@@ -34,20 +28,29 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderColumn;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Embeddable
 public class EmbeddableTestEntityEmbeddable implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    
+
     private EmbeddableTestEntity manyToOne;
-    private Set<EmbeddableTestEntity> oneToMany = new HashSet<EmbeddableTestEntity>(0);
-    private Set<EmbeddableTestEntity> oneToMany2 = new HashSet<EmbeddableTestEntity>(0);
-    private Map<String, NameObject> elementCollection = new HashMap<String, NameObject>(0);
-    private Map<String, IntIdEntity> manyToMany = new HashMap<String, IntIdEntity>(0);
+    private NameObject nameObject = new NameObject();
+    private Set<EmbeddableTestEntity> oneToMany = new HashSet<>(0);
+    private Set<EmbeddableTestEntity> oneToMany2 = new HashSet<>(0);
+    private Map<String, NameObject> elementCollection = new HashMap<>(0);
+    private Map<String, IntIdEntity> manyToMany = new HashMap<>(0);
     private EmbeddableTestEntityNestedEmbeddable nestedEmbeddable = new EmbeddableTestEntityNestedEmbeddable();
-    // Can't initialize collection because of Hibernate bug!?
-    private Map<String, String> elementCollection2;// = new HashMap<String, String>(0);
+    private Map<String, String> elementCollection2 = new HashMap<>(0);
+    private List<NameObject> elementCollection3 = new ArrayList<>();
 
     @JoinColumns({
             @JoinColumn(name = "many_to_one_key", referencedColumnName = "test_key"),
@@ -60,6 +63,15 @@ public class EmbeddableTestEntityEmbeddable implements Serializable {
     
     public void setManyToOne(EmbeddableTestEntity manyToOne) {
         this.manyToOne = manyToOne;
+    }
+
+    @Embedded
+    public NameObject getNameObject() {
+        return nameObject;
+    }
+
+    public void setNameObject(NameObject nameObject) {
+        this.nameObject = nameObject;
     }
 
     @OneToMany(mappedBy = "embeddable.manyToOne")
@@ -143,8 +155,24 @@ public class EmbeddableTestEntityEmbeddable implements Serializable {
         return elementCollection2;
     }
 
-    public void setElementCollection2(Map<String, String> elementCollections) {
+    public void setElementCollection2(Map<String, String> elementCollection2) {
         this.elementCollection2 = elementCollection2;
+    }
+
+    @ElementCollection
+    @OrderColumn(name = "emb_ts_ent_elem_coll3_idx", nullable = false)
+    @CollectionTable(name = "emb_ts_ent_elem_coll3",
+            joinColumns = {
+                    @JoinColumn(name = "elem_coll3_parent_key", referencedColumnName = "test_key"),
+                    @JoinColumn(name = "elem_coll3_parent_value", referencedColumnName = "test_value")
+            }
+    )
+    public List<NameObject> getElementCollection3() {
+        return elementCollection3;
+    }
+
+    public void setElementCollection3(List<NameObject> elementCollection3) {
+        this.elementCollection3 = elementCollection3;
     }
 
 }

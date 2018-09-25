@@ -63,6 +63,11 @@ public class EntityViewUpdateSimpleCreatableSubviewCollectionsTest extends Abstr
         cfg.addEntityView(PersonCreateView.class);
     }
 
+    @Override
+    protected String[] getFetchedCollections() {
+        return new String[] { "people" };
+    }
+
     @Test
     public void testUpdateWithPersonCreateView() {
         final UpdatableDocumentWithCollectionsView docView = getDoc1View();
@@ -76,27 +81,31 @@ public class EntityViewUpdateSimpleCreatableSubviewCollectionsTest extends Abstr
 
         // Then
         // Assert that only the document is loaded, as we don't need to load the old person
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        if (isFullMode()) {
-            fullFetch(builder);
+        if (isQueryStrategy()) {
+            if (isFullMode()) {
+                assertReplaceAnd(builder);
+            }
         } else {
-//            builder.select(Document.class);
-            // Adding elements to a list requires full fetching
-            fullFetch(builder);
+            if (isFullMode()) {
+                fullFetch(builder);
+            } else {
+                //            builder.select(Document.class);
+                // Adding elements to a list requires full fetching
+                fullFetch(builder);
+            }
         }
 
         builder.insert(Person.class);
 
-        if (version) {
+        if (version || isFullMode() && isQueryStrategy()) {
             builder.update(Document.class);
         }
-        builder.assertInsert()
-                    .forRelation(Document.class, "people")
-                .and()
+        builder.insert(Document.class, "people")
                 .validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertEquals(doc1.getPeople().get(1).getId(), personCreateView.getId());
         assertEquals("newPers", doc1.getPeople().get(1).getName());
         assertSubviewEquals(doc1.getPeople(), docView.getPeople());
@@ -125,10 +134,20 @@ public class EntityViewUpdateSimpleCreatableSubviewCollectionsTest extends Abstr
         }
     }
 
+    private AssertStatementBuilder assertReplaceAnd(AssertStatementBuilder builder) {
+        builder.delete(Document.class, "people")
+                .insert(Document.class, "people");
+        if (doc1.getPeople().size() > 1) {
+            builder.insert(Document.class, "people");
+        }
+        return builder;
+    }
+
     @Override
-    protected boolean isQueryStrategy() {
-        // Collection changes always need to be applied on the entity model, can't do that via a query
-        return false;
+    protected AssertStatementBuilder fullUpdate(AssertStatementBuilder builder) {
+        assertReplaceAnd(builder);
+        versionUpdate(builder);
+        return builder;
     }
 
     @Override

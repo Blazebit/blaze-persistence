@@ -81,7 +81,7 @@ public class ViewMetamodelImpl implements ViewMetamodel {
 
         // Phase 3: Build the ManagedViewType instances representing the metamodel
         for (ViewMapping viewMapping : viewMappings) {
-            ManagedViewTypeImplementor<?> managedView = viewMapping.getManagedViewType(context);
+            ManagedViewTypeImplementor<?> managedView = viewMapping.getManagedViewType(context, null);
 
             managedViews.put(viewMapping.getEntityViewClass(), managedView);
             if (managedView instanceof FlatViewType<?>) {
@@ -208,6 +208,10 @@ public class ViewMetamodelImpl implements ViewMetamodel {
                             continue;
                         }
                     } else {
+                        if ((attributeType.getModifiers() & Modifier.ABSTRACT) != 0) {
+                            // Skip abstract values for now. At some point we might have to use a subclass
+                            continue;
+                        }
                         Constructor<?> typeConstructor = attributeType.getDeclaredConstructor();
                         typeConstructor.setAccessible(true);
                         value = typeConstructor.newInstance();

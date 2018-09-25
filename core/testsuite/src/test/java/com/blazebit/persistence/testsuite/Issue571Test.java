@@ -198,7 +198,7 @@ public class Issue571Test extends AbstractCoreTest {
     }
 
     @Test
-    // Ignore MySQL / Oracle because of unsuppored use of CTE's, ignore Hibernate 4.3 and 4.3 metamodel bug
+    // Ignore MySQL / Oracle because of unsupported use of CTE's, ignore Hibernate 4.3 and 4.3 metamodel bug
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class, NoOracle.class, NoHibernate42.class, NoHibernate43.class  })
     public void testBindingCteUsingNestedIdClass() {
         transactional(new TxVoidWork() {

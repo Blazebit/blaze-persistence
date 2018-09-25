@@ -292,7 +292,7 @@ public class ProxyFactory {
             cc.addField(evmField);
 
             if (managedViewType.isUpdatable() || managedViewType.isCreatable()) {
-                if (managedViewType.getFlushMode() == FlushMode.LAZY || managedViewType.getFlushMode() == FlushMode.PARTIAL) {
+                if (true || managedViewType.getFlushMode() == FlushMode.LAZY || managedViewType.getFlushMode() == FlushMode.PARTIAL) {
                     cc.addInterface(pool.get(DirtyStateTrackable.class.getName()));
                     initialStateField = new CtField(pool.get(Object[].class.getName()), "$$_initialState", cc);
                     initialStateField.setModifiers(getModifiers(false));
@@ -561,15 +561,16 @@ public class ProxyFactory {
                 if (attributeName.equals(idName)) {
                     continue;
                 }
+                AbstractMethodAttribute<?, ?> attribute = entry.getValue().getSubAttribute(managedView);
+                if (attribute.getDirtyStateIndex() != -1) {
+                    subtypeMutableAttributes[j] = attribute;
+                    subtypeMutableAttributeCount++;
+                }
+
                 CtField field = fieldMap.get(attributeName);
                 CtClass type;
                 if (field == null) {
-                    AbstractMethodAttribute<?, ?> attribute = entry.getValue().getAttribute();
                     type = getType(attribute);
-                    if (attribute.getDirtyStateIndex() != -1) {
-                        subtypeMutableAttributes[j] = attribute;
-                        subtypeMutableAttributeCount++;
-                    }
                 } else {
                     type = field.getType();
                 }
@@ -654,7 +655,7 @@ public class ProxyFactory {
                 if (field != null) {
                     type = field.getType();
                 } else {
-                    AbstractMethodAttribute<?, ?> attribute = entry.getValue().getAttribute();
+                    AbstractMethodAttribute<?, ?> attribute = entry.getValue().getSubAttribute(managedView);
                     type = getType(attribute);
                 }
                 parameterTypes[j] = type;
@@ -2119,33 +2120,35 @@ public class ProxyFactory {
     }
 
     private void renderDirtyTrackerRegistration(CtField[] attributeFields, CtField mutableStateField, AbstractMethodAttribute<?, ?>[] mutableAttributes, ConstructorKind kind, StringBuilder sb) throws NotFoundException, CannotCompileException {
-        for (int i = 0; i < attributeFields.length; i++) {
-            if (attributeFields[i] == null) {
-                continue;
-            }
+        if (kind != ConstructorKind.REFERENCE) {
+            for (int i = 0; i < attributeFields.length; i++) {
+                if (attributeFields[i] == null) {
+                    continue;
+                }
 
-            AbstractMethodAttribute<?, ?> methodAttribute = mutableAttributes[i];
-            if (kind != ConstructorKind.REFERENCE && methodAttribute != null) {
-                if (!methodAttribute.getConvertedJavaType().isPrimitive() && mutableStateField != null && (methodAttribute.isCollection() || methodAttribute.isSubview())) {
-                    sb.append("\tif ($0.").append(attributeFields[i].getName()).append(" != null) {\n");
+                AbstractMethodAttribute<?, ?> methodAttribute = mutableAttributes[i];
+                if (methodAttribute != null) {
+                    if (!methodAttribute.getConvertedJavaType().isPrimitive() && mutableStateField != null && (methodAttribute.isCollection() || methodAttribute.isSubview())) {
+                        sb.append("\tif ($0.").append(attributeFields[i].getName()).append(" != null) {\n");
 
-                    // $(i + 1).setParent(this, attributeIndex)
-                    if (methodAttribute.isCollection()) {
-                        // Collections must be "mutable" for a recording implementation to be used
-                        if (methodAttribute.getDirtyStateIndex() != -1) {
-                            if (methodAttribute instanceof MapAttribute<?, ?, ?>) {
-                                sb.append("\t\t((").append(RecordingMap.class.getName()).append(") $0.").append(attributeFields[i].getName()).append(").$$_setParent($0, ").append(methodAttribute.getDirtyStateIndex()).append(");\n");
-                            } else {
-                                sb.append("\t\t((").append(RecordingCollection.class.getName()).append(") $0.").append(attributeFields[i].getName()).append(").$$_setParent($0, ").append(methodAttribute.getDirtyStateIndex()).append(");\n");
+                        // $(i + 1).setParent(this, attributeIndex)
+                        if (methodAttribute.isCollection()) {
+                            // Collections must be "mutable" for a recording implementation to be used
+                            if (methodAttribute.getDirtyStateIndex() != -1) {
+                                if (methodAttribute instanceof MapAttribute<?, ?, ?>) {
+                                    sb.append("\t\t((").append(RecordingMap.class.getName()).append(") $0.").append(attributeFields[i].getName()).append(").$$_setParent($0, ").append(methodAttribute.getDirtyStateIndex()).append(");\n");
+                                } else {
+                                    sb.append("\t\t((").append(RecordingCollection.class.getName()).append(") $0.").append(attributeFields[i].getName()).append(").$$_setParent($0, ").append(methodAttribute.getDirtyStateIndex()).append(");\n");
+                                }
                             }
+                        } else if (methodAttribute.isSubview()) {
+                            sb.append("\t\tif ($0.").append(attributeFields[i].getName()).append(" instanceof ").append(DirtyTracker.class.getName()).append(") {\n");
+                            sb.append("\t\t\t((").append(DirtyTracker.class.getName()).append(") $0.").append(attributeFields[i].getName()).append(").$$_setParent($0, ").append(methodAttribute.getDirtyStateIndex()).append(");\n");
+                            sb.append("\t\t}\n");
                         }
-                    } else if (methodAttribute.isSubview()) {
-                        sb.append("\t\tif ($0.").append(attributeFields[i].getName()).append(" instanceof ").append(DirtyTracker.class.getName()).append(") {\n");
-                        sb.append("\t\t\t((").append(DirtyTracker.class.getName()).append(") $0.").append(attributeFields[i].getName()).append(").$$_setParent($0, ").append(methodAttribute.getDirtyStateIndex()).append(");\n");
-                        sb.append("\t\t}\n");
-                    }
 
-                    sb.append("\t}\n");
+                        sb.append("\t}\n");
+                    }
                 }
             }
         }

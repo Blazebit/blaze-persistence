@@ -69,7 +69,7 @@ public class EntityViewUpdateCorrelatedUpdatableOnlySubviewTest extends Abstract
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
             fullFetch(builder);
@@ -95,7 +95,7 @@ public class EntityViewUpdateCorrelatedUpdatableOnlySubviewTest extends Abstract
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isFullMode()) {
             if (isQueryStrategy()) {
@@ -127,7 +127,7 @@ public class EntityViewUpdateCorrelatedUpdatableOnlySubviewTest extends Abstract
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isFullMode()) {
             if (isQueryStrategy()) {
@@ -157,7 +157,7 @@ public class EntityViewUpdateCorrelatedUpdatableOnlySubviewTest extends Abstract
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
@@ -166,10 +166,6 @@ public class EntityViewUpdateCorrelatedUpdatableOnlySubviewTest extends Abstract
         } else {
             if (isFullMode()) {
                 fullFetch(builder);
-
-                if (version) {
-                    builder.update(Document.class);
-                }
             }
         }
         builder.validate();
@@ -189,7 +185,7 @@ public class EntityViewUpdateCorrelatedUpdatableOnlySubviewTest extends Abstract
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isFullMode()) {
             if (isQueryStrategy()) {

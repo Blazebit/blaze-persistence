@@ -74,7 +74,9 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
     private final EntityType<?> treatType;
     private final String valuesTypeName;
     private final int valueCount;
+    private final EntityType<?> valueType;
     private final String valuesIdName;
+    private final String valueClazzAttributeName;
     private final String valuesCastedParameter;
     private final String[] valuesAttributes;
     private final String qualificationExpression;
@@ -106,7 +108,9 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         this.qualificationExpression = treatedJoinNode.qualificationExpression;
         this.valuesTypeName = treatedJoinNode.valuesTypeName;
         this.valueCount = treatedJoinNode.valueCount;
+        this.valueType = treatedJoinNode.valueType;
         this.valuesIdName = treatedJoinNode.valuesIdName;
+        this.valueClazzAttributeName = treatedJoinNode.valueClazzAttributeName;
         this.valuesCastedParameter = treatedJoinNode.valuesCastedParameter;
         this.valuesAttributes = treatedJoinNode.valuesAttributes;
         this.aliasInfo = treatedJoinAliasInfo;
@@ -126,7 +130,9 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         this.treatType = treatType;
         this.valuesTypeName = null;
         this.valueCount = 0;
+        this.valueType = null;
         this.valuesIdName = null;
+        this.valueClazzAttributeName = null;
         this.valuesCastedParameter = null;
         this.valuesAttributes = null;
         this.qualificationExpression = qualificationExpression;
@@ -150,7 +156,7 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         onUpdate(null);
     }
 
-    private JoinNode(ManagedType<?> nodeType, String valuesTypeName, int valueCount, String valuesIdName, String valuesCastedParameter, String[] valuesAttributes, JoinAliasInfo aliasInfo) {
+    private JoinNode(Type<?> nodeType, EntityType<?> valueType, String valuesTypeName, int valueCount, String valuesIdName, String valueClazzAttributeName, String valuesCastedParameter, String[] valuesAttributes, JoinAliasInfo aliasInfo) {
         this.parent = null;
         this.parentTreeNode = null;
         this.joinType = null;
@@ -160,7 +166,9 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         this.treatType = null;
         this.valuesTypeName = valuesTypeName;
         this.valueCount = valueCount;
+        this.valueType = valueType;
         this.valuesIdName = valuesIdName;
+        this.valueClazzAttributeName = valueClazzAttributeName;
         this.valuesCastedParameter = valuesCastedParameter;
         this.valuesAttributes = valuesAttributes;
         this.qualificationExpression = null;
@@ -173,8 +181,8 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         return new JoinNode(null, null, null, null, null, nodeType, null, null, aliasInfo);
     }
 
-    public static JoinNode createValuesRootNode(ManagedType<?> nodeType, String valuesTypeName, int valueCount, String valuesIdName, String valuesCastedParameter, String[] valuesAttributes, JoinAliasInfo aliasInfo) {
-        return new JoinNode(nodeType, valuesTypeName, valueCount, valuesIdName, valuesCastedParameter, valuesAttributes, aliasInfo);
+    public static JoinNode createValuesRootNode(Type<?> nodeType, EntityType<?> valueType, String valuesTypeName, int valueCount, String valuesIdName, String valueClazzAttributeName, String valuesCastedParameter, String[] valuesAttributes, JoinAliasInfo aliasInfo) {
+        return new JoinNode(nodeType, valueType, valuesTypeName, valueCount, valuesIdName, valueClazzAttributeName, valuesCastedParameter, valuesAttributes, aliasInfo);
     }
 
     public static JoinNode createCorrelationRootNode(JoinNode correlationParent, String correlationPath, Attribute<?, ?> correlatedAttribute, Type<?> nodeType, EntityType<?> treatType, JoinAliasInfo aliasInfo) {
@@ -193,11 +201,12 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         // NOTE: no cloning of treatedJoinNodes and entityJoinNodes is intentional
         JoinNode newNode;
         if (valueCount > 0) {
-            newNode = createValuesRootNode((ManagedType<?>) nodeType, valuesTypeName, valueCount, valuesIdName, valuesCastedParameter, valuesAttributes, aliasInfo);
-        } else if (joinType == null) {
+            newNode = createValuesRootNode(nodeType, valueType, valuesTypeName, valueCount, valuesIdName, valueClazzAttributeName, valuesCastedParameter, valuesAttributes, aliasInfo);
+        } else if (correlationParent == null) {
             newNode = createRootNode((EntityType<?>) nodeType, aliasInfo);
         } else {
-            throw new UnsupportedOperationException("Cloning subqueries not yet implemented!");
+            JoinAliasInfo parentAliasInfo = (JoinAliasInfo) aliasInfo.getAliasOwner().getAliasInfo(correlationParent.getAlias());
+            newNode = createCorrelationRootNode(parentAliasInfo.getJoinNode(), correlationPath, parentTreeNode.getAttribute(), nodeType, treatType, aliasInfo);
         }
 
         newNode.getClauseDependencies().addAll(clauseDependencies);
@@ -556,6 +565,13 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         throw new IllegalArgumentException("Expected type of join node to be an entity but isn't: " + JpaMetamodelUtils.getTypeName(nodeType));
     }
 
+    public EntityType<?> getInternalEntityType() {
+        if (valueType != null) {
+            return valueType;
+        }
+        return getEntityType();
+    }
+
     public ManagedType<?> getManagedType() {
         if (treatType != null) {
             return treatType;
@@ -585,6 +601,14 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
 
     public int getValueCount() {
         return valueCount;
+    }
+
+    public EntityType<?> getValueType() {
+        return valueType;
+    }
+
+    public String getValueClazzAttributeName() {
+        return valueClazzAttributeName;
     }
 
     public String getValuesIdName() {
@@ -722,16 +746,6 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         return qualificationExpression != null;
     }
 
-    public boolean hasElementCollectionJoins() {
-        for (JoinTreeNode treeNode : nodes.values()) {
-            if (treeNode.getAttribute().getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     /**
      * @author Christian Beikov
      * @since 1.2.0
@@ -773,30 +787,45 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         }
     }
 
-    public void appendDeReference(StringBuilder sb, String property) {
-        appendDeReference(sb, property, false);
+    public void appendDeReference(StringBuilder sb, String property, boolean externalRepresentation) {
+        appendDeReference(sb, property, false, externalRepresentation, false);
     }
 
-    public void appendDeReference(StringBuilder sb, String property, boolean renderTreat) {
-        appendAlias(sb, renderTreat);
+    public void appendDeReference(StringBuilder sb, String property, boolean renderTreat, boolean externalRepresentation, boolean requiresElementCollectionIdCutoff) {
+        appendAlias(sb, renderTreat, externalRepresentation);
         // If we have a valuesTypeName, the property can only be "value" which is already handled in appendAlias
         if (property != null && valuesTypeName == null) {
-            sb.append('.').append(property);
+            if (requiresElementCollectionIdCutoff && parentTreeNode != null && parentTreeNode.getAttribute().getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION && property.endsWith(".id")) {
+                // See https://hibernate.atlassian.net/browse/HHH-13045 for details
+                sb.append('.').append(property, 0, property.length() - ".id".length());
+            } else {
+                sb.append('.').append(property);
+            }
         }
     }
 
-    public void appendAlias(StringBuilder sb) {
-        appendAlias(sb, false);
+    public void appendAlias(StringBuilder sb, boolean externalRepresentation) {
+        appendAlias(sb, false, externalRepresentation);
     }
 
-    public void appendAlias(StringBuilder sb, boolean renderTreat) {
+    public void appendAlias(StringBuilder sb, boolean renderTreat, boolean externalRepresentation) {
         if (valuesTypeName != null) {
-            // NOTE: property should always be null
-            sb.append("TREAT_");
-            sb.append(valuesTypeName.toUpperCase()).append('(');
-            sb.append(aliasInfo.getAlias());
-            sb.append(".value");
-            sb.append(')');
+            if (externalRepresentation) {
+                sb.append(aliasInfo.getAlias());
+            } else {
+                // NOTE: property should always be null
+                sb.append("TREAT_");
+                sb.append(valuesTypeName.toUpperCase()).append('(');
+                sb.append(aliasInfo.getAlias());
+                sb.append(".value");
+                sb.append(')');
+            }
+        } else if (valueClazzAttributeName != null) {
+            if (externalRepresentation) {
+                sb.append(aliasInfo.getAlias());
+            } else {
+                sb.append(aliasInfo.getAlias()).append('.').append(valueClazzAttributeName);
+            }
         } else {
             if (qualificationExpression != null) {
                 boolean hasTreat = renderTreat && treatType != null;

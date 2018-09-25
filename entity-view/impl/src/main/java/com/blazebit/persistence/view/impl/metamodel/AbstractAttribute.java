@@ -47,19 +47,20 @@ import com.blazebit.persistence.view.impl.collection.SortedSetCollectionInstanti
 import com.blazebit.persistence.view.impl.collection.UnorderedMapInstantiator;
 import com.blazebit.persistence.view.impl.collection.UnorderedSetCollectionInstantiator;
 import com.blazebit.persistence.view.metamodel.Attribute;
+import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.reflection.ReflectionUtils;
 
 import javax.persistence.metamodel.ManagedType;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -94,14 +95,14 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     protected final String correlationExpression;
     protected final MappingType mappingType;
     protected final boolean id;
-    private final boolean updateMappable;
+    protected final javax.persistence.metamodel.Attribute<?, ?> updateMappableAttribute;
     private final List<TargetType> possibleTargetTypes;
 
     @SuppressWarnings("unchecked")
-    public AbstractAttribute(ManagedViewTypeImplementor<X> declaringType, AttributeMapping mapping, MetamodelBuildingContext context) {
+    public AbstractAttribute(ManagedViewTypeImplementor<X> declaringType, AttributeMapping mapping, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
         Class<Y> javaType = null;
         try {
-            javaType = (Class<Y>) mapping.getJavaType(context);
+            javaType = (Class<Y>) mapping.getJavaType(context, embeddableMapping);
             if (javaType == null) {
                 context.addError("The attribute type is not resolvable at the " + mapping.getErrorLocation());
             }
@@ -123,7 +124,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
         this.declaringType = declaringType;
         this.javaType = javaType;
-        this.convertedJavaType = getConvertedType(declaringType.getJavaType(), mapping.getType(context).getConvertedType(), javaType);
+        this.convertedJavaType = getConvertedType(declaringType.getJavaType(), mapping.getType(context, embeddableMapping).getConvertedType(), javaType);
         Annotation mappingAnnotation = mapping.getMapping();
 
         if (mappingAnnotation instanceof IdMapping) {
@@ -133,7 +134,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.batchSize = -1;
             this.subqueryProvider = null;
             this.id = true;
-            this.updateMappable = checkUpdatableMapping(this.mapping, context);
+            this.updateMappableAttribute = getUpdateMappableAttribute(this.mapping, context);
             this.mappingType = MappingType.BASIC;
             this.subqueryExpression = null;
             this.subqueryAlias = null;
@@ -151,7 +152,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.batchSize = batchSize;
             this.subqueryProvider = null;
             this.id = false;
-            this.updateMappable = checkUpdatableMapping(this.mapping, context);
+            this.updateMappableAttribute = getUpdateMappableAttribute(this.mapping, context);
             this.mappingType = MappingType.BASIC;
             this.subqueryExpression = null;
             this.subqueryAlias = null;
@@ -164,13 +165,13 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                 this.correlationExpression = null;
             } else {
                 ExtendedManagedType<?> managedType = context.getEntityMetamodel().getManagedType(ExtendedManagedType.class, declaringType.getEntityClass());
-                ExtendedAttribute<?, ?> attribute = managedType.getAttributes().get(this.mapping);
+                ExtendedAttribute<?, ?> attribute = managedType.getOwnedAttributes().get(this.mapping);
 
                 this.correlationKeyAlias = "__correlationAlias";
                 // If the mapping is a deep path expression i.e. contains a dot but no parenthesis, we try to find a mapped by attribute by a prefix
                 int index;
                 if (attribute == null && (index = this.mapping.indexOf('.')) != -1 && this.mapping.indexOf('(') == -1
-                        && (attribute = managedType.getAttributes().get(this.mapping.substring(0, index))) != null && attribute.getMappedBy() != null) {
+                        && (attribute = managedType.getOwnedAttributes().get(this.mapping.substring(0, index))) != null && attribute.getMappedBy() != null) {
                     this.correlated = attribute.getElementClass();
                     this.correlationExpression = attribute.getMappedBy() + " IN __correlationAlias";
                     this.correlationResult = this.mapping.substring(index + 1);
@@ -194,7 +195,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.subqueryProvider = null;
             this.id = false;
             // Parameters are never update mappable
-            this.updateMappable = false;
+            this.updateMappableAttribute = null;
             this.mappingType = MappingType.PARAMETER;
             this.subqueryExpression = null;
             this.subqueryAlias = null;
@@ -213,7 +214,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.batchSize = -1;
             this.id = false;
             // Subqueries are never update mappable
-            this.updateMappable = false;
+            this.updateMappableAttribute = null;
             this.mappingType = MappingType.SUBQUERY;
             this.subqueryExpression = mappingSubquery.expression();
             this.subqueryAlias = mappingSubquery.subqueryAlias();
@@ -244,8 +245,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
             this.subqueryProvider = null;
             this.id = false;
-            // Since we can cascade correlated views, we consider them update mappable
-            this.updateMappable = true;
+            this.updateMappableAttribute = null;
             this.mappingType = MappingType.CORRELATED;
             this.subqueryExpression = null;
             this.subqueryAlias = null;
@@ -273,8 +273,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
             this.subqueryProvider = null;
             this.id = false;
-            // Since we can cascade correlated views, we consider them update mappable
-            this.updateMappable = true;
+            this.updateMappableAttribute = null;
             this.mappingType = MappingType.CORRELATED;
             this.subqueryExpression = null;
             this.subqueryAlias = null;
@@ -296,7 +295,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.batchSize = Integer.MIN_VALUE;
             this.subqueryProvider = null;
             this.id = false;
-            this.updateMappable = false;
+            this.updateMappableAttribute = null;
             this.mappingType = null;
             this.subqueryExpression = null;
             this.subqueryAlias = null;
@@ -316,15 +315,19 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         return ReflectionUtils.resolveType(declaringClass, convertedType);
     }
 
-    private boolean checkUpdatableMapping(String mapping, MetamodelBuildingContext context) {
+    private javax.persistence.metamodel.Attribute<?, ?> getUpdateMappableAttribute(String mapping, MetamodelBuildingContext context) {
         try {
-            UpdatableExpressionVisitor visitor = new UpdatableExpressionVisitor(declaringType.getEntityClass());
+            UpdatableExpressionVisitor visitor = new UpdatableExpressionVisitor(context.getEntityMetamodel(), declaringType.getEntityClass());
             context.getExpressionFactory().createPathExpression(mapping).accept(visitor);
-            return true;
+            Iterator<javax.persistence.metamodel.Attribute<?, ?>> iterator = visitor.getPossibleTargets().keySet().iterator();
+            if (iterator.hasNext()) {
+                return iterator.next();
+            }
         } catch (Exception ex) {
             // Don't care about the actual exception as that will be thrown anyway when validating the expressions later
-            return false;
         }
+
+        return null;
     }
 
     public static String stripThisFromMapping(String mapping) {
@@ -372,24 +375,25 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
      * @param context The metamodel context
      * @return The mappings which contain collection attribute uses
      */
-    public Set<String> getCollectionJoinMappings(ManagedType<?> managedType, MetamodelBuildingContext context) {
-        if (mapping == null || isQueryParameter() || getAttributeType() == AttributeType.SINGULAR || getFetchStrategy() != FetchStrategy.JOIN) {
+    public Map<String, Boolean> getCollectionJoinMappings(ManagedType<?> managedType, MetamodelBuildingContext context) {
+        if (mapping == null || isQueryParameter() || getFetchStrategy() != FetchStrategy.JOIN) {
             // Subqueries and parameters can't be checked. When a collection is remapped to a singular attribute, we don't check it
             // When using a non-join fetch strategy, we also don't care about the collection join mappings
-            return Collections.emptySet();
+            return Collections.emptyMap();
         }
         
         CollectionJoinMappingGathererExpressionVisitor visitor = new CollectionJoinMappingGathererExpressionVisitor(managedType, context.getEntityMetamodel());
         String expression = stripThisFromMapping(mapping);
         if (expression.isEmpty()) {
-            return Collections.emptySet();
+            return Collections.emptyMap();
         }
 
-        context.getExpressionFactory().createSimpleExpression(expression, false).accept(visitor);
-        Set<String> mappings = new HashSet<String>();
+        context.getTypeValidationExpressionFactory().createSimpleExpression(expression, false).accept(visitor);
+        Map<String, Boolean> mappings = new HashMap<>();
+        boolean aggregate = getAttributeType() == AttributeType.SINGULAR;
         
         for (String s : visitor.getPaths()) {
-            mappings.add(s);
+            mappings.put(s, aggregate);
         }
         
         return mappings;
@@ -404,7 +408,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     protected boolean determineForcedUnique(MetamodelBuildingContext context) {
         if (isCollection() && getMapping() != null && getMapping().indexOf('.') == -1) {
             ExtendedManagedType<?> managedType = context.getEntityMetamodel().getManagedType(ExtendedManagedType.class, getDeclaringType().getJpaManagedType());
-            ExtendedAttribute<?, ?> attribute = managedType.getAttributes().get(getMapping());
+            ExtendedAttribute<?, ?> attribute = managedType.getOwnedAttributes().get(getMapping());
             if (attribute != null && attribute.getAttribute() instanceof javax.persistence.metamodel.PluralAttribute<?, ?, ?>) {
                 // TODO: we should add that information to ExtendedAttribute
                 return (((javax.persistence.metamodel.PluralAttribute<?, ?, ?>) attribute.getAttribute()).getCollectionType() != javax.persistence.metamodel.PluralAttribute.CollectionType.MAP)
@@ -418,7 +422,8 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     }
 
     public boolean isUpdateMappable() {
-        return updateMappable;
+        // Since we can cascade correlated views, we consider them update mappable
+        return isCorrelated() || updateMappableAttribute != null;
     }
 
     public Class<?> getCorrelated() {
@@ -752,8 +757,8 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                 validateTypesCompatible(possibleTargetTypes, expressionType, elementType, subtypesAllowed, context, ExpressionLocation.MAPPING, getLocation());
             }
 
-            if (isUpdatable() && (declaringType.isUpdatable() || declaringType.isCreatable())) {
-                UpdatableExpressionVisitor visitor = new UpdatableExpressionVisitor(managedType.getJavaType());
+            if (isMutable() && (declaringType.isUpdatable() || declaringType.isCreatable())) {
+                UpdatableExpressionVisitor visitor = new UpdatableExpressionVisitor(context.getEntityMetamodel(), managedType.getJavaType());
                 try {
                     // NOTE: Not supporting "this" here because it doesn't make sense to have an updatable mapping that refers to this
                     // The only thing that might be interesting is supporting "this" when we support cascading as properties could be nested
@@ -761,10 +766,22 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                     // I guess these attributes are not "updatable" but that probably depends on the decision regarding collections as they have a similar problem
                     // A collection itself might not be "updatable" but it's elements could be. This is roughly the same problem
                     context.getExpressionFactory().createPathExpression(mapping).accept(visitor);
-                    Map<Method, Class<?>[]> possibleTargets = visitor.getPossibleTargets();
+                    Map<javax.persistence.metamodel.Attribute<?, ?>, javax.persistence.metamodel.Type<?>> possibleTargets = visitor.getPossibleTargets();
 
                     if (possibleTargets.size() > 1) {
                         context.addError("Multiple possible target type for the mapping in the " + getLocation() + ": " + possibleTargets);
+                    }
+
+                    javax.persistence.metamodel.Attribute<?, ?> jpaAttribute = possibleTargets.keySet().iterator().next();
+                    // TODO: maybe allow to override this per-attribute?
+                    if (isDisallowOwnedUpdatableSubview()) {
+                        for (Type<?> updateCascadeAllowedSubtype : getUpdateCascadeAllowedSubtypes()) {
+                            ManagedViewType<?> managedViewType = (ManagedViewType<?>) updateCascadeAllowedSubtype;
+                            if (managedViewType.isUpdatable()) {
+                                context.addError("Invalid use of @UpdatableEntityView type '" + managedViewType.getJavaType().getName() + "' for the " + getLocation() + ". Consider using a read-only view type instead! " +
+                                        "For further information on this topic, please consult the documentation https://persistence.blazebit.com/documentation/entity-view/manual/en_US/index.html#updatable-mappings-subview");
+                            }
+                        }
                     }
                 } catch (SyntaxErrorException ex) {
                     try {
@@ -781,6 +798,8 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             }
         }
     }
+
+    protected abstract boolean isDisallowOwnedUpdatableSubview();
 
     public void checkNestedAttribute(List<AbstractAttribute<?, ?>> parents, ManagedType<?> managedType, MetamodelBuildingContext context) {
         if (!parents.isEmpty()) {
@@ -846,6 +865,14 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     public abstract String getLocation();
 
     public abstract boolean isUpdatable();
+
+    public abstract boolean isMutable();
+
+    public abstract String getMappedBy();
+
+    public abstract boolean isUpdateCascaded();
+
+    public abstract Set<Type<?>> getUpdateCascadeAllowedSubtypes();
 
     protected abstract boolean isIndexed();
 

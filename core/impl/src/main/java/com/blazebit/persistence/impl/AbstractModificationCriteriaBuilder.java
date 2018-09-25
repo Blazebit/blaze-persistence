@@ -98,7 +98,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             this.cteName = null;
             this.isReturningEntityAliasAllowed = false;
             this.returningAttributes = new LinkedHashMap<>(0);
-            this.returningAttributeBindingMap = new LinkedHashMap<String, String>(0);
+            this.returningAttributeBindingMap = new LinkedHashMap<>(0);
             this.attributeEntries = null;
             this.columnBindingMap = null;
         } else {
@@ -107,9 +107,9 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             // Returning the "entity" is only allowed in CTEs
             this.isReturningEntityAliasAllowed = true;
             this.returningAttributes = null;
-            this.attributeEntries = mainQuery.metamodel.getManagedType(ExtendedManagedType.class, cteClass).getAttributes();
-            this.returningAttributeBindingMap = new LinkedHashMap<String, String>(attributeEntries.size());
-            this.columnBindingMap = new LinkedHashMap<String, String>(attributeEntries.size());
+            this.attributeEntries = mainQuery.metamodel.getManagedType(ExtendedManagedType.class, cteClass).getOwnedAttributes();
+            this.returningAttributeBindingMap = new LinkedHashMap<>(attributeEntries.size());
+            this.columnBindingMap = new LinkedHashMap<>(attributeEntries.size());
         }
     }
 

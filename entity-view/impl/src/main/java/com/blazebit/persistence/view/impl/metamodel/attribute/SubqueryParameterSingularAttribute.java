@@ -30,7 +30,7 @@ import com.blazebit.persistence.view.metamodel.SubqueryAttribute;
 public class SubqueryParameterSingularAttribute<X, Y> extends AbstractParameterSingularAttribute<X, Y> implements SubqueryAttribute<X, Y> {
 
     public SubqueryParameterSingularAttribute(MappingConstructorImpl<X> constructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context) {
-        super(constructor, mapping, context);
+        super(constructor, mapping, context, null);
     }
 
     @Override

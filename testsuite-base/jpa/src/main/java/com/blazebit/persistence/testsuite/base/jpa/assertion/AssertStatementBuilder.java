@@ -79,6 +79,12 @@ public class AssertStatementBuilder {
                 .and();
     }
 
+    public AssertStatementBuilder select(Class<?> entityClass, String relationName) {
+        return assertSelect()
+                .forRelation(entityClass, relationName)
+                .and();
+    }
+
     public AssertSelectStatementBuilder assertSelect() {
         failIfValidated();
         return new AssertSelectStatementBuilder(this, relationalModelAccessor);
@@ -91,6 +97,12 @@ public class AssertStatementBuilder {
     public AssertStatementBuilder insert(Class<?> entityClass) {
         return assertInsert()
                 .forEntity(entityClass)
+                .and();
+    }
+
+    public AssertStatementBuilder insert(Class<?> entityClass, String relationName) {
+        return assertInsert()
+                .forRelation(entityClass, relationName)
                 .and();
     }
 
@@ -109,6 +121,12 @@ public class AssertStatementBuilder {
                 .and();
     }
 
+    public AssertStatementBuilder update(Class<?> entityClass, String relationName) {
+        return assertUpdate()
+                .forRelation(entityClass, relationName)
+                .and();
+    }
+
     public AssertUpdateStatementBuilder assertUpdate() {
         failIfValidated();
         return new AssertUpdateStatementBuilder(this, relationalModelAccessor);
@@ -121,6 +139,12 @@ public class AssertStatementBuilder {
     public AssertStatementBuilder delete(Class<?> entityClass) {
         return assertDelete()
                 .forEntity(entityClass)
+                .and();
+    }
+
+    public AssertStatementBuilder delete(Class<?> entityClass, String relationName) {
+        return assertDelete()
+                .forRelation(entityClass, relationName)
                 .and();
     }
 

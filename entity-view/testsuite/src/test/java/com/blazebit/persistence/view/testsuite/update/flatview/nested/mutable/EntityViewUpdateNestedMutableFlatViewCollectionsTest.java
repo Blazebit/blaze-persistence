@@ -66,6 +66,11 @@ public class EntityViewUpdateNestedMutableFlatViewCollectionsTest extends Abstra
         cfg.addEntityView(UpdatableNameObjectContainerView.class);
     }
 
+    @Override
+    protected String[] getFetchedCollections() {
+        return new String[] { "nameContainers" };
+    }
+
     @Test
     public void testUpdateCollectionElement() {
         // Given
@@ -80,18 +85,21 @@ public class EntityViewUpdateNestedMutableFlatViewCollectionsTest extends Abstra
         // Then
         // Assert that the document and the people are loaded i.e. a full fetch
         // Finally the person is updated because the primary name changed
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        fullFetch(builder);
-        if (version) {
+        if (!isQueryStrategy()) {
+            fullFetch(builder);
+        }
+        if (version || isFullMode() && isQueryStrategy()) {
             builder.update(Document.class);
         }
-        builder.assertDelete()
-                    .forRelation(Document.class, "nameContainers")
-                .and()
-                .assertInsert()
-                    .forRelation(Document.class, "nameContainers")
-                .validate();
+        if (isFullMode()) {
+            builder.delete(Document.class, "nameContainers")
+                    .insert(Document.class, "nameContainers");
+        } else {
+            builder.update(Document.class, "nameContainers");
+        }
+        builder.validate();
 
         assertNoUpdateAndReload(docView);
         assertEquals("newPers", doc1.getNameContainers().get(0).getNameObject().getPrimaryName());
@@ -131,10 +139,9 @@ public class EntityViewUpdateNestedMutableFlatViewCollectionsTest extends Abstra
 
     @Override
     protected AssertStatementBuilder fullUpdate(AssertStatementBuilder builder) {
-        fullFetch(builder);
-        if (version) {
-            builder.update(Document.class);
-        }
+        builder.delete(Document.class, "nameContainers")
+                .insert(Document.class, "nameContainers");
+        builder.update(Document.class);
         return builder;
     }
 

@@ -72,6 +72,8 @@ public interface MetamodelBuildingContext {
 
     public ExpressionFactory createMacroAwareExpressionFactory(String viewRoot);
 
+    public boolean isDisallowOwnedUpdatableSubview();
+
     public ProxyFactory getProxyFactory();
 
     public FlushMode getFlushMode(Class<?> clazz, FlushMode defaultValue);

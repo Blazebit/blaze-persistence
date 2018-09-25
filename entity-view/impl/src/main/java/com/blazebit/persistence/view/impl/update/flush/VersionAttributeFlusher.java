@@ -47,6 +47,7 @@ public class VersionAttributeFlusher<E, V> extends BasicAttributeFlusher<E, V> {
                 false,
                 null,
                 null,
+                null,
                 userType,
                 null,
                 null,
@@ -60,7 +61,7 @@ public class VersionAttributeFlusher<E, V> extends BasicAttributeFlusher<E, V> {
     }
 
     @Override
-    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
+    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
         if (query != null) {
             String parameter;
             if (parameterPrefix == null) {
@@ -87,7 +88,7 @@ public class VersionAttributeFlusher<E, V> extends BasicAttributeFlusher<E, V> {
     }
 
     @Override
-    public boolean flushEntity(UpdateContext context, E entity, Object view, V value, Runnable postReplaceListener) {
+    public boolean flushEntity(UpdateContext context, E entity, Object ownerView, Object view, V value, Runnable postReplaceListener) {
         Object entityValue = entityAttributeAccessor.getValue(entity);
         if (value != entityValue && !elementDescriptor.getBasicUserType().isDeepEqual(value, entityValue)) {
             throw new OptimisticLockException(entity, view);

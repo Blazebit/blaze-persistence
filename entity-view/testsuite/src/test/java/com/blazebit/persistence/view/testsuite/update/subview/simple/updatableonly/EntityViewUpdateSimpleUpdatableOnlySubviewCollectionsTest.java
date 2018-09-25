@@ -62,6 +62,11 @@ public class EntityViewUpdateSimpleUpdatableOnlySubviewCollectionsTest extends A
         cfg.addEntityView(PersonView.class);
     }
 
+    @Override
+    protected String[] getFetchedCollections() {
+        return new String[] { "people" };
+    }
+
     @Test
     public void testUpdateReplaceCollection() {
         // Given
@@ -76,12 +81,16 @@ public class EntityViewUpdateSimpleUpdatableOnlySubviewCollectionsTest extends A
         // Assert that the document and the people are loaded in full mode.
         // During dirty detection we should be able to figure out that nothing changed
         // So partial modes wouldn't load anything and both won't cause any updates
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isFullMode()) {
-            fullFetch(builder);
+            if (isQueryStrategy()) {
+                assertReplaceAnd(builder);
+            } else {
+                fullFetch(builder);
+            }
 
-            if (version) {
+            if (isQueryStrategy()) {
                 builder.update(Document.class);
             }
         }
@@ -105,11 +114,17 @@ public class EntityViewUpdateSimpleUpdatableOnlySubviewCollectionsTest extends A
 
         // Then
         // Assert that the document and the people are loaded, but only a relation insert is done
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        fullFetch(builder);
+        if (isQueryStrategy()) {
+            if (isFullMode()) {
+                assertReplaceAnd(builder);
+            }
+        } else {
+            fullFetch(builder);
+        }
 
-        if (version) {
+        if (version || isFullMode() && isQueryStrategy()) {
             builder.update(Document.class);
         }
 
@@ -136,19 +151,25 @@ public class EntityViewUpdateSimpleUpdatableOnlySubviewCollectionsTest extends A
         // Then
         // In partial mode, only the document is loaded. In full mode, the people are also loaded
         // Since we load the people in the full mode, we do a proper diff and can compute that only a single item was added
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        if (isFullMode()) {
-            fullFetch(builder);
+        if (isQueryStrategy()) {
+            if (isFullMode()) {
+                assertReplaceAnd(builder);
+            }
         } else {
-            if (preferLoadingAndDiffingOverRecreate()) {
+            if (isFullMode()) {
                 fullFetch(builder);
             } else {
-                assertReplaceAnd(builder);
+                if (preferLoadingAndDiffingOverRecreate()) {
+                    fullFetch(builder);
+                } else {
+                    assertReplaceAnd(builder);
+                }
             }
         }
 
-        if (version) {
+        if (version || isFullMode() && isQueryStrategy()) {
             builder.update(Document.class);
         }
 
@@ -174,19 +195,24 @@ public class EntityViewUpdateSimpleUpdatableOnlySubviewCollectionsTest extends A
         // Then
         // In partial mode, only the document is loaded. In full mode, the people are also loaded
         // Since we load the people in the full mode, we do a proper diff and can compute that only a single item was added
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        if (isFullMode()) {
-            fullFetch(builder);
-        } else {
-            if (preferLoadingAndDiffingOverRecreate()) {
-                fullFetch(builder);
-            } else {
+        if (isQueryStrategy()) {
+            if (isFullMode()) {
                 assertReplaceAnd(builder);
             }
+        } else {
+            if (isFullMode()) {
+                fullFetch(builder);
+            } else {
+                if (preferLoadingAndDiffingOverRecreate()) {
+                    fullFetch(builder);
+                } else {
+                    assertReplaceAnd(builder);
+                }
+            }
         }
-
-        if (version) {
+        if (version || isFullMode() && isQueryStrategy()) {
             builder.update(Document.class);
         }
 
@@ -214,19 +240,25 @@ public class EntityViewUpdateSimpleUpdatableOnlySubviewCollectionsTest extends A
         // Then
         // In partial mode, only the document is loaded. In full mode, the people are also loaded
         // Since we load the people in the full mode, we do a proper diff and can compute that only a single item was added
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
-        if (isFullMode()) {
-            fullFetch(builder);
+        if (isQueryStrategy()) {
+            if (isFullMode()) {
+                assertReplaceAnd(builder);
+            }
         } else {
-            if (preferLoadingAndDiffingOverRecreate()) {
+            if (isFullMode()) {
                 fullFetch(builder);
             } else {
-                assertReplaceAnd(builder);
+                if (preferLoadingAndDiffingOverRecreate()) {
+                    fullFetch(builder);
+                } else {
+                    assertReplaceAnd(builder);
+                }
             }
         }
 
-        if (version) {
+        if (version || isFullMode() && isQueryStrategy()) {
             builder.update(Document.class);
         }
 
@@ -250,12 +282,16 @@ public class EntityViewUpdateSimpleUpdatableOnlySubviewCollectionsTest extends A
 
         // Then
         // Nothing is loaded since nothing that should be cascaded changed
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isFullMode()) {
-            fullFetch(builder);
+            if (isQueryStrategy()) {
+                assertReplaceAnd(builder);
+            } else {
+                fullFetch(builder);
+            }
 
-            if (version) {
+            if (isQueryStrategy()) {
                 builder.update(Document.class);
             }
         }
@@ -289,18 +325,18 @@ public class EntityViewUpdateSimpleUpdatableOnlySubviewCollectionsTest extends A
     }
 
     private AssertStatementBuilder assertReplaceAnd(AssertStatementBuilder builder) {
-        return builder.assertDelete()
-                    .forRelation(Document.class, "people")
-                .and()
-                .assertInsert()
-                    .forRelation(Document.class, "people")
-                .and();
+        builder.delete(Document.class, "people")
+                .insert(Document.class, "people");
+        if (doc1.getPeople().size() > 1) {
+            builder.insert(Document.class, "people");
+        }
+        return builder;
     }
 
     @Override
-    protected boolean isQueryStrategy() {
-        // Collection changes always need to be applied on the entity model, can't do that via a query
-        return false;
+    protected AssertStatementBuilder fullUpdate(AssertStatementBuilder builder) {
+        assertReplaceAnd(builder);
+        return versionUpdate(builder);
     }
 
     @Override

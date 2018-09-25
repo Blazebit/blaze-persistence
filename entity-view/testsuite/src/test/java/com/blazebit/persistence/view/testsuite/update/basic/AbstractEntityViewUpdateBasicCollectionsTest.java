@@ -42,6 +42,11 @@ public abstract class AbstractEntityViewUpdateBasicCollectionsTest<T extends Upd
         super(mode, strategy, version, viewType);
     }
 
+    @Override
+    protected String[] getFetchedCollections() {
+        return new String[] { "strings" };
+    }
+
     public T updateReplaceCollection() {
         // Given
         final T docView = getDoc1View();

@@ -67,8 +67,10 @@ public class SubqueryInitiatorFactory {
     private <T> SubqueryBuilderImpl<T> createSubqueryBuilder(T result, SubqueryBuilderListener<T> listener, boolean inExists, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder, ClauseType clause) {
         SubqueryBuilderImpl<T> subqueryBuilder = new SubqueryBuilderImpl<T>(mainQuery, new QueryContext(queryBuilder, clause), aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
 
-        subqueryBuilder.parameterManager.applyFrom(builder.mainQuery.parameterManager, builder);
-        mainQuery.cteManager.applyFrom(builder.mainQuery.cteManager);
+        if (builder.isMainQuery) {
+            subqueryBuilder.parameterManager.applyFrom(builder.mainQuery.parameterManager, builder);
+            mainQuery.cteManager.applyFrom(builder.mainQuery.cteManager);
+        }
         subqueryBuilder.joinManager.applyFrom(builder.joinManager);
         subqueryBuilder.whereManager.applyFrom(builder.whereManager);
         subqueryBuilder.havingManager.applyFrom(builder.havingManager);

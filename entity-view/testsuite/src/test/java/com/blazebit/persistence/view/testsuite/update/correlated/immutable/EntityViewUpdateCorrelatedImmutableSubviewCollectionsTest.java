@@ -62,6 +62,11 @@ public class EntityViewUpdateCorrelatedImmutableSubviewCollectionsTest extends A
         cfg.addEntityView(UpdatablePersonView.class);
     }
 
+    @Override
+    protected String[] getFetchedCollections() {
+        return new String[] { "partners" };
+    }
+
     @Test
     public void testUpdateReplaceCollection() {
         // Given
@@ -73,16 +78,13 @@ public class EntityViewUpdateCorrelatedImmutableSubviewCollectionsTest extends A
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isFullMode()) {
             if (isQueryStrategy()) {
                 builder.update(Document.class);
             } else {
                 fullFetch(builder);
-                if (version) {
-                    builder.update(Document.class);
-                }
             }
         }
 
@@ -104,16 +106,13 @@ public class EntityViewUpdateCorrelatedImmutableSubviewCollectionsTest extends A
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isFullMode()) {
             if (isQueryStrategy()) {
                 builder.update(Document.class);
             } else {
                 fullFetch(builder);
-                if (version) {
-                    builder.update(Document.class);
-                }
             }
         }
 
@@ -138,16 +137,13 @@ public class EntityViewUpdateCorrelatedImmutableSubviewCollectionsTest extends A
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isFullMode()) {
             if (isQueryStrategy()) {
                 builder.update(Document.class);
             } else {
                 fullFetch(builder);
-                if (version) {
-                    builder.update(Document.class);
-                }
             }
         }
 

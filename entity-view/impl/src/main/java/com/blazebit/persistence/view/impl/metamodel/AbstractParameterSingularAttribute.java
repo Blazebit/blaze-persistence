@@ -36,10 +36,10 @@ public abstract class AbstractParameterSingularAttribute<X, Y> extends AbstractP
     private final Map<ManagedViewType<? extends Y>, String> inheritanceSubtypes;
 
     @SuppressWarnings("unchecked")
-    public AbstractParameterSingularAttribute(MappingConstructorImpl<X> constructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context) {
-        super(constructor, mapping, context);
-        this.type = (Type<Y>) mapping.getType(context);
-        this.inheritanceSubtypes = (Map<ManagedViewType<? extends Y>, String>) (Map<?, ?>) mapping.getInheritanceSubtypes(context);
+    public AbstractParameterSingularAttribute(MappingConstructorImpl<X> constructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
+        super(constructor, mapping, context, embeddableMapping);
+        this.type = (Type<Y>) mapping.getType(context, embeddableMapping);
+        this.inheritanceSubtypes = (Map<ManagedViewType<? extends Y>, String>) (Map<?, ?>) mapping.getInheritanceSubtypes(context, embeddableMapping);
     }
 
     @Override

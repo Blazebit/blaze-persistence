@@ -47,6 +47,11 @@ public class EntityViewUpdateCreatableEntityTest extends AbstractEntityViewUpdat
         super(mode, strategy, version, UpdatableDocumentEntityView.class);
     }
 
+    @Override
+    protected String[] getFetchedCollections() {
+        return new String[] { "responsiblePerson" };
+    }
+
     @Test
     public void testSimpleUpdate() {
         // Given & When
@@ -54,7 +59,7 @@ public class EntityViewUpdateCreatableEntityTest extends AbstractEntityViewUpdat
 
         // Then
         // Assert that not only the document is loaded
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
             fullFetch(builder);
@@ -63,7 +68,7 @@ public class EntityViewUpdateCreatableEntityTest extends AbstractEntityViewUpdat
         builder.update(Document.class)
                 .validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertEquals("newDoc", docView.getName());
         assertEquals(doc1.getName(), docView.getName());
     }
@@ -76,7 +81,7 @@ public class EntityViewUpdateCreatableEntityTest extends AbstractEntityViewUpdat
         // Then
         // Since the responsiblePerson changed we don't need to load the old responsiblePerson
         // Unfortunately, the new responsiblePerson has to be loaded by the JPA provider since it has to be merged
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
             if (isFullMode()) {
@@ -89,7 +94,7 @@ public class EntityViewUpdateCreatableEntityTest extends AbstractEntityViewUpdat
         builder.update(Document.class)
                 .validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertEquals(p2.getId(), docView.getResponsiblePerson().getId());
         assertEquals(doc1.getResponsiblePerson().getId(), docView.getResponsiblePerson().getId());
     }
@@ -102,7 +107,7 @@ public class EntityViewUpdateCreatableEntityTest extends AbstractEntityViewUpdat
         // Then
         // Since the responsiblePerson changed we don't need to load the old responsiblePerson
         // Unfortunately, the new responsiblePerson has to be loaded by the JPA provider since it has to be merged
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
             if (isFullMode()) {
@@ -115,7 +120,7 @@ public class EntityViewUpdateCreatableEntityTest extends AbstractEntityViewUpdat
         builder.update(Document.class)
                 .validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertEquals(p2.getId(), docView.getResponsiblePerson().getId());
         assertEquals(doc1.getResponsiblePerson().getId(), docView.getResponsiblePerson().getId());
         assertEquals("pers2", doc1.getResponsiblePerson().getName());
@@ -128,7 +133,7 @@ public class EntityViewUpdateCreatableEntityTest extends AbstractEntityViewUpdat
 
         // Then
         // Since we update the old responsiblePerson, load it along with the document for updating it later
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
@@ -145,7 +150,7 @@ public class EntityViewUpdateCreatableEntityTest extends AbstractEntityViewUpdat
 
         builder.validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertEquals(doc1.getResponsiblePerson().getId(), docView.getResponsiblePerson().getId());
         assertEquals("pers1", doc1.getResponsiblePerson().getName());
     }
@@ -158,7 +163,7 @@ public class EntityViewUpdateCreatableEntityTest extends AbstractEntityViewUpdat
         // Then
         // Since the responsiblePerson changed we don't need to load the old responsiblePerson
         // Since the new responsiblePerson is null, we don't need to do anything further
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
             if (isFullMode()) {
@@ -171,7 +176,7 @@ public class EntityViewUpdateCreatableEntityTest extends AbstractEntityViewUpdat
         builder.update(Document.class)
                 .validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertNull(doc1.getResponsiblePerson());
     }
 
@@ -183,7 +188,7 @@ public class EntityViewUpdateCreatableEntityTest extends AbstractEntityViewUpdat
         // Then
         // Since the responsiblePerson changed we don't need to load the old responsiblePerson
         // The new responsiblePerson will be persisted
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
             if (isFullMode()) {

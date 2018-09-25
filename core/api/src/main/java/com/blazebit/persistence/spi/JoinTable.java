@@ -17,6 +17,7 @@
 package com.blazebit.persistence.spi;
 
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A structure for accessing join table information.
@@ -27,22 +28,27 @@ import java.util.Map;
 public class JoinTable {
 
     private final String tableName;
+    private final Set<String> idAttributeNames;
+    private final Set<String> targetAttributeNames;
     private final Map<String, String> idColumnMappings;
     private final Map<String, String> keyColumnMappings;
     private final Map<String, String> targetIdColumnMappings;
 
     /**
      * Constructs a JoinTable.
-     *
      * @param tableName The join table name
+     * @param idAttributeNames The attribute names of the owning entity
      * @param idColumnMappings The id column mappings
      * @param keyColumnMappings The key column mappings
+     * @param targetAttributeNames The attribute names of the target entity
      * @param targetIdColumnMappings The target id column mappings
      */
-    public JoinTable(String tableName, Map<String, String> idColumnMappings, Map<String, String> keyColumnMappings, Map<String, String> targetIdColumnMappings) {
+    public JoinTable(String tableName, Set<String> idAttributeNames, Map<String, String> idColumnMappings, Map<String, String> keyColumnMappings, Set<String> targetAttributeNames, Map<String, String> targetIdColumnMappings) {
         this.tableName = tableName;
+        this.idAttributeNames = idAttributeNames;
         this.idColumnMappings = idColumnMappings;
         this.keyColumnMappings = keyColumnMappings;
+        this.targetAttributeNames = targetAttributeNames;
         this.targetIdColumnMappings = targetIdColumnMappings;
     }
 
@@ -53,6 +59,16 @@ public class JoinTable {
      */
     public String getTableName() {
         return tableName;
+    }
+
+    /**
+     * Returns the id attribute names of the owning entity that map to the join table.
+     *
+     * @return The owner entity id attribute names
+     * @since 1.3.0
+     */
+    public Set<String> getIdAttributeNames() {
+        return idAttributeNames;
     }
 
     /**
@@ -75,6 +91,16 @@ public class JoinTable {
      */
     public Map<String, String> getKeyColumnMappings() {
         return keyColumnMappings;
+    }
+
+    /**
+     * Returns the id attribute names of the target entity that map to the join table.
+     *
+     * @return The target entity id attribute names
+     * @since 1.3.0
+     */
+    public Set<String> getTargetAttributeNames() {
+        return targetAttributeNames;
     }
 
     /**

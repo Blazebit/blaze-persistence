@@ -38,7 +38,7 @@ public class AssertUpdateStatement extends AbstractAssertStatement {
             if (!query.startsWith("with ") || (updateIndex = query.indexOf(")\nupdate ")) == -1) {
                 query = stripReturningClause(query);
                 updateIndex = -2;
-                if (!query.startsWith("delete ")) {
+                if (!query.startsWith("update ")) {
                     Assert.fail("Query is not an update statement: " + query);
                     return;
                 }

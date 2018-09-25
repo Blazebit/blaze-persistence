@@ -72,7 +72,7 @@ public class EntityViewUpdateNestedUpdatableOnlySubviewTest extends AbstractEnti
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
@@ -106,7 +106,7 @@ public class EntityViewUpdateNestedUpdatableOnlySubviewTest extends AbstractEnti
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             builder.update(Person.class);
@@ -140,7 +140,7 @@ public class EntityViewUpdateNestedUpdatableOnlySubviewTest extends AbstractEnti
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             builder.update(Person.class);
@@ -173,7 +173,7 @@ public class EntityViewUpdateNestedUpdatableOnlySubviewTest extends AbstractEnti
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
@@ -183,9 +183,6 @@ public class EntityViewUpdateNestedUpdatableOnlySubviewTest extends AbstractEnti
         } else {
             if (isFullMode()) {
                 fullFetch(builder);
-                if (version) {
-                    builder.update(Document.class);
-                }
             }
         }
 
@@ -206,7 +203,7 @@ public class EntityViewUpdateNestedUpdatableOnlySubviewTest extends AbstractEnti
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             builder.update(Person.class);

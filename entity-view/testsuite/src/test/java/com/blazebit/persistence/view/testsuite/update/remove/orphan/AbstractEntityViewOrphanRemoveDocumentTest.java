@@ -143,11 +143,13 @@ public abstract class AbstractEntityViewOrphanRemoveDocumentTest<T> extends Abst
     }
 
     @Override
-    protected void restartTransactionAndReload() {
-        restartTransaction();
+    protected void reload() {
         // Load into PC, then access via find
+        cbf.create(em, Document.class)
+                .fetch("people", "contacts")
+                .where("id").in(ids(doc1))
+                .getResultList();
         cbf.create(em, Person.class)
-                .where("id").in(ids(p1, p2, p3, p4, p5, p6, p7, p8, p9))
                 .getResultList();
         doc1 = load(doc1);
         p1 = load(p1);
@@ -211,23 +213,21 @@ public abstract class AbstractEntityViewOrphanRemoveDocumentTest<T> extends Abst
 
     protected AssertStatementBuilder deleteDocumentOwned(AssertStatementBuilder builder, boolean simpleDelete) {
         if (!isQueryStrategy() || simpleDelete || !dbmsDialect.supportsModificationQueryInWithClause()) {
-            builder
-                    .assertDelete().forRelation(Document.class, "contacts").and()
-                    .assertDelete().forRelation(Document.class, "contacts2").and()
-                    .assertDelete().forRelation(Document.class, "people").and()
-                    .assertDelete().forRelation(Document.class, "peopleListBag").and()
-                    .assertDelete().forRelation(Document.class, "peopleCollectionBag").and();
+            builder.delete(Document.class, "contacts")
+                    .delete(Document.class, "contacts2")
+                    .delete(Document.class, "people")
+                    .delete(Document.class, "peopleListBag")
+                    .delete(Document.class, "peopleCollectionBag");
         }
         if (supportsNestedEmbeddables()) {
-            builder
-                    .assertDelete().forRelation(Document.class, "nameContainerMap").and()
-                    .assertDelete().forRelation(Document.class, "nameContainers").and();
+            builder.delete(Document.class, "nameContainerMap")
+                    .delete(Document.class, "nameContainers");
         }
         return builder
-                .assertDelete().forRelation(Document.class, "nameMap").and()
-                .assertDelete().forRelation(Document.class, "names").and()
-                .assertDelete().forRelation(Document.class, "stringMap").and()
-                .assertDelete().forRelation(Document.class, "strings").and()
+                .delete(Document.class, "nameMap")
+                .delete(Document.class, "names")
+                .delete(Document.class, "stringMap")
+                .delete(Document.class, "strings")
                 ;
     }
 
@@ -237,14 +237,10 @@ public abstract class AbstractEntityViewOrphanRemoveDocumentTest<T> extends Abst
 
     protected AssertStatementBuilder deletePersonOwned(AssertStatementBuilder builder, boolean simpleDelete) {
         if (!isQueryStrategy() || simpleDelete || !dbmsDialect.supportsModificationQueryInWithClause()) {
-            builder
-                    .assertDelete().forRelation(Person.class, "favoriteDocuments").and()
-            ;
+            builder.delete(Person.class, "favoriteDocuments");
         }
 
-        return builder
-                .assertDelete().forRelation(Person.class, "localized").and()
-                ;
+        return builder.delete(Person.class, "localized");
     }
 
     @Override

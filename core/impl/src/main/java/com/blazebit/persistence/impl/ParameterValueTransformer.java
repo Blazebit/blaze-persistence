@@ -16,11 +16,15 @@
 
 package com.blazebit.persistence.impl;
 
+import javax.persistence.Query;
+
 /**
  * @author Christian Beikov
  * @since 1.2.0
  */
 public interface ParameterValueTransformer {
+
+    public ParameterValueTransformer forQuery(Query query);
 
     public Object transform(Object originalValue);
 

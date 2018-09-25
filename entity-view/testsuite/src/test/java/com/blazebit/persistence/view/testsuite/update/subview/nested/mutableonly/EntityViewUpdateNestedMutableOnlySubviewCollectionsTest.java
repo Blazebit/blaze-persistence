@@ -64,6 +64,11 @@ public class EntityViewUpdateNestedMutableOnlySubviewCollectionsTest extends Abs
         cfg.addEntityView(UpdatableFriendPersonView.class);
     }
 
+    @Override
+    protected String[] getFetchedCollections() {
+        return new String[] { "people" };
+    }
+
     @Test
     public void testUpdateAddToCollection() {
         // Given
@@ -76,7 +81,7 @@ public class EntityViewUpdateNestedMutableOnlySubviewCollectionsTest extends Abs
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isFullMode()) {
             if (isQueryStrategy()) {
@@ -90,11 +95,13 @@ public class EntityViewUpdateNestedMutableOnlySubviewCollectionsTest extends Abs
                 }
             }
         } else {
-            builder.assertSelect()
-                    .fetching(Document.class)
-                    .fetching(Document.class, "people")
-                    .fetching(Person.class)
-                    .and();
+            if (!isQueryStrategy()) {
+                builder.assertSelect()
+                        .fetching(Document.class)
+                        .fetching(Document.class, "people")
+                        .fetching(Person.class)
+                        .and();
+            }
 
             if (version) {
                 builder.update(Document.class);
@@ -105,7 +112,7 @@ public class EntityViewUpdateNestedMutableOnlySubviewCollectionsTest extends Abs
                     .forRelation(Document.class, "people")
                 .validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertSubviewEquals(doc1.getPeople(), docView.getPeople());
     }
 
@@ -122,7 +129,7 @@ public class EntityViewUpdateNestedMutableOnlySubviewCollectionsTest extends Abs
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isFullMode()) {
             if (isQueryStrategy()) {
@@ -136,11 +143,13 @@ public class EntityViewUpdateNestedMutableOnlySubviewCollectionsTest extends Abs
                 }
             }
         } else {
-            builder.assertSelect()
-                    .fetching(Document.class)
-                    .fetching(Document.class, "people")
-                    .fetching(Person.class)
-                    .and();
+            if (!isQueryStrategy()) {
+                builder.assertSelect()
+                            .fetching(Document.class)
+                            .fetching(Document.class, "people")
+                            .fetching(Person.class)
+                        .and();
+            }
 
             if (version) {
                 builder.update(Document.class);
@@ -151,7 +160,7 @@ public class EntityViewUpdateNestedMutableOnlySubviewCollectionsTest extends Abs
                     .forRelation(Document.class, "people")
                 .validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertSubviewEquals(doc1.getPeople(), docView.getPeople());
     }
 
@@ -168,25 +177,26 @@ public class EntityViewUpdateNestedMutableOnlySubviewCollectionsTest extends Abs
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
-            fullFetch(builder);
             if (isFullMode()) {
                 builder.update(Person.class);
                 builder.update(Person.class);
                 builder.update(Person.class);
+                builder.delete(Document.class, "people")
+                        .insert(Document.class, "people");
             }
 
             builder.update(Person.class);
-            if (version) {
+            if (version || isFullMode()) {
                 builder.update(Document.class);
             }
         } else {
             fullFetch(builder)
                     .assertSelect()
-                    .fetching(Person.class)
-                    .fetching(Person.class)
+                        .fetching(Person.class)
+                        .fetching(Person.class)
                     .and();
             if (version) {
                 builder.update(Document.class);
@@ -200,7 +210,7 @@ public class EntityViewUpdateNestedMutableOnlySubviewCollectionsTest extends Abs
                 .and()
                 .validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertSubviewEquals(doc1.getPeople(), docView.getPeople());
         assertEquals("newPerson", p4.getName());
     }
@@ -219,18 +229,19 @@ public class EntityViewUpdateNestedMutableOnlySubviewCollectionsTest extends Abs
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
-            fullFetch(builder);
             if (isFullMode()) {
                 builder.update(Person.class);
                 builder.update(Person.class);
                 builder.update(Person.class);
+                builder.delete(Document.class, "people")
+                        .insert(Document.class, "people");
             }
 
             builder.update(Person.class);
-            if (version) {
+            if (version || isFullMode()) {
                 builder.update(Document.class);
             }
         } else {
@@ -250,7 +261,7 @@ public class EntityViewUpdateNestedMutableOnlySubviewCollectionsTest extends Abs
                 .and()
                 .validate();
 
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertSubviewEquals(doc1.getPeople(), docView.getPeople());
         assertEquals("newPerson", p4.getName());
     }
@@ -284,17 +295,18 @@ public class EntityViewUpdateNestedMutableOnlySubviewCollectionsTest extends Abs
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
-                fullFetch(builder);
                 builder.update(Person.class);
+                builder.delete(Document.class, "people")
+                        .insert(Document.class, "people");
             }
 
             builder.update(Person.class);
 
-            if (version) {
+            if (version || isFullMode()) {
                 builder.update(Document.class);
             }
         } else {
@@ -375,32 +387,16 @@ public class EntityViewUpdateNestedMutableOnlySubviewCollectionsTest extends Abs
         }
     }
 
-    private void assertNoCollectionUpdateAndReload(UpdatableDocumentWithCollectionsView docView) {
-        AssertStatementBuilder afterBuilder = assertQueriesAfterUpdate(docView);
-
-        if (isQueryStrategy()) {
-            if (isFullMode()) {
-                fullFetch(afterBuilder).update(Person.class);
-            }
-        } else {
-            if (isFullMode()) {
-                fullFetch(afterBuilder);
-            }
-        }
-
-        afterBuilder.validate();
-    }
-
     private void assertNoCollectionUpdateFullAndReload(UpdatableDocumentWithCollectionsView docView) {
         AssertStatementBuilder afterBuilder = assertQueriesAfterUpdate(docView);
 
         if (isQueryStrategy()) {
             if (isFullMode()) {
-                fullFetch(afterBuilder).update(Person.class)
-                        .update(Person.class);
-                if (version) {
-                    versionUpdate(afterBuilder);
-                }
+                afterBuilder.update(Person.class)
+                        .update(Person.class)
+                        .delete(Document.class, "people")
+                        .insert(Document.class, "people");
+                versionUpdate(afterBuilder);
             }
         } else {
             if (isFullMode()) {
@@ -426,14 +422,16 @@ public class EntityViewUpdateNestedMutableOnlySubviewCollectionsTest extends Abs
 
     @Override
     protected AssertStatementBuilder fullUpdate(AssertStatementBuilder builder) {
-        fullFetch(builder)
+        builder.delete(Document.class, "people")
+                .insert(Document.class, "people")
                 .update(Person.class)
                 .update(Person.class)
                 .update(Person.class)
                 .update(Person.class);
-        if (version) {
-            builder.update(Document.class);
+        if (doc1.getPeople().size() > 1) {
+            builder.insert(Document.class, "people");
         }
+        builder.update(Document.class);
         return builder;
     }
 

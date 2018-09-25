@@ -82,8 +82,7 @@ public class EntityViewUpdateBlobTest extends AbstractEntityViewUpdateTest<Updat
     }
 
     @Override
-    protected void restartTransactionAndReload() {
-        restartTransaction();
+    protected void reload() {
         entity = cbf.create(em, BlobEntity.class).getSingleResult();
     }
 
@@ -109,7 +108,7 @@ public class EntityViewUpdateBlobTest extends AbstractEntityViewUpdateTest<Updat
         update(docView);
 
         // Then 2
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertEquals("newDoc", docView.getName());
         assertEquals(entity.getName(), docView.getName());
     }
@@ -137,7 +136,7 @@ public class EntityViewUpdateBlobTest extends AbstractEntityViewUpdateTest<Updat
         update(docView);
 
         // Then 2
-        assertNoUpdateAndReload(docView);
+        assertNoUpdateAndReload(docView, true);
         assertEquals("newDoc1", docView.getName());
         assertEquals(date.getTime(), docView.getLastModified().getTime());
         assertEquals(entity.getName(), docView.getName());
@@ -176,7 +175,7 @@ public class EntityViewUpdateBlobTest extends AbstractEntityViewUpdateTest<Updat
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
         if (isFullMode()) {
             if (!isQueryStrategy()) {
                 fullFetch(builder);
@@ -200,7 +199,7 @@ public class EntityViewUpdateBlobTest extends AbstractEntityViewUpdateTest<Updat
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
         if (!isQueryStrategy()) {
             fullFetch(builder);
         }
@@ -242,7 +241,7 @@ public class EntityViewUpdateBlobTest extends AbstractEntityViewUpdateTest<Updat
         });
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
         if (!isQueryStrategy()) {
             fullFetch(builder);
         }

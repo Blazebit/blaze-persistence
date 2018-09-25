@@ -34,8 +34,6 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import javax.print.Doc;
-
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -215,7 +213,7 @@ public class EntityViewUpdateCorrelatedMutableSubviewTest extends AbstractEntity
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isFullMode()) {
             if (!isQueryStrategy()) {
@@ -233,7 +231,7 @@ public class EntityViewUpdateCorrelatedMutableSubviewTest extends AbstractEntity
             if (!isQueryStrategy()) {
                 afterBuilder.select(Document.class);
             }
-            if (isQueryStrategy() || version) {
+            if (isQueryStrategy()) {
                 afterBuilder.update(Document.class);
             }
         }

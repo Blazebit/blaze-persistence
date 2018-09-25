@@ -211,10 +211,10 @@ public abstract class PredicateManager<T> extends AbstractManager<ExpressionModi
     }
 
     void buildClause(StringBuilder sb) {
-        buildClause(sb, Collections.<String>emptyList(), null);
+        buildClause(sb, Collections.<String>emptyList(), Collections.<String>emptyList(), null);
     }
 
-    void buildClause(StringBuilder sb, List<String> additionalConjuncts, List<String> endConjuncts) {
+    void buildClause(StringBuilder sb, List<String> additionalConjuncts, List<String> optionalConjuncts, List<String> endConjuncts) {
         if (!hasPredicates() && additionalConjuncts.isEmpty()) {
             return;
         }
@@ -222,14 +222,15 @@ public abstract class PredicateManager<T> extends AbstractManager<ExpressionModi
         int initialLength = sb.length();
         sb.append(' ').append(getClauseName()).append(' ');
         int oldLength = sb.length();
-        buildClausePredicate(sb, additionalConjuncts, endConjuncts);
+        buildClausePredicate(sb, additionalConjuncts, optionalConjuncts, endConjuncts);
         if (sb.length() == oldLength) {
             sb.setLength(initialLength);
         }
     }
 
-    void buildClausePredicate(StringBuilder sb, List<String> additionalConjuncts, List<String> endConjuncts) {
+    void buildClausePredicate(StringBuilder sb, List<String> additionalConjuncts, List<String> optionalConjuncts, List<String> endConjuncts) {
         int size = additionalConjuncts.size();
+        boolean hasPredicates = size > 0;
         for (int i = 0; i < size; i++) {
             sb.append(additionalConjuncts.get(i));
             sb.append(" AND ");
@@ -240,14 +241,27 @@ public abstract class PredicateManager<T> extends AbstractManager<ExpressionModi
         int oldLength = sb.length();
         applyPredicate(queryGenerator);
         queryGenerator.setClauseType(null);
-        if (sb.length() == oldLength && size > 0) {
-            sb.setLength(sb.length() - " AND ".length());
+        if (sb.length() == oldLength) {
+            if (size > 0) {
+                sb.setLength(sb.length() - " AND ".length());
+            }
+        } else {
+            hasPredicates = true;
         }
 
         if (endConjuncts != null && !endConjuncts.isEmpty()) {
-            for (String endConjunct : endConjuncts) {
+            for (int i = 0; i < optionalConjuncts.size(); i++) {
                 sb.append(" AND ");
-                sb.append(endConjunct);
+                sb.append(optionalConjuncts.get(i));
+            }
+            for (int i = 0; i < endConjuncts.size(); i++) {
+                sb.append(" AND ");
+                sb.append(endConjuncts.get(i));
+            }
+        } else if (hasPredicates) {
+            for (int i = 0; i < optionalConjuncts.size(); i++) {
+                sb.append(" AND ");
+                sb.append(optionalConjuncts.get(i));
             }
         }
     }

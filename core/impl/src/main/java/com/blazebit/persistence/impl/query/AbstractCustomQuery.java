@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -68,7 +69,12 @@ public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
                 valuesParameterMap.put(name, param);
             }
         }
-        this.transformers = Collections.unmodifiableMap(transformers);
+        Map<String, ParameterValueTransformer> newTransformers = new HashMap<>(transformers.size());
+        for (Map.Entry<String, ParameterValueTransformer> entry : transformers.entrySet()) {
+            newTransformers.put(entry.getKey(), entry.getValue().forQuery(this));
+        }
+
+        this.transformers = Collections.unmodifiableMap(newTransformers);
         this.valuesParameters = Collections.unmodifiableMap(valuesParameterMap);
         this.valuesElementParameters = Collections.unmodifiableMap(valuesParameters);
         this.parameters = Collections.unmodifiableMap(parameters);
@@ -139,7 +145,24 @@ public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
             }
         }
         if (missingParameters != null && !missingParameters.isEmpty()) {
-            throw new IllegalArgumentException("The following parameters have not been set: " + missingParameters);
+            // Re-Check since a transformer could spread values
+            Iterator<String> iterator = missingParameters.iterator();
+            while (iterator.hasNext()) {
+                String missingParamName = iterator.next();
+                String valuesName = valuesElementParameters.get(missingParamName);
+                if (valuesName == null) {
+                    if (valueBinders.get(missingParamName) != null) {
+                        iterator.remove();
+                    }
+                } else {
+                    if (valuesParameters.get(valuesName).getValue() != null) {
+                        iterator.remove();
+                    }
+                }
+            }
+            if (!missingParameters.isEmpty()) {
+                throw new IllegalArgumentException("The following parameters have not been set: " + missingParameters);
+            }
         }
     }
 

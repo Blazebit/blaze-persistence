@@ -78,16 +78,28 @@ public class EntityFunction implements JpqlFunction {
         // TODO: this is a hibernate specific integration detail
         // Replace the subview subselect that is generated for this subselect
         final String subselect = "( select * from " + entityName + " )";
-        int subselectIndex = sb.indexOf(subselect, 0);
+        final String subselectTableExpr = subselect + " " + valuesTableSqlAlias;
+        int subselectIndex = sb.indexOf(subselectTableExpr, 0);
+        final String andSeparator = " and ";
         if (subselectIndex == -1) {
             // this is probably a VALUES clause for an entity type
             int syntheticPredicateStart = sb.indexOf(syntheticPredicate, SqlUtils.indexOfWhere(sb));
-            sb.replace(syntheticPredicateStart, syntheticPredicateStart + syntheticPredicate.length(), "1=1");
+            int end = syntheticPredicateStart + syntheticPredicate.length();
+            if (sb.indexOf(andSeparator, end) == end) {
+                sb.replace(syntheticPredicateStart, end + andSeparator.length(), "");
+            } else {
+                sb.replace(syntheticPredicateStart, end, "1=1");
+            }
         } else {
-            while ((subselectIndex = sb.indexOf(subselect, subselectIndex)) > -1) {
+            while ((subselectIndex = sb.indexOf(subselectTableExpr, subselectIndex)) > -1) {
                 int endIndex = subselectIndex + subselect.length();
                 int syntheticPredicateStart = sb.indexOf(syntheticPredicate, endIndex);
-                sb.replace(syntheticPredicateStart, syntheticPredicateStart + syntheticPredicate.length(), "1=1");
+                int end = syntheticPredicateStart + syntheticPredicate.length();
+                if (sb.indexOf(andSeparator, end) == end) {
+                    sb.replace(syntheticPredicateStart, end + andSeparator.length(), "");
+                } else {
+                    sb.replace(syntheticPredicateStart, end, "1=1");
+                }
                 sb.replace(subselectIndex, endIndex, entityName);
             }
         }

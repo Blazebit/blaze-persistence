@@ -28,10 +28,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 /**
  *
@@ -371,6 +373,30 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
         $$_markDirty(-1);
     }
 
+    protected C copyDelegate() {
+        if (ordered) {
+            return (C) new LinkedHashMap<>(delegate);
+        } else {
+            if (hashBased) {
+                return (C) new HashMap<>(delegate);
+            } else {
+                return (C) new TreeMap<>(delegate);
+            }
+        }
+    }
+
+    public C getInitialVersion() {
+        if (actions == null || actions.isEmpty()) {
+            return (C) this;
+        }
+        C collection = copyDelegate();
+        for (int i = actions.size() - 1; i >= 0; i--) {
+            MapAction<C> action = actions.get(i);
+            action.undo(collection, removedKeys.keySet(), addedKeys.keySet(), removedElements.keySet(), addedElements.keySet());
+        }
+        return collection;
+    }
+
     public List<MapAction<C>> resetActions(UpdateContext context) {
         List<MapAction<C>> oldActions = this.actions;
         if (oldActions == null) {
@@ -584,15 +610,17 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
         }
         for (Object o : removedElements) {
             // Only consider an element to be removed if it hasn't been added before
-            if (this.addedElements.remove(o) == null) {
-                if (this.removedElements.put((V) o, (V) o) == null) {
+            if (o != null) {
+                if (this.addedElements.remove(o) == null) {
+                    if (this.removedElements.put((V) o, (V) o) == null) {
+                        if (o instanceof BasicDirtyTracker) {
+                            ((BasicDirtyTracker) o).$$_unsetParent();
+                        }
+                    }
+                } else {
                     if (o instanceof BasicDirtyTracker) {
                         ((BasicDirtyTracker) o).$$_unsetParent();
                     }
-                }
-            } else {
-                if (o instanceof BasicDirtyTracker) {
-                    ((BasicDirtyTracker) o).$$_unsetParent();
                 }
             }
         }

@@ -398,7 +398,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                     sb.append(aliasPrefix);
                 }
 
-                baseNode.appendAlias(sb);
+                baseNode.appendAlias(sb, externalRepresentation);
 
                 if (valueFunction) {
                     sb.append(')');
@@ -458,7 +458,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                     sb.append(aliasPrefix);
                 }
 
-                baseNode.appendAlias(sb, renderTreat);
+                baseNode.appendAlias(sb, renderTreat, externalRepresentation);
                 sb.append(')');
                 sb.append(".").append(field);
             } else {
@@ -466,7 +466,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                     sb.append(aliasPrefix);
                 }
 
-                baseNode.appendDeReference(sb, field, renderTreat);
+                baseNode.appendDeReference(sb, field, renderTreat, externalRepresentation, jpaProvider.needsElementCollectionIdCutoff());
             }
 
             if (addTypeCaseWhen) {
