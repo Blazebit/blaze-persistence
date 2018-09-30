@@ -127,6 +127,9 @@ public class ViewTypeObjectBuilderTemplate<T> {
     private static final int FEATURE_INDEXED_COLLECTIONS = 1;
     private static final int FEATURE_SUBVIEWS = 2;
 
+    private static final String CASE_WHEN_PREFIX = "CASE WHEN ";
+    private static final String CASE_WHEN_SUFFIX = " THEN true ELSE false END";
+
     private final ManagedViewType<?> viewType;
     private final ObjectInstantiator<T> objectInstantiator;
     private final ObjectInstantiator<T>[] subtypeInstantiators;
@@ -247,11 +250,12 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 // Collect all mappers for all constraints
                 List<Map.Entry<String, TupleElementMapperBuilder>> builders = new ArrayList<>(constrainedAttribute.getSelectionConstrainedAttributes().size());
                 for (Map.Entry<String, AbstractMethodAttribute<? super T, ?>> entry : constrainedAttribute.getSelectionConstrainedAttributes()) {
-                    String constraint = entry.getKey();
+                    String mapping = mainMapperBuilder.getMapping(CASE_WHEN_PREFIX + entry.getKey() + CASE_WHEN_SUFFIX);
+                    String constraint = mapping.substring(CASE_WHEN_PREFIX.length(), mapping.length() - CASE_WHEN_SUFFIX.length());
                     AbstractMethodAttribute<? super T, ?> attribute = entry.getValue();
                     EntityType<?> treatType = getTreatType(metamodel, managedViewType, attribute.getDeclaringType());
                     TupleElementMapperBuilder mapperBuilder = new TupleElementMapperBuilder(mappingList.size(), constraint, aliasPrefix, mappingPrefix, idPrefix, treatType, metamodel, ef);
-                    applyMapping(constrainedAttribute.getAttribute(), attributePath, mapperBuilder, featuresFound, tupleIdDescriptor, embeddingViewJpqlMacro);
+                    applyMapping(attribute, attributePath, mapperBuilder, featuresFound, tupleIdDescriptor, embeddingViewJpqlMacro);
                     builders.add(new AbstractMap.SimpleEntry<>(constraint, mapperBuilder));
                 }
                 ConstrainedTupleElementMapper.addMappers(mappingList, parameterMappingList, tupleTransformatorFactory, builders);
