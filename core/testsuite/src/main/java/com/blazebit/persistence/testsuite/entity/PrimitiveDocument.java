@@ -162,4 +162,22 @@ public class PrimitiveDocument implements Serializable {
         this.parent = parent;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof PrimitiveDocument)) {
+            return false;
+        }
+
+        PrimitiveDocument that = (PrimitiveDocument) o;
+
+        return getId() == that.getId();
+    }
+
+    @Override
+    public int hashCode() {
+        return (int) (getId() ^ (getId() >>> 32));
+    }
 }

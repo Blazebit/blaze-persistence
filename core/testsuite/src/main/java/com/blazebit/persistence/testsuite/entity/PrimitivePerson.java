@@ -87,5 +87,23 @@ public class PrimitivePerson implements Serializable {
     public void setOwnedDocuments(Set<PrimitiveDocument> ownedDocuments) {
         this.ownedDocuments = ownedDocuments;
     }
-    
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof PrimitivePerson)) {
+            return false;
+        }
+
+        PrimitivePerson that = (PrimitivePerson) o;
+
+        return getId() == that.getId();
+    }
+
+    @Override
+    public int hashCode() {
+        return (int) (getId() ^ (getId() >>> 32));
+    }
 }

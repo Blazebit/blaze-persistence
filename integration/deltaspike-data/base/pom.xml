@@ -174,5 +174,19 @@
                 </dependencies>
             </dependencyManagement>
         </profile>
+        <profile>
+            <id>deltaspike-1.9</id>
+            <dependencyManagement>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.deltaspike.distribution</groupId>
+                        <artifactId>distributions-bom</artifactId>
+                        <version>${version.deltaspike-1.9}</version>
+                        <type>pom</type>
+                        <scope>import</scope>
+                    </dependency>
+                </dependencies>
+            </dependencyManagement>
+        </profile>
     </profiles>
 </project>

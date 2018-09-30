@@ -28,7 +28,9 @@ In addition, the following Maven dependencies are required:
 </dependency>
 ----
 
-If you still work with DeltaSpike Data 1.7 you will have to use a different integration as DeltaSpike Data 1.8 changed quite a bit.
+This will also work for DeltaSpike Data 1.9.
+
+If you still work with DeltaSpike Data 1.7 you will have to use a different integration as DeltaSpike Data 1.9 and 1.8 changed quite a bit.
 
 [source,xml]
 ----

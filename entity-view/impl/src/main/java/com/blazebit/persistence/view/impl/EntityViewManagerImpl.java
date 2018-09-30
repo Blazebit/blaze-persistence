@@ -136,6 +136,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         this.unsafeDisabled = !Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.PROXY_UNSAFE_ALLOWED)));
         this.proxyFactory = new ProxyFactory(unsafeDisabled, packageOpener);
 
+        boolean validateManagedTypes = !Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.MANAGED_TYPE_VALIDATION_DISABLED)));
         boolean validateExpressions = !Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.EXPRESSION_VALIDATION_DISABLED)));
 
         Set<String> errors = config.getBootContext().getErrors();
@@ -154,9 +155,10 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
         ViewMetamodelImpl viewMetamodel = null;
         RuntimeException exception = null;
+        Map<Class<?>, Object> typeTestValues = config.getTypeTestValues();
 
         try {
-            viewMetamodel = new ViewMetamodelImpl(entityMetamodel, context, validateExpressions);
+            viewMetamodel = new ViewMetamodelImpl(entityMetamodel, context, typeTestValues, validateManagedTypes, validateExpressions);
         } catch (RuntimeException ex) {
             exception = ex;
         }

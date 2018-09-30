@@ -58,6 +58,14 @@ public final class ConfigurationProperties {
      */
     public static final String EXPRESSION_VALIDATION_DISABLED = "com.blazebit.persistence.view.expression_validation_disabled";
     /**
+     * A boolean flag to make it possible to disable the managed type validation.
+     * By default the managed type validation is enabled, but since the validation is not bullet proof, it can be disabled.
+     * Valid values for this property are <code>true</code> or <code>false</code>.
+     *
+     * @since 1.3.0
+     */
+    public static final String MANAGED_TYPE_VALIDATION_DISABLED = "com.blazebit.persistence.view.managed_type_validation_disabled";
+    /**
      * An integer value that defines the default batch size for entity view attributes.
      * By default the value is 1 and can be overridden either via {@linkplain com.blazebit.persistence.view.BatchFetch#size()}
      * or by setting this property via {@linkplain com.blazebit.persistence.view.EntityViewSetting#setProperty}.

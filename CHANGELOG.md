@@ -13,13 +13,19 @@ Not yet released
 * Support for binding associations mapped by compound or foreign keys
 * Using a comparator with `List` and `Collection` types in entity views will sort the collection after load
 * Add option to force deduplication of elements in non-sets to `@CollectionMapping`
+* Properly implement dirty state transfer when converting one entity view to another
+* Added validation for `equals`/`hashCode` implementations of JPA managed types that are used within entity views which can be disabled with the property `com.blazebit.persistence.view.managed_type_validation_disabled`
+* Add support for DeltaSpike Data 1.9
 
 ### Bug fixes
 
 * Using non-bags in entity views will now properly deduplicate elements
 * Fix support for exists repository methods in Spring Data repositories
 * Fix problems with count queries that require parameters in Spring Data repositories
-* Properly set parent id on converted creatable subviews contained in inverse collections 
+* Properly set parent id on converted creatable subviews contained in inverse collections
+* Fix entity view build time validation error with certain inheritance mappings
+* Fix problems with objects of wrong types being returned from standard repository methods with Spring Data 2.0+
+* Fix various little issues related to embeddable handling in updatable entity views
 
 ### Backwards-incompatible changes
 

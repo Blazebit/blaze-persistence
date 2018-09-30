@@ -188,4 +188,23 @@ public interface EntityViewConfiguration {
      */
     public EntityViewConfiguration setProperty(String propertyName, String value);
 
+    /**
+     * Returns all type test values that should be used for checking the equals/hashCode implementation of JPA types.
+     *
+     * @return All type test values
+     * @since 1.3.0
+     */
+    public Map<Class<?>, Object> getTypeTestValues();
+
+    /**
+     * Sets the given value as type test value for the given type.
+     *
+     * @param type The type for which to register the value
+     * @param value The value which is used for testing
+     * @param <T> The type
+     * @return this for method chaining
+     * @since 1.3.0
+     */
+    public <T> EntityViewConfiguration setTypeTestValue(Class<T> type, T value);
+
 }

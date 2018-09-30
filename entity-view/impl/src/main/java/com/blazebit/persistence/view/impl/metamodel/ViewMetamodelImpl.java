@@ -17,15 +17,29 @@
 package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.persistence.parser.EntityMetamodel;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.view.metamodel.FlatViewType;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
+import com.blazebit.persistence.view.metamodel.MappingConstructor;
+import com.blazebit.persistence.view.metamodel.MethodAttribute;
+import com.blazebit.persistence.view.metamodel.ParameterAttribute;
+import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.metamodel.ViewType;
+import com.blazebit.reflection.ReflectionUtils;
 
+import javax.persistence.metamodel.IdentifiableType;
+import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.SingularAttribute;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +57,7 @@ public class ViewMetamodelImpl implements ViewMetamodel {
     private final Map<Class<?>, FlatViewTypeImpl<?>> flatViews;
     private final Map<Class<?>, ManagedViewTypeImplementor<?>> managedViews;
 
-    public ViewMetamodelImpl(EntityMetamodel entityMetamodel, MetamodelBuildingContext context, boolean validateExpressions) {
+    public ViewMetamodelImpl(EntityMetamodel entityMetamodel, MetamodelBuildingContext context, Map<Class<?>, Object> typeTestValues, boolean validateManagedTypes, boolean validateExpressions) {
         this.metamodel = entityMetamodel;
 
         Collection<ViewMapping> viewMappings = context.getViewMappings();
@@ -87,6 +101,124 @@ public class ViewMetamodelImpl implements ViewMetamodel {
                     t.checkNestedAttributes(parents, context);
                 }
             }
+        }
+
+        // Phase 5: Validate that JPA types that are used in entity views have sane equals/hashCode implementations
+        if (validateManagedTypes) {
+            Set<ManagedType<?>> jpaManagedTypes = new HashSet<>();
+            for (ManagedViewTypeImplementor<?> managedViewType : managedViews.values()) {
+                for (MethodAttribute<?, ?> attribute : managedViewType.getAttributes()) {
+                    Type<?> keyType = ((AbstractAttribute<?, ?>) attribute).getKeyType();
+                    Type<?> elementType = ((AbstractAttribute<?, ?>) attribute).getElementType();
+                    if (keyType instanceof BasicTypeImpl<?>) {
+                        jpaManagedTypes.add(((BasicTypeImpl<Object>) keyType).getManagedType());
+                    }
+                    if (elementType instanceof BasicTypeImpl<?>) {
+                        jpaManagedTypes.add(((BasicTypeImpl<Object>) elementType).getManagedType());
+                    }
+                }
+                for (MappingConstructor<?> constructor : managedViewType.getConstructors()) {
+                    for (ParameterAttribute<?, ?> parameterAttribute : constructor.getParameterAttributes()) {
+                        Type<?> keyType = ((AbstractAttribute<?, ?>) parameterAttribute).getKeyType();
+                        Type<?> elementType = ((AbstractAttribute<?, ?>) parameterAttribute).getElementType();
+                        if (keyType instanceof BasicTypeImpl<?>) {
+                            jpaManagedTypes.add(((BasicTypeImpl<Object>) keyType).getManagedType());
+                        }
+                        if (elementType instanceof BasicTypeImpl<?>) {
+                            jpaManagedTypes.add(((BasicTypeImpl<Object>) elementType).getManagedType());
+                        }
+                    }
+                }
+            }
+
+            // A null might end up in here because we don't filter it out before adding, so remove it here again
+            jpaManagedTypes.remove(null);
+            for (ManagedType<?> jpaManagedType : jpaManagedTypes) {
+                Class<?> javaType = jpaManagedType.getJavaType();
+                if ((javaType.getModifiers() & Modifier.ABSTRACT) == 0) {
+                    try {
+                        Constructor<?> declaredConstructor = javaType.getDeclaredConstructor();
+                        declaredConstructor.setAccessible(true);
+                        Object instance1 = declaredConstructor.newInstance();
+                        Object instance2 = declaredConstructor.newInstance();
+                        Object instance3 = declaredConstructor.newInstance();
+
+                        // Try to set any value on instance3 so that it would differ from instance1
+                        String error = createValue(jpaManagedType, instance3, typeTestValues);
+
+                        if (error != null) {
+                            context.addError(error);
+                        } else if (instance1.hashCode() != instance2.hashCode() || instance1.hashCode() == instance3.hashCode() || !instance1.equals(instance2) || instance1.equals(instance3)) {
+                            context.addError("The use of the JPA managed type '" + javaType.getName() + "' in entity views is problematic because the equals/hashCode implementation seems wrong. Equality of should be based on the identifier for entities and the full state for embeddables. Consider using a subview instead or add a proper equals/hashCode implementation!");
+                        }
+                    } catch (Exception ex) {
+                        throw new RuntimeException("Error during validation of equals/hashCode implementations of managed type: " + javaType.getName(), ex);
+                    }
+                }
+            }
+        }
+    }
+
+    private String createValue(ManagedType<?> jpaManagedType, Object instance, Map<Class<?>, Object> typeTestValues) throws Exception {
+        boolean setAnyValue = false;
+        Class<?> javaType = jpaManagedType.getJavaType();
+        if ((javaType.getModifiers() & Modifier.ABSTRACT) == 0) {
+            Set<SingularAttribute<?, ?>> jpaAttributes;
+            if (jpaManagedType instanceof IdentifiableType<?>) {
+                jpaAttributes = JpaMetamodelUtils.getIdAttributes((IdentifiableType<?>) jpaManagedType);
+            } else {
+                jpaAttributes = (Set<SingularAttribute<?, ?>>) jpaManagedType.getSingularAttributes();
+            }
+
+            // Try to set any value on instance so that it would differ from instance1
+            for (SingularAttribute<?, ?> jpaAttribute : jpaAttributes) {
+                javax.persistence.metamodel.Type<?> type = jpaAttribute.getType();
+                Class<?> attributeType = JpaMetamodelUtils.resolveFieldClass(javaType, jpaAttribute);
+                Object value = typeTestValues.get(attributeType);
+                if (value == null) {
+                    if (type.getPersistenceType() == javax.persistence.metamodel.Type.PersistenceType.BASIC) {
+                        if (attributeType.isEnum()) {
+                            value = attributeType.getEnumConstants()[0];
+                        } else {
+                            // We just skip basic values we can't handle
+                            continue;
+                        }
+                    } else {
+                        Constructor<?> typeConstructor = attributeType.getDeclaredConstructor();
+                        typeConstructor.setAccessible(true);
+                        value = typeConstructor.newInstance();
+                        String error = createValue((ManagedType<?>) type, value, typeTestValues);
+                        if (error != null) {
+                            return error;
+                        }
+                    }
+                }
+                setAttribute(instance, jpaAttribute, value);
+                setAnyValue = true;
+            }
+
+            if (!setAnyValue) {
+                Set<String> typeNames = new HashSet<>(jpaAttributes.size());
+                for (SingularAttribute<?, ?> jpaAttribute : jpaAttributes) {
+                    typeNames.add(jpaAttribute.getType().getJavaType().getName());
+                }
+                return "Can't check if the equals/hashCode implementation of the JPA managed type '" + javaType.getName() + "' which is used in entity views is problematic because there are no type test values registered in the EntityViewConfiguration for any of the types: " + typeNames;
+            }
+        }
+        return null;
+    }
+
+    private void setAttribute(Object instance, SingularAttribute<?, ?> jpaAttribute, Object value) throws Exception {
+        if (jpaAttribute.getJavaMember() instanceof Method) {
+            Method setter = ReflectionUtils.getSetter(instance.getClass(), jpaAttribute.getName());
+            setter.setAccessible(true);
+            setter.invoke(instance, value);
+        } else if (jpaAttribute.getJavaMember() instanceof Field) {
+            Field field = (Field) jpaAttribute.getJavaMember();
+            field.setAccessible(true);
+            field.set(instance, value);
+        } else {
+            throw new IllegalArgumentException("Unsupported JPA member type: " + jpaAttribute.getJavaMember());
         }
     }
 

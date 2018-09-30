@@ -18,13 +18,13 @@ package com.blazebit.persistence.deltaspike.data.impl.meta;
 
 import com.blazebit.persistence.deltaspike.data.EntityViewManagerResolver;
 import com.blazebit.persistence.deltaspike.data.impl.builder.part.EntityViewQueryRoot;
+import com.blazebit.persistence.deltaspike.data.impl.util.OptionalUtils;
+import com.blazebit.persistence.deltaspike.data.impl.util.StreamUtils;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.reflection.ReflectionUtils;
 import org.apache.deltaspike.core.util.AnnotationUtils;
 import org.apache.deltaspike.core.util.ClassUtils;
-import org.apache.deltaspike.core.util.OptionalUtil;
-import org.apache.deltaspike.core.util.StreamUtil;
 import org.apache.deltaspike.data.api.Modifying;
 import org.apache.deltaspike.data.api.Query;
 import org.apache.deltaspike.data.api.Repository;
@@ -87,8 +87,8 @@ public class EntityViewAwareRepositoryMethodMetadataInitializer extends Reposito
 
         repositoryMethodMetadata.setMethod(method);
 
-        repositoryMethodMetadata.setReturnsOptional(OptionalUtil.isOptionalReturned(method));
-        repositoryMethodMetadata.setReturnsStream(StreamUtil.isStreamReturned(method));
+        repositoryMethodMetadata.setReturnsOptional(OptionalUtils.isOptionalReturned(method));
+        repositoryMethodMetadata.setReturnsStream(StreamUtils.isStreamReturned(method));
 
         repositoryMethodMetadata.setQuery(method.isAnnotationPresent(Query.class) ? method.getAnnotation(Query.class) : null);
         repositoryMethodMetadata.setModifying(method.isAnnotationPresent(Modifying.class) ? method.getAnnotation(Modifying.class) : null);

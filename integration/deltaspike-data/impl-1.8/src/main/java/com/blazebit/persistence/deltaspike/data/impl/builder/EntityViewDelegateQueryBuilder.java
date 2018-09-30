@@ -18,10 +18,10 @@ package com.blazebit.persistence.deltaspike.data.impl.builder;
 
 import com.blazebit.persistence.deltaspike.data.base.handler.EntityViewDelegateQueryHandler;
 import com.blazebit.persistence.deltaspike.data.impl.handler.EntityViewCdiQueryInvocationContext;
+import com.blazebit.persistence.deltaspike.data.impl.util.OptionalUtils;
+import com.blazebit.persistence.deltaspike.data.impl.util.StreamUtils;
 import org.apache.deltaspike.core.api.provider.BeanProvider;
 import org.apache.deltaspike.core.util.ClassUtils;
-import org.apache.deltaspike.core.util.OptionalUtil;
-import org.apache.deltaspike.core.util.StreamUtil;
 import org.apache.deltaspike.data.api.QueryInvocationException;
 import org.apache.deltaspike.data.impl.util.bean.BeanDestroyable;
 
@@ -59,10 +59,10 @@ public class EntityViewDelegateQueryBuilder extends EntityViewQueryBuilder {
             EntityViewDelegateQueryHandler delegate = lookup(context);
             if (delegate != null) {
                 Object result = invoke(delegate, context);
-                if (result instanceof Collection && StreamUtil.isStreamReturned(context.getMethod())) {
-                    return StreamUtil.wrap(result);
-                } else if (OptionalUtil.isOptionalReturned(context.getMethod())) {
-                    return OptionalUtil.wrap(result);
+                if (result instanceof Collection && StreamUtils.isStreamReturned(context.getMethod())) {
+                    return StreamUtils.wrap(result);
+                } else if (OptionalUtils.isOptionalReturned(context.getMethod())) {
+                    return OptionalUtils.wrap(result);
                 } else {
                     return result;
                 }

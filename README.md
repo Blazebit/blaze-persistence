@@ -292,7 +292,7 @@ Blaze-Persistence DeltaSpike Data integration
 </dependency>
 ```
 
-Blaze-Persistence DeltaSpike Data 1.8 integration
+Blaze-Persistence DeltaSpike Data 1.9 and 1.8 integration
 
 ```xml
 <dependency>

@@ -29,8 +29,17 @@ import com.blazebit.persistence.view.spi.EntityViewMapping;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 
 import javax.persistence.EntityManagerFactory;
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -45,6 +54,7 @@ public class EntityViewConfigurationImpl implements EntityViewConfiguration {
     private final MutableBasicUserTypeRegistry userTypeRegistry = new MutableBasicUserTypeRegistry();
     private final MetamodelBootContext bootContext = new MetamodelBootContextImpl();
     private final ViewMappingReader annotationViewMappingReader = new AnnotationViewMappingReader(bootContext);
+    private final Map<Class<?>, Object> typeTestValues = new HashMap<>();
     private Properties properties = new Properties();
 
     public EntityViewConfigurationImpl() {
@@ -54,6 +64,38 @@ public class EntityViewConfigurationImpl implements EntityViewConfiguration {
     private void loadDefaultProperties() {
         properties.put(ConfigurationProperties.PROXY_EAGER_LOADING, "false");
         properties.put(ConfigurationProperties.PROXY_UNSAFE_ALLOWED, "true");
+        properties.put(ConfigurationProperties.MANAGED_TYPE_VALIDATION_DISABLED, "false");
+
+        typeTestValues.put(boolean.class, true);
+        typeTestValues.put(byte.class, Byte.MAX_VALUE);
+        typeTestValues.put(short.class, Short.MAX_VALUE);
+        typeTestValues.put(char.class, Character.MAX_VALUE);
+        typeTestValues.put(int.class, Integer.MAX_VALUE);
+        typeTestValues.put(long.class, Long.MAX_VALUE);
+        typeTestValues.put(float.class, Float.MAX_VALUE);
+        typeTestValues.put(double.class, Double.MAX_VALUE);
+        typeTestValues.put(Boolean.class, true);
+        typeTestValues.put(Byte.class, Byte.MAX_VALUE);
+        typeTestValues.put(Short.class, Short.MAX_VALUE);
+        typeTestValues.put(Character.class, Character.MAX_VALUE);
+        typeTestValues.put(Integer.class, Integer.MAX_VALUE);
+        typeTestValues.put(Long.class, Long.MAX_VALUE);
+        typeTestValues.put(Float.class, Float.MAX_VALUE);
+        typeTestValues.put(Double.class, Double.MAX_VALUE);
+        typeTestValues.put(String.class, "-");
+        typeTestValues.put(Date.class, new Date(1));
+        typeTestValues.put(java.sql.Date.class, new java.sql.Date(1));
+        typeTestValues.put(Time.class, new Time(1000));
+        typeTestValues.put(Timestamp.class, new Timestamp(1));
+        typeTestValues.put(Calendar.class, Calendar.getInstance());
+        typeTestValues.put(GregorianCalendar.class, new GregorianCalendar());
+        typeTestValues.put(byte[].class, new byte[]{ Byte.MAX_VALUE });
+        typeTestValues.put(Byte[].class, new Byte[] { Byte.MAX_VALUE });
+        typeTestValues.put(char[].class, new char[] { Character.MAX_VALUE });
+        typeTestValues.put(Character[].class, new Character[] { Character.MAX_VALUE });
+        typeTestValues.put(BigInteger.class, BigInteger.TEN);
+        typeTestValues.put(BigDecimal.class, BigDecimal.TEN);
+        typeTestValues.put(Serializable.class, "-");
     }
 
     @Override
@@ -158,6 +200,17 @@ public class EntityViewConfigurationImpl implements EntityViewConfiguration {
     @Override
     public EntityViewConfiguration setProperty(String propertyName, String value) {
         properties.setProperty(propertyName, value);
+        return this;
+    }
+
+    @Override
+    public Map<Class<?>, Object> getTypeTestValues() {
+        return typeTestValues;
+    }
+
+    @Override
+    public <T> EntityViewConfiguration setTypeTestValue(Class<T> type, T value) {
+        typeTestValues.put(type, value);
         return this;
     }
 }
