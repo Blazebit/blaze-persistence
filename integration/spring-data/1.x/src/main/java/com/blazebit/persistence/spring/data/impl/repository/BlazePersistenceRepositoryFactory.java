@@ -17,6 +17,7 @@
 package com.blazebit.persistence.spring.data.impl.repository;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.spring.data.base.query.EntityViewAwareJpaQueryMethod;
 import com.blazebit.persistence.spring.data.base.query.EntityViewAwareRepositoryMetadata;
 import com.blazebit.persistence.spring.data.base.repository.EntityViewAwareCrudMethodMetadata;
@@ -26,6 +27,7 @@ import com.blazebit.persistence.spring.data.impl.query.EntityViewAwareRepository
 import com.blazebit.persistence.spring.data.impl.query.EntityViewAwareRepositoryMetadataImpl;
 import com.blazebit.persistence.spring.data.impl.query.PartTreeBlazePersistenceQuery;
 import com.blazebit.persistence.view.EntityViewManager;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.jpa.provider.PersistenceProvider;
 import org.springframework.data.jpa.provider.QueryExtractor;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
@@ -96,6 +98,17 @@ public class BlazePersistenceRepositoryFactory extends JpaRepositoryFactory {
     @Override
     protected RepositoryInformation getRepositoryInformation(RepositoryMetadata metadata, Class<?> customImplementationClass) {
         return new EntityViewAwareRepositoryInformation((EntityViewAwareRepositoryMetadata) metadata, super.getRepositoryInformation(metadata, customImplementationClass));
+    }
+
+    @Override
+    protected void validate(RepositoryMetadata repositoryMetadata) {
+        super.validate(repositoryMetadata);
+
+        if (cbf.getService(EntityMetamodel.class).getEntity(repositoryMetadata.getDomainType()) == null) {
+            throw new InvalidDataAccessApiUsageException(
+                    String.format("Cannot implement repository %s when using a non-entity domain type %s. Only types annotated with @Entity are supported!",
+                            repositoryMetadata.getRepositoryInterface().getName(), repositoryMetadata.getDomainType().getName()));
+        }
     }
 
     @Override

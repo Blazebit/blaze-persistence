@@ -22,6 +22,7 @@ import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -89,10 +90,37 @@ public class ListSetAction<C extends List<E>, E> implements ListAction<C> {
     @Override
     @SuppressWarnings("unchecked")
     public CollectionAction<C> replaceObject(Object oldElem, Object elem) {
-        if (element != oldElem) {
+        if (element == oldElem) {
+            if (removedElementInView == oldElem) {
+                return new ListSetAction(index, elem, elem);
+            } else {
+                return new ListSetAction(index, elem, removedElementInView);
+            }
+        } else if (removedElementInView == oldElem) {
+            return new ListSetAction(index, element, elem);
+        } else {
             return null;
         }
-        return new ListSetAction(index, elem, removedElementInView);
+    }
+
+    @Override
+    public CollectionAction<C> replaceObjects(Map<Object, Object> objectMapping) {
+        if (objectMapping == null) {
+            return this;
+        }
+        Object newElement = objectMapping.get(element);
+        Object newRemovedElement = objectMapping.get(removedElementInView);
+        if (newElement == null && newRemovedElement == null) {
+            return this;
+        }
+        if (newElement == null) {
+            newElement = element;
+        }
+        if (newRemovedElement == null) {
+            newRemovedElement = removedElementInView;
+        }
+
+        return new ListSetAction(index, newElement, newRemovedElement);
     }
 
     @Override

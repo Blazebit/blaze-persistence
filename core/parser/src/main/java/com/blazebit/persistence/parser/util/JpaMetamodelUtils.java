@@ -296,6 +296,19 @@ public class JpaMetamodelUtils {
             if (e.getClass().getSimpleName().equals("ClassNotResolvedException")) {
                 return Collections.emptySet();
             }
+            // EclipseLink can't get the id type of a MappedSuperClass
+            if (e instanceof NullPointerException) {
+                IdentifiableType<?> identifiableType = entityType;
+                while (identifiableType.getSupertype() instanceof IdentifiableType<?>) {
+                    try {
+                        identifiableType = identifiableType.getSupertype();
+                        return Collections.<SingularAttribute<?, ?>>singleton(identifiableType.getId(identifiableType.getIdType().getJavaType()));
+                    } catch (NullPointerException e2) {
+                        // Ignore
+                    }
+                }
+                throw e;
+            }
             throw e;
         }
     }

@@ -42,6 +42,12 @@
             <url>http://repo.jenkins-ci.org/public/</url>
         </repository>
     </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>repo.jenkins-ci.org</id>
+            <url>http://repo.jenkins-ci.org/public/</url>
+        </pluginRepository>
+    </pluginRepositories>
 
     <dependencies>
         <dependency>
@@ -56,6 +62,18 @@
             <artifactId>bridge-method-annotation</artifactId>
             <version>${version.bridge-injector}</version>
             <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.jenkins-ci</groupId>
+                    <artifactId>annotation-indexer</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- We need a newer version to be compatible with JDK9+ -->
+        <dependency>
+            <groupId>org.jenkins-ci</groupId>
+            <artifactId>annotation-indexer</artifactId>
+            <version>${version.bridge-injector-indexer}</version>
         </dependency>
 
         <dependency>
@@ -139,36 +157,6 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>com.infradna.tool</groupId>
-                <artifactId>bridge-method-injector</artifactId>
-                <version>${version.bridge-injector}</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>process</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <dependencies>
-                    <!-- Replace the old ASM version by the new one to support JDK9+ -->
-                    <dependency>
-                        <groupId>org.ow2.asm</groupId>
-                        <artifactId>asm-debug-all</artifactId>
-                        <version>CUSTOM</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.ow2.asm</groupId>
-                        <artifactId>asm</artifactId>
-                        <version>${version.bridge-injector-asm}</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.ow2.asm</groupId>
-                        <artifactId>asm-commons</artifactId>
-                        <version>${version.bridge-injector-asm}</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
-            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
                 <executions>
@@ -212,6 +200,42 @@
                         <groupId>com.infradna.tool</groupId>
                         <artifactId>bridge-method-annotation</artifactId>
                         <version>${version.bridge-injector}</version>
+                    </dependency>
+                    <!-- We need a newer version to be compatible with JDK9+ -->
+                    <dependency>
+                        <groupId>org.jenkins-ci</groupId>
+                        <artifactId>annotation-indexer</artifactId>
+                        <version>${version.bridge-injector-indexer}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>com.infradna.tool</groupId>
+                <artifactId>bridge-method-injector</artifactId>
+                <version>${version.bridge-injector}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>process</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <!-- Replace the old ASM version by the new one to support JDK9+ -->
+                    <dependency>
+                        <groupId>org.ow2.asm</groupId>
+                        <artifactId>asm-debug-all</artifactId>
+                        <version>CUSTOM</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.ow2.asm</groupId>
+                        <artifactId>asm</artifactId>
+                        <version>${version.bridge-injector-asm}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.ow2.asm</groupId>
+                        <artifactId>asm-commons</artifactId>
+                        <version>${version.bridge-injector-asm}</version>
                     </dependency>
                 </dependencies>
             </plugin>

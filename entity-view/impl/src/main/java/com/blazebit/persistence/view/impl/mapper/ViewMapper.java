@@ -21,8 +21,12 @@ import com.blazebit.persistence.view.impl.accessor.Accessors;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
 import com.blazebit.persistence.view.impl.collection.MapInstantiator;
+import com.blazebit.persistence.view.impl.collection.RecordingCollection;
+import com.blazebit.persistence.view.impl.collection.RecordingMap;
 import com.blazebit.persistence.view.impl.metamodel.AbstractAttribute;
+import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
 import com.blazebit.persistence.view.impl.proxy.ConvertReflectionInstantiator;
+import com.blazebit.persistence.view.impl.proxy.DirtyTracker;
 import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
@@ -33,8 +37,11 @@ import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.metamodel.ViewType;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -45,6 +52,7 @@ import java.util.Set;
  */
 public class ViewMapper<S, T> {
 
+    private final int[] dirtyMapping;
     private final AttributeAccessor[] sourceAccessors;
     private final ObjectInstantiator<T> objectInstantiator;
 
@@ -58,6 +66,7 @@ public class ViewMapper<S, T> {
         AttributeAccessor[] sourceAccessors = new AttributeAccessor[attributes.size()];
         Iterator<MethodAttribute<? super T, ?>> iterator = attributes.iterator();
         MethodAttribute<? super T, ?> idAttribute = null;
+        List<Integer> dirtyMapping = new ArrayList<>();
         int i = 0;
 
         // Id attribute is always the first
@@ -74,8 +83,32 @@ public class ViewMapper<S, T> {
             if (targetAttribute != idAttribute) {
                 parameterTypes[i] = targetAttribute.getConvertedJavaType();
                 sourceAccessors[i] = createAccessor(sourceType, targetType, ignoreMissing, entityViewManager, proxyFactory, targetAttribute);
+                // Extract a mapping from target dirty state index to the source
+                int dirtyStateIndex = ((AbstractMethodAttribute<?, ?>) targetAttribute).getDirtyStateIndex();
+                if (dirtyStateIndex != -1) {
+                    MethodAttribute<? super S, ?> sourceAttribute = sourceType.getAttribute(targetAttribute.getName());
+                    if (sourceAttribute != null) {
+                        int sourceIndex = ((AbstractMethodAttribute<?, ?>) sourceAttribute).getDirtyStateIndex();
+                        if (sourceIndex != -1) {
+                            for (int j = dirtyMapping.size(); j <= dirtyStateIndex; j++) {
+                                dirtyMapping.add(-1);
+                            }
+                            dirtyMapping.set(dirtyStateIndex, sourceIndex);
+                        }
+                    }
+                }
                 i++;
             }
+        }
+
+        if (dirtyMapping.isEmpty()) {
+            this.dirtyMapping = null;
+        } else {
+            int[] dirtyMappingArray = new int[dirtyMapping.size()];
+            for (i = 0; i < dirtyMapping.size(); i++) {
+                dirtyMappingArray[i] = dirtyMapping.get(i);
+            }
+            this.dirtyMapping = dirtyMappingArray;
         }
 
         this.sourceAccessors = sourceAccessors;
@@ -154,7 +187,17 @@ public class ViewMapper<S, T> {
                 tuple[i] = sourceAccessors[i].getValue(source);
             }
         }
-        return objectInstantiator.newInstance(tuple);
+        T result = objectInstantiator.newInstance(tuple);
+        if (dirtyMapping != null && source instanceof DirtyTracker) {
+            DirtyTracker oldDirtyTracker = (DirtyTracker) source;
+            DirtyTracker dirtyTracker = (DirtyTracker) result;
+            for (int i = 0; i < dirtyMapping.length; i++) {
+                if (oldDirtyTracker.$$_isDirty(dirtyMapping[i])) {
+                    dirtyTracker.$$_markDirty(i);
+                }
+            }
+        }
+        return result;
     }
 
     /**
@@ -224,28 +267,75 @@ public class ViewMapper<S, T> {
         public Object getValue(Object object) {
             Map<Object, Object> map = (Map<Object, Object>) accessor.getValue(object);
             Map<Object, Object> newMap = null;
+            Map<Object, Object> backingMap;
             if (map != null) {
-                // TODO: take over dirty status of old attribute?
+                Map<Object, Object> objectMapping = null;
                 if (recording) {
-                    newMap = (Map<Object, Object>) mapInstantiator.createRecordingCollection(map.size());
+                    RecordingMap<?, ?, ?> recordingMap = mapInstantiator.createRecordingCollection(map.size());
+                    newMap = (Map<Object, Object>) recordingMap;
+                    backingMap = (Map<Object, Object>) recordingMap.getDelegate();
+                    if (map instanceof RecordingMap<?, ?, ?> && (keyMapper != null || valueMapper != null)) {
+                        // We have to map the removed objects separately as these might be required for cascading actions
+                        objectMapping = new IdentityHashMap<>(map.size() * 2);
+                        if (keyMapper != null) {
+                            for (Object e : ((RecordingMap<?, ?, ?>) map).getRemovedKeys()) {
+                                objectMapping.put(e, keyMapper.map(e));
+                            }
+                        }
+                        if (valueMapper != null) {
+                            for (Object e : ((RecordingMap<?, ?, ?>) map).getRemovedElements()) {
+                                objectMapping.put(e, valueMapper.map(e));
+                            }
+                        }
+                    }
                 } else {
-                    newMap = (Map<Object, Object>) mapInstantiator.createCollection(map.size());
+                    newMap = backingMap = (Map<Object, Object>) mapInstantiator.createCollection(map.size());
                 }
 
                 if (keyMapper != null && valueMapper != null) {
-                    for (Map.Entry<Object, Object> entry : map.entrySet()) {
-                        newMap.put(keyMapper.map(entry.getKey()), valueMapper.map(entry.getValue()));
+                    if (objectMapping == null) {
+                        for (Map.Entry<Object, Object> entry : map.entrySet()) {
+                            backingMap.put(keyMapper.map(entry.getKey()), valueMapper.map(entry.getValue()));
+                        }
+                    } else {
+                        for (Map.Entry<Object, Object> entry : map.entrySet()) {
+                            Object newKey = keyMapper.map(entry.getKey());
+                            Object newValue = valueMapper.map(entry.getValue());
+                            objectMapping.put(entry.getKey(), newKey);
+                            objectMapping.put(entry.getValue(), newValue);
+                            backingMap.put(newKey, newValue);
+                        }
                     }
                 } else if (keyMapper != null) {
-                    for (Map.Entry<Object, Object> entry : map.entrySet()) {
-                        newMap.put(keyMapper.map(entry.getKey()), entry.getValue());
+                    if (objectMapping == null) {
+                        for (Map.Entry<Object, Object> entry : map.entrySet()) {
+                            backingMap.put(keyMapper.map(entry.getKey()), entry.getValue());
+                        }
+                    } else {
+                        for (Map.Entry<Object, Object> entry : map.entrySet()) {
+                            Object newKey = keyMapper.map(entry.getKey());
+                            objectMapping.put(entry.getKey(), newKey);
+                            backingMap.put(newKey, entry.getValue());
+                        }
                     }
                 } else if (valueMapper != null) {
-                    for (Map.Entry<Object, Object> entry : map.entrySet()) {
-                        newMap.put(entry.getKey(), valueMapper.map(entry.getValue()));
+                    if (objectMapping == null) {
+                        for (Map.Entry<Object, Object> entry : map.entrySet()) {
+                            backingMap.put(entry.getKey(), valueMapper.map(entry.getValue()));
+                        }
+                    } else {
+                        for (Map.Entry<Object, Object> entry : map.entrySet()) {
+                            Object newValue = valueMapper.map(entry.getValue());
+                            objectMapping.put(entry.getValue(), newValue);
+                            backingMap.put(entry.getKey(), newValue);
+                        }
                     }
                 } else {
-                    newMap.putAll(map);
+                    backingMap.putAll(map);
+                }
+
+                if (recording && map instanceof RecordingMap<?, ?, ?>) {
+                    ((RecordingMap<Map<Object, Object>, Object, Object>) newMap).setActions((RecordingMap<Map<Object, Object>, Object, Object>) map, objectMapping);
                 }
             }
             return newMap;
@@ -273,21 +363,41 @@ public class ViewMapper<S, T> {
         public Object getValue(Object object) {
             Collection<Object> collection = (Collection<Object>) accessor.getValue(object);
             Collection<Object> newCollection = null;
+            Collection<Object> backingCollection;
             if (collection != null) {
-                // TODO: take over dirty status of old attribute?
+                Map<Object, Object> objectMapping = null;
                 if (recording) {
-                    newCollection = (Collection<Object>) collectionInstantiator.createRecordingCollection(collection.size());
+                    RecordingCollection<?, ?> coll = collectionInstantiator.createRecordingCollection(collection.size());
+                    newCollection = (Collection<Object>) coll;
+                    backingCollection = (Collection<Object>) coll.getDelegate();
+                    if (collection instanceof RecordingCollection<?, ?> && valueMapper != null) {
+                        objectMapping = new IdentityHashMap<>(collection.size());
+                        for (Object e : ((RecordingCollection<?, ?>) collection).getRemovedElements()) {
+                            objectMapping.put(e, valueMapper.map(e));
+                        }
+                    }
                 } else {
-                    newCollection = (Collection<Object>) collectionInstantiator.createCollection(collection.size());
+                    newCollection = backingCollection = (Collection<Object>) collectionInstantiator.createCollection(collection.size());
                 }
 
                 if (valueMapper != null) {
-                    for (Object o : collection) {
-                        newCollection.add(valueMapper.map(o));
+                    if (objectMapping == null) {
+                        for (Object o : collection) {
+                            backingCollection.add(valueMapper.map(o));
+                        }
+                    } else {
+                        for (Object o : collection) {
+                            Object newObject = valueMapper.map(o);
+                            objectMapping.put(o, newObject);
+                            backingCollection.add(newObject);
+                        }
                     }
-
                 } else {
-                    newCollection.addAll(collection);
+                    backingCollection.addAll(collection);
+                }
+
+                if (recording && collection instanceof RecordingCollection<?, ?>) {
+                    ((RecordingCollection<Collection<Object>, Object>) newCollection).setActions((RecordingCollection<Collection<Object>, Object>) collection, objectMapping);
                 }
             }
             return newCollection;
@@ -311,7 +421,6 @@ public class ViewMapper<S, T> {
         public Object getValue(Object object) {
             Object value = accessor.getValue(object);
             if (value != null) {
-                // TODO: take over dirty status of old attribute?
                 return mapper.map(value);
             }
             return null;

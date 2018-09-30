@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -138,6 +139,18 @@ public class CollectionRetainAllAction<C extends Collection<E>, E> implements Co
             return null;
         }
         return new CollectionRetainAllAction(newElements, removedElementsInView);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public CollectionAction<C> replaceObjects(Map<Object, Object> objectMapping) {
+        List<Object> newElements = RecordingUtils.replaceElements(elements, objectMapping);
+        List<Object> newRemovedElementsInView = RecordingUtils.replaceElements(removedElementsInView, objectMapping);
+
+        if (newElements == null && newRemovedElementsInView == null) {
+            return new CollectionRetainAllAction(elements, removedElementsInView);
+        }
+        return new CollectionRetainAllAction(newElements, newRemovedElementsInView);
     }
 
     @Override

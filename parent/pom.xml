@@ -46,6 +46,7 @@
         <!-- 1.18 messed up calculation of load index -->
         <version.bridge-injector>1.17</version.bridge-injector>
         <version.bridge-injector-asm>6.2.1</version.bridge-injector-asm>
+        <version.bridge-injector-indexer>1.12</version.bridge-injector-indexer>
 
         <!-- Minimum version is 4.2.8.Final -->
         <!-- 4.2.15.Final has a bug regarding naming strategies -->

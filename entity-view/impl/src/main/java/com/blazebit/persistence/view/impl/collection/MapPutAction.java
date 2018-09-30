@@ -129,6 +129,40 @@ public class MapPutAction<C extends Map<K, V>, K, V> implements MapAction<C> {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
+    public MapAction<C> replaceObjects(Map<Object, Object> objectMapping) {
+        if (objectMapping == null) {
+            return this;
+        }
+        Object newKey = objectMapping.get(key);
+        Object newValue = objectMapping.get(value);
+        Object newRemovedValueInView = objectMapping.get(removedValueInView);
+        if (newKey != null) {
+            if (newValue != null) {
+                if (newRemovedValueInView == null) {
+                    return new MapPutAction(newKey, newValue, removedValueInView);
+                } else {
+                    return new MapPutAction(newKey, newValue, newRemovedValueInView);
+                }
+            } else if (newRemovedValueInView != null) {
+                return new MapPutAction(newKey, value, newRemovedValueInView);
+            } else {
+                return new MapPutAction(newKey, value, removedValueInView);
+            }
+        } else if (newValue != null) {
+            if (newRemovedValueInView == null) {
+                return new MapPutAction(key, newValue, removedValueInView);
+            } else {
+                return new MapPutAction(key, newValue, newRemovedValueInView);
+            }
+        } else if (newRemovedValueInView != null) {
+            return new MapPutAction(key, value, newRemovedValueInView);
+        } else {
+            return this;
+        }
+    }
+
+    @Override
     public void addAction(List<MapAction<C>> actions, Collection<Object> addedKeys, Collection<Object> removedKeys, Collection<Object> addedElements, Collection<Object> removedElements) {
         actions.add(this);
     }

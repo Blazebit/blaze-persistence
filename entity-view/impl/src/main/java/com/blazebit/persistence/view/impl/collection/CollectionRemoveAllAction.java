@@ -24,6 +24,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -57,6 +59,15 @@ public class CollectionRemoveAllAction<C extends Collection<E>, E> implements Co
         } else {
             this.elements = Collections.newSetFromMap(new IdentityHashMap<Object, Boolean>(collection.size()));
             this.elements.addAll(collection);
+        }
+    }
+
+    private CollectionRemoveAllAction(CollectionRemoveAllAction<C, E> action) {
+        if (action.elements instanceof Set<?>) {
+            this.elements = Collections.newSetFromMap(new IdentityHashMap<Object, Boolean>(action.elements.size()));
+            this.elements.addAll(action.elements);
+        } else {
+            this.elements = new ArrayList<>(action.elements);
         }
     }
 
@@ -118,6 +129,17 @@ public class CollectionRemoveAllAction<C extends Collection<E>, E> implements Co
 
         if (newElements == null) {
             return null;
+        }
+        return new CollectionRemoveAllAction(newElements, elements instanceof List);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public CollectionAction<C> replaceObjects(Map<Object, Object> objectMapping) {
+        List<Object> newElements = RecordingUtils.replaceElements(elements, objectMapping);
+
+        if (newElements == null) {
+            return new CollectionRemoveAllAction<>(this);
         }
         return new CollectionRemoveAllAction(newElements, elements instanceof List);
     }

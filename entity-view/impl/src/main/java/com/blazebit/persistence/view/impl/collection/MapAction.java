@@ -50,5 +50,7 @@ public interface MapAction<T extends Map<?, ?>> {
 
     public MapAction<T> replaceObject(Object oldKey, Object oldValue, Object newKey, Object newValue);
 
+    public MapAction<T> replaceObjects(Map<Object, Object> objectMapping);
+
     public void addAction(List<MapAction<T>> actions, Collection<Object> addedKeys, Collection<Object> removedKeys, Collection<Object> addedElements, Collection<Object> removedElements);
 }

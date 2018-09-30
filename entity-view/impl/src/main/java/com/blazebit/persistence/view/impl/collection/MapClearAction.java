@@ -94,6 +94,11 @@ public class MapClearAction<C extends Map<K, V>, K, V> implements MapAction<C> {
     }
 
     @Override
+    public MapAction<C> replaceObjects(Map<Object, Object> objectMapping) {
+        return this;
+    }
+
+    @Override
     public void addAction(List<MapAction<C>> actions, Collection<Object> addedKeys, Collection<Object> removedKeys, Collection<Object> addedElements, Collection<Object> removedElements) {
         actions.clear();
         actions.add(this);

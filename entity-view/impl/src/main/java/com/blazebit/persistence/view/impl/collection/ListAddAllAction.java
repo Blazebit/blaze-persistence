@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -37,6 +38,11 @@ public class ListAddAllAction<C extends List<E>, E> implements ListAction<C> {
     public ListAddAllAction(int index, Collection<? extends E> collection) {
         this.index = index;
         this.elements = new ArrayList<E>(collection);
+    }
+
+    private ListAddAllAction(List<? extends E> collection, int index) {
+        this.index = index;
+        this.elements = collection;
     }
 
     @Override
@@ -99,7 +105,18 @@ public class ListAddAllAction<C extends List<E>, E> implements ListAction<C> {
         if (newElements == null) {
             return null;
         }
-        return new ListAddAllAction(index, newElements);
+        return new ListAddAllAction(newElements, index);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public CollectionAction<C> replaceObjects(Map<Object, Object> objectMapping) {
+        List<Object> newElements = RecordingUtils.replaceElements(elements, objectMapping);
+
+        if (newElements == null) {
+            return new ListAddAllAction<>(index, elements);
+        }
+        return new ListAddAllAction(newElements, index);
     }
 
     @Override

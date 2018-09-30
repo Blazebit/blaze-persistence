@@ -22,6 +22,7 @@ import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -36,6 +37,11 @@ public class ListRemoveAction<C extends List<E>, E> implements ListAction<C> {
     public ListRemoveAction(int index, List<?> delegate) {
         this.index = index;
         this.removedElementInView = delegate.get(index);
+    }
+
+    private ListRemoveAction(int index, Object removedElementInView) {
+        this.index = index;
+        this.removedElementInView = removedElementInView;
     }
 
     @Override
@@ -74,7 +80,24 @@ public class ListRemoveAction<C extends List<E>, E> implements ListAction<C> {
 
     @Override
     public CollectionAction<C> replaceObject(Object oldElem, Object elem) {
-        return null;
+        if (oldElem != removedElementInView) {
+            return this;
+        }
+
+        return new ListRemoveAction(index, elem);
+    }
+
+    @Override
+    public CollectionAction<C> replaceObjects(Map<Object, Object> objectMapping) {
+        if (objectMapping == null) {
+            return this;
+        }
+        Object newElement = objectMapping.get(removedElementInView);
+        if (newElement == null) {
+            return this;
+        }
+
+        return new ListRemoveAction(index, newElement);
     }
 
     @Override

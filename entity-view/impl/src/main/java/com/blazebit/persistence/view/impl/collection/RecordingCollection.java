@@ -227,6 +227,43 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
         return removedElements.keySet();
     }
 
+    public void setActions(RecordingCollection<C, E> recordingCollection, Map<Object, Object> objectMapping) {
+        if (recordingCollection.actions == null) {
+            this.actions = null;
+            this.addedElements = null;
+            this.removedElements = null;
+        } else {
+            this.actions = new ArrayList<>(recordingCollection.actions.size());
+            this.addedElements = new IdentityHashMap<>(recordingCollection.addedElements.size());
+            this.removedElements = new IdentityHashMap<>(recordingCollection.removedElements.size());
+
+            for (CollectionAction<C> action : recordingCollection.actions) {
+                actions.add(action.replaceObjects(objectMapping));
+            }
+
+            for (E e : recordingCollection.addedElements.keySet()) {
+                E newElement = (E) objectMapping.get(e);
+                if (newElement == null) {
+                    addedElements.put(e, e);
+                } else {
+                    addedElements.put(newElement, newElement);
+                }
+            }
+
+            for (E e : recordingCollection.removedElements.keySet()) {
+                E newElement = (E) objectMapping.get(e);
+                if (newElement == null) {
+                    removedElements.put(e, e);
+                } else {
+                    removedElements.put(newElement, newElement);
+                }
+            }
+        }
+        if (recordingCollection.dirty) {
+            $$_markDirty(-1);
+        }
+    }
+
     public void setActions(List<CollectionAction<C>> actions, Map<E, E> addedElements, Map<E, E> removedElements) {
         this.actions = actions;
         this.addedElements = addedElements;
@@ -237,7 +274,7 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
                 for (E oldElem : addedElements.keySet()) {
                     if (oldElem.equals(elem) && elem != oldElem) {
                         if (elem instanceof DirtyTracker) {
-                            ((DirtyTracker) oldElem).$$_unsetParent();
+                            ((DirtyTracker) elem).$$_unsetParent();
                         }
                         if (oldElem instanceof DirtyTracker) {
                             ((DirtyTracker) oldElem).$$_setParent(this, 1);
@@ -257,7 +294,7 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
                 for (E oldElem : addedElements.keySet()) {
                     if (oldElem.equals(elem) && elem != oldElem) {
                         if (elem instanceof DirtyTracker) {
-                            ((DirtyTracker) oldElem).$$_unsetParent();
+                            ((DirtyTracker) elem).$$_unsetParent();
                         }
                         if (oldElem instanceof DirtyTracker) {
                             ((DirtyTracker) oldElem).$$_setParent(this, 1);
@@ -269,10 +306,14 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
             }
             delegate.addAll(addedElements.keySet());
         }
+        $$_markDirty(-1);
     }
 
     public List<CollectionAction<C>> resetActions(UpdateContext context) {
         List<CollectionAction<C>> oldActions = this.actions;
+        if (oldActions == null) {
+            return Collections.emptyList();
+        }
         Map<E, E> addedElements = this.addedElements;
         Map<E, E> removedElements = this.removedElements;
         this.actions = null;

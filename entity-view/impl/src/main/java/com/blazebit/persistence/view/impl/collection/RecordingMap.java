@@ -222,7 +222,66 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
     public boolean hasActions() {
         return actions != null && actions.size() > 0;
     }
-    
+
+    public void setActions(RecordingMap<C, K, V> recordingMap, Map<Object, Object> objectMapping) {
+        if (recordingMap.actions == null) {
+            this.actions = null;
+            this.addedKeys = null;
+            this.removedKeys = null;
+            this.addedElements = null;
+            this.removedElements = null;
+        } else {
+            this.actions = new ArrayList<>(recordingMap.actions.size());
+            this.addedKeys = new IdentityHashMap<>(recordingMap.addedKeys.size());
+            this.removedKeys = new IdentityHashMap<>(recordingMap.removedKeys.size());
+            this.addedElements = new IdentityHashMap<>(recordingMap.addedElements.size());
+            this.removedElements = new IdentityHashMap<>(recordingMap.removedElements.size());
+
+            for (MapAction<C> action : recordingMap.actions) {
+                actions.add(action.replaceObjects(objectMapping));
+            }
+
+            for (K e : recordingMap.addedKeys.keySet()) {
+                K newElement = (K) objectMapping.get(e);
+                if (newElement == null) {
+                    addedKeys.put(e, e);
+                } else {
+                    addedKeys.put(newElement, newElement);
+                }
+            }
+
+            for (K e : recordingMap.removedKeys.keySet()) {
+                K newElement = (K) objectMapping.get(e);
+                if (newElement == null) {
+                    removedKeys.put(e, e);
+                } else {
+                    removedKeys.put(newElement, newElement);
+                }
+            }
+
+            for (V e : recordingMap.addedElements.keySet()) {
+                V newElement = (V) objectMapping.get(e);
+                if (newElement == null) {
+                    addedElements.put(e, e);
+                } else {
+                    addedElements.put(newElement, newElement);
+                }
+            }
+
+            for (V e : recordingMap.removedElements.keySet()) {
+                V newElement = (V) objectMapping.get(e);
+                if (newElement == null) {
+                    removedElements.put(e, e);
+                } else {
+                    removedElements.put(newElement, newElement);
+                }
+            }
+        }
+        if (recordingMap.dirty) {
+            $$_markDirty(-1);
+        }
+    }
+
     public void setActions(List<MapAction<C>> actions, Map<K, K> addedKeys, Map<K, K> removedKeys, Map<V, V> addedElements, Map<V, V> removedElements) {
         this.actions = actions;
         this.addedKeys = addedKeys;
@@ -309,10 +368,14 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
             }
             delegate.putAll(newValues);
         }
+        $$_markDirty(-1);
     }
 
     public List<MapAction<C>> resetActions(UpdateContext context) {
         List<MapAction<C>> oldActions = this.actions;
+        if (oldActions == null) {
+            return Collections.emptyList();
+        }
         Map<K, K> addedKeys = this.addedKeys;
         Map<K, K> removedKeys = this.removedKeys;
         Map<V, V> addedElements = this.addedElements;

@@ -2082,6 +2082,10 @@ public class ProxyFactory {
                 return "0F";
             } else if (type == CtClass.doubleType) {
                 return "0D";
+            } else if (type == CtClass.charType) {
+                return "'\\0";
+            } else if (type == CtClass.booleanType) {
+                return "false";
             } else {
                 return "0";
             }

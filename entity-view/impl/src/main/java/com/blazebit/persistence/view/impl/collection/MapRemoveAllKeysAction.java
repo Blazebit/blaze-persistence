@@ -151,6 +151,28 @@ public class MapRemoveAllKeysAction<C extends Map<K, V>, K, V> implements MapAct
     }
 
     @Override
+    @SuppressWarnings("unchecked")
+    public MapAction<C> replaceObjects(Map<Object, Object> objectMapping) {
+        if (objectMapping == null) {
+            return this;
+        }
+        List<Object> newElements = RecordingUtils.replaceElements(elements, objectMapping);
+        Map<Object, Object> newRemovedObjectsInView = RecordingUtils.replaceElements(removedObjectsInView, objectMapping);
+
+        if (newElements != null) {
+            if (newRemovedObjectsInView == null) {
+                return new MapRemoveAllKeysAction(newElements, removedObjectsInView);
+            } else {
+                return new MapRemoveAllKeysAction(newElements, newRemovedObjectsInView);
+            }
+        } else if (newRemovedObjectsInView != null) {
+            return new MapRemoveAllKeysAction(elements, newRemovedObjectsInView);
+        } else {
+            return this;
+        }
+    }
+
+    @Override
     public void addAction(List<MapAction<C>> actions, Collection<Object> addedKeys, Collection<Object> removedKeys, Collection<Object> addedElements, Collection<Object> removedElements) {
         actions.add(this);
     }

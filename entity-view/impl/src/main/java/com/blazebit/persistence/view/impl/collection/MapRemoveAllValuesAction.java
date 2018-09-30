@@ -156,6 +156,28 @@ public class MapRemoveAllValuesAction<C extends Map<K, V>, K, V> implements MapA
     }
 
     @Override
+    @SuppressWarnings("unchecked")
+    public MapAction<C> replaceObjects(Map<Object, Object> objectMapping) {
+        if (objectMapping == null) {
+            return this;
+        }
+        List<Object> newElements = RecordingUtils.replaceElements(elements, objectMapping);
+        Map<Object, Object> newRemovedObjectsInView = RecordingUtils.replaceElements(removedObjectsInView, objectMapping);
+
+        if (newElements != null) {
+            if (newRemovedObjectsInView == null) {
+                return new MapRemoveAllValuesAction(newElements, removedObjectsInView);
+            } else {
+                return new MapRemoveAllValuesAction(newElements, newRemovedObjectsInView);
+            }
+        } else if (newRemovedObjectsInView != null) {
+            return new MapRemoveAllValuesAction(elements, newRemovedObjectsInView);
+        } else {
+            return this;
+        }
+    }
+
+    @Override
     public void addAction(List<MapAction<C>> actions, Collection<Object> addedKeys, Collection<Object> removedKeys, Collection<Object> addedElements, Collection<Object> removedElements) {
         actions.add(this);
     }

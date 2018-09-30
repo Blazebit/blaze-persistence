@@ -22,6 +22,7 @@ import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -83,6 +84,20 @@ public class ListAddAction<C extends List<E>, E> implements ListAction<C> {
             return null;
         }
         return new ListAddAction(index, elem);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public CollectionAction<C> replaceObjects(Map<Object, Object> objectMapping) {
+        if (objectMapping == null) {
+            return this;
+        }
+        Object newElement = objectMapping.get(element);
+
+        if (newElement == null) {
+            return this;
+        }
+        return new ListAddAction(index, newElement);
     }
 
     @Override

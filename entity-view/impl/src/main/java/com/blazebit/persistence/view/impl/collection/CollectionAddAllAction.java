@@ -24,6 +24,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -57,6 +59,15 @@ public class CollectionAddAllAction<C extends Collection<E>, E> implements Colle
         } else {
             this.elements = Collections.newSetFromMap(new IdentityHashMap<E, Boolean>(collection.size()));
             this.elements.addAll(collection);
+        }
+    }
+
+    private CollectionAddAllAction(CollectionAddAllAction<C, E> action) {
+        if (action.elements instanceof Set<?>) {
+            this.elements = Collections.newSetFromMap(new IdentityHashMap<E, Boolean>(action.elements.size()));
+            this.elements.addAll(action.elements);
+        } else {
+            this.elements = new ArrayList<>(action.elements);
         }
     }
 
@@ -122,6 +133,17 @@ public class CollectionAddAllAction<C extends Collection<E>, E> implements Colle
 
         if (newElements == null) {
             return null;
+        }
+        return new CollectionAddAllAction(newElements, elements instanceof List);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public CollectionAction<C> replaceObjects(Map<Object, Object> objectMapping) {
+        List<Object> newElements = RecordingUtils.replaceElements(elements, objectMapping);
+
+        if (newElements == null) {
+            return new CollectionAddAllAction<>(this);
         }
         return new CollectionAddAllAction(newElements, elements instanceof List);
     }

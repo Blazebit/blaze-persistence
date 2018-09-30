@@ -109,4 +109,73 @@ public final class RecordingUtils {
 
         return newElements;
     }
+
+    public static List<Object> replaceElements(Collection<?> elements, Map<Object, Object> objectMapping) {
+        List<Object> newElements = null;
+
+        if (objectMapping != null) {
+            int i = 0;
+            for (Object element : elements) {
+                Object newElement = objectMapping.get(element);
+                if (newElement != null) {
+                    if (newElements == null) {
+                        newElements = new ArrayList<>(elements);
+                    }
+                    newElements.set(i, newElement);
+                }
+                i++;
+            }
+        }
+
+        return newElements;
+    }
+
+    public static Map<Object, Object> replaceElements(Map<?, ?> elements, Map<Object, Object> objectMapping) {
+        Map<Object, Object> newElements = null;
+        Iterator<? extends Map.Entry<?, ?>> iter = elements.entrySet().iterator();
+
+        while (iter.hasNext()) {
+            Map.Entry<?, ?> entry = iter.next();
+            Object newKey = objectMapping.get(entry.getKey());
+            Object newValue = objectMapping.get(entry.getValue());
+            if (newKey != null || newValue != null) {
+                if (newElements == null) {
+                    newElements = new LinkedHashMap<>(elements);
+                }
+                if (newKey == null) {
+                    newKey = entry.getKey();
+                } else if (newValue == null) {
+                    newValue = entry.getValue();
+                }
+                newElements.remove(entry.getKey());
+                newElements.put(newKey, newValue);
+            }
+        }
+
+        return newElements;
+    }
+
+    public static List<Map.Entry<Object, Object>> replaceEntries(Collection<? extends Map.Entry<?, ?>> elements, Map<Object, Object> objectMapping) {
+        List<Map.Entry<Object, Object>> newElements = null;
+
+        int i = 0;
+        for (Map.Entry<?, ?> element : elements) {
+            Object newKey = objectMapping.get(element.getKey());
+            Object newValue = objectMapping.get(element.getValue());
+            if (newKey != null || newValue != null) {
+                if (newElements == null) {
+                    newElements = new ArrayList<>((Collection<? extends Map.Entry<Object, Object>>) elements);
+                }
+                if (newKey == null) {
+                    newKey = element.getKey();
+                } else if (newValue == null) {
+                    newValue = element.getValue();
+                }
+                newElements.set(i, new AbstractMap.SimpleEntry<>(newKey, newValue));
+            }
+            i++;
+        }
+
+        return newElements;
+    }
 }

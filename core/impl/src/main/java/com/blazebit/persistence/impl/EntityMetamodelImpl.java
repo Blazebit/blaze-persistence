@@ -528,7 +528,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         @SuppressWarnings("unchecked")
         private ExtendedManagedTypeImpl(ManagedType<X> managedType, boolean hasCascadingDeleteCycle, Map<String, AttributeEntry<?, ?>> attributes) {
             this.managedType = managedType;
-            if (managedType instanceof EntityType<?>) {
+            if (managedType instanceof IdentifiableType<?>) {
                 this.idAttributes = (Set<SingularAttribute<X, ?>>) (Set) JpaMetamodelUtils.getIdAttributes((IdentifiableType<?>) managedType);
             } else {
                 this.idAttributes = Collections.emptySet();
