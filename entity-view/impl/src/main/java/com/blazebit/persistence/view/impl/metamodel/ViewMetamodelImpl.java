@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
+import com.blazebit.persistence.view.impl.ConfigurationProperties;
 import com.blazebit.persistence.view.metamodel.FlatViewType;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
@@ -31,6 +32,8 @@ import com.blazebit.reflection.ReflectionUtils;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.SingularAttribute;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -144,15 +147,35 @@ public class ViewMetamodelImpl implements ViewMetamodel {
                         Object instance3 = declaredConstructor.newInstance();
 
                         // Try to set any value on instance3 so that it would differ from instance1
-                        String error = createValue(jpaManagedType, instance3, typeTestValues);
+                        String error = createValue(jpaManagedType, instance2, typeTestValues);
 
                         if (error != null) {
                             context.addError(error);
-                        } else if (instance1.hashCode() != instance2.hashCode() || instance1.hashCode() == instance3.hashCode() || !instance1.equals(instance2) || instance1.equals(instance3)) {
-                            context.addError("The use of the JPA managed type '" + javaType.getName() + "' in entity views is problematic because the equals/hashCode implementation seems wrong. Equality of should be based on the identifier for entities and the full state for embeddables. Consider using a subview instead or add a proper equals/hashCode implementation!");
+                        } else {
+                            error = createValue(jpaManagedType, instance3, typeTestValues);
+                            if (error != null) {
+                                context.addError(error);
+                            } else {
+                                String infoText = "Equals/hashCode should be based on the identifier for entities and the full state for embeddables. Consider using a subview instead or add a proper equals/hashCode implementation!";
+                                if (instance2.hashCode() != instance3.hashCode()) {
+                                    context.addError("The use of the JPA managed type '" + javaType.getName() + "' in entity views is problematic because two instances with the same state do not have the same hashCode. " + infoText);
+                                }
+                                if (instance1.hashCode() == instance3.hashCode()) {
+                                    context.addError("The use of the JPA managed type '" + javaType.getName() + "' in entity views is problematic because two instances with different state have the same hashCode. " + infoText);
+                                }
+                                if (!instance2.equals(instance3)) {
+                                    context.addError("The use of the JPA managed type '" + javaType.getName() + "' in entity views is problematic because two instances with the same state are not equal. " + infoText);
+                                }
+                                if (instance1.equals(instance3)) {
+                                    context.addError("The use of the JPA managed type '" + javaType.getName() + "' in entity views is problematic because two instances with different state are equal. " + infoText);
+                                }
+                            }
                         }
                     } catch (Exception ex) {
-                        throw new RuntimeException("Error during validation of equals/hashCode implementations of managed type: " + javaType.getName(), ex);
+                        StringWriter sw = new StringWriter();
+                        sw.append("Error during validation of equals/hashCode implementations of managed type [").append(javaType.getName()).append("]. If you think this is due to a bug, please report the problem and temporarily deactivate the type checking by setting the property '").append(ConfigurationProperties.MANAGED_TYPE_VALIDATION_DISABLED).append("' to true.\n");
+                        ex.printStackTrace(new PrintWriter(sw));
+                        context.addError(sw.toString());
                     }
                 }
             }
@@ -187,7 +210,7 @@ public class ViewMetamodelImpl implements ViewMetamodel {
                         Constructor<?> typeConstructor = attributeType.getDeclaredConstructor();
                         typeConstructor.setAccessible(true);
                         value = typeConstructor.newInstance();
-                        String error = createValue((ManagedType<?>) type, value, typeTestValues);
+                        String error = createValue(metamodel.getManagedType(attributeType), value, typeTestValues);
                         if (error != null) {
                             return error;
                         }

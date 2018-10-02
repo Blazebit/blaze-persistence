@@ -204,28 +204,4 @@ public abstract class AbstractPath<X> extends AbstractExpression<X> implements B
         }
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (!(o instanceof AbstractPath<?>)) {
-            return false;
-        }
-
-        AbstractPath<?> that = (AbstractPath<?>) o;
-
-        if (getAttribute() != null ? !getAttribute().equals(that.getAttribute()) : that.getAttribute() != null) {
-            return false;
-        }
-        return getAlias() != null ? getAlias().equals(that.getAlias()) : that.getAlias() == null;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = getAttribute() != null ? getAttribute().hashCode() : 0;
-        result = 31 * result + (getAlias() != null ? getAlias().hashCode() : 0);
-        return result;
-    }
-
 }

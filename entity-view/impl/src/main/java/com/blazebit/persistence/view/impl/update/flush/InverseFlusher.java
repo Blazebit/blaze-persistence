@@ -34,14 +34,14 @@ import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.mapper.Mapper;
 import com.blazebit.persistence.view.impl.mapper.Mappers;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
-import com.blazebit.persistence.view.metamodel.SingularAttribute;
-import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 import com.blazebit.persistence.view.impl.update.EntityViewUpdaterImpl;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
+import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.metamodel.ViewType;
+import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
 import javax.persistence.Query;
 import java.util.Collections;
@@ -141,8 +141,8 @@ public final class InverseFlusher<E> {
                             attributeLocation,
                             evm,
                             childViewType.getJavaType(),
-                            Collections.<Type<?>>emptySet(),
-                            Collections.<Type<?>>emptySet(),
+                            attribute.getPersistCascadeAllowedSubtypes(),
+                            attribute.getUpdateCascadeAllowedSubtypes(),
                             new ReferenceEntityLoader(evm, childViewType, EntityViewUpdaterImpl.createViewIdMapper(evm, childViewType)),
                             Accessors.forViewId(evm, childViewType, true),
                             true
@@ -170,8 +170,8 @@ public final class InverseFlusher<E> {
                             attributeLocation,
                             evm,
                             childViewType.getJavaType(),
-                            Collections.<Type<?>>emptySet(),
-                            Collections.<Type<?>>emptySet(),
+                            attribute.getPersistCascadeAllowedSubtypes(),
+                            attribute.getUpdateCascadeAllowedSubtypes(),
                             new ReferenceEntityLoader(evm, childViewType, EntityViewUpdaterImpl.createViewIdMapper(evm, childViewType)),
                             Accessors.forViewId(evm, childViewType, true),
                             true

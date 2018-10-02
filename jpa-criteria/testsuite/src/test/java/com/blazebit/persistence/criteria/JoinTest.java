@@ -64,6 +64,21 @@ public class JoinTest extends AbstractCoreTest {
     }
 
     @Test
+    public void joinSimple() {
+        BlazeCriteriaQuery<Document> cq = BlazeCriteria.get(cbf, Document.class);
+        BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
+        BlazeRoot<Document> root = cq.from(Document.class);
+        root.fetch(Document_.partners);
+        BlazeJoin<Document, Person> p1 = root.join(Document_.partners);
+
+        cq.select(root);
+        cq.where(cb.equal(p1.get(Person_.age), 1L));
+
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
+        assertEquals("SELECT generatedDocument_0 FROM Document generatedDocument_0 JOIN FETCH generatedDocument_0.partners generatedPerson_1 JOIN generatedDocument_0.partners generatedPerson_2 WHERE generatedPerson_2.age = 1L", criteriaBuilder.getQueryString());
+    }
+
+    @Test
     public void joinSet() {
         BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(cbf, Long.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
