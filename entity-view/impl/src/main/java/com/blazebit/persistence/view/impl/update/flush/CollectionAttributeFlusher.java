@@ -179,7 +179,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
 
     @Override
     public boolean supportsQueryFlush() {
-        return inverseFlusher != null || super.supportsQueryFlush();
+        return inverseFlusher != null && inverseFlusher.supportsQueryFlush() || inverseFlusher == null && super.supportsQueryFlush();
     }
 
     @Override
@@ -347,7 +347,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                     }
                     // It could be the case that entity flushing is triggered by a different dirty collection,
                     // yet we still want elements of this collection to flush with query flushing if configured
-                    if (flushStrategy == FlushStrategy.ENTITY) {
+                    if (flushStrategy == FlushStrategy.ENTITY || !inverseFlusher.supportsQueryFlush()) {
                         visitInverseElementFlushersForActions(context, recordingCollection, added, removed, new ElementFlusherEntityExecutor(context, entity));
                     } else {
                         visitInverseElementFlushersForActions(context, recordingCollection, added, removed, new ElementFlusherQueryExecutor(context, entity, null));
@@ -595,7 +595,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
     @Override
     protected boolean mergeCollectionElements(UpdateContext context, Object view, E entity, V value) {
         if (elementFlushers != null) {
-            if (flushStrategy == FlushStrategy.ENTITY) {
+            if (flushStrategy == FlushStrategy.ENTITY || !supportsQueryFlush()) {
                 for (CollectionElementAttributeFlusher<E, V> elementFlusher : elementFlushers) {
                     elementFlusher.flushEntity(context, entity, view, value, null);
                 }
@@ -1233,12 +1233,12 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
 
         @Override
         public void onAddedInverseElement(Object element) {
-            inverseFlusher.flushEntitySetElement(context, element, entity, null);
+            inverseFlusher.flushEntitySetElement(context, element, entity, entity, null);
         }
 
         @Override
         public void onAddedAndUpdatedInverseElement(DirtyAttributeFlusher<?, E, V> flusher, Object element) {
-            inverseFlusher.flushEntitySetElement(context, element, entity, (DirtyAttributeFlusher<?, E, Object>) (DirtyAttributeFlusher<?, ?, ?>) flusher);
+            inverseFlusher.flushEntitySetElement(context, element, entity, entity, (DirtyAttributeFlusher<?, E, Object>) (DirtyAttributeFlusher<?, ?, ?>) flusher);
         }
 
         @Override
@@ -1250,7 +1250,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         @Override
         public void onRemovedInverseElement(Object element) {
             if (inverseRemoveStrategy == InverseCollectionElementAttributeFlusher.Strategy.SET_NULL) {
-                inverseFlusher.flushEntitySetElement(context, element, null, null);
+                inverseFlusher.flushEntitySetElement(context, element, entity, null, null);
             } else {
                 // We need to remove the element from the entity backing collection as well, otherwise it might not be removed properly when using cascading
                 // Note that this is only necessary for entity flushing which is handled by this code. JPA DML statements like use for query flushing don't respect cascading configurations
@@ -1298,18 +1298,18 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         @Override
         public void onAddedInverseElement(Object element) {
             if (view != null) {
-                inverseFlusher.flushQuerySetElement(context, element, view, null, null);
+                inverseFlusher.flushQuerySetElement(context, element, view, view, null, null);
             } else {
-                inverseFlusher.flushQuerySetEntityOnElement(context, element, entity, null, null);
+                inverseFlusher.flushQuerySetEntityOnElement(context, element, entity, entity, null, null);
             }
         }
 
         @Override
         public void onAddedAndUpdatedInverseElement(DirtyAttributeFlusher<?, E, V> flusher, Object element) {
             if (view != null) {
-                inverseFlusher.flushQuerySetElement(context, element, view, null, (DirtyAttributeFlusher<?, E, Object>) (DirtyAttributeFlusher<?, ?, ?>) flusher);
+                inverseFlusher.flushQuerySetElement(context, element, view, view, null, (DirtyAttributeFlusher<?, E, Object>) (DirtyAttributeFlusher<?, ?, ?>) flusher);
             } else {
-                inverseFlusher.flushQuerySetEntityOnElement(context, element, entity, null, (DirtyAttributeFlusher<?, E, Object>) (DirtyAttributeFlusher<?, ?, ?>) flusher);
+                inverseFlusher.flushQuerySetEntityOnElement(context, element, entity, entity, null, (DirtyAttributeFlusher<?, E, Object>) (DirtyAttributeFlusher<?, ?, ?>) flusher);
             }
         }
 
@@ -1322,7 +1322,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         @Override
         public void onRemovedInverseElement(Object element) {
             if (inverseRemoveStrategy == InverseCollectionElementAttributeFlusher.Strategy.SET_NULL) {
-                inverseFlusher.flushQuerySetElement(context, element, null, null, null);
+                inverseFlusher.flushQuerySetElement(context, element, view, null, null, null);
             } else {
                 inverseFlusher.removeElement(context, entity, element);
             }

@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.update.flush;
 
 import com.blazebit.persistence.DeleteCriteriaBuilder;
 import com.blazebit.persistence.parser.EntityMetamodel;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.view.OptimisticLockException;
@@ -31,9 +32,14 @@ import com.blazebit.persistence.view.impl.entity.LoadOnlyViewToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.LoadOrPersistViewToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.ReferenceEntityLoader;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
+import com.blazebit.persistence.view.impl.mapper.CollectionAddMapper;
+import com.blazebit.persistence.view.impl.mapper.CollectionRemoveMapper;
 import com.blazebit.persistence.view.impl.mapper.Mapper;
 import com.blazebit.persistence.view.impl.mapper.Mappers;
+import com.blazebit.persistence.view.impl.mapper.NullMapper;
+import com.blazebit.persistence.view.impl.mapper.SimpleMapper;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
+import com.blazebit.persistence.view.impl.type.EntityBasicUserType;
 import com.blazebit.persistence.view.impl.update.EntityViewUpdaterImpl;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
@@ -44,6 +50,8 @@ import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
 import javax.persistence.Query;
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.ManagedType;
 import java.util.Collections;
 import java.util.List;
 
@@ -104,7 +112,8 @@ public final class InverseFlusher<E> {
 
             AttributeAccessor parentReferenceAttributeAccessor = null;
             Mapper<Object, Object> parentEntityOnChildViewMapper = null;
-            Mapper<Object, Object> parentEntityOnChildEntityMapper = null;
+            Mapper<Object, Object> parentEntityOnChildEntityAddMapper = null;
+            Mapper<Object, Object> parentEntityOnChildEntityRemoveMapper = null;
             InverseViewToEntityMapper childViewToEntityMapper = null;
             InverseEntityToEntityMapper childEntityToEntityMapper = null;
             ViewToEntityMapper parentReferenceViewToEntityMapper = new LoadOnlyViewToEntityMapper(
@@ -131,7 +140,7 @@ public final class InverseFlusher<E> {
                                     attribute.getWritableMappedByMappings()
                             )
                     );
-                    parentEntityOnChildEntityMapper = (Mapper<Object, Object>) Mappers.forEntityAttributeMapping(
+                    parentEntityOnChildEntityAddMapper = parentEntityOnChildEntityRemoveMapper = (Mapper<Object, Object>) Mappers.forEntityAttributeMapping(
                             evm,
                             viewType.getEntityClass(),
                             childViewType.getEntityClass(),
@@ -176,7 +185,7 @@ public final class InverseFlusher<E> {
                             Accessors.forViewId(evm, childViewType, true),
                             true
                     );
-                    parentEntityOnChildEntityMapper = Mappers.forAccessor(parentReferenceAttributeAccessor);
+                    parentEntityOnChildEntityAddMapper = parentEntityOnChildEntityRemoveMapper = Mappers.forAccessor(parentReferenceAttributeAccessor);
                     parentEntityOnChildViewMapper = (Mapper<Object, Object>) Mappers.forViewConvertToViewAttributeMapping(
                             evm,
                             (ViewType<Object>) viewType,
@@ -196,16 +205,37 @@ public final class InverseFlusher<E> {
                 }
             }
 
-            DirtyAttributeFlusher<?, Object, Object> parentReferenceAttributeFlusher = new ParentReferenceAttributeFlusher<>(
-                    evm,
-                    viewType.getEntityClass(),
-                    attributeLocation,
-                    attribute.getMappedBy(),
-                    attribute.getWritableMappedByMappings(),
-                    parentReferenceTypeDescriptor,
-                    parentReferenceAttributeAccessor,
-                    parentEntityOnChildViewMapper
-            );
+            DirtyAttributeFlusher<?, Object, ? extends Object> parentReferenceAttributeFlusher;
+            ManagedType<?> managedType = evm.getMetamodel().getEntityMetamodel().getManagedType(elementEntityClass);
+            Attribute<?, ?> inverseAttribute = JpaMetamodelUtils.getAttribute(managedType, attribute.getMappedBy());
+            // Many-To-Many relation can't be handled by the inverse flushers
+            if (inverseAttribute.isCollection()) {
+                // A collection can only have a single attribute, so it's safe to assume a SimpleMapper
+                parentEntityOnChildEntityAddMapper = new CollectionAddMapper<>(parentEntityOnChildEntityAddMapper == null ? parentReferenceAttributeAccessor : ((SimpleMapper<Object, Object>) parentEntityOnChildEntityAddMapper).getAttributeAccessor());
+                parentEntityOnChildEntityRemoveMapper = new CollectionRemoveMapper<>(parentEntityOnChildEntityRemoveMapper == null ? parentReferenceAttributeAccessor : ((SimpleMapper<Object, Object>) parentEntityOnChildEntityRemoveMapper).getAttributeAccessor());
+                parentReferenceAttributeFlusher = new ParentCollectionReferenceAttributeFlusher<>(
+                        attributeLocation,
+                        attribute.getMappedBy(),
+                        viewType.getFlushStrategy(),
+                        parentReferenceAttributeAccessor,
+                        null,
+                        null,
+                        null,
+                        TypeDescriptor.forInverseCollectionAttribute(new EntityBasicUserType(evm.getJpaProvider()))
+                );
+            } else {
+                parentEntityOnChildEntityRemoveMapper = new NullMapper<>(parentEntityOnChildEntityRemoveMapper);
+                parentReferenceAttributeFlusher = new ParentReferenceAttributeFlusher<>(
+                        evm,
+                        viewType.getEntityClass(),
+                        attributeLocation,
+                        attribute.getMappedBy(),
+                        attribute.getWritableMappedByMappings(),
+                        parentReferenceTypeDescriptor,
+                        parentReferenceAttributeAccessor,
+                        parentEntityOnChildViewMapper
+                );
+            }
 
             UnmappedAttributeCascadeDeleter deleter = null;
             String parentIdAttributeName = null;
@@ -232,7 +262,8 @@ public final class InverseFlusher<E> {
                         evm,
                         childViewType,
                         parentEntityOnChildViewMapper,
-                        parentEntityOnChildEntityMapper,
+                        parentEntityOnChildEntityAddMapper,
+                        parentEntityOnChildEntityRemoveMapper,
                         childTypeDescriptor.getViewToEntityMapper(),
                         parentReferenceAttributeFlusher,
                         EntityViewUpdaterImpl.createIdFlusher(evm, childViewType, EntityViewUpdaterImpl.createViewIdMapper(evm, childViewType))
@@ -242,7 +273,8 @@ public final class InverseFlusher<E> {
                 childEntityToEntityMapper = new InverseEntityToEntityMapper(
                         evm,
                         evm.getMetamodel().getEntityMetamodel().entity(childType),
-                        parentEntityOnChildEntityMapper,
+                        parentEntityOnChildEntityAddMapper,
+                        parentEntityOnChildEntityRemoveMapper,
                         parentReferenceAttributeFlusher
                 );
             }
@@ -258,7 +290,7 @@ public final class InverseFlusher<E> {
                     parentEntityOnChildViewMapper,
                     childViewToEntityMapper,
                     childReferenceViewToEntityMapper,
-                    parentEntityOnChildEntityMapper,
+                    parentEntityOnChildEntityAddMapper,
                     childEntityToEntityMapper
             );
         }
@@ -314,34 +346,34 @@ public final class InverseFlusher<E> {
         return view == null ? null : (E) parentReferenceViewToEntityMapper.applyToEntity(context, null, view);
     }
 
-    public void flushQuerySetElement(UpdateContext context, Object element, Object view, String parameterPrefix, DirtyAttributeFlusher<?, E, Object> nestedGraphNode) {
+    public void flushQuerySetElement(UpdateContext context, Object element, Object oldParent, Object view, String parameterPrefix, DirtyAttributeFlusher<?, E, Object> nestedGraphNode) {
         if (childViewToEntityMapper != null) {
-            flushQuerySetEntityOnViewElement(context, element, getParentEntityReference(context, view), parameterPrefix, nestedGraphNode);
+            flushQuerySetEntityOnViewElement(context, element, getParentEntityReference(context, oldParent), getParentEntityReference(context, view), parameterPrefix, nestedGraphNode);
         } else {
-            flushQuerySetEntityOnEntityElement(context, element, getParentEntityReference(context, view), parameterPrefix, nestedGraphNode);
+            flushQuerySetEntityOnEntityElement(context, element, getParentEntityReference(context, oldParent), getParentEntityReference(context, view), parameterPrefix, nestedGraphNode);
         }
     }
 
-    public void flushQuerySetEntityOnElement(UpdateContext context, Object element, E entity, String parameterPrefix, DirtyAttributeFlusher<?, E, Object> nestedGraphNode) {
+    public void flushQuerySetEntityOnElement(UpdateContext context, Object element, E oldParent, E entity, String parameterPrefix, DirtyAttributeFlusher<?, E, Object> nestedGraphNode) {
         if (childViewToEntityMapper != null) {
-            flushQuerySetEntityOnViewElement(context, element, entity, parameterPrefix, nestedGraphNode);
+            flushQuerySetEntityOnViewElement(context, element, oldParent, entity, parameterPrefix, nestedGraphNode);
         } else {
-            flushQuerySetEntityOnEntityElement(context, element, entity, parameterPrefix, nestedGraphNode);
+            flushQuerySetEntityOnEntityElement(context, element, oldParent, entity, parameterPrefix, nestedGraphNode);
         }
     }
 
-    private void flushQuerySetEntityOnViewElement(UpdateContext context, Object element, E newValue, String parameterPrefix, DirtyAttributeFlusher<?, E, Object> nestedGraphNode) {
-        flushQuerySetEntityOnElement(context, element, newValue, parameterPrefix, nestedGraphNode, childViewToEntityMapper);
+    private void flushQuerySetEntityOnViewElement(UpdateContext context, Object element, E oldParent, E newValue, String parameterPrefix, DirtyAttributeFlusher<?, E, Object> nestedGraphNode) {
+        flushQuerySetEntityOnElement(context, element, oldParent, newValue, parameterPrefix, nestedGraphNode, childViewToEntityMapper);
     }
 
-    private void flushQuerySetEntityOnEntityElement(UpdateContext context, Object element, E newValue, String parameterPrefix, DirtyAttributeFlusher<?, E, Object> nestedGraphNode) {
+    private void flushQuerySetEntityOnEntityElement(UpdateContext context, Object element, E oldParent, E newValue, String parameterPrefix, DirtyAttributeFlusher<?, E, Object> nestedGraphNode) {
         parentEntityOnChildEntityMapper.map(newValue, element);
-        flushQuerySetEntityOnElement(context, element, newValue, parameterPrefix, nestedGraphNode, childEntityToEntityMapper);
+        flushQuerySetEntityOnElement(context, element, oldParent, newValue, parameterPrefix, nestedGraphNode, childEntityToEntityMapper);
     }
 
-    private void flushQuerySetEntityOnElement(UpdateContext context, Object element, E newValue, String parameterPrefix, DirtyAttributeFlusher<?, E, Object> nestedGraphNode, InverseElementToEntityMapper elementToEntityMapper) {
+    private void flushQuerySetEntityOnElement(UpdateContext context, Object element, E oldParent, E newValue, String parameterPrefix, DirtyAttributeFlusher<?, E, Object> nestedGraphNode, InverseElementToEntityMapper elementToEntityMapper) {
         if (shouldPersist(element) || nestedGraphNode != null && !nestedGraphNode.supportsQueryFlush()) {
-            elementToEntityMapper.flushEntity(context, newValue, element, nestedGraphNode);
+            elementToEntityMapper.flushEntity(context, oldParent, newValue, element, nestedGraphNode);
         } else {
             int orphanRemovalStartIndex = context.getOrphanRemovalDeleters().size();
             Query q = elementToEntityMapper.createInverseUpdateQuery(context, element, nestedGraphNode, parentReferenceAttributeFlusher);
@@ -360,35 +392,39 @@ public final class InverseFlusher<E> {
         }
     }
 
-    public void flushEntitySetElement(UpdateContext context, Iterable<?> elements, E newValue) {
+    public void flushEntitySetElement(UpdateContext context, Iterable<?> elements, E oldParent, E newValue) {
         if (childViewToEntityMapper != null) {
             for (Object element : elements) {
-                flushEntitySetViewElement(context, element, newValue, null);
+                flushEntitySetViewElement(context, element, oldParent, newValue, null);
             }
         } else {
             for (Object element : elements) {
-                flushEntitySetEntityElement(context, element, newValue, null);
+                flushEntitySetEntityElement(context, element, oldParent, newValue, null);
             }
         }
     }
 
-    public void flushEntitySetElement(UpdateContext context, Object element, E newValue, DirtyAttributeFlusher<?, E, Object> nestedGraphNode) {
+    public void flushEntitySetElement(UpdateContext context, Object element, E oldParent, E newValue, DirtyAttributeFlusher<?, E, Object> nestedGraphNode) {
         if (childViewToEntityMapper != null) {
-            flushEntitySetViewElement(context, element, newValue, nestedGraphNode);
+            flushEntitySetViewElement(context, element, oldParent, newValue, nestedGraphNode);
         } else {
-            flushEntitySetEntityElement(context, element, newValue, nestedGraphNode);
+            flushEntitySetEntityElement(context, element, oldParent, newValue, nestedGraphNode);
         }
     }
 
-    private void flushEntitySetViewElement(UpdateContext context, Object child, E newParent, DirtyAttributeFlusher<?, E, Object> nestedGraphNode) {
-        childViewToEntityMapper.flushEntity(context, newParent, child, nestedGraphNode);
+    private void flushEntitySetViewElement(UpdateContext context, Object child, E oldParent, E newParent, DirtyAttributeFlusher<?, E, Object> nestedGraphNode) {
+        childViewToEntityMapper.flushEntity(context, oldParent, newParent, child, nestedGraphNode);
     }
 
-    private void flushEntitySetEntityElement(UpdateContext context, Object child, E newParent, DirtyAttributeFlusher<?, E, Object> nestedGraphNode) {
-        childEntityToEntityMapper.flushEntity(context, newParent, child, nestedGraphNode);
+    private void flushEntitySetEntityElement(UpdateContext context, Object child, E oldParent, E newParent, DirtyAttributeFlusher<?, E, Object> nestedGraphNode) {
+        childEntityToEntityMapper.flushEntity(context, oldParent, newParent, child, nestedGraphNode);
     }
 
     private boolean shouldPersist(Object view) {
         return view instanceof EntityViewProxy && ((EntityViewProxy) view).$$_isNew();
+    }
+
+    public boolean supportsQueryFlush() {
+        return parentReferenceAttributeFlusher.supportsQueryFlush();
     }
 }

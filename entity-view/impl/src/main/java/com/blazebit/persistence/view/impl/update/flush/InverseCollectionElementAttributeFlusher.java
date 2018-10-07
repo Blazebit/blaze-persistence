@@ -42,7 +42,7 @@ public class InverseCollectionElementAttributeFlusher<E, V> extends CollectionEl
         if (strategy == Strategy.REMOVE) {
             inverseFlusher.removeElement(context, null, element);
         } else if (strategy != Strategy.IGNORE) {
-            inverseFlusher.flushQuerySetElement(context, (V)  element, strategy == Strategy.SET_NULL ? null : view, parameterPrefix, (DirtyAttributeFlusher<?, E, Object>) nestedGraphNode);
+            inverseFlusher.flushQuerySetElement(context, (V)  element, view, strategy == Strategy.SET_NULL ? null : view, parameterPrefix, (DirtyAttributeFlusher<?, E, Object>) nestedGraphNode);
         }
     }
 
@@ -52,7 +52,7 @@ public class InverseCollectionElementAttributeFlusher<E, V> extends CollectionEl
         if (strategy == Strategy.REMOVE) {
             inverseFlusher.removeElement(context, entity, element);
         } else if (strategy != Strategy.IGNORE) {
-            inverseFlusher.flushEntitySetElement(context, (V) element, strategy == Strategy.SET_NULL ? null : entity, (DirtyAttributeFlusher<?, E, Object>) nestedGraphNode);
+            inverseFlusher.flushEntitySetElement(context, (V) element, entity, strategy == Strategy.SET_NULL ? null : entity, (DirtyAttributeFlusher<?, E, Object>) nestedGraphNode);
         }
         return true;
     }

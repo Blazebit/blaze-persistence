@@ -237,13 +237,13 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
             Object oldValue = initialValueViewAttributeAccessor.getInitialValue(view);
             if (oldValue != null && !Objects.equals(oldValue, finalValue)) {
                 if (inverseRemoveStrategy == InverseCollectionElementAttributeFlusher.Strategy.SET_NULL) {
-                    inverseFlusher.flushQuerySetElement(context, oldValue, null, null, null);
+                    inverseFlusher.flushQuerySetElement(context, oldValue, view, null, null, null);
                 } else {
                     inverseFlusher.removeElement(context, null, oldValue);
                 }
             }
             if (finalValue != null) {
-                inverseFlusher.flushQuerySetElement(context, finalValue, view, null, null);
+                inverseFlusher.flushQuerySetElement(context, finalValue, view, view, null, null);
             }
         }
         finalValue = persistOrMerge(context, null, view, finalValue);
@@ -350,13 +350,13 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
             Object oldValue = initialValueViewAttributeAccessor.getInitialValue(view);
             if (oldValue != null && !Objects.equals(oldValue, finalValue)) {
                 if (inverseRemoveStrategy == InverseCollectionElementAttributeFlusher.Strategy.SET_NULL) {
-                    inverseFlusher.flushEntitySetElement(context, oldValue, null, null);
+                    inverseFlusher.flushEntitySetElement(context, oldValue, entity, null, null);
                 } else {
                     inverseFlusher.removeElement(context, entity, oldValue);
                 }
             }
             if (finalValue != null) {
-                inverseFlusher.flushEntitySetElement(context, finalValue, entity, null);
+                inverseFlusher.flushEntitySetElement(context, finalValue, entity, entity, null);
             }
         }
         finalValue = persistOrMerge(context, entity, view, finalValue);

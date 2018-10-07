@@ -199,6 +199,25 @@ public class TypeDescriptor {
         );
     }
 
+    public static TypeDescriptor forInverseCollectionAttribute(BasicUserType<?> basicUserType) {
+        return new TypeDescriptor(
+                false,
+                true,
+                true,
+                true,
+                false,
+                false,
+                false,
+                false,
+                null,
+                null,
+                (BasicUserType<Object>) basicUserType,
+                null,
+                null,
+                null
+        );
+    }
+
     public static TypeDescriptor forEntityComponentType() {
         return new TypeDescriptor(
                 false,

@@ -157,14 +157,14 @@ public class WhereTest extends AbstractCoreTest {
         assertEquals("SELECT document.id FROM Document document " +
                 "WHERE 1 = 0 " +
                 "AND 1 = 0 " +
-                "AND document.id IN (:generated_param_0) " +
-                "AND document.id IN (0L) " +
-                "AND document.id IN (0L) " +
-                "AND document.id IN (:generated_param_1) " +
-                "AND document.id IN (0L) " +
+                "AND document.id IN " + listParameter("generated_param_0") + " " +
+                "AND document.id IN " + listParameter("generated_param_1") + " " +
+                "AND document.id IN " + listParameter("generated_param_2") + " " +
+                "AND document.id IN " + listParameter("generated_param_3") + " " +
+                "AND document.id IN " + listParameter("generated_param_4") + " " +
                 "AND document.id IN (SELECT 0L FROM Document sub) " +
                 "AND document.id IN " + listParameter("collectionParam") + " " +
-                "AND (SELECT 0L FROM Document sub) IN (0L)" +
+                "AND (SELECT 0L FROM Document sub) IN " + listParameter("generated_param_5") +
                 "", criteriaBuilder.getQueryString());
     }
 
@@ -278,7 +278,7 @@ public class WhereTest extends AbstractCoreTest {
                 new String[]{ "document.people IS NOT EMPTY", "document.people IS EMPTY"},
                 new String[]{ "document.owner MEMBER OF document.people", "document.owner NOT MEMBER OF document.people", null},
                 new String[]{ "document.owner NOT MEMBER OF document.people", "document.owner MEMBER OF document.people"},
-                new String[]{ "document.id IN (0L)", "document.id NOT IN (0L)", null}
+                new String[]{ "document.id IN " + listParameter("generated_param"), "document.id NOT IN " + listParameter("generated_param"), null}
         );
 
         CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
@@ -446,7 +446,7 @@ public class WhereTest extends AbstractCoreTest {
         );
         
         CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
-        assertEquals("SELECT document.id FROM Document document WHERE document.id IN (1L, 2L) OR document.id <> :idParam OR " + function("YEAR", "document.creationDate") + " > 2015 OR " + function("CAST_TIMESTAMP", "CASE WHEN document.age > 12L THEN document.creationDate ELSE CURRENT_TIMESTAMP END") + " < ALL(SELECT " + function("CAST_TIMESTAMP", "subDoc.lastModified") + " FROM Document subDoc)", criteriaBuilder.getQueryString());
+        assertEquals("SELECT document.id FROM Document document WHERE document.id IN " + listParameter("generated_param_0") + " OR document.id <> :idParam OR " + function("YEAR", "document.creationDate") + " > 2015 OR " + function("CAST_TIMESTAMP", "CASE WHEN document.age > 12L THEN document.creationDate ELSE CURRENT_TIMESTAMP END") + " < ALL(SELECT " + function("CAST_TIMESTAMP", "subDoc.lastModified") + " FROM Document subDoc)", criteriaBuilder.getQueryString());
         assertNotNull(criteriaBuilder.getParameter("idParam"));
         assertEquals(Long.class, criteriaBuilder.getParameter("idParam").getParameterType());
     }

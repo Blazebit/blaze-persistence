@@ -43,7 +43,8 @@ public class InverseViewToEntityMapper<E> implements InverseElementToEntityMappe
     private final boolean persistAllowed;
 
     private final Mapper<Object, Object> parentEntityOnChildViewMapper;
-    private final Mapper<Object, Object> parentEntityOnChildEntityMapper;
+    private final Mapper<Object, Object> parentEntityOnChildEntityAddMapper;
+    private final Mapper<Object, Object> parentEntityOnChildEntityRemoveMapper;
     private final ViewToEntityMapper elementViewToEntityMapper;
     private final String updatePrefixString;
     private final String updatePostfixString;
@@ -51,7 +52,7 @@ public class InverseViewToEntityMapper<E> implements InverseElementToEntityMappe
     private final DirtyAttributeFlusher<?, Object, Object> parentReferenceAttributeFlusher;
     private final DirtyAttributeFlusher<?, Object, Object> idAttributeFlusher;
 
-    public InverseViewToEntityMapper(EntityViewManagerImpl evm, ViewType<?> childViewType, Mapper<Object, Object> parentEntityOnChildViewMapper, Mapper<Object, Object> parentEntityOnChildEntityMapper,
+    public InverseViewToEntityMapper(EntityViewManagerImpl evm, ViewType<?> childViewType, Mapper<Object, Object> parentEntityOnChildViewMapper, Mapper<Object, Object> parentEntityOnChildEntityAddMapper, Mapper<Object, Object> parentEntityOnChildEntityRemoveMapper,
                                      ViewToEntityMapper elementViewToEntityMapper, DirtyAttributeFlusher<?, Object, Object> parentReferenceAttributeFlusher, DirtyAttributeFlusher<?, Object, Object> idAttributeFlusher) {
         this.elementViewToEntityMapper = elementViewToEntityMapper;
         this.viewIdAccessor = Accessors.forViewId(evm, childViewType, true);
@@ -60,7 +61,8 @@ public class InverseViewToEntityMapper<E> implements InverseElementToEntityMappe
         this.persistAllowed = false;
         EntityType<?> entityType = evm.getMetamodel().getEntityMetamodel().entity(childViewType.getEntityClass());
         this.parentEntityOnChildViewMapper = parentEntityOnChildViewMapper;
-        this.parentEntityOnChildEntityMapper = parentEntityOnChildEntityMapper;
+        this.parentEntityOnChildEntityAddMapper = parentEntityOnChildEntityAddMapper;
+        this.parentEntityOnChildEntityRemoveMapper = parentEntityOnChildEntityRemoveMapper;
         this.updatePrefixString = "UPDATE " + entityType.getName() + " e SET ";
         if (idAttributeFlusher == null) {
             this.updatePostfixString = " WHERE e." + JpaMetamodelUtils.getSingleIdAttribute(entityType).getName() + " = :" + ID_PARAM_NAME;
@@ -76,7 +78,7 @@ public class InverseViewToEntityMapper<E> implements InverseElementToEntityMappe
     }
 
     @Override
-    public void flushEntity(UpdateContext context, final Object newParent, final Object child, DirtyAttributeFlusher<?, E, Object> nestedGraphNode) {
+    public void flushEntity(UpdateContext context, Object oldParent, final Object newParent, final Object child, DirtyAttributeFlusher<?, E, Object> nestedGraphNode) {
         if (child == null) {
             return;
         }
@@ -97,7 +99,11 @@ public class InverseViewToEntityMapper<E> implements InverseElementToEntityMappe
         if (shouldPersist(child)) {
             elementEntity = entityLoader.toEntity(context, null);
 
-            parentEntityOnChildEntityMapper.map(newParent, elementEntity);
+            if (newParent == null) {
+                parentEntityOnChildEntityRemoveMapper.map(oldParent, elementEntity);
+            } else {
+                parentEntityOnChildEntityAddMapper.map(newParent, elementEntity);
+            }
             if (nestedGraphNode == null) {
                 if (parentEntityOnChildViewMapperListener != null) {
                     parentEntityOnChildViewMapperListener.run();
@@ -109,7 +115,11 @@ public class InverseViewToEntityMapper<E> implements InverseElementToEntityMappe
         } else {
             elementEntity = entityLoader.toEntity(context, id);
 
-            parentEntityOnChildEntityMapper.map(newParent, elementEntity);
+            if (newParent == null) {
+                parentEntityOnChildEntityRemoveMapper.map(oldParent, elementEntity);
+            } else {
+                parentEntityOnChildEntityAddMapper.map(newParent, elementEntity);
+            }
             if (nestedGraphNode == null) {
                 if (parentEntityOnChildViewMapperListener != null) {
                     parentEntityOnChildViewMapperListener.run();

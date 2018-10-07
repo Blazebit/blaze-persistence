@@ -314,7 +314,7 @@ public class SubqueryTest extends AbstractCoreTest {
                 .leftJoin("person.partnerDocument", "personDoc")
                 .where("contactDoc").eqExpression("d")
                 .end();
-        String expectedQuery = "SELECT d FROM Document d WHERE d.owner IN (SELECT contact " +
+        String expectedQuery = "SELECT d FROM Document d WHERE d.owner IN (SELECT " + joinAliasValue("contact") + " " +
                 "FROM d.people person " +
                 "LEFT JOIN person.partnerDocument personDoc, " +
                 "d.partners partner " +
@@ -438,6 +438,7 @@ public class SubqueryTest extends AbstractCoreTest {
     }
 
     @Test
+    // A special test for Hibernate that needs a different query to be generated to properly work
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testJoinElementCollectionsOnCorrelatedInverseAssociations() {
         CriteriaBuilder<Integer> crit = cbf.create(em, Integer.class)

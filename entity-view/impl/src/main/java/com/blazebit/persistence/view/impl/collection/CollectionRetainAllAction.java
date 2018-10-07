@@ -158,12 +158,7 @@ public class CollectionRetainAllAction<C extends Collection<E>, E> implements Co
         CollectionOperations op = new CollectionOperations(actions);
         op.removeElements(removedElements);
         op.removeEmpty();
-        if (elements.isEmpty()) {
-            actions.clear();
-            actions.add((CollectionAction<C>) (CollectionAction) new CollectionClearAction<>());
-        } else {
-            actions.add(this);
-        }
+        actions.add(this);
     }
 
     public Collection<Object> onRemoveObjects(Collection<Object> objectsToRemove) {

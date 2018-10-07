@@ -177,7 +177,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
             Object oldValue = viewAttributeAccessor.getInitialValue(view);
             if (oldValue != null && !Objects.equals(oldValue, finalValue)) {
                 if (inverseRemoveStrategy == InverseCollectionElementAttributeFlusher.Strategy.SET_NULL) {
-                    inverseFlusher.flushQuerySetElement(context, oldValue, null, null, null);
+                    inverseFlusher.flushQuerySetElement(context, oldValue, view, null, null, null);
                 } else {
                     inverseFlusher.removeElement(context, null, oldValue);
                 }
@@ -187,7 +187,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
             if (flushOperation == ViewFlushOperation.CASCADE) {
                 if (update && inverseFlusher != null) {
                     if (finalValue != null) {
-                        inverseFlusher.flushQuerySetElement(context, finalValue, view, null, (DirtyAttributeFlusher<?, E, Object>) (DirtyAttributeFlusher<?, ?, ?>) nestedFlusher);
+                        inverseFlusher.flushQuerySetElement(context, finalValue, view, view, null, (DirtyAttributeFlusher<?, E, Object>) (DirtyAttributeFlusher<?, ?, ?>) nestedFlusher);
                     }
                 } else {
                     int orphanRemovalStartIndex = context.getOrphanRemovalDeleters().size();
@@ -203,7 +203,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
                     context.removeOrphans(orphanRemovalStartIndex);
                 }
             } else if (update && inverseFlusher != null && finalValue != null) {
-                inverseFlusher.flushQuerySetElement(context, finalValue, view, null, null);
+                inverseFlusher.flushQuerySetElement(context, finalValue, view, view, null, null);
             }
 
             Object v = viewToEntityMapper.applyToEntity(context, null, finalValue);
@@ -229,7 +229,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
             if (nestedFlusher != null && nestedFlusher != viewToEntityMapper.getFullGraphNode()) {
                 if (update && inverseFlusher != null) {
                     if (finalValue != null) {
-                        inverseFlusher.flushQuerySetElement(context, finalValue, view, null, (DirtyAttributeFlusher<?, E, Object>) (DirtyAttributeFlusher<?, ?, ?>) nestedFlusher);
+                        inverseFlusher.flushQuerySetElement(context, finalValue, view, view, null, (DirtyAttributeFlusher<?, E, Object>) (DirtyAttributeFlusher<?, ?, ?>) nestedFlusher);
                     }
                 } else {
                     int orphanRemovalStartIndex = context.getOrphanRemovalDeleters().size();
@@ -245,7 +245,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
                     context.removeOrphans(orphanRemovalStartIndex);
                 }
             }  else if (update && inverseFlusher != null && finalValue != null) {
-                inverseFlusher.flushQuerySetElement(context, finalValue, view, null, null);
+                inverseFlusher.flushQuerySetElement(context, finalValue, view, view, null, null);
             }
             Object v = viewToEntityMapper.applyToEntity(context, null, value);
             if (query != null && update) {
@@ -316,7 +316,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
             Object oldValue = viewAttributeAccessor.getInitialValue(view);
             if (oldValue != null && !Objects.equals(oldValue, finalValue)) {
                 if (inverseRemoveStrategy == InverseCollectionElementAttributeFlusher.Strategy.SET_NULL) {
-                    inverseFlusher.flushEntitySetElement(context, oldValue, null, null);
+                    inverseFlusher.flushEntitySetElement(context, oldValue, entity, null, null);
                 } else {
                     inverseFlusher.removeElement(context, entity, oldValue);
                 }
@@ -325,15 +325,15 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
         if (flushOperation != null) {
             if (flushOperation == ViewFlushOperation.CASCADE) {
                 if (update && inverseFlusher != null) {
-                    inverseFlusher.flushEntitySetElement(context, finalValue, entity, (DirtyAttributeFlusher<?, E, Object>) (DirtyAttributeFlusher<?, ?, ?>) nestedFlusher);
+                    inverseFlusher.flushEntitySetElement(context, finalValue, entity, entity, (DirtyAttributeFlusher<?, E, Object>) (DirtyAttributeFlusher<?, ?, ?>) nestedFlusher);
                 } else {
                     nestedFlusher.flushEntity(context, null, null, finalValue, null);
                 }
             } else if (update && inverseFlusher != null) {
                 if (finalValue instanceof MutableStateTrackable) {
-                    inverseFlusher.flushEntitySetElement(context, finalValue, entity, (DirtyAttributeFlusher<?, E, Object>) (DirtyAttributeFlusher<?, ?, ?>) viewToEntityMapper.getNestedDirtyFlusher(context, (MutableStateTrackable) finalValue, null));
+                    inverseFlusher.flushEntitySetElement(context, finalValue, entity, entity, (DirtyAttributeFlusher<?, E, Object>) (DirtyAttributeFlusher<?, ?, ?>) viewToEntityMapper.getNestedDirtyFlusher(context, (MutableStateTrackable) finalValue, null));
                 } else {
-                    inverseFlusher.flushEntitySetElement(context, finalValue, entity, null);
+                    inverseFlusher.flushEntitySetElement(context, finalValue, entity, entity, null);
                 }
             }
 
@@ -352,13 +352,13 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
         if (updatable || isPassThrough()) {
             if (nestedFlusher != null && nestedFlusher != viewToEntityMapper.getFullGraphNode()) {
                 if (update && inverseFlusher != null) {
-                    inverseFlusher.flushEntitySetElement(context, finalValue, entity, (DirtyAttributeFlusher<?, E, Object>) (DirtyAttributeFlusher<?, ?, ?>) nestedFlusher);
+                    inverseFlusher.flushEntitySetElement(context, finalValue, entity, entity, (DirtyAttributeFlusher<?, E, Object>) (DirtyAttributeFlusher<?, ?, ?>) nestedFlusher);
                     wasDirty |= true;
                 } else {
                     wasDirty |= nestedFlusher.flushEntity(context, null, null, finalValue, null);
                 }
             } else if (update && inverseFlusher != null) {
-                inverseFlusher.flushEntitySetElement(context, finalValue, entity, null);
+                inverseFlusher.flushEntitySetElement(context, finalValue, entity, entity, null);
             }
             Object v = viewToEntityMapper.applyToEntity(context, null, finalValue);
             if (update) {

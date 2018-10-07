@@ -26,6 +26,7 @@ Not yet released
 * Fix entity view build time validation error with certain inheritance mappings
 * Fix problems with objects of wrong types being returned from standard repository methods with Spring Data 2.0+
 * Fix various little issues related to embeddable handling in updatable entity views
+* Fix support for mapping the inverse side of a `ManyToMany` as updatable collection
 
 ### Backwards-incompatible changes
 

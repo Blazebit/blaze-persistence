@@ -28,7 +28,7 @@
     <artifactId>blaze-persistence-integration-spring-data-parent</artifactId>
     <packaging>pom</packaging>
     
-    <name>Blazebit Persistence Integrations Spring-Data</name>
+    <name>Blazebit Persistence Integration Spring-Data</name>
 
     <modules>
         <module>base</module>

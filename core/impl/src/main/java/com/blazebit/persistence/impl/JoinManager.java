@@ -541,7 +541,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         }
 
         JoinAliasInfo rootAliasInfo = new JoinAliasInfo(rootAlias, rootAlias, true, true, aliasManager);
-        JoinNode rootNode = JoinNode.createCorrelationRootNode(correlationParent, correlatedAttribute, type, treatEntityType, rootAliasInfo);
+        JoinNode rootNode = JoinNode.createCorrelationRootNode(correlationParent, correlatedAttribute, joinResult.getAttribute(), type, treatEntityType, rootAliasInfo);
         rootAliasInfo.setJoinNode(rootNode);
         rootNodes.add(rootNode);
         // register root alias in aliasManager

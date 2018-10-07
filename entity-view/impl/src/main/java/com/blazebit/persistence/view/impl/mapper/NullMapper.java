@@ -16,27 +16,22 @@
 
 package com.blazebit.persistence.view.impl.mapper;
 
-import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
-
 /**
  *
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.3.0
  */
-public class SimpleMapper<S, T> implements Mapper<S, T> {
+public class NullMapper<S, T> implements Mapper<S, T> {
 
-    private final AttributeAccessor attributeAccessor;
+    private final Mapper<S, T> mapper;
 
-    public SimpleMapper(AttributeAccessor attributeAccessor) {
-        this.attributeAccessor = attributeAccessor;
+    public NullMapper(Mapper<S, T> mapper) {
+        this.mapper = mapper;
     }
 
     @Override
     public void map(S source, T target) {
-        attributeAccessor.setValue(target, source);
+        mapper.map(null, target);
     }
-
-    public AttributeAccessor getAttributeAccessor() {
-        return attributeAccessor;
-    }
+    
 }

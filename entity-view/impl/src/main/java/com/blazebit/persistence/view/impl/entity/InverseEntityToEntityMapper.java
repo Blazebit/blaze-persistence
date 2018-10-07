@@ -39,12 +39,14 @@ public class InverseEntityToEntityMapper<E> implements InverseElementToEntityMap
     private final String fullUpdateQueryString;
     private final AttributeAccessor entityIdAccessor;
     private final DirtyAttributeFlusher<?, ?, ?> inverseAttributeFlusher;
-    private final Mapper<Object, Object> parentEntityOnChildEntityMapper;
+    private final Mapper<Object, Object> parentEntityOnChildEntityAddMapper;
+    private final Mapper<Object, Object> parentEntityOnChildEntityRemoveMapper;
 
-    public InverseEntityToEntityMapper(EntityViewManagerImpl evm, EntityType<?> entityType, Mapper<Object, Object> parentEntityOnChildEntityMapper, DirtyAttributeFlusher<?, ?, ?> inverseAttributeFlusher) {
+    public InverseEntityToEntityMapper(EntityViewManagerImpl evm, EntityType<?> entityType, Mapper<Object, Object> parentEntityOnChildEntityAddMapper, Mapper<Object, Object> parentEntityOnChildEntityRemoveMapper, DirtyAttributeFlusher<?, ?, ?> inverseAttributeFlusher) {
         this.updatePrefixString = "UPDATE " + entityType.getName() + " e SET ";
         this.updatePostfixString = " WHERE e." + JpaMetamodelUtils.getSingleIdAttribute(entityType).getName() + " = :" + ID_PARAM_NAME;
-        this.parentEntityOnChildEntityMapper = parentEntityOnChildEntityMapper;
+        this.parentEntityOnChildEntityAddMapper = parentEntityOnChildEntityAddMapper;
+        this.parentEntityOnChildEntityRemoveMapper = parentEntityOnChildEntityRemoveMapper;
         this.inverseAttributeFlusher = inverseAttributeFlusher;
         this.fullUpdateQueryString = createQueryString(null, inverseAttributeFlusher);
         this.entityIdAccessor = evm.getEntityIdAccessor();
@@ -75,9 +77,13 @@ public class InverseEntityToEntityMapper<E> implements InverseElementToEntityMap
     }
 
     @Override
-    public void flushEntity(UpdateContext context, Object newParent, Object child, DirtyAttributeFlusher<?, E, Object> nestedGraphNode) {
+    public void flushEntity(UpdateContext context, Object oldParent, Object newParent, Object child, DirtyAttributeFlusher<?, E, Object> nestedGraphNode) {
         // Set the "newParent" on the entity object "child"
-        parentEntityOnChildEntityMapper.map(newParent, child);
+        if (newParent == null) {
+            parentEntityOnChildEntityRemoveMapper.map(oldParent, child);
+        } else {
+            parentEntityOnChildEntityAddMapper.map(newParent, child);
+        }
 
         if (nestedGraphNode != null) {
             nestedGraphNode.flushEntity(context, null, null, child, null);

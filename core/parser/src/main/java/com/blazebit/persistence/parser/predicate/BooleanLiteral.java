@@ -78,4 +78,9 @@ public class BooleanLiteral extends AbstractPredicate {
         result = 31 * result + (value ? 1 : 0);
         return result;
     }
+
+    @Override
+    public String toString() {
+        return Boolean.toString(value != negated);
+    }
 }

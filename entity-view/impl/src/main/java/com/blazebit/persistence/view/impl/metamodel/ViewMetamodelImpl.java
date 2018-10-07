@@ -147,12 +147,12 @@ public class ViewMetamodelImpl implements ViewMetamodel {
                         Object instance3 = declaredConstructor.newInstance();
 
                         // Try to set any value on instance3 so that it would differ from instance1
-                        String error = createValue(jpaManagedType, instance2, typeTestValues);
+                        String error = createValue(jpaManagedType, instance2, typeTestValues, true);
 
                         if (error != null) {
                             context.addError(error);
                         } else {
-                            error = createValue(jpaManagedType, instance3, typeTestValues);
+                            error = createValue(jpaManagedType, instance3, typeTestValues, true);
                             if (error != null) {
                                 context.addError(error);
                             } else {
@@ -182,12 +182,12 @@ public class ViewMetamodelImpl implements ViewMetamodel {
         }
     }
 
-    private String createValue(ManagedType<?> jpaManagedType, Object instance, Map<Class<?>, Object> typeTestValues) throws Exception {
+    private String createValue(ManagedType<?> jpaManagedType, Object instance, Map<Class<?>, Object> typeTestValues, boolean root) throws Exception {
         boolean setAnyValue = false;
         Class<?> javaType = jpaManagedType.getJavaType();
         if ((javaType.getModifiers() & Modifier.ABSTRACT) == 0) {
             Set<SingularAttribute<?, ?>> jpaAttributes;
-            if (jpaManagedType instanceof IdentifiableType<?>) {
+            if (jpaManagedType instanceof IdentifiableType<?> && !root) {
                 jpaAttributes = JpaMetamodelUtils.getIdAttributes((IdentifiableType<?>) jpaManagedType);
             } else {
                 jpaAttributes = (Set<SingularAttribute<?, ?>>) jpaManagedType.getSingularAttributes();
@@ -210,7 +210,7 @@ public class ViewMetamodelImpl implements ViewMetamodel {
                         Constructor<?> typeConstructor = attributeType.getDeclaredConstructor();
                         typeConstructor.setAccessible(true);
                         value = typeConstructor.newInstance();
-                        String error = createValue(metamodel.getManagedType(attributeType), value, typeTestValues);
+                        String error = createValue(metamodel.getManagedType(attributeType), value, typeTestValues, false);
                         if (error != null) {
                             return error;
                         }

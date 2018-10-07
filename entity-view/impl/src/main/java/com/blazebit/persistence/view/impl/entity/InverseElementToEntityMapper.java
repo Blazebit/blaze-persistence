@@ -28,7 +28,7 @@ import javax.persistence.Query;
  */
 public interface InverseElementToEntityMapper<E> {
 
-    public void flushEntity(UpdateContext context, Object newParent, Object child, DirtyAttributeFlusher<?, E, Object> nestedGraphNode);
+    public void flushEntity(UpdateContext context, Object oldParent, Object newParent, Object child, DirtyAttributeFlusher<?, E, Object> nestedGraphNode);
 
     public Query createInverseUpdateQuery(UpdateContext context, Object element, DirtyAttributeFlusher<?, E, Object> nestedGraphNode, DirtyAttributeFlusher<?, ?, ?> inverseAttributeFlusher);
 

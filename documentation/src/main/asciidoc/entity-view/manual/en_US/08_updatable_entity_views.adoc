@@ -717,7 +717,7 @@ cat.getKittens().add(newKitten);
 Since the `kittens` collection is dirty i.e. a new kitten was added and the collection is _owned_ by the `Cat` entity, it will be loaded along with the `Cat`.
 If `kittens` were an inverse collection, it wouldn't need loading during flushing as adding the new kitten would be a matter of issuing an update query or persisting an entity.
 
-[[updatable-mappings-collection]]
+[[updatable-mappings-inverse]]
 ==== Inverse mappings
 
 Changes to inverse relations like OneToOne's and *ToMany collections are flushed by persisting, updating or removing the inverse relation objects.

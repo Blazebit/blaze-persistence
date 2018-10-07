@@ -39,6 +39,7 @@ public class InPredicate<T> extends AbstractSimplePredicate implements BlazeCrit
 
     private final Expression<? extends T> expression;
     private final List<Expression<? extends T>> values;
+    private boolean allLiterals = true;
 
     public InPredicate(BlazeCriteriaBuilderImpl criteriaBuilder, Expression<? extends T> expression) {
         this(criteriaBuilder, expression, new ArrayList<Expression<? extends T>>());
@@ -85,19 +86,21 @@ public class InPredicate<T> extends AbstractSimplePredicate implements BlazeCrit
             if (expr == null) {
                 throw new IllegalArgumentException("Null expression at index: " + (i + 1));
             }
+            allLiterals = allLiterals && expr instanceof LiteralExpression<?>;
         }
     }
 
     // Copy-constructor
-    private InPredicate(BlazeCriteriaBuilderImpl criteriaBuilder, boolean negated, Expression<? extends T> expression, List<Expression<? extends T>> values) {
+    private InPredicate(BlazeCriteriaBuilderImpl criteriaBuilder, boolean negated, Expression<? extends T> expression, List<Expression<? extends T>> values, boolean allLiterals) {
         super(criteriaBuilder, negated);
         this.expression = expression;
         this.values = values;
+        this.allLiterals = allLiterals;
     }
 
     @Override
     public AbstractPredicate copyNegated() {
-        return new InPredicate<T>(criteriaBuilder, !isNegated(), expression, values);
+        return new InPredicate<T>(criteriaBuilder, !isNegated(), expression, values, allLiterals);
     }
 
     @Override
@@ -114,6 +117,7 @@ public class InPredicate<T> extends AbstractSimplePredicate implements BlazeCrit
     @Override
     public InPredicate<T> value(Expression<? extends T> value) {
         values.add(value);
+        allLiterals = allLiterals && value instanceof LiteralExpression<?>;
         return this;
     }
 
@@ -127,6 +131,7 @@ public class InPredicate<T> extends AbstractSimplePredicate implements BlazeCrit
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void render(RenderContext context) {
         List<Expression<? extends T>> values = this.values;
         StringBuilder buffer = context.getBuffer();
@@ -141,7 +146,7 @@ public class InPredicate<T> extends AbstractSimplePredicate implements BlazeCrit
                 return;
             case 1:
                 Expression<? extends T> first = values.get(0);
-                if (first instanceof Subquery<?> || (first instanceof ParameterExpressionImpl<?> && Collection.class.isAssignableFrom(((ParameterExpressionImpl<?>) first).getParameterType()))) {
+                if (first instanceof Subquery<?> || (first instanceof ParameterExpressionImpl<?> && Collection.class.isAssignableFrom(((ParameterExpressionImpl<?>) first).getParameterType())) || allLiterals) {
                     context.apply(expression);
 
                     if (isNegated()) {
@@ -149,7 +154,17 @@ public class InPredicate<T> extends AbstractSimplePredicate implements BlazeCrit
                     }
 
                     buffer.append(" IN ");
-                    context.apply(first);
+                    if (allLiterals) {
+                        List<Object> literalValues = new ArrayList<>(values.size());
+                        for (LiteralExpression<T> value : (Collection<LiteralExpression<T>>) (Collection<?>) values) {
+                            literalValues.add(value.getLiteral());
+                        }
+
+                        final String paramName = context.registerLiteralParameterBinding(literalValues, Collection.class);
+                        buffer.append(':').append(paramName);
+                    } else {
+                        context.apply(first);
+                    }
                     return;
                 }
                 //CHECKSTYLE:OFF: FallThrough
@@ -162,14 +177,24 @@ public class InPredicate<T> extends AbstractSimplePredicate implements BlazeCrit
                 }
 
                 buffer.append(" IN ");
-                buffer.append('(');
-                for (int i = 0; i < values.size(); i++) {
-                    if (i != 0) {
-                        buffer.append(',');
+                if (allLiterals) {
+                    List<Object> literalValues = new ArrayList<>(values.size());
+                    for (LiteralExpression<T> value : (Collection<LiteralExpression<T>>) (Collection<?>) values) {
+                        literalValues.add(value.getLiteral());
                     }
-                    context.apply(values.get(i));
+
+                    final String paramName = context.registerLiteralParameterBinding(literalValues, Collection.class);
+                    buffer.append(':').append(paramName);
+                } else {
+                    buffer.append('(');
+                    for (int i = 0; i < values.size(); i++) {
+                        if (i != 0) {
+                            buffer.append(',');
+                        }
+                        context.apply(values.get(i));
+                    }
+                    buffer.append(')');
                 }
-                buffer.append(')');
         }
     }
 
