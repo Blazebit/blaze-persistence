@@ -152,7 +152,7 @@ public class TupleElementMapperBuilder {
 
         ManagedType<?> managedType = metamodel.getManagedType(expressionType);
         Set<SingularAttribute<?, ?>> idAttributes;
-        if (managedType == null || !(managedType instanceof IdentifiableType<?>) || (idAttributes = JpaMetamodelUtils.getIdAttributes((IdentifiableType<?>) managedType)).size() > 1) {
+        if (managedType == null || !JpaMetamodelUtils.isIdentifiable(managedType) || (idAttributes = JpaMetamodelUtils.getIdAttributes((IdentifiableType<?>) managedType)).size() > 1) {
             return getMapping(prefixParts, mapping);
         }
 

@@ -338,6 +338,12 @@ public class OpenJPAJpaProvider implements JpaProvider {
     }
 
     @Override
+    public <T> T unproxy(T entity) {
+        // OpenJPA does not support proxying without enhancement?
+        return entity;
+    }
+
+    @Override
     public JpaMetamodelAccessor getJpaMetamodelAccessor() {
         return JpaMetamodelAccessorImpl.INSTANCE;
     }

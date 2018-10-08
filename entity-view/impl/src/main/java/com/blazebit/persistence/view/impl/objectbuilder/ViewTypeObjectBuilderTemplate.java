@@ -25,6 +25,7 @@ import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.parser.predicate.EqPredicate;
 import com.blazebit.persistence.parser.predicate.InPredicate;
 import com.blazebit.persistence.parser.predicate.Predicate;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.FetchStrategy;
@@ -103,7 +104,6 @@ import com.blazebit.persistence.view.spi.type.BasicUserType;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 
 import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -1087,7 +1087,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         EntityMetamodel entityMetamodel = evm.getMetamodel().getEntityMetamodel();
         ManagedType<?> managedType = entityMetamodel.getManagedType(entityClazz);
         // Return the class if it is identifiable, otherwise return null. When null, it will use fromIdentifiableValues in correlation builders to correlate values
-        if (managedType instanceof IdentifiableType<?>) {
+        if (JpaMetamodelUtils.isIdentifiable(managedType)) {
             return entityClazz;
         }
         return null;

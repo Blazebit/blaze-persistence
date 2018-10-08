@@ -16,8 +16,8 @@
 
 package com.blazebit.persistence.view.impl.collection;
 
-import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
+import com.blazebit.persistence.view.impl.update.UpdateContext;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -69,6 +69,26 @@ public class CollectionRemoveAllAction<C extends Collection<E>, E> implements Co
         } else {
             this.elements = new ArrayList<>(action.elements);
         }
+    }
+
+    private CollectionRemoveAllAction(Collection<Object> collection) {
+        this.elements = collection;
+    }
+
+    public static <C extends Collection<E>, E> CollectionRemoveAllAction<C, E> retainAll(Collection<?> c, C delegate, boolean allowDuplicates) {
+        int size = c.size() >= delegate.size() ? delegate.size() : delegate.size() - c.size();
+        Collection<Object> removedElements;
+        if (allowDuplicates) {
+            removedElements = new ArrayList<>(size);
+        } else {
+            removedElements = Collections.newSetFromMap(new IdentityHashMap<Object, Boolean>(size));
+        }
+        for (E e : delegate) {
+            if (!c.contains(e)) {
+                removedElements.add(e);
+            }
+        }
+        return new CollectionRemoveAllAction<>(removedElements);
     }
 
     @Override

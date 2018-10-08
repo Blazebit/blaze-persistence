@@ -165,6 +165,10 @@ public class JpaMetamodelUtils {
             }
         } else {
             jpaReportedFieldClass = ((SingularAttribute<?, ?>) attr).getType().getJavaType();
+            // Thanks DataNucleus...
+            if (attr.getJavaType().isArray() && attr.getJavaType().getComponentType() == jpaReportedFieldClass) {
+                jpaReportedFieldClass = attr.getJavaType();
+            }
 
             if (resolverBaseClass == null) {
                 return jpaReportedFieldClass;
@@ -369,4 +373,38 @@ public class JpaMetamodelUtils {
         return attributes;
     }
 
+    public static boolean isIdentifiable(ManagedType<?> jpaManagedType) {
+        if (jpaManagedType instanceof IdentifiableType<?>) {
+            IdentifiableType<?> identifiableType = (IdentifiableType<?>) jpaManagedType;
+            if (identifiableType.hasSingleIdAttribute()) {
+                return true;
+            }
+            try {
+                if (identifiableType.getIdType() != null) {
+                    return true;
+                }
+            } catch (IllegalStateException ex) {
+                // Ignore
+                // Hibernate 4 throws an IllegalStateException here when there is no id type but it has id class attributes..
+            } catch (RuntimeException ex) {
+                // Ignore
+                // DataNucleus 4 throws an ClassNotResolvedException
+                try {
+                    return !identifiableType.getIdClassAttributes().isEmpty();
+                } catch (NullPointerException ex2) {
+                    // Ignore
+                    // Special case in DataNucleus 4 when there is no id class
+                    return true;
+                }
+            }
+            try {
+                return !identifiableType.getIdClassAttributes().isEmpty();
+            } catch (IllegalArgumentException ex) {
+                // Ignore
+                // The JPA spec says that an IllegalArgumentException is thrown when it doesn't have id class attributes
+            }
+        }
+
+        return false;
+    }
 }

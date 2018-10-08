@@ -655,7 +655,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             // That involves only suffixing association paths so that predicates look like "p = other.relation.id"
             if (!jpaProvider.needsBrokenAssociationToIdRewriteInOnClause() || pathExpression.getBaseNode() != null && pathExpression.getField() != null) {
                 Type<?> pathType = pathExpression.getPathReference().getType();
-                if (pathType instanceof IdentifiableType<?>) {
+                if (pathType instanceof ManagedType<?> && JpaMetamodelUtils.isIdentifiable((ManagedType<?>) pathType)) {
                     String idName = JpaMetamodelUtils.getSingleIdAttribute((IdentifiableType<?>) pathType).getName();
                     sb.append('.');
                     sb.append(idName);

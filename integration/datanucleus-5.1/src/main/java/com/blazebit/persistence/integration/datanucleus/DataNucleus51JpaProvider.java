@@ -468,6 +468,12 @@ public class DataNucleus51JpaProvider implements JpaProvider {
     }
 
     @Override
+    public <T> T unproxy(T entity) {
+        // DataNucleus doesn't support proxies, but only enhancement
+        return entity;
+    }
+
+    @Override
     public JpaMetamodelAccessor getJpaMetamodelAccessor() {
         return DataNucleus51JpaMetamodelAccessor.INSTANCE;
     }

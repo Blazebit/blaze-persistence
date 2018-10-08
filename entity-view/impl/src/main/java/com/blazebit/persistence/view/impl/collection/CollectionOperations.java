@@ -28,14 +28,12 @@ public final class CollectionOperations {
     private final List<? extends CollectionAction<? extends Collection<?>>> actions;
     private final CollectionRemoveAllAction removeAction;
     private final CollectionAddAllAction addAction;
-    private final CollectionRetainAllAction retainAction;
     private final int removeIndex;
 
     public CollectionOperations(List<? extends CollectionAction<? extends Collection<?>>> actions) {
         // We ensure there will always be at most a single remove and add action after a non-add/remove operation
         CollectionRemoveAllAction removeAction = null;
         CollectionAddAllAction addAction = null;
-        CollectionRetainAllAction retainAction = null;
         int removeIndex = actions.size();
         if (!actions.isEmpty()) {
             CollectionAction<?> a = actions.get(actions.size() - 1);
@@ -52,23 +50,6 @@ public final class CollectionOperations {
                         removeIndex = actions.size() - 2;
                     }
                 }
-            } else if (a instanceof CollectionRetainAllAction) {
-                retainAction = (CollectionRetainAllAction) a;
-                removeIndex = actions.size() - 1;
-                if (actions.size() > 1) {
-                    a = actions.get(actions.size() - 2);
-                    if (a instanceof CollectionAddAllAction) {
-                        addAction = (CollectionAddAllAction) a;
-                        removeIndex = actions.size() - 2;
-                        if (actions.size() > 2) {
-                            a = actions.get(actions.size() - 3);
-                            if (a instanceof CollectionRemoveAllAction) {
-                                removeAction = (CollectionRemoveAllAction) a;
-                                removeIndex = actions.size() - 3;
-                            }
-                        }
-                    }
-                }
             }
         }
 
@@ -76,17 +57,12 @@ public final class CollectionOperations {
         this.actions = actions;
         this.removeAction = removeAction;
         this.addAction = addAction;
-        this.retainAction = retainAction;
         this.removeIndex = removeIndex;
     }
 
     public boolean addElements(Collection<Object> addedElements) {
         if (!addedElements.isEmpty()) {
             Collection<Object> objectsToAdd = addedElements;
-            // A retain action always needs to add all added elements since it's the last operation
-            if (retainAction != null) {
-                retainAction.onAddObjects(objectsToAdd);
-            }
             // Elide removed elements for newly added elements
             if (removeAction != null) {
                 objectsToAdd = removeAction.onAddObjects(objectsToAdd);
@@ -111,10 +87,6 @@ public final class CollectionOperations {
             if (addAction != null) {
                 objectsToRemove = addAction.onRemoveObjects(objectsToRemove);
             }
-            // A retain operation only needs to remove objects that didn't elide
-            if (retainAction != null) {
-                retainAction.onRemoveObjects(objectsToRemove);
-            }
             if (!objectsToRemove.isEmpty()) {
                 // Merge newly removed elements into existing remove action
                 if (removeAction != null) {
@@ -130,9 +102,6 @@ public final class CollectionOperations {
 
     public void removeEmpty() {
         if (addAction != null && addAction.isEmpty()) {
-            actions.remove(actions.size() - (retainAction == null ? 1 : 2));
-        }
-        if (retainAction != null && retainAction.isEmpty()) {
             actions.remove(actions.size() - 1);
         }
         if (removeAction != null && removeAction.isEmpty()) {

@@ -456,6 +456,16 @@ public interface JpaProvider {
     public Object getIdentifier(Object entity);
 
     /**
+     * Returns the unproxied i.e. the real entity object.
+     *
+     * @param entity The entity, maybe a proxy
+     * @param <T> The entity type
+     * @return the real entity object
+     * @since 1.3.0
+     */
+    public <T> T unproxy(T entity);
+
+    /**
      * Returns the JpaMetamodelAccessor for this JPA vendor.
      * @return the JpaMetamodelAccessor for this JPA vendor
      * @since 1.3.0

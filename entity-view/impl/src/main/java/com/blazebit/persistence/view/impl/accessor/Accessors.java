@@ -162,7 +162,7 @@ public final class Accessors {
                 accessors.add(forViewAttribute(evm, attribute, readonly));
             }
             if (jpaAttribute != null) {
-                accessors.add(forEntityAttribute(jpaAttributeOwner.getJavaType(), jpaAttribute));
+                accessors.add(forEntityAttribute(evm, jpaAttributeOwner.getJavaType(), jpaAttribute));
             }
             if (!possibleAttributes.isEmpty()) {
                 if (possibleAttributes.size() > 1) {
@@ -214,8 +214,8 @@ public final class Accessors {
         }
     }
 
-    public static AttributeAccessor forEntityAttribute(Class<?> entityClass, Attribute<?, ?> attribute) {
-        return forEntityAttribute(entityClass, attribute, null);
+    private static AttributeAccessor forEntityAttribute(EntityViewManagerImpl evm, Class<?> entityClass, Attribute<?, ?> attribute) {
+        return forEntityAttribute(evm, entityClass, attribute, null);
     }
 
     public static AttributeAccessor forEntityMapping(EntityViewManagerImpl evm, MethodAttribute<?, ?> attribute) {
@@ -232,7 +232,7 @@ public final class Accessors {
         List<Attribute<?, ?>> attributes = path.getAttributes();
 
         if (attributes.size() == 1) {
-            return forEntityAttribute(entityClass, attributes.get(0), null);
+            return forEntityAttribute(evm, entityClass, attributes.get(0), null);
         }
 
         List<AttributeAccessor> mappers = new ArrayList<>(attributes.size());
@@ -240,18 +240,18 @@ public final class Accessors {
         for (int i = 0; i < attributes.size() - 1; i++) {
             javax.persistence.metamodel.Attribute<?, ?> attribute = attributes.get(i);
             Class<?> attributeClass = JpaMetamodelUtils.resolveFieldClass(targetClass, attribute);
-            mappers.add(forEntityAttribute(targetClass, attribute, attributeClass));
+            mappers.add(forEntityAttribute(evm, targetClass, attribute, attributeClass));
             targetClass = attributeClass;
         }
 
-        mappers.add(forEntityAttribute(targetClass, attributes.get(attributes.size() - 1), null));
+        mappers.add(forEntityAttribute(evm, targetClass, attributes.get(attributes.size() - 1), null));
         return new NestedAttributeAccessor(mappers);
     }
 
-    private static AttributeAccessor forEntityAttribute(Class<?> entityClass, Attribute<?, ?> attribute, Class<?> targetType) {
+    private static AttributeAccessor forEntityAttribute(EntityViewManagerImpl evm, Class<?> entityClass, Attribute<?, ?> attribute, Class<?> targetType) {
         Member member = attribute.getJavaMember();
         if (member instanceof Field) {
-            return new EntityFieldAttributeAccessor((Field) member, targetType);
+            return new EntityFieldAttributeAccessor(evm.getJpaProvider(), (Field) member, targetType);
         } else if (member instanceof Method) {
             Method getter = ReflectionUtils.getGetter(entityClass, attribute.getName());
             Method setter = ReflectionUtils.getSetter(entityClass, attribute.getName());

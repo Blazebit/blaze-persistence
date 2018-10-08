@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.view.impl.accessor;
 
+import com.blazebit.persistence.spi.JpaProvider;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 
@@ -25,14 +27,12 @@ import java.lang.reflect.Field;
  */
 public class EntityFieldAttributeAccessor implements AttributeAccessor {
 
+    private final JpaProvider jpaProvider;
     private final Field field;
     private final Constructor<?> targetTypeConstructor;
 
-    EntityFieldAttributeAccessor(Field field) {
-        this(field, null);
-    }
-
-    EntityFieldAttributeAccessor(Field field, Class<?> targetType) {
+    EntityFieldAttributeAccessor(JpaProvider jpaProvider, Field field, Class<?> targetType) {
+        this.jpaProvider = jpaProvider;
         field.setAccessible(true);
         this.field = field;
         if (targetType == null) {
@@ -51,7 +51,7 @@ public class EntityFieldAttributeAccessor implements AttributeAccessor {
     @Override
     public void setValue(Object entity, Object value) {
         try {
-            field.set(entity, value);
+            field.set(jpaProvider.unproxy(entity), value);
         } catch (Exception e) {
             throw new RuntimeException("Couldn't map value [" + value + "] to entity attribute!", e);
         }
@@ -64,6 +64,7 @@ public class EntityFieldAttributeAccessor implements AttributeAccessor {
         }
 
         try {
+            entity = jpaProvider.unproxy(entity);
             Object result = field.get(entity);
             if (result == null && targetTypeConstructor != null) {
                 result = targetTypeConstructor.newInstance();
@@ -83,7 +84,7 @@ public class EntityFieldAttributeAccessor implements AttributeAccessor {
         }
 
         try {
-            return field.get(entity);
+            return field.get(jpaProvider.unproxy(entity));
         } catch (Exception e) {
             throw new RuntimeException("Couldn't access entity attribute value!", e);
         }
