@@ -52,6 +52,17 @@ public class MapRemoveAllKeysAction<C extends Map<K, V>, K, V> implements MapAct
         this.removedObjectsInView = removedObjectsInView;
     }
 
+    public static <C extends Map<K, V>, K, V> MapRemoveAllKeysAction<C, K, V> retainAll(Collection<?> c, C delegate) {
+        int size = c.size() >= delegate.size() ? delegate.size() : delegate.size() - c.size();
+        Map<K, V> removedObjectsInView = new LinkedHashMap<>(size);
+        for (Map.Entry<K, V> entry : delegate.entrySet()) {
+            if (!c.contains(entry.getKey())) {
+                removedObjectsInView.put(entry.getKey(), entry.getValue());
+            }
+        }
+        return new MapRemoveAllKeysAction<>(new ArrayList<>(removedObjectsInView.keySet()), removedObjectsInView);
+    }
+
     @Override
     public void doAction(C map, UpdateContext context, MapViewToEntityMapper mapper, CollectionRemoveListener keyRemoveListener, CollectionRemoveListener valueRemoveListener) {
         if (mapper != null && mapper.getKeyMapper() != null) {

@@ -89,7 +89,7 @@ public class EntityViewConfigurationImpl implements EntityViewConfiguration {
         typeTestValues.put(Timestamp.class, new Timestamp(1));
         typeTestValues.put(Calendar.class, Calendar.getInstance());
         typeTestValues.put(GregorianCalendar.class, new GregorianCalendar());
-        typeTestValues.put(byte[].class, new byte[]{ Byte.MAX_VALUE });
+        typeTestValues.put(byte[].class, new byte[] { Byte.MAX_VALUE });
         typeTestValues.put(Byte[].class, new Byte[] { Byte.MAX_VALUE });
         typeTestValues.put(char[].class, new char[] { Character.MAX_VALUE });
         typeTestValues.put(Character[].class, new Character[] { Character.MAX_VALUE });

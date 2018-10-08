@@ -24,6 +24,9 @@ import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.Path;
 import com.blazebit.persistence.impl.builder.predicate.JoinOnBuilderImpl;
 import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListenerImpl;
+import com.blazebit.persistence.impl.function.entity.ValuesEntity;
+import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
+import com.blazebit.persistence.impl.util.Keywords;
 import com.blazebit.persistence.parser.ListIndexAttribute;
 import com.blazebit.persistence.parser.MapEntryAttribute;
 import com.blazebit.persistence.parser.MapKeyAttribute;
@@ -49,13 +52,10 @@ import com.blazebit.persistence.parser.expression.StringLiteral;
 import com.blazebit.persistence.parser.expression.TreatExpression;
 import com.blazebit.persistence.parser.expression.VisitorAdapter;
 import com.blazebit.persistence.parser.expression.modifier.ExpressionModifier;
-import com.blazebit.persistence.impl.function.entity.ValuesEntity;
 import com.blazebit.persistence.parser.predicate.CompoundPredicate;
 import com.blazebit.persistence.parser.predicate.EqPredicate;
 import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.parser.predicate.PredicateBuilder;
-import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
-import com.blazebit.persistence.impl.util.Keywords;
 import com.blazebit.persistence.parser.util.ExpressionUtils;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.DbmsModificationState;
@@ -67,7 +67,6 @@ import com.blazebit.persistence.spi.JpaProvider;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ListAttribute;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.MapAttribute;
@@ -760,7 +759,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                         syntheticSubqueryValuesWhereClauseConjuncts.add("1=1");
                     }
                     String exampleAttributeName = "value";
-                    if (rootNode.getType() instanceof IdentifiableType<?>) {
+                    if (rootNode.getType() instanceof ManagedType<?> && JpaMetamodelUtils.isIdentifiable((ManagedType<?>) rootNode.getType())) {
                         exampleAttributeName = JpaMetamodelUtils.getSingleIdAttribute(rootNode.getEntityType()).getName();
                     }
                     syntheticSubqueryValuesWhereClauseConjuncts.add(rootNode.getAlias() + "." + exampleAttributeName + " IS NULL");

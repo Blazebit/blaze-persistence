@@ -498,7 +498,7 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
 
     @Override
     public boolean retainAll(Collection<?> c) {
-        addAction(new CollectionRetainAllAction<C, E>(c, delegate));
+        addAction(CollectionRemoveAllAction.retainAll(c, delegate, allowDuplicates()));
         return delegate.retainAll(c);
     }
 

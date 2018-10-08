@@ -530,6 +530,12 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     }
 
     @Override
+    public <T> T unproxy(T entity) {
+        // EclipseLink doesn't do proxying?
+        return entity;
+    }
+
+    @Override
     public JpaMetamodelAccessor getJpaMetamodelAccessor() {
         return JpaMetamodelAccessorImpl.INSTANCE;
     }

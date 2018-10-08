@@ -59,7 +59,7 @@ public class RecordingValuesCollection<C extends Map<K, V>, K, V> implements Col
 
     @Override
     public boolean retainAll(Collection<?> c) {
-        recordingMap.addAction(new MapRetainAllValuesAction<C, K, V>(c, recordingMap.delegate));
+        recordingMap.addAction(MapRemoveAllValuesAction.retainAll(c, recordingMap.delegate));
         return delegate.retainAll(c);
     }
 

@@ -315,6 +315,11 @@ public final class CachingJpaProvider implements JpaProvider {
     }
 
     @Override
+    public <T> T unproxy(T entity) {
+        return jpaProvider.unproxy(entity);
+    }
+
+    @Override
     public JpaMetamodelAccessor getJpaMetamodelAccessor() {
         return jpaProvider.getJpaMetamodelAccessor();
     }

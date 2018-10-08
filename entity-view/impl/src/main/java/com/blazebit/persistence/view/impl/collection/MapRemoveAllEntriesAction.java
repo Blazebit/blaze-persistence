@@ -58,6 +58,17 @@ public class MapRemoveAllEntriesAction<C extends Map<K, V>, K, V> implements Map
         this.removedObjectsInView = removedObjectsInView;
     }
 
+    public static <C extends Map<K, V>, K, V> MapRemoveAllKeysAction<C, K, V> retainAll(Collection<?> c, C delegate) {
+        int size = c.size() >= delegate.size() ? delegate.size() : delegate.size() - c.size();
+        Map<K, V> removedObjectsInView = new LinkedHashMap<>(size);
+        for (Map.Entry<K, V> entry : delegate.entrySet()) {
+            if (!c.contains(entry)) {
+                removedObjectsInView.put(entry.getKey(), entry.getValue());
+            }
+        }
+        return new MapRemoveAllKeysAction<>(new ArrayList<>(removedObjectsInView.entrySet()), removedObjectsInView);
+    }
+
     @Override
     @SuppressWarnings("unchecked")
     public void doAction(C map, UpdateContext context, MapViewToEntityMapper mapper, CollectionRemoveListener keyRemoveListener, CollectionRemoveListener valueRemoveListener) {

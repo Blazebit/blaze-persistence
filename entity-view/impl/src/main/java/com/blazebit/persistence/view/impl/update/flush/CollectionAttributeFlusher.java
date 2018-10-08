@@ -1251,7 +1251,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         public void onRemovedInverseElement(Object element) {
             if (inverseRemoveStrategy == InverseCollectionElementAttributeFlusher.Strategy.SET_NULL) {
                 inverseFlusher.flushEntitySetElement(context, element, entity, null, null);
-            } else {
+            } else if (inverseRemoveStrategy != InverseCollectionElementAttributeFlusher.Strategy.IGNORE) {
                 // We need to remove the element from the entity backing collection as well, otherwise it might not be removed properly when using cascading
                 // Note that this is only necessary for entity flushing which is handled by this code. JPA DML statements like use for query flushing don't respect cascading configurations
                 Collection<Object> entityCollection = (Collection<Object>) entityAttributeMapper.getValue(entity);
@@ -1323,7 +1323,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         public void onRemovedInverseElement(Object element) {
             if (inverseRemoveStrategy == InverseCollectionElementAttributeFlusher.Strategy.SET_NULL) {
                 inverseFlusher.flushQuerySetElement(context, element, view, null, null, null);
-            } else {
+            } else if (inverseRemoveStrategy != InverseCollectionElementAttributeFlusher.Strategy.IGNORE) {
                 inverseFlusher.removeElement(context, entity, element);
             }
         }

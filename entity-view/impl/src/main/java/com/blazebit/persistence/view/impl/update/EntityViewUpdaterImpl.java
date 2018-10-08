@@ -175,7 +175,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                 idViewBuilder = null;
                 jpaIdInstantiator = ((BasicTypeImpl<?>) viewIdAttribute.getType()).isJpaManaged() ? new EntityIdLoader(viewIdAttribute.getJavaType()) : null;
             }
-            persistViewMapper = declaredViewType != null ? (ViewMapper<Object, Object>) evm.getViewMapper(viewType, declaredViewType, false) : null;
+            persistViewMapper = declaredViewType != null ? (ViewMapper<Object, Object>) evm.getViewMapper(viewType, declaredViewType, false, false) : null;
             this.idFlusher = createIdFlusher(evm, view, viewIdMapper);
         } else {
             this.rootUpdateAllowed = false;

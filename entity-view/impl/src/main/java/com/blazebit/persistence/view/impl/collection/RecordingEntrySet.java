@@ -63,7 +63,7 @@ public class RecordingEntrySet<C extends Map<K, V>, K, V> implements Set<Map.Ent
     @Override
     @SuppressWarnings("unchecked")
     public boolean retainAll(Collection<?> c) {
-        recordingMap.addAction(new MapRetainAllEntriesAction<C, K, V>((Collection<Map.Entry<K, V>>) c, recordingMap.delegate));
+        recordingMap.addAction(MapRemoveAllEntriesAction.retainAll(c, recordingMap.delegate));
         return delegate.retainAll(c);
     }
 

@@ -311,7 +311,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         if (targetViewType == null) {
             throw new IllegalArgumentException("Unknown target view type: " + entityViewClass.getName());
         }
-        ViewMapper<Object, T> viewMapper = getViewMapper(sourceViewType, targetViewType, ignoreMissingAttributes);
+        ViewMapper<Object, T> viewMapper = getViewMapper(sourceViewType, targetViewType, ignoreMissingAttributes, markNew);
         T object = viewMapper.map(source);
         if (markNew) {
             if (!targetViewType.isCreatable()) {
@@ -323,11 +323,11 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
 
     @SuppressWarnings("unchecked")
-    public final <S, T> ViewMapper<S, T> getViewMapper(ManagedViewTypeImplementor<S> sourceViewType, ManagedViewTypeImplementor<T> targetViewType, boolean ignoreMissing) {
-        ViewMapper.Key key = new ViewMapper.Key<>(sourceViewType, targetViewType, ignoreMissing);
+    public final <S, T> ViewMapper<S, T> getViewMapper(ManagedViewTypeImplementor<S> sourceViewType, ManagedViewTypeImplementor<T> targetViewType, boolean ignoreMissing, boolean markNew) {
+        ViewMapper.Key key = new ViewMapper.Key<>(sourceViewType, targetViewType, ignoreMissing, markNew);
         ViewMapper<?, ?> viewMapper = entityViewMappers.get(key);
         if (viewMapper == null) {
-            viewMapper = new ViewMapper(sourceViewType, targetViewType, ignoreMissing, this, proxyFactory);
+            viewMapper = new ViewMapper(sourceViewType, targetViewType, ignoreMissing, markNew, this, proxyFactory);
             ViewMapper<?, ?> old = entityViewMappers.putIfAbsent(key, viewMapper);
             if (old != null) {
                 viewMapper = old;

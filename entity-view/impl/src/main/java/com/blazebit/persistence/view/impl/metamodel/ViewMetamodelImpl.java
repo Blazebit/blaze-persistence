@@ -157,14 +157,11 @@ public class ViewMetamodelImpl implements ViewMetamodel {
                                 context.addError(error);
                             } else {
                                 String infoText = "Equals/hashCode should be based on the identifier for entities and the full state for embeddables. Consider using a subview instead or add a proper equals/hashCode implementation!";
-                                if (instance2.hashCode() != instance3.hashCode()) {
-                                    context.addError("The use of the JPA managed type '" + javaType.getName() + "' in entity views is problematic because two instances with the same state do not have the same hashCode. " + infoText);
-                                }
-                                if (instance1.hashCode() == instance3.hashCode()) {
-                                    context.addError("The use of the JPA managed type '" + javaType.getName() + "' in entity views is problematic because two instances with different state have the same hashCode. " + infoText);
-                                }
                                 if (!instance2.equals(instance3)) {
                                     context.addError("The use of the JPA managed type '" + javaType.getName() + "' in entity views is problematic because two instances with the same state are not equal. " + infoText);
+                                }
+                                if (instance2.hashCode() != instance3.hashCode()) {
+                                    context.addError("The use of the JPA managed type '" + javaType.getName() + "' in entity views is problematic because two instances with the same state do not have the same hashCode. " + infoText);
                                 }
                                 if (instance1.equals(instance3)) {
                                     context.addError("The use of the JPA managed type '" + javaType.getName() + "' in entity views is problematic because two instances with different state are equal. " + infoText);
@@ -187,8 +184,12 @@ public class ViewMetamodelImpl implements ViewMetamodel {
         Class<?> javaType = jpaManagedType.getJavaType();
         if ((javaType.getModifiers() & Modifier.ABSTRACT) == 0) {
             Set<SingularAttribute<?, ?>> jpaAttributes;
-            if (jpaManagedType instanceof IdentifiableType<?> && !root) {
+            if (JpaMetamodelUtils.isIdentifiable(jpaManagedType) && !root) {
                 jpaAttributes = JpaMetamodelUtils.getIdAttributes((IdentifiableType<?>) jpaManagedType);
+                // Hibernate
+                if (jpaAttributes.isEmpty()) {
+                    jpaAttributes = (Set<SingularAttribute<?, ?>>) jpaManagedType.getSingularAttributes();
+                }
             } else {
                 jpaAttributes = (Set<SingularAttribute<?, ?>>) jpaManagedType.getSingularAttributes();
             }

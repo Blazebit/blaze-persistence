@@ -95,7 +95,7 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
 
     protected String getEntityIdName(Class<?> entityClass) {
         ManagedType<?> managedType = entityViewConfiguration.getCriteriaBuilder().getMetamodel().managedType(entityClass);
-        if (managedType instanceof IdentifiableType<?>) {
+        if (JpaMetamodelUtils.isIdentifiable(managedType)) {
             return JpaMetamodelUtils.getSingleIdAttribute((IdentifiableType<?>) managedType).getName();
         } else {
             return null;

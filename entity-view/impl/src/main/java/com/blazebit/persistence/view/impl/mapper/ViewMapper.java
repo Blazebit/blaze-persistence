@@ -56,7 +56,7 @@ public class ViewMapper<S, T> {
     private final AttributeAccessor[] sourceAccessors;
     private final ObjectInstantiator<T> objectInstantiator;
 
-    public ViewMapper(ManagedViewType<S> sourceType, ManagedViewType<T> targetType, boolean ignoreMissing, EntityViewManager entityViewManager, ProxyFactory proxyFactory) {
+    public ViewMapper(ManagedViewType<S> sourceType, ManagedViewType<T> targetType, boolean ignoreMissing, boolean markNew, EntityViewManager entityViewManager, ProxyFactory proxyFactory) {
         if (!targetType.getEntityClass().isAssignableFrom(sourceType.getEntityClass())) {
             throw inconvertible("Incompatible entity types!", sourceType, targetType);
         }
@@ -73,7 +73,7 @@ public class ViewMapper<S, T> {
         if (targetType instanceof ViewType<?>) {
             idAttribute = ((ViewType<T>) targetType).getIdAttribute();
             parameterTypes[i] = idAttribute.getConvertedJavaType();
-            sourceAccessors[i] = createAccessor(sourceType, targetType, ignoreMissing, entityViewManager, proxyFactory, idAttribute);
+            sourceAccessors[i] = createAccessor(sourceType, targetType, ignoreMissing, markNew, entityViewManager, proxyFactory, idAttribute);
             i++;
         }
 
@@ -82,18 +82,20 @@ public class ViewMapper<S, T> {
             MethodAttribute<? super T, ?> targetAttribute = iterator.next();
             if (targetAttribute != idAttribute) {
                 parameterTypes[i] = targetAttribute.getConvertedJavaType();
-                sourceAccessors[i] = createAccessor(sourceType, targetType, ignoreMissing, entityViewManager, proxyFactory, targetAttribute);
-                // Extract a mapping from target dirty state index to the source
-                int dirtyStateIndex = ((AbstractMethodAttribute<?, ?>) targetAttribute).getDirtyStateIndex();
-                if (dirtyStateIndex != -1) {
-                    MethodAttribute<? super S, ?> sourceAttribute = sourceType.getAttribute(targetAttribute.getName());
-                    if (sourceAttribute != null) {
-                        int sourceIndex = ((AbstractMethodAttribute<?, ?>) sourceAttribute).getDirtyStateIndex();
-                        if (sourceIndex != -1) {
-                            for (int j = dirtyMapping.size(); j <= dirtyStateIndex; j++) {
-                                dirtyMapping.add(-1);
+                sourceAccessors[i] = createAccessor(sourceType, targetType, ignoreMissing, markNew, entityViewManager, proxyFactory, targetAttribute);
+                if (!markNew) {
+                    // Extract a mapping from target dirty state index to the source
+                    int dirtyStateIndex = ((AbstractMethodAttribute<?, ?>) targetAttribute).getDirtyStateIndex();
+                    if (dirtyStateIndex != -1) {
+                        MethodAttribute<? super S, ?> sourceAttribute = sourceType.getAttribute(targetAttribute.getName());
+                        if (sourceAttribute != null) {
+                            int sourceIndex = ((AbstractMethodAttribute<?, ?>) sourceAttribute).getDirtyStateIndex();
+                            if (sourceIndex != -1) {
+                                for (int j = dirtyMapping.size(); j <= dirtyStateIndex; j++) {
+                                    dirtyMapping.add(-1);
+                                }
+                                dirtyMapping.set(dirtyStateIndex, sourceIndex);
                             }
-                            dirtyMapping.set(dirtyStateIndex, sourceIndex);
                         }
                     }
                 }
@@ -115,7 +117,7 @@ public class ViewMapper<S, T> {
         this.objectInstantiator = new ConvertReflectionInstantiator<>(proxyFactory, targetType, parameterTypes, entityViewManager);
     }
 
-    private AttributeAccessor createAccessor(ManagedViewType<S> sourceType, ManagedViewType<T> targetType, boolean ignoreMissing, EntityViewManager entityViewManager, ProxyFactory proxyFactory, MethodAttribute<? super T, ?> targetAttribute) {
+    private AttributeAccessor createAccessor(ManagedViewType<S> sourceType, ManagedViewType<T> targetType, boolean ignoreMissing, boolean markNew, EntityViewManager entityViewManager, ProxyFactory proxyFactory, MethodAttribute<? super T, ?> targetAttribute) {
         // Try to find a source attribute
         MethodAttribute<? super S, ?> sourceAttribute = sourceType.getAttribute(targetAttribute.getName());
 
@@ -137,7 +139,7 @@ public class ViewMapper<S, T> {
             ViewMapper<Object, Object> valueMapper = null;
 
             if (targetAttribute.isSubview()) {
-                valueMapper = createViewMapper(sourcePluralAttr.getElementType(), targetPluralAttr.getElementType(), ignoreMissing, entityViewManager, proxyFactory);
+                valueMapper = createViewMapper(sourcePluralAttr.getElementType(), targetPluralAttr.getElementType(), ignoreMissing, markNew, entityViewManager, proxyFactory);
             } else if (targetPluralAttr.getElementType() != sourcePluralAttr.getElementType()) {
                 throw inconvertible("Attribute '" + targetAttribute.getName() + "' from target type has a different element type than in source type!", sourceType, targetType);
             }
@@ -149,19 +151,19 @@ public class ViewMapper<S, T> {
                 ViewMapper<Object, Object> keyMapper = null;
 
                 if (targetMapAttr.isKeySubview()) {
-                    keyMapper = createViewMapper(sourceMapAttr.getKeyType(), targetMapAttr.getKeyType(), ignoreMissing, entityViewManager, proxyFactory);
+                    keyMapper = createViewMapper(sourceMapAttr.getKeyType(), targetMapAttr.getKeyType(), ignoreMissing, markNew, entityViewManager, proxyFactory);
                 } else if (targetMapAttr.getKeyType() != sourceMapAttr.getKeyType()) {
                     throw inconvertible("Attribute '" + targetAttribute.getName() + "' from target type has a different key type than in source type!", sourceType, targetType);
                 }
 
                 MapInstantiator<?, ?> mapInstantiator = ((AbstractAttribute<?, ?>) targetAttribute).getMapInstantiator();
-                return new MapMappingAccessor(Accessors.forViewAttribute(null, sourceAttribute, true), needsDirtyTracker, mapInstantiator, keyMapper, valueMapper);
+                return new MapMappingAccessor(Accessors.forViewAttribute(null, sourceAttribute, true), needsDirtyTracker, !markNew, mapInstantiator, keyMapper, valueMapper);
             } else {
                 CollectionInstantiator collectionInstantiator = ((AbstractAttribute<?, ?>) targetAttribute).getCollectionInstantiator();
-                return new CollectionMappingAccessor(Accessors.forViewAttribute(null, sourceAttribute, true), needsDirtyTracker, collectionInstantiator, valueMapper);
+                return new CollectionMappingAccessor(Accessors.forViewAttribute(null, sourceAttribute, true), needsDirtyTracker, !markNew, collectionInstantiator, valueMapper);
             }
         } else if (targetAttribute.isSubview()) {
-            ViewMapper<Object, Object> mapper = createViewMapper(((SingularAttribute<?, ?>) sourceAttribute).getType(), ((SingularAttribute<?, ?>) targetAttribute).getType(), ignoreMissing, entityViewManager, proxyFactory);
+            ViewMapper<Object, Object> mapper = createViewMapper(((SingularAttribute<?, ?>) sourceAttribute).getType(), ((SingularAttribute<?, ?>) targetAttribute).getType(), ignoreMissing, markNew, entityViewManager, proxyFactory);
             return new AttributeMappingAccessor(Accessors.forViewAttribute(null, sourceAttribute, true), mapper);
         } else if (targetAttribute.getConvertedJavaType() != sourceAttribute.getConvertedJavaType()) {
             throw inconvertible("Attribute '" + targetAttribute.getName() + "' from target type has a different type than in source type!", sourceType, targetType);
@@ -170,10 +172,10 @@ public class ViewMapper<S, T> {
         }
     }
 
-    private ViewMapper<Object, Object> createViewMapper(Type<?> source, Type<?> target, boolean ignoreMissing, EntityViewManager entityViewManager, ProxyFactory proxyFactory) {
+    private ViewMapper<Object, Object> createViewMapper(Type<?> source, Type<?> target, boolean ignoreMissing, boolean markNew, EntityViewManager entityViewManager, ProxyFactory proxyFactory) {
         ManagedViewType<Object> sourceType = (ManagedViewType<Object>) source;
         ManagedViewType<Object> targetType = (ManagedViewType<Object>) target;
-        return new ViewMapper<>(sourceType, targetType, ignoreMissing, entityViewManager, proxyFactory);
+        return new ViewMapper<>(sourceType, targetType, ignoreMissing, markNew, entityViewManager, proxyFactory);
     }
 
     private RuntimeException inconvertible(String reason, ManagedViewType<S> sourceType, ManagedViewType<T> targetType) {
@@ -208,11 +210,13 @@ public class ViewMapper<S, T> {
         private final ManagedViewType<S> sourceType;
         private final ManagedViewType<T> targetType;
         private final boolean ignoreMissing;
+        private final boolean markNew;
 
-        public Key(ManagedViewType<S> sourceType, ManagedViewType<T> targetType, boolean ignoreMissing) {
+        public Key(ManagedViewType<S> sourceType, ManagedViewType<T> targetType, boolean ignoreMissing, boolean markNew) {
             this.sourceType = sourceType;
             this.targetType = targetType;
             this.ignoreMissing = ignoreMissing;
+            this.markNew = markNew;
         }
 
         @Override
@@ -229,6 +233,9 @@ public class ViewMapper<S, T> {
             if (ignoreMissing != key.ignoreMissing) {
                 return false;
             }
+            if (markNew != key.markNew) {
+                return false;
+            }
             if (!sourceType.equals(key.sourceType)) {
                 return false;
             }
@@ -240,6 +247,7 @@ public class ViewMapper<S, T> {
             int result = sourceType.hashCode();
             result = 31 * result + targetType.hashCode();
             result = 31 * result + (ignoreMissing ? 1 : 0);
+            result = 31 * result + (markNew ? 1 : 0);
             return result;
         }
     }
@@ -251,13 +259,15 @@ public class ViewMapper<S, T> {
     private static class MapMappingAccessor extends ReadOnlyAccessor {
         private final AttributeAccessor accessor;
         private final boolean recording;
+        private final boolean copyDirtyState;
         private final MapInstantiator<?, ?> mapInstantiator;
         private final ViewMapper<Object, Object> keyMapper;
         private final ViewMapper<Object, Object> valueMapper;
 
-        public MapMappingAccessor(AttributeAccessor accessor, boolean recording, MapInstantiator<?, ?> mapInstantiator, ViewMapper<Object, Object> keyMapper, ViewMapper<Object, Object> valueMapper) {
+        public MapMappingAccessor(AttributeAccessor accessor, boolean recording, boolean copyDirtyState, MapInstantiator<?, ?> mapInstantiator, ViewMapper<Object, Object> keyMapper, ViewMapper<Object, Object> valueMapper) {
             this.accessor = accessor;
             this.recording = recording;
+            this.copyDirtyState = copyDirtyState;
             this.mapInstantiator = mapInstantiator;
             this.keyMapper = keyMapper;
             this.valueMapper = valueMapper;
@@ -273,20 +283,24 @@ public class ViewMapper<S, T> {
                 if (recording) {
                     RecordingMap<?, ?, ?> recordingMap = mapInstantiator.createRecordingCollection(map.size());
                     newMap = (Map<Object, Object>) recordingMap;
-                    backingMap = (Map<Object, Object>) recordingMap.getDelegate();
-                    if (map instanceof RecordingMap<?, ?, ?> && (keyMapper != null || valueMapper != null)) {
-                        // We have to map the removed objects separately as these might be required for cascading actions
-                        objectMapping = new IdentityHashMap<>(map.size() * 2);
-                        if (keyMapper != null) {
-                            for (Object e : ((RecordingMap<?, ?, ?>) map).getRemovedKeys()) {
-                                objectMapping.put(e, keyMapper.map(e));
+                    if (copyDirtyState) {
+                        backingMap = (Map<Object, Object>) recordingMap.getDelegate();
+                        if (map instanceof RecordingMap<?, ?, ?> && (keyMapper != null || valueMapper != null)) {
+                            // We have to map the removed objects separately as these might be required for cascading actions
+                            objectMapping = new IdentityHashMap<>(map.size() * 2);
+                            if (keyMapper != null) {
+                                for (Object e : ((RecordingMap<?, ?, ?>) map).getRemovedKeys()) {
+                                    objectMapping.put(e, keyMapper.map(e));
+                                }
+                            }
+                            if (valueMapper != null) {
+                                for (Object e : ((RecordingMap<?, ?, ?>) map).getRemovedElements()) {
+                                    objectMapping.put(e, valueMapper.map(e));
+                                }
                             }
                         }
-                        if (valueMapper != null) {
-                            for (Object e : ((RecordingMap<?, ?, ?>) map).getRemovedElements()) {
-                                objectMapping.put(e, valueMapper.map(e));
-                            }
-                        }
+                    } else {
+                        backingMap = newMap;
                     }
                 } else {
                     newMap = backingMap = (Map<Object, Object>) mapInstantiator.createCollection(map.size());
@@ -334,7 +348,7 @@ public class ViewMapper<S, T> {
                     backingMap.putAll(map);
                 }
 
-                if (recording && map instanceof RecordingMap<?, ?, ?>) {
+                if (recording && copyDirtyState && map instanceof RecordingMap<?, ?, ?>) {
                     ((RecordingMap<Map<Object, Object>, Object, Object>) newMap).setActions((RecordingMap<Map<Object, Object>, Object, Object>) map, objectMapping);
                 }
             }
@@ -349,12 +363,14 @@ public class ViewMapper<S, T> {
     private static class CollectionMappingAccessor extends ReadOnlyAccessor {
         private final AttributeAccessor accessor;
         private final boolean recording;
+        private final boolean copyDirtyState;
         private final CollectionInstantiator collectionInstantiator;
         private final ViewMapper<Object, Object> valueMapper;
 
-        public CollectionMappingAccessor(AttributeAccessor accessor, boolean recording, CollectionInstantiator collectionInstantiator, ViewMapper<Object, Object> valueMapper) {
+        public CollectionMappingAccessor(AttributeAccessor accessor, boolean recording, boolean copyDirtyState, CollectionInstantiator collectionInstantiator, ViewMapper<Object, Object> valueMapper) {
             this.accessor = accessor;
             this.recording = recording;
+            this.copyDirtyState = copyDirtyState;
             this.collectionInstantiator = collectionInstantiator;
             this.valueMapper = valueMapper;
         }
@@ -369,12 +385,16 @@ public class ViewMapper<S, T> {
                 if (recording) {
                     RecordingCollection<?, ?> coll = collectionInstantiator.createRecordingCollection(collection.size());
                     newCollection = (Collection<Object>) coll;
-                    backingCollection = (Collection<Object>) coll.getDelegate();
-                    if (collection instanceof RecordingCollection<?, ?> && valueMapper != null) {
-                        objectMapping = new IdentityHashMap<>(collection.size());
-                        for (Object e : ((RecordingCollection<?, ?>) collection).getRemovedElements()) {
-                            objectMapping.put(e, valueMapper.map(e));
+                    if (copyDirtyState) {
+                        backingCollection = (Collection<Object>) coll.getDelegate();
+                        if (collection instanceof RecordingCollection<?, ?> && valueMapper != null) {
+                            objectMapping = new IdentityHashMap<>(collection.size());
+                            for (Object e : ((RecordingCollection<?, ?>) collection).getRemovedElements()) {
+                                objectMapping.put(e, valueMapper.map(e));
+                            }
                         }
+                    } else {
+                        backingCollection = newCollection;
                     }
                 } else {
                     newCollection = backingCollection = (Collection<Object>) collectionInstantiator.createCollection(collection.size());
@@ -396,7 +416,7 @@ public class ViewMapper<S, T> {
                     backingCollection.addAll(collection);
                 }
 
-                if (recording && collection instanceof RecordingCollection<?, ?>) {
+                if (recording && copyDirtyState && collection instanceof RecordingCollection<?, ?>) {
                     ((RecordingCollection<Collection<Object>, Object>) newCollection).setActions((RecordingCollection<Collection<Object>, Object>) collection, objectMapping);
                 }
             }

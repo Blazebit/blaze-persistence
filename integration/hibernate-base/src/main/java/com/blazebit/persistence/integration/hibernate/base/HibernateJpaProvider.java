@@ -39,6 +39,7 @@ import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
@@ -922,6 +923,17 @@ public class HibernateJpaProvider implements JpaProvider {
             return ((HibernateProxy) entity).getHibernateLazyInitializer().getIdentifier();
         }
         return persistenceUnitUtil.getIdentifier(entity);
+    }
+
+    @Override
+    public <T> T unproxy(T entity) {
+        if (entity instanceof HibernateProxy) {
+            HibernateProxy hibernateProxy = (HibernateProxy) entity;
+            LazyInitializer initializer = hibernateProxy.getHibernateLazyInitializer();
+            return (T) initializer.getImplementation();
+        } else {
+            return entity;
+        }
     }
 
     @Override

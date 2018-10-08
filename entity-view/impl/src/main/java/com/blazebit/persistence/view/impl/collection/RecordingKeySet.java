@@ -60,7 +60,7 @@ public class RecordingKeySet<C extends Map<K, V>, K, V> implements Set<K> {
 
     @Override
     public boolean retainAll(Collection<?> c) {
-        recordingMap.addAction(new MapRetainAllKeysAction<C, K, V>(c, recordingMap.delegate));
+        recordingMap.addAction(MapRemoveAllKeysAction.retainAll(c, recordingMap.delegate));
         return delegate.retainAll(c);
     }
 
