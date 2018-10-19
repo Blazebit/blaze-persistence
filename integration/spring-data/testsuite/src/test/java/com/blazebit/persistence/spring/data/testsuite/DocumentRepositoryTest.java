@@ -55,6 +55,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.test.annotation.DirtiesContext;
@@ -580,7 +581,7 @@ public class DocumentRepositoryTest extends AbstractSpringTest {
 
             @Override
             public EntityViewSetting<DocumentView, ?> acceptEntityViewSetting(EntityViewSetting<DocumentView, ?> setting) {
-                setting.addOptionalParameter("optionalParameter", "Foo");
+                setting.addOptionalParameter("optionalParameter", param);
                 return setting;
             }
         });
@@ -633,6 +634,65 @@ public class DocumentRepositoryTest extends AbstractSpringTest {
         assertEquals(3, keysetAwarePage.getKeysetPage().getKeysets().size());
     }
 
+    @Test
+    public void testEntityViewAttributeSorting() {
+        // Given
+        String doc1 = "D1";
+        String doc2 = "D2";
+        String doc3 = "D3";
+        Person person = createPerson("Foo");
+        createDocument(doc1, person);
+        createDocument(doc2, person);
+        createDocument(doc3, createPerson("Bar"));
+
+        String sortProperty = "ownerDocumentCount";
+
+        List<DocumentView> list = documentRepository.findAll(new Sort(Direction.ASC, sortProperty));
+
+        assertEquals(doc3, list.get(0).getName());
+
+        list = documentRepository.findAll(new Sort(Direction.DESC, sortProperty));
+
+        assertEquals(doc3, list.get(2).getName());
+    }
+
+    @Test
+    public void testMixedEntityViewAndEntityAttributeSortingPartTree() {
+        // Given
+        String doc1 = "D1";
+        String doc2 = "D2";
+        String doc3 = "D2";
+        Person person = createPerson("Foo");
+        createDocument(doc1, "A", 0L, person);
+        createDocument(doc2, "B", 0L, person);
+        createDocument(doc3, createPerson("Bar"));
+
+        String entityViewSortProperty = "ownerDocumentCount";
+        String entitySortProperty = "description";
+
+        List<DocumentView> list = documentRepository.findAll(
+                new Sort(
+                    new Sort.Order(Direction.ASC, entityViewSortProperty),
+                    new Sort.Order(Direction.DESC, entitySortProperty)
+                ),
+                "foo");
+
+        assertEquals(doc3, list.get(0).getName());
+        assertEquals(doc2, list.get(1).getName());
+        assertEquals(doc1, list.get(2).getName());
+
+        list = documentRepository.findAll(
+                new Sort(
+                    new Sort.Order(Direction.ASC, entitySortProperty),
+                    new Sort.Order(Direction.ASC, entityViewSortProperty)
+                ),
+                "foo");
+
+        assertEquals(doc1, list.get(0).getName());
+        assertEquals(doc3, list.get(1).getName());
+        assertEquals(doc2, list.get(2).getName());
+    }
+
     private List<Long> getIdsFromViews(Iterable<DocumentAccessor> views) {
         List<Long> ids = new ArrayList<>();
         for (DocumentAccessor view : views) {
@@ -646,7 +706,7 @@ public class DocumentRepositoryTest extends AbstractSpringTest {
     }
 
     private Document createDocument(final String name, final Person owner) {
-        return createDocument(name, null, 0l, owner);
+        return createDocument(name, null, 0L, owner);
     }
 
     private Document createDocument(final String name, final String description, final long age, final Person owner) {
@@ -656,8 +716,12 @@ public class DocumentRepositoryTest extends AbstractSpringTest {
                 Document d = new Document(name);
                 d.setDescription(description);
                 d.setAge(age);
-                d.setOwner(owner);
                 em.persist(d);
+                if (owner != null) {
+                    d.setOwner(owner);
+                    owner.getDocuments().add(d);
+                    em.merge(owner);
+                }
                 return d;
             }
         });

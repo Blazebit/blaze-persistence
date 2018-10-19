@@ -19,6 +19,7 @@ package com.blazebit.persistence.spring.data.testsuite.view;
 import com.blazebit.persistence.spring.data.testsuite.entity.Document;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.IdMapping;
+import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingParameter;
 
 /**
@@ -34,6 +35,9 @@ public interface DocumentView {
     String getName();
 
     PersonView getOwner();
+
+    @Mapping("size(owner.documents)")
+    long getOwnerDocumentCount();
 
     @MappingParameter("optionalParameter")
     String getOptionalParameter();
