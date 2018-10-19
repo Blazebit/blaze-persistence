@@ -55,6 +55,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.test.annotation.DirtiesContext;
@@ -580,7 +581,7 @@ public class DocumentRepositoryTest extends AbstractSpringTest {
 
             @Override
             public EntityViewSetting<DocumentView, ?> acceptEntityViewSetting(EntityViewSetting<DocumentView, ?> setting) {
-                setting.addOptionalParameter("optionalParameter", "Foo");
+                setting.addOptionalParameter("optionalParameter", param);
                 return setting;
             }
         });
@@ -631,6 +632,50 @@ public class DocumentRepositoryTest extends AbstractSpringTest {
 
         // Then
         assertEquals(3, keysetAwarePage.getKeysetPage().getKeysets().size());
+    }
+
+    @Test
+    public void testEntityViewPropertySorting() {
+        // Given
+        String doc1 = "D1";
+        String doc2 = "D2";
+        String doc3 = "D2";
+        Person person = createPerson("Foo");
+        createDocument(doc1, person);
+        createDocument(doc2, person);
+        createDocument(doc3, createPerson("Bar"));
+
+        String sortProperty = "ownerDocumentCount";
+
+        List<DocumentView> list = documentRepository.findAll(new Sort(Direction.ASC, sortProperty));
+
+        assertEquals(doc3, list.get(0).getName());
+
+        list = documentRepository.findAll(new Sort(Direction.DESC, sortProperty));
+
+        assertEquals(doc3, list.get(2).getName());
+    }
+
+    @Test
+    public void testEntityViewPropertySortingPartTree() {
+        // Given
+        String doc1 = "D1";
+        String doc2 = "D2";
+        String doc3 = "D2";
+        Person person = createPerson("Foo");
+        createDocument(doc1, person);
+        createDocument(doc2, person);
+        createDocument(doc3, createPerson("Bar"));
+
+        String sortProperty = "ownerDocumentCount";
+
+        List<DocumentView> list = documentRepository.findAll(new Sort(Direction.ASC, sortProperty), "foo");
+
+        assertEquals(doc3, list.get(0).getName());
+
+        list = documentRepository.findAll(new Sort(Direction.DESC, sortProperty), "foo");
+
+        assertEquals(doc3, list.get(2).getName());
     }
 
     private List<Long> getIdsFromViews(Iterable<DocumentAccessor> views) {

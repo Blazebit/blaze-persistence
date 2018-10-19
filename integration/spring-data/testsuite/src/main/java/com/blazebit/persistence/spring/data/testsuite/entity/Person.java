@@ -20,7 +20,10 @@ import javax.persistence.Basic;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
+
 import java.io.Serializable;
+import java.util.Set;
 
 /**
  * @author Christian Beikov
@@ -34,6 +37,7 @@ public class Person implements Serializable {
     private Long id;
     private String name;
     private long age;
+    private Set<Document> documents;
 
     public Person() {
     }
@@ -72,5 +76,14 @@ public class Person implements Serializable {
 
     public void setAge(long age) {
         this.age = age;
+    }
+
+    @OneToMany(mappedBy = "owner")
+    public Set<Document> getDocuments() {
+        return documents;
+    }
+
+    public void setDocuments(Set<Document> documents) {
+        this.documents = documents;
     }
 }

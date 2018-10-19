@@ -23,6 +23,7 @@ import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.criteria.BlazeCriteria;
 import com.blazebit.persistence.criteria.BlazeCriteriaBuilder;
 import com.blazebit.persistence.criteria.BlazeCriteriaQuery;
+import com.blazebit.persistence.spring.data.base.EntityViewSortUtil;
 import com.blazebit.persistence.spring.data.base.query.JpaParameters.JpaParameter;
 import com.blazebit.persistence.spring.data.repository.EntityViewSettingProcessor;
 import com.blazebit.persistence.view.EntityViewManager;
@@ -343,6 +344,15 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
 
         @SuppressWarnings("unchecked")
         protected <T> EntityViewSetting<T, ?> processSetting(EntityViewSetting<T, ?> setting, Object[] values) {
+            Sort sort;
+            int sortIndex = parameters.getSortIndex();
+            if (sortIndex >= 0 && (sort = (Sort) values[sortIndex]) != null) {
+                EntityViewSortUtil.processEntityViewSortOrders(evm, setting, sort);
+            }
+            int pageableIndex = parameters.getPageableIndex();
+            if (pageableIndex >= 0 && (sort = ((Pageable) values[pageableIndex]).getSort()) != null) {
+                EntityViewSortUtil.processEntityViewSortOrders(evm, setting, sort);
+            }
             int entityViewSettingProcessorIndex = parameters.getEntityViewSettingProcessorIndex();
             if (entityViewSettingProcessorIndex >= 0) {
                 EntityViewSettingProcessor<T> processor = (EntityViewSettingProcessor<T>) values[entityViewSettingProcessorIndex];
@@ -469,8 +479,14 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
         }
 
         private Sort getDynamicSort(Object[] values) {
-            return parameters.potentiallySortsDynamically() ? new ParametersParameterAccessor(parameters, values).getSort()
-                    : null;
+            Sort sort;
+            if (parameters.potentiallySortsDynamically()
+                && (sort = new ParametersParameterAccessor(parameters, values).getSort()) != null) {
+                return entityViewClass != null ? EntityViewSortUtil
+                    .removeEntityViewSortOrders(evm, entityViewClass, sort) : sort;
+            } else {
+                return null;
+            }
         }
     }
 

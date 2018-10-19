@@ -25,6 +25,7 @@ import com.blazebit.persistence.criteria.BlazeCriteriaQuery;
 import com.blazebit.persistence.criteria.BlazeCriteria;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.spi.ExtendedManagedType;
+import com.blazebit.persistence.spring.data.base.EntityViewSortUtil;
 import com.blazebit.persistence.spring.data.base.query.KeysetAwarePageImpl;
 import com.blazebit.persistence.spring.data.repository.KeysetPageable;
 import com.blazebit.persistence.view.EntityViewManager;
@@ -446,8 +447,13 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
         BlazeCriteriaQuery<S> cq = BlazeCriteria.get(cbf, domainClass);
         Root<S> root = this.applySpecificationToCriteria(spec, domainClass, cq);
 
-        if (sort != null) {
-            cq.orderBy(QueryUtils.toOrders(sort, root, BlazeCriteria.get(cbf)));
+        Class<V> entityViewClass = metadata == null
+            || metadata.getEntityViewClass() == null ? this.entityViewClass : (Class<V>) metadata.getEntityViewClass();
+
+        Sort actualSort = (sort == null || entityViewClass == null) ? sort : EntityViewSortUtil
+            .removeEntityViewSortOrders(evm, entityViewClass, sort);
+        if (actualSort != null) {
+            cq.orderBy(QueryUtils.toOrders(actualSort, root, BlazeCriteria.get(cbf)));
         }
         CriteriaBuilder<S> cb = cq.createCriteriaBuilder(entityManager);
 
@@ -461,7 +467,6 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
         boolean withExtractAllKeysets = false;
 
         TypedQuery<V> query;
-        Class<V> entityViewClass = metadata == null || metadata.getEntityViewClass() == null ? this.entityViewClass : (Class<V>) metadata.getEntityViewClass();
         if (entityViewClass == null) {
             if (pageable == null) {
                 query = (TypedQuery<V>) cb.getQuery();
@@ -486,9 +491,17 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
         } else {
             if (pageable == null) {
                 EntityViewSetting<V, CriteriaBuilder<V>> setting = EntityViewSetting.create(entityViewClass);
+                if (sort != null) {
+                    EntityViewSortUtil.processEntityViewSortOrders(evm, setting, sort);
+                }
                 query = evm.applySetting(setting, cb).getQuery();
             } else {
                 EntityViewSetting<V, PaginatedCriteriaBuilder<V>> setting = EntityViewSetting.create(entityViewClass, getOffset(pageable), pageable.getPageSize());
+                if (sort != null) {
+                    EntityViewSortUtil.processEntityViewSortOrders(evm, setting, sort);
+                } else if (pageable.getSort() != null) {
+                    EntityViewSortUtil.processEntityViewSortOrders(evm, setting, pageable.getSort());
+                }
                 if (pageable instanceof KeysetPageable) {
                     KeysetPageable keysetPageable = (KeysetPageable) pageable;
                     setting.withKeysetPage(keysetPageable.getKeysetPage());
