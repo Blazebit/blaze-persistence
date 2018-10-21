@@ -1998,8 +1998,8 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                         }
                         maybeSingularAssociationName = joinNode.getParentTreeNode().getRelationName();
                         ExtendedManagedType<?> managedType = metamodel.getManagedType(ExtendedManagedType.class, parent.getJavaType());
-                        ExtendedAttribute<?, ?> associationAttribute = managedType.getOwnedAttributes().get(maybeSingularAssociationName);
-                        return managedType.getOwnedAttributes().containsKey(maybeSingularAssociationName + "." + maybeSingularAssociationIdExpression)
+                        ExtendedAttribute<?, ?> associationAttribute = managedType.getOwnedSingularAttributes().get(maybeSingularAssociationName);
+                        return managedType.getOwnedSingularAttributes().containsKey(maybeSingularAssociationName + "." + maybeSingularAssociationIdExpression)
                                 && associationAttribute != null
                                 && (contains(metamodel.getManagedType(ExtendedManagedType.class, associationAttribute.getElementClass()).getIdAttributes(), maybeSingularAssociationIdExpression) || mainQuery.jpaProvider.supportsSingleValuedAssociationNaturalIdExpressions());
                     } else {
@@ -2061,8 +2061,8 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
         PathElementExpression maybeSingularAssociationIdExpression = pathElements.get(maybeSingularAssociationIdIndex);
         ExtendedManagedType<?> managedType = metamodel.getManagedType(ExtendedManagedType.class, JpaMetamodelUtils.getTypeName(baseType));
-        ExtendedAttribute<?, ?> associationAttribute = managedType.getOwnedAttributes().get(attributePath);
-        return managedType.getOwnedAttributes().containsKey(attributePath + "." + maybeSingularAssociationIdExpression)
+        ExtendedAttribute<?, ?> associationAttribute = managedType.getOwnedSingularAttributes().get(attributePath);
+        return managedType.getOwnedSingularAttributes().containsKey(attributePath + "." + maybeSingularAssociationIdExpression)
                 && associationAttribute != null
                 && (contains(metamodel.getManagedType(ExtendedManagedType.class, associationAttribute.getElementClass()).getIdAttributes(), maybeSingularAssociationIdExpression) || mainQuery.jpaProvider.supportsSingleValuedAssociationNaturalIdExpressions());
     }

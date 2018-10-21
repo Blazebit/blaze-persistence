@@ -95,7 +95,7 @@ public class HibernateJpaProvider implements JpaProvider {
     private final boolean supportsJoinTableCleanupOnDelete;
     private final boolean needsCorrelationPredicateWhenCorrelatingWithWhereClause;
     private final boolean supportsSingleValuedAssociationNaturalIdExpressions;
-    private final boolean needsElementCollectionIdCutoff;
+    private final boolean needsElementCollectionIdCutoffForCompositeIdOwner;
 
     static {
         Class<?> typeClass = null;
@@ -184,7 +184,7 @@ public class HibernateJpaProvider implements JpaProvider {
             // See https://hibernate.atlassian.net/browse/HHH-12775 for details
             this.supportsSingleValuedAssociationNaturalIdExpressions = major > 5 || major == 5 && minor >= 4;
             // See https://hibernate.atlassian.net/browse/HHH-13045 for details
-            this.needsElementCollectionIdCutoff = major < 5 || major == 5 && minor < 4 || major == 5 && minor == 4 && "SNAPSHOT".equals(type);
+            this.needsElementCollectionIdCutoffForCompositeIdOwner = major < 5 || major == 5 && minor < 4 || major == 5 && minor == 4 && "SNAPSHOT".equals(type);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -236,8 +236,8 @@ public class HibernateJpaProvider implements JpaProvider {
     }
 
     @Override
-    public boolean needsElementCollectionIdCutoff() {
-        return needsElementCollectionIdCutoff;
+    public boolean needsElementCollectionIdCutoffForCompositeIdOwner() {
+        return needsElementCollectionIdCutoffForCompositeIdOwner;
     }
 
     @Override

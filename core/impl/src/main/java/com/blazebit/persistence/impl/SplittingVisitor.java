@@ -53,7 +53,12 @@ public class SplittingVisitor extends LazyCopyingResultVisitorAdapter {
                 expressions.add(new PropertyExpression(subAttributePart));
             }
 
-            String field = expression.getField() + "." + subAttribute;
+            String field;
+            if (expression.getField() == null) {
+                field = subAttribute;
+            } else {
+                field = expression.getField() + "." + subAttribute;
+            }
             JoinNode node = (JoinNode) expression.getBaseNode();
             Class<?> fieldClass = jpaProvider.getJpaMetamodelAccessor().getAttributePath(metamodel, node.getManagedType(), field).getAttributeClass();
             Type<?> fieldType = metamodel.type(fieldClass);

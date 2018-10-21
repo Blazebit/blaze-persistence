@@ -316,7 +316,7 @@ public class OpenJPAJpaProvider implements JpaProvider {
     }
 
     @Override
-    public boolean needsElementCollectionIdCutoff() {
+    public boolean needsElementCollectionIdCutoffForCompositeIdOwner() {
         return false;
     }
 

@@ -42,14 +42,19 @@ import com.blazebit.persistence.parser.expression.TrimExpression;
 import com.blazebit.persistence.parser.expression.TypeFunctionExpression;
 import com.blazebit.persistence.parser.expression.WhenClauseExpression;
 import com.blazebit.persistence.parser.predicate.BooleanLiteral;
+import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
+import com.blazebit.persistence.spi.JpaProvider;
 
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EmbeddableType;
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -63,12 +68,14 @@ import static com.blazebit.persistence.parser.util.JpaMetamodelUtils.ATTRIBUTE_N
 class EmbeddableSplittingVisitor extends AbortableVisitorAdapter {
 
     protected final EntityMetamodel metamodel;
+    protected final JpaProvider jpaProvider;
     protected final SplittingVisitor splittingVisitor;
     protected final List<Expression> splittedOffExpressions;
     protected PathExpression expressionToSplit;
 
-    public EmbeddableSplittingVisitor(EntityMetamodel metamodel, SplittingVisitor splittingVisitor) {
+    public EmbeddableSplittingVisitor(EntityMetamodel metamodel, JpaProvider jpaProvider, SplittingVisitor splittingVisitor) {
         this.metamodel = metamodel;
+        this.jpaProvider = jpaProvider;
         this.splittingVisitor = splittingVisitor;
         this.splittedOffExpressions = new ArrayList<>();
     }
@@ -84,29 +91,55 @@ class EmbeddableSplittingVisitor extends AbortableVisitorAdapter {
     public List<Expression> splitOff(Expression expression) {
         expressionToSplit = null;
         expression.accept(this);
-        collectSplittedOffExpressions(expression);
+        if (collectSplittedOffExpressions(expression)) {
+            return null;
+        }
         return splittedOffExpressions;
     }
 
-    protected void collectSplittedOffExpressions(Expression expression) {
+    protected boolean collectSplittedOffExpressions(Expression expression) {
         splittedOffExpressions.clear();
         if (expressionToSplit != null) {
             PathReference pathReference = expressionToSplit.getPathReference();
             JoinNode baseNode = (JoinNode) pathReference.getBaseNode();
+            String fieldPrefix = pathReference.getField() == null ? "" : pathReference.getField() + ".";
             ExtendedManagedType<?> managedType = metamodel.getManagedType(ExtendedManagedType.class, baseNode.getJavaType());
             Set<String> orderedAttributes = new TreeSet<>();
-            for (SingularAttribute<?, ?> singularAttribute : managedType.getIdAttributes()) {
-                EmbeddableType<?> embeddableType = (EmbeddableType<?>) singularAttribute.getType();
-                Set<SingularAttribute<?, ?>> subAttributes = new TreeSet<>(ATTRIBUTE_NAME_COMPARATOR);
-                subAttributes.addAll(embeddableType.getSingularAttributes());
-                for (SingularAttribute<?, ?> attribute : subAttributes) {
-                    addAttributes("", attribute, orderedAttributes);
+            EntityType<?> ownerType;
+            if (baseNode.getParentTreeNode() == null && pathReference.getField() == null) {
+                ownerType = baseNode.getEntityType();
+                for (SingularAttribute<?, ?> idAttribute : managedType.getIdAttributes()) {
+                    addAttributes(ownerType, null, fieldPrefix, "", idAttribute, orderedAttributes);
                 }
+            } else {
+                Map<String, ? extends ExtendedAttribute<?, ?>> ownedAttributes;
+                String prefix = pathReference.getField();
+                if (baseNode.getParentTreeNode() != null && baseNode.getParentTreeNode().getAttribute().getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION) {
+                    String elementCollectionPath = baseNode.getParentTreeNode().getRelationName();
+                    ExtendedManagedType entityManagedType = metamodel.getManagedType(ExtendedManagedType.class, baseNode.getParent().getEntityType());
+                    ownedAttributes = entityManagedType.getAttributes();
+                    if (prefix == null) {
+                        prefix = elementCollectionPath;
+                    } else {
+                        prefix = elementCollectionPath + "." + prefix;
+                    }
+                } else {
+                    ownedAttributes = managedType.getOwnedSingularAttributes();
+                }
+                orderedAttributes.addAll(JpaUtils.getEmbeddedPropertyPaths((Map<String, ExtendedAttribute<?, ?>>) ownedAttributes, prefix, false));
             }
+
+            // Signal the caller that the expression was eliminated
+            if (orderedAttributes.isEmpty()) {
+                return true;
+            }
+
             for (String orderedAttribute : orderedAttributes) {
                 splittedOffExpressions.add(splittingVisitor.splitOff(expression, expressionToSplit, orderedAttribute));
             }
         }
+
+        return false;
     }
 
     @Override
@@ -114,28 +147,34 @@ class EmbeddableSplittingVisitor extends AbortableVisitorAdapter {
         PathReference pathReference = expr.getPathReference();
         JoinNode baseNode = (JoinNode) pathReference.getBaseNode();
 
+        Attribute attr;
         if (pathReference.getField() == null) {
-            return true;
-        }
+            if (baseNode.getParentTreeNode() != null) {
+                attr = baseNode.getParentTreeNode().getAttribute();
+                if (attr instanceof PluralAttribute<?, ?, ?> && ((PluralAttribute) attr).getElementType() instanceof EmbeddableType<?>) {
+                    expressionToSplit = expr;
+                }
+            }
+        } else {
+            ExtendedManagedType<?> managedType = metamodel.getManagedType(ExtendedManagedType.class, baseNode.getJavaType());
+            attr = managedType.getAttribute(pathReference.getField()).getAttribute();
 
-        ExtendedManagedType<?> managedType = metamodel.getManagedType(ExtendedManagedType.class, baseNode.getJavaType());
-        Attribute attr = managedType.getAttribute(pathReference.getField()).getAttribute();
+            if (attr instanceof PluralAttribute<?, ?, ?>) {
+                return true;
+            }
 
-        if (attr instanceof PluralAttribute<?, ?, ?>) {
-            return true;
-        }
+            SingularAttribute<?, ?> singularAttr = (SingularAttribute<?, ?>) attr;
 
-        SingularAttribute<?, ?> singularAttr = (SingularAttribute<?, ?>) attr;
-
-        int dotIndex = expr.getField().lastIndexOf('.');
-        if (dotIndex == -1 && singularAttr.getType() instanceof EmbeddableType<?>) {
-            expressionToSplit = expr;
+            int dotIndex = expr.getField().lastIndexOf('.');
+            if (dotIndex == -1 && singularAttr.getType() instanceof EmbeddableType<?>) {
+                expressionToSplit = expr;
+            }
         }
 
         return true;
     }
 
-    protected void addAttributes(String prefix, SingularAttribute<?, ?> singularAttribute, Set<String> orderedAttributes) {
+    protected void addAttributes(EntityType<?> ownerType, String elementCollectionPath, String fieldPrefix, String prefix, SingularAttribute<?, ?> singularAttribute, Set<String> orderedAttributes) {
         String attributeName;
         if (prefix.isEmpty()) {
             attributeName = singularAttribute.getName();
@@ -147,7 +186,20 @@ class EmbeddableSplittingVisitor extends AbortableVisitorAdapter {
             Set<SingularAttribute<?, ?>> subAttributes = new TreeSet<>(ATTRIBUTE_NAME_COMPARATOR);
             subAttributes.addAll(((EmbeddableType<?>) singularAttribute.getType()).getSingularAttributes());
             for (SingularAttribute<?, ?> attribute : subAttributes) {
-                addAttributes(newPrefix, attribute, orderedAttributes);
+                addAttributes(ownerType, elementCollectionPath, fieldPrefix, newPrefix, attribute, orderedAttributes);
+            }
+        } else if (singularAttribute.getType() instanceof ManagedType<?>) {
+            String newPrefix = attributeName + ".";
+            List<String> attributeNames;
+            if (elementCollectionPath == null) {
+                attributeNames = jpaProvider.getIdentifierOrUniqueKeyEmbeddedPropertyNames(ownerType, fieldPrefix + attributeName);
+            } else {
+                attributeNames = jpaProvider.getIdentifierOrUniqueKeyEmbeddedPropertyNames(ownerType, elementCollectionPath, elementCollectionPath + "." + fieldPrefix + attributeName);
+            }
+
+            ExtendedManagedType<?> managedType = metamodel.getManagedType(ExtendedManagedType.class, (ManagedType<?>) singularAttribute.getType());
+            for (String attrName : attributeNames) {
+                addAttributes(ownerType, elementCollectionPath, fieldPrefix, newPrefix, (SingularAttribute<?, ?>) managedType.getAttributes().get(attrName).getAttribute(), orderedAttributes);
             }
         } else {
             orderedAttributes.add(attributeName);

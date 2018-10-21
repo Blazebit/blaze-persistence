@@ -22,33 +22,19 @@ import com.blazebit.persistence.impl.query.CTEQuerySpecification;
 import com.blazebit.persistence.impl.query.CustomSQLQuery;
 import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.QuerySpecification;
-import com.blazebit.persistence.parser.expression.Expression;
-import com.blazebit.persistence.parser.expression.NullExpression;
-import com.blazebit.persistence.parser.expression.PathExpression;
-import com.blazebit.persistence.parser.expression.PropertyExpression;
-import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
-import com.blazebit.persistence.spi.JpaMetamodelAccessor;
 import com.blazebit.persistence.spi.SetOperationType;
 
 import javax.persistence.Query;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.SingularAttribute;
-import javax.persistence.metamodel.Type;
-import java.util.ArrayDeque;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
-import java.util.TreeSet;
 
 /**
  *
@@ -65,7 +51,7 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
     protected final CTEBuilderListener listener;
     protected final String cteName;
     protected final EntityType<?> cteType;
-    protected final Map<String, ExtendedAttribute> attributeEntries;
+    protected final Map<String, ExtendedAttribute<?, ?>> attributeEntries;
     protected final Map<String, Integer> bindingMap;
     protected final Map<String, String> columnBindingMap;
     protected final CTEBuilderListenerImpl subListener;
@@ -77,7 +63,7 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
         this.listener = listener;
 
         this.cteType = mainQuery.metamodel.entity(clazz);
-        this.attributeEntries = mainQuery.metamodel.getManagedType(ExtendedManagedType.class, clazz).getOwnedAttributes();
+        this.attributeEntries = mainQuery.metamodel.getManagedType(ExtendedManagedType.class, clazz).getOwnedSingularAttributes();
         this.cteName = cteName;
         this.bindingMap = new LinkedHashMap<>(attributeEntries.size());
         this.columnBindingMap = new LinkedHashMap<>(attributeEntries.size());
@@ -209,76 +195,7 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
     }
 
     protected List<String> prepareAndGetAttributes() {
-        final Queue<String> attributeQueue = new ArrayDeque<>(bindingMap.keySet());
-        while (!attributeQueue.isEmpty()) {
-            final String attributeName = attributeQueue.remove();
-            Integer tupleIndex = bindingMap.get(attributeName);
-
-            final ExtendedAttribute<?, ?> attributeEntry = attributeEntries.get(attributeName);
-            final List<Attribute<?, ?>> attributePath = attributeEntry.getAttributePath();
-            final JpaMetamodelAccessor jpaMetamodelAccessor = mainQuery.jpaProvider.getJpaMetamodelAccessor();
-            final Attribute<?, ?> lastAttribute = attributePath.get(attributePath.size() - 1);
-
-            if (jpaMetamodelAccessor.isJoinable(lastAttribute) || lastAttribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED) {
-                // We have to map *-to-one relationships to their id or unique props
-                // NOTE: Since we are talking about *-to-ones, the expression can only be a path to an object
-                // so it is safe to just append the id to the path
-                Expression selectExpression = selectManager.getSelectInfos().get(tupleIndex).getExpression();
-
-                // TODO: Maybe also allow Treat, Case-When, Array?
-                if (selectExpression instanceof NullExpression) {
-                    // When binding null, we don't have to adapt anything
-                } else if (selectExpression instanceof PathExpression) {
-                    boolean firstBinding = true;
-                    final Collection<String> embeddedPropertyNames;
-
-                    if (lastAttribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED) {
-                        embeddedPropertyNames = new TreeSet<>(JpaMetamodelUtils.getEmbeddedPropertyNames((EmbeddableType<?>) ((SingularAttribute<?, ?>) lastAttribute).getType()));
-                    } else {
-                        embeddedPropertyNames = new TreeSet<>(cbf.getJpaProvider().getIdentifierOrUniqueKeyEmbeddedPropertyNames(cteType, attributeName));
-                    }
-
-                    PathExpression baseExpression = embeddedPropertyNames.size() > 1 ?
-                            ((PathExpression) selectExpression).clone(false) : ((PathExpression) selectExpression);
-
-                    joinManager.implicitJoin(baseExpression, true, null, ClauseType.SELECT, null, false, false, false, false);
-
-                    if (baseExpression.getPathReference().getType().getPersistenceType().equals(Type.PersistenceType.BASIC)) {
-                        throw new IllegalStateException("An association should be bound to its association type and not its identifier type");
-                    }
-
-                    bindingMap.remove(attributeName);
-
-                    for (String embeddedPropertyName : embeddedPropertyNames) {
-                        PathExpression pathExpression = firstBinding ?
-                                ((PathExpression) selectExpression) : baseExpression.clone(false);
-
-                        pathExpression.getExpressions().add(new PropertyExpression(embeddedPropertyName));
-                        String nestedAttributePath = attributeName + "." + embeddedPropertyName;
-                        ExtendedAttribute<?, ?> nestedAttributeEntry = attributeEntries.get(nestedAttributePath);
-
-                        // Process the nested attribute path recursively
-                        attributeQueue.add(nestedAttributePath);
-
-                        // Replace this binding in the binding map, additional selects need an updated index
-                        bindingMap.put(nestedAttributePath, firstBinding ? tupleIndex : selectManager.getSelectInfos().size());
-
-                        if (!firstBinding) {
-                            selectManager.select(pathExpression, null);
-                        } else {
-                            firstBinding = false;
-                        }
-
-                        for (String column : nestedAttributeEntry.getColumnNames()) {
-                            columnBindingMap.put(column, nestedAttributePath);
-                        }
-                    }
-                } else {
-                    throw new IllegalArgumentException("Illegal expression '" + selectExpression.toString() + "' for binding relation '" + attributeName + "'!");
-                }
-            }
-        }
-
+        JpaUtils.expandBindings(cteType, bindingMap, columnBindingMap, attributeEntries, ClauseType.SELECT, this);
         String[] attributes = new String[bindingMap.size()];
         for (Map.Entry<String, Integer> entry : bindingMap.entrySet()) {
             attributes[entry.getValue()] = entry.getKey();
