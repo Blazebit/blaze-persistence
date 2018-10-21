@@ -49,7 +49,7 @@ public class GroupByTest extends AbstractCoreTest {
     public void testGroupByEntitySelect() {
         CriteriaBuilder<Long> criteria = cbf.create(em, Long.class).from(Document.class, "d");
         criteria.groupBy("d.owner");
-        assertEquals("SELECT d FROM Document d JOIN d.owner owner_1 GROUP BY owner_1, d.age, d.archived, d.byteArray, d.creationDate, d.creationDate2, d.defaultContact, d.documentType, d.id, d.idx, d.intIdEntity, d.lastModified, d.lastModified2, d.name, d.nameContainer, d.nameObject, d.nonJoinable, d.owner, d.parent, d.responsiblePerson, d.someValue, d.version, d.wrappedByteArray", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d JOIN d.owner owner_1 GROUP BY owner_1, d.age, d.archived, d.byteArray, d.creationDate, d.creationDate2, d.defaultContact, d.documentType, d.id, d.idx, d.intIdEntity, d.lastModified, d.lastModified2, d.name, d.nameContainer.nameObject.intIdEntity.id, d.nameContainer.nameObject.primaryName, d.nameContainer.nameObject.secondaryName, d.nameObject.intIdEntity.id, d.nameObject.primaryName, d.nameObject.secondaryName, d.nonJoinable, d.owner, d.parent, d.responsiblePerson, d.someValue, d.version, d.wrappedByteArray", criteria.getQueryString());
         criteria.getResultList();
     }
     
@@ -115,6 +115,17 @@ public class GroupByTest extends AbstractCoreTest {
                 .select("''");
 
         assertEquals("SELECT d.id, " + function("count_tuple", "INDEX(people_1)") + ", '' FROM Document d LEFT JOIN d.people people_1 GROUP BY d.id", cb.getQueryString());
+        cb.getResultList();
+    }
+
+    @Test
+    public void testGroupByEmbeddable() {
+        CriteriaBuilder<Long> cb = cbf.create(em, Long.class)
+                .from(Document.class, "d")
+                .select("d.id")
+                .groupBy("names");
+
+        assertEquals("SELECT d.id FROM Document d LEFT JOIN d.names names_1 GROUP BY names_1.intIdEntity.id, names_1.primaryName, names_1.secondaryName, d.id", cb.getQueryString());
         cb.getResultList();
     }
 }

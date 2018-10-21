@@ -58,7 +58,7 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
     private static final String COLLECTION_BASE_QUERY_ALIAS = "_collection";
     private final String collectionName;
     private final String keyFunctionExpression;
-    private final Map<String, ExtendedAttribute> collectionAttributeEntries;
+    private final Map<String, ExtendedAttribute<?, ?>> collectionAttributeEntries;
     private final Map<String, String> collectionColumnBindingMap;
 
     public AbstractInsertCollectionCriteriaBuilder(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, Class<T> clazz, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener, String collectionName) {
@@ -66,7 +66,7 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
         this.collectionName = collectionName;
         ExtendedManagedType<?> extendedManagedType = mainQuery.metamodel.getManagedType(ExtendedManagedType.class, entityType);
         ExtendedAttribute<?, ?> extendedAttribute = extendedManagedType.getAttribute(collectionName);
-        Map<String, ExtendedAttribute> collectionAttributeEntries = JpaUtils.getCollectionAttributeEntries(mainQuery.metamodel, entityType, extendedAttribute);
+        Map<String, ExtendedAttribute<?, ?>> collectionAttributeEntries = JpaUtils.getCollectionAttributeEntries(mainQuery.metamodel, entityType, extendedAttribute);
         if (extendedAttribute.getAttribute() instanceof MapAttribute<?, ?, ?>) {
             keyFunctionExpression = "key(" + collectionName + ")";
         } else if (extendedAttribute.getAttribute() instanceof ListAttribute<?, ?> && !extendedAttribute.isBag()) {

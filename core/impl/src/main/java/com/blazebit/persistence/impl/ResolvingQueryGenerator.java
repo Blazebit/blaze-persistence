@@ -466,7 +466,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                     sb.append(aliasPrefix);
                 }
 
-                baseNode.appendDeReference(sb, field, renderTreat, externalRepresentation, jpaProvider.needsElementCollectionIdCutoff());
+                baseNode.appendDeReference(sb, field, renderTreat, externalRepresentation, jpaProvider.needsElementCollectionIdCutoffForCompositeIdOwner());
             }
 
             if (addTypeCaseWhen) {

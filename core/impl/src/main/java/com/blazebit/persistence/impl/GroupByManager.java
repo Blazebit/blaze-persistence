@@ -39,7 +39,7 @@ public class GroupByManager extends AbstractManager<ExpressionModifier> {
 
     private static final ResolvedExpression[] EMPTY = new ResolvedExpression[0];
 
-    private final FunctionalDependencyAnalyzerVisitor functionalDependencyAnalyzerVisitor;
+    private final EmbeddableSplittingVisitor embeddableSplittingVisitor;
     /**
      * We use an ArrayList since a HashSet causes problems when the path reference in the expression is changed
      * after it was inserted into the set (e.g. when implicit joining is performed).
@@ -48,9 +48,9 @@ public class GroupByManager extends AbstractManager<ExpressionModifier> {
     // These are the collected group by clauses
     private final Map<ResolvedExpression, Set<ClauseType>> groupByClauses;
 
-    GroupByManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, FunctionalDependencyAnalyzerVisitor functionalDependencyAnalyzerVisitor) {
+    GroupByManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, EmbeddableSplittingVisitor embeddableSplittingVisitor) {
         super(queryGenerator, parameterManager, subqueryInitFactory);
-        this.functionalDependencyAnalyzerVisitor = functionalDependencyAnalyzerVisitor;
+        this.embeddableSplittingVisitor = embeddableSplittingVisitor;
         groupByInfos = new ArrayList<>();
         groupByClauses = new LinkedHashMap<>();
     }
@@ -71,10 +71,6 @@ public class GroupByManager extends AbstractManager<ExpressionModifier> {
         registerParameterExpressions(expr);
     }
     
-    boolean existsGroupBy(Expression expr) {
-        return groupByInfos.contains(new NodeInfo(expr));
-    }
-
     void collectGroupByClauses() {
         if (groupByInfos.isEmpty()) {
             return;
@@ -189,6 +185,20 @@ public class GroupByManager extends AbstractManager<ExpressionModifier> {
     }
 
     public void collect(ResolvedExpression expression, ClauseType clauseType, boolean hasGroupBy) {
+        List<Expression> expressions = embeddableSplittingVisitor.splitOff(expression.getExpression());
+        if (expressions != null) {
+            if (expressions.isEmpty()) {
+                collect0(expression, clauseType, hasGroupBy);
+            } else {
+                for (Expression splitOffExpression : expressions) {
+                    ResolvedExpression subExpression = new ResolvedExpression(splitOffExpression.toString(), splitOffExpression);
+                    collect0(subExpression, clauseType, hasGroupBy);
+                }
+            }
+        }
+    }
+
+    private void collect0(ResolvedExpression expression, ClauseType clauseType, boolean hasGroupBy) {
         Set<ClauseType> clauseTypes = groupByClauses.get(expression);
         if (clauseTypes == null) {
             clauseTypes = EnumSet.of(clauseType);

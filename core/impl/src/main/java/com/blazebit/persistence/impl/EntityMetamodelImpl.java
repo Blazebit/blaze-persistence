@@ -324,6 +324,17 @@ public class EntityMetamodelImpl implements EntityMetamodel {
                 } else if (isAssociation(attribute) && (elementCollectionPath != null || !jpaProvider.isForeignJoinColumn(e, attributeName))) {
                     // We create an attribute entry for the id attribute of *ToOne relations if the columns reside on the Many side
                     collectIdColumns(e, attributeMap, attributeName, newParents, elementCollectionPath, fieldType, temporaryExtendedManagedTypes, seenTypesForEnumResolving, enumTypes);
+                    if (e != type) {
+                        String prefix = attributeName + ".";
+                        for (AttributeEntry<?, ?> value : attributeMap.values()) {
+                            if (value.getAttributePathString().startsWith(prefix)) {
+                                String idPath = value.getAttributePathString().substring(prefix.length());
+                                ArrayList<Attribute<?, ?>> idParents = new ArrayList<>(value.attributePath.subList(0, value.attributePath.size()));
+                                AttributeEntry attributeEntry = new AttributeEntry(jpaProvider, e, value.attribute, idPath, value.elementClass, idParents, null);
+                                managedTypeAttributes.put(idPath, attributeEntry);
+                            }
+                        }
+                    }
                 }
             }
 
@@ -609,6 +620,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         private final Set<SingularAttribute<X, ?>> idAttributes;
         private final Map<String, AttributeEntry<?, ?>> attributes;
         private final Map<String, AttributeEntry<?, ?>> ownedAttributes;
+        private final Map<String, AttributeEntry<?, ?>> ownedSingularAttributes;
 
         @SuppressWarnings("unchecked")
         private ExtendedManagedTypeImpl(ManagedType<X> managedType, Map.Entry<EntityType<?>, String> singularOwnerType, Map.Entry<EntityType<?>, String> pluralOwnerType, boolean hasCascadingDeleteCycle, Map<String, AttributeEntry<?, ?>> attributes) {
@@ -623,6 +635,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
             this.hasCascadingDeleteCycle = hasCascadingDeleteCycle;
             this.attributes = attributes;
             Map<String, AttributeEntry<?, ?>> ownedAttributes = new HashMap<>(attributes.size());
+            Map<String, AttributeEntry<?, ?>> ownedSingularAttributes = new HashMap<>(attributes.size());
             OUTER: for (Map.Entry<String, AttributeEntry<?, ?>> entry : attributes.entrySet()) {
                 // Paths that go over a collection are not owned
                 List<Attribute<?, ?>> attributePath = entry.getValue().getAttributePath();
@@ -634,8 +647,12 @@ public class EntityMetamodelImpl implements EntityMetamodel {
                 }
 
                 ownedAttributes.put(entry.getKey(), entry.getValue());
+                if (!attributePath.get(attributePath.size() - 1).isCollection()) {
+                    ownedSingularAttributes.put(entry.getKey(), entry.getValue());
+                }
             }
             this.ownedAttributes = ownedAttributes;
+            this.ownedSingularAttributes = ownedSingularAttributes;
         }
 
         @Override
@@ -685,6 +702,11 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         @Override
         public Map<String, ExtendedAttribute<X, ?>> getOwnedAttributes() {
             return (Map<String, ExtendedAttribute<X, ?>>) (Map<?, ?>) ownedAttributes;
+        }
+
+        @Override
+        public Map<String, ExtendedAttribute<X, ?>> getOwnedSingularAttributes() {
+            return (Map<String, ExtendedAttribute<X, ?>>) (Map<?, ?>) ownedSingularAttributes;
         }
 
         @Override

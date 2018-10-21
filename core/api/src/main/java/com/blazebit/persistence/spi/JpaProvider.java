@@ -496,7 +496,7 @@ public interface JpaProvider {
      * @return true if needed, else false
      * @since 1.3.0
      */
-    public boolean needsElementCollectionIdCutoff();
+    public boolean needsElementCollectionIdCutoffForCompositeIdOwner();
 
     /**
      * Enables query result caching for the given query.

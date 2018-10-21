@@ -469,7 +469,7 @@ public class DataNucleusJpaProvider implements JpaProvider {
     }
 
     @Override
-    public boolean needsElementCollectionIdCutoff() {
+    public boolean needsElementCollectionIdCutoffForCompositeIdOwner() {
         return false;
     }
 

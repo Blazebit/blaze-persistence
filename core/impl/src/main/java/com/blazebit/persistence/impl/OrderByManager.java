@@ -105,7 +105,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
             }
 
             List<Expression> splittedOffExpressions = embeddableSplittingVisitor.splitOff(expr);
-            if (!splittedOffExpressions.isEmpty()) {
+            if (splittedOffExpressions != null && !splittedOffExpressions.isEmpty()) {
                 infos.set(i, new OrderByInfo(splittedOffExpressions.get(0), orderByInfo.ascending, orderByInfo.nullFirst));
                 List<OrderByInfo> newOrderByInfos = new ArrayList<>(splittedOffExpressions.size() - 1);
                 for (int j = 1; j < splittedOffExpressions.size(); j++) {
@@ -191,7 +191,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
 
             resultUnique = resultUnique || unique || clausesRequiredForResultUniqueness != null && clausesRequiredForResultUniqueness.isEmpty();
             boolean resUnique = resultUnique || (i + 1) == size && functionalDependencyAnalyzerVisitor.isResultUnique();
-            if (splitOffExpressions.isEmpty()) {
+            if (splitOffExpressions == null || splitOffExpressions.isEmpty()) {
                 realExpressions.add(new OrderByExpression(orderByInfo.ascending, orderByInfo.nullFirst, expr, nullable, unique, resUnique));
             } else {
                 for (Expression splitOffExpression : splitOffExpressions) {

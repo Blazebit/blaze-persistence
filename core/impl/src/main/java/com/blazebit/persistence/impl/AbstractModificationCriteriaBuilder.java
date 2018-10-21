@@ -107,7 +107,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             // Returning the "entity" is only allowed in CTEs
             this.isReturningEntityAliasAllowed = true;
             this.returningAttributes = null;
-            this.attributeEntries = mainQuery.metamodel.getManagedType(ExtendedManagedType.class, cteClass).getOwnedAttributes();
+            this.attributeEntries = mainQuery.metamodel.getManagedType(ExtendedManagedType.class, cteClass).getOwnedSingularAttributes();
             this.returningAttributeBindingMap = new LinkedHashMap<>(attributeEntries.size());
             this.columnBindingMap = new LinkedHashMap<>(attributeEntries.size());
         }

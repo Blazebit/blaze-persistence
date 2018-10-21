@@ -329,8 +329,8 @@ public final class CachingJpaProvider implements JpaProvider {
     }
 
     @Override
-    public boolean needsElementCollectionIdCutoff() {
-        return jpaProvider.needsElementCollectionIdCutoff();
+    public boolean needsElementCollectionIdCutoffForCompositeIdOwner() {
+        return jpaProvider.needsElementCollectionIdCutoffForCompositeIdOwner();
     }
 
     @Override

@@ -236,9 +236,9 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
         this.subqueryInitFactory = joinManager.getSubqueryInitFactory();
         SplittingVisitor splittingVisitor = new SplittingVisitor(mainQuery.metamodel, mainQuery.jpaProvider);
-        this.embeddableSplittingVisitor = new EmbeddableSplittingVisitor(mainQuery.metamodel, splittingVisitor);
+        this.embeddableSplittingVisitor = new EmbeddableSplittingVisitor(mainQuery.metamodel, mainQuery.jpaProvider, splittingVisitor);
         this.groupByExpressionGatheringVisitor = new GroupByExpressionGatheringVisitor(false, mainQuery.dbmsDialect);
-        this.functionalDependencyAnalyzerVisitor = new FunctionalDependencyAnalyzerVisitor(mainQuery.metamodel, splittingVisitor);
+        this.functionalDependencyAnalyzerVisitor = new FunctionalDependencyAnalyzerVisitor(mainQuery.metamodel, splittingVisitor, mainQuery.jpaProvider);
 
         this.whereManager = new WhereManager<BuilderType>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
         this.groupByManager = new GroupByManager(queryGenerator, parameterManager, subqueryInitFactory, functionalDependencyAnalyzerVisitor);
@@ -306,12 +306,12 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
         this.subqueryInitFactory = joinManager.getSubqueryInitFactory();
         SplittingVisitor splittingVisitor = new SplittingVisitor(mainQuery.metamodel, mainQuery.jpaProvider);
-        this.embeddableSplittingVisitor = new EmbeddableSplittingVisitor(mainQuery.metamodel, splittingVisitor);
+        this.embeddableSplittingVisitor = new EmbeddableSplittingVisitor(mainQuery.metamodel, mainQuery.jpaProvider, splittingVisitor);
         this.groupByExpressionGatheringVisitor = new GroupByExpressionGatheringVisitor(false, mainQuery.dbmsDialect);
-        this.functionalDependencyAnalyzerVisitor = new FunctionalDependencyAnalyzerVisitor(mainQuery.metamodel, splittingVisitor);
+        this.functionalDependencyAnalyzerVisitor = new FunctionalDependencyAnalyzerVisitor(mainQuery.metamodel, splittingVisitor, mainQuery.jpaProvider);
 
         this.whereManager = new WhereManager<BuilderType>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
-        this.groupByManager = new GroupByManager(queryGenerator, parameterManager, subqueryInitFactory, functionalDependencyAnalyzerVisitor);
+        this.groupByManager = new GroupByManager(queryGenerator, parameterManager, subqueryInitFactory, embeddableSplittingVisitor);
         this.havingManager = new HavingManager<BuilderType>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory, groupByExpressionGatheringVisitor);
 
         this.selectManager = new SelectManager<QueryResultType>(queryGenerator, parameterManager, this.joinManager, this.aliasManager, subqueryInitFactory, expressionFactory, mainQuery.jpaProvider, mainQuery, groupByExpressionGatheringVisitor, resultClazz);
@@ -1981,7 +1981,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             sb.append(attributes[0]);
             sb.append(',');
         } else {
-            Map<String, ExtendedAttribute> mapping =  mainQuery.metamodel.getManagedType(ExtendedManagedType.class, clazz).getOwnedAttributes();
+            Map<String, ExtendedAttribute> mapping =  mainQuery.metamodel.getManagedType(ExtendedManagedType.class, clazz).getOwnedSingularAttributes();
             StringBuilder paramBuilder = new StringBuilder();
             for (int i = 0; i < attributes.length; i++) {
                 ExtendedAttribute entry;

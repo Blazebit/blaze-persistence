@@ -23,6 +23,7 @@ import com.blazebit.persistence.parser.expression.NullExpression;
 import com.blazebit.persistence.parser.expression.ParameterExpression;
 import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.expression.PropertyExpression;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.spi.JoinTable;
@@ -30,9 +31,11 @@ import com.blazebit.persistence.spi.JpaMetamodelAccessor;
 import com.blazebit.persistence.spi.JpaProvider;
 
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.PluralAttribute;
+import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -44,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
 import java.util.Queue;
+import java.util.Set;
 import java.util.TreeSet;
 
 /**
@@ -56,13 +60,16 @@ public final class JpaUtils {
     private JpaUtils() {
     }
 
-    public static void expandBindings(EntityType<?> bindType, Map<String, Integer> bindingMap, Map<String, String> columnBindingMap, Map<String, ExtendedAttribute> attributeEntries, ClauseType clause, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {
+    public static void expandBindings(EntityType<?> bindType, Map<String, Integer> bindingMap, Map<String, String> columnBindingMap, Map<String, ExtendedAttribute<?, ?>> attributeEntries, ClauseType clause, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {
         SelectManager<?> selectManager = queryBuilder.selectManager;
         JoinManager joinManager = queryBuilder.joinManager;
         ParameterManager parameterManager = queryBuilder.parameterManager;
         JpaProvider jpaProvider = queryBuilder.mainQuery.jpaProvider;
         EntityMetamodel metamodel = queryBuilder.mainQuery.metamodel;
         JpaMetamodelAccessor jpaMetamodelAccessor = jpaProvider.getJpaMetamodelAccessor();
+
+        Set<SingularAttribute<?, ?>> idAttributes;
+        boolean needsElementCollectionIdCutoffForCompositeIdOwner = jpaProvider.needsElementCollectionIdCutoffForCompositeIdOwner() && ((idAttributes = JpaMetamodelUtils.getIdAttributes(bindType)).size() > 1 || idAttributes.iterator().next().getType() instanceof EmbeddableType<?>);
         final Queue<String> attributeQueue = new ArrayDeque<>(bindingMap.keySet());
         while (!attributeQueue.isEmpty()) {
             final String attributeName = attributeQueue.remove();
@@ -76,7 +83,7 @@ public final class JpaUtils {
 
                 if (!splitExpression && jpaMetamodelAccessor.isJoinable(lastAttribute)) {
                     splitExpression = true;
-                    if (jpaProvider.needsElementCollectionIdCutoff()) {
+                    if (needsElementCollectionIdCutoffForCompositeIdOwner) {
                         for (int i = 0; i < attributePath.size() - 1; i++) {
                             Attribute<?, ?> attribute = attributePath.get(i);
                             if (attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION) {
@@ -98,7 +105,7 @@ public final class JpaUtils {
                         // When binding null, we don't have to adapt anything
                     } else if (selectExpression instanceof PathExpression) {
                         boolean firstBinding = true;
-                        final Collection<String> embeddedPropertyNames = getEmbeddedPropertyPaths(attributeEntries, attributeName, jpaProvider.needsElementCollectionIdCutoff());
+                        final Collection<String> embeddedPropertyNames = getEmbeddedPropertyPaths(attributeEntries, attributeName, needsElementCollectionIdCutoffForCompositeIdOwner);
 
                         PathExpression baseExpression = embeddedPropertyNames.size() > 1 ?
                                 ((PathExpression) selectExpression).clone(false) : ((PathExpression) selectExpression);
@@ -152,7 +159,7 @@ public final class JpaUtils {
                             }
                         }
                     } else if (selectExpression instanceof ParameterExpression) {
-                        final Collection<String> embeddedPropertyNames = getEmbeddedPropertyPaths(attributeEntries, attributeName, jpaProvider.needsElementCollectionIdCutoff());
+                        final Collection<String> embeddedPropertyNames = getEmbeddedPropertyPaths(attributeEntries, attributeName, jpaProvider.needsElementCollectionIdCutoffForCompositeIdOwner());
 
                         if (embeddedPropertyNames.size() > 0) {
                             ParameterExpression parameterExpression = (ParameterExpression) selectExpression;
@@ -209,10 +216,10 @@ public final class JpaUtils {
         }
     }
 
-    private static Collection<String> getEmbeddedPropertyPaths(Map<String, ExtendedAttribute> attributeEntries, String attributeName, boolean needsElementCollectionIdCutoff) {
+    public static Collection<String> getEmbeddedPropertyPaths(Map<String, ExtendedAttribute<?, ?>> attributeEntries, String attributeName, boolean needsElementCollectionIdCutoff) {
         final NavigableSet<String> embeddedPropertyNames = new TreeSet<>();
-        String prefix = attributeName + ".";
-        for (Map.Entry<String, ExtendedAttribute> entry : attributeEntries.entrySet()) {
+        String prefix = attributeName == null ? "" : attributeName + ".";
+        for (Map.Entry<String, ExtendedAttribute<?, ?>> entry : attributeEntries.entrySet()) {
             if (entry.getKey().startsWith(prefix)) {
                 String subAttribute = entry.getKey().substring(prefix.length());
                 String lower = embeddedPropertyNames.lower(subAttribute);
@@ -234,6 +241,8 @@ public final class JpaUtils {
                 }
             }
         }
+        // Remove the embeddable itself since it was split up
+        embeddedPropertyNames.remove(attributeName);
         // Hibernate has a bug in the handling of the deep property named "id" when being part of an element collection alias, so we cut it off
         if (needsElementCollectionIdCutoff && attributeEntries.get(attributeName).getAttribute().getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION) {
             Iterator<String> iterator = embeddedPropertyNames.iterator();
@@ -250,8 +259,8 @@ public final class JpaUtils {
         return embeddedPropertyNames;
     }
 
-    public static Map<String, ExtendedAttribute> getCollectionAttributeEntries(EntityMetamodel metamodel, EntityType<?> entityType, ExtendedAttribute<?, ?> attribute) {
-        Map<String, ExtendedAttribute> collectionAttributeEntries = new HashMap<>();
+    public static Map<String, ExtendedAttribute<?, ?>> getCollectionAttributeEntries(EntityMetamodel metamodel, EntityType<?> entityType, ExtendedAttribute<?, ?> attribute) {
+        Map<String, ExtendedAttribute<?, ?>> collectionAttributeEntries = new HashMap<>();
         JoinTable joinTable = attribute.getJoinTable();
         if (joinTable == null) {
             throw new IllegalArgumentException("No support for inserting into inverse collection via DML API yet!");

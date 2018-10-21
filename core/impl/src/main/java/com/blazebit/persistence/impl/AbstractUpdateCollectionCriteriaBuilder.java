@@ -60,7 +60,7 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
 
     private final String collectionName;
     private final String keyFunctionExpression;
-    private final Map<String, ExtendedAttribute> collectionAttributeEntries;
+    private final Map<String, ExtendedAttribute<?, ?>> collectionAttributeEntries;
     private final Map<String, String> collectionColumnBindingMap;
 
     private List<String> cachedBaseQueryStrings;
@@ -73,7 +73,7 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
         joinManager.join(entityAlias + "." + collectionName, CollectionUpdateModificationQuerySpecification.COLLECTION_BASE_QUERY_ALIAS, JoinType.LEFT, false, true);
         ExtendedManagedType<?> extendedManagedType = mainQuery.metamodel.getManagedType(ExtendedManagedType.class, entityType);
         ExtendedAttribute<?, ?> extendedAttribute = extendedManagedType.getAttribute(collectionName);
-        Map<String, ExtendedAttribute> collectionAttributeEntries = JpaUtils.getCollectionAttributeEntries(mainQuery.metamodel, entityType, extendedAttribute);
+        Map<String, ExtendedAttribute<?, ?>> collectionAttributeEntries = JpaUtils.getCollectionAttributeEntries(mainQuery.metamodel, entityType, extendedAttribute);
         if (extendedAttribute.getAttribute() instanceof MapAttribute<?, ?, ?>) {
             keyFunctionExpression = "key(" + collectionName + ")";
         } else if (extendedAttribute.getAttribute() instanceof ListAttribute<?, ?> && !mainQuery.jpaProvider.isBag(entityType, collectionName)) {

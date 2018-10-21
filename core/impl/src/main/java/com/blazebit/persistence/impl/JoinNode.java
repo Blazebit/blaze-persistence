@@ -37,8 +37,10 @@ import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -795,7 +797,10 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         appendAlias(sb, renderTreat, externalRepresentation);
         // If we have a valuesTypeName, the property can only be "value" which is already handled in appendAlias
         if (property != null && valuesTypeName == null) {
-            if (requiresElementCollectionIdCutoff && parentTreeNode != null && parentTreeNode.getAttribute().getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION && property.endsWith(".id")) {
+            Set<SingularAttribute<?, ?>> idAttributes;
+            if (requiresElementCollectionIdCutoff && parentTreeNode != null && parentTreeNode.getAttribute().getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION
+                    // Only relevant when the owning entity type has an embedded id
+                    && property.endsWith(".id") && ((idAttributes = JpaMetamodelUtils.getIdAttributes(parent.getEntityType())).size() > 1 || idAttributes.iterator().next().getType() instanceof EmbeddableType<?>)) {
                 // See https://hibernate.atlassian.net/browse/HHH-13045 for details
                 sb.append('.').append(property, 0, property.length() - ".id".length());
             } else {

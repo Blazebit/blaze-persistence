@@ -92,6 +92,14 @@ public interface ExtendedManagedType<X> {
     public Map<String, ExtendedAttribute<X, ?>> getOwnedAttributes();
 
     /**
+     * Returns the singular owned extended attributes of the managed type.
+     *
+     * @return The singular owned extended attributes
+     * @since 1.3.0
+     */
+    public Map<String, ExtendedAttribute<X, ?>> getOwnedSingularAttributes();
+
+    /**
      * Returns the extended attribute of the managed type for the given attribute name.
      *
      * @param attributeName The attribute name

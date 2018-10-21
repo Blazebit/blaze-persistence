@@ -19,6 +19,7 @@ Not yet released
 * Added validation for `equals`/`hashCode` implementations of JPA managed types that are used within entity views which can be disabled with the property `com.blazebit.persistence.view.managed_type_validation_disabled`
 * Add support for DeltaSpike Data 1.9
 * Make use of Collection DML API when using the `QUERY` flush strategy in updatable entity views
+* Automatic embeddable splitting within `GROUP BY` clause to avoid Hibernate bugs
 
 ### Bug fixes
 
