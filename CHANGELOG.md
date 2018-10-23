@@ -20,6 +20,7 @@ Not yet released
 * Add support for DeltaSpike Data 1.9
 * Make use of Collection DML API when using the `QUERY` flush strategy in updatable entity views
 * Automatic embeddable splitting within `GROUP BY` clause to avoid Hibernate bugs
+* Support for entity view attribute filters and sorters on attributes of inheritance subtypes
 
 ### Bug fixes
 
@@ -34,6 +35,7 @@ Not yet released
 * Fix various little issues related to embeddable handling in updatable entity views
 * Fix support for mapping the inverse side of a `ManyToMany` as updatable collection
 * Fix cycle detection for certain polymorphic entity view graphs
+* Fix problems with correlated subqueries that used a `ManyToMany` collection
 
 ### Backwards-incompatible changes
 

@@ -37,7 +37,7 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class ConstrainedTupleElementMapper implements TupleElementMapper {
+public class ConstrainedTupleElementMapper implements AliasedTupleElementMapper {
 
     private final Map.Entry<String, TupleElementMapper>[] mappers;
     private final Map.Entry<String, TupleElementMapper>[] subqueryMappers;
@@ -48,6 +48,11 @@ public class ConstrainedTupleElementMapper implements TupleElementMapper {
         this.mappers = mappers.toArray(new Map.Entry[mappers.size()]);
         this.subqueryMappers = subqueryMappers.toArray(new Map.Entry[subqueryMappers.size()]);
         this.alias = alias;
+    }
+
+    @Override
+    public String getAlias() {
+        return alias;
     }
 
     @Override
@@ -124,6 +129,7 @@ public class ConstrainedTupleElementMapper implements TupleElementMapper {
             List<Map.Entry<String, TupleElementMapper>> mappers = new ArrayList<>();
             List<Map.Entry<String, TupleElementMapper>> subqueryMappers = new ArrayList<>();
 
+            String alias = null;
             for (Map.Entry<String, TupleElementMapper> subtypeEntry : attributeEntry) {
                 String constraint = subtypeEntry.getKey();
                 TupleElementMapper mapper = subtypeEntry.getValue();
@@ -142,10 +148,12 @@ public class ConstrainedTupleElementMapper implements TupleElementMapper {
                 } else {
                     mappers.add(new AbstractMap.SimpleEntry<>(constraint, mapper));
                 }
+                // Extract the alias from the first mapper
+                if (mapper instanceof AliasedTupleElementMapper) {
+                    alias = ((AliasedTupleElementMapper) mapper).getAlias();
+                }
             }
 
-            // TODO: determine alias
-            String alias = null;
             mappingList.add(new ConstrainedTupleElementMapper(mappers, subqueryMappers, alias));
             parameterMappingList.add(null);
         }

@@ -120,9 +120,18 @@ public class SizeTransformationTest extends AbstractCoreTest {
                 .select("SIZE(d.people)")
                 .select("d.partners");
         String expectedQuery = "SELECT " + function("COUNT_TUPLE", "'DISTINCT'", "INDEX(people_1)") + ", partners_1 FROM Document d " +
-                "LEFT JOIN d.partners partners_1 " +
-                "LEFT JOIN d.people people_1 " +
-                "GROUP BY d.id, partners_1.age, partners_1.defaultLanguage, partners_1.friend, partners_1.id, partners_1.name, partners_1.nameObject.intIdEntity.id, partners_1.nameObject.primaryName, partners_1.nameObject.secondaryName, partners_1.partnerDocument";
+                "LEFT JOIN d.partners partners_1 ";
+        if (!jpaProvider.supportsSingleValuedAssociationIdExpressions()) {
+            expectedQuery += "LEFT JOIN partners_1.nameObject.intIdEntity intIdEntity_1 ";
+        }
+        expectedQuery += "LEFT JOIN d.people people_1 ";
+        expectedQuery += "GROUP BY d.id, partners_1.age, partners_1.defaultLanguage, partners_1.friend, partners_1.id, partners_1.name, ";
+        if (jpaProvider.supportsSingleValuedAssociationIdExpressions()) {
+            expectedQuery += "partners_1.nameObject.intIdEntity.id, ";
+        } else {
+            expectedQuery += "intIdEntity_1.id, ";
+        }
+        expectedQuery += "partners_1.nameObject.primaryName, partners_1.nameObject.secondaryName, partners_1.partnerDocument";
         Assert.assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
     }
@@ -142,9 +151,18 @@ public class SizeTransformationTest extends AbstractCoreTest {
                 .select("SIZE(d.contacts)")
                 .select("d.partners");
         String expectedQuery = "SELECT " + function("COUNT_TUPLE", "'DISTINCT'", "KEY(contacts_1)") + ", partners_1 FROM Document d " +
-                "LEFT JOIN d.contacts contacts_1 " +
-                "LEFT JOIN d.partners partners_1 " +
-                "GROUP BY d.id, partners_1.age, partners_1.defaultLanguage, partners_1.friend, partners_1.id, partners_1.name, partners_1.nameObject.intIdEntity.id, partners_1.nameObject.primaryName, partners_1.nameObject.secondaryName, partners_1.partnerDocument";
+                "LEFT JOIN d.contacts contacts_1 ";
+        expectedQuery += "LEFT JOIN d.partners partners_1 ";
+        if (!jpaProvider.supportsSingleValuedAssociationIdExpressions()) {
+            expectedQuery += "LEFT JOIN partners_1.nameObject.intIdEntity intIdEntity_1 ";
+        }
+        expectedQuery += "GROUP BY d.id, partners_1.age, partners_1.defaultLanguage, partners_1.friend, partners_1.id, partners_1.name, ";
+        if (jpaProvider.supportsSingleValuedAssociationIdExpressions()) {
+            expectedQuery += "partners_1.nameObject.intIdEntity.id, ";
+        } else {
+            expectedQuery += "intIdEntity_1.id, ";
+        }
+        expectedQuery += "partners_1.nameObject.primaryName, partners_1.nameObject.secondaryName, partners_1.partnerDocument";
         Assert.assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
     }

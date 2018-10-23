@@ -23,6 +23,8 @@ import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.expression.modifier.ExpressionModifier;
 import com.blazebit.persistence.parser.util.ExpressionUtils;
 
+import java.util.HashSet;
+
 /**
  * This Transformer runs through the expressions of the query
  * For each OUTER(pp) expression it performs an implicitJoin for the join manager
@@ -53,7 +55,7 @@ public class OuterFunctionVisitor extends ClauseAndJoinAwareVisitor implements E
             PathExpression path = (PathExpression) expression.getExpressions().get(0);
 
             if (joinManager.getParent() != null) {
-                joinManager.getParent().implicitJoin(path, true, null, fromClause, null, false, true, joinRequired, false, false);
+                joinManager.getParent().implicitJoin(path, true, null, fromClause, new HashSet<String>(), false, true, joinRequired, false, false);
             }
         }
 

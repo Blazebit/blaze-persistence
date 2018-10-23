@@ -63,6 +63,7 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
     protected ContainerBehavior containerBehavior;
     protected Class<? extends Comparator<?>> comparatorClass;
     protected boolean forceUniqueness;
+    protected boolean disallowOwnedUpdatableSubview = true;
 
     // Other configs
     protected Integer defaultBatchSize;
@@ -168,6 +169,16 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
     @Override
     public void setForceUniqueness(boolean forceUniqueness) {
         this.forceUniqueness = forceUniqueness;
+    }
+
+    @Override
+    public boolean isDisallowOwnedUpdatableSubview() {
+        return disallowOwnedUpdatableSubview;
+    }
+
+    @Override
+    public void setDisallowOwnedUpdatableSubview(boolean disallowOwnedUpdatableSubview) {
+        this.disallowOwnedUpdatableSubview = disallowOwnedUpdatableSubview;
     }
 
     @Override

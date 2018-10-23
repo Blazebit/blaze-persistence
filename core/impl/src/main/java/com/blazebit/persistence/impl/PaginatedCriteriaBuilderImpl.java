@@ -413,9 +413,9 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             throw new IllegalStateException("Pagination requires at least one order by item!");
         }
 
-        applyImplicitJoins(null);
+        JoinVisitor joinVisitor = applyImplicitJoins(null);
         // We pass true here to always generate implicit group bys for select and order by clauses. We filter these out later if necessary
-        applyExpressionTransformersAndBuildGroupByClauses(true);
+        applyExpressionTransformersAndBuildGroupByClauses(true, joinVisitor);
         hasCollections = joinManager.hasCollections();
 
         if (hasGroupBy) {
@@ -442,7 +442,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
 
         // Paginated criteria builders always need the last order by expression to be unique
-        List<OrderByExpression> orderByExpressions = orderByManager.getOrderByExpressions(false, whereManager.rootPredicate.getPredicate(), hasGroupBy ? Arrays.asList(getIdentifierExpressions()) : Collections.<ResolvedExpression>emptyList());
+        List<OrderByExpression> orderByExpressions = orderByManager.getOrderByExpressions(false, whereManager.rootPredicate.getPredicate(), hasGroupBy ? Arrays.asList(getIdentifierExpressions()) : Collections.<ResolvedExpression>emptyList(), joinVisitor);
         if (!orderByExpressions.get(orderByExpressions.size() - 1).isResultUnique()) {
             throw new IllegalStateException("The order by items of the query builder are not guaranteed to produce unique tuples! Consider also ordering by the entity identifier!");
         }
@@ -555,7 +555,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
         TypedQuery<T> query;
 
-        if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, NO_CLAUSE_EXCLUSION)) {
+        if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, hasGroupBy ? NO_CLAUSE_EXCLUSION : OBJECT_QUERY_WITHOUT_GROUP_BY_EXCLUSIONS)) {
             query = (TypedQuery<T>) em.createQuery(queryString, expectedResultType);
             if (isCacheable()) {
                 mainQuery.jpaProvider.setCacheable(query);
@@ -565,7 +565,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             TypedQuery<T> baseQuery = (TypedQuery<T>) em.createQuery(queryString, expectedResultType);
             Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery);
 
-            List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, NO_CLAUSE_EXCLUSION);
+            List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, hasGroupBy ? NO_CLAUSE_EXCLUSION : OBJECT_QUERY_WITHOUT_GROUP_BY_EXCLUSIONS);
             List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
             boolean shouldRenderCteNodes = renderCteNodes(false);
             List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.EMPTY_LIST;
@@ -884,7 +884,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
         List<String> whereClauseConjuncts = new ArrayList<>();
         List<String> optionalWhereClauseConjuncts = new ArrayList<>();
-        joinManager.buildClause(sbSelectFrom, NO_CLAUSE_EXCLUSION, null, false, externalRepresentation, false, optionalWhereClauseConjuncts, whereClauseConjuncts, null, explicitVersionEntities, nodesToFetch, Collections.EMPTY_SET);
+        joinManager.buildClause(sbSelectFrom, hasGroupBy ? NO_CLAUSE_EXCLUSION : OBJECT_QUERY_WITHOUT_GROUP_BY_EXCLUSIONS, null, false, externalRepresentation, false, optionalWhereClauseConjuncts, whereClauseConjuncts, null, explicitVersionEntities, nodesToFetch, Collections.EMPTY_SET);
 
         if (keysetMode == KeysetMode.NONE) {
             whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, null);

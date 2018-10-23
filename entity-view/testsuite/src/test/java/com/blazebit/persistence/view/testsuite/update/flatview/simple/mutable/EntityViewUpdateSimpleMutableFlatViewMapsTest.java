@@ -89,7 +89,7 @@ public class EntityViewUpdateSimpleMutableFlatViewMapsTest extends AbstractEntit
         if (version || isQueryStrategy() && isFullMode()) {
             builder.update(Document.class);
         }
-        if (supportsIndexedInplaceUpdate() && (!isQueryStrategy() || isQueryStrategy() && !isFullMode())) {
+        if (supportsIndexedInplaceUpdate() && !isQueryStrategy() || isQueryStrategy() && !isFullMode()) {
             builder.assertUpdate()
                     .forRelation(Document.class, "nameMap")
                     .and();

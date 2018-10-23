@@ -18,16 +18,17 @@ package com.blazebit.persistence.impl.transform;
 
 import com.blazebit.persistence.impl.AttributeHolder;
 import com.blazebit.persistence.impl.ClauseType;
-import com.blazebit.persistence.impl.ResolvedExpression;
-import com.blazebit.persistence.impl.SimplePathReference;
-import com.blazebit.persistence.impl.function.subquery.SubqueryFunction;
-import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.impl.JoinManager;
 import com.blazebit.persistence.impl.JoinNode;
 import com.blazebit.persistence.impl.JpaUtils;
 import com.blazebit.persistence.impl.MainQuery;
+import com.blazebit.persistence.impl.ResolvedExpression;
+import com.blazebit.persistence.impl.SimplePathReference;
 import com.blazebit.persistence.impl.SubqueryBuilderListenerImpl;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
+import com.blazebit.persistence.impl.function.count.AbstractCountFunction;
+import com.blazebit.persistence.impl.function.subquery.SubqueryFunction;
+import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.expression.AggregateExpression;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionModifierCollectingResultVisitorAdapter;
@@ -41,7 +42,6 @@ import com.blazebit.persistence.parser.expression.StringLiteral;
 import com.blazebit.persistence.parser.expression.Subquery;
 import com.blazebit.persistence.parser.expression.SubqueryExpression;
 import com.blazebit.persistence.parser.expression.modifier.ExpressionModifier;
-import com.blazebit.persistence.impl.function.count.AbstractCountFunction;
 import com.blazebit.persistence.parser.util.ExpressionUtils;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.JpaProvider;
@@ -54,7 +54,14 @@ import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 import javax.persistence.metamodel.Type.PersistenceType;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -252,7 +259,7 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
             }
 
             for (PathExpression groupByExpr : groupByExprs) {
-                joinManager.implicitJoin(groupByExpr, true, null, null, null, false, false, false, false);
+                joinManager.implicitJoin(groupByExpr, true, null, null, new HashSet<String>(), false, false, false, false);
             }
 
             PathExpression originalSizeArg = sizeArg.clone(false);

@@ -20,7 +20,7 @@
 
     <parent>
         <groupId>com.blazebit</groupId>
-        <artifactId>blaze-persistence-parent</artifactId>
+        <artifactId>blaze-persistence</artifactId>
         <version>1.3.0-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>

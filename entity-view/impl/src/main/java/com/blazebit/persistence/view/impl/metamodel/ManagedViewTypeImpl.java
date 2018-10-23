@@ -41,6 +41,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -65,6 +66,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
     private final FlushStrategy flushStrategy;
     private final int defaultBatchSize;
     private final Map<String, AbstractMethodAttribute<? super X, ?>> attributes;
+    private final NavigableMap<String, AbstractMethodAttribute<? super X, ?>> recursiveAttributes;
     private final Set<AbstractMethodAttribute<? super X, ?>> updateMappableAttributes;
     private final AbstractMethodAttribute<? super X, ?>[] mutableAttributes;
     private final Map<ParametersKey, MappingConstructorImpl<X>> constructors;
@@ -197,6 +199,19 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
         }
 
         this.inheritanceSubtypeConfigurations = Collections.unmodifiableMap(inheritanceSubtypeConfigurations);
+
+        NavigableMap<String, AbstractMethodAttribute<? super X, ?>> recursiveAttributes = new TreeMap<>();
+        for (Map.Entry<AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<? super X, ?>>> entry : defaultInheritanceSubtypeConfiguration.getAttributesClosure().entrySet()) {
+            AbstractMethodAttribute<? super X, ?> attribute = entry.getValue().getAttribute();
+            if (attribute.getElementType() instanceof ManagedViewTypeImplementor<?>) {
+                for (Map.Entry<String, AbstractMethodAttribute<? super Object, ?>> subEntry : ((ManagedViewTypeImplementor<Object>) attribute.getElementType()).getRecursiveAttributes().entrySet()) {
+                    recursiveAttributes.put(attribute.getName() + "." + subEntry.getKey(), subEntry.getValue());
+                }
+            } else {
+                recursiveAttributes.put(attribute.getName(), attribute);
+            }
+        }
+        this.recursiveAttributes = recursiveAttributes;
 
         Map<ParametersKey, MappingConstructorImpl<X>> constructors = new HashMap<>();
         Map<String, MappingConstructorImpl<X>> constructorIndex = new TreeMap<>();
@@ -433,6 +448,11 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
             return null;
         }
         return constructorIndex.get(name);
+    }
+
+    @Override
+    public NavigableMap<String, AbstractMethodAttribute<? super X, ?>> getRecursiveAttributes() {
+        return recursiveAttributes;
     }
 
     @Override

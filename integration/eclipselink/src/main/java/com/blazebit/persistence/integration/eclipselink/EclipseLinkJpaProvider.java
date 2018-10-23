@@ -22,9 +22,11 @@ import com.blazebit.persistence.spi.JoinTable;
 import com.blazebit.persistence.spi.JpaMetamodelAccessor;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.reflection.ReflectionUtils;
+import org.eclipse.persistence.descriptors.ClassDescriptor;
 import org.eclipse.persistence.internal.helper.DatabaseField;
 import org.eclipse.persistence.internal.jpa.metamodel.AttributeImpl;
 import org.eclipse.persistence.internal.jpa.metamodel.ManagedTypeImpl;
+import org.eclipse.persistence.internal.jpa.metamodel.PluralAttributeImpl;
 import org.eclipse.persistence.jpa.JpaEntityManager;
 import org.eclipse.persistence.mappings.AggregateCollectionMapping;
 import org.eclipse.persistence.mappings.CollectionMapping;
@@ -572,9 +574,30 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     }
 
     @Override
-    public List<String> getIdentifierOrUniqueKeyEmbeddedPropertyNames(EntityType<?> owner, String elementCollectionPath, String attributeName) {
-        // TODO: Not yet supported
-        return Collections.emptyList();
+    public List<String> getIdentifierOrUniqueKeyEmbeddedPropertyNames(EntityType<?> ownerType, String elementCollectionPath, String attributeName) {
+        ClassDescriptor referenceDescriptor = ((PluralAttributeImpl) getAttribute(ownerType, elementCollectionPath)).getCollectionMapping().getReferenceDescriptor();
+        Vector<DatabaseMapping> mappings = referenceDescriptor.getMappings();
+        String path = attributeName.substring(elementCollectionPath.length() + 1);
+        String[] parts = path.split("\\.");
+        OUTER: for (int i = 0; i < parts.length; i++) {
+            for (DatabaseMapping mapping : mappings) {
+                if (parts[i].equals(mapping.getAttributeName())) {
+                    referenceDescriptor = mapping.getReferenceDescriptor();
+                    mappings = referenceDescriptor.getMappings();
+                    continue OUTER;
+                }
+            }
+
+            throw new IllegalArgumentException("Illegal attribute name for type [" + ownerType.getJavaType().getName() + "]: " + attributeName);
+        }
+
+        List<String> idProperties = new ArrayList<>();
+        for (DatabaseMapping mapping : mappings) {
+            if (mapping.isJPAId()) {
+                idProperties.add(mapping.getAttributeName());
+            }
+        }
+        return idProperties;
     }
 
     @Override

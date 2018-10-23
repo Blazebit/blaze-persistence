@@ -41,8 +41,9 @@ public class FinalSetOperationCTECriteriaBuilderImpl<T> extends BaseFinalSetOper
     }
 
     @Override
-    protected void applyImplicitJoins(JoinVisitor parentVisitor) {
+    protected JoinVisitor applyImplicitJoins(JoinVisitor parentVisitor) {
         // There is nothing to do here for final builders as they don't have any nodes
+        return null;
     }
 
     @Override

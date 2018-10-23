@@ -27,6 +27,7 @@ import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.loader.collection.CollectionInitializer;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
@@ -65,10 +66,18 @@ public class CustomOneToManyPersister extends OneToManyPersister implements Cust
         }
 
         OneToMany oneToMany = (OneToMany) collection.getElement();
-        Iterator propertyIterator = oneToMany.getAssociatedClass().getPropertyIterator();
+        return findMappedByProperty(collection, ownerEntityName, columnNames, oneToMany.getAssociatedClass().getPropertyIterator());
+    }
+
+    private String findMappedByProperty(Collection collection, String ownerEntityName, List<String> columnNames, Iterator propertyIterator) {
         while (propertyIterator.hasNext()) {
             Property property = (Property) propertyIterator.next();
-            if (property.getValue() instanceof ToOne) {
+            if (property.getValue() instanceof Component) {
+                String name = findMappedByProperty(collection, ownerEntityName, columnNames, ((Component) property.getValue()).getPropertyIterator());
+                if (name != null) {
+                    return property.getName() + "." + name;
+                }
+            } else if (property.getValue() instanceof ToOne) {
                 ToOne toOne = (ToOne) property.getValue();
                 if (ownerEntityName.equals(toOne.getReferencedEntityName())
                         && matches(columnNames, collection.getKey().getColumnIterator())) {

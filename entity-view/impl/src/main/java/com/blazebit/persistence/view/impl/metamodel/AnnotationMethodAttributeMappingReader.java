@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.annotation.AnnotationUtils;
+import com.blazebit.persistence.view.AllowUpdatableEntityViews;
 import com.blazebit.persistence.view.BatchFetch;
 import com.blazebit.persistence.view.CollectionMapping;
 import com.blazebit.persistence.view.IdMapping;
@@ -100,6 +101,10 @@ public class AnnotationMethodAttributeMappingReader extends AbstractAnnotationAt
         UpdatableMapping updatableMapping = AnnotationUtils.findAnnotation(method, UpdatableMapping.class);
         if (updatableMapping != null) {
             attributeMapping.setUpdatable(updatableMapping.updatable(), updatableMapping.orphanRemoval(), updatableMapping.cascade(), updatableMapping.subtypes(), updatableMapping.persistSubtypes(), updatableMapping.updateSubtypes());
+        }
+
+        if (AnnotationUtils.findAnnotation(method, AllowUpdatableEntityViews.class) != null) {
+            attributeMapping.setDisallowOwnedUpdatableSubview(false);
         }
 
         MappingInverse inverseMapping = AnnotationUtils.findAnnotation(method, MappingInverse.class);

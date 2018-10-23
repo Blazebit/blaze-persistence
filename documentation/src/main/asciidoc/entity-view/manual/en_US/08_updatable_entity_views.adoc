@@ -601,7 +601,8 @@ Even if the `PersonView` had a `setName()` method, changes done to that attribut
 Having only an updatable relationship role is very common, because it is rarely necessary to do cascading updates.
 It is so common, that by default, the subview types used for _owned_ *ToOne relationships are not allowed to be updatable i.e. annotated with `@UpdatableEntityView` as that would break the idea of updatable views per use-case.
 
-An owned *ToOne relationship is a _link_ to an existing object which shouldn't normally be altered as part of the object owning the *ToOne relationship.
+An owned *ToOne relationship is a _link_ to an existing object which shouldn't normally be altered as part of the object owning the
+*ToOne relationship.
 To illustrate this, let's consider the entities `Cat` and `Person`. A `Cat` might have a `@ManyToOne` relationship called *owner* that refers to `Person`.
 When considering the use case of _editing a cat_, one would normally expect to be able to change attributes like the name or age, maybe even the owner _link_,
 but never any attributes of the _linked owner_. Changing attributes of linked objects is usually a separate use case which deserves a separate model.
@@ -611,7 +612,8 @@ so it is not necessary to reload the data to be able to initiate another use cas
 The important part is that the altering of *ToOne _linked objects_ is another use case and is by default not allowed to be done within an updatable entity view.
 
 An inverse OneToOne relationship is not _owned_ and thus not _linked_ which is why it is possible to have an updatable subview type for these relationships.
-As there might be models out there, that do not fit this requirement, it is possible to disable this strict check via link:{entity_view_doc}#updater_disallow_owned_updatable_subview[configuration property].
+As there might be models out there, that do not fit this requirement, it is possible to disable this strict check via link:{entity_view_jdoc}/persistence/view/AllowUpdatableEntityViews.html[@AllowUpdatableEntityViews]
+on a per-attribute level or globally via the link:{entity_view_doc}#updater_disallow_owned_updatable_subview[configuration property].
 
 Note that it is also possible to just make the entity view type `PersonView` updatable(annotate `@UpdatableEntityView`) without the setter `setOwner()`.
 That way, the relationship role wouldn't be allowed to change, but the changes to the underlying `Person` would be cascaded.
@@ -857,6 +859,796 @@ UPDATE Person p SET p.name = :name WHERE p.id = :personId
 ----
 
 Note that a future version might allow to treat correlated mappings as custom inverse mappings.
+
+==== Updatable mapping defaults
+
+The default mappings follow the concept of _what you see is what you get_. If the type of an attribute is a `@UpdatableEntityView`,
+changes done to that object will be flushed during an update. Unsupported configurations will fail during boot.
+
+Basic types are either simple value types like `Integer`, `String` or JPA managed types i.e. entities or embeddables.
+Unless an immutable user type was registered via the <<entity-view-basic-user-type-spi,BasicUserType SPI>>, a basic type is by default considered to be mutable.
+A JPA entity type has identity which makes updatability independent from update cascading. Types without identity are either both updatable and update cascaded or immutable.
+
+An attribute does *update cascading* if changes done to an instance reached through that attribute are flushed during update.
+An attribute does *persist cascading* if a new object reached through that attribute is persisted during update.
+
+The following tables should help illustrate the defaults and are also a good reference.
+
+[width="100%",options="header,footer",cols="3a,1d,1d,1d"]
+|====================
+|*Basic simple type*     |Relationship updatable   |Update cascaded   |Persist cascaded
+
+|[source,java]
+----
+@EntityView(Entity.class)
+interface View {
+    String getName();
+}
+----
+|no                   |no                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+interface View {
+    String getName();
+    void setName(String name);
+}
+----
+|no                   |no                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    String getName();
+    void setName(String name);
+}
+----
+|yes                   |no                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    java.util.Date getDate(); // Mutable
+}
+----
+|yes                   |no                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    @UpdatableMapping(updatable = false)
+    String getName();
+    void setName(String name);
+}
+----
+|no                   |no                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    @UpdatableMapping(updatable = false)
+    java.util.Date getDate(); // Mutable
+}
+----
+|no                   |no                       |no
+|====================
+
+Using a JPA embeddable type `Embeddable`
+
+[width="100%",options="header,footer",cols="3a,1d,1d,1d"]
+|====================
+| *Basic JPA embeddable type*     | Relationship updatable   | Update cascaded   | Persist cascaded
+
+|[source,java]
+----
+@EntityView(Entity.class)
+interface View {
+    Embeddable getEmbeddable();
+}
+----
+|no                   |no                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+interface View {
+    Embeddable getEmbeddable();
+    void setEmbeddable(Embeddable embeddable);
+}
+----
+|no                   |no                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    Embeddable getEmbeddable();
+}
+----
+|yes                   |yes                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    Embeddable getEmbeddable();
+    void setEmbeddable(Embeddable embeddable);
+}
+----
+|yes                   |yes                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    @UpdatableMapping(updatable = false)
+    Embeddable getEmbeddable();
+    void setEmbeddable(Embeddable embeddable);
+}
+----
+|no                   |no                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    @UpdatableMapping(updatable = false)
+    Embeddable getEmbeddable();
+}
+----
+|no                   |no                       |no
+|====================
+
+Using a JPA entity type `Entity2`
+
+[width="100%",options="header,footer",cols="3a,1d,1d,1d"]
+|====================
+| *Basic JPA entity type*     | Relationship updatable   | Update cascaded   | Persist cascaded
+
+|[source,java]
+----
+@EntityView(Entity.class)
+interface View {
+    Entity2 getEntity2();
+}
+----
+|no                   |no                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+interface View {
+    Entity2 getEntity2();
+    void setEntity2(Entity2 entity2);
+}
+----
+|no                   |no                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    Entity2 getEntity2();
+}
+----
+|no                   |yes                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    Entity2 getEntity2();
+    void setEntity2(Entity2 entity2);
+}
+----
+|yes                   |yes                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    @UpdatableMapping(updatable = false)
+    Entity2 getEntity2();
+    void setEntity2(Entity2 entity2);
+}
+----
+|no                   |no                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    @UpdatableMapping(updatable = false)
+    Entity2 getEntity2();
+}
+----
+|no                   |no                       |no
+|====================
+
+Using a read-only entity view type `View2` that looks like
+
+[source,java]
+----
+@EntityView(Entity2.class)
+interface View2 {
+    @IdMapping
+    Integer getId();
+    String getName();
+    void setName(String name);
+}
+----
+
+results in the following default behavior
+
+[width="100%",options="header,footer",cols="3a,1d,1d,1d"]
+|====================
+| *View type*     | Relationship updatable   | Update cascaded   | Persist cascaded
+
+|[source,java]
+----
+@EntityView(Entity.class)
+interface View {
+    View2 getView2();
+}
+----
+|no                   |no                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+interface View {
+    View2 getView2();
+    void setView2(View2 view2);
+}
+----
+|no                   |no                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    View2 getView2();
+}
+----
+|no                   |no                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    View2 getView2();
+    void setView2(View2 view2);
+}
+----
+|yes                   |no footnote:[If a subtype of `View2` that is an updatable view type exists and is set, updates will cascade]                      |no footnote:[If a subtype of `View2` that is a creatable view type exists and is set, the object will be persisted]
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    @UpdatableMapping(updatable = false)
+    View2 getView2();
+    void setView2(View2 view2);
+}
+----
+|no                   |no                      |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    @UpdatableMapping(updatable = false)
+    View2 getView2();
+}
+----
+|no                   |no                       |no
+|====================
+
+A type that isn't allowed for whatever reason will not be allowed to be set on the attribute.
+
+Using an updatable entity view type `View2` that looks like
+
+[source,java]
+----
+@EntityView(Entity2.class)
+@UpdatableEntityView
+interface View2 {
+    @IdMapping
+    Integer getId();
+    String getName();
+    void setName(String name);
+}
+----
+
+[width="100%",options="header,footer",cols="3a,1d,1d,1d"]
+|====================
+| *View type*     | Relationship updatable   | Update cascaded   | Persist cascaded
+
+|[source,java]
+----
+@EntityView(Entity.class)
+interface View {
+    View2 getView2();
+}
+----
+|no                   |no                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+interface View {
+    View2 getView2();
+    void setView2(View2 view2);
+}
+----
+|no                   |no                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    View2 getView2();
+}
+----
+|no                   |yes                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    View2 getView2();
+    void setView2(View2 view2);
+}
+----
+|yes                   |yes                       |no footnote:[If a subtype of `View2` that is a creatable view type exists and is set, the object will be persisted]
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    @UpdatableMapping(updatable = false)
+    View2 getView2();
+    void setView2(View2 view2);
+}
+----
+|no                   |yes                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    @UpdatableMapping(updatable = false)
+    View2 getView2();
+}
+----
+|no                   |yes                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    @UpdatableMapping(cascade = {})
+    View2 getView2();
+}
+----
+|no                   |no                       |no
+|====================
+
+==== Updatable collection mapping defaults
+
+Collections are different, as they are mutable by default. Since it is rarely necessary to make the relationship updatable,
+collections aren't updatable by default just because they are mutable by design. In order for a collection relationship to be considered updatable,
+it must have a setter, be annotated with `@UpdatableMapping(updatable = true)` or have an element type that is `@CreatableEntityView`.
+
+[width="100%",options="header,footer",cols="3a,1d,1d,1d"]
+|====================
+| *Basic simple type*     | Relationship updatable   | Update cascaded   | Persist cascaded
+
+|[source,java]
+----
+@EntityView(Entity.class)
+interface View {
+    Set<String> getNames();
+}
+----
+|no                   |no                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+interface View {
+    Set<String> getNames();
+    void setNames(Set<String> names);
+}
+----
+|no                   |no                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    Set<String> getNames();
+    void setNames(Set<String> names);
+}
+----
+|yes                   |no                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    Set<java.util.Date> getDates(); // Mutable
+}
+----
+|yes                   |no                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    @UpdatableMapping(updatable = false)
+    Set<String> getNames();
+    void setNames(Set<String> names);
+}
+----
+|no                   |no                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    @UpdatableMapping(updatable = false)
+    Set<java.util.Date> getDates(); // Mutable
+}
+----
+|no                   |no                       |no
+|====================
+
+Using a JPA embeddable type `Embeddable`
+
+[width="100%",options="header,footer",cols="3a,1d,1d,1d"]
+|====================
+| *Basic JPA embeddable type*     | Relationship updatable   | Update cascaded   | Persist cascaded
+
+|[source,java]
+----
+@EntityView(Entity.class)
+interface View {
+    Set<Embeddable> getEmbeddables();
+}
+----
+|no                   |no                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+interface View {
+    Set<Embeddable> getEmbeddables();
+    void setEmbeddable(Set<Embeddable> set);
+}
+----
+|no                   |no                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    Set<Embeddable> getEmbeddables();
+}
+----
+|yes                   |yes                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    Set<Embeddable> getEmbeddables();
+    void setEmbeddable(Set<Embeddable> set);
+}
+----
+|yes                   |yes                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    @UpdatableMapping(updatable = false)
+    Set<Embeddable> getEmbeddables();
+    void setEmbeddable(Set<Embeddable> set);
+}
+----
+|no                   |no                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    @UpdatableMapping(updatable = false)
+    Set<Embeddable> getEmbeddables();
+}
+----
+|no                   |no                       |no
+|====================
+
+Using a JPA entity type `Entity2`
+
+[width="100%",options="header,footer",cols="3a,1d,1d,1d"]
+|====================
+| *Basic JPA entity type*     | Relationship updatable   | Update cascaded   | Persist cascaded
+
+|[source,java]
+----
+@EntityView(Entity.class)
+interface View {
+    Set<Entity2> getEntity2();
+}
+----
+|no                   |no                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+interface View {
+    Set<Entity2> getEntity2();
+    void setEntity2(Set<Entity2> entity2);
+}
+----
+|no                   |no                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    Set<Entity2> getEntity2();
+}
+----
+|no                   |yes                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    Set<Entity2> getEntity2();
+    void setEntity2(Set<Entity2> entity2);
+}
+----
+|yes                   |yes                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    @UpdatableMapping(updatable = false)
+    Set<Entity2> getEntity2();
+    void setEntity2(Set<Entity2> entity2);
+}
+----
+|no                   |yes                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    @UpdatableMapping(updatable = false)
+    Set<Entity2> getEntity2();
+}
+----
+|no                   |no                       |no
+|====================
+
+Using a read-only entity view type `View2` that looks like
+
+[source,java]
+----
+@EntityView(Entity2.class)
+interface View2 {
+    @IdMapping
+    Integer getId();
+    String getName();
+    void setName(String name);
+}
+----
+
+[width="100%",options="header,footer",cols="3a,1d,1d,1d"]
+|====================
+| *View type*     | Relationship updatable   | Update cascaded   | Persist cascaded
+
+|[source,java]
+----
+@EntityView(Entity.class)
+interface View {
+    Set<View2> getView2();
+}
+----
+|no                   |no                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+interface View {
+    Set<View2> getView2();
+    void setView2(Set<View2> view2);
+}
+----
+|no                   |no                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    Set<View2> getView2();
+}
+----
+|no                   |no                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    Set<View2> getView2();
+    void setView2(Set<View2> view2);
+}
+----
+|yes                   |no footnote:[If a subtype of `View2` that is an updatable view type exists and is added, updates will cascade]                      |no footnote:[If a subtype of `View2` that is a creatable view type exists and is added, the object will be persisted]
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    @UpdatableMapping(updatable = false)
+    Set<View2> getView2();
+    void setView2(Set<View2> view2);
+}
+----
+|no                   |no                      |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    @UpdatableMapping(updatable = false)
+    Set<View2> getView2();
+}
+----
+|no                   |no                       |no
+|====================
+
+A type that isn't allowed for whatever reason will not be allowed to be added on the attribute.
+
+Using an updatable entity view type `View2` that looks like
+
+[source,java]
+----
+@EntityView(Entity2.class)
+@UpdatableEntityView
+interface View2 {
+    @IdMapping
+    Integer getId();
+    String getName();
+    void setName(String name);
+}
+----
+
+[width="100%",options="header,footer",cols="3a,1d,1d,1d"]
+|====================
+| *View type*     | Relationship updatable   | Update cascaded   | Persist cascaded
+
+|[source,java]
+----
+@EntityView(Entity.class)
+interface View {
+    Set<View2> getView2();
+}
+----
+|no                   |no                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+interface View {
+    Set<View2> getView2();
+    void setView2(Set<View2> view2);
+}
+----
+|no                   |no                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    Set<View2> getView2();
+}
+----
+|no                   |yes                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    Set<View2> getView2();
+    void setView2(Set<View2> view2);
+}
+----
+|yes                   |yes                       |no footnote:[If a subtype of `View2` that is a creatable view type exists and is added, the object will be persisted]
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    @UpdatableMapping(updatable = false)
+    Set<View2> getView2();
+    void setView2(Set<View2> view2);
+}
+----
+|no                   |yes                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    @UpdatableMapping(updatable = false)
+    Set<View2> getView2();
+}
+----
+|no                   |yes                       |no
+
+|[source,java]
+----
+@EntityView(Entity.class)
+@UpdatableEntityView
+interface View {
+    @UpdatableMapping(cascade = {})
+    Set<View2> getView2();
+}
+----
+|no                   |no                       |no
+|====================
 
 === Locking support
 

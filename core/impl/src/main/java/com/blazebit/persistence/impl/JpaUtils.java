@@ -42,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -110,7 +111,7 @@ public final class JpaUtils {
                         PathExpression baseExpression = embeddedPropertyNames.size() > 1 ?
                                 ((PathExpression) selectExpression).clone(false) : ((PathExpression) selectExpression);
 
-                        joinManager.implicitJoin(baseExpression, true, null, ClauseType.SELECT, null, false, false, false, false);
+                        joinManager.implicitJoin(baseExpression, true, null, ClauseType.SELECT, new HashSet<String>(), false, false, false, false);
 
                         if (attributeEntry.getElementClass() != baseExpression.getPathReference().getType().getJavaType()) {
                             throw new IllegalStateException("An association should be bound to its association type and not its identifier type");
@@ -242,19 +243,21 @@ public final class JpaUtils {
             }
         }
         // Remove the embeddable itself since it was split up
-        embeddedPropertyNames.remove(attributeName);
-        // Hibernate has a bug in the handling of the deep property named "id" when being part of an element collection alias, so we cut it off
-        if (needsElementCollectionIdCutoff && attributeEntries.get(attributeName).getAttribute().getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION) {
-            Iterator<String> iterator = embeddedPropertyNames.iterator();
-            List<String> addProperties = new ArrayList<>();
-            while (iterator.hasNext()) {
-                String property = iterator.next();
-                if (property.endsWith(".id")) {
-                    iterator.remove();
-                    addProperties.add(property.substring(0, property.length() - ".id".length()));
+        if (attributeName != null) {
+            embeddedPropertyNames.remove(attributeName);
+            // Hibernate has a bug in the handling of the deep property named "id" when being part of an element collection alias, so we cut it off
+            if (needsElementCollectionIdCutoff && attributeEntries.get(attributeName).getAttribute().getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION) {
+                Iterator<String> iterator = embeddedPropertyNames.iterator();
+                List<String> addProperties = new ArrayList<>();
+                while (iterator.hasNext()) {
+                    String property = iterator.next();
+                    if (property.endsWith(".id")) {
+                        iterator.remove();
+                        addProperties.add(property.substring(0, property.length() - ".id".length()));
+                    }
                 }
+                embeddedPropertyNames.addAll(addProperties);
             }
-            embeddedPropertyNames.addAll(addProperties);
         }
         return embeddedPropertyNames;
     }

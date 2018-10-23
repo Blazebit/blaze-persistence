@@ -500,8 +500,43 @@ public class DataNucleusJpaProvider implements JpaProvider {
     }
 
     @Override
-    public List<String> getIdentifierOrUniqueKeyEmbeddedPropertyNames(EntityType<?> owner, String elementCollectionPath, String attributeName) {
-        return Collections.emptyList();
+    public List<String> getIdentifierOrUniqueKeyEmbeddedPropertyNames(EntityType<?> ownerType, String elementCollectionPath, String attributeName) {
+        ManagedType<?> t = ownerType;
+        Attribute<?, ?> attr = null;
+        String[] parts = attributeName.split("\\.");
+        for (int i = 0; i < parts.length; i++) {
+            attr = t.getAttribute(parts[i]);
+            if (attr instanceof SingularAttribute<?, ?>) {
+                SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) attr;
+                if (singularAttribute.getType().getPersistenceType() != Type.PersistenceType.BASIC) {
+                    t = (ManagedType<?>) singularAttribute.getType();
+                } else if (i + 1 != parts.length) {
+                    throw new IllegalArgumentException("Illegal attribute name for type [" + ownerType.getJavaType().getName() + "]: " + attributeName);
+                }
+            } else {
+                PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) attr;
+                if (pluralAttribute.getElementType().getPersistenceType() != Type.PersistenceType.BASIC) {
+                    t = (ManagedType<?>) pluralAttribute.getElementType();
+                } else if (i + 1 != parts.length) {
+                    throw new IllegalArgumentException("Illegal attribute name for type [" + ownerType.getJavaType().getName() + "]: " + attributeName);
+                }
+            }
+        }
+
+        EntityType<?> entityType = (EntityType<?>) t;
+
+        if (entityType.hasSingleIdAttribute()) {
+            return Collections.singletonList(entityType.getId(entityType.getIdType().getJavaType()).getName());
+        } else {
+            Set<SingularAttribute<?, ?>> attributes = (Set<SingularAttribute<?, ?>>) (Set) entityType.getIdClassAttributes();
+            List<String> attributeNames = new ArrayList<>(attributes.size());
+
+            for (Attribute<?, ?> attribute : attributes) {
+                attributeNames.add(attribute.getName());
+            }
+
+            return attributeNames;
+        }
     }
 
     @Override

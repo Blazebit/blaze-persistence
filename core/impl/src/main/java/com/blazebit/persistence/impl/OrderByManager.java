@@ -88,7 +88,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
         return false;
     }
 
-    void splitEmbeddables() {
+    void splitEmbeddables(JoinVisitor joinVisitor) {
         List<OrderByInfo> infos = orderByInfos;
         int size = infos.size();
         for (int i = 0; i < size; i++) {
@@ -106,6 +106,18 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
 
             List<Expression> splittedOffExpressions = embeddableSplittingVisitor.splitOff(expr);
             if (splittedOffExpressions != null && !splittedOffExpressions.isEmpty()) {
+                if (!jpaProvider.supportsSingleValuedAssociationIdExpressions() && joinVisitor != null) {
+                    ClauseType fromClause = joinVisitor.getFromClause();
+                    try {
+                        joinVisitor.setFromClause(ClauseType.ORDER_BY);
+                        for (int j = 0; j < splittedOffExpressions.size(); j++) {
+                            splittedOffExpressions.get(j).accept(joinVisitor);
+                        }
+                    } finally {
+                        joinVisitor.setFromClause(fromClause);
+                    }
+                }
+
                 infos.set(i, new OrderByInfo(splittedOffExpressions.get(0), orderByInfo.ascending, orderByInfo.nullFirst));
                 List<OrderByInfo> newOrderByInfos = new ArrayList<>(splittedOffExpressions.size() - 1);
                 for (int j = 1; j < splittedOffExpressions.size(); j++) {
@@ -117,7 +129,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
         }
     }
 
-    List<OrderByExpression> getOrderByExpressions(boolean hasCollections, CompoundPredicate rootPredicate, Collection<ResolvedExpression> groupByClauses) {
+    List<OrderByExpression> getOrderByExpressions(boolean hasCollections, CompoundPredicate rootPredicate, Collection<ResolvedExpression> groupByClauses, JoinVisitor joinVisitor) {
         if (orderByInfos.isEmpty()) {
             return Collections.emptyList();
         }
@@ -194,8 +206,15 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
             if (splitOffExpressions == null || splitOffExpressions.isEmpty()) {
                 realExpressions.add(new OrderByExpression(orderByInfo.ascending, orderByInfo.nullFirst, expr, nullable, unique, resUnique));
             } else {
-                for (Expression splitOffExpression : splitOffExpressions) {
-                    realExpressions.add(new OrderByExpression(orderByInfo.ascending, orderByInfo.nullFirst, splitOffExpression, nullable, unique, resUnique));
+                if (jpaProvider.supportsSingleValuedAssociationIdExpressions() || joinVisitor == null) {
+                    for (Expression splitOffExpression : splitOffExpressions) {
+                        realExpressions.add(new OrderByExpression(orderByInfo.ascending, orderByInfo.nullFirst, splitOffExpression, nullable, unique, resUnique));
+                    }
+                } else {
+                    for (Expression splitOffExpression : splitOffExpressions) {
+                        splitOffExpression.accept(joinVisitor);
+                        realExpressions.add(new OrderByExpression(orderByInfo.ascending, orderByInfo.nullFirst, splitOffExpression, nullable, unique, resUnique));
+                    }
                 }
             }
         }
@@ -308,7 +327,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
      * 
      * @return
      */
-    void buildGroupByClauses(GroupByManager groupByManager, boolean hasGroupBy) {
+    void buildGroupByClauses(GroupByManager groupByManager, boolean hasGroupBy, JoinVisitor joinVisitor) {
         if (orderByInfos.isEmpty()) {
             return;
         }
@@ -340,13 +359,13 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
                     sb.setLength(0);
                     queryGenerator.generate(expression);
                     if (jpaProvider.supportsNullPrecedenceExpression()) {
-                        groupByManager.collect(new ResolvedExpression(sb.toString(), expression), ClauseType.ORDER_BY, hasGroupBy);
+                        groupByManager.collect(new ResolvedExpression(sb.toString(), expression), ClauseType.ORDER_BY, hasGroupBy, joinVisitor);
                     } else {
                         String expressionString = sb.toString();
                         sb.setLength(0);
                         jpaProvider.renderNullPrecedence(sb, expressionString, expressionString, null, null);
 
-                        groupByManager.collect(new ResolvedExpression(sb.toString(), expression), ClauseType.ORDER_BY, hasGroupBy);
+                        groupByManager.collect(new ResolvedExpression(sb.toString(), expression), ClauseType.ORDER_BY, hasGroupBy, joinVisitor);
                     }
                 }
                 queryGenerator.setClauseType(null);

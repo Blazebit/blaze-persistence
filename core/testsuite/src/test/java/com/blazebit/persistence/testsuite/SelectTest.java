@@ -457,9 +457,18 @@ public class SelectTest extends AbstractCoreTest {
                 .orderByDesc("id");
 
         String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP END, owner_1 FROM Document d "
-                + "JOIN d.owner owner_1 "
-                + "GROUP BY " + groupBy("d.creationDate", "owner_1.age", "owner_1.defaultLanguage", "owner_1.friend", "owner_1.id", "owner_1.name", "owner_1.nameObject.intIdEntity.id", "owner_1.nameObject.primaryName", "owner_1.nameObject.secondaryName", "owner_1.partnerDocument", renderNullPrecedenceGroupBy("d.id"))
-                + " ORDER BY d.id DESC";
+                + "JOIN d.owner owner_1 ";
+        if (!jpaProvider.supportsSingleValuedAssociationIdExpressions()) {
+            objectQuery += "LEFT JOIN owner_1.nameObject.intIdEntity intIdEntity_1 ";
+        }
+
+        if (jpaProvider.supportsSingleValuedAssociationIdExpressions()) {
+            objectQuery += "GROUP BY " + groupBy("d.creationDate", "owner_1.age", "owner_1.defaultLanguage", "owner_1.friend", "owner_1.id", "owner_1.name", "owner_1.nameObject.intIdEntity.id", "owner_1.nameObject.primaryName", "owner_1.nameObject.secondaryName", "owner_1.partnerDocument", renderNullPrecedenceGroupBy("d.id"));
+        } else {
+            objectQuery += "GROUP BY " + groupBy("d.creationDate", "owner_1.age", "owner_1.defaultLanguage", "owner_1.friend", "owner_1.id", "owner_1.name", "intIdEntity_1.id", "owner_1.nameObject.primaryName", "owner_1.nameObject.secondaryName", "owner_1.partnerDocument", renderNullPrecedenceGroupBy("d.id"));
+        }
+
+        objectQuery += " ORDER BY d.id DESC";
 
         assertEquals(objectQuery, cb.getQueryString());
 
@@ -476,9 +485,16 @@ public class SelectTest extends AbstractCoreTest {
 
         String countQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d";
         String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP END, owner_1 FROM Document d "
-                + "JOIN d.owner owner_1 "
-                + "GROUP BY " + groupBy("d.creationDate", "owner_1.age", "owner_1.defaultLanguage", "owner_1.friend", "owner_1.id", "owner_1.name", "owner_1.nameObject.intIdEntity.id", "owner_1.nameObject.primaryName", "owner_1.nameObject.secondaryName", "owner_1.partnerDocument", renderNullPrecedenceGroupBy("d.id"))
-                + " ORDER BY d.id DESC";
+                + "JOIN d.owner owner_1 ";
+        if (!jpaProvider.supportsSingleValuedAssociationIdExpressions()) {
+            objectQuery += "LEFT JOIN owner_1.nameObject.intIdEntity intIdEntity_1 ";
+        }
+        if (jpaProvider.supportsSingleValuedAssociationIdExpressions()) {
+            objectQuery += "GROUP BY " + groupBy("d.creationDate", "owner_1.age", "owner_1.defaultLanguage", "owner_1.friend", "owner_1.id", "owner_1.name", "owner_1.nameObject.intIdEntity.id", "owner_1.nameObject.primaryName", "owner_1.nameObject.secondaryName", "owner_1.partnerDocument", renderNullPrecedenceGroupBy("d.id"));
+        } else {
+            objectQuery += "GROUP BY " + groupBy("d.creationDate", "owner_1.age", "owner_1.defaultLanguage", "owner_1.friend", "owner_1.id", "owner_1.name", "intIdEntity_1.id", "owner_1.nameObject.primaryName", "owner_1.nameObject.secondaryName", "owner_1.partnerDocument", renderNullPrecedenceGroupBy("d.id"));
+        }
+        objectQuery += " ORDER BY d.id DESC";
 
         assertEquals(countQuery, cb.getPageCountQueryString());
         assertEquals(objectQuery, cb.getQueryString());
@@ -528,6 +544,17 @@ public class SelectTest extends AbstractCoreTest {
                 .from(Document.class, "d")
                 .select("owner", "owner");
         assertEquals("SELECT owner_1 AS owner FROM Document d JOIN d.owner owner_1", cb.getQueryString());
+        cb.getResultList();
+    }
+
+    // from issue #484
+    @Test
+    public void testSelectAliasInSelectExpression3() {
+        CriteriaBuilder<Long> cb = cbf.create(em, Long.class)
+                .from(Document.class, "d")
+                .select("SUM(age)", "age")
+                .select("age + 1", "age2");
+        assertEquals("SELECT SUM(d.age) AS age, SUM(d.age) + 1 AS age2 FROM Document d", cb.getQueryString());
         cb.getResultList();
     }
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.filter;
+package com.blazebit.persistence.view.testsuite.filter.basic;
 
 import org.junit.Test;
 import org.mockito.Mockito;

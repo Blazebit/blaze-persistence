@@ -63,6 +63,7 @@ import javax.persistence.metamodel.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -82,6 +83,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     private Set<JoinNode> renderedJoinNodes;
     private ClauseType clauseType;
     private Map<JoinNode, Boolean> treatedJoinNodesForConstraints;
+    private final Set<String> currentlyResolvingAliases;
     private final AliasManager aliasManager;
     private final ParameterManager parameterManager;
     private final AssociationParameterTransformerFactory parameterTransformerFactory;
@@ -95,6 +97,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         this.parameterTransformerFactory = parameterTransformerFactory;
         this.jpaProvider = jpaProvider;
         this.registeredFunctions = registeredFunctions;
+        this.currentlyResolvingAliases = new HashSet<>();
         this.registeredFunctionsNames = new HashMap<>(registeredFunctions.size());
         for (Map.Entry<String, JpqlFunction> registeredFunctionEntry : registeredFunctions.entrySet()) {
             registeredFunctionsNames.put(registeredFunctionEntry.getKey().toLowerCase(), registeredFunctionEntry.getKey());
@@ -359,24 +362,33 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
     @Override
     public void visit(PathExpression expression) {
-        if (resolveSelectAliases) {
-            // if path expression should not be replaced by select aliases we
-            // check for select aliases that have to be replaced with the corresponding
-            // path expressions
-            if (expression.getBaseNode() == null) {
-                AliasInfo aliasInfo;
-                if ((aliasInfo = aliasManager.getAliasInfo(expression.toString())) != null) {
+        if (resolveSelectAliases && expression.getExpressions().size() == 1) {
+            AliasInfo aliasInfo;
+            String potentialAlias = expression.getExpressions().get(0).toString();
+            try {
+                if (currentlyResolvingAliases.add(potentialAlias) && (aliasInfo = aliasManager.getAliasInfo(potentialAlias)) != null) {
                     if (aliasInfo instanceof SelectInfo) {
                         SelectInfo selectAliasInfo = (SelectInfo) aliasInfo;
                         if (selectAliasInfo.getExpression() instanceof PathExpression) {
-                            PathExpression clonedSelectExpression = (PathExpression) selectAliasInfo.getExpression().clone(false);
-                            clonedSelectExpression.setUsedInCollectionFunction(expression.isUsedInCollectionFunction());
-                            clonedSelectExpression.setPathReference(((PathExpression) selectAliasInfo.getExpression()).getPathReference());
-                            clonedSelectExpression.accept(this);
-                            return;
+                            PathExpression aliasedExpression = (PathExpression) selectAliasInfo.getExpression();
+                            boolean collectionKeyPath = aliasedExpression.isCollectionKeyPath();
+                            boolean usedInCollectionFunction = aliasedExpression.isUsedInCollectionFunction();
+                            aliasedExpression.setCollectionKeyPath(expression.isCollectionKeyPath());
+                            aliasedExpression.setUsedInCollectionFunction(expression.isUsedInCollectionFunction());
+                            try {
+                                selectAliasInfo.getExpression().accept(this);
+                            } finally {
+                                aliasedExpression.setCollectionKeyPath(collectionKeyPath);
+                                aliasedExpression.setUsedInCollectionFunction(usedInCollectionFunction);
+                            }
+                        } else {
+                            selectAliasInfo.getExpression().accept(this);
                         }
+                        return;
                     }
                 }
+            } finally {
+                currentlyResolvingAliases.remove(potentialAlias);
             }
         }
         JoinNode baseNode;
@@ -548,6 +560,14 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
     public void setAliasPrefix(String aliasPrefix) {
         this.aliasPrefix = aliasPrefix;
+    }
+
+    public void addAlias(String alias) {
+        currentlyResolvingAliases.add(alias);
+    }
+
+    public void removeAlias(String alias) {
+        currentlyResolvingAliases.remove(alias);
     }
 
     public void setRenderedJoinNodes(Set<JoinNode> renderedJoinNodes) {

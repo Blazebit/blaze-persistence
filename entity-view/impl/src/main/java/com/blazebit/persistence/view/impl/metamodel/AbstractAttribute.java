@@ -317,7 +317,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     private javax.persistence.metamodel.Attribute<?, ?> getUpdateMappableAttribute(String mapping, MetamodelBuildingContext context) {
         try {
-            UpdatableExpressionVisitor visitor = new UpdatableExpressionVisitor(context.getEntityMetamodel(), declaringType.getEntityClass());
+            UpdatableExpressionVisitor visitor = new UpdatableExpressionVisitor(context.getEntityMetamodel(), declaringType.getEntityClass(), true);
             context.getExpressionFactory().createPathExpression(mapping).accept(visitor);
             Iterator<javax.persistence.metamodel.Attribute<?, ?>> iterator = visitor.getPossibleTargets().keySet().iterator();
             if (iterator.hasNext()) {
@@ -758,7 +758,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             }
 
             if (isMutable() && (declaringType.isUpdatable() || declaringType.isCreatable())) {
-                UpdatableExpressionVisitor visitor = new UpdatableExpressionVisitor(context.getEntityMetamodel(), managedType.getJavaType());
+                UpdatableExpressionVisitor visitor = new UpdatableExpressionVisitor(context.getEntityMetamodel(), managedType.getJavaType(), isUpdatable());
                 try {
                     // NOTE: Not supporting "this" here because it doesn't make sense to have an updatable mapping that refers to this
                     // The only thing that might be interesting is supporting "this" when we support cascading as properties could be nested

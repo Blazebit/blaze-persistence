@@ -250,10 +250,17 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 // Collect all mappers for all constraints
                 List<Map.Entry<String, TupleElementMapperBuilder>> builders = new ArrayList<>(constrainedAttribute.getSelectionConstrainedAttributes().size());
                 for (Map.Entry<String, AbstractMethodAttribute<? super T, ?>> entry : constrainedAttribute.getSelectionConstrainedAttributes()) {
-                    String mapping = mainMapperBuilder.getMapping(CASE_WHEN_PREFIX + entry.getKey() + CASE_WHEN_SUFFIX);
-                    String constraint = mapping.substring(CASE_WHEN_PREFIX.length(), mapping.length() - CASE_WHEN_SUFFIX.length());
                     AbstractMethodAttribute<? super T, ?> attribute = entry.getValue();
-                    EntityType<?> treatType = getTreatType(metamodel, managedViewType, attribute.getDeclaringType());
+                    String constraint;
+                    EntityType<?> treatType;
+                    if (entry.getKey() == null) {
+                        constraint = null;
+                        treatType = null;
+                    } else {
+                        String mapping = mainMapperBuilder.getMapping(CASE_WHEN_PREFIX + entry.getKey() + CASE_WHEN_SUFFIX);
+                        constraint = mapping.substring(CASE_WHEN_PREFIX.length(), mapping.length() - CASE_WHEN_SUFFIX.length());
+                        treatType = getTreatType(metamodel, managedViewType, attribute.getDeclaringType());
+                    }
                     TupleElementMapperBuilder mapperBuilder = new TupleElementMapperBuilder(mappingList.size(), constraint, aliasPrefix, mappingPrefix, idPrefix, treatType, metamodel, ef);
                     applyMapping(attribute, attributePath, mapperBuilder, featuresFound, tupleIdDescriptor, embeddingViewJpqlMacro);
                     builders.add(new AbstractMap.SimpleEntry<>(constraint, mapperBuilder));

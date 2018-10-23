@@ -29,7 +29,7 @@ import java.util.Collections;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public abstract class AbstractCorrelationJoinTupleElementMapper implements TupleElementMapper {
+public abstract class AbstractCorrelationJoinTupleElementMapper implements AliasedTupleElementMapper {
 
     protected final String correlationBasis;
     protected final String correlationResult;
@@ -58,4 +58,8 @@ public abstract class AbstractCorrelationJoinTupleElementMapper implements Tuple
         }
     }
 
+    @Override
+    public String getAlias() {
+        return alias;
+    }
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.filter.model;
+package com.blazebit.persistence.view.testsuite.filter.basic.model;
 
 import com.blazebit.persistence.WhereBuilder;
 import com.blazebit.persistence.testsuite.entity.PrimitiveDocument;

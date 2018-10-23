@@ -84,7 +84,7 @@ public class Hibernate5Access implements HibernateAccess {
     public SessionImplementor wrapSession(SessionImplementor session, DbmsDialect dbmsDialect, String[][] columns, int[] returningSqlTypes, HibernateReturningResult<?> returningResult) {
         JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
         
-        Object jdbcCoordinatorProxy = Proxy.newProxyInstance(jdbcCoordinator.getClass().getClassLoader(), new Class[]{ JdbcCoordinator.class }, new JdbcCoordinatorInvocationHandler(jdbcCoordinator, session.getFactory(), dbmsDialect, columns, returningSqlTypes, returningResult));
+        Object jdbcCoordinatorProxy = Proxy.newProxyInstance(jdbcCoordinator.getClass().getClassLoader(), new Class[]{ JdbcCoordinator.class }, new JdbcCoordinatorInvocationHandler(jdbcCoordinator, new StatementPreparerImpl(jdbcCoordinator, session.getFactory(), dbmsDialect, columns, returningSqlTypes, returningResult)));
         Object sessionProxy = Proxy.newProxyInstance(session.getClass().getClassLoader(), new Class[]{ SessionImplementor.class, EventSource.class }, new Hibernate5SessionInvocationHandler(session, jdbcCoordinatorProxy));
         return (SessionImplementor) sessionProxy;
     }

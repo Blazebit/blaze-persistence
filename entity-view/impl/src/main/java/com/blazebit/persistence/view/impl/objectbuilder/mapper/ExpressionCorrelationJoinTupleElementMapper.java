@@ -32,7 +32,7 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class ExpressionCorrelationJoinTupleElementMapper extends AbstractCorrelationJoinTupleElementMapper implements TupleElementMapper {
+public class ExpressionCorrelationJoinTupleElementMapper extends AbstractCorrelationJoinTupleElementMapper {
 
     private final CorrelationProvider provider;
 

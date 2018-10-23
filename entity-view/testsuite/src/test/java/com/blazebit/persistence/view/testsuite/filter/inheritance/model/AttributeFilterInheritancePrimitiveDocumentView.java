@@ -14,31 +14,26 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.filter.model;
+package com.blazebit.persistence.view.testsuite.filter.inheritance.model;
 
 import com.blazebit.persistence.testsuite.entity.PrimitiveDocument;
 import com.blazebit.persistence.view.AttributeFilter;
 import com.blazebit.persistence.view.AttributeFilters;
 import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.EntityViewInheritance;
 import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.filter.ContainsFilter;
 import com.blazebit.persistence.view.filter.ContainsIgnoreCaseFilter;
-import com.blazebit.persistence.view.testsuite.basic.model.PrimitiveDocumentView;
+import com.blazebit.persistence.view.filter.EqualFilter;
 
 /**
- * @author Moritz Becker
- * @since 1.2.0
+ * @author Christian Beikov
+ * @since 1.3.0
  */
 @EntityView(PrimitiveDocument.class)
-public interface MultipleDefaultAttributeFiltersView {
+@EntityViewInheritance
+public interface AttributeFilterInheritancePrimitiveDocumentView {
 
     @IdMapping
     Long getId();
-
-    @AttributeFilters({
-        @AttributeFilter(ContainsIgnoreCaseFilter.class),
-        @AttributeFilter(ContainsFilter.class)
-    })
-    String getName();
-
 }

@@ -37,16 +37,23 @@ public class SplittingVisitor extends LazyCopyingResultVisitorAdapter {
 
     private final EntityMetamodel metamodel;
     private final JpaProvider jpaProvider;
+    private final AliasManager aliasManager;
     private PathExpression expressionToSplit;
     private String subAttribute;
 
-    public SplittingVisitor(EntityMetamodel metamodel, JpaProvider jpaProvider) {
+    public SplittingVisitor(EntityMetamodel metamodel, JpaProvider jpaProvider, AliasManager aliasManager) {
         this.metamodel = metamodel;
         this.jpaProvider = jpaProvider;
+        this.aliasManager = aliasManager;
     }
 
     @Override
     public Expression visit(PathExpression expression) {
+        if (expression.getBaseNode() == null) {
+            Expression aliasedExpression = ((SelectInfo) aliasManager.getAliasInfo(expression.toString())).getExpression();
+            Expression newExpression = aliasedExpression.accept(this);
+            return aliasedExpression == newExpression ? expression : newExpression;
+        }
         if (expression == expressionToSplit) {
             List<PathElementExpression> expressions = new ArrayList<>(expression.getExpressions());
             for (String subAttributePart : subAttribute.split("\\.")) {

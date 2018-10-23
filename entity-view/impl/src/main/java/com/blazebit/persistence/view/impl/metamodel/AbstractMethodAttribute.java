@@ -221,7 +221,7 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
                         return null;
                 }
             }
-            UpdatableExpressionVisitor visitor = new UpdatableExpressionVisitor(context.getEntityMetamodel(), getDeclaringType().getEntityClass());
+            UpdatableExpressionVisitor visitor = new UpdatableExpressionVisitor(context.getEntityMetamodel(), getDeclaringType().getEntityClass(), isUpdatable());
             try {
                 context.getExpressionFactory().createPathExpression(mapping).accept(visitor);
                 Map<Attribute<?, ?>, javax.persistence.metamodel.Type<?>> possibleTargets = visitor.getPossibleTargets();

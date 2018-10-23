@@ -65,13 +65,16 @@ import com.blazebit.persistence.parser.predicate.MemberOfPredicate;
  */
 public class UpdatableExpressionVisitor extends PathTargetResolvingExpressionVisitor {
 
-    public UpdatableExpressionVisitor(EntityMetamodel metamodel, Class<?> startClass) {
+    private final boolean updatable;
+
+    public UpdatableExpressionVisitor(EntityMetamodel metamodel, Class<?> startClass, boolean updatable) {
         super(metamodel, metamodel.type(startClass), null);
+        this.updatable = updatable;
     }
     
     @Override
     public void visit(PropertyExpression expression) {
-        if (currentPosition.valueClass != null || currentPosition.keyClass != null) {
+        if (updatable && (currentPosition.valueClass != null || currentPosition.keyClass != null)) {
             throw new IllegalArgumentException("Invalid dereferencing of collection property '" + expression.getProperty() + "' in updatable expression!");
         }
 
