@@ -27,7 +27,9 @@ import com.blazebit.persistence.impl.SelectManager;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.modifier.ExpressionModifier;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -79,7 +81,7 @@ public class SizeTransformerGroup implements ExpressionTransformerGroup<Expressi
         for (SizeTransformationVisitor.LateJoinEntry lateJoinEntry : sizeTransformationVisitor.getLateJoins().values()) {
             for (Expression requiredJoinExpression : lateJoinEntry.getExpressionsToJoin()) {
                 for (ClauseType clauseType : lateJoinEntry.getClauseDependencies()) {
-                    joinManager.implicitJoin(requiredJoinExpression, true, null, clauseType, null, false, false, true, false);
+                    joinManager.implicitJoin(requiredJoinExpression, true, null, clauseType, new HashSet<String>(), false, false, true, false);
                 }
             }
         }

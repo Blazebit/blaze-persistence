@@ -69,6 +69,7 @@ import com.blazebit.persistence.spi.DbmsDialect;
 class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
 
     private final boolean treatSizeAsAggregate;
+    private final AliasManager aliasManager;
     private final DbmsDialect dbmsDialect;
     private Set<Expression> expressions = new LinkedHashSet<Expression>();
     /**
@@ -76,8 +77,9 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
      */
     private boolean collect;
 
-    public GroupByExpressionGatheringVisitor(boolean treatSizeAsAggregate, DbmsDialect dbmsDialect) {
+    public GroupByExpressionGatheringVisitor(boolean treatSizeAsAggregate, AliasManager aliasManager, DbmsDialect dbmsDialect) {
         this.treatSizeAsAggregate = treatSizeAsAggregate;
+        this.aliasManager = aliasManager;
         this.dbmsDialect = dbmsDialect;
     }
 
@@ -115,7 +117,11 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
 
                 @Override
                 public void visit(PathExpression expression) {
-                    expressions.add(expression);
+                    if (expression.getBaseNode() == null) {
+                        ((SelectInfo) aliasManager.getAliasInfo(expression.toString())).getExpression().accept(this);
+                    } else {
+                        expressions.add(expression);
+                    }
                 }
 
                 @Override
@@ -169,7 +175,11 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
 
     @Override
     public Boolean visit(PathExpression expression) {
-        return baseExpression(expression);
+        if (expression.getBaseNode() == null) {
+            return ((SelectInfo) aliasManager.getAliasInfo(expression.toString())).getExpression().accept(this);
+        } else {
+            return baseExpression(expression);
+        }
     }
 
     @Override

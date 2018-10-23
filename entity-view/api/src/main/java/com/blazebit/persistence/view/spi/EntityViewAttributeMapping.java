@@ -88,6 +88,22 @@ public interface EntityViewAttributeMapping {
     public void setForceUniqueness(boolean forceUniqueness);
 
     /**
+     * Specifies whether an updatable entity view type is disallowed for owned *ToOne relationships or not.
+     *
+     * @return true if disallowed, false otherwise
+     * @since 1.3.0
+     */
+    public boolean isDisallowOwnedUpdatableSubview();
+
+    /**
+     * Sets whether an updatable entity view type is disallowed for owned *ToOne relationships or not.
+     *
+     * @param disallowOwnedUpdatableSubview true if updatable entity view types should be disallowed, false otherwise
+     * @since 1.3.0
+     */
+    public void setDisallowOwnedUpdatableSubview(boolean disallowOwnedUpdatableSubview);
+
+    /**
      * Returns the comparator class, or <code>null</code> if there none.
      *
      * @return The comparator class

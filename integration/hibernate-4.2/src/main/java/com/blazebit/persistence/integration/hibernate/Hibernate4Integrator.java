@@ -22,14 +22,24 @@ import com.blazebit.persistence.integration.hibernate.base.Database;
 import com.blazebit.persistence.integration.hibernate.base.SimpleDatabase;
 import com.blazebit.persistence.integration.hibernate.base.SimpleTableNameFormatter;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.hql.spi.PersistentTableBulkIdStrategy;
+import org.hibernate.hql.spi.TemporaryTableBulkIdStrategy;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.ServiceContributingIntegrator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.source.MetadataImplementor;
+import org.hibernate.metamodel.spi.TypeContributions;
+import org.hibernate.metamodel.spi.TypeContributor;
 import org.hibernate.persister.spi.PersisterClassResolver;
+import org.hibernate.service.Service;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
+import org.hibernate.service.internal.StandardServiceRegistryImpl;
 import org.hibernate.service.spi.BasicServiceInitiator;
+import org.hibernate.service.spi.Configurable;
+import org.hibernate.service.spi.ServiceBinding;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
@@ -42,9 +52,26 @@ import java.util.logging.Logger;
  * @since 1.2.0
  */
 @ServiceProvider(Integrator.class)
-public class Hibernate4Integrator implements ServiceContributingIntegrator {
+public class Hibernate4Integrator implements ServiceContributingIntegrator, TypeContributor, Configurable, Service {
 
     private static final Logger LOG = Logger.getLogger(Hibernate4Integrator.class.getName());
+    private Map<String, Object> configuration;
+
+    @Override
+    public void configure(Map map) {
+        this.configuration = map;
+    }
+
+    @Override
+    public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+        ((StandardServiceRegistryImpl) serviceRegistry).configureService(new ServiceBinding<>((ServiceBinding.ServiceLifecycleOwner) serviceRegistry, Hibernate4Integrator.class, this));
+        Object o = configuration.get("hibernate.hql.bulk_id_strategy");
+        if (o == null) {
+            serviceRegistry.getService(JdbcServices.class).getDialect().getDefaultProperties().put("hibernate.hql.bulk_id_strategy", new CustomMultiTableBulkIdStrategy(serviceRegistry.getService(JdbcServices.class).getDialect().supportsTemporaryTables() ? TemporaryTableBulkIdStrategy.INSTANCE : new PersistentTableBulkIdStrategy()));
+        } else {
+            LOG.warning("Can't replace hibernate.hql.bulk_id_strategy because it was overridden by the user with: " + o);
+        }
+    }
 
     @Override
     public void prepareServices(ServiceRegistryBuilder serviceRegistryBuilder) {

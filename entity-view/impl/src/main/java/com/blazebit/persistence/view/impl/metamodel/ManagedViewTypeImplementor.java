@@ -23,6 +23,7 @@ import javax.persistence.metamodel.ManagedType;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.Set;
 
 /**
@@ -33,6 +34,8 @@ public interface ManagedViewTypeImplementor<X> extends ManagedViewType<X> {
     void checkAttributes(MetamodelBuildingContext context);
 
     void checkNestedAttributes(List<AbstractAttribute<?, ?>> parents, MetamodelBuildingContext context);
+
+    NavigableMap<String, AbstractMethodAttribute<? super X, ?>> getRecursiveAttributes();
 
     LockMode getLockMode();
 

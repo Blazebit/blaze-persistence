@@ -16,11 +16,8 @@
 
 package com.blazebit.persistence.integration.hibernate;
 
-import com.blazebit.persistence.integration.hibernate.base.HibernateReturningResult;
-import com.blazebit.persistence.spi.DbmsDialect;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.StatementPreparer;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -32,29 +29,16 @@ import java.lang.reflect.Method;
 public class JdbcCoordinatorInvocationHandler implements InvocationHandler {
     
     private final JdbcCoordinator delegate;
-    private final SessionFactoryImplementor sessionFactoryImplementor;
-    private final DbmsDialect dbmsDialect;
-    private final String[][] columns;
-    private final int[] returningSqlTypes;
-    private final HibernateReturningResult<?> returningResult;
-    private transient StatementPreparer statementPreparer;
+    private final transient StatementPreparer statementPreparer;
 
-    public JdbcCoordinatorInvocationHandler(JdbcCoordinator delegate, SessionFactoryImplementor sessionFactoryImplementor, DbmsDialect dbmsDialect, String[][] columns, int[] returningSqlTypes, HibernateReturningResult<?> returningResult) {
+    public JdbcCoordinatorInvocationHandler(JdbcCoordinator delegate, StatementPreparer statementPreparer) {
         this.delegate = delegate;
-        this.sessionFactoryImplementor = sessionFactoryImplementor;
-        this.dbmsDialect = dbmsDialect;
-        this.columns = columns;
-        this.returningSqlTypes = returningSqlTypes;
-        this.returningResult = returningResult;
+        this.statementPreparer = statementPreparer;
     }
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         if ("getStatementPreparer".equals(method.getName())) {
-            if (statementPreparer == null) {
-                statementPreparer = new StatementPreparerImpl(delegate, sessionFactoryImplementor, dbmsDialect, columns, returningSqlTypes, returningResult);
-            }
-            
             return statementPreparer;
         }
         

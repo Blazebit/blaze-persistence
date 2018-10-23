@@ -17,6 +17,7 @@
 package com.blazebit.persistence.impl;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -33,6 +34,7 @@ import com.blazebit.persistence.parser.expression.MapKeyExpression;
 import com.blazebit.persistence.parser.expression.MapValueExpression;
 import com.blazebit.persistence.parser.expression.PathElementExpression;
 import com.blazebit.persistence.parser.expression.PathExpression;
+import com.blazebit.persistence.parser.expression.PropertyExpression;
 import com.blazebit.persistence.parser.expression.VisitorAdapter;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 
@@ -70,6 +72,10 @@ public class EntitySelectResolveVisitor extends VisitorAdapter {
              * selects here
              */
             JoinNode baseNode = ((JoinNode) expression.getBaseNode());
+            if (baseNode == null) {
+                // This is an alias expression to a complex expression
+                return;
+            }
             EntityType<?> entityType = m.getEntity(baseNode.getJavaType());
             if (entityType == null) {
                 // ignore if the expression is not an entity
@@ -93,7 +99,10 @@ public class EntitySelectResolveVisitor extends VisitorAdapter {
                 }
 
                 if (resolve) {
-                    PathExpression attrPath = new PathExpression(new ArrayList<PathElementExpression>(expression.getExpressions()));
+                    List<PathElementExpression> paths = new ArrayList<>(expression.getExpressions().size() + 1);
+                    paths.addAll(expression.getExpressions());
+                    paths.add(new PropertyExpression(attr.getName()));
+                    PathExpression attrPath = new PathExpression(paths);
                     attrPath.setPathReference(new SimplePathReference(baseNode, attr.getName(), m.type(JpaMetamodelUtils.resolveFieldClass(entityClass, attr))));
                     pathExpressions.add(attrPath);
                 }

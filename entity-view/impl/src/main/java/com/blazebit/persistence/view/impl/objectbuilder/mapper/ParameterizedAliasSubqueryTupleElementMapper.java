@@ -28,7 +28,7 @@ import com.blazebit.persistence.view.impl.macro.EmbeddingViewJpqlMacro;
  * @author Christian Beikov
  * @since 1.0.0
  */
-public class ParameterizedAliasSubqueryTupleElementMapper extends ParameterizedSubqueryTupleElementMapper {
+public class ParameterizedAliasSubqueryTupleElementMapper extends ParameterizedSubqueryTupleElementMapper implements AliasedTupleElementMapper {
 
     private final String alias;
 
@@ -45,4 +45,8 @@ public class ParameterizedAliasSubqueryTupleElementMapper extends ParameterizedS
         embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
     }
 
+    @Override
+    public String getAlias() {
+        return alias;
+    }
 }

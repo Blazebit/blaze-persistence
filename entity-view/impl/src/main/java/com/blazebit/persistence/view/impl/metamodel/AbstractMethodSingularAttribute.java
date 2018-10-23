@@ -120,7 +120,7 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
 
         ManagedType<?> managedType = context.getEntityMetamodel().getManagedType(declaringType.getEntityClass());
         this.mappedBy = mapping.determineMappedBy(managedType, this.mapping, context, embeddableMapping);
-        this.disallowOwnedUpdatableSubview = context.isDisallowOwnedUpdatableSubview() && type instanceof ManagedViewType<?> && mappedBy == null
+        this.disallowOwnedUpdatableSubview = context.isDisallowOwnedUpdatableSubview() && mapping.isDisallowOwnedUpdatableSubview() && type instanceof ManagedViewType<?> && mappedBy == null
                 && updateMappableAttribute != null && updateMappableAttribute.getPersistentAttributeType() != javax.persistence.metamodel.Attribute.PersistentAttributeType.EMBEDDED;
 
         // The declaring type must be mutable, otherwise attributes can't have cascading

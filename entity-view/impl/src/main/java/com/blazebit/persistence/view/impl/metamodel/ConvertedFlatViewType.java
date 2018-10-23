@@ -29,6 +29,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.Set;
 
 /**
@@ -77,6 +78,11 @@ public class ConvertedFlatViewType<X> implements FlatViewTypeImplementor<X> {
     @Override
     public LockMode getLockMode() {
         return delegate.getLockMode();
+    }
+
+    @Override
+    public NavigableMap<String, AbstractMethodAttribute<? super X, ?>> getRecursiveAttributes() {
+        return delegate.getRecursiveAttributes();
     }
 
     @Override

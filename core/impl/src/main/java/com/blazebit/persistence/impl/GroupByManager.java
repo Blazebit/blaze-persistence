@@ -21,6 +21,7 @@ import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.Expression.Visitor;
 import com.blazebit.persistence.parser.expression.modifier.ExpressionModifier;
 import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
+import com.blazebit.persistence.spi.JpaProvider;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -37,9 +38,11 @@ import java.util.Set;
  */
 public class GroupByManager extends AbstractManager<ExpressionModifier> {
 
-    private static final ResolvedExpression[] EMPTY = new ResolvedExpression[0];
-
+    private final JpaProvider jpaProvider;
+    private final ImplicitGroupByClauseDependencyRegistrationVisitor implicitGroupByClauseDependencyRegistrationVisitor;
     private final EmbeddableSplittingVisitor embeddableSplittingVisitor;
+    private final GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor;
+
     /**
      * We use an ArrayList since a HashSet causes problems when the path reference in the expression is changed
      * after it was inserted into the set (e.g. when implicit joining is performed).
@@ -48,11 +51,14 @@ public class GroupByManager extends AbstractManager<ExpressionModifier> {
     // These are the collected group by clauses
     private final Map<ResolvedExpression, Set<ClauseType>> groupByClauses;
 
-    GroupByManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, EmbeddableSplittingVisitor embeddableSplittingVisitor) {
+    GroupByManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, JpaProvider jpaProvider, AliasManager aliasManager, EmbeddableSplittingVisitor embeddableSplittingVisitor, GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor) {
         super(queryGenerator, parameterManager, subqueryInitFactory);
+        this.jpaProvider = jpaProvider;
+        this.implicitGroupByClauseDependencyRegistrationVisitor = new ImplicitGroupByClauseDependencyRegistrationVisitor(aliasManager);
         this.embeddableSplittingVisitor = embeddableSplittingVisitor;
-        groupByInfos = new ArrayList<>();
-        groupByClauses = new LinkedHashMap<>();
+        this.groupByExpressionGatheringVisitor = groupByExpressionGatheringVisitor;
+        this.groupByInfos = new ArrayList<>();
+        this.groupByClauses = new LinkedHashMap<>();
     }
 
     void applyFrom(GroupByManager groupByManager) {
@@ -71,7 +77,7 @@ public class GroupByManager extends AbstractManager<ExpressionModifier> {
         registerParameterExpressions(expr);
     }
     
-    void collectGroupByClauses() {
+    void collectGroupByClauses(JoinVisitor joinVisitor) {
         if (groupByInfos.isEmpty()) {
             return;
         }
@@ -82,9 +88,14 @@ public class GroupByManager extends AbstractManager<ExpressionModifier> {
         queryGenerator.setClauseType(ClauseType.GROUP_BY);
         queryGenerator.setQueryBuffer(sb);
         for (NodeInfo info : groupByInfos) {
+            Expression expr = info.getExpression();
+            Set<Expression> collectedExpressions = groupByExpressionGatheringVisitor.extractGroupByExpressions(expr);
+            if (collectedExpressions.size() > 1 || collectedExpressions.iterator().next() != expr) {
+                throw new RuntimeException("The complex group by expression [" + expr + "] is not supported by the underlying database. The valid sub-expressions are: " + collectedExpressions);
+            }
             sb.setLength(0);
-            queryGenerator.generate(info.getExpression());
-            collect(new ResolvedExpression(sb.toString(), info.getExpression()), ClauseType.GROUP_BY, false);
+            queryGenerator.generate(expr);
+            collect(new ResolvedExpression(sb.toString(), expr), ClauseType.GROUP_BY, true, joinVisitor);
         }
         queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
         queryGenerator.setClauseType(null);
@@ -184,15 +195,32 @@ public class GroupByManager extends AbstractManager<ExpressionModifier> {
         groupByClauses.clear();
     }
 
-    public void collect(ResolvedExpression expression, ClauseType clauseType, boolean hasGroupBy) {
+    public void collect(ResolvedExpression expression, ClauseType clauseType, boolean hasGroupBy, JoinVisitor joinVisitor) {
         List<Expression> expressions = embeddableSplittingVisitor.splitOff(expression.getExpression());
         if (expressions != null) {
             if (expressions.isEmpty()) {
                 collect0(expression, clauseType, hasGroupBy);
             } else {
-                for (Expression splitOffExpression : expressions) {
-                    ResolvedExpression subExpression = new ResolvedExpression(splitOffExpression.toString(), splitOffExpression);
-                    collect0(subExpression, clauseType, hasGroupBy);
+                if (jpaProvider.supportsSingleValuedAssociationIdExpressions() || joinVisitor == null) {
+                    for (Expression splitOffExpression : expressions) {
+                        ResolvedExpression subExpression = new ResolvedExpression(splitOffExpression.toString(), splitOffExpression);
+                        collect0(subExpression, clauseType, hasGroupBy);
+                    }
+                } else {
+                    // When we don't support single valued id access, we need to do an implicit join as the embeddable might contain an association
+                    ClauseType fromClause = joinVisitor.getFromClause();
+                    try {
+                        joinVisitor.setFromClause(clauseType);
+                        for (Expression splitOffExpression : expressions) {
+                            if (hasGroupBy) {
+                                splitOffExpression.accept(joinVisitor);
+                            }
+                            ResolvedExpression subExpression = new ResolvedExpression(splitOffExpression.toString(), splitOffExpression);
+                            collect0(subExpression, clauseType, hasGroupBy);
+                        }
+                    } finally {
+                        joinVisitor.setFromClause(fromClause);
+                    }
                 }
             }
         }
@@ -203,7 +231,7 @@ public class GroupByManager extends AbstractManager<ExpressionModifier> {
         if (clauseTypes == null) {
             clauseTypes = EnumSet.of(clauseType);
             if (hasGroupBy) {
-                expression.getExpression().accept(ImplicitGroupByClauseDependencyRegistrationVisitor.INSTANCE);
+                expression.getExpression().accept(implicitGroupByClauseDependencyRegistrationVisitor);
             }
             groupByClauses.put(expression, clauseTypes);
         } else {
@@ -215,7 +243,7 @@ public class GroupByManager extends AbstractManager<ExpressionModifier> {
         Set<ClauseType> clauseTypes = groupByClauses.get(expression);
         if (clauseTypes == null) {
             clauseTypes = EnumSet.copyOf(newClauseTypes);
-            expression.getExpression().accept(ImplicitGroupByClauseDependencyRegistrationVisitor.INSTANCE);
+            expression.getExpression().accept(implicitGroupByClauseDependencyRegistrationVisitor);
             groupByClauses.put(expression, clauseTypes);
         } else {
             clauseTypes.addAll(newClauseTypes);

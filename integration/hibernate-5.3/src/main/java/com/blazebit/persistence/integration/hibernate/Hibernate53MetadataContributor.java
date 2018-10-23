@@ -23,20 +23,44 @@ import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataContributor;
 import org.hibernate.cfg.AnnotationBinder;
 import org.hibernate.cfg.InheritanceState;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
+import org.hibernate.service.Service;
+import org.hibernate.service.spi.Configurable;
+import org.hibernate.service.spi.ServiceBinding;
 import org.jboss.jandex.IndexView;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class Hibernate53MetadataContributor implements MetadataContributor {
+public class Hibernate53MetadataContributor implements MetadataContributor, Service, Configurable {
+
+    private static final Logger LOG = Logger.getLogger(Hibernate53MetadataContributor.class.getName());
+    private Map<String, Object> configurationValues;
+
+    @Override
+    public void configure(Map configurationValues) {
+        this.configurationValues = configurationValues;
+    }
 
     @Override
     public void contribute(InFlightMetadataCollector metadataCollector, IndexView jandexIndex) {
+        ServiceBinding.ServiceLifecycleOwner lifecycleOwner = (ServiceBinding.ServiceLifecycleOwner) metadataCollector.getBootstrapContext().getServiceRegistry();
+        lifecycleOwner.configureService(new ServiceBinding<>(lifecycleOwner, Hibernate53MetadataContributor.class, this));
+        Object existingStrategy = configurationValues.get("hibernate.hql.bulk_id_strategy");
+        if (existingStrategy == null) {
+            JdbcServices jdbcService = metadataCollector.getBootstrapContext().getServiceRegistry().getService(JdbcServices.class);
+            MultiTableBulkIdStrategy defaultMultiTableBulkIdStrategy = jdbcService.getDialect().getDefaultMultiTableBulkIdStrategy();
+            configurationValues.put("hibernate.hql.bulk_id_strategy", new CustomMultiTableBulkIdStrategy(defaultMultiTableBulkIdStrategy));
+        } else {
+            LOG.warning("Can't replace hibernate.hql.bulk_id_strategy because it was overridden by the user with: " + existingStrategy);
+        }
         // Skip if already registered
         if (metadataCollector.getEntityBinding("com.blazebit.persistence.impl.function.entity.ValuesEntity") != null) {
             return;

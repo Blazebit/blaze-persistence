@@ -28,7 +28,7 @@ import com.blazebit.persistence.view.impl.macro.EmbeddingViewJpqlMacro;
  * @author Christian Beikov
  * @since 1.0.0
  */
-public class AliasExpressionTupleElementMapper extends ExpressionTupleElementMapper {
+public class AliasExpressionTupleElementMapper extends ExpressionTupleElementMapper implements AliasedTupleElementMapper {
 
     private final String alias;
 
@@ -51,4 +51,8 @@ public class AliasExpressionTupleElementMapper extends ExpressionTupleElementMap
         embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
     }
 
+    @Override
+    public String getAlias() {
+        return alias;
+    }
 }

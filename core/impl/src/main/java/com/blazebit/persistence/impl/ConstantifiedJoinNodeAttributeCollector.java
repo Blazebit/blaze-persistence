@@ -80,13 +80,15 @@ import java.util.Set;
 class ConstantifiedJoinNodeAttributeCollector extends VisitorAdapter {
 
     private final EntityMetamodel metamodel;
+    private final AliasManager aliasManager;
     private Map<Object, Set<String>> constantifiedJoinNodeAttributes;
     private CompoundPredicate rootPredicate;
     private boolean negated;
     private boolean inKey;
 
-    public ConstantifiedJoinNodeAttributeCollector(EntityMetamodel metamodel) {
+    public ConstantifiedJoinNodeAttributeCollector(EntityMetamodel metamodel, AliasManager aliasManager) {
         this.metamodel = metamodel;
+        this.aliasManager = aliasManager;
         this.constantifiedJoinNodeAttributes = new HashMap<>();
     }
 
@@ -111,6 +113,11 @@ class ConstantifiedJoinNodeAttributeCollector extends VisitorAdapter {
     @Override
     public void visit(PathExpression expr) {
         PathReference pathReference = expr.getPathReference();
+        if (pathReference == null) {
+            ((SelectInfo) aliasManager.getAliasInfo(expr.toString())).getExpression().accept(this);
+            return;
+        }
+
         JoinNode baseNode = (JoinNode) pathReference.getBaseNode();
 
         // We constantify collection as a whole to a single element when reaching this point

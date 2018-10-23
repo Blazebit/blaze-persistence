@@ -16,6 +16,7 @@ db2() {
     # Give the container some time to start
     sleep 5
     docker exec -t db2 sudo -u db2inst1 /home/db2inst1/sqllib/bin/db2 create database test
+    docker exec -t db2 sudo -u db2inst1 bash -c "/home/db2inst1/sqllib/bin/db2 connect to test && /home/db2inst1/sqllib/bin/db2 'CREATE USER TEMPORARY TABLESPACE usr_tbsp MANAGED BY AUTOMATIC STORAGE'"
 	
 	#docker cp db2:/home/db2inst1/sqllib/java/db2jcc4.jar db2jcc4.jar
 	#mvn -q install:install-file -Dfile=db2jcc4.jar -DgroupId=com.ibm.db2 -DartifactId=db2jcc4 -Dversion=9.7 -Dpackaging=jar -DgeneratePom=true

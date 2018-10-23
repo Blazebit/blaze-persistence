@@ -146,7 +146,6 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     protected final ResolvingQueryGenerator queryGenerator;
     protected final SubqueryInitiatorFactory subqueryInitFactory;
     protected final EmbeddableSplittingVisitor embeddableSplittingVisitor;
-    protected final GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor;
     protected final FunctionalDependencyAnalyzerVisitor functionalDependencyAnalyzerVisitor;
 
     // This builder will be passed in when using set operations
@@ -202,7 +201,6 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.finalSetOperationBuilder = (FinalSetReturn) builder.finalSetOperationBuilder;
         this.subqueryInitFactory = builder.subqueryInitFactory;
         this.embeddableSplittingVisitor = builder.embeddableSplittingVisitor;
-        this.groupByExpressionGatheringVisitor = builder.groupByExpressionGatheringVisitor;
         this.functionalDependencyAnalyzerVisitor = builder.functionalDependencyAnalyzerVisitor;
         this.aliasManager = builder.aliasManager;
         this.expressionFactory = builder.expressionFactory;
@@ -235,16 +233,16 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.fromClassExplicitlySet = builder.fromClassExplicitlySet;
 
         this.subqueryInitFactory = joinManager.getSubqueryInitFactory();
-        SplittingVisitor splittingVisitor = new SplittingVisitor(mainQuery.metamodel, mainQuery.jpaProvider);
-        this.embeddableSplittingVisitor = new EmbeddableSplittingVisitor(mainQuery.metamodel, mainQuery.jpaProvider, splittingVisitor);
-        this.groupByExpressionGatheringVisitor = new GroupByExpressionGatheringVisitor(false, mainQuery.dbmsDialect);
-        this.functionalDependencyAnalyzerVisitor = new FunctionalDependencyAnalyzerVisitor(mainQuery.metamodel, splittingVisitor, mainQuery.jpaProvider);
+        SplittingVisitor splittingVisitor = new SplittingVisitor(mainQuery.metamodel, mainQuery.jpaProvider, this.aliasManager);
+        this.embeddableSplittingVisitor = new EmbeddableSplittingVisitor(mainQuery.metamodel, mainQuery.jpaProvider, this.aliasManager, splittingVisitor);
+        GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor = new GroupByExpressionGatheringVisitor(false, this.aliasManager, mainQuery.dbmsDialect);
+        this.functionalDependencyAnalyzerVisitor = new FunctionalDependencyAnalyzerVisitor(mainQuery.metamodel, splittingVisitor, mainQuery.jpaProvider, this.aliasManager);
 
-        this.whereManager = new WhereManager<BuilderType>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
-        this.groupByManager = new GroupByManager(queryGenerator, parameterManager, subqueryInitFactory, functionalDependencyAnalyzerVisitor);
-        this.havingManager = new HavingManager<BuilderType>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory, groupByExpressionGatheringVisitor);
+        this.whereManager = new WhereManager<>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
+        this.groupByManager = new GroupByManager(queryGenerator, parameterManager, subqueryInitFactory, mainQuery.jpaProvider, this.aliasManager, embeddableSplittingVisitor, groupByExpressionGatheringVisitor);
+        this.havingManager = new HavingManager<>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory, groupByExpressionGatheringVisitor);
 
-        this.selectManager = new SelectManager<QueryResultType>(queryGenerator, parameterManager, this.joinManager, this.aliasManager, subqueryInitFactory, expressionFactory, mainQuery.jpaProvider, mainQuery, groupByExpressionGatheringVisitor, builder.resultType);
+        this.selectManager = new SelectManager<>(queryGenerator, parameterManager, this.joinManager, this.aliasManager, subqueryInitFactory, expressionFactory, mainQuery.jpaProvider, mainQuery, groupByExpressionGatheringVisitor, builder.resultType);
         this.orderByManager = new OrderByManager(queryGenerator, parameterManager, subqueryInitFactory, this.joinManager, this.aliasManager, embeddableSplittingVisitor, functionalDependencyAnalyzerVisitor, mainQuery.metamodel, mainQuery.jpaProvider, groupByExpressionGatheringVisitor);
         this.keysetManager = new KeysetManager(this, queryGenerator, parameterManager, mainQuery.jpaProvider, mainQuery.dbmsDialect);
 
@@ -305,16 +303,16 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         }
 
         this.subqueryInitFactory = joinManager.getSubqueryInitFactory();
-        SplittingVisitor splittingVisitor = new SplittingVisitor(mainQuery.metamodel, mainQuery.jpaProvider);
-        this.embeddableSplittingVisitor = new EmbeddableSplittingVisitor(mainQuery.metamodel, mainQuery.jpaProvider, splittingVisitor);
-        this.groupByExpressionGatheringVisitor = new GroupByExpressionGatheringVisitor(false, mainQuery.dbmsDialect);
-        this.functionalDependencyAnalyzerVisitor = new FunctionalDependencyAnalyzerVisitor(mainQuery.metamodel, splittingVisitor, mainQuery.jpaProvider);
+        SplittingVisitor splittingVisitor = new SplittingVisitor(mainQuery.metamodel, mainQuery.jpaProvider, this.aliasManager);
+        this.embeddableSplittingVisitor = new EmbeddableSplittingVisitor(mainQuery.metamodel, mainQuery.jpaProvider, this.aliasManager, splittingVisitor);
+        GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor = new GroupByExpressionGatheringVisitor(false, this.aliasManager, mainQuery.dbmsDialect);
+        this.functionalDependencyAnalyzerVisitor = new FunctionalDependencyAnalyzerVisitor(mainQuery.metamodel, splittingVisitor, mainQuery.jpaProvider, this.aliasManager);
 
-        this.whereManager = new WhereManager<BuilderType>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
-        this.groupByManager = new GroupByManager(queryGenerator, parameterManager, subqueryInitFactory, embeddableSplittingVisitor);
-        this.havingManager = new HavingManager<BuilderType>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory, groupByExpressionGatheringVisitor);
+        this.whereManager = new WhereManager<>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
+        this.groupByManager = new GroupByManager(queryGenerator, parameterManager, subqueryInitFactory, mainQuery.jpaProvider, this.aliasManager, embeddableSplittingVisitor, groupByExpressionGatheringVisitor);
+        this.havingManager = new HavingManager<>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory, groupByExpressionGatheringVisitor);
 
-        this.selectManager = new SelectManager<QueryResultType>(queryGenerator, parameterManager, this.joinManager, this.aliasManager, subqueryInitFactory, expressionFactory, mainQuery.jpaProvider, mainQuery, groupByExpressionGatheringVisitor, resultClazz);
+        this.selectManager = new SelectManager<>(queryGenerator, parameterManager, this.joinManager, this.aliasManager, subqueryInitFactory, expressionFactory, mainQuery.jpaProvider, mainQuery, groupByExpressionGatheringVisitor, resultClazz);
         this.orderByManager = new OrderByManager(queryGenerator, parameterManager, subqueryInitFactory, this.joinManager, this.aliasManager, embeddableSplittingVisitor, functionalDependencyAnalyzerVisitor, mainQuery.metamodel, mainQuery.jpaProvider, groupByExpressionGatheringVisitor);
         this.keysetManager = new KeysetManager(this, queryGenerator, parameterManager, mainQuery.jpaProvider, mainQuery.dbmsDialect);
 
@@ -825,7 +823,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             return node;
         }
         PathExpression pathExpression = expressionFactory.createPathExpression(path);
-        joinManager.implicitJoin(pathExpression, true, null, null, null, false, false, true, false);
+        joinManager.implicitJoin(pathExpression, true, null, null, new HashSet<String>(), false, false, true, false);
         return (JoinNode) pathExpression.getBaseNode();
     }
 
@@ -835,7 +833,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             return new SimplePathReference(node, null, node.getType());
         }
         PathExpression pathExpression = expressionFactory.createPathExpression(path);
-        joinManager.implicitJoin(pathExpression, true, null, null, null, false, false, true, false);
+        joinManager.implicitJoin(pathExpression, true, null, null, new HashSet<String>(), false, false, true, false);
         return (Path) pathExpression.getPathReference();
     }
 
@@ -1191,10 +1189,6 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             expr = expressionFactory.createPathExpression(expression);
         } else {
             expr = expressionFactory.createSimpleExpression(expression, false);
-            Set<Expression> collectedExpressions = groupByExpressionGatheringVisitor.extractGroupByExpressions(expr);
-            if (collectedExpressions.size() > 1 || collectedExpressions.iterator().next() != expr) {
-                throw new RuntimeException("The complex group by expression [" + expression + "] is not supported by the underlying database. The valid sub-expressions are: " + collectedExpressions);
-            }
         }
         verifyBuilderEnded();
         groupByManager.groupBy(expr);
@@ -1570,9 +1564,9 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return true;
     }
 
-    protected void applyImplicitJoins(JoinVisitor parentVisitor) {
+    protected JoinVisitor applyImplicitJoins(JoinVisitor parentVisitor) {
         if (implicitJoinsApplied) {
-            return;
+            return null;
         }
 
         // The first thing we need to do, is reorder values clauses without joins to the end of the from clause roots
@@ -1657,6 +1651,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         joinVisitor.setJoinWithObjectLeafAllowed(true);
         // No need to implicit join again if no mutation occurs
         implicitJoinsApplied = true;
+        return joinVisitor;
     }
 
     protected void implicitJoinWhereClause() {
@@ -1699,11 +1694,11 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         orderByManager.acceptVisitor(expressionVisitor);
     }
 
-    public void applyExpressionTransformersAndBuildGroupByClauses(boolean addsGroupBy) {
+    public void applyExpressionTransformersAndBuildGroupByClauses(boolean addsGroupBy, JoinVisitor joinVisitor) {
         groupByManager.resetCollected();
-        groupByManager.collectGroupByClauses();
+        groupByManager.collectGroupByClauses(joinVisitor);
 
-        orderByManager.splitEmbeddables();
+        orderByManager.splitEmbeddables(joinVisitor);
 
         int size = transformerGroups.size();
         for (int i = 0; i < size; i++) {
@@ -1729,13 +1724,13 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
         if (hasGroupBy || addsGroupBy) {
             if (mainQuery.getQueryConfiguration().isImplicitGroupByFromSelectEnabled()) {
-                selectManager.buildGroupByClauses(cbf.getMetamodel(), groupByManager, hasGroupBy);
+                selectManager.buildGroupByClauses(cbf.getMetamodel(), groupByManager, hasGroupBy, joinVisitor);
             }
             if (mainQuery.getQueryConfiguration().isImplicitGroupByFromHavingEnabled()) {
-                havingManager.buildGroupByClauses(groupByManager, hasGroupBy);
+                havingManager.buildGroupByClauses(groupByManager, hasGroupBy, joinVisitor);
             }
             if (mainQuery.getQueryConfiguration().isImplicitGroupByFromOrderByEnabled()) {
-                orderByManager.buildGroupByClauses(groupByManager, hasGroupBy);
+                orderByManager.buildGroupByClauses(groupByManager, hasGroupBy, joinVisitor);
             }
         }
 
@@ -2320,13 +2315,13 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         // so where("b.c").join("a.b") but also
         // join("a.b", "b").where("b.c")
         // in the first case
-        applyImplicitJoins(null);
-        applyExpressionTransformersAndBuildGroupByClauses(false);
+        JoinVisitor joinVisitor = applyImplicitJoins(null);
+        applyExpressionTransformersAndBuildGroupByClauses(false, joinVisitor);
         hasCollections = joinManager.hasCollections();
 
         if (keysetManager.hasKeyset()) {
             // The last order by expression must be unique, otherwise keyset scrolling wouldn't work
-            List<OrderByExpression> orderByExpressions = orderByManager.getOrderByExpressions(hasCollections, whereManager.rootPredicate.getPredicate(), hasGroupBy ? Arrays.asList(getGroupByIdentifierExpressions()) : Collections.<ResolvedExpression>emptyList());
+            List<OrderByExpression> orderByExpressions = orderByManager.getOrderByExpressions(hasCollections, whereManager.rootPredicate.getPredicate(), hasGroupBy ? Arrays.asList(getGroupByIdentifierExpressions()) : Collections.<ResolvedExpression>emptyList(), joinVisitor);
             if (!orderByExpressions.get(orderByExpressions.size() - 1).isResultUnique()) {
                 throw new IllegalStateException("The order by items of the query builder are not guaranteed to produce unique tuples! Consider also ordering by the entity identifier!");
             }

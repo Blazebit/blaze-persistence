@@ -16,16 +16,7 @@
 
 package com.blazebit.persistence.view.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.Attribute.PersistentAttributeType;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.Metamodel;
-import javax.persistence.metamodel.PluralAttribute;
-import javax.persistence.metamodel.Type;
-
+import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.expression.ArrayExpression;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.FunctionExpression;
@@ -36,6 +27,13 @@ import com.blazebit.persistence.parser.expression.VisitorAdapter;
 import com.blazebit.persistence.parser.predicate.IsEmptyPredicate;
 import com.blazebit.persistence.parser.predicate.MemberOfPredicate;
 import com.blazebit.persistence.parser.util.ExpressionUtils;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
+
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.PluralAttribute;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -44,11 +42,11 @@ import com.blazebit.persistence.parser.util.ExpressionUtils;
  */
 public class CollectionJoinMappingGathererExpressionVisitor extends VisitorAdapter {
 
-    private final Metamodel metamodel;
+    private final EntityMetamodel metamodel;
     private final ManagedType<?> managedType;
     private final List<String> paths;
 
-    public CollectionJoinMappingGathererExpressionVisitor(ManagedType<?> managedType, Metamodel metamodel) {
+    public CollectionJoinMappingGathererExpressionVisitor(ManagedType<?> managedType, EntityMetamodel metamodel) {
         this.metamodel = metamodel;
         this.managedType = managedType;
         this.paths = new ArrayList<>();
@@ -97,21 +95,9 @@ public class CollectionJoinMappingGathererExpressionVisitor extends VisitorAdapt
             
             // NOTE: Attribute could be null because this model might contain errors
             if (jpaAttribute != null) {
+                t = metamodel.getManagedType(JpaMetamodelUtils.resolveFieldClass(t.getJavaType(), jpaAttribute));
                 if (jpaAttribute instanceof PluralAttribute<?, ?, ?>) {
                     paths.add(sb.toString());
-                    Type<?> elementType = ((PluralAttribute<?, ?, ?>) jpaAttribute).getElementType();
-                    
-                    if (elementType instanceof ManagedType<?>) {
-                        t = (ManagedType<?>) elementType;
-                    } else {
-                        t = null;
-                    }
-                } else {
-                    if (jpaAttribute.getPersistentAttributeType() == PersistentAttributeType.BASIC) {
-                        t = null;
-                    } else {
-                        t = metamodel.managedType(jpaAttribute.getJavaType());
-                    }
                 }
             }
         }

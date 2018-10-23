@@ -195,13 +195,14 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
      * 
      * @param m
      * @param hasGroupBy
+     * @param joinVisitor
      * @return
      */
-    void buildGroupByClauses(final EntityMetamodel m, GroupByManager groupByManager, boolean hasGroupBy) {
+    void buildGroupByClauses(final EntityMetamodel m, GroupByManager groupByManager, boolean hasGroupBy, JoinVisitor joinVisitor) {
         SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.CASE_WHEN);
         StringBuilder sb = new StringBuilder();
 
-        Set<PathExpression> componentPaths = new LinkedHashSet<PathExpression>();
+        Set<PathExpression> componentPaths = new LinkedHashSet<>();
         EntitySelectResolveVisitor resolveVisitor = new EntitySelectResolveVisitor(m, componentPaths);
 
         // When no select infos are available, it can only be a root entity select
@@ -218,7 +219,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
             for (PathExpression pathExpr : componentPaths) {
                 sb.setLength(0);
                 queryGenerator.generate(pathExpr);
-                groupByManager.collect(new ResolvedExpression(sb.toString(), pathExpr), ClauseType.SELECT, hasGroupBy);
+                groupByManager.collect(new ResolvedExpression(sb.toString(), pathExpr), ClauseType.SELECT, hasGroupBy, joinVisitor);
             }
             queryGenerator.setClauseType(null);
         } else {
@@ -237,7 +238,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
                     for (PathExpression pathExpr : componentPaths) {
                         sb.setLength(0);
                         queryGenerator.generate(pathExpr);
-                        groupByManager.collect(new ResolvedExpression(sb.toString(), pathExpr), ClauseType.SELECT, hasGroupBy);
+                        groupByManager.collect(new ResolvedExpression(sb.toString(), pathExpr), ClauseType.SELECT, hasGroupBy, joinVisitor);
                     }
                     queryGenerator.setClauseType(null);
                 } else {
@@ -248,7 +249,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
                         for (Expression expression : extractedGroupByExpressions) {
                             sb.setLength(0);
                             queryGenerator.generate(expression);
-                            groupByManager.collect(new ResolvedExpression(sb.toString(), expression), ClauseType.SELECT, hasGroupBy);
+                            groupByManager.collect(new ResolvedExpression(sb.toString(), expression), ClauseType.SELECT, hasGroupBy, joinVisitor);
                         }
                         queryGenerator.setClauseType(null);
                     }
@@ -527,9 +528,14 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
     }
 
     private void applySelect(ResolvingQueryGenerator queryGenerator, StringBuilder sb, SelectInfo select) {
-        queryGenerator.generate(select.getExpression());
-        if (select.alias != null) {
-            sb.append(" AS ").append(select.alias);
+        try {
+            queryGenerator.addAlias(select.alias);
+            queryGenerator.generate(select.getExpression());
+            if (select.alias != null) {
+                sb.append(" AS ").append(select.alias);
+            }
+        } finally {
+            queryGenerator.removeAlias(select.alias);
         }
     }
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.filter.model;
+package com.blazebit.persistence.view.testsuite.filter.basic.model;
 
 import com.blazebit.persistence.testsuite.entity.PrimitiveDocument;
 import com.blazebit.persistence.view.AttributeFilter;
@@ -29,13 +29,15 @@ import com.blazebit.persistence.view.filter.ContainsIgnoreCaseFilter;
  * @since 1.2.0
  */
 @EntityView(PrimitiveDocument.class)
-public interface AttributeFilterPrimitiveDocumentView {
+public interface AttributeFilterNameClashView {
+
     @IdMapping
     Long getId();
 
     @AttributeFilters({
-            @AttributeFilter(ContainsIgnoreCaseFilter.class),
-            @AttributeFilter(name = "caseSensitiveNameFilter", value = ContainsFilter.class)
+        @AttributeFilter(name = "filter", value = ContainsIgnoreCaseFilter.class),
+        @AttributeFilter(name = "filter", value = ContainsFilter.class)
     })
     String getName();
+
 }

@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -65,6 +66,7 @@ import static com.blazebit.persistence.parser.util.JpaMetamodelUtils.ATTRIBUTE_N
 public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, X>, Z, W, FinalSetReturn extends BaseFinalSetOperationBuilderImpl<T, ?, ?>> extends AbstractQueryBuilder<T, X, Z, W, FinalSetReturn> implements FullQueryBuilder<T, X> {
 
     protected static final Set<ClauseType> NO_CLAUSE_EXCLUSION = EnumSet.noneOf(ClauseType.class);
+    protected static final Set<ClauseType> OBJECT_QUERY_WITHOUT_GROUP_BY_EXCLUSIONS = EnumSet.of(ClauseType.GROUP_BY);
     protected static final Set<ClauseType> COUNT_QUERY_CLAUSE_EXCLUSIONS = EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT);
     protected static final Set<ClauseType> COUNT_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS = EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT, ClauseType.GROUP_BY);
 
@@ -435,7 +437,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
 
         List<ResolvedExpression> resolvedExpressions = new ArrayList<>(identifierExpressions == null ? 1 : identifierExpression.length() + 1);
         Expression expression = expressionFactory.createSimpleExpression(identifierExpression, false);
-        joinManager.implicitJoin(expression, false, null, null, null, false, false, false, false);
+        joinManager.implicitJoin(expression, false, null, null, new HashSet<String>(), false, false, false, false);
         StringBuilder sb = new StringBuilder();
 
         implicitJoinWhereClause();
@@ -457,7 +459,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         if (identifierExpressions != null) {
             for (String expressionString : identifierExpressions) {
                 expression = expressionFactory.createSimpleExpression(expressionString, false);
-                joinManager.implicitJoin(expression, false, null, null, null, false, false, false, false);
+                joinManager.implicitJoin(expression, false, null, null, new HashSet<String>(), false, false, false, false);
                 functionalDependencyAnalyzerVisitor.analyzeFormsUniqueTuple(expression);
                 if (functionalDependencyAnalyzerVisitor.getSplittedOffExpressions().isEmpty()) {
                     sb.setLength(0);
@@ -616,7 +618,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
     public X fetch(String path) {
         prepareForModification(ClauseType.JOIN);
         verifyBuilderEnded();
-        joinManager.implicitJoin(expressionFactory.createPathExpression(path), true, null, null, null, false, false, true, false, true);
+        joinManager.implicitJoin(expressionFactory.createPathExpression(path), true, null, null, new HashSet<String>(), false, false, true, false, true);
         return (X) this;
     }
 
@@ -626,8 +628,9 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         prepareForModification(ClauseType.JOIN);
         verifyBuilderEnded();
 
+        HashSet<String> currentlyResolvingAliases = new HashSet<>();
         for (String path : paths) {
-            joinManager.implicitJoin(expressionFactory.createPathExpression(path), true, null, null, null, false, false, true, false, true);
+            joinManager.implicitJoin(expressionFactory.createPathExpression(path), true, null, null, currentlyResolvingAliases, false, false, true, false, true);
         }
 
         return (X) this;

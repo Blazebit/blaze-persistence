@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.filter;
+package com.blazebit.persistence.view.testsuite.filter.basic;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.entity.PrimitiveDocument;
@@ -25,10 +25,10 @@ import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
-import com.blazebit.persistence.view.testsuite.filter.model.AttributeFilterNameClashView;
-import com.blazebit.persistence.view.testsuite.filter.model.AttributeFilterPrimitiveDocumentView;
-import com.blazebit.persistence.view.testsuite.filter.model.MultipleDefaultAttributeFiltersView;
-import com.blazebit.persistence.view.testsuite.filter.model.ViewFilterPrimitiveDocumentView;
+import com.blazebit.persistence.view.testsuite.filter.basic.model.AttributeFilterNameClashView;
+import com.blazebit.persistence.view.testsuite.filter.basic.model.AttributeFilterPrimitiveDocumentView;
+import com.blazebit.persistence.view.testsuite.filter.basic.model.MultipleDefaultAttributeFiltersView;
+import com.blazebit.persistence.view.testsuite.filter.basic.model.ViewFilterPrimitiveDocumentView;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -164,7 +164,7 @@ public class AttributeFilterTest extends AbstractEntityViewTest {
         setting.addViewFilter("viewFilter1");
         List<ViewFilterPrimitiveDocumentView> results = evm.applySetting(setting, cbf.create(em, PrimitiveDocument.class)).getResultList();
         assertEquals(1, results.size());
-        assertEquals(Long.valueOf(doc1.getId()), results.get(0).getId());
+        Assert.assertEquals(Long.valueOf(doc1.getId()), results.get(0).getId());
     }
 
     @Test

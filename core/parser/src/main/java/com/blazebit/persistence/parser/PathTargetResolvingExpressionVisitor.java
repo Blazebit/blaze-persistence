@@ -227,14 +227,14 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
                 }
             }
 
+            valueType = metamodel.type(JpaMetamodelUtils.resolveFieldClass(currentPosition.getCurrentClass(), attribute));
+
             if (typeArguments.length == 0) {
                 // Raw types
                 if (attribute instanceof MapAttribute<?, ?, ?>) {
                     keyType = ((MapAttribute<?, ?, ?>) attribute).getKeyType();
                 }
-                valueType = ((PluralAttribute<?, ?, ?>) attribute).getElementType();
             } else {
-                valueType = metamodel.type(typeArguments[typeArguments.length - 1]);
                 if (typeArguments.length > 1) {
                     keyType = metamodel.type(typeArguments[0]);
                 }

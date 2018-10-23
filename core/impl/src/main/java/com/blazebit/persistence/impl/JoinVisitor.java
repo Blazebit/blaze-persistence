@@ -35,7 +35,9 @@ import com.blazebit.persistence.spi.ExtendedManagedType;
 
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.Type;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -51,10 +53,10 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor {
     private final JoinManager joinManager;
     private final ParameterManager parameterManager;
     private final boolean needsSingleValuedAssociationIdRemoval;
+    private final Set<String> currentlyResolvingAliases;
     private boolean joinRequired;
     private boolean joinWithObjectLeafAllowed = true;
     private ClauseType fromClause;
-    private String selectAlias;
 
     public JoinVisitor(MainQuery mainQuery, JoinVisitor parentVisitor, JoinManager joinManager, ParameterManager parameterManager, boolean needsSingleValuedAssociationIdRemoval) {
         this.parameterTransformerFactory = mainQuery.parameterTransformerFactory;
@@ -63,6 +65,7 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor {
         this.joinManager = joinManager;
         this.parameterManager = parameterManager;
         this.needsSingleValuedAssociationIdRemoval = needsSingleValuedAssociationIdRemoval;
+        this.currentlyResolvingAliases = new HashSet<>();
         // By default we require joins
         this.joinRequired = true;
     }
@@ -82,10 +85,26 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor {
 
     private void visit(PathExpression expression, boolean idRemovable) {
         Expression aliasedExpression;
-        if ((aliasedExpression = joinManager.getJoinableSelectAlias(expression, fromClause == ClauseType.SELECT, false)) != null) {
-            aliasedExpression.accept(this);
+        String alias;
+        if (expression.getExpressions().size() == 1 && !currentlyResolvingAliases.contains(alias = expression.toString()) && (aliasedExpression = joinManager.getJoinableSelectAlias(expression, fromClause == ClauseType.SELECT, false)) != null) {
+            try {
+                currentlyResolvingAliases.add(alias);
+                aliasedExpression.accept(this);
+                // We initialize the aliased PathExpression properly
+                if (aliasedExpression instanceof PathExpression) {
+                    PathExpression aliasedPathExpression = (PathExpression) aliasedExpression;
+                    if (aliasedPathExpression.isCollectionKeyPath()) {
+                        expression.setCollectionKeyPath(true);
+                    }
+                    if (aliasedPathExpression.isUsedInCollectionFunction()) {
+                        expression.setUsedInCollectionFunction(true);
+                    }
+                }
+            } finally {
+                currentlyResolvingAliases.remove(alias);
+            }
         } else {
-            joinManager.implicitJoin(expression, joinWithObjectLeafAllowed, null, fromClause, selectAlias, false, false, joinRequired, idRemovable);
+            joinManager.implicitJoin(expression, joinWithObjectLeafAllowed, null, fromClause, currentlyResolvingAliases, false, false, joinRequired, idRemovable);
             if (parentVisitor != null) {
                 JoinNode baseNode = (JoinNode) expression.getBaseNode();
                 AliasManager aliasOwner = baseNode.getAliasInfo().getAliasOwner();
@@ -342,11 +361,14 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor {
 
     @Override
     public void visit(SelectInfo selectInfo) {
+        String alias = selectInfo.getAlias();
         try {
-            this.selectAlias = selectInfo.getAlias();
+            if (alias != null) {
+                currentlyResolvingAliases.add(alias);
+            }
             selectInfo.getExpression().accept(this);
         } finally {
-            this.selectAlias = null;
+            currentlyResolvingAliases.remove(alias);
         }
     }
 }

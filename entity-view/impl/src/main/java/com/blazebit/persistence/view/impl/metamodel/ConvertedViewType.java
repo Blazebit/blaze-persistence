@@ -30,6 +30,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.Set;
 
 /**
@@ -73,6 +74,11 @@ public class ConvertedViewType<X> implements ViewTypeImplementor<X> {
     @Override
     public void checkNestedAttributes(List<AbstractAttribute<?, ?>> parents, MetamodelBuildingContext context) {
         delegate.checkNestedAttributes(parents, context);
+    }
+
+    @Override
+    public NavigableMap<String, AbstractMethodAttribute<? super X, ?>> getRecursiveAttributes() {
+        return delegate.getRecursiveAttributes();
     }
 
     @Override

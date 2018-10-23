@@ -30,6 +30,8 @@ import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 
+import javax.persistence.Tuple;
+
 /**
  *
  * @author Christian Beikov
@@ -349,14 +351,25 @@ public class WhereTest extends AbstractCoreTest {
         assertEquals(expected, crit.getQueryString());
         crit.getResultList(); 
     }
-    
+
     @Test
     public void testWhereCase() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.whereCase().when("d.id").geExpression("d.age").thenExpression("2").otherwiseExpression("1").eqExpression("d.idx");
         String expected = "SELECT d FROM Document d WHERE CASE WHEN d.id >= d.age THEN 2 ELSE 1 END = d.idx";
         assertEquals(expected, crit.getQueryString());
-        crit.getResultList(); 
+        crit.getResultList();
+    }
+
+    @Test
+    public void testWhereSelectAlias() {
+        CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class)
+                .from(Document.class, "d");
+        crit.select("CASE WHEN d.id >= d.age THEN 2 ELSE 1 END", "myExpression");
+        crit.where("myExpression").eqExpression("d.idx");
+        String expected = "SELECT CASE WHEN d.id >= d.age THEN 2 ELSE 1 END AS myExpression FROM Document d WHERE CASE WHEN d.id >= d.age THEN 2 ELSE 1 END = d.idx";
+        assertEquals(expected, crit.getQueryString());
+        crit.getResultList();
     }
     
     @Test

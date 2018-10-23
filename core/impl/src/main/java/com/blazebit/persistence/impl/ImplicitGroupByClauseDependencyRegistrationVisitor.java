@@ -26,15 +26,21 @@ import com.blazebit.persistence.parser.expression.VisitorAdapter;
  */
 class ImplicitGroupByClauseDependencyRegistrationVisitor extends VisitorAdapter {
 
-    public static final ImplicitGroupByClauseDependencyRegistrationVisitor INSTANCE = new ImplicitGroupByClauseDependencyRegistrationVisitor();
+    private final AliasManager aliasManager;
 
-    private ImplicitGroupByClauseDependencyRegistrationVisitor() {
+    public ImplicitGroupByClauseDependencyRegistrationVisitor(AliasManager aliasManager) {
+        this.aliasManager = aliasManager;
     }
 
     @Override
     public void visit(PathExpression expr) {
         JoinNode node = (JoinNode) expr.getBaseNode();
-        node.updateClauseDependencies(ClauseType.GROUP_BY);
+        if (node == null) {
+            // This can only be a select alias
+            ((SelectInfo) aliasManager.getAliasInfo(expr.toString())).getExpression().accept(this);
+        } else {
+            node.updateClauseDependencies(ClauseType.GROUP_BY);
+        }
     }
 
 }

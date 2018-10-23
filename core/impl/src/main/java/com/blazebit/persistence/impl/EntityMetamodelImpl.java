@@ -328,9 +328,9 @@ public class EntityMetamodelImpl implements EntityMetamodel {
                         String prefix = attributeName + ".";
                         for (AttributeEntry<?, ?> value : attributeMap.values()) {
                             if (value.getAttributePathString().startsWith(prefix)) {
-                                String idPath = value.getAttributePathString().substring(prefix.length());
+                                String idPath = value.getAttributePathString().substring(parent.length() + 1);
                                 ArrayList<Attribute<?, ?>> idParents = new ArrayList<>(value.attributePath.subList(0, value.attributePath.size()));
-                                AttributeEntry attributeEntry = new AttributeEntry(jpaProvider, e, value.attribute, idPath, value.elementClass, idParents, null);
+                                AttributeEntry attributeEntry = new AttributeEntry(jpaProvider, type, value.attribute, idPath, value.elementClass, idParents, null);
                                 managedTypeAttributes.put(idPath, attributeEntry);
                             }
                         }

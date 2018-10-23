@@ -82,9 +82,9 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
     private boolean resultUnique;
     private boolean inKey;
 
-    public FunctionalDependencyAnalyzerVisitor(EntityMetamodel metamodel, SplittingVisitor splittingVisitor, JpaProvider jpaProvider) {
-        super(metamodel, jpaProvider, splittingVisitor);
-        this.constantifiedJoinNodeAttributeCollector = new ConstantifiedJoinNodeAttributeCollector(metamodel);
+    public FunctionalDependencyAnalyzerVisitor(EntityMetamodel metamodel, SplittingVisitor splittingVisitor, JpaProvider jpaProvider, AliasManager aliasManager) {
+        super(metamodel, jpaProvider, aliasManager, splittingVisitor);
+        this.constantifiedJoinNodeAttributeCollector = new ConstantifiedJoinNodeAttributeCollector(metamodel, aliasManager);
         this.uniquenessMissingJoinNodeAttributes = new HashMap<>();
         this.uniquenessFormingJoinNodeExpressions = new HashMap<>();
         this.functionalDependencyRootExpressions = new LinkedHashMap<>();
@@ -186,6 +186,11 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
     @Override
     public Boolean visit(PathExpression expr) {
         PathReference pathReference = expr.getPathReference();
+        if (pathReference == null) {
+            Expression aliasedExpression = ((SelectInfo) aliasManager.getAliasInfo(expr.toString())).getExpression();
+            return aliasedExpression.accept(this);
+        }
+
         JoinNode baseNode = (JoinNode) pathReference.getBaseNode();
 
         if (pathReference.getField() == null) {
@@ -274,7 +279,18 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
         Set<String> orderedAttributes = getUniquenessMissingAttributes(baseNodeKey, managedType);
 
         // We remove for every id attribute from the initialized set of id attribute names
-        String prefix = isEmbeddedIdPart ? pathReference.getField().substring(0, dotIndex + 1) : "";
+        String prefix;
+        if (dotIndex == -1 && baseNode.getParentTreeNode() != null && !baseNode.getParentTreeNode().isCollection()) {
+            prefix = baseNode.getParentTreeNode().getRelationName() + ".";
+            JoinNode node = baseNode.getParent();
+
+            while (node.getParentTreeNode() != null) {
+                prefix = node.getParentTreeNode().getRelationName() + "." + prefix;
+                node = node.getParent();
+            }
+        } else {
+            prefix = isEmbeddedIdPart ? pathReference.getField().substring(0, dotIndex + 1) : "";
+        }
         if (removeAttribute(prefix, singularAttr, orderedAttributes) && currentResolvedExpression != null) {
             List<ResolvedExpression> resolvedExpressions = uniquenessFormingJoinNodeExpressions.get(baseNodeKey);
             if (resolvedExpressions == null) {
@@ -382,7 +398,9 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
                     addAttributes(entityType, null, "", "", idAttribute, orderedAttributes);
                 }
             } else {
-                addAttributes(baseNode.getParent().getEntityType(), null, "", prefix, (SingularAttribute<?, ?>) baseNode.getParentTreeNode().getAttribute(), orderedAttributes);
+                String fieldPrefix = baseNode.getParentTreeNode().getRelationName();
+                fieldPrefix = fieldPrefix.substring(0, fieldPrefix.length() - baseNode.getParentTreeNode().getAttribute().getName().length());
+                addAttributes(baseNode.getParent().getEntityType(), null, fieldPrefix, prefix, (SingularAttribute<?, ?>) baseNode.getParentTreeNode().getAttribute(), orderedAttributes);
             }
             Set<String> constantifiedAttributes = constantifiedJoinNodeAttributeCollector.getConstantifiedJoinNodeAttributes().get(baseNodeKey);
             if (constantifiedAttributes != null) {
