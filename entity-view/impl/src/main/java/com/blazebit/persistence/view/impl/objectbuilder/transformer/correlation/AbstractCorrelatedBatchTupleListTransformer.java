@@ -141,7 +141,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
                 }
             } else {
                 // The correlation key is basic type
-                correlationSelectExpression = correlationKeyExpression = CORRELATION_KEY_ALIAS + ".value";
+                correlationSelectExpression = correlationKeyExpression = CORRELATION_KEY_ALIAS;
             }
         } else {
             this.correlationParamName = generateCorrelationParamName();

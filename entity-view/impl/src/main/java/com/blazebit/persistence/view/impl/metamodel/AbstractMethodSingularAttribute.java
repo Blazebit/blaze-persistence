@@ -181,7 +181,7 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
             }
         }
 
-        if (this.inverseRemoveStrategy == null && mapping.getInverseRemoveStrategy() != null) {
+        if (this.inverseRemoveStrategy == null && mapping.getInverseRemoveStrategy() != null && this.dirtyStateIndex != -1) {
             context.addError("Found use of @MappingInverse on attribute that isn't an inverse relationship. Invalid definition found on the " + mapping.getErrorLocation() + "!");
         }
 

@@ -25,6 +25,7 @@ import javax.persistence.EntityManager;
 
 import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.entity.DocumentType;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Test;
 
@@ -132,6 +133,7 @@ public class JpqlFunctionTest extends AbstractCoreTest {
         String coalesceName = resolveRegisteredFunctionName("coalesce");
         String countName = resolveRegisteredFunctionName("count");
         String lengthName = resolveRegisteredFunctionName("length");
+        String maxName = resolveRegisteredFunctionName("max");
         Map<String, JpqlFunction> functions = cbf.getRegisteredFunctions();
         assertEquals(String.class, functions.get(coalesceName).getReturnType(String.class));
         assertEquals(Integer.class, functions.get(coalesceName).getReturnType(Integer.class));
@@ -140,5 +142,6 @@ public class JpqlFunctionTest extends AbstractCoreTest {
         assertEquals(Long.class, functions.get(countName).getReturnType(Integer.class));
         assertEquals(Long.class, functions.get(countName).getReturnType(Long.class));
         assertEquals(Integer.class, functions.get(lengthName).getReturnType(String.class));
+        assertEquals(DocumentType.class, functions.get(maxName).getReturnType(DocumentType.class));
     }
 }

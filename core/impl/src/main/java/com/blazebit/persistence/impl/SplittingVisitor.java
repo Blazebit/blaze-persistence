@@ -19,6 +19,8 @@ package com.blazebit.persistence.impl;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.LazyCopyingResultVisitorAdapter;
+import com.blazebit.persistence.parser.expression.MapKeyExpression;
+import com.blazebit.persistence.parser.expression.MapValueExpression;
 import com.blazebit.persistence.parser.expression.PathElementExpression;
 import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.expression.PropertyExpression;
@@ -38,13 +40,52 @@ public class SplittingVisitor extends LazyCopyingResultVisitorAdapter {
     private final EntityMetamodel metamodel;
     private final JpaProvider jpaProvider;
     private final AliasManager aliasManager;
-    private PathExpression expressionToSplit;
+    private Expression expressionToSplit;
     private String subAttribute;
 
     public SplittingVisitor(EntityMetamodel metamodel, JpaProvider jpaProvider, AliasManager aliasManager) {
         this.metamodel = metamodel;
         this.jpaProvider = jpaProvider;
         this.aliasManager = aliasManager;
+    }
+
+    @Override
+    public Expression visit(MapKeyExpression expression) {
+        if (expression == expressionToSplit) {
+            List<PathElementExpression> expressions = new ArrayList<>(2);
+            expressions.add(expression);
+            for (String subAttributePart : subAttribute.split("\\.")) {
+                expressions.add(new PropertyExpression(subAttributePart));
+            }
+
+            JoinNode node = ((JoinNode) expression.getPath().getBaseNode()).getKeyJoinNode();
+            String field = subAttribute;
+            Class<?> fieldClass = jpaProvider.getJpaMetamodelAccessor().getAttributePath(metamodel, node.getManagedType(), field).getAttributeClass();
+            Type<?> fieldType = metamodel.type(fieldClass);
+
+            return new PathExpression(
+                    expressions,
+                    new SimplePathReference(node, field, fieldType),
+                    false,
+                    false
+            );
+        }
+        return expression;
+    }
+
+    @Override
+    public Expression visit(MapValueExpression expression) {
+        if (expression == expressionToSplit) {
+            Expression newExpression = expression.getPath().accept(this);
+            if (newExpression != expression.getPath()) {
+                // A split map value expression is not surrounded by the map value operator anymore
+                return newExpression;
+            }
+        } else {
+            return expression.getPath().accept(this);
+        }
+
+        return expression;
     }
 
     @Override
@@ -81,7 +122,7 @@ public class SplittingVisitor extends LazyCopyingResultVisitorAdapter {
         return expression;
     }
 
-    public Expression splitOff(Expression expression, PathExpression expressionToSplit, String subAttribute) {
+    public Expression splitOff(Expression expression, Expression expressionToSplit, String subAttribute) {
         this.expressionToSplit = expressionToSplit;
         this.subAttribute = subAttribute;
         try {

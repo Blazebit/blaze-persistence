@@ -150,4 +150,30 @@ public class GroupByTest extends AbstractCoreTest {
         }
         cb.getResultList();
     }
+
+    @Test
+    public void testGroupByElementCollectionKey() {
+        CriteriaBuilder<Long> cb = cbf.create(em, Long.class)
+                .from(Document.class, "d")
+                .select("d.id")
+                .groupBy("KEY(nameMap)");
+
+        assertEquals("SELECT d.id FROM Document d LEFT JOIN d.nameMap nameMap_1 GROUP BY KEY(nameMap_1), d.id", cb.getQueryString());
+        cb.getResultList();
+    }
+
+    @Test
+    public void testGroupByElementCollectionValue() {
+        CriteriaBuilder<Long> cb = cbf.create(em, Long.class)
+                .from(Document.class, "d")
+                .select("d.id")
+                .groupBy("VALUE(nameMap)");
+
+        if (jpaProvider.supportsSingleValuedAssociationIdExpressions()) {
+            assertEquals("SELECT d.id FROM Document d LEFT JOIN d.nameMap nameMap_1 GROUP BY nameMap_1.intIdEntity.id, nameMap_1.primaryName, nameMap_1.secondaryName, d.id", cb.getQueryString());
+        } else {
+            assertEquals("SELECT d.id FROM Document d LEFT JOIN d.nameMap nameMap_1 LEFT JOIN nameMap_1.intIdEntity intIdEntity_1 GROUP BY intIdEntity_1.id, nameMap_1.primaryName, nameMap_1.secondaryName, d.id", cb.getQueryString());
+        }
+        cb.getResultList();
+    }
 }

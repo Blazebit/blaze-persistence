@@ -18,6 +18,8 @@ package com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.
 
 import com.blazebit.persistence.view.CreatableEntityView;
 import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.InverseRemoveStrategy;
+import com.blazebit.persistence.view.MappingInverse;
 import com.blazebit.persistence.view.PostCreate;
 import com.blazebit.persistence.view.UpdatableEntityView;
 import com.blazebit.persistence.view.UpdatableMapping;
@@ -45,6 +47,7 @@ public abstract class UpdatableLegacyOrderPositionView implements LegacyOrderPos
     public abstract void setArticleNumber(String articleNumber);
 
     @UpdatableMapping
+    @MappingInverse(removeStrategy = InverseRemoveStrategy.REMOVE)
     public abstract Set<LegacyOrderPositionDefaultIdView> getDefaults();
     abstract void setDefaults(Set<LegacyOrderPositionDefaultIdView> defaults);
 }

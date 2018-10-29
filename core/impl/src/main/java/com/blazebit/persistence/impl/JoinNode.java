@@ -530,6 +530,11 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         return treatedJoinNodes;
     }
 
+    public JoinNode getKeyJoinNode() {
+        JoinTreeNode treeNode = getOrCreateTreeNode("KEY(" + getParentTreeNode().getRelationName() + ")", getParentTreeNode().getAttribute());
+        return treeNode.getDefaultNode();
+    }
+
     public JoinTreeNode getOrCreateTreeNode(String joinRelationName, Attribute<?, ?> attribute) {
         JoinTreeNode node = nodes.get(joinRelationName);
 

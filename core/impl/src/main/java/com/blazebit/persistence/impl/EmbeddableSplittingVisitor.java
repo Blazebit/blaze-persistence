@@ -26,8 +26,9 @@ import com.blazebit.persistence.parser.expression.EnumLiteral;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.FunctionExpression;
 import com.blazebit.persistence.parser.expression.GeneralCaseExpression;
+import com.blazebit.persistence.parser.expression.ListIndexExpression;
 import com.blazebit.persistence.parser.expression.MapEntryExpression;
-import com.blazebit.persistence.parser.expression.MapValueExpression;
+import com.blazebit.persistence.parser.expression.MapKeyExpression;
 import com.blazebit.persistence.parser.expression.NullExpression;
 import com.blazebit.persistence.parser.expression.NumericLiteral;
 import com.blazebit.persistence.parser.expression.ParameterExpression;
@@ -50,6 +51,7 @@ import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import java.util.ArrayList;
@@ -72,7 +74,7 @@ class EmbeddableSplittingVisitor extends AbortableVisitorAdapter {
     protected final AliasManager aliasManager;
     protected final SplittingVisitor splittingVisitor;
     protected final List<Expression> splittedOffExpressions;
-    protected PathExpression expressionToSplit;
+    protected Expression expressionToSplit;
 
     public EmbeddableSplittingVisitor(EntityMetamodel metamodel, JpaProvider jpaProvider, AliasManager aliasManager, SplittingVisitor splittingVisitor) {
         this.metamodel = metamodel;
@@ -102,20 +104,31 @@ class EmbeddableSplittingVisitor extends AbortableVisitorAdapter {
     protected boolean collectSplittedOffExpressions(Expression expression) {
         splittedOffExpressions.clear();
         if (expressionToSplit != null) {
-            PathReference pathReference = expressionToSplit.getPathReference();
-            JoinNode baseNode = (JoinNode) pathReference.getBaseNode();
-            String fieldPrefix = pathReference.getField() == null ? "" : pathReference.getField() + ".";
+            JoinNode baseNode;
+            String field;
+            if (expressionToSplit instanceof PathExpression) {
+                PathReference pathReference = ((PathExpression) expressionToSplit).getPathReference();
+                baseNode = (JoinNode) pathReference.getBaseNode();
+                field = pathReference.getField();
+            } else if (expressionToSplit instanceof MapKeyExpression) {
+                baseNode = ((JoinNode) ((MapKeyExpression) expressionToSplit).getPath().getBaseNode()).getKeyJoinNode();
+                field = null;
+            } else {
+                // This should never happen
+                return false;
+            }
+            String fieldPrefix = field == null ? "" : field + ".";
             ExtendedManagedType<?> managedType = metamodel.getManagedType(ExtendedManagedType.class, baseNode.getJavaType());
             Set<String> orderedAttributes = new TreeSet<>();
             EntityType<?> ownerType;
-            if (baseNode.getParentTreeNode() == null && pathReference.getField() == null) {
+            if (baseNode.getParentTreeNode() == null && field == null) {
                 ownerType = baseNode.getEntityType();
                 for (SingularAttribute<?, ?> idAttribute : managedType.getIdAttributes()) {
                     addAttributes(ownerType, null, fieldPrefix, "", idAttribute, orderedAttributes);
                 }
             } else {
                 Map<String, ? extends ExtendedAttribute<?, ?>> ownedAttributes;
-                String prefix = pathReference.getField();
+                String prefix = field;
                 if (baseNode.getParentTreeNode() != null && baseNode.getParentTreeNode().getAttribute().getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION) {
                     String elementCollectionPath = baseNode.getParentTreeNode().getRelationName();
                     ExtendedManagedType entityManagedType = metamodel.getManagedType(ExtendedManagedType.class, baseNode.getParent().getEntityType());
@@ -215,6 +228,37 @@ class EmbeddableSplittingVisitor extends AbortableVisitorAdapter {
     }
 
     @Override
+    public Boolean visit(ListIndexExpression expression) {
+        return false;
+    }
+
+    @Override
+    public Boolean visit(MapKeyExpression expression) {
+        PathExpression path = expression.getPath();
+        PathReference pathReference = path.getPathReference();
+        while (pathReference == null) {
+            Expression aliasedExpression = ((SelectInfo) aliasManager.getAliasInfo(path.toString())).getExpression();
+            if (aliasedExpression instanceof PathExpression) {
+                path = (PathExpression) aliasedExpression;
+                pathReference = path.getPathReference();
+            } else {
+                // This should never happen
+                return false;
+            }
+        }
+
+        JoinNode baseNode = (JoinNode) pathReference.getBaseNode();
+        Attribute attr;
+        if (baseNode.getParentTreeNode() != null) {
+            attr = baseNode.getParentTreeNode().getAttribute();
+            if (attr instanceof MapAttribute<?, ?, ?> && ((MapAttribute<?, ?, ?>) attr).getKeyType() instanceof EmbeddableType<?>) {
+                expressionToSplit = expression;
+            }
+        }
+        return false;
+    }
+
+    @Override
     public Boolean visit(NullExpression expression) {
         // The actual semantics of NULL are, that NULL != NULL
         return true;
@@ -264,11 +308,6 @@ class EmbeddableSplittingVisitor extends AbortableVisitorAdapter {
 
     @Override
     public Boolean visit(MapEntryExpression expression) {
-        return false;
-    }
-
-    @Override
-    public Boolean visit(MapValueExpression expression) {
         return false;
     }
 

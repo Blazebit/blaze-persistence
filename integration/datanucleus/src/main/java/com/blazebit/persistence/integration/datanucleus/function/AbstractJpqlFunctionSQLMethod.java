@@ -23,11 +23,13 @@ import org.datanucleus.store.rdbms.sql.SQLStatement;
 import org.datanucleus.store.rdbms.sql.expression.BooleanExpression;
 import org.datanucleus.store.rdbms.sql.expression.ByteExpression;
 import org.datanucleus.store.rdbms.sql.expression.CharacterExpression;
+import org.datanucleus.store.rdbms.sql.expression.EnumExpression;
 import org.datanucleus.store.rdbms.sql.expression.NumericExpression;
 import org.datanucleus.store.rdbms.sql.expression.SQLExpression;
 import org.datanucleus.store.rdbms.sql.expression.StringExpression;
 import org.datanucleus.store.rdbms.sql.expression.TemporalExpression;
 import org.datanucleus.store.rdbms.sql.method.SQLMethod;
+import org.datanucleus.store.rdbms.sql.method.SimpleOrderableAggregateMethod;
 
 import java.util.logging.Logger;
 
@@ -78,6 +80,12 @@ public abstract class AbstractJpqlFunctionSQLMethod implements JpqlFunction {
             expression = new CharacterExpression(stmt, null, argumentTypeMapping);
         } else if (Boolean.class.isAssignableFrom(firstArgumentType)) {
             expression = new BooleanExpression(stmt, argumentTypeMapping, "");
+        } else if (firstArgumentType.isEnum()) {
+            // DataNucleus needs a table to handle aggregates on enums, so we just assume the aggregate will be MIN/MAX
+            if (function instanceof SimpleOrderableAggregateMethod) {
+                return firstArgumentType;
+            }
+            expression = new EnumExpression(stmt, null, argumentTypeMapping);
         } else {
             throw new UnsupportedOperationException("Unsupported data type: " + firstArgumentType.getName());
         }

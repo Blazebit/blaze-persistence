@@ -17,10 +17,12 @@
 package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.annotation.AnnotationUtils;
+import com.blazebit.persistence.parser.PathTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.parser.expression.SyntaxErrorException;
 import com.blazebit.persistence.view.AttributeFilter;
 import com.blazebit.persistence.view.AttributeFilters;
 import com.blazebit.persistence.view.IdMapping;
+import com.blazebit.persistence.view.InverseRemoveStrategy;
 import com.blazebit.persistence.view.LockMode;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingCorrelated;
@@ -42,6 +44,8 @@ import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.reflection.ReflectionUtils;
 
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.SingularAttribute;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Collection;
@@ -281,6 +285,51 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
             } else {
                 // Flat view types don't have a lock mode of their own, but are assumed to inherit locks from parents
                 return true;
+            }
+        }
+    }
+
+    @Override
+    public void checkAttribute(ManagedType<?> managedType, MetamodelBuildingContext context) {
+        super.checkAttribute(managedType, context);
+        if (isUpdatable() && declaringType.isUpdatable()) {
+            String mappedBy = getMappedBy();
+            if (mappedBy != null && getInverseRemoveStrategy() == InverseRemoveStrategy.SET_NULL) {
+                Type<?> elementType = getElementType();
+                ManagedType<?> elementJpaType;
+                if (elementType instanceof ManagedViewTypeImplementor<?>) {
+                    elementJpaType = ((ManagedViewTypeImplementor<?>) elementType).getJpaManagedType();
+                } else {
+                    elementJpaType = ((BasicTypeImpl<?>) elementType).getManagedType();
+                }
+                Map<String, String> writableMappedByMappings = getWritableMappedByMappings();
+                if (writableMappedByMappings == null) {
+                    Attribute<?, ?> attribute = elementJpaType.getAttribute(mappedBy);
+                    // SET_NULL for plural attributes i.e. @ManyToMany is like removing just the join table entry
+                    // So we just care about singular attributes here
+                    if (attribute instanceof SingularAttribute<?, ?>) {
+                        if (!((SingularAttribute<?, ?>) attribute).isOptional()) {
+                            context.addError("Illegal use of the remove strategy SET_NULL for non-nullable mapped by attribute '" + mappedBy + "' at " + getLocation() + " Use a different strategy via @MappingInverse(removeStrategy = InverseRemoveStrategy...)");
+                        }
+                    }
+                } else {
+                    PathTargetResolvingExpressionVisitor visitor = new PathTargetResolvingExpressionVisitor(context.getEntityMetamodel(), elementJpaType, null);
+                    for (String value : writableMappedByMappings.values()) {
+                        visitor.reset(elementJpaType);
+                        context.getTypeValidationExpressionFactory().createPathExpression(value).accept(visitor);
+                        Map<Attribute<?, ?>, javax.persistence.metamodel.Type<?>> possibleTargets = visitor.getPossibleTargets();
+                        if (possibleTargets.size() > 1) {
+                            context.addError("Multiple possible target type for the mapping in the " + getLocation() + ": " + possibleTargets);
+                        }
+                        Attribute<?, ?> attribute = possibleTargets.keySet().iterator().next();
+                        if (attribute instanceof SingularAttribute<?, ?>) {
+                            if (!((SingularAttribute<?, ?>) attribute).isOptional()) {
+                                context.addError("Illegal use of the remove strategy SET_NULL for non-nullable mapped by attribute '" + mappedBy + "' because writable mapping '" + value + "' is non-optional at " + getLocation() + " Use a different strategy via @MappingInverse(removeStrategy = InverseRemoveStrategy...)");
+                            }
+                        }
+                    }
+
+                }
             }
         }
     }
