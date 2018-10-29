@@ -434,4 +434,23 @@ public class EntityViewMetamodelTest extends AbstractEntityViewTest {
         assertTrue(docViewType.getAttribute("owner").isMutable());
         assertTrue(docViewType.getAttribute("people").isMutable());
     }
+
+    public static interface InverseRemoveStrategyPersonUpdateView extends PersonUpdateView {
+        Set<DocumentBaseView> getOwnedDocuments();
+        void setOwnedDocuments(Set<DocumentBaseView> ownedDocuments);
+    }
+
+    @Test
+    public void inverseRemoveSetNullWhenOptional() {
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        cfg.addEntityView(InverseRemoveStrategyPersonUpdateView.class);
+        cfg.addEntityView(PersonUpdateView.class);
+        cfg.addEntityView(DocumentBaseView.class);
+        try {
+            cfg.createEntityViewManager(cbf);
+            fail("Expected validation failure because of invalid inverse remove strategy usage!");
+        } catch (IllegalArgumentException ex) {
+            assertTrue(ex.getMessage().contains("'owner'"));
+        }
+    }
 }

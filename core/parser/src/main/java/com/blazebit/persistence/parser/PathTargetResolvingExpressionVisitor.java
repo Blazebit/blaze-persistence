@@ -164,8 +164,13 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
     public PathTargetResolvingExpressionVisitor(EntityMetamodel metamodel, Type<?> startClass, String skipBaseNodeAlias) {
         this.metamodel = metamodel;
         this.pathPositions = new ArrayList<>();
-        this.pathPositions.add(currentPosition = new PathPosition(startClass, null));
         this.skipBaseNodeAlias = skipBaseNodeAlias;
+        reset(startClass);
+    }
+
+    public void reset(Type<?> startClass) {
+        pathPositions.clear();
+        pathPositions.add(currentPosition = new PathPosition(startClass, null));
     }
 
     private Type<?> getType(Type<?> baseType, Attribute<?, ?> attribute) {

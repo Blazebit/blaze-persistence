@@ -30,7 +30,7 @@ public class MapValueExpression extends AbstractExpression implements PathElemen
 
     @Override
     public MapValueExpression clone(boolean resolved) {
-        return new MapValueExpression((PathExpression) path.clone(resolved));
+        return new MapValueExpression(path.clone(resolved));
     }
 
     @Override

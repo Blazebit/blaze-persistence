@@ -18,6 +18,7 @@ package com.blazebit.persistence.integration.hibernate.base.function;
 
 import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.JpqlFunction;
+import org.hibernate.MappingException;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.Type;
@@ -54,10 +55,14 @@ public class HibernateSQLFunctionAdapter implements JpqlFunction {
         }
         Type type = sfi.getTypeHelper().basic(firstArgumentType);
         if (type == null) {
-            if (sfi.getClassMetadata(firstArgumentType) != null) {
+            if (sfi.getEntityPersisters().get(firstArgumentType.getName()) != null) {
                 type = sfi.getTypeHelper().entity(firstArgumentType);
             } else {
-                type = sfi.getTypeHelper().custom(firstArgumentType);
+                try {
+                    type = sfi.getTypeHelper().custom(firstArgumentType);
+                } catch (MappingException ex) {
+                    type = sfi.getTypeHelper().heuristicType(firstArgumentType.getName());
+                }
             }
         }
 

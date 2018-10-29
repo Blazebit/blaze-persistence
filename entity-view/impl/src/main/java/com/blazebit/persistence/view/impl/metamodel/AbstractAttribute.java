@@ -772,7 +772,6 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                         context.addError("Multiple possible target type for the mapping in the " + getLocation() + ": " + possibleTargets);
                     }
 
-                    javax.persistence.metamodel.Attribute<?, ?> jpaAttribute = possibleTargets.keySet().iterator().next();
                     // TODO: maybe allow to override this per-attribute?
                     if (isDisallowOwnedUpdatableSubview()) {
                         for (Type<?> updateCascadeAllowedSubtype : getUpdateCascadeAllowedSubtypes()) {
