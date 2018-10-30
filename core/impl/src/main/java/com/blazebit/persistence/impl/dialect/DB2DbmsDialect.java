@@ -52,11 +52,6 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
     public String getWithClause(boolean recursive) {
         return "with";
     }
-    
-    @Override
-    public boolean supportsComplexGroupBy() {
-        return false;
-    }
 
     @Override
     public boolean supportsComplexJoinOn() {

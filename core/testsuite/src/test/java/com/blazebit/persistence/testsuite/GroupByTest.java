@@ -84,7 +84,7 @@ public class GroupByTest extends AbstractCoreTest {
     public void testSizeTransformWithImplicitParameterGroupBy1() {
         CriteriaBuilder<Long> criteria = cbf.create(em, Long.class).from(Document.class, "d")
                 .select("SIZE(d.versions)")
-                .selectCase().when("d.age").lt(2l).thenExpression("'a'").otherwiseExpression("'b'");
+                .selectCase().when("d.age").lt(2L).thenExpression("'a'").otherwiseExpression("'b'");
 
         final String expected = "SELECT " + function("COUNT_TUPLE", "versions_1.id") + ", CASE WHEN d.age < :param_0 THEN 'a' ELSE 'b' END FROM Document d LEFT JOIN d.versions versions_1 GROUP BY d.id, d.age";
         assertEquals(expected, criteria.getQueryString());
@@ -92,29 +92,7 @@ public class GroupByTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDB2.class, NoMSSQL.class, NoOracle.class })
-    public void testSizeTransformWithImplicitParameterGroupBy2() {
-        CriteriaBuilder<Long> criteria = cbf.create(em, Long.class).from(Document.class, "d")
-                .select("SIZE(d.versions)")
-                .selectCase().when("d.age").lt(2l).thenExpression("'a'").otherwiseExpression("'b'");
-        
-        final String expected = "SELECT " + function("COUNT_TUPLE", "versions_1.id") + ", CASE WHEN d.age < :param_0 THEN 'a' ELSE 'b' END FROM Document d LEFT JOIN d.versions versions_1 " +
-                "GROUP BY d.id, " + groupByPathExpressions("CASE WHEN d.age < :param_0 THEN 'a' ELSE 'b' END", "d.age");
-        assertEquals(expected, criteria.getQueryString());
-        criteria.getResultList();
-    }
-
-    @Test
     public void testGroupByKeyExpression() {
-        CriteriaBuilderConfiguration config = Criteria.getDefault();
-        config = configure(config);
-        config.registerDialect(dbms, new DelegatingDbmsDialect(cbf.getService(DbmsDialect.class)) {
-            @Override
-            public boolean supportsComplexGroupBy() {
-                return false;
-            }
-        });
-        cbf = config.createCriteriaBuilderFactory(em.getEntityManagerFactory());
         CriteriaBuilder<Long> criteria = cbf.create(em, Long.class);
         criteria.from(Document.class, "d")
                 .select("KEY(contacts)")

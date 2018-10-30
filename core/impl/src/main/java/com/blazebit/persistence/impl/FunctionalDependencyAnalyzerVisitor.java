@@ -259,8 +259,10 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
 
                     // If the identifiers are constantified, we don't care if this is a one-to-one
                     orderedAttributes.removeAll(constantifiedAttributes);
+                    orderedAttributes.remove(expr.getField());
                     if (orderedAttributes.isEmpty() || orderedAttributes.size() == 1 && equalsAny(orderedAttributes.iterator().next(), extendedManagedType.getAttribute(expr.getField()).getColumnEquivalentAttributes())) {
                         nonConstantParent = false;
+                        orderedAttributes.clear();
                         managedType = metamodel.getManagedType(ExtendedManagedType.class, JpaMetamodelUtils.resolveFieldClass(baseNode.getJavaType(), attribute));
                     }
                 }

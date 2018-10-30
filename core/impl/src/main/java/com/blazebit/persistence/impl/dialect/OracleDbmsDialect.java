@@ -204,12 +204,6 @@ public class OracleDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
-    public boolean supportsComplexGroupBy() {
-        // Oracle does not support subqueries or parameters in the group by clause
-        return false;
-    }
-
-    @Override
     public boolean supportsFullRowValueComparison() {
         return false;
     }

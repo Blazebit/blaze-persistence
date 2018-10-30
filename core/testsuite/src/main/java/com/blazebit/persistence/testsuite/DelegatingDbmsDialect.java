@@ -110,11 +110,6 @@ public class DelegatingDbmsDialect implements DbmsDialect {
     }
 
     @Override
-    public boolean supportsComplexGroupBy() {
-        return delegate.supportsComplexGroupBy();
-    }
-
-    @Override
     public boolean supportsGroupByExpressionInHavingMatching() {
         return delegate.supportsGroupByExpressionInHavingMatching();
     }

@@ -431,11 +431,6 @@ public class DefaultDbmsDialect implements DbmsDialect {
     }
 
     @Override
-    public boolean supportsComplexGroupBy() {
-        return true;
-    }
-
-    @Override
     public boolean supportsGroupByExpressionInHavingMatching() {
         return true;
     }

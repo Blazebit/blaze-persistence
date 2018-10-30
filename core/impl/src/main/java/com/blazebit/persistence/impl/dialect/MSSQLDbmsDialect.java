@@ -56,12 +56,6 @@ public class MSSQLDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
-    public boolean supportsComplexGroupBy() {
-        // SQL Server bug? https://support.microsoft.com/en-us/kb/2873474
-        return false;
-    }
-
-    @Override
     protected String getOperator(SetOperationType type) {
         if (type == null) {
             return null;

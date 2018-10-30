@@ -147,14 +147,6 @@ public interface DbmsDialect {
     public boolean supportsReturningColumns();
 
     /**
-     * Returns true if the dbms supports complex expressions like subqueries or parameters as group by elements, false otherwise.
-     * 
-     * @return Whether complex group by elements are supported by the dbms
-     * @since 1.1.0
-     */
-    public boolean supportsComplexGroupBy();
-
-    /**
      * Returns true if the dbms supports matching non-trivial expressions that appear in the group by clause with usages in the having clause.
      *
      * @return Whether expressions from the group by clause are matched and reused in the having clause by the dbms
