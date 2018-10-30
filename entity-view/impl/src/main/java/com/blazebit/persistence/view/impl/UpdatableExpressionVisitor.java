@@ -58,6 +58,12 @@ import com.blazebit.persistence.parser.predicate.LikePredicate;
 import com.blazebit.persistence.parser.predicate.LtPredicate;
 import com.blazebit.persistence.parser.predicate.MemberOfPredicate;
 
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.Type;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  *
  * @author Christian Beikov
@@ -70,6 +76,19 @@ public class UpdatableExpressionVisitor extends PathTargetResolvingExpressionVis
     public UpdatableExpressionVisitor(EntityMetamodel metamodel, Class<?> startClass, boolean updatable) {
         super(metamodel, metamodel.type(startClass), null);
         this.updatable = updatable;
+    }
+
+    public Map<Attribute<?, ?>, Type<?>> getPossibleTargets() {
+        Map<Attribute<?, ?>, Type<?>> possibleTargets = new HashMap<>();
+
+        List<PathPosition> positions = pathPositions;
+        int size = positions.size();
+        for (int i = 0; i < size; i++) {
+            PathPosition position = positions.get(i);
+            possibleTargets.put(position.getAttribute(), position.getRealCurrentType());
+        }
+
+        return possibleTargets;
     }
     
     @Override

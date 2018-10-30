@@ -32,7 +32,7 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.2.0
  */
-@CreatableEntityView
+@CreatableEntityView(validatePersistability = false)
 @UpdatableEntityView
 @EntityView(Document.class)
 public abstract class DocumentCreateView implements DocumentInterfaceView {

@@ -98,6 +98,11 @@ public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute
     }
 
     @Override
+    public boolean hasDirtyStateIndex() {
+        return false;
+    }
+
+    @Override
     public String getMappedBy() {
         return null;
     }

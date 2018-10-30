@@ -219,7 +219,7 @@ public final class Accessors {
     }
 
     public static AttributeAccessor forEntityMapping(EntityViewManagerImpl evm, MethodAttribute<?, ?> attribute) {
-        if (attribute instanceof MappingAttribute<?, ?>) {
+        if (((AbstractMethodAttribute<?, ?>) attribute).getUpdateMappableAttribute() != null) {
             return forEntityMapping(evm, attribute.getDeclaringType().getEntityClass(), ((MappingAttribute<?, ?>) attribute).getMapping());
         } else {
             return null;

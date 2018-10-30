@@ -354,7 +354,7 @@ public class EntityViewMetamodelTest extends AbstractEntityViewTest {
         assertTrue(docViewType.getAttribute("people").isMutable());
     }
 
-    @CreatableEntityView
+    @CreatableEntityView(excludedEntityAttributes = {"name", "idx", "age"})
     @EntityView(Document.class)
     public static interface DocumentViewWithUpdatableCreatableViewTypes {
         @IdMapping
