@@ -31,7 +31,7 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.2.0
  */
-@CreatableEntityView
+@CreatableEntityView(validatePersistability = false)
 @UpdatableEntityView
 @EntityView(Document.class)
 public interface UpdatableDocumentView extends DocumentIdView {

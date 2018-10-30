@@ -16,6 +16,9 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
+import com.blazebit.persistence.spi.ExtendedAttribute;
+import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
@@ -25,8 +28,13 @@ import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.BasicType;
+import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.SingularAttribute;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
@@ -37,6 +45,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -96,6 +105,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
         this.flushStrategy = context.getFlushStrategy(javaType, viewMapping.getFlushStrategy());
         this.lockMode = viewMapping.getResolvedLockMode();
 
+        ExtendedManagedType<?> extendedManagedType = context.getEntityMetamodel().getManagedType(ExtendedManagedType.class, jpaManagedType);
         boolean embeddable = !(jpaManagedType instanceof EntityType<?>);
 
         if (viewMapping.isCreatable()) {
@@ -143,6 +153,44 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
         // Initialize attribute type and the dirty state index of attributes
         int index = viewMapping.getIdAttribute() == null ? 0 : 1;
         int dirtyStateIndex = 0;
+        Set<String> requiredUpdatableAttributes;
+        Set<String> mappedColumns;
+        if (creatable && validatePersistability) {
+            requiredUpdatableAttributes = new HashSet<>();
+            mappedColumns = new HashSet<>();
+            OUTER: for (Map.Entry<String, ? extends ExtendedAttribute<?, ?>> entry : extendedManagedType.getOwnedSingularAttributes().entrySet()) {
+                ExtendedAttribute<?, ?> extendedAttribute = entry.getValue();
+                SingularAttribute<?, ?> attribute = (SingularAttribute<?, ?>) extendedAttribute.getAttribute();
+                if (!attribute.isVersion() && !attribute.isOptional()) {
+                    // The attribute could be the id attribute of an owned *ToOne association
+                    if ((attribute.getType() instanceof BasicType<?> || attribute.getType() instanceof EmbeddableType<?>) && extendedAttribute.getAttributePath().size() > 1) {
+                        List<Attribute<?, ?>> attributePath = extendedAttribute.getAttributePath();
+                        // So we check the *ToOne attribute instead
+                        for (int i = attributePath.size() - 2; i >= 0; i--) {
+                            SingularAttribute<?, ?> superAttribute = (SingularAttribute<?, ?>) attributePath.get(i);
+                            if (superAttribute.getType() instanceof EntityType<?>) {
+                                // If it is optional, the attribute isn't optional
+                                // Otherwise break to add it to the required set
+                                if (superAttribute.isOptional()) {
+                                    continue OUTER;
+                                } else {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    requiredUpdatableAttributes.add(entry.getKey());
+                }
+            }
+        } else {
+            requiredUpdatableAttributes = Collections.emptySet();
+            mappedColumns = Collections.emptySet();
+        }
+
+        for (String excludedEntityAttribute : excludedEntityAttributes) {
+            removeRequiredUpdatableAttribute(requiredUpdatableAttributes, mappedColumns, extendedManagedType, excludedEntityAttribute);
+        }
+
         for (MethodAttributeMapping mapping : viewMapping.getMethodAttributes().values()) {
             AbstractMethodAttribute<? super X, ?> attribute;
             if (mapping.isId() || mapping.isVersion()) {
@@ -154,6 +202,9 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
                 } else {
                     attribute = mapping.getMethodAttribute(this, index, -1, context, embeddableMapping);
                 }
+                if (!requiredUpdatableAttributes.isEmpty()) {
+                    removeRequiredUpdatableAttribute(requiredUpdatableAttributes, mappedColumns, extendedManagedType, attribute);
+                }
             } else {
                 // Note that the dirty state index is only a "suggested" index, but the implementation can choose not to use it
                 attribute = mapping.getMethodAttribute(this, index, dirtyStateIndex, context, embeddableMapping);
@@ -162,6 +213,11 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
                     dirtyStateIndex++;
                 }
             }
+
+            if (!requiredUpdatableAttributes.isEmpty() && attribute.isUpdatable() && attribute.getUpdateMappableAttribute() != null) {
+                removeRequiredUpdatableAttribute(requiredUpdatableAttributes, mappedColumns, extendedManagedType, attribute);
+            }
+
             hasJoinFetchedCollections = hasJoinFetchedCollections || attribute.hasJoinFetchedCollections();
             attributes.put(mapping.getName(), attribute);
             index++;
@@ -244,6 +300,60 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
                     classes.add(mapping.getEntityViewClass());
                 }
                 context.addError("Entity view type '" + javaType.getName() + "' has no @EntityViewInheritanceMapping but is used as inheritance subtype in: " + classes);
+            }
+        }
+
+        if (!requiredUpdatableAttributes.isEmpty()) {
+            // Before failing, remove all attribute for which we covered all columns already
+            for (Iterator<String> iterator = requiredUpdatableAttributes.iterator(); iterator.hasNext(); ) {
+                ExtendedAttribute<?, ?> extendedAttribute = extendedManagedType.getAttributes().get(iterator.next());
+                if (extendedAttribute == null || mappedColumns.containsAll(Arrays.asList(extendedAttribute.getColumnNames()))) {
+                    iterator.remove();
+                }
+            }
+            if (!requiredUpdatableAttributes.isEmpty()) {
+                // A version attribute defined on a mapped super class isn't reported as version attribute apparently
+                if (jpaManagedType instanceof IdentifiableType<?>) {
+                    if (((IdentifiableType<Object>) jpaManagedType).hasVersionAttribute()) {
+                        for (Iterator<String> iterator = requiredUpdatableAttributes.iterator(); iterator.hasNext(); ) {
+                            ExtendedAttribute<?, ?> extendedAttribute = extendedManagedType.getAttributes().get(iterator.next());
+                            try {
+                                SingularAttribute<? super Object, ?> version = ((IdentifiableType<Object>) jpaManagedType).getVersion(extendedAttribute.getElementClass());
+                                if (extendedAttribute.getAttributePathString().equals(version.getName())) {
+                                    iterator.remove();
+                                }
+                            } catch (IllegalArgumentException ex) {
+                                // Ignore
+                            }
+                        }
+                    }
+                }
+                if (!requiredUpdatableAttributes.isEmpty()) {
+                    context.addError("Entity view type '" + javaType.getName() + "' might not be persistable because it is missing updatable attribute definitions for non-optional entity attributes: " + requiredUpdatableAttributes + ". Add attributes, disable validation or exclude attributes if you know values are set via the entity constructor!");
+                }
+            }
+        }
+    }
+
+    private static void removeRequiredUpdatableAttribute(Set<String> requiredUpdatableAttributes, Set<String> mappedColumns, ExtendedManagedType<?> extendedManagedType, AbstractMethodAttribute<?, ?> attribute) {
+        removeRequiredUpdatableAttribute(requiredUpdatableAttributes, mappedColumns, extendedManagedType, attribute.getMapping());
+    }
+
+    private static void removeRequiredUpdatableAttribute(Set<String> requiredUpdatableAttributes, Set<String> mappedColumns, ExtendedManagedType<?> extendedManagedType, String mapping) {
+        requiredUpdatableAttributes.remove(mapping);
+        ExtendedAttribute<?, ?> extendedAttribute = extendedManagedType.getAttributes().get(mapping);
+        if (extendedAttribute != null) {
+            mappedColumns.addAll(Arrays.asList(extendedAttribute.getColumnNames()));
+            for (ExtendedAttribute<?, ?> columnEquivalentAttribute : extendedAttribute.getColumnEquivalentAttributes()) {
+                requiredUpdatableAttributes.remove(columnEquivalentAttribute.getAttributePathString());
+            }
+            if (extendedAttribute.getAttribute() instanceof SingularAttribute<?, ?>) {
+                SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) extendedAttribute.getAttribute();
+                if (singularAttribute.getType() instanceof EmbeddableType<?>) {
+                    for (String embeddedPropertyName : JpaMetamodelUtils.getEmbeddedPropertyNames((EmbeddableType<?>) singularAttribute.getType())) {
+                        removeRequiredUpdatableAttribute(requiredUpdatableAttributes, mappedColumns, extendedManagedType, mapping + "." + embeddedPropertyName);
+                    }
+                }
             }
         }
     }

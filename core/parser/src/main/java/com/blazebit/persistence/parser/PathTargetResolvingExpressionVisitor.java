@@ -115,11 +115,15 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
             this.attribute = attribute;
         }
 
-        Class<?> getRealCurrentClass() {
+        public Type<?> getRealCurrentType() {
+            return currentClass;
+        }
+
+        public Class<?> getRealCurrentClass() {
             return currentClass.getJavaType();
         }
 
-        Type<?> getCurrentType() {
+        public Type<?> getCurrentType() {
             if (valueClass != null) {
                 return valueClass;
             }
@@ -130,7 +134,7 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
             return currentClass;
         }
 
-        Class<?> getCurrentClass() {
+        public Class<?> getCurrentClass() {
             return getCurrentType().getJavaType();
         }
 
@@ -174,16 +178,16 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
     }
 
     private Type<?> getType(Type<?> baseType, Attribute<?, ?> attribute) {
-        Class<?> baseClass = baseType.getJavaType();
+        if (attribute instanceof PluralAttribute<?, ?, ?>) {
+            return metamodel.type(((PluralAttribute<?, ?, ?>) attribute).getJavaType());
+        }
 
+        Class<?> baseClass = baseType.getJavaType();
         if (baseClass != null) {
             Class<?> clazz = JpaMetamodelUtils.resolveFieldClass(baseType.getJavaType(), attribute);
             if (clazz != null) {
                 return metamodel.type(clazz);
             }
-        }
-        if (attribute instanceof PluralAttribute<?, ?, ?>) {
-            return ((PluralAttribute<?, ?, ?>) attribute).getElementType();
         }
         return ((SingularAttribute<?, ?>) attribute).getType();
     }

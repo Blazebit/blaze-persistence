@@ -379,6 +379,11 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
         return isUpdatable() || isUpdateCascaded() && !getUpdateCascadeAllowedSubtypes().isEmpty();
     }
 
+    @Override
+    public boolean hasDirtyStateIndex() {
+        return getDirtyStateIndex() != -1;
+    }
+
     public int getAttributeIndex() {
         return attributeIndex;
     }

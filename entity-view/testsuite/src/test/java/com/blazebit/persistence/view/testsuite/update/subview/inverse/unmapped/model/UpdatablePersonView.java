@@ -29,7 +29,7 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.2.0
  */
-@CreatableEntityView
+@CreatableEntityView(validatePersistability = false)
 @UpdatableEntityView
 @EntityView(Person.class)
 public interface UpdatablePersonView extends PersonIdView {

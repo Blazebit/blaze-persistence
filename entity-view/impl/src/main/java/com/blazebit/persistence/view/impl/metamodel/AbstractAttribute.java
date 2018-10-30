@@ -421,9 +421,13 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         return false;
     }
 
+    public javax.persistence.metamodel.Attribute<?, ?> getUpdateMappableAttribute() {
+        return updateMappableAttribute;
+    }
+
     public boolean isUpdateMappable() {
         // Since we can cascade correlated views, we consider them update mappable
-        return isCorrelated() || updateMappableAttribute != null;
+        return hasDirtyStateIndex() || updateMappableAttribute != null;
     }
 
     public Class<?> getCorrelated() {
@@ -439,6 +443,8 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     }
 
     public abstract boolean needsDirtyTracker();
+
+    public abstract boolean hasDirtyStateIndex();
 
     /**
      * @author Christian Beikov
