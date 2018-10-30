@@ -219,13 +219,8 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
 
     @Override
     public Boolean visit(ParameterExpression expression) {
-        // Parameters are complex in the sense that they can't be used in the group by unless supported
-        if (dbmsDialect.supportsComplexGroupBy()) {
-            return false;
-        } else {
-            // TODO: reconsider parameters when we have figured out parameter as literal rendering
-            return true;
-        }
+        // TODO: reconsider parameters when we have figured out parameter as literal rendering
+        return true;
     }
 
     @Override
