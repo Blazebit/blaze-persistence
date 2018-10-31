@@ -273,12 +273,14 @@ public class EclipseLinkJpaProvider implements JpaProvider {
             if (oneToOneMapping.hasRelationTable()) {
                 Map<String, String> idColumnMapping = new HashMap<>();
                 Map<String, String> keyMapping = null;
+                Map<String, String> keyColumnTypes = null;
                 Map<String, String> targetIdColumnMapping = new HashMap<>();
                 return new JoinTable(
                         oneToOneMapping.getRelationTable().getName(),
                         null,
                         idColumnMapping,
                         keyMapping,
+                        keyColumnTypes,
                         null,
                         targetIdColumnMapping
 
@@ -309,6 +311,7 @@ public class EclipseLinkJpaProvider implements JpaProvider {
                         idColumnMapping,
                         keyMapping(manyToManyMapping.getContainerPolicy().getIdentityFieldsForMapKey()),
                         null,
+                        null,
                         targetIdColumnMapping
                 );
             } else if (collectionMapping instanceof DirectCollectionMapping) {
@@ -328,6 +331,7 @@ public class EclipseLinkJpaProvider implements JpaProvider {
                         idColumnMapping,
                         keyMapping(directCollectionMapping.getContainerPolicy().getIdentityFieldsForMapKey()),
                         null,
+                        null,
                         targetIdColumnMapping
                 );
             } else if (collectionMapping instanceof DirectMapMapping) {
@@ -346,6 +350,7 @@ public class EclipseLinkJpaProvider implements JpaProvider {
                         null,
                         idColumnMapping,
                         keyMapping(directMapMapping.getContainerPolicy().getIdentityFieldsForMapKey()),
+                        null,
                         null,
                         targetIdColumnMapping
                 );
@@ -367,6 +372,7 @@ public class EclipseLinkJpaProvider implements JpaProvider {
                         null,
                         idColumnMapping,
                         keyMapping(aggregateCollectionMapping.getContainerPolicy().getIdentityFieldsForMapKey()),
+                        null,
                         null,
                         targetIdColumnMapping
                 );

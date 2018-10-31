@@ -90,9 +90,13 @@ import javax.persistence.TemporalType;
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.BasicType;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.MapAttribute;
+import javax.persistence.metamodel.PluralAttribute;
+import javax.persistence.metamodel.SingularAttribute;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -694,6 +698,12 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return result;
     }
 
+    public BuilderType fromValues(Class<?> entityBaseClass, String attributeName, String alias, Collection<?> values) {
+        BuilderType result = fromValues(entityBaseClass, attributeName, alias, values.size());
+        setParameter(alias, values);
+        return result;
+    }
+
     public <T> BuilderType fromIdentifiableValues(Class<T> valueClass, String alias, Collection<T> values) {
         BuilderType result = fromIdentifiableValues(valueClass, alias, values.size());
         setParameter(alias, values);
@@ -717,13 +727,80 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new IllegalArgumentException("Only identifiable types allowed!");
         }
 
-        joinManager.addRootValues(valuesClazz, valueClass, alias, valueCount, treatFunction, castedParameter, true, null);
+        joinManager.addRootValues(valuesClazz, valueClass, alias, valueCount, treatFunction, castedParameter, true, null, null);
         fromClassExplicitlySet = true;
 
         return (BuilderType) this;
     }
 
     public BuilderType fromValues(Class<?> valueClass, String alias, int valueCount) {
+        ManagedType<?> type = mainQuery.metamodel.getManagedType(valueClass);
+        String sqlType = null;
+        if (type == null) {
+            sqlType = mainQuery.dbmsDialect.getSqlType(valueClass);
+            if (sqlType == null) {
+                throw new IllegalArgumentException("The basic type " + valueClass.getSimpleName() + " has no column type registered in the DbmsDialect '" + mainQuery.dbmsDialect.getClass().getName() + "'! Register a column type or consider using the fromValues variant that extracts column types from entity attributes!");
+            }
+        }
+        return fromValues0(valueClass, sqlType, alias, valueCount, null);
+    }
+
+    public BuilderType fromValues(Class<?> entityBaseClass, String attributeName, String alias, int valueCount) {
+        ExtendedManagedType<?> extendedManagedType = mainQuery.metamodel.getManagedType(ExtendedManagedType.class, entityBaseClass);
+        String keyFunction = "key(";
+        String indexFunction = "index(";
+        ExtendedAttribute<?, ?> attribute;
+        Class<?> elementClass;
+        boolean index = false;
+        String valueLikeClause;
+        if (attributeName.regionMatches(true, 0, keyFunction, 0, keyFunction.length())) {
+            attributeName = attributeName.substring(keyFunction.length(), attributeName.length() - 1);
+            attribute = extendedManagedType.getAttribute(attributeName);
+            index = true;
+            if (attribute.getAttributePath().size() > 1) {
+                ExtendedAttribute<?, ?> superAttr = extendedManagedType.getAttribute(attribute.getAttributePathString().substring(0, attribute.getAttributePathString().lastIndexOf('.')));
+                elementClass = JpaMetamodelUtils.resolveKeyClass(superAttr.getElementClass(), (MapAttribute<?, ?, ?>) attribute.getAttribute());
+            } else {
+                elementClass = JpaMetamodelUtils.resolveKeyClass(entityBaseClass, (MapAttribute<?, ?, ?>) attribute.getAttribute());
+            }
+            valueLikeClause = "KEY(" + ((EntityType<?>) extendedManagedType.getType()).getName() + "." + attributeName + ")";
+        } else if (attributeName.regionMatches(true, 0, indexFunction, 0, indexFunction.length())) {
+            attributeName = attributeName.substring(keyFunction.length(), attributeName.length() - 1);
+            attribute = extendedManagedType.getAttribute(attributeName);
+            index = true;
+            elementClass = Integer.class;
+            valueLikeClause = "INDEX(" + ((EntityType<?>) extendedManagedType.getType()).getName() + "." + attributeName + ")";
+        } else {
+            attribute = extendedManagedType.getAttribute(attributeName);
+            elementClass = attribute.getElementClass();
+            valueLikeClause = ((EntityType<?>) extendedManagedType.getType()).getName() + "." + attributeName;
+        }
+        if (attribute.getAttribute() instanceof SingularAttribute<?, ?>) {
+            if (((SingularAttribute<?, ?>) attribute.getAttribute()).getType() instanceof BasicType<?>) {
+                if (attribute.getColumnTypes().length != 1) {
+                    throw new IllegalArgumentException("Unsupported VALUES clause use with multi-column attribute type " + Arrays.toString(attribute.getColumnTypes()) + "! Consider creating a synthetic type like a @CTE entity to hold this attribute and use that type via fromIdentifiableValues instead!");
+                }
+                return fromValues0(elementClass, attribute.getColumnTypes()[0], alias, valueCount, valueLikeClause);
+            }
+        } else if (index) {
+            Map<String, String> keyColumnTypes = attribute.getJoinTable().getKeyColumnTypes();
+            if (keyColumnTypes.size() != 1) {
+                throw new IllegalArgumentException("Unsupported VALUES clause use with multi-column attribute type " + keyColumnTypes.values() + "! Consider creating a synthetic type like a @CTE entity to hold this attribute and use that type via fromIdentifiableValues instead!");
+            }
+            String columnType = keyColumnTypes.values().iterator().next();
+            return fromValues0(elementClass, columnType, alias, valueCount, valueLikeClause);
+        } else {
+            if (((PluralAttribute<?, ?, ?>) attribute.getAttribute()).getElementType() instanceof BasicType<?>) {
+                if (attribute.getColumnTypes().length != 1) {
+                    throw new IllegalArgumentException("Unsupported VALUES clause use with multi-column attribute type " + Arrays.toString(attribute.getColumnTypes()) + "! Consider creating a synthetic type like a @CTE entity to hold this attribute and use that type via fromIdentifiableValues instead!");
+                }
+                return fromValues0(elementClass, attribute.getColumnTypes()[0], alias, valueCount, valueLikeClause);
+            }
+        }
+        return fromValues0(elementClass, null, alias, valueCount, valueLikeClause);
+    }
+
+    private BuilderType fromValues0(Class<?> valueClass, String sqlType, String alias, int valueCount, String valueLikeClause) {
         prepareForModification(ClauseType.JOIN);
         if (!fromClassExplicitlySet) {
             // When from is explicitly called we have to revert the implicit root
@@ -743,7 +820,6 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 throw new IllegalArgumentException("Unsupported non-managed type for VALUES clause: " + valueClass.getName() + ". You can register the type via com.blazebit.persistence.spi.CriteriaBuilderConfiguration.registerNamedType. Please report this so that we can add the type definition as well!");
             }
 
-            String sqlType = mainQuery.dbmsDialect.getSqlType(valueClass);
             castedParameter = mainQuery.dbmsDialect.cast("?", sqlType);
             valuesClazz = ValuesEntity.class;
         } else if (!(type instanceof EntityType)) {
@@ -761,7 +837,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             valuesClazz = entry.getKey().getJavaType();
             valueClazzAttributeName = entry.getValue();
         }
-        joinManager.addRootValues(valuesClazz, valueClass, alias, valueCount, typeName, castedParameter, false, valueClazzAttributeName);
+        joinManager.addRootValues(valuesClazz, valueClass, alias, valueCount, typeName, castedParameter, false, valueClazzAttributeName, valueLikeClause);
         fromClassExplicitlySet = true;
 
         return (BuilderType) this;
@@ -1844,7 +1920,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             Class<?> clazz = node.getInternalEntityType().getJavaType();
             String valueClazzAttributeName = node.getValueClazzAttributeName();
             int valueCount = node.getValueCount();
-            boolean identifiableReference = node.getValuesIdName() != null;
+            boolean identifiableReference = node.getNodeType() instanceof EntityType<?> && node.getValuesIdName() != null;
             String rootAlias = node.getAlias();
             String castedParameter = node.getValuesCastedParameter();
             String[] attributes = node.getValuesAttributes();

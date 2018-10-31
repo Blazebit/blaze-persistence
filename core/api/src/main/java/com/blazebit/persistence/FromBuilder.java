@@ -156,6 +156,22 @@ public interface FromBuilder<X extends FromBuilder<X>> {
     public X fromValues(Class<?> valueClass, String alias, int valueCount);
 
     /**
+     * Add a VALUES clause for values of the type as determined by the given entity attribute to the from clause.
+     * This introduces a parameter named like the given alias.
+     *
+     * To set the values invoke {@link CommonQueryBuilder#setParameter(String, Object)}
+     * or {@link javax.persistence.Query#setParameter(String, Object)} with the alias and a collection.
+     *
+     * @param entityBaseClass The entity class on which the attribute is located
+     * @param attributeName The attribute name within the entity class which to use for determining the values type
+     * @param alias The alias for the entity
+     * @param valueCount The number of values to use for the values clause
+     * @return The query builder for chaining calls
+     * @since 1.3.0
+     */
+    public X fromValues(Class<?> entityBaseClass, String attributeName, String alias, int valueCount);
+
+    /**
      * Add a VALUES clause for values of the given value class to the from clause.
      * This introduces a parameter named like the given alias.
      *
@@ -184,6 +200,19 @@ public interface FromBuilder<X extends FromBuilder<X>> {
      * @since 1.2.0
      */
     public <T> X fromValues(Class<T> valueClass, String alias, Collection<T> values);
+
+    /**
+     * Like {@link FromBuilder#fromValues(Class, String, String, int)} but passes the collection size
+     * as valueCount and directly binds the collection as parameter via {@link CommonQueryBuilder#setParameter(String, Object)}.
+     *
+     * @param entityBaseClass The entity class on which the attribute is located
+     * @param attributeName The attribute name within the entity class which to use for determining the values type
+     * @param alias The alias for the entity
+     * @param values The values to use for the values clause
+     * @return The query builder for chaining calls
+     * @since 1.3.0
+     */
+    public X fromValues(Class<?> entityBaseClass, String attributeName, String alias, Collection<?> values);
 
     /**
      * Like {@link FromBuilder#fromIdentifiableValues(Class, String, int)} but passes the collection size

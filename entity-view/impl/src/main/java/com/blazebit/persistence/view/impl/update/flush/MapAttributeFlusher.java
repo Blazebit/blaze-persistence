@@ -486,14 +486,14 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
 
             String keyEntityIdAttributeName = keyDescriptor.getEntityIdAttributeName();
             if (keyEntityIdAttributeName == null) {
-                insertCb.fromValues((Class<Object>) keyDescriptor.getJpaType(), "key", 1);
+                insertCb.fromValues(ownerEntityClass, "KEY(" + mapping + ")", "key", 1);
             } else {
                 insertCb.fromIdentifiableValues((Class<Object>) keyDescriptor.getJpaType(), "key", 1);
             }
 
             String entityIdAttributeName = elementDescriptor.getEntityIdAttributeName();
             if (entityIdAttributeName == null) {
-                insertCb.fromValues((Class<Object>) elementDescriptor.getJpaType(), "val", 1);
+                insertCb.fromValues(ownerEntityClass, mapping, "val", 1);
             } else {
                 insertCb.fromIdentifiableValues((Class<Object>) elementDescriptor.getJpaType(), "val", 1);
             }

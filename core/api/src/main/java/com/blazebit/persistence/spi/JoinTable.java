@@ -32,6 +32,7 @@ public class JoinTable {
     private final Set<String> targetAttributeNames;
     private final Map<String, String> idColumnMappings;
     private final Map<String, String> keyColumnMappings;
+    private final Map<String, String> keyColumnTypes;
     private final Map<String, String> targetIdColumnMappings;
 
     /**
@@ -40,14 +41,16 @@ public class JoinTable {
      * @param idAttributeNames The attribute names of the owning entity
      * @param idColumnMappings The id column mappings
      * @param keyColumnMappings The key column mappings
+     * @param keyColumnTypes The key column types
      * @param targetAttributeNames The attribute names of the target entity
      * @param targetIdColumnMappings The target id column mappings
      */
-    public JoinTable(String tableName, Set<String> idAttributeNames, Map<String, String> idColumnMappings, Map<String, String> keyColumnMappings, Set<String> targetAttributeNames, Map<String, String> targetIdColumnMappings) {
+    public JoinTable(String tableName, Set<String> idAttributeNames, Map<String, String> idColumnMappings, Map<String, String> keyColumnMappings, Map<String, String> keyColumnTypes, Set<String> targetAttributeNames, Map<String, String> targetIdColumnMappings) {
         this.tableName = tableName;
         this.idAttributeNames = idAttributeNames;
         this.idColumnMappings = idColumnMappings;
         this.keyColumnMappings = keyColumnMappings;
+        this.keyColumnTypes = keyColumnTypes;
         this.targetAttributeNames = targetAttributeNames;
         this.targetIdColumnMappings = targetIdColumnMappings;
     }
@@ -91,6 +94,16 @@ public class JoinTable {
      */
     public Map<String, String> getKeyColumnMappings() {
         return keyColumnMappings;
+    }
+
+    /**
+     * Returns the column types of the key/index columns if there are any, otherwise <code>null</code>.
+     *
+     * @return The key column types
+     * @since 1.3.0
+     */
+    public Map<String, String> getKeyColumnTypes() {
+        return keyColumnTypes;
     }
 
     /**

@@ -651,10 +651,15 @@ public class HibernateJpaProvider implements JpaProvider {
 
     @Override
     public String[] getColumnNames(EntityType<?> entityType, String attributeName) {
-        try {
-            return getEntityPersister(entityType).getPropertyColumnNames(attributeName);
-        } catch (MappingException e) {
-            throw new RuntimeException("Unknown property [" + attributeName + "] of entity [" + entityType.getJavaType() + "]", e);
+        QueryableCollection collectionPersister = getCollectionPersister(entityType, attributeName);
+        if (collectionPersister == null) {
+            try {
+                return getEntityPersister(entityType).getPropertyColumnNames(attributeName);
+            } catch (MappingException e) {
+                throw new RuntimeException("Unknown property [" + attributeName + "] of entity [" + entityType.getJavaType() + "]", e);
+            }
+        } else {
+            return collectionPersister.getElementColumnNames();
         }
     }
 
@@ -747,41 +752,47 @@ public class HibernateJpaProvider implements JpaProvider {
 
     @Override
     public String[] getColumnTypes(EntityType<?> entityType, String attributeName) {
-        AbstractEntityPersister entityPersister = getEntityPersister(entityType);
-        SessionFactoryImplementor sfi = entityPersister.getFactory();
-        String[] columnNames = entityPersister.getPropertyColumnNames(attributeName);
-        Database database = sfi.getServiceRegistry().locateServiceBinding(Database.class).getService();
-        Table[] tables;
+        QueryableCollection collectionPersister = getCollectionPersister(entityType, attributeName);
+        if (collectionPersister == null) {
+            AbstractEntityPersister entityPersister = getEntityPersister(entityType);
+            SessionFactoryImplementor sfi = entityPersister.getFactory();
+            String[] columnNames = entityPersister.getPropertyColumnNames(attributeName);
+            Database database = sfi.getServiceRegistry().locateServiceBinding(Database.class).getService();
+            Table[] tables;
 
-        if (entityPersister instanceof JoinedSubclassEntityPersister) {
-            tables = new Table[((JoinedSubclassEntityPersister) entityPersister).getSubclassTableSpan()];
-            for (int i = 0; i < tables.length; i++) {
-                tables[i] = database.getTable(entityPersister.getSubclassTableName(i));
+            if (entityPersister instanceof JoinedSubclassEntityPersister) {
+                tables = new Table[((JoinedSubclassEntityPersister) entityPersister).getSubclassTableSpan()];
+                for (int i = 0; i < tables.length; i++) {
+                    tables[i] = database.getTable(entityPersister.getSubclassTableName(i));
+                }
+            } else if (entityPersister instanceof UnionSubclassEntityPersister) {
+                tables = new Table[((UnionSubclassEntityPersister) entityPersister).getSubclassTableSpan()];
+                for (int i = 0; i < tables.length; i++) {
+                    tables[i] = database.getTable(unquote(entityPersister.getSubclassTableName(i)));
+                }
+            } else if (entityPersister instanceof SingleTableEntityPersister) {
+                tables = new Table[((SingleTableEntityPersister) entityPersister).getSubclassTableSpan()];
+                for (int i = 0; i < tables.length; i++) {
+                    tables[i] = database.getTable(unquote(entityPersister.getSubclassTableName(i)));
+                }
+            } else {
+                tables = new Table[]{database.getTable(unquote(entityPersister.getTableName()))};
             }
-        } else if (entityPersister instanceof UnionSubclassEntityPersister) {
-            tables = new Table[((UnionSubclassEntityPersister) entityPersister).getSubclassTableSpan()];
-            for (int i = 0; i < tables.length; i++) {
-                tables[i] = database.getTable(unquote(entityPersister.getSubclassTableName(i)));
+
+            // In this case, the property might represent a formula
+            boolean isFormula = columnNames.length == 1 && columnNames[0] == null;
+            boolean isSubselect = tables.length == 1 && tables[0] == null;
+
+            if (isFormula || isSubselect) {
+                Type propertyType = entityPersister.getPropertyType(attributeName);
+                return getColumnTypeForPropertyType(entityType, attributeName, sfi, propertyType);
             }
-        } else if (entityPersister instanceof SingleTableEntityPersister) {
-            tables = new Table[((SingleTableEntityPersister) entityPersister).getSubclassTableSpan()];
-            for (int i = 0; i < tables.length; i++) {
-                tables[i] = database.getTable(unquote(entityPersister.getSubclassTableName(i)));
-            }
+
+            return getColumnTypesForColumnNames(entityType, columnNames, tables);
         } else {
-            tables = new Table[] { database.getTable(unquote(entityPersister.getTableName())) };
+            SessionFactoryImplementor sfi = collectionPersister.getFactory();
+            return getColumnTypeForPropertyType(entityType, attributeName, sfi, collectionPersister.getElementType());
         }
-
-        // In this case, the property might represent a formula
-        boolean isFormula = columnNames.length == 1 && columnNames[0] == null;
-        boolean isSubselect = tables.length == 1 && tables[0] == null;
-
-        if (isFormula || isSubselect) {
-            Type propertyType = entityPersister.getPropertyType(attributeName);
-            return getColumnTypeForPropertyType(entityType, attributeName, sfi, propertyType);
-        }
-
-        return getColumnTypesForColumnNames(entityType, columnNames, tables);
     }
 
     private String[] getColumnTypesForColumnNames(EntityType<?> entityType, String[] columnNames, Table[] tables) {
@@ -941,7 +952,7 @@ public class HibernateJpaProvider implements JpaProvider {
                 for (int i = 0; i < targetColumnMetaData.length; i++) {
                     targetColumnMapping.put(targetColumnMetaData[i], targetColumnMetaData[i]);
                 }
-                return createJoinTable(queryableCollection, targetColumnMapping, null, attributeName);
+                return createJoinTable(ownerType, queryableCollection, targetColumnMapping, null, attributeName);
             } else if (queryableCollection.getElementPersister() instanceof Joinable) {
                 String elementTableName = ((Joinable) queryableCollection.getElementPersister()).getTableName();
                 if (!queryableCollection.getTableName().equals(elementTableName)) {
@@ -954,22 +965,25 @@ public class HibernateJpaProvider implements JpaProvider {
                         targetIdColumnMapping.put(targetColumnMetaData[i], targetPrimaryKeyColumnMetaData[i]);
                     }
                     Set<String> idAttributeNames = getColumnMatchingAttributeNames(elementPersister, Arrays.asList(targetPrimaryKeyColumnMetaData));
-                    return createJoinTable(queryableCollection, targetIdColumnMapping, idAttributeNames, attributeName);
+                    return createJoinTable(ownerType, queryableCollection, targetIdColumnMapping, idAttributeNames, attributeName);
                 }
             }
         }
         return null;
     }
 
-    private JoinTable createJoinTable(QueryableCollection queryableCollection, Map<String, String> targetColumnMapping, Set<String> targetIdAttributeNames, String attributeName) {
+    private JoinTable createJoinTable(EntityType<?> ownerType, QueryableCollection queryableCollection, Map<String, String> targetColumnMapping, Set<String> targetIdAttributeNames, String attributeName) {
         String[] indexColumnNames = queryableCollection.getIndexColumnNames();
         Map<String, String> keyColumnMapping = null;
+        Map<String, String> keyColumnTypes = null;
         if (indexColumnNames != null) {
             keyColumnMapping = new HashMap<>(indexColumnNames.length);
+            keyColumnTypes = new HashMap<>(indexColumnNames.length);
             if (queryableCollection.getKeyType().isEntityType()) {
                 throw new IllegalArgumentException("Determining the join table key foreign key mappings is not yet supported!");
             } else {
                 keyColumnMapping.put(indexColumnNames[0], indexColumnNames[0]);
+                keyColumnTypes.put(indexColumnNames[0], getColumnTypeForPropertyType(ownerType, attributeName, queryableCollection.getFactory(), queryableCollection.getIndexType())[0]);
             }
         }
         AbstractEntityPersister ownerEntityPersister = (AbstractEntityPersister) queryableCollection.getOwnerEntityPersister();
@@ -993,6 +1007,7 @@ public class HibernateJpaProvider implements JpaProvider {
                 idAttributeNames,
                 idColumnMapping,
                 keyColumnMapping,
+                keyColumnTypes,
                 targetIdAttributeNames,
                 targetColumnMapping
         );

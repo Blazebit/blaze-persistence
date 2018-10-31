@@ -262,7 +262,7 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
 
             String entityIdAttributeName = elementDescriptor.getEntityIdAttributeName();
             if (entityIdAttributeName == null) {
-                insertCb.fromValues((Class<Object>) elementDescriptor.getJpaType(), "val", 1);
+                insertCb.fromValues(ownerEntityClass, mapping, "val", 1);
             } else {
                 insertCb.fromIdentifiableValues((Class<Object>) elementDescriptor.getJpaType(), "val", 1);
             }
