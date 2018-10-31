@@ -1462,30 +1462,9 @@ public class ProxyFactory {
             sb.append("\t}\n");
         }
 
-        if (attribute != null && attribute.getDirtyStateIndex() != -1) {
-            // Unset previous object parent
-            if (attribute.isCollection()) {
-                sb.append("\tif ($0.").append(fieldName).append(" != null && $0.").append(fieldName).append(" != $1) {\n");
-                if (attribute instanceof MapAttribute<?, ?, ?>) {
-                    sb.append("\t\tif ($0.").append(fieldName).append(" instanceof ").append(RecordingMap.class.getName()).append(") {\n");
-                    sb.append("\t\t\t((").append(RecordingMap.class.getName()).append(") $0.").append(fieldName).append(").$$_unsetParent();\n");
-                    sb.append("\t\t}\n");
-                } else {
-                    sb.append("\t\tif ($0.").append(fieldName).append(" instanceof ").append(RecordingCollection.class.getName()).append(") {\n");
-                    sb.append("\t\t\t((").append(RecordingCollection.class.getName()).append(") $0.").append(fieldName).append(").$$_unsetParent();\n");
-                    sb.append("\t\t}\n");
-                }
-                sb.append("\t}\n");
-            } else if (attribute.isSubview()) {
-                sb.append("\tif ($0.").append(fieldName).append(" != $1 && $0.").append(fieldName).append(" instanceof ").append(BasicDirtyTracker.class.getName()).append(") {\n");
-                sb.append("\t\t((").append(BasicDirtyTracker.class.getName()).append(") $0.").append(fieldName).append(").$$_unsetParent();\n");
-                sb.append("\t}\n");
-            }
-        }
-
         if (attribute != null && attribute.isUpdatable()) {
             // Collections do type checking in their recording collection implementations
-            if (!attribute.isCollection() && (attribute.isPersistCascaded() || attribute.isUpdateCascaded())) {
+            if (!attribute.isCollection() && dirtyChecking) {
                 // Only consider subviews here for now
                 if (attribute.isSubview()) {
                     String subtypeArray = addAllowedSubtypeField(cc, attribute);
@@ -1509,6 +1488,25 @@ public class ProxyFactory {
         }
 
         if (attribute != null && attribute.getDirtyStateIndex() != -1) {
+            // Unset previous object parent
+            if (attribute.isCollection()) {
+                sb.append("\tif ($0.").append(fieldName).append(" != null && $0.").append(fieldName).append(" != $1) {\n");
+                if (attribute instanceof MapAttribute<?, ?, ?>) {
+                    sb.append("\t\tif ($0.").append(fieldName).append(" instanceof ").append(RecordingMap.class.getName()).append(") {\n");
+                    sb.append("\t\t\t((").append(RecordingMap.class.getName()).append(") $0.").append(fieldName).append(").$$_unsetParent();\n");
+                    sb.append("\t\t}\n");
+                } else {
+                    sb.append("\t\tif ($0.").append(fieldName).append(" instanceof ").append(RecordingCollection.class.getName()).append(") {\n");
+                    sb.append("\t\t\t((").append(RecordingCollection.class.getName()).append(") $0.").append(fieldName).append(").$$_unsetParent();\n");
+                    sb.append("\t\t}\n");
+                }
+                sb.append("\t}\n");
+            } else if (attribute.isSubview()) {
+                sb.append("\tif ($0.").append(fieldName).append(" != $1 && $0.").append(fieldName).append(" instanceof ").append(BasicDirtyTracker.class.getName()).append(") {\n");
+                sb.append("\t\t((").append(BasicDirtyTracker.class.getName()).append(") $0.").append(fieldName).append(").$$_unsetParent();\n");
+                sb.append("\t}\n");
+            }
+
             int mutableStateIndex = attribute.getDirtyStateIndex();
             if (mutableStateField != null) {
                 // this.mutableState[mutableStateIndex] = $1

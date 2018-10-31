@@ -280,7 +280,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
                 // TODO: this is a hibernate specific integration detail
                 // Replace the subview subselect that is generated for this subselect
-                String entityName = node.getEntityClass().getSimpleName();
+                String entityName = node.getEntityName();
                 arguments.add(new StringLiteral(entityName));
                 arguments.add(new StringLiteral(valuesClause));
                 arguments.add(new StringLiteral(valuesAliases == null ? "" : valuesAliases));
@@ -478,7 +478,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                     sb.append(aliasPrefix);
                 }
 
-                baseNode.appendDeReference(sb, field, renderTreat, externalRepresentation, jpaProvider.needsElementCollectionIdCutoffForCompositeIdOwner());
+                baseNode.appendDeReference(sb, field, renderTreat, externalRepresentation, jpaProvider.needsElementCollectionIdCutoff());
             }
 
             if (addTypeCaseWhen) {

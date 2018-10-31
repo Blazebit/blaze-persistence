@@ -37,7 +37,6 @@ import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 
 import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.SingularAttribute;
@@ -804,8 +803,7 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         if (property != null && valuesTypeName == null) {
             Set<SingularAttribute<?, ?>> idAttributes;
             if (requiresElementCollectionIdCutoff && parentTreeNode != null && parentTreeNode.getAttribute().getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION
-                    // Only relevant when the owning entity type has an embedded id
-                    && property.endsWith(".id") && ((idAttributes = JpaMetamodelUtils.getIdAttributes(parent.getEntityType())).size() > 1 || idAttributes.iterator().next().getType() instanceof EmbeddableType<?>)) {
+                    && property.endsWith(".id")) {
                 // See https://hibernate.atlassian.net/browse/HHH-13045 for details
                 sb.append('.').append(property, 0, property.length() - ".id".length());
             } else {

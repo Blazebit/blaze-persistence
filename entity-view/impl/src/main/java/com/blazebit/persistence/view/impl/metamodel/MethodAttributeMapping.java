@@ -501,7 +501,7 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
         }
 
         final Map<ViewMapping, Boolean> subtypeMappings = new HashMap<>(subtypes.size());
-        for (Class<?> type : subtypes) {
+        for (final Class<?> type : subtypes) {
             final ViewMapping subtypeMapping = context.getViewMapping(type);
             if (subtypeMapping == null) {
                 unknownSubviewType(type);
@@ -515,9 +515,10 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
                             @Override
                             public void run() {
                                 Set<Class<?>> dependencies = new HashSet<>();
-                                dependencies.add(getDeclaringView().getEntityViewClass());
+                                dependencies.add(MethodAttributeMapping.this.getDeclaringView().getEntityViewClass());
                                 dependencies.add(clazz);
                                 if (!subtypeMapping.validateDependencies(context, dependencies, MethodAttributeMapping.this, clazz, false)) {
+                                    // validateCascadeSubtypeMappings will remove this when this speculation was invalid
                                     subtypeMappings.put(subtypeMapping, Boolean.FALSE);
                                 }
                             }

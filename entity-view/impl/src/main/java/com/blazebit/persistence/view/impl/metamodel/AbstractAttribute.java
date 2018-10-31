@@ -783,7 +783,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                         for (Type<?> updateCascadeAllowedSubtype : getUpdateCascadeAllowedSubtypes()) {
                             ManagedViewType<?> managedViewType = (ManagedViewType<?>) updateCascadeAllowedSubtype;
                             if (managedViewType.isUpdatable()) {
-                                context.addError("Invalid use of @UpdatableEntityView type '" + managedViewType.getJavaType().getName() + "' for the " + getLocation() + ". Consider using a read-only view type instead! " +
+                                context.addError("Invalid use of @UpdatableEntityView type '" + managedViewType.getJavaType().getName() + "' for the " + getLocation() + ". Consider using a read-only view type instead or use @AllowUpdatableEntityViews! " +
                                         "For further information on this topic, please consult the documentation https://persistence.blazebit.com/documentation/entity-view/manual/en_US/index.html#updatable-mappings-subview");
                             }
                         }

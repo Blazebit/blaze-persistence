@@ -532,7 +532,7 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     }
 
     @Override
-    public boolean needsElementCollectionIdCutoffForCompositeIdOwner() {
+    public boolean needsElementCollectionIdCutoff() {
         return false;
     }
 
