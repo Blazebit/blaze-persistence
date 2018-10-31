@@ -236,7 +236,7 @@ public class HibernateJpaProvider implements JpaProvider {
     }
 
     @Override
-    public boolean needsElementCollectionIdCutoffForCompositeIdOwner() {
+    public boolean needsElementCollectionIdCutoff() {
         return needsElementCollectionIdCutoffForCompositeIdOwner;
     }
 

@@ -1968,7 +1968,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 syntheticPredicate = syntheticPredicate.replace(exampleQuerySqlAlias, valuesTableSqlAlias);
             }
 
-            entityFunctionNodes.add(new EntityFunctionNode(valuesClause, valuesAliases, clazz, valuesTableSqlAlias, syntheticPredicate));
+            entityFunctionNodes.add(new EntityFunctionNode(valuesClause, valuesAliases, node.getInternalEntityType().getName(), valuesTableSqlAlias, syntheticPredicate));
         }
         return entityFunctionNodes;
     }

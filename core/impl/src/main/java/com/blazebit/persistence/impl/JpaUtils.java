@@ -23,7 +23,6 @@ import com.blazebit.persistence.parser.expression.NullExpression;
 import com.blazebit.persistence.parser.expression.ParameterExpression;
 import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.expression.PropertyExpression;
-import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.spi.JoinTable;
@@ -31,11 +30,9 @@ import com.blazebit.persistence.spi.JpaMetamodelAccessor;
 import com.blazebit.persistence.spi.JpaProvider;
 
 import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.PluralAttribute;
-import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -48,7 +45,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
 import java.util.Queue;
-import java.util.Set;
 import java.util.TreeSet;
 
 /**
@@ -69,8 +65,7 @@ public final class JpaUtils {
         EntityMetamodel metamodel = queryBuilder.mainQuery.metamodel;
         JpaMetamodelAccessor jpaMetamodelAccessor = jpaProvider.getJpaMetamodelAccessor();
 
-        Set<SingularAttribute<?, ?>> idAttributes;
-        boolean needsElementCollectionIdCutoffForCompositeIdOwner = jpaProvider.needsElementCollectionIdCutoffForCompositeIdOwner() && ((idAttributes = JpaMetamodelUtils.getIdAttributes(bindType)).size() > 1 || idAttributes.iterator().next().getType() instanceof EmbeddableType<?>);
+        boolean needsElementCollectionIdCutoffForCompositeIdOwner = jpaProvider.needsElementCollectionIdCutoff();
         final Queue<String> attributeQueue = new ArrayDeque<>(bindingMap.keySet());
         while (!attributeQueue.isEmpty()) {
             final String attributeName = attributeQueue.remove();
@@ -160,7 +155,7 @@ public final class JpaUtils {
                             }
                         }
                     } else if (selectExpression instanceof ParameterExpression) {
-                        final Collection<String> embeddedPropertyNames = getEmbeddedPropertyPaths(attributeEntries, attributeName, jpaProvider.needsElementCollectionIdCutoffForCompositeIdOwner());
+                        final Collection<String> embeddedPropertyNames = getEmbeddedPropertyPaths(attributeEntries, attributeName, jpaProvider.needsElementCollectionIdCutoff());
 
                         if (embeddedPropertyNames.size() > 0) {
                             ParameterExpression parameterExpression = (ParameterExpression) selectExpression;

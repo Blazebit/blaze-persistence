@@ -18,22 +18,16 @@ package com.blazebit.persistence.testsuite;
 
 import static org.junit.Assert.assertEquals;
 
-import com.blazebit.persistence.Criteria;
-import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
-import com.blazebit.persistence.spi.DbmsDialect;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDB2;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoFirebird;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoPostgreSQL;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoSQLite;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL;
 import com.blazebit.persistence.testsuite.entity.Document;
 
 /**
@@ -122,7 +116,11 @@ public class GroupByTest extends AbstractCoreTest {
                 .groupBy("names");
 
         if (jpaProvider.supportsSingleValuedAssociationIdExpressions()) {
-            assertEquals("SELECT d.id FROM Document d LEFT JOIN d.names names_1 GROUP BY names_1.intIdEntity.id, names_1.primaryName, names_1.secondaryName, d.id", cb.getQueryString());
+            if (jpaProvider.needsElementCollectionIdCutoff()) {
+                assertEquals("SELECT d.id FROM Document d LEFT JOIN d.names names_1 GROUP BY names_1.intIdEntity, names_1.primaryName, names_1.secondaryName, d.id", cb.getQueryString());
+            } else {
+                assertEquals("SELECT d.id FROM Document d LEFT JOIN d.names names_1 GROUP BY names_1.intIdEntity.id, names_1.primaryName, names_1.secondaryName, d.id", cb.getQueryString());
+            }
         } else {
             assertEquals("SELECT d.id FROM Document d LEFT JOIN d.names names_1 LEFT JOIN names_1.intIdEntity intIdEntity_1 GROUP BY intIdEntity_1.id, names_1.primaryName, names_1.secondaryName, d.id", cb.getQueryString());
         }
@@ -148,7 +146,11 @@ public class GroupByTest extends AbstractCoreTest {
                 .groupBy("VALUE(nameMap)");
 
         if (jpaProvider.supportsSingleValuedAssociationIdExpressions()) {
-            assertEquals("SELECT d.id FROM Document d LEFT JOIN d.nameMap nameMap_1 GROUP BY nameMap_1.intIdEntity.id, nameMap_1.primaryName, nameMap_1.secondaryName, d.id", cb.getQueryString());
+            if (jpaProvider.needsElementCollectionIdCutoff()) {
+                assertEquals("SELECT d.id FROM Document d LEFT JOIN d.nameMap nameMap_1 GROUP BY nameMap_1.intIdEntity, nameMap_1.primaryName, nameMap_1.secondaryName, d.id", cb.getQueryString());
+            } else {
+                assertEquals("SELECT d.id FROM Document d LEFT JOIN d.nameMap nameMap_1 GROUP BY nameMap_1.intIdEntity.id, nameMap_1.primaryName, nameMap_1.secondaryName, d.id", cb.getQueryString());
+            }
         } else {
             assertEquals("SELECT d.id FROM Document d LEFT JOIN d.nameMap nameMap_1 LEFT JOIN nameMap_1.intIdEntity intIdEntity_1 GROUP BY intIdEntity_1.id, nameMap_1.primaryName, nameMap_1.secondaryName, d.id", cb.getQueryString());
         }

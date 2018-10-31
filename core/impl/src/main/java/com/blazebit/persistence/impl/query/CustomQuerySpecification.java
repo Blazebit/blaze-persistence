@@ -391,7 +391,7 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
 
             // TODO: this is a hibernate specific integration detail
             // Replace the subview subselect that is generated for this subselect
-            String entityName = node.getEntityClass().getSimpleName();
+            String entityName = node.getEntityName();
             final String subselect = "( select * from " + entityName + " )";
             final String subselectTableExpr = subselect + " " + valuesTableSqlAlias;
             int subselectIndex = sb.indexOf(subselectTableExpr, 0);

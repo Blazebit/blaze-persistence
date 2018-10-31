@@ -66,7 +66,7 @@ public class LoadOrPersistViewToEntityMapper extends AbstractViewToEntityMapper 
                 if (persistAllowed && persistUpdater.containsKey(viewTypeClass) && !((EntityViewProxy) view).$$_isNew()) {
                     // If that create view object was previously persisted, we won't persist it again, nor update, but just load it
                 } else {
-                    throw new IllegalArgumentException("Couldn't load entity object for attribute '" + attributeLocation + "'. Expected subview of on of the types " + names(viewTypeClasses) + " but got: " + view);
+                    throw new IllegalArgumentException("Couldn't load entity object for attribute '" + attributeLocation + "'. Expected subview of one of the types " + names(viewTypeClasses) + " but got: " + view);
                 }
             }
         }

@@ -25,14 +25,14 @@ public class EntityFunctionNode {
 
     private final String valuesClause;
     private final String valuesAliases;
-    private final Class<?> entityClass;
+    private final String entityName;
     private final String tableAlias;
     private final String syntheticPredicate;
 
-    public EntityFunctionNode(String valuesClause, String valuesAliases, Class<?> entityClass, String tableAlias, String syntheticPredicate) {
+    public EntityFunctionNode(String valuesClause, String valuesAliases, String entityName, String tableAlias, String syntheticPredicate) {
         this.valuesClause = valuesClause;
         this.valuesAliases = valuesAliases;
-        this.entityClass = entityClass;
+        this.entityName = entityName;
         this.tableAlias = tableAlias;
         this.syntheticPredicate = syntheticPredicate;
     }
@@ -45,8 +45,8 @@ public class EntityFunctionNode {
         return valuesAliases;
     }
 
-    public Class<?> getEntityClass() {
-        return entityClass;
+    public String getEntityName() {
+        return entityName;
     }
 
     public String getTableAlias() {
