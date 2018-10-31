@@ -334,14 +334,14 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         }
     }
 
-    String addRootValues(Class<?> clazz, Class<?> valueClazz, String rootAlias, int valueCount, String typeName, String castedParameter, boolean identifiableReference, String valueClazzAttributeName) {
+    String addRootValues(Class<?> clazz, Class<?> valueClazz, String rootAlias, int valueCount, String typeName, String castedParameter, boolean identifiableReference, String valueClazzAttributeName, String valueLikeClause) {
         if (rootAlias == null) {
             throw new IllegalArgumentException("Illegal empty alias for the VALUES clause: " + clazz.getName());
         }
         // TODO: we should pad the value count to avoid filling query caches
         EntityType<?> entityType = mainQuery.metamodel.getEntity(clazz);
         Type<?> type = mainQuery.metamodel.type(valueClazz);
-        String idAttributeName = null;
+        String idAttributeName = valueLikeClause;
         Set<Attribute<?, ?>> attributeSet;
 
         if (identifiableReference) {
@@ -721,7 +721,12 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 }
                 sb.append("(");
                 sb.append(rootNode.getValueCount());
-                sb.append(" VALUES)");
+                sb.append(" VALUES");
+                if (valueType.getJavaType() == ValuesEntity.class && rootNode.getValuesIdName() != null) {
+                    sb.append(" LIKE ");
+                    sb.append(rootNode.getValuesIdName());
+                }
+                sb.append(")");
             } else if (externalRepresentation && explicitVersionEntities.get(rootNode.getJavaType()) != null) {
                 DbmsModificationState state = explicitVersionEntities.get(rootNode.getJavaType()).get(rootNode.getAlias());
                 EntityType<?> type = rootNode.getEntityType();

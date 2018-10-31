@@ -120,7 +120,7 @@ from_item_subquery
 // But the inline value definition is for ad-hoc queries
 values_from_item
     : (
-        simpleTypeName '(' valueCount VALUES ')'
+        simpleTypeName '(' valueCount VALUES (LIKE entityName '.' attributeName)? ')'
       | entityName ( '.' idName )? '(' valueCount VALUES ')'
       | simpleTypeName '(' VALUES values_item ( ',' values_item  )* ')'
       | entityName ( '.' idName )? '(' VALUES values_item ( ',' values_item  )* ')'

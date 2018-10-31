@@ -296,6 +296,7 @@ public class DataNucleusJpaProvider implements JpaProvider {
         AbstractMemberMetaData metaData = attribute.getMetadata();
         if (metaData.getJoinMetaData() != null) {
             Map<String, String> keyMapping = null;
+            Map<String, String> keyColumnTypes = null;
             KeyMetaData keyMetaData = metaData.getKeyMetaData();
             if (keyMetaData != null && keyMetaData.getColumnMetaData() != null) {
                 keyMapping = new HashMap<>();
@@ -362,6 +363,7 @@ public class DataNucleusJpaProvider implements JpaProvider {
                     null,
                     idColumnMapping,
                     keyMapping,
+                    keyColumnTypes,
                     null,
                     targetIdColumnMapping
             );

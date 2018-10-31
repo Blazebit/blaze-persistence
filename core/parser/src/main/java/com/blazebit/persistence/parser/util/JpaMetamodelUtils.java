@@ -99,6 +99,54 @@ public class JpaMetamodelUtils {
         }
     }
 
+    public static Class<?> resolveKeyClass(Class<?> baseClass, MapAttribute<?, ?, ?> attr) {
+        Class<?> resolverBaseClass = baseClass == null ? null : getConcreterClass(baseClass, attr.getDeclaringType().getJavaType());
+        Class<?> jpaReportedFieldClass;
+        Class<?> fieldClass;
+
+        // If it's a raw type, we use the element type the jpa provider thinks is right
+        fieldClass = attr.getKeyType().getJavaType();
+        jpaReportedFieldClass = fieldClass;
+
+        if (resolverBaseClass == null) {
+            return jpaReportedFieldClass;
+        }
+
+        if (attr.getJavaMember() instanceof Method) {
+            Method method = (Method) attr.getJavaMember();
+            Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(resolverBaseClass, method);
+
+            // Skip raw types
+            if (typeArguments.length != 0) {
+                fieldClass = typeArguments[0];
+                if (fieldClass == null) {
+                    fieldClass = resolveType(resolverBaseClass, ((ParameterizedType) method.getGenericReturnType()).getActualTypeArguments()[0]);
+                }
+            }
+        } else {
+            Field field = (Field) attr.getJavaMember();
+            Class<?>[] typeArguments = ReflectionUtils.getResolvedFieldTypeArguments(resolverBaseClass, field);
+
+            // Skip raw types
+            if (typeArguments.length != 0) {
+                fieldClass = typeArguments[0];
+                if (fieldClass == null) {
+                    fieldClass = resolveType(resolverBaseClass, ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0]);
+                }
+            }
+        }
+
+        if (fieldClass.isAssignableFrom(jpaReportedFieldClass)) {
+            return jpaReportedFieldClass;
+        } else if (jpaReportedFieldClass.isAssignableFrom(fieldClass)) {
+            return fieldClass;
+        } else {
+            // Hibernate reports the wrong type for fields that are differently bound via a type variable
+            // so we default in this erroneous case to the resolved java type instead of the jpa resolved type
+            return fieldClass;
+        }
+    }
+
     public static Class<?> resolveFieldClass(Class<?> baseClass, Attribute<?, ?> attr) {
         Class<?> resolverBaseClass = baseClass == null ? null : getConcreterClass(baseClass, attr.getDeclaringType().getJavaType());
         Class<?> jpaReportedFieldClass;

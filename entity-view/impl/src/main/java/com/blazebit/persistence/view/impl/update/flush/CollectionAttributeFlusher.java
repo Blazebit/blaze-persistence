@@ -436,13 +436,13 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         String entityIdAttributeName = elementDescriptor.getEntityIdAttributeName();
         if (flushAtOnce) {
             if (entityIdAttributeName == null) {
-                insertCb.fromValues((Class<Object>) elementDescriptor.getJpaType(), "val", elementsToAdd);
+                insertCb.fromValues(ownerEntityClass, mapping, "val", elementsToAdd);
             } else {
                 insertCb.fromIdentifiableValues((Class<Object>) elementDescriptor.getJpaType(), "val", elementsToAdd);
             }
         } else {
             if (entityIdAttributeName == null) {
-                insertCb.fromValues((Class<Object>) elementDescriptor.getJpaType(), "val", 1);
+                insertCb.fromValues(ownerEntityClass, mapping, "val", 1);
             } else {
                 insertCb.fromIdentifiableValues((Class<Object>) elementDescriptor.getJpaType(), "val", 1);
             }
