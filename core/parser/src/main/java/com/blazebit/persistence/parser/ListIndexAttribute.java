@@ -18,6 +18,7 @@ package com.blazebit.persistence.parser;
 
 import javax.persistence.metamodel.ListAttribute;
 import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 import java.lang.reflect.Member;
@@ -44,6 +45,11 @@ public class ListIndexAttribute<X> implements SingularAttribute<X, Integer>, Qua
 
     public ListIndexAttribute(ListAttribute<?, ?> attribute) {
         this.attribute = attribute;
+    }
+
+    @Override
+    public PluralAttribute<?, ?, ?> getPluralAttribute() {
+        return attribute;
     }
 
     @Override

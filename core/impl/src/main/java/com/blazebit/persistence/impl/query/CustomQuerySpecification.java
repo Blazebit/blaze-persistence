@@ -301,7 +301,7 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
             String sqlAlias = extendedQuerySupport.getSqlAlias(em, baseQuery, tableNameRemappingEntry.getKey());
             String newCteName = tableNameRemappingEntry.getValue();
 
-            SqlUtils.applyTableNameRemapping(sqlSb, sqlAlias, newCteName, null);
+            SqlUtils.applyTableNameRemapping(sqlSb, sqlAlias, newCteName, null, null);
         }
 
         return sb;
@@ -418,7 +418,27 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
                 }
             }
 
-            SqlUtils.applyTableNameRemapping(sb, valuesTableSqlAlias, valuesClause, valuesAliases);
+            String newSqlAlias = null;
+            if (node.getPluralTableJoin() != null) {
+                newSqlAlias = node.getPluralTableAlias() + " ";
+                valuesTableSqlAlias += " " + node.getPluralTableJoin();
+
+                // Replace aliases using the collection table alias
+                if (node.getPluralCollectionTableAlias() != null) {
+                    String dereference = node.getPluralCollectionTableAlias() + ".";
+                    int fromIndex = SqlUtils.indexOfFrom(sb);
+                    int dereferenceIndex = 0;
+                    while ((dereferenceIndex = sb.indexOf(dereference, dereferenceIndex)) != -1) {
+                        if (dereferenceIndex > fromIndex) {
+                            break;
+                        }
+                        sb.replace(dereferenceIndex, dereferenceIndex + node.getPluralCollectionTableAlias().length(), newSqlAlias);
+                        dereferenceIndex += newSqlAlias.length() - node.getPluralCollectionTableAlias().length();
+                    }
+                }
+            }
+
+            SqlUtils.applyTableNameRemapping(sb, valuesTableSqlAlias, valuesClause, valuesAliases, newSqlAlias);
         }
 
         return sb;

@@ -18,6 +18,7 @@ package com.blazebit.persistence.parser;
 
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.MapAttribute;
+import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 import java.lang.reflect.Member;
@@ -41,6 +42,11 @@ public class MapKeyAttribute<X, Y> implements SingularAttribute<X, Y>, Qualified
         this.persistentAttributeType = Type.PersistenceType.ENTITY
                 .equals(jpaType.getPersistenceType()) ? PersistentAttributeType.MANY_TO_ONE : Type.PersistenceType.EMBEDDABLE
                 .equals(jpaType.getPersistenceType()) ? PersistentAttributeType.EMBEDDED : PersistentAttributeType.BASIC;
+    }
+
+    @Override
+    public PluralAttribute<?, ?, ?> getPluralAttribute() {
+        return attribute;
     }
 
     @Override

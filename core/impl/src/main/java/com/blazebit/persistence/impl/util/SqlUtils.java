@@ -82,7 +82,7 @@ public class SqlUtils {
     private SqlUtils() {
     }
 
-    public static void applyTableNameRemapping(StringBuilder sb, String sqlAlias, String newCteName, String aliasExtension) {
+    public static void applyTableNameRemapping(StringBuilder sb, String sqlAlias, String newCteName, String aliasExtension, String newSqlAlias) {
         final String searchAs = " as";
         final String searchAlias = " " + sqlAlias;
         int searchIndex = 0;
@@ -91,18 +91,23 @@ public class SqlUtils {
             if (idx < sb.length() && sb.charAt(idx) == '.') {
                 // This is a dereference of the alias, skip this
             } else {
-                int[] indexRange;
+                int[] tableNameIndexRange;
                 if (searchAs.equalsIgnoreCase(sb.substring(searchIndex - searchAs.length(), searchIndex))) {
                     // Uses aliasing with the AS keyword
-                    indexRange = rtrimBackwardsToFirstWhitespace(sb, searchIndex - searchAs.length());
+                    tableNameIndexRange = rtrimBackwardsToFirstWhitespace(sb, searchIndex - searchAs.length());
                 } else {
                     // Uses aliasing without the AS keyword
-                    indexRange = rtrimBackwardsToFirstWhitespace(sb, searchIndex);
+                    tableNameIndexRange = rtrimBackwardsToFirstWhitespace(sb, searchIndex);
                 }
 
-                int oldLength = indexRange[1] - indexRange[0];
+                if (newSqlAlias != null) {
+                    sb.replace(tableNameIndexRange[1] + 1, tableNameIndexRange[1] + 1 + sqlAlias.length(), newSqlAlias);
+                    searchIndex += newSqlAlias.length() - sqlAlias.length();
+                }
+
+                int oldLength = tableNameIndexRange[1] - tableNameIndexRange[0];
                 // Replace table name with cte name
-                sb.replace(indexRange[0], indexRange[1], newCteName);
+                sb.replace(tableNameIndexRange[0], tableNameIndexRange[1], newCteName);
 
                 if (aliasExtension != null) {
                     sb.insert(searchIndex + searchAlias.length() + (newCteName.length() - oldLength), aliasExtension);
@@ -117,7 +122,7 @@ public class SqlUtils {
         }
     }
 
-    public static int[] rtrimBackwardsToFirstWhitespace(StringBuilder sb, int startIndex) {
+    public static int[] rtrimBackwardsToFirstWhitespace(CharSequence sb, int startIndex) {
         int tableNameStartIndex;
         int tableNameEndIndex = startIndex;
         boolean text = false;
@@ -298,6 +303,10 @@ public class SqlUtils {
         return selectIndex;
     }
 
+    public static int indexOfFrom(CharSequence sql) {
+        return FROM_FINDER.indexIn(sql, 0);
+    }
+
     /**
      * Finds the toplevel WHERE keyword in an arbitrary query.
      *
@@ -449,18 +458,60 @@ public class SqlUtils {
         return index + 1;
     }
 
-    public static int findJoinStartIndex(StringBuilder sqlSb, int aliasIndex) {
+    public static int indexOfJoinTableAlias(CharSequence sql, String tableName) {
+        int startIndex = FROM_FINDER.indexIn(sql, 0);
+        if (startIndex == -1) {
+            return -1;
+        }
+        startIndex += FROM.length();
+        int whereIndex = indexOfWhere(sql);
+        if (whereIndex == -1) {
+            whereIndex = sql.length();
+        }
+
+        PatternFinder finder = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(" " + tableName + " on "));
+        int index = finder.indexIn(sql, startIndex, whereIndex);
+        if (index == -1) {
+            return -1;
+        }
+
+        return index + 1;
+    }
+
+    public static int[] indexOfFullJoin(CharSequence sql, String tableAlias) {
+        int whereIndex = SqlUtils.indexOfWhere(sql);
+        return indexOfFullJoin(sql, tableAlias, whereIndex);
+    }
+
+    public static int[] indexOfFullJoin(CharSequence sql, String tableAlias, int whereIndex) {
+        // For every table alias we found in the select items that we removed due to the cutoff, we delete the joins
+        String aliasOnPart = " " + tableAlias + " on ";
+        int aliasIndex = indexOfJoinTableAlias(sql, tableAlias);
+        if (aliasIndex > -1 && aliasIndex < whereIndex) {
+            // indexOfJoinTableAlias moves the index to the first char of the alias, so move back
+            aliasIndex--;
+            // First, let's find the end of the on clause
+            int onClauseStart = aliasIndex + aliasOnPart.length();
+            int onClauseEnd = SqlUtils.findEndOfOnClause(sql, onClauseStart, whereIndex);
+            int joinStartIndex = SqlUtils.findJoinStartIndex(sql, aliasIndex);
+            return new int[] { joinStartIndex, onClauseEnd };
+        }
+
+        return null;
+    }
+
+    public static int findJoinStartIndex(CharSequence sqlSb, int aliasIndex) {
         // Then we step back token-wise until we have found the tokens "(left|inner|cross)? outer? join"
         int[] tokenRange = SqlUtils.rtrimBackwardsToFirstWhitespace(sqlSb, aliasIndex);
         return findJoinStartIndex(sqlSb, tokenRange[0] - 1, EnumSet.of(JoinToken.JOIN));
     }
 
-    public static int findJoinStartIndex(StringBuilder sqlSb, int tokenEnd, Set<JoinToken> allowedTokens) {
+    public static int findJoinStartIndex(CharSequence sqlSb, int tokenEnd, Set<JoinToken> allowedTokens) {
         int[] tokenRange;
         do {
             tokenRange = SqlUtils.rtrimBackwardsToFirstWhitespace(sqlSb, tokenEnd);
             tokenEnd = tokenRange[0] - 1;
-            JoinToken token = JoinToken.valueOf(sqlSb.substring(tokenRange[0], tokenRange[1]).trim().toUpperCase());
+            JoinToken token = JoinToken.valueOf(sqlSb.subSequence(tokenRange[0], tokenRange[1]).toString().trim().toUpperCase());
             if (allowedTokens.contains(token)) {
                 allowedTokens = token.previous();
             } else {
@@ -498,7 +549,7 @@ public class SqlUtils {
         }
     }
 
-    public static int findEndOfOnClause(StringBuilder sqlSb, int predicateStartIndex, int whereIndex) {
+    public static int findEndOfOnClause(CharSequence sqlSb, int predicateStartIndex, int whereIndex) {
         int joinIndex = JOIN_FINDER.indexIn(sqlSb, predicateStartIndex);
         int end;
         if (joinIndex == -1 || joinIndex > whereIndex) {

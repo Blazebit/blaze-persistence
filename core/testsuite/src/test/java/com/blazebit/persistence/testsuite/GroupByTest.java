@@ -16,11 +16,6 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static org.junit.Assert.assertEquals;
-
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoFirebird;
@@ -29,6 +24,10 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoPostgreSQL;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoSQLite;
 import com.blazebit.persistence.testsuite.entity.Document;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  *

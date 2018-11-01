@@ -68,4 +68,12 @@ public interface JpaMetamodelAccessor {
      * @return Whether the attribute is composite
      */
     boolean isCompositeNode(Attribute<?, ?> attr);
+
+    /**
+     * Returns whether the given attribute is an element collection.
+     *
+     * @param attribute The attribute to check
+     * @return true if the attribute is an element collection, false otherwise
+     */
+    boolean isElementCollection(Attribute<?, ?> attribute);
 }

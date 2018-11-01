@@ -34,7 +34,6 @@ public class DataNucleusJpaMetamodelAccessor extends JpaMetamodelAccessorImpl {
     private DataNucleusJpaMetamodelAccessor() {
     }
 
-
     @Override
     public boolean isJoinable(Attribute<?, ?> attr) {
         if (attr.isCollection()) {
@@ -69,4 +68,22 @@ public class DataNucleusJpaMetamodelAccessor extends JpaMetamodelAccessorImpl {
                 || attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.ONE_TO_ONE;
     }
 
+    @Override
+    public boolean isElementCollection(Attribute<?, ?> attribute) {
+        if (attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION) {
+            return true;
+        }
+        // Datanucleus kinda messes up the metamodel for some reason
+        if (attribute instanceof PluralAttribute<?, ?, ?>) {
+            Type.PersistenceType persistenceType = ((PluralAttribute<?, ?, ?>) attribute).getElementType().getPersistenceType();
+            //CHECKSTYLE:OFF: FallThrough
+            switch (persistenceType) {
+                case BASIC:
+                case EMBEDDABLE:
+                     return true;
+            }
+            //CHECKSTYLE:ON: FallThrough
+        }
+        return false;
+    }
 }

@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.impl;
 
-import com.blazebit.lang.ValueRetriever;
+import com.blazebit.reflection.PropertyPathExpression;
 
 import javax.persistence.Query;
 import java.util.Collection;
@@ -30,9 +30,9 @@ import java.util.Iterator;
 public class ValuesParameterBinder {
 
     private final String[][] parameterNames;
-    private final ValueRetriever<Object, Object>[] pathExpressions;
+    private final PropertyPathExpression<Object, Object>[] pathExpressions;
 
-    public ValuesParameterBinder(String[][] parameterNames, ValueRetriever<Object, Object>[] pathExpressions) {
+    public ValuesParameterBinder(String[][] parameterNames, PropertyPathExpression<Object, Object>[] pathExpressions) {
         this.parameterNames = parameterNames;
         this.pathExpressions = pathExpressions;
     }
@@ -43,7 +43,11 @@ public class ValuesParameterBinder {
             Object element;
             if (iterator.hasNext() && (element = iterator.next()) != null) {
                 for (int j = 0; j < parameterNames[i].length; j++) {
-                    query.setParameter(parameterNames[i][j], pathExpressions[j].getValue(element));
+                    if (pathExpressions[j] == null) {
+                        query.setParameter(parameterNames[i][j], element);
+                    } else {
+                        query.setParameter(parameterNames[i][j], pathExpressions[j].getNullSafeValue(element));
+                    }
                 }
             } else {
                 for (int j = 0; j < parameterNames[i].length; j++) {
@@ -57,7 +61,7 @@ public class ValuesParameterBinder {
         return parameterNames;
     }
 
-    public ValueRetriever<Object, Object>[] getPathExpressions() {
+    public PropertyPathExpression<Object, Object>[] getPathExpressions() {
         return pathExpressions;
     }
 

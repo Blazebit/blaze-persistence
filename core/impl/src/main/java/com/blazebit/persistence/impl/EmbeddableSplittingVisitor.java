@@ -129,7 +129,7 @@ class EmbeddableSplittingVisitor extends AbortableVisitorAdapter {
             } else {
                 Map<String, ? extends ExtendedAttribute<?, ?>> ownedAttributes;
                 String prefix = field;
-                if (baseNode.getParentTreeNode() != null && baseNode.getParentTreeNode().getAttribute().getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION) {
+                if (baseNode.getParentTreeNode() != null && jpaProvider.getJpaMetamodelAccessor().isElementCollection(baseNode.getParentTreeNode().getAttribute())) {
                     String elementCollectionPath = baseNode.getParentTreeNode().getRelationName();
                     ExtendedManagedType entityManagedType = metamodel.getManagedType(ExtendedManagedType.class, baseNode.getParent().getEntityType());
                     ownedAttributes = entityManagedType.getAttributes();
@@ -141,7 +141,7 @@ class EmbeddableSplittingVisitor extends AbortableVisitorAdapter {
                 } else {
                     ownedAttributes = managedType.getOwnedSingularAttributes();
                 }
-                orderedAttributes.addAll(JpaUtils.getEmbeddedPropertyPaths((Map<String, ExtendedAttribute<?, ?>>) ownedAttributes, prefix, false));
+                orderedAttributes.addAll(JpaUtils.getEmbeddedPropertyPaths((Map<String, ExtendedAttribute<?, ?>>) ownedAttributes, prefix, false, false));
             }
 
             // Signal the caller that the expression was eliminated
@@ -177,6 +177,8 @@ class EmbeddableSplittingVisitor extends AbortableVisitorAdapter {
             ExtendedManagedType<?> managedType = metamodel.getManagedType(ExtendedManagedType.class, baseNode.getJavaType());
             attr = managedType.getAttribute(pathReference.getField()).getAttribute();
 
+            // This kind of happens when we do an entity select where the entity is split into it's component paths
+            // We don't want to split it here though as it won't end up in a group by clause or anything anyway
             if (attr instanceof PluralAttribute<?, ?, ?>) {
                 return true;
             }

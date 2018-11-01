@@ -67,6 +67,9 @@ public class UpdatableSubviewTupleTransformer implements TupleTransformer {
                 updatableViewMap.put(key, o);
                 tuple[template.getTupleOffset()] = o;
             }
+        } else {
+            // In case the null check object index differs from the tupleOffset like it is the case when using inheritance
+            tuple[template.getTupleOffset()] = null;
         }
         for (int i = consumeStartIndex; i < consumeEndIndex; i++) {
             tuple[i] = TupleReuse.CONSUMED;

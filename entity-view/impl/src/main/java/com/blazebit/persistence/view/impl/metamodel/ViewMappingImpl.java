@@ -412,6 +412,8 @@ public class ViewMappingImpl implements ViewMapping {
         if (originatingAttributeMapping != null && containsAny(context, dependencies, entityViewClass, excludeEntityViewClass)) {
             if (reportError) {
                 originatingAttributeMapping.circularDependencyError(dependencies);
+            } else {
+                originatingAttributeMapping.circularDependencyDebug(this, dependencies);
             }
             return true;
         }

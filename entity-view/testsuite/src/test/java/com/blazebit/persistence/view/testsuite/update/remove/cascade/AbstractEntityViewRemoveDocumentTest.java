@@ -65,8 +65,6 @@ public abstract class AbstractEntityViewRemoveDocumentTest<T> extends AbstractEn
         doc1.getNameObject().setPrimaryName("doc1");
         doc1.getNames().add(new NameObject("doc1", "doc1"));
         doc1.getNameMap().put("doc1", new NameObject("doc1", "doc1"));
-        doc1.getNameContainer().setName("doc1");
-        doc1.getNameContainer().getNameObject().setPrimaryName("doc1");
         doc1.getNameContainers().add(new NameObjectContainer("doc1", new NameObject("doc1", "doc1")));
         doc1.getNameContainerMap().put("doc1", new NameObjectContainer("doc1", new NameObject("doc1", "doc1")));
         doc2 = new Document("doc2");
@@ -75,8 +73,6 @@ public abstract class AbstractEntityViewRemoveDocumentTest<T> extends AbstractEn
         doc2.setNameObject(new NameObject("doc2", "doc2"));
         doc2.getNames().add(new NameObject("doc2", "doc2"));
         doc2.getNameMap().put("doc1", new NameObject("doc2", "doc2"));
-        doc2.getNameContainer().setName("doc2");
-        doc2.getNameContainer().getNameObject().setPrimaryName("doc2");
         doc2.getNameContainers().add(new NameObjectContainer("doc2", new NameObject("doc2", "doc2")));
         doc2.getNameContainerMap().put("doc2", new NameObjectContainer("doc2", new NameObject("doc2", "doc2")));
 

@@ -101,7 +101,7 @@ public final class JpaUtils {
                         // When binding null, we don't have to adapt anything
                     } else if (selectExpression instanceof PathExpression) {
                         boolean firstBinding = true;
-                        final Collection<String> embeddedPropertyNames = getEmbeddedPropertyPaths(attributeEntries, attributeName, needsElementCollectionIdCutoffForCompositeIdOwner);
+                        final Collection<String> embeddedPropertyNames = getEmbeddedPropertyPaths(attributeEntries, attributeName, needsElementCollectionIdCutoffForCompositeIdOwner, false);
 
                         PathExpression baseExpression = embeddedPropertyNames.size() > 1 ?
                                 ((PathExpression) selectExpression).clone(false) : ((PathExpression) selectExpression);
@@ -155,7 +155,7 @@ public final class JpaUtils {
                             }
                         }
                     } else if (selectExpression instanceof ParameterExpression) {
-                        final Collection<String> embeddedPropertyNames = getEmbeddedPropertyPaths(attributeEntries, attributeName, jpaProvider.needsElementCollectionIdCutoff());
+                        final Collection<String> embeddedPropertyNames = getEmbeddedPropertyPaths(attributeEntries, attributeName, jpaProvider.needsElementCollectionIdCutoff(), false);
 
                         if (embeddedPropertyNames.size() > 0) {
                             ParameterExpression parameterExpression = (ParameterExpression) selectExpression;
@@ -212,11 +212,26 @@ public final class JpaUtils {
         }
     }
 
-    public static Collection<String> getEmbeddedPropertyPaths(Map<String, ExtendedAttribute<?, ?>> attributeEntries, String attributeName, boolean needsElementCollectionIdCutoff) {
+    public static Collection<String> getEmbeddedPropertyPaths(Map<String, ExtendedAttribute<?, ?>> attributeEntries, String attributeName, boolean needsElementCollectionIdCutoff, boolean filterCollections) {
         final NavigableSet<String> embeddedPropertyNames = new TreeSet<>();
         String prefix = attributeName == null ? "" : attributeName + ".";
-        for (Map.Entry<String, ExtendedAttribute<?, ?>> entry : attributeEntries.entrySet()) {
+        int dotCount = -1;
+        int dotIndex = -1;
+        do {
+            dotCount++;
+            dotIndex = prefix.indexOf('.', dotIndex + 1);
+        } while (dotIndex != -1);
+
+        OUTER: for (Map.Entry<String, ExtendedAttribute<?, ?>> entry : attributeEntries.entrySet()) {
             if (entry.getKey().startsWith(prefix)) {
+                if (filterCollections) {
+                    List<Attribute<?, ?>> attributePath = entry.getValue().getAttributePath();
+                    for (int i = dotCount; i < attributePath.size(); i++) {
+                        if (attributePath.get(i).isCollection()) {
+                            continue OUTER;
+                        }
+                    }
+                }
                 String subAttribute = entry.getKey().substring(prefix.length());
                 String lower = embeddedPropertyNames.lower(subAttribute);
                 if (lower == null) {

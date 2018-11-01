@@ -35,6 +35,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -42,6 +44,8 @@ import java.util.Set;
  * @since 1.2.0
  */
 public abstract class AttributeMapping implements EntityViewAttributeMapping {
+
+    private static final Logger LOG = Logger.getLogger("com.blazebit.persistence.view.SUBTYPE_INFERENCE");
 
     protected final ViewMapping viewMapping;
     protected final Annotation mapping;
@@ -601,6 +605,12 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
 
     public void circularDependencyError(Set<Class<?>> dependencies) {
         context.addError("A circular dependency is introduced at the " + getErrorLocation() + " in the following dependency set: " + Arrays.deepToString(dependencies.toArray()));
+    }
+
+    public void circularDependencyDebug(ViewMapping viewMapping, Set<Class<?>> dependencies) {
+        if (LOG.isLoggable(Level.FINEST)) {
+            LOG.finest("Removing allowed subtype '" + viewMapping.getEntityViewClass() + "' because of a possible circular dependency at the " + getErrorLocation() + " in the following dependency set: " + Arrays.deepToString(dependencies.toArray()));
+        }
     }
 
     public void unknownSubviewType(Class<?> subviewClass) {

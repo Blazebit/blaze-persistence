@@ -255,4 +255,9 @@ public class JpaMetamodelAccessorImpl implements JpaMetamodelAccessor {
         return attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.MANY_TO_ONE
                 || attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.ONE_TO_ONE;
     }
+
+    @Override
+    public boolean isElementCollection(Attribute<?, ?> attribute) {
+        return attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION;
+    }
 }

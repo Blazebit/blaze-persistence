@@ -27,13 +27,19 @@ public class EntityFunctionNode {
     private final String valuesAliases;
     private final String entityName;
     private final String tableAlias;
+    private final String pluralCollectionTableAlias;
+    private final String pluralTableAlias;
+    private final String pluralTableJoin;
     private final String syntheticPredicate;
 
-    public EntityFunctionNode(String valuesClause, String valuesAliases, String entityName, String tableAlias, String syntheticPredicate) {
+    public EntityFunctionNode(String valuesClause, String valuesAliases, String entityName, String tableAlias, String pluralCollectionTableAlias, String pluralTableAlias, String pluralTableJoin, String syntheticPredicate) {
         this.valuesClause = valuesClause;
         this.valuesAliases = valuesAliases;
         this.entityName = entityName;
         this.tableAlias = tableAlias;
+        this.pluralCollectionTableAlias = pluralCollectionTableAlias;
+        this.pluralTableAlias = pluralTableAlias;
+        this.pluralTableJoin = pluralTableJoin;
         this.syntheticPredicate = syntheticPredicate;
     }
 
@@ -51,6 +57,18 @@ public class EntityFunctionNode {
 
     public String getTableAlias() {
         return tableAlias;
+    }
+
+    public String getPluralCollectionTableAlias() {
+        return pluralCollectionTableAlias;
+    }
+
+    public String getPluralTableAlias() {
+        return pluralTableAlias;
+    }
+
+    public String getPluralTableJoin() {
+        return pluralTableJoin;
     }
 
     public String getSyntheticPredicate() {

@@ -76,8 +76,11 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
     private final String valuesTypeName;
     private final int valueCount;
     private final EntityType<?> valueType;
-    private final String valuesIdName;
-    private final String valueClazzAttributeName;
+    private final Set<String> valuesIdNames;
+    private final String valuesLikeClause;
+    private final boolean valueClazzAttributeSingular;
+    private final boolean valueClazzSimpleValue;
+    private final String valuesLikeAttribute;
     private final String valuesCastedParameter;
     private final String[] valuesAttributes;
     private final String qualificationExpression;
@@ -110,8 +113,11 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         this.valuesTypeName = treatedJoinNode.valuesTypeName;
         this.valueCount = treatedJoinNode.valueCount;
         this.valueType = treatedJoinNode.valueType;
-        this.valuesIdName = treatedJoinNode.valuesIdName;
-        this.valueClazzAttributeName = treatedJoinNode.valueClazzAttributeName;
+        this.valuesIdNames = treatedJoinNode.valuesIdNames;
+        this.valuesLikeClause = treatedJoinNode.valuesLikeClause;
+        this.valueClazzAttributeSingular = treatedJoinNode.valueClazzAttributeSingular;
+        this.valueClazzSimpleValue = treatedJoinNode.valueClazzSimpleValue;
+        this.valuesLikeAttribute = treatedJoinNode.valuesLikeAttribute;
         this.valuesCastedParameter = treatedJoinNode.valuesCastedParameter;
         this.valuesAttributes = treatedJoinNode.valuesAttributes;
         this.aliasInfo = treatedJoinAliasInfo;
@@ -132,8 +138,11 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         this.valuesTypeName = null;
         this.valueCount = 0;
         this.valueType = null;
-        this.valuesIdName = null;
-        this.valueClazzAttributeName = null;
+        this.valuesIdNames = null;
+        this.valuesLikeClause = null;
+        this.valueClazzAttributeSingular = false;
+        this.valueClazzSimpleValue = false;
+        this.valuesLikeAttribute = null;
         this.valuesCastedParameter = null;
         this.valuesAttributes = null;
         this.qualificationExpression = qualificationExpression;
@@ -157,7 +166,7 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         onUpdate(null);
     }
 
-    private JoinNode(Type<?> nodeType, EntityType<?> valueType, String valuesTypeName, int valueCount, String valuesIdName, String valueClazzAttributeName, String valuesCastedParameter, String[] valuesAttributes, JoinAliasInfo aliasInfo) {
+    private JoinNode(Type<?> nodeType, EntityType<?> valueType, String valuesTypeName, int valueCount, Set<String> valuesIdNames, String valuesLikeClause, String valueClazzAttributeQualificationExpression, boolean valueClazzAttributeSingular, boolean valueClazzSimpleValue, String valuesLikeAttribute, String valuesCastedParameter, String[] valuesAttributes, JoinAliasInfo aliasInfo) {
         this.parent = null;
         this.parentTreeNode = null;
         this.joinType = null;
@@ -168,11 +177,14 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         this.valuesTypeName = valuesTypeName;
         this.valueCount = valueCount;
         this.valueType = valueType;
-        this.valuesIdName = valuesIdName;
-        this.valueClazzAttributeName = valueClazzAttributeName;
+        this.valuesIdNames = valuesIdNames;
+        this.valuesLikeClause = valuesLikeClause;
+        this.valueClazzAttributeSingular = valueClazzAttributeSingular;
+        this.valueClazzSimpleValue = valueClazzSimpleValue;
+        this.valuesLikeAttribute = valuesLikeAttribute;
         this.valuesCastedParameter = valuesCastedParameter;
         this.valuesAttributes = valuesAttributes;
-        this.qualificationExpression = null;
+        this.qualificationExpression = valueClazzAttributeQualificationExpression;
         this.aliasInfo = aliasInfo;
         this.joinNodesForTreatConstraint = Collections.emptyList();
         onUpdate(null);
@@ -182,8 +194,8 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         return new JoinNode(null, null, null, null, null, nodeType, null, null, aliasInfo);
     }
 
-    public static JoinNode createValuesRootNode(Type<?> nodeType, EntityType<?> valueType, String valuesTypeName, int valueCount, String valuesIdName, String valueClazzAttributeName, String valuesCastedParameter, String[] valuesAttributes, JoinAliasInfo aliasInfo) {
-        return new JoinNode(nodeType, valueType, valuesTypeName, valueCount, valuesIdName, valueClazzAttributeName, valuesCastedParameter, valuesAttributes, aliasInfo);
+    public static JoinNode createValuesRootNode(Type<?> nodeType, EntityType<?> valueType, String valuesTypeName, int valueCount, Set<String> valuesIdName, String valuesLikeClause, String qualificationExpression, boolean valueClazzAttributeSingular, boolean valueClazzSimpleValue, String valuesLikeAttribute, String valuesCastedParameter, String[] valuesAttributes, JoinAliasInfo aliasInfo) {
+        return new JoinNode(nodeType, valueType, valuesTypeName, valueCount, valuesIdName, valuesLikeClause, qualificationExpression, valueClazzAttributeSingular, valueClazzSimpleValue, valuesLikeAttribute, valuesCastedParameter, valuesAttributes, aliasInfo);
     }
 
     public static JoinNode createCorrelationRootNode(JoinNode correlationParent, String correlationPath, Attribute<?, ?> correlatedAttribute, Type<?> nodeType, EntityType<?> treatType, JoinAliasInfo aliasInfo) {
@@ -202,7 +214,7 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         // NOTE: no cloning of treatedJoinNodes and entityJoinNodes is intentional
         JoinNode newNode;
         if (valueCount > 0) {
-            newNode = createValuesRootNode(nodeType, valueType, valuesTypeName, valueCount, valuesIdName, valueClazzAttributeName, valuesCastedParameter, valuesAttributes, aliasInfo);
+            newNode = createValuesRootNode(nodeType, valueType, valuesTypeName, valueCount, valuesIdNames, valuesLikeClause, qualificationExpression, valueClazzAttributeSingular, valueClazzSimpleValue, valuesLikeAttribute, valuesCastedParameter, valuesAttributes, aliasInfo);
         } else if (correlationParent == null) {
             newNode = createRootNode((EntityType<?>) nodeType, aliasInfo);
         } else {
@@ -613,12 +625,38 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         return valueType;
     }
 
-    public String getValueClazzAttributeName() {
-        return valueClazzAttributeName;
+    public boolean isValueClazzAttributeSingular() {
+        return valueClazzAttributeSingular;
     }
 
-    public String getValuesIdName() {
-        return valuesIdName;
+    public boolean isValueClazzSimpleValue() {
+        return valueClazzSimpleValue;
+    }
+
+    public String getValuesLikeAttribute() {
+        return valuesLikeAttribute;
+    }
+
+    public String getValueClazzAlias(String prefix) {
+        StringBuilder sb = new StringBuilder();
+        appendValueClazzAlias(sb, prefix);
+        return sb.toString();
+    }
+
+    public void appendValueClazzAlias(StringBuilder sb, String prefix) {
+        if (qualificationExpression == null) {
+            sb.append(prefix).append(valuesLikeAttribute.replace('.', '_'));
+        } else {
+            sb.append(prefix).append(valuesAttributes[0].replace('.', '_')).append('_').append(qualificationExpression.toLowerCase());
+        }
+    }
+
+    public Set<String> getValuesIdNames() {
+        return valuesIdNames;
+    }
+
+    public String getValuesLikeClause() {
+        return valuesLikeClause;
     }
 
     String getValuesTypeName() {
@@ -828,11 +866,21 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
                 sb.append(".value");
                 sb.append(')');
             }
-        } else if (valueClazzAttributeName != null) {
+        } else if (valuesLikeAttribute != null) {
             if (externalRepresentation) {
                 sb.append(aliasInfo.getAlias());
+            } else if (valueClazzAttributeSingular) {
+                sb.append(aliasInfo.getAlias()).append('.').append(valuesLikeAttribute.replace('.', '_'));
             } else {
-                sb.append(aliasInfo.getAlias()).append('.').append(valueClazzAttributeName);
+                if (qualificationExpression != null) {
+                    sb.append(qualificationExpression);
+                    sb.append('(');
+                    sb.append(aliasInfo.getAlias()).append('_').append(valuesLikeAttribute.replace('.', '_'));
+                    sb.append('_').append(qualificationExpression.toLowerCase());
+                    sb.append(')');
+                } else {
+                    sb.append(aliasInfo.getAlias()).append('_').append(valuesLikeAttribute.replace('.', '_'));
+                }
             }
         } else {
             if (qualificationExpression != null) {

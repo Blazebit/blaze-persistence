@@ -103,7 +103,7 @@ public class EntityFunction implements JpqlFunction {
                 sb.replace(subselectIndex, endIndex, entityName);
             }
         }
-        SqlUtils.applyTableNameRemapping(sb, valuesTableSqlAlias, valuesClause, valuesAliases);
+        SqlUtils.applyTableNameRemapping(sb, valuesTableSqlAlias, valuesClause, valuesAliases, null);
         functionRenderContext.addChunk("(");
         functionRenderContext.addChunk(sb.toString());
         functionRenderContext.addChunk(")");
