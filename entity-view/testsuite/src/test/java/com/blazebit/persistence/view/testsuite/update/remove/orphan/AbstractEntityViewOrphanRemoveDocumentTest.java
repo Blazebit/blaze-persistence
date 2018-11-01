@@ -67,8 +67,6 @@ public abstract class AbstractEntityViewOrphanRemoveDocumentTest<T> extends Abst
         doc1.getNameObject().setPrimaryName("doc1");
         doc1.getNames().add(new NameObject("doc1", "doc1"));
         doc1.getNameMap().put("doc1", new NameObject("doc1", "doc1"));
-        doc1.getNameContainer().setName("doc1");
-        doc1.getNameContainer().getNameObject().setPrimaryName("doc1");
         doc1.getNameContainers().add(new NameObjectContainer("doc1", new NameObject("doc1", "doc1")));
         doc1.getNameContainerMap().put("doc1", new NameObjectContainer("doc1", new NameObject("doc1", "doc1")));
 

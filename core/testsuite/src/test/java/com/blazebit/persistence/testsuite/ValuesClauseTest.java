@@ -40,6 +40,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -75,6 +76,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
                 p1 = new Person("p1");
                 d1 = new Document("doc1", 1);
                 d1.setNameObject(new NameObject("123", "abc"));
+                d1.getNameContainers().add(new NameObjectContainer("test", new NameObject("123", "abc")));
                 d1.setOwner(p1);
 
                 em.persist(p1);
@@ -100,7 +102,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
         cb.select("allowedAge");
 
         String expected = ""
-                + "SELECT doc.name, allowedAge FROM Document doc, Long(1 VALUES) allowedAge WHERE TREAT_LONG(allowedAge.value) = :allowedAge_value_0 AND doc.age = allowedAge";
+                + "SELECT doc.name, allowedAge FROM Document doc, Long(1 VALUES) allowedAge WHERE doc.age = allowedAge";
         
         assertEquals(expected, cb.getQueryString());
         List<Tuple> resultList = cb.getResultList();
@@ -122,14 +124,192 @@ public class ValuesClauseTest extends AbstractCoreTest {
 
         String expected = ""
                 + "SELECT doc.name, embeddable FROM Document doc, NameObject(1 VALUES) embeddable" +
-                " WHERE embeddable.intIdEntity = :embeddable_intIdEntity_0 OR embeddable.primaryName = :embeddable_primaryName_0 OR embeddable.secondaryName = :embeddable_secondaryName_0" +
-                " AND doc.nameObject.primaryName = embeddable.secondaryName AND doc.nameObject.secondaryName = embeddable.primaryName";
+                " WHERE doc.nameObject.primaryName = embeddable.secondaryName AND doc.nameObject.secondaryName = embeddable.primaryName";
 
         assertEquals(expected, cb.getQueryString());
         List<Tuple> resultList = cb.getResultList();
         assertEquals(1, resultList.size());
         assertEquals("doc1", resultList.get(0).get(0));
         assertEquals(new NameObject("abc", "123"), resultList.get(0).get(1));
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testValuesEntityFunctionWithPluralOnlyEmbeddable() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
+        cb.fromValues(NameObjectContainer.class, "embeddable", Collections.singleton(new NameObjectContainer("test", new NameObject("abc", "123"))));
+        cb.from(Document.class, "doc");
+        cb.where("doc.nameContainers.name").eqExpression("embeddable.name");
+        cb.where("doc.nameContainers.nameObject.primaryName").eqExpression("embeddable.nameObject.secondaryName");
+        cb.where("doc.nameContainers.nameObject.secondaryName").eqExpression("embeddable.nameObject.primaryName");
+        cb.select("doc.name");
+        cb.select("embeddable");
+
+        String expected = ""
+                + "SELECT doc.name, embeddable FROM Document doc LEFT JOIN doc.nameContainers nameContainers_1, NameObjectContainer(1 VALUES) embeddable" +
+                " WHERE nameContainers_1.name = embeddable.name AND nameContainers_1.nameObject.primaryName = embeddable.nameObject.secondaryName AND nameContainers_1.nameObject.secondaryName = embeddable.nameObject.primaryName";
+
+        assertEquals(expected, cb.getQueryString());
+        List<Tuple> resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+        assertEquals("doc1", resultList.get(0).get(0));
+        assertEquals(new NameObjectContainer("test", new NameObject("abc", "123")), resultList.get(0).get(1));
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testValuesEntityFunctionLikeBasic() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
+        cb.fromValues(Document.class, "name", "n", Collections.singleton("someName"));
+        cb.select("n");
+
+        String expected = "SELECT n FROM String(1 VALUES LIKE Document.name) n";
+
+        assertEquals(expected, cb.getQueryString());
+        List<Tuple> resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+        assertEquals("someName", resultList.get(0).get(0));
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testValuesEntityFunctionLikeEnum() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
+        cb.fromValues(Document.class, "documentType", "t", Collections.singleton(DocumentType.NOVEL));
+        cb.select("t");
+
+        String expected = "SELECT t FROM DocumentType(1 VALUES LIKE Document.documentType) t";
+
+        assertEquals(expected, cb.getQueryString());
+        List<Tuple> resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+        assertEquals(DocumentType.NOVEL, resultList.get(0).get(0));
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testValuesEntityFunctionLikeCalendar() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
+        Calendar cal = Calendar.getInstance();
+        cb.fromValues(Document.class, "creationDate", "t", Collections.singleton(cal));
+        cb.select("t");
+
+        String expected = "SELECT t FROM Calendar(1 VALUES LIKE Document.creationDate) t";
+
+        assertEquals(expected, cb.getQueryString());
+        List<Tuple> resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+        // creationDate is just a DATE
+        cal.set(Calendar.MILLISECOND, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        assertEquals(cal, resultList.get(0).get(0, Calendar.class));
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testValuesEntityFunctionLikeEmbeddable() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
+        cb.fromValues(Document.class, "nameObject", "t", Collections.singleton(new NameObject("123", "abc")));
+        cb.select("t");
+
+        String expected = "SELECT t FROM NameObject(1 VALUES LIKE Document.nameObject) t";
+
+        assertEquals(expected, cb.getQueryString());
+        List<Tuple> resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+        assertEquals(new NameObject("123", "abc"), resultList.get(0).get(0));
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testValuesEntityFunctionLikeEntity() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
+        cb.fromValues(Document.class, "owner", "t", Collections.singleton(new Person(1L)));
+        cb.select("t");
+
+        String expected = "SELECT t FROM Person(1 VALUES LIKE Document.owner) t";
+
+        assertEquals(expected, cb.getQueryString());
+        List<Tuple> resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+        assertEquals(new Person(1L), resultList.get(0).get(0));
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testValuesEntityFunctionLikePluralBasic() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
+        cb.fromValues(Document.class, "strings", "t", Collections.singleton("test"));
+        cb.select("t");
+
+        String expected = "SELECT t FROM String(1 VALUES LIKE Document.strings) t";
+
+        assertEquals(expected, cb.getQueryString());
+        List<Tuple> resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+        assertEquals("test", resultList.get(0).get(0));
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testValuesEntityFunctionLikePluralEmbeddable() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
+        cb.fromValues(Document.class, "names", "t", Collections.singleton(new NameObject("123", "abc")));
+        cb.select("t");
+
+        String expected = "SELECT t FROM NameObject(1 VALUES LIKE Document.names) t";
+
+        assertEquals(expected, cb.getQueryString());
+        List<Tuple> resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+        assertEquals(new NameObject("123", "abc"), resultList.get(0).get(0));
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testValuesEntityFunctionLikePluralEntity() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
+        cb.fromValues(Document.class, "partners", "t", Collections.singleton(new Person(1L)));
+        cb.select("t.id");
+
+        String expected = "SELECT t.id FROM Person(1 VALUES LIKE Document.partners) t";
+
+        assertEquals(expected, cb.getQueryString());
+        List<Tuple> resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+        assertEquals(1L, resultList.get(0).get(0));
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testValuesEntityFunctionLikePluralIndex() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
+        cb.fromValues(Document.class, "INDEX(people)", "t", Collections.singleton(1));
+        cb.select("t");
+
+        String expected = "SELECT t FROM Integer(1 VALUES LIKE INDEX(Document.people)) t";
+
+        assertEquals(expected, cb.getQueryString());
+        List<Tuple> resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+        assertEquals(1, resultList.get(0).get(0));
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testValuesEntityFunctionLikePluralKey() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
+        cb.fromValues(Document.class, "KEY(stringMap)", "t", Collections.singleton("key"));
+        cb.select("t");
+
+        String expected = "SELECT t FROM String(1 VALUES LIKE KEY(Document.stringMap)) t";
+
+        assertEquals(expected, cb.getQueryString());
+        List<Tuple> resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+        assertEquals("key", resultList.get(0).get(0));
     }
 
     // Test for #305
@@ -145,7 +325,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
 
         String expected = ""
                 + "SELECT CASE WHEN doc.name = :param THEN doc.name ELSE '' END, allowedAge FROM Document doc, Long(2 VALUES) allowedAge " +
-                "WHERE TREAT_LONG(allowedAge.value) = :allowedAge_value_0 OR TREAT_LONG(allowedAge.value) = :allowedAge_value_1 AND doc.age = allowedAge";
+                "WHERE doc.age = allowedAge";
 
         assertEquals(expected, cb.getQueryString());
         cb.setParameter("param", "doc1");
@@ -216,7 +396,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
 
         String expected = ""
                 + "SELECT allowedAge, doc.name FROM Long(3 VALUES) allowedAge LEFT JOIN Document doc" +
-                onClause("TREAT_LONG(allowedAge.value) = :allowedAge_value_0 OR TREAT_LONG(allowedAge.value) = :allowedAge_value_1 OR TREAT_LONG(allowedAge.value) = :allowedAge_value_2 AND doc.age = allowedAge") +
+                onClause("doc.age = allowedAge") +
                 " ORDER BY allowedAge ASC";
 
         assertEquals(expected, cb.getQueryString());
@@ -251,7 +431,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
 
         String expected = ""
                 + "SELECT intEntity.name, doc.name FROM IntIdEntity(2 VALUES) intEntity LEFT JOIN Document doc" +
-                onClause("intEntity.id = :intEntity_id_0 OR intEntity.name = :intEntity_name_0 OR intEntity.value = :intEntity_value_0 OR intEntity.id = :intEntity_id_1 OR intEntity.name = :intEntity_name_1 OR intEntity.value = :intEntity_value_1 AND doc.name = intEntity.name") +
+                onClause("doc.name = intEntity.name") +
                 " ORDER BY " + renderNullPrecedence("intEntity.name", "ASC", "LAST");
 
         assertEquals(expected, cb.getQueryString());
@@ -280,7 +460,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
 
         String expected = ""
                 + "SELECT intEntity.name, doc.name FROM IntIdEntity(1 VALUES) intEntity LEFT JOIN Document doc" +
-                onClause("intEntity.id = :intEntity_id_0 OR intEntity.name = :intEntity_name_0 OR intEntity.value = :intEntity_value_0 AND doc.name = intEntity.name") +
+                onClause("doc.name = intEntity.name") +
                 " ORDER BY " + renderNullPrecedence("intEntity.name", "ASC", "LAST");
 
         assertEquals(expected, cb.getQueryString());

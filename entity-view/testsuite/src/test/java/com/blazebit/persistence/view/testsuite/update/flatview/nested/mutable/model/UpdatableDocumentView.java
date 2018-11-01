@@ -37,7 +37,7 @@ public interface UpdatableDocumentView {
     public Long getVersion();
 
     @UpdatableMapping
-    public UpdatableNameObjectContainerView getNameContainer();
+    public UpdatableNameObjectContainerView2 getNameContainer();
 
-    public void setNameContainer(UpdatableNameObjectContainerView nameContainer);
+    public void setNameContainer(UpdatableNameObjectContainerView2 nameContainer);
 }

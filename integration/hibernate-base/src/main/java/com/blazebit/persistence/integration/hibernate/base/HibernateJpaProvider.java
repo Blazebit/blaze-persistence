@@ -671,28 +671,43 @@ public class HibernateJpaProvider implements JpaProvider {
             ComponentType elementType = (ComponentType) persister.getElementType();
             String[] propertyNames = elementType.getPropertyNames();
             Type[] subtypes = elementType.getSubtypes();
-            int dotIndex = -1;
-            do {
-                String propertyName;
-                if (dotIndex == -1) {
-                    propertyName = subAttributeName;
-                } else {
-                    propertyName = subAttributeName.substring(0, dotIndex);
-                }
-                int offset = 0;
+            String[] propertyParts = subAttributeName.split("\\.");
+            int offset = 0;
+            for (int j = 0; j < propertyParts.length - 1; j++) {
+                String propertyName = propertyParts[j];
+
                 for (int i = 0; i < propertyNames.length; i++) {
                     int span = subtypes[i].getColumnSpan(persister.getFactory());
                     if (propertyName.equals(propertyNames[i])) {
-                        String[] columnNames = new String[span];
-                        String[] elementColumnNames = persister.getElementColumnNames();
-                        System.arraycopy(elementColumnNames, offset, columnNames, 0, span);
-                        return columnNames;
+                        if (subtypes[i] instanceof ComponentType) {
+                            elementType = (ComponentType) subtypes[i];
+                            propertyNames = elementType.getPropertyNames();
+                            subtypes = elementType.getSubtypes();
+                            break;
+                        } else {
+                            String[] columnNames = new String[span];
+                            String[] elementColumnNames = persister.getElementColumnNames();
+                            System.arraycopy(elementColumnNames, offset, columnNames, 0, span);
+                            return columnNames;
+                        }
                     } else {
                         offset += span;
                     }
                 }
-                // Component types do not store entries for the id properties of associations so we need to look for a sub-part of the attribute name
-            } while ((dotIndex = subAttributeName.indexOf('.', dotIndex + 1)) != -1);
+            }
+
+            String propertyName = propertyParts[propertyParts.length - 1];
+            for (int i = 0; i < propertyNames.length; i++) {
+                int span = subtypes[i].getColumnSpan(persister.getFactory());
+                if (propertyName.equals(propertyNames[i])) {
+                    String[] columnNames = new String[span];
+                    String[] elementColumnNames = persister.getElementColumnNames();
+                    System.arraycopy(elementColumnNames, offset, columnNames, 0, span);
+                    return columnNames;
+                } else {
+                    offset += span;
+                }
+            }
         } else if (persister.getElementType() instanceof org.hibernate.type.EntityType) {
             AbstractEntityPersister elementPersister = (AbstractEntityPersister) entityPersisters.get(((org.hibernate.type.EntityType) persister.getElementType()).getAssociatedEntityName());
             Type identifierType = ((org.hibernate.type.EntityType) persister.getElementType()).getIdentifierOrUniqueKeyType(persister.getFactory());
@@ -856,20 +871,37 @@ public class HibernateJpaProvider implements JpaProvider {
             ComponentType elementType = (ComponentType) persister.getElementType();
             String[] propertyNames = elementType.getPropertyNames();
             Type[] subtypes = elementType.getSubtypes();
-            int dotIndex = -1;
-            do {
-                String propertyName;
-                if (dotIndex == -1) {
-                    propertyName = subAttributeName;
-                } else {
-                    propertyName = subAttributeName.substring(0, dotIndex);
+            String[] propertyParts = subAttributeName.split("\\.");
+            int offset = 0;
+            for (int j = 0; j < propertyParts.length - 1; j++) {
+                String propertyName = propertyParts[j];
+
+                for (int i = 0; i < propertyNames.length; i++) {
+                    int span = subtypes[i].getColumnSpan(persister.getFactory());
+                    if (propertyName.equals(propertyNames[i])) {
+                        if (subtypes[i] instanceof ComponentType) {
+                            elementType = (ComponentType) subtypes[i];
+                            propertyNames = elementType.getPropertyNames();
+                            subtypes = elementType.getSubtypes();
+                            break;
+                        } else {
+                            columnNames = new String[span];
+                            String[] elementColumnNames = persister.getElementColumnNames();
+                            System.arraycopy(elementColumnNames, offset, columnNames, 0, span);
+                            break;
+                        }
+                    } else {
+                        offset += span;
+                    }
                 }
-                int offset = 0;
+            }
+
+            if (columnNames == null) {
+                String propertyName = propertyParts[propertyParts.length - 1];
                 for (int i = 0; i < propertyNames.length; i++) {
                     int span = subtypes[i].getColumnSpan(persister.getFactory());
                     if (propertyName.equals(propertyNames[i])) {
                         columnNames = new String[span];
-                        propertyType = subtypes[i];
                         String[] elementColumnNames = persister.getElementColumnNames();
                         System.arraycopy(elementColumnNames, offset, columnNames, 0, span);
                         break;
@@ -877,8 +909,7 @@ public class HibernateJpaProvider implements JpaProvider {
                         offset += span;
                     }
                 }
-                // Component type do not store entries for the id properties of associations so we need to look for a sub-part of the attribute name
-            } while (propertyType == null && (dotIndex = subAttributeName.indexOf('.', dotIndex + 1)) != -1);
+            }
         } else if (persister.getElementType() instanceof org.hibernate.type.EntityType) {
             Type identifierType = ((org.hibernate.type.EntityType) persister.getElementType()).getIdentifierOrUniqueKeyType(persister.getFactory());
             String identifierOrUniqueKeyPropertyName = ((org.hibernate.type.EntityType) persister.getElementType()).getIdentifierOrUniqueKeyPropertyName(persister.getFactory());

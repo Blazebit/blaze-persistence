@@ -194,7 +194,7 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
             throw new RuntimeException("Attribute [" + property + "] not found on class " + startType.getJavaType().getName());
         }
         final PluralAttribute.CollectionType collectionType = targetAttribute.getCollectionType();
-        final boolean isElementCollection = targetAttribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION;
+        final boolean isElementCollection = jpaProvider.getJpaMetamodelAccessor().isElementCollection(targetAttribute);
 
         boolean subqueryRequired;
         if (isElementCollection) {

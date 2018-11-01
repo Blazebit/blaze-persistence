@@ -38,7 +38,7 @@ public interface UpdatableDocumentForOneToOneView extends DocumentForOneToOneIdV
     void setName(String name);
 
     @MappingInverse(removeStrategy = InverseRemoveStrategy.SET_NULL)
-    @UpdatableMapping
+    @UpdatableMapping(subtypes = { UpdatableDocumentInfoView.class })
     DocumentInfoIdView getDocumentInfo();
     void setDocumentInfo(DocumentInfoIdView documentInfo);
 }

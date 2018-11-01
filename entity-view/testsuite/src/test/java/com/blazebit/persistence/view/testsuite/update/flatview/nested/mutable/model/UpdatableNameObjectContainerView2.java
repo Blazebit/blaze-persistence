@@ -14,21 +14,26 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.parser;
+package com.blazebit.persistence.view.testsuite.update.flatview.nested.mutable.model;
 
-import javax.persistence.metamodel.PluralAttribute;
+import com.blazebit.persistence.testsuite.entity.NameObjectContainer2;
+import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.UpdatableEntityView;
+import com.blazebit.persistence.view.UpdatableMapping;
 
 /**
- * Super type for attributes like KEY/VALUE/ENTRY/INDEX
- * 
+ *
  * @author Christian Beikov
  * @since 1.2.0
- *
  */
-public interface QualifiedAttribute {
+@UpdatableEntityView
+@EntityView(NameObjectContainer2.class)
+public interface UpdatableNameObjectContainerView2 {
 
-    public PluralAttribute<?, ?, ?> getPluralAttribute();
+    public String getName();
 
-    public String getQualificationExpression();
+    @UpdatableMapping
+    public UpdatableNameObjectView getNameObject();
 
+    public void setNameObject(UpdatableNameObjectView nameObject);
 }

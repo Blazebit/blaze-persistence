@@ -16,15 +16,25 @@
 
 package com.blazebit.persistence.impl;
 
-import java.util.*;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ParameterExpression;
+import com.blazebit.reflection.PropertyPathExpression;
 
 import javax.persistence.Parameter;
 import javax.persistence.Query;
 import javax.persistence.TemporalType;
-
-import com.blazebit.lang.ValueRetriever;
-import com.blazebit.persistence.parser.expression.Expression;
-import com.blazebit.persistence.parser.expression.ParameterExpression;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -393,7 +403,7 @@ public class ParameterManager {
         }
     }
 
-    public void registerValuesParameter(String parameterName, Class<?> type, String[][] parameterNames, ValueRetriever<Object, Object>[] pathExpressions, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {
+    public void registerValuesParameter(String parameterName, Class<?> type, String[][] parameterNames, PropertyPathExpression<Object, Object>[] pathExpressions, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {
         if (parameterName == null) {
             throw new NullPointerException("parameterName");
         }
@@ -793,7 +803,7 @@ public class ParameterManager {
         private final ValuesParameterBinder binder;
         private Collection<Object> value;
 
-        public ValuesParameterWrapper(Class<?> type, String[][] parameterNames, ValueRetriever<Object, Object>[] pathExpressions) {
+        public ValuesParameterWrapper(Class<?> type, String[][] parameterNames, PropertyPathExpression<Object, Object>[] pathExpressions) {
             this.type = type;
             this.binder = new ValuesParameterBinder(parameterNames, pathExpressions);
         }

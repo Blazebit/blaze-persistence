@@ -26,6 +26,7 @@ import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateDocumentTest;
 import com.blazebit.persistence.view.testsuite.update.flatview.nested.mutable.model.UpdatableDocumentView;
 import com.blazebit.persistence.view.testsuite.update.flatview.nested.mutable.model.UpdatableNameObjectContainerView;
+import com.blazebit.persistence.view.testsuite.update.flatview.nested.mutable.model.UpdatableNameObjectContainerView2;
 import com.blazebit.persistence.view.testsuite.update.flatview.nested.mutable.model.UpdatableNameObjectView;
 import org.junit.Assert;
 import org.junit.Test;
@@ -55,7 +56,7 @@ public class EntityViewUpdateNestedMutableFlatViewTest extends AbstractEntityVie
     @Override
     protected void registerViewTypes(EntityViewConfiguration cfg) {
         cfg.addEntityView(UpdatableNameObjectView.class);
-        cfg.addEntityView(UpdatableNameObjectContainerView.class);
+        cfg.addEntityView(UpdatableNameObjectContainerView2.class);
     }
 
     @Test

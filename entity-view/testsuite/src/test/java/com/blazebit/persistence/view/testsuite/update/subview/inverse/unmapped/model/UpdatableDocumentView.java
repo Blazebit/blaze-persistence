@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.testsuite.update.subview.inverse.unmapped.model;
 
 import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.view.AllowUpdatableEntityViews;
 import com.blazebit.persistence.view.CreatableEntityView;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.InverseRemoveStrategy;
@@ -40,6 +41,7 @@ public interface UpdatableDocumentView extends DocumentIdView {
     public void setName(String name);
 
     @UpdatableMapping
+    @AllowUpdatableEntityViews
     PersonIdView getOwner();
     void setOwner(PersonIdView owner);
 

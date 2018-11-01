@@ -17,7 +17,6 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.lang.StringUtils;
-import com.blazebit.lang.ValueRetriever;
 import com.blazebit.persistence.From;
 import com.blazebit.persistence.JoinOnBuilder;
 import com.blazebit.persistence.JoinType;
@@ -63,8 +62,10 @@ import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.spi.JpaMetamodelAccessor;
 import com.blazebit.persistence.spi.JpaProvider;
+import com.blazebit.reflection.PropertyPathExpression;
 
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.BasicType;
 import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ListAttribute;
@@ -83,7 +84,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -325,7 +326,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             JoinNode node = (JoinNode) pathExpression.getBaseNode();
             Attribute<?, ?> attribute = node.getParentTreeNode().getAttribute();
             // Exclude element collections as they are not problematic
-            if (attribute.getPersistentAttributeType() != Attribute.PersistentAttributeType.ELEMENT_COLLECTION) {
+            if (jpaProvider.getJpaMetamodelAccessor().isElementCollection(attribute)) {
                 // There are weird mappings possible, we have to check if the attribute is a join table
                 if (jpaProvider.getJoinTable(node.getParent().getEntityType(), attribute.getName()) != null) {
                     keyRestrictedLeftJoins.add(node);
@@ -334,96 +335,116 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         }
     }
 
-    String addRootValues(Class<?> clazz, Class<?> valueClazz, String rootAlias, int valueCount, String typeName, String castedParameter, boolean identifiableReference, String valueClazzAttributeName, String valueLikeClause) {
+    String addRootValues(Class<?> valueHolderEntityClass, Class<?> valueClass, String rootAlias, int valueCount, String typeName, String castedParameter, boolean identifiableReference, boolean valueClazzAttributeSingular, String valuesClassAttributeName, ExtendedAttribute<?, ?> valuesLikeAttribute, String valueLikeClause, String qualificationExpression) {
         if (rootAlias == null) {
-            throw new IllegalArgumentException("Illegal empty alias for the VALUES clause: " + clazz.getName());
+            throw new IllegalArgumentException("Illegal empty alias for the VALUES clause: " + valueHolderEntityClass.getName());
         }
         // TODO: we should pad the value count to avoid filling query caches
-        EntityType<?> entityType = mainQuery.metamodel.getEntity(clazz);
-        Type<?> type = mainQuery.metamodel.type(valueClazz);
-        String idAttributeName = valueLikeClause;
-        Set<Attribute<?, ?>> attributeSet;
+        EntityType<?> entityType = mainQuery.metamodel.getEntity(valueHolderEntityClass);
+        Type<?> type = mainQuery.metamodel.type(valueClass);
+
+        List<String> attributePaths = new ArrayList<>();
+        String simpleValueAttributePrefix = valuesClassAttributeName == null ? "" : valuesClassAttributeName + ".";
+        boolean simpleValue;
+        Set<String> idAttributeNames;
 
         if (identifiableReference) {
-            SingularAttribute<?, ?> idAttribute = JpaMetamodelUtils.getSingleIdAttribute(entityType);
-            idAttributeName = idAttribute.getName();
-            attributeSet = (Set<Attribute<?, ?>>) (Set<?>) Collections.singleton(idAttribute);
-        } else {
-            Set<Attribute<?, ?>> originalAttributeSet;
-            if (valueClazzAttributeName == null) {
-                originalAttributeSet = (Set<Attribute<?, ?>>) (Set) entityType.getAttributes();
-            } else {
-                originalAttributeSet = (Set<Attribute<?, ?>>) (Set) mainQuery.metamodel.getManagedType(valueClazz).getAttributes();
+            simpleValue = false;
+            idAttributeNames = new LinkedHashSet<>();
+            Map<String, ExtendedAttribute<?, ?>> attributes = new TreeMap<>(mainQuery.metamodel.getManagedType(ExtendedManagedType.class, entityType).getAttributes());
+            for (SingularAttribute<?, ?> attribute : JpaMetamodelUtils.getIdAttributes(entityType)) {
+                idAttributeNames.add(attribute.getName());
+                Collection<String> embeddedPropertyPaths = JpaUtils.getEmbeddedPropertyPaths(attributes, attribute.getName(), mainQuery.jpaProvider.needsElementCollectionIdCutoff(), true);
+                if (embeddedPropertyPaths.isEmpty()) {
+                    attributePaths.add(attribute.getName());
+                } else {
+                    for (String embeddedPropertyPath : embeddedPropertyPaths) {
+                        attributePaths.add(attribute.getName() + "." + embeddedPropertyPath);
+                    }
+                }
             }
-            attributeSet = new TreeSet<>(JpaMetamodelUtils.ATTRIBUTE_NAME_COMPARATOR);
-            for (Attribute<?, ?> attr : originalAttributeSet) {
-                // Filter out collection attributes
-                if (!attr.isCollection()) {
-                    attributeSet.add(attr);
+        } else {
+            idAttributeNames = null;
+            if (valuesLikeAttribute == null) {
+                // This is a normal values clause
+                ManagedType<?> managedType = mainQuery.metamodel.getManagedType(valueClass);
+                Map<String, ExtendedAttribute<?, ?>> attributes;
+                if (managedType == null) {
+                    // When the values type is basic, entityType is ValuesEntity
+                    simpleValue = true;
+                    attributes = new TreeMap<>(mainQuery.metamodel.getManagedType(ExtendedManagedType.class, entityType).getAttributes());
+                } else {
+                    // Otherwise we consider all attributes
+                    simpleValue = false;
+                    attributes = new TreeMap<>(mainQuery.metamodel.getManagedType(ExtendedManagedType.class, managedType).getAttributes());
+                }
+                Collection<String> embeddedPropertyPaths = JpaUtils.getEmbeddedPropertyPaths(attributes, valuesClassAttributeName, mainQuery.jpaProvider.needsElementCollectionIdCutoff(), true);
+                attributePaths.addAll(embeddedPropertyPaths);
+            } else {
+                String prefix = valuesClassAttributeName.substring(0, valuesClassAttributeName.length() - valuesLikeAttribute.getAttribute().getName().length());
+                if (qualificationExpression == null) {
+                    Map<String, ExtendedAttribute<?, ?>> attributes = new TreeMap<>(mainQuery.metamodel.getManagedType(ExtendedManagedType.class, entityType).getAttributes());
+                    Collection<String> embeddedPropertyPaths = JpaUtils.getEmbeddedPropertyPaths(attributes, valuesClassAttributeName, mainQuery.jpaProvider.needsElementCollectionIdCutoff(), true);
+                    if (embeddedPropertyPaths.isEmpty()) {
+                        attributePaths.add(valuesClassAttributeName);
+                    } else {
+                        for (String embeddedPropertyPath : embeddedPropertyPaths) {
+                            attributePaths.add(simpleValueAttributePrefix + embeddedPropertyPath);
+                        }
+                    }
+                } else {
+                    attributePaths.add(prefix + valuesLikeAttribute.getAttribute().getName());
+                }
+                simpleValue = type instanceof BasicType<?>;
+            }
+        }
+
+        String[][] parameterNames = new String[valueCount][attributePaths.size()];
+        String[] attributes = new String[attributePaths.size()];
+        PropertyPathExpression<Object, Object>[] pathExpressions = new PropertyPathExpression[attributePaths.size()];
+
+        for (int i = 0; i < attributePaths.size(); i++) {
+            String attributeName = attributePaths.get(i);
+            String parameterPart = attributeName.replace('.', '_');
+            attributes[i] = attributeName;
+            if (simpleValueAttributePrefix.isEmpty()) {
+                pathExpressions[i] = (PropertyPathExpression<Object, Object>) com.blazebit.reflection.ExpressionUtils.getExpression(valueClass, attributeName);
+                for (int j = 0; j < valueCount; j++) {
+                    parameterNames[j][i] = rootAlias + '_' + parameterPart + '_' + j;
+                }
+            } else {
+                if (attributeName.startsWith(simpleValueAttributePrefix)) {
+                    pathExpressions[i] = (PropertyPathExpression<Object, Object>) com.blazebit.reflection.ExpressionUtils.getExpression(valueClass, attributeName.substring(simpleValueAttributePrefix.length()));
+                    for (int j = 0; j < valueCount; j++) {
+                        parameterNames[j][i] = rootAlias + '_' + parameterPart + '_' + j;
+                    }
+                } else if (simpleValue || attributeName.equals(valuesClassAttributeName)) {
+                    pathExpressions[i] = null;
+                    if (qualificationExpression != null) {
+                        parameterPart += '_' + qualificationExpression.toLowerCase();
+                    }
+                    for (int j = 0; j < valueCount; j++) {
+                        parameterNames[j][i] = rootAlias + '_' + parameterPart + '_' + j;
+                    }
+                } else {
+                    pathExpressions[i] = (PropertyPathExpression<Object, Object>) com.blazebit.reflection.ExpressionUtils.getExpression(valueClass, attributeName);
+                    for (int j = 0; j < valueCount; j++) {
+                        parameterNames[j][i] = rootAlias + '_' + parameterPart + '_' + j;
+                    }
                 }
             }
         }
 
-        String[][] parameterNames = new String[valueCount][attributeSet.size()];
-        ValueRetriever<Object, Object>[] pathExpressions = new ValueRetriever[attributeSet.size()];
-
-        String[] attributes = initializeValuesParameter(clazz, valueClazz, identifiableReference, rootAlias, attributeSet, parameterNames, pathExpressions);
-        parameterManager.registerValuesParameter(rootAlias, valueClazz, parameterNames, pathExpressions, queryBuilder);
+        parameterManager.registerValuesParameter(rootAlias, valueClass, parameterNames, pathExpressions, queryBuilder);
 
         JoinAliasInfo rootAliasInfo = new JoinAliasInfo(rootAlias, rootAlias, true, true, aliasManager);
-        JoinNode rootNode = JoinNode.createValuesRootNode(type, entityType, typeName, valueCount, idAttributeName, valueClazzAttributeName, castedParameter, attributes, rootAliasInfo);
+        JoinNode rootNode = JoinNode.createValuesRootNode(type, entityType, typeName, valueCount, idAttributeNames, valueLikeClause, qualificationExpression, valueClazzAttributeSingular, simpleValue, valuesClassAttributeName, castedParameter, attributes, rootAliasInfo);
         rootAliasInfo.setJoinNode(rootNode);
         rootNodes.add(rootNode);
         // register root alias in aliasManager
         aliasManager.registerAliasInfo(rootAliasInfo);
         entityFunctionNodes.add(rootNode);
         return rootAlias;
-    }
-
-    /**
-     * @author Christian Beikov
-     * @since 1.2.0
-     */
-    static class SimpleValueRetriever implements ValueRetriever<Object, Object> {
-        @Override
-        public Object getValue(Object target) {
-            return target;
-        }
-    }
-
-    private String[] initializeValuesParameter(Class<?> clazz, Class<?> valueClazz, boolean identifiableReference, String prefix, Set<Attribute<?, ?>> attributeSet, String[][] parameterNames, ValueRetriever<?, ?>[] pathExpressions) {
-        int valueCount = parameterNames.length;
-        String[] attributes = new String[attributeSet.size()];
-
-        if (clazz == ValuesEntity.class) {
-            pathExpressions[0] = new SimpleValueRetriever();
-            String attributeName = attributeSet.iterator().next().getName();
-            attributes[0] = attributeName;
-            for (int j = 0; j < valueCount; j++) {
-                parameterNames[j][0] = prefix + '_' + attributeName + '_' + j;
-            }
-        } else if (identifiableReference) {
-            Attribute<?, ?> attribute = attributeSet.iterator().next();
-            String attributeName = attribute.getName();
-            attributes[0] = attributeName;
-            pathExpressions[0] = com.blazebit.reflection.ExpressionUtils.getExpression(clazz, attributeName);
-            for (int j = 0; j < valueCount; j++) {
-                parameterNames[j][0] = prefix + '_' + attributeName + '_' + j;
-            }
-        } else {
-            Iterator<Attribute<?, ?>> iter = attributeSet.iterator();
-            for (int i = 0; i < attributeSet.size(); i++) {
-                Attribute<?, ?> attribute = iter.next();
-                String attributeName = attribute.getName();
-                attributes[i] = attributeName;
-                pathExpressions[i] = com.blazebit.reflection.ExpressionUtils.getExpression(valueClazz, attributeName);
-                for (int j = 0; j < valueCount; j++) {
-                    parameterNames[j][i] = prefix + '_' + attributeName + '_' + j;
-                }
-            }
-        }
-
-        return attributes;
     }
 
     String addRoot(EntityType<?> entityType, String rootAlias) {
@@ -711,9 +732,6 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 } else {
                     if (nodeType instanceof EntityType<?>) {
                         sb.append(((EntityType) nodeType).getName());
-                        if (rootNode.getValuesIdName() != null) {
-                            sb.append('.').append(rootNode.getValuesIdName());
-                        }
                     } else {
                         // Not sure how safe that is regarding ambiguity
                         sb.append(rootNode.getNodeType().getJavaType().getSimpleName());
@@ -721,10 +739,13 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 }
                 sb.append("(");
                 sb.append(rootNode.getValueCount());
+                if (rootNode.getValuesIdNames() != null) {
+                    sb.append(" ID ");
+                }
                 sb.append(" VALUES");
-                if (valueType.getJavaType() == ValuesEntity.class && rootNode.getValuesIdName() != null) {
+                if (rootNode.getValuesLikeClause() != null) {
                     sb.append(" LIKE ");
-                    sb.append(rootNode.getValuesIdName());
+                    sb.append(rootNode.getValuesLikeClause());
                 }
                 sb.append(")");
             } else if (externalRepresentation && explicitVersionEntities.get(rootNode.getJavaType()) != null) {
@@ -762,6 +783,19 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
             JoinNode valuesNode = null;
             if (rootNode.getValueCount() > 0) {
+                if (!externalRepresentation && !rootNode.isValueClazzAttributeSingular()) {
+                    sb.append(" LEFT JOIN ");
+                    sb.append(rootNode.getAlias());
+                    sb.append('.');
+                    sb.append(rootNode.getValuesLikeAttribute());
+                    sb.append(' ');
+                    sb.append(rootNode.getAlias());
+                    sb.append('_');
+                    sb.append(rootNode.getValuesLikeAttribute().replace('.', '_'));
+                    if (rootNode.getQualificationExpression() != null) {
+                        sb.append('_').append(rootNode.getQualificationExpression().toLowerCase());
+                    }
+                }
                 valuesNode = rootNode;
                 // We add a synthetic where clause conjuncts for subqueries that are removed later to support the values clause in subqueries
                 if (syntheticSubqueryValuesWhereClauseConjuncts != null) {
@@ -869,9 +903,9 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         // The rendering strategy is to render the VALUES clause predicate into JPQL with the values parameters
         // in the correct order. The whole SQL part of that will be replaced later by the correct SQL
         int valueCount = rootNode.getValueCount();
-        if (valueCount > 0) {
+        if (!externalRepresentation && valueCount > 0) {
             String typeName = rootNode.getValuesTypeName() == null ? null : rootNode.getValuesTypeName().toUpperCase();
-            String valueClazzAttributeName = externalRepresentation ? null : rootNode.getValueClazzAttributeName();
+            String valueClazzAttributeName = rootNode.getValuesLikeAttribute();
             String[] attributes = rootNode.getValuesAttributes();
             String prefix = rootNode.getAlias();
 
@@ -886,12 +920,29 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                         sb.append(attributes[j]);
                         sb.append(')');
                     } else {
-                        sb.append(alias);
-                        sb.append('.');
-                        if (valueClazzAttributeName != null) {
-                            sb.append(valueClazzAttributeName).append('.');
+                        if (rootNode.getQualificationExpression() != null) {
+                            sb.append(rootNode.getQualificationExpression()).append('(');
                         }
-                        sb.append(attributes[j]);
+                        sb.append(alias);
+                        if (rootNode.isValueClazzAttributeSingular()) {
+                            sb.append('.');
+                            if (rootNode.isValueClazzSimpleValue()) {
+                                sb.append(valueClazzAttributeName);
+                            } else {
+                                sb.append(attributes[j]);
+                            }
+                        } else {
+                            sb.append('_');
+                            sb.append(valueClazzAttributeName.replace('.', '_'));
+                            if (!rootNode.isValueClazzSimpleValue()) {
+                                sb.append(attributes[j], valueClazzAttributeName.length(), attributes[j].length());
+                            }
+                        }
+                        if (rootNode.getQualificationExpression() != null) {
+                            sb.append('_');
+                            sb.append(rootNode.getQualificationExpression().toLowerCase());
+                            sb.append(')');
+                        }
                     }
 
                     sb.append(" = ");
@@ -899,7 +950,15 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                     sb.append(':');
                     sb.append(prefix);
                     sb.append('_');
-                    sb.append(attributes[j]);
+                    if (rootNode.isValueClazzSimpleValue()) {
+                        sb.append(valueClazzAttributeName.replace('.', '_'));
+                    } else {
+                        sb.append(attributes[j].replace('.', '_'));
+                    }
+                    if (rootNode.getQualificationExpression() != null) {
+                        sb.append('_');
+                        sb.append(rootNode.getQualificationExpression().toLowerCase());
+                    }
                     sb.append('_').append(i);
                     sb.append(" OR ");
                 }
@@ -1005,8 +1064,10 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             // This condition will be removed in the final SQL, so no worries about it
             // It is just there to have parameters at the right position in the final SQL
             if (valuesNode != null) {
-                renderValuesClausePredicate(sb, valuesNode, valuesNode.getAlias(), externalRepresentation);
-                sb.append(" AND ");
+                if (!externalRepresentation) {
+                    renderValuesClausePredicate(sb, valuesNode, valuesNode.getAlias(), externalRepresentation);
+                    sb.append(" AND ");
+                }
                 valuesNode = null;
             }
 
@@ -2075,7 +2136,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             baseType = node.getNodeType();
             while (baseType instanceof EmbeddableType<?>) {
                 if (node.getParentTreeNode() == null) {
-                    attributePath = node.getValueClazzAttributeName() + "." + attributePath;
+                    attributePath = node.getValuesLikeAttribute() + "." + attributePath;
                     baseType = node.getValueType();
                     break;
                 }

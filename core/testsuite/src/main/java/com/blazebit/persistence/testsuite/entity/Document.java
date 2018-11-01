@@ -60,7 +60,7 @@ public class Document extends Ownable implements Serializable {
     private Long version;
     private Object someTransientField;
     private NameObject nameObject = new NameObject();
-    private NameObjectContainer nameContainer = new NameObjectContainer();
+    private NameObjectContainer2 nameContainer = new NameObjectContainer2();
     private Set<Version> versions = new HashSet<>();
     private Set<Person> partners = new HashSet<>();
     private IntIdEntity intIdEntity;
@@ -158,12 +158,12 @@ public class Document extends Ownable implements Serializable {
     }
 
     @Embedded
-    public NameObjectContainer getNameContainer() {
+    public NameObjectContainer2 getNameContainer() {
         return nameContainer;
     }
 
-    public void setNameContainer(NameObjectContainer nameContainer) {
-        this.nameContainer = nameContainer;
+    public void setNameContainer(NameObjectContainer2 nameObjectContainer) {
+        this.nameContainer = nameObjectContainer;
     }
 
     @OneToMany(mappedBy = "document", cascade = { CascadeType.PERSIST, CascadeType.REMOVE })
