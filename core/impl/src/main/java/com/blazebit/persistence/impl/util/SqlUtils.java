@@ -511,7 +511,7 @@ public class SqlUtils {
         do {
             tokenRange = SqlUtils.rtrimBackwardsToFirstWhitespace(sqlSb, tokenEnd);
             tokenEnd = tokenRange[0] - 1;
-            JoinToken token = JoinToken.valueOf(sqlSb.subSequence(tokenRange[0], tokenRange[1]).toString().trim().toUpperCase());
+            JoinToken token = JoinToken.of(sqlSb.subSequence(tokenRange[0], tokenRange[1]).toString().trim().toUpperCase());
             if (allowedTokens.contains(token)) {
                 allowedTokens = token.previous();
             } else {
@@ -527,6 +527,7 @@ public class SqlUtils {
      * @since 1.3.0
      */
     enum JoinToken {
+        COMMA,
         LEFT,
         INNER,
         RIGHT,
@@ -547,6 +548,15 @@ public class SqlUtils {
         Set<JoinToken> previous() {
             return EnumSet.noneOf(JoinToken.class);
         }
+
+        static JoinToken of(String text) {
+            switch (text) {
+                case ",":
+                    return COMMA;
+                default:
+                    return valueOf(text);
+            }
+        }
     }
 
     public static int findEndOfOnClause(CharSequence sqlSb, int predicateStartIndex, int whereIndex) {
@@ -558,6 +568,7 @@ public class SqlUtils {
             end = findJoinStartIndex(sqlSb, joinIndex, JoinToken.JOIN.previous());
         }
         int potentialEndIndex = end;
+        int parenthesis = 0;
         QuoteMode mode = QuoteMode.NONE;
         for (int i = predicateStartIndex; i < end; i++) {
             char c = sqlSb.charAt(i);
@@ -567,7 +578,9 @@ public class SqlUtils {
                 if (c == '(') {
                     // While we are in a subcontext, consider the whole query
                     end = whereIndex;
+                    parenthesis++;
                 } else if (c == ')') {
+                    parenthesis--;
                     // When we leave the context, reset the end to the potential end index
                     if (i < potentialEndIndex) {
                         end = potentialEndIndex;
@@ -581,6 +594,9 @@ public class SqlUtils {
                             end = potentialEndIndex = findJoinStartIndex(sqlSb, joinIndex, JoinToken.JOIN.previous());
                         }
                     }
+                } else if (c == ',' && parenthesis == 0) {
+                    // Cross join via comma operator
+                    return i;
                 }
             }
         }

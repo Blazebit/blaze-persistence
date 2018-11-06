@@ -44,3 +44,5 @@ include::13_deltaspike_data.adoc[]
 include::14_metamodel.adoc[]
 
 include::15_configuration.adoc[]
+
+include::16_faq.adoc[]

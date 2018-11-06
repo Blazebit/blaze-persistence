@@ -134,7 +134,8 @@ public class ValuesClauseTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    // NOTE: Only the latest Hibernate 5.2 properly implements support for selecting element collections
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testValuesEntityFunctionWithPluralOnlyEmbeddable() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.fromValues(NameObjectContainer.class, "embeddable", Collections.singleton(new NameObjectContainer("test", new NameObject("abc", "123"))));
@@ -253,7 +254,8 @@ public class ValuesClauseTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    // NOTE: Only the latest Hibernate 5.2 properly implements support for selecting element collections
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testValuesEntityFunctionLikePluralEmbeddable() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.fromValues(Document.class, "names", "t", Collections.singleton(new NameObject("123", "abc")));

@@ -26,7 +26,9 @@ import com.blazebit.persistence.spring.data.impl.query.EntityViewAwareRepository
 import com.blazebit.persistence.spring.data.base.query.EntityViewAwareRepositoryMetadata;
 import com.blazebit.persistence.spring.data.impl.query.EntityViewAwareRepositoryMetadataImpl;
 import com.blazebit.persistence.spring.data.impl.query.PartTreeBlazePersistenceQuery;
+import com.blazebit.persistence.spring.data.repository.EntityViewReplacingMethodInterceptor;
 import com.blazebit.persistence.view.EntityViewManager;
+import org.aopalliance.intercept.MethodInterceptor;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.aop.interceptor.ExposeInvocationInterceptor;
 import org.springframework.beans.BeansException;
@@ -82,6 +84,7 @@ public class BlazePersistenceRepositoryFactory extends JpaRepositoryFactory {
     private final EntityViewManager evm;
     private final QueryExtractor extractor;
     private final Map<RepositoryInformationCacheKey, RepositoryInformation> repositoryInformationCache;
+    private final EntityViewReplacingMethodInterceptor entityViewReplacingMethodInterceptor;
     private List<RepositoryProxyPostProcessor> postProcessors;
     private EntityViewAwareCrudMethodMetadataPostProcessor crudMethodMetadataPostProcessor;
     private Optional<Class<?>> repositoryBaseClass;
@@ -104,6 +107,7 @@ public class BlazePersistenceRepositoryFactory extends JpaRepositoryFactory {
         this.evm = evm;
         addRepositoryProxyPostProcessor(this.crudMethodMetadataPostProcessor = new EntityViewAwareCrudMethodMetadataPostProcessor(evm));
         this.repositoryBaseClass = Optional.empty();
+        this.entityViewReplacingMethodInterceptor = new EntityViewReplacingMethodInterceptor(entityManager, evm);
     }
 
     @Override
@@ -338,6 +342,7 @@ public class BlazePersistenceRepositoryFactory extends JpaRepositoryFactory {
 
         postProcessors.forEach(processor -> processor.postProcess(result, information));
 
+        result.addAdvice(entityViewReplacingMethodInterceptor);
         result.addAdvice(new DefaultMethodInvokingMethodInterceptor());
 
         ProjectionFactory projectionFactory = getProjectionFactory(classLoader, beanFactory);

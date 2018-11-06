@@ -60,6 +60,11 @@ import java.util.Set;
  */
 public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<CompositeAttributeFlusher, DirtyAttributeFlusher<?, Object, Object>> implements DirtyAttributeFlusher<CompositeAttributeFlusher, Object, Object> {
 
+    private static final Runnable EMPTY_RUNNABLE = new Runnable() {
+        @Override
+        public void run() {
+        }
+    };
     private static final int FEATURE_SUPPORTS_QUERY_FLUSH = 0;
     private static final int FEATURE_HAS_PASS_THROUGH_FLUSHER = 1;
     private static final int FEATURE_IS_ANY_OPTIMISTIC_LOCK_PROTECTED = 2;
@@ -420,7 +425,11 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
         }
     }
 
-    private Object determineOldId(UpdateContext context, MutableStateTrackable updatableProxy, Runnable postReplaceListener) {
+    public Object getEntityIdCopy(UpdateContext context, EntityViewProxy updatableProxy) {
+        return determineOldId(context, updatableProxy, EMPTY_RUNNABLE);
+    }
+
+    private Object determineOldId(UpdateContext context, EntityViewProxy updatableProxy, Runnable postReplaceListener) {
         if (updatableProxy.$$_getId() != null && postReplaceListener != null) {
             if (updatableProxy.$$_getId() instanceof EntityViewProxy) {
                 // Copy the id view to preserve the original values

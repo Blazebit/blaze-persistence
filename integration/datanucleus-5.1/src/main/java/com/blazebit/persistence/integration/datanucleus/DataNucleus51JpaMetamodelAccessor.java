@@ -78,12 +78,14 @@ public class DataNucleus51JpaMetamodelAccessor extends JpaMetamodelAccessorImpl 
         if (attribute instanceof PluralAttribute<?, ?, ?>) {
             Type.PersistenceType persistenceType = ((PluralAttribute<?, ?, ?>) attribute).getElementType().getPersistenceType();
             //CHECKSTYLE:OFF: FallThrough
+            //CHECKSTYLE:OFF: MissingSwitchDefault
             switch (persistenceType) {
                 case BASIC:
                 case EMBEDDABLE:
                     return true;
             }
             //CHECKSTYLE:ON: FallThrough
+            //CHECKSTYLE:ON: MissingSwitchDefault
         }
         return false;
     }

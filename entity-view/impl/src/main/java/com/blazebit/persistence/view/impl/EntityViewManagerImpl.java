@@ -54,10 +54,6 @@ import com.blazebit.persistence.view.filter.StartsWithIgnoreCaseFilter;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.accessor.EntityIdAttributeAccessor;
 import com.blazebit.persistence.view.impl.change.ViewChangeModel;
-import com.blazebit.persistence.view.impl.macro.EmbeddingViewJpqlMacro;
-import com.blazebit.persistence.view.impl.mapper.ViewMapper;
-import com.blazebit.persistence.view.impl.update.DefaultUpdateContext;
-import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.filter.ContainsFilterImpl;
 import com.blazebit.persistence.view.impl.filter.ContainsIgnoreCaseFilterImpl;
 import com.blazebit.persistence.view.impl.filter.EndsWithFilterImpl;
@@ -71,6 +67,8 @@ import com.blazebit.persistence.view.impl.filter.NullFilterImpl;
 import com.blazebit.persistence.view.impl.filter.StartsWithFilterImpl;
 import com.blazebit.persistence.view.impl.filter.StartsWithIgnoreCaseFilterImpl;
 import com.blazebit.persistence.view.impl.macro.DefaultViewRootJpqlMacro;
+import com.blazebit.persistence.view.impl.macro.EmbeddingViewJpqlMacro;
+import com.blazebit.persistence.view.impl.mapper.ViewMapper;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.MappingConstructorImpl;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
@@ -82,8 +80,12 @@ import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
 import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
 import com.blazebit.persistence.view.impl.type.DefaultBasicUserTypeRegistry;
+import com.blazebit.persistence.view.impl.update.DefaultUpdateContext;
 import com.blazebit.persistence.view.impl.update.EntityViewUpdater;
 import com.blazebit.persistence.view.impl.update.EntityViewUpdaterImpl;
+import com.blazebit.persistence.view.impl.update.SimpleUpdateContext;
+import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.view.impl.update.flush.CompositeAttributeFlusher;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.ViewType;
@@ -271,6 +273,20 @@ public class EntityViewManagerImpl implements EntityViewManager {
         } catch (Exception e) {
             throw new IllegalArgumentException("Couldn't instantiate entity view object for type: " + entityViewClass.getName() + "\nDid you forget to add a no-args constructor to the view? Consider adding a no-args constructor annotated with @ViewConstructor(\"reference\").", e);
         }
+    }
+
+    @Override
+    public <T> T getEntityReference(EntityManager entityManager, Object view) {
+        if (!(view instanceof EntityViewProxy)) {
+            throw new IllegalArgumentException("Can't remove non entity view object: " + view);
+        }
+        UpdateContext context = new SimpleUpdateContext(this, entityManager);
+        EntityViewProxy proxy = (EntityViewProxy) view;
+        Class<?> entityViewClass = proxy.$$_getEntityViewClass();
+        ManagedViewTypeImplementor<?> viewType = metamodel.managedView(entityViewClass);
+        EntityViewUpdater updater = getUpdater(viewType, null, null, null);
+        Object entityId = ((CompositeAttributeFlusher) updater.getFullGraphNode()).getEntityIdCopy(context, proxy);
+        return (T) entityManager.getReference(proxy.$$_getJpaManagedClass(), entityId);
     }
 
     @Override
