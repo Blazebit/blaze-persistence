@@ -18,6 +18,7 @@ package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus4;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoFirebird;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
@@ -138,6 +139,8 @@ public class GroupByTest extends AbstractCoreTest {
     }
 
     @Test
+    // DataNucleus4 apparently can't handle join of associations within element collections
+    @Category({ NoDatanucleus4.class })
     public void testGroupByElementCollectionValue() {
         CriteriaBuilder<Long> cb = cbf.create(em, Long.class)
                 .from(Document.class, "d")

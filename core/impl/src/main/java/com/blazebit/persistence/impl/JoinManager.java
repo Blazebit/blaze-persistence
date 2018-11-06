@@ -326,7 +326,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             JoinNode node = (JoinNode) pathExpression.getBaseNode();
             Attribute<?, ?> attribute = node.getParentTreeNode().getAttribute();
             // Exclude element collections as they are not problematic
-            if (jpaProvider.getJpaMetamodelAccessor().isElementCollection(attribute)) {
+            if (!jpaProvider.getJpaMetamodelAccessor().isElementCollection(attribute)) {
                 // There are weird mappings possible, we have to check if the attribute is a join table
                 if (jpaProvider.getJoinTable(node.getParent().getEntityType(), attribute.getName()) != null) {
                     keyRestrictedLeftJoins.add(node);

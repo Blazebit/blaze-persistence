@@ -24,6 +24,28 @@ Allowing the actual data consumer i.e. the UI to specify these aspects is essent
 For a simple lookup by id there is also a convenience link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#find(javax.persistence.EntityManager,%20java.lang.Class,%20java.lang.Object)[`EntityViewManager.find()`] method available
 that allows you to skip some of the `CriteriaBuilder` ceremony and that works analogous to how `EntityManager.find()` works, but with entity views.
 
+[source, java]
+----
+CatView cat = entityViewManager.find(entityManager, CatView.class, catId);
+----
+
+To get just a _reference_ to an entity view similar to what an entity reference retrieved via `EntityManager.getReference()` represents, it is possible to use link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#getReference(%20java.lang.Class,%20java.lang.Object)[`EntityViewManager.getReference()`].
+Note that the returned object will only have the identifier set, all other attributes will have their default values. This is usually useful when wanting to compare a list of elements with some entity view type against an entity id
+or also for setting *ToOne relationships.
+
+[source, java]
+----
+CatView cat = entityViewManager.getReference(CatView.class, catId);
+----
+
+To get a _reference_ to an entity form an entity view one can use link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#find(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.getEntityReference()`]
+which will return the entity reference object retrieved via `EntityManager.getReference()` for the given entity view object.
+
+[source, java]
+----
+Cat cat = entityViewManager.<Cat>getEntityReference(entityManager, catView);
+----
+
 === Querying entity views
 
 Code in the presentation layer is intended to create an `EntityViewSetting` via the `create()` API and pass the entity view setting to a data access method.

@@ -319,18 +319,27 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
                 isCollection = true;
             }
             // Also see AbstractMethodPluralAttribute#determineUpdatable() for the same logic
-            if (attributeViewMapping != null && (isUpdatable == Boolean.TRUE || getDeclaringView().isUpdatable())) {
-                if (hasSetter || isCollection && (cascadeTypes.contains(CascadeType.PERSIST) || attributeViewMapping.isCreatable())) {
-                    boolean allowUpdatable;
-                    if (isCollection) {
-                        allowUpdatable = true;
+            if (attributeViewMapping != null) {
+                if (isUpdatable == Boolean.TRUE || getDeclaringView().isUpdatable()) {
+                    if (hasSetter || isCollection && (cascadeTypes.contains(CascadeType.PERSIST) || attributeViewMapping.isCreatable())) {
+                        boolean allowUpdatable;
+                        if (isCollection) {
+                            allowUpdatable = true;
+                        } else {
+                            allowUpdatable = !disallowOwnedUpdatableSubview || attributeViewMapping.isUpdatable();
+                        }
+                        // But only if the attribute is explicitly or implicitly updatable
+                        this.readOnlySubtypeMappings = initializeDependentSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass(), false, false);
+                        this.cascadeSubtypeMappings = initializeDependentSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass(), allowUpdatable, true);
                     } else {
-                        allowUpdatable = !disallowOwnedUpdatableSubview || attributeViewMapping.isUpdatable();
+                        this.cascadeSubtypeMappings = Collections.emptyMap();
                     }
-                    // But only if the attribute is explicitly or implicitly updatable
-                    this.readOnlySubtypeMappings = initializeDependentSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass(), true, false);
-                    this.cascadeSubtypeMappings = initializeDependentSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass(), false, allowUpdatable);
                 } else {
+                    // Allow all read-only subtypes and also creatable subtypes for creatable-only views
+                    if (getDeclaringView().isCreatable() && (hasSetter || isCollection && (cascadeTypes.contains(CascadeType.PERSIST) || attributeViewMapping.isCreatable()))) {
+                        this.readOnlySubtypeMappings = initializeDependentSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass(), false, false);
+                        this.cascadePersistSubtypeMappings = initializeDependentSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass(), false, true);
+                    }
                     this.cascadeSubtypeMappings = Collections.emptyMap();
                 }
             } else {
@@ -500,7 +509,7 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
         return subtypeMappings;
     }
 
-    private Map<ViewMapping, Boolean> initializeDependentSubtypeMappingsAuto(final MetamodelBuildingContext context, final Class<?> clazz, boolean readOnly, boolean allowUpdatable) {
+    private Map<ViewMapping, Boolean> initializeDependentSubtypeMappingsAuto(final MetamodelBuildingContext context, final Class<?> clazz, boolean allowUpdatable, boolean allowCreatable) {
         Set<Class<?>> subtypes = context.findSubtypes(clazz);
         if (subtypes.size() == 0) {
             return Collections.emptyMap();
@@ -511,7 +520,7 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
             final ViewMapping subtypeMapping = context.getViewMapping(type);
             if (subtypeMapping == null) {
                 unknownSubviewType(type);
-            } else if (!readOnly && (allowUpdatable && subtypeMapping.isUpdatable() || !subtypeMapping.isUpdatable()) || !subtypeMapping.isUpdatable() && !subtypeMapping.isCreatable()) {
+            } else if (allowSubtype(subtypeMapping, allowUpdatable, allowCreatable)) {
                 // We can't initialize a potential subtype mapping here immediately, but have to wait until the current view mapping is fully initialized
                 // This avoids access to partly initialized view mappings
                 viewMapping.onInitializeViewMappingsFinished(new Runnable() {
@@ -535,6 +544,16 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
         }
 
         return subtypeMappings;
+    }
+
+    private static boolean allowSubtype(ViewMapping subtypeMapping, boolean allowUpdatable, boolean allowCreatable) {
+        if (allowUpdatable && subtypeMapping.isUpdatable()) {
+            return true;
+        } else if (allowCreatable && subtypeMapping.isCreatable()) {
+            return true;
+        } else {
+            return !subtypeMapping.isUpdatable() && !subtypeMapping.isCreatable();
+        }
     }
 
     public MethodAttributeMapping handleReplacement(AttributeMapping original) {

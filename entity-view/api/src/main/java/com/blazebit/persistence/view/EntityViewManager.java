@@ -75,6 +75,17 @@ public interface EntityViewManager {
     public <T> T getReference(Class<T> entityViewClass, Object id);
 
     /**
+     * Creates an entity reference for the given entity view and returns it.
+     *
+     * @param entityManager The entity manager to use for the entity reference
+     * @param entityView The entity view class for which to get the entity reference
+     * @param <T> The type of the entity class
+     * @return An entity reference for given entity view object
+     * @since 1.3.0
+     */
+    public <T> T getEntityReference(EntityManager entityManager, Object entityView);
+
+    /**
      * Gives access to the change model of the entity view instance.
      *
      * @param entityView The entity view

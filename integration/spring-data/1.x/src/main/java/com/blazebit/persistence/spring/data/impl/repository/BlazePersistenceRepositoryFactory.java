@@ -26,7 +26,9 @@ import com.blazebit.persistence.spring.data.base.repository.AbstractEntityViewAw
 import com.blazebit.persistence.spring.data.impl.query.EntityViewAwareRepositoryInformation;
 import com.blazebit.persistence.spring.data.impl.query.EntityViewAwareRepositoryMetadataImpl;
 import com.blazebit.persistence.spring.data.impl.query.PartTreeBlazePersistenceQuery;
+import com.blazebit.persistence.spring.data.repository.EntityViewReplacingMethodInterceptor;
 import com.blazebit.persistence.view.EntityViewManager;
+import org.aopalliance.intercept.MethodInterceptor;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.jpa.provider.PersistenceProvider;
 import org.springframework.data.jpa.provider.QueryExtractor;
@@ -62,6 +64,7 @@ public class BlazePersistenceRepositoryFactory extends JpaRepositoryFactory {
     private final CriteriaBuilderFactory cbf;
     private final EntityViewManager evm;
     private final QueryExtractor extractor;
+    private final EntityViewReplacingMethodInterceptor entityViewReplacingMethodInterceptor;
     private List<RepositoryProxyPostProcessor> postProcessors;
     private EntityViewAwareCrudMethodMetadataPostProcessor crudMethodMetadataPostProcessor;
 
@@ -72,6 +75,7 @@ public class BlazePersistenceRepositoryFactory extends JpaRepositoryFactory {
         this.cbf = cbf;
         this.evm = evm;
         addRepositoryProxyPostProcessor(this.crudMethodMetadataPostProcessor = new EntityViewAwareCrudMethodMetadataPostProcessor(evm));
+        this.entityViewReplacingMethodInterceptor = new EntityViewReplacingMethodInterceptor(entityManager, evm);
     }
 
     @Override
@@ -124,6 +128,14 @@ public class BlazePersistenceRepositoryFactory extends JpaRepositoryFactory {
     protected Class<?> getRepositoryBaseClass(RepositoryMetadata metadata) {
         // TODO: at some point, we might want to switch to the default if the repository doesn't contain entity views or keyset pagination
         return EntityViewAwareRepositoryImpl.class;
+    }
+
+    @Override
+    public <T> T getRepository(Class<T> repositoryInterface, Object customImplementation) {
+        if (postProcessors != null && postProcessors.get(postProcessors.size() - 1) != entityViewReplacingMethodInterceptor) {
+            addRepositoryProxyPostProcessor(entityViewReplacingMethodInterceptor);
+        }
+        return super.getRepository(repositoryInterface, customImplementation);
     }
 
     @Override

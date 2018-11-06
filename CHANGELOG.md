@@ -13,7 +13,7 @@ Not yet released
 * Support for binding associations mapped by compound or foreign keys
 * Using a comparator with `List` and `Collection` types in entity views will sort the collection after load
 * Add option to force deduplication of elements in non-sets to `@CollectionMapping`
-* Support `VALUES` clause with embeddable and most basic types
+* Support plain `VALUES` clause with embeddable and most basic types
 * Support for binding embeddable parameters in CTEs, insert and update queries
 * Properly implement dirty state transfer when converting one entity view to another
 * Added validation for `equals`/`hashCode` implementations of JPA managed types that are used within entity views which can be disabled with the property `com.blazebit.persistence.view.managed_type_validation_disabled`
@@ -21,6 +21,10 @@ Not yet released
 * Make use of Collection DML API when using the `QUERY` flush strategy in updatable entity views
 * Automatic embeddable splitting within `GROUP BY` clause to avoid Hibernate bugs
 * Support for entity view attribute filters and sorters on attributes of inheritance subtypes
+* Introduced new method `EntityViewManager.getEntityReference()` to get an entity reference by an entity view object
+* Allow to specify example attribute for `VALUES` clause for exact SQL types
+* Implemented creatability validation for creatable entity views
+* Implemented `SET_NULL` inverse remove strategy validation for updatable entity views
 
 ### Bug fixes
 
@@ -39,7 +43,7 @@ Not yet released
 
 ### Backwards-incompatible changes
 
-None yet
+* Require `@AllowUpdatableEntityViews` to be able to use updatable entity view types by for *ToOne relationships in updatable entity views to avoid [possible problems](https://persistence.blazebit.com/documentation/entity-view/manual/en_US/index.html#updatable-mappings-subview)
 
 ## 1.3.0-Alpha3
 

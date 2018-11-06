@@ -1,0 +1,39 @@
+== FAQ
+
+This section tries to cover some standard questions that often come up when introducing entity views or updatable entity views into a project
+as well as some common problems with explanations and possible solutions.
+
+=== Why do I get an optimistic lock exception when updating an updatable entity view?
+
+The `com.blazebit.persistence.view.OptimisticLockException` is very similar to the `javax.persistence.OptimisticLockException` and when thrown,
+it signals that an update isn't possible because of a change of an object that happened in the meantime. This can also happen when you do not use optimistic locking explicitly.
+
+==== If you try to update a non-existent entity
+
+When trying to update an entity that does not exist, the `EntityViewManager.update` operation will throw the `com.blazebit.persistence.view.OptimisticLockException`.
+
+* The entity could have been deleted in the meantime i.e. between loading the view and the update operation
+* The entity view causing the exception is the result of a wrong usage of `EntityViewManager.convert` as it is missing the `ConvertOption.CREATE_NEW`
+
+==== If you try to update a concurrently updated entity
+
+Either the entity was updated within the current transaction or within another transaction through a different mechanism or a different entity view object.
+If an update in a different transaction caused the exception, it is necessary to load the new version of the entity view and let the end-user enter the values to update again.
+By inspecting the change model of the old instance one can assist the user by copying over non-conflicting value changes and just highlight conflicting changes.
+
+If a previous update in the same transaction causes the exception, the code should be adapted to prevent this from happening or updating the version on the entity view accordingly.
+
+=== Why do I get a "could not invoke proxy constructor" exception when fetching entity views?
+
+Entity views are type checked for most parts, but there are some dynamic non-declarative parts that can't be type checked that might cause this runtime exception when using a wrong result.
+Usually, this happens when a `SubqueryProvider` or `CorrelationProvider` is in use. The implementations of these classes define the result type in a manner that is not type checkable.
+
+If a `SubqueryProvider` returns an integer via e.g. `select("1")` or `select("someIntAttribute")`, but the entity view attribute using the subquery provider uses a different type like e.g. `boolean`,
+constructing an instance of that entity view might fail when trying to interpret the integer as boolean with an `IllegalArgumentException` saying that types are incompatible.
+The obvious fix is to correct either the select item to return the correct type or the entity view attribute to declare the appropriate attribute type.
+In case of a subquery provider it is also possible to wrap the subquery into a more complex expression by using e.g. `@MappingSubquery(value = MyProvider.class, subqueryAlias = "subquery", expression = "CASE WHEN EXISTS subquery THEN true ELSE false END")`.
+
+A `CorrelationProvider` can fail in a similar manner as it defines the entity type it correlates via `correlate(SomeEntity.class)`.
+If the entity view attribute expects a different type that is not compatible, it will fail at runtime with an `IllegalArgumentException` saying that types are incompatible.
+If a correlation result is defined via `@MappingCorrelated(correlationResult = "someAttributeOfCorrelatedEntity")` the type of that expression must be compatible which can be another cause for an error.
+This problem can be fixed by adapting the correlation result expression, by changing the correlated entity in the correlation provider or by changing the declared attribute type.

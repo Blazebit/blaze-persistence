@@ -78,6 +78,7 @@ import java.util.logging.Logger;
 public class HibernateJpaProvider implements JpaProvider {
 
     private static final Method GET_TYPE_NAME;
+    private static final Method IS_NULLABLE;
     private static final Logger LOG = Logger.getLogger(HibernateJpaProvider.class.getName());
 
     protected final PersistenceUnitUtil persistenceUnitUtil;
@@ -137,6 +138,14 @@ public class HibernateJpaProvider implements JpaProvider {
             }
         } else {
             throw new IllegalStateException("Unknown Hibernate version in use, could not find AbstractType JPA metamodel class!");
+        }
+
+        try {
+            Method isNullable = OneToOneType.class.getDeclaredMethod("isNullable");
+            isNullable.setAccessible(true);
+            IS_NULLABLE = isNullable;
+        } catch (Exception ex) {
+            throw new IllegalStateException("Unknown Hibernate version in use, could not find isNullable method!", ex);
         }
     }
 
@@ -466,12 +475,23 @@ public class HibernateJpaProvider implements JpaProvider {
         Type propertyType = persister.getPropertyType(attributeName);
 
         if (propertyType instanceof OneToOneType) {
-            return ((OneToOneType) propertyType).getRHSUniqueKeyPropertyName() != null;
+            OneToOneType oneToOneType = (OneToOneType) propertyType;
+            // It is foreign if there is a mapped by attribute
+            // But as of Hibernate 5.4 we noticed that we have to treat nullable one-to-ones as "foreign" as well
+            return (oneToOneType).getRHSUniqueKeyPropertyName() != null || isNullable(oneToOneType);
         }
 
         // Every entity persister has "owned" properties on table number 0, others have higher numbers
         int tableNumber = persister.getSubclassPropertyTableNumber(attributeName);
         return tableNumber >= persister.getEntityMetamodel().getSubclassEntityNames().size();
+    }
+
+    private boolean isNullable(OneToOneType oneToOneType) {
+        try {
+            return (boolean) IS_NULLABLE.invoke(oneToOneType);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -529,6 +549,12 @@ public class HibernateJpaProvider implements JpaProvider {
         }
 
         return ConstraintType.NONE;
+    }
+
+    protected boolean isForeignKeyDirectionToParent(org.hibernate.type.EntityType entityType) {
+        ForeignKeyDirection direction = entityType.getForeignKeyDirection();
+        // Types changed between 4 and 5 so we check it like this. Essentially we check if the TO_PARENT direction is used
+        return direction.toString().regionMatches(true, 0, "to", 0, 2);
     }
 
     protected boolean isForeignKeyDirectionToParent(CollectionType collectionType) {
