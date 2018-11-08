@@ -902,7 +902,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             return node;
         }
         PathExpression pathExpression = expressionFactory.createPathExpression(path);
-        joinManager.implicitJoin(pathExpression, true, null, null, new HashSet<String>(), false, false, true, false);
+        joinManager.implicitJoin(pathExpression, true, true, null, null, new HashSet<String>(), false, false, true, false);
         return (JoinNode) pathExpression.getBaseNode();
     }
 
@@ -912,7 +912,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             return new SimplePathReference(node, null, node.getType());
         }
         PathExpression pathExpression = expressionFactory.createPathExpression(path);
-        joinManager.implicitJoin(pathExpression, true, null, null, new HashSet<String>(), false, false, true, false);
+        joinManager.implicitJoin(pathExpression, true, true, null, null, new HashSet<String>(), false, false, true, false);
         return (Path) pathExpression.getPathReference();
     }
 
@@ -1238,7 +1238,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     public BuilderType setWhereExpression(String expression) {
         prepareForModification(ClauseType.WHERE);
         Predicate predicate = expressionFactory.createBooleanExpression(expression, false);
-        whereManager.restrictExpression(this, predicate);
+        whereManager.restrictExpression(predicate);
         return (BuilderType) this;
     }
     
@@ -1393,7 +1393,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new IllegalStateException("Having without group by");
         }
         Predicate predicate = expressionFactory.createBooleanExpression(expression, false);
-        havingManager.restrictExpression(this, predicate);
+        havingManager.restrictExpression(predicate);
         return (BuilderType) this;
     }
     
@@ -1658,21 +1658,8 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         joinManager.reorderSimpleValuesClauses();
 
         final JoinVisitor joinVisitor = new JoinVisitor(mainQuery, parentVisitor, joinManager, parameterManager, !mainQuery.jpaProvider.supportsSingleValuedAssociationIdExpressions());
-        final List<JoinNode> fetchableNodes = new ArrayList<>();
-        final JoinNodeVisitor joinNodeVisitor = new OnClauseJoinNodeVisitor(joinVisitor) {
-
-            @Override
-            public void visit(JoinNode node) {
-                super.visit(node);
-                node.registerDependencies();
-                if (node.isFetch()) {
-                    fetchableNodes.add(node);
-                }
-            }
-
-        };
         joinVisitor.setFromClause(ClauseType.JOIN);
-        joinManager.acceptVisitor(joinNodeVisitor);
+        joinManager.acceptVisitor(joinVisitor);
         // carry out implicit joins
         joinVisitor.setFromClause(ClauseType.SELECT);
         // There might be clauses for which joins are not required
@@ -1687,6 +1674,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             nodesToFetch = new HashSet<>();
             // Add all parents of the fetchable nodes to nodesToFetch until the fetch owner is reached
             // If we reach a root before a fetch owner, the fetch owner is missing
+            final List<JoinNode> fetchableNodes = joinVisitor.getFetchableNodes();
             for (int i = 0; i < fetchableNodes.size(); i++) {
                 JoinNode fetchableNode = fetchableNodes.get(i);
                 while (!fetchOwners.contains(fetchableNode)) {

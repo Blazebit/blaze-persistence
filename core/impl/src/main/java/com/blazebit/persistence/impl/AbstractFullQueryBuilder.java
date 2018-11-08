@@ -437,7 +437,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
 
         List<ResolvedExpression> resolvedExpressions = new ArrayList<>(identifierExpressions == null ? 1 : identifierExpression.length() + 1);
         Expression expression = expressionFactory.createSimpleExpression(identifierExpression, false);
-        joinManager.implicitJoin(expression, false, null, null, new HashSet<String>(), false, false, false, false);
+        joinManager.implicitJoin(expression, true, false, null, null, new HashSet<String>(), false, false, false, false);
         StringBuilder sb = new StringBuilder();
 
         implicitJoinWhereClause();
@@ -459,7 +459,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         if (identifierExpressions != null) {
             for (String expressionString : identifierExpressions) {
                 expression = expressionFactory.createSimpleExpression(expressionString, false);
-                joinManager.implicitJoin(expression, false, null, null, new HashSet<String>(), false, false, false, false);
+                joinManager.implicitJoin(expression, true, false, null, null, new HashSet<String>(), false, false, false, false);
                 functionalDependencyAnalyzerVisitor.analyzeFormsUniqueTuple(expression);
                 if (functionalDependencyAnalyzerVisitor.getSplittedOffExpressions().isEmpty()) {
                     sb.setLength(0);
@@ -618,7 +618,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
     public X fetch(String path) {
         prepareForModification(ClauseType.JOIN);
         verifyBuilderEnded();
-        joinManager.implicitJoin(expressionFactory.createPathExpression(path), true, null, null, new HashSet<String>(), false, false, true, false, true);
+        joinManager.implicitJoin(expressionFactory.createPathExpression(path), true, true, null, null, new HashSet<String>(), false, false, true, false, true);
         return (X) this;
     }
 
@@ -630,7 +630,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
 
         HashSet<String> currentlyResolvingAliases = new HashSet<>();
         for (String path : paths) {
-            joinManager.implicitJoin(expressionFactory.createPathExpression(path), true, null, null, currentlyResolvingAliases, false, false, true, false, true);
+            joinManager.implicitJoin(expressionFactory.createPathExpression(path), true, true, null, null, currentlyResolvingAliases, false, false, true, false, true);
         }
 
         return (X) this;

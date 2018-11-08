@@ -84,7 +84,7 @@ public abstract class PredicateManager<T> extends AbstractManager<ExpressionModi
         return caseExpressionBuilderListener.startBuilder(new CaseWhenBuilderImpl<RestrictionBuilder<T>>(restrictionBuilder, caseExpressionBuilderListener, subqueryInitFactory, expressionFactory, parameterManager, getClauseType()));
     }
 
-    void restrictExpression(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder, Predicate predicate) {
+    void restrictExpression(Predicate predicate) {
         rootPredicate.verifyBuilderEnded();
         parameterManager.collectParameterRegistrations(predicate, getClauseType(), subqueryInitFactory.getQueryBuilder());
 

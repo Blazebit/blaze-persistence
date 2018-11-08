@@ -361,7 +361,9 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
             return entityLiteral;
         }
 
-        return new PathExpression(new ArrayList<PathElementExpression>(Arrays.asList((PathElementExpression) ctx.general_path_start().accept(this))));
+        List<PathElementExpression> pathElementExpressions = new ArrayList<>(1);
+        pathElementExpressions.add((PathElementExpression) ctx.general_path_start().accept(this));
+        return new PathExpression(pathElementExpressions);
     }
 
     @Override
@@ -723,7 +725,7 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
         if (ctx.left == null) {
             left = ctx.getChild(0).accept(this);
         } else {
-            List<PathElementExpression> pathElems = new ArrayList<PathElementExpression>();
+            List<PathElementExpression> pathElems = new ArrayList<>();
             pathElems.add(new PropertyExpression(ctx.left.getText()));
             left = new PathExpression(pathElems);
         }
@@ -891,7 +893,7 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
             return entityLiteral;
         }
 
-        List<PathElementExpression> pathElems = new ArrayList<PathElementExpression>();
+        List<PathElementExpression> pathElems = new ArrayList<>();
         pathElems.add(new PropertyExpression(ctx.Identifier().getText()));
         return new PathExpression(pathElems);
     }

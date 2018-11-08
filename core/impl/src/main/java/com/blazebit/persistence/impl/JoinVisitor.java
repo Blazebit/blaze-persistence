@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.SubqueryInitiator;
+import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListener;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.FunctionExpression;
 import com.blazebit.persistence.parser.expression.ParameterExpression;
@@ -25,18 +27,23 @@ import com.blazebit.persistence.parser.expression.PropertyExpression;
 import com.blazebit.persistence.parser.expression.SubqueryExpression;
 import com.blazebit.persistence.parser.expression.TreatExpression;
 import com.blazebit.persistence.parser.expression.VisitorAdapter;
+import com.blazebit.persistence.parser.predicate.CompoundPredicate;
 import com.blazebit.persistence.parser.predicate.EqPredicate;
+import com.blazebit.persistence.parser.predicate.ExistsPredicate;
 import com.blazebit.persistence.parser.predicate.InPredicate;
 import com.blazebit.persistence.parser.predicate.IsEmptyPredicate;
 import com.blazebit.persistence.parser.predicate.IsNullPredicate;
 import com.blazebit.persistence.parser.predicate.MemberOfPredicate;
+import com.blazebit.persistence.parser.predicate.PredicateBuilder;
 import com.blazebit.persistence.parser.util.ExpressionUtils;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.Type;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -45,7 +52,7 @@ import java.util.Set;
  * @author Moritz Becker
  * @since 1.0.0
  */
-public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor {
+public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor, JoinNodeVisitor, PredicateBuilderEndedListener, SubqueryBuilderListener<Object> {
 
     private final AssociationParameterTransformerFactory parameterTransformerFactory;
     private final EntityMetamodelImpl metamodel;
@@ -53,7 +60,9 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor {
     private final JoinManager joinManager;
     private final ParameterManager parameterManager;
     private final boolean needsSingleValuedAssociationIdRemoval;
+    private final List<JoinNode> fetchableNodes;
     private final Set<String> currentlyResolvingAliases;
+    private final ImplicitJoinCorrelationPathReplacementVisitor correlationPathReplacementVisitor;
     private boolean joinRequired;
     private boolean joinWithObjectLeafAllowed = true;
     private ClauseType fromClause;
@@ -65,7 +74,9 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor {
         this.joinManager = joinManager;
         this.parameterManager = parameterManager;
         this.needsSingleValuedAssociationIdRemoval = needsSingleValuedAssociationIdRemoval;
+        this.fetchableNodes = new ArrayList<>();
         this.currentlyResolvingAliases = new HashSet<>();
+        this.correlationPathReplacementVisitor = new ImplicitJoinCorrelationPathReplacementVisitor();
         // By default we require joins
         this.joinRequired = true;
     }
@@ -76,6 +87,65 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor {
 
     public void setFromClause(ClauseType fromClause) {
         this.fromClause = fromClause;
+    }
+
+    public List<JoinNode> getFetchableNodes() {
+        return fetchableNodes;
+    }
+
+    @Override
+    public void onBuilderEnded(PredicateBuilder o) {
+        // No-op
+    }
+
+    @Override
+    public void onReplaceBuilder(SubqueryInternalBuilder<Object> oldBuilder, SubqueryInternalBuilder<Object> newBuilder) {
+        // No-op
+    }
+
+    @Override
+    public void onBuilderEnded(SubqueryInternalBuilder<Object> builder) {
+        // No-op
+    }
+
+    @Override
+    public void onBuilderStarted(SubqueryInternalBuilder<Object> builder) {
+        // No-op
+    }
+
+    @Override
+    public void onInitiatorStarted(SubqueryInitiator<?> initiator) {
+        // No-op
+    }
+
+    @Override
+    public void visit(JoinNode node) {
+        if (node.getOnPredicate() != null) {
+            node.getOnPredicate().accept(this);
+            if (!correlationPathReplacementVisitor.getPathsToCorrelate().isEmpty()) {
+                // We rewrite the predicate to use correlated subqueries for implicit joins
+                SubqueryInitiatorImpl<Object> subqueryInitiator = (SubqueryInitiatorImpl<Object>) joinManager.getSubqueryInitFactory().createSubqueryInitiator(null, this, true, fromClause);
+                SubqueryBuilderImpl<?> subqueryBuilder = null;
+                for (Map.Entry<PathExpression, ImplicitJoinCorrelationPathReplacementVisitor.CorrelationTransformEntry> entry : correlationPathReplacementVisitor.getPathsToCorrelate().entrySet()) {
+                    ImplicitJoinCorrelationPathReplacementVisitor.CorrelationTransformEntry correlationTransformEntry = entry.getValue();
+                    String alias = correlationTransformEntry.getAlias();
+                    String correlationExpression = correlationTransformEntry.getCorrelationExpression();
+                    if (subqueryBuilder == null) {
+                        subqueryBuilder = (SubqueryBuilderImpl<?>) subqueryInitiator.from(correlationExpression, alias);
+                    } else {
+                        subqueryBuilder.from(correlationExpression, alias);
+                    }
+                }
+
+                subqueryBuilder.whereManager.restrictExpression(correlationPathReplacementVisitor.rewritePredicate(node.getOnPredicate()));
+                node.setOnPredicate(new CompoundPredicate(CompoundPredicate.BooleanOperator.AND, new ExistsPredicate(new SubqueryExpression(subqueryBuilder), false)));
+                node.getOnPredicate().accept(this);
+            }
+        }
+        node.registerDependencies();
+        if (node.isFetch()) {
+            fetchableNodes.add(node);
+        }
     }
 
     @Override
@@ -104,13 +174,18 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor {
                 currentlyResolvingAliases.remove(alias);
             }
         } else {
-            joinManager.implicitJoin(expression, joinWithObjectLeafAllowed, null, fromClause, currentlyResolvingAliases, false, false, joinRequired, idRemovable);
-            if (parentVisitor != null) {
-                JoinNode baseNode = (JoinNode) expression.getBaseNode();
-                AliasManager aliasOwner = baseNode.getAliasInfo().getAliasOwner();
-                if (aliasOwner != joinManager.getAliasManager()) {
-                    parentVisitor.addClauseDependencies(baseNode, aliasOwner);
+            try {
+                // Also allow joins if this expression was joined before already to avoid possible side-effects of implicit joining multiple times
+                joinManager.implicitJoin(expression, expression.getBaseNode() != null || fromClause != ClauseType.JOIN, joinWithObjectLeafAllowed, null, fromClause, currentlyResolvingAliases, false, false, joinRequired, idRemovable);
+                if (parentVisitor != null) {
+                    JoinNode baseNode = (JoinNode) expression.getBaseNode();
+                    AliasManager aliasOwner = baseNode.getAliasInfo().getAliasOwner();
+                    if (aliasOwner != joinManager.getAliasManager()) {
+                        parentVisitor.addClauseDependencies(baseNode, aliasOwner);
+                    }
                 }
+            } catch (ImplicitJoinNotAllowedException ex) {
+                correlationPathReplacementVisitor.addPathExpression(expression, ex);
             }
         }
     }
@@ -248,6 +323,9 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor {
             visit(pathExpression, true);
             String lastElement = pathExpression.getExpressions().get(pathExpression.getExpressions().size() - 1).toString();
             PathReference pathReference = pathExpression.getPathReference();
+            if (pathReference == null) {
+                return false;
+            }
             JoinNode node = (JoinNode) pathReference.getBaseNode();
             String field = pathReference.getField();
             if (field == null) {
@@ -302,7 +380,7 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor {
             visit(pathExpression, false);
             PathReference pathReference = (pathExpression).getPathReference();
             // We only attach the natural id to paths referring to entity types
-            if (pathReference.getField() != null && pathReference.getType() instanceof EntityType<?>) {
+            if (pathReference != null && pathReference.getField() != null && pathReference.getType() instanceof EntityType<?>) {
                 JoinNode node = (JoinNode) pathReference.getBaseNode();
                 // We need a parent tree node to determine the natural id attribute
                 List<String> identifierOrUniqueKeyEmbeddedPropertyNames = metamodel.getJpaProvider()

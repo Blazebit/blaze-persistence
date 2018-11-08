@@ -622,6 +622,31 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 value = replaceWithRecordingCollection(context, view, value, actions);
 
                 if (fetch) {
+                    if (inverseFlusher != null) {
+                        // When we know the collection was fetched, we can try to "merge" the changes into the JPA collection
+                        // If either of the collections is empty, we simply do the replace logic
+                        Collection<Object> jpaCollection = (Collection<Object>) entityAttributeMapper.getValue(entity);
+                        actions = determineJpaCollectionActions(context, (V) jpaCollection, value, elementEqualityChecker);
+                        Map<Object, Object> added;
+                        Map<Object, Object> removed;
+                        if (!actions.isEmpty()) {
+                            Map<Object, Object>[] addedAndRemoved = getAddedAndRemovedElementsForInverseFlusher(actions);
+                            added = addedAndRemoved[0];
+                            removed = addedAndRemoved[1];
+                        } else {
+                            added = removed = Collections.emptyMap();
+                        }
+
+                        // It could be the case that entity flushing is triggered by a different dirty collection,
+                        // yet we still want elements of this collection to flush with query flushing if configured
+                        if (flushStrategy == FlushStrategy.ENTITY || !inverseFlusher.supportsQueryFlush()) {
+                            visitInverseElementFlushersForActions(context, value, added, removed, new ElementFlusherEntityExecutor(context, entity));
+                        } else {
+                            visitInverseElementFlushersForActions(context, value, added, removed, new ElementFlusherQueryExecutor(context, entity, null));
+                        }
+                        return true;
+                    }
+
                     if (value == null || value.isEmpty()) {
                         replace = true;
                     } else if (elementDescriptor.shouldFlushMutations()) {
