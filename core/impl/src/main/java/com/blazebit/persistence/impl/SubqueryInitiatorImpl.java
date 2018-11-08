@@ -20,6 +20,7 @@ import com.blazebit.persistence.LeafOngoingFinalSetOperationSubqueryBuilder;
 import com.blazebit.persistence.StartOngoingSetOperationSubqueryBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
+import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 
 import java.util.Arrays;
@@ -82,6 +83,16 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
             subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createArithmeticExpression("1"))));
         }
         subqueryBuilder.from(correlationPath, alias);
+        listener.onBuilderStarted(subqueryBuilder);
+        return subqueryBuilder;
+    }
+
+    public SubqueryBuilder<X> from(Expression correlationExpression, String alias) {
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
+        if (inExists) {
+            subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createArithmeticExpression("1"))));
+        }
+        subqueryBuilder.from(correlationExpression, alias);
         listener.onBuilderStarted(subqueryBuilder);
         return subqueryBuilder;
     }

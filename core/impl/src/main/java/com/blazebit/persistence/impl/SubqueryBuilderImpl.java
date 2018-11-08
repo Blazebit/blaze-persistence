@@ -50,6 +50,12 @@ public class SubqueryBuilderImpl<T> extends BaseSubqueryBuilderImpl<T, SubqueryB
         return new SubqueryBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext);
     }
 
+    public SubqueryBuilderImpl<T> from(Expression expression, String alias) {
+        prepareForModification(ClauseType.JOIN);
+        joinManager.addRoot(null, expression, alias);
+        return this;
+    }
+
     @Override
     public List<Expression> getSelectExpressions() {
         List<Expression> selectExpressions = new ArrayList<Expression>(selectManager.getSelectInfos().size());

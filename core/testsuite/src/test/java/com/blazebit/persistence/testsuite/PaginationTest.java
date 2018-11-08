@@ -746,7 +746,7 @@ public class PaginationTest extends AbstractCoreTest {
         String expectedCountQuery = "SELECT " + countPaginated("d.id", true) + " FROM Document d LEFT JOIN d.contacts contacts_1 WHERE " + joinAliasValue("contacts_1") + " IS NULL";
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         pcb.getPageCountQueryString();
-        cb.getResultList();
+        pcb.getResultList();
     }
     
     @Test
@@ -762,11 +762,12 @@ public class PaginationTest extends AbstractCoreTest {
                 + " WHERE " + joinAliasValue("contacts_owner_1_age_1") + " IS NULL";
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         pcb.getPageCountQueryString();
-        cb.getResultList();
+        pcb.getResultList();
     }
 
     @Test
-    @Category(NoEclipselink.class)
+    // Not sure what datanucleus does here..
+    @Category({ NoEclipselink.class, NoDatanucleus.class })
     // TODO: report eclipse bug, the expression "VALUE(c) IS NULL" seems illegal but JPA spec 4.6.11 allows it
     public void testSelectOnlyPropagationForWithJoins3() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d");
@@ -777,12 +778,12 @@ public class PaginationTest extends AbstractCoreTest {
                 .end()
                 .where("c").isNull().orderByAsc("id").page(0, 1);
 
-        String expectedCountQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d JOIN d.owner owner_1 " +
+        String expectedCountQuery = "SELECT " + countPaginated("d.id", true) + " FROM Document d " +
                 "LEFT JOIN d.contacts c"
-                + onClause("KEY(c) = owner_1.age") +
+                + onClause("EXISTS (SELECT 1 FROM d.owner _synth_subquery_0 WHERE KEY(c) = _synth_subquery_0.age)") +
                 " WHERE " + joinAliasValue("c") + " IS NULL";
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
-        cb.getResultList();
+        pcb.getResultList();
     }
     
     @Test
@@ -805,7 +806,7 @@ public class PaginationTest extends AbstractCoreTest {
 
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         pcb.getPageCountQueryString();
-        cb.setParameter("language", Locale.GERMAN).getResultList();
+        pcb.setParameter("language", Locale.GERMAN).getResultList();
     }
     
     @Test

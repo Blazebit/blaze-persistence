@@ -55,7 +55,7 @@ public class OuterFunctionVisitor extends ClauseAndJoinAwareVisitor implements E
             PathExpression path = (PathExpression) expression.getExpressions().get(0);
 
             if (joinManager.getParent() != null) {
-                joinManager.getParent().implicitJoin(path, true, null, fromClause, new HashSet<String>(), false, true, joinRequired, false, false);
+                joinManager.getParent().implicitJoin(path, true, true, null, fromClause, new HashSet<String>(), false, true, joinRequired, false, false);
             }
         }
 

@@ -804,7 +804,9 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
     public Expression createExpression(String field) {
         List<PathElementExpression> pathElements = new ArrayList<>();
         if (qualificationExpression != null) {
-            PathExpression path = new PathExpression(Collections.<PathElementExpression>singletonList(new PropertyExpression(parent.getAlias())));
+            List<PathElementExpression> pathElementExpressions = new ArrayList<>(1);
+            pathElementExpressions.add(new PropertyExpression(parent.getAlias()));
+            PathExpression path = new PathExpression(pathElementExpressions);
             if ("KEY".equalsIgnoreCase(qualificationExpression)) {
                 pathElements.add(new MapKeyExpression(path));
             } else if ("INDEX".equalsIgnoreCase(qualificationExpression)) {

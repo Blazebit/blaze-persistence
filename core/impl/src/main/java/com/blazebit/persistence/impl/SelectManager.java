@@ -34,6 +34,7 @@ import com.blazebit.persistence.impl.builder.object.ClassObjectBuilder;
 import com.blazebit.persistence.impl.builder.object.ConstructorObjectBuilder;
 import com.blazebit.persistence.impl.builder.object.SelectObjectBuilderImpl;
 import com.blazebit.persistence.impl.builder.object.TupleObjectBuilder;
+import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.SimpleQueryGenerator;
 import com.blazebit.persistence.parser.expression.Expression;
@@ -46,13 +47,11 @@ import com.blazebit.persistence.parser.expression.PathElementExpression;
 import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.expression.PropertyExpression;
 import com.blazebit.persistence.parser.expression.SubqueryExpression;
-import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
 import com.blazebit.persistence.spi.JpaProvider;
 
 import javax.persistence.Tuple;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -211,7 +210,8 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
             JoinNode rootNode = joinManager.getRootNodeOrFail("Empty select not allowed when having multiple roots!");
             String rootAlias = rootNode.getAliasInfo().getAlias();
             
-            List<PathElementExpression> path = Arrays.asList((PathElementExpression) new PropertyExpression(rootAlias));
+            List<PathElementExpression> path = new ArrayList<>();
+            path.add(new PropertyExpression(rootAlias));
             resolveVisitor.visit(new PathExpression(path, new SimplePathReference(rootNode, null, rootNode.getNodeType()), false, false));
 
             queryGenerator.setClauseType(ClauseType.GROUP_BY);

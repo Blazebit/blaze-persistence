@@ -106,7 +106,7 @@ public final class JpaUtils {
                         PathExpression baseExpression = embeddedPropertyNames.size() > 1 ?
                                 ((PathExpression) selectExpression).clone(false) : ((PathExpression) selectExpression);
 
-                        joinManager.implicitJoin(baseExpression, true, null, ClauseType.SELECT, new HashSet<String>(), false, false, false, false);
+                        joinManager.implicitJoin(baseExpression, true, true, null, ClauseType.SELECT, new HashSet<String>(), false, false, false, false);
 
                         if (attributeEntry.getElementClass() != baseExpression.getPathReference().getType().getJavaType()) {
                             throw new IllegalStateException("An association should be bound to its association type and not its identifier type");

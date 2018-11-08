@@ -318,18 +318,7 @@ public class SubqueryTest extends AbstractCoreTest {
                     .from("d.owner.ownedDocuments", "dSub")
                     .where("dSub").notEqExpression("d")
                 .end();
-        String correlationPath = correlationPath("owner_1.ownedDocuments", Document.class, "dSub", "owner.id = owner_1.id");
-        String correlationPathWhere = "";
-        int idx;
-        if ((idx = correlationPath.indexOf(" WHERE ")) != -1) {
-            correlationPathWhere = correlationPath.substring(idx + " WHERE ".length());
-            correlationPath = correlationPath.substring(0, idx);
-        }
-        String expectedQuery = "SELECT d FROM Document d JOIN d.owner owner_1 WHERE EXISTS (SELECT 1 FROM " + correlationPath + " WHERE ";
-        if (!correlationPathWhere.isEmpty()) {
-            expectedQuery += correlationPathWhere + " AND ";
-        }
-        expectedQuery += "dSub <> d)";
+        String expectedQuery = "SELECT d FROM Document d WHERE EXISTS (SELECT 1 FROM d.owner dSub_base LEFT JOIN dSub_base.ownedDocuments dSub WHERE dSub <> d)";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }

@@ -35,7 +35,6 @@ import com.blazebit.persistence.spi.SetOperationType;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -132,8 +131,11 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
             if (JpaMetamodelUtils.getAttribute(rootNode.getManagedType(), expression) == null) {
                 throw new IllegalArgumentException("The attribute '" + expression + "' does not exist on the type '" + rootNode.getJavaType().getName() + "'! Did you maybe forget to use a select alias?");
             }
+            List<PathElementExpression> path = new ArrayList<>(2);
+            path.add(new PropertyExpression(rootNode.getAlias()));
+            path.add(new PropertyExpression(expression));
             return ExpressionUtils.isNullable(getMetamodel(), new PathExpression(
-                    Arrays.<PathElementExpression>asList(new PropertyExpression(rootNode.getAlias()), new PropertyExpression(expression)),
+                    path,
                     new SimplePathReference(rootNode, expression, null),
                     false,
                     false

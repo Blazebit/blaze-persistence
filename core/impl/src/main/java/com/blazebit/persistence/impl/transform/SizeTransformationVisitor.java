@@ -259,7 +259,7 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
             }
 
             for (PathExpression groupByExpr : groupByExprs) {
-                joinManager.implicitJoin(groupByExpr, true, null, null, new HashSet<String>(), false, false, false, false);
+                joinManager.implicitJoin(groupByExpr, true, true, null, null, new HashSet<String>(), false, false, false, false);
             }
 
             PathExpression originalSizeArg = sizeArg.clone(false);

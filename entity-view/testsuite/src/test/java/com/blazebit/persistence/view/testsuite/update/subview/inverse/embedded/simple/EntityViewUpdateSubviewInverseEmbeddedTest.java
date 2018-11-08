@@ -47,6 +47,8 @@ import org.junit.runners.Parameterized;
 
 import javax.persistence.EntityManager;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -152,6 +154,25 @@ public class EntityViewUpdateSubviewInverseEmbeddedTest extends AbstractEntityVi
         // Then
         // After update, the position is replaced with the declaration type
        assertFalse(newOrder.getPositions().iterator().next() instanceof UpdatableLegacyOrderPositionView);
+        restartTransaction();
+        LegacyOrder legacyOrder = em.find(LegacyOrder.class, newOrder.getId());
+        Assert.assertEquals(1, legacyOrder.getPositions().size());
+        Assert.assertEquals(new LegacyOrderPositionId(newOrder.getId(), 0), legacyOrder.getPositions().iterator().next().getId());
+    }
+
+    @Test
+    public void testPersistAndAddNewElementToNewCollection() {
+        // When
+        UpdatableLegacyOrderView newOrder = evm.create(UpdatableLegacyOrderView.class);
+        UpdatableLegacyOrderPositionView position = evm.create(UpdatableLegacyOrderPositionView.class);
+        position.getId().setPositionId(0);
+        position.setArticleNumber("123");
+        newOrder.setPositions(new HashSet<>(Arrays.<LegacyOrderPositionIdView>asList(position)));
+        update(newOrder);
+
+        // Then
+        // After update, the position is replaced with the declaration type
+        assertFalse(newOrder.getPositions().iterator().next() instanceof UpdatableLegacyOrderPositionView);
         restartTransaction();
         LegacyOrder legacyOrder = em.find(LegacyOrder.class, newOrder.getId());
         Assert.assertEquals(1, legacyOrder.getPositions().size());
