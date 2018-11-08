@@ -347,7 +347,7 @@ public class ViewMetamodelTest extends AbstractEntityViewTest {
     }
 
     @Test
-    public void testGetConstructorsInterfaceView() throws Exception {
+    public void testGetConstructorsInterfaceView() {
         ViewMetamodel viewMetamodel = getViewMetamodel();
         ViewType<DocumentViewInterface> viewType = viewMetamodel.view(DocumentViewInterface.class);
         Set<MappingConstructor<DocumentViewInterface>> constructors = viewType.getConstructors();
@@ -355,7 +355,7 @@ public class ViewMetamodelTest extends AbstractEntityViewTest {
     }
 
     @Test
-    public void testGetConstructorsClassView() throws Exception {
+    public void testGetConstructorsClassView() {
         ViewMetamodel viewMetamodel = getViewMetamodel();
         ViewType<DocumentViewAbstractClass> viewType = viewMetamodel.view(DocumentViewAbstractClass.class);
         Set<MappingConstructor<DocumentViewAbstractClass>> constructors = viewType.getConstructors();
@@ -405,7 +405,7 @@ public class ViewMetamodelTest extends AbstractEntityViewTest {
     }
 
     @Test
-    public void testConflictingMapping() throws Exception {
+    public void testConflictingMapping() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(ConflictingDoc.class);
         verifyException(cfg, IllegalArgumentException.class).createEntityViewManager(cbf);
@@ -430,7 +430,7 @@ public class ViewMetamodelTest extends AbstractEntityViewTest {
     }
 
     @Test
-    public void testResolveConflictingMapping() throws Exception {
+    public void testResolveConflictingMapping() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(ResolveConflictingDoc.class);
         ViewMetamodel metamodel = cfg.createEntityViewManager(cbf).getMetamodel();
@@ -455,7 +455,7 @@ public class ViewMetamodelTest extends AbstractEntityViewTest {
     }
 
     @Test
-    public void testInheritancePrecedenceNonConflictingMapping() throws Exception {
+    public void testInheritancePrecedenceNonConflictingMapping() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(InheritancePrecedenceNonConflictingDoc.class);
         ViewMetamodel metamodel = cfg.createEntityViewManager(cbf).getMetamodel();
@@ -478,7 +478,7 @@ public class ViewMetamodelTest extends AbstractEntityViewTest {
     }
 
     @Test
-    public void testNoMappingNonConflictingMapping() throws Exception {
+    public void testNoMappingNonConflictingMapping() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(NoMappingNonConflictingDoc.class);
         ViewMetamodel metamodel = cfg.createEntityViewManager(cbf).getMetamodel();
@@ -499,6 +499,20 @@ public class ViewMetamodelTest extends AbstractEntityViewTest {
     public static interface NoMappingNonConflictingDoc extends NoMappingNonConflictingDoc1, NoMappingNonConflictingDoc2 {
     }
 
+    @Test
+    public void testSetterOnSubtype() {
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        cfg.addEntityView(SetterOnSubtypeDocument.class);
+        ViewMetamodel metamodel = cfg.createEntityViewManager(cbf).getMetamodel();
+        MethodAttribute<? super SetterOnSubtypeDocument, ?> idAttribute = metamodel.view(SetterOnSubtypeDocument.class).getAttribute("id");
+        assertFalse(idAttribute.isMutable());
+        assertFalse(idAttribute.isUpdatable());
+    }
+
+    @EntityView(Document.class)
+    public static interface SetterOnSubtypeDocument extends IdHolderView<Long> {
+        public void setId(Long id);
+    }
     
     // TODO: Test filter mapping
 }

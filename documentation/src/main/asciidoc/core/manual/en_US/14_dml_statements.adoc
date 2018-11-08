@@ -44,7 +44,7 @@ The statement only works on collections that have a join or collection table.
 
 [source,java]
 ----
-DeleteCriteriaBuilder<Cat> cb = cbf.deleteCollection(em, Cat.class, "kittens", "cat")
+DeleteCriteriaBuilder<Cat> cb = cbf.deleteCollection(em, Cat.class, "cat", "kittens")
     .whereExists()
         .from(Cat.class, "subCat")
         .where("cat.id").eqExpression("subCat.id")
@@ -52,11 +52,11 @@ DeleteCriteriaBuilder<Cat> cb = cbf.deleteCollection(em, Cat.class, "kittens", "
     .end();
 ----
 
-The alias `cat` or in general, an delete collection statement alias only allows access to the join or collection table related attributes.
+The alias `cat`, or in general a delete collection statement alias, only allows access to the join or collection table related attributes.
 Generally, these attributes are
 
 * The source id i.e. `cat.id`
-* The target id i.e. `cat.kittens.id`
+* The target id i.e. `cat.kittens.id` or target embeddable attributes
 * The collection index/key i.e. `KEY(cat.kittens)`
 
 [source,sql]
@@ -207,17 +207,16 @@ The statement only works on collections that have a join or collection table.
 
 [source,java]
 ----
-UpdateCriteriaBuilder<Cat> cb = cbf.updateCollection(em, Cat.class, "kittens", "cat")
-    .set("cat.id", 2)
+UpdateCriteriaBuilder<Cat> cb = cbf.updateCollection(em, Cat.class, "cat", "kittens")
+    .set("id", 2)
     .where("cat.id").eq(1);
 ----
 
-The alias `cat` or in general, an update collection statement alias only allows access to the join or collection table related attributes.
-Generally, these attributes are
+You can only set attributes of the join or collection table, which generally are
 
-* The source id i.e. `cat.id`
-* The target id i.e. `cat.kittens.id`
-* The collection index/key i.e. `KEY(cat.kittens)`
+* The source id i.e. `id`
+* The target id i.e. `kittens.id` or target embeddable attributes
+* The collection index/key i.e. `KEY(kittens)`
 
 The logical SQL for this _re-parenting query_ looks like
 
@@ -287,19 +286,18 @@ The statement only works on collections that have a join or collection table.
 
 [source,java]
 ----
-InsertCriteriaBuilder<Cat> cb = cbf.insertCollection(em, Cat.class, "kittens", "cat")
+InsertCriteriaBuilder<Cat> cb = cbf.insertCollection(em, Cat.class, "kittens")
     .from(Cat.class, "c")
-    .bind("cat.id", 2)
-    .bind("cat.kittens.id").select("c.kittens.id)
+    .bind("id", 2)
+    .bind("kittens.id").select("c.kittens.id")
     .where("c.id").eq(1);
 ----
 
-The alias `cat` or in general, an insert collection statement alias only allows access to the join or collection table related attributes.
-Generally, these attributes are
+You can only bind attributes of the join or collection table, which generally are
 
-* The source id i.e. `cat.id`
-* The target id i.e. `cat.kittens.id`
-* The collection index/key i.e. `KEY(cat.kittens)`
+* The source id i.e. `id`
+* The target id i.e. `kittens.id` or target embeddable attributes
+* The collection index/key i.e. `KEY(kittens)`
 
 The logical SQL for this _kittens copying query_ looks like
 

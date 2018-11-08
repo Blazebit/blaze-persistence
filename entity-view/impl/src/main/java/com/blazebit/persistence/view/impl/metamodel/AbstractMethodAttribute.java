@@ -456,7 +456,7 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
                 return null;
             }
 
-            if (m.getParameterTypes()[0] != getter.getReturnType()) {
+            if (ReflectionUtils.getResolvedMethodParameterTypes(viewType, m)[0] != ReflectionUtils.getResolvedMethodReturnType(viewType, getter)) {
                 context.addError("The setter '" + m.getName() + "' of the class '" + viewType.getName()
                     + "' must accept an argument of the same type as it's corresponding getter returns!");
                 return null;
@@ -471,7 +471,7 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
             attributeName = getAttributeName(m);
             Method setter = ReflectionUtils.getSetter(viewType, attributeName);
 
-            if (setter != null && setter.getParameterTypes()[0] != m.getReturnType()) {
+            if (setter != null && ReflectionUtils.getResolvedMethodParameterTypes(viewType, setter)[0] != ReflectionUtils.getResolvedMethodReturnType(viewType, m)) {
                 context.addError("The getter '" + m.getName() + "' of the class '" + viewType.getName()
                     + "' must have the same return type as it's corresponding setter accepts!");
                 return null;
