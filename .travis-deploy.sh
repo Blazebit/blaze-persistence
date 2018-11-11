@@ -3,7 +3,7 @@
 if [ "$TRAVIS_REPO_SLUG" == "Blazebit/blaze-persistence" ] && 
     [ "$TRAVIS_BRANCH" == "master" ] &&
     [ "$TRAVIS_PULL_REQUEST" == "false" ] &&
-    [ "$JPAPROVIDER" == "hibernate" ] &&
+    [ "$JPAPROVIDER" == "hibernate-5.2" ] &&
     [ "$RDBMS" == "h2" ]; then
 
   echo "Starting snapshot deployment..."

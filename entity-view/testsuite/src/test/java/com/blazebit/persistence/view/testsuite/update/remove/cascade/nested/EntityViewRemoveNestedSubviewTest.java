@@ -88,8 +88,10 @@ public class EntityViewRemoveNestedSubviewTest extends AbstractEntityViewRemoveD
 
         // document.responsiblePerson.friend
         builder.delete(Person.class)
+                .update(Document.class)
         // document.responsiblePerson
                 .delete(Person.class)
+                .update(Document.class)
         // document.versions
                 .delete(Version.class)
                 .delete(Document.class)
@@ -134,8 +136,10 @@ public class EntityViewRemoveNestedSubviewTest extends AbstractEntityViewRemoveD
         // document.responsiblePerson
         builder.
                 delete(Person.class)
+                .update(Document.class)
                 // document.responsiblePerson.friend
                 .delete(Person.class)
+                .update(Document.class)
                 // document.versions
                 .delete(Version.class)
                 .delete(Document.class)

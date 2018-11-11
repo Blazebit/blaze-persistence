@@ -57,6 +57,11 @@ public class DefaultEntityLoaderFetchGraphNode extends AbstractEntityLoader impl
     }
 
     @Override
+    public String getMapping() {
+        return attributeName;
+    }
+
+    @Override
     public void appendFetchJoinQueryFragment(String base, StringBuilder sb) {
         if (fetchGraph != null) {
             applyFetchGraph(sb, base, fetchGraph);

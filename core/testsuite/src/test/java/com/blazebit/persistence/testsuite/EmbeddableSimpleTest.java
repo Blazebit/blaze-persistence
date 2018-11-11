@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import javax.persistence.Tuple;
 
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
@@ -95,7 +96,7 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
 
     @Test
     // Prior to Hibernate 5.1 it wasn't possible reference other from clause elements in the ON clause which is required to support implicit joins in ON clauses
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, })
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
     public void testCyclicDependencyInOnClauseImplicitJoin2() {
         CriteriaBuilder<OrderPosition> criteria = cbf.create(em, OrderPosition.class, "p");
         criteria.leftJoinDefaultOn("p.order", "o")
@@ -106,7 +107,7 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
 
     @Test
     // Prior to Hibernate 5.1 it wasn't possible reference other from clause elements in the ON clause which is required to support implicit joins in ON clauses
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, })
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoEclipselink.class })
     public void testCyclicDependencyInOnClauseImplicitJoin3() {
         CriteriaBuilder<OrderPosition> criteria = cbf.create(em, OrderPosition.class, "p");
         criteria.leftJoinDefaultOn("p.order", "o")
@@ -117,7 +118,7 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
 
     @Test
     // Prior to Hibernate 5.1 it wasn't possible reference other from clause elements in the ON clause which is required to support implicit joins in ON clauses
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, })
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoEclipselink.class  })
     public void testCyclicDependencyInOnClauseImplicitJoin4() {
         CriteriaBuilder<OrderPosition> criteria = cbf.create(em, OrderPosition.class, "p");
         criteria.leftJoinDefaultOn("p.order", "o")

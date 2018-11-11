@@ -112,7 +112,7 @@
             <property name="ignorePattern" value="@version|@see"/>
         </module>
         <module name="MethodLength">
-            <property name="max" value="270"/>
+            <property name="max" value="280"/>
         </module>
         <module name="ParameterNumber">
             <property name="max" value="25"/>

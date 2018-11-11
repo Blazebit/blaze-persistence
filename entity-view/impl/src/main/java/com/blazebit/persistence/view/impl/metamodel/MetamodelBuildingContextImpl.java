@@ -238,7 +238,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
         Expression simpleExpression = typeValidationExpressionFactory.createSimpleExpression(expression, true);
         ScalarTargetResolvingExpressionVisitor visitor = new ScalarTargetResolvingExpressionVisitor(managedType, entityMetamodel, jpqlFunctions);
         simpleExpression.accept(visitor);
-        return visitor.getPossibleTargets();
+        return visitor.getPossibleTargetTypes();
     }
 
     @Override

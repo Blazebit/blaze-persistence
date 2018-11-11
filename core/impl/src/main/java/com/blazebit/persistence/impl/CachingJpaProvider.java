@@ -98,8 +98,12 @@ public final class CachingJpaProvider implements JpaProvider {
     }
 
     @Override
-    public Map<String, String> getWritableMappedByMappings(EntityType<?> inverseType, EntityType<?> ownerType, String attributeName) {
-        return entityMetamodel.getManagedType(ExtendedManagedType.class, ownerType.getName()).getAttribute(attributeName).getWritableMappedByMappings(inverseType);
+    public Map<String, String> getWritableMappedByMappings(EntityType<?> inverseType, EntityType<?> ownerType, String attributeName, String inverseAttribute) {
+        if (attributeName.isEmpty()) {
+            return entityMetamodel.getManagedType(ExtendedManagedType.class, inverseType).getAttribute(inverseAttribute).getWritableMappedByMappings(ownerType);
+        } else {
+            return entityMetamodel.getManagedType(ExtendedManagedType.class, ownerType).getAttribute(attributeName).getWritableMappedByMappings(inverseType);
+        }
     }
 
     @Override
@@ -164,8 +168,8 @@ public final class CachingJpaProvider implements JpaProvider {
     }
 
     @Override
-    public boolean needsBracketsForListParamter() {
-        return jpaProvider.needsBracketsForListParamter();
+    public boolean needsBracketsForListParameter() {
+        return jpaProvider.needsBracketsForListParameter();
     }
 
     @Override

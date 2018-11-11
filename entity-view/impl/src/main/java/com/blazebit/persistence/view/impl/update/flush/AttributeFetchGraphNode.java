@@ -44,6 +44,11 @@ public class AttributeFetchGraphNode<X extends AttributeFetchGraphNode<X>> imple
     }
 
     @Override
+    public String getMapping() {
+        return mapping;
+    }
+
+    @Override
     public void appendFetchJoinQueryFragment(String base, StringBuilder sb) {
         if (fetch && mapping != null) {
             String newBase = base.replace('.', '_') + "_" + attributeName;

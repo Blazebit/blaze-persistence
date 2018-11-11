@@ -476,7 +476,9 @@ public class EntityViewUpdateMutableEntityMapsTest extends AbstractEntityViewUpd
             .and()
             .assertSelect()
                 .fetching(Person.class, "localized")
-            .and();
+            .and()
+            // ownedDocuments2 for the merge call of Person
+            .select(Document.class);
         if (version || isQueryStrategy() && isFullMode()) {
             afterBuilder.update(Document.class);
         }

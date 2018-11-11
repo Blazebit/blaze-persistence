@@ -57,7 +57,7 @@ public class ConstrainedAttribute<T extends AbstractAttribute<?, ?>> {
     }
 
     public T getSubAttribute(ManagedViewType<?> viewType) {
-        T attribute = subAttributes.get(viewType);
+        T attribute = subAttributes.get(((ManagedViewTypeImplementor<?>) viewType).getRealType());
         if (attribute == null) {
             return this.attribute;
         }
@@ -70,6 +70,6 @@ public class ConstrainedAttribute<T extends AbstractAttribute<?, ?>> {
     }
 
     public void addSubAttribute(ManagedViewType<?> viewType, T attribute) {
-        subAttributes.put(viewType, attribute);
+        subAttributes.put(((ManagedViewTypeImplementor<?>) viewType).getRealType(), attribute);
     }
 }

@@ -39,7 +39,11 @@ public class TxSupport {
             success = true;
         } finally {
             if (!success) {
-                tx.rollback();
+                try {
+                    tx.rollback();
+                } catch (RuntimeException ex) {
+                    // Ignore
+                }
             }
         }
     }

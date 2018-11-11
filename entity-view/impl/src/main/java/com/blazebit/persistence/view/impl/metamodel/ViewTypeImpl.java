@@ -95,6 +95,11 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewTypeI
     }
 
     @Override
+    public ViewTypeImplementor<X> getRealType() {
+        return this;
+    }
+
+    @Override
     protected boolean hasId() {
         return true;
     }

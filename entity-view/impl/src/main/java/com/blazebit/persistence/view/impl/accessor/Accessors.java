@@ -36,6 +36,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -94,6 +95,9 @@ public final class Accessors {
                         foundAttribute = methodAttribute;
                     }
                 }
+            }
+            if (foundAttribute == null) {
+                return null;
             }
             return forViewAttribute(evm, foundAttribute, readonly);
         }
@@ -227,6 +231,9 @@ public final class Accessors {
     }
 
     public static AttributeAccessor forEntityMapping(EntityViewManagerImpl evm, Class<?> entityClass, String mapping) {
+        if (mapping.isEmpty()) {
+            return new NestedAttributeAccessor(Collections.<AttributeAccessor>emptyList());
+        }
         EntityMetamodel entityMetamodel = evm.getMetamodel().getEntityMetamodel();
         AttributePath path = evm.getJpaProvider().getJpaMetamodelAccessor().getBasicAttributePath(entityMetamodel, entityMetamodel.managedType(entityClass), mapping);
         List<Attribute<?, ?>> attributes = path.getAttributes();

@@ -76,6 +76,7 @@ import com.blazebit.persistence.view.impl.update.flush.UnmappedAttributeCascadeD
 import com.blazebit.persistence.view.impl.update.flush.UnmappedBasicAttributeCascadeDeleter;
 import com.blazebit.persistence.view.impl.update.flush.UnmappedCollectionAttributeCascadeDeleter;
 import com.blazebit.persistence.view.impl.update.flush.UnmappedMapAttributeCascadeDeleter;
+import com.blazebit.persistence.view.impl.update.flush.UnmappedWritableBasicAttributeSetNullCascadeDeleter;
 import com.blazebit.persistence.view.impl.update.flush.VersionAttributeFlusher;
 import com.blazebit.persistence.view.impl.update.flush.ViewCollectionRemoveListener;
 import com.blazebit.persistence.view.metamodel.BasicType;
@@ -310,7 +311,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
             Map.Entry<String, ExtendedAttribute> entry = iterator.next();
             ExtendedAttribute attributeEntry = entry.getValue();
             JoinTable joinTable = attributeEntry.getJoinTable();
-            if (joinTable == null && (entityMetamodel.getEntity(attributeEntry.getElementClass()) == null || !attributeEntry.isDeleteCascaded())) {
+            if (joinTable == null && !"".equals(attributeEntry.getMappedBy()) && (entityMetamodel.getEntity(attributeEntry.getElementClass()) == null || !attributeEntry.isDeleteCascaded())) {
                 iterator.remove();
             }
         }
@@ -331,13 +332,23 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                 ExtendedAttribute extendedAttribute = entry.getValue();
                 UnmappedAttributeCascadeDeleter deleter;
                 if (extendedAttribute.getAttribute().isCollection()) {
-                    if (((javax.persistence.metamodel.PluralAttribute<?, ?, ?>) extendedAttribute.getAttribute()).getCollectionType() == javax.persistence.metamodel.PluralAttribute.CollectionType.MAP) {
-                        deleter = new UnmappedMapAttributeCascadeDeleter(evm, unmappedAttributeName, extendedAttribute, entityClass, idAttributeName, false);
+                    if ("".equals(extendedAttribute.getMappedBy())) {
+                        ExtendedManagedType managedType = entityMetamodel.getManagedType(ExtendedManagedType.class, extendedAttribute.getElementClass());
+                        deleter = new UnmappedWritableBasicAttributeSetNullCascadeDeleter(evm, managedType, extendedAttribute.getWritableMappedByMappings((EntityType<?>) managedType.getType()));
                     } else {
-                        deleter = new UnmappedCollectionAttributeCascadeDeleter(evm, unmappedAttributeName, extendedAttribute, entityClass, idAttributeName, false);
+                        if (((javax.persistence.metamodel.PluralAttribute<?, ?, ?>) extendedAttribute.getAttribute()).getCollectionType() == javax.persistence.metamodel.PluralAttribute.CollectionType.MAP) {
+                            deleter = new UnmappedMapAttributeCascadeDeleter(evm, unmappedAttributeName, extendedAttribute, entityClass, idAttributeName, false);
+                        } else {
+                            deleter = new UnmappedCollectionAttributeCascadeDeleter(evm, unmappedAttributeName, extendedAttribute, entityClass, idAttributeName, false);
+                        }
                     }
                 } else {
-                    deleter = new UnmappedBasicAttributeCascadeDeleter(evm, unmappedAttributeName, extendedAttribute, idAttributeName, false);
+                    if ("".equals(extendedAttribute.getMappedBy())) {
+                        ExtendedManagedType managedType = entityMetamodel.getManagedType(ExtendedManagedType.class, extendedAttribute.getElementClass());
+                        deleter = new UnmappedWritableBasicAttributeSetNullCascadeDeleter(evm, managedType, extendedAttribute.getWritableMappedByMappings((EntityType<?>) managedType.getType()));
+                    } else {
+                        deleter = new UnmappedBasicAttributeCascadeDeleter(evm, unmappedAttributeName, extendedAttribute, idAttributeName, false);
+                    }
                 }
 
                 cascadeDeleteUnmappedFlusherList.add(deleter);

@@ -27,6 +27,8 @@ public interface FetchGraphNode<T extends FetchGraphNode<T>> {
 
     public String getAttributeName();
 
+    public String getMapping();
+
     public void appendFetchJoinQueryFragment(String base, StringBuilder sb);
     
     public FetchGraphNode<?> mergeWith(List<T> fetchGraphNodes);

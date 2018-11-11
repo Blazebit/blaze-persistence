@@ -222,7 +222,7 @@ public final class InverseFlusher<E> {
             ManagedType<?> managedType = evm.getMetamodel().getEntityMetamodel().getManagedType(elementEntityClass);
             Attribute<?, ?> inverseAttribute = JpaMetamodelUtils.getAttribute(managedType, attribute.getMappedBy());
             // Many-To-Many relation can't be handled by the inverse flushers
-            if (inverseAttribute.isCollection()) {
+            if (inverseAttribute != null && inverseAttribute.isCollection()) {
                 // A collection can only have a single attribute, so it's safe to assume a SimpleMapper
                 parentEntityOnChildEntityAddMapper = new CollectionAddMapper<>(parentEntityOnChildEntityAddMapper == null ? parentReferenceAttributeAccessor : ((SimpleMapper<Object, Object>) parentEntityOnChildEntityAddMapper).getAttributeAccessor());
                 parentEntityOnChildEntityRemoveMapper = new CollectionRemoveMapper<>(parentEntityOnChildEntityRemoveMapper == null ? parentReferenceAttributeAccessor : ((SimpleMapper<Object, Object>) parentEntityOnChildEntityRemoveMapper).getAttributeAccessor());
@@ -261,11 +261,17 @@ public final class InverseFlusher<E> {
                 childIdAttributeName = elementManagedType.getIdAttribute().getName();
 
                 String mapping = attribute.getMappedBy();
-                ExtendedAttribute extendedAttribute = elementManagedType.getAttribute(mapping);
-                if (childTypeDescriptor.isSubview()) {
-                    deleter = new ViewTypeCascadeDeleter(childTypeDescriptor.getViewToEntityMapper());
-                } else if (childTypeDescriptor.isJpaEntity()) {
-                    deleter = new UnmappedBasicAttributeCascadeDeleter(evm, mapping, extendedAttribute, mapping + "." + parentIdAttributeName, false);
+                if (mapping != null) {
+                    if (mapping.isEmpty()) {
+                        deleter = new UnmappedWritableBasicAttributeSetNullCascadeDeleter(evm, elementManagedType, attribute.getWritableMappedByMappings());
+                    } else {
+                        ExtendedAttribute extendedAttribute = elementManagedType.getAttribute(mapping);
+                        if (childTypeDescriptor.isSubview()) {
+                            deleter = new ViewTypeCascadeDeleter(childTypeDescriptor.getViewToEntityMapper());
+                        } else if (childTypeDescriptor.isJpaEntity()) {
+                            deleter = new UnmappedBasicAttributeCascadeDeleter(evm, mapping, extendedAttribute, mapping + "." + parentIdAttributeName, false);
+                        }
+                    }
                 }
             }
 

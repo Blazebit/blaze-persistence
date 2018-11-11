@@ -827,7 +827,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         public Map<String, String> getWritableMappedByMappings(EntityType<?> inverseType) {
             Map<String, String> mappings = inverseAttributeCache.get(inverseType);
             if (mappings == null) {
-                mappings = jpaProvider.getWritableMappedByMappings(inverseType, (EntityType<?>) ownerType, attributePathString);
+                mappings = jpaProvider.getWritableMappedByMappings(inverseType, (EntityType<?>) ownerType, attributePathString, null);
                 if (mappings == null) {
                     inverseAttributeCache.putIfAbsent(inverseType, NO_MAPPINGS);
                 } else {

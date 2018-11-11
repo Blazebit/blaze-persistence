@@ -32,7 +32,7 @@ public class NestedAttributeAccessor implements AttributeAccessor {
 
     @Override
     public void setValue(Object entity, Object value) {
-        if (entity == null) {
+        if (entity == null || accessors.length == 0) {
             return;
         }
 
@@ -45,8 +45,8 @@ public class NestedAttributeAccessor implements AttributeAccessor {
 
     @Override
     public Object getOrCreateValue(Object entity) {
-        if (entity == null) {
-            return null;
+        if (entity == null || accessors.length == 0) {
+            return entity;
         }
 
         Object value = entity;
@@ -59,8 +59,8 @@ public class NestedAttributeAccessor implements AttributeAccessor {
 
     @Override
     public Object getValue(Object entity) {
-        if (entity == null) {
-            return null;
+        if (entity == null || accessors.length == 0) {
+            return entity;
         }
 
         Object value = entity;

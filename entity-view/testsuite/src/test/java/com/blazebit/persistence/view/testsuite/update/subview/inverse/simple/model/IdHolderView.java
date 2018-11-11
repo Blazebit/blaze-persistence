@@ -14,15 +14,21 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl.metamodel;
+package com.blazebit.persistence.view.testsuite.update.subview.inverse.simple.model;
 
-import com.blazebit.persistence.view.metamodel.FlatViewType;
+import com.blazebit.persistence.view.IdMapping;
+
+import java.io.Serializable;
 
 /**
+ *
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.0.0
  */
-public interface FlatViewTypeImplementor<X> extends FlatViewType<X>, ManagedViewTypeImplementor<X> {
+public interface IdHolderView<T> extends Serializable {
 
-    public FlatViewTypeImplementor<X> getRealType();
+    @IdMapping
+    public T getId();
+
+    public void setId(T id);
 }

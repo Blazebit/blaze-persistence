@@ -32,6 +32,11 @@ public class FlatViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements FlatV
     }
 
     @Override
+    public FlatViewTypeImplementor<X> getRealType() {
+        return this;
+    }
+
+    @Override
     protected boolean hasId() {
         return false;
     }

@@ -25,6 +25,7 @@ Not yet released
 * Allow to specify example attribute for `VALUES` clause for exact SQL types
 * Implemented creatability validation for creatable entity views
 * Implemented `SET_NULL` inverse remove strategy validation for updatable entity views
+* Add updatable entity view support for inverse collections without a mapped by i.e. explicit join columns
 
 ### Bug fixes
 

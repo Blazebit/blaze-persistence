@@ -17,6 +17,9 @@
 package com.blazebit.persistence.view.impl;
 
 import com.blazebit.persistence.parser.EntityMetamodel;
+import com.blazebit.persistence.parser.ListIndexAttribute;
+import com.blazebit.persistence.parser.MapKeyAttribute;
+import com.blazebit.persistence.parser.PathTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.parser.expression.ArithmeticExpression;
 import com.blazebit.persistence.parser.expression.ArithmeticFactor;
 import com.blazebit.persistence.parser.expression.ArrayExpression;
@@ -31,9 +34,6 @@ import com.blazebit.persistence.parser.expression.MapValueExpression;
 import com.blazebit.persistence.parser.expression.NullExpression;
 import com.blazebit.persistence.parser.expression.NumericLiteral;
 import com.blazebit.persistence.parser.expression.ParameterExpression;
-import com.blazebit.persistence.parser.expression.PathElementExpression;
-import com.blazebit.persistence.parser.expression.PathExpression;
-import com.blazebit.persistence.parser.expression.PropertyExpression;
 import com.blazebit.persistence.parser.expression.SimpleCaseExpression;
 import com.blazebit.persistence.parser.expression.StringLiteral;
 import com.blazebit.persistence.parser.expression.SubqueryExpression;
@@ -41,19 +41,17 @@ import com.blazebit.persistence.parser.expression.TimeLiteral;
 import com.blazebit.persistence.parser.expression.TimestampLiteral;
 import com.blazebit.persistence.parser.expression.TreatExpression;
 import com.blazebit.persistence.parser.expression.TrimExpression;
-import com.blazebit.persistence.parser.expression.VisitorAdapter;
 import com.blazebit.persistence.parser.expression.WhenClauseExpression;
 import com.blazebit.persistence.parser.predicate.BooleanLiteral;
 import com.blazebit.persistence.parser.util.ExpressionUtils;
 import com.blazebit.persistence.spi.JpqlFunction;
-import com.blazebit.reflection.ReflectionUtils;
 
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.ListAttribute;
 import javax.persistence.metamodel.ManagedType;
-import java.lang.reflect.Method;
+import javax.persistence.metamodel.MapAttribute;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -65,132 +63,21 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.0.0
  */
-public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
+public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingExpressionVisitor {
 
     private final ManagedType<?> managedType;
-    private final EntityMetamodel metamodel;
     private final Map<String, JpqlFunction> functions;
     private boolean parametersAllowed;
-    private PathPosition currentPosition;
-    private List<PathPosition> pathPositions;
 
-    /**
-     * @author Christian Beikov
-     * @since 1.0.0
-     */
-    private static class PathPosition {
-
-        private Class<?> currentClass;
-        private Class<?> keyClass;
-        private Class<?> valueClass;
-        private Method method;
-        private boolean hasCollectionJoin;
-
-        PathPosition(ManagedType<?> managedType, Method method) {
-            this.currentClass = managedType.getJavaType();
-            this.method = method;
-        }
-        
-        private PathPosition(Class<?> currentClass, Class<?> keyClass, Class<?> valueClass, Method method, boolean hasCollectionJoin) {
-            this.currentClass = currentClass;
-            this.keyClass = keyClass;
-            this.valueClass = valueClass;
-            this.method = method;
-            this.hasCollectionJoin = hasCollectionJoin;
-        }
-
-        Class<?> getRealCurrentClass() {
-            return currentClass;
-        }
-
-        Class<?> getCurrentClass() {
-            if (valueClass != null) {
-                return valueClass;
-            }
-            
-            return currentClass;
-        }
-
-        void setCurrentClass(Class<?> currentClass) {
-            this.currentClass = currentClass;
-            this.keyClass = null;
-            this.valueClass = null;
-            this.hasCollectionJoin = false;
-        }
-
-        Method getMethod() {
-            return method;
-        }
-
-        void setMethod(Method method) {
-            this.method = method;
-        }
-
-        public boolean hasCollectionJoin() {
-            return hasCollectionJoin;
-        }
-
-        void setKeyClass(Class<?> keyClass) {
-            this.keyClass = keyClass;
-        }
-
-        Class<?> getKeyClass() {
-            return keyClass;
-        }
-
-        void setValueClass(Class<?> valueClass) {
-            this.valueClass = valueClass;
-            
-            if (valueClass != null && valueClass != currentClass) {
-                hasCollectionJoin = true;
-            }
-        }
-
-        Class<?> getValueClass() {
-            return valueClass;
-        }
-
-        PathPosition copy() {
-            return new PathPosition(currentClass, keyClass, valueClass, method, hasCollectionJoin);
-        }
-    }
-
-    public ScalarTargetResolvingExpressionVisitor(Class<?> managedTypeClass, EntityMetamodel metamodel, Map<String, JpqlFunction> functions) {
-        this(metamodel.getManagedType(managedTypeClass), metamodel, functions);
+    public ScalarTargetResolvingExpressionVisitor(Class<?> managedType, EntityMetamodel metamodel, Map<String, JpqlFunction> functions) {
+        this(metamodel.managedType(managedType), metamodel, functions);
     }
 
     public ScalarTargetResolvingExpressionVisitor(ManagedType<?> managedType, EntityMetamodel metamodel, Map<String, JpqlFunction> functions) {
+        super(metamodel, managedType, null);
         this.managedType = managedType;
-        this.metamodel = metamodel;
         this.functions = functions;
         this.parametersAllowed = false;
-        this.pathPositions = new ArrayList<PathPosition>();
-        this.pathPositions.add(currentPosition = new PathPosition(managedType, null));
-    }
-
-    public void clear() {
-        this.pathPositions.clear();
-        this.pathPositions.add(currentPosition = new PathPosition(managedType, null));
-    }
-
-    private Method resolve(Class<?> currentClass, String property) {
-        Attribute<?, ?> attribute = null;
-        
-        try {
-            attribute = metamodel.managedType(currentClass).getAttribute(property);
-        } catch (IllegalArgumentException ex) {
-            attribute = null;
-        }
-        
-        if (attribute == null) {
-            throw new IllegalArgumentException("The property '" + property + "' could not be found on the type '" + currentClass.getName() + "'!");
-        }
-        
-        return ReflectionUtils.getGetter(currentClass, property);
-    }
-
-    private Class<?> getType(Class<?> baseClass, Method element) {
-        return ReflectionUtils.getResolvedMethodReturnType(baseClass, element);
     }
 
     /**
@@ -201,7 +88,7 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
         
         public boolean hasCollectionJoin();
         
-        public Method getLeafMethod();
+        public Attribute<?, ?> getLeafMethod();
         
         public Class<?> getLeafBaseClass();
 
@@ -218,12 +105,12 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
     public static class TargetTypeImpl implements TargetType {
         
         private final boolean hasCollectionJoin;
-        private final Method leafMethod;
+        private final Attribute<?, ?> leafMethod;
         private final Class<?> leafBaseClass;
         private final Class<?> leafBaseKeyClass;
         private final Class<?> leafBaseValueClass;
 
-        public TargetTypeImpl(boolean hasCollectionJoin, Method leafMethod, Class<?> leafBaseClass, Class<?> leafBaseKeyClass, Class<?> leafBaseValueClass) {
+        public TargetTypeImpl(boolean hasCollectionJoin, Attribute<?, ?> leafMethod, Class<?> leafBaseClass, Class<?> leafBaseKeyClass, Class<?> leafBaseValueClass) {
             this.hasCollectionJoin = hasCollectionJoin;
             this.leafMethod = leafMethod;
             this.leafBaseClass = leafBaseClass;
@@ -237,7 +124,7 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
         }
 
         @Override
-        public Method getLeafMethod() {
+        public Attribute<?, ?> getLeafMethod() {
             return leafMethod;
         }
 
@@ -280,11 +167,15 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
         }
     }
 
-    public List<TargetType> getPossibleTargets() {
+    public void clear() {
+        reset(managedType);
+    }
+
+    public List<TargetType> getPossibleTargetTypes() {
         List<PathPosition> positions = pathPositions;
         int size = positions.size();
         
-        if (size == 1 && positions.get(0).getMethod() == null && managedType.getJavaType().equals(positions.get(0).getRealCurrentClass())) {
+        if (size == 1 && positions.get(0).getAttribute() == null && managedType.getJavaType().equals(positions.get(0).getRealCurrentClass())) {
             // When we didn't resolve any property, the expression is probably static and we can't give types in that case
             return Collections.emptyList();
         }
@@ -292,36 +183,10 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
         List<TargetType> possibleTargets = new ArrayList<TargetType>(size);
         for (int i = 0; i < size; i++) {
             PathPosition position = positions.get(i);
-            possibleTargets.add(new TargetTypeImpl(position.hasCollectionJoin(), position.getMethod(), position.getRealCurrentClass(), position.getCurrentClass(), position.getCurrentClass()));
+            possibleTargets.add(new TargetTypeImpl(position.hasCollectionJoin(), position.getAttribute(), position.getRealCurrentClass(), position.getKeyCurrentClass(), position.getCurrentClass()));
         }
         
         return possibleTargets;
-    }
-    
-    @Override
-    public void visit(PropertyExpression expression) {
-        currentPosition.setMethod(resolve(currentPosition.getCurrentClass(), expression.getProperty()));
-        if (currentPosition.getMethod() == null) {
-            currentPosition.setCurrentClass(null);
-        } else {
-            Class<?> type = getType(currentPosition.getCurrentClass(), currentPosition.getMethod());
-            Class<?> keyType = null;
-            Class<?> valueType = null;
-            
-            if (Collection.class.isAssignableFrom(type) || Map.class.isAssignableFrom(type)) {
-                Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(currentPosition.getCurrentClass(), currentPosition.getMethod());
-                valueType = typeArguments[typeArguments.length - 1];
-                if (typeArguments.length > 1) {
-                    keyType = typeArguments[0];
-                }
-            } else {
-                valueType = type;
-            }
-            
-            currentPosition.setCurrentClass(type);
-            currentPosition.setKeyClass(keyType);
-            currentPosition.setValueClass(valueType);
-        }
     }
 
     @Override
@@ -368,22 +233,13 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
     }
 
     @Override
-    public void visit(PathExpression expression) {
-        List<PathElementExpression> expressions = expression.getExpressions();
-        int size = expressions.size();
-        for (int i = 0; i < size; i++) {
-            expressions.get(i).accept(this);
-        }
-    }
-
-    @Override
     public void visit(ArrayExpression expression) {
         boolean wasParamsAllowed = parametersAllowed;
         List<PathPosition> currentPositions = pathPositions;
         PathPosition position = currentPosition;
 
         parametersAllowed = true;
-        pathPositions = new ArrayList<PathPosition>();
+        pathPositions = new ArrayList<>();
         pathPositions.add(currentPosition = new PathPosition(managedType, null));
         
         // Validate index against metamodel
@@ -395,15 +251,14 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
     
         // Only need the base to navigate down the path
         expression.getBase().accept(this);
-        currentPosition.setCurrentClass(currentPosition.getValueClass());
+        currentPosition.setCurrentType(currentPosition.getCurrentType());
     }
 
     @Override
     public void visit(TreatExpression expression) {
         EntityType<?> type = metamodel.getEntity(expression.getType());
-        currentPosition.setMethod(null);
-        currentPosition.setCurrentClass(type.getJavaType());
-        currentPosition.setValueClass(type.getJavaType());
+        currentPosition.setAttribute(null);
+        currentPosition.setCurrentType(type);
     }
 
     @Override
@@ -411,13 +266,13 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
         // We can't infer a type here
         if (parametersAllowed) {
             // NOTE: We use null as marker for ANY TYPE
-            currentPosition.setCurrentClass(null);
+            currentPosition.setCurrentType(null);
         } else {
             // If there are other branches (path positions) i.e. of a case when that have a type, we can allow parameters too
             for (PathPosition position : pathPositions) {
                 if (position != currentPosition) {
                     if (position.getCurrentClass() != null) {
-                        currentPosition.setCurrentClass(null);
+                        currentPosition.setCurrentType(null);
                         return;
                     }
                 }
@@ -427,10 +282,127 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
         }
     }
 
+    @Override
+    public void visit(NullExpression expression) {
+        // We can't infer a type here
+        // TODO: Not sure what happens when this is the result node of a case when
+    }
+
+    @Override
+    public void visit(ArithmeticExpression expression) {
+        if (expression.getNumericType() != null) {
+            currentPosition.setCurrentType(metamodel.type(expression.getNumericType().getJavaType()));
+        }
+    }
+
+    @Override
+    public void visit(ArithmeticFactor expression) {
+        if (expression.getNumericType() != null) {
+            currentPosition.setCurrentType(metamodel.type(expression.getNumericType().getJavaType()));
+        }
+    }
+
+    @Override
+    public void visit(NumericLiteral expression) {
+        if (expression.getNumericType() != null) {
+            currentPosition.setCurrentType(metamodel.type(expression.getNumericType().getJavaType()));
+        }
+    }
+
+    @Override
+    public void visit(BooleanLiteral expression) {
+        currentPosition.setCurrentType(metamodel.type(Boolean.class));
+    }
+
+    @Override
+    public void visit(StringLiteral expression) {
+        currentPosition.setCurrentType(metamodel.type(String.class));
+    }
+
+    @Override
+    public void visit(DateLiteral expression) {
+        currentPosition.setCurrentType(metamodel.type(Date.class));
+    }
+
+    @Override
+    public void visit(TimeLiteral expression) {
+        currentPosition.setCurrentType(metamodel.type(Date.class));
+    }
+
+    @Override
+    public void visit(TimestampLiteral expression) {
+        currentPosition.setCurrentType(metamodel.type(Date.class));
+    }
+
+    @Override
+    public void visit(SubqueryExpression expression) {
+        invalid(expression);
+    }
+
+    @Override
+    public void visit(ListIndexExpression expression) {
+        expression.getPath().accept(this);
+        if (!(currentPosition.getAttribute() instanceof ListAttribute<?, ?>)) {
+            invalid(expression, "Does not resolve to java.util.List!");
+        } else {
+            currentPosition.setAttribute(new ListIndexAttribute<>((ListAttribute<?, ?>) currentPosition.getAttribute()));
+            currentPosition.setCurrentType(metamodel.type(Integer.class));
+        }
+    }
+
+    @Override
+    public void visit(MapEntryExpression expression) {
+        expression.getPath().accept(this);
+        if (!(currentPosition.getAttribute() instanceof MapAttribute<?, ?, ?>)) {
+            invalid(expression, "Does not resolve to java.util.Map!");
+        } else {
+            currentPosition.setAttribute(null);
+            currentPosition.setCurrentType(metamodel.type(Map.Entry.class));
+        }
+    }
+
+    @Override
+    public void visit(MapKeyExpression expression) {
+        expression.getPath().accept(this);
+        if (!(currentPosition.getAttribute() instanceof MapAttribute<?, ?, ?>)) {
+            invalid(expression, "Does not resolve to java.util.Map!");
+        } else {
+            currentPosition.setAttribute(new MapKeyAttribute<>((MapAttribute<?, Object, ?>) currentPosition.getAttribute()));
+            currentPosition.setCurrentType(((MapAttribute<?, Object, ?>) currentPosition.getAttribute()).getKeyType());
+        }
+    }
+
+    @Override
+    public void visit(MapValueExpression expression) {
+        expression.getPath().accept(this);
+        if (!(currentPosition.getAttribute() instanceof MapAttribute<?, ?, ?>)) {
+            invalid(expression, "Does not resolve to java.util.Map!");
+        } else {
+            currentPosition.setCurrentType(currentPosition.getCurrentType());
+        }
+    }
+
+    @Override
+    public void visit(FunctionExpression expression) {
+        String name = expression.getFunctionName();
+        if ("FUNCTION".equalsIgnoreCase(name)) {
+            // Skip the function name
+            resolveFirst(expression.getExpressions().subList(1, expression.getExpressions().size()), true);
+            resolveToFunctionReturnType(((StringLiteral) expression.getExpressions().get(0)).getValue());
+        } else if (ExpressionUtils.isSizeFunction(expression)) {
+            // According to our grammar, we can only get a path here
+            currentPosition.setAttribute(null);
+            currentPosition.setCurrentType(metamodel.type(Long.class));
+        } else {
+            resolveFirst(expression.getExpressions(), true);
+            resolveToFunctionReturnType(name);
+        }
+    }
+
     private void resolveFirst(List<Expression> expressions, boolean allowParams) {
         List<PathPosition> currentPositions = pathPositions;
         List<PathPosition> newPositions = new ArrayList<>();
-        
+
         int positionsSize = currentPositions.size();
         for (int j = 0; j < positionsSize; j++) {
             int size = expressions.size();
@@ -455,141 +427,9 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
                 }
             }
         }
-        
+
         currentPosition = null;
         pathPositions = newPositions;
-    }
-
-    @Override
-    public void visit(NullExpression expression) {
-        // We can't infer a type here
-        // TODO: Not sure what happens when this is the result node of a case when
-    }
-
-    @Override
-    public void visit(ArithmeticExpression expression) {
-        if (expression.getNumericType() != null) {
-            currentPosition.setCurrentClass(expression.getNumericType().getJavaType());
-        }
-    }
-
-    @Override
-    public void visit(ArithmeticFactor expression) {
-        if (expression.getNumericType() != null) {
-            currentPosition.setCurrentClass(expression.getNumericType().getJavaType());
-        }
-    }
-
-    @Override
-    public void visit(NumericLiteral expression) {
-        if (expression.getNumericType() != null) {
-            currentPosition.setCurrentClass(expression.getNumericType().getJavaType());
-        }
-    }
-
-    @Override
-    public void visit(BooleanLiteral expression) {
-        currentPosition.setCurrentClass(Boolean.class);
-    }
-
-    @Override
-    public void visit(StringLiteral expression) {
-        currentPosition.setCurrentClass(String.class);
-    }
-
-    @Override
-    public void visit(DateLiteral expression) {
-        currentPosition.setCurrentClass(Date.class);
-    }
-
-    @Override
-    public void visit(TimeLiteral expression) {
-        currentPosition.setCurrentClass(Date.class);
-    }
-
-    @Override
-    public void visit(TimestampLiteral expression) {
-        currentPosition.setCurrentClass(Date.class);
-    }
-
-    @Override
-    public void visit(SubqueryExpression expression) {
-        invalid(expression);
-    }
-
-    @Override
-    public void visit(ListIndexExpression expression) {
-        PropertyExpression property = resolveBase(expression.getPath());
-        currentPosition.setMethod(resolve(currentPosition.getCurrentClass(), property.getProperty()));
-        Class<?> type = ReflectionUtils.getResolvedMethodReturnType(currentPosition.getCurrentClass(), currentPosition.getMethod());
-
-        if (!List.class.isAssignableFrom(type)) {
-            invalid(expression, "Does not resolve to java.util.List!");
-        } else {
-            currentPosition.setCurrentClass(type);
-            currentPosition.setValueClass(Integer.class);
-        }
-    }
-
-    @Override
-    public void visit(MapEntryExpression expression) {
-        PropertyExpression property = resolveBase(expression.getPath());
-        currentPosition.setMethod(resolve(currentPosition.getCurrentClass(), property.getProperty()));
-        Class<?> type = ReflectionUtils.getResolvedMethodReturnType(currentPosition.getCurrentClass(), currentPosition.getMethod());
-
-        if (!Map.class.isAssignableFrom(type)) {
-            invalid(expression, "Does not resolve to java.util.Map!");
-        } else {
-            currentPosition.setCurrentClass(Map.Entry.class);
-        }
-    }
-
-    @Override
-    public void visit(MapKeyExpression expression) {
-        PropertyExpression property = resolveBase(expression.getPath());
-        currentPosition.setMethod(resolve(currentPosition.getCurrentClass(), property.getProperty()));
-        Class<?> type = ReflectionUtils.getResolvedMethodReturnType(currentPosition.getCurrentClass(), currentPosition.getMethod());
-        Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(currentPosition.getCurrentClass(), currentPosition.getMethod());
-
-        if (!Map.class.isAssignableFrom(type)) {
-            invalid(expression, "Does not resolve to java.util.Map!");
-        } else {
-            currentPosition.setCurrentClass(type);
-            currentPosition.setValueClass(typeArguments[0]);
-        }
-    }
-
-    @Override
-    public void visit(MapValueExpression expression) {
-        PropertyExpression property = resolveBase(expression.getPath());
-        currentPosition.setMethod(resolve(currentPosition.getCurrentClass(), property.getProperty()));
-        Class<?> type = ReflectionUtils.getResolvedMethodReturnType(currentPosition.getCurrentClass(), currentPosition.getMethod());
-        Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(currentPosition.getCurrentClass(), currentPosition.getMethod());
-
-        if (!Map.class.isAssignableFrom(type)) {
-            invalid(expression, "Does not resolve to java.util.Map!");
-        } else {
-            currentPosition.setCurrentClass(type);
-            currentPosition.setValueClass(typeArguments[1]);
-        }
-    }
-
-    @Override
-    public void visit(FunctionExpression expression) {
-        String name = expression.getFunctionName();
-        if ("FUNCTION".equalsIgnoreCase(name)) {
-            // Skip the function name
-            resolveFirst(expression.getExpressions().subList(1, expression.getExpressions().size()), true);
-            resolveToFunctionReturnType(((StringLiteral) expression.getExpressions().get(0)).getValue());
-        } else if (ExpressionUtils.isSizeFunction(expression)) {
-            // According to our grammar, we can only get a path here
-            PropertyExpression property = resolveBase((PathExpression) expression.getExpressions().get(0));
-            currentPosition.setMethod(resolve(currentPosition.getCurrentClass(), property.getProperty()));
-            currentPosition.setCurrentClass(Long.class);
-        } else {
-            resolveFirst(expression.getExpressions(), true);
-            resolveToFunctionReturnType(name);
-        }
     }
 
     private void resolveToFunctionReturnType(String functionName) {
@@ -604,24 +444,15 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
         for (int i = 0; i < positionsSize; i++) {
             PathPosition position = currentPositions.get(i);
             Class<?> returnType = function.getReturnType(position.getCurrentClass());
-            position.setCurrentClass(returnType);
+            position.setAttribute(null);
+            position.setCurrentType(metamodel.type(returnType));
         }
     }
 
     @Override
     public void visit(TrimExpression expression) {
-        currentPosition.setCurrentClass(String.class);
-    }
-
-    private PropertyExpression resolveBase(PathExpression path) {
-        int lastIndex = path.getExpressions().size() - 1;
-        
-        for (int i = 0; i < lastIndex; i++) {
-            path.getExpressions().get(i).accept(this);
-        }
-        
-        // According to our grammar, the last element must be a property
-        return (PropertyExpression) path.getExpressions().get(lastIndex);
+        currentPosition.setAttribute(null);
+        currentPosition.setCurrentType(metamodel.type(String.class));
     }
 
     @Override
@@ -632,14 +463,6 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
     @Override
     public void visit(WhenClauseExpression expression) {
         expression.getResult().accept(this);
-    }
-
-    private void invalid(Object o) {
-        throw new IllegalArgumentException("Illegal occurence of [" + o + "] in path chain resolver!");
-    }
-
-    private void invalid(Object o, String reason) {
-        throw new IllegalArgumentException("Illegal occurence of [" + o + "] in path chain resolver! " + reason);
     }
 
 }

@@ -147,6 +147,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
         return attributeName;
     }
 
+    @Override
     public String getMapping() {
         return mapping;
     }

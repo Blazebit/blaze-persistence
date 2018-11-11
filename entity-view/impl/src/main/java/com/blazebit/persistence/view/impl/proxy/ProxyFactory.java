@@ -667,6 +667,10 @@ public class ProxyFactory {
             }
 
             for (MappingConstructorImpl<T> constructor : constructors) {
+                // Skip the default constructor that is handled before
+                if (constructor.getParameterAttributes().isEmpty()) {
+                    continue;
+                }
                 MappingConstructorImpl<T> baseConstructor = (MappingConstructorImpl<T>) inheritanceBase.getConstructor(constructor.getName());
                 MappingConstructorImpl.InheritanceSubtypeConstructorConfiguration<T> subtypeConstructorConfiguration = baseConstructor.getSubtypeConstructorConfiguration((Map<ManagedViewTypeImplementor<? extends T>, String>) (Map<?, ?>) configurationEntry.getKey());
                 @SuppressWarnings("unchecked")

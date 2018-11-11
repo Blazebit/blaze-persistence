@@ -42,6 +42,11 @@ public class EmbeddableAttributeFetchGraphNode<X extends EmbeddableAttributeFetc
     }
 
     @Override
+    public String getMapping() {
+        return mapping;
+    }
+
+    @Override
     public void appendFetchJoinQueryFragment(String base, StringBuilder sb) {
         if (nestedGraphNode != null) {
             String newBase = base + "." + mapping;
