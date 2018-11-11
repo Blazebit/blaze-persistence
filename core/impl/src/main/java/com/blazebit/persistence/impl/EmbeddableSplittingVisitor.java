@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.expression.AbortableVisitorAdapter;
 import com.blazebit.persistence.parser.expression.ArithmeticExpression;
@@ -218,7 +219,7 @@ class EmbeddableSplittingVisitor extends AbortableVisitorAdapter {
             }
 
             ExtendedAttribute<?, ?> extendedAttribute = (ExtendedAttribute<?, ?>) metamodel.getManagedType(ExtendedManagedType.class, ownerType).getAttributes().get(fieldPrefix + attributeName);
-            if (extendedAttribute != null && extendedAttribute.getMappedBy() == null) {
+            if (extendedAttribute != null && StringUtils.isEmpty(extendedAttribute.getMappedBy())) {
                 ExtendedManagedType<?> managedType = metamodel.getManagedType(ExtendedManagedType.class, (ManagedType<?>) singularAttribute.getType());
                 for (String attrName : attributeNames) {
                     addAttributes(ownerType, elementCollectionPath, fieldPrefix, newPrefix, (SingularAttribute<?, ?>) managedType.getAttributes().get(attrName).getAttribute(), orderedAttributes);

@@ -59,6 +59,11 @@ public class ConvertedViewType<X> implements ViewTypeImplementor<X> {
         return converter;
     }
 
+    @Override
+    public ViewTypeImplementor<X> getRealType() {
+        return delegate;
+    }
+
     // Delegating methods
 
     @Override

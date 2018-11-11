@@ -61,6 +61,11 @@ public class CompositeAttributeFetchGraphNode<X extends CompositeAttributeFetchG
     }
 
     @Override
+    public String getMapping() {
+        return null;
+    }
+
+    @Override
     public void appendFetchJoinQueryFragment(String base, StringBuilder sb) {
         for (int i = 0; i < flushers.length; i++) {
             if (flushers[i] != null) {

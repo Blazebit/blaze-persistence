@@ -1160,7 +1160,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         if (mainQuery.jpaProvider.needsCorrelationPredicateWhenCorrelatingWithWhereClause() || node.getTreatType() != null && !renderTreat && !mainQuery.jpaProvider.supportsSubtypeRelationResolving()) {
             ExtendedManagedType<?> extendedManagedType = metamodel.getManagedType(ExtendedManagedType.class, node.getCorrelationParent().getManagedType());
             ExtendedAttribute attribute = extendedManagedType.getAttribute(node.getCorrelationPath());
-            if (attribute.getMappedBy() == null) {
+            if (StringUtils.isEmpty(attribute.getMappedBy())) {
                 if (attribute.getAttribute() instanceof ListAttribute<?, ?> && !attribute.isBag()) {
                     // What the hell Hibernate? Why just for indexed lists?
                     sb.append(node.getCorrelationParent().getEntityType().getName());

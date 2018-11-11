@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.annotation.AnnotationUtils;
+import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.parser.expression.SyntaxErrorException;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
@@ -54,6 +55,9 @@ import com.blazebit.reflection.ReflectionUtils;
 
 import javax.persistence.metamodel.ManagedType;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.lang.reflect.Member;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collection;
@@ -171,11 +175,11 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                 // If the mapping is a deep path expression i.e. contains a dot but no parenthesis, we try to find a mapped by attribute by a prefix
                 int index;
                 if (attribute == null && (index = this.mapping.indexOf('.')) != -1 && this.mapping.indexOf('(') == -1
-                        && (attribute = managedType.getOwnedAttributes().get(this.mapping.substring(0, index))) != null && attribute.getMappedBy() != null) {
+                        && (attribute = managedType.getOwnedAttributes().get(this.mapping.substring(0, index))) != null && !StringUtils.isEmpty(attribute.getMappedBy())) {
                     this.correlated = attribute.getElementClass();
                     this.correlationExpression = attribute.getMappedBy() + " IN __correlationAlias";
                     this.correlationResult = this.mapping.substring(index + 1);
-                } else if (attribute != null && attribute.getMappedBy() != null) {
+                } else if (attribute != null && !StringUtils.isEmpty(attribute.getMappedBy())) {
                     this.correlated = attribute.getElementClass();
                     this.correlationExpression = attribute.getMappedBy() + " IN __correlationAlias";
                     this.correlationResult = "";
@@ -400,9 +404,8 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     }
 
     public boolean hasJoinFetchedCollections() {
-        return isCollection() && getFetchStrategy() == FetchStrategy.JOIN
-                || getElementType() instanceof ManagedViewTypeImpl<?> && ((ManagedViewTypeImplementor<?>) getElementType()).hasJoinFetchedCollections()
-                || getKeyType() instanceof ManagedViewTypeImpl<?> && ((ManagedViewTypeImplementor<?>) getKeyType()).hasJoinFetchedCollections();
+        return getFetchStrategy() == FetchStrategy.JOIN && (
+                isCollection() || getElementType() instanceof ManagedViewTypeImpl<?> && ((ManagedViewTypeImplementor<?>) getElementType()).hasJoinFetchedCollections());
     }
 
     protected boolean determineForcedUnique(MetamodelBuildingContext context) {
@@ -412,7 +415,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             if (attribute != null && attribute.getAttribute() instanceof javax.persistence.metamodel.PluralAttribute<?, ?, ?>) {
                 // TODO: we should add that information to ExtendedAttribute
                 return (((javax.persistence.metamodel.PluralAttribute<?, ?, ?>) attribute.getAttribute()).getCollectionType() != javax.persistence.metamodel.PluralAttribute.CollectionType.MAP)
-                        && (attribute.getMappedBy() != null || !attribute.isBag())
+                        && (!StringUtils.isEmpty(attribute.getMappedBy()) || !attribute.isBag())
                         && (attribute.getJoinTable() == null || attribute.getJoinTable().getKeyColumnMappings() == null)
                         && !MetamodelUtils.isIndexedList(context.getEntityMetamodel(), context.getExpressionFactory(), managedType.getType().getJavaType(), getMapping());
             }
@@ -468,85 +471,107 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         }
     }
 
-    private static boolean isCompatible(TargetType t, Class<?> targetType, Class<?> targetElementType, boolean subtypesAllowed) {
+    private static boolean isCompatible(TargetType t, Class<?> targetType, Class<?> targetElementType, boolean subtypesAllowed, boolean singular) {
         if (t.hasCollectionJoin()) {
-            return isCompatible(t.getLeafBaseClass(), t.getLeafBaseValueClass(), targetType, targetElementType, subtypesAllowed);
+            return isCompatible(t.getLeafBaseClass(), t.getLeafBaseValueClass(), targetType, targetElementType, subtypesAllowed, singular);
         } else {
-            return isCompatible(t.getLeafBaseClass(), null, targetType, targetElementType, subtypesAllowed);
+            Class<?> entityAttributeElementType = getElementTypeOrNull(t, singular);
+            return isCompatible(t.getLeafBaseClass(), entityAttributeElementType, targetType, targetElementType, subtypesAllowed, singular);
         }
     }
 
+    private static Class<?> getElementTypeOrNull(TargetType t, boolean singular) {
+        if (singular && t.getLeafBaseClass() == t.getLeafBaseValueClass() && (Collection.class.isAssignableFrom(t.getLeafBaseClass()) || Map.class.isAssignableFrom(t.getLeafBaseClass()))) {
+            Member javaMember = t.getLeafMethod().getJavaMember();
+            Class<?> elementClass;
+            if (javaMember instanceof Field) {
+                Class<?>[] resolvedFieldTypeArguments = ReflectionUtils.getResolvedFieldTypeArguments(t.getLeafMethod().getDeclaringType().getJavaType(), (Field) javaMember);
+                elementClass = resolvedFieldTypeArguments[resolvedFieldTypeArguments.length - 1];
+            } else if (javaMember instanceof Method) {
+                Class<?>[] resolvedMethodReturnTypeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(t.getLeafMethod().getDeclaringType().getJavaType(), (Method) javaMember);
+                elementClass = resolvedMethodReturnTypeArguments[resolvedMethodReturnTypeArguments.length - 1];
+            } else {
+                elementClass = null;
+            }
+            if (elementClass != t.getLeafBaseValueClass()) {
+                return elementClass;
+            }
+        }
+        return null;
+    }
+
     /**
-     * Checks if <code>possibleTargetType</code> with an optional element type <code>possibleTargetElementType</code>
-     * can be mapped to <code>targetType</code> with the optional element type <code>targetElementType</code> and the given <code>subtypesAllowed</code> config.
+     * Checks if <code>entityAttributeType</code> with an optional element type <code>entityAttributeElementType</code>
+     * can be mapped to <code>targetType</code> with the optional element type <code>viewAttributeElementType</code> and the given <code>subtypesAllowed</code> config.
      *
-     * A <code>possibleTargetType</code> of <code>NULL</code> represents the <i>any type</i> which makes it always compatible i.e. returning <code>true</code>.
-     * A type is compatible if the source types given by <code>possibleTargetType</code>/<code>possibleTargetElementType</code>
-     * are subtypes of the target types <code>targetType</code>/<code>targetElementType</code>.
+     * A <code>entityAttributeType</code> of <code>NULL</code> represents the <i>any type</i> which makes it always compatible i.e. returning <code>true</code>.
+     * A type is compatible if the source types given by <code>entityAttributeType</code>/<code>entityAttributeElementType</code>
+     * are subtypes of the target types <code>targetType</code>/<code>viewAttributeElementType</code>.
      *
      * A source collection type it is also compatible with non-collection targets if the source element type is a subtype of the target type.
      * A source non-collection type is also compatible with a collection target if the source type is a subtype of the target element type.
      *
-     * @param possibleTargetType The source type
-     * @param possibleTargetElementType The optional source element type
-     * @param targetType The target type
-     * @param targetElementType The optional target element type
+     * @param entityAttributeType The source type
+     * @param entityAttributeElementType The optional source element type
+     * @param viewAttributeType The target type
+     * @param viewAttributeElementType The optional target element type
      * @param subtypesAllowed Whether a more specific source type is allowed to map to a general target type
-     * @return True if mapping from <code>possibleTargetType</code>/<code>possibleTargetElementType</code> to <code>targetType</code>/<code>targetElementType</code> is possible
+     * @param singular Whether the view attribute is singular
+     * @return True if mapping from <code>entityAttributeType</code>/<code>entityAttributeElementType</code> to <code>targetType</code>/<code>viewAttributeElementType</code> is possible
      */
-    private static boolean isCompatible(Class<?> possibleTargetType, Class<?> possibleTargetElementType, Class<?> targetType, Class<?> targetElementType, boolean subtypesAllowed) {
+    private static boolean isCompatible(Class<?> entityAttributeType, Class<?> entityAttributeElementType, Class<?> viewAttributeType, Class<?> viewAttributeElementType, boolean subtypesAllowed, boolean singular) {
         // Null is the marker for ANY TYPE
-        if (possibleTargetType == null) {
+        if (entityAttributeType == null) {
             return true;
         }
 
         if (subtypesAllowed) {
-            if (possibleTargetElementType != null) {
-                if (targetElementType != null) {
+            if (entityAttributeElementType != null) {
+                if (viewAttributeElementType != null) {
                     // Mapping a plural entity attribute to a plural view attribute
-                    // Either possibleTargetType is a subtype of target type, or it is a subtype of map and the target type a subtype of Collection
+                    // Either entityAttributeType is a subtype of target type, or it is a subtype of map and the target type a subtype of Collection
                     // This allows mapping Map<?, Entity> to List<Subview>
-                    // Anyway the possibleTargetElementType must be a subtype of the targetElementType
-                    return (targetType.isAssignableFrom(possibleTargetType) || Map.class.isAssignableFrom(possibleTargetType) && Collection.class.isAssignableFrom(targetType))
-                            && targetElementType.isAssignableFrom(possibleTargetElementType);
+                    // Anyway the entityAttributeElementType must be a subtype of the viewAttributeElementType
+                    return (viewAttributeType.isAssignableFrom(entityAttributeType) || !singular && Map.class.isAssignableFrom(entityAttributeType) && Collection.class.isAssignableFrom(viewAttributeType))
+                            && viewAttributeElementType.isAssignableFrom(entityAttributeElementType);
                 } else {
                     // Mapping a plural entity attribute to a singular view attribute
-                    return targetType.isAssignableFrom(possibleTargetElementType);
+                    return viewAttributeType.isAssignableFrom(entityAttributeElementType);
                 }
             } else {
-                if (targetElementType != null) {
+                if (viewAttributeElementType != null) {
                     // Mapping a singular entity attribute to a plural view attribute
-                    return targetElementType.isAssignableFrom(possibleTargetType);
+                    return viewAttributeElementType.isAssignableFrom(entityAttributeType);
                 } else {
                     // Mapping a singular entity attribute to a singular view attribute
-                    return targetType.isAssignableFrom(possibleTargetType);
+                    return viewAttributeType.isAssignableFrom(entityAttributeType);
                 }
             }
         } else {
-            if (possibleTargetElementType != null) {
-                if (targetElementType != null) {
+            if (entityAttributeElementType != null) {
+                if (viewAttributeElementType != null) {
                     // Mapping a plural entity attribute to a plural view attribute
-                    return targetType == possibleTargetType
-                            && targetElementType == possibleTargetElementType;
+                    return viewAttributeType == entityAttributeType
+                            && viewAttributeElementType == entityAttributeElementType;
                 } else {
                     // Mapping a plural entity attribute to a singular view attribute
-                    return targetType == possibleTargetElementType;
+                    return viewAttributeType == entityAttributeElementType;
                 }
             } else {
-                if (targetElementType != null) {
+                if (viewAttributeElementType != null) {
                     // Mapping a singular entity attribute to a plural view attribute
-                    return targetElementType == possibleTargetType;
+                    return viewAttributeElementType == entityAttributeType;
                 } else {
                     // Mapping a singular entity attribute to a singular view attribute
-                    return targetType == possibleTargetType;
+                    return viewAttributeType == entityAttributeType;
                 }
             }
         }
     }
 
-    private static void validateTypesCompatible(ManagedType<?> managedType, String expression, Class<?> targetType, Class<?> targetElementType, boolean subtypesAllowed, MetamodelBuildingContext context, ExpressionLocation expressionLocation, String location) {
+    private static void validateTypesCompatible(ManagedType<?> managedType, String expression, Class<?> targetType, Class<?> targetElementType, boolean subtypesAllowed, boolean singular, MetamodelBuildingContext context, ExpressionLocation expressionLocation, String location) {
         if (expression.isEmpty()) {
-            if (isCompatible(managedType.getJavaType(), null, targetType, targetElementType, subtypesAllowed)) {
+            if (isCompatible(managedType.getJavaType(), null, targetType, targetElementType, subtypesAllowed, singular)) {
                 return;
             }
             context.addError(typeCompatibilityError(
@@ -571,15 +596,15 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             context.addError("An error occurred while trying to resolve the " + expressionLocation + " of the " + location + ": " + ex.getMessage());
         }
 
-        validateTypesCompatible(visitor.getPossibleTargets(), targetType, targetElementType, subtypesAllowed, context, expressionLocation, location);
+        validateTypesCompatible(visitor.getPossibleTargetTypes(), targetType, targetElementType, subtypesAllowed, singular, context, expressionLocation, location);
     }
 
-    private static void validateTypesCompatible(List<TargetType> possibleTargets, Class<?> targetType, Class<?> targetElementType, boolean subtypesAllowed, MetamodelBuildingContext context, ExpressionLocation expressionLocation, String location) {
+    private static void validateTypesCompatible(List<TargetType> possibleTargets, Class<?> targetType, Class<?> targetElementType, boolean subtypesAllowed, boolean singular, MetamodelBuildingContext context, ExpressionLocation expressionLocation, String location) {
         final Class<?> expressionType = targetType;
         if (!possibleTargets.isEmpty()) {
             boolean error = true;
             for (TargetType t : possibleTargets) {
-                if (isCompatible(t, targetType, targetElementType, subtypesAllowed)) {
+                if (isCompatible(t, targetType, targetElementType, subtypesAllowed, singular)) {
                     error = false;
                     break;
                 }
@@ -594,7 +619,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
                 if (targetType != null) {
                     for (TargetType t : possibleTargets) {
-                        if (isCompatible(t, targetType, targetElementType, subtypesAllowed)) {
+                        if (isCompatible(t, targetType, targetElementType, subtypesAllowed, singular)) {
                             error = false;
                             break;
                         }
@@ -730,11 +755,11 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
         if (isCorrelated()) {
             // Validate that resolving "correlationBasis" on "managedType" is valid
-            validateTypesCompatible(managedType, stripThisFromMapping(correlationBasis), Object.class, null, true, context, ExpressionLocation.CORRELATION_BASIS, getLocation());
+            validateTypesCompatible(managedType, stripThisFromMapping(correlationBasis), Object.class, null, true, true, context, ExpressionLocation.CORRELATION_BASIS, getLocation());
 
             if (correlated != null) {
                 // Validate that resolving "correlationResult" on "correlated" is compatible with "expressionType" and "elementType"
-                validateTypesCompatible(context.getEntityMetamodel().managedType(correlated), stripThisFromMapping(correlationResult), expressionType, elementType, true, context, ExpressionLocation.CORRELATION_RESULT, getLocation());
+                validateTypesCompatible(context.getEntityMetamodel().managedType(correlated), stripThisFromMapping(correlationResult), expressionType, elementType, true, !isCollection(), context, ExpressionLocation.CORRELATION_RESULT, getLocation());
 
                 // TODO: Validate the "correlationExpression" when https://github.com/Blazebit/blaze-persistence/issues/212 is implemented
                 try {
@@ -760,7 +785,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             // If a converter is applied, we already know that there was a type match with the underlying type
             if (getElementType().getConvertedType() == null) {
                 // Validate that resolving "mapping" on "managedType" is compatible with "expressionType" and "elementType"
-                validateTypesCompatible(possibleTargetTypes, expressionType, elementType, subtypesAllowed, context, ExpressionLocation.MAPPING, getLocation());
+                validateTypesCompatible(possibleTargetTypes, expressionType, elementType, subtypesAllowed, !isCollection(), context, ExpressionLocation.MAPPING, getLocation());
             }
 
             if (isMutable() && (declaringType.isUpdatable() || declaringType.isCreatable())) {

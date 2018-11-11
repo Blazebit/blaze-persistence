@@ -792,10 +792,16 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
             // Query flush strategy
 
             // TODO: in the future, we could try to aggregate deletes into modification CTEs if we know there are no cycles
+            Object entityId;
+            if (idFlusher instanceof EmbeddableAttributeFlusher<?, ?>) {
+                entityId = ((EmbeddableAttributeFlusher<Object, Object>) idFlusher).getViewToEntityMapper().applyToEntity(context, null, viewId);
+            } else {
+                entityId = viewId;
+            }
 
             // We only need to cascade delete unmapped attributes for query flushing since entity flushing takes care of that for us
             for (int i = 0; i < unmappedPreRemoveCascadeDeleters.length; i++) {
-                unmappedPreRemoveCascadeDeleters[i].removeByOwnerId(context, viewId);
+                unmappedPreRemoveCascadeDeleters[i].removeByOwnerId(context, entityId);
             }
 
             Object[] returnedValues = null;
@@ -804,7 +810,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                 for (int i = 0; i < flushers.length; i++) {
                     final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[i];
                     if (flusher != null && !flusher.requiresDeleteCascadeAfterRemove()) {
-                        postFlushDeleters.addAll(flusher.removeByOwnerId(context, viewId));
+                        postFlushDeleters.addAll(flusher.removeByOwnerId(context, entityId));
                     }
                 }
             }
@@ -832,9 +838,9 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                     // If the dbms supports it, we use the returning feature to do this
                     if (context.getEntityViewManager().getDbmsDialect().supportsReturningColumns()) {
                         DeleteCriteriaBuilder<?> cb = context.getEntityViewManager().getCriteriaBuilderFactory().delete(context.getEntityManager(), entityClass);
-                        cb.where(idFlusher.getAttributeName()).eq(viewId);
+                        cb.where(idFlusher.getMapping()).eq(entityId);
                         if (version != null && versionFlusher != null) {
-                            cb.where(versionFlusher.getAttributeName()).eq(version);
+                            cb.where(versionFlusher.getMapping()).eq(version);
                         }
 
                         ReturningResult<Tuple> result = cb.executeWithReturning(returningAttributes.toArray(new String[returningAttributes.size()]));
@@ -849,7 +855,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                         // Otherwise we query the attributes
                         CriteriaBuilder<Object[]> cb = context.getEntityViewManager().getCriteriaBuilderFactory().create(context.getEntityManager(), Object[].class);
                         cb.from(entityClass);
-                        cb.where(idFlusher.getAttributeName()).eq(viewId);
+                        cb.where(idFlusher.getMapping()).eq(entityId);
                         for (String attribute : returningAttributes) {
                             cb.select(attribute);
                         }

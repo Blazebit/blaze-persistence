@@ -59,7 +59,7 @@ public interface JpaProvider {
      *
      * @return True if brackets are needed, false otherwise
      */
-    public boolean needsBracketsForListParamter();
+    public boolean needsBracketsForListParameter();
 
     /**
      * Returns whether key restricted left joins should be rewritten to subquery joins.
@@ -319,9 +319,10 @@ public interface JpaProvider {
      * @param inverseType The type containing the inverse relation
      * @param ownerType The declaring type of the attribute to check
      * @param attributeName The name of the attribute for which to retrieve the writable mapped by mapping
+     * @param inverseAttribute The name of the inverse attribute for which to retrieve the writable mapped by mapping
      * @return The writable mappings for the inverse type if the attribute is not insertable or updatable, null otherwise
      */
-    public Map<String, String> getWritableMappedByMappings(EntityType<?> inverseType, EntityType<?> ownerType, String attributeName);
+    public Map<String, String> getWritableMappedByMappings(EntityType<?> inverseType, EntityType<?> ownerType, String attributeName, String inverseAttribute);
 
     /**
      * If the given attribute is a collection that uses a join table, returns it's descriptor.

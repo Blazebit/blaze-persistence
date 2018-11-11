@@ -325,7 +325,9 @@ public class EntityViewUpdateMutableEntityTest extends AbstractEntityViewUpdateE
                 .and()
                 .assertSelect()
                     .fetching(Person.class, "localized")
-                .and();
+                .and()
+                // ownedDocuments2 for the merge call of Person
+                .select(Document.class);
 
         if (isQueryStrategy()) {
             if (doesJpaMergeOfRecentlyPersistedEntityForceUpdate()) {

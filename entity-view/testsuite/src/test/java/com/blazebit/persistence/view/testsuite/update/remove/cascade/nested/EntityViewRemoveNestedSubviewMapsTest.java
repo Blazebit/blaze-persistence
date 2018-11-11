@@ -87,8 +87,10 @@ public class EntityViewRemoveNestedSubviewMapsTest extends AbstractEntityViewRem
 
         // document.contacts.friend
         builder.delete(Person.class)
+                .update(Document.class)
                 // document.contacts
                 .delete(Person.class)
+                .update(Document.class)
                 // document.versions
                 .delete(Version.class)
                 .delete(Document.class)
@@ -153,8 +155,10 @@ public class EntityViewRemoveNestedSubviewMapsTest extends AbstractEntityViewRem
         }
 
         builder.delete(Person.class)
+                .update(Document.class)
                 // document.contacts.friend
                 .delete(Person.class)
+                .update(Document.class)
                 // document.versions
                 .delete(Version.class)
                 .delete(Document.class)

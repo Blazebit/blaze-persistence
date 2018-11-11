@@ -58,6 +58,10 @@ public class ConvertedFlatViewType<X> implements FlatViewTypeImplementor<X> {
         return converter;
     }
 
+    @Override
+    public FlatViewTypeImplementor<X> getRealType() {
+        return delegate;
+    }
     // Delegating methods
 
     @Override

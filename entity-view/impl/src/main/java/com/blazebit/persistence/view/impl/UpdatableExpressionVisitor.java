@@ -93,7 +93,7 @@ public class UpdatableExpressionVisitor extends PathTargetResolvingExpressionVis
     
     @Override
     public void visit(PropertyExpression expression) {
-        if (updatable && (currentPosition.valueClass != null || currentPosition.keyClass != null)) {
+        if (updatable && (currentPosition.attribute != null)) {
             throw new IllegalArgumentException("Invalid dereferencing of collection property '" + expression.getProperty() + "' in updatable expression!");
         }
 

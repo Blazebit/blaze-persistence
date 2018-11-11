@@ -38,6 +38,11 @@ public class CollectionElementFetchGraphNode<X extends CollectionElementFetchGra
     }
 
     @Override
+    public String getMapping() {
+        return null;
+    }
+
+    @Override
     public void appendFetchJoinQueryFragment(String base, StringBuilder sb) {
         nestedGraphNode.appendFetchJoinQueryFragment(base, sb);
     }

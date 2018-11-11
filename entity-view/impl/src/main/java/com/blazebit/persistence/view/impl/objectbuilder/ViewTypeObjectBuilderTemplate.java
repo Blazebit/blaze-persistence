@@ -343,7 +343,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         }
         Class<?>[] constructorParameterTypes = parameterTypes.toArray(new Class[parameterTypes.size()]);
         // This can only happen for subview mappings
-        if (!inheritanceSubtypeConfiguration.getInheritanceSubtypes().contains(managedViewType)) {
+        if (!inheritanceSubtypeConfiguration.getInheritanceSubtypes().contains(managedViewType.getRealType())) {
             this.objectInstantiator = null;
         } else {
             this.objectInstantiator = createInstantiator(managedViewType, viewTypeBase, inheritanceSubtypeConfiguration.getConfigurationIndex(), mappingConstructor, constructorParameterTypes, evm, mutableBasicUserTypes, typeConverterEntries);
@@ -1072,7 +1072,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         EntityMetamodel entityMetamodel = evm.getMetamodel().getEntityMetamodel();
         ScalarTargetResolvingExpressionVisitor visitor = new ScalarTargetResolvingExpressionVisitor(managedTypeClass, entityMetamodel, evm.getCriteriaBuilderFactory().getRegisteredFunctions());
         ef.createSimpleExpression(correlationBasis, false).accept(visitor);
-        Collection<ScalarTargetResolvingExpressionVisitor.TargetType> possibleTypes = visitor.getPossibleTargets();
+        Collection<ScalarTargetResolvingExpressionVisitor.TargetType> possibleTypes = visitor.getPossibleTargetTypes();
         if (possibleTypes.size() > 1) {
             throw new IllegalArgumentException("The correlation basis '" + correlationBasis + "' is ambiguous in the context of the managed type '" + managedTypeClass.getName() + "'!");
         }

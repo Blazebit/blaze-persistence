@@ -158,7 +158,9 @@ public class EntityViewOrphanRemoveNestedSubviewTest extends AbstractEntityViewO
         deletePersonOwned(builder, true);
         deletePersonOwned(builder, true);
         builder.delete(Person.class);
+        builder.update(Document.class);
         builder.delete(Person.class);
+        builder.update(Document.class);
         builder.validate();
 
         restartTransactionAndReload();
@@ -187,6 +189,7 @@ public class EntityViewOrphanRemoveNestedSubviewTest extends AbstractEntityViewO
 
         // document.responsiblePerson.friend
         builder.delete(Person.class);
+        builder.update(Document.class);
         builder.update(Person.class);
         return builder;
     }

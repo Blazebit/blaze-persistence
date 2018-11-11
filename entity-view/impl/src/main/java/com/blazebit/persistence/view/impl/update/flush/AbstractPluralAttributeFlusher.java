@@ -241,7 +241,8 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
 
     protected abstract V createJpaCollection();
 
-    protected final String getMapping() {
+    @Override
+    public final String getMapping() {
         if (ownerMapping == null) {
             return mapping;
         } else {

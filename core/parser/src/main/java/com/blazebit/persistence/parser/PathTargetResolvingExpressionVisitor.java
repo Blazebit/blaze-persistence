@@ -89,7 +89,7 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
 
     protected PathPosition currentPosition;
     protected List<PathPosition> pathPositions;
-    private final EntityMetamodel metamodel;
+    protected final EntityMetamodel metamodel;
     private final String skipBaseNodeAlias;
 
     /**
@@ -103,7 +103,7 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
         public Type<?> keyClass;
         public Attribute<?, ?> attribute;
 
-        PathPosition(Type<?> currentClass, Attribute<?, ?> attribute) {
+        public PathPosition(Type<?> currentClass, Attribute<?, ?> attribute) {
             this.currentClass = currentClass;
             this.attribute = attribute;
         }
@@ -138,7 +138,11 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
             return getCurrentType().getJavaType();
         }
 
-        void setCurrentType(Type<?> currentClass) {
+        public Class<?> getKeyCurrentClass() {
+            return keyClass == null ? null : keyClass.getJavaType();
+        }
+
+        public void setCurrentType(Type<?> currentClass) {
             this.currentClass = currentClass;
             this.valueClass = null;
             this.keyClass = null;
@@ -152,6 +156,10 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
             this.attribute = attribute;
         }
 
+        public boolean hasCollectionJoin() {
+            return valueClass != null;
+        }
+
         void setValueType(Type<?> valueClass) {
             this.valueClass = valueClass;
         }
@@ -160,7 +168,7 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
             this.keyClass = keyClass;
         }
 
-        PathPosition copy() {
+        public PathPosition copy() {
             return new PathPosition(currentClass, valueClass, keyClass, attribute);
         }
     }
@@ -248,8 +256,6 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
                     keyType = metamodel.type(typeArguments[0]);
                 }
             }
-        } else {
-            valueType = type;
         }
 
         currentPosition.setCurrentType(type);

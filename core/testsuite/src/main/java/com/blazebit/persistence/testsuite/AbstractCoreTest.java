@@ -84,7 +84,7 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
      */
     protected String listParameter(String name) {
         // Workaround for HHH-7407
-        if (jpaProvider.needsBracketsForListParamter()) {
+        if (jpaProvider.needsBracketsForListParameter()) {
             return "(:" + name + ")";
         } else {
             return ":" + name;

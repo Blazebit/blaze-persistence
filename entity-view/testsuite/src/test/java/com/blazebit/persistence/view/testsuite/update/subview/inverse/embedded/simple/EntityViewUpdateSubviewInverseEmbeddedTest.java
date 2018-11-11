@@ -67,7 +67,7 @@ public class EntityViewUpdateSubviewInverseEmbeddedTest extends AbstractEntityVi
 
     @Override
     protected Class<?>[] getEntityClasses() {
-        return new Class<?>[]{
+        return new Class<?>[] {
                 LegacyOrder.class,
                 LegacyOrderPosition.class,
                 LegacyOrderPositionId.class,

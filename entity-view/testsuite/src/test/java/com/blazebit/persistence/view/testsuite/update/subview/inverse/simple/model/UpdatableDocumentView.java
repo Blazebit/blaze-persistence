@@ -14,15 +14,23 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl.metamodel;
+package com.blazebit.persistence.view.testsuite.update.subview.inverse.simple.model;
 
-import com.blazebit.persistence.view.metamodel.FlatViewType;
+import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.view.CreatableEntityView;
+import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.UpdatableEntityView;
 
 /**
+ *
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.3.0
  */
-public interface FlatViewTypeImplementor<X> extends FlatViewType<X>, ManagedViewTypeImplementor<X> {
+@CreatableEntityView(excludedEntityAttributes = { "owner", "idx", "age" })
+@UpdatableEntityView
+@EntityView(Document.class)
+public interface UpdatableDocumentView extends DocumentIdView {
 
-    public FlatViewTypeImplementor<X> getRealType();
+    String getName();
+    void setName(String name);
 }

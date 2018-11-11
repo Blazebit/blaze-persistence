@@ -87,8 +87,10 @@ public class EntityViewRemoveNestedSubviewCollectionsTest extends AbstractEntity
 
         // document.people.friend
         builder.delete(Person.class)
+                .update(Document.class)
                 // document.people
                 .delete(Person.class)
+                .update(Document.class)
                 // document.versions
                 .delete(Version.class)
                 .delete(Document.class)
@@ -152,8 +154,10 @@ public class EntityViewRemoveNestedSubviewCollectionsTest extends AbstractEntity
         }
 
         builder.delete(Person.class)
+                .update(Document.class)
                 // document.people.friend
                 .delete(Person.class)
+                .update(Document.class)
                 // document.versions
                 .delete(Version.class)
                 .delete(Document.class)

@@ -130,9 +130,11 @@ public class ConstrainedTupleElementMapper implements AliasedTupleElementMapper 
             List<Map.Entry<String, TupleElementMapper>> subqueryMappers = new ArrayList<>();
 
             String alias = null;
+            Map.Entry<String, TupleElementMapper> defaultEntry = null;
             for (Map.Entry<String, TupleElementMapper> subtypeEntry : attributeEntry) {
                 String constraint = subtypeEntry.getKey();
                 TupleElementMapper mapper = subtypeEntry.getValue();
+                AbstractMap.SimpleEntry<String, TupleElementMapper> entry;
                 if (mapper instanceof SubqueryTupleElementMapper) {
                     SubqueryTupleElementMapper subqueryMapper = (SubqueryTupleElementMapper) mapper;
                     String subqueryAlias = "_inheritance_subquery_" + subqueryMappers.size();
@@ -143,15 +145,26 @@ public class ConstrainedTupleElementMapper implements AliasedTupleElementMapper 
                         subqueryExpression = subqueryMapper.getSubqueryExpression().replaceAll(subqueryMapper.getSubqueryAlias(), subqueryAlias);
                     }
 
-                    mappers.add(new AbstractMap.SimpleEntry<String, TupleElementMapper>(constraint, new ExpressionTupleElementMapper(subqueryExpression, subqueryMapper.getEmbeddingViewPath())));
+                    entry = new AbstractMap.SimpleEntry<String, TupleElementMapper>(constraint, new ExpressionTupleElementMapper(subqueryExpression, subqueryMapper.getEmbeddingViewPath()));
                     subqueryMappers.add(new AbstractMap.SimpleEntry<>(subqueryAlias, mapper));
                 } else {
-                    mappers.add(new AbstractMap.SimpleEntry<>(constraint, mapper));
+                    entry = new AbstractMap.SimpleEntry<>(constraint, mapper);
                 }
+
+                if (constraint == null) {
+                    defaultEntry = entry;
+                } else {
+                    mappers.add(entry);
+                }
+
                 // Extract the alias from the first mapper
                 if (mapper instanceof AliasedTupleElementMapper) {
                     alias = ((AliasedTupleElementMapper) mapper).getAlias();
                 }
+            }
+
+            if (defaultEntry != null) {
+                mappers.add(defaultEntry);
             }
 
             mappingList.add(new ConstrainedTupleElementMapper(mappers, subqueryMappers, alias));

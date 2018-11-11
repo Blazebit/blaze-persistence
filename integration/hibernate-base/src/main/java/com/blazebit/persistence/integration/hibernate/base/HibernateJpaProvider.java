@@ -31,6 +31,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.OneToManyPersister;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -65,6 +66,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -260,7 +263,7 @@ public class HibernateJpaProvider implements JpaProvider {
     }
 
     @Override
-    public boolean needsBracketsForListParamter() {
+    public boolean needsBracketsForListParameter() {
         return true;
     }
 
@@ -603,6 +606,9 @@ public class HibernateJpaProvider implements JpaProvider {
         if (persister != null) {
             if (persister.isInverse()) {
                 return getMappedBy(persister);
+            } else if (persister instanceof OneToManyPersister) {
+                // A one-to-many association without a join table is like an inverse association
+                return "";
             }
         } else {
             EntityPersister entityPersister = getEntityPersister(ownerType);
@@ -615,17 +621,51 @@ public class HibernateJpaProvider implements JpaProvider {
     }
 
     @Override
-    public Map<String, String> getWritableMappedByMappings(EntityType<?> inverseType, EntityType<?> ownerType, String attributeName) {
+    public Map<String, String> getWritableMappedByMappings(EntityType<?> inverseType, EntityType<?> ownerType, String attributeName, String inverseAttribute) {
         AbstractEntityPersister entityPersister = getEntityPersister(ownerType);
         int propertyIndex = entityPersister.getEntityMetamodel().getPropertyIndex(attributeName);
-        // Either the mapped by property is writable
-        if (entityPersister.getEntityMetamodel().getPropertyInsertability()[propertyIndex]) {
-            return null;
+        Type propertyType = entityPersister.getPropertyTypes()[propertyIndex];
+        org.hibernate.type.EntityType ownerPropertyType;
+        if (propertyType instanceof CollectionType) {
+            QueryableCollection persister = getCollectionPersister(ownerType, attributeName);
+            AbstractEntityPersister inversePersister = getEntityPersister(inverseType);
+            if (!persister.isInverse() && persister.getTableName().equals(inversePersister.getTableName())) {
+                // We have a one-to-many relationship that has just join columns
+
+                // Find properties for element columns in entityPersister
+                // Map to properties for key columns of inverseType
+                Set<String> elementAttributes = getColumnMatchingAttributeNames(entityPersister, Arrays.asList((entityPersister.toColumns(attributeName))));
+                Set<String> keyAttributes = removeIdentifierAccess(ownerType, elementAttributes, inverseType, getColumnMatchingAttributeNames(inversePersister, Arrays.asList(persister.getKeyColumnNames())));
+
+                Map<String, String> mapping = new HashMap<>();
+                Iterator<String> elemAttrIter = elementAttributes.iterator();
+                Iterator<String> keyAttrIter = keyAttributes.iterator();
+
+                while (elemAttrIter.hasNext()) {
+                    mapping.put(elemAttrIter.next(), keyAttrIter.next());
+                }
+
+                if (mapping.isEmpty()) {
+                    throw new IllegalArgumentException("Mapped by property '" + inverseType.getName() + "#" + attributeName + "' must be writable or the column must be part of the id!");
+                }
+                return mapping;
+            } else {
+                // We only support detection when the inverse collection is writable
+                if (entityPersister.getEntityMetamodel().getPropertyInsertability()[propertyIndex]) {
+                    return null;
+                }
+                throw new IllegalArgumentException("Mapped by property '" + inverseType.getName() + "#" + attributeName + "' must be writable!");
+            }
+        } else {
+            // Either the mapped by property is writable
+            if (entityPersister.getEntityMetamodel().getPropertyInsertability()[propertyIndex]) {
+                return null;
+            }
+            // Or the columns of the mapped by property are part of the target id
+            ownerPropertyType = (org.hibernate.type.EntityType) propertyType;
         }
-        // Or the columns of the mapped by property are part of the target id
-        org.hibernate.type.EntityType propertyType = (org.hibernate.type.EntityType) entityPersister.getPropertyType(attributeName);
-        AbstractEntityPersister sourceType = (AbstractEntityPersister) entityPersisters.get(propertyType.getAssociatedEntityName());
-        Type identifierType = propertyType.getIdentifierOrUniqueKeyType(null);
+        AbstractEntityPersister sourceType = (AbstractEntityPersister) entityPersisters.get(ownerPropertyType.getAssociatedEntityName());
+        Type identifierType = ownerPropertyType.getIdentifierOrUniqueKeyType(entityPersister.getFactory());
         String sourcePropertyPrefix;
         String[] sourcePropertyNames;
         if (identifierType.isComponentType()) {
@@ -634,7 +674,7 @@ public class HibernateJpaProvider implements JpaProvider {
             sourcePropertyNames = componentType.getPropertyNames();
         } else {
             sourcePropertyPrefix = "";
-            sourcePropertyNames = new String[]{ sourceType.getIdentifierPropertyName() };
+            sourcePropertyNames = new String[]{sourceType.getIdentifierPropertyName()};
         }
         String[] targetColumnNames = entityPersister.getPropertyColumnNames(propertyIndex);
         Type targetIdType = entityPersister.getIdentifierType();
@@ -666,6 +706,40 @@ public class HibernateJpaProvider implements JpaProvider {
             return mapping;
         }
     }
+
+    private Set<String> removeIdentifierAccess(EntityType<?> elementType, Set<String> elementAttributeNames, EntityType<?> ownerType, Set<String> columnMatchingAttributeNames) {
+        Set<String> set = new LinkedHashSet<>();
+        Iterator<String> iterator = elementAttributeNames.iterator();
+        AbstractEntityPersister elementPersister = getEntityPersister(elementType);
+        AbstractEntityPersister entityPersister = getEntityPersister(ownerType);
+        List<String> addedAttributeNames = new ArrayList<>();
+        for (String attributeName : columnMatchingAttributeNames) {
+            String elementAttributeName = iterator.next();
+            Type propertyType = entityPersister.getPropertyType(attributeName);
+            if (propertyType instanceof org.hibernate.type.EntityType) {
+                // If the columns refer to an association, we map that through instead of trying to set just the identifier properties
+                if (elementPersister.getEntityName().equals(((org.hibernate.type.EntityType) propertyType).getAssociatedEntityName())) {
+                    List<String> identifierPropertyNames = getIdentifierOrUniqueKeyEmbeddedPropertyNames(ownerType, attributeName);
+                    iterator.remove();
+                    for (int i = 1; i < identifierPropertyNames.size(); i++) {
+                        iterator.next();
+                        iterator.remove();
+                    }
+                    addedAttributeNames.add(attributeName);
+                }
+            } else {
+                set.add(attributeName);
+            }
+        }
+
+        for (String addedAttributeName : addedAttributeNames) {
+            set.add(addedAttributeName);
+            elementAttributeNames.add("");
+        }
+
+        return set;
+    }
+
 
     protected String getMappedBy(CollectionPersister persister) {
         if (persister instanceof CustomCollectionPersister) {
@@ -1071,7 +1145,7 @@ public class HibernateJpaProvider implements JpaProvider {
     }
 
     private static Set<String> getColumnMatchingAttributeNames(AbstractEntityPersister ownerEntityPersister, List<String> idColumnNames) {
-        Set<String> idAttributeNames = new HashSet<>();
+        Set<String> idAttributeNames = new LinkedHashSet<>();
         Type identifierType = ownerEntityPersister.getIdentifierType();
         if (identifierType instanceof ComponentType) {
             String[] idPropertyNames = ((ComponentType) identifierType).getPropertyNames();

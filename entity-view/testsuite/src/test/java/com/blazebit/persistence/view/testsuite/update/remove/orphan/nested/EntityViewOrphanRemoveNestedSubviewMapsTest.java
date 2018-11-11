@@ -161,7 +161,9 @@ public class EntityViewOrphanRemoveNestedSubviewMapsTest extends AbstractEntityV
         deletePersonOwned(builder, true);
         deletePersonOwned(builder, true);
         builder.delete(Person.class);
+        builder.update(Document.class);
         builder.delete(Person.class);
+        builder.update(Document.class);
         builder.delete(Document.class, "contacts");
         builder.validate();
 
@@ -203,6 +205,7 @@ public class EntityViewOrphanRemoveNestedSubviewMapsTest extends AbstractEntityV
 
         // document.responsiblePerson.friend
         builder.delete(Person.class);
+        builder.update(Document.class);
         builder.update(Person.class);
         return builder;
     }

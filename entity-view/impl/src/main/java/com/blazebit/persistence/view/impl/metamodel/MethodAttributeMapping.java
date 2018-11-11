@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl.metamodel;
 import com.blazebit.persistence.spi.AttributePath;
 import com.blazebit.persistence.view.CascadeType;
 import com.blazebit.persistence.view.InverseRemoveStrategy;
+import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingCorrelated;
 import com.blazebit.persistence.view.MappingCorrelatedSimple;
 import com.blazebit.persistence.view.MappingParameter;
@@ -454,7 +455,7 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
 
         EntityType<?> entityType = (EntityType<?>) managedType;
         try {
-            Map<String, String> writableMappedByMappings = context.getJpaProvider().getWritableMappedByMappings(entityType, elementType, mappedBy);
+            Map<String, String> writableMappedByMappings = context.getJpaProvider().getWritableMappedByMappings(entityType, elementType, mappedBy, ((Mapping) mapping).value());
             if (writableMappedByMappings == null) {
                 return null;
             } else {

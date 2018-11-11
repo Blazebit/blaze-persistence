@@ -23,4 +23,6 @@ import com.blazebit.persistence.view.metamodel.ViewType;
  * @since 1.2.0
  */
 public interface ViewTypeImplementor<X> extends ViewType<X>, ManagedViewTypeImplementor<X> {
+
+    public ViewTypeImplementor<X> getRealType();
 }

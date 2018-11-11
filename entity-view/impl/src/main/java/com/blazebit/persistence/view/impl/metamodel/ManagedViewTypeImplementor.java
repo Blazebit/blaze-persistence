@@ -31,6 +31,9 @@ import java.util.Set;
  * @since 1.2.0
  */
 public interface ManagedViewTypeImplementor<X> extends ManagedViewType<X> {
+
+    ManagedViewTypeImplementor<X> getRealType();
+
     void checkAttributes(MetamodelBuildingContext context);
 
     void checkNestedAttributes(List<AbstractAttribute<?, ?>> parents, MetamodelBuildingContext context);

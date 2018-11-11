@@ -65,7 +65,7 @@
             <artifactId>catch-exception</artifactId>
             <scope>compile</scope>
         </dependency>
-        
+
         <!-- Add mockito early to the local maven repo since the Hibernate,DB2 build froze on downloading this dependency -->
         <dependency>
             <groupId>org.mockito</groupId>
@@ -674,6 +674,9 @@
                                 </goals>
                                 <phase>generate-sources</phase>
                                 <configuration>
+                                    <additionalSourceDirectories>
+                                        <additionalSourceDirectory>${additional.source.directory}</additionalSourceDirectory>
+                                    </additionalSourceDirectories>
                                     <!-- source output directory -->
                                     <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
                                     <processors>
@@ -808,6 +811,9 @@
                                 </goals>
                                 <phase>generate-sources</phase>
                                 <configuration>
+                                    <additionalSourceDirectories>
+                                        <additionalSourceDirectory>${additional.source.directory}</additionalSourceDirectory>
+                                    </additionalSourceDirectories>
                                     <!-- source output directory -->
                                     <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
                                     <processors>
@@ -942,6 +948,9 @@
                                 </goals>
                                 <phase>generate-sources</phase>
                                 <configuration>
+                                    <additionalSourceDirectories>
+                                        <additionalSourceDirectory>${additional.source.directory}</additionalSourceDirectory>
+                                    </additionalSourceDirectories>
                                     <!-- source output directory -->
                                     <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
                                     <processors>
@@ -1076,6 +1085,9 @@
                                 </goals>
                                 <phase>generate-sources</phase>
                                 <configuration>
+                                    <additionalSourceDirectories>
+                                        <additionalSourceDirectory>${additional.source.directory}</additionalSourceDirectory>
+                                    </additionalSourceDirectories>
                                     <!-- source output directory -->
                                     <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
                                     <processors>
@@ -1213,6 +1225,9 @@
                                 </goals>
                                 <phase>generate-sources</phase>
                                 <configuration>
+                                    <additionalSourceDirectories>
+                                        <additionalSourceDirectory>${additional.source.directory}</additionalSourceDirectory>
+                                    </additionalSourceDirectories>
                                     <!-- source output directory -->
                                     <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
                                     <processors>
@@ -1347,6 +1362,9 @@
                                 </goals>
                                 <phase>generate-sources</phase>
                                 <configuration>
+                                    <additionalSourceDirectories>
+                                        <additionalSourceDirectory>${additional.source.directory}</additionalSourceDirectory>
+                                    </additionalSourceDirectories>
                                     <!-- source output directory -->
                                     <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
                                     <processors>
@@ -1491,6 +1509,9 @@
                                 </goals>
                                 <phase>generate-sources</phase>
                                 <configuration>
+                                    <additionalSourceDirectories>
+                                        <additionalSourceDirectory>${additional.source.directory}</additionalSourceDirectory>
+                                    </additionalSourceDirectories>
                                     <!-- source output directory -->
                                     <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
                                     <processors>
@@ -1632,6 +1653,9 @@
                                 </goals>
                                 <phase>generate-sources</phase>
                                 <configuration>
+                                    <additionalSourceDirectories>
+                                        <additionalSourceDirectory>${additional.source.directory}</additionalSourceDirectory>
+                                    </additionalSourceDirectories>
                                     <!-- source output directory -->
                                     <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
                                     <processors>
@@ -1734,6 +1758,9 @@
                                 </goals>
                                 <phase>generate-sources</phase>
                                 <configuration>
+                                    <additionalSourceDirectories>
+                                        <additionalSourceDirectory>${additional.source.directory}</additionalSourceDirectory>
+                                    </additionalSourceDirectories>
                                     <!-- source output directory -->
                                     <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
                                     <processors>
@@ -1900,6 +1927,9 @@
                                 </goals>
                                 <phase>generate-sources</phase>
                                 <configuration>
+                                    <additionalSourceDirectories>
+                                        <additionalSourceDirectory>${additional.source.directory}</additionalSourceDirectory>
+                                    </additionalSourceDirectories>
                                     <!-- source output directory -->
                                     <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
                                     <processors>
@@ -2055,6 +2085,9 @@
                                 </goals>
                                 <phase>generate-sources</phase>
                                 <configuration>
+                                    <additionalSourceDirectories>
+                                        <additionalSourceDirectory>${additional.source.directory}</additionalSourceDirectory>
+                                    </additionalSourceDirectories>
                                     <!-- source output directory -->
                                     <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
                                     <processors>
@@ -2204,6 +2237,9 @@
                                 </goals>
                                 <phase>generate-sources</phase>
                                 <configuration>
+                                    <additionalSourceDirectories>
+                                        <additionalSourceDirectory>${additional.source.directory}</additionalSourceDirectory>
+                                    </additionalSourceDirectories>
                                     <!-- source output directory -->
                                     <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
                                     <processors>
@@ -2293,6 +2329,9 @@
                                 </goals>
                                 <phase>generate-sources</phase>
                                 <configuration>
+                                    <additionalSourceDirectories>
+                                        <additionalSourceDirectory>${additional.source.directory}</additionalSourceDirectory>
+                                    </additionalSourceDirectories>
                                     <!-- source output directory -->
                                     <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
                                     <processors>

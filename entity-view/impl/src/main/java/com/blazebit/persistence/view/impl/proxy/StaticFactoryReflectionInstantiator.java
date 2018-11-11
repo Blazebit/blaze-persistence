@@ -40,7 +40,7 @@ public class StaticFactoryReflectionInstantiator<T> extends AbstractReflectionIn
         Method factoryMethod;
 
         try {
-            if (mappingConstructor == null) {
+            if (mappingConstructor == null || mappingConstructor.getParameterAttributes().isEmpty()) {
                 factoryMethod = proxyClazz.getDeclaredMethod("create" + inheritanceConfigurationIndex, parameterTypes);
             } else {
                 factoryMethod = proxyClazz.getDeclaredMethod("create" + inheritanceConfigurationIndex + "_" + mappingConstructor.getName(), parameterTypes);

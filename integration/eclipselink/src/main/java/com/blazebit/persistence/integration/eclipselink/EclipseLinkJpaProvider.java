@@ -84,7 +84,7 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     }
 
     @Override
-    public boolean needsBracketsForListParamter() {
+    public boolean needsBracketsForListParameter() {
         return false;
     }
 
@@ -241,7 +241,7 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     }
 
     @Override
-    public Map<String, String> getWritableMappedByMappings(EntityType<?> inverseType, EntityType<?> ownerType, String attributeName) {
+    public Map<String, String> getWritableMappedByMappings(EntityType<?> inverseType, EntityType<?> ownerType, String attributeName, String inverseAttribute) {
         return null;
     }
 
