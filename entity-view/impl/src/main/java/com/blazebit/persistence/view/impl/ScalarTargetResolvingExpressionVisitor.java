@@ -175,12 +175,12 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
         List<PathPosition> positions = pathPositions;
         int size = positions.size();
         
-        if (size == 1 && positions.get(0).getAttribute() == null && managedType.getJavaType().equals(positions.get(0).getRealCurrentClass())) {
+        if (managedType != null && size == 1 && positions.get(0).getAttribute() == null && managedType.getJavaType().equals(positions.get(0).getRealCurrentClass())) {
             // When we didn't resolve any property, the expression is probably static and we can't give types in that case
             return Collections.emptyList();
         }
         
-        List<TargetType> possibleTargets = new ArrayList<TargetType>(size);
+        List<TargetType> possibleTargets = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
             PathPosition position = positions.get(i);
             possibleTargets.add(new TargetTypeImpl(position.hasCollectionJoin(), position.getAttribute(), position.getRealCurrentClass(), position.getKeyCurrentClass(), position.getCurrentClass()));

@@ -46,6 +46,11 @@ public final class SubviewCorrelator implements Correlator {
     }
 
     @Override
+    public int getElementOffset() {
+        return managedViewType.getInheritanceSubtypeConfiguration(null).hasSubtypes() ? 1 : 0;
+    }
+
+    @Override
     @SuppressWarnings({"rawtypes", "unchecked"})
     public ObjectBuilder<?> finish(FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration entityViewConfiguration, int tupleSuffix, String correlationRoot, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
         EntityViewConfiguration subviewConfiguration = entityViewConfiguration.forSubview(criteriaBuilder, attributePath, embeddingViewJpqlMacro);

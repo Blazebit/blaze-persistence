@@ -17,10 +17,12 @@
 package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
 
 import com.blazebit.persistence.CorrelationQueryBuilder;
+import com.blazebit.persistence.FromProvider;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.JoinOnBuilder;
 import com.blazebit.persistence.view.CorrelationBuilder;
 
+import javax.persistence.metamodel.EntityType;
 import java.util.Map;
 
 /**
@@ -53,6 +55,11 @@ public class JoinCorrelationBuilder implements CorrelationBuilder {
     }
 
     @Override
+    public FromProvider getCorrelationFromProvider() {
+        return criteriaBuilder;
+    }
+
+    @Override
     public String getCorrelationAlias() {
         return correlationAlias;
     }
@@ -72,4 +79,18 @@ public class JoinCorrelationBuilder implements CorrelationBuilder {
         return (JoinOnBuilder<CorrelationQueryBuilder>) (JoinOnBuilder<?>) criteriaBuilder.leftJoinOn(joinBase, entityClass, correlationAlias);
     }
 
+    @Override
+    public JoinOnBuilder<CorrelationQueryBuilder> correlate(EntityType<?> entityType) {
+        if (correlated) {
+            throw new IllegalArgumentException("Can not correlate with multiple entity classes!");
+        }
+
+        // Basic element has an alias, subviews don't
+        if (selectAlias != null) {
+            criteriaBuilder.select(correlationResult, selectAlias);
+        }
+
+        correlated = true;
+        return (JoinOnBuilder<CorrelationQueryBuilder>) (JoinOnBuilder<?>) criteriaBuilder.leftJoinOn(joinBase, entityType, correlationAlias);
+    }
 }

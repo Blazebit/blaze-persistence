@@ -45,9 +45,6 @@ import java.util.Map;
  */
 public abstract class AbstractCorrelatedSubselectTupleListTransformer extends AbstractCorrelatedTupleListTransformer {
 
-    protected static final int VALUE_INDEX = 0;
-    protected static final int VIEW_INDEX = 1;
-
     protected final EntityViewManagerImpl evm;
     protected final String viewRootAlias;
     protected final String viewRootIdExpression;
@@ -58,6 +55,8 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
     protected final int maximumViewMapperCount;
     protected final String correlationBasisExpression;
     protected final String correlationKeyExpression;
+    protected final int valueIndex;
+    protected final int viewIndex;
 
     protected int keyIndex;
     protected FullQueryBuilder<?, ?> criteriaBuilder;
@@ -77,6 +76,8 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
         this.maximumViewMapperCount = Math.max(1, Math.max(viewRootIdMapperCount, embeddingViewIdMapperCount));
         this.correlationBasisExpression = correlationBasisExpression;
         this.correlationKeyExpression = correlationKeyExpression;
+        this.valueIndex = correlator.getElementOffset();
+        this.viewIndex = valueIndex + 1;
     }
 
     private static int viewIdMapperCount(ManagedViewType<?> viewRootType) {

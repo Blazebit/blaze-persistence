@@ -35,6 +35,7 @@ import org.junit.runners.Parameterized;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -217,6 +218,26 @@ public class EntityViewUpdateSimpleMutableSubviewCollectionsTest extends Abstrac
         // When
         newPerson.setName("newPerson");
         docView.getPeople().add(newPerson);
+        verifyUpdateAddToCollectionAndModify(docView);
+    }
+
+    @Test
+    public void testClearUpdateAddToCollectionAndModify() {
+        // Given
+        final UpdatableDocumentWithCollectionsView docView = getDoc1View();
+        UpdatablePersonView newPerson = getP2View(UpdatablePersonView.class);
+        clearQueries();
+
+        // When
+        newPerson.setName("newPerson");
+        docView.getPeople().add(newPerson);
+        List<UpdatablePersonView> copy = new ArrayList<>(docView.getPeople());
+        docView.getPeople().clear();
+        docView.getPeople().addAll(copy);
+        verifyUpdateAddToCollectionAndModify(docView);
+    }
+
+    public void verifyUpdateAddToCollectionAndModify(UpdatableDocumentWithCollectionsView docView) {
         update(docView);
 
         // Then

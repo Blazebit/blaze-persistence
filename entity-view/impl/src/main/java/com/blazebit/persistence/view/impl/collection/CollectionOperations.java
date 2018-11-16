@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.collection;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -60,27 +61,36 @@ public final class CollectionOperations {
         this.removeIndex = removeIndex;
     }
 
-    public boolean addElements(Collection<Object> addedElements) {
+    public boolean addElements(RecordingCollection<?, ?> recordingCollection, Collection<Object> addedElements) {
         if (!addedElements.isEmpty()) {
             Collection<Object> objectsToAdd = addedElements;
             // Elide removed elements for newly added elements
             if (removeAction != null) {
                 objectsToAdd = removeAction.onAddObjects(objectsToAdd);
             }
-            if (!objectsToAdd.isEmpty()) {
-                // Merge newly added elements into existing add action
-                if (addAction != null) {
-                    addAction.onAddObjects(objectsToAdd);
-                } else {
-                    return true;
+            // Merge newly added elements into existing add action
+            if (!objectsToAdd.isEmpty() && addAction != null) {
+                addAction.onAddObjects(objectsToAdd);
+                return false;
+            } else {
+                if (addedElements != objectsToAdd) {
+                    Iterator<Object> iterator = addedElements.iterator();
+                    while (iterator.hasNext()) {
+                        Object o = iterator.next();
+                        if (!objectsToAdd.contains(o)) {
+                            iterator.remove();
+                            recordingCollection.addAddedElement(o);
+                        }
+                    }
                 }
+                return !objectsToAdd.isEmpty();
             }
         }
 
         return false;
     }
 
-    public int removeElements(Collection<Object> removedElements) {
+    public int removeElements(RecordingCollection<?, ?> recordingCollection, Collection<Object> removedElements) {
         if (!removedElements.isEmpty()) {
             Collection<Object> objectsToRemove = removedElements;
             // Elide added elements for newly removed elements
@@ -92,6 +102,16 @@ public final class CollectionOperations {
                 if (removeAction != null) {
                     removeAction.onRemoveObjects(objectsToRemove);
                 } else {
+                    if (removedElements != objectsToRemove) {
+                        Iterator<Object> iterator = removedElements.iterator();
+                        while (iterator.hasNext()) {
+                            Object o = iterator.next();
+                            if (!objectsToRemove.contains(o)) {
+                                iterator.remove();
+                                recordingCollection.addRemovedElement(o);
+                            }
+                        }
+                    }
                     return removeIndex;
                 }
             }

@@ -195,6 +195,26 @@ public class EntityViewUpdateSimpleMutableSubviewMapsTest extends AbstractEntity
         // When
         newPerson.setName("newPerson");
         docView.getContacts().put(2, newPerson);
+        verifyUpdateAddToCollectionAndModify(docView);
+    }
+
+    @Test
+    public void testClearUpdateAddToCollectionAndModify() {
+        // Given
+        final UpdatableDocumentWithMapsView docView = getDoc1View();
+        UpdatablePersonView newPerson = getP2View(UpdatablePersonView.class);
+        clearQueries();
+
+        // When
+        newPerson.setName("newPerson");
+        docView.getContacts().put(2, newPerson);
+        HashMap<Integer, UpdatablePersonView> copy = new HashMap<>(docView.getContacts());
+        docView.getContacts().clear();
+        docView.getContacts().putAll(copy);
+        verifyUpdateAddToCollectionAndModify(docView);
+    }
+
+    private void verifyUpdateAddToCollectionAndModify(UpdatableDocumentWithMapsView docView) {
         update(docView);
 
         // Then

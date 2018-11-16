@@ -120,7 +120,7 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
         }
 
         public Class<?> getRealCurrentClass() {
-            return currentClass.getJavaType();
+            return currentClass == null ? null : currentClass.getJavaType();
         }
 
         public Type<?> getCurrentType() {
@@ -135,7 +135,7 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
         }
 
         public Class<?> getCurrentClass() {
-            return getCurrentType().getJavaType();
+            return getCurrentType() == null ? null : getCurrentType().getJavaType();
         }
 
         public Class<?> getKeyCurrentClass() {

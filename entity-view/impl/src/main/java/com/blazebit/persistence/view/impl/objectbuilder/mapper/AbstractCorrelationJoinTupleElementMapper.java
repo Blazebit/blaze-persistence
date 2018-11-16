@@ -21,6 +21,7 @@ import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
 import com.blazebit.persistence.view.impl.PrefixingQueryGenerator;
+import com.blazebit.persistence.view.impl.macro.EmbeddingViewJpqlMacro;
 
 import java.util.Collections;
 
@@ -50,8 +51,12 @@ public abstract class AbstractCorrelationJoinTupleElementMapper implements Alias
             this.correlationResult = correlationAlias;
         } else {
             StringBuilder sb = new StringBuilder(correlationAlias.length() + correlationResult.length() + 1);
+            EmbeddingViewJpqlMacro embeddingViewJpqlMacro = (EmbeddingViewJpqlMacro) ef.getDefaultMacroConfiguration().get("EMBEDDING_VIEW").getState()[0];
+            String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
+            embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
             Expression expr = ef.createSimpleExpression(correlationResult, false);
-            SimpleQueryGenerator generator = new PrefixingQueryGenerator(Collections.singletonList(correlationAlias));
+            embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
+            SimpleQueryGenerator generator = new PrefixingQueryGenerator(Collections.singletonList(correlationAlias), joinBase, null, null);
             generator.setQueryBuffer(sb);
             expr.accept(generator);
             this.correlationResult = sb.toString().intern();

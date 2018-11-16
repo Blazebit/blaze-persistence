@@ -477,7 +477,8 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
         while (iterator.hasNext()) {
             Map.Entry<ViewMapping, Boolean> entry = iterator.next();
             ViewMapping mapping = entry.getKey();
-            if (mapping.validateDependencies(context, dependencies, this, null, reportError)) {
+            // Only report errors if this is an explicit mapping i.e. entry.getValue() == Boolean.TRUE
+            if (mapping.validateDependencies(context, dependencies, this, null, entry.getValue() == Boolean.TRUE)) {
                 iterator.remove();
                 // This is only an error if a mapping was explicit
                 if (entry.getValue() == Boolean.TRUE) {

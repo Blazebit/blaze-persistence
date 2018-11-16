@@ -126,7 +126,7 @@ public class EntityViewUpdateCorrelatedUpdatableOnlySubviewCollectionsTest exten
 
         builder.validate();
 
-        assertNoUpdateAndReload(docView, true);
+        assertNoUpdateAndReload(docView);
         assertEquals(doc1.getPartners().size(), docView.getPartners().size() - 1);
         docView.getPartners().remove(newPerson);
         assertSubviewEquals(doc1.getPartners(), docView.getPartners());
@@ -196,7 +196,7 @@ public class EntityViewUpdateCorrelatedUpdatableOnlySubviewCollectionsTest exten
         }
 
         builder.validate();
-        assertNoUpdateAndReload(docView, true);
+        assertNoUpdateAndReload(docView);
         assertEquals(doc1.getPartners().size(), docView.getPartners().size() - 1);
         docView.getPartners().remove(newPerson);
         assertEquals(doc1.getPartners().size(), docView.getPartners().size());

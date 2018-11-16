@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.LeafOngoingFinalSetOperationSubqueryBuilder;
 import com.blazebit.persistence.StartOngoingSetOperationSubqueryBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
@@ -23,6 +24,7 @@ import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 
+import javax.persistence.metamodel.EntityType;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -56,6 +58,11 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     }
 
     @Override
+    public CommonQueryBuilder<?> getParentQueryBuilder() {
+        return (CommonQueryBuilder<?>) queryContext.getParent();
+    }
+
+    @Override
     public SubqueryBuilder<X> from(Class<?> clazz) {
         return from(clazz, null);
     }
@@ -67,6 +74,22 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
             subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createArithmeticExpression("1"))));
         }
         subqueryBuilder.from(clazz, alias);
+        listener.onBuilderStarted(subqueryBuilder);
+        return subqueryBuilder;
+    }
+
+    @Override
+    public SubqueryBuilder<X> from(EntityType<?> entityType) {
+        return from(entityType, null);
+    }
+
+    @Override
+    public SubqueryBuilder<X> from(EntityType<?> entityType, String alias) {
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
+        if (inExists) {
+            subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createArithmeticExpression("1"))));
+        }
+        subqueryBuilder.from(entityType, alias);
         listener.onBuilderStarted(subqueryBuilder);
         return subqueryBuilder;
     }
@@ -160,6 +183,17 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     }
 
     @Override
+    public SubqueryBuilder<X> fromValues(Class<?> entityBaseClass, String attributeName, String alias, int valueCount) {
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
+        if (inExists) {
+            subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createArithmeticExpression("1"))));
+        }
+        subqueryBuilder.fromValues(entityBaseClass, attributeName, alias, valueCount);
+        listener.onBuilderStarted(subqueryBuilder);
+        return subqueryBuilder;
+    }
+
+    @Override
     public SubqueryBuilder<X> fromIdentifiableValues(Class<?> valueClass, String alias, int valueCount) {
         SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
         if (inExists) {
@@ -173,6 +207,13 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     @Override
     public <T> SubqueryBuilder<X> fromValues(Class<T> valueClass, String alias, Collection<T> values) {
         SubqueryBuilder<X> builder = fromValues(valueClass, alias, values.size());
+        builder.setParameter(alias, values);
+        return builder;
+    }
+
+    @Override
+    public SubqueryBuilder<X> fromValues(Class<?> entityBaseClass, String attributeName, String alias, Collection<?> values) {
+        SubqueryBuilder<X> builder = fromValues(entityBaseClass, attributeName, alias, values.size());
         builder.setParameter(alias, values);
         return builder;
     }

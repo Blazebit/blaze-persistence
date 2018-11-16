@@ -589,7 +589,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         ScalarTargetResolvingExpressionVisitor visitor = new ScalarTargetResolvingExpressionVisitor(managedType, context.getEntityMetamodel(), context.getJpqlFunctions());
 
         try {
-            context.getExpressionFactory().createSimpleExpression(expression, false).accept(visitor);
+            context.getTypeValidationExpressionFactory().createSimpleExpression(expression, false).accept(visitor);
         } catch (SyntaxErrorException ex) {
             context.addError("Syntax error in " + expressionLocation + " '" + expression + "' of the " + location + ": " + ex.getMessage());
         } catch (IllegalArgumentException ex) {

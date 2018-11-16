@@ -29,6 +29,11 @@ import com.blazebit.persistence.view.impl.macro.EmbeddingViewJpqlMacro;
 public final class BasicCorrelator implements Correlator {
 
     @Override
+    public int getElementOffset() {
+        return 0;
+    }
+
+    @Override
     public ObjectBuilder<?> finish(FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration entityViewConfiguration, int tupleSuffix, String correlationRoot, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
         criteriaBuilder.select(correlationRoot);
         return null;

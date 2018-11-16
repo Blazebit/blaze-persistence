@@ -48,5 +48,5 @@ public interface CollectionAction<T extends Collection<?>> {
 
     public CollectionAction<T> replaceObjects(Map<Object, Object> objectMapping);
 
-    public void addAction(List<CollectionAction<T>> actions, Collection<Object> addedElements, Collection<Object> removedElements);
+    public void addAction(RecordingCollection<?, ?> recordingCollection, List<CollectionAction<T>> actions);
 }

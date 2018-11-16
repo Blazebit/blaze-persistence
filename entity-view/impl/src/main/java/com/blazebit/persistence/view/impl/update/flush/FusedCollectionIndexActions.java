@@ -56,9 +56,17 @@ public class FusedCollectionIndexActions implements FusedCollectionActions {
             List<Map.Entry<Object, Integer>> trimmedObjectMap = collectionAction.getTrimmedObjectEntries();
 
             for (Map.Entry<Object, Integer> entry : removedObjectMap) {
-                int index = applyIndexTranslations(translateOperations, -entry.getValue());
-                RemoveOperation removeOperation = new RemoveOperation(index, entry.getKey());
-                addTranslateOperation(translateOperations, index, Integer.MAX_VALUE, -1, removeOperation, null);
+                if (appendIndex <= entry.getValue()) {
+                    int indexToRemove = entry.getValue() - appendIndex;
+                    appendedObjects.remove(indexToRemove);
+                    if (appendedObjects.isEmpty()) {
+                        appendIndex = Integer.MAX_VALUE;
+                    }
+                } else {
+                    int index = applyIndexTranslations(translateOperations, -entry.getValue());
+                    RemoveOperation removeOperation = new RemoveOperation(index, entry.getKey());
+                    addTranslateOperation(translateOperations, index, Integer.MAX_VALUE, -1, removeOperation, null);
+                }
             }
             for (Map.Entry<Object, Integer> entry : trimmedObjectMap) {
                 int index = applyIndexTranslations(translateOperations, -entry.getValue());
@@ -72,8 +80,35 @@ public class FusedCollectionIndexActions implements FusedCollectionActions {
                 replaceOperations.add(replaceOperation);
                 addTranslateOperation(translateOperations, index, Integer.MAX_VALUE, 1, null, replaceOperation);
             }
-            for (Map.Entry<Object, Integer> entry : appendedObjectMap) {
-                appendIndex = Math.min(entry.getValue(), appendIndex);
+            OUTER: for (Map.Entry<Object, Integer> entry : appendedObjectMap) {
+                int index = entry.getValue();
+                for (int i = 0; i < translateOperations.size(); i++) {
+                    IndexTranslateOperation translateOperation = translateOperations.get(i);
+                    // We look at translate operations that removes the index range within which the append is
+                    if (translateOperation.offset == -1 && translateOperation.startIndex <= index && index <= translateOperation.endIndex) {
+                        Iterator<RemoveOperation> iterator = translateOperation.removeOperations.iterator();
+                        while (iterator.hasNext()) {
+                            RemoveOperation removeOperation = iterator.next();
+                            // Find the remove operation for the current append index
+                            if (index == removeOperation.index) {
+                                // If we readd an object we removed before
+                                if (removeOperation.removedObject == entry.getKey()) {
+                                    // Drop the remove operation
+                                    iterator.remove();
+                                    // Remove the translate if possible
+                                    if (translateOperation.removeOperations.isEmpty()) {
+                                        translateOperations.remove(i);
+                                    }
+                                    // Also skip adding the append
+                                    continue OUTER;
+                                }
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                }
+                appendIndex = Math.min(index, appendIndex);
                 appendedObjects.add(entry.getKey());
             }
         }
@@ -141,7 +176,7 @@ public class FusedCollectionIndexActions implements FusedCollectionActions {
 
     private static void addTranslateOperation(List<IndexTranslateOperation> translateOperations, int startIndex, int endIndex, int offset, RemoveOperation removeOperation, ReplaceOperation replaceOperation) {
         if (translateOperations.isEmpty()) {
-            translateOperations.add(new IndexTranslateOperation(startIndex, endIndex, offset, removeOperation == null ? Collections.<RemoveOperation>emptyList() : Collections.singletonList(removeOperation)));
+            translateOperations.add(new IndexTranslateOperation(startIndex, endIndex, offset, removeOperation == null ? new ArrayList<RemoveOperation>() : new ArrayList<>(Collections.singletonList(removeOperation))));
         } else {
             for (int i = 0; i < translateOperations.size(); i++) {
                 IndexTranslateOperation indexTranslateOperation = translateOperations.get(i);
@@ -167,13 +202,13 @@ public class FusedCollectionIndexActions implements FusedCollectionActions {
                         return;
                     } else {
                         translateOperations.set(i, new IndexTranslateOperation(indexTranslateOperation.startIndex, startIndex, indexTranslateOperation.offset, indexTranslateOperation.removeOperations));
-                        translateOperations.add(i + 1, new IndexTranslateOperation(startIndex, endIndex, offset, removeOperation == null ? Collections.<RemoveOperation>emptyList() : Collections.singletonList(removeOperation)));
+                        translateOperations.add(i + 1, new IndexTranslateOperation(startIndex, endIndex, offset, removeOperation == null ? new ArrayList<RemoveOperation>() : new ArrayList<>(Collections.singletonList(removeOperation))));
                         return;
                     }
                 }
             }
 
-            translateOperations.add(new IndexTranslateOperation(startIndex, endIndex, offset, removeOperation == null ? Collections.<RemoveOperation>emptyList() : Collections.singletonList(removeOperation)));
+            translateOperations.add(new IndexTranslateOperation(startIndex, endIndex, offset, removeOperation == null ? new ArrayList<RemoveOperation>() : new ArrayList<>(Collections.singletonList(removeOperation))));
         }
     }
 
