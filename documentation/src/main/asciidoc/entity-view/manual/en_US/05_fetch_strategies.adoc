@@ -74,17 +74,16 @@ The main query will fetch the `correlationBasis` and all the other attributes.
 [source,sql]
 ----
 SELECT
-    TREAT_LONG(correlationParams.value),
+    correlationParams,
     correlated_SameAgedPersons
 FROM Person correlated_SameAgedPersons,
-     VALUES ((?), (?), ...) correlationParams # <1>
-WHERE correlated_SameAgedPersons.age = TREAT_LONG(correlationParams.value)
+     Long(20 VALUES) correlationParams
+WHERE correlated_SameAgedPersons.age = correlationParams
 ----
-<1> Actually there will be 20 question marks here because of the defined batch size of 20
 
 The correlation query on the other hand will select the correlation value and the `Person` instances with an age matching any of the `correlationParams` values.
 What you see here is the use of the link:{core_doc}#anchor-values-clause[`VALUES` clause] for making multiple values available like a table for querying which is required when wanting to select the correlation value.
-Selecting the actual correlation value via `TREAT_LONG(correlationParams.value)` along with the `Person` is necessary to be able to correlate the instances to the instance of the main query.
+Selecting the actual correlation value via `correlationParams` along with the `Person` is necessary to be able to correlate the instances to the instance of the main query.
 
 Depending on how many different values for `age` there are(cardinality), the correlation query might get executed multiple times.
 In general, the runtime will collect up to _batch size_ different values and then execute the correlation query for these values.

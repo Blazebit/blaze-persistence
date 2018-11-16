@@ -424,25 +424,37 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
 
         for (MapAction<C> action : actions) {
             for (Object o : action.getAddedKeys(initialState)) {
-                addedKeys.put((K) o, (K) o);
-                removedKeys.remove(o);
-                // We don't set the parent here because that will happen during the setParent call for this collection
+                if (removedKeys.remove(o) == null) {
+                    addedKeys.put((K) o, (K) o);
+                    // We don't set the parent here because that will happen during the setParent call for this collection
+                } else {
+                    if (o instanceof BasicDirtyTracker) {
+                        ((BasicDirtyTracker) o).$$_unsetParent();
+                    }
+                }
             }
             for (Object o : action.getRemovedKeys(initialState)) {
-                removedKeys.put((K) o, (K) o);
-                addedKeys.remove(o);
+                if (addedKeys.remove(o) == null) {
+                    removedKeys.put((K) o, (K) o);
+                }
                 if (o instanceof BasicDirtyTracker) {
                     ((BasicDirtyTracker) o).$$_unsetParent();
                 }
             }
             for (Object o : action.getAddedElements(initialState)) {
-                addedElements.put((V) o, (V) o);
-                removedElements.remove(o);
-                // We don't set the parent here because that will happen during the setParent call for this collection
+                if (removedElements.remove(o) == null) {
+                    addedElements.put((V) o, (V) o);
+                    // We don't set the parent here because that will happen during the setParent call for this collection
+                } else {
+                    if (o instanceof BasicDirtyTracker) {
+                        ((BasicDirtyTracker) o).$$_unsetParent();
+                    }
+                }
             }
             for (Object o : action.getRemovedElements(initialState)) {
-                removedElements.put((V) o, (V) o);
-                addedElements.remove(o);
+                if (addedElements.remove(o) == null) {
+                    removedElements.put((V) o, (V) o);
+                }
                 if (o instanceof BasicDirtyTracker) {
                     ((BasicDirtyTracker) o).$$_unsetParent();
                 }

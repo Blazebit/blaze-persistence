@@ -26,6 +26,7 @@ import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
+import com.blazebit.persistence.view.testsuite.convert.type.model.DocumentSubqueryTypeConverterView;
 import com.blazebit.persistence.view.testsuite.convert.type.model.DocumentTypeConverterView;
 import org.junit.Assert;
 import org.junit.Before;
@@ -128,6 +129,34 @@ public class TypeConverterTest extends AbstractEntityViewTest {
         evm = cfg.createEntityViewManager(cbf);
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class);
         DocumentTypeConverterView documentView = evm.applySetting(EntityViewSetting.create(DocumentTypeConverterView.class), criteria)
+                .getSingleResult();
+
+        assertEquals("1", documentView.getAge());
+    }
+
+    @Test
+    public void testTypeConverterSubquery() {
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        cfg.addEntityView(DocumentSubqueryTypeConverterView.class);
+        cfg.registerTypeConverter(Long.class, String.class, new TypeConverter<Long, String>() {
+            @Override
+            public Class<?> getUnderlyingType(Class<?> owningClass, Type declaredType) {
+                return String.class;
+            }
+
+            @Override
+            public String convertToViewType(Long object) {
+                return Long.toString(object);
+            }
+
+            @Override
+            public Long convertToUnderlyingType(String object) {
+                return Long.valueOf(object);
+            }
+        });
+        evm = cfg.createEntityViewManager(cbf);
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class);
+        DocumentSubqueryTypeConverterView documentView = evm.applySetting(EntityViewSetting.create(DocumentSubqueryTypeConverterView.class), criteria)
                 .getSingleResult();
 
         assertEquals("1", documentView.getAge());

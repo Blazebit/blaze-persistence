@@ -57,14 +57,14 @@ public class CorrelatedCollectionBatchTupleListTransformer extends AbstractCorre
         Map<Object, Collection<Object>> collections = new HashMap<Object, Collection<Object>>(list.size());
         for (int i = 0; i < list.size(); i++) {
             Object[] element = (Object[]) list.get(i);
-            Collection<Object> result = collections.get(element[KEY_INDEX]);
+            Collection<Object> result = collections.get(element[keyIndex]);
             if (result == null) {
                 result = (Collection<Object>) createDefaultResult();
-                collections.put(element[KEY_INDEX], result);
+                collections.put(element[keyIndex], result);
             }
 
-            if (element[VALUE_INDEX] != null) {
-                add(result, element[VALUE_INDEX]);
+            if (element[valueIndex] != null) {
+                add(result, element[valueIndex]);
             }
         }
 

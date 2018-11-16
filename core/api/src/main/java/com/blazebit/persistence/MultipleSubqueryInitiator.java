@@ -26,6 +26,14 @@ package com.blazebit.persistence;
 public interface MultipleSubqueryInitiator<T> {
 
     /**
+     * Returns the parent query builder.
+     *
+     * @return The parent query builder
+     * @since 1.3.0
+     */
+    public CommonQueryBuilder<?> getParentQueryBuilder();
+
+    /**
      * Starts a {@link SubqueryInitiator} for the given subquery alias.
      *
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery

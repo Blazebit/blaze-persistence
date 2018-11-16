@@ -16,12 +16,14 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
+import com.blazebit.persistence.parser.AliasReplacementVisitor;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.expression.AbstractCachingExpressionFactory;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.parser.expression.MacroConfiguration;
 import com.blazebit.persistence.parser.expression.MacroFunction;
+import com.blazebit.persistence.parser.expression.NullExpression;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.view.FlushMode;
@@ -30,6 +32,7 @@ import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingCorrelated;
 import com.blazebit.persistence.view.MappingCorrelatedSimple;
+import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.impl.ConfigurationProperties;
 import com.blazebit.persistence.view.impl.JpqlMacroAdapter;
 import com.blazebit.persistence.view.impl.MacroConfigurationExpressionFactory;
@@ -214,6 +217,18 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
         } else if (mapping instanceof MappingCorrelated) {
             // We can't determine the managed type
             return Collections.emptyList();
+        } else if (mapping instanceof MappingSubquery) {
+            MappingSubquery mappingSubquery = (MappingSubquery) mapping;
+            if (!mappingSubquery.expression().isEmpty()) {
+                Expression simpleExpression = typeValidationExpressionFactory.createSimpleExpression(((MappingSubquery)mapping).expression(), true);
+                AliasReplacementVisitor aliasReplacementVisitor = new AliasReplacementVisitor(new NullExpression(), mappingSubquery.subqueryAlias());
+                simpleExpression.accept(aliasReplacementVisitor);
+                ScalarTargetResolvingExpressionVisitor visitor = new ScalarTargetResolvingExpressionVisitor((ManagedType<?>) null, entityMetamodel, jpqlFunctions);
+                simpleExpression.accept(visitor);
+                return visitor.getPossibleTargetTypes();
+            }
+            // We can't determine the managed type
+            return Collections.emptyList();
         } else {
             // There is no entity model type for other mappings
             return Collections.emptyList();
@@ -259,7 +274,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
             Map<Class<?>, Type<?>> convertedTypeMap = null;
 
             for (Class<?> entityModelType : possibleTypes) {
-                if (!typeConverterMap.isEmpty()) {
+                if (entityModelType != null && !typeConverterMap.isEmpty()) {
                     convertedTypeMap = convertedTypeRegistry.get(key);
 
                     if (convertedTypeMap != null) {

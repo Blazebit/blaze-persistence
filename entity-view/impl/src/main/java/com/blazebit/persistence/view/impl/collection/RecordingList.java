@@ -73,7 +73,7 @@ public class RecordingList<E> extends RecordingCollection<List<E>, E> implements
     public void clear() {
         int size = delegate.size();
         // Always remove the last element to benefit from tail removals
-        for (int i = size - 1; i > 0; i--) {
+        for (int i = size - 1; i >= 0; i--) {
             addRemoveAction(i);
         }
         delegate.clear();

@@ -55,10 +55,10 @@ public class CorrelatedCollectionSubselectTupleListTransformer extends AbstractC
         collections = new HashMap<>(list.size());
         for (int i = 0; i < list.size(); i++) {
             Object[] element = list.get(i);
-            Map<Object, Collection<Object>> viewRootResult = collections.get(element[VIEW_INDEX]);
+            Map<Object, Collection<Object>> viewRootResult = collections.get(element[viewIndex]);
             if (viewRootResult == null) {
                 viewRootResult = new HashMap<>();
-                collections.put(element[VIEW_INDEX], viewRootResult);
+                collections.put(element[viewIndex], viewRootResult);
             }
             Collection<Object> result = viewRootResult.get(element[keyIndex]);
             if (result == null) {
@@ -66,8 +66,8 @@ public class CorrelatedCollectionSubselectTupleListTransformer extends AbstractC
                 viewRootResult.put(element[keyIndex], result);
             }
 
-            if (element[VALUE_INDEX] != null) {
-                add(result, element[VALUE_INDEX]);
+            if (element[valueIndex] != null) {
+                add(result, element[valueIndex]);
             }
         }
 

@@ -52,7 +52,7 @@ public class CorrelatedSingularBatchTupleListTransformer extends AbstractCorrela
             }
         } else {
             for (Object[] element : (List<Object[]>) (List<?>) list) {
-                correlationValues.get(element[KEY_INDEX]).onResult(element[VALUE_INDEX], this);
+                correlationValues.get(element[keyIndex]).onResult(element[valueIndex], this);
             }
         }
     }

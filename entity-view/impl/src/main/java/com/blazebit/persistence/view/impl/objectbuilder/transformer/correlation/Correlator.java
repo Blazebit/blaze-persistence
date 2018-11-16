@@ -28,6 +28,8 @@ import com.blazebit.persistence.view.impl.macro.EmbeddingViewJpqlMacro;
  */
 public interface Correlator {
 
+    public int getElementOffset();
+
     public ObjectBuilder<?> finish(FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration entityViewConfiguration, int tupleSuffix, String correlationRoot, EmbeddingViewJpqlMacro embeddingViewJpqlMacro);
 
 }

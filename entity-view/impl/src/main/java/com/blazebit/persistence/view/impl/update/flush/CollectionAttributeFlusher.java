@@ -281,9 +281,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 } else {
                     if (entityAttributeMapper == null) {
                         // We have a correlation mapping here
-                        if (recordingCollection.hasActions()) {
-                            recordingCollection.resetActions(context);
-                        }
+                        recordingCollection.resetActions(context);
                     }
 
                     List<Object> embeddables = null;
@@ -300,9 +298,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                         if (initial instanceof RecordingCollection<?, ?>) {
                             initial = (V) ((RecordingCollection) initial).getInitialVersion();
                         }
-                        if (recordingCollection.hasActions()) {
-                            recordingCollection.resetActions(context);
-                        }
+                        recordingCollection.resetActions(context);
                         // If the initial object was null like it happens during full flushing, we can only replace the collection
                         if (initial == null) {
                             replaceCollection(context, ownerView, view, null, current, FlushStrategy.QUERY);
@@ -385,6 +381,9 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                     if (entityIdAttributeName != null) {
                         removedObjects = appendRemoveSpecific(context, deleteCb, fusedCollectionActions);
                         removedAll = false;
+                        if (removedObjects.isEmpty()) {
+                            deleteCb = null;
+                        }
                     }
                 }
             } else {
@@ -541,7 +540,9 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
     @SuppressWarnings("unchecked")
     public boolean flushEntity(UpdateContext context, E entity, Object ownerView, Object view, V value, Runnable postReplaceListener) {
         if (flushOperation != null) {
-            value = replaceWithRecordingCollection(context, view, value, collectionActions);
+            if (!(value instanceof RecordingCollection<?, ?>)) {
+                value = replaceWithRecordingCollection(context, view, value, collectionActions);
+            }
             invokeFlushOperation(context, ownerView, view, entity, value);
             return true;
         }
@@ -606,7 +607,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 if (!replace) {
                     if (entityAttributeMapper == null) {
                         // When having a correlated attribute, we consider is being dirty when it changed
-                        wasDirty |= recordingCollection.hasActions();
+                        wasDirty |= !recordingCollection.resetActions(context).isEmpty();
                     } else {
                         Collection<?> collection = (Collection<?>) entityAttributeMapper.getValue(entity);
                         if (collection == null) {
@@ -693,6 +694,9 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
             }
 
             if (replace) {
+                if (isRecording) {
+                    ((RecordingCollection<Collection<?>, ?>) value).resetActions(context);
+                }
                 replaceCollection(context, ownerView, view, entity, value, FlushStrategy.ENTITY);
                 return true;
             }

@@ -84,7 +84,7 @@ public class CollectionClearAction<C extends Collection<E>, E> implements Collec
     }
 
     @Override
-    public void addAction(List<CollectionAction<C>> actions, Collection<Object> addedElements, Collection<Object> removedElements) {
+    public void addAction(RecordingCollection<?, ?> recordingCollection, List<CollectionAction<C>> actions) {
         actions.clear();
         actions.add(this);
     }

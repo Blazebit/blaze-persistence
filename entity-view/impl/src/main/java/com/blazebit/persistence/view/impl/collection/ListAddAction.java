@@ -137,7 +137,7 @@ public class ListAddAction<C extends List<E>, E> implements ListAction<C> {
     }
 
     @Override
-    public void addAction(List<CollectionAction<C>> actions, Collection<Object> addedElements, Collection<Object> removedElements) {
+    public void addAction(RecordingCollection<?, ?> recordingCollection, List<CollectionAction<C>> actions) {
         actions.add(this);
     }
 

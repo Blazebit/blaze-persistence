@@ -475,11 +475,10 @@ The resulting logical JPQL doesn't include individual parameters, but specifies 
 
 [source,sql]
 ----
-SELECT TREAT_STRING(myValue.value)
+SELECT myValue
 FROM String(2 VALUES) myValue
 ----
 
-The use of `TREAT_STRING` as the name suggests, has the effect that the expression is treated like a string expression.
 Behind the scenes, a type called `ValuesEntity` is used to be able to implement the VALUES clause.
 
 For further information on `TREAT` functions, take a look at the <<treat-functions,JPQL functions>> chapter.
@@ -501,7 +500,7 @@ The logical JPQL encodes this as
 
 [source,sql]
 ----
-SELECT TREAT_STRING(myValue.value)
+SELECT myValue
 FROM String(2 VALUES LIKE Cat.name) myValue
 ----
 

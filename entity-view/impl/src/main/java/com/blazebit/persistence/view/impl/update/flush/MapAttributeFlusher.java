@@ -48,6 +48,7 @@ import javax.persistence.Tuple;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -210,7 +211,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                         if (action.getAddedKeys().contains(entry.getKey())) {
                             continue OUTER;
                         }
-                        if (action.getAddedElements().contains(element)) {
+                        if (identityContains(action.getAddedElements(), element)) {
                             wasElementAdded = true;
                         }
                     }
@@ -223,6 +224,16 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                 }
             }
         }
+    }
+
+    private boolean identityContains(Collection<Object> addedElements, MutableStateTrackable element) {
+        for (Object addedElement : addedElements) {
+            if (addedElement == element) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @Override
@@ -291,18 +302,16 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
         } else {
             boolean isRecording = current instanceof RecordingMap<?, ?, ?>;
             if (isRecording) {
-                RecordingMap<Map<?, ?>, ?, ?> recordingCollection = (RecordingMap<Map<?, ?>, ?, ?>) current;
+                RecordingMap<Map<?, ?>, ?, ?> recordingMap = (RecordingMap<Map<?, ?>, ?, ?>) current;
                 if (entityAttributeMapper == null) {
                     // We have a correlation mapping here
-                    if (recordingCollection.hasActions()) {
-                        recordingCollection.resetActions(context);
-                    }
+                    recordingMap.resetActions(context);
                 }
 
                 Map<Object, Object> embeddables = null;
                 if (elementDescriptor.shouldFlushMutations()) {
                     if (elementDescriptor.shouldJpaPersistOrMerge()) {
-                        mergeAndRequeue(context, recordingCollection, (Map<Object, Object>) recordingCollection.getDelegate());
+                        mergeAndRequeue(context, recordingMap, (Map<Object, Object>) recordingMap.getDelegate());
                     } else if (elementDescriptor.isSubview() && (elementDescriptor.isIdentifiable() || isIndexed())) {
                         embeddables = flushCollectionViewElements(context, current);
                     }
@@ -313,9 +322,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                     if (initial instanceof RecordingMap<?, ?, ?>) {
                         initial = (V) ((RecordingMap) initial).getInitialVersion();
                     }
-                    if (recordingCollection.hasActions()) {
-                        recordingCollection.resetActions(context);
-                    }
+                    recordingMap.resetActions(context);
                     // If the initial object was null like it happens during full flushing, we can only replace the collection
                     if (initial == null) {
                         replaceCollection(context, ownerView, view, null, current, FlushStrategy.QUERY);
@@ -384,6 +391,9 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                 if (removeSpecific) {
                     removedObjects = appendRemoveSpecific(context, deleteCb, fusedCollectionActions);
                     removedAll = false;
+                    if (removedObjects.isEmpty()) {
+                        deleteCb = null;
+                    }
                 }
             } else {
                 removedAll = false;
@@ -628,7 +638,9 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
     @SuppressWarnings("unchecked")
     public boolean flushEntity(UpdateContext context, E entity, Object ownerView, Object view, V value, Runnable postReplaceListener) {
         if (flushOperation != null) {
-            value = replaceWithRecordingCollection(context, view, value, collectionActions);
+            if (!(value instanceof RecordingMap<?, ?, ?>)) {
+                value = replaceWithRecordingCollection(context, view, value, collectionActions);
+            }
             invokeFlushOperation(context, ownerView, view, entity, value);
             return true;
         }
@@ -689,7 +701,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                 if (!replace) {
                     if (entityAttributeMapper == null) {
                         // When having a correlated attribute, we consider is being dirty when it changed
-                        wasDirty |= recordingMap.hasActions();
+                        wasDirty |= !recordingMap.resetActions(context).isEmpty();
                     } else {
                         Map<?, ?> map = (Map<?, ?>) entityAttributeMapper.getValue(entity);
                         if (map == null) {
@@ -777,6 +789,9 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
             }
 
             if (replace) {
+                if (isRecording) {
+                    ((RecordingMap<Map<?, ?>, ?, ?>) value).resetActions(context);
+                }
                 replaceCollection(context, ownerView, view, entity, value, FlushStrategy.ENTITY);
                 return true;
             }

@@ -874,7 +874,7 @@ An attribute does *persist cascading* if a new object reached through that attri
 
 The following tables should help illustrate the defaults and are also a good reference.
 
-[width="100%",options="header,footer",cols="3a,1d,1d,1d"]
+[width="100%",options="header,footer",cols="3a,1d,1a,1a"]
 |====================
 |*Basic simple type*     |Relationship updatable   |Update cascaded   |Persist cascaded
 
@@ -944,7 +944,7 @@ interface View {
 
 Using a JPA embeddable type `Embeddable`
 
-[width="100%",options="header,footer",cols="3a,1d,1d,1d"]
+[width="100%",options="header,footer",cols="3a,1d,1a,1a"]
 |====================
 | *Basic JPA embeddable type*     | Relationship updatable   | Update cascaded   | Persist cascaded
 
@@ -1014,7 +1014,7 @@ interface View {
 
 Using a JPA entity type `Entity2`
 
-[width="100%",options="header,footer",cols="3a,1d,1d,1d"]
+[width="100%",options="header,footer",cols="3a,1d,1a,1a"]
 |====================
 | *Basic JPA entity type*     | Relationship updatable   | Update cascaded   | Persist cascaded
 
@@ -1097,7 +1097,7 @@ interface View2 {
 
 results in the following default behavior
 
-[width="100%",options="header,footer",cols="3a,1d,1d,1d"]
+[width="100%",options="header,footer",cols="3a,1d,1a,1a"]
 |====================
 | *View type*     | Relationship updatable   | Update cascaded   | Persist cascaded
 
@@ -1181,7 +1181,7 @@ interface View2 {
 }
 ----
 
-[width="100%",options="header,footer",cols="3a,1d,1d,1d"]
+[width="100%",options="header,footer",cols="3a,1d,1a,1a"]
 |====================
 | *View type*     | Relationship updatable   | Update cascaded   | Persist cascaded
 
@@ -1266,7 +1266,7 @@ Collections are different, as they are mutable by default. Since it is rarely ne
 collections aren't updatable by default just because they are mutable by design. In order for a collection relationship to be considered updatable,
 it must have a setter, be annotated with `@UpdatableMapping(updatable = true)` or have an element type that is `@CreatableEntityView`.
 
-[width="100%",options="header,footer",cols="3a,1d,1d,1d"]
+[width="100%",options="header,footer",cols="3a,1d,1a,1a"]
 |====================
 | *Basic simple type*     | Relationship updatable   | Update cascaded   | Persist cascaded
 
@@ -1336,7 +1336,7 @@ interface View {
 
 Using a JPA embeddable type `Embeddable`
 
-[width="100%",options="header,footer",cols="3a,1d,1d,1d"]
+[width="100%",options="header,footer",cols="3a,1d,1a,1a"]
 |====================
 | *Basic JPA embeddable type*     | Relationship updatable   | Update cascaded   | Persist cascaded
 
@@ -1406,7 +1406,7 @@ interface View {
 
 Using a JPA entity type `Entity2`
 
-[width="100%",options="header,footer",cols="3a,1d,1d,1d"]
+[width="100%",options="header,footer",cols="3a,1d,1a,1a"]
 |====================
 | *Basic JPA entity type*     | Relationship updatable   | Update cascaded   | Persist cascaded
 
@@ -1487,7 +1487,7 @@ interface View2 {
 }
 ----
 
-[width="100%",options="header,footer",cols="3a,1d,1d,1d"]
+[width="100%",options="header,footer",cols="3a,1d,1a,1a"]
 |====================
 | *View type*     | Relationship updatable   | Update cascaded   | Persist cascaded
 
@@ -1571,7 +1571,7 @@ interface View2 {
 }
 ----
 
-[width="100%",options="header,footer",cols="3a,1d,1d,1d"]
+[width="100%",options="header,footer",cols="3a,1d,1a,1a"]
 |====================
 | *View type*     | Relationship updatable   | Update cascaded   | Persist cascaded
 

@@ -40,7 +40,7 @@ public class CorrelatedSingularSubselectTupleListTransformer extends AbstractCor
     @Override
     protected void populateResult(Map<Object, Map<Object, TuplePromise>> correlationValues, List<Object[]> list) {
         for (Object[] element : (List<Object[]>) (List<?>) list) {
-            correlationValues.get(element[VIEW_INDEX]).get(element[keyIndex]).onResult(element[VALUE_INDEX], this);
+            correlationValues.get(element[viewIndex]).get(element[keyIndex]).onResult(element[valueIndex], this);
         }
     }
 

@@ -18,10 +18,12 @@ package com.blazebit.persistence.view.impl.update.flush;
 
 import com.blazebit.persistence.view.impl.collection.ListAction;
 import com.blazebit.persistence.view.impl.collection.ListAddAction;
+import com.blazebit.persistence.view.impl.collection.ListAddAllAction;
 import com.blazebit.persistence.view.impl.collection.ListRemoveAction;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -94,5 +96,35 @@ public class FusedCollectionIndexActionsTest {
         Assert.assertEquals(2, indexActions.getRemoveCount());
         Assert.assertEquals(0, indexActions.getAddCount());
         Assert.assertEquals(2, indexActions.getUpdateCount());
+    }
+
+    @Test
+    public void testAddClearAndReadd() {
+        List<String> objects = new ArrayList<>(Arrays.asList("o1", "o2"));
+        FusedCollectionIndexActions indexActions = new FusedCollectionIndexActions(Arrays.<ListAction<?>>asList(
+                new ListAddAction<>(1, true, objects.get(1)),
+                new ListRemoveAction<>(1, false, objects),
+                new ListRemoveAction<>(0, false, objects),
+                new ListAddAllAction<>(0, true, objects)
+        ));
+        Assert.assertEquals(0, indexActions.getRemoveCount());
+        Assert.assertEquals(1, indexActions.getAddCount());
+        Assert.assertEquals(0, indexActions.getUpdateCount());
+    }
+
+    @Test
+    public void testAddClearAndReadd2() {
+        List<String> objects = new ArrayList<>(Arrays.asList("o1", "o2", "o3", "o4"));
+        FusedCollectionIndexActions indexActions = new FusedCollectionIndexActions(Arrays.<ListAction<?>>asList(
+                new ListAddAction<>(3, true, objects.get(3)),
+                new ListRemoveAction<>(3, false, objects),
+                new ListRemoveAction<>(2, false, objects),
+                new ListRemoveAction<>(1, false, objects),
+                new ListRemoveAction<>(0, false, objects),
+                new ListAddAllAction<>(0, true, objects)
+        ));
+        Assert.assertEquals(0, indexActions.getRemoveCount());
+        Assert.assertEquals(1, indexActions.getAddCount());
+        Assert.assertEquals(0, indexActions.getUpdateCount());
     }
 }

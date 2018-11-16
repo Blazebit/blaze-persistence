@@ -17,9 +17,12 @@
 package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
 
 import com.blazebit.persistence.CorrelationQueryBuilder;
+import com.blazebit.persistence.FromProvider;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.JoinOnBuilder;
 import com.blazebit.persistence.view.CorrelationBuilder;
+
+import javax.persistence.metamodel.EntityType;
 
 /**
  *
@@ -52,6 +55,11 @@ public class SubqueryCorrelationBuilder implements CorrelationBuilder {
     @Override
     public <T> T getService(Class<T> serviceClass) {
         return criteriaBuilder.getService(serviceClass);
+    }
+
+    @Override
+    public FromProvider getCorrelationFromProvider() {
+        return criteriaBuilder;
     }
 
     @Override
@@ -91,4 +99,31 @@ public class SubqueryCorrelationBuilder implements CorrelationBuilder {
         return correlationBuilder;
     }
 
+    @Override
+    public JoinOnBuilder<CorrelationQueryBuilder> correlate(EntityType<?> entityType) {
+        if (correlationRoot != null) {
+            throw new IllegalArgumentException("Can not correlate with multiple entity classes!");
+        }
+
+        JoinOnBuilder<CorrelationQueryBuilder> correlationBuilder;
+        if (batchSize > 1) {
+            if (correlationBasisEntity != null) {
+                criteriaBuilder.fromIdentifiableValues(correlationBasisEntity, correlationKeyAlias, batchSize);
+            } else {
+                criteriaBuilder.fromValues(correlationBasisType, correlationKeyAlias, batchSize);
+            }
+
+            correlationBuilder = (JoinOnBuilder<CorrelationQueryBuilder>) (JoinOnBuilder<?>) criteriaBuilder.innerJoinOn(entityType, correlationAlias);
+        } else {
+            if (innerJoin) {
+                correlationBuilder = (JoinOnBuilder<CorrelationQueryBuilder>) (JoinOnBuilder<?>) criteriaBuilder.innerJoinOn(entityType, correlationAlias);
+            } else {
+                criteriaBuilder.from(entityType, correlationAlias);
+                correlationBuilder = criteriaBuilder.getService(JoinOnBuilder.class);
+            }
+        }
+
+        this.correlationRoot = correlationResult;
+        return correlationBuilder;
+    }
 }

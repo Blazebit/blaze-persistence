@@ -158,10 +158,10 @@ public class CollectionAddAllAction<C extends Collection<E>, E> implements Colle
     }
 
     @Override
-    public void addAction(List<CollectionAction<C>> actions, Collection<Object> addedElements, Collection<Object> removedElements) {
+    public void addAction(RecordingCollection<?, ?> recordingCollection, List<CollectionAction<C>> actions) {
         CollectionOperations op = new CollectionOperations(actions);
 
-        if (op.addElements(addedElements)) {
+        if (op.addElements(recordingCollection, (Collection<Object>) elements)) {
             actions.add(this);
         }
 

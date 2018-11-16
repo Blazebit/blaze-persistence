@@ -20,6 +20,7 @@ import com.blazebit.persistence.CaseWhenAndThenBuilder;
 import com.blazebit.persistence.CaseWhenBuilder;
 import com.blazebit.persistence.CaseWhenOrThenBuilder;
 import com.blazebit.persistence.CaseWhenThenBuilder;
+import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.LeafOngoingFinalSetOperationSubqueryBuilder;
 import com.blazebit.persistence.MultipleSubqueryInitiator;
@@ -48,6 +49,7 @@ import com.blazebit.persistence.parser.predicate.PredicateBuilder;
 import com.blazebit.persistence.parser.predicate.PredicateQuantifier;
 import com.blazebit.persistence.parser.predicate.QuantifiableBinaryExpressionPredicate;
 
+import javax.persistence.metamodel.EntityType;
 import java.util.Collection;
 
 /**
@@ -99,6 +101,11 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAn
             predicate.negate();
         }
         this.predicate = predicate;
+    }
+
+    @Override
+    public CommonQueryBuilder<?> getParentQueryBuilder() {
+        return (CommonQueryBuilder<?>) subqueryInitFactory.getQueryBuilder();
     }
 
     @Override
@@ -245,6 +252,18 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAn
     }
 
     @Override
+    public SubqueryBuilder<T> from(EntityType<?> entityType) {
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        return getSubqueryInitiator().from(entityType);
+    }
+
+    @Override
+    public SubqueryBuilder<T> from(EntityType<?> entityType, String alias) {
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        return getSubqueryInitiator().from(entityType, alias);
+    }
+
+    @Override
     public SubqueryBuilder<T> from(String correlationPath) {
         chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
         return getSubqueryInitiator().from(correlationPath);
@@ -292,6 +311,12 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAn
     }
 
     @Override
+    public SubqueryBuilder<T> fromValues(Class<?> entityBaseClass, String attributeName, String alias, int valueCount) {
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        return getSubqueryInitiator().fromValues(entityBaseClass, attributeName, alias, valueCount);
+    }
+
+    @Override
     public SubqueryBuilder<T> fromIdentifiableValues(Class<?> valueClass, String alias, int valueCount) {
         chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
         return getSubqueryInitiator().fromIdentifiableValues(valueClass, alias, valueCount);
@@ -301,6 +326,12 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAn
     public <X> SubqueryBuilder<T> fromValues(Class<X> valueClass, String alias, Collection<X> values) {
         chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
         return getSubqueryInitiator().fromValues(valueClass, alias, values);
+    }
+
+    @Override
+    public SubqueryBuilder<T> fromValues(Class<?> entityBaseClass, String attributeName, String alias, Collection<?> values) {
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        return getSubqueryInitiator().fromValues(entityBaseClass, attributeName, alias, values);
     }
 
     @Override

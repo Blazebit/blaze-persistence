@@ -17,7 +17,10 @@
 package com.blazebit.persistence.view;
 
 import com.blazebit.persistence.CorrelationQueryBuilder;
+import com.blazebit.persistence.FromProvider;
 import com.blazebit.persistence.JoinOnBuilder;
+
+import javax.persistence.metamodel.EntityType;
 
 /**
  * A builder for correlating a basis with an entity class.
@@ -37,6 +40,14 @@ public interface CorrelationBuilder {
     public <T> T getService(Class<T> serviceClass);
 
     /**
+     * Returns the correlation from provider.
+     *
+     * @return The correlation from provider
+     * @since 1.3.0
+     */
+    public FromProvider getCorrelationFromProvider();
+
+    /**
      * Generates a meaningful alias that can be used for the correlation.
      *
      * @return The generated alias
@@ -50,4 +61,13 @@ public interface CorrelationBuilder {
      * @return The restriction builder for the correlation predicate
      */
     public JoinOnBuilder<CorrelationQueryBuilder> correlate(Class<?> entityClass);
+
+    /**
+     * Correlates a basis with the given entity type.
+     *
+     * @param entityType The entity type which should be correlated
+     * @return The restriction builder for the correlation predicate
+     * @since 1.3.0
+     */
+    public JoinOnBuilder<CorrelationQueryBuilder> correlate(EntityType<?> entityType);
 }

@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.MultipleSubqueryInitiator;
 import com.blazebit.persistence.SubqueryBuilder;
@@ -45,6 +46,11 @@ public class MultipleSubqueryInitiatorImpl<T> extends SubqueryBuilderListenerImp
         this.listener = listener;
         this.subqueryInitFactory = subqueryInitFactory;
         this.clauseType = clauseType;
+    }
+
+    @Override
+    public CommonQueryBuilder<?> getParentQueryBuilder() {
+        return (CommonQueryBuilder<?>) subqueryInitFactory.getQueryBuilder();
     }
 
     @Override

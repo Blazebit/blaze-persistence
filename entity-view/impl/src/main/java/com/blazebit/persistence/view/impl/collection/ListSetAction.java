@@ -169,7 +169,7 @@ public class ListSetAction<C extends List<E>, E> implements ListAction<C> {
     }
 
     @Override
-    public void addAction(List<CollectionAction<C>> actions, Collection<Object> addedElements, Collection<Object> removedElements) {
+    public void addAction(RecordingCollection<?, ?> recordingCollection, List<CollectionAction<C>> actions) {
         CollectionAction<C> lastAction;
         // Multiple set operations are coalesced into a single one
         if (!actions.isEmpty() && (lastAction = actions.get(actions.size() - 1)) instanceof ListSetAction<?, ?>) {

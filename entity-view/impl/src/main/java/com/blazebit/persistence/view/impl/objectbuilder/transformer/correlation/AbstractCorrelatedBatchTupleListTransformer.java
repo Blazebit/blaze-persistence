@@ -44,13 +44,13 @@ import java.util.Map;
 public abstract class AbstractCorrelatedBatchTupleListTransformer extends AbstractCorrelatedTupleListTransformer {
 
     public static final String CORRELATION_KEY_ALIAS = "correlationKey";
-    protected static final int VALUE_INDEX = 0;
-    protected static final int KEY_INDEX = 1;
     private static final String CORRELATION_PARAM_PREFIX = "correlationParam_";
 
     protected final int batchSize;
     protected final boolean correlatesThis;
     protected final BatchCorrelationMode expectBatchCorrelationMode;
+    protected final int valueIndex;
+    protected final int keyIndex;
 
     protected String correlationParamName;
     protected String correlationSelectExpression;
@@ -65,6 +65,8 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
         this.batchSize = entityViewConfiguration.getBatchSize(attributePath, defaultBatchSize);
         this.correlatesThis = correlatesThis;
         this.expectBatchCorrelationMode = entityViewConfiguration.getExpectBatchCorrelationValues(attributePath);
+        this.valueIndex = correlator.getElementOffset();
+        this.keyIndex = valueIndex + 1;
     }
 
     private String generateCorrelationParamName() {

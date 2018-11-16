@@ -74,6 +74,7 @@ public class FusedMapActions {
                             removeValueCount--;
                         }
                     } else {
+                        removeCount--;
                         removeValueCount--;
                     }
                 }
