@@ -28,12 +28,14 @@ import java.util.Set;
 public class OrderedMapInstantiator extends AbstractMapInstantiator<Map<?, ?>, RecordingMap<Map<?, ?>, ?, ?>> {
 
     private final Set<Class<?>> allowedSubtypes;
+    private final Set<Class<?>> parentRequiringSubtypes;
     private final boolean updatable;
     private final boolean optimize;
 
-    public OrderedMapInstantiator(PluralObjectFactory<Map<?, ?>> collectionFactory, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize) {
+    public OrderedMapInstantiator(PluralObjectFactory<Map<?, ?>> collectionFactory, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringSubtypes, boolean updatable, boolean optimize) {
         super(collectionFactory);
         this.allowedSubtypes = allowedSubtypes;
+        this.parentRequiringSubtypes = parentRequiringSubtypes;
         this.updatable = updatable;
         this.optimize = optimize;
     }
@@ -45,6 +47,6 @@ public class OrderedMapInstantiator extends AbstractMapInstantiator<Map<?, ?>, R
 
     @Override
     public RecordingMap<Map<?, ?>, ?, ?> createRecordingCollection(int size) {
-        return new RecordingMap(createCollection(size), true, allowedSubtypes, updatable, optimize);
+        return new RecordingMap(createCollection(size), true, allowedSubtypes, parentRequiringSubtypes, updatable, optimize);
     }
 }

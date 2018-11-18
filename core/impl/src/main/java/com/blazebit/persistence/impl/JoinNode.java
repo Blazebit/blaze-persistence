@@ -39,7 +39,6 @@ import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -841,7 +840,6 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         appendAlias(sb, renderTreat, externalRepresentation);
         // If we have a valuesTypeName, the property can only be "value" which is already handled in appendAlias
         if (property != null && valuesTypeName == null) {
-            Set<SingularAttribute<?, ?>> idAttributes;
             if (requiresElementCollectionIdCutoff && parentTreeNode != null && parentTreeNode.getAttribute().getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION
                     && property.endsWith(".id")) {
                 // See https://hibernate.atlassian.net/browse/HHH-13045 for details

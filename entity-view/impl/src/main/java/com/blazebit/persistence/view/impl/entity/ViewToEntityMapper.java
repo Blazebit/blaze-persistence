@@ -48,4 +48,5 @@ public interface ViewToEntityMapper extends ElementToEntityMapper {
 
     public Object loadEntity(UpdateContext context, Object view);
 
+    public boolean cascades(Object value);
 }

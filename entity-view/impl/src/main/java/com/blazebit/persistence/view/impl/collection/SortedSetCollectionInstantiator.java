@@ -30,13 +30,15 @@ import java.util.TreeSet;
 public class SortedSetCollectionInstantiator  extends AbstractCollectionInstantiator {
 
     private final Set<Class<?>> allowedSubtypes;
+    private final Set<Class<?>> parentRequiringSubtypes;
     private final boolean updatable;
     private final boolean optimize;
     private final Comparator<?> comparator;
 
-    public SortedSetCollectionInstantiator(PluralObjectFactory<Collection<?>> collectionFactory, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize, Comparator<?> comparator) {
+    public SortedSetCollectionInstantiator(PluralObjectFactory<Collection<?>> collectionFactory, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringSubtypes, boolean updatable, boolean optimize, Comparator<?> comparator) {
         super(collectionFactory);
         this.allowedSubtypes = allowedSubtypes;
+        this.parentRequiringSubtypes = parentRequiringSubtypes;
         this.updatable = updatable;
         this.optimize = optimize;
         this.comparator = comparator;
@@ -54,6 +56,6 @@ public class SortedSetCollectionInstantiator  extends AbstractCollectionInstanti
 
     @Override
     public RecordingSortedSet<NavigableSet<?>, ?> createRecordingCollection(int size) {
-        return new RecordingNavigableSet(createCollection(size), allowedSubtypes, updatable, optimize);
+        return new RecordingNavigableSet(createCollection(size), allowedSubtypes, parentRequiringSubtypes, updatable, optimize);
     }
 }

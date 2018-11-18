@@ -35,6 +35,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  *
@@ -102,29 +103,11 @@ public class EntityViewUpdateNestedUpdatableOnlySubviewTest extends AbstractEnti
         clearQueries();
 
         // When
-        docView.getResponsiblePerson().setFriend(newFriend);
-        update(docView);
-
-        // Then
-        AssertStatementBuilder builder = assertUnorderedQuerySequence();
-
-        if (isQueryStrategy()) {
-            builder.update(Person.class);
-            if (isFullMode() || version) {
-                builder.update(Document.class);
-            }
-        } else {
-            fullFetch(builder);
-            if (version) {
-                builder.update(Document.class);
-            }
-            builder.update(Person.class);
+        try {
+            docView.getResponsiblePerson().setFriend(newFriend);
+        } catch (IllegalArgumentException ex) {
+            assertTrue(ex.getMessage().contains("Setting instances of type"));
         }
-
-        builder.validate();
-
-        assertNoUpdateAndReload(docView);
-        assertEquals(p4.getId(), doc1.getResponsiblePerson().getFriend().getId());
     }
 
     @Test
@@ -136,30 +119,11 @@ public class EntityViewUpdateNestedUpdatableOnlySubviewTest extends AbstractEnti
 
         // When
         newFriend.setName("newFriend");
-        docView.getResponsiblePerson().setFriend(newFriend);
-        update(docView);
-
-        // Then
-        AssertStatementBuilder builder = assertUnorderedQuerySequence();
-
-        if (isQueryStrategy()) {
-            builder.update(Person.class);
-            if (isFullMode() || version) {
-                builder.update(Document.class);
-            }
-        } else {
-            fullFetch(builder);
-            if (version) {
-                builder.update(Document.class);
-            }
-            builder.update(Person.class);
+        try {
+            docView.getResponsiblePerson().setFriend(newFriend);
+        } catch (IllegalArgumentException ex) {
+            assertTrue(ex.getMessage().contains("Setting instances of type"));
         }
-
-        builder.validate();
-
-        assertNoUpdateAndReload(docView);
-        assertEquals(p4.getId(), doc1.getResponsiblePerson().getFriend().getId());
-        assertEquals("pers4", p4.getName());
     }
 
     @Test

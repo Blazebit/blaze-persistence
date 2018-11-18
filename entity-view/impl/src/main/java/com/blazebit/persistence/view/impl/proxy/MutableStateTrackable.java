@@ -18,6 +18,8 @@ package com.blazebit.persistence.view.impl.proxy;
 
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
+import java.util.List;
+
 /**
  * @author Christian Beikov
  * @since 1.2.0
@@ -34,6 +36,17 @@ public interface MutableStateTrackable extends EntityViewProxy, DirtyTracker {
     public Object[] $$_getMutableState();
 
     public DirtyTracker $$_getParent();
+
+    /**
+     * Returns an interleaved list of read only parent objects and parent indexes.
+     *
+     * @return An interleaved list of read only parent objects and parent indexes
+     */
+    public List<Object> $$_getReadOnlyParents();
+
+    public void $$_addReadOnlyParent(DirtyTracker readOnlyParent, int parentIndex);
+
+    public void $$_removeReadOnlyParent(DirtyTracker readOnlyParent, int parentIndex);
 
     public int $$_getParentIndex();
 

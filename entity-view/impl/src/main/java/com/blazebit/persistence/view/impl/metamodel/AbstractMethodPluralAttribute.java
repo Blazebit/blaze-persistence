@@ -56,6 +56,7 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
     private final Set<Type<?>> persistSubtypes;
     private final Set<Type<?>> updateSubtypes;
     private final Set<Class<?>> allowedSubtypes;
+    private final Set<Class<?>> parentRequiringSubtypes;
     private final Map<ManagedViewType<? extends Y>, String> elementInheritanceSubtypes;
     private final boolean sorted;
     private final boolean ordered;
@@ -95,9 +96,14 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
         this.readOnlySubtypes = (Set<Type<?>>) (Set) mapping.getReadOnlySubtypes(context, embeddableMapping);
 
         if (updatable) {
-            this.persistSubtypes = determinePersistSubtypeSet(elementType, mapping.getCascadeSubtypes(context, embeddableMapping), mapping.getCascadePersistSubtypes(context, embeddableMapping), context);
+            Set<Type<?>> types = determinePersistSubtypeSet(elementType, mapping.getCascadeSubtypes(context, embeddableMapping), mapping.getCascadePersistSubtypes(context, embeddableMapping), context);
             this.persistCascaded = mapping.getCascadeTypes().contains(CascadeType.PERSIST)
-                    || mapping.getCascadeTypes().contains(CascadeType.AUTO) && !persistSubtypes.isEmpty();
+                    || mapping.getCascadeTypes().contains(CascadeType.AUTO) && !types.isEmpty();
+            if (persistCascaded) {
+                this.persistSubtypes = types;
+            } else {
+                this.persistSubtypes = Collections.emptySet();
+            }
         } else {
             this.persistCascaded = false;
             this.persistSubtypes = Collections.emptySet();
@@ -134,6 +140,8 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
         }
 
         this.allowedSubtypes = createAllowedSubtypesSet();
+        // We treat elements of correlated collections specially
+        this.parentRequiringSubtypes = isCorrelated() ? Collections.<Class<?>>emptySet() : createParentRequiringSubtypesSet();
         this.optimisticLockProtected = determineOptimisticLockProtected(mapping, context, mutable);
         this.elementInheritanceSubtypes = (Map<ManagedViewType<? extends Y>, String>) (Map<?, ?>) mapping.getElementInheritanceSubtypes(context, embeddableMapping);
         this.dirtyStateIndex = determineDirtyStateIndex(dirtyStateIndex);
@@ -291,6 +299,11 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
     @Override
     public Set<Class<?>> getAllowedSubtypes() {
         return allowedSubtypes;
+    }
+
+    @Override
+    public Set<Class<?>> getParentRequiringSubtypes() {
+        return parentRequiringSubtypes;
     }
 
     @Override

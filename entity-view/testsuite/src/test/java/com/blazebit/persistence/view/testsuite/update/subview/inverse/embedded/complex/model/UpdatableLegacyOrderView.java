@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.complex.model;
 
+import com.blazebit.persistence.view.CascadeType;
 import com.blazebit.persistence.view.CreatableEntityView;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.InverseRemoveStrategy;
@@ -37,7 +38,7 @@ import java.util.Set;
 public interface UpdatableLegacyOrderView extends LegacyOrderIdView {
 
     @MappingInverse(removeStrategy = InverseRemoveStrategy.REMOVE)
-    @UpdatableMapping
+    @UpdatableMapping(cascade = { CascadeType.UPDATE, CascadeType.PERSIST })
     Set<UpdatableLegacyOrderPositionView> getPositions();
     void setPositions(Set<UpdatableLegacyOrderPositionView> positions);
 }

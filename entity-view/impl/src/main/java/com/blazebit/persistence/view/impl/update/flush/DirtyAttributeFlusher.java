@@ -66,6 +66,8 @@ public interface DirtyAttributeFlusher<T extends DirtyAttributeFlusher<T, E, V>,
 
     public boolean requiresFlushAfterPersist(V value);
 
+    public boolean requiresDeferredFlush(V value);
+
     public boolean requiresDeleteCascadeAfterRemove();
 
     public boolean isViewOnlyDeleteCascaded();

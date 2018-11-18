@@ -34,12 +34,14 @@ import com.blazebit.persistence.view.spi.type.BasicUserType;
 public final class DirtyStateViewAttributeAccessor extends ViewAttributeAccessor implements InitialValueAttributeAccessor {
 
     private final int dirtyStateIndex;
+    private final boolean updatableOnly;
     private final BasicUserType<Object> userType;
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public DirtyStateViewAttributeAccessor(EntityViewManagerImpl evm, MethodAttribute<?, ?> attribute) {
         super(evm, attribute, false);
         this.dirtyStateIndex = ((AbstractMethodAttribute<?, ?>) attribute).getDirtyStateIndex();
+        this.updatableOnly = ((AbstractMethodAttribute<?, ?>) attribute).isUpdatableOnly() && !attribute.isCorrelated();
         if (attribute instanceof SingularAttribute<?, ?>) {
             SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) attribute;
             if (singularAttribute.getType() instanceof BasicType<?>) {
@@ -82,7 +84,9 @@ public final class DirtyStateViewAttributeAccessor extends ViewAttributeAccessor
         super.setValue(view, value);
         if (view instanceof MutableStateTrackable) {
             MutableStateTrackable mutableStateTrackable = (MutableStateTrackable) view;
-            if (value instanceof DirtyTracker) {
+            if (updatableOnly && value instanceof MutableStateTrackable) {
+                ((MutableStateTrackable) value).$$_addReadOnlyParent(mutableStateTrackable, dirtyStateIndex);
+            } else if (value instanceof DirtyTracker) {
                 ((DirtyTracker) value).$$_setParent(mutableStateTrackable, dirtyStateIndex);
             }
             mutableStateTrackable.$$_getMutableState()[dirtyStateIndex] = value;

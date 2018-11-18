@@ -46,6 +46,7 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
 
     protected final C delegate;
     protected final Set<Class<?>> allowedSubtypes;
+    protected final Set<Class<?>> parentRequiringSubtypes;
     protected final boolean updatable;
     protected final boolean indexed;
     private final boolean ordered;
@@ -60,9 +61,10 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
     // We remember the iterator so we can do a proper hash based collection replacement
     private transient RecordingReplacingIterator<E> currentIterator;
 
-    protected RecordingCollection(C delegate, boolean indexed, boolean ordered, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize, boolean hashBased) {
+    protected RecordingCollection(C delegate, boolean indexed, boolean ordered, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringSubtypes, boolean updatable, boolean optimize, boolean hashBased) {
         this.delegate = delegate;
         this.allowedSubtypes = allowedSubtypes;
+        this.parentRequiringSubtypes = parentRequiringSubtypes;
         this.updatable = updatable;
         this.indexed = indexed;
         this.ordered = ordered;
@@ -70,9 +72,10 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
         this.hashBased = hashBased;
     }
 
-    public RecordingCollection(C delegate, boolean indexed, boolean ordered, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize) {
+    public RecordingCollection(C delegate, boolean indexed, boolean ordered, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringSubtypes, boolean updatable, boolean optimize) {
         this.delegate = delegate;
         this.allowedSubtypes = allowedSubtypes;
+        this.parentRequiringSubtypes = parentRequiringSubtypes;
         this.updatable = updatable;
         this.indexed = indexed;
         this.ordered = ordered;
@@ -167,6 +170,25 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
     @Override
     public boolean $$_hasParent() {
         return parent != null;
+    }
+
+    @Override
+    public void $$_replaceAttribute(Object oldObject, int attributeIndex, Object newObject) {
+        if (ordered) {
+            List<E> newCollection = new ArrayList<>(delegate.size());
+            for (E e : delegate) {
+                if (e == oldObject) {
+                    newCollection.add((E) newObject);
+                } else {
+                    newCollection.add(e);
+                }
+            }
+            delegate.clear();
+            delegate.addAll(newCollection);
+        } else {
+            delegate.remove(oldObject);
+            delegate.add((E) newObject);
+        }
     }
 
     public void $$_unsetParent() {
@@ -490,11 +512,14 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
             if (!allowedSubtypes.contains(c)) {
                 throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed!");
             }
+            if (parentRequiringSubtypes.contains(c) && !((DirtyTracker) e).$$_hasParent()) {
+                throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed until they are assigned to an attribute that cascades the type!");
+            }
         }
     }
 
     protected void checkType(Collection<?> collection, String action) {
-        if (collection != null && !allowedSubtypes.isEmpty()) {
+        if (collection != null && !collection.isEmpty() && !allowedSubtypes.isEmpty()) {
             for (Object e : collection) {
                 Class<?> c;
                 if (e instanceof EntityViewProxy) {
@@ -505,6 +530,9 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
 
                 if (!allowedSubtypes.contains(c)) {
                     throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed!");
+                }
+                if (parentRequiringSubtypes.contains(c) && !((DirtyTracker) e).$$_hasParent()) {
+                    throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed until they are assigned to an attribute that cascades the type!");
                 }
             }
         }

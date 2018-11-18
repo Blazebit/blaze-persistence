@@ -210,7 +210,7 @@ public class Document extends Ownable implements Serializable {
         this.wrappedByteArray = wrappedByteArray;
     }
 
-    @OneToMany(mappedBy = "partnerDocument")
+    @OneToMany(mappedBy = "partnerDocument", cascade = CascadeType.PERSIST)
     public Set<Person> getPartners() {
         return partners;
     }
@@ -260,8 +260,8 @@ public class Document extends Ownable implements Serializable {
         return contacts;
     }
 
-    public void setContacts(Map<Integer, Person> localized) {
-        this.contacts = localized;
+    public void setContacts(Map<Integer, Person> contacts) {
+        this.contacts = contacts;
     }
 
     @OneToMany
@@ -271,8 +271,8 @@ public class Document extends Ownable implements Serializable {
         return contacts2;
     }
 
-    public void setContacts2(Map<Integer, Person> localized) {
-        this.contacts2 = localized;
+    public void setContacts2(Map<Integer, Person> contacts2) {
+        this.contacts2 = contacts2;
     }
 
     @OneToMany

@@ -35,6 +35,7 @@ import com.blazebit.persistence.view.spi.EntityViewConstructorMapping;
 import com.blazebit.persistence.view.spi.EntityViewMapping;
 import com.blazebit.persistence.view.spi.EntityViewParameterMapping;
 
+import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.ManagedType;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
@@ -98,6 +99,11 @@ public class ParameterAttributeMapping extends AttributeMapping implements Entit
     @Override
     public String getMappedBy() {
         return null;
+    }
+
+    @Override
+    public boolean determineDisallowOwnedUpdatableSubview(MetamodelBuildingContext context, EmbeddableOwner embeddableMapping, Attribute<?, ?> updateMappableAttribute) {
+        return false;
     }
 
     @Override

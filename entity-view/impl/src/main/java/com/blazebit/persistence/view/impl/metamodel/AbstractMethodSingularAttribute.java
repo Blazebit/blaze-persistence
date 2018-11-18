@@ -61,6 +61,7 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
     private final Set<Type<?>> persistSubtypes;
     private final Set<Type<?>> updateSubtypes;
     private final Set<Class<?>> allowedSubtypes;
+    private final Set<Class<?>> parentRequiringSubtypes;
     private final Map<ManagedViewType<? extends Y>, String> inheritanceSubtypes;
 
     @SuppressWarnings("unchecked")
@@ -110,9 +111,14 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
         this.readOnlySubtypes = (Set<Type<?>>) (Set) mapping.getReadOnlySubtypes(context, embeddableMapping);
 
         if (updatable) {
-            this.persistSubtypes = determinePersistSubtypeSet(type, mapping.getCascadeSubtypes(context, embeddableMapping), mapping.getCascadePersistSubtypes(context, embeddableMapping), context);
+            Set<Type<?>> types = determinePersistSubtypeSet(type, mapping.getCascadeSubtypes(context, embeddableMapping), mapping.getCascadePersistSubtypes(context, embeddableMapping), context);
             this.persistCascaded = mapping.getCascadeTypes().contains(CascadeType.PERSIST)
-                    || mapping.getCascadeTypes().contains(CascadeType.AUTO) && !persistSubtypes.isEmpty();
+                    || mapping.getCascadeTypes().contains(CascadeType.AUTO) && !types.isEmpty();
+            if (persistCascaded) {
+                this.persistSubtypes = types;
+            } else {
+                this.persistSubtypes = Collections.emptySet();
+            }
         } else {
             this.persistCascaded = false;
             this.persistSubtypes = Collections.emptySet();
@@ -120,7 +126,7 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
 
         ManagedType<?> managedType = context.getEntityMetamodel().getManagedType(declaringType.getEntityClass());
         this.mappedBy = mapping.determineMappedBy(managedType, this.mapping, context, embeddableMapping);
-        this.disallowOwnedUpdatableSubview = context.isDisallowOwnedUpdatableSubview() && mapping.isDisallowOwnedUpdatableSubview() && type instanceof ManagedViewType<?> && mappedBy == null
+        this.disallowOwnedUpdatableSubview = context.isDisallowOwnedUpdatableSubview() && mapping.determineDisallowOwnedUpdatableSubview(context, embeddableMapping, updateMappableAttribute) && type instanceof ManagedViewType<?> && mappedBy == null
                 && updateMappableAttribute != null && updateMappableAttribute.getPersistentAttributeType() != javax.persistence.metamodel.Attribute.PersistentAttributeType.EMBEDDED;
 
         // The declaring type must be mutable, otherwise attributes can't have cascading
@@ -165,6 +171,8 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
         }
 
         this.allowedSubtypes = createAllowedSubtypesSet();
+        // We treat correlated attributes specially
+        this.parentRequiringSubtypes = isCorrelated() ? Collections.<Class<?>>emptySet() : createParentRequiringSubtypesSet();
         this.optimisticLockProtected = determineOptimisticLockProtected(mapping, context, mutable);
         this.inheritanceSubtypes = (Map<ManagedViewType<? extends Y>, String>) (Map<?, ?>) mapping.getInheritanceSubtypes(context, embeddableMapping);
         this.dirtyStateIndex = determineDirtyStateIndex(dirtyStateIndex);
@@ -340,6 +348,11 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
     @Override
     public Set<Class<?>> getAllowedSubtypes() {
         return allowedSubtypes;
+    }
+
+    @Override
+    public Set<Class<?>> getParentRequiringSubtypes() {
+        return parentRequiringSubtypes;
     }
 
     @Override

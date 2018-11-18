@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.collection;
 
 import com.blazebit.persistence.view.impl.entity.MapViewToEntityMapper;
 import com.blazebit.persistence.view.impl.proxy.DirtyTracker;
+import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.spi.type.BasicDirtyTracker;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
@@ -47,6 +48,7 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
 
     protected final C delegate;
     protected final Set<Class<?>> allowedSubtypes;
+    protected final Set<Class<?>> parentRequiringSubtypes;
     protected final boolean updatable;
     private final boolean optimize;
     private final boolean hashBased;
@@ -62,18 +64,20 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
     // We remember the iterator so we can do a proper hash based collection replacement
     private transient RecordingEntrySetReplacingIterator<K, V> currentIterator;
 
-    protected RecordingMap(C delegate, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize, boolean hashBased, boolean ordered) {
+    protected RecordingMap(C delegate, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringSubtypes, boolean updatable, boolean optimize, boolean hashBased, boolean ordered) {
         this.delegate = delegate;
         this.allowedSubtypes = allowedSubtypes;
+        this.parentRequiringSubtypes = parentRequiringSubtypes;
         this.updatable = updatable;
         this.optimize = optimize;
         this.hashBased = hashBased;
         this.ordered = ordered;
     }
 
-    public RecordingMap(C delegate, boolean ordered, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize) {
+    public RecordingMap(C delegate, boolean ordered, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringSubtypes, boolean updatable, boolean optimize) {
         this.delegate = delegate;
         this.allowedSubtypes = allowedSubtypes;
+        this.parentRequiringSubtypes = parentRequiringSubtypes;
         this.updatable = updatable;
         this.optimize = optimize;
         this.ordered = ordered;
@@ -174,6 +178,40 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
     @Override
     public boolean $$_hasParent() {
         return parent != null;
+    }
+
+    @Override
+    public void $$_replaceAttribute(Object oldObject, int attributeIndex, Object newObject) {
+        if (oldObject instanceof MutableStateTrackable) {
+            ((MutableStateTrackable) oldObject).$$_removeReadOnlyParent(this, attributeIndex);
+        }
+        if (newObject instanceof MutableStateTrackable) {
+            ((MutableStateTrackable) newObject).$$_addReadOnlyParent(this, attributeIndex);
+        }
+        if (attributeIndex == 1) {
+            if (ordered) {
+                Map<K, V> newMap = new LinkedHashMap<>(delegate.size());
+                for (Entry<K, V> entry : delegate.entrySet()) {
+                    if (entry.getKey() == oldObject) {
+                        newMap.put((K) newObject, entry.getValue());
+                    } else {
+                        newMap.put(entry.getKey(), entry.getValue());
+                    }
+                }
+                delegate.clear();
+                delegate.putAll(newMap);
+            } else {
+                V value = delegate.remove(oldObject);
+                delegate.put((K) newObject, value);
+            }
+        } else {
+            for (Entry<K, V> entry : delegate.entrySet()) {
+                if (entry.getValue() == oldObject) {
+                    entry.setValue((V) newObject);
+                    break;
+                }
+            }
+        }
     }
 
     @Override
@@ -534,11 +572,14 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
             if (!allowedSubtypes.contains(c)) {
                 throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed!");
             }
+            if (parentRequiringSubtypes.contains(c) && !((DirtyTracker) e).$$_hasParent()) {
+                throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed until they are assigned to an attribute that cascades the type!");
+            }
         }
     }
 
     protected void checkType(Map<?, ?> collection, String action) {
-        if (collection != null && !allowedSubtypes.isEmpty()) {
+        if (collection != null && !collection.isEmpty() && !allowedSubtypes.isEmpty()) {
             for (Object e : collection.values()) {
                 Class<?> c;
                 if (e instanceof EntityViewProxy) {
@@ -549,6 +590,9 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
 
                 if (!allowedSubtypes.contains(c)) {
                     throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed!");
+                }
+                if (parentRequiringSubtypes.contains(c) && !((DirtyTracker) e).$$_hasParent()) {
+                    throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed until they are assigned to an attribute that cascades the type!");
                 }
             }
         }

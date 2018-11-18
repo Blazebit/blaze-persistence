@@ -62,6 +62,11 @@ public class LoadOnlyViewToEntityMapper implements ViewToEntityMapper {
     }
 
     @Override
+    public boolean cascades(Object value) {
+        return false;
+    }
+
+    @Override
     public <T extends DirtyAttributeFlusher<T, E, V>, E, V> DirtyAttributeFlusher<T, E, V> getNestedDirtyFlusher(UpdateContext context, MutableStateTrackable current, DirtyAttributeFlusher<T, E, V> fullFlusher) {
         return fullFlusher;
     }

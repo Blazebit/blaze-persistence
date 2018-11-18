@@ -24,6 +24,7 @@ import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.spi.EntityViewAttributeMapping;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 
+import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.ManagedType;
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
@@ -67,7 +68,7 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
     protected ContainerBehavior containerBehavior;
     protected Class<? extends Comparator<?>> comparatorClass;
     protected boolean forceUniqueness;
-    protected boolean disallowOwnedUpdatableSubview = true;
+    protected Boolean disallowOwnedUpdatableSubview;
 
     // Other configs
     protected Integer defaultBatchSize;
@@ -177,7 +178,7 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
 
     @Override
     public boolean isDisallowOwnedUpdatableSubview() {
-        return disallowOwnedUpdatableSubview;
+        return !Boolean.FALSE.equals(disallowOwnedUpdatableSubview);
     }
 
     @Override
@@ -209,6 +210,8 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
     public boolean isSorted() {
         return containerBehavior == ContainerBehavior.SORTED;
     }
+
+    public abstract boolean determineDisallowOwnedUpdatableSubview(MetamodelBuildingContext context, EmbeddableOwner embeddableMapping, Attribute<?, ?> updateMappableAttribute);
 
     public abstract String determineMappedBy(ManagedType<?> managedType, String mapping, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping);
 

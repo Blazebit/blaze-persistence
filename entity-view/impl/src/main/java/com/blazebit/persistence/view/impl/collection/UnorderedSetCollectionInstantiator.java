@@ -28,12 +28,14 @@ import java.util.Set;
 public class UnorderedSetCollectionInstantiator  extends AbstractCollectionInstantiator {
 
     private final Set<Class<?>> allowedSubtypes;
+    private final Set<Class<?>> parentRequiringSubtypes;
     private final boolean updatable;
     private final boolean optimize;
 
-    public UnorderedSetCollectionInstantiator(PluralObjectFactory<Collection<?>> collectionFactory, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize) {
+    public UnorderedSetCollectionInstantiator(PluralObjectFactory<Collection<?>> collectionFactory, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringSubtypes, boolean updatable, boolean optimize) {
         super(collectionFactory);
         this.allowedSubtypes = allowedSubtypes;
+        this.parentRequiringSubtypes = parentRequiringSubtypes;
         this.updatable = updatable;
         this.optimize = optimize;
     }
@@ -50,6 +52,6 @@ public class UnorderedSetCollectionInstantiator  extends AbstractCollectionInsta
 
     @Override
     public RecordingSet<Set<?>, ?> createRecordingCollection(int size) {
-        return new RecordingSet(createCollection(size), false, allowedSubtypes, updatable, optimize);
+        return new RecordingSet(createCollection(size), false, allowedSubtypes, parentRequiringSubtypes, updatable, optimize);
     }
 }

@@ -320,6 +320,11 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
         return false;
     }
 
+    @Override
+    public boolean requiresDeferredFlush(V value) {
+        return false;
+    }
+
     protected final <X> X persistOrMerge(EntityManager em, X object) {
         return persistOrMerge(em, object, elementDescriptor);
     }

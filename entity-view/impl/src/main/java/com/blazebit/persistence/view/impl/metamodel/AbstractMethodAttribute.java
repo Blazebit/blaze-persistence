@@ -399,6 +399,10 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
 
     public abstract int getDirtyStateIndex();
 
+    public boolean isUpdatableOnly() {
+        return hasDirtyStateIndex() && !isPersistCascaded() && !isUpdateCascaded();
+    }
+
     public abstract Map<String, String> getWritableMappedByMappings();
 
     protected final Set<Class<?>> createAllowedSubtypesSet() {
@@ -414,6 +418,22 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
         }
         for (Type<?> t : updateAllowedSubtypes) {
             allowedSubtypes.add(t.getJavaType());
+        }
+        return Collections.unmodifiableSet(allowedSubtypes);
+    }
+
+    protected final Set<Class<?>> createParentRequiringSubtypesSet() {
+        Set<Type<?>> readOnlyAllowedSubtypes = getReadOnlyAllowedSubtypes();
+        Set<Type<?>> persistAllowedSubtypes = getPersistCascadeAllowedSubtypes();
+        Set<Type<?>> updateAllowedSubtypes = getUpdateCascadeAllowedSubtypes();
+        Set<Class<?>> allowedSubtypes = new HashSet<>(readOnlyAllowedSubtypes.size());
+        for (Type<?> t : readOnlyAllowedSubtypes) {
+            if (t instanceof ManagedViewTypeImplementor<?>) {
+                ManagedViewTypeImplementor<?> viewType = (ManagedViewTypeImplementor<?>) t;
+                if (viewType.isUpdatable() && !updateAllowedSubtypes.contains(t) || viewType.isCreatable() && !persistAllowedSubtypes.contains(t)) {
+                    allowedSubtypes.add(t.getJavaType());
+                }
+            }
         }
         return Collections.unmodifiableSet(allowedSubtypes);
     }

@@ -1111,7 +1111,8 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
             sb.append(node.getAliasInfo().getAlias());
             renderedJoins.add(node);
-            boolean onClause = valuesNode != null || node.getOnPredicate() != null && !node.getOnPredicate().getChildren().isEmpty() || onCondition != null;
+            boolean realOnClause = node.getOnPredicate() != null && !node.getOnPredicate().getChildren().isEmpty() || onCondition != null;
+            boolean onClause = valuesNode != null || realOnClause;
 
             if (onClause) {
                 sb.append(joinRestrictionKeyword);
@@ -1125,7 +1126,9 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             if (valuesNode != null) {
                 if (!externalRepresentation) {
                     renderValuesClausePredicate(sb, valuesNode, valuesNode.getAlias(), externalRepresentation);
-                    sb.append(" AND ");
+                    if (realOnClause) {
+                        sb.append(" AND ");
+                    }
                 }
                 valuesNode = null;
             }
@@ -2185,7 +2188,9 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             return false;
         }
 
+        String elementCollectionPath = null;
         String attributePath = joinResult.joinFields(maybeSingularAssociationName);
+        String fullAttributePath = attributePath;
         if (maybeSingularAssociation instanceof MapKeyAttribute<?, ?>) {
             // Skip the foreign join column check for map keys
             // They aren't allowed as join sources in the JPA providers yet so we can only render them directly
@@ -2193,18 +2198,24 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             // Get the base type. This is important if the path is "deeper" i.e. when having embeddables
             JoinNode node = parent;
             baseType = node.getNodeType();
-            while (baseType instanceof EmbeddableType<?>) {
+            if (baseType instanceof EmbeddableType<?>) {
                 if (node.getParentTreeNode() == null) {
-                    attributePath = node.getValuesLikeAttribute() + "." + attributePath;
+                    fullAttributePath = node.getValuesLikeAttribute() + "." + fullAttributePath;
+                    elementCollectionPath = node.isValueClazzAttributeSingular() ? null : node.getValuesLikeAttribute();
                     baseType = node.getValueType();
-                    break;
+                } else {
+                    if (node.getParentTreeNode().getAttribute().isCollection()) {
+                        elementCollectionPath = node.getParentTreeNode().getRelationName();
+                    } else {
+                        attributePath = node.getParentTreeNode().getRelationName() + "." + attributePath;
+                    }
+                    fullAttributePath = node.getParentTreeNode().getRelationName() + "." + fullAttributePath;
+                    node = node.getParent();
+                    baseType = node.getNodeType();
                 }
-                attributePath = node.getParentTreeNode().getRelationName() + "." + attributePath;
-                node = node.getParent();
-                baseType = node.getNodeType();
             }
 
-            if (mainQuery.jpaProvider.isForeignJoinColumn((EntityType<?>) baseType, attributePath)) {
+            if (mainQuery.jpaProvider.isForeignJoinColumn((EntityType<?>) baseType, fullAttributePath)) {
                 return false;
             }
         } else if (mainQuery.jpaProvider.isForeignJoinColumn((EntityType<?>) baseType, maybeSingularAssociation.getName())) {
@@ -2213,10 +2224,18 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
         PathElementExpression maybeSingularAssociationIdExpression = pathElements.get(maybeSingularAssociationIdIndex);
         ExtendedManagedType<?> managedType = metamodel.getManagedType(ExtendedManagedType.class, JpaMetamodelUtils.getTypeName(baseType));
-        ExtendedAttribute<?, ?> associationAttribute = managedType.getOwnedSingularAttributes().get(attributePath);
-        return managedType.getOwnedSingularAttributes().containsKey(attributePath + "." + maybeSingularAssociationIdExpression)
-                && associationAttribute != null
-                && (contains(metamodel.getManagedType(ExtendedManagedType.class, associationAttribute.getElementClass()).getIdAttributes(), maybeSingularAssociationIdExpression) || mainQuery.jpaProvider.supportsSingleValuedAssociationNaturalIdExpressions());
+        if (elementCollectionPath == null) {
+            ExtendedAttribute<?, ?> associationAttribute = managedType.getOwnedSingularAttributes().get(fullAttributePath);
+            return managedType.getOwnedSingularAttributes().containsKey(fullAttributePath + "." + maybeSingularAssociationIdExpression)
+                    && associationAttribute != null
+                    && (contains(metamodel.getManagedType(ExtendedManagedType.class, associationAttribute.getElementClass()).getIdAttributes(), maybeSingularAssociationIdExpression) || mainQuery.jpaProvider.supportsSingleValuedAssociationNaturalIdExpressions());
+        } else {
+            // We assume that associations within element collections are always owned
+            ExtendedAttribute<?, ?> associationAttribute = managedType.getAttributes().get(fullAttributePath);
+            return !mainQuery.jpaProvider.needsElementCollectionIdCutoff() && managedType.getAttributes().containsKey(fullAttributePath + "." + maybeSingularAssociationIdExpression)
+                    && associationAttribute != null
+                    && (contains(metamodel.getManagedType(ExtendedManagedType.class, associationAttribute.getElementClass()).getIdAttributes(), maybeSingularAssociationIdExpression) || mainQuery.jpaProvider.supportsSingleValuedAssociationNaturalIdExpressions());
+        }
     }
 
     private static boolean contains(Set<? extends Attribute<?, ?>> attributes, PathElementExpression expression) {

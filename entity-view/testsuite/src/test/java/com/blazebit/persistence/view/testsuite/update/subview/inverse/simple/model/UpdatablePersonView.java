@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.testsuite.update.subview.inverse.simple.model;
 
 import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.view.CascadeType;
 import com.blazebit.persistence.view.CreatableEntityView;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.InverseRemoveStrategy;
@@ -40,7 +41,7 @@ public interface UpdatablePersonView extends PersonIdView {
     void setName(String name);
 
     @MappingInverse(removeStrategy = InverseRemoveStrategy.REMOVE)
-    @UpdatableMapping
+    @UpdatableMapping(cascade = { CascadeType.UPDATE, CascadeType.PERSIST })
     Set<DocumentIdView> getOwnedDocuments2();
     void setOwnedDocuments2(Set<DocumentIdView> ownedDocuments2);
 }
