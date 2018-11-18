@@ -196,7 +196,7 @@ public class HibernateJpaProvider implements JpaProvider {
             // See https://hibernate.atlassian.net/browse/HHH-12775 for details
             this.supportsSingleValuedAssociationNaturalIdExpressions = major > 5 || major == 5 && minor >= 4;
             // See https://hibernate.atlassian.net/browse/HHH-13045 for details
-            this.needsElementCollectionIdCutoffForCompositeIdOwner = major < 5 || major == 5 && minor < 4 || major == 5 && minor == 4 && "SNAPSHOT".equals(type);
+            this.needsElementCollectionIdCutoffForCompositeIdOwner = major < 5 || major == 5 && minor < 4;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

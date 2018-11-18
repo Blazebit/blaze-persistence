@@ -48,7 +48,7 @@ import javax.persistence.EntityManager;
 //@Category({ NoDatanucleus.class, NoEclipselink.class})
 // NOTE: Hibernate has a bug when selecting inverse one-to-ones: https://hibernate.atlassian.net/browse/HHH-12885
 @Category({ NoHibernate.class, NoDatanucleus.class, NoEclipselink.class})
-public class EntityViewUpdateSubviewInverseEmbeddedTest extends AbstractEntityViewUpdateTest<UpdatableDocumentForOneToOneView> {
+public class EntityViewUpdateSubviewInverseOneToOneEntityTest extends AbstractEntityViewUpdateTest<UpdatableDocumentForOneToOneView> {
 
     private DocumentForSimpleOneToOne doc1;
     private DocumentForSimpleOneToOne doc2;
@@ -61,7 +61,7 @@ public class EntityViewUpdateSubviewInverseEmbeddedTest extends AbstractEntityVi
         };
     }
 
-    public EntityViewUpdateSubviewInverseEmbeddedTest(FlushMode mode, FlushStrategy strategy, boolean version) {
+    public EntityViewUpdateSubviewInverseOneToOneEntityTest(FlushMode mode, FlushStrategy strategy, boolean version) {
         super(mode, strategy, version, UpdatableDocumentForOneToOneView.class);
     }
 

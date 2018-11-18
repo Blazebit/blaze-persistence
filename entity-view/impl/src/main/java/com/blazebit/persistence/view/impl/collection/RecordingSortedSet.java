@@ -27,8 +27,8 @@ import java.util.SortedSet;
  */
 public class RecordingSortedSet<C extends SortedSet<E>, E> extends RecordingSet<C, E> implements SortedSet<E> {
 
-    protected RecordingSortedSet(C delegate, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize) {
-        super(delegate, allowedSubtypes, updatable, optimize, false, false);
+    protected RecordingSortedSet(C delegate, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringSubtypes, boolean updatable, boolean optimize) {
+        super(delegate, allowedSubtypes, parentRequiringSubtypes, updatable, optimize, false, false);
     }
 
     @Override

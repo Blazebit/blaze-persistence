@@ -109,31 +109,11 @@ public class EntityViewUpdateSimpleUpdatableOnlySubviewCollectionsTest extends A
         clearQueries();
         
         // When
-        docView.getPeople().add(newPerson);
-        update(docView);
-
-        // Then
-        // Assert that the document and the people are loaded, but only a relation insert is done
-        AssertStatementBuilder builder = assertUnorderedQuerySequence();
-
-        if (isQueryStrategy()) {
-            if (isFullMode()) {
-                assertReplaceAnd(builder);
-            }
-        } else {
-            fullFetch(builder);
+        try {
+            docView.getPeople().add(newPerson);
+        } catch (IllegalArgumentException ex) {
+            assertTrue(ex.getMessage().contains("Adding instances of type"));
         }
-
-        if (version || isFullMode() && isQueryStrategy()) {
-            builder.update(Document.class);
-        }
-
-        builder.assertInsert()
-                .forRelation(Document.class, "people")
-                .validate();
-
-        assertNoUpdateAndReload(docView);
-        assertSubviewEquals(doc1.getPeople(), docView.getPeople());
     }
 
     @Test
@@ -189,39 +169,11 @@ public class EntityViewUpdateSimpleUpdatableOnlySubviewCollectionsTest extends A
 
         // When
         newPerson.setName("newPerson");
-        docView.getPeople().add(newPerson);
-        update(docView);
-
-        // Then
-        // In partial mode, only the document is loaded. In full mode, the people are also loaded
-        // Since we load the people in the full mode, we do a proper diff and can compute that only a single item was added
-        AssertStatementBuilder builder = assertUnorderedQuerySequence();
-
-        if (isQueryStrategy()) {
-            if (isFullMode()) {
-                assertReplaceAnd(builder);
-            }
-        } else {
-            if (isFullMode()) {
-                fullFetch(builder);
-            } else {
-                if (preferLoadingAndDiffingOverRecreate()) {
-                    fullFetch(builder);
-                } else {
-                    assertReplaceAnd(builder);
-                }
-            }
+        try {
+            docView.getPeople().add(newPerson);
+        } catch (IllegalArgumentException ex) {
+            assertTrue(ex.getMessage().contains("Adding instances of type"));
         }
-        if (version || isFullMode() && isQueryStrategy()) {
-            builder.update(Document.class);
-        }
-
-        builder.assertInsert()
-                .forRelation(Document.class, "people")
-                .validate();
-        assertNoUpdateAndReload(docView);
-        assertEquals(doc1.getPeople().size(), docView.getPeople().size());
-        assertEquals("pers2", p2.getName());
     }
 
     @Test

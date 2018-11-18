@@ -33,6 +33,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  *
@@ -92,23 +93,11 @@ public class EntityViewUpdateSimpleUpdatableOnlySubviewTest extends AbstractEnti
         clearQueries();
 
         // When
-        docView.setResponsiblePerson(newPerson);
-        update(docView);
-
-        // Then
-        // Assert that only the document is loaded and finally also updated
-        // There is no need to actually load the person
-        AssertStatementBuilder builder = assertUnorderedQuerySequence();
-
-        if (!isQueryStrategy()) {
-            fullFetch(builder);
+        try {
+            docView.setResponsiblePerson(newPerson);
+        } catch (IllegalArgumentException ex) {
+            assertTrue(ex.getMessage().contains("Setting instances of type"));
         }
-
-        builder.update(Document.class)
-                .validate();
-
-        assertNoUpdateAndReload(docView);
-        assertEquals(p2.getId(), doc1.getResponsiblePerson().getId());
     }
 
     @Test
@@ -120,24 +109,11 @@ public class EntityViewUpdateSimpleUpdatableOnlySubviewTest extends AbstractEnti
 
         // When
         newPerson.setName("newOwner");
-        docView.setResponsiblePerson(newPerson);
-        update(docView);
-
-        // Then
-        // Assert that only the document is loaded and finally also updated
-        // But the person is not updated
-        AssertStatementBuilder builder = assertUnorderedQuerySequence();
-
-        if (!isQueryStrategy()) {
-            fullFetch(builder);
+        try {
+            docView.setResponsiblePerson(newPerson);
+        } catch (IllegalArgumentException ex) {
+            assertTrue(ex.getMessage().contains("Setting instances of type"));
         }
-
-        builder.update(Document.class)
-                .validate();
-
-        assertNoUpdateAndReload(docView);
-        Assert.assertEquals(p2.getId(), doc1.getResponsiblePerson().getId());
-        Assert.assertEquals("pers2", p2.getName());
     }
 
     @Test

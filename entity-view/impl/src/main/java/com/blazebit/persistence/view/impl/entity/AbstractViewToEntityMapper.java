@@ -133,6 +133,12 @@ public abstract class AbstractViewToEntityMapper implements ViewToEntityMapper {
     }
 
     @Override
+    public boolean cascades(Object element) {
+        Class<?> viewTypeClass = getViewTypeClass(element);
+        return persistUpdater.containsKey(viewTypeClass) || updateUpdater.containsKey(viewTypeClass);
+    }
+
+    @Override
     public void removeById(UpdateContext context, Object id) {
         defaultUpdater.remove(context, id);
     }

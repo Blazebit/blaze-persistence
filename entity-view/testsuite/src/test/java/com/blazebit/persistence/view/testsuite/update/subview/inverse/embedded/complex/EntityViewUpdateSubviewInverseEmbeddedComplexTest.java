@@ -56,7 +56,7 @@ import java.util.Iterator;
 @RunWith(Parameterized.class)
 // NOTE: No Datanucleus support yet
 @Category({ NoDatanucleus.class, NoEclipselink.class})
-public class EntityViewUpdateSubviewInverseEmbeddedTest extends AbstractEntityViewUpdateTest<UpdatableLegacyOrderView> {
+public class EntityViewUpdateSubviewInverseEmbeddedComplexTest extends AbstractEntityViewUpdateTest<UpdatableLegacyOrderView> {
 
     @Override
     protected Class<?>[] getEntityClasses() {
@@ -69,7 +69,7 @@ public class EntityViewUpdateSubviewInverseEmbeddedTest extends AbstractEntityVi
         };
     }
 
-    public EntityViewUpdateSubviewInverseEmbeddedTest(FlushMode mode, FlushStrategy strategy, boolean version) {
+    public EntityViewUpdateSubviewInverseEmbeddedComplexTest(FlushMode mode, FlushStrategy strategy, boolean version) {
         super(mode, strategy, version, UpdatableLegacyOrderView.class);
     }
 

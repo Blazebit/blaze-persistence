@@ -26,6 +26,8 @@ Not yet released
 * Implemented creatability validation for creatable entity views
 * Implemented `SET_NULL` inverse remove strategy validation for updatable entity views
 * Add updatable entity view support for inverse collections without a mapped by i.e. explicit join columns
+* Rewrtite implicit joins in `ON` clause automatically to subqueries
+* Add support for multiple non-cascading parent objects for updatable entity views
 
 ### Bug fixes
 

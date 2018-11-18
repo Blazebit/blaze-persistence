@@ -26,8 +26,8 @@ import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedMethodCollectionAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedMethodListAttribute;
-import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedMethodSingularAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedMethodSetAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedMethodSingularAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.MappingMethodCollectionAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.MappingMethodListAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.MappingMethodMapAttribute;
@@ -321,25 +321,21 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
             }
             // Also see AbstractMethodPluralAttribute#determineUpdatable() for the same logic
             if (attributeViewMapping != null) {
+                boolean allowCreatable = cascadeTypes.contains(CascadeType.PERSIST) || attributeViewMapping.isCreatable() && cascadeTypes.contains(CascadeType.AUTO);
                 if (isUpdatable == Boolean.TRUE || getDeclaringView().isUpdatable()) {
-                    if (hasSetter || isCollection && (cascadeTypes.contains(CascadeType.PERSIST) || attributeViewMapping.isCreatable())) {
-                        boolean allowUpdatable;
-                        if (isCollection) {
-                            allowUpdatable = true;
-                        } else {
-                            allowUpdatable = !disallowOwnedUpdatableSubview || attributeViewMapping.isUpdatable();
-                        }
+                    if (hasSetter || isCollection && allowCreatable) {
+                        boolean allowUpdatable = cascadeTypes.contains(CascadeType.UPDATE) || attributeViewMapping.isUpdatable() && cascadeTypes.contains(CascadeType.AUTO);
                         // But only if the attribute is explicitly or implicitly updatable
-                        this.readOnlySubtypeMappings = initializeDependentSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass(), false, false);
-                        this.cascadeSubtypeMappings = initializeDependentSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass(), allowUpdatable, true);
+                        this.readOnlySubtypeMappings = initializeDependentSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass(), true, true);
+                        this.cascadeSubtypeMappings = initializeDependentSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass(), allowUpdatable, allowCreatable);
                     } else {
                         this.cascadeSubtypeMappings = Collections.emptyMap();
                     }
                 } else {
                     // Allow all read-only subtypes and also creatable subtypes for creatable-only views
-                    if (getDeclaringView().isCreatable() && (hasSetter || isCollection && (cascadeTypes.contains(CascadeType.PERSIST) || attributeViewMapping.isCreatable()))) {
-                        this.readOnlySubtypeMappings = initializeDependentSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass(), false, false);
-                        this.cascadePersistSubtypeMappings = initializeDependentSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass(), false, true);
+                    if (getDeclaringView().isCreatable() && (hasSetter || isCollection && allowCreatable)) {
+                        this.readOnlySubtypeMappings = initializeDependentSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass(), true, true);
+                        this.cascadePersistSubtypeMappings = initializeDependentSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass(), false, allowCreatable);
                     }
                     this.cascadeSubtypeMappings = Collections.emptyMap();
                 }
@@ -381,6 +377,24 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
         }
 
         return error;
+    }
+
+    @Override
+    public boolean determineDisallowOwnedUpdatableSubview(MetamodelBuildingContext context, EmbeddableOwner embeddableMapping, Attribute<?, ?> updateMappableAttribute) {
+        if (disallowOwnedUpdatableSubview != null) {
+            return disallowOwnedUpdatableSubview;
+        }
+        String mappedBy;
+        if (embeddableMapping == null) {
+            mappedBy = this.mappedBy;
+        } else {
+            if (embeddableMappedByMap == null) {
+                embeddableMappedByMap = new HashMap<>(1);
+            }
+            mappedBy = embeddableMappedByMap.get(embeddableMapping);
+        }
+
+        return disallowOwnedUpdatableSubview = isCollection || mappedBy != null && !mappedBy.isEmpty() || updateMappableAttribute != null && updateMappableAttribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.ONE_TO_ONE;
     }
 
     public String determineMappedBy(ManagedType<?> managedType, String mapping, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {

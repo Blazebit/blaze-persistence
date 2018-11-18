@@ -227,6 +227,11 @@ public class EmbeddableAttributeFlusher<E, V> extends EmbeddableAttributeFetchGr
     }
 
     @Override
+    public boolean requiresDeferredFlush(V value) {
+        return nestedGraphNode != null && nestedGraphNode.requiresDeferredFlush(value);
+    }
+
+    @Override
     public <X> DirtyChecker<X>[] getNestedCheckers(V current) {
         return viewToEntityMapper.getUpdater(current).getDirtyChecker().getNestedCheckers((DirtyStateTrackable) current);
     }

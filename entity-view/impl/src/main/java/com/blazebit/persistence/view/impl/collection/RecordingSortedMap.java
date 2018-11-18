@@ -27,8 +27,8 @@ import java.util.SortedMap;
  */
 public class RecordingSortedMap<C extends SortedMap<K, V>, K, V> extends RecordingMap<C, K, V> implements SortedMap<K, V> {
 
-    protected RecordingSortedMap(C delegate, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize) {
-        super(delegate, allowedSubtypes, updatable, optimize, false, false);
+    protected RecordingSortedMap(C delegate, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringSubtypes, boolean updatable, boolean optimize) {
+        super(delegate, allowedSubtypes, parentRequiringSubtypes, updatable, optimize, false, false);
     }
 
     @Override

@@ -497,6 +497,11 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
     }
 
     @Override
+    public boolean requiresDeferredFlush(V value) {
+        return false;
+    }
+
+    @Override
     public DirtyAttributeFlusher<BasicAttributeFlusher<E, V>, E, V> getDirtyFlusher(UpdateContext context, Object view, Object initial, Object current) {
         if (updatable) {
             if (initial != current) {

@@ -47,7 +47,7 @@ import javax.persistence.EntityManager;
 @RunWith(Parameterized.class)
 // NOTE: No Datanucleus support yet
 @Category({ NoDatanucleus.class, NoEclipselink.class})
-public class EntityViewUpdateSubviewInverseEmbeddedTest extends AbstractEntityViewUpdateTest<UpdatableDocumentForOneToOneView> {
+public class EntityViewUpdateSubviewInverseOneToOneSimpleTest extends AbstractEntityViewUpdateTest<UpdatableDocumentForOneToOneView> {
 
     private DocumentForSimpleOneToOne doc1;
     private DocumentForSimpleOneToOne doc2;
@@ -60,7 +60,7 @@ public class EntityViewUpdateSubviewInverseEmbeddedTest extends AbstractEntityVi
         };
     }
 
-    public EntityViewUpdateSubviewInverseEmbeddedTest(FlushMode mode, FlushStrategy strategy, boolean version) {
+    public EntityViewUpdateSubviewInverseOneToOneSimpleTest(FlushMode mode, FlushStrategy strategy, boolean version) {
         super(mode, strategy, version, UpdatableDocumentForOneToOneView.class);
     }
 

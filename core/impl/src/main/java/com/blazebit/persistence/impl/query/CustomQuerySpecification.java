@@ -397,7 +397,7 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
             int subselectIndex = sb.indexOf(subselectTableExpr, 0);
             if (subselectIndex == -1) {
                 // this is probably a VALUES clause for an entity type
-                int syntheticPredicateStart = sb.indexOf(syntheticPredicate, SqlUtils.indexOfWhere(sb));
+                int syntheticPredicateStart = sb.indexOf(syntheticPredicate, SqlUtils.indexOfFrom(sb));
                 int end = syntheticPredicateStart + syntheticPredicate.length();
                 if (sb.indexOf(andSeparator, end) == end) {
                     sb.replace(syntheticPredicateStart, end + andSeparator.length(), "");

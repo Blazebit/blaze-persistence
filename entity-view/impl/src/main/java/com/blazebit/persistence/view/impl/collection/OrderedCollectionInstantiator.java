@@ -32,14 +32,16 @@ import java.util.Set;
 public class OrderedCollectionInstantiator  extends AbstractCollectionInstantiator {
 
     private final Set<Class<?>> allowedSubtypes;
+    private final Set<Class<?>> parentRequiringSubtypes;
     private final boolean updatable;
     private final boolean optimize;
     private final boolean forceUnique;
     private final Comparator<Object> comparator;
 
-    public OrderedCollectionInstantiator(PluralObjectFactory<Collection<?>> collectionFactory, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize, boolean forceUnique, Comparator<?> comparator) {
+    public OrderedCollectionInstantiator(PluralObjectFactory<Collection<?>> collectionFactory, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringSubtypes, boolean updatable, boolean optimize, boolean forceUnique, Comparator<?> comparator) {
         super(collectionFactory);
         this.allowedSubtypes = allowedSubtypes;
+        this.parentRequiringSubtypes = parentRequiringSubtypes;
         this.updatable = updatable;
         this.optimize = optimize;
         this.forceUnique = forceUnique;
@@ -87,6 +89,6 @@ public class OrderedCollectionInstantiator  extends AbstractCollectionInstantiat
 
     @Override
     public RecordingCollection<Collection<?>, ?> createRecordingCollection(int size) {
-        return new RecordingCollection(createCollection(size), false, true, allowedSubtypes, updatable, optimize);
+        return new RecordingCollection(createCollection(size), false, true, allowedSubtypes, parentRequiringSubtypes, updatable, optimize);
     }
 }

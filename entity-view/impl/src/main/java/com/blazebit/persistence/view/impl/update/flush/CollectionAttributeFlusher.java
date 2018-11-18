@@ -200,6 +200,11 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         return false;
     }
 
+    @Override
+    public boolean requiresDeferredFlush(V value) {
+        return false;
+    }
+
     protected boolean executeActions(UpdateContext context, Collection<Object> jpaCollection, List<CollectionAction<Collection<?>>> actions, ViewToEntityMapper mapper) {
         for (CollectionAction<Collection<?>> action : actions) {
             action.doAction(jpaCollection, context, mapper, removeListener);

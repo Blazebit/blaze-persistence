@@ -28,6 +28,7 @@ import javax.transaction.Status;
 import javax.transaction.Synchronization;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -71,25 +72,40 @@ public class ResetInitialStateSynchronization implements Synchronization, Initia
     }
 
     @Override
-    public void addPersistedView(MutableStateTrackable persistedView) {
+    public int addPersistedView(MutableStateTrackable persistedView) {
         if (persistedViews == null) {
             persistedViews = new ArrayList<>();
         }
         persistedView.$$_setIsNew(false);
         persistedViews.add(persistedView);
+        persistedViews.add(null);
         persistedViews.add(NO_ID_MARKER);
+        persistedViews.add(persistedView.$$_getParent());
+        persistedViews.add(persistedView.$$_getParentIndex());
+        persistedViews.add(persistedView.$$_getReadOnlyParents() == null || persistedView.$$_getReadOnlyParents().isEmpty() ? Collections.emptyList() : new ArrayList<>(persistedView.$$_getReadOnlyParents()));
         persistedViews.add(persistedView.$$_resetDirty());
+        return persistedViews.size() - 6;
     }
 
     @Override
-    public void addPersistedView(MutableStateTrackable persistedView, Object oldId) {
+    public int addPersistedView(MutableStateTrackable persistedView, Object oldId) {
         if (persistedViews == null) {
             persistedViews = new ArrayList<>();
         }
         persistedView.$$_setIsNew(false);
         persistedViews.add(persistedView);
+        persistedViews.add(null);
         persistedViews.add(oldId);
+        persistedViews.add(persistedView.$$_getParent());
+        persistedViews.add(persistedView.$$_getParentIndex());
+        persistedViews.add(persistedView.$$_getReadOnlyParents() == null || persistedView.$$_getReadOnlyParents().isEmpty() ? Collections.emptyList() : new ArrayList<>(persistedView.$$_getReadOnlyParents()));
         persistedViews.add(persistedView.$$_resetDirty());
+        return persistedViews.size() - 6;
+    }
+
+    @Override
+    public void addPersistedViewNewObject(int newObjectIndex, Object newObject) {
+        persistedViews.set(newObjectIndex, newObject);
     }
 
     @Override
@@ -177,14 +193,26 @@ public class ResetInitialStateSynchronization implements Synchronization, Initia
                 }
             }
             if (persistedViews != null) {
-                for (int i = 0; i < persistedViews.size(); i += 3) {
+                for (int i = 0; i < persistedViews.size(); i += 7) {
                     MutableStateTrackable view = (MutableStateTrackable) persistedViews.get(i);
+                    Object newObject = persistedViews.get(i + 1);
                     view.$$_setIsNew(true);
-                    Object id = persistedViews.get(i + 1);
+                    Object id = persistedViews.get(i + 2);
+                    DirtyTracker parent = (DirtyTracker) persistedViews.get(i + 3);
+                    int parentIndex = (int) persistedViews.get(i + 4);
+                    List<Object> readOnlyParents = (List<Object>) persistedViews.get(i + 5);
                     if (id != NO_ID_MARKER) {
                         view.$$_setId(id);
                     }
-                    view.$$_setDirty((long[]) persistedViews.get(i + 2));
+                    if (parent != null) {
+                        parent.$$_replaceAttribute(newObject, parentIndex, view);
+                        for (int j = 0; j < readOnlyParents.size(); j += 2) {
+                            DirtyTracker readOnlyParent = (DirtyTracker) readOnlyParents.get(j);
+                            int readOnlyParentIndex = (int) readOnlyParents.get(j + 1);
+                            readOnlyParent.$$_replaceAttribute(newObject, readOnlyParentIndex, view);
+                        }
+                    }
+                    view.$$_setDirty((long[]) persistedViews.get(i + 6));
                 }
             }
             if (updatedViews != null) {

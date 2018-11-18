@@ -33,6 +33,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  *
@@ -91,27 +92,11 @@ public class EntityViewUpdateCorrelatedUpdatableOnlySubviewTest extends Abstract
         clearQueries();
 
         // When
-        docView.setResponsiblePerson(newPerson);
-        update(docView);
-
-        // Then
-        AssertStatementBuilder builder = assertUnorderedQuerySequence();
-
-        if (isFullMode()) {
-            if (isQueryStrategy()) {
-                builder.update(Document.class);
-            } else {
-                fullFetch(builder);
-                if (version) {
-                    builder.update(Document.class);
-                }
-            }
+        try {
+            docView.setResponsiblePerson(newPerson);
+        } catch (IllegalArgumentException ex) {
+            assertTrue(ex.getMessage().contains("Setting instances of type"));
         }
-
-        builder.validate();
-
-        assertNoUpdateAndReload(docView);
-        assertEquals(p1.getId(), doc1.getResponsiblePerson().getId());
     }
 
     @Test
@@ -123,27 +108,11 @@ public class EntityViewUpdateCorrelatedUpdatableOnlySubviewTest extends Abstract
 
         // When
         newPerson.setName("newOwner");
-        docView.setResponsiblePerson(newPerson);
-        update(docView);
-
-        // Then
-        AssertStatementBuilder builder = assertUnorderedQuerySequence();
-
-        if (isFullMode()) {
-            if (isQueryStrategy()) {
-                builder.update(Document.class);
-            } else {
-                fullFetch(builder);
-                if (version) {
-                    builder.update(Document.class);
-                }
-            }
+        try {
+            docView.setResponsiblePerson(newPerson);
+        } catch (IllegalArgumentException ex) {
+            assertTrue(ex.getMessage().contains("Setting instances of type"));
         }
-        builder.validate();
-
-        assertNoUpdateAndReload(docView);
-        Assert.assertEquals(p1.getId(), doc1.getResponsiblePerson().getId());
-        Assert.assertEquals("pers2", p2.getName());
     }
 
     @Test

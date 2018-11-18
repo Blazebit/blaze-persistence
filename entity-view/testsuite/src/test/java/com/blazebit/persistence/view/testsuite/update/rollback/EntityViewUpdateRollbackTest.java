@@ -23,8 +23,12 @@ import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
+import com.blazebit.persistence.view.impl.proxy.DirtyTracker;
+import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateDocumentTest;
+import com.blazebit.persistence.view.testsuite.update.rollback.model.PersonNameView;
 import com.blazebit.persistence.view.testsuite.update.rollback.model.UpdatableDocumentRollbackView;
+import com.blazebit.persistence.view.testsuite.update.rollback.model.CreatePersonRollbackView;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -34,7 +38,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import java.util.Date;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 /**
  *
@@ -53,6 +57,12 @@ public class EntityViewUpdateRollbackTest extends AbstractEntityViewUpdateDocume
     @Parameterized.Parameters(name = "{0} - {1} - VERSIONED={2}")
     public static Object[][] combinations() {
         return MODE_STRATEGY_VERSION_COMBINATIONS;
+    }
+
+    @Override
+    protected void registerViewTypes(EntityViewConfiguration cfg) {
+        cfg.addEntityView(PersonNameView.class);
+        cfg.addEntityView(CreatePersonRollbackView.class);
     }
 
     @Test
@@ -134,6 +144,33 @@ public class EntityViewUpdateRollbackTest extends AbstractEntityViewUpdateDocume
         assertEquals("doc1", evm.getChangeModel(docView).get("name").getInitialState());
         assertEquals("newNewDoc", evm.getChangeModel(docView).get("name").getCurrentState());
         assertEquals("newNewDoc", docView.getName());
+    }
+
+    @Test
+    public void testRollbackPersisted() {
+        // Given
+        final UpdatableDocumentRollbackView docView = getDoc1View();
+        CreatePersonRollbackView personView = evm.create(CreatePersonRollbackView.class);
+        personView.setName("test");
+
+        // When 1
+        docView.setOwner(personView);
+        assertTrue(((DirtyTracker) personView).$$_hasParent());
+        updateWithRollback(docView);
+
+        // Then 1
+        restartTransactionAndReload();
+        assertTrue(docView.getOwner() == personView);
+        assertTrue(((DirtyTracker) personView).$$_hasParent());
+
+        // When 2
+        update(docView);
+
+        // Then 2
+        assertNoUpdateAndReload(docView);
+        assertFalse(docView.getOwner() == personView);
+        assertFalse(((DirtyTracker) personView).$$_hasParent());
+        assertEquals(doc1.getOwner().getId(), personView.getId());
     }
 
     @Override

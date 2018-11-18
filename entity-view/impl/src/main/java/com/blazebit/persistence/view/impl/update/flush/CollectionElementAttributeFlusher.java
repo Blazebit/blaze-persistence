@@ -139,6 +139,11 @@ public abstract class CollectionElementAttributeFlusher<E, V> extends Collection
     }
 
     @Override
+    public boolean requiresDeferredFlush(V value) {
+        return false;
+    }
+
+    @Override
     public <X> DirtyChecker<X>[] getNestedCheckers(V current) {
         throw new UnsupportedOperationException();
     }

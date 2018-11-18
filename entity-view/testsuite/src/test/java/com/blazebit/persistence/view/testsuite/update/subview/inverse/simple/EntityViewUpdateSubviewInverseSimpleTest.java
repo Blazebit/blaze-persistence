@@ -42,9 +42,9 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 // NOTE: No Datanucleus support yet
 @Category({ NoDatanucleus.class, NoEclipselink.class})
-public class EntityViewUpdateSubviewInverseEmbeddedTest extends AbstractEntityViewUpdateDocumentTest<UpdatablePersonView> {
+public class EntityViewUpdateSubviewInverseSimpleTest extends AbstractEntityViewUpdateDocumentTest<UpdatablePersonView> {
 
-    public EntityViewUpdateSubviewInverseEmbeddedTest(FlushMode mode, FlushStrategy strategy, boolean version) {
+    public EntityViewUpdateSubviewInverseSimpleTest(FlushMode mode, FlushStrategy strategy, boolean version) {
         super(mode, strategy, version, UpdatablePersonView.class);
     }
 

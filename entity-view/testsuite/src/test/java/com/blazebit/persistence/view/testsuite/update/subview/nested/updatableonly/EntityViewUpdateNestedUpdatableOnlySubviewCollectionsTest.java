@@ -242,33 +242,11 @@ public class EntityViewUpdateNestedUpdatableOnlySubviewCollectionsTest extends A
         clearQueries();
 
         // When
-        docView.getPeople().get(0).setFriend(newFriend);
-        update(docView);
-
-        // Then
-        AssertStatementBuilder builder = assertUnorderedQuerySequence();
-
-        if (isQueryStrategy()) {
-            if (isFullMode()) {
-                assertReplaceAnd(builder);
-            }
-            builder.update(Person.class);
-            if (version || isFullMode()) {
-                builder.update(Document.class);
-            }
-        } else {
-            fullFetch(builder);
-            if (version) {
-                builder.update(Document.class);
-            }
-            builder.update(Person.class);
+        try {
+            docView.getPeople().get(0).setFriend(newFriend);
+        } catch (IllegalArgumentException ex) {
+            assertTrue(ex.getMessage().contains("Setting instances of type"));
         }
-
-        builder.validate();
-
-        assertNoCollectionUpdateAndReload(docView);
-        assertEquals(p4.getId(), p1.getFriend().getId());
-        assertSubviewEquals(doc1.getPeople(), docView.getPeople());
     }
 
     @Test
@@ -280,33 +258,11 @@ public class EntityViewUpdateNestedUpdatableOnlySubviewCollectionsTest extends A
 
         // When
         newFriend.setName("newFriend");
-        docView.getPeople().get(0).setFriend(newFriend);
-        update(docView);
-
-        // Then
-        AssertStatementBuilder builder = assertUnorderedQuerySequence();
-
-        if (isQueryStrategy()) {
-            if (isFullMode()) {
-                assertReplaceAnd(builder).update(Person.class);
-                versionUpdate(builder);
-            }
-        } else {
-            if (isFullMode()) {
-                fullFetch(builder);
-                if (version) {
-                    versionUpdate(builder);
-                }
-            }
+        try {
+            docView.getPeople().get(0).setFriend(newFriend);
+        } catch (IllegalArgumentException ex) {
+            assertTrue(ex.getMessage().contains("Setting instances of type"));
         }
-
-        builder.validate();
-
-        assertNoCollectionUpdateAndReload(docView);
-        assertEquals(p3.getId(), p1.getFriend().getId());
-        assertEquals("pers3", p3.getName());
-        docView.getPeople().get(0).getFriend().setName("pers3");
-        assertSubviewEquals(doc1.getPeople(), docView.getPeople());
     }
 
     @Test
@@ -318,35 +274,11 @@ public class EntityViewUpdateNestedUpdatableOnlySubviewCollectionsTest extends A
 
         // When
         newFriend.setName("newFriend");
-        docView.getPeople().get(0).setFriend(newFriend);
-        update(docView);
-
-        // Then
-        AssertStatementBuilder builder = assertUnorderedQuerySequence();
-
-        if (isQueryStrategy()) {
-            if (isFullMode()) {
-                assertReplaceAnd(builder);
-            }
-            builder.update(Person.class);
-            if (version ||isFullMode()) {
-                builder.update(Document.class);
-            }
-        } else {
-            fullFetch(builder);
-            if (version) {
-                builder.update(Document.class);
-            }
-            builder.update(Person.class);
+        try {
+            docView.getPeople().get(0).setFriend(newFriend);
+        } catch (IllegalArgumentException ex) {
+            assertTrue(ex.getMessage().contains("Setting instances of type"));
         }
-
-        builder.validate();
-
-        assertNoCollectionUpdateAndReload(docView);
-        assertEquals(p4.getId(), p1.getFriend().getId());
-        assertEquals("pers4", p4.getName());
-        docView.getPeople().get(0).getFriend().setName("pers4");
-        assertSubviewEquals(doc1.getPeople(), docView.getPeople());
     }
 
     @Test

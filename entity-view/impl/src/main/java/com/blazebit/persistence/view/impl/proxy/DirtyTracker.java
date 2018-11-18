@@ -42,4 +42,6 @@ public interface DirtyTracker extends BasicDirtyTracker {
 
     public long $$_getSimpleDirty();
 
+    public void $$_replaceAttribute(Object oldObject, int attributeIndex, Object newObject);
+
 }

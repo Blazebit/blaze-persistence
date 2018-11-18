@@ -37,9 +37,11 @@ public interface InitialStateResetter {
 
     public void addRecordingMap(RecordingMap<?, ?, ?> recordingMap, List<? extends MapAction<?>> actions, Map<?, ?> addedKeys, Map<?, ?> removedKeys, Map<?, ?> addedElements, Map<?, ?> removedElements);
 
-    public void addPersistedView(MutableStateTrackable persistedView);
+    public int addPersistedView(MutableStateTrackable persistedView);
 
-    public void addPersistedView(MutableStateTrackable persistedView, Object oldId);
+    public int addPersistedView(MutableStateTrackable persistedView, Object oldId);
+
+    public void addPersistedViewNewObject(int newObjectIndex, Object newObject);
 
     public void addUpdatedView(MutableStateTrackable updatedView);
 

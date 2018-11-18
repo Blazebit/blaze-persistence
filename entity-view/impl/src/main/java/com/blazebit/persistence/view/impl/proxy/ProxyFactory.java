@@ -277,6 +277,7 @@ public class ProxyFactory {
 
             boolean dirtyChecking = false;
             CtField dirtyField = null;
+            CtField readOnlyParentsField = null;
             CtField parentField = null;
             CtField parentIndexField = null;
             CtField initialStateField = null;
@@ -307,6 +308,10 @@ public class ProxyFactory {
                 mutableStateField.setModifiers(getModifiers(false));
                 cc.addField(mutableStateField);
 
+                readOnlyParentsField = new CtField(pool.get(List.class.getName()), "$$_readOnlyParents", cc);
+                readOnlyParentsField.setModifiers(getModifiers(true));
+                readOnlyParentsField.setGenericSignature(Descriptor.of(List.class.getName()) + "<" + Descriptor.of(Object.class.getName()) + ">;");
+                cc.addField(readOnlyParentsField);
                 parentField = new CtField(pool.get(DirtyTracker.class.getName()), "$$_parent", cc);
                 parentField.setModifiers(getModifiers(true));
                 cc.addField(parentField);
@@ -317,11 +322,14 @@ public class ProxyFactory {
                 dirtyChecking = true;
 
                 addGetter(cc, mutableStateField, "$$_getMutableState");
+                addGetter(cc, readOnlyParentsField, "$$_getReadOnlyParents");
                 addGetter(cc, parentField, "$$_getParent");
                 addGetter(cc, parentIndexField, "$$_getParentIndex");
+                addAddReadOnlyParent(cc, readOnlyParentsField, parentField);
+                addRemoveReadOnlyParent(cc, readOnlyParentsField);
                 addSetParent(cc, parentField, parentIndexField);
                 addHasParent(cc, parentField);
-                addUnsetParent(cc, parentField, parentIndexField);
+                addUnsetParent(cc, parentField, parentIndexField, readOnlyParentsField);
                 markDirtyStub = addMarkDirtyStub(cc);
             }
 
@@ -387,6 +395,7 @@ public class ProxyFactory {
             }
 
             if (dirtyChecking) {
+                addReplaceAttribute(cc, mutableAttributes);
                 cc.removeMethod(markDirtyStub);
                 if (mutableAttributeCount > 64) {
                     throw new IllegalArgumentException("Support for more than 64 mutable attributes per view is not yet implemented! " + viewType.getJavaType().getName() + " has " + mutableAttributeCount);
@@ -1247,6 +1256,100 @@ public class ProxyFactory {
         }
     }
 
+    private CtMethod addAddReadOnlyParent(CtClass cc, CtField readOnlyParentField, CtField parentField) throws CannotCompileException {
+        FieldInfo parentFieldInfo = readOnlyParentField.getFieldInfo2();
+        String desc = "(" + Descriptor.of(DirtyTracker.class.getName()) + "I)V";
+        ConstPool cp = parentFieldInfo.getConstPool();
+        MethodInfo minfo = new MethodInfo(cp, "$$_addReadOnlyParent", desc);
+        minfo.setAccessFlags(AccessFlag.PUBLIC);
+        String readOnlyParentFieldName = parentFieldInfo.getName();
+        String parentFieldName = parentField.getName();
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("{\n");
+
+        // Strict check for write-parent
+        sb.append("\tif ($0.").append(parentFieldName).append(" == null) {\n");
+        sb.append("\t\tthrow new IllegalStateException(\"Can't set read only parent for object \" + $0.toString() + \" util it doesn't have a writable parent! First add the object to an attribute with proper cascading. If you just want to reference it convert the object with EntityViewManager.getReference() or EntityViewManager.convert()!\");\n");
+        sb.append("\t}\n");
+
+        sb.append("\tif ($0.").append(readOnlyParentFieldName).append(" == null) {\n");
+        sb.append("\t\t$0.").append(readOnlyParentFieldName).append(" = new java.util.ArrayList();\n");
+        sb.append("\t}\n");
+
+        sb.append("\t$0.").append(readOnlyParentFieldName).append(".add($1);\n");
+        sb.append("\t$0.").append(readOnlyParentFieldName).append(".add(Integer#valueOf($2));\n");
+
+        sb.append('}');
+
+        CtMethod method = CtMethod.make(minfo, cc);
+        method.setBody(sb.toString());
+        cc.addMethod(method);
+        return method;
+    }
+
+    private CtMethod addRemoveReadOnlyParent(CtClass cc, CtField readOnlyParentField) throws CannotCompileException {
+        FieldInfo parentFieldInfo = readOnlyParentField.getFieldInfo2();
+        String desc = "(" + Descriptor.of(DirtyTracker.class.getName()) + "I)V";
+        ConstPool cp = parentFieldInfo.getConstPool();
+        MethodInfo minfo = new MethodInfo(cp, "$$_removeReadOnlyParent", desc);
+        minfo.setAccessFlags(AccessFlag.PUBLIC);
+        String readOnlyParentFieldName = parentFieldInfo.getName();
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("{\n");
+
+        sb.append("\tif ($0.").append(readOnlyParentFieldName).append(" != null) {\n");
+        sb.append("\t\tint size = $0.").append(readOnlyParentFieldName).append(".size();\n");
+        sb.append("\t\tfor (int i = 0; i < size; i += 2) {\n");
+        sb.append("\t\t\tif ($0.").append(readOnlyParentFieldName).append(".get(i) == $1 && ((Integer) $0.").append(readOnlyParentFieldName).append(".get(i + 1)).intValue() == $2) {\n");
+        sb.append("\t\t\t\t$0.").append(readOnlyParentFieldName).append(".remove(i + 1);\n");
+        sb.append("\t\t\t\t$0.").append(readOnlyParentFieldName).append(".remove(i);\n");
+        sb.append("\t\t\t\tbreak;\n");
+        sb.append("\t\t\t}\n");
+        sb.append("\t\t}\n");
+        sb.append("\t}\n");
+
+        sb.append('}');
+
+        CtMethod method = CtMethod.make(minfo, cc);
+        method.setBody(sb.toString());
+        cc.addMethod(method);
+        return method;
+    }
+
+    private CtMethod addReplaceAttribute(CtClass cc, AbstractMethodAttribute[] attributes) throws CannotCompileException {
+        String desc = "(" + Descriptor.of(Object.class.getName()) + "I" + Descriptor.of(Object.class.getName()) + ")V";
+        ConstPool cp = cc.getClassFile().getConstPool();
+        MethodInfo minfo = new MethodInfo(cp, "$$_replaceAttribute", desc);
+        minfo.setAccessFlags(AccessFlag.PUBLIC);
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("{\n");
+
+        sb.append("\tswitch ($2) {");
+        for (int i = 0; i < attributes.length; i++) {
+            AbstractMethodAttribute attribute = attributes[i];
+            if (attribute != null && attribute.hasDirtyStateIndex() && ReflectionUtils.getSetter(attribute.getDeclaringType().getJavaType(), attribute.getName()) != null) {
+                sb.append("\t\tcase ").append(attribute.getDirtyStateIndex()).append(": $0.set").append(Character.toUpperCase(attribute.getName().charAt(0))).append(attribute.getName(), 1, attribute.getName().length());
+                sb.append("((").append(attribute.getJavaType().getName()).append(") $3); break;\n");
+            }
+        }
+
+        sb.append("\t\tdefault: throw new IllegalArgumentException(\"Invalid non-mutable attribute index: \" + $2);\n");
+        sb.append("\t}\n");
+
+        sb.append('}');
+
+        CtMethod method = CtMethod.make(minfo, cc);
+        method.setBody(sb.toString());
+        cc.addMethod(method);
+        return method;
+    }
+
     private CtMethod addSetParent(CtClass cc, CtField parentField, CtField parentIndexField) throws CannotCompileException {
         FieldInfo parentFieldInfo = parentField.getFieldInfo2();
         FieldInfo parentIndexFieldInfo = parentIndexField.getFieldInfo2();
@@ -1294,7 +1397,7 @@ public class ProxyFactory {
         return method;
     }
 
-    private CtMethod addUnsetParent(CtClass cc, CtField parentField, CtField parentIndexField) throws CannotCompileException {
+    private CtMethod addUnsetParent(CtClass cc, CtField parentField, CtField parentIndexField, CtField readOnlyParentsField) throws CannotCompileException {
         FieldInfo parentFieldInfo = parentField.getFieldInfo2();
         FieldInfo parentIndexFieldInfo = parentIndexField.getFieldInfo2();
         String desc = "()V";
@@ -1303,10 +1406,14 @@ public class ProxyFactory {
         minfo.setAccessFlags(AccessFlag.PUBLIC);
         String parentFieldName = parentFieldInfo.getName();
         String parentIndexFieldName = parentIndexFieldInfo.getName();
+        String readOnlyParentsFieldName = readOnlyParentsField.getName();
 
         StringBuilder sb = new StringBuilder();
 
         sb.append("{\n");
+        sb.append("\tif ($0.").append(parentFieldName).append(" != null && $0.").append(readOnlyParentsFieldName).append(" != null && !$0.").append(readOnlyParentsFieldName).append(".isEmpty()) {\n");
+        sb.append("\t\tthrow new IllegalStateException(\"Can't unset writable parent \" + $0.").append(parentFieldName).append(" + \" on object \" + $0.toString() + \" because it is still connected to read only parents: \" + $0.").append(readOnlyParentsFieldName).append(");\n");
+        sb.append("\t}\n");
         sb.append("\t$0.").append(parentFieldName).append(" = null;\n");
         sb.append("\t$0.").append(parentIndexFieldName).append(" = 0;\n");
 
@@ -1472,6 +1579,7 @@ public class ProxyFactory {
                 // Only consider subviews here for now
                 if (attribute.isSubview()) {
                     String subtypeArray = addAllowedSubtypeField(cc, attribute);
+                    addParentRequiringSubtypeField(cc, attribute);
                     sb.append("\tif ($1 != null) {\n");
                     sb.append("\t\tClass c;\n");
                     sb.append("\t\tif ($1 instanceof ").append(EntityViewProxy.class.getName()).append(") {\n");
@@ -1486,12 +1594,19 @@ public class ProxyFactory {
                     sb.append(".concat(c.getName())");
                     sb.append(");\n");
                     sb.append("\t\t}\n");
+
+                    sb.append("\t\tif (").append(attributeField.getDeclaringClass().getName()).append('#').append(attribute.getName()).append("_$$_parentRequiringSubtypes.contains(c) && !((").append(DirtyTracker.class.getName()).append(") $1).$$_hasParent()) {\n");
+                    sb.append("\t\t\tthrow new IllegalArgumentException(");
+                    sb.append("\"Setting instances of type [\" + c.getName() + \"] on attribute '").append(attribute.getName()).append("' is not allowed until they are assigned to an attribute that cascades the type! If you want this attribute to cascade, annotate it with @UpdatableMapping(cascade = { UPDATE }) or  @UpdatableMapping(cascade = { PERSIST })\"");
+                    sb.append(");\n");
+                    sb.append("\t\t}\n");
                     sb.append("\t}\n");
                 }
             }
         }
 
         if (attribute != null && attribute.getDirtyStateIndex() != -1) {
+            int mutableStateIndex = attribute.getDirtyStateIndex();
             // Unset previous object parent
             if (attribute.isCollection()) {
                 sb.append("\tif ($0.").append(fieldName).append(" != null && $0.").append(fieldName).append(" != $1) {\n");
@@ -1506,12 +1621,18 @@ public class ProxyFactory {
                 }
                 sb.append("\t}\n");
             } else if (attribute.isSubview()) {
-                sb.append("\tif ($0.").append(fieldName).append(" != $1 && $0.").append(fieldName).append(" instanceof ").append(BasicDirtyTracker.class.getName()).append(") {\n");
-                sb.append("\t\t((").append(BasicDirtyTracker.class.getName()).append(") $0.").append(fieldName).append(").$$_unsetParent();\n");
+                if (attribute.isUpdatableOnly() && !attribute.isCorrelated()) {
+                    sb.append("\tif ($0.").append(fieldName).append(" != $1 && $0.").append(fieldName).append(" instanceof ").append(MutableStateTrackable.class.getName()).append(") {\n");
+                    sb.append("\t\t\t((").append(MutableStateTrackable.class.getName()).append(") $0.").append(fieldName).append(").$$_removeReadOnlyParent($0, ").append(mutableStateIndex).append(");\n");
+                    sb.append("\t} else if ($0.").append(fieldName).append(" != $1 && $0.").append(fieldName).append(" instanceof ").append(BasicDirtyTracker.class.getName()).append(") {\n");
+                    sb.append("\t\t\t((").append(BasicDirtyTracker.class.getName()).append(") $0.").append(fieldName).append(").$$_unsetParent();\n");
+                } else {
+                    sb.append("\tif ($0.").append(fieldName).append(" != $1 && $0.").append(fieldName).append(" instanceof ").append(BasicDirtyTracker.class.getName()).append(") {\n");
+                    sb.append("\t\t((").append(BasicDirtyTracker.class.getName()).append(") $0.").append(fieldName).append(").$$_unsetParent();\n");
+                }
                 sb.append("\t}\n");
             }
 
-            int mutableStateIndex = attribute.getDirtyStateIndex();
             if (mutableStateField != null) {
                 // this.mutableState[mutableStateIndex] = $1
                 sb.append("\t$0.").append(mutableStateField.getName()).append("[").append(mutableStateIndex).append("] = ");
@@ -1535,8 +1656,16 @@ public class ProxyFactory {
                             sb.append("\t\t}\n");
                         }
                     } else if (attribute.isSubview()) {
-                        sb.append("\t\tif ($1 instanceof ").append(BasicDirtyTracker.class.getName()).append(") {\n");
-                        sb.append("\t\t\t((").append(BasicDirtyTracker.class.getName()).append(") $1).$$_setParent($0, ").append(mutableStateIndex).append(");\n");
+                        // Correlated attributes are treated special, we don't consider correlated attributes read-only parents
+                        if (attribute.isUpdatableOnly() && !attribute.isCorrelated()) {
+                            sb.append("\t\tif ($1 instanceof ").append(MutableStateTrackable.class.getName()).append(") {\n");
+                            sb.append("\t\t\t((").append(MutableStateTrackable.class.getName()).append(") $1).$$_addReadOnlyParent($0, ").append(mutableStateIndex).append(");\n");
+                            sb.append("\t\t} else if ($1 instanceof ").append(BasicDirtyTracker.class.getName()).append(") {\n");
+                            sb.append("\t\t\t((").append(BasicDirtyTracker.class.getName()).append(") $1).$$_setParent($0, ").append(mutableStateIndex).append(");\n");
+                        } else {
+                            sb.append("\t\tif ($1 instanceof ").append(BasicDirtyTracker.class.getName()).append(") {\n");
+                            sb.append("\t\t\t((").append(BasicDirtyTracker.class.getName()).append(") $1).$$_setParent($0, ").append(mutableStateIndex).append(");\n");
+                        }
                         sb.append("\t\t}\n");
                     }
                     sb.append("\t}\n");
@@ -1969,6 +2098,7 @@ public class ProxyFactory {
                         if (methodAttribute instanceof PluralAttribute<?, ?, ?>) {
                             PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) methodAttribute;
                             addAllowedSubtypeField(attributeFields[i].getDeclaringClass(), methodAttribute);
+                            addParentRequiringSubtypeField(attributeFields[i].getDeclaringClass(), methodAttribute);
 
                             switch (pluralAttribute.getCollectionType()) {
                                 case MAP:
@@ -2015,6 +2145,8 @@ public class ProxyFactory {
                             }
                             sb.append(attributeFields[i].getDeclaringClass().getName()).append('#');
                             sb.append(methodAttribute.getName()).append("_$$_subtypes").append(',');
+                            sb.append(attributeFields[i].getDeclaringClass().getName()).append('#');
+                            sb.append(methodAttribute.getName()).append("_$$_parentRequiringSubtypes").append(',');
                             sb.append(methodAttribute.isUpdatable()).append(',');
                             sb.append(methodAttribute.isOptimizeCollectionActionsEnabled());
                             sb.append(");\n");
@@ -2186,6 +2318,50 @@ public class ProxyFactory {
         if (!allowedSubtypes.isEmpty()) {
             fieldSb.append("new java.util.HashSet(java.util.Arrays.asList(new java.lang.Class[]{ ");
             for (Class<?> c : allowedSubtypes) {
+                fieldSb.append(c.getName());
+                fieldSb.append(".class, ");
+            }
+
+            fieldSb.setLength(fieldSb.length() - 2);
+            fieldSb.append(" }));");
+        } else {
+            fieldSb.append("java.util.Collections.emptySet();");
+        }
+        CtField allowedSubtypesField = CtField.make(fieldSb.toString(), declaringClass);
+        declaringClass.addField(allowedSubtypesField);
+        return subtypeArray;
+    }
+
+    private String addParentRequiringSubtypeField(CtClass declaringClass, AbstractMethodAttribute<?, ?> attribute) throws CannotCompileException {
+        Set<Class<?>> parentRequiringSubtypes = attribute.getParentRequiringSubtypes();
+        String subtypeArray;
+        if (!parentRequiringSubtypes.isEmpty()) {
+            StringBuilder subtypeArrayBuilder = new StringBuilder();
+            for (Class<?> c : parentRequiringSubtypes) {
+                subtypeArrayBuilder.append(c.getName());
+                subtypeArrayBuilder.append(", ");
+            }
+
+            subtypeArrayBuilder.setLength(subtypeArrayBuilder.length() - 2);
+            subtypeArray = subtypeArrayBuilder.toString();
+        } else {
+            subtypeArray = "";
+        }
+
+        try {
+            declaringClass.getDeclaredField(attribute.getName() + "_$$_parentRequiringSubtypes");
+            return subtypeArray;
+        } catch (NotFoundException ex) {
+        }
+
+        StringBuilder fieldSb = new StringBuilder();
+        fieldSb.append("private static final java.util.Set ");
+        fieldSb.append(attribute.getName());
+        fieldSb.append("_$$_parentRequiringSubtypes = ");
+
+        if (!parentRequiringSubtypes.isEmpty()) {
+            fieldSb.append("new java.util.HashSet(java.util.Arrays.asList(new java.lang.Class[]{ ");
+            for (Class<?> c : parentRequiringSubtypes) {
                 fieldSb.append(c.getName());
                 fieldSb.append(".class, ");
             }
