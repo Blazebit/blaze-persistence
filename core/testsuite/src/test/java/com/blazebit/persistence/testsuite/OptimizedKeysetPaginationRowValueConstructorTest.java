@@ -225,7 +225,7 @@ public class OptimizedKeysetPaginationRowValueConstructorTest extends AbstractCo
                 .orderByAsc("d.name")
                 .orderByAsc("d.id");
 
-        PaginatedCriteriaBuilder<Tuple> pcb = crit.page(reference.getId(), 1).withKeysetExtraction(true);
+        PaginatedCriteriaBuilder<Tuple> pcb = crit.pageAndNavigate(reference.getId(), 1).withKeysetExtraction(true);
 
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         PagedList<Tuple> list = pcb.getResultList();
@@ -270,7 +270,7 @@ public class OptimizedKeysetPaginationRowValueConstructorTest extends AbstractCo
                 .orderByAsc("d.id")
                 .page(null, 0, 1);
 
-        PaginatedCriteriaBuilder<Tuple> pcb = crit.page(reference.getId(), 1).withKeysetExtraction(true);
+        PaginatedCriteriaBuilder<Tuple> pcb = crit.pageAndNavigate(reference.getId(), 1).withKeysetExtraction(true);
 
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         PagedList<Tuple> expectedList = firstPageCb.getResultList();

@@ -47,7 +47,6 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
     private final boolean orphanRemoval;
     private final boolean viewOnlyDeleteCascaded;
     private final String[] elementIdAttributePaths;
-    private final DirtyAttributeFlusher<?, Object, Object> elementIdFlusher;
     private final String parameterName;
     private final boolean passThrough;
     private final TypeConverter<Object, Object> converter;
@@ -75,7 +74,6 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
         this.elementIdAttributePaths = elementIdAttributePaths;
         this.inverseFlusher = inverseFlusher;
         this.inverseRemoveStrategy = InverseCollectionElementAttributeFlusher.Strategy.of(inverseRemoveStrategy);
-        this.elementIdFlusher = ((CompositeAttributeFlusher) nestedGraphNode).getIdFlusher();
         this.parameterName = parameterName;
         this.passThrough = passThrough;
         this.entityAttributeAccessor = entityAttributeAccessor;
@@ -97,7 +95,6 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
         this.viewOnlyDeleteCascaded = original.viewOnlyDeleteCascaded;
         this.converter = original.converter;
         this.elementIdAttributePaths = original.elementIdAttributePaths;
-        this.elementIdFlusher = original.elementIdFlusher;
         this.parameterName = original.parameterName;
         this.passThrough = original.passThrough;
         this.entityAttributeAccessor = original.entityAttributeAccessor;
@@ -110,6 +107,15 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
         this.update = update;
         this.flushOperation = nestedFlusher == null ? ViewFlushOperation.NONE : ViewFlushOperation.CASCADE;
         this.nestedFlusher = nestedFlusher;
+    }
+
+    @Override
+    protected FetchGraphNode<?> getNestedGraphNode() {
+        return nestedFlusher != null ? nestedFlusher : viewToEntityMapper.getFullGraphNode();
+    }
+
+    private DirtyAttributeFlusher<?, Object, Object> getElementIdFlusher() {
+        return ((CompositeAttributeFlusher) viewToEntityMapper.getFullGraphNode()).getIdFlusher();
     }
 
     /**
@@ -139,9 +145,9 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
     public boolean appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix, String separator) {
         if (update && (updatable || isPassThrough()) && inverseFlusher == null) {
             if (mappingPrefix == null) {
-                return elementIdFlusher.appendUpdateQueryFragment(context, sb, mapping + ".", parameterName + "_", separator);
+                return getElementIdFlusher().appendUpdateQueryFragment(context, sb, mapping + ".", parameterName + "_", separator);
             } else {
-                return elementIdFlusher.appendUpdateQueryFragment(context, sb, mappingPrefix + mapping + ".", parameterPrefix + parameterName + "_", separator);
+                return getElementIdFlusher().appendUpdateQueryFragment(context, sb, mappingPrefix + mapping + ".", parameterPrefix + parameterName + "_", separator);
             }
         }
 
@@ -213,9 +219,9 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
                 if (inverseFlusher == null) {
                     Object realValue = v == null ? null : subviewIdAccessor.getValue(finalValue);
                     if (parameterPrefix == null) {
-                        elementIdFlusher.flushQuery(context, parameterName + "_", query, finalValue, null, realValue, ownerAwareDeleter);
+                        getElementIdFlusher().flushQuery(context, parameterName + "_", query, finalValue, null, realValue, ownerAwareDeleter);
                     } else {
-                        elementIdFlusher.flushQuery(context, parameterPrefix + parameterName + "_", query, finalValue, null, realValue, ownerAwareDeleter);
+                        getElementIdFlusher().flushQuery(context, parameterPrefix + parameterName + "_", query, finalValue, null, realValue, ownerAwareDeleter);
                     }
                 }
             }
@@ -254,9 +260,9 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
                 if (inverseFlusher == null) {
                     Object realValue = v == null ? null : subviewIdAccessor.getValue(value);
                     if (parameterPrefix == null) {
-                        elementIdFlusher.flushQuery(context, parameterName + "_", query, value, null, realValue, ownerAwareDeleter);
+                        getElementIdFlusher().flushQuery(context, parameterName + "_", query, value, null, realValue, ownerAwareDeleter);
                     } else {
-                        elementIdFlusher.flushQuery(context, parameterPrefix + parameterName + "_", query, value, null, realValue, ownerAwareDeleter);
+                        getElementIdFlusher().flushQuery(context, parameterPrefix + parameterName + "_", query, value, null, realValue, ownerAwareDeleter);
                     }
                 }
             }

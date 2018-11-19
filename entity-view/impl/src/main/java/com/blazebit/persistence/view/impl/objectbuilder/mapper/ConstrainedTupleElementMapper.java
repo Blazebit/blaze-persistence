@@ -29,8 +29,10 @@ import com.blazebit.persistence.view.impl.objectbuilder.transformator.TupleTrans
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  *
@@ -58,7 +60,13 @@ public class ConstrainedTupleElementMapper implements AliasedTupleElementMapper 
     @Override
     public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
         StringBuilder sb = new StringBuilder();
-        StringBuilderSelectBuilder selectBuilder = new StringBuilderSelectBuilder(sb);
+        FullQueryBuilder<?, ?> fullQueryBuilder;
+        if (queryBuilder instanceof ConstrainedSelectBuilder) {
+            fullQueryBuilder = ((ConstrainedSelectBuilder) queryBuilder).getQueryBuilder();
+        } else {
+            fullQueryBuilder = (FullQueryBuilder<?, ?>) queryBuilder;
+        }
+        StringBuilderSelectBuilder selectBuilder = new StringBuilderSelectBuilder(sb, fullQueryBuilder);
 
         sb.append("CASE");
         for (Map.Entry<String, TupleElementMapper> entry : mappers) {
@@ -96,20 +104,15 @@ public class ConstrainedTupleElementMapper implements AliasedTupleElementMapper 
         }
     }
 
-    public static void addMappers(List<TupleElementMapper> mappingList, List<String> parameterMappingList, TupleTransformatorFactory tupleTransformatorFactory, List<Map.Entry<String, TupleElementMapperBuilder>> builders) {
+    public static void addMappers(int classMappingIndex, List<TupleElementMapper> mappingList, List<String> parameterMappingList, TupleTransformatorFactory tupleTransformatorFactory, List<ConstrainedTupleElementMapperBuilder> builders) {
         List<List<Map.Entry<String, TupleElementMapper>>> subtypeMappersPerAttribute = new ArrayList<>();
-        boolean first = true;
-
+        Map<Integer, Object> consumableIndexes = new TreeMap<>();
         // Transpose the subtype grouped attribute lists to attribute grouped subtype lists
-        for (Map.Entry<String, TupleElementMapperBuilder> builderEntry : builders) {
-            String constraint = builderEntry.getKey();
-            TupleElementMapperBuilder mapperBuilder = builderEntry.getValue();
+        for (ConstrainedTupleElementMapperBuilder builderEntry : builders) {
+            String constraint = builderEntry.constraint;
+            TupleElementMapperBuilder mapperBuilder = builderEntry.tupleElementMapperBuilder;
 
-            // NOTE: we assume that constrained attributes have the same attribute types so we only use the transformators of the first mapper builder
-            if (first) {
-                tupleTransformatorFactory.add(mapperBuilder.getTupleTransformatorFactory());
-                first = false;
-            }
+            tupleTransformatorFactory.add(consumableIndexes, classMappingIndex, builderEntry.subtypeIndexes, mapperBuilder.getTupleTransformatorFactory());
 
             int attributeIndex = 0;
             for (TupleElementMapper mapper : mapperBuilder.getMappers()) {
@@ -123,6 +126,15 @@ public class ConstrainedTupleElementMapper implements AliasedTupleElementMapper 
                 attributeIndex++;
             }
         }
+
+        // Add a transformer that consumes all the tuple indexes that need to be consumed to reduce tuples
+        consumableIndexes.remove(-1);
+        final int[] consumableIndexArray = new int[consumableIndexes.size()];
+        int i = 0;
+        for (Iterator<Integer> iter = consumableIndexes.keySet().iterator(); iter.hasNext(); i++) {
+            consumableIndexArray[i] = iter.next();
+        }
+        tupleTransformatorFactory.add(new ConsumingTupleTransformer(consumableIndexArray));
 
         // Split up subquery mappers from the rest since they need special handling
         for (List<Map.Entry<String, TupleElementMapper>> attributeEntry : subtypeMappersPerAttribute) {
@@ -173,16 +185,41 @@ public class ConstrainedTupleElementMapper implements AliasedTupleElementMapper 
     }
 
     /**
+     *
+     * @author Christian Beikov
+     * @since 1.3.0
+     */
+    public static class ConstrainedTupleElementMapperBuilder {
+
+        private final String constraint;
+        private final int[] subtypeIndexes;
+        private final TupleElementMapperBuilder tupleElementMapperBuilder;
+
+        public ConstrainedTupleElementMapperBuilder(String constraint, int[] subtypeIndexes, TupleElementMapperBuilder tupleElementMapperBuilder) {
+            this.constraint = constraint;
+            this.subtypeIndexes = subtypeIndexes;
+            this.tupleElementMapperBuilder = tupleElementMapperBuilder;
+        }
+    }
+
+    /**
      * @author Christian Beikov
      * @since 1.2.0
      */
-    private static class StringBuilderSelectBuilder implements SelectBuilder<Object> {
+    private static class StringBuilderSelectBuilder implements ConstrainedSelectBuilder {
 
         private final StringBuilder sb;
+        private final FullQueryBuilder<?, ?> queryBuilder;
         private SubqueryInitiator<Object> initiator;
 
-        public StringBuilderSelectBuilder(StringBuilder sb) {
+        public StringBuilderSelectBuilder(StringBuilder sb, FullQueryBuilder<?, ?> queryBuilder) {
             this.sb = sb;
+            this.queryBuilder = queryBuilder;
+        }
+
+        @Override
+        public FullQueryBuilder<?, ?> getQueryBuilder() {
+            return queryBuilder;
         }
 
         @SuppressWarnings("unchecked")

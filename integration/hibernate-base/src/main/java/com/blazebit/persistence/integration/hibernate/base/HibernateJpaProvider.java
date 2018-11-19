@@ -248,6 +248,11 @@ public class HibernateJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsGroupByEntityAlias() {
+        return false;
+    }
+
+    @Override
     public boolean needsElementCollectionIdCutoff() {
         return needsElementCollectionIdCutoffForCompositeIdOwner;
     }

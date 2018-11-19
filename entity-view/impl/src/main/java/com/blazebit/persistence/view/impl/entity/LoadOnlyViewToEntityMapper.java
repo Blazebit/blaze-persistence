@@ -47,6 +47,11 @@ public class LoadOnlyViewToEntityMapper implements ViewToEntityMapper {
     }
 
     @Override
+    public DirtyAttributeFlusher<?, ?, ?> getIdFlusher() {
+        return null;
+    }
+
+    @Override
     public EntityViewUpdater getUpdater(Object current) {
         return null;
     }

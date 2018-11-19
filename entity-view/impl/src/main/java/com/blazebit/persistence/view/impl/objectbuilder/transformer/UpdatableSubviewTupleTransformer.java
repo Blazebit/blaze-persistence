@@ -55,6 +55,16 @@ public class UpdatableSubviewTupleTransformer implements TupleTransformer {
     }
 
     @Override
+    public int getConsumeStartIndex() {
+        return consumeStartIndex;
+    }
+
+    @Override
+    public int getConsumeEndIndex() {
+        return consumeEndIndex;
+    }
+
+    @Override
     public Object[] transform(Object[] tuple, UpdatableViewMap updatableViewMap) {
         if (nullCheckObjectIndex == -1 || tuple[nullCheckObjectIndex] != null) {
             Object id = new TupleId(template.getIdPositions(), tuple);

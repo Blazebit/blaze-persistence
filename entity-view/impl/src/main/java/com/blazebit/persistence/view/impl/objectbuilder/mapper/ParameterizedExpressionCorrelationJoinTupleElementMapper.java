@@ -45,8 +45,13 @@ public class ParameterizedExpressionCorrelationJoinTupleElementMapper extends Ab
     public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
         String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
         embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
-        FullQueryBuilder<?, ?> fullQueryBuilder = (FullQueryBuilder<?, ?>) queryBuilder;
-        CorrelationBuilder correlationBuilder = new JoinCorrelationBuilder(fullQueryBuilder, optionalParameters, joinBase, correlationAlias, correlationResult, alias);
+        FullQueryBuilder<?, ?> fullQueryBuilder;
+        if (queryBuilder instanceof ConstrainedSelectBuilder) {
+            fullQueryBuilder = ((ConstrainedSelectBuilder) queryBuilder).getQueryBuilder();
+        } else {
+            fullQueryBuilder = (FullQueryBuilder<?, ?>) queryBuilder;
+        }
+        CorrelationBuilder correlationBuilder = new JoinCorrelationBuilder(queryBuilder, fullQueryBuilder, joinBase, correlationAlias, correlationResult, alias);
         providerFactory.create(parameterHolder, optionalParameters).applyCorrelation(correlationBuilder, correlationBasis);
         if (fetches.length != 0) {
             for (int i = 0; i < fetches.length; i++) {

@@ -48,7 +48,8 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
 
     protected final C delegate;
     protected final Set<Class<?>> allowedSubtypes;
-    protected final Set<Class<?>> parentRequiringSubtypes;
+    protected final Set<Class<?>> parentRequiringUpdateSubtypes;
+    protected final Set<Class<?>> parentRequiringCreateSubtypes;
     protected final boolean updatable;
     private final boolean optimize;
     private final boolean hashBased;
@@ -64,20 +65,22 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
     // We remember the iterator so we can do a proper hash based collection replacement
     private transient RecordingEntrySetReplacingIterator<K, V> currentIterator;
 
-    protected RecordingMap(C delegate, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringSubtypes, boolean updatable, boolean optimize, boolean hashBased, boolean ordered) {
+    protected RecordingMap(C delegate, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringUpdateSubtypes, Set<Class<?>> parentRequiringCreateSubtypes, boolean updatable, boolean optimize, boolean hashBased, boolean ordered) {
         this.delegate = delegate;
         this.allowedSubtypes = allowedSubtypes;
-        this.parentRequiringSubtypes = parentRequiringSubtypes;
+        this.parentRequiringUpdateSubtypes = parentRequiringUpdateSubtypes;
+        this.parentRequiringCreateSubtypes = parentRequiringCreateSubtypes;
         this.updatable = updatable;
         this.optimize = optimize;
         this.hashBased = hashBased;
         this.ordered = ordered;
     }
 
-    public RecordingMap(C delegate, boolean ordered, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringSubtypes, boolean updatable, boolean optimize) {
+    public RecordingMap(C delegate, boolean ordered, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringUpdateSubtypes, Set<Class<?>> parentRequiringCreateSubtypes, boolean updatable, boolean optimize) {
         this.delegate = delegate;
         this.allowedSubtypes = allowedSubtypes;
-        this.parentRequiringSubtypes = parentRequiringSubtypes;
+        this.parentRequiringUpdateSubtypes = parentRequiringUpdateSubtypes;
+        this.parentRequiringCreateSubtypes = parentRequiringCreateSubtypes;
         this.updatable = updatable;
         this.optimize = optimize;
         this.ordered = ordered;
@@ -563,17 +566,23 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
     protected void checkType(Object e, String action) {
         if (e != null && !allowedSubtypes.isEmpty()) {
             Class<?> c;
+            boolean isNew;
             if (e instanceof EntityViewProxy) {
                 c = ((EntityViewProxy) e).$$_getEntityViewClass();
+                isNew = ((EntityViewProxy) e).$$_isNew();
             } else {
                 c = e.getClass();
+                isNew = false;
             }
 
             if (!allowedSubtypes.contains(c)) {
                 throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed!");
             }
-            if (parentRequiringSubtypes.contains(c) && !((DirtyTracker) e).$$_hasParent()) {
-                throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed until they are assigned to an attribute that cascades the type!");
+            if (!isNew && parentRequiringUpdateSubtypes.contains(c) && !((DirtyTracker) e).$$_hasParent()) {
+                throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed until they are assigned to an attribute that update cascades the type! If you want this attribute to cascade, annotate it with @UpdatableMapping(cascade = { UPDATE })");
+            }
+            if (isNew && parentRequiringCreateSubtypes.contains(c) && !((DirtyTracker) e).$$_hasParent()) {
+                throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed until they are assigned to an attribute that persist cascades the type! If you want this attribute to cascade, annotate it with @UpdatableMapping(cascade = { PERSIST })");
             }
         }
     }
@@ -582,17 +591,23 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
         if (collection != null && !collection.isEmpty() && !allowedSubtypes.isEmpty()) {
             for (Object e : collection.values()) {
                 Class<?> c;
+                boolean isNew;
                 if (e instanceof EntityViewProxy) {
                     c = ((EntityViewProxy) e).$$_getEntityViewClass();
+                    isNew = ((EntityViewProxy) e).$$_isNew();
                 } else {
                     c = e.getClass();
+                    isNew = false;
                 }
 
                 if (!allowedSubtypes.contains(c)) {
                     throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed!");
                 }
-                if (parentRequiringSubtypes.contains(c) && !((DirtyTracker) e).$$_hasParent()) {
-                    throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed until they are assigned to an attribute that cascades the type!");
+                if (!isNew && parentRequiringUpdateSubtypes.contains(c) && !((DirtyTracker) e).$$_hasParent()) {
+                    throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed until they are assigned to an attribute that update cascades the type! If you want this attribute to cascade, annotate it with @UpdatableMapping(cascade = { UPDATE })");
+                }
+                if (isNew && parentRequiringCreateSubtypes.contains(c) && !((DirtyTracker) e).$$_hasParent()) {
+                    throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed until they are assigned to an attribute that persist cascades the type! If you want this attribute to cascade, annotate it with @UpdatableMapping(cascade = { PERSIST })");
                 }
             }
         }

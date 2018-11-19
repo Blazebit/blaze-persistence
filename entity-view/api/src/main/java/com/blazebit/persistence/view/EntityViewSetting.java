@@ -216,7 +216,7 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> {
      * Returns <code>null</code> if no pagination or a absolute first result will be applied.
      *
      * @return The id of the entity which should be located on a page
-     * @see FullQueryBuilder#page(java.lang.Object, int)
+     * @see FullQueryBuilder#pageAndNavigate(java.lang.Object, int)
      */
     public Object getEntityId() {
         return entityId;

@@ -24,6 +24,7 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate52;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate53;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
@@ -38,12 +39,12 @@ import static org.junit.Assert.assertEquals;
  * @author Christian Beikov
  * @since 1.2.0
  */
-@Category({ NoHibernate52.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+@Category({ NoHibernate52.class, NoHibernate53.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
 public class EntityEqualityRewriteToIdTest extends AbstractCoreTest {
 
     @Test
     // This actually only makes sense for Hibernate 5.1
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate52.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate52.class, NoHibernate53.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void rewriteEntityAssociationEqualsEntityInOnToIdEquals() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.innerJoinOn("partners","p")
@@ -57,7 +58,7 @@ public class EntityEqualityRewriteToIdTest extends AbstractCoreTest {
 
     @Test
     // Pre Hibernate 5.1 we could do this broken thing to make some stuff work
-    @Category({ NoHibernate51.class, NoHibernate52.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoHibernate51.class, NoHibernate52.class, NoHibernate53.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void rewriteEntityAssociationEqualsEntityInOnToIdEqualsBroken() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.innerJoinOn("partners","p")
@@ -83,7 +84,7 @@ public class EntityEqualityRewriteToIdTest extends AbstractCoreTest {
 
     @Test
     // This actually only makes sense for Hibernate 5.1
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate52.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate52.class, NoHibernate53.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void rewriteEntityEqualsEntityAssociationInOnToIdEquals() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.innerJoinOn("partners","p")
@@ -97,7 +98,7 @@ public class EntityEqualityRewriteToIdTest extends AbstractCoreTest {
 
     @Test
     // Pre Hibernate 5.1 we could do this broken thing to make some stuff work
-    @Category({ NoHibernate51.class, NoHibernate52.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoHibernate51.class, NoHibernate52.class, NoHibernate53.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void rewriteEntityEqualsEntityAssociationInOnToIdEqualsBroken() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.innerJoinOn("partners","p")
@@ -111,7 +112,7 @@ public class EntityEqualityRewriteToIdTest extends AbstractCoreTest {
 
     @Test
     // This actually only makes sense for Hibernate 5.1
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate52.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate52.class, NoHibernate53.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void rewriteEntityEqualsTransientEntityParameterInOn() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.innerJoinOn("partners","p")
@@ -125,7 +126,7 @@ public class EntityEqualityRewriteToIdTest extends AbstractCoreTest {
 
     @Test
     // Pre Hibernate 5.1 we could do this broken thing to make some stuff work
-    @Category({ NoHibernate51.class, NoHibernate52.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoHibernate51.class, NoHibernate52.class, NoHibernate53.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void rewriteEntityEqualsTransientEntityParameterInOnBroken() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.innerJoinOn("partners","p")

@@ -67,7 +67,7 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
     @SuppressWarnings("unchecked")
     public AbstractPluralAttributeFlusher(String attributeName, String mapping, boolean fetch, Class<?> ownerEntityClass, String ownerIdAttributeName, String ownerMapping, DirtyAttributeFlusher<?, ?, ?> ownerIdFlusher, DirtyAttributeFlusher<?, ?, ?> elementFlusher, boolean supportsCollectionDml, FlushStrategy flushStrategy, AttributeAccessor entityAttributeMapper,
                                           InitialValueAttributeAccessor viewAttributeAccessor, boolean optimisticLockProtected, boolean collectionUpdatable, boolean viewOnlyDeleteCascaded, boolean jpaProviderDeletesCollection, CollectionRemoveListener cascadeDeleteListener, CollectionRemoveListener removeListener, TypeDescriptor elementDescriptor) {
-        super(attributeName, mapping, fetch, elementDescriptor.getViewToEntityMapper() == null ? null : elementDescriptor.getViewToEntityMapper().getFullGraphNode());
+        super(attributeName, mapping, fetch, null);
         this.ownerEntityClass = ownerEntityClass;
         this.ownerIdAttributeName = ownerIdAttributeName;
         this.ownerMapping = ownerMapping;
@@ -131,7 +131,7 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
     }
 
     protected AbstractPluralAttributeFlusher(AbstractPluralAttributeFlusher<?, ?, ?, ?, ?> original, boolean fetch, PluralFlushOperation flushOperation, List<? extends A> collectionActions, List<CollectionElementAttributeFlusher<E, V>> elementFlushers) {
-        super(original.attributeName, original.mapping, fetch, elementFlushers == null ? original.nestedGraphNode : computeElementFetchGraphNode(elementFlushers));
+        super(original.attributeName, original.mapping, fetch, elementFlushers == null ? original.getNestedGraphNode() : computeElementFetchGraphNode(elementFlushers));
         this.ownerEntityClass = original.ownerEntityClass;
         this.ownerIdAttributeName = original.ownerIdAttributeName;
         this.ownerMapping = original.ownerMapping;
@@ -156,6 +156,12 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
         this.flushOperation = flushOperation;
         this.collectionActions = collectionActions;
         this.elementFlushers = elementFlushers;
+    }
+
+    @Override
+    protected FetchGraphNode<?> getNestedGraphNode() {
+        FetchGraphNode<?> nestedGraphNode = super.getNestedGraphNode();
+        return nestedGraphNode == null && elementDescriptor.getViewToEntityMapper() != null && elementFlushers == null ? elementDescriptor.getViewToEntityMapper().getFullGraphNode() : nestedGraphNode;
     }
 
     private static <E, V> FetchGraphNode<?> computeElementFetchGraphNode(List<CollectionElementAttributeFlusher<E, V>> elementFlushers) {
@@ -649,7 +655,7 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
 
         public EntityIdWithViewIdEqualityChecker(ViewToEntityMapper mapper) {
             this.mapper = mapper;
-            DirtyAttributeFlusher<?, Object, Object> idFlusher = ((CompositeAttributeFlusher) mapper.getFullGraphNode()).getIdFlusher();
+            DirtyAttributeFlusher<?, Object, Object> idFlusher = (DirtyAttributeFlusher<?, Object, Object>) mapper.getIdFlusher();
             if (idFlusher instanceof EmbeddableAttributeFlusher<?, ?>) {
                 this.idMapper = ((EmbeddableAttributeFlusher) idFlusher).getViewToEntityMapper();
             } else {

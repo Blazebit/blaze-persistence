@@ -34,6 +34,8 @@ public interface ViewToEntityMapper extends ElementToEntityMapper {
 
     public FetchGraphNode<?> getFullGraphNode();
 
+    public DirtyAttributeFlusher<?, ?, ?> getIdFlusher();
+
     public <T extends DirtyAttributeFlusher<T, E, V>, E, V> DirtyAttributeFlusher getNestedDirtyFlusher(UpdateContext context, MutableStateTrackable current, DirtyAttributeFlusher<T, E, V> fullFlusher);
 
     public AttributeAccessor getViewIdAccessor();

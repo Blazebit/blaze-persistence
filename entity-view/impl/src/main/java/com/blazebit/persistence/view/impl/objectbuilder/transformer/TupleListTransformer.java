@@ -31,5 +31,7 @@ public abstract class TupleListTransformer {
         this.startIndex = startIndex;
     }
 
+    public abstract int getConsumableIndex();
+
     public abstract List<Object[]> transform(List<Object[]> tuples);
 }

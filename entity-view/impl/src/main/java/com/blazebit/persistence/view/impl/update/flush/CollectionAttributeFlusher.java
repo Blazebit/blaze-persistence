@@ -220,14 +220,15 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         for (int i = 0; i < fetchGraphNodes.size(); i++) {
             CollectionAttributeFlusher<E, V> node = fetchGraphNodes.get(i);
             fetchChanged |= this.fetch != node.fetch;
-            if (node.nestedGraphNode != null) {
-                if (node.nestedGraphNode instanceof CollectionElementFetchGraphNode) {
-                    CollectionElementFetchGraphNode<?, ?> collectionElementFetchGraphNode = (CollectionElementFetchGraphNode<?, ?>) node.nestedGraphNode;
+            FetchGraphNode<?> nestedGraphNode = node.getNestedGraphNode();
+            if (nestedGraphNode != null) {
+                if (nestedGraphNode instanceof CollectionElementFetchGraphNode) {
+                    CollectionElementFetchGraphNode<?, ?> collectionElementFetchGraphNode = (CollectionElementFetchGraphNode<?, ?>) nestedGraphNode;
                     if (collectionElementFetchGraphNode.nestedGraphNode != null) {
                         nestedFlushers.add(collectionElementFetchGraphNode.nestedGraphNode);
                     }
                 } else {
-                    nestedFlushers.add(node.nestedGraphNode);
+                    nestedFlushers.add(nestedGraphNode);
                 }
             }
         }

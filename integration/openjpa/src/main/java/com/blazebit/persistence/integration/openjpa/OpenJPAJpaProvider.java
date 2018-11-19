@@ -316,6 +316,11 @@ public class OpenJPAJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsGroupByEntityAlias() {
+        return true;
+    }
+
+    @Override
     public boolean needsElementCollectionIdCutoff() {
         return false;
     }

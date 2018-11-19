@@ -491,6 +491,14 @@ public interface JpaProvider {
     public boolean supportsSingleValuedAssociationNaturalIdExpressions();
 
     /**
+     * Indicates whether the provider supports group by entity alias properly.
+     *
+     * @return true if supported, else false
+     * @since 1.3.0
+     */
+    public boolean supportsGroupByEntityAlias();
+
+    /**
      * Indicates whether the provider needs to cutoff id properties when used as subpath of element collections.
      * This is to be able to workaround https://hibernate.atlassian.net/browse/HHH-13045 .
      *

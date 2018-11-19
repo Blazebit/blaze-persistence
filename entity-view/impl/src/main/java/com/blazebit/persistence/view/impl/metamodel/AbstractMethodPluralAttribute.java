@@ -56,7 +56,8 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
     private final Set<Type<?>> persistSubtypes;
     private final Set<Type<?>> updateSubtypes;
     private final Set<Class<?>> allowedSubtypes;
-    private final Set<Class<?>> parentRequiringSubtypes;
+    private final Set<Class<?>> parentRequiringUpdateSubtypes;
+    private final Set<Class<?>> parentRequiringCreateSubtypes;
     private final Map<ManagedViewType<? extends Y>, String> elementInheritanceSubtypes;
     private final boolean sorted;
     private final boolean ordered;
@@ -141,7 +142,8 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
 
         this.allowedSubtypes = createAllowedSubtypesSet();
         // We treat elements of correlated collections specially
-        this.parentRequiringSubtypes = isCorrelated() ? Collections.<Class<?>>emptySet() : createParentRequiringSubtypesSet();
+        this.parentRequiringUpdateSubtypes = isCorrelated() ? Collections.<Class<?>>emptySet() : createParentRequiringUpdateSubtypesSet();
+        this.parentRequiringCreateSubtypes = isCorrelated() ? Collections.<Class<?>>emptySet() : createParentRequiringCreateSubtypesSet();
         this.optimisticLockProtected = determineOptimisticLockProtected(mapping, context, mutable);
         this.elementInheritanceSubtypes = (Map<ManagedViewType<? extends Y>, String>) (Map<?, ?>) mapping.getElementInheritanceSubtypes(context, embeddableMapping);
         this.dirtyStateIndex = determineDirtyStateIndex(dirtyStateIndex);
@@ -184,13 +186,16 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
         this.deleteCascaded = orphanRemoval || definesDeleteCascading || allowsDeleteCascading && inverseRemoveStrategy != null;
 
         if (updatable) {
-            boolean jpaOrphanRemoval = context.getJpaProvider().isOrphanRemoval(declaringType.getJpaManagedType(), getMapping());
-            if (jpaOrphanRemoval && !orphanRemoval) {
-                context.addError("Orphan removal configuration via @UpdatableMapping must be defined if entity attribute defines orphan removal. Invalid definition found on the  " + mapping.getErrorLocation() + "!");
-            }
-            boolean jpaDeleteCascaded = context.getJpaProvider().isDeleteCascaded(declaringType.getJpaManagedType(), getMapping());
-            if (jpaDeleteCascaded && !deleteCascaded) {
-                context.addError("Delete cascading configuration via @UpdatableMapping must be defined if entity attribute defines delete cascading. Invalid definition found on the  " + mapping.getErrorLocation() + "!");
+            String mappingExpression = getMapping();
+            if (mappingExpression != null) {
+                boolean jpaOrphanRemoval = context.getJpaProvider().isOrphanRemoval(declaringType.getJpaManagedType(), mappingExpression);
+                if (jpaOrphanRemoval && !orphanRemoval) {
+                    context.addError("Orphan removal configuration via @UpdatableMapping must be defined if entity attribute defines orphan removal. Invalid definition found on the  " + mapping.getErrorLocation() + "!");
+                }
+                boolean jpaDeleteCascaded = context.getJpaProvider().isDeleteCascaded(declaringType.getJpaManagedType(), mappingExpression);
+                if (jpaDeleteCascaded && !deleteCascaded) {
+                    context.addError("Delete cascading configuration via @UpdatableMapping must be defined if entity attribute defines delete cascading. Invalid definition found on the  " + mapping.getErrorLocation() + "!");
+                }
             }
         }
 
@@ -302,8 +307,13 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
     }
 
     @Override
-    public Set<Class<?>> getParentRequiringSubtypes() {
-        return parentRequiringSubtypes;
+    public Set<Class<?>> getParentRequiringUpdateSubtypes() {
+        return parentRequiringUpdateSubtypes;
+    }
+
+    @Override
+    public Set<Class<?>> getParentRequiringCreateSubtypes() {
+        return parentRequiringCreateSubtypes;
     }
 
     @Override

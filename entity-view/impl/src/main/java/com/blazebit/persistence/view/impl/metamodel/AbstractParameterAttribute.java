@@ -138,7 +138,12 @@ public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute
     }
 
     @Override
-    public Set<Class<?>> getParentRequiringSubtypes() {
+    public Set<Class<?>> getParentRequiringUpdateSubtypes() {
+        return Collections.emptySet();
+    }
+
+    @Override
+    public Set<Class<?>> getParentRequiringCreateSubtypes() {
         return Collections.emptySet();
     }
 

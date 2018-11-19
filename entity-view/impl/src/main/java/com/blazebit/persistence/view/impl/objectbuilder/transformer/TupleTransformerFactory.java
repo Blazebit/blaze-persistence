@@ -28,5 +28,9 @@ import com.blazebit.persistence.view.impl.EntityViewConfiguration;
  */
 public interface TupleTransformerFactory {
 
+    public int getConsumeStartIndex();
+
+    public int getConsumeEndIndex();
+
     public TupleTransformer create(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration);
 }

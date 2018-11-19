@@ -458,14 +458,11 @@ public class SelectTest extends AbstractCoreTest {
 
         String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP END, owner_1 FROM Document d "
                 + "JOIN d.owner owner_1 ";
-        if (!jpaProvider.supportsSingleValuedAssociationIdExpressions()) {
-            objectQuery += "LEFT JOIN owner_1.nameObject.intIdEntity intIdEntity_1 ";
-        }
 
-        if (jpaProvider.supportsSingleValuedAssociationIdExpressions()) {
-            objectQuery += "GROUP BY " + groupBy("d.creationDate", "owner_1.age", "owner_1.defaultLanguage", "owner_1.friend", "owner_1.id", "owner_1.name", "owner_1.nameObject.intIdEntity.id", "owner_1.nameObject.primaryName", "owner_1.nameObject.secondaryName", "owner_1.partnerDocument", renderNullPrecedenceGroupBy("d.id"));
+        if (jpaProvider.supportsGroupByEntityAlias()) {
+            objectQuery += "GROUP BY " + groupBy("d.creationDate", "owner_1", renderNullPrecedenceGroupBy("d.id"));
         } else {
-            objectQuery += "GROUP BY " + groupBy("d.creationDate", "owner_1.age", "owner_1.defaultLanguage", "owner_1.friend", "owner_1.id", "owner_1.name", "intIdEntity_1.id", "owner_1.nameObject.primaryName", "owner_1.nameObject.secondaryName", "owner_1.partnerDocument", renderNullPrecedenceGroupBy("d.id"));
+            objectQuery += "GROUP BY " + groupBy("d.creationDate", "owner_1.age", "owner_1.defaultLanguage", "owner_1.friend.id", "owner_1.id", "owner_1.name", "owner_1.nameObject.intIdEntity.id", "owner_1.nameObject.primaryName", "owner_1.nameObject.secondaryName", "owner_1.partnerDocument.id", renderNullPrecedenceGroupBy("d.id"));
         }
 
         objectQuery += " ORDER BY d.id DESC";
@@ -486,13 +483,10 @@ public class SelectTest extends AbstractCoreTest {
         String countQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d";
         String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP END, owner_1 FROM Document d "
                 + "JOIN d.owner owner_1 ";
-        if (!jpaProvider.supportsSingleValuedAssociationIdExpressions()) {
-            objectQuery += "LEFT JOIN owner_1.nameObject.intIdEntity intIdEntity_1 ";
-        }
-        if (jpaProvider.supportsSingleValuedAssociationIdExpressions()) {
-            objectQuery += "GROUP BY " + groupBy("d.creationDate", "owner_1.age", "owner_1.defaultLanguage", "owner_1.friend", "owner_1.id", "owner_1.name", "owner_1.nameObject.intIdEntity.id", "owner_1.nameObject.primaryName", "owner_1.nameObject.secondaryName", "owner_1.partnerDocument", renderNullPrecedenceGroupBy("d.id"));
+        if (jpaProvider.supportsGroupByEntityAlias()) {
+            objectQuery += "GROUP BY " + groupBy("d.creationDate", "owner_1", renderNullPrecedenceGroupBy("d.id"));
         } else {
-            objectQuery += "GROUP BY " + groupBy("d.creationDate", "owner_1.age", "owner_1.defaultLanguage", "owner_1.friend", "owner_1.id", "owner_1.name", "intIdEntity_1.id", "owner_1.nameObject.primaryName", "owner_1.nameObject.secondaryName", "owner_1.partnerDocument", renderNullPrecedenceGroupBy("d.id"));
+            objectQuery += "GROUP BY " + groupBy("d.creationDate", "owner_1.age", "owner_1.defaultLanguage", "owner_1.friend.id", "owner_1.id", "owner_1.name", "owner_1.nameObject.intIdEntity.id", "owner_1.nameObject.primaryName", "owner_1.nameObject.secondaryName", "owner_1.partnerDocument.id", renderNullPrecedenceGroupBy("d.id"));
         }
         objectQuery += " ORDER BY d.id DESC";
 

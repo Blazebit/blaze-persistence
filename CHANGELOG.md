@@ -28,6 +28,7 @@ Not yet released
 * Add updatable entity view support for inverse collections without a mapped by i.e. explicit join columns
 * Rewrtite implicit joins in `ON` clause automatically to subqueries
 * Add support for multiple non-cascading parent objects for updatable entity views
+* Add support for correlated inheritance mappings and correlations in inheritance subtypes
 
 ### Bug fixes
 

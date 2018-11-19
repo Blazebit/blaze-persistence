@@ -31,10 +31,11 @@ import java.util.Collections;
  */
 public class ConvertReflectionInstantiator<T> implements ObjectInstantiator<T> {
 
+    private final boolean resetInitialState;
     private final Constructor<T> constructor;
     private final AbstractReflectionInstantiator.TypeConverterEntry[] typeConverterEntries;
 
-    public ConvertReflectionInstantiator(ProxyFactory proxyFactory, ManagedViewType<T> viewType, Class<?>[] parameterTypes, EntityViewManager entityViewManager) {
+    public ConvertReflectionInstantiator(ProxyFactory proxyFactory, ManagedViewType<T> viewType, Class<?>[] parameterTypes, boolean resetInitialState, EntityViewManager entityViewManager) {
         @SuppressWarnings("unchecked")
         Class<T> proxyClazz = (Class<T>) proxyFactory.getProxy(entityViewManager, (ManagedViewTypeImplementor<Object>) viewType, null);
         Constructor<T> javaConstructor;
@@ -45,6 +46,7 @@ public class ConvertReflectionInstantiator<T> implements ObjectInstantiator<T> {
             throw new IllegalArgumentException("Couldn't find expected constructor of the proxy class: " + proxyClazz.getName(), ex);
         }
 
+        this.resetInitialState = resetInitialState && DirtyStateTrackable.class.isAssignableFrom(proxyClazz);
         this.constructor = javaConstructor;
         this.typeConverterEntries = AbstractReflectionInstantiator.withPrimitiveConverters(Collections.<AbstractReflectionInstantiator.TypeConverterEntry>emptyList(), parameterTypes);
     }
@@ -58,7 +60,14 @@ public class ConvertReflectionInstantiator<T> implements ObjectInstantiator<T> {
                 AbstractReflectionInstantiator.TypeConverterEntry entry = typeConverterEntries[i];
                 tuple[entry.index] = entry.typeConverter.convertToViewType(tuple[entry.index]);
             }
-            return constructor.newInstance(tuple);
+            T t = constructor.newInstance(tuple);
+            if (resetInitialState) {
+                Object[] initialState = ((DirtyStateTrackable) t).$$_getInitialState();
+                for (int i = 0; i < initialState.length; i++) {
+                    initialState[i] = null;
+                }
+            }
+            return t;
         } catch (Exception ex) {
             String[] types = new String[tuple.length];
             

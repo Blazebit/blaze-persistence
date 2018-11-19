@@ -649,6 +649,15 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
         return value;
     }
+
+    public void addUpdater(ManagedViewTypeImplementor<?> viewType, ManagedViewTypeImplementor<?> declaredViewType, EntityViewUpdaterImpl owner, String ownerMapping, EntityViewUpdaterImpl updater) {
+        if (declaredViewType != null && declaredViewType != viewType || owner != null) {
+            ContextAwareUpdaterKey key = new ContextAwareUpdaterKey(viewType, declaredViewType, owner, ownerMapping);
+            contextAwareEntityViewUpdaterCache.put(key, updater);
+        } else {
+            entityViewUpdaterCache.put(viewType, updater);
+        }
+    }
     
     public EntityViewUpdater getUpdater(ManagedViewTypeImplementor<?> viewType, ManagedViewTypeImplementor<?> declaredViewType, EntityViewUpdaterImpl owner, String ownerMapping) {
         if (declaredViewType != null && declaredViewType != viewType || owner != null) {
@@ -656,12 +665,8 @@ public class EntityViewManagerImpl implements EntityViewManager {
             EntityViewUpdaterImpl value = contextAwareEntityViewUpdaterCache.get(key);
 
             if (value == null) {
-                value = new EntityViewUpdaterImpl(this, viewType, declaredViewType, owner, ownerMapping);
-                EntityViewUpdaterImpl oldValue = contextAwareEntityViewUpdaterCache.putIfAbsent(key, value);
-
-                if (oldValue != null) {
-                    value = oldValue;
-                }
+                new EntityViewUpdaterImpl(this, viewType, declaredViewType, owner, ownerMapping);
+                value = contextAwareEntityViewUpdaterCache.get(key);
             }
 
             return value;
@@ -669,12 +674,8 @@ public class EntityViewManagerImpl implements EntityViewManager {
             EntityViewUpdaterImpl value = entityViewUpdaterCache.get(viewType);
 
             if (value == null) {
-                value = new EntityViewUpdaterImpl(this, viewType, null, null, null);
-                EntityViewUpdaterImpl oldValue = entityViewUpdaterCache.putIfAbsent(viewType, value);
-
-                if (oldValue != null) {
-                    value = oldValue;
-                }
+                new EntityViewUpdaterImpl(this, viewType, null, null, null);
+                value = entityViewUpdaterCache.get(viewType);
             }
 
             return value;

@@ -58,6 +58,7 @@ import java.util.NavigableSet;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  *
@@ -197,15 +198,20 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
         if (readOnlySubtypes != null) {
             return readOnlySubtypes;
         }
-        Set<ManagedViewTypeImplementor<?>> subtypes = initializeCascadeSubtypes(readOnlySubtypeMappings, context, embeddableMapping);
         com.blazebit.persistence.view.metamodel.Type<?> elementType = getElementType(context, embeddableMapping);
         if (elementType == null) {
             elementType = getType(context, embeddableMapping);
         }
-        if (elementType instanceof ManagedViewTypeImplementor<?>) {
-            if (subtypes.isEmpty()) {
+        Set<ManagedViewTypeImplementor<?>> subtypes;
+        if (readOnlySubtypeMappings == null || readOnlySubtypeMappings.isEmpty()) {
+            if (elementType instanceof ManagedViewTypeImplementor<?>) {
                 subtypes = Collections.<ManagedViewTypeImplementor<?>>singleton((ManagedViewTypeImplementor<?>) elementType);
             } else {
+                subtypes = Collections.emptySet();
+            }
+        } else {
+            subtypes = initializeReadOnlyCascadeSubtypes(readOnlySubtypeMappings, context, embeddableMapping);
+            if (elementType instanceof ManagedViewTypeImplementor<?>) {
                 subtypes.add((ManagedViewTypeImplementor<?>) elementType);
             }
         }
@@ -278,13 +284,29 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
         }
     }
 
+    private Set<ManagedViewTypeImplementor<?>> initializeReadOnlyCascadeSubtypes(Map<ViewMapping, Boolean> subtypeMappings, final MetamodelBuildingContext context, final EmbeddableOwner embeddableMapping) {
+        if (subtypeMappings == null || subtypeMappings.isEmpty()) {
+            return Collections.emptySet();
+        }
+        final Set<ManagedViewTypeImplementor<?>> subtypes = Collections.newSetFromMap(new ConcurrentHashMap<ManagedViewTypeImplementor<?>, Boolean>(subtypeMappings.size()));
+        for (final ViewMapping mapping : subtypeMappings.keySet()) {
+            mapping.onInitializeViewMappingsFinished(new Runnable() {
+                @Override
+                public void run() {
+                    subtypes.add(context.getManagedViewType(mapping, embeddableMapping));
+                }
+            });
+        }
+        return subtypes;
+    }
+
     private Set<ManagedViewTypeImplementor<?>> initializeCascadeSubtypes(Map<ViewMapping, Boolean> subtypeMappings, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
         if (subtypeMappings == null || subtypeMappings.isEmpty()) {
             return Collections.emptySet();
         }
         Set<ManagedViewTypeImplementor<?>> subtypes = new HashSet<>(subtypeMappings.size());
         for (ViewMapping mapping : subtypeMappings.keySet()) {
-            subtypes.add(mapping.getManagedViewType(context, embeddableMapping));
+            subtypes.add(context.getManagedViewType(mapping, embeddableMapping));
         }
         return subtypes;
     }

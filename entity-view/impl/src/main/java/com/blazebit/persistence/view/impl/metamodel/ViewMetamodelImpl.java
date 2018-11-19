@@ -81,7 +81,7 @@ public class ViewMetamodelImpl implements ViewMetamodel {
 
         // Phase 3: Build the ManagedViewType instances representing the metamodel
         for (ViewMapping viewMapping : viewMappings) {
-            ManagedViewTypeImplementor<?> managedView = viewMapping.getManagedViewType(context, null);
+            ManagedViewTypeImplementor<?> managedView = context.getManagedViewType(viewMapping, null);
 
             managedViews.put(viewMapping.getEntityViewClass(), managedView);
             if (managedView instanceof FlatViewType<?>) {

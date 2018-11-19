@@ -92,6 +92,7 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewTypeI
                 context.addError("Invalid lock owner mapping defined for managed view type '" + getJavaType().getName() + "'!");
             }
         }
+        context.finishViewType(this);
     }
 
     @Override

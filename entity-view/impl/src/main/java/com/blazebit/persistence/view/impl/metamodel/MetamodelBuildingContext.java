@@ -89,4 +89,12 @@ public interface MetamodelBuildingContext {
     public Set<Class<?>> findSubtypes(Class<?> entityViewClass);
 
     public Set<Class<?>> findSupertypes(Class<?> entityViewClass);
+
+    public void addManagedViewType(ViewMapping viewMapping, EmbeddableOwner embeddableMapping, ManagedViewTypeImplementor<?> managedViewType);
+
+    public ManagedViewTypeImplementor<?> getManagedViewType(ViewMapping viewMapping, EmbeddableOwner embeddableMapping);
+
+    public void finishViewType(ManagedViewTypeImplementor<?> managedViewType);
+
+    public void onViewTypeFinished(ManagedViewTypeImplementor<?> managedViewType, Runnable listener);
 }

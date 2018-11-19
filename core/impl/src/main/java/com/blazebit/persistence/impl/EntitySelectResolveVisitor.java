@@ -16,16 +16,6 @@
 
 package com.blazebit.persistence.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
-
-import javax.persistence.FetchType;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EntityType;
-
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.expression.FunctionExpression;
 import com.blazebit.persistence.parser.expression.ListIndexExpression;
@@ -36,7 +26,19 @@ import com.blazebit.persistence.parser.expression.PathElementExpression;
 import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.expression.PropertyExpression;
 import com.blazebit.persistence.parser.expression.VisitorAdapter;
-import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
+import com.blazebit.persistence.spi.ExtendedAttribute;
+import com.blazebit.persistence.spi.ExtendedManagedType;
+import com.blazebit.persistence.spi.JpaProvider;
+
+import javax.persistence.FetchType;
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.EntityType;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * This visitor resolves entity references to their attributes. This is needed for entity references
@@ -50,11 +52,19 @@ import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 public class EntitySelectResolveVisitor extends VisitorAdapter {
 
     private final EntityMetamodel m;
+    private final JpaProvider jpaProvider;
     private final Set<PathExpression> pathExpressions;
 
-    public EntitySelectResolveVisitor(EntityMetamodel m, Set<PathExpression> pathExpressions) {
+    private JoinNode rootNode;
+
+    public EntitySelectResolveVisitor(EntityMetamodel m, JpaProvider jpaProvider, Set<PathExpression> pathExpressions) {
         this.m = m;
+        this.jpaProvider = jpaProvider;
         this.pathExpressions = pathExpressions;
+    }
+
+    public JoinNode getRootNode() {
+        return rootNode;
     }
 
     @Override
@@ -71,23 +81,34 @@ public class EntitySelectResolveVisitor extends VisitorAdapter {
              * the group by (because of DB2) we need to resolve such entity
              * selects here
              */
-            JoinNode baseNode = ((JoinNode) expression.getBaseNode());
-            if (baseNode == null) {
+            rootNode = ((JoinNode) expression.getBaseNode());
+            if (rootNode == null) {
                 // This is an alias expression to a complex expression
                 return;
             }
-            EntityType<?> entityType = m.getEntity(baseNode.getJavaType());
+            EntityType<?> entityType = m.getEntity(rootNode.getJavaType());
             if (entityType == null) {
                 // ignore if the expression is not an entity
                 return;
             }
 
-            Class<?> entityClass = entityType.getJavaType();
-            // we need to ensure a deterministic order for testing
-            SortedSet<Attribute<?, ?>> sortedAttributes = new TreeSet<>(JpaMetamodelUtils.ATTRIBUTE_NAME_COMPARATOR);
             // TODO: a polymorphic query will fail because we don't collect subtype properties
-            sortedAttributes.addAll(entityType.getAttributes());
-            for (Attribute<?, ?> attr : sortedAttributes) {
+            ExtendedManagedType<?> extendedManagedType = m.getManagedType(ExtendedManagedType.class, entityType);
+            Set<String> attributePaths;
+            if (rootNode.getValuesIdNames() != null && !rootNode.getValuesIdNames().isEmpty()) {
+                attributePaths = rootNode.getValuesIdNames();
+            } else {
+                attributePaths = Collections.emptySet();
+            }
+            Map<String, ExtendedAttribute<?, ?>> ownedSingularAttributes = (Map<String, ExtendedAttribute<?, ?>>) (Map) extendedManagedType.getOwnedSingularAttributes();
+            Collection<String> propertyPaths = JpaUtils.getEmbeddedPropertyPaths(ownedSingularAttributes, null, jpaProvider.needsElementCollectionIdCutoff(), true);
+            for (String propertyPath : propertyPaths) {
+                // Skip if the attribute is not in the desired attribute paths
+                if (!attributePaths.isEmpty() && !attributePaths.contains(propertyPath)) {
+                    continue;
+                }
+                ExtendedAttribute<?, ?> extendedAttribute = ownedSingularAttributes.get(propertyPath);
+                Attribute<?, ?> attr = extendedAttribute.getAttribute();
                 boolean resolve = false;
                 if (ExpressionUtils.isAssociation(attr) && !attr.isCollection()) {
                     resolve = true;
@@ -101,9 +122,11 @@ public class EntitySelectResolveVisitor extends VisitorAdapter {
                 if (resolve) {
                     List<PathElementExpression> paths = new ArrayList<>(expression.getExpressions().size() + 1);
                     paths.addAll(expression.getExpressions());
-                    paths.add(new PropertyExpression(attr.getName()));
+                    for (Attribute<?, ?> attribute : extendedAttribute.getAttributePath()) {
+                        paths.add(new PropertyExpression(attribute.getName()));
+                    }
                     PathExpression attrPath = new PathExpression(paths);
-                    attrPath.setPathReference(new SimplePathReference(baseNode, attr.getName(), m.type(JpaMetamodelUtils.resolveFieldClass(entityClass, attr))));
+                    attrPath.setPathReference(new SimplePathReference(rootNode, propertyPath, m.type(extendedAttribute.getElementClass())));
                     pathExpressions.add(attrPath);
                 }
             }
@@ -127,5 +150,4 @@ public class EntitySelectResolveVisitor extends VisitorAdapter {
     @Override
     public void visit(MapValueExpression expression) {
     }
-
 }

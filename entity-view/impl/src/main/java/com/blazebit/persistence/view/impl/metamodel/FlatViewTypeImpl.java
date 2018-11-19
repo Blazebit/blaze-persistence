@@ -29,6 +29,7 @@ public class FlatViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements FlatV
 
     public FlatViewTypeImpl(ViewMapping viewMapping, ManagedType<?> managedType, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
         super(viewMapping, managedType, context, embeddableMapping);
+        context.finishViewType(this);
     }
 
     @Override

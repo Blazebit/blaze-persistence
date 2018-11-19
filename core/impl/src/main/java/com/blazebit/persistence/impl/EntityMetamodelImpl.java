@@ -51,6 +51,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -108,7 +109,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
             }
 
             Set<Attribute<?, ?>> attributes = (Set<Attribute<?, ?>>) (Set) e.getAttributes();
-            Map<String, AttributeEntry<?, ?>> attributeMap = new HashMap<>(attributes.size());
+            Map<String, AttributeEntry<?, ?>> attributeMap = new TreeMap<>();
             TemporaryExtendedManagedType extendedManagedType = new TemporaryExtendedManagedType(e, attributeMap);
             temporaryExtendedManagedTypes.put(JpaMetamodelUtils.getTypeName(e), extendedManagedType);
             if (e.getJavaType() != null) {
@@ -257,7 +258,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         Set<Attribute<?, ?>> attributes = (Set<Attribute<?, ?>>) (Set) type.getAttributes();
         TemporaryExtendedManagedType extendedManagedType = temporaryExtendedManagedTypes.get(JpaMetamodelUtils.getTypeName(type));
         if (extendedManagedType == null) {
-            extendedManagedType = new TemporaryExtendedManagedType(type, new HashMap<String, AttributeEntry<?, ?>>());
+            extendedManagedType = new TemporaryExtendedManagedType(type, new TreeMap<String, AttributeEntry<?, ?>>());
             temporaryExtendedManagedTypes.put(JpaMetamodelUtils.getTypeName(type), extendedManagedType);
             if (type.getJavaType() != null) {
                 temporaryExtendedManagedTypes.put(type.getJavaType().getName(), extendedManagedType);

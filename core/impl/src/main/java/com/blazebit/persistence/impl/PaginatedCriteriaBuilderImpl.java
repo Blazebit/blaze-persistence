@@ -123,7 +123,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         FullQueryBuilder<Y, ?> criteriaBuilder = super.copy(resultClass);
         PaginatedCriteriaBuilder<Y> builder;
         if (entityId != null) {
-            builder = criteriaBuilder.page(entityId, maxResults);
+            builder = criteriaBuilder.pageAndNavigate(entityId, maxResults);
         } else if (keysetPage != null) {
             builder = criteriaBuilder.page(keysetPage, firstResult, maxResults);
         } else {

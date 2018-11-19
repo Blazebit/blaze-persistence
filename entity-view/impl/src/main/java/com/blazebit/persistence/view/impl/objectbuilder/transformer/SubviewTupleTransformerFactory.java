@@ -41,6 +41,16 @@ public class SubviewTupleTransformerFactory implements TupleTransformerFactory {
     }
 
     @Override
+    public int getConsumeStartIndex() {
+        return template.getTupleOffset() + 1;
+    }
+
+    @Override
+    public int getConsumeEndIndex() {
+        return template.getTupleOffset() + template.getMappers().length;
+    }
+
+    @Override
     public TupleTransformer create(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
         ObjectBuilder<Object[]> objectBuilder = template.createObjectBuilder(parameterHolder, optionalParameters, entityViewConfiguration, 0, true, nullIfEmpty);
         if (updatable) {

@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.BaseSubqueryBuilder;
 import com.blazebit.persistence.CTEBuilder;
 import com.blazebit.persistence.CaseWhenStarterBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
@@ -39,14 +40,6 @@ import com.blazebit.persistence.StartOngoingSetOperationCTECriteriaBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.WhereOrBuilder;
-import com.blazebit.persistence.impl.util.SqlUtils;
-import com.blazebit.persistence.parser.EntityMetamodel;
-import com.blazebit.persistence.parser.expression.Expression;
-import com.blazebit.persistence.parser.expression.ExpressionFactory;
-import com.blazebit.persistence.parser.expression.PathExpression;
-import com.blazebit.persistence.parser.expression.Subquery;
-import com.blazebit.persistence.parser.expression.SubqueryExpressionFactory;
-import com.blazebit.persistence.parser.expression.VisitorAdapter;
 import com.blazebit.persistence.impl.function.entity.ValuesEntity;
 import com.blazebit.persistence.impl.keyset.KeysetBuilderImpl;
 import com.blazebit.persistence.impl.keyset.KeysetImpl;
@@ -54,8 +47,6 @@ import com.blazebit.persistence.impl.keyset.KeysetLink;
 import com.blazebit.persistence.impl.keyset.KeysetManager;
 import com.blazebit.persistence.impl.keyset.KeysetMode;
 import com.blazebit.persistence.impl.keyset.SimpleKeysetLink;
-import com.blazebit.persistence.parser.expression.modifier.ExpressionModifier;
-import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.impl.query.AbstractCustomQuery;
 import com.blazebit.persistence.impl.query.CTENode;
 import com.blazebit.persistence.impl.query.CustomQuerySpecification;
@@ -71,6 +62,16 @@ import com.blazebit.persistence.impl.transform.SimpleTransformerGroup;
 import com.blazebit.persistence.impl.transform.SizeTransformationVisitor;
 import com.blazebit.persistence.impl.transform.SizeTransformerGroup;
 import com.blazebit.persistence.impl.transform.SubqueryRecursiveExpressionVisitor;
+import com.blazebit.persistence.impl.util.SqlUtils;
+import com.blazebit.persistence.parser.EntityMetamodel;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.expression.PathExpression;
+import com.blazebit.persistence.parser.expression.Subquery;
+import com.blazebit.persistence.parser.expression.SubqueryExpressionFactory;
+import com.blazebit.persistence.parser.expression.VisitorAdapter;
+import com.blazebit.persistence.parser.expression.modifier.ExpressionModifier;
+import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.ConfigurationSource;
 import com.blazebit.persistence.spi.DbmsDialect;
@@ -552,6 +553,10 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
     
     private SetReturn addSetOperation(SetOperationType type) {
+        // We support set operations in subqueries since we use custom functions
+        if (!(this instanceof BaseSubqueryBuilder<?>)) {
+            mainQuery.assertSupportsAdvancedSql("Illegal use of SET operation!");
+        }
         prepareForModification(ClauseType.SELECT);
         this.setOperationEnded = true;
         // We only check non-empty queries since empty ones will be replaced
@@ -669,7 +674,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     public BuilderType fromCte(Class<?> clazz, String cteName) {
-        return fromCte(clazz, null);
+        return fromCte(clazz, cteName, null);
     }
 
     public BuilderType fromCte(Class<?> clazz, String cteName, String alias) {
@@ -856,6 +861,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         
         // Handle old and new references
         if (state != null) {
+            mainQuery.assertSupportsAdvancedSql("Illegal use of modification state clause OLD/NEW!");
             Class<?> clazz = type.getJavaType();
             Map<String, DbmsModificationState> versionEntities = explicitVersionEntities.get(clazz);
             if (versionEntities == null) {
