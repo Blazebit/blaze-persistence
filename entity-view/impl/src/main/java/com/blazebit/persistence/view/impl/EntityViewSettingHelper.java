@@ -78,7 +78,7 @@ public final class EntityViewSettingHelper {
             if (managedView instanceof FlatViewType<?>) {
                 if (setting.isKeysetPaginated()) {
                     if (setting.getFirstResult() == -1) {
-                        return (Q) criteriaBuilder.page(setting.getEntityId(), setting.getMaxResults()).withKeysetExtraction(true);
+                        return (Q) criteriaBuilder.pageAndNavigate(setting.getEntityId(), setting.getMaxResults()).withKeysetExtraction(true);
                     } else {
                         return (Q) criteriaBuilder.page(setting.getKeysetPage(), setting.getFirstResult(), setting.getMaxResults());
                     }

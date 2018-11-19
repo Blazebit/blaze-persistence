@@ -28,14 +28,16 @@ import java.util.Set;
 public class UnorderedMapInstantiator extends AbstractMapInstantiator<Map<?, ?>, RecordingMap<Map<?, ?>, ?, ?>> {
 
     private final Set<Class<?>> allowedSubtypes;
-    private final Set<Class<?>> parentRequiringSubtypes;
+    private final Set<Class<?>> parentRequiringUpdateSubtypes;
+    private final Set<Class<?>> parentRequiringCreateSubtypes;
     private final boolean updatable;
     private final boolean optimize;
 
-    public UnorderedMapInstantiator(PluralObjectFactory<Map<?, ?>> collectionFactory, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringSubtypes, boolean updatable, boolean optimize) {
+    public UnorderedMapInstantiator(PluralObjectFactory<Map<?, ?>> collectionFactory, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringUpdateSubtypes, Set<Class<?>> parentRequiringCreateSubtypes, boolean updatable, boolean optimize) {
         super(collectionFactory);
         this.allowedSubtypes = allowedSubtypes;
-        this.parentRequiringSubtypes = parentRequiringSubtypes;
+        this.parentRequiringUpdateSubtypes = parentRequiringUpdateSubtypes;
+        this.parentRequiringCreateSubtypes = parentRequiringCreateSubtypes;
         this.updatable = updatable;
         this.optimize = optimize;
     }
@@ -47,6 +49,6 @@ public class UnorderedMapInstantiator extends AbstractMapInstantiator<Map<?, ?>,
 
     @Override
     public RecordingMap<Map<?, ?>, ?, ?> createRecordingCollection(int size) {
-        return new RecordingMap(createCollection(size), false, allowedSubtypes, parentRequiringSubtypes, updatable, optimize);
+        return new RecordingMap(createCollection(size), false, allowedSubtypes, parentRequiringUpdateSubtypes, parentRequiringCreateSubtypes, updatable, optimize);
     }
 }

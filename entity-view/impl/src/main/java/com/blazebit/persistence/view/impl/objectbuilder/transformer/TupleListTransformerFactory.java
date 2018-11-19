@@ -27,5 +27,7 @@ import java.util.Map;
  */
 public interface TupleListTransformerFactory {
 
+    public int getConsumableIndex();
+
     public TupleListTransformer create(Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration);
 }

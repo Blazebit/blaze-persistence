@@ -61,7 +61,8 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
     private final Set<Type<?>> persistSubtypes;
     private final Set<Type<?>> updateSubtypes;
     private final Set<Class<?>> allowedSubtypes;
-    private final Set<Class<?>> parentRequiringSubtypes;
+    private final Set<Class<?>> parentRequiringUpdateSubtypes;
+    private final Set<Class<?>> parentRequiringCreateSubtypes;
     private final Map<ManagedViewType<? extends Y>, String> inheritanceSubtypes;
 
     @SuppressWarnings("unchecked")
@@ -172,7 +173,8 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
 
         this.allowedSubtypes = createAllowedSubtypesSet();
         // We treat correlated attributes specially
-        this.parentRequiringSubtypes = isCorrelated() ? Collections.<Class<?>>emptySet() : createParentRequiringSubtypesSet();
+        this.parentRequiringUpdateSubtypes = isCorrelated() ? Collections.<Class<?>>emptySet() : createParentRequiringUpdateSubtypesSet();
+        this.parentRequiringCreateSubtypes = isCorrelated() ? Collections.<Class<?>>emptySet() : createParentRequiringCreateSubtypesSet();
         this.optimisticLockProtected = determineOptimisticLockProtected(mapping, context, mutable);
         this.inheritanceSubtypes = (Map<ManagedViewType<? extends Y>, String>) (Map<?, ?>) mapping.getInheritanceSubtypes(context, embeddableMapping);
         this.dirtyStateIndex = determineDirtyStateIndex(dirtyStateIndex);
@@ -204,13 +206,16 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
         this.deleteCascaded = orphanRemoval || definesDeleteCascading || allowsDeleteCascading && inverseRemoveStrategy != null;
 
         if (updatable) {
-            boolean jpaOrphanRemoval = context.getJpaProvider().isOrphanRemoval(declaringType.getJpaManagedType(), getMapping());
-            if (jpaOrphanRemoval && !orphanRemoval) {
-                context.addError("Orphan removal configuration via @UpdatableMapping must be defined if entity attribute defines orphan removal. Invalid definition found on the  " + mapping.getErrorLocation() + "!");
-            }
-            boolean jpaDeleteCascaded = context.getJpaProvider().isDeleteCascaded(declaringType.getJpaManagedType(), getMapping());
-            if (jpaDeleteCascaded && !deleteCascaded) {
-                context.addError("Delete cascading configuration via @UpdatableMapping must be defined if entity attribute defines delete cascading. Invalid definition found on the  " + mapping.getErrorLocation() + "!");
+            String mappingExpression = getMapping();
+            if (mappingExpression != null) {
+                boolean jpaOrphanRemoval = context.getJpaProvider().isOrphanRemoval(declaringType.getJpaManagedType(), mappingExpression);
+                if (jpaOrphanRemoval && !orphanRemoval) {
+                    context.addError("Orphan removal configuration via @UpdatableMapping must be defined if entity attribute defines orphan removal. Invalid definition found on the  " + mapping.getErrorLocation() + "!");
+                }
+                boolean jpaDeleteCascaded = context.getJpaProvider().isDeleteCascaded(declaringType.getJpaManagedType(), mappingExpression);
+                if (jpaDeleteCascaded && !deleteCascaded) {
+                    context.addError("Delete cascading configuration via @UpdatableMapping must be defined if entity attribute defines delete cascading. Invalid definition found on the  " + mapping.getErrorLocation() + "!");
+                }
             }
         }
     }
@@ -351,8 +356,13 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
     }
 
     @Override
-    public Set<Class<?>> getParentRequiringSubtypes() {
-        return parentRequiringSubtypes;
+    public Set<Class<?>> getParentRequiringUpdateSubtypes() {
+        return parentRequiringUpdateSubtypes;
+    }
+
+    @Override
+    public Set<Class<?>> getParentRequiringCreateSubtypes() {
+        return parentRequiringCreateSubtypes;
     }
 
     @Override

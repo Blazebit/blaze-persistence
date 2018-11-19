@@ -65,7 +65,7 @@ public final class JpaUtils {
         EntityMetamodel metamodel = queryBuilder.mainQuery.metamodel;
         JpaMetamodelAccessor jpaMetamodelAccessor = jpaProvider.getJpaMetamodelAccessor();
 
-        boolean needsElementCollectionIdCutoffForCompositeIdOwner = jpaProvider.needsElementCollectionIdCutoff();
+        boolean needsElementCollectionIdCutoff = jpaProvider.needsElementCollectionIdCutoff();
         final Queue<String> attributeQueue = new ArrayDeque<>(bindingMap.keySet());
         while (!attributeQueue.isEmpty()) {
             final String attributeName = attributeQueue.remove();
@@ -79,7 +79,7 @@ public final class JpaUtils {
 
                 if (!splitExpression && jpaMetamodelAccessor.isJoinable(lastAttribute)) {
                     splitExpression = true;
-                    if (needsElementCollectionIdCutoffForCompositeIdOwner) {
+                    if (needsElementCollectionIdCutoff) {
                         for (int i = 0; i < attributePath.size() - 1; i++) {
                             Attribute<?, ?> attribute = attributePath.get(i);
                             if (attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION) {
@@ -101,7 +101,7 @@ public final class JpaUtils {
                         // When binding null, we don't have to adapt anything
                     } else if (selectExpression instanceof PathExpression) {
                         boolean firstBinding = true;
-                        final Collection<String> embeddedPropertyNames = getEmbeddedPropertyPaths(attributeEntries, attributeName, needsElementCollectionIdCutoffForCompositeIdOwner, false);
+                        final Collection<String> embeddedPropertyNames = getEmbeddedPropertyPaths(attributeEntries, attributeName, needsElementCollectionIdCutoff, false);
 
                         PathExpression baseExpression = embeddedPropertyNames.size() > 1 ?
                                 ((PathExpression) selectExpression).clone(false) : ((PathExpression) selectExpression);

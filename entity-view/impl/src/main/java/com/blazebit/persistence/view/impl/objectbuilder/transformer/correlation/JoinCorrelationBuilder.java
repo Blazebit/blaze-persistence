@@ -20,10 +20,10 @@ import com.blazebit.persistence.CorrelationQueryBuilder;
 import com.blazebit.persistence.FromProvider;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.JoinOnBuilder;
+import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.view.CorrelationBuilder;
 
 import javax.persistence.metamodel.EntityType;
-import java.util.Map;
 
 /**
  *
@@ -32,17 +32,17 @@ import java.util.Map;
  */
 public class JoinCorrelationBuilder implements CorrelationBuilder {
 
+    private final SelectBuilder<?> selectBuilder;
     private final FullQueryBuilder<?, ?> criteriaBuilder;
-    private final Map<String, Object> optionalParameters;
     private final String joinBase;
     private final String selectAlias;
     private final String correlationAlias;
     private final String correlationResult;
     private boolean correlated;
 
-    public JoinCorrelationBuilder(FullQueryBuilder<?, ?> criteriaBuilder, Map<String, Object> optionalParameters, String joinBase, String correlationAlias, String correlationResult, String selectAlias) {
+    public JoinCorrelationBuilder(SelectBuilder<?> selectBuilder, FullQueryBuilder<?, ?> criteriaBuilder, String joinBase, String correlationAlias, String correlationResult, String selectAlias) {
+        this.selectBuilder = selectBuilder;
         this.criteriaBuilder = criteriaBuilder;
-        this.optionalParameters = optionalParameters;
         this.joinBase = joinBase;
         this.correlationAlias = correlationAlias;
         this.correlationResult = correlationResult;
@@ -72,7 +72,7 @@ public class JoinCorrelationBuilder implements CorrelationBuilder {
 
         // Basic element has an alias, subviews don't
         if (selectAlias != null) {
-            criteriaBuilder.select(correlationResult, selectAlias);
+            selectBuilder.select(correlationResult, selectAlias);
         }
 
         correlated = true;
@@ -87,7 +87,7 @@ public class JoinCorrelationBuilder implements CorrelationBuilder {
 
         // Basic element has an alias, subviews don't
         if (selectAlias != null) {
-            criteriaBuilder.select(correlationResult, selectAlias);
+            selectBuilder.select(correlationResult, selectAlias);
         }
 
         correlated = true;

@@ -18,7 +18,6 @@ package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -33,15 +32,15 @@ import java.util.Map;
 public class ConstrainedAttribute<T extends AbstractAttribute<?, ?>> {
 
     private final T attribute;
-    private final List<Map.Entry<String, T>> selectionConstrainedAttributes;
+    private final List<Entry<T>> selectionConstrainedAttributes;
     private final Map<ManagedViewType<?>, T> subAttributes;
 
     @SuppressWarnings("unchecked")
-    public ConstrainedAttribute(String constraint, T attribute) {
+    public ConstrainedAttribute(String constraint, int[] subtypeIndexes, T attribute) {
         this.attribute = attribute;
         this.selectionConstrainedAttributes = new ArrayList<>();
         this.subAttributes = new HashMap<>();
-        addSelectionConstraint(constraint, attribute);
+        addSelectionConstraint(constraint, subtypeIndexes, attribute);
     }
 
     public T getAttribute() {
@@ -52,7 +51,7 @@ public class ConstrainedAttribute<T extends AbstractAttribute<?, ?>> {
         return selectionConstrainedAttributes.size() > 1;
     }
 
-    public Collection<Map.Entry<String, T>> getSelectionConstrainedAttributes() {
+    public Collection<Entry<T>> getSelectionConstrainedAttributes() {
         return selectionConstrainedAttributes;
     }
 
@@ -65,11 +64,44 @@ public class ConstrainedAttribute<T extends AbstractAttribute<?, ?>> {
         return attribute;
     }
 
-    public void addSelectionConstraint(String constraint, T attribute) {
-        selectionConstrainedAttributes.add(new AbstractMap.SimpleEntry<>(constraint, attribute));
+    public void addSelectionConstraint(String constraint, int[] subtypeIndexes, T attribute) {
+        selectionConstrainedAttributes.add(new Entry<>(constraint, subtypeIndexes, attribute));
     }
 
     public void addSubAttribute(ManagedViewType<?> viewType, T attribute) {
         subAttributes.put(((ManagedViewTypeImplementor<?>) viewType).getRealType(), attribute);
+    }
+
+    /**
+     *
+     * @author Christian Beikov
+     * @since 1.3.0
+     */
+    public static class Entry<T> {
+        private final String constraint;
+        private final int[] subtypeIndexes;
+        private final T attribute;
+
+        public Entry(String constraint, int[] subtypeIndexes, T attribute) {
+            this.constraint = constraint;
+            this.subtypeIndexes = subtypeIndexes;
+            this.attribute = attribute;
+        }
+
+        public String getConstraint() {
+            return constraint;
+        }
+
+        public int getSubtypeIndex() {
+            return subtypeIndexes[0];
+        }
+
+        public int[] getSubtypeIndexes() {
+            return subtypeIndexes;
+        }
+
+        public T getAttribute() {
+            return attribute;
+        }
     }
 }

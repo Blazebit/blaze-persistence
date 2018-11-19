@@ -59,17 +59,19 @@ public class TupleElementMapperBuilder {
     private final EntityMetamodel metamodel;
     private final ExpressionFactory ef;
     private final String constraint;
+    private final Integer subtypeIndex;
     private final List<TupleElementMapper> mappers;
     private final List<String> parameterMappings;
     private final TupleTransformatorFactory tupleTransformatorFactory;
 
-    public TupleElementMapperBuilder(int mapperIndex, String constraint, String aliasPrefix, String mappingPrefix, String idPrefix, EntityType<?> treatType, EntityMetamodel metamodel, ExpressionFactory ef) {
-        this(mapperIndex, constraint, aliasPrefix, mappingPrefix, idPrefix, treatType, metamodel, ef, new ArrayList<TupleElementMapper>(), new ArrayList<String>(), new TupleTransformatorFactory());
+    public TupleElementMapperBuilder(int mapperIndex, String constraint, Integer subtypeIndex, String aliasPrefix, String mappingPrefix, String idPrefix, EntityType<?> treatType, EntityMetamodel metamodel, ExpressionFactory ef) {
+        this(mapperIndex, constraint, subtypeIndex, aliasPrefix, mappingPrefix, idPrefix, treatType, metamodel, ef, new ArrayList<TupleElementMapper>(), new ArrayList<String>(), new TupleTransformatorFactory());
     }
 
-    public TupleElementMapperBuilder(int mapperIndex, String constraint, String aliasPrefix, String mappingPrefix, String idPrefix, EntityType<?> treatType, EntityMetamodel metamodel, ExpressionFactory ef, List<TupleElementMapper> mappers, List<String> parameterMappings, TupleTransformatorFactory tupleTransformatorFactory) {
+    public TupleElementMapperBuilder(int mapperIndex, String constraint, Integer subtypeIndex, String aliasPrefix, String mappingPrefix, String idPrefix, EntityType<?> treatType, EntityMetamodel metamodel, ExpressionFactory ef, List<TupleElementMapper> mappers, List<String> parameterMappings, TupleTransformatorFactory tupleTransformatorFactory) {
         this.mapperIndex = mapperIndex;
         this.constraint = constraint;
+        this.subtypeIndex = subtypeIndex;
         this.aliasPrefix = aliasPrefix;
         if (treatType != null) {
             this.mappingPrefix = "TREAT(" + mappingPrefix + " AS " + treatType.getName() + ")";
@@ -228,6 +230,14 @@ public class TupleElementMapperBuilder {
             sb.append(')');
         }
         return sb.toString().intern();
+    }
+
+    public String getJoinCorrelationAttributePath(String attributePath) {
+        if (subtypeIndex == null) {
+            return attributePath;
+        } else {
+            return attributePath + '_' + subtypeIndex;
+        }
     }
 
     public TupleTransformatorFactory getTupleTransformatorFactory() {

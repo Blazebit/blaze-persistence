@@ -219,7 +219,7 @@ public class PaginationTest extends AbstractCoreTest {
                 + function("PAGE_POSITION",
                         "(SELECT _page_position_d.id "
                         + "FROM Document _page_position_d "
-                        + "GROUP BY " + groupBy("_page_position_d.id", "_page_position_d.name", "_page_position_d.id")
+                        + "GROUP BY " + (jpaProvider.supportsGroupByEntityAlias() ? groupBy("_page_position_d.name", "_page_position_d.id") : groupBy("_page_position_d.id", "_page_position_d.name"))
                         + " ORDER BY _page_position_d.name ASC, _page_position_d.id ASC)",
                         ":_entityPagePositionParameter")
                     + " "
@@ -228,7 +228,7 @@ public class PaginationTest extends AbstractCoreTest {
         PaginatedCriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d")
                 .orderByAsc("name")
                 .orderByAsc("id")
-                .page(reference.getId(), 1);
+                .pageAndNavigate(reference.getId(), 1);
         
         List<Document> originalList = cbf.create(em, Document.class, "d")
                 .orderByAsc("name")
@@ -248,7 +248,7 @@ public class PaginationTest extends AbstractCoreTest {
     
     @Test(expected = IllegalArgumentException.class)
     public void testPaginationWithInvalidReferenceObject() {
-        cbf.create(em, Document.class, "d").page("test", 1);
+        cbf.create(em, Document.class, "d").pageAndNavigate("test", 1);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -267,7 +267,7 @@ public class PaginationTest extends AbstractCoreTest {
                         "(SELECT _page_position_d.id "
                         + "FROM Document _page_position_d "
                         + "WHERE _page_position_d.name <> :param_0 "
-                        + "GROUP BY " + groupBy("_page_position_d.id", "_page_position_d.name", "_page_position_d.id")
+                        + "GROUP BY " + (jpaProvider.supportsGroupByEntityAlias() ? groupBy("_page_position_d.name", "_page_position_d.id") : groupBy("_page_position_d.id", "_page_position_d.name"))
                         + " ORDER BY _page_position_d.name ASC, _page_position_d.id ASC)",
                         ":_entityPagePositionParameter")
                     + " "
@@ -278,7 +278,7 @@ public class PaginationTest extends AbstractCoreTest {
                 .where("name").notEq("adoc")
                 .orderByAsc("name")
                 .orderByAsc("id")
-                .page(reference.getId(), 1);
+                .pageAndNavigate(reference.getId(), 1);
         PaginatedCriteriaBuilder<Document> firstPageCb = cbf.create(em, Document.class, "d")
                 .where("name").notEq("adoc")
                 .orderByAsc("name")

@@ -471,6 +471,11 @@ public class DataNucleusJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsGroupByEntityAlias() {
+        return true;
+    }
+
+    @Override
     public boolean needsElementCollectionIdCutoff() {
         return false;
     }

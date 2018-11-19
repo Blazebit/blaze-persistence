@@ -922,7 +922,9 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     public abstract Set<Class<?>> getAllowedSubtypes();
 
-    public abstract Set<Class<?>> getParentRequiringSubtypes();
+    public abstract Set<Class<?>> getParentRequiringUpdateSubtypes();
+
+    public abstract Set<Class<?>> getParentRequiringCreateSubtypes();
 
     public abstract boolean isOptimizeCollectionActionsEnabled();
 
@@ -939,24 +941,24 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             if (comparator != null) {
                 context.addError("Comparator can't be defined for indexed attribute at the " + getLocation());
             }
-            return new ListCollectionInstantiator((PluralObjectFactory<Collection<?>>) collectionFactory, getAllowedSubtypes(), getParentRequiringSubtypes(), isUpdatable(), true, isOptimizeCollectionActionsEnabled(), false, null);
+            return new ListCollectionInstantiator((PluralObjectFactory<Collection<?>>) collectionFactory, getAllowedSubtypes(), getParentRequiringUpdateSubtypes(), getParentRequiringCreateSubtypes(), isUpdatable(), true, isOptimizeCollectionActionsEnabled(), false, null);
         } else {
             if (sorted) {
-                return new SortedSetCollectionInstantiator((PluralObjectFactory<Collection<?>>) collectionFactory, getAllowedSubtypes(), getParentRequiringSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled(), comparator);
+                return new SortedSetCollectionInstantiator((PluralObjectFactory<Collection<?>>) collectionFactory, getAllowedSubtypes(), getParentRequiringUpdateSubtypes(), getParentRequiringCreateSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled(), comparator);
             } else {
                 if (getCollectionType() == PluralAttribute.CollectionType.SET) {
                     if (comparator != null) {
                         context.addError("Comparator can't be defined for non-sorted set attribute at the " + getLocation());
                     }
                     if (ordered) {
-                        return new OrderedSetCollectionInstantiator((PluralObjectFactory<Collection<?>>) collectionFactory, getAllowedSubtypes(), getParentRequiringSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled());
+                        return new OrderedSetCollectionInstantiator((PluralObjectFactory<Collection<?>>) collectionFactory, getAllowedSubtypes(), getParentRequiringUpdateSubtypes(), getParentRequiringCreateSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled());
                     } else {
-                        return new UnorderedSetCollectionInstantiator((PluralObjectFactory<Collection<?>>) collectionFactory, getAllowedSubtypes(), getParentRequiringSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled());
+                        return new UnorderedSetCollectionInstantiator((PluralObjectFactory<Collection<?>>) collectionFactory, getAllowedSubtypes(), getParentRequiringUpdateSubtypes(), getParentRequiringCreateSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled());
                     }
                 } else if (getCollectionType() == PluralAttribute.CollectionType.LIST) {
-                    return new ListCollectionInstantiator((PluralObjectFactory<Collection<?>>) collectionFactory, getAllowedSubtypes(), getParentRequiringSubtypes(), isUpdatable(), false, isOptimizeCollectionActionsEnabled(), isForcedUnique(), comparator);
+                    return new ListCollectionInstantiator((PluralObjectFactory<Collection<?>>) collectionFactory, getAllowedSubtypes(), getParentRequiringUpdateSubtypes(), getParentRequiringCreateSubtypes(), isUpdatable(), false, isOptimizeCollectionActionsEnabled(), isForcedUnique(), comparator);
                 } else {
-                    return new OrderedCollectionInstantiator((PluralObjectFactory<Collection<?>>) collectionFactory, getAllowedSubtypes(), getParentRequiringSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled(), isForcedUnique(), comparator);
+                    return new OrderedCollectionInstantiator((PluralObjectFactory<Collection<?>>) collectionFactory, getAllowedSubtypes(), getParentRequiringUpdateSubtypes(), getParentRequiringCreateSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled(), isForcedUnique(), comparator);
                 }
             }
         }
@@ -965,11 +967,11 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     protected final MapInstantiator createMapInstantiator(PluralObjectFactory<? extends Map<?, ?>> mapFactory, boolean sorted, boolean ordered, Comparator comparator) {
         if (sorted) {
-            return new SortedMapInstantiator((PluralObjectFactory<Map<?, ?>>) mapFactory, getAllowedSubtypes(), getParentRequiringSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled(), comparator);
+            return new SortedMapInstantiator((PluralObjectFactory<Map<?, ?>>) mapFactory, getAllowedSubtypes(), getParentRequiringUpdateSubtypes(), getParentRequiringCreateSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled(), comparator);
         } else if (ordered) {
-            return new OrderedMapInstantiator((PluralObjectFactory<Map<?, ?>>) mapFactory, getAllowedSubtypes(), getParentRequiringSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled());
+            return new OrderedMapInstantiator((PluralObjectFactory<Map<?, ?>>) mapFactory, getAllowedSubtypes(), getParentRequiringUpdateSubtypes(), getParentRequiringCreateSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled());
         } else {
-            return new UnorderedMapInstantiator((PluralObjectFactory<Map<?, ?>>) mapFactory, getAllowedSubtypes(), getParentRequiringSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled());
+            return new UnorderedMapInstantiator((PluralObjectFactory<Map<?, ?>>) mapFactory, getAllowedSubtypes(), getParentRequiringUpdateSubtypes(), getParentRequiringCreateSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled());
         }
     }
 

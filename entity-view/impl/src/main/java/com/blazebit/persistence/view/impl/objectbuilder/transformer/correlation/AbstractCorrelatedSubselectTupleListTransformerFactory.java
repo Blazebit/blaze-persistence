@@ -67,4 +67,9 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformerFactory imp
         this.correlationBasisEntity = correlationBasisEntity;
     }
 
+    @Override
+    public int getConsumableIndex() {
+        return -1;
+    }
+
 }

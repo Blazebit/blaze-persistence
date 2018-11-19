@@ -60,4 +60,8 @@ public abstract class AbstractCorrelatedBatchTupleListTransformerFactory impleme
         this.correlationBasisEntity = correlationBasisEntity;
     }
 
+    @Override
+    public int getConsumableIndex() {
+        return -1;
+    }
 }

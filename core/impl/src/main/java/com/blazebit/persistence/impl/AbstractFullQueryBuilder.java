@@ -618,7 +618,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
     public X fetch(String path) {
         prepareForModification(ClauseType.JOIN);
         verifyBuilderEnded();
-        joinManager.implicitJoin(expressionFactory.createPathExpression(path), true, true, null, null, new HashSet<String>(), false, false, true, false, true);
+        joinManager.implicitJoin(expressionFactory.createPathExpression(path), true, true, null, null, new HashSet<String>(), false, false, true, false, true, false);
         return (X) this;
     }
 
@@ -630,7 +630,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
 
         HashSet<String> currentlyResolvingAliases = new HashSet<>();
         for (String path : paths) {
-            joinManager.implicitJoin(expressionFactory.createPathExpression(path), true, true, null, null, currentlyResolvingAliases, false, false, true, false, true);
+            joinManager.implicitJoin(expressionFactory.createPathExpression(path), true, true, null, null, currentlyResolvingAliases, false, false, true, false, true, false);
         }
 
         return (X) this;

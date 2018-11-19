@@ -155,13 +155,13 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
 
         if (usesEmbeddingView) {
             maximumSlotsFilled = embeddingViewIdMapperCount == 0 ? 1 : embeddingViewIdMapperCount;
-            this.keyIndex = (maximumViewMapperCount - maximumSlotsFilled) + 2;
+            this.keyIndex = (maximumViewMapperCount - maximumSlotsFilled) + 2 + valueIndex;
         } else if (usesViewRoot) {
             maximumSlotsFilled = viewRootIdMapperCount == 0 ? 1 : viewRootIdMapperCount;
-            this.keyIndex = (maximumViewMapperCount - maximumSlotsFilled) + 2;
+            this.keyIndex = (maximumViewMapperCount - maximumSlotsFilled) + 2 + valueIndex;
         } else {
             maximumSlotsFilled = 0;
-            this.keyIndex = maximumViewMapperCount + 1;
+            this.keyIndex = maximumViewMapperCount + 1 + valueIndex;
         }
 
         for (int i = maximumSlotsFilled; i < maximumViewMapperCount; i++) {

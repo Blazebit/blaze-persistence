@@ -107,6 +107,7 @@ public class GroupByManager extends AbstractManager<ExpressionModifier> {
 
     void buildGroupBy(StringBuilder sb, Set<ClauseType> excludedClauses) {
         if (!groupByClauses.isEmpty()) {
+            queryGenerator.setClauseType(ClauseType.GROUP_BY);
             queryGenerator.setQueryBuffer(sb);
             int initialIndex = sb.length();
             sb.append(" GROUP BY ");
@@ -127,6 +128,7 @@ public class GroupByManager extends AbstractManager<ExpressionModifier> {
     }
 
     void buildGroupBy(StringBuilder sb, Set<ClauseType> excludedClauses, ResolvedExpression[] additionalGroupBys) {
+        queryGenerator.setClauseType(ClauseType.GROUP_BY);
         queryGenerator.setQueryBuffer(sb);
         if (groupByClauses.isEmpty()) {
             if (additionalGroupBys.length != 0) {

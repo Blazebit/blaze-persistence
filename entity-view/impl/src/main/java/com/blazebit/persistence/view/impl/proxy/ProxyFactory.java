@@ -1335,7 +1335,13 @@ public class ProxyFactory {
             AbstractMethodAttribute attribute = attributes[i];
             if (attribute != null && attribute.hasDirtyStateIndex() && ReflectionUtils.getSetter(attribute.getDeclaringType().getJavaType(), attribute.getName()) != null) {
                 sb.append("\t\tcase ").append(attribute.getDirtyStateIndex()).append(": $0.set").append(Character.toUpperCase(attribute.getName().charAt(0))).append(attribute.getName(), 1, attribute.getName().length());
-                sb.append("((").append(attribute.getJavaType().getName()).append(") $3); break;\n");
+                sb.append('(');
+                if (attribute.getJavaType().isPrimitive()) {
+                    appendUnwrap(sb, attribute.getJavaType(), "$3");
+                } else {
+                    sb.append("(").append(attribute.getJavaType().getName()).append(") $3");
+                }
+                sb.append("); break;\n");
             }
         }
 
@@ -1499,6 +1505,28 @@ public class ProxyFactory {
         }
     }
 
+    private void appendUnwrap(StringBuilder sb, Class<?> type, String input) {
+        if (type == long.class) {
+            sb.append("((Long) ").append(input).append(").longValue()");
+        } else if (type == float.class) {
+            sb.append("((Float) ").append(input).append(").floatValue()");
+        } else if (type == double.class) {
+            sb.append("((Double) ").append(input).append(").doubleValue()");
+        } else if (type == int.class) {
+            sb.append("((Integer) ").append(input).append(").intValue()");
+        } else if (type == short.class) {
+            sb.append("((Short) ").append(input).append(").shortValue()");
+        } else if (type == byte.class) {
+            sb.append("((Byte) ").append(input).append(").byteValue()");
+        } else if (type == boolean.class) {
+            sb.append("((Boolean) ").append(input).append(").booleanValue()");
+        } else if (type == char.class) {
+            sb.append("((Character) ").append(input).append(").charValue()");
+        } else {
+            throw new UnsupportedOperationException("Unwrap not possible for type: " + type);
+        }
+    }
+
     private CtMethod addSetter(AbstractMethodAttribute<?, ?> attribute, CtClass cc, CtField attributeField, String methodName, CtField mutableStateField, boolean dirtyChecking, boolean isId) throws CannotCompileException, NotFoundException {
         FieldInfo finfo = attributeField.getFieldInfo2();
         String fieldType = finfo.getDescriptor();
@@ -1579,13 +1607,17 @@ public class ProxyFactory {
                 // Only consider subviews here for now
                 if (attribute.isSubview()) {
                     String subtypeArray = addAllowedSubtypeField(cc, attribute);
-                    addParentRequiringSubtypeField(cc, attribute);
+                    addParentRequiringUpdateSubtypesField(cc, attribute);
+                    addParentRequiringCreateSubtypesField(cc, attribute);
                     sb.append("\tif ($1 != null) {\n");
                     sb.append("\t\tClass c;\n");
+                    sb.append("\t\tboolean isNew;\n");
                     sb.append("\t\tif ($1 instanceof ").append(EntityViewProxy.class.getName()).append(") {\n");
                     sb.append("\t\t\tc = ((").append(EntityViewProxy.class.getName()).append(") $1).$$_getEntityViewClass();\n");
+                    sb.append("\t\t\tisNew = ((").append(EntityViewProxy.class.getName()).append(") $1).$$_isNew();\n");
                     sb.append("\t\t} else {\n");
                     sb.append("\t\t\tc = $1.getClass();\n");
+                    sb.append("\t\t\tisNew = false;\n");
                     sb.append("\t\t}\n");
 
                     sb.append("\t\tif (!").append(attributeField.getDeclaringClass().getName()).append('#').append(attribute.getName()).append("_$$_subtypes.contains(c)) {\n");
@@ -1595,9 +1627,15 @@ public class ProxyFactory {
                     sb.append(");\n");
                     sb.append("\t\t}\n");
 
-                    sb.append("\t\tif (").append(attributeField.getDeclaringClass().getName()).append('#').append(attribute.getName()).append("_$$_parentRequiringSubtypes.contains(c) && !((").append(DirtyTracker.class.getName()).append(") $1).$$_hasParent()) {\n");
+                    sb.append("\t\tif (!isNew && ").append(attributeField.getDeclaringClass().getName()).append('#').append(attribute.getName()).append("_$$_parentRequiringUpdateSubtypes.contains(c) && !((").append(DirtyTracker.class.getName()).append(") $1).$$_hasParent()) {\n");
                     sb.append("\t\t\tthrow new IllegalArgumentException(");
-                    sb.append("\"Setting instances of type [\" + c.getName() + \"] on attribute '").append(attribute.getName()).append("' is not allowed until they are assigned to an attribute that cascades the type! If you want this attribute to cascade, annotate it with @UpdatableMapping(cascade = { UPDATE }) or  @UpdatableMapping(cascade = { PERSIST })\"");
+                    sb.append("\"Setting instances of type [\" + c.getName() + \"] on attribute '").append(attribute.getName()).append("' is not allowed until they are assigned to an attribute that cascades the type! If you want this attribute to cascade, annotate it with @UpdatableMapping(cascade = { UPDATE })\"");
+                    sb.append(");\n");
+                    sb.append("\t\t}\n");
+
+                    sb.append("\t\tif (isNew && ").append(attributeField.getDeclaringClass().getName()).append('#').append(attribute.getName()).append("_$$_parentRequiringCreateSubtypes.contains(c) && !((").append(DirtyTracker.class.getName()).append(") $1).$$_hasParent()) {\n");
+                    sb.append("\t\t\tthrow new IllegalArgumentException(");
+                    sb.append("\"Setting instances of type [\" + c.getName() + \"] on attribute '").append(attribute.getName()).append("' is not allowed until they are assigned to an attribute that cascades the type! If you want this attribute to cascade, annotate it with @UpdatableMapping(cascade = { PERSIST })\"");
                     sb.append(");\n");
                     sb.append("\t\t}\n");
                     sb.append("\t}\n");
@@ -2098,7 +2136,8 @@ public class ProxyFactory {
                         if (methodAttribute instanceof PluralAttribute<?, ?, ?>) {
                             PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) methodAttribute;
                             addAllowedSubtypeField(attributeFields[i].getDeclaringClass(), methodAttribute);
-                            addParentRequiringSubtypeField(attributeFields[i].getDeclaringClass(), methodAttribute);
+                            addParentRequiringUpdateSubtypesField(attributeFields[i].getDeclaringClass(), methodAttribute);
+                            addParentRequiringCreateSubtypesField(attributeFields[i].getDeclaringClass(), methodAttribute);
 
                             switch (pluralAttribute.getCollectionType()) {
                                 case MAP:
@@ -2146,7 +2185,9 @@ public class ProxyFactory {
                             sb.append(attributeFields[i].getDeclaringClass().getName()).append('#');
                             sb.append(methodAttribute.getName()).append("_$$_subtypes").append(',');
                             sb.append(attributeFields[i].getDeclaringClass().getName()).append('#');
-                            sb.append(methodAttribute.getName()).append("_$$_parentRequiringSubtypes").append(',');
+                            sb.append(methodAttribute.getName()).append("_$$_parentRequiringUpdateSubtypes").append(',');
+                            sb.append(attributeFields[i].getDeclaringClass().getName()).append('#');
+                            sb.append(methodAttribute.getName()).append("_$$_parentRequiringCreateSubtypes").append(',');
                             sb.append(methodAttribute.isUpdatable()).append(',');
                             sb.append(methodAttribute.isOptimizeCollectionActionsEnabled());
                             sb.append(");\n");
@@ -2288,56 +2329,23 @@ public class ProxyFactory {
         }
     }
 
-    private String addAllowedSubtypeField(CtClass declaringClass, AbstractMethodAttribute<?, ?> attribute) throws NotFoundException, CannotCompileException {
-        Set<Class<?>> allowedSubtypes = attribute.getAllowedSubtypes();
-        String subtypeArray;
-        if (!allowedSubtypes.isEmpty()) {
-            StringBuilder subtypeArrayBuilder = new StringBuilder();
-            for (Class<?> c : allowedSubtypes) {
-                subtypeArrayBuilder.append(c.getName());
-                subtypeArrayBuilder.append(", ");
-            }
-
-            subtypeArrayBuilder.setLength(subtypeArrayBuilder.length() - 2);
-            subtypeArray = subtypeArrayBuilder.toString();
-        } else {
-            subtypeArray = "";
-        }
-
-        try {
-            declaringClass.getDeclaredField(attribute.getName() + "_$$_subtypes");
-            return subtypeArray;
-        } catch (NotFoundException ex) {
-        }
-
-        StringBuilder fieldSb = new StringBuilder();
-        fieldSb.append("private static final java.util.Set ");
-        fieldSb.append(attribute.getName());
-        fieldSb.append("_$$_subtypes = ");
-
-        if (!allowedSubtypes.isEmpty()) {
-            fieldSb.append("new java.util.HashSet(java.util.Arrays.asList(new java.lang.Class[]{ ");
-            for (Class<?> c : allowedSubtypes) {
-                fieldSb.append(c.getName());
-                fieldSb.append(".class, ");
-            }
-
-            fieldSb.setLength(fieldSb.length() - 2);
-            fieldSb.append(" }));");
-        } else {
-            fieldSb.append("java.util.Collections.emptySet();");
-        }
-        CtField allowedSubtypesField = CtField.make(fieldSb.toString(), declaringClass);
-        declaringClass.addField(allowedSubtypesField);
-        return subtypeArray;
+    private String addAllowedSubtypeField(CtClass declaringClass, AbstractMethodAttribute<?, ?> attribute) throws CannotCompileException {
+        return addClassSetField(declaringClass, "subtypes", attribute, attribute.getAllowedSubtypes());
     }
 
-    private String addParentRequiringSubtypeField(CtClass declaringClass, AbstractMethodAttribute<?, ?> attribute) throws CannotCompileException {
-        Set<Class<?>> parentRequiringSubtypes = attribute.getParentRequiringSubtypes();
+    private String addParentRequiringUpdateSubtypesField(CtClass declaringClass, AbstractMethodAttribute<?, ?> attribute) throws CannotCompileException {
+        return addClassSetField(declaringClass, "parentRequiringUpdateSubtypes", attribute, attribute.getParentRequiringUpdateSubtypes());
+    }
+
+    private String addParentRequiringCreateSubtypesField(CtClass declaringClass, AbstractMethodAttribute<?, ?> attribute) throws CannotCompileException {
+        return addClassSetField(declaringClass, "parentRequiringCreateSubtypes", attribute, attribute.getParentRequiringUpdateSubtypes());
+    }
+
+    private String addClassSetField(CtClass declaringClass, String fieldSuffix, AbstractMethodAttribute<?, ?> attribute, Set<Class<?>> classes) throws CannotCompileException {
         String subtypeArray;
-        if (!parentRequiringSubtypes.isEmpty()) {
+        if (!classes.isEmpty()) {
             StringBuilder subtypeArrayBuilder = new StringBuilder();
-            for (Class<?> c : parentRequiringSubtypes) {
+            for (Class<?> c : classes) {
                 subtypeArrayBuilder.append(c.getName());
                 subtypeArrayBuilder.append(", ");
             }
@@ -2349,7 +2357,7 @@ public class ProxyFactory {
         }
 
         try {
-            declaringClass.getDeclaredField(attribute.getName() + "_$$_parentRequiringSubtypes");
+            declaringClass.getDeclaredField(attribute.getName() + "_$$_" + fieldSuffix);
             return subtypeArray;
         } catch (NotFoundException ex) {
         }
@@ -2357,11 +2365,11 @@ public class ProxyFactory {
         StringBuilder fieldSb = new StringBuilder();
         fieldSb.append("private static final java.util.Set ");
         fieldSb.append(attribute.getName());
-        fieldSb.append("_$$_parentRequiringSubtypes = ");
+        fieldSb.append("_$$_").append(fieldSuffix).append(" = ");
 
-        if (!parentRequiringSubtypes.isEmpty()) {
+        if (!classes.isEmpty()) {
             fieldSb.append("new java.util.HashSet(java.util.Arrays.asList(new java.lang.Class[]{ ");
-            for (Class<?> c : parentRequiringSubtypes) {
+            for (Class<?> c : classes) {
                 fieldSb.append(c.getName());
                 fieldSb.append(".class, ");
             }

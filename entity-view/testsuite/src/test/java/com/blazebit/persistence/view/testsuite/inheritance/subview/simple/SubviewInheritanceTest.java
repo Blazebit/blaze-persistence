@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.inheritance.subview;
+package com.blazebit.persistence.view.testsuite.inheritance.subview.simple;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
@@ -26,21 +26,22 @@ import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
-import com.blazebit.persistence.view.testsuite.inheritance.subview.model.DocumentView1;
-import com.blazebit.persistence.view.testsuite.inheritance.subview.model.DocumentView3;
-import com.blazebit.persistence.view.testsuite.inheritance.subview.model.OldPersonView1;
-import com.blazebit.persistence.view.testsuite.inheritance.subview.model.OldPersonView2;
-import com.blazebit.persistence.view.testsuite.inheritance.subview.model.OldPersonView3;
-import com.blazebit.persistence.view.testsuite.inheritance.subview.model.PersonBaseView;
-import com.blazebit.persistence.view.testsuite.inheritance.subview.model.PersonBaseView1;
-import com.blazebit.persistence.view.testsuite.inheritance.subview.model.PersonBaseView2;
-import com.blazebit.persistence.view.testsuite.inheritance.subview.model.PersonBaseView3;
-import com.blazebit.persistence.view.testsuite.inheritance.subview.model.SimpleDocumentView;
-import com.blazebit.persistence.view.testsuite.inheritance.subview.model.SimplePersonSubView;
-import com.blazebit.persistence.view.testsuite.inheritance.subview.model.DocumentView2;
-import com.blazebit.persistence.view.testsuite.inheritance.subview.model.YoungPersonView1;
-import com.blazebit.persistence.view.testsuite.inheritance.subview.model.YoungPersonView2;
-import com.blazebit.persistence.view.testsuite.inheritance.subview.model.YoungPersonView3;
+import com.blazebit.persistence.view.testsuite.inheritance.subview.simple.model.DocumentView1;
+import com.blazebit.persistence.view.testsuite.inheritance.subview.simple.model.DocumentView3;
+import com.blazebit.persistence.view.testsuite.inheritance.subview.simple.model.OldPersonView1;
+import com.blazebit.persistence.view.testsuite.inheritance.subview.simple.model.OldPersonView2;
+import com.blazebit.persistence.view.testsuite.inheritance.subview.simple.model.OldPersonView3;
+import com.blazebit.persistence.view.testsuite.inheritance.subview.simple.model.PersonBaseView;
+import com.blazebit.persistence.view.testsuite.inheritance.subview.simple.model.PersonBaseView1;
+import com.blazebit.persistence.view.testsuite.inheritance.subview.simple.model.PersonBaseView2;
+import com.blazebit.persistence.view.testsuite.inheritance.subview.simple.model.PersonBaseView3;
+import com.blazebit.persistence.view.testsuite.inheritance.subview.simple.model.SimpleDocumentView;
+import com.blazebit.persistence.view.testsuite.inheritance.subview.simple.model.SimplePersonSubView;
+import com.blazebit.persistence.view.testsuite.inheritance.subview.simple.model.DocumentView2;
+import com.blazebit.persistence.view.testsuite.inheritance.subview.simple.model.YoungPersonView1;
+import com.blazebit.persistence.view.testsuite.inheritance.subview.simple.model.YoungPersonView2;
+import com.blazebit.persistence.view.testsuite.inheritance.subview.simple.model.YoungPersonView3;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -334,15 +335,15 @@ public class SubviewInheritanceTest extends AbstractEntityViewTest {
         if (doc == null) {
             assertNull(view);
         }
-        assertEquals(doc.getId(), view.getId());
-        assertEquals(doc.getName(), view.getName());
+        Assert.assertEquals(doc.getId(), view.getId());
+        Assert.assertEquals(doc.getName(), view.getName());
     }
 
     public static void assertPersonEquals(Person pers, PersonBaseView view) {
         if (pers == null) {
             assertNull(view);
         }
-        assertEquals(pers.getId(), view.getId());
-        assertEquals(pers.getName(), view.getName());
+        Assert.assertEquals(pers.getId(), view.getId());
+        Assert.assertEquals(pers.getName(), view.getName());
     }
 }

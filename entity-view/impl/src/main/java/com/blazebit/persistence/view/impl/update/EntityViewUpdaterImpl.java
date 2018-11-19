@@ -129,6 +129,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public EntityViewUpdaterImpl(EntityViewManagerImpl evm, ManagedViewTypeImplementor<?> viewType, ManagedViewTypeImplementor<?> declaredViewType, EntityViewUpdaterImpl owner, String ownerMapping) {
+        evm.addUpdater(viewType, declaredViewType, owner, ownerMapping, this);
         Class<?> entityClass = viewType.getEntityClass();
         this.fullFlush = viewType.getFlushMode() == FlushMode.FULL;
         this.flushStrategy = viewType.getFlushStrategy();
@@ -571,6 +572,11 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
     @Override
     public FetchGraphNode<?> getFullGraphNode() {
         return fullFlusher;
+    }
+
+    @Override
+    public DirtyAttributeFlusher<?, ?, ?> getIdFlusher() {
+        return idFlusher;
     }
 
     @Override

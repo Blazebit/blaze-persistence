@@ -314,6 +314,22 @@ public class ValuesClauseTest extends AbstractCoreTest {
         assertEquals("key", resultList.get(0).get(0));
     }
 
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testIdentifiableValuesEntityFunctionGroupBy() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
+
+        cb.fromIdentifiableValues(Person.class, "p", Arrays.asList(p1))
+                .fromValues(Integer.class, "someVal", Arrays.asList(1, 2))
+                .select("p")
+                .select("MAX(someVal)");
+
+        String expected = "SELECT p, MAX(someVal) FROM Person(1 ID VALUES) p, Integer(2 VALUES) someVal GROUP BY p.id";
+
+        // Only test that the EntitySelectResolveVisitor works properly here. In fact, this is only relevant for INSERT-SELECT
+        assertEquals(expected, cb.getQueryString());
+    }
+
     // Test for #305
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })

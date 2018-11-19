@@ -41,6 +41,16 @@ public class SubviewTupleTransformer implements TupleTransformer {
     }
 
     @Override
+    public int getConsumeStartIndex() {
+        return consumeStartIndex;
+    }
+
+    @Override
+    public int getConsumeEndIndex() {
+        return consumeEndIndex;
+    }
+
+    @Override
     public Object[] transform(Object[] tuple, UpdatableViewMap updatableViewMap) {
         tuple[template.getTupleOffset()] = objectBuilder.build(tuple);
         for (int i = consumeStartIndex; i < consumeEndIndex; i++) {

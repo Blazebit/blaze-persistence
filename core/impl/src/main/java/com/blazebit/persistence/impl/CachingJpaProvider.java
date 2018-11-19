@@ -333,6 +333,11 @@ public final class CachingJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsGroupByEntityAlias() {
+        return jpaProvider.supportsGroupByEntityAlias();
+    }
+
+    @Override
     public boolean needsElementCollectionIdCutoff() {
         return jpaProvider.needsElementCollectionIdCutoff();
     }

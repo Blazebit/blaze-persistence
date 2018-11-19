@@ -63,6 +63,7 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor, Jo
     private final List<JoinNode> fetchableNodes;
     private final Set<String> currentlyResolvingAliases;
     private final ImplicitJoinCorrelationPathReplacementVisitor correlationPathReplacementVisitor;
+    private boolean reuseExisting;
     private boolean joinRequired;
     private boolean joinWithObjectLeafAllowed = true;
     private ClauseType fromClause;
@@ -87,6 +88,12 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor, Jo
 
     public void setFromClause(ClauseType fromClause) {
         this.fromClause = fromClause;
+    }
+
+    public boolean setReuseExisting(boolean reuseExisting) {
+        boolean old = this.reuseExisting;
+        this.reuseExisting = reuseExisting;
+        return old;
     }
 
     public List<JoinNode> getFetchableNodes() {
@@ -176,7 +183,7 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor, Jo
         } else {
             try {
                 // Also allow joins if this expression was joined before already to avoid possible side-effects of implicit joining multiple times
-                joinManager.implicitJoin(expression, expression.getBaseNode() != null || fromClause != ClauseType.JOIN, joinWithObjectLeafAllowed, null, fromClause, currentlyResolvingAliases, false, false, joinRequired, idRemovable);
+                joinManager.implicitJoin(expression, expression.getBaseNode() != null || fromClause != ClauseType.JOIN, joinWithObjectLeafAllowed, null, fromClause, currentlyResolvingAliases, false, false, joinRequired, idRemovable, false, reuseExisting);
                 if (parentVisitor != null) {
                     JoinNode baseNode = (JoinNode) expression.getBaseNode();
                     AliasManager aliasOwner = baseNode.getAliasInfo().getAliasOwner();

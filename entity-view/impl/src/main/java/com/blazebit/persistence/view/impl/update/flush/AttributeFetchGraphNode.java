@@ -29,7 +29,7 @@ public class AttributeFetchGraphNode<X extends AttributeFetchGraphNode<X>> imple
     protected final String attributeName;
     protected final String mapping;
     protected final boolean fetch;
-    protected final FetchGraphNode<?> nestedGraphNode;
+    private final FetchGraphNode<?> nestedGraphNode;
 
     public AttributeFetchGraphNode(String attributeName, String mapping, boolean fetch, FetchGraphNode nestedGraphNode) {
         this.fetch = fetch;
@@ -48,6 +48,10 @@ public class AttributeFetchGraphNode<X extends AttributeFetchGraphNode<X>> imple
         return mapping;
     }
 
+    protected FetchGraphNode<?> getNestedGraphNode() {
+        return nestedGraphNode;
+    }
+
     @Override
     public void appendFetchJoinQueryFragment(String base, StringBuilder sb) {
         if (fetch && mapping != null) {
@@ -59,6 +63,7 @@ public class AttributeFetchGraphNode<X extends AttributeFetchGraphNode<X>> imple
                     .append(" ")
                     .append(newBase);
 
+            FetchGraphNode<?> nestedGraphNode = getNestedGraphNode();
             if (nestedGraphNode != null) {
                 nestedGraphNode.appendFetchJoinQueryFragment(newBase, sb);
             }
@@ -73,8 +78,9 @@ public class AttributeFetchGraphNode<X extends AttributeFetchGraphNode<X>> imple
         for (int i = 0; i < fetchGraphNodes.size(); i++) {
             X node = fetchGraphNodes.get(i);
             fetchChanged |= this.fetch != node.fetch;
-            if (node.nestedGraphNode != null) {
-                nestedFlushers.add(node.nestedGraphNode);
+            FetchGraphNode<?> nestedGraphNode = node.getNestedGraphNode();
+            if (nestedGraphNode != null) {
+                nestedFlushers.add(nestedGraphNode);
             }
         }
 
@@ -97,5 +103,4 @@ public class AttributeFetchGraphNode<X extends AttributeFetchGraphNode<X>> imple
 
         return new AttributeFetchGraphNode<>(attributeName, mapping, newFetch, fetchGraphNode);
     }
-
 }

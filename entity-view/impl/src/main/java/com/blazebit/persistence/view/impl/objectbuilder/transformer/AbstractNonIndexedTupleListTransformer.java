@@ -42,6 +42,11 @@ public abstract class AbstractNonIndexedTupleListTransformer<C> extends TupleLis
     }
 
     @Override
+    public int getConsumableIndex() {
+        return -1;
+    }
+
+    @Override
     public List<Object[]> transform(List<Object[]> tuples) {
         Map<TupleId, TupleIndexValue> tupleIndex = new HashMap<TupleId, TupleIndexValue>(tuples.size());
         // Implementation detail: the tuple list is a LinkedList

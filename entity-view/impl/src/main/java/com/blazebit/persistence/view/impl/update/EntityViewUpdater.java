@@ -34,6 +34,8 @@ public interface EntityViewUpdater {
 
     public FetchGraphNode<?> getFullGraphNode();
 
+    public DirtyAttributeFlusher<?, ?, ?> getIdFlusher();
+
     public <T extends DirtyAttributeFlusher<T, E, V>, E, V> DirtyAttributeFlusher<T, E, V> getNestedDirtyFlusher(UpdateContext context, MutableStateTrackable current, DirtyAttributeFlusher<T, E, V> fullFlusher);
 
     public boolean executeUpdate(UpdateContext context, MutableStateTrackable updatableProxy);

@@ -26,5 +26,9 @@ import com.blazebit.persistence.view.impl.objectbuilder.transformator.UpdatableV
  */
 public interface TupleTransformer {
 
+    public int getConsumeStartIndex();
+
+    public int getConsumeEndIndex();
+
     public Object[] transform(Object[] tuple, UpdatableViewMap updatableViewMap);
 }

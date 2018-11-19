@@ -30,15 +30,17 @@ import java.util.TreeMap;
 public class SortedMapInstantiator extends AbstractMapInstantiator<NavigableMap<?, ?>, RecordingNavigableMap<NavigableMap<?, ?>, ?, ?>> {
 
     private final Set<Class<?>> allowedSubtypes;
-    private final Set<Class<?>> parentRequiringSubtypes;
+    private final Set<Class<?>> parentRequiringUpdateSubtypes;
+    private final Set<Class<?>> parentRequiringCreateSubtypes;
     private final boolean updatable;
     private final boolean optimize;
     private final Comparator<?> comparator;
 
-    public SortedMapInstantiator(PluralObjectFactory<Map<?, ?>> collectionFactory, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringSubtypes, boolean updatable, boolean optimize, Comparator<?> comparator) {
+    public SortedMapInstantiator(PluralObjectFactory<Map<?, ?>> collectionFactory, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringUpdateSubtypes, Set<Class<?>> parentRequiringCreateSubtypes, boolean updatable, boolean optimize, Comparator<?> comparator) {
         super(collectionFactory);
         this.allowedSubtypes = allowedSubtypes;
-        this.parentRequiringSubtypes = parentRequiringSubtypes;
+        this.parentRequiringUpdateSubtypes = parentRequiringUpdateSubtypes;
+        this.parentRequiringCreateSubtypes = parentRequiringCreateSubtypes;
         this.updatable = updatable;
         this.optimize = optimize;
         this.comparator = comparator;
@@ -51,6 +53,6 @@ public class SortedMapInstantiator extends AbstractMapInstantiator<NavigableMap<
 
     @Override
     public RecordingNavigableMap<NavigableMap<?, ?>, ?, ?> createRecordingCollection(int size) {
-        return new RecordingNavigableMap(createCollection(size), allowedSubtypes, parentRequiringSubtypes, updatable, optimize);
+        return new RecordingNavigableMap(createCollection(size), allowedSubtypes, parentRequiringUpdateSubtypes, parentRequiringCreateSubtypes, updatable, optimize);
     }
 }

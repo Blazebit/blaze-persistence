@@ -14,18 +14,24 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.inheritance.subview.model;
+package com.blazebit.persistence.view.testsuite.inheritance.subview.correlated.model;
 
-import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.EntityViewInheritance;
+import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.view.BatchFetch;
+import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.FetchStrategy;
+import com.blazebit.persistence.view.MappingCorrelatedSimple;
 
 /**
  *
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.3.0
  */
-@EntityView(Person.class)
-@EntityViewInheritance({ YoungPersonView1.class, OldPersonView1.class })
-public interface PersonBaseView1 extends PersonBaseView {
+@EntityView(Document.class)
+public interface DocumentView4 extends DocumentView {
+
+    @BatchFetch(size = 10)
+    @MappingCorrelatedSimple(correlated = Person.class, correlationBasis = "owner", correlationExpression = "this = correlationKey", fetch = FetchStrategy.SELECT)
+    public PersonBaseView4 getOwner();
 }

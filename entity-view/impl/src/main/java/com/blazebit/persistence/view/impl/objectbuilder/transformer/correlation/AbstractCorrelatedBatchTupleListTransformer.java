@@ -29,6 +29,7 @@ import com.blazebit.persistence.view.impl.macro.CorrelatedSubqueryViewRootJpqlMa
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
 import javax.persistence.EntityManager;
+import javax.persistence.Parameter;
 import javax.persistence.Query;
 import java.util.Collections;
 import java.util.HashMap;
@@ -237,6 +238,21 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
         }
 
         return tuples;
+    }
+
+    @Override
+    protected void populateParameters(FullQueryBuilder<?, ?> queryBuilder) {
+        FullQueryBuilder<?, ?> mainBuilder = entityViewConfiguration.getCriteriaBuilder();
+        for (Parameter<?> paramEntry : mainBuilder.getParameters()) {
+            if (!paramEntry.getName().equals(correlationParamName) && queryBuilder.containsParameter(paramEntry.getName()) && !queryBuilder.isParameterSet(paramEntry.getName())) {
+                queryBuilder.setParameter(paramEntry.getName(), mainBuilder.getParameterValue(paramEntry.getName()));
+            }
+        }
+        for (Map.Entry<String, Object> paramEntry : entityViewConfiguration.getOptionalParameters().entrySet()) {
+            if (!paramEntry.getKey().equals(correlationParamName) && queryBuilder.containsParameter(paramEntry.getKey()) && !queryBuilder.isParameterSet(paramEntry.getKey())) {
+                queryBuilder.setParameter(paramEntry.getKey(), paramEntry.getValue());
+            }
+        }
     }
 
     private void transformViewMacroAware(List<Object[]> tuples, FixedArrayList correlationParams, int tupleOffset, String correlationRoot, CorrelatedSubqueryViewRootJpqlMacro macro, BatchCorrelationMode correlationMode, ManagedViewType<?> viewType, int viewIndex) {

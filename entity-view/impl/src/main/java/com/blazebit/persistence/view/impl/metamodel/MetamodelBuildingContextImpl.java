@@ -50,6 +50,7 @@ import com.blazebit.reflection.ReflectionUtils;
 
 import javax.persistence.metamodel.ManagedType;
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -84,6 +85,8 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
     private final ExpressionFactory typeValidationExpressionFactory;
     private final ProxyFactory proxyFactory;
     private final Map<Class<?>, ViewMapping> viewMappings;
+    private final Map<ViewMappingInitializationKey, ManagedViewTypeImplementor<?>> initializingManagedViews;
+    private final Map<ManagedViewTypeImplementor<?>, List<Runnable>> managedViewFinishListeners;
     private final Set<String> errors;
 
     private final boolean disallowOwnedUpdatableSubview;
@@ -101,6 +104,8 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
         this.typeValidationExpressionFactory = createTypeValidationExpressionFactory();
         this.proxyFactory = proxyFactory;
         this.viewMappings = viewMappings;
+        this.initializingManagedViews = new HashMap<>();
+        this.managedViewFinishListeners = new HashMap<>();
         this.errors = errors;
         this.disallowOwnedUpdatableSubview = "true".equals(properties.getProperty(ConfigurationProperties.UPDATER_DISALLOW_OWNED_UPDATABLE_SUBVIEW));
         this.flushModeOverride = getFlushMode(properties.getProperty(ConfigurationProperties.UPDATER_FLUSH_MODE), "global property '" + ConfigurationProperties.UPDATER_FLUSH_MODE + "'");
@@ -180,6 +185,53 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
     @Override
     public Collection<ViewMapping> getViewMappings() {
         return viewMappings.values();
+    }
+
+    @Override
+    public void addManagedViewType(ViewMapping viewMapping, EmbeddableOwner embeddableMapping, ManagedViewTypeImplementor<?> managedViewType) {
+        ViewMappingInitializationKey key = new ViewMappingInitializationKey(viewMapping, embeddableMapping);
+        if (initializingManagedViews.get(key) == null) {
+            initializingManagedViews.put(key, managedViewType);
+        }
+    }
+
+    @Override
+    public ManagedViewTypeImplementor<?> getManagedViewType(ViewMapping viewMapping, EmbeddableOwner embeddableMapping) {
+        ViewMappingInitializationKey key = new ViewMappingInitializationKey(viewMapping, embeddableMapping);
+        ManagedViewTypeImplementor<?> managedViewTypeImplementor = initializingManagedViews.get(key);
+        if (managedViewTypeImplementor == null) {
+            return viewMapping.getManagedViewType(this, embeddableMapping);
+        }
+        return managedViewTypeImplementor;
+    }
+
+    @Override
+    public void finishViewType(ManagedViewTypeImplementor<?> managedViewType) {
+        List<Runnable> finishListeners = managedViewFinishListeners.get(managedViewType);
+        if (finishListeners == null) {
+            managedViewFinishListeners.put(managedViewType, Collections.<Runnable>emptyList());
+        } else {
+            for (Runnable finishListener : finishListeners) {
+                finishListener.run();
+            }
+            finishListeners.clear();
+        }
+    }
+
+    @Override
+    public void onViewTypeFinished(ManagedViewTypeImplementor<?> managedViewType, Runnable listener) {
+        List<Runnable> finishListeners = managedViewFinishListeners.get(managedViewType);
+        if (finishListeners == null) {
+            finishListeners = new ArrayList<>();
+            finishListeners.add(listener);
+            managedViewFinishListeners.put(managedViewType, finishListeners);
+        } else {
+            if (finishListeners.isEmpty()) {
+                listener.run();
+            } else {
+                finishListeners.add(listener);
+            }
+        }
     }
 
     @Override
@@ -514,6 +566,44 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
         public int hashCode() {
             int result = type != null ? type.hashCode() : 0;
             result = 31 * result + (possibleTypes != null ? possibleTypes.hashCode() : 0);
+            return result;
+        }
+    }
+
+    /**
+     * @author Christian Beikov
+     * @since 1.3.0
+     */
+    private static class ViewMappingInitializationKey {
+        private final ViewMapping viewMapping;
+        private final EmbeddableOwner embeddableOwner;
+
+        public ViewMappingInitializationKey(ViewMapping viewMapping, EmbeddableOwner embeddableOwner) {
+            this.viewMapping = viewMapping;
+            this.embeddableOwner = embeddableOwner;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof ViewMappingInitializationKey)) {
+                return false;
+            }
+
+            ViewMappingInitializationKey that = (ViewMappingInitializationKey) o;
+
+            if (!viewMapping.equals(that.viewMapping)) {
+                return false;
+            }
+            return embeddableOwner != null ? embeddableOwner.equals(that.embeddableOwner) : that.embeddableOwner == null;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = viewMapping.hashCode();
+            result = 31 * result + (embeddableOwner != null ? embeddableOwner.hashCode() : 0);
             return result;
         }
     }

@@ -113,6 +113,11 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
         }
     }
 
+    @Override
+    public int getConsumableIndex() {
+        return -1;
+    }
+
     protected boolean isRecording() {
         return false;
     }

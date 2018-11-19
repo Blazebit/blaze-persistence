@@ -134,6 +134,7 @@ public class CTEManager extends CTEBuilderListenerImpl {
 
     @SuppressWarnings("unchecked")
     <Y> StartOngoingSetOperationCTECriteriaBuilder<Y, LeafOngoingFinalSetOperationCTECriteriaBuilder<Y>> withStartSet(Class<?> cteClass, Y result) {
+        mainQuery.assertSupportsAdvancedSql("Illegal use of WITH clause!");
         String cteName = cteClass.getSimpleName();
         FinalSetOperationCTECriteriaBuilderImpl<Y> parentFinalSetOperationBuilder = new FinalSetOperationCTECriteriaBuilderImpl<Y>(mainQuery, queryContext, (Class<Y>) cteClass, result, null, false, this, null);
         OngoingFinalSetOperationCTECriteriaBuilderImpl<Y> subFinalSetOperationBuilder = new OngoingFinalSetOperationCTECriteriaBuilderImpl<Y>(mainQuery, queryContext, (Class<Y>) cteClass, null, null, true, parentFinalSetOperationBuilder.getSubListener(), null);
@@ -156,6 +157,7 @@ public class CTEManager extends CTEBuilderListenerImpl {
 
     @SuppressWarnings("unchecked")
     <Y> FullSelectCTECriteriaBuilder<Y> with(Class<?> cteClass, Y result) {
+        mainQuery.assertSupportsAdvancedSql("Illegal use of WITH clause!");
         String cteName = cteClass.getSimpleName();
         FullSelectCTECriteriaBuilderImpl<Y> cteBuilder = new FullSelectCTECriteriaBuilderImpl<Y>(mainQuery, queryContext, cteName, (Class<Object>) cteClass, result, this);
         this.onBuilderStarted(cteBuilder);
@@ -164,6 +166,7 @@ public class CTEManager extends CTEBuilderListenerImpl {
 
     @SuppressWarnings("unchecked")
     <Y> SelectRecursiveCTECriteriaBuilder<Y> withRecursive(Class<?> cteClass, Y result) {
+        mainQuery.assertSupportsAdvancedSql("Illegal use of WITH clause!");
         String cteName = cteClass.getSimpleName();
         recursive = true;
         RecursiveCTECriteriaBuilderImpl<Y> cteBuilder = new RecursiveCTECriteriaBuilderImpl<Y>(mainQuery, queryContext, cteName, (Class<Object>) cteClass, result, this);
@@ -172,6 +175,7 @@ public class CTEManager extends CTEBuilderListenerImpl {
     }
 
     <Y> ReturningModificationCriteriaBuilderFactory<Y> withReturning(Class<?> cteClass, Y result) {
+        mainQuery.assertSupportsAdvancedSql("Illegal use of WITH clause!");
         String cteName = cteClass.getSimpleName();
         ReturningModificationCriteraBuilderFactoryImpl<Y> factory = new ReturningModificationCriteraBuilderFactoryImpl<Y>(mainQuery, cteName, cteClass, result, this);
         return factory;

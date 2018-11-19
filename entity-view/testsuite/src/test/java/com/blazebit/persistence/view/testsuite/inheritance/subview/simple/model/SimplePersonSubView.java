@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.inheritance.subview.model;
+package com.blazebit.persistence.view.testsuite.inheritance.subview.simple.model;
 
 import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.EntityViewInheritance;
 import com.blazebit.persistence.testsuite.entity.Person;
 
 /**
@@ -26,7 +25,6 @@ import com.blazebit.persistence.testsuite.entity.Person;
  * @since 1.2.0
  */
 @EntityView(Person.class)
-@EntityViewInheritance({ YoungPersonView2.class, OldPersonView2.class })
-public interface PersonBaseView2 extends PersonBaseView {
-    
+public interface SimplePersonSubView extends PersonBaseView {
+
 }

@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.inheritance.subview.model;
+package com.blazebit.persistence.view.testsuite.inheritance.subview.correlated.model;
 
-import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.EntityViewInheritanceMapping;
 import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.EntityViewInheritance;
 
 /**
  *
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.3.0
  */
 @EntityView(Person.class)
-@EntityViewInheritanceMapping("age < 15")
-public interface YoungPersonView2 extends PersonBaseView2 {
+@EntityViewInheritance({ YoungPersonView4.class, OldPersonView4.class })
+public interface PersonBaseView4 extends PersonBaseView {
 
-    public SimplePersonSubView getFriend();
+    String getName();
 }

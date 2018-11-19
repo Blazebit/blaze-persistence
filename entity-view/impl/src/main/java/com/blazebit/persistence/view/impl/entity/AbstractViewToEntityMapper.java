@@ -49,7 +49,6 @@ public abstract class AbstractViewToEntityMapper implements ViewToEntityMapper {
     protected final Map<Class<?>, EntityViewUpdater> persistUpdater;
     protected final Map<Class<?>, EntityViewUpdater> updateUpdater;
     protected final Map<Class<?>, EntityViewUpdater> removeUpdater;
-    protected final FetchGraphNode<?> fullGraphNode;
     protected final EntityLoader entityLoader;
     protected final AttributeAccessor viewIdAccessor;
     protected final AttributeAccessor entityIdAccessor;
@@ -88,7 +87,6 @@ public abstract class AbstractViewToEntityMapper implements ViewToEntityMapper {
         this.persistUpdater = Collections.unmodifiableMap(persistUpdater);
         this.updateUpdater = Collections.unmodifiableMap(updateUpdater);
         this.removeUpdater = Collections.unmodifiableMap(removeUpdater);
-        this.fullGraphNode = defaultUpdater.getFullGraphNode();
         this.entityLoader = entityLoader;
         this.viewIdAccessor = viewIdAccessor;
         this.entityIdAccessor = viewIdAccessor == null ? null : evm.getEntityIdAccessor();
@@ -97,7 +95,12 @@ public abstract class AbstractViewToEntityMapper implements ViewToEntityMapper {
 
     @Override
     public FetchGraphNode<?> getFullGraphNode() {
-        return fullGraphNode;
+        return defaultUpdater.getFullGraphNode();
+    }
+
+    @Override
+    public DirtyAttributeFlusher<?, ?, ?> getIdFlusher() {
+        return defaultUpdater.getIdFlusher();
     }
 
     @Override

@@ -109,4 +109,10 @@ public class MainQuery {
     public CriteriaBuilderFactoryImpl getCbf() {
         return cbf;
     }
+
+    public void assertSupportsAdvancedSql(String message) {
+        if (cbf.getExtendedQuerySupport() == null || !cbf.getExtendedQuerySupport().supportsAdvancedSql()) {
+            throw new IllegalStateException(message + " There is no extended query support for the JPA provider yet!");
+        }
+    }
 }

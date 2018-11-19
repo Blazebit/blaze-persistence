@@ -46,6 +46,7 @@ public abstract class AbstractCorrelationJoinTupleElementMapper implements Alias
         this.embeddingViewPath = embeddingViewPath;
         this.fetches = fetches;
         this.joinBase = joinBase.intern();
+        // TODO: incorporate subtype index!
         this.correlationAlias = CorrelationProviderHelper.getDefaultCorrelationAlias(attributePath);
         if (correlationResult.isEmpty()) {
             this.correlationResult = correlationAlias;

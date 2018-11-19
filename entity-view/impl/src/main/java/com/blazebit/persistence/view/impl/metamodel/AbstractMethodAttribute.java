@@ -422,7 +422,23 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
         return Collections.unmodifiableSet(allowedSubtypes);
     }
 
-    protected final Set<Class<?>> createParentRequiringSubtypesSet() {
+    protected final Set<Class<?>> createParentRequiringUpdateSubtypesSet() {
+        Set<Type<?>> readOnlyAllowedSubtypes = getReadOnlyAllowedSubtypes();
+        Set<Type<?>> persistAllowedSubtypes = getPersistCascadeAllowedSubtypes();
+        Set<Type<?>> updateAllowedSubtypes = getUpdateCascadeAllowedSubtypes();
+        Set<Class<?>> allowedSubtypes = new HashSet<>(readOnlyAllowedSubtypes.size());
+        for (Type<?> t : readOnlyAllowedSubtypes) {
+            if (t instanceof ManagedViewTypeImplementor<?>) {
+                ManagedViewTypeImplementor<?> viewType = (ManagedViewTypeImplementor<?>) t;
+                if (viewType.isUpdatable() && !updateAllowedSubtypes.contains(t) || viewType.isCreatable() && !persistAllowedSubtypes.contains(t)) {
+                    allowedSubtypes.add(t.getJavaType());
+                }
+            }
+        }
+        return Collections.unmodifiableSet(allowedSubtypes);
+    }
+
+    protected final Set<Class<?>> createParentRequiringCreateSubtypesSet() {
         Set<Type<?>> readOnlyAllowedSubtypes = getReadOnlyAllowedSubtypes();
         Set<Type<?>> persistAllowedSubtypes = getPersistCascadeAllowedSubtypes();
         Set<Type<?>> updateAllowedSubtypes = getUpdateCascadeAllowedSubtypes();

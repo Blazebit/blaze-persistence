@@ -58,6 +58,16 @@ public class CorrelatedSubviewJoinTupleTransformerFactory implements TupleTransf
     }
 
     @Override
+    public int getConsumeStartIndex() {
+        return -1;
+    }
+
+    @Override
+    public int getConsumeEndIndex() {
+        return -1;
+    }
+
+    @Override
     public TupleTransformer create(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
         // TODO: Fix view conversion for correlated attributes somehow
         // Before, we passed a FullQueryBuilder instead of a ParameterHolder but that doesn't work for view conversion
@@ -66,7 +76,7 @@ public class CorrelatedSubviewJoinTupleTransformerFactory implements TupleTransf
         if (parameterHolder instanceof FullQueryBuilder<?, ?>) {
             FullQueryBuilder<?, ?> queryBuilder = (FullQueryBuilder<?, ?>) parameterHolder;
             CorrelationProvider provider = correlationProviderFactory.create(parameterHolder, optionalParameters);
-            JoinCorrelationBuilder correlationBuilder = new JoinCorrelationBuilder(queryBuilder, optionalParameters, joinBase, correlationAlias, correlationResult, null);
+            JoinCorrelationBuilder correlationBuilder = new JoinCorrelationBuilder(queryBuilder, queryBuilder, joinBase, correlationAlias, correlationResult, null);
 
             EmbeddingViewJpqlMacro embeddingViewJpqlMacro = entityViewConfiguration.getEmbeddingViewJpqlMacro();
             String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();

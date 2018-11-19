@@ -202,7 +202,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         StringBuilder sb = new StringBuilder();
 
         Set<PathExpression> componentPaths = new LinkedHashSet<>();
-        EntitySelectResolveVisitor resolveVisitor = new EntitySelectResolveVisitor(m, componentPaths);
+        EntitySelectResolveVisitor resolveVisitor = new EntitySelectResolveVisitor(m, jpaProvider, componentPaths);
 
         // When no select infos are available, it can only be a root entity select
         if (selectInfos.isEmpty()) {
@@ -212,46 +212,40 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
             
             List<PathElementExpression> path = new ArrayList<>();
             path.add(new PropertyExpression(rootAlias));
-            resolveVisitor.visit(new PathExpression(path, new SimplePathReference(rootNode, null, rootNode.getNodeType()), false, false));
+            PathExpression pathExpression = new PathExpression(path, new SimplePathReference(rootNode, null, rootNode.getNodeType()), false, false);
 
-            queryGenerator.setClauseType(ClauseType.GROUP_BY);
-            queryGenerator.setQueryBuffer(sb);
-            for (PathExpression pathExpr : componentPaths) {
-                sb.setLength(0);
-                queryGenerator.generate(pathExpr);
-                groupByManager.collect(new ResolvedExpression(sb.toString(), pathExpr), ClauseType.SELECT, hasGroupBy, joinVisitor);
+            if (jpaProvider.supportsGroupByEntityAlias()) {
+                Set<Expression> extractedGroupByExpressions = groupByExpressionGatheringVisitor.extractGroupByExpressions(pathExpression);
+                if (!extractedGroupByExpressions.isEmpty()) {
+                    collectGroupBys(sb, joinVisitor, groupByManager, hasGroupBy, extractedGroupByExpressions, null);
+                }
+            } else {
+                resolveVisitor.visit(pathExpression);
+                collectGroupBys(sb, joinVisitor, groupByManager, hasGroupBy, componentPaths, resolveVisitor.getRootNode());
             }
-            queryGenerator.setClauseType(null);
         } else {
             List<SelectInfo> infos = selectInfos;
             int size = selectInfos.size();
             for (int i = 0; i < size; i++) {
                 final SelectInfo selectInfo = infos.get(i);
-                componentPaths.clear();
-                selectInfo.getExpression().accept(resolveVisitor);
-
-                // The select info can only either an entity select or any other expression
-                // but entity selects can't be nested in other expressions, therefore we can differentiate here
-                if (componentPaths.size() > 0) {
-                    queryGenerator.setClauseType(ClauseType.GROUP_BY);
-                    queryGenerator.setQueryBuffer(sb);
-                    for (PathExpression pathExpr : componentPaths) {
-                        sb.setLength(0);
-                        queryGenerator.generate(pathExpr);
-                        groupByManager.collect(new ResolvedExpression(sb.toString(), pathExpr), ClauseType.SELECT, hasGroupBy, joinVisitor);
-                    }
-                    queryGenerator.setClauseType(null);
-                } else {
+                if (jpaProvider.supportsGroupByEntityAlias()) {
                     Set<Expression> extractedGroupByExpressions = groupByExpressionGatheringVisitor.extractGroupByExpressions(selectInfo.getExpression());
                     if (!extractedGroupByExpressions.isEmpty()) {
-                        queryGenerator.setClauseType(ClauseType.GROUP_BY);
-                        queryGenerator.setQueryBuffer(sb);
-                        for (Expression expression : extractedGroupByExpressions) {
-                            sb.setLength(0);
-                            queryGenerator.generate(expression);
-                            groupByManager.collect(new ResolvedExpression(sb.toString(), expression), ClauseType.SELECT, hasGroupBy, joinVisitor);
+                        collectGroupBys(sb, joinVisitor, groupByManager, hasGroupBy, extractedGroupByExpressions, null);
+                    }
+                } else {
+                    componentPaths.clear();
+                    selectInfo.getExpression().accept(resolveVisitor);
+
+                    // The select info can only either an entity select or any other expression
+                    // but entity selects can't be nested in other expressions, therefore we can differentiate here
+                    if (componentPaths.size() > 0) {
+                        collectGroupBys(sb, joinVisitor, groupByManager, hasGroupBy, componentPaths, resolveVisitor.getRootNode());
+                    } else {
+                        Set<Expression> extractedGroupByExpressions = groupByExpressionGatheringVisitor.extractGroupByExpressions(selectInfo.getExpression());
+                        if (!extractedGroupByExpressions.isEmpty()) {
+                            collectGroupBys(sb, joinVisitor, groupByManager, hasGroupBy, extractedGroupByExpressions, null);
                         }
-                        queryGenerator.setClauseType(null);
                     }
                 }
             }
@@ -259,6 +253,46 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
 
         queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
         groupByExpressionGatheringVisitor.clear();
+    }
+
+    private void collectGroupBys(StringBuilder sb, JoinVisitor joinVisitor, GroupByManager groupByManager, boolean hasGroupBy, Set<? extends Expression> componentPaths, JoinNode rootNode) {
+        queryGenerator.setClauseType(ClauseType.GROUP_BY);
+        queryGenerator.setQueryBuffer(sb);
+        if (joinVisitor == null) {
+            for (Expression expr : componentPaths) {
+                sb.setLength(0);
+                queryGenerator.generate(expr);
+                groupByManager.collect(new ResolvedExpression(sb.toString(), expr), ClauseType.SELECT, hasGroupBy, joinVisitor);
+            }
+        } else {
+            joinVisitor.setFromClause(ClauseType.SELECT);
+            boolean old = joinVisitor.setReuseExisting(true);
+
+            for (Expression expr : componentPaths) {
+                expr.accept(joinVisitor);
+                sb.setLength(0);
+                queryGenerator.generate(expr);
+                // When we encounter an association id access that works with a reused join node, we have to also generate a non-reused path
+                // Otherwise we won't have the owning column in the group by clause which will lead to an error on some DBMS
+                if (expr instanceof PathExpression && rootNode != ((PathExpression) expr).getBaseNode()) {
+                    PathExpression pathExpression = (PathExpression) expr;
+                    PathExpression associationIdAccess = pathExpression.clone(false);
+                    associationIdAccess.setPathReference(pathExpression.getPathReference());
+                    groupByManager.collect(new ResolvedExpression(sb.toString(), associationIdAccess), ClauseType.SELECT, hasGroupBy, joinVisitor);
+
+                    joinVisitor.setReuseExisting(false);
+                    expr.accept(joinVisitor);
+                    sb.setLength(0);
+                    queryGenerator.generate(expr);
+                    groupByManager.collect(new ResolvedExpression(sb.toString(), expr), ClauseType.SELECT, hasGroupBy, joinVisitor);
+                    joinVisitor.setReuseExisting(true);
+                } else {
+                    groupByManager.collect(new ResolvedExpression(sb.toString(), expr), ClauseType.SELECT, hasGroupBy, joinVisitor);
+                }
+            }
+            joinVisitor.setReuseExisting(old);
+        }
+        queryGenerator.setClauseType(null);
     }
 
     void buildSelect(StringBuilder sb, boolean isInsertInto, boolean externalRepresentation) {

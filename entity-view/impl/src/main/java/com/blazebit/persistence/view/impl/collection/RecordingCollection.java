@@ -46,7 +46,8 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
 
     protected final C delegate;
     protected final Set<Class<?>> allowedSubtypes;
-    protected final Set<Class<?>> parentRequiringSubtypes;
+    protected final Set<Class<?>> parentRequiringUpdateSubtypes;
+    protected final Set<Class<?>> parentRequiringCreateSubtypes;
     protected final boolean updatable;
     protected final boolean indexed;
     private final boolean ordered;
@@ -61,10 +62,11 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
     // We remember the iterator so we can do a proper hash based collection replacement
     private transient RecordingReplacingIterator<E> currentIterator;
 
-    protected RecordingCollection(C delegate, boolean indexed, boolean ordered, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringSubtypes, boolean updatable, boolean optimize, boolean hashBased) {
+    protected RecordingCollection(C delegate, boolean indexed, boolean ordered, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringUpdateSubtypes, Set<Class<?>> parentRequiringCreateSubtypes, boolean updatable, boolean optimize, boolean hashBased) {
         this.delegate = delegate;
         this.allowedSubtypes = allowedSubtypes;
-        this.parentRequiringSubtypes = parentRequiringSubtypes;
+        this.parentRequiringUpdateSubtypes = parentRequiringUpdateSubtypes;
+        this.parentRequiringCreateSubtypes = parentRequiringCreateSubtypes;
         this.updatable = updatable;
         this.indexed = indexed;
         this.ordered = ordered;
@@ -72,10 +74,11 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
         this.hashBased = hashBased;
     }
 
-    public RecordingCollection(C delegate, boolean indexed, boolean ordered, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringSubtypes, boolean updatable, boolean optimize) {
+    public RecordingCollection(C delegate, boolean indexed, boolean ordered, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringUpdateSubtypes, Set<Class<?>> parentRequiringCreateSubtypes, boolean updatable, boolean optimize) {
         this.delegate = delegate;
         this.allowedSubtypes = allowedSubtypes;
-        this.parentRequiringSubtypes = parentRequiringSubtypes;
+        this.parentRequiringUpdateSubtypes = parentRequiringUpdateSubtypes;
+        this.parentRequiringCreateSubtypes = parentRequiringCreateSubtypes;
         this.updatable = updatable;
         this.indexed = indexed;
         this.ordered = ordered;
@@ -503,17 +506,23 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
     protected void checkType(Object e, String action) {
         if (e != null && !allowedSubtypes.isEmpty()) {
             Class<?> c;
+            boolean isNew;
             if (e instanceof EntityViewProxy) {
                 c = ((EntityViewProxy) e).$$_getEntityViewClass();
+                isNew = ((EntityViewProxy) e).$$_isNew();
             } else {
                 c = e.getClass();
+                isNew = false;
             }
 
             if (!allowedSubtypes.contains(c)) {
                 throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed!");
             }
-            if (parentRequiringSubtypes.contains(c) && !((DirtyTracker) e).$$_hasParent()) {
-                throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed until they are assigned to an attribute that cascades the type!");
+            if (!isNew && parentRequiringUpdateSubtypes.contains(c) && !((DirtyTracker) e).$$_hasParent()) {
+                throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed until they are assigned to an attribute that update cascades the type! If you want this attribute to cascade, annotate it with @UpdatableMapping(cascade = { UPDATE })");
+            }
+            if (isNew && parentRequiringCreateSubtypes.contains(c) && !((DirtyTracker) e).$$_hasParent()) {
+                throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed until they are assigned to an attribute that persist cascades the type! If you want this attribute to cascade, annotate it with @UpdatableMapping(cascade = { PERSIST })");
             }
         }
     }
@@ -522,17 +531,23 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
         if (collection != null && !collection.isEmpty() && !allowedSubtypes.isEmpty()) {
             for (Object e : collection) {
                 Class<?> c;
+                boolean isNew;
                 if (e instanceof EntityViewProxy) {
                     c = ((EntityViewProxy) e).$$_getEntityViewClass();
+                    isNew = ((EntityViewProxy) e).$$_isNew();
                 } else {
                     c = e.getClass();
+                    isNew = false;
                 }
 
                 if (!allowedSubtypes.contains(c)) {
                     throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed!");
                 }
-                if (parentRequiringSubtypes.contains(c) && !((DirtyTracker) e).$$_hasParent()) {
-                    throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed until they are assigned to an attribute that cascades the type!");
+                if (!isNew && parentRequiringUpdateSubtypes.contains(c) && !((DirtyTracker) e).$$_hasParent()) {
+                    throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed until they are assigned to an attribute that update cascades the type! If you want this attribute to cascade, annotate it with @UpdatableMapping(cascade = { UPDATE })");
+                }
+                if (isNew && parentRequiringCreateSubtypes.contains(c) && !((DirtyTracker) e).$$_hasParent()) {
+                    throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed until they are assigned to an attribute that persist cascades the type! If you want this attribute to cascade, annotate it with @UpdatableMapping(cascade = { PERSIST })");
                 }
             }
         }

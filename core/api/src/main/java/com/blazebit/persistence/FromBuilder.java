@@ -17,6 +17,7 @@
 package com.blazebit.persistence;
 
 import javax.persistence.metamodel.EntityType;
+import java.util.Collection;
 import java.util.Set;
 
 /**
@@ -62,6 +63,50 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @since 1.2.1
      */
     public Path getPath(String path);
+
+    /* Declarations to retain binary compatibility */
+
+    @Override
+    public X from(Class<?> entityClass);
+
+    @Override
+    public X from(Class<?> entityClass, String alias);
+
+    @Override
+    public X from(EntityType<?> entityType);
+
+    @Override
+    public X from(EntityType<?> entityType, String alias);
+
+    @Override
+    public X fromOld(Class<?> entityClass);
+
+    @Override
+    public X fromOld(Class<?> entityClass, String alias);
+
+    @Override
+    public X fromNew(Class<?> entityClass);
+
+    @Override
+    public X fromNew(Class<?> entityClass, String alias);
+
+    @Override
+    public X fromValues(Class<?> valueClass, String alias, int valueCount);
+
+    @Override
+    public X fromValues(Class<?> entityBaseClass, String attributeName, String alias, int valueCount);
+
+    @Override
+    public X fromIdentifiableValues(Class<?> valueClass, String alias, int valueCount);
+
+    @Override
+    public <T> X fromValues(Class<T> valueClass, String alias, Collection<T> values);
+
+    @Override
+    public X fromValues(Class<?> entityBaseClass, String attributeName, String alias, Collection<?> values);
+
+    @Override
+    public <T> X fromIdentifiableValues(Class<T> valueClass, String alias, Collection<T> values);
 
     /*
      * Join methods

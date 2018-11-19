@@ -163,6 +163,10 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
                 }
                 // We always need collections in here
                 if (node.getParentTreeNode() == null || node.getParentTreeNode().isCollection()) {
+                    // Skip *ToOne join nodes that are functionally dependent on an existing node
+                    if (entry.getKey() instanceof Map.Entry<?, ?> && functionalDependencyRootExpressions.containsKey(node)) {
+                        continue OUTER;
+                    }
                     resolvedExpressions.addAll(entry.getValue());
                 } else {
                     // Skip *ToOne join nodes that are functionally dependent on an existing node
@@ -192,8 +196,9 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
         }
 
         JoinNode baseNode = (JoinNode) pathReference.getBaseNode();
+        String field = pathReference.getField();
 
-        if (pathReference.getField() == null) {
+        if (field == null) {
             lastJoinNode = baseNode;
             functionalDependencyRootExpressions.put(baseNode, Collections.singletonList(currentResolvedExpression));
             // This is a basic element collection. The element is it's unique key
@@ -204,12 +209,13 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
             if (inKey) {
                 return true;
             }
-            throw new IllegalArgumentException("Ordering by association '" + expr + "' does not make sense! Please order by it's id instead!");
+            field = baseNode.getParentTreeNode().getRelationName();
+            baseNode = baseNode.getParent();
         }
 
         // First we check if the target attribute is unique, if it isn't, we don't need to check the join structure
         ExtendedManagedType<?> managedType = metamodel.getManagedType(ExtendedManagedType.class, baseNode.getJavaType());
-        Attribute attr = managedType.getAttribute(pathReference.getField()).getAttribute();
+        Attribute attr = managedType.getAttribute(field).getAttribute();
 
         if (attr instanceof PluralAttribute<?, ?, ?>) {
             lastJoinNode = baseNode;
@@ -223,7 +229,7 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
         // Right now we only support ids, but we actually should check for unique constraints
         boolean isEmbeddedIdPart = false;
         SingularAttribute<?, ?> singularAttr = (SingularAttribute<?, ?>) attr;
-        if (!singularAttr.isId() && !(isEmbeddedIdPart = isEmbeddedIdPart(baseNode, pathReference.getField(), singularAttr))) {
+        if (!singularAttr.isId() && !(isEmbeddedIdPart = isEmbeddedIdPart(baseNode, field, singularAttr))) {
             registerFunctionalDependencyRootExpression(baseNode);
             return false;
         }
@@ -291,7 +297,7 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
                 node = node.getParent();
             }
         } else {
-            prefix = isEmbeddedIdPart ? pathReference.getField().substring(0, dotIndex + 1) : "";
+            prefix = isEmbeddedIdPart ? field.substring(0, dotIndex + 1) : "";
         }
         if (removeAttribute(prefix, singularAttr, orderedAttributes) && currentResolvedExpression != null) {
             List<ResolvedExpression> resolvedExpressions = uniquenessFormingJoinNodeExpressions.get(baseNodeKey);

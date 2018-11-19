@@ -43,24 +43,13 @@ public class GroupByTest extends AbstractCoreTest {
     public void testGroupByEntitySelect() {
         CriteriaBuilder<Long> criteria = cbf.create(em, Long.class).from(Document.class, "d");
         criteria.groupBy("d.owner");
-        String expectedQuery = "SELECT d FROM Document d ";
-        if (!jpaProvider.supportsSingleValuedAssociationIdExpressions()) {
-            expectedQuery += "LEFT JOIN d.nameContainer.nameObject.intIdEntity intIdEntity_1 LEFT JOIN d.nameObject.intIdEntity intIdEntity_2 ";
-        }
-        expectedQuery += "JOIN d.owner owner_1 ";
-        expectedQuery += "GROUP BY owner_1, d.age, d.archived, d.byteArray, d.creationDate, d.creationDate2, d.defaultContact, d.documentType, d.id, d.idx, d.intIdEntity, d.lastModified, d.lastModified2, d.name, d.nameContainer.name, ";
-        if (jpaProvider.supportsSingleValuedAssociationIdExpressions()) {
-            expectedQuery += "d.nameContainer.nameObject.intIdEntity.id, ";
+        String expectedQuery = "SELECT d FROM Document d JOIN d.owner owner_1 ";
+        if (jpaProvider.supportsGroupByEntityAlias()) {
+            expectedQuery += "GROUP BY owner_1, d";
         } else {
-            expectedQuery += "intIdEntity_1.id, ";
+            expectedQuery += "GROUP BY owner_1, d.age, d.archived, d.byteArray, d.creationDate, d.creationDate2, d.defaultContact, d.documentType, d.id, d.idx, d.intIdEntity.id, d.lastModified, d.lastModified2, d.name, d.nameContainer.name, d.nameContainer.nameObject.intIdEntity.id, d.nameContainer.nameObject.primaryName, d.nameContainer.nameObject.secondaryName, d.nameObject.intIdEntity.id, d.nameObject.primaryName, d.nameObject.secondaryName, d.nonJoinable, owner_1.id, d.owner.id, d.parent.id, d.responsiblePerson.id, d.someValue, d.version, d.wrappedByteArray";
         }
-        expectedQuery += "d.nameContainer.nameObject.primaryName, d.nameContainer.nameObject.secondaryName, ";
-        if (jpaProvider.supportsSingleValuedAssociationIdExpressions()) {
-            expectedQuery += "d.nameObject.intIdEntity.id, ";
-        } else {
-            expectedQuery += "intIdEntity_2.id, ";
-        }
-        expectedQuery += "d.nameObject.primaryName, d.nameObject.secondaryName, d.nonJoinable, d.owner, d.parent, d.responsiblePerson, d.someValue, d.version, d.wrappedByteArray";
+
         assertEquals(expectedQuery, criteria.getQueryString());
         criteria.getResultList();
     }
