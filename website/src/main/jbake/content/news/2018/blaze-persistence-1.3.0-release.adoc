@@ -1,0 +1,39 @@
+= Blaze-Persistence 1.3.0 Release
+Christian Beikov
+2018-11-23 0
+:description: Blaze-Persistence version 1.3.0 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+I'm proud to announce that Blaze-Persistence version 1.3.0 is finally done!
+
+It took so much longer than initially planned, mostly because of the great feedback we received that we simply deemed to be too important to be deferred.
+We felt that 1.3.0 would only be a partial solution without these fixes and features, so we decided to get those features in before releasing.
+
+The most notable features and bug fixes are:
+
+* https://github.com/Blazebit/blaze-persistence/issues/667[*#667*, window="_blank"] Validate equals/hashCode implementations of JPA managed types used in entity views to avoid errors due to wrong implementations
+* https://github.com/Blazebit/blaze-persistence/issues/571[*#571*, window="_blank"] Support binding embeddables and associations using compound or foreign keys in CTE’s and DML
+* https://github.com/Blazebit/blaze-persistence/issues/509[*#509*, window="_blank"] Make use of collection DML API for updatable entity views in flushing
+* https://github.com/Blazebit/blaze-persistence/issues/681[*#681*, window="_blank"] Allow updatable entity views to have multiple non-cascading parents
+* https://github.com/Blazebit/blaze-persistence/issues/434[*#434*, window="_blank"] Implement creatability validation for creatable entity views+++<!-- PREVIEW-SUFFIX --><!-- </p></li></ul></div> --><!-- PREVIEW-END -->+++
+* https://github.com/Blazebit/blaze-persistence/issues/402[*#402*, window="_blank"] Special rendering of implicit joins in ON clause
+* https://github.com/Blazebit/blaze-persistence/issues/517[*#517*, window="_blank"] Validate inverse remove strategy SET_NULL against column nullability
+* https://github.com/Blazebit/blaze-persistence/issues/679[*#679*, window="_blank"] Spring Domain events related bug fixes
+
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#130[changelog, window="_blank"] for a full list of changes and improvements.
+
+Once again I would like to thank https://github.com/heruan[Giovanni Lovato, window="_blank"] for all the issues he reported. He was testing out early implementations of the query flush strategy for updatable entity view collections
+and went through many test-debug cycles with me to get the implementation right for even the most complex JPA models. Without his feedback and patience, the release wouldn't be as good as it is. Thanks for your contribution and keep up the good work!
+
+Thanks to https://github.com/JWGmeligMeyling[Jan-Willem Gmelig Meyling, window="_blank"] we caught up on changes coming with Hibernate 5.4 and adapted our implementations to be able to provide a consistent experience!
+One of these changes is that with Hibernate 5.4 you will now be able to leverage the _single value id access optimization_ not only for primary ids, but also for natural ids.
+
+With version 1.3.0 a.k.a. _Fury_ being done, we will start working on 1.4.0 a.k.a. _Coulson_. We might port back critical fixes to 1.3, but in general we don't anticipate to do any further public 1.3 releases.
+Since 1.4 is backwards compatible, it should be no problem to work with 1.4.0 Alpha releases to get fixes that were done on master.
+
+If you need fixes back-ported, I would like to direct you to our https://persistence.blazebit.com/support.html#_blaze_persistence_commercial_support[*commercial support*, window="_blank"].

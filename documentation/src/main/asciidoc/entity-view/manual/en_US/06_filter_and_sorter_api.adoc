@@ -193,11 +193,11 @@ Have a look at how a range filter could be implemented:
 
 [source,java]
 ----
-public class MyCustomFilter extends com.blazebit.persistence.view.AttributeFilterProvider {
+public class MyCustomFilter extends AttributeFilterProvider {
 
     private final Range range;
 
-    public EndsWithFilterImpl(Object value) {
+    public MyCustomFilter(Object value) {
         this.value = (Range) value;
     }
 

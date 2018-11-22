@@ -23,6 +23,6 @@ A release involves various steps which are outlined here and should be kept up-t
 . Click on the repository, then click *Close* and *Confirm*. Wait a few seconds, click *Refresh* and finally click *Release* and *Confirm*
 . Commit the changes and push the branch `git push origin`, as well as the created tag `git push origin TAG`
 . Create a GitHub release from the tag and use the same content as in `website/src/main/jbake/content/news/CURRENT_YEAR/blaze-persistence-VERSION-release.adoc` and add the _tar.gz_ and _zip_ artifacts of `blaze-persistence-distribution` as binaries to the release
-. Push the new website changes only if you are working on the lastest version series and first to the staging server by invoking `./build-deploy-website.sh staging` and if everything is alright push to production with `./build-deploy-website.sh prod`
+. Push the new website changes only if you are working on the latest version series and first to the staging server by invoking `./build-deploy-website.sh staging` and if everything is alright push to production with `./build-deploy-website.sh prod`
 . If you want to push just the documentation changes use `./build-deploy-documentation.sh staging` and if everything is alright push to production with `./build-deploy-documentation.sh prod` instead
 . Create tweet about new version

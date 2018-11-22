@@ -2,9 +2,25 @@
 
 Changes that happened in releases
 
-## 1.3.0
+## 1.4.0
 
 Not yet released
+
+### New features
+
+None
+
+### Bug fixes
+
+None
+
+### Backwards-incompatible changes
+
+None
+
+## 1.3.0
+
+23/11/2018 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.3.0) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue+milestone%3A1.3.0+is%3Aclosed+closed%3A%3C2018-11-23)
 
 ### New features
 

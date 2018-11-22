@@ -23,21 +23,21 @@ link:documentation/core/manual/en_US/index.html[Core Reference, window="_blank"]
 The reference documentation for the Core module
 +
 [.versions]
-link:documentation/1.3/core/manual/en_US/index.html[Development 1.3, window="_blank", role="development-version"]
-link:documentation/1.2/core/manual/en_US/index.html[Latest stable 1.2, window="_blank", role="stable-version"]
-//Older
+link:documentation/1.4/core/manual/en_US/index.html[Development 1.4, window="_blank", role="development-version"]
+link:documentation/1.3/core/manual/en_US/index.html[Latest stable 1.3, window="_blank", role="stable-version"]
+Older
 //link:documentation/1.3/core/manual/en_US/index.html[1.3, window="_blank"], 
-//link:documentation/1.2/core/manual/en_US/index.html[1.2, window="_blank"]
+link:documentation/1.2/core/manual/en_US/index.html[1.2, window="_blank"]
 
 link:documentation/entity-view/manual/en_US/index.html[Entity View Reference, window="_blank"]::
 The reference documentation for the Entity View module
 +
 [.versions]
-link:documentation/1.3/entity-view/manual/en_US/index.html[Development 1.3, window="_blank", role="development-version"]
-link:documentation/1.2/entity-view/manual/en_US/index.html[Latest stable 1.2, window="_blank", role="stable-version"]
-//Older
+link:documentation/1.4/entity-view/manual/en_US/index.html[Development 1.4, window="_blank", role="development-version"]
+link:documentation/1.3/entity-view/manual/en_US/index.html[Latest stable 1.3, window="_blank", role="stable-version"]
+Older
 //link:documentation/1.3/entity-view/manual/en_US/index.html[1.3, window="_blank"], 
-//link:documentation/1.2/entity-view/manual/en_US/index.html[1.2, window="_blank"]
+link:documentation/1.2/entity-view/manual/en_US/index.html[1.2, window="_blank"]
 
 https://github.com/Blazebit/blaze-persistence#core-quick-start[*Core quickstart*, window="_blank"]::
 A simple quickstart section with a usage example for the Core module
