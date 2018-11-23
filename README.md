@@ -625,33 +625,33 @@ By default, a Maven build `mvn clean install` will test against H2 and Hibernate
 To test a specific combination, you need to activate at least 4 profiles
 
 * One of the JPA provider profiles
-** `hibernate-5.4`
-** `hibernate-5.3`
-** `hibernate-5.2`
-** `hibernate-5.1`
-** `hibernate-5.0`
-** `hibernate-4.3`
-** `hibernate`
-** `eclipselink`
-** `datanucleus-5.1`
-** `datanucleus-5`
-** `datanucleus-4`
-** `openjpa`
+  * `hibernate-5.4`
+  * `hibernate-5.3`
+  * `hibernate-5.2`
+  * `hibernate-5.1`
+  * `hibernate-5.0`
+  * `hibernate-4.3`
+  * `hibernate`
+  * `eclipselink`
+  * `datanucleus-5.1`
+  * `datanucleus-5`
+  * `datanucleus-4`
+  * `openjpa`
 * A DBMS profile
-** `h2`
-** `postgresql`
-** `mysql`
-** `oracle`
-** `db2`
-** `mssql`
-** `firebird`
-** `sqllite`
+  * `h2`
+  * `postgresql`
+  * `mysql`
+  * `oracle`
+  * `db2`
+  * `mssql`
+  * `firebird`
+  * `sqllite`
 * A Spring data profile
-** `spring-data-2.0.x`
-** `spring-data-1.11.x`
+  * `spring-data-2.0.x`
+  * `spring-data-1.11.x`
 * A Deltaspike profile
-** `deltaspike-1.7`
-** `deltaspike-1.8`
+  * `deltaspike-1.7`
+  * `deltaspike-1.8`
 
 The default DBMS connection infos are defined via Maven properties, so you can override them in a build by passing the properties as system properties.
 
