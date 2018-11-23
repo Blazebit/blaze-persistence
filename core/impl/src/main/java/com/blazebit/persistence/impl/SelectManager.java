@@ -266,7 +266,8 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
             }
         } else {
             joinVisitor.setFromClause(ClauseType.SELECT);
-            boolean old = joinVisitor.setReuseExisting(true);
+            // Only reuse the existing node if the source of the component paths is an entity select
+            boolean old = joinVisitor.setReuseExisting(rootNode != null);
 
             for (Expression expr : componentPaths) {
                 expr.accept(joinVisitor);

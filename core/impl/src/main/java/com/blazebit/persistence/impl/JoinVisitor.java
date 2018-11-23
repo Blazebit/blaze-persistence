@@ -183,7 +183,7 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor, Jo
         } else {
             try {
                 // Also allow joins if this expression was joined before already to avoid possible side-effects of implicit joining multiple times
-                joinManager.implicitJoin(expression, expression.getBaseNode() != null || fromClause != ClauseType.JOIN, joinWithObjectLeafAllowed, null, fromClause, currentlyResolvingAliases, false, false, joinRequired, idRemovable, false, reuseExisting);
+                joinManager.implicitJoin(expression, expression.getBaseNode() != null || fromClause != ClauseType.JOIN, joinWithObjectLeafAllowed, null, fromClause, null, currentlyResolvingAliases, false, false, joinRequired, idRemovable, false, reuseExisting);
                 if (parentVisitor != null) {
                     JoinNode baseNode = (JoinNode) expression.getBaseNode();
                     AliasManager aliasOwner = baseNode.getAliasInfo().getAliasOwner();

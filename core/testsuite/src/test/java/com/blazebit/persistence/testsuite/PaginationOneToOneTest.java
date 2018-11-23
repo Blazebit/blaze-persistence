@@ -138,10 +138,10 @@ public class PaginationOneToOneTest extends AbstractCoreTest {
                 .select("d.documentInfo.someInfo")
                 .orderByAsc("d.documentInfo.id");
 
-        String expectedCountQuery = "SELECT " + countPaginated("documentInfo_1.id", false) + " FROM DocumentForOneToOne d";
+        String expectedCountQuery = "SELECT " + countPaginated("documentInfo_1.id", false) + " FROM DocumentForOneToOne d JOIN d.documentInfo documentInfo_1";
 
-        String expectedObjectQuery = "SELECT d.name, documentInfo_1.someInfo FROM DocumentForOneToOne d LEFT JOIN d.documentInfo documentInfo_1"
-                + " ORDER BY " + renderNullPrecedence("documentInfo_1.id",  "ASC", "LAST");
+        String expectedObjectQuery = "SELECT d.name, documentInfo_1.someInfo FROM DocumentForOneToOne d JOIN d.documentInfo documentInfo_1"
+                + " ORDER BY documentInfo_1.id ASC";
 
         PaginatedCriteriaBuilder<Tuple> pcb = crit.pageBy(0, 1, "d.documentInfo.id");
 

@@ -41,6 +41,7 @@ import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.JpaMetamodelAccessor;
 
 import javax.persistence.TypedQuery;
+import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.SingularAttribute;
 import java.lang.reflect.Constructor;
@@ -49,6 +50,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -188,13 +190,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         } else {
             // Collect usage of collection join nodes to optimize away the count distinct
             // Note that we always exclude the nodes with group by dependency. We consider just the ones from the identifiers
-            Set<JoinNode> identifierExpressionsToUseNonRootJoinNodes;
-            // If there are no collections, we don't try to avoid *ToOne joins so we can render count(*)
-            if (hasCollections) {
-                identifierExpressionsToUseNonRootJoinNodes = getIdentifierExpressionsToUseNonRootJoinNodes();
-            } else {
-                identifierExpressionsToUseNonRootJoinNodes = Collections.EMPTY_SET;
-            }
+            Set<JoinNode> identifierExpressionsToUseNonRootJoinNodes = getIdentifierExpressionsToUseNonRootJoinNodes();
             Set<JoinNode> collectionJoinNodes = joinManager.buildClause(sbSelectFrom, COUNT_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, null, true, externalRepresentation, true, optionalWhereClauseConjuncts, whereClauseConjuncts, null, explicitVersionEntities, countNodesToFetch, identifierExpressionsToUseNonRootJoinNodes);
             boolean hasCollectionJoinUsages = collectionJoinNodes.size() > 0;
 
@@ -277,6 +273,19 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
                 joinNodeGathererVisitor = new JoinNodeGathererVisitor();
             }
             cachedIdentifierExpressionsToUseNonRootJoinNodes = joinNodeGathererVisitor.collectNonRootJoinNodes(getIdentifierExpressionsToUse());
+            // Remove join nodes that use non-optional one-to-one associations
+            Iterator<JoinNode> iterator = cachedIdentifierExpressionsToUseNonRootJoinNodes.iterator();
+            OUTER: while (iterator.hasNext()) {
+                JoinNode joinNode = iterator.next();
+                JoinTreeNode parentTreeNode;
+                while ((parentTreeNode = joinNode.getParentTreeNode()) != null) {
+                    if (parentTreeNode.isOptional() || parentTreeNode.getAttribute().getPersistentAttributeType() != Attribute.PersistentAttributeType.ONE_TO_ONE) {
+                        continue OUTER;
+                    }
+                    joinNode = joinNode.getParent();
+                }
+                iterator.remove();
+            }
         }
 
         return cachedIdentifierExpressionsToUseNonRootJoinNodes;
@@ -435,9 +444,10 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
             throw new IllegalArgumentException("Invalid null identifier expression passed to page()!");
         }
 
+        // Note: Identifier expressions are inner joined!
         List<ResolvedExpression> resolvedExpressions = new ArrayList<>(identifierExpressions == null ? 1 : identifierExpression.length() + 1);
         Expression expression = expressionFactory.createSimpleExpression(identifierExpression, false);
-        joinManager.implicitJoin(expression, true, false, null, null, new HashSet<String>(), false, false, false, false);
+        joinManager.implicitJoin(expression, true, false, null, null, JoinType.INNER, new HashSet<String>(), false, false, false, false, false, false);
         StringBuilder sb = new StringBuilder();
 
         implicitJoinWhereClause();
@@ -459,7 +469,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         if (identifierExpressions != null) {
             for (String expressionString : identifierExpressions) {
                 expression = expressionFactory.createSimpleExpression(expressionString, false);
-                joinManager.implicitJoin(expression, true, false, null, null, new HashSet<String>(), false, false, false, false);
+                joinManager.implicitJoin(expression, true, false, null, null, JoinType.INNER, new HashSet<String>(), false, false, false, false, false, false);
                 functionalDependencyAnalyzerVisitor.analyzeFormsUniqueTuple(expression);
                 if (functionalDependencyAnalyzerVisitor.getSplittedOffExpressions().isEmpty()) {
                     sb.setLength(0);
@@ -618,7 +628,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
     public X fetch(String path) {
         prepareForModification(ClauseType.JOIN);
         verifyBuilderEnded();
-        joinManager.implicitJoin(expressionFactory.createPathExpression(path), true, true, null, null, new HashSet<String>(), false, false, true, false, true, false);
+        joinManager.implicitJoin(expressionFactory.createPathExpression(path), true, true, null, null, null, new HashSet<String>(), false, false, true, false, true, false);
         return (X) this;
     }
 
@@ -630,7 +640,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
 
         HashSet<String> currentlyResolvingAliases = new HashSet<>();
         for (String path : paths) {
-            joinManager.implicitJoin(expressionFactory.createPathExpression(path), true, true, null, null, currentlyResolvingAliases, false, false, true, false, true, false);
+            joinManager.implicitJoin(expressionFactory.createPathExpression(path), true, true, null, null, null, currentlyResolvingAliases, false, false, true, false, true, false);
         }
 
         return (X) this;
