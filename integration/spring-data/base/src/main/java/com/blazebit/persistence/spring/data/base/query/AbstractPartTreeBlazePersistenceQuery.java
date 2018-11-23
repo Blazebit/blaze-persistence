@@ -63,7 +63,7 @@ import java.util.regex.Pattern;
  */
 public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQuery {
 
-    private static final Pattern QUERY_PATTERN = Pattern.compile("^(find|read|get|query|stream)All$");
+    private static final Pattern QUERY_PATTERN = Pattern.compile("^(((find|read|get|query)(All|One))|streamAll)$");
 
     private final Class<?> domainClass;
     private final Class<?> entityViewClass;
