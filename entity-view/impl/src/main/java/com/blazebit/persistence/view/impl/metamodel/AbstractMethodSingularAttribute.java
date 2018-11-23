@@ -158,7 +158,8 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
         this.mutable = determineMutable(type);
 
         if (disallowOwnedUpdatableSubview && mapping.getCascadeTypes().contains(CascadeType.UPDATE)) {
-            context.addError("UPDATE cascading configuration for owned relationship attribute '" + updateMappableAttribute.getName() + "' is illegal. Remove the definition found on the " + mapping.getErrorLocation() + "!");
+            context.addError("UPDATE cascading configuration for owned relationship attribute '" + updateMappableAttribute.getName() + "' is illegal. Remove the definition found on the " + mapping.getErrorLocation() + " or use @AllowUpdatableEntityViews! " +
+                    "For further information on this topic, please consult the documentation https://persistence.blazebit.com/documentation/entity-view/manual/en_US/index.html#updatable-mappings-subview");
         }
 
         if (!mapping.getCascadeTypes().contains(CascadeType.AUTO)) {

@@ -1,0 +1,21 @@
+= Talk about Blaze-Persistence at Java Vienna JUG
+Christian Beikov
+2018-11-23 0
+:description: I am giving a talk about Blaze-Persistence Entity Views at the Java Vienna JUG
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,talk
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+I will be speaking at the https://www.meetup.com/de-DE/Java-Vienna/events/256644900/?rv=ea1_v2&_xtd=gatlbWFpbF9jbGlja9oAJDE3OThjM2RkLWFmOWItNGFiOC05MzAxLWI1NzM3NTkyM2ZjZA[Java Vienna JUG meetup] taking place at the Vienna University of Technology on the 3rd of December 2018.
+The exact location will be published on the meetup page and the talk will start at around 18:25.
+
+The title of the presentation is _Entity Views - Not your father's DTOs_ and it will be about all the benefits that come with using Entity Views.
+In the talk I will explain the basic concepts, show some features and present use cases.
+You can expect a little comparison with other DTO solutions and +++<!-- PREVIEW-SUFFIX --><!-- </p></div> --><!-- PREVIEW-END -->+++
+an example application that shows how Entity Views can be used end-to-end.
+I will also showcase some real world examples of community members which will allow you to get a feeling for how much you can benefit by using Entity Views.
+
+After the meetup I'll stick around for beer and further discussions, so if you are in town, join us!

@@ -197,6 +197,20 @@ public class EntityViewManagerProducer {
 
 The CDI extension collects all the entity views classes and provides a producer for the pre-configured `EntityViewConfiguration`.
 
+When deploying a WAR file to an application server running on Java 11+ that doesn't support MR-JARs, it will be necessary to use a special Java 9+ only artifact:
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-entity-view-impl</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+    <!-- Use the 9 classifier to get the Java 9+ only artifact -->
+    <classifier>9</classifier>
+</dependency>
+----
+
 [[environments-cdi]]
 ==== CDI
 

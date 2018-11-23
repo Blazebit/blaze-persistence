@@ -253,6 +253,22 @@
                                     <goal>run</goal>
                                 </goals>
                             </execution>
+                            <execution>
+                                <id>compile-java9-only</id>
+                                <phase>compile</phase>
+                                <configuration>
+                                    <tasks>
+                                        <mkdir dir="${project.build.outputDirectory}/META-INF/versions/9" />
+                                        <copy todir="${project.build.directory}/classes9">
+                                            <fileset dir="${project.build.outputDirectory}" excludes="META-INF/versions/**,**/UnsafeHelper.class"/>
+                                        </copy>
+                                        <javac srcdir="${project.basedir}/src/main/java9" destdir="${project.build.directory}/classes9" classpath="${project.build.outputDirectory}" includeantruntime="false" />
+                                    </tasks>
+                                </configuration>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                            </execution>
                         </executions>
                     </plugin>
                     <plugin>
@@ -281,6 +297,17 @@
                                 </goals>
                                 <configuration>
                                     <classifier>module</classifier>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>java-9-jar</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                                <configuration>
+                                    <classifier>9</classifier>
+                                    <classesDirectory>${project.build.directory}/classes9</classesDirectory>
                                 </configuration>
                             </execution>
                         </executions>
