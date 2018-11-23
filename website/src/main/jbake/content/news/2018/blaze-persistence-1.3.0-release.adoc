@@ -1,6 +1,6 @@
 = Blaze-Persistence 1.3.0 Release
 Christian Beikov
-2018-11-23 0
+2018-11-23 1
 :description: Blaze-Persistence version 1.3.0 was just released
 :page: news
 :icon: christian_head.png
@@ -31,7 +31,7 @@ Once again I would like to thank https://github.com/heruan[Giovanni Lovato, wind
 and went through many test-debug cycles with me to get the implementation right for even the most complex JPA models. Without his feedback and patience, the release wouldn't be as good as it is. Thanks for your contribution and keep up the good work!
 
 Thanks to https://github.com/JWGmeligMeyling[Jan-Willem Gmelig Meyling, window="_blank"] we caught up on changes coming with Hibernate 5.4 and adapted our implementations to be able to provide a consistent experience!
-One of these changes is that with Hibernate 5.4 you will now be able to leverage the _single value id access optimization_ not only for primary ids, but also for natural ids.
+One of these changes is that with Hibernate 5.4 you will now be able to leverage the *single value id access optimization* not only for primary ids, but also for natural ids.
 
 With version 1.3.0 a.k.a. _Fury_ being done, we will start working on 1.4.0 a.k.a. _Coulson_. We might port back critical fixes to 1.3, but in general we don't anticipate to do any further public 1.3 releases.
 Since 1.4 is backwards compatible, it should be no problem to work with 1.4.0 Alpha releases to get fixes that were done on master.
