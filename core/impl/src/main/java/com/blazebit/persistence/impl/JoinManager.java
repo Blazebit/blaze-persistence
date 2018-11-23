@@ -1700,8 +1700,8 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 current = currentResult.baseNode;
                 resultFields = currentResult.addToList(resultFields);
 
-                // It can never be a single valued association id reference if the join is required
-                singleValuedAssociationIdExpression = !joinRequired && isSingleValuedAssociationId(currentResult, pathElements, idRemovable);
+                // It can never be a single valued association id reference if the join type is INNER i.e. it is required
+                singleValuedAssociationIdExpression = joinType != JoinType.INNER && isSingleValuedAssociationId(currentResult, pathElements, idRemovable);
 
                 if (singleValuedAssociationIdExpression) {
                     if (!mainQuery.jpaProvider.supportsSingleValuedAssociationIdExpressions()) {
