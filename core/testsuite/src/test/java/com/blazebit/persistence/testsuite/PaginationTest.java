@@ -100,6 +100,72 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
+    public void implicitGroupByImplicitlyJoinedEntityTest() {
+        // Not sure if we want to support implicit group by's here
+        CriteriaBuilder<Tuple> tupleCriteriaBuilder = cbf.create(em, Tuple.class)
+            .from(Document.class, "d")
+            .select("d.owner.id", "ownerId")
+            .select("d.owner.age", "ownerAge")
+            .select("d.owner.name", "ownerName")
+            .select("max(d.id)", "latestDocument")
+            .orderByAsc("d.owner.name")
+            .orderByAsc("d.owner.age")
+            .orderByAsc("d.owner.id");
+
+        PaginatedCriteriaBuilder<Tuple> page = tupleCriteriaBuilder
+            .page(0, 10);
+
+        page.getResultList();
+    }
+
+    @Test
+    public void groupByImplicitlyJoinedEntityTest() {
+        // Test that shows that its not sufficient to group by / order by all used path expressions
+        CriteriaBuilder<Tuple> tupleCriteriaBuilder = cbf.create(em, Tuple.class)
+            .from(Document.class, "d")
+            .select("d.owner.id", "ownerId")
+            .select("d.owner.age", "ownerAge")
+            .select("d.owner.name", "ownerName")
+            .select("max(d.id)", "latestDocument")
+            .groupBy("d.owner.name")
+            .groupBy("d.owner.age")
+            .groupBy("d.owner.id")
+            .orderByAsc("d.owner.name")
+            .orderByAsc("d.owner.age")
+            .orderByAsc("d.owner.id");
+
+        PaginatedCriteriaBuilder<Tuple> page = tupleCriteriaBuilder
+            .page(0, 10);
+
+        page.getResultList();
+    }
+
+
+    @Test
+    public void groupByJoinedEntityTest() {
+        // Test that shows that a work around with a manual inner join default
+        // still fails, because the required join is omitted in the count query
+        CriteriaBuilder<Tuple> tupleCriteriaBuilder = cbf.create(em, Tuple.class)
+            .from(Document.class, "d")
+            .innerJoinDefault("d.owner", "theOwner")
+            .select("theOwner.id", "ownerId")
+            .select("theOwner.age", "ownerAge")
+            .select("theOwner.name", "ownerName")
+            .select("max(d.id)", "latestDocument")
+            .groupBy("theOwner.name")
+            .groupBy("theOwner.age")
+            .groupBy("theOwner.id")
+            .orderByAsc("theOwner.name")
+            .orderByAsc("theOwner.age")
+            .orderByAsc("theOwner.id");
+
+        PaginatedCriteriaBuilder<Tuple> page = tupleCriteriaBuilder
+            .page(0, 10);
+
+        page.getResultList();
+    }
+
+    @Test
     public void simpleTest() {
         CriteriaBuilder<DocumentViewModel> crit = cbf.create(em, Document.class, "d")
                 .selectNew(DocumentViewModel.class)
