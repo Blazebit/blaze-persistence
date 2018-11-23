@@ -21,7 +21,7 @@
     <parent>
         <groupId>com.blazebit</groupId>
         <artifactId>blaze-persistence-entity-view</artifactId>
-        <version>1.3.0-SNAPSHOT</version>
+        <version>1.3.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -260,7 +260,7 @@
                                     <tasks>
                                         <mkdir dir="${project.build.outputDirectory}/META-INF/versions/9" />
                                         <copy todir="${project.build.directory}/classes9">
-                                            <fileset dir="${project.build.outputDirectory}" excludes="META-INF/versions/**,**/UnsafeHelper.class"/>
+                                            <fileset dir="${project.build.outputDirectory}" excludes="META-INF/versions/**,**/UnsafeHelper.class" />
                                         </copy>
                                         <javac srcdir="${project.basedir}/src/main/java9" destdir="${project.build.directory}/classes9" classpath="${project.build.outputDirectory}" includeantruntime="false" />
                                     </tasks>
