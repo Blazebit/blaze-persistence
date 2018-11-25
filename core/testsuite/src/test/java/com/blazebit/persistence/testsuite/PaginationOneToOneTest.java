@@ -199,7 +199,7 @@ public class PaginationOneToOneTest extends AbstractCoreTest {
         String expectedCountQuery = "SELECT " + countPaginated("d.id", false) + " FROM DocumentInfo d";
 
         String expectedObjectQuery = "SELECT d.someInfo, document_1.name FROM DocumentInfo d LEFT JOIN d.document document_1"
-                + " ORDER BY " + renderNullPrecedence("document_1.id",  "ASC", "LAST");
+                + " ORDER BY " + renderNullPrecedence(singleValuedAssociationIdPath("d.document.id", "document_1"),  "ASC", "LAST");
 
         PaginatedCriteriaBuilder<Tuple> pcb = crit.page(0, 1);
 
@@ -228,7 +228,7 @@ public class PaginationOneToOneTest extends AbstractCoreTest {
         String expectedCountQuery = "SELECT " + countPaginated("d.id", false) + " FROM DocumentInfo d";
 
         String expectedObjectQuery = "SELECT d.someInfo, document2_1.name FROM DocumentInfo d JOIN d.document2 document2_1"
-                + " ORDER BY document2_1.id ASC";
+                + " ORDER BY " + singleValuedAssociationIdPath("d.document2.id", "document2_1") + " ASC";
 
         PaginatedCriteriaBuilder<Tuple> pcb = crit.page(0, 1);
 
@@ -257,7 +257,7 @@ public class PaginationOneToOneTest extends AbstractCoreTest {
         String expectedCountQuery = "SELECT " + countPaginated("d.document.id", false) + " FROM DocumentInfo d JOIN d.document document_1";
 
         String expectedObjectQuery = "SELECT d.someInfo, document_1.name FROM DocumentInfo d JOIN d.document document_1"
-                + " ORDER BY document_1.id ASC";
+                + " ORDER BY " + singleValuedAssociationIdPath("d.document.id", "document_1") + " ASC";
 
         PaginatedCriteriaBuilder<Tuple> pcb = crit.pageBy(0, 1, "d.document.id");
 
@@ -286,7 +286,7 @@ public class PaginationOneToOneTest extends AbstractCoreTest {
         String expectedCountQuery = "SELECT " + countPaginated("d.document2.id", false) + " FROM DocumentInfo d";
 
         String expectedObjectQuery = "SELECT d.someInfo, document2_1.name FROM DocumentInfo d JOIN d.document2 document2_1"
-                + " ORDER BY document2_1.id ASC";
+                + " ORDER BY " + singleValuedAssociationIdPath("d.document2.id", "document2_1") + " ASC";
 
         PaginatedCriteriaBuilder<Tuple> pcb = crit.pageBy(0, 1, "d.document2.id");
 

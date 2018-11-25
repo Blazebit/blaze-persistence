@@ -231,9 +231,14 @@ public class ExpressionUtils {
             int dotIndex = expr.getField().lastIndexOf('.');
             if (dotIndex != -1) {
                 // A single valued id path is nullable if the parent association is nullable
-                Attribute<?, ?> associationAttribute = extendedManagedType.getAttribute(expr.getField().substring(0, dotIndex)).getAttribute();
+                String associationName = expr.getField().substring(0, dotIndex);
+                Attribute<?, ?> associationAttribute = extendedManagedType.getAttribute(associationName).getAttribute();
                 if (isNullable(associationAttribute)) {
-                    return true;
+                    // Finally check if the association might have been inner joined
+                    JoinTreeNode associationNode = baseNode.getNodes().get(associationName);
+                    if (associationNode == null || associationNode.getDefaultNode().getJoinType() != JoinType.INNER) {
+                        return true;
+                    }
                 }
             }
         }
