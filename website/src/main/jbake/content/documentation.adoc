@@ -47,7 +47,10 @@ A simple quickstart section with a usage example for the Entity View module
 
 === Presentations
 
-https://www.slideshare.net/blazebitbeikov/blazepersistence-introduction-viennadb20170522[ViennaDB Meetup 2017-05-22]::
+https://www.meetup.com/de-DE/Java-Vienna/events/256644900[Java Vienna Meetup 2018-12-03]::
+https://www.slideshare.net/blazebitbeikov/entity-views-not-your-fathers-dtos-javaviennameetup-20181203[Entity Views - Not your father's DTOs] was a talk by Christian that uncovers the problems with traditional DTO approaches and how Blaze-Persistence Entity Views can help you overcome these issues. The demo code can be found on https://github.com/Blazebit/blaze-persistence/tree/master/examples/spring-data-rest[GitHub]
+
+https://www.meetup.com/de-DE/ViennaDB-The-Austrian-Database-Meetup-Group/events/239381170[ViennaDB Meetup 2017-05-22]::
 Christian gave an updated https://www.slideshare.net/blazebitbeikov/blazepersistence-introduction-viennadb20170522[introduction talk] with a special focus on how Entity Views and Keyset pagination work internally. https://www.slideshare.net/blazebitbeikov/blazepersistence-introduction-viennadb20170522[Slides] and demo code are https://github.com/Blazebit/blaze-persistence-presentation/tree/viennadb-2017-05-22[tagged on Github]
 
 https://www.meetup.com/Java-Vienna/events/234641121[JSUG/Java Vienna Meetup 2016-11-14]::
