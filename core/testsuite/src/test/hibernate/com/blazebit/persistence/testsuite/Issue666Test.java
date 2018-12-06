@@ -16,8 +16,10 @@
 
 package com.blazebit.persistence.testsuite;
 
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDB2;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
@@ -75,6 +77,8 @@ public class Issue666Test extends AbstractCoreTest {
     }
 
     @Test
+    // NOTE: Doing this with Hibernate < 5.0 leads to a syntax error with DB2
+    @Category({ NoDB2.class })
     public void metaModelInstantiationWithNestedIdClassAssociationTest() {
         transactional(new TxVoidWork() {
             @Override
