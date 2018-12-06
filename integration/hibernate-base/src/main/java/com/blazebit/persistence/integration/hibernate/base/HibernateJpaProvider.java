@@ -899,11 +899,9 @@ public class HibernateJpaProvider implements JpaProvider {
                 tables = new Table[]{database.getTable(unquote(entityPersister.getTableName()))};
             }
 
-            // In this case, the property might represent a formula
-            boolean isFormula = columnNames.length == 1 && columnNames[0] == null;
             boolean isSubselect = tables.length == 1 && tables[0] == null;
 
-            if (isFormula || isSubselect) {
+            if (isSubselect || isFormula(columnNames)) {
                 Type propertyType = entityPersister.getPropertyType(attributeName);
                 return getColumnTypeForPropertyType(entityType, attributeName, sfi, propertyType);
             }
@@ -1063,9 +1061,8 @@ public class HibernateJpaProvider implements JpaProvider {
         if (columnNames == null) {
             throw new IllegalArgumentException("Couldn't find column names for " + getTypeName(ownerType) + "#" + attributeName);
         }
-        boolean isFormula = columnNames.length == 1 && columnNames[0] == null;
 
-        if (isFormula) {
+        if (isFormula(columnNames)) {
             return getColumnTypeForPropertyType(ownerType, attributeName, sfi, propertyType);
         }
 
@@ -1073,6 +1070,16 @@ public class HibernateJpaProvider implements JpaProvider {
         Table[] tables = new Table[]{ database.getTable(unquote(persister.getTableName())) };
 
         return getColumnTypesForColumnNames(ownerType, columnNames, tables);
+    }
+
+    private boolean isFormula(String[] columnNames) {
+        for (int i = 0; i < columnNames.length; i++) {
+            if (columnNames[i] == null) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @Override
