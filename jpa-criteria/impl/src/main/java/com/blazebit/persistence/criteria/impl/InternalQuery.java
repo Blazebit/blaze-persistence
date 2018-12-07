@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.criteria.impl;
 
+import com.blazebit.persistence.BaseSubqueryBuilder;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FromBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
@@ -468,13 +469,13 @@ public class InternalQuery<T> implements Serializable {
             path = "";
         }
 
-        renderJoins(cb, true, context, path, (Set<BlazeJoin<?, ?>>) (Set<?>) r.getBlazeJoins());
+        renderJoins(cb, null, true, context, path, (Set<BlazeJoin<?, ?>>) (Set<?>) r.getBlazeJoins());
         Collection<TreatedPath<?>> treatedPaths = (Collection<TreatedPath<?>>) (Collection) r.getTreatedPaths();
         if (treatedPaths != null && treatedPaths.size() > 0) {
             for (TreatedPath<?> treatedPath : treatedPaths) {
                 RootImpl<?> treatedRoot = (RootImpl<?>) treatedPath;
                 String treatedParentPath = "TREAT(" + path + " AS " + treatedPath.getTreatType().getName() + ')';
-                renderJoins(cb, fetching, context, treatedParentPath, (Set<BlazeJoin<?, ?>>) (Set<?>) treatedRoot.getBlazeJoins());
+                renderJoins(cb, null, fetching, context, treatedParentPath, (Set<BlazeJoin<?, ?>>) (Set<?>) treatedRoot.getBlazeJoins());
             }
         }
     }
@@ -511,17 +512,21 @@ public class InternalQuery<T> implements Serializable {
                     join.prepareAlias(context);
                     EntityType<?> treatJoinType = join.getTreatJoinType();
                     String path = getPath(r.getAlias(), j, treatJoinType);
-                    if (cb == null) {
-                        if (j.getAlias() != null) {
-                            cb = initiator.from(path, j.getAlias());
-                        } else {
-                            cb = initiator.from(path);
-                        }
+                    if (j.getAttribute() != null && j.getAttribute().getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED) {
+                        cb = (SubqueryBuilder<?>) renderJoins(cb, initiator, false, context, path, (Set<BlazeJoin<?, ?>>) (Set<?>) j.getBlazeJoins());
                     } else {
-                        if (j.getAlias() != null) {
-                            cb.from(path, j.getAlias());
+                        if (cb == null) {
+                            if (j.getAlias() != null) {
+                                cb = initiator.from(path, j.getAlias());
+                            } else {
+                                cb = initiator.from(path);
+                            }
                         } else {
-                            cb.from(path);
+                            if (j.getAlias() != null) {
+                                cb.from(path, j.getAlias());
+                            } else {
+                                cb.from(path);
+                            }
                         }
                     }
                 }
@@ -537,7 +542,10 @@ public class InternalQuery<T> implements Serializable {
                 Set<BlazeJoin<?, ?>> joins = (Set<BlazeJoin<?, ?>>) (Set<?>) r.getBlazeJoins();
 
                 for (BlazeJoin<?, ?> j : joins) {
-                    renderJoins(cb, context, (AbstractFrom<?, ?>) j, false);
+                    // We already rendered correlation joins for embedded paths
+                    if (j.getAttribute() != null && j.getAttribute().getPersistentAttributeType() != Attribute.PersistentAttributeType.EMBEDDED) {
+                        renderJoins(cb, context, (AbstractFrom<?, ?>) j, false);
+                    }
                 }
             }
         }
@@ -546,9 +554,9 @@ public class InternalQuery<T> implements Serializable {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    private void renderJoins(FromBuilder<?> cb, boolean fetching, RenderContextImpl context, String parentPath, Set<BlazeJoin<?, ?>> joins) {
+    private FromBuilder<?> renderJoins(FromBuilder<?> cb, SubqueryInitiator<?> subqueryInitiator, boolean fetching, RenderContextImpl context, String parentPath, Set<BlazeJoin<?, ?>> joins) {
         if (joins.isEmpty()) {
-            return;
+            return cb;
         }
 
         for (BlazeJoin<?, ?> j : joins) {
@@ -577,6 +585,10 @@ public class InternalQuery<T> implements Serializable {
                         ((FullQueryBuilder<?, ?>) cb).join(path, alias, getJoinType(j.getJoinType()), true);
                     } else if (j instanceof EntityJoin<?, ?>) {
                         throw new IllegalArgumentException("Entity join without on-condition is not allowed! " + j);
+                    } else if (cb == null) {
+                        cb = subqueryInitiator.from(path, alias);
+                    } else if (cb instanceof BaseSubqueryBuilder<?>) {
+                        ((SubqueryBuilder<?>) cb).from(path, alias);
                     } else {
                         cb.join(path, alias, getJoinType(j.getJoinType()));
                     }
@@ -605,17 +617,19 @@ public class InternalQuery<T> implements Serializable {
                 }
             }
 
-            renderJoins(cb, fetching, context, alias, (Set<BlazeJoin<?, ?>>) (Set<?>) j.getBlazeJoins());
+            renderJoins(cb, null, fetching, context, alias, (Set<BlazeJoin<?, ?>>) (Set<?>) j.getBlazeJoins());
 
             Collection<TreatedPath<?>> treatedPaths = (Collection<TreatedPath<?>>) (Collection) join.getTreatedPaths();
             if (treatedPaths != null && treatedPaths.size() > 0) {
                 for (TreatedPath<?> treatedPath : treatedPaths) {
                     AbstractJoin<?, ?> treatedJoin = (AbstractJoin<?, ?>) treatedPath;
                     String treatedParentPath = "TREAT(" + alias + " AS " + treatedPath.getTreatType().getName() + ')';
-                    renderJoins(cb, fetching, context, treatedParentPath, (Set<BlazeJoin<?, ?>>) (Set<?>) treatedJoin.getBlazeJoins());
+                    renderJoins(cb, null, fetching, context, treatedParentPath, (Set<BlazeJoin<?, ?>>) (Set<?>) treatedJoin.getBlazeJoins());
                 }
             }
         }
+
+        return cb;
     }
 
     private String getPath(String parentPath, BlazeJoin<?, ?> j, EntityType<?> treatJoinType) {
