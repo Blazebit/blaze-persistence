@@ -33,7 +33,7 @@ public interface SubqueryInternalBuilder<T> extends Subquery {
 
     public List<Expression> getSelectExpressions();
 
-    public Set<Expression> getCorrelatedExpressions();
+    public Set<Expression> getCorrelatedExpressions(AliasManager aliasManager);
     
     public int getFirstResult();
     

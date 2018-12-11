@@ -229,7 +229,7 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
             throw new IllegalArgumentException("Unexpected subquery subtype: " + expression.getSubquery());
         }
         SubqueryInternalBuilder<?> builder = (SubqueryInternalBuilder<?>) expression.getSubquery();
-        expressions.addAll(builder.getCorrelatedExpressions());
+        expressions.addAll(builder.getCorrelatedExpressions(aliasManager));
         return true;
     }
 
