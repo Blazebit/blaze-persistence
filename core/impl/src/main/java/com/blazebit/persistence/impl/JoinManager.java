@@ -274,11 +274,11 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         }
     }
 
-    public void collectCorrelatedRootExpressions(Collection<Expression> expressions) {
+    public void collectCorrelatedRootExpressions(AliasManager aliasManager, Collection<Expression> expressions) {
         int size = rootNodes.size();
         for (int i = 0; i < size; i++) {
             JoinNode rootNode = rootNodes.get(i);
-            if (rootNode.getCorrelationParent() != null) {
+            if (rootNode.getCorrelationParent() != null && rootNode.getCorrelationParent().getAliasInfo().getAliasOwner() == aliasManager) {
                 ExtendedManagedType<?> extendedManagedType = metamodel.getManagedType(ExtendedManagedType.class, rootNode.getCorrelationParent().getManagedType());
                 for (SingularAttribute<?, ?> idAttribute : extendedManagedType.getIdAttributes()) {
                     List<PathElementExpression> pathElementExpressions = new ArrayList<>(2);

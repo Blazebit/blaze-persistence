@@ -52,7 +52,7 @@ class CorrelatedExpressionGatheringVisitor extends VisitorAdapter {
             throw new IllegalArgumentException("Unexpected base node type: " + baseNode);
         }
 
-        if (aliasManager != ((JoinNode) baseNode).getAliasInfo().getAliasOwner()) {
+        if (aliasManager == ((JoinNode) baseNode).getAliasInfo().getAliasOwner()) {
             expressions.add(expression);
         }
     }
@@ -77,6 +77,6 @@ class CorrelatedExpressionGatheringVisitor extends VisitorAdapter {
             throw new IllegalArgumentException("Unexpected subquery subtype: " + expression.getSubquery());
         }
         SubqueryInternalBuilder<?> builder = (SubqueryInternalBuilder<?>) expression.getSubquery();
-        expressions.addAll(builder.getCorrelatedExpressions());
+        expressions.addAll(builder.getCorrelatedExpressions(aliasManager));
     }
 }
