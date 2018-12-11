@@ -315,12 +315,14 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
         }
 
         // But even now that we order by all id attribute parts, we still have to make sure this join node is uniqueness preserving
+        String subPath = field;
         while (baseNode.getParent() != null) {
             if (baseNode.getParentTreeNode() == null) {
                 // Don't assume uniqueness when encountering a cross or entity join
                 // To support this, we need to find top-level equality predicates between unique keys of the joined relations in the query
                 return false;
             } else {
+                subPath = baseNode.getParentTreeNode().getRelationName() + "." + subPath;
                 attr = baseNode.getParentTreeNode().getAttribute();
                 // Only one-to-one relation joins i.e. joins having a unique key with unique key equality predicate are uniqueness preserving
                 baseNode = baseNode.getParent();
@@ -340,9 +342,10 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
                         }
                         orderedAttributes = new HashSet<>();
                         addAttributes(baseNode.getEntityType(), null, "", "", (SingularAttribute<?, ?>) attr, orderedAttributes);
-
+                        orderedAttributes.removeAll(constantifiedAttributes);
+                        orderedAttributes.remove(subPath);
                         // If the identifiers are constantified, we don't care if this is a one-to-one
-                        if (constantifiedAttributes.containsAll(orderedAttributes)) {
+                        if (orderedAttributes.isEmpty() || orderedAttributes.size() == 1 && extendedManagedType.getAttributes().containsKey(subPath) && equalsAny(orderedAttributes.iterator().next(), extendedManagedType.getAttribute(subPath).getColumnEquivalentAttributes())) {
                             continue;
                         }
                     }

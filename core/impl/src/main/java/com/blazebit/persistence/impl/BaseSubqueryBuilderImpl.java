@@ -69,12 +69,12 @@ public abstract class BaseSubqueryBuilderImpl<T, X, Y extends BaseOngoingSetOper
     }
 
     @Override
-    public Set<Expression> getCorrelatedExpressions() {
+    public Set<Expression> getCorrelatedExpressions(AliasManager aliasManager) {
         prepareAndCheck();
         CorrelatedExpressionGatheringVisitor visitor = new CorrelatedExpressionGatheringVisitor(aliasManager);
         applyVisitor(visitor);
         Set<Expression> expressions = visitor.getExpressions();
-        joinManager.collectCorrelatedRootExpressions(expressions);
+        joinManager.collectCorrelatedRootExpressions(aliasManager, expressions);
         return expressions;
     }
 

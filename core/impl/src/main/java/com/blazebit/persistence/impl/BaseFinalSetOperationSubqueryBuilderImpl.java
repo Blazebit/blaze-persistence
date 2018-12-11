@@ -81,13 +81,13 @@ public abstract class BaseFinalSetOperationSubqueryBuilderImpl<T, X extends Base
     }
 
     @Override
-    public Set<Expression> getCorrelatedExpressions() {
+    public Set<Expression> getCorrelatedExpressions(AliasManager aliasManager) {
         Set<Expression> correlatedExpressions = new LinkedHashSet<>();
         if (setOperationManager.getStartQueryBuilder() != null) {
-            correlatedExpressions.addAll(((SubqueryInternalBuilder<?>) setOperationManager.getStartQueryBuilder()).getCorrelatedExpressions());
+            correlatedExpressions.addAll(((SubqueryInternalBuilder<?>) setOperationManager.getStartQueryBuilder()).getCorrelatedExpressions(aliasManager));
         }
         for (AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder : setOperationManager.getSetOperations()) {
-            correlatedExpressions.addAll(((SubqueryInternalBuilder<?>) queryBuilder).getCorrelatedExpressions());
+            correlatedExpressions.addAll(((SubqueryInternalBuilder<?>) queryBuilder).getCorrelatedExpressions(aliasManager));
         }
         return correlatedExpressions;
     }
