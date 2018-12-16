@@ -85,12 +85,17 @@ import javax.persistence.metamodel.IdentifiableType;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -106,12 +111,28 @@ public class ProxyFactory {
     private static final Logger LOG = Logger.getLogger(ProxyFactory.class.getName());
     // This has to be static since runtime generated correlation providers can't be matched in a later run, so we always create a new one with a unique name
     private static final ConcurrentMap<Class<?>, AtomicInteger> CORRELATION_PROVIDER_CLASS_COUNT = new ConcurrentHashMap<>();
+    private static final Path DEBUG_DUMP_DIRECTORY;
     private final ConcurrentMap<ProxyClassKey, Class<?>> proxyClasses = new ConcurrentHashMap<>();
     private final ConcurrentMap<ProxyClassKey, Class<?>> unsafeProxyClasses = new ConcurrentHashMap<>();
     private final Object proxyLock = new Object();
     private final ClassPool pool;
     private final boolean unsafeDisabled;
     private final PackageOpener packageOpener;
+
+    static {
+        String property = System.getProperty("entityview.debugDumpDirectory");
+        if (property == null) {
+            DEBUG_DUMP_DIRECTORY = null;
+        } else {
+            Path p = Paths.get(property);
+            if (Files.exists(p)) {
+                DEBUG_DUMP_DIRECTORY = p.toAbsolutePath();
+            } else {
+                DEBUG_DUMP_DIRECTORY = null;
+                Logger.getLogger(ProxyFactory.class.getName()).severe("The given debug dump directory does not exist: " + p.toAbsolutePath());
+            }
+        }
+    }
 
     /**
      * @author Christian Beikov
@@ -485,6 +506,10 @@ public class ProxyFactory {
             // Ask the package opener to allow deep access, otherwise defining the class will fail
             packageOpener.openPackageIfNeeded(clazz, clazz.getPackage().getName(), ProxyFactory.class);
 
+            if (DEBUG_DUMP_DIRECTORY != null) {
+                cc.writeFile(DEBUG_DUMP_DIRECTORY.toString());
+            }
+
             Class<? extends T> c;
             if (unsafe) {
                 c = (Class<? extends T>) UnsafeHelper.define(cc.getName(), cc.toBytecode(), clazz);
@@ -572,8 +597,26 @@ public class ProxyFactory {
                 }
                 AbstractMethodAttribute<?, ?> attribute = entry.getValue().getSubAttribute(managedView);
                 if (attribute.getDirtyStateIndex() != -1) {
-                    subtypeMutableAttributes[j] = attribute;
-                    subtypeMutableAttributeCount++;
+                    if (entry.getValue().getSelectionConstrainedAttributes().isEmpty()) {
+                        subtypeMutableAttributes[j] = attribute;
+                        subtypeMutableAttributeCount++;
+                    } else {
+                        // Collect the subtype indexes where this attribute is mutable
+                        SortedSet<Integer> indexes = new TreeSet<>();
+                        // If the attributes are different, we are working on a "subAttribute"
+                        if (entry.getValue().getAttribute() != attribute) {
+                            indexes.add(subtypeIndex);
+                        }
+                        for (ConstrainedAttribute.Entry<AbstractMethodAttribute<?, ?>> selectionConstrainedAttribute : entry.getValue().getSelectionConstrainedAttributes()) {
+                            for (int index : selectionConstrainedAttribute.getSubtypeIndexes()) {
+                                indexes.add(index);
+                            }
+                        }
+                        if (indexes.contains(subtypeIndex)) {
+                            subtypeMutableAttributes[j] = attribute;
+                            subtypeMutableAttributeCount++;
+                        }
+                    }
                 }
 
                 CtField field = fieldMap.get(attributeName);
@@ -628,7 +671,7 @@ public class ProxyFactory {
 
                 overallConstructorParameterTypes.put(constructor.getName(), constructorAttributeTypes);
                 int superConstructorParameterEndPosition = constructorParameterStartPosition + constructor.getParameterAttributes().size();
-                cc.addConstructor(createConstructor(entityViewManager, managedView, cc, constructorParameterStartPosition, superConstructorParameterEndPosition, fields, constructorAttributeTypes, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, ConstructorKind.NORMAL, null, unsafe));
+                cc.addConstructor(createConstructor(entityViewManager, managedView, cc, constructorParameterStartPosition, superConstructorParameterEndPosition, fields, constructorAttributeTypes, initialStateField, mutableStateField, subtypeMutableAttributes, subtypeMutableAttributeCount, ConstructorKind.NORMAL, null, unsafe));
             }
         }
 
