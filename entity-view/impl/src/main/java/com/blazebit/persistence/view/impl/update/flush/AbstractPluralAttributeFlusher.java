@@ -29,6 +29,7 @@ import com.blazebit.persistence.view.spi.type.BasicUserType;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -363,7 +364,17 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
 
     protected abstract boolean isIndexed();
 
-    protected abstract void addElementFlushActions(UpdateContext context, TypeDescriptor elementDescriptor, List<A> actions, V current);
+    protected abstract void addFlatViewElementFlushActions(UpdateContext context, TypeDescriptor elementDescriptor, List<A> actions, V current);
+
+    protected static boolean identityContains(Collection<Object> addedElements, MutableStateTrackable element) {
+        for (Object addedElement : addedElements) {
+            if (addedElement == element) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     @SuppressWarnings("unchecked")
     protected final DirtyAttributeFlusher<X, E, V> getElementOnlyFlusher(UpdateContext context, V current) {
@@ -476,7 +487,7 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
                     }
                 } else {
                     if (typeDescriptor.supportsDirtyCheck() && !typeDescriptor.isIdentifiable() && isIndexed()) {
-                        addElementFlushActions(context, typeDescriptor, (List<A>) actions, current);
+                        addFlatViewElementFlushActions(context, typeDescriptor, (List<A>) actions, current);
                     } else {
                         for (Object o : values) {
                             if (o instanceof MutableStateTrackable) {
@@ -528,6 +539,49 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
     protected abstract CollectionElementAttributeFlusher<E, V> createMergeFlusher(TypeDescriptor typeDescriptor, Object element);
 
     protected abstract AbstractPluralAttributeFlusher<X, A, R, E, V> partialFlusher(boolean fetch, PluralFlushOperation operation, List<? extends A> collectionActions, List<CollectionElementAttributeFlusher<E, V>> elementFlushers);
+
+    /**
+     * @author Christian Beikov
+     * @since 1.4.0
+     */
+    protected static enum EntryState {
+        EXISTED {
+            @Override
+            EntryState onAdd() {
+                return EXISTED;
+            }
+
+            @Override
+            EntryState onRemove() {
+                return REMOVED;
+            }
+        },
+        ADDED {
+            @Override
+            EntryState onAdd() {
+                return ADDED;
+            }
+
+            @Override
+            EntryState onRemove() {
+                return EXISTED;
+            }
+        },
+        REMOVED {
+            @Override
+            EntryState onAdd() {
+                return EXISTED;
+            }
+
+            @Override
+            EntryState onRemove() {
+                return REMOVED;
+            }
+        };
+
+        abstract EntryState onAdd();
+        abstract EntryState onRemove();
+    }
 
     /**
      * @author Christian Beikov

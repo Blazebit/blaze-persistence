@@ -48,7 +48,6 @@ import javax.persistence.Tuple;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -196,9 +195,9 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
     }
 
     @Override
-    protected void addElementFlushActions(UpdateContext context, TypeDescriptor typeDescriptor, List<MapAction<?>> actions, V current) {
+    protected void addFlatViewElementFlushActions(UpdateContext context, TypeDescriptor typeDescriptor, List<MapAction<?>> actions, V current) {
         final ViewToEntityMapper mapper = typeDescriptor.getViewToEntityMapper();
-        OUTER: for (Map.Entry<?, ?> entry : current.entrySet()) {
+        for (Map.Entry<?, ?> entry : current.entrySet()) {
             Object o = entry.getValue();
             if (o instanceof MutableStateTrackable) {
                 MutableStateTrackable element = (MutableStateTrackable) o;
@@ -206,34 +205,25 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                 DirtyAttributeFlusher<?, E, V> flusher = (DirtyAttributeFlusher<?, E, V>) (DirtyAttributeFlusher) mapper.getNestedDirtyFlusher(context, element, (DirtyAttributeFlusher) null);
                 if (flusher != null) {
                     // Skip the element flusher if the key was already added before
-                    boolean wasElementAdded = false;
+                    EntryState state = EntryState.EXISTED;
                     for (MapAction<?> action : actions) {
-                        if (action.getAddedKeys().contains(entry.getKey())) {
-                            continue OUTER;
-                        }
-                        if (identityContains(action.getAddedElements(), element)) {
-                            wasElementAdded = true;
+                        if (identityContains(action.getRemovedElements(), element)) {
+                            state = state.onRemove();
+                            if (identityContains(action.getAddedElements(), element)) {
+                                state = state.onAdd();
+                            }
+                        } else if (identityContains(action.getAddedElements(), element)) {
+                            state = state.onAdd();
                         }
                     }
 
-                    if (wasElementAdded) {
-                        actions.add(new MapPutAction(entry.getKey(), element, Collections.emptyMap()));
-                    } else {
+                    // If the element was added, we don't have to introduce a put action for flushing it
+                    if (state != EntryState.ADDED) {
                         actions.add(new MapPutAction(entry.getKey(), element, current));
                     }
                 }
             }
         }
-    }
-
-    private boolean identityContains(Collection<Object> addedElements, MutableStateTrackable element) {
-        for (Object addedElement : addedElements) {
-            if (addedElement == element) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     @Override
@@ -1603,12 +1593,16 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
         List<MapAction<Map<Object, Object>>> collectionActions = determineCollectionActions(context, initial, current, equalityChecker);
 
         // If nothing changed in the collection and no changes should be flushed, we are done
-        if (collectionActions.size() == 0 && (!keyDescriptor.shouldFlushMutations() || keyDescriptor.supportsDirtyCheck()) && (!elementDescriptor.shouldFlushMutations() || elementDescriptor.supportsDirtyCheck())) {
-            // Always reset the actions as that indicates changes
+        if (collectionActions.size() == 0) {
+            List<CollectionElementAttributeFlusher<E, V>> elementFlushers = getElementFlushers(context, current, collectionActions);
             if (current instanceof RecordingMap<?, ?, ?>) {
                 ((RecordingMap<?, ?, ?>) current).resetActions(context);
             }
-            return null;
+            // A "null" element flusher list is given when a fetch and compare is more appropriate
+            if (elementFlushers == null) {
+                return this;
+            }
+            return getReplayAndElementFlusher(context, initial, current, collectionActions, elementFlushers);
         }
 
         if (collectionActions.size() > current.size()) {
@@ -1632,12 +1626,12 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
             // If we determine possible collection actions, we try to apply them, but if not
             if (elementDescriptor.shouldFlushMutations()) {
                 List<CollectionElementAttributeFlusher<E, V>> elementFlushers = getElementFlushers(context, current, collectionActions);
+                if (current instanceof RecordingMap<?, ?, ?>) {
+                    ((RecordingMap<?, ?, ?>) current).resetActions(context);
+                }
                 // A "null" element flusher list is given when a fetch and compare is more appropriate
                 if (elementFlushers == null) {
                     return this;
-                }
-                if (current instanceof RecordingMap<?, ?, ?>) {
-                    ((RecordingMap<?, ?, ?>) current).resetActions(context);
                 }
                 return getReplayAndElementFlusher(context, initial, current, collectionActions, elementFlushers);
             } else {

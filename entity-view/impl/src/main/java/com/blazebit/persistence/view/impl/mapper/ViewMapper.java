@@ -190,6 +190,7 @@ public class ViewMapper<S, T> {
             }
         }
         T result = objectInstantiator.newInstance(tuple);
+        // TODO: copy initial state, on create new, mark everything as dirty
         if (dirtyMapping != null && source instanceof DirtyTracker) {
             DirtyTracker oldDirtyTracker = (DirtyTracker) source;
             DirtyTracker dirtyTracker = (DirtyTracker) result;
