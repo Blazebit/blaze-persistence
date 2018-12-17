@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.update.flush;
 
 import com.blazebit.persistence.view.impl.collection.MapAction;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
+import com.blazebit.persistence.view.impl.proxy.DirtyTracker;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 
 import java.util.ArrayList;
@@ -69,9 +70,13 @@ public class FusedMapActions {
                         if (removedValue == null) {
                             added.put(key, value);
                         } else {
-                            removed.put(new RemoveWrapper(key), removedValue);
-                            replaces.put(key, value);
-                            removeValueCount--;
+                            if (removedValue != value || value instanceof DirtyTracker && ((DirtyTracker) value).$$_isDirty() && added.get(key) != value) {
+                                removed.put(new RemoveWrapper(key), removedValue);
+                                replaces.put(key, value);
+                                if (removedValue != value) {
+                                    removeValueCount--;
+                                }
+                            }
                         }
                     } else {
                         removeCount--;

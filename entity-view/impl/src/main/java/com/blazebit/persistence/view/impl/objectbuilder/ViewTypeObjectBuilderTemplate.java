@@ -526,7 +526,9 @@ public class ViewTypeObjectBuilderTemplate<T> {
                     } else {
                         MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) attribute;
                         ManagedViewTypeImplementor<Object[]> managedViewType = (ManagedViewTypeImplementor<Object[]>) pluralAttribute.getElementType();
-                        applySubviewMapping(mappingAttribute, attributePath, newTupleIdDescriptor, managedViewType, mapperBuilder, embeddingViewJpqlMacro, false, managedViewType instanceof ViewType<?>);
+                        // Obviously, we produce null if the object type is identifiable i.e. a ViewType and it is empty = null id
+                        // Additionally, we also consider empty embeddables as null when we have a non-indexed collection so we can filter out these elements
+                        applySubviewMapping(mappingAttribute, attributePath, newTupleIdDescriptor, managedViewType, mapperBuilder, embeddingViewJpqlMacro, false, managedViewType instanceof ViewType<?> || !listKey && !mapKey);
                     }
                 } else if (mapKey) {
                     MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) attribute;

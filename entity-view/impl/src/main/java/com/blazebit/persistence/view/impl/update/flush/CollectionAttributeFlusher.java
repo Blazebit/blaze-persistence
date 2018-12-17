@@ -497,7 +497,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
     }
 
     @Override
-    protected void addElementFlushActions(UpdateContext context, TypeDescriptor elementDescriptor, List<CollectionAction<?>> actions, V current) {
+    protected void addFlatViewElementFlushActions(UpdateContext context, TypeDescriptor elementDescriptor, List<CollectionAction<?>> actions, V current) {
         throw new UnsupportedOperationException("Not indexed!");
     }
 

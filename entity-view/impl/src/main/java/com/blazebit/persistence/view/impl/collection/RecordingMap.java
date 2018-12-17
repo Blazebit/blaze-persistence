@@ -629,7 +629,6 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
             this.removedElements = new IdentityHashMap<>();
         }
 
-
         // addAction optimizes actions by figuring converting to physical changes
         if (optimize) {
             action.addAction(actions, addedKeys, removedKeys, addedElements, removedElements);
@@ -642,7 +641,12 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
             if (this.removedKeys.remove(o) == null) {
                 if (this.addedKeys.put((K) o, (K) o) == null) {
                     if (parent != null && o instanceof BasicDirtyTracker) {
-                        ((BasicDirtyTracker) o).$$_setParent(this, 1);
+                        // Check if it was replaced by itself
+                        if (removedKeys.remove(o)) {
+                            this.addedKeys.remove(o);
+                        } else {
+                            ((BasicDirtyTracker) o).$$_setParent(this, 1);
+                        }
                     }
                 }
             } else {
@@ -670,7 +674,12 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
             if (this.removedElements.remove(o) == null) {
                 if (this.addedElements.put((V) o, (V) o) == null) {
                     if (parent != null && o instanceof BasicDirtyTracker) {
-                        ((BasicDirtyTracker) o).$$_setParent(this, 2);
+                        // Check if it was replaced by itself
+                        if (removedElements.remove(o)) {
+                            this.addedElements.remove(o);
+                        } else {
+                            ((BasicDirtyTracker) o).$$_setParent(this, 2);
+                        }
                     }
                 }
             } else {

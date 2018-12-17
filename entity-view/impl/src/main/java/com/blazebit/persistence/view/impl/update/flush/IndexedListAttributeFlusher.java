@@ -315,24 +315,32 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
     }
 
     @Override
-    protected void addElementFlushActions(UpdateContext context, TypeDescriptor typeDescriptor, List<CollectionAction<?>> actions, V current) {
+    protected void addFlatViewElementFlushActions(UpdateContext context, TypeDescriptor typeDescriptor, List<CollectionAction<?>> actions, V current) {
         final ViewToEntityMapper mapper = typeDescriptor.getViewToEntityMapper();
-        OUTER: for (int i = 0; i < current.size(); i++) {
+        for (int i = 0; i < current.size(); i++) {
             Object o = current.get(i);
             if (o instanceof MutableStateTrackable) {
                 MutableStateTrackable element = (MutableStateTrackable) o;
                 @SuppressWarnings("unchecked")
                 DirtyAttributeFlusher<?, E, V> flusher = (DirtyAttributeFlusher<?, E, V>) (DirtyAttributeFlusher) mapper.getNestedDirtyFlusher(context, element, (DirtyAttributeFlusher) null);
                 if (flusher != null) {
-                    // Skip the element flusher if the element was already added before
+                    EntryState state = EntryState.EXISTED;
                     for (CollectionAction<?> action : actions) {
-                        if (action.getAddedObjects().contains(element)) {
-                            continue OUTER;
+                        if (identityContains(action.getRemovedObjects(), element)) {
+                            state = state.onRemove();
+                            if (identityContains(action.getAddedObjects(), element)) {
+                                state = state.onAdd();
+                            }
+                        } else if (identityContains(action.getAddedObjects(), element)) {
+                            state = state.onAdd();
                         }
                     }
 
-                    // Using last = false is intentional to actually get a proper update instead of a delete and insert
-                    actions.add(new ListSetAction<>(i, false, element, null));
+                    // If the element was added, we don't have to introduce a set action for flushing it
+                    if (state != EntryState.ADDED) {
+                        // Using last = false is intentional to actually get a proper update instead of a delete and insert
+                        actions.add(new ListSetAction<>(i, false, element, null));
+                    }
                 }
             }
         }
