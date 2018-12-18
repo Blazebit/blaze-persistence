@@ -57,6 +57,10 @@ public final class JpaUtils {
     private JpaUtils() {
     }
 
+    private static boolean isBasicElementType(Attribute<?, ?> attribute) {
+        return attribute instanceof PluralAttribute<?, ?, ?> && ((PluralAttribute<?, ?, ?>) attribute).getElementType().getPersistenceType() == Type.PersistenceType.BASIC;
+    }
+
     public static void expandBindings(EntityType<?> bindType, Map<String, Integer> bindingMap, Map<String, String> columnBindingMap, Map<String, ExtendedAttribute<?, ?>> attributeEntries, ClauseType clause, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {
         SelectManager<?> selectManager = queryBuilder.selectManager;
         JoinManager joinManager = queryBuilder.joinManager;
@@ -77,7 +81,7 @@ public final class JpaUtils {
                 final Attribute<?, ?> lastAttribute = attributePath.get(attributePath.size() - 1);
                 boolean splitExpression = lastAttribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED;
 
-                if (!splitExpression && jpaMetamodelAccessor.isJoinable(lastAttribute)) {
+                if (!splitExpression && jpaMetamodelAccessor.isJoinable(lastAttribute) && !isBasicElementType(lastAttribute)) {
                     splitExpression = true;
                     if (needsElementCollectionIdCutoff) {
                         for (int i = 0; i < attributePath.size() - 1; i++) {
