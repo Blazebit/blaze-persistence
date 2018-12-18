@@ -316,7 +316,6 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
                     returningAttributeBindingMap,
                     getUpdateExampleQuery(),
                     updateSql,
-                    discriminatorPredicate,
                     setExpressionContainingUpdateQueries,
                     columnOnlyRemappings,
                     columnExpressionRemappings
@@ -337,7 +336,6 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
                     returningAttributeBindingMap,
                     getUpdateExampleQuery(),
                     updateSql,
-                    discriminatorPredicate,
                     setExpressionContainingUpdateQueries,
                     columnOnlyRemappings,
                     columnExpressionRemappings,

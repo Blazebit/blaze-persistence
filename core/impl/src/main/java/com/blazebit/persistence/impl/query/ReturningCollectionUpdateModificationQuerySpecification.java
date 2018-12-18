@@ -40,9 +40,9 @@ public class ReturningCollectionUpdateModificationQuerySpecification<T> extends 
     private final ReturningObjectBuilder<T> objectBuilder;
 
     public ReturningCollectionUpdateModificationQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Query exampleQuery, Set<Parameter<?>> parameters, Set<String> parameterListNames, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes,
-                                                                   boolean isEmbedded, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates, Map<String, String> returningAttributeBindingMap, Query updateExampleQuery, String updateSql, String discriminatorPredicate, List<Query> setExpressionContainingUpdateQueries,
+                                                                   boolean isEmbedded, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates, Map<String, String> returningAttributeBindingMap, Query updateExampleQuery, String updateSql, List<Query> setExpressionContainingUpdateQueries,
                                                                    Map<String, String> columnOnlyRemappings, Map<String, String> columnExpressionRemappings, ReturningObjectBuilder<T> objectBuilder) {
-        super(commonQueryBuilder, baseQuery, exampleQuery, parameters, parameterListNames, recursive, ctes, shouldRenderCteNodes, isEmbedded, returningColumns, includedModificationStates, returningAttributeBindingMap, updateExampleQuery, updateSql, discriminatorPredicate, setExpressionContainingUpdateQueries, columnOnlyRemappings, columnExpressionRemappings);
+        super(commonQueryBuilder, baseQuery, exampleQuery, parameters, parameterListNames, recursive, ctes, shouldRenderCteNodes, isEmbedded, returningColumns, includedModificationStates, returningAttributeBindingMap, updateExampleQuery, updateSql, setExpressionContainingUpdateQueries, columnOnlyRemappings, columnExpressionRemappings);
         this.objectBuilder = objectBuilder;
     }
 
