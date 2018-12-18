@@ -26,6 +26,7 @@ import com.blazebit.persistence.view.impl.collection.RecordingMap;
 import com.blazebit.persistence.view.impl.metamodel.AbstractAttribute;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
 import com.blazebit.persistence.view.impl.proxy.ConvertReflectionInstantiator;
+import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
 import com.blazebit.persistence.view.impl.proxy.DirtyTracker;
 import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
@@ -53,6 +54,7 @@ import java.util.Set;
 public class ViewMapper<S, T> {
 
     private final int[] dirtyMapping;
+    private final boolean copyInitialState;
     private final AttributeAccessor[] sourceAccessors;
     private final ObjectInstantiator<T> objectInstantiator;
 
@@ -83,19 +85,17 @@ public class ViewMapper<S, T> {
             if (targetAttribute != idAttribute) {
                 parameterTypes[i] = targetAttribute.getConvertedJavaType();
                 sourceAccessors[i] = createAccessor(sourceType, targetType, ignoreMissing, markNew, entityViewManager, proxyFactory, targetAttribute);
-                if (!markNew) {
-                    // Extract a mapping from target dirty state index to the source
-                    int dirtyStateIndex = ((AbstractMethodAttribute<?, ?>) targetAttribute).getDirtyStateIndex();
-                    if (dirtyStateIndex != -1) {
-                        MethodAttribute<? super S, ?> sourceAttribute = sourceType.getAttribute(targetAttribute.getName());
-                        if (sourceAttribute != null) {
-                            int sourceIndex = ((AbstractMethodAttribute<?, ?>) sourceAttribute).getDirtyStateIndex();
-                            if (sourceIndex != -1) {
-                                for (int j = dirtyMapping.size(); j <= dirtyStateIndex; j++) {
-                                    dirtyMapping.add(-1);
-                                }
-                                dirtyMapping.set(dirtyStateIndex, sourceIndex);
+                // Extract a mapping from target dirty state index to the source
+                int dirtyStateIndex = ((AbstractMethodAttribute<?, ?>) targetAttribute).getDirtyStateIndex();
+                if (dirtyStateIndex != -1) {
+                    MethodAttribute<? super S, ?> sourceAttribute = sourceType.getAttribute(targetAttribute.getName());
+                    if (sourceAttribute != null) {
+                        int sourceIndex = ((AbstractMethodAttribute<?, ?>) sourceAttribute).getDirtyStateIndex();
+                        if (sourceIndex != -1) {
+                            for (int j = dirtyMapping.size(); j <= dirtyStateIndex; j++) {
+                                dirtyMapping.add(-1);
                             }
+                            dirtyMapping.set(dirtyStateIndex, sourceIndex);
                         }
                     }
                 }
@@ -113,6 +113,7 @@ public class ViewMapper<S, T> {
             this.dirtyMapping = dirtyMappingArray;
         }
 
+        this.copyInitialState = !markNew;
         this.sourceAccessors = sourceAccessors;
         this.objectInstantiator = new ConvertReflectionInstantiator<>(proxyFactory, targetType, parameterTypes, markNew, entityViewManager);
     }
@@ -190,13 +191,39 @@ public class ViewMapper<S, T> {
             }
         }
         T result = objectInstantiator.newInstance(tuple);
-        // TODO: copy initial state, on create new, mark everything as dirty
         if (dirtyMapping != null && source instanceof DirtyTracker) {
             DirtyTracker oldDirtyTracker = (DirtyTracker) source;
             DirtyTracker dirtyTracker = (DirtyTracker) result;
-            for (int i = 0; i < dirtyMapping.length; i++) {
-                if (oldDirtyTracker.$$_isDirty(dirtyMapping[i])) {
-                    dirtyTracker.$$_markDirty(i);
+            if (copyInitialState) {
+                if (oldDirtyTracker instanceof DirtyStateTrackable && dirtyTracker instanceof DirtyStateTrackable) {
+                    Object[] oldInitial = ((DirtyStateTrackable) oldDirtyTracker).$$_getInitialState();
+                    Object[] newInitial = ((DirtyStateTrackable) dirtyTracker).$$_getInitialState();
+                    for (int i = 0; i < dirtyMapping.length; i++) {
+                        int dirtyStateIndex = dirtyMapping[i];
+                        if (oldDirtyTracker.$$_isDirty(dirtyStateIndex)) {
+                            newInitial[dirtyStateIndex] = oldInitial[dirtyStateIndex];
+                            dirtyTracker.$$_markDirty(i);
+                        }
+                    }
+                } else {
+                    for (int i = 0; i < dirtyMapping.length; i++) {
+                        if (oldDirtyTracker.$$_isDirty(dirtyMapping[i])) {
+                            dirtyTracker.$$_markDirty(i);
+                        }
+                    }
+                }
+            } else {
+                // Reset the initial state i.e. mark it as new
+                if (dirtyTracker instanceof DirtyStateTrackable) {
+                    Object[] initialState = ((DirtyStateTrackable) dirtyTracker).$$_getInitialState();
+                    for (int i = 0; i < initialState.length; i++) {
+                        initialState[i] = null;
+                    }
+                }
+                for (int i = 0; i < dirtyMapping.length; i++) {
+                    if (oldDirtyTracker.$$_isDirty(dirtyMapping[i])) {
+                        dirtyTracker.$$_markDirty(i);
+                    }
                 }
             }
         }

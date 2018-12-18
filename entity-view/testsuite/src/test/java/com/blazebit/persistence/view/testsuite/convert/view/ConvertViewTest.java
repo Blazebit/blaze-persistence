@@ -21,11 +21,14 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import com.blazebit.persistence.view.ConvertOption;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.EntityViews;
+import com.blazebit.persistence.view.change.ChangeModel;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
+import com.blazebit.persistence.view.testsuite.convert.view.model.DocumentCloneUpdateView;
 import com.blazebit.persistence.view.testsuite.convert.view.model.DocumentCloneView;
 import com.blazebit.persistence.view.testsuite.convert.view.model.DocumentIdView;
 import com.blazebit.persistence.view.testsuite.convert.view.model.PersonView;
@@ -36,7 +39,7 @@ import org.junit.experimental.categories.Category;
 
 import javax.persistence.EntityManager;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 /**
  *
@@ -54,6 +57,7 @@ public class ConvertViewTest extends AbstractEntityViewTest {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentIdView.class);
         cfg.addEntityView(DocumentCloneView.class);
+        cfg.addEntityView(DocumentCloneUpdateView.class);
         cfg.addEntityView(SimplePersonView.class);
         cfg.addEntityView(PersonView.class);
         evm = cfg.createEntityViewManager(cbf);
@@ -123,5 +127,33 @@ public class ConvertViewTest extends AbstractEntityViewTest {
         assertEquals(documentView.getId(), idView.getId());
         assertEquals(documentView.getOwner(), idView.getOwner());
         assertEquals(documentView.getOwner().getName(), idView.getOwner().getName());
+    }
+
+    @Test
+    public void testConvertDirty() {
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class);
+        DocumentCloneUpdateView documentView = evm.applySetting(EntityViewSetting.create(DocumentCloneUpdateView.class), criteria)
+                .getSingleResult();
+
+        documentView.setName("abc");
+        DocumentCloneUpdateView secondView = evm.convert(documentView, DocumentCloneUpdateView.class);
+
+        ChangeModel<Object> nameChange = evm.getChangeModel(secondView).get("name");
+        assertTrue(nameChange.isDirty());
+        assertEquals("doc1", nameChange.getInitialState());
+    }
+
+    @Test
+    public void testConvertDirtyToNew() {
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class);
+        DocumentCloneUpdateView documentView = evm.applySetting(EntityViewSetting.create(DocumentCloneUpdateView.class), criteria)
+                .getSingleResult();
+
+        documentView.setName("abc");
+        DocumentCloneUpdateView secondView = evm.convert(documentView, DocumentCloneUpdateView.class, ConvertOption.CREATE_NEW);
+
+        ChangeModel<Object> nameChange = evm.getChangeModel(secondView).get("name");
+        assertTrue(nameChange.isDirty());
+        assertNull(nameChange.getInitialState());
     }
 }
