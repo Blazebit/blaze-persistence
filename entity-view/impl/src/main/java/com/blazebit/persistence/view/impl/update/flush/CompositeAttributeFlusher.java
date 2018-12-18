@@ -582,7 +582,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                 }
             } else {
                 // In case of nested attributes, the entity instance we get is the container of the attribute
-                if (loadForEntityFlush && !entityClass.isInstance(entity)) {
+                if ((loadForEntityFlush || viewIdAccessor == null) && !entityClass.isInstance(entity)) {
                     entity = entityLoader.toEntity(context, id);
                 }
             }

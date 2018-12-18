@@ -1376,15 +1376,20 @@ public class ProxyFactory {
         sb.append("\tswitch ($2) {");
         for (int i = 0; i < attributes.length; i++) {
             AbstractMethodAttribute attribute = attributes[i];
-            if (attribute != null && attribute.hasDirtyStateIndex() && ReflectionUtils.getSetter(attribute.getDeclaringType().getJavaType(), attribute.getName()) != null) {
-                sb.append("\t\tcase ").append(attribute.getDirtyStateIndex()).append(": $0.set").append(Character.toUpperCase(attribute.getName().charAt(0))).append(attribute.getName(), 1, attribute.getName().length());
-                sb.append('(');
-                if (attribute.getJavaType().isPrimitive()) {
-                    appendUnwrap(sb, attribute.getJavaType(), "$3");
-                } else {
-                    sb.append("(").append(attribute.getJavaType().getName()).append(") $3");
+            if (attribute != null && attribute.hasDirtyStateIndex()) {
+                sb.append("\t\tcase ").append(attribute.getDirtyStateIndex()).append(": ");
+                // If there is no setter, we simply ignore the object rather than throwing an exception
+                if (ReflectionUtils.getSetter(attribute.getDeclaringType().getJavaType(), attribute.getName()) != null) {
+                    sb.append("$0.set").append(Character.toUpperCase(attribute.getName().charAt(0))).append(attribute.getName(), 1, attribute.getName().length());
+                    sb.append('(');
+                    if (attribute.getJavaType().isPrimitive()) {
+                        appendUnwrap(sb, attribute.getJavaType(), "$3");
+                    } else {
+                        sb.append("(").append(attribute.getJavaType().getName()).append(") $3");
+                    }
+                    sb.append("); ");
                 }
-                sb.append("); break;\n");
+                sb.append("break;\n");
             }
         }
 
