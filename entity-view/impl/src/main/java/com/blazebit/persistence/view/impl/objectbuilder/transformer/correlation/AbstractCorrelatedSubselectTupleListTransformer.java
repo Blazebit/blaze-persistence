@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
 
 import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.LimitBuilder;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.view.CorrelationProvider;
@@ -125,6 +126,12 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
 
         EmbeddingViewJpqlMacro embeddingViewJpqlMacro = entityViewConfiguration.getEmbeddingViewJpqlMacro();
         this.criteriaBuilder = queryBuilder.copy(Object[].class);
+        // A copied query that is extended with further joins can't possibly use the limits provided by the outer query
+        if (criteriaBuilder instanceof LimitBuilder<?>) {
+            LimitBuilder<?> limitBuilder = (LimitBuilder<?>) criteriaBuilder;
+            limitBuilder.setFirstResult(0);
+            limitBuilder.setMaxResults(Integer.MAX_VALUE);
+        }
         this.viewRootJpqlMacro = new CorrelatedSubqueryViewRootJpqlMacro(criteriaBuilder, optionalParameters, false, viewRootEntityClass, idAttributePath, viewRootExpression);
         this.criteriaBuilder.registerMacro("view_root", viewRootJpqlMacro);
         this.criteriaBuilder.registerMacro("embedding_view", embeddingViewJpqlMacro);
