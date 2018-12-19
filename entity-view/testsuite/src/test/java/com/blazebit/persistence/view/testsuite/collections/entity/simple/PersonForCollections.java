@@ -25,6 +25,7 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -43,7 +44,8 @@ public class PersonForCollections implements Serializable {
     private Long id;
     private String name;
     private DocumentForCollections partnerDocument;
-    private Set<DocumentForCollections> ownedDocuments = new HashSet<DocumentForCollections>();
+    private Set<DocumentForCollections> ownedDocuments = new HashSet<>();
+    private Set<PersonForCollections> someCollection = new HashSet<>();
 
     public PersonForCollections() {
     }
@@ -87,6 +89,16 @@ public class PersonForCollections implements Serializable {
 
     public void setOwnedDocuments(Set<DocumentForCollections> ownedDocuments) {
         this.ownedDocuments = ownedDocuments;
+    }
+
+    @OneToMany
+    @JoinTable(name = "pers_coll_some_coll")
+    public Set<PersonForCollections> getSomeCollection() {
+        return someCollection;
+    }
+
+    public void setSomeCollection(Set<PersonForCollections> someCollection) {
+        this.someCollection = someCollection;
     }
 
     @Override

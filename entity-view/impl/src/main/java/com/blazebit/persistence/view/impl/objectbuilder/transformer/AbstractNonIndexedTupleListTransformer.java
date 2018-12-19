@@ -55,25 +55,28 @@ public abstract class AbstractNonIndexedTupleListTransformer<C> extends TupleLis
         while (tupleListIter.hasNext()) {
             Object[] tuple = tupleListIter.next();
             TupleId id = new TupleId(parentIdPositions, tuple);
-            TupleIndexValue tupleIndexValue = tupleIndex.get(id);
+            // Skip constructing the collection and removing tuples when the parent is empty i.e. null
+            if (!id.isEmpty()) {
+                TupleIndexValue tupleIndexValue = tupleIndex.get(id);
 
-            if (tupleIndexValue == null) {
-                Object collection = createCollection();
-                tupleIndexValue = new TupleIndexValue(collection, tuple, startIndex, 1);
-                add(collection, tuple[startIndex]);
-                tuple[startIndex] = collection;
-                tupleIndex.put(id, tupleIndexValue);
-            } else if (tupleIndexValue.addRestTuple(tuple, startIndex, 1)) {
-                Object collection = tupleIndexValue.getTupleValue();
-                add(collection, tuple[startIndex]);
-                tuple[startIndex] = collection;
-                // Check if the tuple after the offset is contained
-                if (tupleIndexValue.containsRestTuple(tuple, startIndex, 1)) {
+                if (tupleIndexValue == null) {
+                    Object collection = createCollection();
+                    tupleIndexValue = new TupleIndexValue(collection, tuple, startIndex, 1);
+                    add(collection, tuple[startIndex]);
+                    tuple[startIndex] = collection;
+                    tupleIndex.put(id, tupleIndexValue);
+                } else if (tupleIndexValue.addRestTuple(tuple, startIndex, 1)) {
+                    Object collection = tupleIndexValue.getTupleValue();
+                    add(collection, tuple[startIndex]);
+                    tuple[startIndex] = collection;
+                    // Check if the tuple after the offset is contained
+                    if (tupleIndexValue.containsRestTuple(tuple, startIndex, 1)) {
+                        tupleListIter.remove();
+                    }
+                } else {
+                    add(tupleIndexValue.getTupleValue(), tuple[startIndex]);
                     tupleListIter.remove();
                 }
-            } else {
-                add(tupleIndexValue.getTupleValue(), tuple[startIndex]);
-                tupleListIter.remove();
             }
         }
 
