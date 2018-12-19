@@ -251,7 +251,8 @@ public class TupleTransformatorFactory {
     public TupleTransformator create(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
         List<TupleTransformatorLevel> newTransformatorLevels = new ArrayList<TupleTransformatorLevel>(transformatorLevels.size());
         for (TupleTransformatorFactoryLevel thisLevel : transformatorLevels) {
-            final List<TupleTransformer> tupleTransformers = new ArrayList<TupleTransformer>(thisLevel.tupleTransformerFactories.size());
+            List<TupleTransformerFactory> tupleTransformerFactories = thisLevel.tupleTransformerFactories;
+            final TupleTransformer[] tupleTransformers = new TupleTransformer[tupleTransformerFactories.size()];
             // No need to copy this, because TupleListTransformer are not context sensitive
             final TupleListTransformer tupleListTransformer;
 
@@ -260,9 +261,11 @@ public class TupleTransformatorFactory {
             } else {
                 tupleListTransformer = thisLevel.tupleListTransformer;
             }
-            
-            for (TupleTransformerFactory tupleTransformerFactory : thisLevel.tupleTransformerFactories) {
-                tupleTransformers.add(tupleTransformerFactory.create(parameterHolder, optionalParameters, entityViewConfiguration));
+
+            // We create the tuple transformers in the inverse order as deeper nested objects come first, yet we want to initialize stuff top-down to properly support nested join correlations
+            for (int i = tupleTransformerFactories.size() - 1; i >= 0; i--) {
+                TupleTransformerFactory tupleTransformerFactory = tupleTransformerFactories.get(i);
+                tupleTransformers[i] = tupleTransformerFactory.create(parameterHolder, optionalParameters, entityViewConfiguration);
             }
 
             newTransformatorLevels.add(new TupleTransformatorLevel(tupleTransformers, tupleListTransformer));
