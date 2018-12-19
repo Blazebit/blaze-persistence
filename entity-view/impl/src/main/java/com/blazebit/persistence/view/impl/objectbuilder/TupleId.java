@@ -42,6 +42,15 @@ public class TupleId {
         }
     }
 
+    public boolean isEmpty() {
+        for (int i = 0; i < id.length; i++) {
+            if (id[i] != null) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     @Override
     public int hashCode() {
         int hash = 7;

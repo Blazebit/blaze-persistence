@@ -62,33 +62,36 @@ public abstract class AbstractIndexedTupleListTransformer<C, K> extends TupleLis
         while (tupleListIter.hasNext()) {
             Object[] tuple = tupleListIter.next();
             TupleId id = new TupleId(parentIdPositions, tuple);
-            TupleIndexValue tupleIndexValue = tupleIndex.get(id);
+            // Skip constructing the collection and removing tuples when the parent is empty i.e. null
+            if (!id.isEmpty()) {
+                TupleIndexValue tupleIndexValue = tupleIndex.get(id);
 
-            // At startIndex we have the index/key of the list/map
-            // At valueStartIndex is the actual element that should be put into the collection
-            if (tupleIndexValue == null) {
-                Object collection = createCollection();
-                tupleIndexValue = new TupleIndexValue(collection, tuple, startIndex, valueOffset + 1);
-                Object key = tuple[startIndex];
-                add(collection, key, tuple[valueStartIndex]);
-                tuple[startIndex] = collection;
-                tuple[valueStartIndex] = TupleReuse.CONSUMED;
-                tupleIndex.put(id, tupleIndexValue);
-            } else if (tupleIndexValue.addRestTuple(tuple, startIndex, valueOffset + 1)) {
-                Object collection = tupleIndexValue.getTupleValue();
-                Object key = tuple[startIndex];
-                add(collection, key, tuple[valueStartIndex]);
-                tuple[startIndex] = collection;
-                tuple[valueStartIndex] = TupleReuse.CONSUMED;
-                // Check if the tuple after the offset is contained
-                if (tupleIndexValue.containsRestTuple(tuple, startIndex, valueOffset + 1)) {
+                // At startIndex we have the index/key of the list/map
+                // At valueStartIndex is the actual element that should be put into the collection
+                if (tupleIndexValue == null) {
+                    Object collection = createCollection();
+                    tupleIndexValue = new TupleIndexValue(collection, tuple, startIndex, valueOffset + 1);
+                    Object key = tuple[startIndex];
+                    add(collection, key, tuple[valueStartIndex]);
+                    tuple[startIndex] = collection;
+                    tuple[valueStartIndex] = TupleReuse.CONSUMED;
+                    tupleIndex.put(id, tupleIndexValue);
+                } else if (tupleIndexValue.addRestTuple(tuple, startIndex, valueOffset + 1)) {
+                    Object collection = tupleIndexValue.getTupleValue();
+                    Object key = tuple[startIndex];
+                    add(collection, key, tuple[valueStartIndex]);
+                    tuple[startIndex] = collection;
+                    tuple[valueStartIndex] = TupleReuse.CONSUMED;
+                    // Check if the tuple after the offset is contained
+                    if (tupleIndexValue.containsRestTuple(tuple, startIndex, valueOffset + 1)) {
+                        tupleListIter.remove();
+                    }
+                } else {
+                    Object key = tuple[startIndex];
+                    add(tupleIndexValue.getTupleValue(), key, tuple[valueStartIndex]);
+                    tuple[valueStartIndex] = TupleReuse.CONSUMED;
                     tupleListIter.remove();
                 }
-            } else {
-                Object key = tuple[startIndex];
-                add(tupleIndexValue.getTupleValue(), key, tuple[valueStartIndex]);
-                tuple[valueStartIndex] = TupleReuse.CONSUMED;
-                tupleListIter.remove();
             }
         }
 
