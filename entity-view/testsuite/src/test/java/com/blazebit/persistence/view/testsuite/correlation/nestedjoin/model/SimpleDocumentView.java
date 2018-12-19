@@ -14,23 +14,26 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl.objectbuilder.transformator;
+package com.blazebit.persistence.view.testsuite.correlation.nestedjoin.model;
 
-import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformer;
-import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleTransformer;
+import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.IdMapping;
+import com.blazebit.persistence.view.testsuite.correlation.model.SimplePersonCorrelatedSubView;
+
+import java.util.Set;
 
 /**
+ *
  * @author Christian Beikov
- * @since 1.0.0
+ * @since 1.4.0
  */
-class TupleTransformatorLevel {
-
-    final TupleTransformer[] tupleTransformers;
-    final TupleListTransformer tupleListTransformer;
+@EntityView(Document.class)
+public interface SimpleDocumentView {
     
-    public TupleTransformatorLevel(TupleTransformer[] tupleTransformers,
-            TupleListTransformer tupleListTransformer) {
-        this.tupleTransformers = tupleTransformers;
-        this.tupleListTransformer = tupleListTransformer;
-    }
+    @IdMapping
+    public Long getId();
+
+    public String getName();
+
 }

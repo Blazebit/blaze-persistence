@@ -48,7 +48,7 @@ public class TupleTransformator {
         }
 
         for (int i = 0; i < transformatorLevels.size(); i++) {
-            if (!transformatorLevels.get(i).tupleTransformers.isEmpty()) {
+            if (transformatorLevels.get(i).tupleTransformers.length != 0) {
                 ListIterator<Object[]> newTupleListIter = newTupleList.listIterator();
 
                 while (newTupleListIter.hasNext()) {
@@ -76,10 +76,10 @@ public class TupleTransformator {
     }
 
     private Object[] transform(int level, Object[] tuple, UpdatableViewMap updatableViewMap) {
-        List<TupleTransformer> tupleTransformers = transformatorLevels.get(level).tupleTransformers;
+        TupleTransformer[] tupleTransformers = transformatorLevels.get(level).tupleTransformers;
         Object[] currentTuple = tuple;
-        for (int i = 0; i < tupleTransformers.size(); i++) {
-            currentTuple = tupleTransformers.get(i).transform(currentTuple, updatableViewMap);
+        for (int i = 0; i < tupleTransformers.length; i++) {
+            currentTuple = tupleTransformers[i].transform(currentTuple, updatableViewMap);
         }
         return currentTuple;
     }
