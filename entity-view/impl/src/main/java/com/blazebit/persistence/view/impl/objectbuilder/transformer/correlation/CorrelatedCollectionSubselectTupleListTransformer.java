@@ -73,10 +73,12 @@ public class CorrelatedCollectionSubselectTupleListTransformer extends AbstractC
 
         for (Map.Entry<Object, Map<Object, Collection<Object>>> entry : collections.entrySet()) {
             Map<Object, TuplePromise> tuplePromiseMap = correlationValues.get(entry.getKey());
-            for (Map.Entry<Object, Collection<Object>> correlationEntry : entry.getValue().entrySet()) {
-                TuplePromise tuplePromise = tuplePromiseMap.get(correlationEntry.getKey());
-                if (tuplePromise != null) {
-                    tuplePromise.onResult(postConstruct(correlationEntry.getValue()), this);
+            if (tuplePromiseMap != null) {
+                for (Map.Entry<Object, Collection<Object>> correlationEntry : entry.getValue().entrySet()) {
+                    TuplePromise tuplePromise = tuplePromiseMap.get(correlationEntry.getKey());
+                    if (tuplePromise != null) {
+                        tuplePromise.onResult(postConstruct(correlationEntry.getValue()), this);
+                    }
                 }
             }
         }
