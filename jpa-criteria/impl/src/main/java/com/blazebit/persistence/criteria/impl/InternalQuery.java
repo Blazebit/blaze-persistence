@@ -587,7 +587,7 @@ public class InternalQuery<T> implements Serializable {
                         throw new IllegalArgumentException("Entity join without on-condition is not allowed! " + j);
                     } else if (cb == null) {
                         cb = subqueryInitiator.from(path, alias);
-                    } else if (cb instanceof BaseSubqueryBuilder<?>) {
+                    } else if (cb instanceof BaseSubqueryBuilder<?> && j.isCorrelated()) {
                         ((SubqueryBuilder<?>) cb).from(path, alias);
                     } else {
                         cb.join(path, alias, getJoinType(j.getJoinType()));
