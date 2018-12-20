@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.testsuite.collections.subview;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
@@ -34,6 +35,7 @@ import com.blazebit.persistence.view.testsuite.collections.subview.model.variati
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import javax.persistence.EntityManager;
 import java.util.List;
@@ -98,6 +100,8 @@ public class SelectFetchNestedEmptyCollectionsTest<T extends PersonForCollection
     }
 
     @Test
+    // NOTE: DataNucleus doesn't like CASE WHEN ... THEN '' ELSE NULL END because NULL apparently has a different type for DN..
+    @Category({ NoDatanucleus.class })
     public void testCollections() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(PersonForCollectionsSelectFetchNestedView.class);
