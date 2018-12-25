@@ -651,11 +651,17 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         Serializable collectionKey = null;
         LockOptions lockOptions = new LockOptions();
         RowSelection rowSelection = new RowSelection();
-        boolean readOnly = false; // TODO: readonly?
-        boolean cacheable = false; // TODO: cacheable?
+        boolean readOnly = false;
+        boolean cacheable = false;
         String cacheRegion = null;
         String comment = null;
         List<String> queryHints = null;
+
+        for (Query participatingQuery : participatingQueries) {
+            org.hibernate.Query hibernateQuery = participatingQuery.unwrap(org.hibernate.Query.class);
+            readOnly = readOnly || hibernateQuery.isReadOnly();
+            cacheable = cacheable || hibernateAccess.getQueryParameters(hibernateQuery, namedParams).isCacheable();
+        }
 
         for (QueryParamEntry queryParamEntry : getQueryParamEntries(em, participatingQueries, querySpaces)) {
             queryStrings.add(queryParamEntry.queryString);
