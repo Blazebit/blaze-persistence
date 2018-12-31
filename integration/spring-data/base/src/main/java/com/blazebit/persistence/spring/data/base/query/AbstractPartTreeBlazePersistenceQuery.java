@@ -27,6 +27,7 @@ import com.blazebit.persistence.spring.data.base.query.JpaParameters.JpaParamete
 import com.blazebit.persistence.spring.data.repository.EntityViewSettingProcessor;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
+import com.blazebit.persistence.spring.data.repository.BlazeSpecification;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -91,8 +92,13 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
         this.tree = new PartTree(source, domainClass);
 
         boolean hasEntityViewSettingProcessorParameter = parameters.hasEntityViewSettingProcessorParameter();
+        boolean hasSpecificationParameter = parameters.hasSpecificationParameter();
+        boolean hasCriteriaBuilderProcessorParameter = parameters.hasBlazeSpecificationParameter();
         boolean recreateQueries = parameters.potentiallySortsDynamically() || entityViewClass != null
-            || skipMethodNamePredicateMatching || hasEntityViewSettingProcessorParameter;
+                || skipMethodNamePredicateMatching
+                || hasEntityViewSettingProcessorParameter
+                || hasSpecificationParameter
+                || hasCriteriaBuilderProcessorParameter;
         this.query = isCountProjection(tree) ? new AbstractPartTreeBlazePersistenceQuery.CountQueryPreparer(persistenceProvider,
             recreateQueries) : new AbstractPartTreeBlazePersistenceQuery.QueryPreparer(persistenceProvider, recreateQueries);
     }
@@ -281,6 +287,8 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
 
             com.blazebit.persistence.CriteriaBuilder<?> cb = ((BlazeCriteriaQuery<?>) criteriaQuery).createCriteriaBuilder(getEntityManager());
 
+            processBlazeSpecification(cb, values);
+
             if (entityViewClass == null) {
                 return cb.getQuery();
             } else {
@@ -304,6 +312,9 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
             processSpecification(criteriaQuery, values);
 
             com.blazebit.persistence.CriteriaBuilder<?> cb = ((BlazeCriteriaQuery<?>) criteriaQuery).createCriteriaBuilder(getEntityManager());
+
+            processBlazeSpecification(cb, values);
+
             TypedQuery<Object> jpaQuery;
             ParameterBinder binder = getBinder(values, expressions);
             int firstResult = getOffset(binder.getPageable());
@@ -356,6 +367,16 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
                 BlazeCriteriaBuilder criteriaBuilder = blazeCriteriaQuery.getCriteriaBuilder();
                 Predicate predicate = specification.toPredicate(root, criteriaQuery, criteriaBuilder);
                 criteriaQuery.where(predicate);
+            }
+        }
+
+        @SuppressWarnings({ "rawtypes", "unchecked" })
+        protected void processBlazeSpecification(com.blazebit.persistence.CriteriaBuilder<?> criteriaBuilder, Object[] values) {
+            int criteriaBuilderProcessorIndex = parameters.getBlazeSpecificationIndex();
+            if (criteriaBuilderProcessorIndex >= 0) {
+                String rootAlias = criteriaBuilder.getRoots().iterator().next().getAlias();
+                BlazeSpecification blazeSpecification = (BlazeSpecification) values[criteriaBuilderProcessorIndex];
+                blazeSpecification.applySpecification(rootAlias, criteriaBuilder);
             }
         }
 

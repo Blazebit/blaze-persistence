@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.spring.data.testsuite;
 
+import com.blazebit.persistence.WhereBuilder;
 import com.blazebit.persistence.integration.view.spring.EnableEntityViews;
 import com.blazebit.persistence.spring.data.testsuite.accessor.DocumentAccessor;
 import com.blazebit.persistence.spring.data.testsuite.accessor.DocumentAccessors;
@@ -36,6 +37,7 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
 import com.blazebit.persistence.view.EntityViewSetting;
+import com.blazebit.persistence.spring.data.repository.BlazeSpecification;
 
 import org.junit.Assume;
 import org.junit.Before;
@@ -587,6 +589,24 @@ public class DocumentRepositoryTest extends AbstractSpringTest {
         // Then
         assertEquals(1, actual.size());
         assertEquals(actual.get(0).getOptionalParameter(), param);
+    }
+
+    @Test
+    public void testBlazeSpecificationParameter() {
+        // Given
+        String name = "D1";
+        createDocument(name);
+
+        // When
+        List<DocumentView> actual = documentRepository.findAll(new BlazeSpecification() {
+            @Override
+            public <X extends WhereBuilder<X>> X applySpecification(String rootAlias, X builder) {
+                return builder.where("name").eqExpression("'D2'");
+            }
+        });
+
+        // Then
+        assertEquals(0, actual.size());
     }
 
     private List<Long> getIdsFromViews(Iterable<DocumentAccessor> views) {
