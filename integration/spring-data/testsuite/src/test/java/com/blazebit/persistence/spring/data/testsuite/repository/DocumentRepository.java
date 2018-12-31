@@ -17,10 +17,7 @@
 package com.blazebit.persistence.spring.data.testsuite.repository;
 
 import com.blazebit.persistence.spring.data.annotation.OptionalParam;
-import com.blazebit.persistence.spring.data.repository.EntityViewRepository;
-import com.blazebit.persistence.spring.data.repository.EntityViewSettingProcessor;
-import com.blazebit.persistence.spring.data.repository.EntityViewSpecificationExecutor;
-import com.blazebit.persistence.spring.data.repository.KeysetAwarePage;
+import com.blazebit.persistence.spring.data.repository.*;
 import com.blazebit.persistence.spring.data.testsuite.entity.Document;
 import com.blazebit.persistence.spring.data.testsuite.view.DocumentView;
 

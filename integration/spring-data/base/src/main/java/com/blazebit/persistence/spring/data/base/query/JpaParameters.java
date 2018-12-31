@@ -22,8 +22,6 @@ import org.springframework.core.MethodParameter;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.Temporal;
 
-import com.blazebit.persistence.spring.data.annotation.OptionalParam;
-import com.blazebit.persistence.spring.data.base.query.JpaParameters.JpaParameter;
 import com.blazebit.persistence.spring.data.repository.EntityViewSettingProcessor;
 
 import org.springframework.data.repository.query.Param;
@@ -249,7 +247,7 @@ public class JpaParameters extends Parameters<JpaParameters, JpaParameter> {
         @Override
         public boolean isSpecialParameter() {
             return super.isSpecialParameter() || isOptionalParameter() || isSpecificationParameter()
-                || isEntityViewSettingProcessorParameter();
+                    || isEntityViewSettingProcessorParameter();
         }
 
         boolean isOptionalParameter() {

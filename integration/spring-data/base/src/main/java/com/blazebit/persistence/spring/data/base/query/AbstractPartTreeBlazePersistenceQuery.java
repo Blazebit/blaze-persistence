@@ -91,8 +91,11 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
         this.tree = new PartTree(source, domainClass);
 
         boolean hasEntityViewSettingProcessorParameter = parameters.hasEntityViewSettingProcessorParameter();
+        boolean hasSpecificationParameter = parameters.hasSpecificationParameter();
         boolean recreateQueries = parameters.potentiallySortsDynamically() || entityViewClass != null
-            || skipMethodNamePredicateMatching || hasEntityViewSettingProcessorParameter;
+                || skipMethodNamePredicateMatching
+                || hasEntityViewSettingProcessorParameter
+                || hasSpecificationParameter;
         this.query = isCountProjection(tree) ? new AbstractPartTreeBlazePersistenceQuery.CountQueryPreparer(persistenceProvider,
             recreateQueries) : new AbstractPartTreeBlazePersistenceQuery.QueryPreparer(persistenceProvider, recreateQueries);
     }
@@ -304,6 +307,7 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
             processSpecification(criteriaQuery, values);
 
             com.blazebit.persistence.CriteriaBuilder<?> cb = ((BlazeCriteriaQuery<?>) criteriaQuery).createCriteriaBuilder(getEntityManager());
+
             TypedQuery<Object> jpaQuery;
             ParameterBinder binder = getBinder(values, expressions);
             int firstResult = getOffset(binder.getPageable());
