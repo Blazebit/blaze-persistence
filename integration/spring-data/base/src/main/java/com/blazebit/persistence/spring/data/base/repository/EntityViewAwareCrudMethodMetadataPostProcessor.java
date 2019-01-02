@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2018 Blazebit.
+ * Copyright 2014 - 2019 Blazebit.
  * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
