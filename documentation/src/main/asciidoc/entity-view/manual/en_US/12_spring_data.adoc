@@ -86,6 +86,20 @@ Optionally specify a custom basePackage for repository class scanning and a cust
 @EnableJpaRepositories(repositoryFactoryBeanClass = BlazePersistenceRepositoryFactoryBean.class)
 ----
 
+==== Spring Boot Devtools
+
+It is important to note that {projectname} currently does not integrate with Spring Boot Devtools (`org.springframework.boot:spring-boot-devtools`).
+Spring Boot Devtools uses a separate `RestartClassloader` to load classes that frequently change to allow for faster application restarts.
+You may experience issues with active Spring Boot Devtools when using {projectname} Entity-Views because the entity
+classes in the JPA metamodel are loaded by the `RestartClassloader` whereas the entity classes you annotate your entity views
+with are loaded by the base application classloader. This can lead to errors at startup time like:
+
+ The entity class '<your-entity>' used for the entity view '<your-entity-view>' could not be found in the persistence unit!
+
+To work around this issue you either need to completely disable Spring Boot Devtools or alternatively, https://docs.spring.io/spring-boot/docs/current/reference/html/using-boot-devtools.html#using-boot-devtools-customizing-classload[exclude]
+your entity classes from the `RestartClassloader` by adding properties prefixed with `restart.exclude` to your
+`META-INF/spring-devtools.properties`.
+
 [[spring-data-features]]
 === Features
 
