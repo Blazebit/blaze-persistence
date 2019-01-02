@@ -167,6 +167,33 @@ public class MyCatController {
     }
 ----
 
+Because Spring Data Specifications work on a JPA criteria builder we provide `BlazeSpecification` as an alternative that
+accepts a {projectname} criteria builder but works analogously apart from that.
+
+[source,java]
+----
+@Transactional(readOnly = true)
+public interface SimpleCatViewRepository extends Repository<Cat, Long> {
+
+    Iterable<SimpleCatView> findAll(BlazeSpecification specification);
+}
+
+@Controller
+public class MyCatController {
+
+    @Autowired
+    private SimpleCatViewRepository simpleCatViewRepository;
+
+    public Iterable<SimpleCatView> getCatDataForDisplay(final int minAge) {
+        return simpleCatViewRepository.findAll(new BlazeSpecification() {
+            @Override
+            public void applySpecification(String rootAlias, CriteriaBuilder<?> builder) {
+                return criteriaBuilder.where("age").ge(minAge);
+            }
+        });
+    }
+----
+
 The integration handles ad-hoc uses of https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#jpa.entity-graph[`@EntityGraph`] by adapting the query generation through call of link:{core_jdoc}/persistence/CriteriaBuilder.html#fetch(java.lang.String...)[`CriteriaBuilder.fetch()`] rather than passing the entity graphs as hints.
 
 Another notable feature the integration provides is the support for the return type `KeysetAwarePage` as a replacement for `Page`.
