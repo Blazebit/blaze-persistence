@@ -31,6 +31,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import javax.persistence.EntityManager;
+import javax.persistence.Tuple;
 
 import static org.junit.Assert.assertEquals;
 
@@ -70,11 +71,23 @@ public class PaginationEmbeddedIdTest extends AbstractCoreTest {
                 entity2.getId().setValue("e2");
                 entity2.setVersion(1L);
 
+                EmbeddableTestEntity entity3 = new EmbeddableTestEntity();
+                entity3.getId().setKey("e3");
+                entity3.getId().setValue("a");
+                entity3.setVersion(1L);
+
+                EmbeddableTestEntity entity4 = new EmbeddableTestEntity();
+                entity4.getId().setKey("e4");
+                entity4.getId().setValue("a");
+                entity4.setVersion(1L);
+
                 IntIdEntity intIdEntity1 = new IntIdEntity("i1", 1);
                 IntIdEntity intIdEntity2 = new IntIdEntity("i2", 2);
 
                 em.persist(entity1);
                 em.persist(entity2);
+                em.persist(entity3);
+                em.persist(entity4);
                 em.persist(intIdEntity1);
                 em.persist(intIdEntity2);
 
@@ -82,6 +95,10 @@ public class PaginationEmbeddedIdTest extends AbstractCoreTest {
                 entity1.getEmbeddable().getElementCollection().put("test2", new NameObject("test", "b", intIdEntity2));
                 entity2.getEmbeddable().getElementCollection().put("test", new NameObject("test", "b", intIdEntity1));
                 entity2.getEmbeddable().getElementCollection().put("test2", new NameObject("test", "b", intIdEntity2));
+                entity3.getEmbeddable().getElementCollection().put("test", new NameObject("test", "b", intIdEntity1));
+                entity3.getEmbeddable().getElementCollection().put("test2", new NameObject("test", "b", intIdEntity2));
+                entity4.getEmbeddable().getElementCollection().put("test", new NameObject("test", "b", intIdEntity1));
+                entity4.getEmbeddable().getElementCollection().put("test2", new NameObject("test", "b", intIdEntity2));
             }
         });
     }
@@ -209,5 +226,25 @@ public class PaginationEmbeddedIdTest extends AbstractCoreTest {
                 + " ORDER BY e.id.key ASC, e.id.value ASC";
         String queryString = crit.page(0, 1).getQueryString();
         assertEquals(expectedObjectQuery, queryString);
+    }
+
+    @Test
+    // Test for #711
+    public void paginateWithConstantifiedIdPart() {
+        CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class)
+                .from(EmbeddableTestEntity.class, "e");
+        crit.select("e.id").select("e.embeddable.elementCollection.primaryName");
+        crit.where("e.id.key").eq("e3");
+        crit.orderByAsc("e.id.key");
+        crit.orderByAsc("e.id.value");
+        PaginatedCriteriaBuilder<Tuple> pcb = crit.pageBy(0, 1, "e.id.key", "e.id.value");
+
+        String expectedObjectQuery = "SELECT e.id, elementCollection_1.primaryName FROM EmbeddableTestEntity e LEFT JOIN e.embeddable.elementCollection elementCollection_1"
+                + " WHERE (e.id.key = :ids_0_0 AND e.id.value = :ids_1_0)"
+                + " ORDER BY e.id.key ASC, e.id.value ASC";
+        String queryString = pcb.getQueryString();
+        assertEquals(expectedObjectQuery, queryString);
+        PagedList<Tuple> list = pcb.getResultList();
+        assertEquals(2, list.size());
     }
 }

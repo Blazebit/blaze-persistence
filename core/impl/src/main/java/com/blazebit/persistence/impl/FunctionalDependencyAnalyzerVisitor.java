@@ -60,7 +60,6 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,7 +73,7 @@ import java.util.Set;
 class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
 
     private final ConstantifiedJoinNodeAttributeCollector constantifiedJoinNodeAttributeCollector;
-    private final Map<Object, Set<String>> uniquenessMissingJoinNodeAttributes;
+    private final Map<Object, Map<String, Boolean>> uniquenessMissingJoinNodeAttributes;
     private final Map<Object, List<ResolvedExpression>> uniquenessFormingJoinNodeExpressions;
     private final Map<Object, List<ResolvedExpression>> functionalDependencyRootExpressions;
     private Object lastJoinNode;
@@ -260,13 +259,13 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
                 boolean nonConstantParent = true;
                 Set<String> constantifiedAttributes = constantifiedJoinNodeAttributeCollector.getConstantifiedJoinNodeAttributes().get(baseNode);
                 if (constantifiedAttributes != null) {
-                    Set<String> orderedAttributes = new HashSet<>();
+                    Map<String, Boolean> orderedAttributes = new HashMap<>();
                     addAttributes(baseNode.getEntityType(), null, "", "", (SingularAttribute<?, ?>) attribute, orderedAttributes);
-
-                    // If the identifiers are constantified, we don't care if this is a one-to-one
-                    orderedAttributes.removeAll(constantifiedAttributes);
+                    initConstantifiedAttributes(orderedAttributes, constantifiedAttributes);
                     orderedAttributes.remove(expr.getField());
-                    if (orderedAttributes.isEmpty() || orderedAttributes.size() == 1 && equalsAny(orderedAttributes.iterator().next(), extendedManagedType.getAttribute(expr.getField()).getColumnEquivalentAttributes())) {
+                    String singleNonConstantifiedAttribute = getSingleNonConstantifiedAttribute(orderedAttributes);
+                    // If the identifiers are constantified, we don't care if this is a one-to-one
+                    if (singleNonConstantifiedAttribute != null && (singleNonConstantifiedAttribute.isEmpty() || equalsAny(singleNonConstantifiedAttribute, extendedManagedType.getAttribute(expr.getField()).getColumnEquivalentAttributes()))) {
                         nonConstantParent = false;
                         orderedAttributes.clear();
                         managedType = metamodel.getManagedType(ExtendedManagedType.class, JpaMetamodelUtils.resolveFieldClass(baseNode.getJavaType(), attribute));
@@ -284,7 +283,7 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
         registerFunctionalDependencyRootExpression(baseNodeKey);
 
         // First we initialize the names of the id attributes as set for the join node
-        Set<String> orderedAttributes = getUniquenessMissingAttributes(baseNodeKey, managedType);
+        Map<String, Boolean> orderedAttributes = getUniquenessMissingAttributes(baseNodeKey, managedType);
 
         // We remove for every id attribute from the initialized set of id attribute names
         String prefix;
@@ -310,7 +309,7 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
         lastJoinNode = baseNodeKey;
 
         // While there still are some attribute names left, we simply report that it isn't unique, yet
-        if (!orderedAttributes.isEmpty()) {
+        if (hasNonConstantifiedAttribute(orderedAttributes)) {
             return false;
         }
 
@@ -340,12 +339,13 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
                         } else {
                             extendedManagedType = metamodel.getManagedType(ExtendedManagedType.class, baseNode.getManagedType().getJavaType());
                         }
-                        orderedAttributes = new HashSet<>();
+                        orderedAttributes = new HashMap<>();
                         addAttributes(baseNode.getEntityType(), null, "", "", (SingularAttribute<?, ?>) attr, orderedAttributes);
-                        orderedAttributes.removeAll(constantifiedAttributes);
+                        initConstantifiedAttributes(orderedAttributes, constantifiedAttributes);
                         orderedAttributes.remove(subPath);
+                        String singleNonConstantifiedAttribute = getSingleNonConstantifiedAttribute(orderedAttributes);
                         // If the identifiers are constantified, we don't care if this is a one-to-one
-                        if (orderedAttributes.isEmpty() || orderedAttributes.size() == 1 && extendedManagedType.getAttributes().containsKey(subPath) && equalsAny(orderedAttributes.iterator().next(), extendedManagedType.getAttribute(subPath).getColumnEquivalentAttributes())) {
+                        if (singleNonConstantifiedAttribute != null && (singleNonConstantifiedAttribute.isEmpty() || extendedManagedType.getAttributes().containsKey(subPath) && equalsAny(singleNonConstantifiedAttribute, extendedManagedType.getAttribute(subPath).getColumnEquivalentAttributes()))) {
                             continue;
                         }
                     }
@@ -356,6 +356,48 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
         }
 
         return true;
+    }
+
+    private static boolean hasNonConstantifiedAttribute(Map<String, Boolean> orderedAttributes) {
+        for (Map.Entry<String, Boolean> entry : orderedAttributes.entrySet()) {
+            if (entry.getValue() == Boolean.FALSE) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static void initConstantifiedAttributes(Map<String, Boolean> orderedAttributes, Set<String> constantifiedAttributes) {
+        for (String constantifiedAttribute : constantifiedAttributes) {
+            if (orderedAttributes.containsKey(constantifiedAttribute)) {
+                orderedAttributes.put(constantifiedAttribute, Boolean.TRUE);
+            }
+        }
+    }
+
+    private String getSingleNonConstantifiedAttribute(Map<String, Boolean> orderedAttributes) {
+        // Null means there are multiple or no constantified attributes
+        if (orderedAttributes.isEmpty()) {
+            // The empty string signals no attributes
+            return "";
+        }
+
+        String attribute = null;
+        for (Map.Entry<String, Boolean> entry : orderedAttributes.entrySet()) {
+            if (entry.getValue() == Boolean.FALSE) {
+                if (attribute == null) {
+                    attribute = entry.getKey();
+                } else {
+                    return null;
+                }
+            }
+        }
+
+        // Is the case of having only constantified attributes even reasonable?
+//        if (attribute == null) {
+//            return "";
+//        }
+        return attribute;
     }
 
     private boolean equalsAny(String attribute, Set<? extends ExtendedAttribute<?, ?>> columnEquivalentAttributes) {
@@ -386,18 +428,18 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
         return false;
     }
 
-    private Set<String> getUniquenessMissingAttributes(Object baseNodeKey, ExtendedManagedType<?> managedType) {
-        Set<String> orderedAttributes = uniquenessMissingJoinNodeAttributes.get(baseNodeKey);
+    private Map<String, Boolean> getUniquenessMissingAttributes(Object baseNodeKey, ExtendedManagedType<?> managedType) {
+        Map<String, Boolean> orderedAttributes = uniquenessMissingJoinNodeAttributes.get(baseNodeKey);
         if (orderedAttributes == null) {
-            orderedAttributes = new HashSet<>();
+            orderedAttributes = new HashMap<>();
             JoinNode baseNode;
             EntityType<?> entityType;
             String prefix;
             if (baseNodeKey instanceof Map.Entry<?, ?>) {
                 baseNode = (JoinNode) ((Map.Entry) baseNodeKey).getKey();
-                String assocationName = (String) ((Map.Entry) baseNodeKey).getValue();
+                String associationName = (String) ((Map.Entry) baseNodeKey).getValue();
                 entityType = baseNode.getEntityType();
-                prefix = assocationName + ".";
+                prefix = associationName + ".";
             } else {
                 baseNode = (JoinNode) baseNodeKey;
                 entityType = baseNode.getEntityType();
@@ -415,14 +457,14 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
             }
             Set<String> constantifiedAttributes = constantifiedJoinNodeAttributeCollector.getConstantifiedJoinNodeAttributes().get(baseNodeKey);
             if (constantifiedAttributes != null) {
-                orderedAttributes.removeAll(constantifiedAttributes);
+                initConstantifiedAttributes(orderedAttributes, constantifiedAttributes);
             }
             uniquenessMissingJoinNodeAttributes.put(baseNodeKey, orderedAttributes);
         }
         return orderedAttributes;
     }
 
-    private boolean removeAttribute(String prefix, SingularAttribute<?, ?> singularAttribute, Set<String> orderedAttributes) {
+    private boolean removeAttribute(String prefix, SingularAttribute<?, ?> singularAttribute, Map<String, Boolean> orderedAttributes) {
         String attributeName;
         if (prefix.isEmpty()) {
             attributeName = singularAttribute.getName();
@@ -440,7 +482,7 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
             }
             return removed;
         } else {
-            return orderedAttributes.remove(attributeName);
+            return orderedAttributes.remove(attributeName) != null;
         }
     }
 

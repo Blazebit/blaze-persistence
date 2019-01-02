@@ -59,6 +59,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 import static com.blazebit.persistence.parser.util.JpaMetamodelUtils.ATTRIBUTE_NAME_COMPARATOR;
@@ -120,7 +121,7 @@ class EmbeddableSplittingVisitor extends AbortableVisitorAdapter {
             }
             String fieldPrefix = field == null ? "" : field + ".";
             ExtendedManagedType<?> managedType = metamodel.getManagedType(ExtendedManagedType.class, baseNode.getJavaType());
-            Set<String> orderedAttributes = new TreeSet<>();
+            Map<String, Boolean> orderedAttributes = new TreeMap<>();
             EntityType<?> ownerType;
             if (baseNode.getParentTreeNode() == null && field == null) {
                 ownerType = baseNode.getEntityType();
@@ -142,7 +143,9 @@ class EmbeddableSplittingVisitor extends AbortableVisitorAdapter {
                 } else {
                     ownedAttributes = managedType.getOwnedSingularAttributes();
                 }
-                orderedAttributes.addAll(JpaUtils.getEmbeddedPropertyPaths((Map<String, ExtendedAttribute<?, ?>>) ownedAttributes, prefix, false, false));
+                for (String embeddedPropertyPath : JpaUtils.getEmbeddedPropertyPaths((Map<String, ExtendedAttribute<?, ?>>) ownedAttributes, prefix, false, false)) {
+                    orderedAttributes.put(embeddedPropertyPath, Boolean.FALSE);
+                }
             }
 
             // Signal the caller that the expression was eliminated
@@ -150,7 +153,7 @@ class EmbeddableSplittingVisitor extends AbortableVisitorAdapter {
                 return true;
             }
 
-            for (String orderedAttribute : orderedAttributes) {
+            for (String orderedAttribute : orderedAttributes.keySet()) {
                 splittedOffExpressions.add(splittingVisitor.splitOff(expression, expressionToSplit, orderedAttribute));
             }
         }
@@ -195,7 +198,7 @@ class EmbeddableSplittingVisitor extends AbortableVisitorAdapter {
         return true;
     }
 
-    protected void addAttributes(EntityType<?> ownerType, String elementCollectionPath, String fieldPrefix, String prefix, SingularAttribute<?, ?> singularAttribute, Set<String> orderedAttributes) {
+    protected void addAttributes(EntityType<?> ownerType, String elementCollectionPath, String fieldPrefix, String prefix, SingularAttribute<?, ?> singularAttribute, Map<String, Boolean> orderedAttributes) {
         String attributeName;
         if (prefix.isEmpty()) {
             attributeName = singularAttribute.getName();
@@ -226,7 +229,7 @@ class EmbeddableSplittingVisitor extends AbortableVisitorAdapter {
                 }
             }
         } else {
-            orderedAttributes.add(attributeName);
+            orderedAttributes.put(attributeName, Boolean.FALSE);
         }
     }
 
