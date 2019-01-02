@@ -293,7 +293,7 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
                 return cb.getQuery();
             } else {
                 EntityViewSetting<?, ?> setting = EntityViewSetting.create(entityViewClass);
-                processSetting(setting, values);
+                setting = processSetting(setting, values);
                 return evm.applySetting(setting, cb).getQuery();
             }
         }
@@ -328,11 +328,11 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
             } else {
                 if (withCount) {
                     EntityViewSetting<?, ?> setting = EntityViewSetting.create(entityViewClass, firstResult, maxResults);
-                    processSetting(setting, values);
+                    setting = processSetting(setting, values);
                     jpaQuery = (TypedQuery<Object>) ((PaginatedCriteriaBuilder<?>) evm.applySetting(setting, cb)).withCountQuery(true).getQuery();
                 } else {
                     EntityViewSetting<?, ?> setting = EntityViewSetting.create(entityViewClass, firstResult, maxResults + 1);
-                    processSetting(setting, values);
+                    setting = processSetting(setting, values);
                     jpaQuery = (TypedQuery<Object>) ((PaginatedCriteriaBuilder<?>) evm.applySetting(setting, cb)).withHighestKeysetOffset(1).withCountQuery(false).getQuery();
                 }
             }
@@ -342,7 +342,7 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
         }
 
         @SuppressWarnings("unchecked")
-        protected <T> void processSetting(EntityViewSetting<T, ?> setting, Object[] values) {
+        protected <T> EntityViewSetting<T, ?> processSetting(EntityViewSetting<T, ?> setting, Object[] values) {
             int entityViewSettingProcessorIndex = parameters.getEntityViewSettingProcessorIndex();
             if (entityViewSettingProcessorIndex >= 0) {
                 EntityViewSettingProcessor<T> processor = (EntityViewSettingProcessor<T>) values[entityViewSettingProcessorIndex];
@@ -355,6 +355,7 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
                 Object parameterValue = values[parameter.getIndex()];
                 setting.addOptionalParameter(parameterName, parameterValue);
             }
+            return setting;
         }
 
         @SuppressWarnings({ "rawtypes", "unchecked" })
