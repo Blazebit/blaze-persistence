@@ -249,8 +249,14 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
                 StringBuilder parameterNameBuilder = new StringBuilder(AbstractCommonQueryBuilder.ID_PARAM_NAME.length() + 10);
                 parameterNameBuilder.append(AbstractCommonQueryBuilder.ID_PARAM_NAME).append('_');
                 int start = parameterNameBuilder.length();
-                for (int i = 0; i < ids.size(); i++) {
-                    Object[] tuple = (Object[]) ids.get(i);
+                Object[] empty = ids.size() < pageSize ? new Object[identifierCount] : null;
+                for (int i = 0; i < pageSize; i++) {
+                    Object[] tuple;
+                    if (ids.size() > i) {
+                        tuple = (Object[]) ids.get(i);
+                    } else {
+                        tuple = empty;
+                    }
                     for (int j = 0; j < identifierCount; j++) {
                         parameterNameBuilder.setLength(start);
                         parameterNameBuilder.append(j).append('_').append(i);
