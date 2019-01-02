@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.spring.data.repository;
 
-import com.blazebit.persistence.WhereBuilder;
+import com.blazebit.persistence.CriteriaBuilder;
 
 /**
  * @author Moritz Becker
@@ -24,5 +24,5 @@ import com.blazebit.persistence.WhereBuilder;
  */
 public interface BlazeSpecification {
 
-    <X extends WhereBuilder<X>> X applySpecification(String rootAlias, X builder);
+    void applySpecification(String rootAlias, CriteriaBuilder<?> builder);
 }

@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.spring.data.testsuite;
 
-import com.blazebit.persistence.WhereBuilder;
 import com.blazebit.persistence.integration.view.spring.EnableEntityViews;
 import com.blazebit.persistence.spring.data.testsuite.accessor.DocumentAccessor;
 import com.blazebit.persistence.spring.data.testsuite.accessor.DocumentAccessors;
@@ -600,8 +599,8 @@ public class DocumentRepositoryTest extends AbstractSpringTest {
         // When
         List<DocumentView> actual = documentRepository.findAll(new BlazeSpecification() {
             @Override
-            public <X extends WhereBuilder<X>> X applySpecification(String rootAlias, X builder) {
-                return builder.where("name").eqExpression("'D2'");
+            public void applySpecification(String rootAlias, com.blazebit.persistence.CriteriaBuilder<?> builder) {
+                builder.where("name").eqExpression("'D2'");
             }
         });
 
