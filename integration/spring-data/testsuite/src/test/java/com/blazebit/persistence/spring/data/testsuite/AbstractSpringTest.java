@@ -17,6 +17,7 @@
 package com.blazebit.persistence.spring.data.testsuite;
 
 import com.blazebit.persistence.spring.data.testsuite.config.CustomLocalContainerEntityManagerFactoryBean;
+import com.blazebit.persistence.spring.data.testsuite.config.SystemPropertyBasedActiveProfilesResolver;
 import com.blazebit.persistence.spring.data.testsuite.entity.Document;
 import com.blazebit.persistence.spring.data.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.base.AbstractPersistenceTest;
@@ -24,6 +25,7 @@ import com.blazebit.persistence.testsuite.base.jpa.MutablePersistenceUnitInfo;
 import org.junit.After;
 import org.junit.Before;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestContextManager;
 import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
 import org.springframework.test.context.support.DirtiesContextTestExecutionListener;
@@ -32,6 +34,7 @@ import org.springframework.test.context.support.DirtiesContextTestExecutionListe
  * @author Moritz Becker
  * @since 1.2.0
  */
+@ActiveProfiles(resolver = SystemPropertyBasedActiveProfilesResolver.class)
 public class AbstractSpringTest extends AbstractPersistenceTest {
 
     private TestContextManager testContextManager;

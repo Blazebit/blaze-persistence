@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -69,6 +70,7 @@ public class KeysetPageableHandlerMethodArgumentResolver extends PageableHandler
     private static final String INVALID_DEFAULT_PAGE_SIZE = "Invalid default page size configured for method %s! Must not be less than one!";
     private static final String INVALID_KEYSET_DOMAIN_CLASS = "Invalid keyset domain class configured for method %s! Should be an entity type!";
     private static final KeysetPageable DEFAULT_PAGE_REQUEST = new KeysetPageRequest(null, null, 0, 20);
+    private static final Object UNSORTED;
     private final ConcurrentMap<PropertyCacheKey, Class<? extends Serializable>> propertyTypeCache = new ConcurrentHashMap<>();
     private final ObjectMapper mapper = new ObjectMapper();
     private final SortHandlerMethodArgumentResolver sortResolver;
@@ -80,6 +82,21 @@ public class KeysetPageableHandlerMethodArgumentResolver extends PageableHandler
     private String previousSizeParameterName = DEFAULT_PREVIOUS_SIZE_PARAMETER;
     private String lowestParameterName = DEFAULT_LOWEST_PARAMETER;
     private String highestParameterName = DEFAULT_HIGHEST_PARAMETER;
+
+    static {
+        Object unsorted = null;
+        try {
+            for (Method unsortedCandidate : Sort.class.getDeclaredMethods()) {
+                if ("unsorted".equals(unsortedCandidate.getName())) {
+                    unsorted = unsortedCandidate.invoke(null);
+                    break;
+                }
+            }
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException(e);
+        }
+        UNSORTED = unsorted;
+    }
 
     public KeysetPageableHandlerMethodArgumentResolver() {
         this(null);
@@ -237,7 +254,7 @@ public class KeysetPageableHandlerMethodArgumentResolver extends PageableHandler
         Sort sort = sortResolver.resolveArgument(methodParameter, mavContainer, webRequest, binderFactory);
 
         // Default if necessary and default configured
-        sort = sort == null && defaultOrFallback != null ? defaultOrFallback.getSort() : sort;
+        sort = sort == UNSORTED && defaultOrFallback != null ? defaultOrFallback.getSort() : sort;
 
         KeysetPage keysetPage = null;
         Iterator<Sort.Order> iterator;

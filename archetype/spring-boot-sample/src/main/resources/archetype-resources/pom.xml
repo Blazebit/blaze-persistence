@@ -135,7 +135,7 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <version.spring>4.3.3.RELEASE</version.spring>
+                <version.spring>${version.spring-data-1.x-spring}</version.spring>
             </properties>
 
             <dependencies>
@@ -155,7 +155,7 @@
         <profile>
             <id>spring-data-2.0.x</id>
             <properties>
-                <version.spring>5.0.4.RELEASE</version.spring>
+                <version.spring>${version.spring-data-2.0-spring}</version.spring>
             </properties>
             <dependencies>
                 <dependency>
@@ -174,7 +174,7 @@
         <profile>
             <id>spring-data-2.1.x</id>
             <properties>
-                <version.spring>5.1.0.RC2</version.spring>
+                <version.spring>${version.spring-data-2.1-spring}</version.spring>
             </properties>
             <repositories>
                 <repository>
