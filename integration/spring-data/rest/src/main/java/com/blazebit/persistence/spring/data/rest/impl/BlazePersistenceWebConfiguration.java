@@ -35,9 +35,12 @@ import java.util.List;
 @Configuration
 public class BlazePersistenceWebConfiguration extends WebMvcConfigurerAdapter {
 
+    private final ObjectFactory<ConversionService> conversionService;
+
     @Autowired
-    @Qualifier("mvcConversionService")
-    private ObjectFactory<ConversionService> conversionService;
+    public BlazePersistenceWebConfiguration(@Qualifier("mvcConversionService") ObjectFactory<ConversionService> conversionService) {
+        this.conversionService = conversionService;
+    }
 
     @Bean
     public KeysetPageableHandlerMethodArgumentResolver keysetPageableResolver() {

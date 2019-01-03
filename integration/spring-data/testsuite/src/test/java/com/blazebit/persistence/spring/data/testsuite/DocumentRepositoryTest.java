@@ -48,6 +48,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.ImportResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -56,7 +57,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 
 import javax.persistence.EntityManager;
@@ -77,7 +77,6 @@ import static org.junit.Assert.*;
  */
 @RunWith(Parameterized.class)
 @ContextConfiguration(classes = DocumentRepositoryTest.TestConfig.class)
-@ActiveProfiles(resolver = SystemPropertyBasedActiveProfilesResolver.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class DocumentRepositoryTest extends AbstractSpringTest {
 
@@ -658,9 +657,9 @@ public class DocumentRepositoryTest extends AbstractSpringTest {
     }
 
     @Configuration
-    @ComponentScan
+    @ComponentScan(excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = ".*TestConfig"))
     @ImportResource("classpath:/com/blazebit/persistence/spring/data/impl/application-config.xml")
-    @EnableEntityViews(basePackages = {"org.springframework.data.jpa.repository.support", "com.blazebit.persistence.spring.data.testsuite.view"})
+    @EnableEntityViews(basePackages = "com.blazebit.persistence.spring.data.testsuite.view")
     @EnableJpaRepositories(
             basePackages = "com.blazebit.persistence.spring.data.testsuite.repository",
             entityManagerFactoryRef = "myEmf",

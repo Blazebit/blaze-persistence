@@ -188,8 +188,8 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <version.spring>4.3.3.RELEASE</version.spring>
-                <version.spring.boot>1.5.4.RELEASE</version.spring.boot>
+                <version.spring>${version.spring-data-1.x-spring}</version.spring>
+                <version.spring.boot>${version.spring-data-1.x-spring-boot}</version.spring.boot>
             </properties>
 
             <dependencies>
@@ -212,8 +212,8 @@
         <profile>
             <id>spring-data-2.0.x</id>
             <properties>
-                <version.spring>5.0.4.RELEASE</version.spring>
-                <version.spring.boot>2.0.0.RELEASE</version.spring.boot>
+                <version.spring>${version.spring-data-2.0-spring}</version.spring>
+                <version.spring.boot>${version.spring-data-2.0-spring-boot}</version.spring.boot>
             </properties>
             <dependencies>
                 <dependency>
@@ -245,8 +245,8 @@
         <profile>
             <id>spring-data-2.1.x</id>
             <properties>
-                <version.spring>5.1.0.RC2</version.spring>
-                <version.spring.boot>2.1.0.M2</version.spring.boot>
+                <version.spring>${version.spring-data-2.1-spring}</version.spring>
+                <version.spring.boot>${version.spring-data-2.1-spring-boot}</version.spring.boot>
             </properties>
             <dependencies>
                 <dependency>
