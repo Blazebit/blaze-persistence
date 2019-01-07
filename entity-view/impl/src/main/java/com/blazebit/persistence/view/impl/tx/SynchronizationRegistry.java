@@ -31,21 +31,24 @@ import java.util.concurrent.ConcurrentMap;
  */
 public class SynchronizationRegistry implements Synchronization {
 
-    private static final Object NO_REGISTRATION_MARKER = new Object();
+    private static final ThreadLocal<Object> THREAD_LOCAL_KEY = new ThreadLocal<Object>() {
+        @Override
+        protected Object initialValue() {
+            return new Object();
+        }
+    };
     private static final ConcurrentMap<Object, SynchronizationRegistry> REGISTRY = new ConcurrentHashMap<>();
     private final List<Synchronization> synchronizations;
     private final Object key;
 
     public SynchronizationRegistry() {
-        this(NO_REGISTRATION_MARKER);
+        this(THREAD_LOCAL_KEY.get());
     }
 
     public SynchronizationRegistry(Object key) {
         this.synchronizations = new ArrayList<>(1);
         this.key = key;
-        if (key != NO_REGISTRATION_MARKER) {
-            REGISTRY.put(key, this);
-        }
+        REGISTRY.put(key, this);
     }
 
     public static SynchronizationRegistry getRegistry(Object key) {
@@ -87,6 +90,7 @@ public class SynchronizationRegistry implements Synchronization {
 
     @Override
     public void afterCompletion(int status) {
+        THREAD_LOCAL_KEY.remove();
         List<Exception> suppressedExceptions = null;
         switch (status) {
             // We don't care about these statuses, only about committed and rolled back
