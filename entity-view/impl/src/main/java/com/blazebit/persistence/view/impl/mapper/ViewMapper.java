@@ -201,7 +201,7 @@ public class ViewMapper<S, T> {
                     for (int i = 0; i < dirtyMapping.length; i++) {
                         int dirtyStateIndex = dirtyMapping[i];
                         if (oldDirtyTracker.$$_isDirty(dirtyStateIndex)) {
-                            newInitial[dirtyStateIndex] = oldInitial[dirtyStateIndex];
+                            newInitial[i] = oldInitial[dirtyStateIndex];
                             dirtyTracker.$$_markDirty(i);
                         }
                     }
