@@ -438,6 +438,11 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
         }
         Collection<Object> addedElements = action.getAddedObjects();
         Collection<Object> removedElements = action.getRemovedObjects();
+        // We don't consider re-adds to sets to be actual changes
+        if (removedElements.isEmpty() && !addedElements.isEmpty() && !allowDuplicates() && addedElements.removeAll(delegate) && addedElements.isEmpty()) {
+            return;
+        }
+
         if (this.actions == null) {
             this.actions = new ArrayList<>();
             this.addedElements = new IdentityHashMap<>();
