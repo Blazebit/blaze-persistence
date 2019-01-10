@@ -34,6 +34,9 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 /**
  *
  * @author Christian Beikov
@@ -73,6 +76,9 @@ public class EntityViewUpdateSubviewInverseSimpleTest extends AbstractEntityView
         document.setName("newDoc123");
         newPerson.getOwnedDocuments2().add(document);
         update(newPerson);
+
+        newPerson.getOwnedDocuments2().add(document);
+        Assert.assertFalse(evm.getChangeModel(newPerson).get("ownedDocuments2").isDirty());
 
         // Then
         restartTransaction();
