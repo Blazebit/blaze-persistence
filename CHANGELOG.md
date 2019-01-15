@@ -18,6 +18,35 @@ None
 
 None
 
+## 1.3.1
+
+15/01/2019 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.3.1) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+milestone%3A1.4.0+is%3Aclosed+closed%3A%3C2019-01-15+label%3Abug)
+
+### New features
+
+None
+
+### Bug fixes
+
+* Don't consider re-adds to a set to be adds
+* Include constantified expression predicates in pagination object query
+* Updatable entity view containing deeply nested collection that is empty wrongly removes tuples from result
+* Nested join correlations results in exception due to invalid join base alias being used bug entity-view
+* Empty flat view is added to non-indexed collection invalidly
+* Dirty updatable flat views contained in maps aren't flushed if re-added
+* Dirty state is not properly copied when converting between view types
+* Invalid handling of discriminator predicate in collection update query generation
+* Basic element types of collection bindings are being expanded
+* State field wrongly sized for updatable entity views with inheritance leads to IOOBE
+* Functional dependency analysis for pagination doesn't treat partial constantified many to one joins like single value id paths
+* Implicit group by adds nested correlated subquery expression to grandfather query
+* Joining embeddable on correlated root with JPA Criteria API produces invalid JPQL
+* Multi-Column attribute where one column is a formula produces a startup exception
+
+### Backwards-incompatible changes
+
+None
+
 ## 1.3.0
 
 23/11/2018 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.3.0) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue+milestone%3A1.3.0+is%3Aclosed+closed%3A%3C2018-11-23)
