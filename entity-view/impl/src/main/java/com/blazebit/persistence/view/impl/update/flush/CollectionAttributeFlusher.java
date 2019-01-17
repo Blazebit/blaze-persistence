@@ -1313,12 +1313,17 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         List<CollectionAction<Collection<?>>> collectionActions = determineCollectionActions(context, initial, current, equalityChecker);
 
         // If nothing changed in the collection and no changes should be flushed, we are done
-        if (collectionActions.size() == 0 && (!elementDescriptor.shouldFlushMutations() || elementDescriptor.supportsDirtyCheck())) {
+        if (collectionActions.size() == 0) {
+            List<CollectionElementAttributeFlusher<E, V>> elementFlushers = getElementFlushers(context, current, collectionActions);
             // Always reset the actions as that indicates changes
             if (current instanceof RecordingCollection<?, ?>) {
                 ((RecordingCollection<?, ?>) current).resetActions(context);
             }
-            return null;
+            // A "null" element flusher list is given when a fetch and compare is more appropriate
+            if (elementFlushers == null) {
+                return this;
+            }
+            return getReplayAndElementFlusher(context, initial, current, collectionActions, elementFlushers);
         }
 
         if (inverseFlusher != null) {
