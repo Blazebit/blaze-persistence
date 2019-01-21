@@ -328,7 +328,7 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
 
     public long count() {
         TypedQuery<Long> countQuery = getCountQuery(null, getDomainClass());
-        return countQuery.getSingleResult();
+        return ((Number) countQuery.getSingleResult()).longValue();
     }
 
     public boolean existsById(ID id) {
