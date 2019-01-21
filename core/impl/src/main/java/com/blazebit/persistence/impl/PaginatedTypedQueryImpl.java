@@ -137,7 +137,7 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
 
     @Override
     public long getTotalCount() {
-        return (Long) countQuery.getSingleResult();
+        return ((Number) countQuery.getSingleResult()).longValue();
     }
 
     @Override
@@ -155,10 +155,10 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
         long totalSize = -1L;
         if (withCount) {
             if (entityId == null) {
-                totalSize = (Long) countQuery.getSingleResult();
+                totalSize = ((Number) countQuery.getSingleResult()).longValue();
             } else {
                 Object[] result = (Object[]) countQuery.getSingleResult();
-                totalSize = (Long) result[0];
+                totalSize = ((Number) result[0]).longValue();
 
                 if (result[1] == null) {
                     // If the reference entity id is not contained (i.e. has no position), we return this special value
@@ -166,7 +166,7 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
                     firstRow = 0;
                 } else {
                     // The page position is numbered from 1 so we need to correct this here
-                    int position = ((Long) result[1]).intValue() - 1;
+                    int position = ((Number) result[1]).intValue() - 1;
                     queryFirstResult = firstRow = position == 0 ? 0 : position - (position % pageSize);
                 }
             }
