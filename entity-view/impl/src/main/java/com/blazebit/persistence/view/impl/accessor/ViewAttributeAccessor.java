@@ -35,9 +35,8 @@ public class ViewAttributeAccessor implements AttributeAccessor {
     private final Field field;
 
     ViewAttributeAccessor(EntityViewManagerImpl evm, MethodAttribute<?, ?> attribute, boolean readonly) {
-        Class<?> clazz = attribute.getDeclaringType().getJavaType();
-        Method getter = ReflectionUtils.getGetter(clazz, attribute.getName());
-        if (!Modifier.isPublic(getter.getModifiers()) || !Modifier.isPublic(getter.getDeclaringClass().getModifiers())) {
+        Method getter = attribute.getJavaMethod();
+        if (getter != null && (!Modifier.isPublic(getter.getModifiers()) || !Modifier.isPublic(getter.getDeclaringClass().getModifiers()))) {
             try {
                 getter.setAccessible(true);
             } catch (Exception e) {
@@ -45,7 +44,7 @@ public class ViewAttributeAccessor implements AttributeAccessor {
             }
         }
         this.getter = getter;
-        if (readonly) {
+        if (readonly && getter != null) {
             this.field = null;
         } else {
             Class<?> proxyClass = evm.getProxyFactory().getProxy(evm, (ManagedViewTypeImplementor<Object>) attribute.getDeclaringType(), null);
@@ -67,7 +66,11 @@ public class ViewAttributeAccessor implements AttributeAccessor {
     @Override
     public Object getValue(Object object) {
         try {
-            return getter.invoke(object);
+            if (getter == null) {
+                return field.get(object);
+            } else {
+                return getter.invoke(object);
+            }
         } catch (Exception e) {
             throw new RuntimeException("Couldn't get value from entity view attribute!", e);
         }
