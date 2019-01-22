@@ -56,6 +56,63 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerFactoryI
 
     @Override
     public String getDbms(EntityManagerFactory entityManagerFactory) {
+        if (entityManagerFactory == null) {
+            return null;
+        }
+        AbstractSession session = entityManagerFactory.unwrap(JpaEntityManagerFactory.class).getDatabaseSession();
+        DatabasePlatform platform = session.getPlatform();
+
+        if (platform.isAccess()) {
+            return "access";
+        } else if (platform.isAttunity()) {
+            return null;
+        } else if (platform.isCloudscape()) {
+            return null;
+        } else if (platform.isDerby()) {
+            return "derby";
+        } else if (platform.isDB2()) {
+            return "db2";
+        } else if (platform.isHANA()) {
+            return "hana";
+        } else if (platform.isH2()) {
+            return "h2";
+        } else if (platform.isDBase()) {
+            return "dbase";
+        } else if (platform.isHSQL()) {
+            return "hsql";
+        } else if (platform.isInformix()) {
+            return "informix";
+        } else if (platform.isMySQL()) {
+            return "mysql";
+        } else if (platform.isODBC()) {
+            return null;
+        } else if (platform.isOracle()) {
+            return "oracle";
+        } else if (platform.isOracle9()) {
+            return "oracle";
+        } else if (platform.isPervasive()) {
+            return null;
+        } else if (platform.isPostgreSQL()) {
+            return "postgresql";
+        } else if (platform.isPointBase()) {
+            return null;
+        } else if (platform.isSQLAnywhere()) {
+            return null;
+        } else if (platform.isFirebird()) {
+            return "firebird";
+        } else if (platform.isSQLServer()) {
+            return "microsoft";
+        } else if (platform.isSybase()) {
+            return "sybase";
+        } else if (platform.isSymfoware()) {
+            return null;
+        } else if (platform.isTimesTen()) {
+            return null;
+        } else if (platform.isTimesTen7()) {
+            return null;
+        } else if (platform.isMaxDB()) {
+            return null;
+        }
         return null;
     }
 
@@ -85,7 +142,7 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerFactoryI
                 if (persistenceUnitUtil == null && em != null) {
                     persistenceUnitUtil = em.getEntityManagerFactory().getPersistenceUnitUtil();
                 }
-                return new EclipseLinkJpaProvider(persistenceUnitUtil);
+                return new EclipseLinkJpaProvider(persistenceUnitUtil, getDbms(entityManagerFactory));
             }
         };
     }
