@@ -38,5 +38,5 @@ goto:EOF
 
 :oracle
 docker rm -f oracle || true
-docker run --shm-size=1536m --name oracle -d -p 1521:1521 alexeiled/docker-oracle-xe-11g
+docker run --shm-size=1536m --name oracle -d -p 1521:1521 wnameless/oracle-xe-11g
 goto:EOF

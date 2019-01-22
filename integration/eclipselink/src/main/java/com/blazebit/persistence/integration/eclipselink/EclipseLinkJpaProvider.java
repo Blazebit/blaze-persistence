@@ -63,9 +63,24 @@ public class EclipseLinkJpaProvider implements JpaProvider {
 
     private static final String[] EMPTY = {};
     private final PersistenceUnitUtil persistenceUnitUtil;
+    private final DB db;
 
-    public EclipseLinkJpaProvider(PersistenceUnitUtil persistenceUnitUtil) {
+    /**
+     * @author Christian Beikov
+     * @since 1.4.0
+     */
+    private static enum DB {
+        OTHER,
+        DB2;
+    }
+
+    public EclipseLinkJpaProvider(PersistenceUnitUtil persistenceUnitUtil, String dbms) {
         this.persistenceUnitUtil = persistenceUnitUtil;
+        if ("db2".equals(dbms)) {
+            this.db = DB.DB2;
+        } else {
+            this.db = DB.OTHER;
+        }
     }
 
     @Override
@@ -115,17 +130,44 @@ public class EclipseLinkJpaProvider implements JpaProvider {
 
     @Override
     public boolean supportsNullPrecedenceExpression() {
-        return true;
+        return db == DB.OTHER;
     }
 
     @Override
     public void renderNullPrecedence(StringBuilder sb, String expression, String resolvedExpression, String order, String nulls) {
-        sb.append(expression);
-        if (order != null) {
-            sb.append(' ').append(order);
-
-            if (nulls != null) {
-                sb.append(" NULLS ").append(nulls);
+        if (nulls != null) {
+            if (db == DB.DB2) {
+                // We need this workaround since EclipseLink doesn't handle null precedence properly on DB2..
+                if ("FIRST".equals(nulls) && "DESC".equalsIgnoreCase(order) || "LAST".equals(nulls) && "ASC".equalsIgnoreCase(order)) {
+                    // According to DB2 docs, the following are the defaults
+                    // ASC + NULLS LAST
+                    // DESC + NULLS FIRST
+                    sb.append(expression);
+                    sb.append(" ").append(order);
+                    return;
+                } else {
+                    sb.append("CASE WHEN ").append(resolvedExpression != null ? resolvedExpression : expression).append(" IS NULL THEN ");
+                    if ("FIRST".equals(nulls)) {
+                        sb.append("0 ELSE 1");
+                    } else {
+                        sb.append("1 ELSE 0");
+                    }
+                    sb.append(" END, ");
+                }
+                sb.append(expression);
+                if (order != null) {
+                    sb.append(' ').append(order);
+                }
+            } else {
+                sb.append(expression);
+                if (order != null) {
+                    sb.append(' ').append(order).append(" NULLS ").append(nulls);
+                }
+            }
+        } else {
+            sb.append(expression);
+            if (order != null) {
+                sb.append(' ').append(order);
             }
         }
     }

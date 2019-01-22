@@ -306,32 +306,28 @@ public class HibernateJpaProvider implements JpaProvider {
         if (nulls != null) {
             if (db != DB.OTHER) {
                 if (db == DB.DB2) {
-                    if (("FIRST".equals(nulls) && "DESC".equalsIgnoreCase(order)) || ("LAST".equals(nulls) && "ASC".equalsIgnoreCase(order))) {
-                        // The following are ok according to DB2 docs
+                    if (("FIRST".equals(nulls) && "DESC".equalsIgnoreCase(order)) || "LAST".equals(nulls) && "ASC".equalsIgnoreCase(order)) {
+                        // According to DB2 docs, the following are the defaults
                         // ASC + NULLS LAST
                         // DESC + NULLS FIRST
                         sb.append(expression);
-                        if (order != null) {
-                            sb.append(" ").append(order).append(" NULLS ").append(nulls);
-                        }
+                        sb.append(" ").append(order);
                         return;
                     }
                 } else if (db == DB.MSSQL) {
-                    if (("ASC".equalsIgnoreCase(order) && "FIRST".equals(nulls)) || ("DESC".equalsIgnoreCase(order) && "LAST".equals(nulls))) {
+                    if ("ASC".equalsIgnoreCase(order) && "FIRST".equals(nulls) || "DESC".equalsIgnoreCase(order) && "LAST".equals(nulls)) {
                         // The following are the defaults, so just let them through
                         // ASC + NULLS FIRST
                         // DESC + NULLS LAST
                         sb.append(expression);
-                        if (order != null) {
-                            sb.append(" ").append(order);
-                        }
+                        sb.append(" ").append(order);
                         return;
                     }
                 }
 
                 // According to the following, MySQL sorts NULLS FIRST when ASC and NULLS LAST when DESC, so we only need the expression for opposite cases
                 // https://dev.mysql.com/doc/refman/8.0/en/working-with-null.html
-                if (db != DB.MY_SQL || ("ASC".equalsIgnoreCase(order) && "LAST".equals(nulls)) || ("DESC".equalsIgnoreCase(order) && "FIRST".equals(nulls))) {
+                if (db != DB.MY_SQL || "ASC".equalsIgnoreCase(order) && "LAST".equals(nulls) || "DESC".equalsIgnoreCase(order) && "FIRST".equals(nulls)) {
                     // Unfortunately we have to take care of that our selves because the SQL generation has a bug for MySQL: HHH-10241
                     sb.append("CASE WHEN ").append(resolvedExpression != null ? resolvedExpression : expression).append(" IS NULL THEN ");
                     if ("FIRST".equals(nulls)) {
