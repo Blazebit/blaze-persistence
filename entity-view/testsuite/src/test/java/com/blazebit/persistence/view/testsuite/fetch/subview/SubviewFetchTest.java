@@ -26,9 +26,11 @@ import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.EntityViews;
+import com.blazebit.persistence.view.Sorters;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.fetch.subview.model.DocumentSelectSubviewTestView;
+import com.blazebit.persistence.view.testsuite.fetch.subview.model.DocumentSubselectSubviewTestView;
 import com.blazebit.persistence.view.testsuite.fetch.subview.model.PersonSelectSubview;
 import org.junit.Before;
 import org.junit.Test;
@@ -80,7 +82,7 @@ public class SubviewFetchTest extends AbstractEntityViewTest {
     @Test
     // NOTE: Eclipselink and Datanucleus don't support the single valued id access optimization which causes a cyclic join dependency
     @Category({ NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class })
-    public void testSubqueryFetch() {
+    public void testSubqueryFetchOptional() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentSelectSubviewTestView.class);
         cfg.addEntityView(PersonSelectSubview.class);
@@ -90,6 +92,23 @@ public class SubviewFetchTest extends AbstractEntityViewTest {
         EntityViewSetting<DocumentSelectSubviewTestView, CriteriaBuilder<DocumentSelectSubviewTestView>> setting = EntityViewSetting.create(DocumentSelectSubviewTestView.class);
         CriteriaBuilder<DocumentSelectSubviewTestView> cb = evm.applySetting(setting, criteria);
         List<DocumentSelectSubviewTestView> results = cb.getResultList();
+
+        assertEquals(1, results.size());
+    }
+
+    @Test
+    // NOTE: Eclipselink and Datanucleus don't support the single valued id access optimization which causes a cyclic join dependency
+    @Category({ NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class })
+    public void testSubselectFetchWithSorter() {
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        cfg.addEntityView(DocumentSubselectSubviewTestView.class);
+        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").orderByAsc("id");
+        EntityViewSetting<DocumentSubselectSubviewTestView, CriteriaBuilder<DocumentSubselectSubviewTestView>> setting = EntityViewSetting.create(DocumentSubselectSubviewTestView.class);
+        setting.addAttributeSorter("name", Sorters.ascending());
+        CriteriaBuilder<DocumentSubselectSubviewTestView> cb = evm.applySetting(setting, criteria);
+        List<DocumentSubselectSubviewTestView> results = cb.getResultList();
 
         assertEquals(1, results.size());
     }

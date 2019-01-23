@@ -80,6 +80,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
     private final Map<String, Integer> selectAliasToPositionMap = new HashMap<String, Integer>();
     private final SelectObjectBuilderEndedListenerImpl selectObjectBuilderEndedListener = new SelectObjectBuilderEndedListenerImpl();
     private CaseExpressionBuilderListener caseExpressionBuilderListener;
+    private final AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder;
     private final GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor;
     private final JoinManager joinManager;
     private final AliasManager aliasManager;
@@ -89,9 +90,10 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
     private final Class<?> resultClazz;
 
     @SuppressWarnings("unchecked")
-    public SelectManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, JoinManager joinManager, AliasManager aliasManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, JpaProvider jpaProvider,
+    public SelectManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder, JoinManager joinManager, AliasManager aliasManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, JpaProvider jpaProvider,
                          MainQuery mainQuery, GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor, Class<?> resultClazz) {
         super(queryGenerator, parameterManager, subqueryInitFactory);
+        this.queryBuilder = queryBuilder;
         this.groupByExpressionGatheringVisitor = groupByExpressionGatheringVisitor;
         this.joinManager = joinManager;
         this.aliasManager = aliasManager;
@@ -539,7 +541,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         return this.distinct;
     }
 
-    void unserDefaultSelect() {
+    void unsetDefaultSelect() {
         hasDefaultSelect = false;
     }
 
@@ -550,6 +552,9 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
 
         for (int i = 0; i < selectInfos.size(); i++) {
             SelectInfo selectInfo = selectInfos.get(i);
+            if (selectInfo.getAlias() != null) {
+                queryBuilder.inlineSelectAlias(selectInfo.getAlias(), selectInfo.getExpression());
+            }
             aliasManager.unregisterAliasInfoForBottomLevel(selectInfo);
             unregisterParameterExpressions(selectInfo.getExpression());
         }

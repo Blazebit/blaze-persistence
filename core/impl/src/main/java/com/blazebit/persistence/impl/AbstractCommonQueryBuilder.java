@@ -56,6 +56,7 @@ import com.blazebit.persistence.impl.query.DefaultQuerySpecification;
 import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.ObjectBuilderTypedQuery;
 import com.blazebit.persistence.impl.query.QuerySpecification;
+import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
 import com.blazebit.persistence.impl.transform.ExpressionTransformerGroup;
 import com.blazebit.persistence.impl.transform.OuterFunctionVisitor;
 import com.blazebit.persistence.impl.transform.SimpleTransformerGroup;
@@ -63,6 +64,7 @@ import com.blazebit.persistence.impl.transform.SizeTransformationVisitor;
 import com.blazebit.persistence.impl.transform.SizeTransformerGroup;
 import com.blazebit.persistence.impl.transform.SubqueryRecursiveExpressionVisitor;
 import com.blazebit.persistence.impl.util.SqlUtils;
+import com.blazebit.persistence.parser.AliasReplacementVisitor;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
@@ -247,7 +249,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.groupByManager = new GroupByManager(queryGenerator, parameterManager, subqueryInitFactory, mainQuery.jpaProvider, this.aliasManager, embeddableSplittingVisitor, groupByExpressionGatheringVisitor);
         this.havingManager = new HavingManager<>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory, groupByExpressionGatheringVisitor);
 
-        this.selectManager = new SelectManager<>(queryGenerator, parameterManager, this.joinManager, this.aliasManager, subqueryInitFactory, expressionFactory, mainQuery.jpaProvider, mainQuery, groupByExpressionGatheringVisitor, builder.resultType);
+        this.selectManager = new SelectManager<>(queryGenerator, parameterManager, this, this.joinManager, this.aliasManager, subqueryInitFactory, expressionFactory, mainQuery.jpaProvider, mainQuery, groupByExpressionGatheringVisitor, builder.resultType);
         this.orderByManager = new OrderByManager(queryGenerator, parameterManager, subqueryInitFactory, this.joinManager, this.aliasManager, embeddableSplittingVisitor, functionalDependencyAnalyzerVisitor, mainQuery.metamodel, mainQuery.jpaProvider, groupByExpressionGatheringVisitor);
         this.keysetManager = new KeysetManager(this, queryGenerator, parameterManager, mainQuery.jpaProvider, mainQuery.dbmsDialect);
 
@@ -317,7 +319,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.groupByManager = new GroupByManager(queryGenerator, parameterManager, subqueryInitFactory, mainQuery.jpaProvider, this.aliasManager, embeddableSplittingVisitor, groupByExpressionGatheringVisitor);
         this.havingManager = new HavingManager<>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory, groupByExpressionGatheringVisitor);
 
-        this.selectManager = new SelectManager<>(queryGenerator, parameterManager, this.joinManager, this.aliasManager, subqueryInitFactory, expressionFactory, mainQuery.jpaProvider, mainQuery, groupByExpressionGatheringVisitor, resultClazz);
+        this.selectManager = new SelectManager<>(queryGenerator, parameterManager, this, this.joinManager, this.aliasManager, subqueryInitFactory, expressionFactory, mainQuery.jpaProvider, mainQuery, groupByExpressionGatheringVisitor, resultClazz);
         this.orderByManager = new OrderByManager(queryGenerator, parameterManager, subqueryInitFactory, this.joinManager, this.aliasManager, embeddableSplittingVisitor, functionalDependencyAnalyzerVisitor, mainQuery.metamodel, mainQuery.jpaProvider, groupByExpressionGatheringVisitor);
         this.keysetManager = new KeysetManager(this, queryGenerator, parameterManager, mainQuery.jpaProvider, mainQuery.dbmsDialect);
 
@@ -364,7 +366,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
         selectManager.setDefaultSelect(nodeMapping, builder.selectManager.getSelectInfos());
         if (fixedSelect) {
-            selectManager.unserDefaultSelect();
+            selectManager.unsetDefaultSelect();
         }
         // No need to copy the finalSetOperationBuilder as that is only necessary for further builders which isn't possible after copying
         collectParameters();
@@ -1725,6 +1727,26 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         // No need to implicit join again if no mutation occurs
         implicitJoinsApplied = true;
         return joinVisitor;
+    }
+
+    void inlineSelectAlias(String selectAlias, Expression expression) {
+        final AliasReplacementVisitor aliasReplacementVisitor = new AliasReplacementVisitor(expression, selectAlias);
+        ExpressionModifierVisitor<ExpressionModifier> expressionModifierVisitor = new ExpressionModifierVisitor<ExpressionModifier>() {
+            @Override
+            public void visit(ExpressionModifier expressionModifier, ClauseType clauseType) {
+                Expression expr = expressionModifier.get();
+                Expression newExpr = expr.accept(aliasReplacementVisitor);
+                if (expr != newExpr) {
+                    expressionModifier.set(newExpr);
+                }
+            }
+        };
+        joinManager.apply(expressionModifierVisitor);
+        selectManager.apply(expressionModifierVisitor);
+        whereManager.apply(expressionModifierVisitor);
+        havingManager.apply(expressionModifierVisitor);
+        groupByManager.apply(expressionModifierVisitor);
+        orderByManager.apply(expressionModifierVisitor);
     }
 
     protected void implicitJoinWhereClause() {
