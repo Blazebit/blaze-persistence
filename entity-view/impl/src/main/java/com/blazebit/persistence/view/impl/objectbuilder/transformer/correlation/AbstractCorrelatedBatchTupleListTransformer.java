@@ -203,6 +203,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
             while (tupleListIter.hasNext()) {
                 Object[] tuple = tupleListIter.next();
                 Object correlationValue = tuple[startIndex];
+
                 TuplePromise tupleIndexValue = correlationValues.get(correlationValue);
 
                 if (tupleIndexValue == null) {
@@ -210,20 +211,23 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
                     tupleIndexValue.add(tuple);
                     correlationValues.put(correlationValue, tupleIndexValue);
 
-                    if (correlationBasisEntity != null) {
-                        correlationParams.add(em.getReference(correlationBasisEntity, tuple[startIndex]));
-                    } else {
-                        correlationParams.add(tuple[startIndex]);
-                    }
-
-                    if (batchSize == correlationParams.realSize()) {
-                        Object defaultKey;
+                    // Can't correlate null
+                    if (correlationValue != null) {
                         if (correlationBasisEntity != null) {
-                            defaultKey = jpaProvider.getIdentifier(correlationParams.get(0));
+                            correlationParams.add(em.getReference(correlationBasisEntity, correlationValue));
                         } else {
-                            defaultKey = correlationParams.get(0);
+                            correlationParams.add(correlationValue);
                         }
-                        batchLoad(correlationValues, correlationParams, null, defaultKey, viewRootJpqlMacro, BatchCorrelationMode.VALUES);
+
+                        if (batchSize == correlationParams.realSize()) {
+                            Object defaultKey;
+                            if (correlationBasisEntity != null) {
+                                defaultKey = jpaProvider.getIdentifier(correlationParams.get(0));
+                            } else {
+                                defaultKey = correlationParams.get(0);
+                            }
+                            batchLoad(correlationValues, correlationParams, null, defaultKey, viewRootJpqlMacro, BatchCorrelationMode.VALUES);
+                        }
                     }
                 } else {
                     tupleIndexValue.add(tuple);
