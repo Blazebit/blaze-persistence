@@ -69,10 +69,17 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
         super(ef, correlator, viewRootType, embeddingViewType, correlationResult, correlationProviderFactory, attributePath, fetches, viewRootIndex, embeddingViewIndex, tupleIndex, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
         this.evm = evm;
         this.viewRootAlias = viewRootAlias;
-        this.viewRootIdExpression = viewRootAlias + "." + getEntityIdName(viewRootType.getEntityClass());
+        String viewRootAliasPrefix = viewRootAlias + ".";
+        this.viewRootIdExpression = viewRootAliasPrefix + getEntityIdName(viewRootType.getEntityClass());
         this.viewRootIdMapperCount = viewIdMapperCount(viewRootType);
         this.embeddingViewPath = embeddingViewPath;
-        this.embeddingViewIdExpression = viewRootAlias.equals(embeddingViewPath) ? viewRootAlias + "." + getEntityIdName(embeddingViewType.getEntityClass()) : viewRootAlias + "." + embeddingViewPath + "." + getEntityIdName(embeddingViewType.getEntityClass());
+        if (viewRootAlias.equals(embeddingViewPath)) {
+            this.embeddingViewIdExpression = viewRootAliasPrefix + getEntityIdName(embeddingViewType.getEntityClass());
+        } else if (embeddingViewPath.startsWith(viewRootAliasPrefix)) {
+            this.embeddingViewIdExpression = embeddingViewPath + "." + getEntityIdName(embeddingViewType.getEntityClass());
+        } else {
+            this.embeddingViewIdExpression = viewRootAlias + "." + embeddingViewPath + "." + getEntityIdName(embeddingViewType.getEntityClass());
+        }
         this.embeddingViewIdMapperCount = viewIdMapperCount(embeddingViewType);
         this.maximumViewMapperCount = Math.max(1, Math.max(viewRootIdMapperCount, embeddingViewIdMapperCount));
         this.correlationBasisExpression = correlationBasisExpression;
