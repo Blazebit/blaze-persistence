@@ -199,7 +199,7 @@ public abstract class AbstractEntityViewAwareRepositoryHandler<E, V, PK extends 
 
         TypedQuery<V> query;
         if (viewClass() == null) {
-            query = (TypedQuery<V>) cb.getQuery();
+            query = (TypedQuery<V>) cb.page(start, max).getQuery();
         } else {
             EntityViewSetting<V, PaginatedCriteriaBuilder<V>> setting = EntityViewSetting.create(viewClass(), start, max);
             query = applySetting(setting, cb)
