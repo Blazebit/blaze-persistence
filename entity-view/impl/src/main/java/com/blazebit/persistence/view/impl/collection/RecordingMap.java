@@ -478,9 +478,6 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
                 if (addedKeys.remove(o) == null) {
                     removedKeys.put((K) o, (K) o);
                 }
-                if (o instanceof BasicDirtyTracker) {
-                    ((BasicDirtyTracker) o).$$_unsetParent();
-                }
             }
             for (Object o : action.getAddedElements(initialState)) {
                 if (removedElements.remove(o) == null) {
@@ -496,9 +493,6 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
                 if (addedElements.remove(o) == null) {
                     removedElements.put((V) o, (V) o);
                 }
-                if (o instanceof BasicDirtyTracker) {
-                    ((BasicDirtyTracker) o).$$_unsetParent();
-                }
             }
         }
 
@@ -508,6 +502,18 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
         this.addedElements = addedElements;
         this.removedKeys = removedKeys;
         this.removedElements = removedElements;
+
+        for (K o : removedKeys.keySet()) {
+            if (o instanceof BasicDirtyTracker) {
+                ((BasicDirtyTracker) o).$$_unsetParent();
+            }
+        }
+
+        for (V o : removedElements.keySet()) {
+            if (o instanceof BasicDirtyTracker) {
+                ((BasicDirtyTracker) o).$$_unsetParent();
+            }
+        }
     }
 
     public List<MapAction<C>> getActions() {
@@ -578,10 +584,10 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
             if (!allowedSubtypes.contains(c)) {
                 throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed!");
             }
-            if (!isNew && parentRequiringUpdateSubtypes.contains(c) && !((DirtyTracker) e).$$_hasParent()) {
+            if (e != parent && !isNew && parentRequiringUpdateSubtypes.contains(c) && !((DirtyTracker) e).$$_hasParent()) {
                 throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed until they are assigned to an attribute that update cascades the type! If you want this attribute to cascade, annotate it with @UpdatableMapping(cascade = { UPDATE })");
             }
-            if (isNew && parentRequiringCreateSubtypes.contains(c) && !((DirtyTracker) e).$$_hasParent()) {
+            if (e != parent && isNew && parentRequiringCreateSubtypes.contains(c) && !((DirtyTracker) e).$$_hasParent()) {
                 throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed until they are assigned to an attribute that persist cascades the type! If you want this attribute to cascade, annotate it with @UpdatableMapping(cascade = { PERSIST })");
             }
         }

@@ -115,7 +115,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
     }
 
     private DirtyAttributeFlusher<?, Object, Object> getElementIdFlusher() {
-        return ((CompositeAttributeFlusher) viewToEntityMapper.getFullGraphNode()).getIdFlusher();
+        return (DirtyAttributeFlusher<?, Object, Object>) viewToEntityMapper.getIdFlusher();
     }
 
     /**
@@ -370,7 +370,12 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
             }
             Object v = viewToEntityMapper.flushToEntity(context, null, finalValue);
             if (v == null) {
-                v = viewToEntityMapper.loadEntity(context, finalValue);
+                // Special case when a view references itself
+                if (finalValue == view) {
+                    v = entity;
+                } else {
+                    v = viewToEntityMapper.loadEntity(context, finalValue);
+                }
             } else {
                 wasDirty = true;
             }
@@ -379,7 +384,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
                     Object oldVal = entity == null ? null : entityAttributeAccessor.getValue(entity);
                     Object oldId = oldVal == null ? null : viewToEntityMapper.getEntityIdAccessor().getValue(oldVal);
                     Object newId = v == null ? null : viewToEntityMapper.getEntityIdAccessor().getValue(v);
-                    wasDirty = !Objects.equals(oldId, newId);
+                    wasDirty = oldVal == null && v != null || !Objects.equals(oldId, newId);
                 }
                 if (wasDirty) {
                     entityAttributeAccessor.setValue(entity, v);

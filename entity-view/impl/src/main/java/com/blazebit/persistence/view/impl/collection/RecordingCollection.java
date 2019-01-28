@@ -416,9 +416,6 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
                 if (addedElements.remove(o) == null) {
                     removedElements.put((E) o, (E) o);
                 }
-                if (o instanceof BasicDirtyTracker) {
-                    ((BasicDirtyTracker) o).$$_unsetParent();
-                }
             }
         }
 
@@ -426,6 +423,12 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
         this.dirty = true;
         this.addedElements = addedElements;
         this.removedElements = removedElements;
+
+        for (E o : removedElements.keySet()) {
+            if (o instanceof BasicDirtyTracker) {
+                ((BasicDirtyTracker) o).$$_unsetParent();
+            }
+        }
     }
 
     protected boolean allowDuplicates() {
@@ -523,10 +526,10 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
             if (!allowedSubtypes.contains(c)) {
                 throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed!");
             }
-            if (!isNew && parentRequiringUpdateSubtypes.contains(c) && !((DirtyTracker) e).$$_hasParent()) {
+            if (e != parent && !isNew && parentRequiringUpdateSubtypes.contains(c) && !((DirtyTracker) e).$$_hasParent()) {
                 throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed until they are assigned to an attribute that update cascades the type! If you want this attribute to cascade, annotate it with @UpdatableMapping(cascade = { UPDATE })");
             }
-            if (isNew && parentRequiringCreateSubtypes.contains(c) && !((DirtyTracker) e).$$_hasParent()) {
+            if (e != parent && isNew && parentRequiringCreateSubtypes.contains(c) && !((DirtyTracker) e).$$_hasParent()) {
                 throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed until they are assigned to an attribute that persist cascades the type! If you want this attribute to cascade, annotate it with @UpdatableMapping(cascade = { PERSIST })");
             }
         }
