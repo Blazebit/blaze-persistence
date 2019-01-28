@@ -580,7 +580,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
 
         public ViewMappingInitializationKey(ViewMapping viewMapping, EmbeddableOwner embeddableOwner) {
             this.viewMapping = viewMapping;
-            this.embeddableOwner = embeddableOwner;
+            this.embeddableOwner = viewMapping.getIdAttribute() == null ? embeddableOwner : null;
         }
 
         @Override
