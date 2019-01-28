@@ -267,8 +267,11 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
                 context.onViewTypeFinished(elementType, new Runnable() {
                     @Override
                     public void run() {
-                        for (Map.Entry<String, AbstractMethodAttribute<? super Object, ?>> subEntry : elementType.getRecursiveAttributes().entrySet()) {
-                            recursiveAttributes.put(attribute.getName() + "." + subEntry.getKey(), subEntry.getValue());
+                        // Cyclic models can run into this condition, but it's ok because we only allow cycles at non-cascading attributes
+                        if (elementType.getRecursiveAttributes() != null) {
+                            for (Map.Entry<String, AbstractMethodAttribute<? super Object, ?>> subEntry : elementType.getRecursiveAttributes().entrySet()) {
+                                recursiveAttributes.put(attribute.getName() + "." + subEntry.getKey(), subEntry.getValue());
+                            }
                         }
                     }
                 });

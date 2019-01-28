@@ -1313,7 +1313,7 @@ public class ProxyFactory {
         sb.append("{\n");
 
         // Strict check for write-parent
-        sb.append("\tif ($0.").append(parentFieldName).append(" == null) {\n");
+        sb.append("\tif ($0 != $1 && $0.").append(parentFieldName).append(" == null) {\n");
         sb.append("\t\tthrow new IllegalStateException(\"Can't set read only parent for object \" + $0.toString() + \" util it doesn't have a writable parent! First add the object to an attribute with proper cascading. If you just want to reference it convert the object with EntityViewManager.getReference() or EntityViewManager.convert()!\");\n");
         sb.append("\t}\n");
 
@@ -1675,13 +1675,13 @@ public class ProxyFactory {
                     sb.append(");\n");
                     sb.append("\t\t}\n");
 
-                    sb.append("\t\tif (!isNew && ").append(attributeField.getDeclaringClass().getName()).append('#').append(attribute.getName()).append("_$$_parentRequiringUpdateSubtypes.contains(c) && !((").append(DirtyTracker.class.getName()).append(") $1).$$_hasParent()) {\n");
+                    sb.append("\t\tif ($0 != $1 && !isNew && ").append(attributeField.getDeclaringClass().getName()).append('#').append(attribute.getName()).append("_$$_parentRequiringUpdateSubtypes.contains(c) && !((").append(DirtyTracker.class.getName()).append(") $1).$$_hasParent()) {\n");
                     sb.append("\t\t\tthrow new IllegalArgumentException(");
                     sb.append("\"Setting instances of type [\" + c.getName() + \"] on attribute '").append(attribute.getName()).append("' is not allowed until they are assigned to an attribute that cascades the type! If you want this attribute to cascade, annotate it with @UpdatableMapping(cascade = { UPDATE })\"");
                     sb.append(");\n");
                     sb.append("\t\t}\n");
 
-                    sb.append("\t\tif (isNew && ").append(attributeField.getDeclaringClass().getName()).append('#').append(attribute.getName()).append("_$$_parentRequiringCreateSubtypes.contains(c) && !((").append(DirtyTracker.class.getName()).append(") $1).$$_hasParent()) {\n");
+                    sb.append("\t\tif ($0 != $1 && isNew && ").append(attributeField.getDeclaringClass().getName()).append('#').append(attribute.getName()).append("_$$_parentRequiringCreateSubtypes.contains(c) && !((").append(DirtyTracker.class.getName()).append(") $1).$$_hasParent()) {\n");
                     sb.append("\t\t\tthrow new IllegalArgumentException(");
                     sb.append("\"Setting instances of type [\" + c.getName() + \"] on attribute '").append(attribute.getName()).append("' is not allowed until they are assigned to an attribute that cascades the type! If you want this attribute to cascade, annotate it with @UpdatableMapping(cascade = { PERSIST })\"");
                     sb.append(");\n");

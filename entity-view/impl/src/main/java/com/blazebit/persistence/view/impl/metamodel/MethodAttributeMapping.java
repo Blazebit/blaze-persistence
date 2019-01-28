@@ -348,16 +348,16 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
                     if (hasSetter || isCollection && allowCreatable) {
                         boolean allowUpdatable = cascadeTypes.contains(CascadeType.UPDATE) || attributeViewMapping.isUpdatable() && cascadeTypes.contains(CascadeType.AUTO);
                         // But only if the attribute is explicitly or implicitly updatable
-                        this.readOnlySubtypeMappings = initializeDependentSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass(), true, true);
-                        this.cascadeSubtypeMappings = initializeDependentSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass(), allowUpdatable, allowCreatable);
+                        this.readOnlySubtypeMappings = initializeDependentSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass(), true, true, false);
+                        this.cascadeSubtypeMappings = initializeDependentSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass(), allowUpdatable, allowCreatable, true);
                     } else {
                         this.cascadeSubtypeMappings = Collections.emptyMap();
                     }
                 } else {
                     // Allow all read-only subtypes and also creatable subtypes for creatable-only views
                     if (getDeclaringView().isCreatable() && (hasSetter || isCollection && allowCreatable)) {
-                        this.readOnlySubtypeMappings = initializeDependentSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass(), true, true);
-                        this.cascadePersistSubtypeMappings = initializeDependentSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass(), false, allowCreatable);
+                        this.readOnlySubtypeMappings = initializeDependentSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass(), true, true, false);
+                        this.cascadePersistSubtypeMappings = initializeDependentSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass(), false, allowCreatable, true);
                     }
                     this.cascadeSubtypeMappings = Collections.emptyMap();
                 }
@@ -547,7 +547,7 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
         return subtypeMappings;
     }
 
-    private Map<ViewMapping, Boolean> initializeDependentSubtypeMappingsAuto(final MetamodelBuildingContext context, final Class<?> clazz, boolean allowUpdatable, boolean allowCreatable) {
+    private Map<ViewMapping, Boolean> initializeDependentSubtypeMappingsAuto(final MetamodelBuildingContext context, final Class<?> clazz, boolean allowUpdatable, boolean allowCreatable, final boolean removeCycles) {
         Set<Class<?>> subtypes = context.findSubtypes(clazz);
         if (subtypes.size() == 0) {
             return Collections.emptyMap();
@@ -570,7 +570,7 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
                                 Set<Class<?>> dependencies = new HashSet<>();
                                 dependencies.add(MethodAttributeMapping.this.getDeclaringView().getEntityViewClass());
                                 dependencies.add(clazz);
-                                if (!subtypeMapping.validateDependencies(context, dependencies, MethodAttributeMapping.this, clazz, false)) {
+                                if (!removeCycles || !subtypeMapping.validateDependencies(context, dependencies, MethodAttributeMapping.this, clazz, false)) {
                                     // validateCascadeSubtypeMappings will remove this when this speculation was invalid
                                     subtypeMappings.put(subtypeMapping, Boolean.FALSE);
                                 }

@@ -79,7 +79,11 @@ public abstract class AbstractViewToEntityMapper implements ViewToEntityMapper {
         for (Type<?> readOnlyType : readOnlyAllowedSubtypes) {
             viewTypeClasses.add(readOnlyType.getJavaType());
             if (readOnlyType instanceof ManagedViewTypeImplementor<?>) {
-                removeUpdater.put(readOnlyType.getJavaType(), evm.getUpdater((ManagedViewTypeImplementor<?>) readOnlyType, null, owner, ownerMapping));
+                if (isEmbeddable) {
+                    removeUpdater.put(readOnlyType.getJavaType(), evm.getUpdater((ManagedViewTypeImplementor<?>) readOnlyType, null, owner, ownerMapping));
+                } else {
+                    removeUpdater.put(readOnlyType.getJavaType(), evm.getUpdater((ManagedViewTypeImplementor<?>) readOnlyType, null, null, null));
+                }
             }
         }
 
