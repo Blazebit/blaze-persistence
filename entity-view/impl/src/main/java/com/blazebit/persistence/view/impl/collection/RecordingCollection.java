@@ -402,19 +402,22 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
         Map<E, E> removedElements = new IdentityHashMap<>();
 
         for (CollectionAction<C> action : actions) {
-            for (Object o : action.getAddedObjects(initialState)) {
-                if (removedElements.remove(o) == null) {
-                    addedElements.put((E) o, (E) o);
-                    // We don't set the parent here because that will happen during the setParent call for this collection
-                } else {
-                    if (o instanceof BasicDirtyTracker) {
-                        ((BasicDirtyTracker) o).$$_unsetParent();
+            // Specially handle the clear action by considering the initial state as fully removed
+            if (action instanceof CollectionClearAction<?, ?>) {
+                for (E o : initialState) {
+                    removedElements.put(o, o);
+                }
+            } else {
+                for (Object o : action.getAddedObjects()) {
+                    if (removedElements.remove(o) == null) {
+                        addedElements.put((E) o, (E) o);
+                        // We don't set the parent here because that will happen during the setParent call for this collection
                     }
                 }
-            }
-            for (Object o : action.getRemovedObjects(initialState)) {
-                if (addedElements.remove(o) == null) {
-                    removedElements.put((E) o, (E) o);
+                for (Object o : action.getRemovedObjects()) {
+                    if (addedElements.remove(o) == null) {
+                        removedElements.put((E) o, (E) o);
+                    }
                 }
             }
         }
