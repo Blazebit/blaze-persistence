@@ -111,6 +111,10 @@ public class RecordingEntrySetReplacingIterator<K, V> implements Iterator<Map.En
         }
     }
 
+    public V getCurrent() {
+        return current.value;
+    }
+
     /**
      * Mutable entry.
      *
