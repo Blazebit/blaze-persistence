@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.collection;
 
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.proxy.DirtyTracker;
+import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.spi.type.BasicDirtyTracker;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
@@ -177,20 +178,34 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
 
     @Override
     public void $$_replaceAttribute(Object oldObject, int attributeIndex, Object newObject) {
-        if (ordered) {
-            List<E> newCollection = new ArrayList<>(delegate.size());
-            for (E e : delegate) {
-                if (e == oldObject) {
-                    newCollection.add((E) newObject);
-                } else {
-                    newCollection.add(e);
-                }
-            }
-            delegate.clear();
-            delegate.addAll(newCollection);
-        } else {
+        if (oldObject instanceof MutableStateTrackable) {
+            ((MutableStateTrackable) oldObject).$$_removeReadOnlyParent(this, attributeIndex);
+        }
+        if (newObject instanceof MutableStateTrackable) {
+            ((MutableStateTrackable) newObject).$$_addReadOnlyParent(this, attributeIndex);
+        }
+        if (currentIterator != null && currentIterator.getCurrent() == oldObject) {
+            // This happens while persisting
+            return;
+        }
+        if (newObject == null) {
             delegate.remove(oldObject);
-            delegate.add((E) newObject);
+        } else {
+            if (ordered) {
+                List<E> newCollection = new ArrayList<>(delegate.size());
+                for (E e : delegate) {
+                    if (e == oldObject) {
+                        newCollection.add((E) newObject);
+                    } else {
+                        newCollection.add(e);
+                    }
+                }
+                delegate.clear();
+                delegate.addAll(newCollection);
+            } else {
+                delegate.remove(oldObject);
+                delegate.add((E) newObject);
+            }
         }
     }
 

@@ -191,21 +191,29 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
         if (newObject instanceof MutableStateTrackable) {
             ((MutableStateTrackable) newObject).$$_addReadOnlyParent(this, attributeIndex);
         }
+        if (currentIterator != null && currentIterator.getCurrent() == oldObject) {
+            // This happens while persisting
+            return;
+        }
         if (attributeIndex == 1) {
-            if (ordered) {
-                Map<K, V> newMap = new LinkedHashMap<>(delegate.size());
-                for (Entry<K, V> entry : delegate.entrySet()) {
-                    if (entry.getKey() == oldObject) {
-                        newMap.put((K) newObject, entry.getValue());
-                    } else {
-                        newMap.put(entry.getKey(), entry.getValue());
-                    }
-                }
-                delegate.clear();
-                delegate.putAll(newMap);
+            if (newObject == null) {
+                delegate.remove(oldObject);
             } else {
-                V value = delegate.remove(oldObject);
-                delegate.put((K) newObject, value);
+                if (ordered) {
+                    Map<K, V> newMap = new LinkedHashMap<>(delegate.size());
+                    for (Entry<K, V> entry : delegate.entrySet()) {
+                        if (entry.getKey() == oldObject) {
+                            newMap.put((K) newObject, entry.getValue());
+                        } else {
+                            newMap.put(entry.getKey(), entry.getValue());
+                        }
+                    }
+                    delegate.clear();
+                    delegate.putAll(newMap);
+                } else {
+                    V value = delegate.remove(oldObject);
+                    delegate.put((K) newObject, value);
+                }
             }
         } else {
             for (Entry<K, V> entry : delegate.entrySet()) {

@@ -706,23 +706,10 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                     context.getInitialStateResetter().addPersistedViewNewObject(newObjectIndex, newObject);
                 }
             }
-            if (shouldPersist) {
-            }
             if (doPersist) {
                 if (recordingCollection != null && (recordingCollection.isHashBased() || persistViewMapper != null)) {
                     // Reset the parent accordingly
-                    List<Object> readOnlyParents = updatableProxy.$$_getReadOnlyParents();
-                    if (newObject != updatableProxy) {
-                        if (newObject instanceof BasicDirtyTracker) {
-                            ((BasicDirtyTracker) newObject).$$_setParent(parent, parentIndex);
-                            if (newObject instanceof MutableStateTrackable && readOnlyParents != null) {
-                                for (int i = 0; i < readOnlyParents.size(); i += 2) {
-                                    ((DirtyTracker) readOnlyParents.get(i)).$$_replaceAttribute(updatableProxy, (int) readOnlyParents.get(i + 1), newObject);
-                                }
-                            }
-                        }
-                        updatableProxy.$$_unsetParent();
-                    }
+                    resetParents(updatableProxy, parentIndex, parent, newObject);
                     if (recordingCollection.getCurrentIterator() == null) {
                         recordingCollection.getDelegate().add(newObject);
                     } else {
@@ -730,18 +717,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                     }
                 } else if (recordingMap != null && (persistViewMapper != null || updatableProxy.$$_getParentIndex() == 1 && recordingMap.isHashBased())) {
                     // Reset the parent accordingly
-                    List<Object> readOnlyParents = updatableProxy.$$_getReadOnlyParents();
-                    if (newObject != updatableProxy) {
-                        if (newObject instanceof BasicDirtyTracker) {
-                            ((BasicDirtyTracker) newObject).$$_setParent(parent, parentIndex);
-                            if (newObject instanceof MutableStateTrackable) {
-                                for (int i = 0; i < readOnlyParents.size(); i += 2) {
-                                    ((DirtyTracker) readOnlyParents.get(i)).$$_replaceAttribute(updatableProxy, (int) readOnlyParents.get(i + 1), newObject);
-                                }
-                            }
-                        }
-                        updatableProxy.$$_unsetParent();
-                    }
+                    resetParents(updatableProxy, parentIndex, parent, newObject);
                     if (updatableProxy.$$_getParentIndex() == 1) {
                         if (recordingMap.getCurrentIterator() == null) {
                             recordingMap.getDelegate().put(newObject, removedValue);
@@ -764,6 +740,27 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                     updatableProxy.$$_unsetParent();
                 }
             }
+        }
+    }
+
+    private void resetParents(MutableStateTrackable updatableProxy, int parentIndex, DirtyTracker parent, Object newObject) {
+        List<Object> readOnlyParents = updatableProxy.$$_getReadOnlyParents();
+        if (newObject != updatableProxy) {
+            Object newReadOnlyParent = null;
+            if (newObject instanceof BasicDirtyTracker) {
+                ((BasicDirtyTracker) newObject).$$_setParent(parent, parentIndex);
+                if (newObject instanceof MutableStateTrackable && readOnlyParents != null) {
+                    newReadOnlyParent = newObject;
+                }
+            }
+            if (readOnlyParents != null) {
+                // The list changes while replacing attributes, so copy it
+                readOnlyParents = new ArrayList<>(readOnlyParents);
+                for (int i = 0; i < readOnlyParents.size(); i += 2) {
+                    ((DirtyTracker) readOnlyParents.get(i)).$$_replaceAttribute(updatableProxy, (int) readOnlyParents.get(i + 1), newReadOnlyParent);
+                }
+            }
+            updatableProxy.$$_unsetParent();
         }
     }
 

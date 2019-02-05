@@ -88,4 +88,8 @@ public class RecordingReplacingIterator<E> implements Iterator<E> {
             current = null;
         }
     }
+
+    public E getCurrent() {
+        return current;
+    }
 }
