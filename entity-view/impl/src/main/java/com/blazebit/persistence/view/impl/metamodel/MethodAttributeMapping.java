@@ -345,19 +345,25 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
             if (attributeViewMapping != null) {
                 boolean allowCreatable = cascadeTypes.contains(CascadeType.PERSIST) || attributeViewMapping.isCreatable() && cascadeTypes.contains(CascadeType.AUTO);
                 if (isUpdatable == Boolean.TRUE || getDeclaringView().isUpdatable()) {
+                    if (hasSetter || isCollection) {
+                        this.readOnlySubtypeMappings = initializeDependentSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass(), true, true, false);
+                    }
                     if (hasSetter || isCollection && allowCreatable) {
                         boolean allowUpdatable = cascadeTypes.contains(CascadeType.UPDATE) || attributeViewMapping.isUpdatable() && cascadeTypes.contains(CascadeType.AUTO);
                         // But only if the attribute is explicitly or implicitly updatable
-                        this.readOnlySubtypeMappings = initializeDependentSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass(), true, true, false);
                         this.cascadeSubtypeMappings = initializeDependentSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass(), allowUpdatable, allowCreatable, true);
                     } else {
                         this.cascadeSubtypeMappings = Collections.emptyMap();
                     }
                 } else {
                     // Allow all read-only subtypes and also creatable subtypes for creatable-only views
-                    if (getDeclaringView().isCreatable() && (hasSetter || isCollection && allowCreatable)) {
-                        this.readOnlySubtypeMappings = initializeDependentSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass(), true, true, false);
-                        this.cascadePersistSubtypeMappings = initializeDependentSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass(), false, allowCreatable, true);
+                    if (getDeclaringView().isCreatable()) {
+                        if (hasSetter || isCollection) {
+                            this.readOnlySubtypeMappings = initializeDependentSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass(), true, true, false);
+                        }
+                        if (hasSetter || isCollection && allowCreatable) {
+                            this.cascadePersistSubtypeMappings = initializeDependentSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass(), false, allowCreatable, true);
+                        }
                     }
                     this.cascadeSubtypeMappings = Collections.emptyMap();
                 }
