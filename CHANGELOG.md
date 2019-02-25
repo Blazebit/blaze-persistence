@@ -18,6 +18,31 @@ None
 
 None
 
+## 1.3.2
+
+26/02/2019 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.3.2) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+milestone%3A1.4.0+is%3Aclosed+closed%3A%3C2019-02-26+label%3Abug)
+
+### New features
+
+None
+
+### Bug fixes
+
+* Fix issues with DeltaSpike Data integration and EclipseLink + DB2
+* NPE during view attribute accessor resolving when lacking an explicit version mapping
+* Workaround EclipseLink's wrong null precedence handling on platforms that don't support it
+* Select correlation wrongly tries to load data based on null correlation basis
+* Select alias expressions should be resolved when copying a query or when switching the select clause
+* Non-entity-view deltaspike repository method wrongly tries to resolve entity class via view class
+* Repository method findAll(int start, int max) for entity type doesn't properly paginate
+* Replacing normal collection with recording during flush fails because of invalid setParent call due to ClearAction
+* Readonly parents collection isn't copied when replacing the attribute values
+* Updatable plural attribute doesn't allow updatable/creatable subtypes when missing the setter
+
+### Backwards-incompatible changes
+
+None
+
 ## 1.3.1
 
 15/01/2019 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.3.1) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+milestone%3A1.4.0+is%3Aclosed+closed%3A%3C2019-01-15+label%3Abug)
