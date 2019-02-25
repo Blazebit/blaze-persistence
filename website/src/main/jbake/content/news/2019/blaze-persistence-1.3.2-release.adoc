@@ -1,0 +1,31 @@
+= Blaze-Persistence 1.3.2 Release
+Christian Beikov
+2019-02-26 0
+:description: Blaze-Persistence version 1.3.2 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+We just released Blaze-Persistence version 1.3.2, again with a lot of bug fixes especially in the DeltaSpike Data integration. It's completely backwards compatible and as always, we advise you to update quickly to avoid getting bitten by the bugs ;)
+
+The most notable bug fixes are:
+
+* https://github.com/Blazebit/blaze-persistence/issues/720[*#720*, window="_blank"] EntityViewRepository findAll(start,max) fails with ClassCastException
+* https://github.com/Blazebit/blaze-persistence/issues/722[*#722*, window="_blank"] NPE during view attribute accessor resolving when lacking an explicit version mapping
+* https://github.com/Blazebit/blaze-persistence/issues/723[*#723*, window="_blank"] Workaround EclipseLink's wrong null precedence handling on platforms that don't support it
+* https://github.com/Blazebit/blaze-persistence/issues/724[*#724*, window="_blank"] Select correlation wrongly tries to load data based on null correlation basis
+* https://github.com/Blazebit/blaze-persistence/issues/725[*#725*, window="_blank"] Select alias expressions should be resolved when +++<!-- PREVIEW-SUFFIX --><!-- </p></li></ul></div> --><!-- PREVIEW-END -->+++copying a query or when switching the select clause
+* https://github.com/Blazebit/blaze-persistence/issues/728[*#728*, window="_blank"] Non-entity-view deltaspike repository method wrongly tries to resolve entity class via view class
+* https://github.com/Blazebit/blaze-persistence/issues/729[*#729*, window="_blank"] Repository method findAll(int start, int max) for entity type doesn't properly paginate
+* https://github.com/Blazebit/blaze-persistence/issues/733[*#733*, window="_blank"] Replacing normal collection with recording during flush fails because of invalid setParent call due to ClearAction
+* https://github.com/Blazebit/blaze-persistence/issues/734[*#734*, window="_blank"] Readonly parents collection isn't copied when replacing the attribute values
+* https://github.com/Blazebit/blaze-persistence/issues/736[*#736*, window="_blank"] Updatable plural attribute doesn't allow updatable/creatable subtypes when missing the setter
+
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#132[changelog, window="_blank"] for a full list of changes and improvements.
+
+Thanks to all contributors for reporting issues and helping us understand the root causes.
+
+The first alpha release of 1.4.0 will still take some time to bake because of entity view lifecycle listeners which takes some time to get right. We will publish it as soon as we have an acceptable version you can try out!
