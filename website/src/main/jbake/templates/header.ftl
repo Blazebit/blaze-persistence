@@ -32,14 +32,14 @@
     <meta name="twitter:description" content="<#escape x as x?xml>${content.description}</#escape>" />
 
     <#if (content.image)??>
-    <meta property="og:image"        content="${config.site_host}images/${content.image}" />
-    <meta name="twitter:image"       content="${config.site_host}images/${content.image}" />
+    <meta property="og:image"        content="http://${config.site_domain}/images/${content.image}" />
+    <meta name="twitter:image"       content="http://${config.site_domain}/images/${content.image}" />
     <#elseif (content.extimage)??>
     <meta property="og:image"        content="${content.extimage}" />
     <meta name="twitter:image"       content="${content.extimage}" />
     <#else>
-    <meta property="og:image"        content="${config.site_host}images/blaze_persistence_square.png" />
-    <meta name="twitter:image"       content="${config.site_host}images/blaze_persistence_square.png" />
+    <meta property="og:image"        content="http://${config.site_domain}/images/blaze_persistence_square.png" />
+    <meta name="twitter:image"       content="http://${config.site_domain}/images/blaze_persistence_square.png" />
     </#if>
     </#if>
 
