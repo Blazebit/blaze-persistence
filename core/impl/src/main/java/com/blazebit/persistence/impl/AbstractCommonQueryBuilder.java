@@ -19,6 +19,7 @@ package com.blazebit.persistence.impl;
 import com.blazebit.persistence.BaseSubqueryBuilder;
 import com.blazebit.persistence.CTEBuilder;
 import com.blazebit.persistence.CaseWhenStarterBuilder;
+import com.blazebit.persistence.ConstantRegistry;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.From;
 import com.blazebit.persistence.FullQueryBuilder;
@@ -398,6 +399,8 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             // TODO: We should think of a better way to expose a where builder to clients as an on builder
             // TODO: Setting the expression via this does not clear the cache
             return (T) whereManager.startOnBuilder(this);
+        } else if (ConstantRegistry.class.equals(serviceClass)) {
+            return (T) parameterManager;
         }
         
         return cbf.getService(serviceClass);

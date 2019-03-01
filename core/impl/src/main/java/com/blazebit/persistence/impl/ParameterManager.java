@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.ConstantRegistry;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ParameterExpression;
 import com.blazebit.reflection.PropertyPathExpression;
@@ -42,7 +43,7 @@ import java.util.Set;
  * @author Moritz Becker
  * @since 1.0.0
  */
-public class ParameterManager {
+public class ParameterManager implements ConstantRegistry {
 
     private static final String PREFIX = "param_";
     private int counter;
@@ -316,6 +317,11 @@ public class ParameterManager {
             throw new IllegalArgumentException(String.format("Parameter name \"%s\" does not exist", parameterName));
         }
         return parameter.getValue();
+    }
+
+    @Override
+    public String addConstant(Object object) {
+        return addParameterExpression(object, null, null).getName();
     }
 
     public ParameterExpression addParameterExpression(Object o, ClauseType clause, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {

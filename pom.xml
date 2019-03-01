@@ -59,6 +59,7 @@
         <module>checkstyle-rules</module>
         <module>archetype</module>
         <module>dist</module>
+        <module>querydsl</module>
     </modules>
 
     <issueManagement>

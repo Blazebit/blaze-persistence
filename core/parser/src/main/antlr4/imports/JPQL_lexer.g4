@@ -133,7 +133,10 @@ Outer_function : [Oo][Uu][Tt][Ee][Rr];
  
 Star_operator : '*';
 
-Character_literal : '\''JavaLetter'\'';
+Character_literal
+    : '\'\'\'\''
+    | '\'' ~[\'] '\''
+    ;
 
 String_literal : '\'' ~[\']* '\'';
 
