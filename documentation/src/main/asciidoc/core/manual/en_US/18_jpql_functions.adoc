@@ -240,10 +240,14 @@ Extracts the requested field of temporal argument like specified by the ANSI SQL
 
 The possible fields and the respective function names are:
 
+* *Millisecond* - `MILLISECOND`
 * *Second* - `SECOND`
 * *Minute* - `MINUTE`
 * *Hour* - `HOUR`
 * *Day* - `DAY`
+* *Day of week* - `DAYOFWEEK`
+* *Day of year* - `DAYOFYEAR`
+* *Week* - `WEEK`
 * *Month* - `MONTH`
 * *Year* - `YEAR`
 * *Epoch* - `EPOCH`
