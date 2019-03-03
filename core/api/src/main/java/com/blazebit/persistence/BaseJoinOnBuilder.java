@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence;
 
+import com.blazebit.persistence.spi.ServiceProvider;
+
 /**
  * A base interface for builders that support join on.
  * This is related to the fact, that a query builder supports join on clauses.
@@ -24,7 +26,7 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.0.0
  */
-public interface BaseJoinOnBuilder<T extends BaseJoinOnBuilder<T>> {
+public interface BaseJoinOnBuilder<T extends BaseJoinOnBuilder<T>> extends ServiceProvider {
 
     /**
      * Starts a {@link RestrictionBuilder} for an on predicate with the given expression as left hand expression.

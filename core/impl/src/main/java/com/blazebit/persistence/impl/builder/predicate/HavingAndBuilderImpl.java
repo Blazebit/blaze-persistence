@@ -188,4 +188,9 @@ public class HavingAndBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedLis
             caseExpressionBuilderListener.verifyBuilderEnded();
         }
     }
+
+    @Override
+    public <T> T getService(Class<T> serviceClass) {
+        return subqueryInitFactory.getQueryBuilder().getService(serviceClass);
+    }
 }

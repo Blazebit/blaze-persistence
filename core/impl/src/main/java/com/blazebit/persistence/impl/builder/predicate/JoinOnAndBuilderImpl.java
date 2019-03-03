@@ -79,4 +79,8 @@ public class JoinOnAndBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedLis
         return predicate;
     }
 
+    @Override
+    public <T> T getService(Class<T> serviceClass) {
+        return subqueryInitFactory.getQueryBuilder().getService(serviceClass);
+    }
 }

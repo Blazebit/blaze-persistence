@@ -376,4 +376,9 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAn
 
         listener.onBuilderEnded(AbstractQuantifiablePredicateBuilder.this);
     }
+
+    @Override
+    public <T> T getService(Class<T> serviceClass) {
+        return subqueryInitFactory.getQueryBuilder().getService(serviceClass);
+    }
 }

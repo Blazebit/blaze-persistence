@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence;
 
+import com.blazebit.persistence.spi.ServiceProvider;
+
 /**
  * The builder interface for between predicates.
  * 
@@ -29,7 +31,7 @@ package com.blazebit.persistence;
  * @author Moritz Becker
  * @since 1.0.0
  */
-public interface BetweenBuilder<T> {
+public interface BetweenBuilder<T> extends ServiceProvider {
 
     /**
      * Constructs a between predicate with a parameter as upper bound.

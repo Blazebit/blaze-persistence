@@ -119,4 +119,9 @@ public class JoinOnBuilderImpl<T> implements JoinOnBuilder<T>, PredicateBuilder 
     public JoinOnOrBuilder<JoinOnBuilder<T>> onOr() {
         return rootPredicate.startBuilder(new JoinOnOrBuilderImpl<JoinOnBuilder<T>>(this, rootPredicate, expressionFactory, parameterManager, subqueryInitFactory));
     }
+
+    @Override
+    public <T> T getService(Class<T> serviceClass) {
+        return subqueryInitFactory.getQueryBuilder().getService(serviceClass);
+    }
 }

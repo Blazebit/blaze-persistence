@@ -220,4 +220,9 @@ public class LikeBuilderImpl<T> extends SubqueryAndExpressionBuilderListener<T> 
         escapeBuilderEndedListener.verifyBuilderEnded();
     }
 
+    @Override
+    public <T> T getService(Class<T> serviceClass) {
+        return subqueryInitFactory.getQueryBuilder().getService(serviceClass);
+    }
+
 }

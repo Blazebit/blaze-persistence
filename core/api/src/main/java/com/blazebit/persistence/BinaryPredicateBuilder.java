@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence;
 
+import com.blazebit.persistence.spi.ServiceProvider;
+
 /**
  * The interface for binary predicate builders.
  * The left hand side and the operator are already known to the builder and the methods of this builder terminate the building process.
@@ -25,7 +27,7 @@ package com.blazebit.persistence;
  * @author Moritz Becker
  * @since 1.0.0
  */
-public interface BinaryPredicateBuilder<T> {
+public interface BinaryPredicateBuilder<T> extends ServiceProvider {
 
     /**
      * Uses the given value as right hand side for the binary predicate.

@@ -186,4 +186,9 @@ public class WhereOrBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedListe
             caseExpressionBuilderListener.verifyBuilderEnded();
         }
     }
+
+    @Override
+    public <T> T getService(Class<T> serviceClass) {
+        return subqueryInitFactory.getQueryBuilder().getService(serviceClass);
+    }
 }

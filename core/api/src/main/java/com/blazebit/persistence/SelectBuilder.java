@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence;
 
+import com.blazebit.persistence.spi.ServiceProvider;
+
 /**
  * An interface for builders that support selecting.
  * This is related to the fact, that a query builder supports select clauses.
@@ -24,7 +26,7 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.0.0
  */
-public interface SelectBuilder<X> {
+public interface SelectBuilder<X> extends ServiceProvider {
 
     /**
      * Like {@link SelectBuilder#selectCase(java.lang.String)} but without an alias.

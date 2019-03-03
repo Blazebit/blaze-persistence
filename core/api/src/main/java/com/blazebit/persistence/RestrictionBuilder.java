@@ -17,6 +17,7 @@
 package com.blazebit.persistence;
 
 import com.blazebit.persistence.internal.RestrictionBuilderExperimental;
+import com.blazebit.persistence.spi.ServiceProvider;
 
 import java.util.Collection;
 
@@ -29,7 +30,7 @@ import java.util.Collection;
  * @author Christian Beikov
  * @since 1.0.0
  */
-public interface RestrictionBuilder<T> {
+public interface RestrictionBuilder<T> extends ServiceProvider {
 
     /**
      * Starts a builder for a between predicate with lower bound expression.

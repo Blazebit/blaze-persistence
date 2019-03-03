@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence;
 
+import com.blazebit.persistence.spi.ServiceProvider;
+
 /**
  * A base interface for builders that support having.
  * This is related to the fact, that a query builder supports group by and having clauses.
@@ -24,7 +26,7 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.0.0
  */
-public interface BaseHavingBuilder<T extends BaseHavingBuilder<T>> {
+public interface BaseHavingBuilder<T extends BaseHavingBuilder<T>> extends ServiceProvider {
 
     /**
      * Starts a {@link SubqueryInitiator} for the left hand side of a predicate.
