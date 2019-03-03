@@ -60,14 +60,13 @@ class BasicTest : AbstractCoreTest() {
     }
 
     @Test
-    @UseExperimental(LimitedServiceProviderAccess::class)
     fun basicTest() {
         cbf.create(em, Tuple::class)
                 .from(Document::class.java)
-                .where(document.name).betweenExpression(ConstantImpl.create("test")).andExpression(ConstantImpl.create("test"))
-//                .whereOr() this is unsupported because we cant access a ServiceProvider from a whereOr
-//                    .where(document.name).eqExpression(ConstantImpl.create("test"))
-//                .endOr()
+                .whereOr()
+                    .where(document.name).betweenExpression(ConstantImpl.create("test")).andExpression(ConstantImpl.create("test"))
+                    .where(document.name).eqExpression(ConstantImpl.create("test"))
+                .endOr()
                 .resultList
     }
 
@@ -195,7 +194,6 @@ class BasicTest : AbstractCoreTest() {
     }
 
     @Test
-    @UseExperimental(LimitedServiceProviderAccess::class)
     fun innerJoinAssociationOnStub() {
         val friend = QPerson("friend")
 

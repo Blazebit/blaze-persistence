@@ -117,7 +117,7 @@ fun <T, A, P> T.innerJoin(path : EntityPath<P>, alias : Path<P>): A where T : Fr
         return innerJoin(expression, aliasName)
     }
     else {
-        return WrappedJoinOnBuilder(innerJoinOn(entityType, aliasName), this)
+        return innerJoinOn(entityType, aliasName)
                 .on("true").eqExpression("true").end()
     }
 }
@@ -200,7 +200,7 @@ fun <T, A, P> T.leftJoin(path : EntityPath<P>, alias : Path<P>): A where T : Fro
         return leftJoin(expression, aliasName)
     }
     else {
-        return WrappedJoinOnBuilder(leftJoinOn(entityType, aliasName), this)
+        return leftJoinOn(entityType, aliasName)
                 .on("true").eqExpression("true").end()
     }
 }
@@ -285,7 +285,7 @@ fun <T, A, P> T.rightJoin(path : EntityPath<P>, alias : Path<P>): A where T : Fr
         return rightJoin(expression, aliasName)
     }
     else {
-        return WrappedJoinOnBuilder(rightJoinOn(entityType, aliasName), this)
+        return rightJoinOn(entityType, aliasName)
                 .on("true").eqExpression("true").end()
     }
 }
@@ -297,10 +297,10 @@ fun <T, A, P> T.rightJoin(path : EntityPath<P>, alias : Path<P>): A where T : Fr
  * @param alias The alias for the joined element
  * @return The restriction builder for the on-clause
  */
-fun <T, A, P> T.rightJoinOn(path : CollectionExpression<*, P>, alias : Path<P>): WrappedJoinOnBuilder<A> where T : FromBuilder<A>, T : ServiceProvider {
+fun <T, A, P> T.rightJoinOn(path : CollectionExpression<*, P>, alias : Path<P>): JoinOnBuilder<A> where T : FromBuilder<A>, T : ServiceProvider {
     val aliasName = alias.metadata.name
     val expression = parseExpressionAndBindParameters(path)
-    return WrappedJoinOnBuilder(rightJoinOn(expression, aliasName), this)
+    return rightJoinOn(expression, aliasName)
 }
 
 /**
@@ -310,10 +310,10 @@ fun <T, A, P> T.rightJoinOn(path : CollectionExpression<*, P>, alias : Path<P>):
  * @param alias The alias for the joined element
  * @return The restriction builder for the on-clause
  */
-fun <T, A, P> T.rightJoinOn(path : MapExpression<*, P>, alias : Path<P>): WrappedJoinOnBuilder<A> where T : FromBuilder<A>, T : ServiceProvider {
+fun <T, A, P> T.rightJoinOn(path : MapExpression<*, P>, alias : Path<P>): JoinOnBuilder<A> where T : FromBuilder<A>, T : ServiceProvider {
     val aliasName = alias.metadata.name
     val expression = parseExpressionAndBindParameters(path)
-    return WrappedJoinOnBuilder(rightJoinOn(expression, aliasName), this)
+    return rightJoinOn(expression, aliasName)
 }
 
 
@@ -323,7 +323,7 @@ fun <T, A, P> T.rightJoinOn(path : MapExpression<*, P>, alias : Path<P>): Wrappe
  * @param path The path to join
  * @return The restriction builder for the on-clause
  */
-fun <T, A, P> T.rightJoinOn(path : EntityPath<P>): WrappedJoinOnBuilder<A> where T : FromBuilder<A>, T : ServiceProvider {
+fun <T, A, P> T.rightJoinOn(path : EntityPath<P>): JoinOnBuilder<A> where T : FromBuilder<A>, T : ServiceProvider {
     return rightJoinOn(path, path)
 }
 
@@ -334,16 +334,16 @@ fun <T, A, P> T.rightJoinOn(path : EntityPath<P>): WrappedJoinOnBuilder<A> where
  * @param alias The alias for the joined element
  * @return The restriction builder for the on-clause
  */
-fun <T, A, P> T.rightJoinOn(path : EntityPath<P>, alias : Path<P>): WrappedJoinOnBuilder<A> where T : FromBuilder<A>, T : ServiceProvider {
+fun <T, A, P> T.rightJoinOn(path : EntityPath<P>, alias : Path<P>): JoinOnBuilder<A> where T : FromBuilder<A>, T : ServiceProvider {
     val entityType = path.type
     val aliasName = alias.metadata.name
 
     if (! path.isRoot()) {
         val expression = parseExpressionAndBindParameters(path)
-        return WrappedJoinOnBuilder(rightJoinOn(expression, aliasName), this)
+        return rightJoinOn(expression, aliasName)
     }
     else {
-        return WrappedJoinOnBuilder(rightJoinOn(entityType, aliasName), this)
+        return rightJoinOn(entityType, aliasName)
     }
 }
 
@@ -354,10 +354,10 @@ fun <T, A, P> T.rightJoinOn(path : EntityPath<P>, alias : Path<P>): WrappedJoinO
  * @param alias The alias for the joined element
  * @return The restriction builder for the on-clause
  */
-fun <T, A, P> T.innerJoinOn(path : CollectionExpression<*, P>, alias : Path<P>): WrappedJoinOnBuilder<A>  where T : FromBuilder<A>, T: ServiceProvider {
+fun <T, A, P> T.innerJoinOn(path : CollectionExpression<*, P>, alias : Path<P>): JoinOnBuilder<A>  where T : FromBuilder<A>, T: ServiceProvider {
     val aliasName = alias.metadata.name
     val expression = parseExpressionAndBindParameters(path)
-    return WrappedJoinOnBuilder(innerJoinOn(expression, aliasName), this)
+    return innerJoinOn(expression, aliasName)
 }
 
 /**
@@ -367,10 +367,10 @@ fun <T, A, P> T.innerJoinOn(path : CollectionExpression<*, P>, alias : Path<P>):
  * @param alias The alias for the joined element
  * @return The restriction builder for the on-clause
  */
-fun <T, A, P> T.innerJoinOn(path : MapExpression<*, P>, alias : Path<P>): WrappedJoinOnBuilder<A>  where T : FromBuilder<A>, T: ServiceProvider {
+fun <T, A, P> T.innerJoinOn(path : MapExpression<*, P>, alias : Path<P>): JoinOnBuilder<A>  where T : FromBuilder<A>, T: ServiceProvider {
     val aliasName = alias.metadata.name
     val expression = parseExpressionAndBindParameters(path)
-    return WrappedJoinOnBuilder(innerJoinOn(expression, aliasName), this)
+    return innerJoinOn(expression, aliasName)
 }
 
 /**
@@ -379,7 +379,7 @@ fun <T, A, P> T.innerJoinOn(path : MapExpression<*, P>, alias : Path<P>): Wrappe
  * @param path The path to join
  * @return The restriction builder for the on-clause
  */
-fun <T, A, P> T.innerJoinOn(path : EntityPath<P>): WrappedJoinOnBuilder<A>  where T : FromBuilder<A>, T : ServiceProvider {
+fun <T, A, P> T.innerJoinOn(path : EntityPath<P>): JoinOnBuilder<A>  where T : FromBuilder<A>, T : ServiceProvider {
     return innerJoinOn(path, path)
 }
 
@@ -390,16 +390,16 @@ fun <T, A, P> T.innerJoinOn(path : EntityPath<P>): WrappedJoinOnBuilder<A>  wher
  * @param alias The alias for the joined element
  * @return The restriction builder for the on-clause
  */
-fun <T, A, P> T.innerJoinOn(path : EntityPath<P>, alias : Path<P>): WrappedJoinOnBuilder<A>  where T : FromBuilder<A>, T : ServiceProvider {
+fun <T, A, P> T.innerJoinOn(path : EntityPath<P>, alias : Path<P>): JoinOnBuilder<A>  where T : FromBuilder<A>, T : ServiceProvider {
     val entityType = path.type
     val aliasName = alias.metadata.name
 
     if (! path.isRoot()) {
         val expression = parseExpressionAndBindParameters(path)
-        return WrappedJoinOnBuilder(innerJoinOn(expression, aliasName), this)
+        return innerJoinOn(expression, aliasName)
     }
     else {
-        return WrappedJoinOnBuilder(innerJoinOn(entityType, aliasName), this)
+        return innerJoinOn(entityType, aliasName)
     }
 }
 
@@ -414,10 +414,10 @@ private fun EntityPath<*>.isRoot() : Boolean {
  * @param alias The alias for the joined element
  * @return The restriction builder for the on-clause
  */
-fun <T, A, P> T.leftJoinOn(path : CollectionExpression<*, P>, alias : Path<P>): WrappedJoinOnBuilder<A> where T : FromBuilder<A>, T : ServiceProvider {
+fun <T, A, P> T.leftJoinOn(path : CollectionExpression<*, P>, alias : Path<P>): JoinOnBuilder<A> where T : FromBuilder<A>, T : ServiceProvider {
     val aliasName = alias.metadata.name
     val expression = parseExpressionAndBindParameters(path)
-    return WrappedJoinOnBuilder(leftJoinOn(expression, aliasName), this)
+    return leftJoinOn(expression, aliasName)
 }
 
 /**
@@ -427,10 +427,10 @@ fun <T, A, P> T.leftJoinOn(path : CollectionExpression<*, P>, alias : Path<P>): 
  * @param alias The alias for the joined element
  * @return The restriction builder for the on-clause
  */
-fun <T, A, P> T.leftJoinOn(path : MapExpression<*, P>, alias : Path<P>): WrappedJoinOnBuilder<A> where T : FromBuilder<A>, T : ServiceProvider {
+fun <T, A, P> T.leftJoinOn(path : MapExpression<*, P>, alias : Path<P>): JoinOnBuilder<A> where T : FromBuilder<A>, T : ServiceProvider {
     val aliasName = alias.metadata.name
     val expression = parseExpressionAndBindParameters(path)
-    return WrappedJoinOnBuilder(leftJoinOn(expression, aliasName), this)
+    return leftJoinOn(expression, aliasName)
 }
 
 /**
@@ -439,7 +439,7 @@ fun <T, A, P> T.leftJoinOn(path : MapExpression<*, P>, alias : Path<P>): Wrapped
  * @param path The path to join
  * @return The restriction builder for the on-clause
  */
-fun <T, A, P> T.leftJoinOn(path : EntityPath<P>): WrappedJoinOnBuilder<A> where T : FromBuilder<A>, T : ServiceProvider {
+fun <T, A, P> T.leftJoinOn(path : EntityPath<P>): JoinOnBuilder<A> where T : FromBuilder<A>, T : ServiceProvider {
     return leftJoinOn(path, path)
 }
 
@@ -450,16 +450,16 @@ fun <T, A, P> T.leftJoinOn(path : EntityPath<P>): WrappedJoinOnBuilder<A> where 
  * @param alias The alias for the joined element
  * @return The restriction builder for the on-clause
  */
-fun <T, A, P> T.leftJoinOn(path : EntityPath<P>, alias : Path<P>): WrappedJoinOnBuilder<A> where T : FromBuilder<A>, T : ServiceProvider {
+fun <T, A, P> T.leftJoinOn(path : EntityPath<P>, alias : Path<P>): JoinOnBuilder<A> where T : FromBuilder<A>, T : ServiceProvider {
     val entityType = path.type
     val aliasName = alias.metadata.name
 
     if (! path.isRoot()) {
         val expression = parseExpressionAndBindParameters(path)
-        return WrappedJoinOnBuilder(leftJoinOn(expression, aliasName), this)
+        return leftJoinOn(expression, aliasName)
     }
     else {
-        return WrappedJoinOnBuilder(leftJoinOn(entityType, aliasName), this)
+        return leftJoinOn(entityType, aliasName)
     }
 }
 
@@ -519,12 +519,21 @@ fun <T : CTEBuilder<T>> CTEBuilder<T>.with(entityPath: EntityPath<*>) : FullSele
     return with(entityPath.type)
 }
 
-@UseExperimental(LimitedServiceProviderAccess::class)
-fun <T> FullSelectCTECriteriaBuilder<T>.bind(path : Path<*>) : WrappedSelectBuilder<FullSelectCTECriteriaBuilder<T>> {
+fun <T> JoinOnBuilder<T>.on(predicate: Predicate) : T {
+    var jpqlQueryFragment = parseExpressionAndBindParameters(predicate)
+    return this.setOnExpression(jpqlQueryFragment)
+}
+
+fun <T> JoinOnBuilder<T>.on(predicate: Expression<*>) : RestrictionBuilder<JoinOnBuilder<T>> {
+    var jpqlQueryFragment = parseExpressionAndBindParameters(predicate)
+    return this.on(jpqlQueryFragment)
+}
+
+fun <T> FullSelectCTECriteriaBuilder<T>.bind(path : Path<*>) : SelectBuilder<FullSelectCTECriteriaBuilder<T>> {
     var jpqlQueryFragment = parseExpressionAndBindParameters(path)
     val alias = generateSequence(path) { elem -> elem.metadata.parent }.last().metadata.name
     val unqualifiedExpression = jpqlQueryFragment.substring(alias.length + 1)
-    return WrappedSelectBuilder(bind(unqualifiedExpression), this)
+    return bind(unqualifiedExpression)
 }
 
 /**
@@ -707,17 +716,15 @@ fun <X> NumberExpression<X>.round(decimals: Int) : NumberExpression<X> where X: 
     return NumberOperation.create<X>(this.type, Ops.MathOps.ROUND2, this, ConstantImpl.create(decimals))
 }
 
-@LimitedServiceProviderAccess
-fun <A> A.where(path: Path<*>) : WrappedRestrictionBuilder<A> where A : BaseWhereBuilder<A>, A : ServiceProvider {
+fun <A> A.where(path: Path<*>) : RestrictionBuilder<A> where A : BaseWhereBuilder<A>, A : ServiceProvider {
     val jpqlQueryFragment = parseExpressionAndBindParameters(path)
-    return WrappedRestrictionBuilder(this.where(jpqlQueryFragment), this)
+    return this.where(jpqlQueryFragment)
 }
 
 
-@LimitedServiceProviderAccess
-fun <A> A.having(path: Path<*>) : WrappedRestrictionBuilder<A> where A : BaseHavingBuilder<A>, A : ServiceProvider {
+fun <A> A.having(path: Path<*>) : RestrictionBuilder<A> where A : BaseHavingBuilder<A>, A : ServiceProvider {
     val jpqlQueryFragment = parseExpressionAndBindParameters(path)
-    return WrappedRestrictionBuilder(this.having(jpqlQueryFragment), this)
+    return this.having(jpqlQueryFragment)
 }
 
 /**
@@ -733,6 +740,75 @@ fun <A> A.fetch(vararg paths: Path<*>) : A where A : FetchBuilder<A>, A : Servic
     }
     return this
 }
+
+/**
+ * Finishes the EQ predicate and adds it to the parent predicate container represented by the type T.
+ * The predicate checks if the left hand side is equal to the given expression.
+ *
+ * @param expression The expression on the right hand side
+ * @return The parent predicate container builder
+ */
+fun <A : RestrictionBuilder<T>, T> A.eqExpression(expression: Expression<*>) : T {
+    val jpqlQueryFragment = parseExpressionAndBindParameters(expression)
+    return this.eqExpression(jpqlQueryFragment)
+}
+
+/**
+ * Finishes the NEQ predicate and adds it to the parent predicate container represented by the type T.
+ * The predicate checks if the left hand side is equal to the given expression.
+ *
+ * @param expression The expression on the right hand side
+ * @return The parent predicate container builder
+ */
+fun <A : RestrictionBuilder<T>, T> A.notEqExpression(expression: Expression<*>) : T {
+    val jpqlQueryFragment = parseExpressionAndBindParameters(expression)
+    return this.notEqExpression(jpqlQueryFragment)
+}
+
+/**
+ * Starts a builder for a between predicate with lower bound expression.
+ *
+ * @param expression The between start expression
+ * @return The BetweenBuilder
+ */
+fun <A : RestrictionBuilder<T>, T> A.betweenExpression(expression: Expression<*>) : BetweenBuilder<T> {
+    val jpqlQueryFragment = parseExpressionAndBindParameters(expression)
+    return this.betweenExpression(jpqlQueryFragment)
+}
+
+/**
+ * Starts a builder for a not between predicate with lower bound expression.
+ *
+ * @param expression The between start expression
+ * @return The BetweenBuilder
+ */
+fun <A : RestrictionBuilder<T>, T> A.notBetweenExpression(expression: Expression<*>) : BetweenBuilder<T> {
+    val jpqlQueryFragment = parseExpressionAndBindParameters(expression)
+    return this.notBetweenExpression(jpqlQueryFragment)
+}
+
+/**
+ * Constructs a between predicate with an expression as upper bound.
+ *
+ * @param expression The upper bound expression
+ * @return The parent predicate container builder
+ */
+fun <A> BetweenBuilder<A>.andExpression(expression: Expression<*>) : A {
+    val jpqlQueryFragment = parseExpressionAndBindParameters(expression)
+    return this.andExpression(jpqlQueryFragment)
+}
+
+/**
+ * Constructs a between predicate with an expression as upper bound.
+ *
+ * @param expression The upper bound expression
+ * @return The parent predicate container builder
+ */
+fun <A> BinaryPredicateBuilder<A>.andExpression(expression: Expression<*>) : A {
+    val jpqlQueryFragment = parseExpressionAndBindParameters(expression)
+    return this.expression(jpqlQueryFragment)
+}
+
 
 private fun ServiceProvider.parseExpressionAndBindParameters(expression : Expression<*>) : String {
     val serviceProvider = this as ServiceProvider
@@ -750,90 +826,4 @@ private fun ServiceProvider.parseExpressionAndBindParameters(expression : Expres
     }
 
     return jpqlQueryFragment
-}
-
-@LimitedServiceProviderAccess
-class WrappedRestrictionBuilder<X>(private val delegate : RestrictionBuilder<X>, private val serviceProvider: ServiceProvider) :
-        RestrictionBuilder<X> by delegate,
-        ServiceProvider by serviceProvider {
-
-    fun eqExpression(expression: Expression<*>) : X {
-        val jpqlQueryFragment = parseExpressionAndBindParameters(expression)
-        return this.eqExpression(jpqlQueryFragment)
-    }
-
-    /**
-     * Finishes the NEQ predicate and adds it to the parent predicate container represented by the type T.
-     * The predicate checks if the left hand side is equal to the given expression.
-     *
-     * @param expression The expression on the right hand side
-     * @return The parent predicate container builder
-     */
-    fun notEqExpression(expression: Expression<*>) : X {
-        val jpqlQueryFragment = parseExpressionAndBindParameters(expression)
-        return this.notEqExpression(jpqlQueryFragment)
-    }
-
-    /**
-     * Starts a builder for a between predicate with lower bound expression.
-     *
-     * @param expression The between start expression
-     * @return The BetweenBuilder
-     */
-    fun betweenExpression(expression: Expression<*>) : WrappedBetweenBuilder<X> {
-        val jpqlQueryFragment = parseExpressionAndBindParameters(expression)
-        return WrappedBetweenBuilder(this.betweenExpression(jpqlQueryFragment), this)
-    }
-
-    /**
-     * Starts a builder for a not between predicate with lower bound expression.
-     *
-     * @param expression The between start expression
-     * @return The BetweenBuilder
-     */
-    fun notBetweenExpression(expression: Expression<*>) : WrappedBetweenBuilder<X> {
-        val jpqlQueryFragment = parseExpressionAndBindParameters(expression)
-        return WrappedBetweenBuilder(this.notBetweenExpression(jpqlQueryFragment), this)
-    }
-
-
-}
-
-@LimitedServiceProviderAccess
-class WrappedBetweenBuilder<X>(private val delegate : BetweenBuilder<X>, private val serviceProvider: ServiceProvider) :
-        BetweenBuilder<X> by delegate,
-        ServiceProvider by serviceProvider {
-
-    /**
-     * Constructs a between predicate with an expression as upper bound.
-     *
-     * @param expression The upper bound expression
-     * @return The parent predicate container builder
-     */
-    fun andExpression(expression: Expression<*>) : X {
-        val jpqlQueryFragment = parseExpressionAndBindParameters(expression)
-        return this.andExpression(jpqlQueryFragment)
-    }
-
-}
-
-class WrappedSelectBuilder<X>(private val delegate : SelectBuilder<X>, private val serviceProvider: ServiceProvider) :
-        SelectBuilder<X> by delegate,
-        ServiceProvider by serviceProvider
-
-class WrappedJoinOnBuilder<T>(private val delegate : JoinOnBuilder<T>, private val serviceProvider: ServiceProvider) :
-        JoinOnBuilder<T> by delegate,
-        ServiceProvider by serviceProvider {
-
-    @UseExperimental(LimitedServiceProviderAccess::class)
-    fun on(path : Path<*>) : WrappedRestrictionBuilder<JoinOnBuilder<T>> {
-        val jpqlQueryFragment = parseExpressionAndBindParameters(path)
-        return WrappedRestrictionBuilder(this.on(jpqlQueryFragment), this)
-    }
-
-    fun on(predicate: Predicate) : T {
-        val jpqlQueryFragment = parseExpressionAndBindParameters(predicate)
-        return this.setOnExpression(jpqlQueryFragment)
-    }
-
 }
