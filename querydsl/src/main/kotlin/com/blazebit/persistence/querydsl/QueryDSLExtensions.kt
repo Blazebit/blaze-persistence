@@ -22,7 +22,10 @@ import com.mysema.query.jpa.JPQLSerializer
 import com.mysema.query.types.*
 import com.mysema.query.types.Path
 import com.mysema.query.types.expr.*
+import com.mysema.query.types.path.CollectionPath
 import javax.persistence.EntityManager
+import javax.persistence.Tuple
+import javax.persistence.TypedQuery
 import kotlin.math.exp
 import kotlin.reflect.KClass
 
@@ -38,6 +41,16 @@ import kotlin.reflect.KClass
 fun <T : Any> CriteriaBuilderFactory.create(entityManager : EntityManager, entityPath : EntityPath<T>) : CriteriaBuilder<T> {
     val alias = entityPath.metadata.name
     return this.create(entityManager, entityPath.type as Class<T>, alias)
+}
+
+fun <T : Any> CriteriaBuilderFactory.delete(entityManager : EntityManager, entityPath : EntityPath<T>) : DeleteCriteriaBuilder<T> {
+    val alias = entityPath.metadata.name
+    return this.delete(entityManager, entityPath.type as Class<T>, alias)
+}
+
+fun <T : Any> CriteriaBuilderFactory.update(entityManager : EntityManager, entityPath : EntityPath<T>) : UpdateCriteriaBuilder<T> {
+    val alias = entityPath.metadata.name
+    return this.update(entityManager, entityPath.type as Class<T>, alias)
 }
 
 /**
@@ -494,13 +507,55 @@ fun <T> T.groupBy(vararg expressions: Expression<*>) : T where T : GroupByBuilde
         cb.groupBy(parseExpressionAndBindParameters(expression))}
 }
 
-
+/**
+ * Creates a builder for a CTE with the given CTE type.
+ *
+ * @param cteClass The type of the CTE
+ * @return The CTE builder
+ */
 fun <T : CTEBuilder<T>> CTEBuilder<T>.with(cteClass : KClass<*>) : FullSelectCTECriteriaBuilder<T> {
     return with(cteClass.java)
 }
 
+/**
+ * Creates a builder for a CTE with a nested set operation builder.
+ * Doing this is like starting a nested query that will be connected via a set operation.
+ *
+ * @param entityPath The type of the CTE
+ * @return The CTE set operation builder
+ */
+fun <T : CTEBuilder<T>> CTEBuilder<T>.withStartSet(entityPath: EntityPath<*>) : StartOngoingSetOperationCTECriteriaBuilder<T, LeafOngoingFinalSetOperationCTECriteriaBuilder<T>> {
+    return withStartSet(entityPath.type)
+}
+
+/**
+ * Creates a builder for a recursive CTE with the given CTE type.
+ *
+ * @param entityPath The type of the CTE
+ * @return The recursive CTE builder
+ */
+fun <T : CTEBuilder<T>> CTEBuilder<T>.withRecursive(entityPath: EntityPath<*>) : SelectRecursiveCTECriteriaBuilder<T> {
+    return withRecursive(entityPath.type)
+}
+
+/**
+ * Creates a builder for a CTE with the given CTE type.
+ *
+ * @param entityPath The type of the CTE
+ * @return The CTE builder
+ */
 fun <T : CTEBuilder<T>> CTEBuilder<T>.with(entityPath: EntityPath<*>) : FullSelectCTECriteriaBuilder<T> {
     return with(entityPath.type)
+}
+
+/**
+ * Creates a builder for a modification CTE with the given CTE type.
+ *
+ * @param entityPath The type of the CTE
+ * @return A factory to create a modification query that returns/binds attributes to the CTE.
+ */
+fun <T : CTEBuilder<T>> CTEBuilder<T>.withReturning(entityPath: EntityPath<*>) : ReturningModificationCriteriaBuilderFactory<T> {
+    return withReturning(entityPath.type)
 }
 
 fun <T> JoinOnBuilder<T>.on(predicate: Predicate) : T {
@@ -508,16 +563,168 @@ fun <T> JoinOnBuilder<T>.on(predicate: Predicate) : T {
     return this.setOnExpression(jpqlQueryFragment)
 }
 
-fun <T> JoinOnBuilder<T>.on(predicate: Expression<*>) : RestrictionBuilder<JoinOnBuilder<T>> {
+fun <T : BaseJoinOnBuilder<T>> BaseJoinOnBuilder<T>.on(predicate: Expression<*>) : RestrictionBuilder<T> {
     var jpqlQueryFragment = parseExpressionAndBindParameters(predicate)
     return this.on(jpqlQueryFragment)
 }
 
-fun <T> FullSelectCTECriteriaBuilder<T>.bind(path : Path<*>) : SelectBuilder<FullSelectCTECriteriaBuilder<T>> {
+fun <T : SelectBaseCTECriteriaBuilder<X>, X> T.bind(path : Path<*>) : SelectBuilder<X> {
     var jpqlQueryFragment = parseExpressionAndBindParameters(path)
     val alias = generateSequence(path) { elem -> elem.metadata.parent }.last().metadata.name
     val unqualifiedExpression = jpqlQueryFragment.substring(alias.length + 1)
     return bind(unqualifiedExpression)
+}
+
+fun <T : BaseInsertCriteriaBuilder<*, T>?> BaseInsertCriteriaBuilder<*, T>.bind(path : Path<*>) : SelectBuilder<T> {
+    var jpqlQueryFragment = parseExpressionAndBindParameters(path)
+    val alias = generateSequence(path) { elem -> elem.metadata.parent }.last().metadata.name
+    val unqualifiedExpression = jpqlQueryFragment.substring(alias.length + 1)
+    return bind(unqualifiedExpression)
+}
+
+fun <T, X> T.executeWithReturning(vararg attributes : Path<*>) : ReturningResult<Tuple>
+        where T : ModificationCriteriaBuilder<X>, T : ServiceProvider {
+    val toTypedArray = attributes.map { expr -> expr.getPathString(1) }.toTypedArray()
+    return this.executeWithReturning(*toTypedArray)
+}
+
+
+fun <T, X, V> T.executeWithReturning(attribute : Path<V>) : ReturningResult<V>
+        where T : ModificationCriteriaBuilder<X>, T : ServiceProvider {
+    return this.executeWithReturning(attribute.getPathString(1), attribute.type as Class<V>)
+}
+
+fun Path<*>.getPathString(drop : Int = 0) : String {
+    return generateSequence(this.metadata) { pathMetadata -> pathMetadata.parent?.metadata }
+            .map { pathMetadata -> pathMetadata.name }
+            .toMutableList()
+            .dropLast(drop)
+            .reversed()
+            .joinToString(".")
+}
+
+
+fun <T, X> T.getWithReturningQuery(vararg attributes : Path<*>) : TypedQuery<ReturningResult<Tuple>>
+        where T : ModificationCriteriaBuilder<X>, T : ServiceProvider {
+    val toTypedArray = attributes.map { expr -> parseExpressionAndBindParameters(expr) }.toTypedArray()
+    return this.getWithReturningQuery(*toTypedArray)
+}
+
+
+fun <T, X, V> T.getWithReturningQuery(attribute : Path<V>) : TypedQuery<ReturningResult<V>>
+        where T : ModificationCriteriaBuilder<X>, T : ServiceProvider {
+    return this.getWithReturningQuery(parseExpressionAndBindParameters(attribute), attribute.type as Class<V>)
+}
+
+
+fun <T, X> T.returning(cteAttribute : Path<*>, modificationAttribute : Path<*>) : X
+        where T : ReturningBuilder<X>, T : ServiceProvider {
+    val cteAttributeExpr = parseExpressionAndBindParameters(cteAttribute)
+    val modificationAttributeExpr = parseExpressionAndBindParameters(modificationAttribute)
+    return this.returning(cteAttributeExpr, modificationAttributeExpr)
+}
+
+fun <X, Y, T> Y.delete(path : Path<T>) : ReturningDeleteCriteriaBuilder<T, X>
+        where Y : ReturningModificationCriteriaBuilderFactory<X>, Y : ServiceProvider {
+    val alias = path.metadata.name
+    val type = path.type as Class<T>
+    return delete(type, alias)
+}
+
+
+fun <X, Y, T> Y.deleteCollection(path : CollectionPath<*, T>) : ReturningDeleteCriteriaBuilder<T, X>
+        where Y : ReturningModificationCriteriaBuilderFactory<X>, Y : ServiceProvider {
+    val collectionName = path.getMetadata().name
+    val entityAlias = path.getMetadata().parent!!.metadata.name
+    val type = path.getMetadata().parent!!.type as Class<T>
+    return deleteCollection(type, entityAlias, collectionName)
+}
+
+fun <X, Y, T> Y.update(path : Path<T>) : ReturningUpdateCriteriaBuilder<T, X>
+        where Y : ReturningModificationCriteriaBuilderFactory<X>, Y : ServiceProvider {
+    val alias = path.metadata.name
+    val type = path.type as Class<T>
+    return update(type, alias)
+}
+
+
+fun <X, Y, T> Y.updateCollection(path : CollectionPath<*, T>) : ReturningUpdateCriteriaBuilder<T, X>
+        where Y : ReturningModificationCriteriaBuilderFactory<X>, Y : ServiceProvider {
+    val collectionName = path.getMetadata().name
+    val entityAlias = path.getMetadata().parent!!.metadata.name
+    val type = path.getMetadata().parent!!.type as Class<T>
+    return updateCollection(type, entityAlias, collectionName)
+}
+
+
+fun <X, Y, T> Y.insert(path : Path<T>) : ReturningInsertCriteriaBuilder<T, X>
+        where Y : ReturningModificationCriteriaBuilderFactory<X>, Y : ServiceProvider {
+    val type = path.type as Class<T>
+    return insert(type)
+}
+
+
+fun <X, Y, T> Y.insertCollection(path : CollectionPath<*, T>) : ReturningInsertCriteriaBuilder<T, X>
+        where Y : ReturningModificationCriteriaBuilderFactory<X>, Y : ServiceProvider {
+    val collectionName = path.getMetadata().name
+    val type = path.getMetadata().parent!!.type as Class<T>
+    return insertCollection(type, collectionName)
+}
+
+fun <T, B> B.and(expression : Expression<*>) : RestrictionBuilder<CaseWhenAndBuilder<T>> where B : CaseWhenAndBuilder<T>, B : ServiceProvider {
+    val jpqlFragment = parseExpressionAndBindParameters(expression)
+    return and(jpqlFragment)
+}
+
+fun <T : CaseWhenBuilder<*>?, B> B.and(expression : Expression<*>) : RestrictionBuilder<CaseWhenAndThenBuilder<T>> where B : CaseWhenAndThenBuilder<T>, B : ServiceProvider {
+    val jpqlFragment = parseExpressionAndBindParameters(expression)
+    return and(jpqlFragment)
+}
+
+fun <T, B> B.otherwiseExpression(expression : Expression<*>) : T where B : CaseWhenBuilder<T>, B : ServiceProvider {
+    val jpqlFragment = parseExpressionAndBindParameters(expression)
+    return otherwiseExpression(jpqlFragment)
+}
+
+fun <T, B> B.or(expression : Expression<*>) : RestrictionBuilder<CaseWhenOrBuilder<T>> where B : CaseWhenOrBuilder<T>, B : ServiceProvider {
+    val jpqlFragment = parseExpressionAndBindParameters(expression)
+    return or(jpqlFragment)
+}
+
+fun <T : CaseWhenBuilder<*>?, B> B.or(expression : Expression<*>) : RestrictionBuilder<CaseWhenOrThenBuilder<T>> where B : CaseWhenOrThenBuilder<T>, B : ServiceProvider {
+    val jpqlFragment = parseExpressionAndBindParameters(expression)
+    return or(jpqlFragment)
+}
+
+fun <T, B> B.thenExpression(expression : Expression<*>) : T where B : CaseWhenThenBuilder<T>, B : ServiceProvider {
+    val jpqlFragment = parseExpressionAndBindParameters(expression)
+    return thenExpression(jpqlFragment)
+}
+
+fun <T, B> B.`when`(expression : Expression<*>) : RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>> where B : CaseWhenStarterBuilder<T>, B : ServiceProvider {
+    val jpqlFragment = parseExpressionAndBindParameters(expression)
+    return `when`(jpqlFragment)
+}
+
+fun <T, B> B.`when`(expression : Expression<*>, thenExpression : Expression<*>) : SimpleCaseWhenStarterBuilder<T> where B : SimpleCaseWhenStarterBuilder<T>, B : ServiceProvider {
+    val jpqlFragment = parseExpressionAndBindParameters(expression)
+    val jpqlFragmentThen = parseExpressionAndBindParameters(thenExpression)
+    return `when`(jpqlFragment, jpqlFragmentThen)
+}
+
+
+
+/**
+ * Uses the given value as reference value for keyset pagination for the given expression.
+ * Normally the expression is one of the order by expressions used in the query.
+ *
+ * @param expression The order by expression for which a value should be provided
+ * @param value The reference value from which the keyset pagination can start from
+ * @return This keyset builder
+ */
+fun <T, X, V> T.with(expression: Expression<V>, value : V) : KeysetBuilder<X> where T : ServiceProvider, T : KeysetBuilder<X> {
+    var jpqlQueryFragment = parseExpressionAndBindParameters(expression)
+    return with(jpqlQueryFragment, value)
 }
 
 /**
@@ -706,9 +913,24 @@ fun <A> A.where(path: Path<*>) : RestrictionBuilder<A> where A : BaseWhereBuilde
 }
 
 
+fun <A> A.whereSimpleCase(path: Path<*>) : SimpleCaseWhenStarterBuilder<RestrictionBuilder<A>> where A : BaseWhereBuilder<A>, A : ServiceProvider {
+    val jpqlQueryFragment = parseExpressionAndBindParameters(path)
+    return this.whereSimpleCase(jpqlQueryFragment)
+}
+
 fun <A> A.having(path: Path<*>) : RestrictionBuilder<A> where A : BaseHavingBuilder<A>, A : ServiceProvider {
     val jpqlQueryFragment = parseExpressionAndBindParameters(path)
     return this.having(jpqlQueryFragment)
+}
+
+
+fun <T, X, B : BaseUpdateCriteriaBuilder<T, X>, V> B.set(path : Path<V>, value : V) : X {
+    return set(path.getPathString(1), value)
+}
+
+
+fun <T, X, B : BaseUpdateCriteriaBuilder<T, X>, V> B.setExpression(path : Path<V>, expression : Expression<V>) : X {
+    return setExpression(path.getPathString(1), parseExpressionAndBindParameters(expression))
 }
 
 /**

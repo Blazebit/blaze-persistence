@@ -426,6 +426,15 @@ class BasicTest : AbstractCoreTest() {
         assertEquals(expected, cb.queryString)
     }
 
+    @Test
+    fun testExecuteWithReturning() {
+        val resultList = cbf.update(em, person)
+                .set(person.name, "Frank")
+                .setExpression(person.age, person.age + 1)
+                .where(person.name.like("Billy"))
+                .executeUpdate()
+    }
+
     override fun getEntityClasses(): Array<Class<*>> {
         return arrayOf(
             IntIdEntity::class.java,
