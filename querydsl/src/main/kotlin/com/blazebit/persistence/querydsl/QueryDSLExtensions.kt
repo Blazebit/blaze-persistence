@@ -23,6 +23,7 @@ import com.mysema.query.types.*
 import com.mysema.query.types.Path
 import com.mysema.query.types.expr.*
 import javax.persistence.EntityManager
+import kotlin.math.exp
 import kotlin.reflect.KClass
 
 /**
@@ -112,13 +113,11 @@ fun <T, A, P> T.innerJoin(path : EntityPath<P>, alias : Path<P>): A where T : Fr
     val entityType = path.type
     val aliasName = alias.metadata.name
 
-    if (! path.isRoot()) {
+    return if (! path.isRoot()) {
         val expression = parseExpressionAndBindParameters(path)
-        return innerJoin(expression, aliasName)
-    }
-    else {
-        return innerJoinOn(entityType, aliasName)
-                .on("true").eqExpression("true").end()
+        innerJoin(expression, aliasName)
+    } else {
+        innerJoinOn(entityType, aliasName).onTrue()
     }
 }
 
@@ -195,14 +194,16 @@ fun <T, A, P> T.leftJoin(path : EntityPath<P>, alias : Path<P>): A where T : Fro
 
     val aliasName = alias.metadata.name
 
-    if (! path.isRoot()) {
+    return if (! path.isRoot()) {
         val expression = parseExpressionAndBindParameters(path)
-        return leftJoin(expression, aliasName)
+        leftJoin(expression, aliasName)
+    } else {
+        leftJoinOn(entityType, aliasName).onTrue()
     }
-    else {
-        return leftJoinOn(entityType, aliasName)
-                .on("true").eqExpression("true").end()
-    }
+}
+
+private fun <T> JoinOnBuilder<T>.onTrue() : T {
+    return on("true").eqExpression("true").end()
 }
 
 /**
@@ -280,13 +281,11 @@ fun <T, A, P> T.rightJoin(path : EntityPath<P>, alias : Path<P>): A where T : Fr
     val entityType = path.type
     val aliasName = alias.metadata.name
 
-    if (! path.isRoot()) {
+    return if (! path.isRoot()) {
         val expression = parseExpressionAndBindParameters(path)
-        return rightJoin(expression, aliasName)
-    }
-    else {
-        return rightJoinOn(entityType, aliasName)
-                .on("true").eqExpression("true").end()
+        rightJoin(expression, aliasName)
+    } else {
+        rightJoinOn(entityType, aliasName).onTrue()
     }
 }
 
@@ -338,12 +337,11 @@ fun <T, A, P> T.rightJoinOn(path : EntityPath<P>, alias : Path<P>): JoinOnBuilde
     val entityType = path.type
     val aliasName = alias.metadata.name
 
-    if (! path.isRoot()) {
+    return if (! path.isRoot()) {
         val expression = parseExpressionAndBindParameters(path)
-        return rightJoinOn(expression, aliasName)
-    }
-    else {
-        return rightJoinOn(entityType, aliasName)
+        rightJoinOn(expression, aliasName)
+    } else {
+        rightJoinOn(entityType, aliasName)
     }
 }
 
@@ -394,12 +392,11 @@ fun <T, A, P> T.innerJoinOn(path : EntityPath<P>, alias : Path<P>): JoinOnBuilde
     val entityType = path.type
     val aliasName = alias.metadata.name
 
-    if (! path.isRoot()) {
+    return if (! path.isRoot()) {
         val expression = parseExpressionAndBindParameters(path)
-        return innerJoinOn(expression, aliasName)
-    }
-    else {
-        return innerJoinOn(entityType, aliasName)
+        innerJoinOn(expression, aliasName)
+    } else {
+        innerJoinOn(entityType, aliasName)
     }
 }
 
@@ -454,12 +451,11 @@ fun <T, A, P> T.leftJoinOn(path : EntityPath<P>, alias : Path<P>): JoinOnBuilder
     val entityType = path.type
     val aliasName = alias.metadata.name
 
-    if (! path.isRoot()) {
+    return if (! path.isRoot()) {
         val expression = parseExpressionAndBindParameters(path)
-        return leftJoinOn(expression, aliasName)
-    }
-    else {
-        return leftJoinOn(entityType, aliasName)
+        leftJoinOn(expression, aliasName)
+    } else {
+        leftJoinOn(entityType, aliasName)
     }
 }
 
@@ -474,11 +470,8 @@ fun <T> T.orderByAsc(expression: Expression<*>, nullFirst : Boolean) : T where T
 }
 
 fun <T> T.orderByAsc(vararg expressions: Expression<*>) : T where T : OrderByBuilder<T>, T : ServiceProvider {
-    for (expression in expressions ) {
-        var exp = parseExpressionAndBindParameters(expression)
-        orderByAsc(exp)
-    }
-    return this
+    return expressions.fold(this) { cb, expression ->
+        cb.orderByAsc(parseExpressionAndBindParameters(expression))}
 }
 
 fun <T> T.orderByDesc(expression: Expression<*>, nullFirst : Boolean) : T where T : OrderByBuilder<T>, T : ServiceProvider {
@@ -487,27 +480,18 @@ fun <T> T.orderByDesc(expression: Expression<*>, nullFirst : Boolean) : T where 
 }
 
 fun <T> T.orderByDesc(vararg expressions: Expression<*>) : T where T : OrderByBuilder<T>, T : ServiceProvider {
-    for (expression in expressions ) {
-        var exp = parseExpressionAndBindParameters(expression)
-        orderByDesc(exp)
-    }
-    return this
+    return expressions.fold(this) { cb, expression ->
+        cb.orderByDesc(parseExpressionAndBindParameters(expression))}
 }
 
 fun <T> T.orderByAsc(vararg specifiers: OrderSpecifier<*>) : T where T : OrderByBuilder<T>, T : ServiceProvider {
-    for (specifier in specifiers) {
-        orderBy(specifier.target, specifier.isAscending, specifier.nullHandling == OrderSpecifier.NullHandling.NullsFirst)
-    }
-    return this
+    return specifiers.fold(this) { cb, specifier ->
+        cb.orderBy(specifier.target, specifier.isAscending, specifier.nullHandling == OrderSpecifier.NullHandling.NullsFirst)}
 }
 
-
 fun <T> T.groupBy(vararg expressions: Expression<*>) : T where T : GroupByBuilder<T>, T : ServiceProvider {
-    for (expression in expressions) {
-        var jpqlQueryFragment = parseExpressionAndBindParameters(expression)
-        return groupBy(jpqlQueryFragment)
-    }
-    return this
+    return expressions.fold(this) { cb, expression ->
+        cb.groupBy(parseExpressionAndBindParameters(expression))}
 }
 
 
@@ -734,11 +718,8 @@ fun <A> A.having(path: Path<*>) : RestrictionBuilder<A> where A : BaseHavingBuil
  * @return The query builder for chaining calls
  */
 fun <A> A.fetch(vararg paths: Path<*>) : A where A : FetchBuilder<A>, A : ServiceProvider {
-    for (path in paths) {
-        var jpqlQueryFragment = parseExpressionAndBindParameters(path)
-        this.fetch(jpqlQueryFragment)
-    }
-    return this
+    return paths.fold(this) { cb, expression ->
+        cb.fetch(parseExpressionAndBindParameters(expression))}
 }
 
 /**
@@ -811,19 +792,13 @@ fun <A> BinaryPredicateBuilder<A>.andExpression(expression: Expression<*>) : A {
 
 
 private fun ServiceProvider.parseExpressionAndBindParameters(expression : Expression<*>) : String {
-    val serviceProvider = this as ServiceProvider
-
-    val em = serviceProvider.getService(EntityManager::class.java)
+    val em = getService(EntityManager::class.java)
+    val parameterManager = getService(ConstantRegistry::class.java)
     val ser = JPQLSerializer(BlazePersistJPQLTemplates.INSTANCE, em)
     expression.accept(ser, null)
-    var jpqlQueryFragment = ser.toString()
 
-    val parameterManager = serviceProvider.getService(ConstantRegistry::class.java)
-
-    for ((constant, label) in ser.constantToLabel) {
+    return ser.constantToLabel.entries.fold(ser.toString()) {jpqlQueryFragment, (constant, label) ->
         val parameterName = parameterManager.addConstant(constant)
-        jpqlQueryFragment = jpqlQueryFragment.replace("?$label", ":$parameterName")
+        jpqlQueryFragment.replace("?$label", ":$parameterName")
     }
-
-    return jpqlQueryFragment
 }
