@@ -308,5 +308,10 @@ public class ConstrainedTupleElementMapper implements AliasedTupleElementMapper 
             sb.append(expression);
             return this;
         }
+
+        @Override
+        public <T> T getService(Class<T> serviceClass) {
+            return initiator.getParentQueryBuilder().getService(serviceClass);
+        }
     }
 }

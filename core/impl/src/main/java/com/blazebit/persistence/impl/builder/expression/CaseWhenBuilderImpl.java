@@ -233,4 +233,8 @@ public class CaseWhenBuilderImpl<T> extends PredicateAndExpressionBuilderEndedLi
         return expression;
     }
 
+    @Override
+    public <T> T getService(Class<T> serviceClass) {
+        return subqueryInitFactory.getQueryBuilder().getService(serviceClass);
+    }
 }

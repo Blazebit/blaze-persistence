@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence;
 
+import com.blazebit.persistence.spi.ServiceProvider;
+
 /**
  * A builder that can terminate the build process for general case when expressions.
  *
@@ -23,7 +25,7 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.0.0
  */
-public interface CaseWhenThenBuilder<T extends CaseWhenBuilder<?>> {
+public interface CaseWhenThenBuilder<T extends CaseWhenBuilder<?>> extends ServiceProvider {
 
     /**
      * Adds the constructed when expression with the then expression to the case when builder.

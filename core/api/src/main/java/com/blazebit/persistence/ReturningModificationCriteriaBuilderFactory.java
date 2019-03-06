@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence;
 
+import com.blazebit.persistence.spi.ServiceProvider;
+
 /**
  * A builder for modification queries that return results.
  *
@@ -23,7 +25,7 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public interface ReturningModificationCriteriaBuilderFactory<X> {
+public interface ReturningModificationCriteriaBuilderFactory<X> extends ServiceProvider {
 
     /**
      * Like {@link ReturningModificationCriteriaBuilderFactory#delete(java.lang.Class, java.lang.String)} but with the alias

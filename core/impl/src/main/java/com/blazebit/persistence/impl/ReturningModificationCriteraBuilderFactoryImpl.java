@@ -104,4 +104,9 @@ public class ReturningModificationCriteraBuilderFactoryImpl<X> implements Return
         listener.onBuilderStarted(cb);
         return cb;
     }
+
+    @Override
+    public <T> T getService(Class<T> serviceClass) {
+        return mainQuery.cteManager.getQueryContext().getParent().getService(serviceClass);
+    }
 }

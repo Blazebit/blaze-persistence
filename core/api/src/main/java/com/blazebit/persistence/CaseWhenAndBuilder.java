@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence;
 
+import com.blazebit.persistence.spi.ServiceProvider;
+
 /**
  * The builder interface for a when predicate container that connects predicates with the AND operator.
  *
@@ -23,7 +25,7 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.0.0
  */
-public interface CaseWhenAndBuilder<T> {
+public interface CaseWhenAndBuilder<T> extends ServiceProvider {
 
     /**
      * Starts a {@link RestrictionBuilder} for a case when predicate with the given expression as left hand expression.

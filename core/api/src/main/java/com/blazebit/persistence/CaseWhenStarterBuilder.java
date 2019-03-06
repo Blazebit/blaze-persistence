@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence;
 
+import com.blazebit.persistence.spi.ServiceProvider;
+
 /**
  * A builder for general case when expressions.
  *
@@ -23,7 +25,7 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.0.0
  */
-public interface CaseWhenStarterBuilder<T> {
+public interface CaseWhenStarterBuilder<T> extends ServiceProvider {
 
     /**
      * Starts a {@link RestrictionBuilder} to create a when predicate where expression will be on the left hand side of the predicate.
