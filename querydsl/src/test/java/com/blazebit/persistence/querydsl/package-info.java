@@ -21,6 +21,7 @@
         Version.class,
         Person.class,
         Document.class,
+        IdHolderCTE.class,
         TestCTE.class,
         TestAdvancedCTE1.class,
         TestAdvancedCTE2.class,
@@ -33,6 +34,7 @@
 package com.blazebit.persistence.querydsl;
 
 import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.IdHolderCTE;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.LongSequenceEntity;
 import com.blazebit.persistence.testsuite.entity.NameObject;
