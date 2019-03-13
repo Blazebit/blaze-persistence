@@ -2124,6 +2124,11 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         PathElementExpression maybeSingularAssociationNameExpression = pathElements.get(maybeSingularAssociationIndex);
         String maybeSingularAssociationName = getSimpleName(maybeSingularAssociationNameExpression);
 
+        if (maybeSingularAssociationNameExpression instanceof MapKeyExpression) {
+            // a MapKeyExpression can never be a single valued association id
+            return false;
+        }
+
         if (parent == null) {
             // This is the case when we have exactly 2 path elements
             if (maybeSingularAssociationNameExpression instanceof TreatExpression) {
