@@ -34,5 +34,9 @@
         <class>com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionId</class>
         <class>com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionDefault</class>
         <class>com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionDefaultId</class>
+
+        <class>com.blazebit.persistence.view.testsuite.subview.treat.model.Container</class>
+        <class>com.blazebit.persistence.view.testsuite.subview.treat.model.BaseContainerItem</class>
+        <class>com.blazebit.persistence.view.testsuite.subview.treat.model.ContainerItem1</class>
     </persistence-unit>
 </persistence>

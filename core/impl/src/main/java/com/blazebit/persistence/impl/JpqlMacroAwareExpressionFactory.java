@@ -84,6 +84,17 @@ public final class JpqlMacroAwareExpressionFactory implements ExpressionFactory 
     }
 
     @Override
+    public Expression createSimpleOrObjectExpression(String expression, boolean allowQuantifiedPredicates) {
+        return expressionFactory.createSimpleOrObjectExpression(expression, allowQuantifiedPredicates, getDefaultMacroConfiguration(), null);
+    }
+
+    @Override
+    public Expression createSimpleOrObjectExpression(String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return expressionFactory.createSimpleOrObjectExpression(expression, allowQuantifiedPredicates, macroConfiguration, usedMacros);
+    }
+
+
+    @Override
     public Expression createCaseOperandExpression(String caseOperandExpression) {
         return expressionFactory.createCaseOperandExpression(caseOperandExpression, getDefaultMacroConfiguration(), null);
     }

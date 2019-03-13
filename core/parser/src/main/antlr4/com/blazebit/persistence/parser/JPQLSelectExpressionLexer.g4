@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-lexer grammar JPQL_lexer;
+lexer grammar JPQLSelectExpressionLexer;
 
 KEY: [Kk][Ee][Yy];
 
@@ -130,15 +130,31 @@ TREAT: [Tt] [Rr] [Ee] [Aa] [Tt];
 AS: [Aa] [Ss];
 
 Outer_function : [Oo][Uu][Tt][Ee][Rr];
- 
-Star_operator : '*';
 
-Character_literal : '\''JavaLetter'\'';
+Character_literal : '\'' JavaLetter '\'';
 
-String_literal : '\'' ~[\']* '\'';
+String_literal : '\'' ~[']* '\'';
 
 Input_parameter : ':'Identifier | '?'Digits;
- 
+
+Star : '*';
+
+Slash : '/';
+
+LP: '(';
+RP: ')';
+LB: '[';
+RB: ']';
+
+EQ : '=';
+NEQ : '<>'
+    | '!='
+    ;
+LT : '<';
+LE : '<=';
+GT : '>';
+GE : '>=';
+
 //Enum_literal : (Identifier'.')+Identifier;
  
 //Entity_type_literal : Identifier;
@@ -148,17 +164,12 @@ Date_literal : '{' 'd' (' ' | '\t')+ '\'' Date_string '\'' (' ' | '\t')* '}';
 Time_literal : '{' 't' (' ' | '\t')+ '\'' Time_string '\'' (' ' | '\t')* '}';
 
 Timestamp_literal : '{' 'ts' (' ' | '\t')+ '\'' Date_string ' ' Time_string ('.' DIGIT*)? '\'' (' ' | '\t')* '}';
-     
+
 Boolean_literal
      : [Tt][Rr][Uu][Ee]
      | [Ff][Aa][Ll][Ss][Ee]
      ;
  
-Not_equal_operator
-     : '<>'
-     | '!='
-     ;
-
 Signum : SignumFragment
        ;
 
@@ -198,7 +209,11 @@ Integer_literal
 Path_separator
      : '.'
      ;
- 
+
+Argument_separator
+     : ','
+     ;
+
 WS: [ \n\t\r]+ -> channel(HIDDEN);
  
 Identifier

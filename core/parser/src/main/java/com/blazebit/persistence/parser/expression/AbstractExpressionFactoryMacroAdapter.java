@@ -47,6 +47,11 @@ public abstract class AbstractExpressionFactoryMacroAdapter implements Expressio
     }
 
     @Override
+    public Expression createSimpleOrObjectExpression(String expression, boolean allowQuantifiedPredicates) {
+        return createSimpleOrObjectExpression(expression, allowQuantifiedPredicates, getDefaultMacroConfiguration(), null);
+    }
+
+    @Override
     public Expression createCaseOperandExpression(String caseOperandExpression) {
         return createCaseOperandExpression(caseOperandExpression, getDefaultMacroConfiguration(), null);
     }

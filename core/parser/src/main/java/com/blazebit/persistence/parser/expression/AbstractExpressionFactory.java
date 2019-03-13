@@ -148,6 +148,14 @@ public abstract class AbstractExpressionFactory extends AbstractExpressionFactor
         }
     };
 
+    private static final RuleInvoker SIMPLE_OR_OBJECT_EXPRESSION_RULE_INVOKER = new RuleInvoker() {
+
+        @Override
+        public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
+            return parser.parseSimpleOrObjectExpression();
+        }
+    };
+
     private final boolean allowTreatJoinExtension;
     private final boolean optimize;
     private final Set<String> aggregateFunctions;
@@ -250,6 +258,11 @@ public abstract class AbstractExpressionFactory extends AbstractExpressionFactor
     @Override
     public Expression createSimpleExpression(String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
         return createExpression(getSimpleExpressionRuleInvoker(), expression, true, allowQuantifiedPredicates, false, macroConfiguration, usedMacros);
+    }
+
+    @Override
+    public Expression createSimpleOrObjectExpression(String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return createExpression(SIMPLE_OR_OBJECT_EXPRESSION_RULE_INVOKER, expression, true, allowQuantifiedPredicates, false, macroConfiguration, usedMacros);
     }
 
     @Override
