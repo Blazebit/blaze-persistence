@@ -12,7 +12,7 @@ None
 
 ### Bug fixes
 
-None
+* Fix support for de-referencing map key entity type expressions
 
 ### Backwards-incompatible changes
 
