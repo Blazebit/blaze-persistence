@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-grammar JPQLSelectExpression;
+parser grammar JPQLSelectExpressionParser;
 
-//TODO: add antlr issue to illustrate that import of grammar containing left-recursive rules leads to error in antlr 4.3 (arithmetic_term)
-import JPQL_lexer;
+options { tokenVocab=JPQLSelectExpressionLexer; }
 
 @parser::members {
 private boolean allowOuter = false;
@@ -42,21 +41,21 @@ parsePath : state_field_path_expression EOF
           ;
 
 parseJoinPath : join_association_path_expression EOF                                                                #NormalJoinPathExpression
-              | Outer_function '(' join_association_path_expression ')' EOF                                         #OuterJoinPathExpression
-              | macroName=Identifier '(' (join_association_path_expression (',' simple_expression)*)?  ')'  EOF     #MacroJoinPathExpression
+              | Outer_function LP join_association_path_expression RP EOF                                         #OuterJoinPathExpression
+              | macroName=Identifier LP (join_association_path_expression (Argument_separator simple_expression)*)?  RP  EOF     #MacroJoinPathExpression
               ;
 
 join_association_path_expression
-          : simple_subpath '.' general_path_element                                             #SimpleJoinPathExpression
+          : simple_subpath Path_separator general_path_element                                             #SimpleJoinPathExpression
           // TODO: I am not sure this is actually necessary. Maybe we leave it in the grammar but the treated_subpath will be replaced by a join node
-          | {allowTreatJoinExtension == true}? treated_subpath  '.' general_path_element        #ExtendedJoinPathExpression
+          | {allowTreatJoinExtension == true}? treated_subpath Path_separator general_path_element        #ExtendedJoinPathExpression
           | single_element_path_expression                                                      #SingleJoinElementExpression
-          | TREAT '(' join_path_expression AS subtype ')'                                       #TreatJoinPathExpression
+          | TREAT LP join_path_expression AS subtype RP                                       #TreatJoinPathExpression
           ;
 
 join_path_expression
-    : simple_subpath '.' general_path_element                                                    #SimplePath
-    | {allowTreatJoinExtension == true}? TREAT '(' identifier AS subtype ')' '.' simple_subpath  #TreatedRootPath
+    : simple_subpath Path_separator general_path_element                                                    #SimplePath
+    | {allowTreatJoinExtension == true}? TREAT LP identifier AS subtype RP Path_separator simple_subpath  #TreatedRootPath
     ;
 
 subtype : identifier
@@ -64,6 +63,11 @@ subtype : identifier
 
 parseSimpleExpression
     : simple_expression EOF 
+    ;
+
+parseSimpleOrObjectExpression
+    : simple_expression EOF
+    | treated_subpath EOF
     ;
 
 parseSimpleSubqueryExpression
@@ -102,18 +106,18 @@ simple_expression : single_valued_path_expression
                   | aggregate_expression
                   ;
  
-key_value_expression : name=KEY '('collection_valued_path_expression')'
-                     | name=VALUE '('collection_valued_path_expression')'
+key_value_expression : name=KEY LP collection_valued_path_expression RP
+                     | name=VALUE LP collection_valued_path_expression RP
                      ;
 
 treated_key_value_expression
     :
     // I think this is an error in the JPQL grammar as it doesn't make sense to do TREAT(ENTRY(...))
     //| TREAT '(' qualified_identification_variable AS subtype ')'
-    | TREAT '(' key_value_expression AS subtype ')'
+    | TREAT LP key_value_expression AS subtype RP
     ;
 
-qualified_identification_variable : name=ENTRY '('collection_valued_path_expression')' # EntryFunction
+qualified_identification_variable : name=ENTRY LP collection_valued_path_expression RP # EntryFunction
                                   | key_value_expression #KeyValueExpression
                                   ;
 
@@ -140,21 +144,21 @@ general_path_element : simple_path_element
 //                 | simple_path_element '[' string_expression ']' #ArrayExpressionStringIndex
 //                 ;
 
-array_expression : simple_path_element '[' Input_parameter ']' #ArrayExpressionParameterIndex
-                | simple_path_element '[' state_field_path_expression ']' #ArrayExpressionPathIndex
-                | simple_path_element '[' single_element_path_expression ']' #ArrayExpressionSingleElementPathIndex
-                | simple_path_element '[' Integer_literal ']' #ArrayExpressionIntegerLiteralIndex
-                | simple_path_element '[' string_literal ']' #ArrayExpressionStringLiteralIndex
+array_expression : simple_path_element LB Input_parameter RB #ArrayExpressionParameterIndex
+                | simple_path_element LB state_field_path_expression RB #ArrayExpressionPathIndex
+                | simple_path_element LB single_element_path_expression RB #ArrayExpressionSingleElementPathIndex
+                | simple_path_element LB Integer_literal RB #ArrayExpressionIntegerLiteralIndex
+                | simple_path_element LB string_literal RB #ArrayExpressionStringLiteralIndex
                 ;
 
 general_subpath : simple_subpath
                 | treated_subpath
                 ;
 
-simple_subpath : general_path_start ('.'general_path_element)*
+simple_subpath : general_path_start (Path_separator general_path_element)*
                ;
 
-treated_subpath : TREAT '(' general_subpath AS subtype ')' ('.'general_path_element)*
+treated_subpath : TREAT LP general_subpath AS subtype RP (Path_separator general_path_element)*
                 ;
 
 state_field_path_expression : path
@@ -167,7 +171,7 @@ single_valued_object_path_expression : path
                                      | macro_expression
                                      ;
 
-path : general_subpath '.' general_path_element
+path : general_subpath Path_separator general_path_element
      ;
 
 collection_valued_path_expression : single_element_path_expression
@@ -178,8 +182,8 @@ collection_valued_path_expression : single_element_path_expression
 single_element_path_expression : general_path_start
                                ;
 
-aggregate_expression : funcname=( AVG | MAX | MIN | SUM | COUNT) '('(distinct=DISTINCT)? aggregate_argument ')'  # AggregateExpression
-                     | funcname=COUNT '(' Star_operator ')' # CountStar
+aggregate_expression : funcname=( AVG | MAX | MIN | SUM | COUNT) LP (distinct=DISTINCT)? aggregate_argument RP  # AggregateExpression
+                     | funcname=COUNT LP Star RP # CountStar
                      ;
 
 aggregate_argument : single_element_path_expression
@@ -197,11 +201,11 @@ scalar_expression : null_literal // This is a custom, non JPA compliant extensio
                   | case_expression
                   ;
 
-outer_expression : Outer_function '(' single_valued_path_expression  ')'
+outer_expression : Outer_function LP single_valued_path_expression  RP
                  ;
 
 // Careful before you change something, an empty invocation will produce a child, which is specially handled in JPQLSelectExpressionVisitorImpl
-macro_expression : macroName=Identifier '(' (simple_expression (',' simple_expression)*)?  ')'
+macro_expression : macroName=Identifier LP (simple_expression (Argument_separator simple_expression)*)?  RP
                  ;
 
 arithmetic_expression : arithmetic_term # ArithmeticExpressionTerm
@@ -209,7 +213,7 @@ arithmetic_expression : arithmetic_term # ArithmeticExpressionTerm
                       ;
 
 arithmetic_term : arithmetic_factor # ArithmeticTermFactor
-                | term=arithmetic_term op=( '*' | '/' ) factor=arithmetic_factor # ArithmeticMultDiv
+                | term=arithmetic_term op=( Star | Slash ) factor=arithmetic_factor # ArithmeticMultDiv
                 ;
 
 arithmetic_factor : signum=Signum? arithmetic_primary;
@@ -217,7 +221,7 @@ arithmetic_factor : signum=Signum? arithmetic_primary;
 arithmetic_primary : state_field_path_expression # ArithmeticPrimary
                    | single_element_path_expression # ArithmeticPrimary
                    | numeric_literal # ArithmeticPrimary
-                   | '('arithmetic_expression')' # ArithmeticPrimaryParanthesis
+                   | LP arithmetic_expression RP # ArithmeticPrimaryParanthesis
                    | Input_parameter # ArithmeticPrimary
                    | functions_returning_numerics # ArithmeticPrimary
                    | aggregate_expression # ArithmeticPrimary
@@ -273,10 +277,10 @@ entity_type_expression : type_discriminator
                        ;
 
 entity_type_or_literal_expression : entity_type_expression
-                                  | pathElem+=identifier ('.' pathElem+=identifier)*
+                                  | pathElem+=identifier (Path_separator pathElem+=identifier)*
                                   ;
 
-type_discriminator : TYPE '(' type_discriminator_arg ')';
+type_discriminator : TYPE LP type_discriminator_arg RP;
 
 type_discriminator_arg : Input_parameter
                        | single_valued_object_path_expression
@@ -284,22 +288,22 @@ type_discriminator_arg : Input_parameter
                        | key_value_expression
                        ;
 
-functions_returning_numerics : LENGTH '('string_expression')' # Functions_returning_numerics_default
-                             | LOCATE '('string_expression',' string_expression (',' arithmetic_expression)? ')' # Functions_returning_numerics_default
-                             | ABS '('arithmetic_expression')' # Functions_returning_numerics_default
-                             | SQRT '('arithmetic_expression')' # Functions_returning_numerics_default
-                             | MOD '('arithmetic_expression',' arithmetic_expression')' # Functions_returning_numerics_default
-                             | SIZE '('collection_valued_path_expression')' # Functions_returning_numerics_size
-                             | INDEX '('collection_valued_path_expression')' # IndexFunction
+functions_returning_numerics : LENGTH LP string_expression RP # Functions_returning_numerics_default
+                             | LOCATE LP string_expression Argument_separator string_expression (Argument_separator arithmetic_expression)? RP # Functions_returning_numerics_default
+                             | ABS LP arithmetic_expression RP # Functions_returning_numerics_default
+                             | SQRT LP arithmetic_expression RP # Functions_returning_numerics_default
+                             | MOD LP arithmetic_expression Argument_separator arithmetic_expression RP # Functions_returning_numerics_default
+                             | SIZE LP collection_valued_path_expression RP # Functions_returning_numerics_size
+                             | INDEX LP collection_valued_path_expression RP # IndexFunction
                              ;
 
 functions_returning_datetime : CURRENT_DATE | CURRENT_TIME | CURRENT_TIMESTAMP;
 
-functions_returning_strings : CONCAT '('string_expression',' string_expression (',' string_expression)*')' # StringFunction
-                            | SUBSTRING '('string_expression',' arithmetic_expression (',' arithmetic_expression)?')' # StringFunction
-                            | TRIM '('((trim_specification)? (trim_character)? FROM)? string_expression')' # TrimFunction
-                            | LOWER '('string_expression')' # StringFunction
-                            | UPPER '('string_expression')' # StringFunction
+functions_returning_strings : CONCAT LP string_expression Argument_separator string_expression (Argument_separator string_expression)* RP # StringFunction
+                            | SUBSTRING LP string_expression Argument_separator arithmetic_expression (Argument_separator arithmetic_expression)? RP # StringFunction
+                            | TRIM LP ((trim_specification)? (trim_character)? FROM)? string_expression RP # TrimFunction
+                            | LOWER LP string_expression RP # StringFunction
+                            | UPPER LP string_expression RP # StringFunction
                             ;
 
 trim_specification : LEADING
@@ -307,7 +311,7 @@ trim_specification : LEADING
                    | BOTH
                    ;
 
-function_invocation : FUNCTION '(' string_literal (',' args+=function_arg)*')';
+function_invocation : FUNCTION LP string_literal (Argument_separator args+=function_arg)* RP;
 
 function_arg :
              state_field_path_expression
@@ -323,15 +327,15 @@ case_expression : coalesce_expression
                 | {allowCaseWhen == true}? simple_case_expression     //for entity view extension only
                 ;
 
-coalesce_expression : COALESCE '('scalar_expression (',' scalar_expression)+')';
+coalesce_expression : COALESCE LP scalar_expression (Argument_separator scalar_expression)+ RP;
 
-nullif_expression : NULLIF '('scalar_expression',' scalar_expression')';
+nullif_expression : NULLIF LP scalar_expression Argument_separator scalar_expression RP;
 
 null_literal : NULL;
 
 literal
     : simple_literal
-    | pathElem+=identifier ('.' pathElem+=identifier)+
+    | pathElem+=identifier (Path_separator pathElem+=identifier)+
     ;
 
 simple_literal
@@ -380,7 +384,7 @@ conditional_factor : (not=NOT)? conditional_primary
                    ;
 
 conditional_primary : simple_cond_expression # ConditionalPrimary_simple
-                    | '('conditional_expression')' # ConditionalPrimary
+                    | LP conditional_expression RP # ConditionalPrimary
                     ;
 
 simple_cond_expression : comparison_expression
@@ -401,7 +405,7 @@ between_expression : expr=arithmetic_expression (not=NOT)? BETWEEN bound1=arithm
 // TODO: the cases for identifier are actually not JPA compliant and is only required for managing a placeholder that is later replaced by a subquery
 // in_expression : (/* Placeholder case */ left=Identifier | state_field_path_expression | type_discriminator) (not=NOT)? IN ( '(' inItems+=in_item (',' inItems+=in_item)* ')' | param=Input_parameter | /* Single expression case */ state_field_path_expression | /* Placeholder case */ single_element_path_expression )
 // TODO: allowing scalar expressions on the LHS is not JPA compliant but this is allowed through the API
-in_expression : (left=Identifier | scalar_expression) (not=NOT)? IN ( '(' inItems+=in_item (',' inItems+=in_item)* ')' | param=Input_parameter | /* Single expression case */ state_field_path_expression | /* Placeholder case */ single_element_path_expression )
+in_expression : (left=Identifier | scalar_expression) (not=NOT)? IN ( LP inItems+=in_item (Argument_separator inItems+=in_item)* RP | param=Input_parameter | /* Single expression case */ state_field_path_expression | /* Placeholder case */ single_element_path_expression )
               ;
 
 in_item : literal
@@ -450,32 +454,32 @@ simple_entity_or_value_expression : identifier
                                   ;
 
 comparison_expression : left=string_expression comparison_operator right=string_expression # ComparisonExpression_string
-                      | {allowQuantifiedPredicates == true}? left=string_expression comparison_operator quantifier=(ALL | ANY | SOME) ('(' right=identifier ')' | right=identifier) # QuantifiedComparisonExpression_string
+                      | {allowQuantifiedPredicates == true}? left=string_expression comparison_operator quantifier=(ALL | ANY | SOME) (LP right=identifier RP | right=identifier) # QuantifiedComparisonExpression_string
                       | left=boolean_expression op=equality_comparison_operator right=boolean_expression # ComparisonExpression_boolean
-                      | {allowQuantifiedPredicates == true}? left=boolean_expression op=equality_comparison_operator quantifier=(ALL | ANY | SOME) ('(' right=identifier ')' | right=identifier) # QuantifiedComparisonExpression_boolean
+                      | {allowQuantifiedPredicates == true}? left=boolean_expression op=equality_comparison_operator quantifier=(ALL | ANY | SOME) (LP right=identifier RP | right=identifier) # QuantifiedComparisonExpression_boolean
                       | left=enum_expression op=equality_comparison_operator right=enum_expression # ComparisonExpression_enum
-                      | {allowQuantifiedPredicates == true}? left=datetime_expression comparison_operator quantifier=(ALL | ANY | SOME) ('(' right=identifier ')' | right=identifier) # QuantifiedComparisonExpression_datetime
+                      | {allowQuantifiedPredicates == true}? left=datetime_expression comparison_operator quantifier=(ALL | ANY | SOME) (LP right=identifier RP | right=identifier) # QuantifiedComparisonExpression_datetime
                       | left=datetime_expression comparison_operator right=datetime_expression # ComparisonExpression_datetime
-                      | {allowQuantifiedPredicates == true}? left=datetime_expression comparison_operator quantifier=(ALL | ANY | SOME) ('(' right=identifier ')' | right=identifier) # QuantifiedComparisonExpression_datetime
+                      | {allowQuantifiedPredicates == true}? left=datetime_expression comparison_operator quantifier=(ALL | ANY | SOME) (LP right=identifier RP | right=identifier) # QuantifiedComparisonExpression_datetime
                       | left=entity_expression op=equality_comparison_operator right=entity_expression # ComparisonExpression_entity
-                      | {allowQuantifiedPredicates == true}? left=entity_expression op=equality_comparison_operator quantifier=(ALL | ANY | SOME) ('(' right=identifier ')' | right=identifier) # QuantifiedComparisonExpression_entity
+                      | {allowQuantifiedPredicates == true}? left=entity_expression op=equality_comparison_operator quantifier=(ALL | ANY | SOME) (LP right=identifier RP | right=identifier) # QuantifiedComparisonExpression_entity
                       | left=arithmetic_expression comparison_operator right=arithmetic_expression # ComparisonExpression_arithmetic
-                      | {allowQuantifiedPredicates == true}? left=arithmetic_expression comparison_operator quantifier=(ALL | ANY | SOME) ('(' right=identifier ')' | right=identifier) # QuantifiedComparisonExpression_arithmetic
+                      | {allowQuantifiedPredicates == true}? left=arithmetic_expression comparison_operator quantifier=(ALL | ANY | SOME) (LP right=identifier RP | right=identifier) # QuantifiedComparisonExpression_arithmetic
                       | left=entity_type_or_literal_expression op=equality_comparison_operator right=entity_type_or_literal_expression # ComparisonExpression_entitytype
-                      | {allowQuantifiedPredicates == true}? left=entity_type_expression op=equality_comparison_operator quantifier=(ALL | ANY | SOME) ('(' right=identifier ')' | right=identifier) # QuantifiedComparisonExpression_entitytype
+                      | {allowQuantifiedPredicates == true}? left=entity_type_expression op=equality_comparison_operator quantifier=(ALL | ANY | SOME) (LP right=identifier RP | right=identifier) # QuantifiedComparisonExpression_entitytype
                       | left=path op=equality_comparison_operator right=type_discriminator # ComparisonExpression_path_type
                       | left=type_discriminator op=equality_comparison_operator right=path # ComparisonExpression_type_path
                       ;
 
-equality_comparison_operator : '=' # EqPredicate
-                             | Not_equal_operator # NeqPredicate
+equality_comparison_operator : EQ # EqPredicate
+                             | NEQ # NeqPredicate
                              ;
 
 comparison_operator : equality_comparison_operator # EqOrNeqPredicate
-                    | '>' # GtPredicate
-                    | '>=' # GePredicate
-                    | '<' # LtPredicate
-                    | '<=' # LePredicate
+                    | GT # GtPredicate
+                    | GE # GePredicate
+                    | LT # LtPredicate
+                    | LE # LePredicate
                     ;
 
 // NOTE: it is not standard compliant to have an optional ELSE branch, but we make up for that in our renderer by rendering a NULL result in the ELSE branch

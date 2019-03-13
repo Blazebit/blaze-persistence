@@ -1782,12 +1782,12 @@
                             <verbose>false</verbose>
                             <fork>true</fork>
                             <log4jConfiguration>${basedir}/log4j.properties</log4jConfiguration>
-                            <metadataDirectory>${project.build.outputDirectory}</metadataDirectory>
+                            <metadataDirectory>${project.build.testOutputDirectory}</metadataDirectory>
                             <useFileListFile>true</useFileListFile>
                         </configuration>
                         <executions>
                             <execution>
-                                <phase>process-classes</phase>
+                                <phase>process-test-classes</phase>
                                 <goals>
                                     <goal>enhance</goal>
                                 </goals>
@@ -1807,14 +1807,13 @@
                         <executions>
                             <execution>
                                 <id>add-source</id>
-                                <phase>generate-sources</phase>
+                                <phase>generate-test-sources</phase>
                                 <goals>
-                                    <goal>add-source</goal>
+                                    <goal>add-test-source</goal>
                                 </goals>
                                 <configuration>
                                     <sources>
-                                        <source>${additional.source.directory}</source>
-                                        <source>${project.build.directory}/generated-sources/metamodel</source>
+                                        <source>${project.build.directory}/generated-test-sources/metamodel</source>
                                     </sources>
                                 </configuration>
                             </execution>
@@ -1827,12 +1826,12 @@
                             <execution>
                                 <id>process</id>
                                 <goals>
-                                    <goal>process</goal>
+                                    <goal>process-test</goal>
                                 </goals>
-                                <phase>generate-sources</phase>
+                                <phase>generate-test-sources</phase>
                                 <configuration>
                                     <!-- source output directory -->
-                                    <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
+                                    <outputDirectory>${project.build.directory}/generated-test-sources/metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.datanucleus.jpa.query.JPACriteriaProcessor</processor>
                                     </processors>

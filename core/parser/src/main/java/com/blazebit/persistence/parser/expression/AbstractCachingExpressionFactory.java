@@ -64,6 +64,13 @@ public abstract class AbstractCachingExpressionFactory extends AbstractExpressio
         }
     };
 
+    private static final ExpressionSupplier SIMPLE_OR_OBJECT_EXPRESSION_SUPPLIER = new ExpressionSupplier() {
+        @Override
+        public Expression get(ExpressionFactory expressionFactory, String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+            return expressionFactory.createSimpleOrObjectExpression(expression, allowQuantifiedPredicates, macroConfiguration, usedMacros);
+        }
+    };
+
     private static final ExpressionSupplier CASE_OPERAND_EXPRESSION_SUPPLIER = new ExpressionSupplier() {
         @Override
         public Expression get(ExpressionFactory expressionFactory, String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
@@ -154,6 +161,11 @@ public abstract class AbstractCachingExpressionFactory extends AbstractExpressio
     @Override
     public Expression createSimpleExpression(final String expression, final boolean allowQuantifiedPredicates, final MacroConfiguration macroConfiguration, Set<String> usedMacros) {
         return getOrDefault("com.blazebit.persistence.parser.expression.cache.SimpleExpression", delegate, expression, allowQuantifiedPredicates, macroConfiguration, SIMPLE_EXPRESSION_SUPPLIER);
+    }
+
+    @Override
+    public Expression createSimpleOrObjectExpression(final String expression, boolean allowQuantifiedPredicates, final MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return getOrDefault("com.blazebit.persistence.parser.expression.cache.SimpleOrObjectExpression", delegate, expression, allowQuantifiedPredicates, macroConfiguration, SIMPLE_OR_OBJECT_EXPRESSION_SUPPLIER);
     }
 
     @Override

@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.parser.expression;
 
-import com.blazebit.persistence.parser.JPQLSelectExpressionBaseVisitor;
 import com.blazebit.persistence.parser.JPQLSelectExpressionLexer;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser.ArrayExpressionIntegerLiteralIndexContext;
@@ -51,6 +50,7 @@ import com.blazebit.persistence.parser.JPQLSelectExpressionParser.TreatedRootPat
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser.Treated_key_value_expressionContext;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser.Treated_subpathContext;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser.TrimFunctionContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParserBaseVisitor;
 import com.blazebit.persistence.parser.predicate.BetweenPredicate;
 import com.blazebit.persistence.parser.predicate.BinaryExpressionPredicate;
 import com.blazebit.persistence.parser.predicate.BooleanLiteral;
@@ -89,7 +89,7 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.0.0
  */
-public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVisitor<Expression> {
+public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionParserBaseVisitor<Expression> {
 
     private final Set<String> aggregateFunctions;
     private final Map<String, Class<Enum<?>>> enums;

@@ -45,6 +45,10 @@ public interface ExpressionFactory {
 
     public Expression createSimpleExpression(String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration, Set<String> usedMacros);
 
+    public Expression createSimpleOrObjectExpression(String expression, boolean allowQuantifiedPredicates);
+
+    public Expression createSimpleOrObjectExpression(String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration, Set<String> usedMacros);
+
     public Expression createCaseOperandExpression(String caseOperandExpression);
 
     public Expression createCaseOperandExpression(String caseOperandExpression, MacroConfiguration macroConfiguration, Set<String> usedMacros);

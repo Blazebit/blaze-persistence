@@ -185,6 +185,10 @@ public class AbstractParserTest {
         return ef().createSimpleExpression(expr, false, macroConfiguration, null);
     }
 
+    protected Expression parseSimpleOrObjectExpression(String expr) {
+        return ef().createSimpleOrObjectExpression(expr, false, macroConfiguration, null);
+    }
+
     protected Expression parseOptimized(String expr) {
         return optimizingEf().createSimpleExpression(expr, false, macroConfiguration, null);
     }

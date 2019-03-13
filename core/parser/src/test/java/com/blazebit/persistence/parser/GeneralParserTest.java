@@ -16,24 +16,7 @@
 
 package com.blazebit.persistence.parser;
 
-import com.blazebit.persistence.parser.expression.ArithmeticExpression;
-import com.blazebit.persistence.parser.expression.ArithmeticFactor;
-import com.blazebit.persistence.parser.expression.ArithmeticOperator;
-import com.blazebit.persistence.parser.expression.ArrayExpression;
-import com.blazebit.persistence.parser.expression.Expression;
-import com.blazebit.persistence.parser.expression.FunctionExpression;
-import com.blazebit.persistence.parser.expression.GeneralCaseExpression;
-import com.blazebit.persistence.parser.expression.MacroConfiguration;
-import com.blazebit.persistence.parser.expression.MacroFunction;
-import com.blazebit.persistence.parser.expression.NullExpression;
-import com.blazebit.persistence.parser.expression.NumericLiteral;
-import com.blazebit.persistence.parser.expression.NumericType;
-import com.blazebit.persistence.parser.expression.ParameterExpression;
-import com.blazebit.persistence.parser.expression.PathExpression;
-import com.blazebit.persistence.parser.expression.PropertyExpression;
-import com.blazebit.persistence.parser.expression.SimpleCaseExpression;
-import com.blazebit.persistence.parser.expression.SyntaxErrorException;
-import com.blazebit.persistence.parser.expression.WhenClauseExpression;
+import com.blazebit.persistence.parser.expression.*;
 import com.blazebit.persistence.parser.predicate.BetweenPredicate;
 import com.blazebit.persistence.parser.predicate.CompoundPredicate;
 import com.blazebit.persistence.parser.predicate.EqPredicate;
@@ -45,12 +28,11 @@ import com.blazebit.persistence.parser.predicate.LtPredicate;
 import com.blazebit.persistence.parser.predicate.MemberOfPredicate;
 import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.parser.predicate.PredicateQuantifier;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -62,6 +44,15 @@ import static org.junit.Assert.assertTrue;
  * @since 1.0.0
  */
 public class GeneralParserTest extends AbstractParserTest {
+
+    @Before
+    @Override
+    public void initTest() {
+        super.initTest();
+        entityTypes.put(TestEntity.class.getSimpleName(), TestEntity.class);
+    }
+
+    private static class TestEntity { }
 
     @Test
     public void testSoftKeywordsMultipleKeywordsAsSimpleUpperPath() {
@@ -1055,5 +1046,42 @@ public class GeneralParserTest extends AbstractParserTest {
 
         Expression expected = add(_int("123"), _int("1"));
         assertEquals(expected, result);
+    }
+
+    @Test(expected = SyntaxErrorException.class)
+    public void testCaseWhenWithNonScalarTreat() {
+        parse("CASE WHEN true THEN TREAT(c as D) ELSE TREAT(b as C) END");
+    }
+
+    @Test
+    public void testCaseWhenWithScalarTreat() {
+        GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN 1 = 1 THEN TREAT(c as D).a ELSE TREAT(b as C).a END");
+
+        GeneralCaseExpression expected = new GeneralCaseExpression(Collections.singletonList(
+                new WhenClauseExpression(new EqPredicate(_int("1"), _int("1")), path(treat(path("c"), "D"), "a"))
+        ), path(treat(path("b"), "C"), "a"));
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void testCaseWhenWithTypeOperator() {
+        GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN TestEntity = TYPE(x) THEN TREAT(c as D).a ELSE TREAT(b as C).a END");
+
+        GeneralCaseExpression expected = new GeneralCaseExpression(Collections.singletonList(
+                new WhenClauseExpression(new EqPredicate(_entity(TestEntity.class), typeFunction(path("x"))), path(treat(path("c"), "D"), "a"))
+        ), path(treat(path("b"), "C"), "a"));
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void testTreat() {
+        TreatExpression result = (TreatExpression) parseSimpleOrObjectExpression("TREAT(x as Y)");
+        assertEquals(treat(path("x"), "Y"), result);
+    }
+
+    @Test
+    public void testLocate() {
+        FunctionExpression result = (FunctionExpression) parse("LOCATE('abc',document.name)");
+        assertEquals(function("LOCATE", _string("abc"), path("document", "name")), result);
     }
 }

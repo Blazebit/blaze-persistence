@@ -257,6 +257,9 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
     @Override
     public void visit(TreatExpression expression) {
         EntityType<?> type = metamodel.getEntity(expression.getType());
+        if (type == null) {
+            throw new RuntimeException("No entity found with name \"" + expression.getType() + "\"");
+        }
         currentPosition.setAttribute(null);
         currentPosition.setCurrentType(type);
     }

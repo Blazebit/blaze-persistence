@@ -70,6 +70,11 @@ public class MacroConfigurationExpressionFactory extends AbstractExpressionFacto
     }
 
     @Override
+    public Expression createSimpleOrObjectExpression(String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return expressionFactory.createSimpleOrObjectExpression(expression, allowQuantifiedPredicates, macroConfiguration, usedMacros);
+    }
+
+    @Override
     public Expression createCaseOperandExpression(String caseOperandExpression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
         return expressionFactory.createCaseOperandExpression(caseOperandExpression, macroConfiguration, usedMacros);
     }
