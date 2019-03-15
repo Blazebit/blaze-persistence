@@ -501,7 +501,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         featuresFound[FEATURE_SUBVIEWS] = true;
                         ManagedViewTypeImpl<Object[]> managedViewType = (ManagedViewTypeImpl<Object[]>) mapAttribute.getKeyType();
                         applySubviewMapping(mappingAttribute, attributePath, tupleIdDescriptor, managedViewType, mapperBuilder, embeddingViewJpqlMacro, true, true);
-                        mapValueStartIndex = tupleOffset + (mapperBuilder.mapperIndex() - startIndex) + 1;
+                        mapValueStartIndex = tupleOffset + mapperBuilder.mapperIndex();
                     } else {
                         applyCollectionFunctionMapping("KEY", "_KEY", mappingAttribute, mapperBuilder, EMPTY);
                     }
