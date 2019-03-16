@@ -297,7 +297,14 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
             cardinalityMandatory = computedMandatory;
         }
     }
-    
+
+    public boolean containsNode(JoinNode n, String joinRelationName) {
+        if (parent == n && parentTreeNode != null && joinRelationName.equals(parentTreeNode.getRelationName())) {
+            return onPredicate == null;
+        }
+        return parent != null && parent.containsNode(n, joinRelationName);
+    }
+
     private boolean isEmptyCondition() {
         return onPredicate == null || onPredicate.getChildren().isEmpty();
     }

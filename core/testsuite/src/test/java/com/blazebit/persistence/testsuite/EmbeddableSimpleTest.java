@@ -126,4 +126,118 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
                 .end();
         criteria.getResultList();
     }
+
+    @Test
+    // Prior to Hibernate 5.1 it wasn't possible reference other from clause elements in the ON clause which is required to support implicit joins in ON clauses
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
+    public void testCyclicDependencyInOnClauseImplicitJoin5() {
+        CriteriaBuilder<Order> criteria = cbf.create(em, Order.class, "o");
+        criteria.leftJoinDefaultOn("o.orderPositions", "p")
+                .on("o.orderPositions.id.position").gt(2)
+                .end();
+        criteria.getResultList();
+    }
+
+    @Test
+    // Prior to Hibernate 5.1 it wasn't possible reference other from clause elements in the ON clause which is required to support implicit joins in ON clauses
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
+    public void testCyclicDependencyInOnClauseImplicitJoin6() {
+        CriteriaBuilder<Order> criteria = cbf.create(em, Order.class, "o");
+        criteria.leftJoinDefaultOn("o.orderPositions", "p")
+                .on("o.orderPositions.head.number").gt(2)
+                .end();
+        criteria.getResultList();
+    }
+
+    @Test
+    // Prior to Hibernate 5.1 it wasn't possible reference other from clause elements in the ON clause which is required to support implicit joins in ON clauses
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
+    public void testCyclicDependencyInOnClauseImplicitJoin7() {
+        CriteriaBuilder<Order> criteria = cbf.create(em, Order.class, "o");
+        criteria.leftJoinDefault("o.orderPositions", "p")
+                .leftJoinOn("p", Order.class, "o2")
+                .on("o2.id").eqExpression("o.orderPositions.id.orderId")
+                .end();
+        assertEquals(
+                "SELECT o FROM Order o " +
+                        "LEFT JOIN o.orderPositions p " +
+                        "LEFT JOIN Order o2 ON (o2.id = p.id.orderId)",
+                criteria.getQueryString()
+        );
+        criteria.getResultList();
+    }
+
+    @Test
+    // Prior to Hibernate 5.1 it wasn't possible reference other from clause elements in the ON clause which is required to support implicit joins in ON clauses
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
+    public void testCyclicDependencyInOnClauseImplicitJoin8() {
+        CriteriaBuilder<Order> criteria = cbf.create(em, Order.class, "o");
+        criteria.leftJoinDefault("o.orderPositions", "p")
+                .leftJoinOn("p", Order.class, "o2")
+                .on("o2.number").eqExpression("o.orderPositions.order.number")
+                .end();
+        assertEquals(
+                "SELECT o FROM Order o " +
+                        "LEFT JOIN o.orderPositions p " +
+                        "LEFT JOIN Order o2 ON (EXISTS (" +
+                        "SELECT 1 FROM p.order _synth_subquery_0 " +
+                        "WHERE o2.number = _synth_subquery_0.number" +
+                        "))",
+                criteria.getQueryString()
+        );
+        criteria.getResultList();
+    }
+
+    @Test
+    // Prior to Hibernate 5.1 it wasn't possible reference other from clause elements in the ON clause which is required to support implicit joins in ON clauses
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
+    public void testCyclicDependencyInOnClauseImplicitJoin9() {
+        CriteriaBuilder<Order> criteria = cbf.create(em, Order.class, "o");
+        criteria.leftJoinDefault("o.orderPositions", "p")
+                .leftJoinDefault("p.order", "o1")
+                .leftJoinOn("o1", Order.class, "o2")
+                .on("o2.number").eqExpression("o.orderPositions.order.number")
+                .end();
+        assertEquals(
+                "SELECT o FROM Order o " +
+                        "LEFT JOIN o.orderPositions p " +
+                        "LEFT JOIN p.order o1 " +
+                        "LEFT JOIN Order o2 ON (o2.number = o1.number)",
+                criteria.getQueryString()
+        );
+        criteria.getResultList();
+    }
+
+    @Test
+    // Prior to Hibernate 5.1 it wasn't possible reference other from clause elements in the ON clause which is required to support implicit joins in ON clauses
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
+    public void testCyclicDependencyInOnClauseImplicitJoin10() {
+        CriteriaBuilder<Order> criteria = cbf.create(em, Order.class, "o");
+        criteria.leftJoinDefaultOn("o.orderPositions", "p")
+                .on("p.id.position").gt(1)
+                .end()
+                .leftJoinOn("p", Order.class, "o2")
+                .on("o2.number").eqExpression("o.orderPositions.order.number")
+                .end();
+        String subquery;
+        if (jpaProvider.needsCorrelationPredicateWhenCorrelatingWithWhereClause()) {
+            subquery = "SELECT 1 FROM OrderPosition _synth_subquery_0 " +
+                            "JOIN _synth_subquery_0.order order_1 " +
+                            "WHERE _synth_subquery_0.order.id = o.id " +
+                            "AND o2.number = order_1.number";
+        } else {
+            subquery = "SELECT 1 FROM o.orderPositions _synth_subquery_0 " +
+                    "JOIN _synth_subquery_0.order order_1 " +
+                    "WHERE o2.number = order_1.number";
+        }
+        assertEquals(
+                "SELECT o FROM Order o " +
+                        "LEFT JOIN o.orderPositions p ON (p.id.position > :param_0) " +
+                        "LEFT JOIN Order o2 ON (EXISTS (" +
+                        subquery +
+                        "))",
+                criteria.getQueryString()
+        );
+        criteria.getResultList();
+    }
 }

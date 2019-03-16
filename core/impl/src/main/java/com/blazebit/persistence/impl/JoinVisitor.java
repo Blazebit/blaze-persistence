@@ -63,6 +63,7 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor, Jo
     private final List<JoinNode> fetchableNodes;
     private final Set<String> currentlyResolvingAliases;
     private final ImplicitJoinCorrelationPathReplacementVisitor correlationPathReplacementVisitor;
+    private JoinNode currentJoinNode;
     private boolean reuseExisting;
     private boolean joinRequired;
     private boolean joinWithObjectLeafAllowed = true;
@@ -128,25 +129,30 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor, Jo
     @Override
     public void visit(JoinNode node) {
         if (node.getOnPredicate() != null) {
-            node.getOnPredicate().accept(this);
-            if (!correlationPathReplacementVisitor.getPathsToCorrelate().isEmpty()) {
-                // We rewrite the predicate to use correlated subqueries for implicit joins
-                SubqueryInitiatorImpl<Object> subqueryInitiator = (SubqueryInitiatorImpl<Object>) joinManager.getSubqueryInitFactory().createSubqueryInitiator(null, this, true, fromClause);
-                SubqueryBuilderImpl<?> subqueryBuilder = null;
-                for (Map.Entry<PathExpression, ImplicitJoinCorrelationPathReplacementVisitor.CorrelationTransformEntry> entry : correlationPathReplacementVisitor.getPathsToCorrelate().entrySet()) {
-                    ImplicitJoinCorrelationPathReplacementVisitor.CorrelationTransformEntry correlationTransformEntry = entry.getValue();
-                    String alias = correlationTransformEntry.getAlias();
-                    String correlationExpression = correlationTransformEntry.getCorrelationExpression();
-                    if (subqueryBuilder == null) {
-                        subqueryBuilder = (SubqueryBuilderImpl<?>) subqueryInitiator.from(correlationExpression, alias);
-                    } else {
-                        subqueryBuilder.from(correlationExpression, alias);
-                    }
-                }
-
-                subqueryBuilder.whereManager.restrictExpression(correlationPathReplacementVisitor.rewritePredicate(node.getOnPredicate()));
-                node.setOnPredicate(new CompoundPredicate(CompoundPredicate.BooleanOperator.AND, new ExistsPredicate(new SubqueryExpression(subqueryBuilder), false)));
+            currentJoinNode = node;
+            try {
                 node.getOnPredicate().accept(this);
+                if (!correlationPathReplacementVisitor.getPathsToCorrelate().isEmpty()) {
+                    // We rewrite the predicate to use correlated subqueries for implicit joins
+                    SubqueryInitiatorImpl<Object> subqueryInitiator = (SubqueryInitiatorImpl<Object>) joinManager.getSubqueryInitFactory().createSubqueryInitiator(null, this, true, fromClause);
+                    SubqueryBuilderImpl<?> subqueryBuilder = null;
+                    for (Map.Entry<PathExpression, ImplicitJoinCorrelationPathReplacementVisitor.CorrelationTransformEntry> entry : correlationPathReplacementVisitor.getPathsToCorrelate().entrySet()) {
+                        ImplicitJoinCorrelationPathReplacementVisitor.CorrelationTransformEntry correlationTransformEntry = entry.getValue();
+                        String alias = correlationTransformEntry.getAlias();
+                        String correlationExpression = correlationTransformEntry.getCorrelationExpression();
+                        if (subqueryBuilder == null) {
+                            subqueryBuilder = (SubqueryBuilderImpl<?>) subqueryInitiator.from(correlationExpression, alias);
+                        } else {
+                            subqueryBuilder.from(correlationExpression, alias);
+                        }
+                    }
+
+                    subqueryBuilder.whereManager.restrictExpression(correlationPathReplacementVisitor.rewritePredicate(node.getOnPredicate()));
+                    node.setOnPredicate(new CompoundPredicate(CompoundPredicate.BooleanOperator.AND, new ExistsPredicate(new SubqueryExpression(subqueryBuilder), false)));
+                    node.getOnPredicate().accept(this);
+                }
+            } finally {
+                currentJoinNode = null;
             }
         }
         node.registerDependencies();
@@ -183,7 +189,7 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor, Jo
         } else {
             try {
                 // Also allow joins if this expression was joined before already to avoid possible side-effects of implicit joining multiple times
-                joinManager.implicitJoin(expression, expression.getBaseNode() != null || fromClause != ClauseType.JOIN, joinWithObjectLeafAllowed, null, fromClause, null, currentlyResolvingAliases, false, false, joinRequired, idRemovable, false, reuseExisting);
+                joinManager.implicitJoin(expression, expression.getBaseNode() != null || fromClause != ClauseType.JOIN, joinWithObjectLeafAllowed, null, fromClause, null, currentJoinNode, currentlyResolvingAliases, false, false, joinRequired, idRemovable, false, reuseExisting);
                 if (parentVisitor != null) {
                     JoinNode baseNode = (JoinNode) expression.getBaseNode();
                     AliasManager aliasOwner = baseNode.getAliasInfo().getAliasOwner();
@@ -350,7 +356,7 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor, Jo
                     }
                 }
             } else {
-                if (field.endsWith(lastElement) && (field.length() == lastElement.length() || field.charAt(field.length() - lastElement.length()) == '.')) {
+                if (field.endsWith(lastElement) && (field.length() == lastElement.length() || field.charAt(field.length() - lastElement.length() - 1) == '.')) {
                     // If there is a field, we only have to check if the last element is in the field
                     return false;
                 } else {

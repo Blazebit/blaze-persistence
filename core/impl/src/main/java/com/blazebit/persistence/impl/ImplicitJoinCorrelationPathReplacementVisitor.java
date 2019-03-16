@@ -30,6 +30,8 @@ import java.util.ListIterator;
 import java.util.Map;
 
 /**
+ * This visitor gathers information about supposed invalid implicit joins in the ON clause
+ * to be able to rewrite the predicate to EXISTS subqueries.
  *
  * @author Christian Beikov
  * @since 1.3.0

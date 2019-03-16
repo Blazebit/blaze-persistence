@@ -49,7 +49,7 @@ public class OrderPosition implements Serializable {
         this.id = id;
     }
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(insertable = false, updatable = false, nullable = false)
     public Order getOrder() {
         return order;
