@@ -58,17 +58,24 @@ public class CorrelationProviderProxyBase implements CorrelationProvider {
 
         // Exercise the parser first to resolve the view root
         ExpressionFactory expressionFactory = correlationBuilder.getService(ExpressionFactory.class);
-        String expressionString = AbstractAttribute.replaceThisFromMapping(this.correlationExpression, alias);
-        Expression expression = expressionFactory.createBooleanExpression(expressionString, false);
+        String originalExpressionString = AbstractAttribute.replaceThisFromMapping(this.correlationExpression, alias);
+        String expressionString = originalExpressionString;
 
-        // Find out the view root alias
+                // Find out the view root alias
         MacroFunction viewRootFunction = expressionFactory.getDefaultMacroConfiguration().get("VIEW_ROOT");
         ViewRootJpqlMacro viewRootMacro = (ViewRootJpqlMacro) viewRootFunction.getState()[0];
+        EmbeddingViewJpqlMacro embeddingViewJpqlMacro = (EmbeddingViewJpqlMacro) expressionFactory.getDefaultMacroConfiguration().get("EMBEDDING_VIEW").getState()[0];
+        String viewRoot = viewRootMacro.getViewRoot();
+        String embeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
+        // Don't replace the correlationKey alias
+        expressionString = CorrelationProviderHelper.temporaryReplace(expressionString, correlationKeyAlias.equals(viewRoot) ? null : viewRoot, CorrelationProviderHelper.TEMPORARY_VIEW_ROOT_MATCHING_NAME);
+        expressionString = CorrelationProviderHelper.temporaryReplace(expressionString, correlationKeyAlias.equals(embeddingViewPath) ? null : embeddingViewPath , CorrelationProviderHelper.TEMPORARY_EMBEDDING_VIEW_MATCHING_NAME);
+
+        Expression expression = expressionFactory.createBooleanExpression(expressionString, false);
 
         // Prefix all paths except view root alias based ones and substitute the key alias with the correlation expression
         String aliasToSkip;
         if (viewRootMacro.getViewRoot() == null) {
-            EmbeddingViewJpqlMacro embeddingViewJpqlMacro = (EmbeddingViewJpqlMacro) expressionFactory.getDefaultMacroConfiguration().get("EMBEDDING_VIEW").getState()[0];
             aliasToSkip = embeddingViewJpqlMacro.getEmbeddingViewPath();
         } else {
             aliasToSkip = viewRootMacro.getViewRoot();
@@ -77,8 +84,19 @@ public class CorrelationProviderProxyBase implements CorrelationProvider {
         StringBuilder buffer = new StringBuilder(approximateExpressionSize);
         generator.setQueryBuffer(buffer);
         expression.accept(generator);
+        String finalExpression = buffer.toString();
+
+        if (originalExpressionString != expressionString) {
+            if (viewRoot != null) {
+                finalExpression = finalExpression.replaceAll(CorrelationProviderHelper.TEMPORARY_VIEW_ROOT_MATCHING_NAME, viewRoot);
+            }
+            if (embeddingViewPath != null) {
+                finalExpression = finalExpression.replaceAll(CorrelationProviderHelper.TEMPORARY_EMBEDDING_VIEW_MATCHING_NAME, embeddingViewPath);
+            }
+        }
 
         correlationBuilder.correlate(correlated)
-                .setOnExpression(buffer.toString());
+                .setOnExpression(finalExpression);
     }
+
 }

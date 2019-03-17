@@ -14,6 +14,7 @@ None
 
 * Fix support for de-referencing map key entity type expressions
 * Fix for absolute paths referring to dependent joins in ON clauses
+* Attributes having the same name as a correlation basis alias aren't prefixed in the correlation expression
 
 ### Backwards-incompatible changes
 

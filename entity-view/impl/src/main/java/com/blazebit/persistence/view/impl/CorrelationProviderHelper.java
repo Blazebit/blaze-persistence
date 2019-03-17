@@ -22,12 +22,18 @@ import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author Christian Beikov
  * @since 1.2.0
  */
 public class CorrelationProviderHelper {
+
+    public static final String TEMPORARY_VIEW_ROOT_MATCHING_NAME = "__VIEW_ROOT_MATCHING_NAME";
+    public static final String TEMPORARY_EMBEDDING_VIEW_MATCHING_NAME = "__EMBEDDING_VIEW_MATCHING_NAME";
+    private static final String NON_IDENTIFIER_CHARS = "\\s\\,+\\-/*%<>=";
 
     private CorrelationProviderHelper() {
     }
@@ -76,5 +82,31 @@ public class CorrelationProviderHelper {
         }
         
         return new ParameterizedCorrelationProviderFactory(constructor, parameterNames);
+    }
+
+    public static String temporaryReplace(String expressionString, String viewRoot, String temporaryViewRootMatchingName) {
+        if (viewRoot == null) {
+            return expressionString;
+        }
+
+        Matcher matcher = Pattern.compile("([" + NON_IDENTIFIER_CHARS + "\\(]|^)(" + Pattern.quote(viewRoot) + ")([" + NON_IDENTIFIER_CHARS + "\\)]|$)").matcher(expressionString);
+        if (!matcher.find()) {
+            return expressionString;
+        }
+
+        StringBuilder sb = new StringBuilder(expressionString.length());
+        sb.append(expressionString, 0, matcher.start());
+        int end = matcher.start();
+        do {
+            sb.append(expressionString, end, matcher.start());
+            end = matcher.end();
+            sb.append(matcher.group(1));
+            sb.append(temporaryViewRootMatchingName);
+            sb.append(matcher.group(3));
+        } while (matcher.find());
+
+        sb.append(expressionString, end, expressionString.length());
+
+        return sb.toString();
     }
 }
