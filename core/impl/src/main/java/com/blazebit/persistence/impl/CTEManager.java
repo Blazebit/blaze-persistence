@@ -122,7 +122,7 @@ public class CTEManager extends CTEBuilderListenerImpl {
             sb.append(cte.nonRecursiveCriteriaBuilder.getQueryString());
             
             if (cte.recursive) {
-                sb.append("\nUNION ALL\n");
+                sb.append(cte.unionAll ? "\nUNION ALL\n" : "\nUNION\n");
                 sb.append(cte.recursiveCriteriaBuilder.getQueryString());
             }
             
