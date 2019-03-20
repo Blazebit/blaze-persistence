@@ -25,8 +25,10 @@ import com.blazebit.persistence.spi.JpaProvider;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -373,4 +375,5 @@ public final class CachingJpaProvider implements JpaProvider {
     public JpaMetamodelAccessor getJpaMetamodelAccessor() {
         return jpaProvider.getJpaMetamodelAccessor();
     }
+
 }

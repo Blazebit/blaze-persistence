@@ -40,6 +40,7 @@ import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
+import java.math.BigDecimal;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -281,6 +282,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         for (Attribute<?, ?> attribute : attributes) {
             List<Attribute<?, ?>> newParents;
             String attributeName;
+
             Class<?> fieldType = JpaMetamodelUtils.resolveFieldClass(type.getJavaType(), attribute);
             if (e == null) {
                 attributeName = attribute.getName();
@@ -336,6 +338,20 @@ public class EntityMetamodelImpl implements EntityMetamodel {
                             }
                         }
                     }
+                }
+                else if (jpaProvider.getJpaMetamodelAccessor().isCompositeUserType(delegate, attribute)) {
+                    Collection<String> compositePropertyNames = jpaProvider.getJpaMetamodelAccessor().getCompositePropertyNames(delegate, attribute);
+
+
+
+                    for (String compositePropertyName : compositePropertyNames) {
+                        String idPath = attributeName + "." + compositePropertyName;
+                        List<Attribute<?,?>> idParents = new ArrayList<>();
+                        idParents.add(attribute);
+                        AttributeEntry attributeEntry = new AttributeEntry(jpaProvider, type, attribute, idPath, BigDecimal.class, idParents, null);
+                        managedTypeAttributes.put(idPath, attributeEntry);
+                    }
+
                 }
             }
 

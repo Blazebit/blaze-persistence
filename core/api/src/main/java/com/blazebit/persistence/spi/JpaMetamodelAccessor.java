@@ -20,6 +20,7 @@ import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
+import java.util.Collection;
 
 /**
  * @author Jan-Willem Gmelig Meyling
@@ -76,4 +77,8 @@ public interface JpaMetamodelAccessor {
      * @return true if the attribute is an element collection, false otherwise
      */
     boolean isElementCollection(Attribute<?, ?> attribute);
+
+    boolean isCompositeUserType(Metamodel metamodel, Attribute<?,?> attribute);
+
+    Collection<String> getCompositePropertyNames(Metamodel metamodel, Attribute<?,?> attribute);
 }

@@ -45,6 +45,7 @@ import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
+import org.hibernate.type.CompositeType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.OneToOneType;
@@ -57,6 +58,7 @@ import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.SetAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import java.io.Serializable;
@@ -1452,7 +1454,21 @@ public class HibernateJpaProvider implements JpaProvider {
 
     @Override
     public JpaMetamodelAccessor getJpaMetamodelAccessor() {
-        return JpaMetamodelAccessorImpl.INSTANCE;
+        return new JpaMetamodelAccessorImpl() {
+            @Override
+            public boolean isCompositeUserType(Metamodel metamodel, Attribute<?, ?> attribute) {
+                EntityPersister entityPersister = entityPersisters.get(attribute.getDeclaringType().getJavaType().getName());
+                Type propertyType = entityPersister.getPropertyType(attribute.getName());
+                return propertyType instanceof CompositeType;
+            }
+
+            @Override
+            public Collection<String> getCompositePropertyNames(Metamodel metamodel, Attribute<?, ?> attribute) {
+                EntityPersister entityPersister = entityPersisters.get(attribute.getDeclaringType().getJavaType().getName());
+                CompositeType propertyType = (CompositeType) entityPersister.getPropertyType(attribute.getName());
+                return Arrays.asList(propertyType.getPropertyNames());
+            }
+        };
     }
 
 }

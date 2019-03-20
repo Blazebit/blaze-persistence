@@ -20,8 +20,10 @@ import com.blazebit.persistence.JoinType;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 

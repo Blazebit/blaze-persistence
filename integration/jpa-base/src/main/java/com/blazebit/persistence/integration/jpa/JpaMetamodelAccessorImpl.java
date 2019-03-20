@@ -30,6 +30,7 @@ import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -260,4 +261,15 @@ public class JpaMetamodelAccessorImpl implements JpaMetamodelAccessor {
     public boolean isElementCollection(Attribute<?, ?> attribute) {
         return attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION;
     }
+
+    @Override
+    public boolean isCompositeUserType(Metamodel metamodel, Attribute<?, ?> attribute) {
+        return false;
+    }
+
+    @Override
+    public Collection<String> getCompositePropertyNames(Metamodel metamodel, Attribute<?, ?> attribute) {
+        return null;
+    }
+
 }
