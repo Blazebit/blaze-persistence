@@ -43,7 +43,9 @@ import org.hibernate.service.spi.ServiceBinding;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -99,6 +101,7 @@ public class Hibernate4Integrator implements ServiceContributingIntegrator, Type
         }
 
         Iterator<PersistentClass> iter = configuration.getClassMappings();
+        List<PersistentClass> invalidPolymorphicCtes = new ArrayList<>();
         while (iter.hasNext()) {
             PersistentClass clazz = iter.next();
             Class<?> entityClass = clazz.getMappedClass();
@@ -107,8 +110,21 @@ public class Hibernate4Integrator implements ServiceContributingIntegrator, Type
             }
             
             if (entityClass != null && entityClass.isAnnotationPresent(CTE.class)) {
+                if (clazz.isPolymorphic()) {
+                    invalidPolymorphicCtes.add(clazz);
+                }
                 clazz.getTable().setSubselect("select * from " + clazz.getJpaEntityName());
             }
+        }
+
+        if (!invalidPolymorphicCtes.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("Found invalid polymorphic CTE entity definitions. CTE entities may not extend other entities:");
+            for (PersistentClass invalidPolymorphicCte : invalidPolymorphicCtes) {
+                sb.append("\n - ").append(invalidPolymorphicCte.getMappedClass().getName());
+            }
+
+            throw new RuntimeException(sb.toString());
         }
 
         if (registerValuesEntity) {

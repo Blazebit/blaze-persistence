@@ -8,13 +8,14 @@ Not yet released
 
 ### New features
 
-None
+* Added startup check for accidental polymorphic CTEs
 
 ### Bug fixes
 
 * Fix support for de-referencing map key entity type expressions
 * Fix for absolute paths referring to dependent joins in ON clauses
 * Attributes having the same name as a correlation basis alias aren't prefixed in the correlation expression
+* Allow use of `TREAT` operator in subview mapping
 
 ### Backwards-incompatible changes
 

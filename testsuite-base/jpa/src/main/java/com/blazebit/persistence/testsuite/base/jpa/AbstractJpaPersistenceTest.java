@@ -436,7 +436,7 @@ public abstract class AbstractJpaPersistenceTest {
         return properties;
     }
 
-    private EntityManagerFactory createEntityManagerFactory(String persistenceUnitName, Map<Object, Object> properties) {
+    protected EntityManagerFactory createEntityManagerFactory(String persistenceUnitName, Map<Object, Object> properties) {
         MutablePersistenceUnitInfo persistenceUnitInfo = new MutablePersistenceUnitInfo();
         persistenceUnitInfo.setPersistenceUnitName(persistenceUnitName);
         persistenceUnitInfo.setTransactionType(PersistenceUnitTransactionType.RESOURCE_LOCAL);

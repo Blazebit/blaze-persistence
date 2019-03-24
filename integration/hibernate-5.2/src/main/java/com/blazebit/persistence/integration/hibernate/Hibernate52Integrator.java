@@ -45,12 +45,26 @@ public class Hibernate52Integrator implements Integrator {
     @Override
     public void integrate(Metadata metadata, SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
         // TODO: remember metadata for exact column types
+        List<PersistentClass> invalidPolymorphicCtes = new ArrayList<>();
         for (PersistentClass clazz : metadata.getEntityBindings()) {
             Class<?> entityClass = clazz.getMappedClass();
             
             if (entityClass != null && entityClass.isAnnotationPresent(CTE.class)) {
+                if (clazz.isPolymorphic()) {
+                    invalidPolymorphicCtes.add(clazz);
+                }
                 clazz.getTable().setSubselect("select * from " + clazz.getJpaEntityName());
             }
+        }
+
+        if (!invalidPolymorphicCtes.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("Found invalid polymorphic CTE entity definitions. CTE entities may not extend other entities:");
+            for (PersistentClass invalidPolymorphicCte : invalidPolymorphicCtes) {
+                sb.append("\n - ").append(invalidPolymorphicCte.getMappedClass().getName());
+            }
+
+            throw new RuntimeException(sb.toString());
         }
 
         serviceRegistry.locateServiceBinding(PersisterClassResolver.class).setService(new CustomPersisterClassResolver());
