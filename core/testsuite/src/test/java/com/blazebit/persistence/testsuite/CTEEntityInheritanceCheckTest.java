@@ -21,11 +21,13 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.PersistenceException;
 
 /**
  * @author Moritz Becker
@@ -43,15 +45,25 @@ public class CTEEntityInheritanceCheckTest extends AbstractCoreTest {
         };
     }
 
-    @Test(expected = RuntimeException.class)
-    public void test() {
-        CriteriaBuilder<BaseCte> cb = cbf.create(em, BaseCte.class)
-                .with(BaseCte.class)
-                    .from(SimpleEntity.class)
-                    .bind("id").select("id")
-                .end();
+    @Override
+    public void init() {
+        // No-op
+    }
 
-        cb.getResultList();
+    @Test
+    public void test() {
+        try {
+            emf = createEntityManagerFactory("TestsuiteBase", createProperties("none"));
+        } catch (PersistenceException ex) {
+            Throwable t = ex;
+            if (ex.getCause() != null) {
+                t = ex.getCause();
+                if (t.getCause() != null) {
+                    t = t.getCause();
+                }
+            }
+            Assert.assertTrue(t.getMessage().contains("Found invalid polymorphic CTE entity definitions"));
+        }
     }
 
     @Entity
