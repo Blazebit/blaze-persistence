@@ -16,6 +16,7 @@ Not yet released
 * Fix for absolute paths referring to dependent joins in ON clauses
 * Attributes having the same name as a correlation basis alias aren't prefixed in the correlation expression
 * Allow use of `TREAT` operator in subview mapping
+* Fix invalid reduction of collection cardinality due to non-consideration of the parent tuple identity
 
 ### Backwards-incompatible changes
 
