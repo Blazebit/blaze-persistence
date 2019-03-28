@@ -65,9 +65,10 @@ public class A {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof A)) return false;
         A a = (A) o;
-        return Objects.equals(id, a.id);
+        // Null-ids are never equal
+        return id != null && a.id != null && Objects.equals(id, a.id);
     }
 
     @Override

@@ -69,15 +69,15 @@ public class C {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof C)) return false;
         C c = (C) o;
-        return Objects.equals(id1, c.id1) &&
-                Objects.equals(id2, c.id2);
+        return Objects.equals(getId1(), c.getId1()) &&
+                Objects.equals(getId2(), c.getId2());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id1, id2);
+        return Objects.hash(getId1(), getId2());
     }
 
     public static class CompositeId implements Serializable {
@@ -103,15 +103,15 @@ public class C {
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (!(o instanceof CompositeId)) return false;
             CompositeId that = (CompositeId) o;
-            return Objects.equals(id1, that.id1) &&
-                    Objects.equals(id2, that.id2);
+            return Objects.equals(getId1(), that.getId1()) &&
+                    Objects.equals(getId2(), that.getId2());
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(id1, id2);
+            return Objects.hash(getId1(), getId2());
         }
     }
 }
