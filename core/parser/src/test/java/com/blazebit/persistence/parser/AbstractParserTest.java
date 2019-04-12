@@ -213,6 +213,10 @@ public class AbstractParserTest {
         return ef().createPathExpression(expr, macroConfiguration, null);
     }
 
+    protected PathExpression parseJoinBasePath(String expr){
+        return ef().createJoinBasePathExpression(expr, macroConfiguration, null);
+    }
+
     protected MapKeyExpression keyExpression(String expression) {
         return keyExpression(parsePath(expression));
     }

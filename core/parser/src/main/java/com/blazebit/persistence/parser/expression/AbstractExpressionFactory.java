@@ -76,6 +76,14 @@ public abstract class AbstractExpressionFactory extends AbstractExpressionFactor
         }
     };
 
+    private static final RuleInvoker JOIN_BASE_PATH_RULE_INVOKER = new RuleInvoker() {
+
+        @Override
+        public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
+            return parser.parseJoinBasePath();
+        }
+    };
+
     private static final RuleInvoker JOIN_PATH_RULE_INVOKER = new RuleInvoker() {
 
         @Override
@@ -243,6 +251,11 @@ public abstract class AbstractExpressionFactory extends AbstractExpressionFactor
     @Override
     public PathExpression createPathExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
         return (PathExpression) createExpression(PATH_RULE_INVOKER, expression, false, false, false, macroConfiguration, usedMacros);
+    }
+
+    @Override
+    public PathExpression createJoinBasePathExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return (PathExpression) createExpression(JOIN_BASE_PATH_RULE_INVOKER, expression, false, false, false, macroConfiguration, usedMacros);
     }
 
     @Override

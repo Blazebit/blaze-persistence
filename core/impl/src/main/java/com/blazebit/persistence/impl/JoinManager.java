@@ -1514,8 +1514,26 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         return joinOn(result, base, metamodel.entity(clazz), alias, type);
     }
 
+    private JoinNode implicitJoinTreatExpression(TreatExpression treatExpression, boolean joinAllowed, ClauseType fromClause, JoinType joinType, JoinNode currentJoinNode, Set<String> currentlyResolvingAliases, boolean fromSubquery, boolean fromSelectAlias, boolean joinRequired, boolean idRemovable, boolean fetch, boolean reuseExisting) {
+        JoinNode resultJoinNode;
+        if (treatExpression.getExpression() instanceof PathExpression) {
+            PathExpression treatedPathExpression = (PathExpression) treatExpression.getExpression();
+            implicitJoin(treatedPathExpression, joinAllowed, true, treatExpression.getType(), fromClause, joinType, currentJoinNode, currentlyResolvingAliases, fromSubquery, fromSelectAlias, joinRequired, idRemovable, fetch, reuseExisting);
+            JoinNode treatedJoinNode = (JoinNode) treatedPathExpression.getBaseNode();
+            if (treatedJoinNode.getTreatType() == null) {
+                EntityType<?> treatType = metamodel.entity(treatExpression.getType());
+                resultJoinNode = treatedJoinNode.getTreatedJoinNode(treatType);
+            } else {
+                resultJoinNode = treatedJoinNode;
+            }
+        } else {
+            throw new UnsupportedOperationException("Unsupported treated expression type: " + treatExpression.getExpression().getClass());
+        }
+        return resultJoinNode;
+    }
+
     <X> JoinOnBuilder<X> joinOn(X result, String base, EntityType<?> entityType, String alias, JoinType type) {
-        PathExpression basePath = expressionFactory.createPathExpression(base);
+        PathExpression basePath = expressionFactory.createJoinBasePathExpression(base);
 
         if (alias == null || alias.isEmpty()) {
             throw new IllegalArgumentException("Invalid empty alias!");
@@ -1524,19 +1542,27 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             throw new IllegalArgumentException("The JPA provider does not support entity joins and an emulation for non-inner entity joins is not implemented!");
         }
 
-        List<PathElementExpression> propertyExpressions = basePath.getExpressions();
+        List<PathElementExpression> pathElementExpressions = basePath.getExpressions();
         JoinNode baseNode;
-        if (propertyExpressions.size() > 1) {
-            AliasInfo aliasInfo = aliasManager.getAliasInfo(propertyExpressions.get(0).toString());
+        if (pathElementExpressions.size() > 1 || (pathElementExpressions.size() == 1 && !(pathElementExpressions.get(0) instanceof PropertyExpression))) {
 
-            if (aliasInfo == null || !(aliasInfo instanceof JoinAliasInfo)) {
-                throw new IllegalArgumentException("The base '" + base + "' is not a valid join alias!");
+            if (pathElementExpressions.size() == 1 && pathElementExpressions.get(0) instanceof TreatExpression) {
+                // support treated join base (#769)
+                baseNode = implicitJoinTreatExpression((TreatExpression) pathElementExpressions.get(0), true, null, null, null, null, false, false, true, false, false, false);
+                basePath.setPathReference(new SimplePathReference(baseNode, null, baseNode.getType()));
+            } else {
+                AliasInfo aliasInfo = aliasManager.getAliasInfo(pathElementExpressions.get(0).toString());
+
+                if (!(aliasInfo instanceof JoinAliasInfo)) {
+                    throw new IllegalArgumentException("The base '" + base + "' is not a valid join alias!");
+                }
+
+                baseNode = ((JoinAliasInfo) aliasInfo).getJoinNode();
+                implicitJoin(basePath, true, true, null, null, null, null, null, false, false, true, false, false, false);
             }
 
-            implicitJoin(basePath, true, true, null, null, null, null, null, false, false, true, false, false, false);
-            baseNode = ((JoinAliasInfo) aliasInfo).getJoinNode();
-            for (int i = 1; i < propertyExpressions.size(); i++) {
-                String relationName = propertyExpressions.get(i).toString();
+            for (int i = 1; i < pathElementExpressions.size(); i++) {
+                String relationName = pathElementExpressions.get(i).toString();
                 JoinTreeNode treeNode = baseNode.getNodes().get(relationName);
                 if (treeNode == null) {
                     break;
@@ -1552,7 +1578,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         } else {
             AliasInfo aliasInfo = aliasManager.getAliasInfo(base);
 
-            if (aliasInfo == null || !(aliasInfo instanceof JoinAliasInfo)) {
+            if (!(aliasInfo instanceof JoinAliasInfo)) {
                 throw new IllegalArgumentException("The base '" + base + "' is not a valid join alias!");
             }
             baseNode = ((JoinAliasInfo) aliasInfo).getJoinNode();
@@ -1649,7 +1675,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             Expression aliasedExpression;
             String alias;
             // If joinable select alias, it is guaranteed to have only a single element
-            if (pathExpression.getExpressions().size() == 1 && !currentlyResolvingAliases.contains(alias = pathExpression.toString()) && (aliasedExpression = getJoinableSelectAlias(pathExpression, fromClause == ClauseType.SELECT, fromSubquery)) != null) {
+            if (pathExpression.getExpressions().size() == 1 && currentlyResolvingAliases != null && !currentlyResolvingAliases.contains(alias = pathExpression.toString()) && (aliasedExpression = getJoinableSelectAlias(pathExpression, fromClause == ClauseType.SELECT, fromSubquery)) != null) {
                 // this check is necessary to prevent infinite recursion in the case of e.g. SELECT name AS name
                 if (!fromSelectAlias) {
                     try {
@@ -1783,7 +1809,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
             // The case of a simple join alias usage
             if (pathElements.size() == 1 && !fromSelectAlias
-                    && !currentlyResolvingAliases.contains(alias = elementExpr.toString())
+                    && currentlyResolvingAliases != null && !currentlyResolvingAliases.contains(alias = elementExpr.toString())
                     && (aliasInfo = aliasManager.getAliasInfoForBottomLevel(alias)) != null) {
                 // No need to assert the resultFields here since they can't appear anyways if we enter this branch
                 if (aliasInfo instanceof SelectInfo) {
@@ -1823,7 +1849,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 if (elementExpr instanceof MapKeyExpression) {
                     baseNode = joinMapKey((MapKeyExpression) elementExpr, null, fromClause, currentlyResolvingAliases, fromSubquery, fromSelectAlias, true, fetch, true, true);
                 } else if (elementExpr instanceof ListIndexExpression) {
-                    baseNode = joinListIndex((ListIndexExpression) elementExpr, null, fromClause, currentlyResolvingAliases, fromSubquery, fromSelectAlias, true, fetch, true, true);
+                    baseNode = joinListIndex((ListIndexExpression) elementExpr, null, fromClause, currentlyResolvingAliases, fromSubquery, fromSelectAlias, true, fetch, true);
                 } else if (elementExpr instanceof MapEntryExpression) {
                     baseNode = joinMapEntry((MapEntryExpression) elementExpr, null, fromClause, currentlyResolvingAliases, fromSubquery, fromSelectAlias, true, fetch, true, true);
                 } else if (elementExpr instanceof MapValueExpression) {
@@ -2414,19 +2440,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 boolean joinRequired = false;
                 boolean fetch = false;
 
-                if (treatExpression.getExpression() instanceof PathExpression) {
-                    PathExpression treatedPathExpression = (PathExpression) treatExpression.getExpression();
-                    implicitJoin(treatedPathExpression, joinAllowed, true, treatExpression.getType(), fromClause, joinType, currentJoinNode, currentlyResolvingAliases, fromSubquery, fromSelectAlias, true, false, fetch, false);
-                    JoinNode treatedJoinNode = (JoinNode) treatedPathExpression.getBaseNode();
-                    if (treatedJoinNode.getTreatType() == null) {
-                        EntityType<?> treatType = metamodel.entity(treatExpression.getType());
-                        current = treatedJoinNode.getTreatedJoinNode(treatType);
-                    } else {
-                        current = treatedJoinNode;
-                    }
-                } else {
-                    throw new UnsupportedOperationException("Unsupported treated expression type: " + treatExpression.getExpression().getClass());
-                }
+                current = implicitJoinTreatExpression((TreatExpression) elementExpr, joinAllowed, fromClause, joinType, currentJoinNode, currentlyResolvingAliases, fromSubquery, fromSelectAlias, true, false, fetch, false);
             } else if (elementExpr instanceof MapKeyExpression) {
                 MapKeyExpression mapKeyExpression = (MapKeyExpression) elementExpr;
                 boolean fromSubquery = false;
@@ -2507,7 +2521,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         return current;
     }
 
-    private JoinNode joinListIndex(ListIndexExpression listIndexExpression, String alias, ClauseType fromClause, Set<String> currentlyResolvingAliases, boolean fromSubquery, boolean fromSelectAlias, boolean joinRequired, boolean fetch, boolean implicit, boolean defaultJoin) {
+    private JoinNode joinListIndex(ListIndexExpression listIndexExpression, String alias, ClauseType fromClause, Set<String> currentlyResolvingAliases, boolean fromSubquery, boolean fromSelectAlias, boolean joinRequired, boolean fetch, boolean implicit) {
         implicitJoin(listIndexExpression.getPath(), true, true, null, fromClause, null, null, currentlyResolvingAliases, fromSubquery, fromSelectAlias, joinRequired, false, fetch, false);
         JoinNode current = (JoinNode) listIndexExpression.getPath().getBaseNode();
         String joinRelationName = "INDEX(" + current.getParentTreeNode().getRelationName() + ")";

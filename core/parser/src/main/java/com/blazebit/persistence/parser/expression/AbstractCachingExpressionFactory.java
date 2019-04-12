@@ -50,6 +50,13 @@ public abstract class AbstractCachingExpressionFactory extends AbstractExpressio
         }
     };
 
+    private static final ExpressionSupplier JOIN_BASE_PATH_EXPRESSION_SUPPLIER = new ExpressionSupplier() {
+        @Override
+        public Expression get(ExpressionFactory expressionFactory, String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+            return expressionFactory.createJoinBasePathExpression(expression, macroConfiguration, usedMacros);
+        }
+    };
+
     private static final ExpressionSupplier JOIN_PATH_EXPRESSION_SUPPLIER = new ExpressionSupplier() {
         @Override
         public Expression get(ExpressionFactory expressionFactory, String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
@@ -151,6 +158,11 @@ public abstract class AbstractCachingExpressionFactory extends AbstractExpressio
     @Override
     public PathExpression createPathExpression(final String expression, final MacroConfiguration macroConfiguration, Set<String> usedMacros) {
         return getOrDefault("com.blazebit.persistence.parser.expression.cache.PathExpression", delegate, expression, false, macroConfiguration, PATH_EXPRESSION_SUPPLIER);
+    }
+
+    @Override
+    public PathExpression createJoinBasePathExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return getOrDefault("com.blazebit.persistence.parser.expression.cache.JoinBasePathExpression", delegate, expression, false, macroConfiguration, JOIN_BASE_PATH_EXPRESSION_SUPPLIER);
     }
 
     @Override

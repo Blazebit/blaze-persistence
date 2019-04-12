@@ -60,6 +60,11 @@ public class MacroConfigurationExpressionFactory extends AbstractExpressionFacto
     }
 
     @Override
+    public PathExpression createJoinBasePathExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return expressionFactory.createJoinBasePathExpression(expression, macroConfiguration, usedMacros);
+    }
+
+    @Override
     public Expression createJoinPathExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
         return expressionFactory.createJoinPathExpression(expression, macroConfiguration, usedMacros);
     }

@@ -163,6 +163,16 @@ public class SubqueryExpressionFactory extends AbstractExpressionFactory {
     }
 
     @Override
+    public PathExpression createJoinBasePathExpression(String expression) {
+        return delegate.createJoinBasePathExpression(expression);
+    }
+
+    @Override
+    public PathExpression createJoinBasePathExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return delegate.createJoinBasePathExpression(expression, macroConfiguration, usedMacros);
+    }
+
+    @Override
     public Expression createJoinPathExpression(String expression) {
         return delegate.createJoinPathExpression(expression);
     }

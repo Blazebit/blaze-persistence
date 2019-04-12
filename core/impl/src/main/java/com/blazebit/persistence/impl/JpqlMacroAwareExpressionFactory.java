@@ -64,6 +64,16 @@ public final class JpqlMacroAwareExpressionFactory implements ExpressionFactory 
     }
 
     @Override
+    public PathExpression createJoinBasePathExpression(String expression) {
+        return expressionFactory.createJoinBasePathExpression(expression);
+    }
+
+    @Override
+    public PathExpression createJoinBasePathExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return expressionFactory.createJoinBasePathExpression(expression, macroConfiguration, usedMacros);
+    }
+
+    @Override
     public Expression createJoinPathExpression(String expression) {
         return expressionFactory.createJoinPathExpression(expression, getDefaultMacroConfiguration(), null);
     }

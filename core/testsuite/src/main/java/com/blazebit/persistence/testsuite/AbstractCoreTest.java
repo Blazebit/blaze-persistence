@@ -260,8 +260,8 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
         }
     }
 
-    protected String treatJoin(String path, Class<?> type) {
-        if (jpaProvider.supportsTreatJoin()) {
+    protected String treatJoin(String path, Class<?> type, JoinType joinType) {
+        if (jpaProvider.supportsTreatJoin() && (!jpaProvider.supportsSubtypeRelationResolving() || joinType == JoinType.INNER)) {
             return "TREAT(" + path + " AS " + type.getSimpleName() + ")";
         } else if (jpaProvider.supportsSubtypeRelationResolving()) {
             return path;

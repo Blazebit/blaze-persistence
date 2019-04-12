@@ -37,6 +37,10 @@ public interface ExpressionFactory {
 
     public PathExpression createPathExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros);
 
+    public PathExpression createJoinBasePathExpression(String expression);
+
+    public PathExpression createJoinBasePathExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros);
+
     public Expression createJoinPathExpression(String expression);
 
     public Expression createJoinPathExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros);

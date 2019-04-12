@@ -1084,4 +1084,10 @@ public class GeneralParserTest extends AbstractParserTest {
         FunctionExpression result = (FunctionExpression) parse("LOCATE('abc',document.name)");
         assertEquals(function("LOCATE", _string("abc"), path("document", "name")), result);
     }
+
+    @Test
+    public void testJoinBasePathExpression() {
+        PathExpression result = (PathExpression) parseJoinBasePath("TREAT(x as Y)");
+        assertEquals(path(treat(path("x"), "Y")), result);
+    }
 }

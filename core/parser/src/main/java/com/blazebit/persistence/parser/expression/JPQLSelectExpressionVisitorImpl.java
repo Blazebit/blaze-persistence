@@ -45,7 +45,6 @@ import com.blazebit.persistence.parser.JPQLSelectExpressionParser.SingleJoinElem
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser.String_literalContext;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser.TimeLiteralContext;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser.TimestampLiteralContext;
-import com.blazebit.persistence.parser.JPQLSelectExpressionParser.TreatJoinPathExpressionContext;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser.TreatedRootPathContext;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser.Treated_key_value_expressionContext;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser.Treated_subpathContext;
@@ -317,6 +316,15 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionParserB
     }
 
     @Override
+    public Expression visitParseJoinBasePath(JPQLSelectExpressionParser.ParseJoinBasePathContext ctx) {
+        Expression expression = super.visitParseJoinBasePath(ctx);
+        if (expression instanceof TreatExpression) {
+            expression = wrapPath(expression);
+        }
+        return expression;
+    }
+
+    @Override
     public Expression visitLiteral(JPQLSelectExpressionParser.LiteralContext ctx) {
         JPQLSelectExpressionParser.Simple_literalContext literalContext = ctx.simple_literal();
         if (literalContext != null) {
@@ -444,8 +452,13 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionParserB
     }
 
     @Override
-    public Expression visitTreatJoinPathExpression(TreatJoinPathExpressionContext ctx) {
+    public Expression visitTreatJoinPathExpression(JPQLSelectExpressionParser.TreatJoinPathExpressionContext ctx) {
         return new TreatExpression(ctx.join_path_expression().accept(this), ctx.subtype().getText());
+    }
+
+    @Override
+    public Expression visitTreated_join_base(JPQLSelectExpressionParser.Treated_join_baseContext ctx) {
+        return new TreatExpression(ctx.simple_subpath().accept(this), ctx.subtype().getText());
     }
 
     @Override

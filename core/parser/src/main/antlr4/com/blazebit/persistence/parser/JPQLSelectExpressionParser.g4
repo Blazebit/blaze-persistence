@@ -40,6 +40,12 @@ parsePath : state_field_path_expression EOF
           | single_element_path_expression EOF
           ;
 
+parseJoinBasePath : parsePath
+                  | treated_join_base
+                  ;
+
+treated_join_base : TREAT LP simple_subpath AS subtype RP;
+
 parseJoinPath : join_association_path_expression EOF                                                                #NormalJoinPathExpression
               | Outer_function LP join_association_path_expression RP EOF                                         #OuterJoinPathExpression
               | macroName=Identifier LP (join_association_path_expression (Argument_separator simple_expression)*)?  RP  EOF     #MacroJoinPathExpression

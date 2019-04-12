@@ -187,7 +187,7 @@ public class TreatTest extends AbstractCoreTest {
         criteria.select("polymorphicSub1.sub1Value");
         criteria.innerJoin("TREAT(p.parent AS PolymorphicSub1)", "polymorphicSub1");
         String treatJoinWhereFragment = treatJoinWhereFragment(PolymorphicBase.class, "parent", "polymorphicSub1", PolymorphicSub1.class, JoinType.INNER, null);
-        assertEquals("SELECT polymorphicSub1.sub1Value FROM PolymorphicBase p JOIN " + treatJoin("p.parent", PolymorphicSub1.class) + " polymorphicSub1" + treatJoinWhereFragment, criteria.getQueryString());
+        assertEquals("SELECT polymorphicSub1.sub1Value FROM PolymorphicBase p JOIN " + treatJoin("p.parent", PolymorphicSub1.class, JoinType.INNER) + " polymorphicSub1" + treatJoinWhereFragment, criteria.getQueryString());
         criteria.getResultList();
     }
 

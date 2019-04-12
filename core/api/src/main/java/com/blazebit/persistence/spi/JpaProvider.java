@@ -292,7 +292,7 @@ public interface JpaProvider {
      * Returns where to put treat filters for a treat joined association of this attribute.
      * This is for JPA providers that don't correctly filter the types.
      *
-     * Hibernate for example does not automatically add the type constraint to treat joins of a type that is uses
+     * Hibernate for example does not automatically add the type constraint to treat joins of a type that uses
      * the table per class inheritance strategy.
      *
      * @param ownerType The declaring type of the attribute to check

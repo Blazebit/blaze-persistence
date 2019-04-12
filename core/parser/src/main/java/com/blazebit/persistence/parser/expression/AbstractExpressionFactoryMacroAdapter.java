@@ -37,6 +37,11 @@ public abstract class AbstractExpressionFactoryMacroAdapter implements Expressio
     }
 
     @Override
+    public PathExpression createJoinBasePathExpression(String expression) {
+        return createJoinBasePathExpression(expression, getDefaultMacroConfiguration(), null);
+    }
+
+    @Override
     public Expression createJoinPathExpression(String expression) {
         return createJoinPathExpression(expression, getDefaultMacroConfiguration(), null);
     }
