@@ -359,6 +359,7 @@ public class JoinManyToManyMapValueTest extends AbstractTreatVariationsTest {
     // NOTE: This is a special case that the JPA spec does not cover but is required to make TREAT complete
     public void joinTreatedParentRootManyToManyMapValue() {
         assumeRootTreatJoinSupportedOrEmulated();
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         List<Integer> bases = list(
                 from(Integer.class, "Base", "b")
                         .selectSubquery()
@@ -380,6 +381,7 @@ public class JoinManyToManyMapValueTest extends AbstractTreatVariationsTest {
     // NOTE: This is a special case that the JPA spec does not cover but is required to make TREAT complete
     public void joinMultipleTreatedParentRootManyToManyMapValue() {
         assumeRootTreatJoinSupportedOrEmulated();
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         List<Object[]> bases = list(
                 from(Object[].class, "Base", "b")
                         .selectSubquery()
@@ -488,6 +490,7 @@ public class JoinManyToManyMapValueTest extends AbstractTreatVariationsTest {
     public void joinTreatedParentRootEmbeddableManyToManyMapValue() {
         assumeMapInEmbeddableIsSupported();
         assumeRootTreatJoinSupportedOrEmulated();
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         List<Integer> bases = list(
                 from(Integer.class, "Base", "b")
                         .selectSubquery()
@@ -510,6 +513,7 @@ public class JoinManyToManyMapValueTest extends AbstractTreatVariationsTest {
     public void joinMultipleTreatedParentRootEmbeddableManyToManyMapValue() {
         assumeMapInEmbeddableIsSupported();
         assumeRootTreatJoinSupportedOrEmulated();
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         List<Object[]> bases = list(
                 from(Object[].class, "Base", "b")
                         .selectSubquery()

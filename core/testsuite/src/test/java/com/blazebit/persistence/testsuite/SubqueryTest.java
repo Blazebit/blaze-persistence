@@ -318,7 +318,7 @@ public class SubqueryTest extends AbstractCoreTest {
                     .from("d.owner.ownedDocuments", "dSub")
                     .where("dSub").notEqExpression("d")
                 .end();
-        String expectedQuery = "SELECT d FROM Document d WHERE EXISTS (SELECT 1 FROM d.owner dSub_base LEFT JOIN dSub_base.ownedDocuments dSub WHERE dSub <> d)";
+        String expectedQuery = "SELECT d FROM Document d WHERE EXISTS (SELECT 1 FROM d.owner dSub_base JOIN dSub_base.ownedDocuments dSub WHERE dSub <> d)";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }

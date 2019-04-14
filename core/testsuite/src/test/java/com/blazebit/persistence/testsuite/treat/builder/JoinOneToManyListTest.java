@@ -357,6 +357,7 @@ public class JoinOneToManyListTest extends AbstractTreatVariationsTest {
     // NOTE: This is a special case that the JPA spec does not cover but is required to make TREAT complete
     public void joinTreatedParentRootOneToManyList() {
         assumeRootTreatJoinSupportedOrEmulated();
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         List<Integer> bases = list(
                 from(Integer.class, "Base", "b")
                         .selectSubquery()
@@ -378,6 +379,7 @@ public class JoinOneToManyListTest extends AbstractTreatVariationsTest {
     // NOTE: This is a special case that the JPA spec does not cover but is required to make TREAT complete
     public void joinMultipleTreatedParentRootOneToManyList() {
         assumeRootTreatJoinSupportedOrEmulated();
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         List<Object[]> bases = list(
                 from(Object[].class, "Base", "b")
                         .selectSubquery()
@@ -481,6 +483,7 @@ public class JoinOneToManyListTest extends AbstractTreatVariationsTest {
     // NOTE: This is a special case that the JPA spec does not cover but is required to make TREAT complete
     public void joinTreatedParentRootEmbeddableOneToManyList() {
         assumeRootTreatJoinSupportedOrEmulated();
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         List<Integer> bases = list(
                 from(Integer.class, "Base", "b")
                         .selectSubquery()
@@ -502,6 +505,7 @@ public class JoinOneToManyListTest extends AbstractTreatVariationsTest {
     // NOTE: This is a special case that the JPA spec does not cover but is required to make TREAT complete
     public void joinMultipleTreatedParentRootEmbeddableOneToManyList() {
         assumeRootTreatJoinSupportedOrEmulated();
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         List<Object[]> bases = list(
                 from(Object[].class, "Base", "b")
                         .selectSubquery()

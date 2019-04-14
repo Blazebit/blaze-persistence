@@ -502,66 +502,67 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             FunctionExpression outerFunctionExpr = (FunctionExpression) expr;
             pathExpression = (PathExpression) outerFunctionExpr.getExpressions().get(0);
         } else {
-            throw new IllegalArgumentException("Correlation join path [" + correlationPath == null ? expr.toString() : correlationPath + "] is not a valid join path");
+            throw new IllegalArgumentException("Correlation join path [" + correlationPath + "] is not a valid join path");
         }
 
         if (isJoinableSelectAlias(pathExpression, false, false)) {
             throw new IllegalArgumentException("No select alias allowed in join path");
         }
 
-        // Then we determine the correlation parent
-        JoinNode correlationParent;
-        List<PathElementExpression> pathElements = pathExpression.getExpressions();
+        // Correlation is split into 3 phases
+        // Phase 1 is determining the correlation basis which must be an alias
+        // Phase 2 is determining the correlated attribute which we use in the root node of the subquery
+        // Phase 3 is joining the rest of the path and assigning the last join node the given alias
+
+        List<JoinNode> treatedCorrelationNodes = new ArrayList<>();
+        List<PathExpression> pathExpressionStack = new ArrayList<>();
+        pathExpressionStack.add(pathExpression);
+
+        // Phase 1
+        JoinNode correlationParent = null;
         int start = 0;
-        AliasInfo aliasInfo;
-        if ((aliasInfo = aliasManager.getAliasInfo(pathElements.get(0).toString())) != null) {
-            correlationParent = ((JoinAliasInfo) aliasInfo).getJoinNode();
-            start = 1;
-        } else if (pathElements.get(0) instanceof TreatExpression) {
-            TreatExpression treatExpression = (TreatExpression) pathElements.get(0);
-            if (treatExpression.getExpression() instanceof PathExpression && (aliasInfo = aliasManager.getAliasInfo(((PathExpression) treatExpression.getExpression()).getExpressions().get(0).toString())) != null) {
-                correlationParent = ((JoinAliasInfo) aliasInfo).getJoinNode().getTreatedJoinNode(metamodel.entity(treatExpression.getType()));
-                start = 1;
+        for (int i = 0; i < pathExpressionStack.size(); i++) {
+            PathExpression currentPathExpression = pathExpressionStack.get(i);
+            List<PathElementExpression> pathElements = currentPathExpression.getExpressions();
+            AliasInfo aliasInfo;
+            if (pathElements.get(0) instanceof PropertyExpression) {
+                if ((aliasInfo = aliasManager.getAliasInfo(pathElements.get(0).toString())) != null) {
+                    correlationParent = ((JoinAliasInfo) aliasInfo).getJoinNode();
+                    start = 1;
+                } else {
+                    correlationParent = parent.getRootNodeOrFail("Could not join correlation path [", correlationPath, "] because it did not use an absolute path but multiple root nodes are available!");
+                }
+            } else if (pathElements.get(0) instanceof TreatExpression) {
+                TreatExpression treatExpression = (TreatExpression) pathElements.get(0);
+                PathExpression treatExpressionPathExpression = (PathExpression) treatExpression.getExpression();
+                if (treatExpressionPathExpression.getExpressions().size() == 1) {
+                    if ((aliasInfo = aliasManager.getAliasInfo(treatExpressionPathExpression.getExpressions().get(0).toString())) != null) {
+                        // Root treat
+                        correlationParent = ((JoinAliasInfo) aliasInfo).getJoinNode().getTreatedJoinNode(metamodel.entity(treatExpression.getType()));
+                        treatedCorrelationNodes.add(correlationParent);
+                        // Use the treated root node as correlation parent
+                        start = 1;
+                    } else {
+                        // Treat of an association on a query root
+                        correlationParent = parent.getRootNodeOrFail("Could not join correlation path [", correlationPath, "] because it did not use an absolute path but multiple root nodes are available!");
+                        pathExpressionStack.add(treatExpressionPathExpression);
+                        break;
+                    }
+                } else {
+                    pathExpressionStack.add(treatExpressionPathExpression);
+                }
             } else {
-                throw new IllegalArgumentException("The correlation path '" + correlationPath == null ? expr.toString() : correlationPath + "' couldn't be properly analyzed because of nested treat expressions!");
+                throw new IllegalArgumentException("The correlation path '" + correlationPath + "' couldn't be properly analyzed because of an unsupported expression structure!");
             }
-        } else {
-            correlationParent = parent.getRootNodeOrFail("Could not join correlation path [", correlationPath == null ? expr.toString() : correlationPath, "] because it did not use an absolute path but multiple root nodes are available!");
         }
 
-        if (correlationParent.getAliasInfo().getAliasOwner() == aliasManager) {
-            throw new IllegalArgumentException("The correlation path '" + correlationPath == null ? expr.toString() : correlationPath + "' does not seem to be part of a parent query!");
-        }
-
-        // Then we determine the first correlated attribute
+        // Phase 2
+        PathExpression currentPathExpression = pathExpressionStack.remove(pathExpressionStack.size() - 1);
+        List<PathElementExpression> pathElements = currentPathExpression.getExpressions();
         List<PathElementExpression> fields = new ArrayList<>();
-        String correlatedAttribute = findCorrelatedAttribute(correlationParent, pathElements, start, pathElements.size() - 1, fields);
-        Expression correlatedAttributeExpr;
-        Expression elementExpr;
-        EntityType<?> correlationTreatEntityType = null;
-        if (correlatedAttribute == null) {
-            StringBuilder sb = new StringBuilder();
-            List<PathElementExpression> elementExpressions = new ArrayList<>(fields.size() + 1);
-            for (PathElementExpression field : fields) {
-                elementExpressions.add(field);
-                sb.append(field.toString());
-                sb.append('.');
-            }
-            elementExpressions.add(pathElements.get(pathElements.size() - 1));
-            sb.append(pathElements.get(pathElements.size() - 1));
-            correlatedAttributeExpr = elementExpr = new PathExpression(elementExpressions);
-            correlatedAttribute = sb.toString();
-            correlationTreatEntityType = treatEntityType == null ? null : metamodel.entity(treatEntityType);
-        } else {
-            correlatedAttributeExpr = expressionFactory.createSimpleExpression(correlatedAttribute, false);
-            elementExpr = pathElements.get(pathElements.size() - 1);
-        }
+        String correlatedAttribute = findCorrelatedAttribute(correlationParent, pathElements, start, pathElements.size(), fields);
+        Expression correlatedAttributeExpr = expressionFactory.createSimpleExpression(correlatedAttribute, false);
 
-        if (elementExpr instanceof ArrayExpression) {
-            throw new IllegalArgumentException("Array expressions are not allowed!");
-        }
-
-        // Create a correlation join for the first path
         AttributeHolder joinResult = JpaUtils.getAttributeForJoining(metamodel, correlationParent.getNodeType(), correlatedAttributeExpr, null);
         Type<?> type = joinResult.getAttributeType();
 
@@ -577,29 +578,76 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             }
         }
 
-        // Finally we implicit join the rest of the expression
-        if (correlatedAttributeExpr == elementExpr) {
+        // Phase 3
+        start += fields.size();
+        final JoinNode rootNode;
+        if (pathExpressionStack.isEmpty() && start + 1 == pathElements.size()) {
+            // This is a simple path to an association, no deep expression that requires implicit joining
+
             JoinAliasInfo rootAliasInfo = new JoinAliasInfo(rootAlias, rootAlias, false, true, aliasManager);
-            JoinNode rootNode = JoinNode.createCorrelationRootNode(correlationParent, correlatedAttribute, joinResult.getAttribute(), type, correlationTreatEntityType, rootAliasInfo);
+            rootNode = JoinNode.createCorrelationRootNode(correlationParent, correlatedAttribute, joinResult.getAttribute(), type, metamodel.getEntity(treatEntityType), rootAliasInfo);
             rootAliasInfo.setJoinNode(rootNode);
             rootNodes.add(rootNode);
             // register root alias in aliasManager
             aliasManager.registerAliasInfo(rootAliasInfo);
         } else {
+            // This is a deep expression that requires implicit joining
             String rootAliasBase = rootAlias + "_base";
             if (aliasManager.getAliasInfo(rootAliasBase) != null) {
                 rootAliasBase = aliasManager.generateRootAlias(rootAliasBase);
             }
 
             JoinAliasInfo rootAliasInfo = new JoinAliasInfo(rootAliasBase, rootAliasBase, true, true, aliasManager);
-            JoinNode rootNode = JoinNode.createCorrelationRootNode(correlationParent, correlatedAttribute, joinResult.getAttribute(), type, null, rootAliasInfo);
+            rootNode = JoinNode.createCorrelationRootNode(correlationParent, correlatedAttribute, joinResult.getAttribute(), type, null, rootAliasInfo);
             rootAliasInfo.setJoinNode(rootNode);
             rootNodes.add(rootNode);
             // register root alias in aliasManager
             aliasManager.registerAliasInfo(rootAliasInfo);
 
-            JoinResult result = implicitJoin(rootNode, pathExpression, null, null, null, new HashSet<String>(), start + fields.size() + 1, pathElements.size() - 1, true, true);
-            createOrUpdateNode(result.baseNode, result.addToList(Collections.singletonList(elementExpr.toString())), treatEntityType, rootAlias, null, null, false, true, true);
+            JoinResult result;
+            if (pathExpressionStack.size() > 1) {
+                // Implicit join the rest of the current level
+                result = implicitJoin(rootNode, currentPathExpression, null, JoinType.INNER, null, new HashSet<String>(), start + 1, pathElements.size(), true, true);
+                // Reset start
+                start = 0;
+
+                while (pathExpressionStack.size() > 1) {
+                    currentPathExpression = pathExpressionStack.remove(pathExpressionStack.size() - 1);
+                    pathElements = currentPathExpression.getExpressions();
+                    // This can only be a treat expression
+                    TreatExpression treatExpression = (TreatExpression) pathElements.get(0);
+                    EntityType<?> treatType = metamodel.entity(treatExpression.getType());
+
+                    JoinNode treatedNode = result.baseNode.getTreatedJoinNode(treatType);
+                    treatedCorrelationNodes.add(treatedNode);
+                    result = implicitJoin(treatedNode, currentPathExpression, null, JoinType.INNER, null, new HashSet<String>(), 1, pathElements.size(), true, true);
+                }
+            } else {
+                result = new JoinResult(rootNode, null, rootNode.getNodeType());
+            }
+
+            if (pathExpressionStack.size() > 0) {
+                currentPathExpression = pathExpressionStack.remove(0);
+                pathElements = currentPathExpression.getExpressions();
+                // This can only be a treat expression
+                TreatExpression treatExpression = (TreatExpression) pathElements.get(0);
+                EntityType<?> treatType = metamodel.entity(treatExpression.getType());
+
+                JoinNode treatedNode = result.baseNode.getTreatedJoinNode(treatType);
+                treatedCorrelationNodes.add(treatedNode);
+                result = new JoinResult(treatedNode, null, treatType);
+            }
+            pathElements = currentPathExpression.getExpressions();
+            Expression elementExpr = pathElements.get(pathElements.size() - 1);
+            result = implicitJoin(result.baseNode, pathExpression, null, JoinType.INNER, null, new HashSet<String>(), start + 1, pathElements.size() - 1, true, true);
+            JoinResult finalNode = createOrUpdateNode(result.baseNode, result.addToList(Collections.singletonList(elementExpr.toString())), treatEntityType, rootAlias, JoinType.INNER, null, false, true, true);
+            if (treatEntityType != null) {
+                treatedCorrelationNodes.add(finalNode.baseNode);
+            }
+        }
+
+        if (!treatedCorrelationNodes.isEmpty()) {
+            rootNode.setJoinNodesNeedingTreatConjunct(treatedCorrelationNodes);
         }
 
         return rootAlias;
@@ -1159,6 +1207,19 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
     }
 
     private boolean renderCorrelationJoinPath(StringBuilder sb, JoinAliasInfo joinBase, JoinNode node, List<String> whereConjuncts, List<String> optionalWhereConjuncts, boolean externalRepresentation) {
+        StringBuilder whereSb = null;
+        if (node.getJoinNodesNeedingTreatConjunct() != null) {
+            whereSb = new StringBuilder();
+
+            for (JoinNode joinNode : node.getJoinNodesNeedingTreatConjunct()) {
+                whereSb.setLength(0);
+                whereSb.append("TYPE(");
+                joinNode.appendAlias(whereSb, false, externalRepresentation);
+                whereSb.append(") = ");
+                whereSb.append(joinNode.getTreatType().getName());
+                whereConjuncts.add(whereSb.toString());
+            }
+        }
         final boolean renderTreat = mainQuery.jpaProvider.supportsTreatJoin() &&
                 (!mainQuery.jpaProvider.supportsSubtypeRelationResolving() || node.getJoinType() == JoinType.INNER);
         if (mainQuery.jpaProvider.needsCorrelationPredicateWhenCorrelatingWithWhereClause() || node.getTreatType() != null && !renderTreat && !mainQuery.jpaProvider.supportsSubtypeRelationResolving()) {
@@ -1174,7 +1235,11 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                     sb.append(node.getAlias());
                     sb.append('.').append(node.getCorrelationPath());
 
-                    StringBuilder whereSb = new StringBuilder();
+                    if (whereSb == null) {
+                        whereSb = new StringBuilder();
+                    } else {
+                        whereSb.setLength(0);
+                    }
                     whereSb.append("_synthetic_").append(node.getAlias());
                     boolean singleValuedAssociationId = mainQuery.jpaProvider.supportsSingleValuedAssociationIdExpressions() && extendedManagedType.getIdAttributes().size() == 1;
                     if (singleValuedAssociationId) {
@@ -1192,7 +1257,11 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             } else {
                 boolean renderAlias = true;
                 sb.append(node.getEntityType().getName());
-                StringBuilder whereSb = new StringBuilder();
+                if (whereSb == null) {
+                    whereSb = new StringBuilder();
+                } else {
+                    whereSb.setLength(0);
+                }
                 ExtendedManagedType elementManagedType = metamodel.getManagedType(ExtendedManagedType.class, node.getManagedType());
                 if (elementManagedType.getAttribute(attribute.getMappedBy()).getAttribute().isCollection()) {
                     renderAlias = false;
@@ -2296,7 +2365,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
     }
 
     private String getSimpleName(PathElementExpression element) {
-        if (element == null) {
+        if (element == null || element instanceof TreatExpression) {
             return null;
         } else if (element instanceof ArrayExpression) {
             return ((ArrayExpression) element).getBase().getProperty();

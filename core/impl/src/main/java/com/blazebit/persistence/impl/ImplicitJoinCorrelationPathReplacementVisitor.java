@@ -61,8 +61,10 @@ public class ImplicitJoinCorrelationPathReplacementVisitor extends InplaceModifi
             PathExpression transformedExpression = pathExpression.clone(false);
             // For now, we only support 2 levels of treats, but this obviously should be improved
             if (transformedExpression.getExpressions().get(0) instanceof TreatExpression) {
+                // Only the first expression in the list can be a treat expression
                 TreatExpression treatExpression = (TreatExpression) transformedExpression.getExpressions().get(0);
                 if (treatExpression.getType().equals(ex.getTreatType())) {
+                    // The not-allowed implicit join is the one within the treat
                     PathExpression pathExpressionToModify = (PathExpression) treatExpression.getExpression();
                     removeMatchingJoinAttributePathElements(ex, pathExpressionToModify);
                     if (pathExpressionToModify.getExpressions().isEmpty()) {
@@ -71,8 +73,14 @@ public class ImplicitJoinCorrelationPathReplacementVisitor extends InplaceModifi
                         throw new IllegalArgumentException("Can't transform nested TREAT expression: " + pathExpression);
                     }
                 } else {
+                    // The not-allowed implicit join happens after dereferencing the treat
                     PathExpression pathExpressionToModify = (PathExpression) treatExpression.getExpression();
-                    if (ex.getBaseNode().getTreatType() != null && ex.getBaseNode().getTreatType().getName().equals(treatExpression.getType())
+                    // Usually, this will always mean the treat is a root treat
+                    // If the root treat is an up-cast, JoinNode#getTreatType will be null
+                    // If it's a proper treat, it must match the treat expressions treat type
+                    // In addition, we also need to make sure the root treat alias matches the not-allowed implicit joins base node alias
+                    if ((ex.getBaseNode().getTreatType() == null && ex.getBaseNode().getEntityType().getName().equals(treatExpression.getType())
+                            || ex.getBaseNode().getTreatType() != null && ex.getBaseNode().getTreatType().getName().equals(treatExpression.getType()))
                             && pathExpressionToModify.getExpressions().size() == 1 && ex.getBaseNode().getAlias().equals(pathExpressionToModify.getExpressions().get(0).toString())) {
                         // Root treat
                         removeMatchingJoinAttributePathElements(ex, transformedExpression);
