@@ -314,7 +314,7 @@ public abstract class AbstractTreatVariationsTest extends AbstractCoreTest {
     }
 
     protected void assumeHibernateSupportsMultiTpcWithTypeExpression() {
-        // TODO: create issue for this
+        // Fixed in Hibernate 5.3 via HHH-12565
         Assume.assumeTrue("Hibernate does not prefix the table per class discriminator column properly when using a type expression!", !strategy.equals("TablePerClass") || !isHibernate());
     }
 

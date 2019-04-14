@@ -114,7 +114,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
 
 /**
  *
@@ -129,8 +128,6 @@ import java.util.logging.Logger;
 public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, SetReturn, SubquerySetReturn, FinalSetReturn extends BaseFinalSetOperationBuilderImpl<?, ?, ?>> implements ServiceProvider, ConfigurationSource {
 
     public static final String ID_PARAM_NAME = "ids";
-
-    protected static final Logger LOG = Logger.getLogger(AbstractCommonQueryBuilder.class.getName());
 
     protected final MainQuery mainQuery;
     protected final QueryContext queryContext;

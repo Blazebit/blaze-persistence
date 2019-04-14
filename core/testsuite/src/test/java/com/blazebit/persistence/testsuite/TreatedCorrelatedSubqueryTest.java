@@ -18,9 +18,7 @@ package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.PolymorphicBase;
 import com.blazebit.persistence.testsuite.entity.PolymorphicSub1;
@@ -36,13 +34,13 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 
 /**
- * @author Moritz Becker
+ * @author Christian Beikov
  * @since 1.4.0
  */
-// NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
+// NOTE: EclipseLink does not support subtype property access which is required here
 // NOTE: Seems Datanucleus fails to properly interpret the entity literal
-@Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class })
-public class TreatedEntityJoinTest extends AbstractCoreTest {
+@Category({ NoEclipselink.class, NoDatanucleus.class })
+public class TreatedCorrelatedSubqueryTest extends AbstractCoreTest {
 
     private PolymorphicSub1 root2;
 
@@ -76,6 +74,8 @@ public class TreatedEntityJoinTest extends AbstractCoreTest {
                 em.persist(parent2);
                 em.persist(root1);
                 em.persist(root2);
+
+                parent2.setParent2(root1);
             }
         });
     }
@@ -87,33 +87,44 @@ public class TreatedEntityJoinTest extends AbstractCoreTest {
 
     @Test
     public void test1() {
-        CriteriaBuilder<PolymorphicSub1> cb = cbf.create(em, PolymorphicSub1.class, "root")
-                .innerJoinOn("TREAT(parent AS PolymorphicSub2)", PolymorphicBase.class, "parentAlias")
-                    .on("parentAlias.id").eqExpression("TREAT(root.parent AS PolymorphicSub2).id")
+        CriteriaBuilder<PolymorphicBase> cb = cbf.create(em, PolymorphicBase.class, "root")
+                .whereExists()
+                    .from("TREAT(root.parent AS PolymorphicSub2).parent2", "parentAlias")
                 .end();
 
-        String expectedQuery = "SELECT root FROM PolymorphicSub1 root " +
-                "LEFT JOIN root.parent parent_1 " +
-                "JOIN PolymorphicBase parentAlias" + onClause("(TYPE(parent_1) = " + PolymorphicSub2.class.getSimpleName() + " AND parentAlias.id = " + treatRoot("parent_1", PolymorphicSub2.class, "id") + ")");
+        String expectedQuery = "SELECT root FROM PolymorphicBase root " +
+                "WHERE EXISTS (SELECT 1 FROM root.parent parentAlias_base JOIN parentAlias_base.parent2 parentAlias WHERE TYPE(parentAlias_base) = " + PolymorphicSub2.class.getSimpleName() + ")";
         assertEquals(expectedQuery, cb.getQueryString());
-        List<PolymorphicSub1> result = cb.getResultList();
+        List<PolymorphicBase> result = cb.getResultList();
         assertEquals(1, result.size());
         assertEquals(root2.getId(), result.get(0).getId());
     }
 
     @Test
     public void test2() {
-        CriteriaBuilder<PolymorphicSub1> cb = cbf.create(em, PolymorphicSub1.class, "root")
-                .innerJoinOn("TREAT(parent AS PolymorphicSub2)", PolymorphicBase.class, "parent")
-                    .on("parent.id").eqExpression("TREAT(root.parent AS PolymorphicSub2).id")
+        CriteriaBuilder<PolymorphicBase> cb = cbf.create(em, PolymorphicBase.class, "root")
+                .whereExists()
+                .from("TREAT(TREAT(root AS PolymorphicSub1).parent AS PolymorphicSub2).parent2", "parentAlias")
                 .end();
 
-        String expectedQuery = "SELECT root FROM PolymorphicSub1 root " +
-                "LEFT JOIN root.parent parent_1 " +
-                "JOIN PolymorphicBase parent" + onClause("(TYPE(parent_1) = " + PolymorphicSub2.class.getSimpleName() + " AND parent.id = " + treatRoot("parent_1", PolymorphicSub2.class, "id") + ")");
+        String expectedQuery = "SELECT root FROM PolymorphicBase root " +
+                "WHERE EXISTS (SELECT 1 FROM root.parent parentAlias_base JOIN parentAlias_base.parent2 parentAlias WHERE TYPE(root) = " + PolymorphicSub1.class.getSimpleName() + " AND TYPE(parentAlias_base) = " + PolymorphicSub2.class.getSimpleName() + ")";
         assertEquals(expectedQuery, cb.getQueryString());
-        List<PolymorphicSub1> result = cb.getResultList();
+        List<PolymorphicBase> result = cb.getResultList();
         assertEquals(1, result.size());
         assertEquals(root2.getId(), result.get(0).getId());
+    }
+
+    @Test
+    public void test3() {
+        CriteriaBuilder<PolymorphicBase> cb = cbf.create(em, PolymorphicBase.class, "root")
+                .whereExists()
+                .from("TREAT(TREAT(parent AS PolymorphicSub1).parent AS PolymorphicSub2).parent2", "parentAlias")
+                .end();
+
+        String expectedQuery = "SELECT root FROM PolymorphicBase root " +
+                "WHERE EXISTS (SELECT 1 FROM root.parent parentAlias_base JOIN parentAlias_base.parent parent_1 JOIN parent_1.parent2 parentAlias WHERE TYPE(parentAlias_base) = " + PolymorphicSub1.class.getSimpleName() + " AND TYPE(parent_1) = " + PolymorphicSub2.class.getSimpleName() + ")";
+        assertEquals(expectedQuery, cb.getQueryString());
+        cb.getResultList();
     }
 }

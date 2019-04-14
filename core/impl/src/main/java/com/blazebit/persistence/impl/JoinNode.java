@@ -94,6 +94,7 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
     private final Set<JoinNode> dependencies = new HashSet<>();
 
     private CompoundPredicate onPredicate;
+    private List<JoinNode> joinNodesNeedingTreatConjunct;
     
     // Cache
     private boolean dirty = true;
@@ -427,6 +428,10 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
     }
 
     public JoinNode getTreatedJoinNode(EntityType<?> type) {
+        // Return this when the treat is an upcast
+        if (type.getJavaType().isAssignableFrom(getJavaType())) {
+            return this;
+        }
         String typeName = type.getJavaType().getName();
         JoinNode treatedNode = treatedJoinNodes.get(typeName);
         if (treatedNode != null) {
@@ -782,6 +787,14 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
 
 
         return collectionJoins;
+    }
+
+    List<JoinNode> getJoinNodesNeedingTreatConjunct() {
+        return joinNodesNeedingTreatConjunct;
+    }
+
+    void setJoinNodesNeedingTreatConjunct(List<JoinNode> joinNodesNeedingTreatConjunct) {
+        this.joinNodesNeedingTreatConjunct = joinNodesNeedingTreatConjunct;
     }
 
     List<JoinNode> getJoinNodesForTreatConstraint() {
