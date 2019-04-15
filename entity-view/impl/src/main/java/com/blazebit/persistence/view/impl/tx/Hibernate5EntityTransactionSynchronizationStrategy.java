@@ -30,13 +30,13 @@ import com.blazebit.reflection.ReflectionUtils;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class Hibernate5TransactionSynchronizationStrategy implements TransactionSynchronizationStrategy {
+public class Hibernate5EntityTransactionSynchronizationStrategy implements TransactionSynchronizationStrategy {
     
     private final EntityTransaction tx;
     private final Object synchronizationRegistry;
     private final Method registerSynchronization;
 
-    public Hibernate5TransactionSynchronizationStrategy(EntityManager em) {
+    public Hibernate5EntityTransactionSynchronizationStrategy(EntityManager em) {
         try {
             this.tx = em.getTransaction();
         } catch (IllegalStateException e) {
