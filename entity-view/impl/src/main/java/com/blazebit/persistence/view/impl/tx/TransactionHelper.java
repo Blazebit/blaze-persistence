@@ -74,7 +74,7 @@ public class TransactionHelper {
 
             if (major >= 5) {
                 Object jtaPlatform = getHibernate5JtaPlatformPresent(em);
-                if (jtaPlatform == null) {
+                if (jtaPlatform == null || jtaPlatform.getClass() == Class.forName("org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform")) {
                     return new Hibernate5EntityTransactionSynchronizationStrategy(em);
                 } else {
                     return new Hibernate5JtaPlatformTransactionSynchronizationStrategy(jtaPlatform);
