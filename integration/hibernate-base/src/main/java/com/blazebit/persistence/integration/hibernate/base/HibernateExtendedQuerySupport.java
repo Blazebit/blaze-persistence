@@ -46,6 +46,7 @@ import org.hibernate.hql.internal.antlr.SqlTokenTypes;
 import org.hibernate.hql.internal.ast.exec.BasicExecutor;
 import org.hibernate.hql.internal.ast.exec.DeleteExecutor;
 import org.hibernate.hql.internal.ast.exec.StatementExecutor;
+import org.hibernate.hql.internal.ast.tree.AbstractStatement;
 import org.hibernate.hql.internal.ast.tree.DotNode;
 import org.hibernate.hql.internal.ast.tree.FromElement;
 import org.hibernate.hql.internal.ast.tree.QueryNode;
@@ -177,9 +178,16 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         }
         QueryTranslator translator = plan.getTranslators()[0];
         
-        QueryNode queryNode = getField(translator, "sqlAst");
+        AbstractStatement statement = getField(translator, "sqlAst");
+        QueryNode queryNode;
+
+        if (statement instanceof QueryNode) {
+            queryNode = (QueryNode) statement;
+        } else {
+            queryNode = (QueryNode) statement.getNextSibling();
+        }
         FromElement fromElement = queryNode.getFromClause().getFromElement(alias);
-        
+
         if (fromElement == null) {
             throw new IllegalArgumentException("The alias " + alias + " could not be found in the query: " + query);
         }
