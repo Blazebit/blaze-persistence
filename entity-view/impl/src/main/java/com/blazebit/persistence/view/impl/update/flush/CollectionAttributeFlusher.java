@@ -34,6 +34,7 @@ import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
 import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
+import com.blazebit.persistence.view.impl.update.EntityViewUpdater;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.spi.type.BasicUserType;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
@@ -1017,7 +1018,11 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
             return null;
         }
         if (elementDescriptor.isSubview()) {
-            return (DirtyChecker<E>) elementDescriptor.getViewToEntityMapper().getUpdater(element).getDirtyChecker();
+            EntityViewUpdater updater = elementDescriptor.getViewToEntityMapper().getUpdater(element);
+            if (updater == null) {
+                throw new IllegalArgumentException("Found unexpected element in plural attribute '" + attributeName + "'. The object does not seem to be flushable: " + element);
+            }
+            return (DirtyChecker<E>) updater.getDirtyChecker();
         } else if (elementDescriptor.isJpaEntity()) {
             return (DirtyChecker<E>) elementDescriptor.getEntityToEntityMapper().getDirtyChecker();
         } else {
@@ -1146,7 +1151,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                         }
 
                         List<CollectionElementAttributeFlusher<E, V>> elementFlushers = getInverseElementFlushersForActions(context, (Collection<?>) current, added, removed);
-                        return partialFlusher(false, PluralFlushOperation.COLLECTION_REPLACE_AND_ELEMENT, Collections.EMPTY_LIST, elementFlushers);
+                        return partialFlusher(false, PluralFlushOperation.ELEMENT_ONLY, Collections.EMPTY_LIST, elementFlushers);
                     }
                     return partialFlusher(false, PluralFlushOperation.COLLECTION_REPLACE_ONLY, Collections.EMPTY_LIST, Collections.<CollectionElementAttributeFlusher<E, V>>emptyList());
                 }
@@ -1165,7 +1170,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                         }
 
                         List<CollectionElementAttributeFlusher<E, V>> elementFlushers = getInverseElementFlushersForActions(context, (Collection<?>) current, added, removed);
-                        return partialFlusher(false, PluralFlushOperation.COLLECTION_REPLACE_AND_ELEMENT, Collections.EMPTY_LIST, elementFlushers);
+                        return partialFlusher(false, PluralFlushOperation.ELEMENT_ONLY, Collections.EMPTY_LIST, elementFlushers);
                     }
                     return partialFlusher(false, PluralFlushOperation.COLLECTION_REPLACE_ONLY, Collections.EMPTY_LIST, Collections.<CollectionElementAttributeFlusher<E, V>>emptyList());
                 }

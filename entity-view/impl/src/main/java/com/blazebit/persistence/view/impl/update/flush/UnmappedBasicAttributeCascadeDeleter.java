@@ -29,6 +29,7 @@ import javax.persistence.Query;
 import javax.persistence.Tuple;
 import javax.persistence.metamodel.EntityType;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -99,12 +100,13 @@ public class UnmappedBasicAttributeCascadeDeleter extends AbstractUnmappedAttrib
 
     @Override
     public void removeByOwnerId(UpdateContext context, Object ownerId) {
-        Object[] returnedValues = null;
-        Object id = null;
         if (requiresDeleteAsEntity) {
             CriteriaBuilder<?> cb = context.getEntityViewManager().getCriteriaBuilderFactory().create(context.getEntityManager(), elementEntityClass);
             cb.where(ownerIdAttributeName).eq(ownerId);
-            context.getEntityManager().remove(cb.getSingleResult());
+            for (Object o : cb.getResultList()) {
+                context.getEntityManager().remove(o);
+            }
+
             // We need to flush here, otherwise the deletion will be deferred and might cause a constraint violation
             context.getEntityManager().flush();
         } else {
@@ -122,19 +124,22 @@ public class UnmappedBasicAttributeCascadeDeleter extends AbstractUnmappedAttrib
                     cb.select(attribute);
                 }
                 cb.select(elementIdAttributeName);
-                returnedValues = cb.getSingleResult();
-                id = returnedValues[returnedValues.length - 1];
+                for (Object[] returnedValues : cb.getResultList()) {
+                    Object id = returnedValues[returnedValues.length - 1];
 
-                for (int i = 0; i < unmappedPreRemoveCascadeDeleters.length; i++) {
-                    unmappedPreRemoveCascadeDeleters[i].removeByOwnerId(context, id);
+                    for (int i = 0; i < unmappedPreRemoveCascadeDeleters.length; i++) {
+                        unmappedPreRemoveCascadeDeleters[i].removeByOwnerId(context, id);
+                    }
+                    removeWithoutPreCascadeDelete(context, ownerId, returnedValues, id);
                 }
+            } else {
+                removeWithoutPreCascadeDelete(context, ownerId, null, null);
             }
-            removeWithoutPreCascadeDelete(context, ownerId, returnedValues, id);
         }
     }
 
     private void removeWithoutPreCascadeDelete(UpdateContext context, Object ownerId, Object[] returnedValues, Object id) {
-        boolean doDelete = true;
+        List<Object[]> returnedValuesList;
         // need to "return" the values from the delete query for the post deleters since the values aren't available after executing the delete query
         if (unmappedPostRemoveCascadeDeleters.length != 0 && returnedValues == null) {
             List<String> returningAttributes = new ArrayList<>();
@@ -153,8 +158,13 @@ public class UnmappedBasicAttributeCascadeDeleter extends AbstractUnmappedAttrib
                 }
 
                 ReturningResult<Tuple> result = cb.executeWithReturning(returningAttributes.toArray(new String[returningAttributes.size()]));
-                returnedValues = result.getLastResult().toArray();
-                doDelete = false;
+                returnedValuesList = new ArrayList<>();
+                for (Tuple tuple : result.getResultList()) {
+                    returnedValues = tuple.toArray();
+                    returnedValuesList.add(returnedValues);
+                    id = returnedValues[returnedValues.length - 1];
+                    deleteElement(context, ownerId, id);
+                }
             } else {
                 // Otherwise we query the attributes
                 CriteriaBuilder<Object[]> cb = evm.getCriteriaBuilderFactory().create(context.getEntityManager(), Object[].class);
@@ -168,33 +178,44 @@ public class UnmappedBasicAttributeCascadeDeleter extends AbstractUnmappedAttrib
                     cb.select(attribute);
                 }
                 cb.select(elementIdAttributeName);
-                returnedValues = cb.getSingleResult();
-                id = returnedValues[returnedValues.length - 1];
+                returnedValuesList = new ArrayList<>();
+                for (Object[] objects : cb.getResultList()) {
+                    returnedValues = objects;
+                    returnedValuesList.add(returnedValues);
+                    id = returnedValues[returnedValues.length - 1];
+                    deleteElement(context, ownerId, id);
+                }
             }
+        } else {
+            deleteElement(context, ownerId, id);
+            returnedValuesList = returnedValues == null ? Collections.<Object[]>emptyList() : Collections.singletonList(returnedValues);
         }
 
-        if (doDelete) {
-            if (requiresDeleteAsEntity) {
-                if (id == null) {
-                    throw new UnsupportedOperationException("Delete by owner id should not be invoked!");
+        for (int i = 0; i < returnedValuesList.size(); i++) {
+            Object[] objects = returnedValuesList.get(i);
+            for (int j = 0; j < unmappedPostRemoveCascadeDeleters.length; j++) {
+                if (objects[j] != null) {
+                    unmappedPostRemoveCascadeDeleters[j].removeById(context, objects[j]);
                 }
-                context.getEntityManager().remove(context.getEntityManager().getReference(elementEntityClass, id));
+            }
+        }
+    }
+
+    private void deleteElement(UpdateContext context, Object ownerId, Object id) {
+        if (requiresDeleteAsEntity) {
+            if (id == null) {
+                throw new UnsupportedOperationException("Delete by owner id should not be invoked!");
+            }
+            context.getEntityManager().remove(context.getEntityManager().getReference(elementEntityClass, id));
+        } else {
+            if (id == null) {
+                Query query = context.getEntityManager().createQuery(deleteByOwnerIdQuery);
+                query.setParameter("ownerId", ownerId);
+                query.executeUpdate();
             } else {
-                if (id == null) {
-                    Query query = context.getEntityManager().createQuery(deleteByOwnerIdQuery);
-                    query.setParameter("ownerId", ownerId);
-                    query.executeUpdate();
-                } else {
-                    Query query = context.getEntityManager().createQuery(deleteQuery);
-                    query.setParameter("id", id);
-                    query.executeUpdate();
-                }
-            }
-        }
-
-        for (int i = 0; i < unmappedPostRemoveCascadeDeleters.length; i++) {
-            if (returnedValues[i] != null) {
-                unmappedPostRemoveCascadeDeleters[i].removeById(context, returnedValues[i]);
+                Query query = context.getEntityManager().createQuery(deleteQuery);
+                query.setParameter("id", id);
+                query.executeUpdate();
             }
         }
     }

@@ -280,7 +280,7 @@ public final class JpaUtils {
         Map<String, ExtendedAttribute<?, ?>> collectionAttributeEntries = new HashMap<>();
         JoinTable joinTable = attribute.getJoinTable();
         if (joinTable == null) {
-            throw new IllegalArgumentException("No support for inserting into inverse collection via DML API yet!");
+            throw new IllegalArgumentException("Inserting into or updating an inverse collection via DML API is not supported!");
         }
 
         ExtendedManagedType<?> extendedManagedType = metamodel.getManagedType(ExtendedManagedType.class, entityType);

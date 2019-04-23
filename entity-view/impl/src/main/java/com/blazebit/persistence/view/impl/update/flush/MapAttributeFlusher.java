@@ -38,6 +38,7 @@ import com.blazebit.persistence.view.impl.entity.MapViewToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
 import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
+import com.blazebit.persistence.view.impl.update.EntityViewUpdater;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.spi.type.BasicUserType;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
@@ -1306,7 +1307,11 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
             return null;
         }
         if (elementDescriptor.isSubview()) {
-            return (DirtyChecker<E>) elementDescriptor.getViewToEntityMapper().getUpdater(element).getDirtyChecker();
+            EntityViewUpdater updater = elementDescriptor.getViewToEntityMapper().getUpdater(element);
+            if (updater == null) {
+                throw new IllegalArgumentException("Found unexpected element in plural attribute '" + attributeName + "'. The object does not seem to be flushable: " + element);
+            }
+            return (DirtyChecker<E>) updater.getDirtyChecker();
         } else if (elementDescriptor.isJpaEntity()) {
             return (DirtyChecker<E>) elementDescriptor.getEntityToEntityMapper().getDirtyChecker();
         } else {
@@ -1320,7 +1325,11 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
             return null;
         }
         if (keyDescriptor.isSubview()) {
-            return (DirtyChecker<Object>) (DirtyChecker<?>) keyDescriptor.getViewToEntityMapper().getUpdater(element).getDirtyChecker();
+            EntityViewUpdater updater = keyDescriptor.getViewToEntityMapper().getUpdater(element);
+            if (updater == null) {
+                throw new IllegalArgumentException("Found unexpected key in map attribute '" + attributeName + "'. The object does not seem to be flushable: " + element);
+            }
+            return (DirtyChecker<Object>) (DirtyChecker<?>) updater.getDirtyChecker();
         } else if (keyDescriptor.isJpaEntity()) {
             return (DirtyChecker<Object>) keyDescriptor.getEntityToEntityMapper().getDirtyChecker();
         } else {

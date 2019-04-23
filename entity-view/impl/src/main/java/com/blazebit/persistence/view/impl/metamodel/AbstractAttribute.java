@@ -168,7 +168,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                 this.correlationKeyAlias = null;
                 this.correlationExpression = null;
             } else {
-                ExtendedManagedType<?> managedType = context.getEntityMetamodel().getManagedType(ExtendedManagedType.class, declaringType.getEntityClass());
+                ExtendedManagedType<?> managedType = context.getEntityMetamodel().getManagedType(ExtendedManagedType.class, declaringType.getJpaManagedType());
                 ExtendedAttribute<?, ?> attribute = managedType.getOwnedAttributes().get(this.mapping);
 
                 this.correlationKeyAlias = "__correlationAlias";

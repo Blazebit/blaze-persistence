@@ -36,6 +36,7 @@ import org.junit.runners.Parameterized;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 
 /**
  *
@@ -79,6 +80,26 @@ public class EntityViewUpdateSubviewInverseSimpleTest extends AbstractEntityView
 
         newPerson.getOwnedDocuments2().add(document);
         Assert.assertFalse(evm.getChangeModel(newPerson).get("ownedDocuments2").isDirty());
+
+        // Then
+        restartTransaction();
+        Document newDocument = em.find(Document.class, document.getId());
+        Assert.assertEquals(newPerson.getId(), newDocument.getOwner().getId());
+    }
+
+    @Test
+    public void testReplaceCollection() {
+        // Given
+        UpdatablePersonView newPerson = evm.create(UpdatablePersonView.class);
+        newPerson.setName("newPers1");
+        UpdatableDocumentView document = evm.create(UpdatableDocumentView.class);
+        document.setName("newDoc123");
+        newPerson.getOwnedDocuments2().add(document);
+        update(newPerson);
+
+        // When
+        newPerson.setOwnedDocuments2(new HashSet<>(newPerson.getOwnedDocuments2()));
+        update(newPerson);
 
         // Then
         restartTransaction();

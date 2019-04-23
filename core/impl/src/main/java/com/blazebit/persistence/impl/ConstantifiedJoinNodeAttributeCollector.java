@@ -128,7 +128,7 @@ class ConstantifiedJoinNodeAttributeCollector extends VisitorAdapter {
             return;
         }
 
-        ExtendedManagedType<?> managedType = metamodel.getManagedType(ExtendedManagedType.class, baseNode.getJavaType());
+        ExtendedManagedType<?> managedType = metamodel.getManagedType(ExtendedManagedType.class, baseNode.getManagedType());
         Attribute attr = managedType.getAttribute(pathReference.getField()).getAttribute();
 
         // We constantify collection as a whole to a single element when reaching this point

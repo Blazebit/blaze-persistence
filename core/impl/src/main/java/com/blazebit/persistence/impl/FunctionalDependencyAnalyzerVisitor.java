@@ -213,7 +213,7 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
         }
 
         // First we check if the target attribute is unique, if it isn't, we don't need to check the join structure
-        ExtendedManagedType<?> managedType = metamodel.getManagedType(ExtendedManagedType.class, baseNode.getJavaType());
+        ExtendedManagedType<?> managedType = metamodel.getManagedType(ExtendedManagedType.class, baseNode.getManagedType());
         Attribute attr = managedType.getAttribute(field).getAttribute();
 
         if (attr instanceof PluralAttribute<?, ?, ?>) {
@@ -246,12 +246,7 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
         } else {
             // We have to correct the base node for single valued id paths
             String associationName = expr.getField().substring(0, dotIndex);
-            ExtendedManagedType<?> extendedManagedType;
-            if (baseNode.getManagedType().getJavaType() == null) {
-                extendedManagedType = metamodel.getManagedType(ExtendedManagedType.class, JpaMetamodelUtils.getTypeName(baseNode.getManagedType()));
-            } else {
-                extendedManagedType = metamodel.getManagedType(ExtendedManagedType.class, baseNode.getManagedType().getJavaType());
-            }
+            ExtendedManagedType<?> extendedManagedType = metamodel.getManagedType(ExtendedManagedType.class, baseNode.getManagedType());
             ExtendedAttribute<?, ?> extendedAttribute = extendedManagedType.getAttribute(associationName);
             Attribute<?, ?> attribute = extendedAttribute.getAttribute();
             baseNodeKey = new AbstractMap.SimpleEntry<>(baseNode, associationName);
@@ -333,12 +328,7 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
                         // This is relevant for queries like `select e.manyToOne.id, e.manyToOne.name from Entity e order by e.manyToOne.id`
                         // Normally, the expression `e.manyToOne.id` wouldn't be considered unique, unless there is a unique key with constant equality predicate
                         // i.e. a predicate like `e.id = 1` that essentially "constantifies" the parent join node
-                        ExtendedManagedType<?> extendedManagedType;
-                        if (baseNode.getManagedType().getJavaType() == null) {
-                            extendedManagedType = metamodel.getManagedType(ExtendedManagedType.class, JpaMetamodelUtils.getTypeName(baseNode.getManagedType()));
-                        } else {
-                            extendedManagedType = metamodel.getManagedType(ExtendedManagedType.class, baseNode.getManagedType().getJavaType());
-                        }
+                        ExtendedManagedType<?> extendedManagedType = metamodel.getManagedType(ExtendedManagedType.class, baseNode.getManagedType());
                         orderedAttributes = new HashMap<>();
                         addAttributes(baseNode.getEntityType(), null, "", "", (SingularAttribute<?, ?>) attr, orderedAttributes);
                         initConstantifiedAttributes(orderedAttributes, constantifiedAttributes);

@@ -131,7 +131,7 @@ public class TypeDescriptor {
                 // Only construct when orphanRemoval or delete cascading is enabled, orphanRemoval implies delete cascading
                 if (attribute.isDeleteCascaded()) {
                     String mapping = attribute.getMapping();
-                    ExtendedManagedType elementManagedType = entityMetamodel.getManagedType(ExtendedManagedType.class, attribute.getDeclaringType().getEntityClass());
+                    ExtendedManagedType elementManagedType = entityMetamodel.getManagedType(ExtendedManagedType.class, attribute.getDeclaringType().getJpaManagedType());
                     deleter = new UnmappedBasicAttributeCascadeDeleter(
                             evm,
                             mapping,
