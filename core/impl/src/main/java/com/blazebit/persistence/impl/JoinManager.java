@@ -2253,7 +2253,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                             return false;
                         }
                         maybeSingularAssociationName = joinNode.getParentTreeNode().getRelationName();
-                        ExtendedManagedType<?> managedType = metamodel.getManagedType(ExtendedManagedType.class, parent.getJavaType());
+                        ExtendedManagedType<?> managedType = metamodel.getManagedType(ExtendedManagedType.class, parent.getManagedType());
                         ExtendedAttribute<?, ?> associationAttribute = managedType.getOwnedSingularAttributes().get(maybeSingularAssociationName);
                         return managedType.getOwnedSingularAttributes().containsKey(maybeSingularAssociationName + "." + maybeSingularAssociationIdExpression)
                                 && associationAttribute != null

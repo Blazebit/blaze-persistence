@@ -536,14 +536,14 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
                 sb.append(returningAttribute.get(i).getName()).append('.');
                 if (returningAttribute.get(i).isCollection()) {
                     sb.setLength(sb.length() - 1);
-                    joinTable = mainQuery.metamodel.getManagedType(ExtendedManagedType.class, entityType.getJavaType()).getAttribute(sb.toString()).getJoinTable();
+                    joinTable = mainQuery.metamodel.getManagedType(ExtendedManagedType.class, entityType).getAttribute(sb.toString()).getJoinTable();
                     sb.setLength(0);
                 }
             }
             sb.setLength(sb.length() - 1);
 
             if (joinTable == null) {
-                for (String column : mainQuery.metamodel.getManagedType(ExtendedManagedType.class, entityType.getJavaType()).getAttribute(sb.toString()).getColumnNames()) {
+                for (String column : mainQuery.metamodel.getManagedType(ExtendedManagedType.class, entityType).getAttribute(sb.toString()).getColumnNames()) {
                     columns.add(column);
                 }
             } else {
@@ -567,7 +567,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         List<String> columns = new ArrayList<String>(returningAttributeNames.size());
 
         for (String returningAttributeName : returningAttributeBindingMap.values()) {
-            for (String column : mainQuery.metamodel.getManagedType(ExtendedManagedType.class, entityType.getJavaType()).getAttribute(returningAttributeName).getColumnNames()) {
+            for (String column : mainQuery.metamodel.getManagedType(ExtendedManagedType.class, entityType).getAttribute(returningAttributeName).getColumnNames()) {
                 columns.add(column);
             }
         }

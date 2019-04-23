@@ -39,6 +39,7 @@ import com.blazebit.persistence.parser.util.ExpressionUtils;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 
 import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Type;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -401,7 +402,7 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor, Jo
                 if (identifierOrUniqueKeyEmbeddedPropertyNames.size() == 1) {
                     // This "fix" only works if we have a single id attribute
                     String naturalIdAttribute = identifierOrUniqueKeyEmbeddedPropertyNames.get(0);
-                    ExtendedManagedType extendedManagedType = metamodel.getManagedType(ExtendedManagedType.class, pathReference.getType().getJavaType());
+                    ExtendedManagedType extendedManagedType = metamodel.getManagedType(ExtendedManagedType.class, (ManagedType<?>) pathReference.getType());
                     if (!extendedManagedType.getIdAttribute().getName().equals(naturalIdAttribute)) {
                         // Now we finally know the natural id attribute name
                         return naturalIdAttribute;

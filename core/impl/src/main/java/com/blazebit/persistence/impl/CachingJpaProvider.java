@@ -119,12 +119,7 @@ public final class CachingJpaProvider implements JpaProvider {
 
     @Override
     public boolean isOrphanRemoval(ManagedType<?> ownerType, String attributeName) {
-        ExtendedManagedType managedType;
-        if (ownerType instanceof EntityType<?>) {
-            managedType = entityMetamodel.getManagedType(ExtendedManagedType.class, ((EntityType) ownerType).getName());
-        } else {
-            managedType = entityMetamodel.getManagedType(ExtendedManagedType.class, ownerType.getJavaType());
-        }
+        ExtendedManagedType managedType  = entityMetamodel.getManagedType(ExtendedManagedType.class, ownerType);
         ExtendedAttribute attribute = (ExtendedAttribute) managedType.getAttributes().get(attributeName);
         return attribute != null && attribute.isOrphanRemoval();
     }
@@ -136,12 +131,7 @@ public final class CachingJpaProvider implements JpaProvider {
 
     @Override
     public boolean isDeleteCascaded(ManagedType<?> ownerType, String attributeName) {
-        ExtendedManagedType managedType;
-        if (ownerType instanceof EntityType<?>) {
-            managedType = entityMetamodel.getManagedType(ExtendedManagedType.class, ((EntityType) ownerType).getName());
-        } else {
-            managedType = entityMetamodel.getManagedType(ExtendedManagedType.class, ownerType.getJavaType());
-        }
+        ExtendedManagedType managedType = entityMetamodel.getManagedType(ExtendedManagedType.class, ownerType);
         ExtendedAttribute attribute = (ExtendedAttribute) managedType.getAttributes().get(attributeName);
         return attribute != null && attribute.isDeleteCascaded();
     }

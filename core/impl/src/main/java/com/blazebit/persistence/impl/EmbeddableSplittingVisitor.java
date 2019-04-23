@@ -120,7 +120,7 @@ class EmbeddableSplittingVisitor extends AbortableVisitorAdapter {
                 return false;
             }
             String fieldPrefix = field == null ? "" : field + ".";
-            ExtendedManagedType<?> managedType = metamodel.getManagedType(ExtendedManagedType.class, baseNode.getJavaType());
+            ExtendedManagedType<?> managedType = metamodel.getManagedType(ExtendedManagedType.class, baseNode.getManagedType());
             Map<String, Boolean> orderedAttributes = new TreeMap<>();
             EntityType<?> ownerType;
             if (baseNode.getParentTreeNode() == null && field == null) {
@@ -178,7 +178,7 @@ class EmbeddableSplittingVisitor extends AbortableVisitorAdapter {
                 }
             }
         } else {
-            ExtendedManagedType<?> managedType = metamodel.getManagedType(ExtendedManagedType.class, baseNode.getJavaType());
+            ExtendedManagedType<?> managedType = metamodel.getManagedType(ExtendedManagedType.class, baseNode.getManagedType());
             attr = managedType.getAttribute(pathReference.getField()).getAttribute();
 
             // This kind of happens when we do an entity select where the entity is split into it's component paths

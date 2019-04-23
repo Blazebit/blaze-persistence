@@ -39,6 +39,7 @@ import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.persistence.metamodel.ListAttribute;
 import javax.persistence.metamodel.MapAttribute;
+import javax.persistence.metamodel.Type;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -60,16 +61,25 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
     private final String keyFunctionExpression;
     private final Map<String, ExtendedAttribute<?, ?>> collectionAttributeEntries;
     private final Map<String, String> collectionColumnBindingMap;
+    private final Type<?> elementType;
+    private final ExtendedAttribute<?, ?> collectionAttribute;
 
     public AbstractInsertCollectionCriteriaBuilder(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, Class<T> clazz, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener, String collectionName) {
         super(mainQuery, queryContext, isMainQuery, clazz, cteName, cteClass, result, listener);
         this.collectionName = collectionName;
-        ExtendedManagedType<?> extendedManagedType = mainQuery.metamodel.getManagedType(ExtendedManagedType.class, entityType);
-        ExtendedAttribute<?, ?> extendedAttribute = extendedManagedType.getAttribute(collectionName);
-        Map<String, ExtendedAttribute<?, ?>> collectionAttributeEntries = JpaUtils.getCollectionAttributeEntries(mainQuery.metamodel, entityType, extendedAttribute);
-        if (extendedAttribute.getAttribute() instanceof MapAttribute<?, ?, ?>) {
+        ExtendedManagedType extendedManagedType = mainQuery.metamodel.getManagedType(ExtendedManagedType.class, entityType);
+        this.collectionAttribute = extendedManagedType.getAttribute(collectionName);
+        this.elementType = mainQuery.metamodel.type(collectionAttribute.getElementClass());
+        if (collectionAttribute.getJoinTable() == null && "".equals(collectionAttribute.getMappedBy())) {
+            throw new IllegalArgumentException("Unsupported collection attribute that doesn't have a join table or a mapped by attribute!");
+        }
+        if (collectionAttribute.getMappedBy() != null) {
+            throw new IllegalArgumentException("Insert operation on inverse collections is currently not supported!");
+        }
+        Map<String, ExtendedAttribute<?, ?>> collectionAttributeEntries = JpaUtils.getCollectionAttributeEntries(mainQuery.metamodel, entityType, collectionAttribute);
+        if (collectionAttribute.getAttribute() instanceof MapAttribute<?, ?, ?>) {
             keyFunctionExpression = "key(" + collectionName + ")";
-        } else if (extendedAttribute.getAttribute() instanceof ListAttribute<?, ?> && !extendedAttribute.isBag()) {
+        } else if (collectionAttribute.getAttribute() instanceof ListAttribute<?, ?> && !collectionAttribute.isBag()) {
             keyFunctionExpression = "index(" + collectionName + ")";
         } else {
             keyFunctionExpression = null;
@@ -84,6 +94,8 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
         this.keyFunctionExpression = builder.keyFunctionExpression;
         this.collectionColumnBindingMap = builder.collectionColumnBindingMap;
         this.collectionAttributeEntries = builder.collectionAttributeEntries;
+        this.collectionAttribute = builder.collectionAttribute;
+        this.elementType = builder.elementType;
     }
 
     @Override

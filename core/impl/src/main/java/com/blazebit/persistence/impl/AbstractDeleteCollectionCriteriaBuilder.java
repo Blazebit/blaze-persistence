@@ -30,11 +30,15 @@ import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.impl.query.ReturningCollectionDeleteModificationQuerySpecification;
 import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.DbmsModificationState;
+import com.blazebit.persistence.spi.ExtendedAttribute;
+import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 import com.blazebit.persistence.spi.JoinTable;
 
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.Type;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -50,18 +54,34 @@ import java.util.Set;
 public abstract class AbstractDeleteCollectionCriteriaBuilder<T, X extends BaseDeleteCriteriaBuilder<T, X>, Y> extends BaseDeleteCriteriaBuilderImpl<T, X, Y> {
 
     protected final String collectionName;
+    protected final Type<?> elementType;
+    protected final ExtendedAttribute<?, ?> collectionAttribute;
 
     public AbstractDeleteCollectionCriteriaBuilder(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, Class<T> clazz, String alias, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener, String collectionName) {
         super(mainQuery, queryContext, isMainQuery, clazz, alias, cteName, cteClass, result, listener);
         this.collectionName = collectionName;
-        // Add the join here so that references in the where clause go the the expected join node
+        ExtendedManagedType extendedManagedType = mainQuery.metamodel.getManagedType(ExtendedManagedType.class, entityType);
+        this.collectionAttribute = extendedManagedType.getAttribute(collectionName);
+        // Add the join here so that references in the where clause goes the the expected join node
         // Also, this validates the collection actually exists
-        joinManager.join(entityAlias + "." + collectionName, CollectionDeleteModificationQuerySpecification.COLLECTION_BASE_QUERY_ALIAS, JoinType.LEFT, false, true);
+        JoinNode join = joinManager.join(entityAlias + "." + collectionName, CollectionDeleteModificationQuerySpecification.COLLECTION_BASE_QUERY_ALIAS, JoinType.LEFT, false, true);
+        this.elementType = join.getType();
+        if (collectionAttribute.getJoinTable() == null && "".equals(collectionAttribute.getMappedBy())) {
+            throw new IllegalArgumentException("Unsupported collection attribute that doesn't have a join table or a mapped by attribute!");
+        }
+
+        if (collectionAttribute.getMappedBy() != null) {
+            // Use a different alias to properly prefix paths with the collection role alias
+            JoinNode rootNode = joinManager.getRootNodeOrFail(null);
+            rootNode.getAliasInfo().setAlias(CollectionDeleteModificationQuerySpecification.COLLECTION_BASE_QUERY_ALIAS + "." + collectionAttribute.getMappedBy());
+        }
     }
 
     public AbstractDeleteCollectionCriteriaBuilder(AbstractDeleteCollectionCriteriaBuilder<T, X, Y> builder, MainQuery mainQuery, QueryContext queryContext) {
         super(builder, mainQuery, queryContext);
         this.collectionName = builder.collectionName;
+        this.collectionAttribute = builder.collectionAttribute;
+        this.elementType = builder.elementType;
     }
 
     @Override
@@ -71,6 +91,12 @@ public abstract class AbstractDeleteCollectionCriteriaBuilder<T, X extends BaseD
             sbSelectFrom.append(entityType.getName());
             sbSelectFrom.append('(').append(collectionName).append(") ");
             sbSelectFrom.append(entityAlias);
+            appendWhereClause(sbSelectFrom, externalRepresentation);
+        } else if (collectionAttribute.getJoinTable() == null) {
+            sbSelectFrom.append("DELETE FROM ");
+            sbSelectFrom.append(((EntityType<?>) elementType).getName());
+            sbSelectFrom.append(' ');
+            sbSelectFrom.append(CollectionDeleteModificationQuerySpecification.COLLECTION_BASE_QUERY_ALIAS);
             appendWhereClause(sbSelectFrom, externalRepresentation);
         } else {
             // The internal representation is just a "hull" to hold the parameters at the appropriate positions
@@ -87,37 +113,45 @@ public abstract class AbstractDeleteCollectionCriteriaBuilder<T, X extends BaseD
 
     @Override
     protected Query getQuery(Map<DbmsModificationState, String> includedModificationStates) {
-        Query baseQuery = em.createQuery(getBaseQueryStringWithCheck());
-        QuerySpecification querySpecification = getQuerySpecification(baseQuery, getCountExampleQuery(), getReturningColumns(), null, includedModificationStates);
+        if (collectionAttribute.getJoinTable() == null) {
+            return super.getQuery(includedModificationStates);
+        } else {
+            Query baseQuery = em.createQuery(getBaseQueryStringWithCheck());
+            QuerySpecification querySpecification = getQuerySpecification(baseQuery, getCountExampleQuery(), getReturningColumns(), null, includedModificationStates);
 
-        Query query = new CustomSQLQuery(
-                querySpecification,
-                baseQuery,
-                parameterManager.getTransformers(),
-                parameterManager.getValuesParameters(),
-                parameterManager.getValuesBinders()
-        );
+            Query query = new CustomSQLQuery(
+                    querySpecification,
+                    baseQuery,
+                    parameterManager.getTransformers(),
+                    parameterManager.getValuesParameters(),
+                    parameterManager.getValuesBinders()
+            );
 
-        parameterManager.parameterizeQuery(query);
+            parameterManager.parameterizeQuery(query);
 
-        return query;
+            return query;
+        }
     }
 
     @Override
     protected <R> TypedQuery<ReturningResult<R>> getExecuteWithReturningQuery(TypedQuery<Object[]> exampleQuery, Query baseQuery, String[] returningColumns, ReturningObjectBuilder<R> objectBuilder) {
-        QuerySpecification querySpecification = getQuerySpecification(baseQuery, exampleQuery, returningColumns, objectBuilder, null);
+        if (collectionAttribute.getJoinTable() == null) {
+            return super.getExecuteWithReturningQuery(exampleQuery, baseQuery, returningColumns, objectBuilder);
+        } else {
+            QuerySpecification querySpecification = getQuerySpecification(baseQuery, exampleQuery, returningColumns, objectBuilder, null);
 
-        CustomReturningSQLTypedQuery query = new CustomReturningSQLTypedQuery<R>(
-                querySpecification,
-                exampleQuery,
-                parameterManager.getTransformers(),
-                parameterManager.getValuesParameters(),
-                parameterManager.getValuesBinders()
-        );
+            CustomReturningSQLTypedQuery query = new CustomReturningSQLTypedQuery<R>(
+                    querySpecification,
+                    exampleQuery,
+                    parameterManager.getTransformers(),
+                    parameterManager.getValuesParameters(),
+                    parameterManager.getValuesBinders()
+            );
 
-        parameterManager.parameterizeQuery(query);
+            parameterManager.parameterizeQuery(query);
 
-        return query;
+            return query;
+        }
     }
 
     private <R> QuerySpecification getQuerySpecification(Query baseQuery, Query exampleQuery, String[] returningColumns, ReturningObjectBuilder<R> objectBuilder, Map<DbmsModificationState, String> includedModificationStates) {
@@ -133,7 +167,7 @@ public abstract class AbstractDeleteCollectionCriteriaBuilder<T, X extends BaseD
         String sql = extendedQuerySupport.getSql(em, baseQuery);
         String ownerAlias = extendedQuerySupport.getSqlAlias(em, baseQuery, entityAlias);
         String targetAlias = extendedQuerySupport.getSqlAlias(em, baseQuery, CollectionDeleteModificationQuerySpecification.COLLECTION_BASE_QUERY_ALIAS);
-        JoinTable joinTable = mainQuery.jpaProvider.getJoinTable(entityType, collectionName);
+        JoinTable joinTable = collectionAttribute.getJoinTable();
         if (joinTable == null) {
             throw new IllegalStateException("Deleting inverse collections is not supported!");
         }
