@@ -76,11 +76,11 @@ public class HibernateJpqlFunctionAdapter implements SQLFunction {
         if (type != null) {
             return type;
         }
-        
-        if (sfi.getClassMetadata(returnType) != null) {
+
+        if (sfi.getEntityPersisters().containsKey(returnType.getName())) {
             return sfi.getTypeHelper().entity(returnType);
         }
-        
+
         return sfi.getTypeHelper().custom(returnType);
     }
 
