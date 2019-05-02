@@ -140,4 +140,8 @@ public class BlazePersistenceRepositoryFactoryBean<T extends Repository<S, ID>, 
         super.afterPropertiesSet();
     }
 
+    public void setEscapeCharacter(char escapeCharacter) {
+        // Needed to work with Spring Boot 2.1.4
+    }
+
 }
