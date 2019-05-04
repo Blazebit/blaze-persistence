@@ -20,18 +20,35 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import javax.persistence.EntityManager;
 
 import com.blazebit.persistence.spi.JpqlFunction;
+import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatement;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDB2;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoFirebird;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoPostgreSQL;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoSQLite;
 import com.blazebit.persistence.testsuite.entity.DocumentType;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
+import org.junit.experimental.categories.Categories;
 import org.junit.experimental.categories.Category;
 
 /**
@@ -47,6 +64,7 @@ public class JpqlFunctionTest extends AbstractCoreTest {
             @Override
             public void work(EntityManager em) {
                 Document doc1 = new Document("D1");
+                doc1.setAge(5L);
                 Document doc2 = new Document("D2");
                 Document doc3 = new Document("D3");
 
@@ -63,6 +81,16 @@ public class JpqlFunctionTest extends AbstractCoreTest {
                 em.persist(doc3);
             }
         });
+    }
+
+    @Before
+    public final void setUp() {
+        enableQueryCollecting();
+    }
+
+    @After
+    public final void tearDown() {
+        disableQueryCollecting();
     }
     
     @Test
@@ -143,5 +171,56 @@ public class JpqlFunctionTest extends AbstractCoreTest {
         assertEquals(Long.class, functions.get(countName).getReturnType(Long.class));
         assertEquals(Integer.class, functions.get(lengthName).getReturnType(String.class));
         assertEquals(DocumentType.class, functions.get(maxName).getReturnType(DocumentType.class));
+    }
+
+    @Test
+    @Category({ NoPostgreSQL.class, NoDB2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoH2.class, NoMSSQL.class, NoEclipselink.class})
+    public void testCastFunctionWithTargetTypeOverrideMysql() {
+        testCastFunctionWithTargetTypeOverride("unsigned");
+    }
+
+    @Test
+    @Category({ NoMySQL.class, NoEclipselink.class })
+    public void testCastFunctionWithTargetTypeOverrideDefault() {
+        testCastFunctionWithTargetTypeOverride("int");
+    }
+
+    private void testCastFunctionWithTargetTypeOverride(final String castTypeOverride) {
+        CriteriaBuilder<Long> cb = cbf.create(em, Long.class).from(Document.class, "d")
+                .select("FUNCTION('cast_long', d.age, '" + castTypeOverride + "')").where("d.name").eq("D1");
+
+        clearQueries();
+        Long age = cb.getSingleResult();
+        assertUnorderedQuerySequence()
+                .addStatement(new AssertStatement() {
+                    @Override
+                    public void validate(String query) {
+                        Assert.assertTrue(Pattern.matches(".*cast\\(.*as " + castTypeOverride + "\\).*", query));
+                    }
+                })
+                .validate();
+
+        assertEquals(5L, age.longValue());
+    }
+
+    @Test
+    @Category({ NoHibernate.class, NoDatanucleus.class, NoOpenJPA.class })
+    public void testCastFunctionWithTargetTypeOverrideEclipselink() {
+        final String castTypeOverride = "smallint";
+        CriteriaBuilder<Integer> cb = cbf.create(em, Integer.class).from(Document.class, "d")
+                .select("FUNCTION('cast_integer', d.age, '" + castTypeOverride + "')").where("d.name").eq("D1");
+
+        clearQueries();
+        Integer age = cb.getSingleResult();
+        assertUnorderedQuerySequence()
+                .addStatement(new AssertStatement() {
+                    @Override
+                    public void validate(String query) {
+                        Assert.assertTrue(Pattern.matches(".*cast\\(.*as " + castTypeOverride + "\\).*", query));
+                    }
+                })
+                .validate();
+
+        assertEquals(5, age.longValue());
     }
 }

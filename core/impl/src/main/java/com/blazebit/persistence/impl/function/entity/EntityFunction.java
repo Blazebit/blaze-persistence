@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl.function.entity;
 
+import com.blazebit.persistence.impl.util.JpqlFunctionUtil;
 import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.JpqlFunction;
@@ -66,10 +67,10 @@ public class EntityFunction implements JpqlFunction {
         }
 
         sb.append(subquery, 1, subqueryEndIndex);
-        String entityName = unquote(functionRenderContext.getArgument(1));
-        String valuesClause = unquote(functionRenderContext.getArgument(2));
-        String valuesAliases = unquote(functionRenderContext.getArgument(3));
-        String syntheticPredicate = unquote(functionRenderContext.getArgument(4));
+        String entityName = JpqlFunctionUtil.unquote(functionRenderContext.getArgument(1));
+        String valuesClause = JpqlFunctionUtil.unquote(functionRenderContext.getArgument(2));
+        String valuesAliases = JpqlFunctionUtil.unquote(functionRenderContext.getArgument(3));
+        String syntheticPredicate = JpqlFunctionUtil.unquote(functionRenderContext.getArgument(4));
         String exampleQuerySqlAlias = syntheticPredicate.substring(0, syntheticPredicate.indexOf('.'));
         String valuesTableSqlAlias = subquery.substring(aliasStartIndex, aliasEndIndex);
 
@@ -107,31 +108,6 @@ public class EntityFunction implements JpqlFunction {
         functionRenderContext.addChunk("(");
         functionRenderContext.addChunk(sb.toString());
         functionRenderContext.addChunk(")");
-    }
-
-    private static String unquote(String s) {
-        StringBuilder sb = new StringBuilder(s.length());
-        boolean quote = false;
-        for (int i = 1; i < s.length() - 1; i++) {
-            final char c = s.charAt(i);
-            if (quote) {
-                quote = false;
-                if (c != '\'') {
-                    sb.append('\'');
-                }
-                sb.append(c);
-            } else {
-                if (c == '\'') {
-                    quote = true;
-                } else {
-                    sb.append(c);
-                }
-            }
-        }
-        if (quote) {
-            sb.append('\'');
-        }
-        return sb.toString();
     }
 
 }

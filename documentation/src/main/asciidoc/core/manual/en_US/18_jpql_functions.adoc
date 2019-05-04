@@ -147,7 +147,7 @@ By doing a distinct count on the resulting string, the ANSI SQL distinct countin
 
 ==== CAST functions
 
-Syntax: `FUNCTION ( 'CAST_XXX', argument )`
+Syntax: `FUNCTION ( 'CAST_XXX', argument (, sqlCastTypeOverride)? )`
 
 There are multiple different cast functions for different data types.
 
@@ -167,7 +167,8 @@ There are multiple different cast functions for different data types.
 * `java.sql.Timestamp` - `CAST_TIMESTAMP`
 * `java.util.Calendar` - `CAST_CALENDAR`
 
-A cast invocation will always generate a ANSI SQL cast. The SQL data type for a Java type is determined by link:{core_jdoc}/persistence/spi/DbmsDialect.html#getSqlType(java.lang.Class)[`DbmsDialect.getSqlType()`].
+A cast invocation will always generate a ANSI SQL cast. The SQL data type for a Java type is determined by link:{core_jdoc}/persistence/spi/DbmsDialect.html#getSqlType(java.lang.Class)[`DbmsDialect.getSqlType()`]
+and can be overridden using the optional `sqlCastTypeOverride` parameter that is passed as string, e.g. `'varchar(100)'`.
 By providing a <<customize-dbms-dialect,custom DBMS dialect>> you can override these types.
 
 [source,java]

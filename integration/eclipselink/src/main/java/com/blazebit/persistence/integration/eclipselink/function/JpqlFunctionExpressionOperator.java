@@ -181,7 +181,7 @@ public class JpqlFunctionExpressionOperator extends ExpressionOperator {
                 context.addChunk(castStrings[0]);
                 bePrefix();
             } else if (context.isChunkFirst()) {
-                chunks.set(0, new StringBuilder(castStrings[0]).append(chunks.get(0)).toString());
+                chunks.set(0, castStrings[0] + chunks.get(0));
             } else {
                 chunks.add(0, castStrings[0]);
                 bePrefix();
