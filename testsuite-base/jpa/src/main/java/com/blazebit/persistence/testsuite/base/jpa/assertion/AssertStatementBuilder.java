@@ -159,8 +159,9 @@ public class AssertStatementBuilder {
         }
     }
 
-    void addStatement(AssertStatement statement) {
+    public AssertStatementBuilder addStatement(AssertStatement statement) {
         statements.add(statement);
+        return this;
     }
 
     public void validate() {

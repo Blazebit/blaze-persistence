@@ -16,10 +16,10 @@
 
 package com.blazebit.persistence.impl.function.cast;
 
+import com.blazebit.persistence.impl.util.JpqlFunctionUtil;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.JpqlFunction;
-import com.blazebit.persistence.spi.TemplateRenderer;
 
 /**
  * @author Christian Beikov
@@ -29,12 +29,12 @@ public class CastFunction implements JpqlFunction {
 
     private final String functionName;
     private final Class<?> castType;
-    private final TemplateRenderer renderer;
+    private final String defaultSqlCastType;
 
     public CastFunction(Class<?> castType, DbmsDialect dbmsDialect) {
         this.functionName = "CAST_" + castType.getSimpleName().toUpperCase();
         this.castType = castType;
-        this.renderer = new TemplateRenderer("cast(?1 as " + dbmsDialect.getSqlType(castType) + ")");
+        this.defaultSqlCastType = dbmsDialect.getSqlType(castType);
     }
 
     @Override
@@ -54,10 +54,19 @@ public class CastFunction implements JpqlFunction {
 
     @Override
     public void render(FunctionRenderContext context) {
-        if (context.getArgumentsSize() != 1) {
-            throw new RuntimeException("The " + functionName + " function needs exactly one argument <expression>! args=" + context);
+        if (context.getArgumentsSize() != 1 && context.getArgumentsSize() != 2) {
+            throw new RuntimeException("The " + functionName + " function needs one argument <expression> with an optional second argument <sql-type-name>! args=" + context);
         }
-        renderer.start(context).addArgument(0).build();
+
+        context.addChunk("cast(");
+        context.addArgument(0);
+        context.addChunk(" as ");
+        if (context.getArgumentsSize() == 1) {
+            context.addChunk(defaultSqlCastType);
+        } else {
+            context.addChunk(JpqlFunctionUtil.unquote(context.getArgument(1)));
+        }
+        context.addChunk(")");
     }
 
 }
