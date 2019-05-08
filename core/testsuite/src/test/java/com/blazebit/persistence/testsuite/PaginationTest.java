@@ -949,4 +949,15 @@ public class PaginationTest extends AbstractCoreTest {
         assertEquals(objectQuery, cb.getQueryString());
         cb.getResultList();
     }
+
+    @Test
+    public void testPaginationWithIdentifierExpressionAndDereferencedEmbeddable() {
+        PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
+                .select("nameObject.primaryName")
+                .where("nameObject.primaryName").eq("test")
+                .orderByAsc("d.id")
+                .pageBy(0, 10, "d.id");
+
+        cb.getResultList();
+    }
 }

@@ -140,6 +140,7 @@ class ConstantifiedJoinNodeAttributeCollector extends VisitorAdapter {
         }
 
         boolean isEmbeddedIdPart = false;
+        boolean isEmbeddedPart = false;
         int dotIndex = -1;
         SingularAttribute<?, ?> singularAttr = (SingularAttribute<?, ?>) attr;
         Object baseNodeKey;
@@ -156,6 +157,9 @@ class ConstantifiedJoinNodeAttributeCollector extends VisitorAdapter {
                 associationName = expr.getField().substring(0, dotIndex);
                 baseNodeKey = new AbstractMap.SimpleEntry<>(baseNode, associationName);
             }
+        } else if (isEmbeddedPart = attr.getDeclaringType() instanceof EmbeddableType<?>) {
+            dotIndex = expr.getField().lastIndexOf('.');
+            baseNodeKey = baseNode;
         } else {
             baseNodeKey = baseNode;
         }
@@ -165,7 +169,7 @@ class ConstantifiedJoinNodeAttributeCollector extends VisitorAdapter {
             attributes = new HashSet<>();
             constantifiedJoinNodeAttributes.put(baseNodeKey, attributes);
         }
-        String prefix = isEmbeddedIdPart ? pathReference.getField().substring(0, dotIndex + 1) : "";
+        String prefix = isEmbeddedIdPart || isEmbeddedPart ? pathReference.getField().substring(0, dotIndex + 1) : "";
         addAttribute(prefix, singularAttr, attributes);
         StringBuilder attributeNameBuilder = null;
         Set<String> baseNodeAttributes = null;
