@@ -492,15 +492,22 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
             if (pageable == null) {
                 EntityViewSetting<V, CriteriaBuilder<V>> setting = EntityViewSetting.create(entityViewClass);
                 if (sort != null) {
-                    EntityViewSortUtil.processEntityViewSortOrders(evm, setting, sort);
+                    setting.addAttributeSorters(
+                            EntityViewSortUtil.createEntityViewSortersFromSort(evm, setting.getEntityViewClass(), sort)
+                    );
                 }
                 query = evm.applySetting(setting, cb).getQuery();
             } else {
                 EntityViewSetting<V, PaginatedCriteriaBuilder<V>> setting = EntityViewSetting.create(entityViewClass, getOffset(pageable), pageable.getPageSize());
                 if (sort != null) {
-                    EntityViewSortUtil.processEntityViewSortOrders(evm, setting, sort);
+                    setting.addAttributeSorters(
+                            EntityViewSortUtil.createEntityViewSortersFromSort(evm, setting.getEntityViewClass(), sort)
+                    );
+
                 } else if (pageable.getSort() != null) {
-                    EntityViewSortUtil.processEntityViewSortOrders(evm, setting, pageable.getSort());
+                    setting.addAttributeSorters(
+                            EntityViewSortUtil.createEntityViewSortersFromSort(evm, setting.getEntityViewClass(), pageable.getSort())
+                    );
                 }
                 if (pageable instanceof KeysetPageable) {
                     KeysetPageable keysetPageable = (KeysetPageable) pageable;

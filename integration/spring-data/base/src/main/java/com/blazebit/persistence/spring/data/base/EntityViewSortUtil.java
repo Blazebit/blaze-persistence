@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2018 Blazebit.
+ * Copyright 2014 - 2019 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@ import org.springframework.data.domain.Sort.NullHandling;
 import org.springframework.data.domain.Sort.Order;
 
 import com.blazebit.persistence.view.EntityViewManager;
-import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.Sorter;
 import com.blazebit.persistence.view.Sorters;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
@@ -55,7 +54,7 @@ public final class EntityViewSortUtil {
      * @param order the order
      * @return true, if the given order refers to a view property
      */
-    public static boolean isEntityViewSorting(EntityViewManager evm, Class<?> entityViewClass, Order order) {
+    private static boolean isEntityViewSorting(EntityViewManager evm, Class<?> entityViewClass, Order order) {
         String property = order.getProperty();
         ManagedViewType<?> viewType = evm.getMetamodel().view(entityViewClass);
         for (String path : property.split("\\.")) {
@@ -86,26 +85,23 @@ public final class EntityViewSortUtil {
      * returning a new {@link Sort} instance with only entity related sort orders.
      * 
      * @param evm the entity view manager
-     * @param setting the entity view setting
+     * @param entityViewClass the entity view class
      * @param sort the sort instance
-     * @return a new {@link Sort} with only entity related sort orders
+     * @return the applicable entity view sorters
      */
-    public static <T> Sort processEntityViewSortOrders(EntityViewManager evm, EntityViewSetting<T, ?> setting, Sort sort) {
-        Class<T> entityViewClass = setting.getEntityViewClass();
-        List<Order> orders = new ArrayList<>();
+    public static Map<String, Sorter> createEntityViewSortersFromSort(EntityViewManager evm, Class<?> entityViewClass, Sort sort) {
         Map<String, Sorter> sorters = new HashMap<>();
         for (Order order : sort) {
             if (isEntityViewSorting(evm, entityViewClass, order)) {
                 boolean nullsFirst = order.getNullHandling().equals(NullHandling.NULLS_FIRST);
                 Sorter sorter = order.isAscending() ? Sorters.ascending(nullsFirst) : Sorters.descending(nullsFirst);
                 String property = order.getProperty();
-                sorters.putIfAbsent(property, sorter);
-            } else {
-                orders.add(order);
+                if (!sorters.containsKey(property)) {
+                    sorters.put(property, sorter);
+                }
             }
         }
-        setting.addAttributeSorters(sorters);
-        return orders.isEmpty() ? null : new Sort(orders);
+        return sorters;
     }
 
     /**

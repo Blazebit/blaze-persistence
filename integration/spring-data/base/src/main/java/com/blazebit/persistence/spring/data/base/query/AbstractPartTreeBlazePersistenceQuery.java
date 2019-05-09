@@ -347,11 +347,15 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
             Sort sort;
             int sortIndex = parameters.getSortIndex();
             if (sortIndex >= 0 && (sort = (Sort) values[sortIndex]) != null) {
-                EntityViewSortUtil.processEntityViewSortOrders(evm, setting, sort);
+                setting.addAttributeSorters(
+                        EntityViewSortUtil.createEntityViewSortersFromSort(evm, setting.getEntityViewClass(), sort)
+                );
             }
             int pageableIndex = parameters.getPageableIndex();
             if (pageableIndex >= 0 && (sort = ((Pageable) values[pageableIndex]).getSort()) != null) {
-                EntityViewSortUtil.processEntityViewSortOrders(evm, setting, sort);
+                setting.addAttributeSorters(
+                    EntityViewSortUtil.createEntityViewSortersFromSort(evm, setting.getEntityViewClass(), sort)
+                );
             }
             int entityViewSettingProcessorIndex = parameters.getEntityViewSettingProcessorIndex();
             if (entityViewSettingProcessorIndex >= 0) {
