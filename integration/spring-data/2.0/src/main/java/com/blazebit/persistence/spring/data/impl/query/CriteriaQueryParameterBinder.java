@@ -19,6 +19,8 @@ package com.blazebit.persistence.spring.data.impl.query;
 import com.blazebit.persistence.spring.data.base.query.AbstractCriteriaQueryParameterBinder;
 import com.blazebit.persistence.spring.data.base.query.JpaParameters;
 import com.blazebit.persistence.spring.data.base.query.ParameterMetadataProvider;
+import com.blazebit.persistence.spring.data.repository.KeysetPageable;
+import org.springframework.data.domain.Pageable;
 
 /**
  * Concrete version for Spring Data 2.x.
@@ -34,6 +36,11 @@ public class CriteriaQueryParameterBinder extends AbstractCriteriaQueryParameter
 
     @Override
     protected int getOffset() {
-        return (int) getPageable().getOffset();
+        Pageable pageable = getPageable();
+        if (pageable instanceof KeysetPageable) {
+            return ((KeysetPageable) pageable).getIntOffset();
+        } else {
+            return (int) pageable.getOffset();
+        }
     }
 }

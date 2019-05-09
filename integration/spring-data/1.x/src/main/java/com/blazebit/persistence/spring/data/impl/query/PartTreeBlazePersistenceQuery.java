@@ -22,6 +22,7 @@ import com.blazebit.persistence.spring.data.base.query.EntityViewAwareJpaQueryMe
 import com.blazebit.persistence.spring.data.base.query.JpaParameters;
 import com.blazebit.persistence.spring.data.base.query.ParameterBinder;
 import com.blazebit.persistence.spring.data.base.query.ParameterMetadataProvider;
+import com.blazebit.persistence.spring.data.repository.KeysetPageable;
 import com.blazebit.persistence.view.EntityViewManager;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.provider.PersistenceProvider;
@@ -62,7 +63,11 @@ public class PartTreeBlazePersistenceQuery extends AbstractPartTreeBlazePersiste
         if (pageable == null) {
             return 0;
         }
-        return pageable.getOffset();
+        if (pageable instanceof KeysetPageable) {
+            return ((KeysetPageable) pageable).getIntOffset();
+        } else {
+            return pageable.getOffset();
+        }
     }
 
     @Override

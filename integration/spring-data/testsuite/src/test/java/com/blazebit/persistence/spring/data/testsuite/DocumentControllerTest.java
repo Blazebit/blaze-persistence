@@ -65,6 +65,19 @@ public class DocumentControllerTest extends AbstractSpringWebMvcTest {
                 .andExpect(jsonPath("$.keysetPage.highest.tuple[0]", is(d2.getId().intValue())));
     }
 
+    @Test
+    public void testDocumentControllerOffsetParameter() throws Exception {
+        // Given
+        createDocument("D1");
+        Document d2 = createDocument("D2");
+
+        // When / Then
+        mockMvc.perform(get("/document-views?offset={offset}&size={size}", 1, 2))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.numberOfElements", is(1)))
+                .andExpect(jsonPath("$.content[0].id", is(d2.getId().intValue())));
+    }
+
     private Document createDocument(String name) {
         return createDocument(name, null);
     }

@@ -19,6 +19,7 @@ package com.blazebit.persistence.spring.data.impl.repository;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.spring.data.base.repository.AbstractEntityViewAwareRepository;
 import com.blazebit.persistence.spring.data.repository.EntityViewRepository;
+import com.blazebit.persistence.spring.data.repository.KeysetPageable;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.infradna.tool.bridge_method_injector.WithBridgeMethods;
 import org.springframework.data.domain.Example;
@@ -83,6 +84,10 @@ public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> extend
 
     @Override
     protected int getOffset(Pageable pageable) {
-        return (int) pageable.getOffset();
+        if (pageable instanceof KeysetPageable) {
+            return ((KeysetPageable) pageable).getIntOffset();
+        } else {
+            return (int) pageable.getOffset();
+        }
     }
 }

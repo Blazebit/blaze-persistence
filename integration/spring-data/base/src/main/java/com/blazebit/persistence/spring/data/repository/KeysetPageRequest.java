@@ -87,7 +87,7 @@ public class KeysetPageRequest extends PageRequest implements KeysetPageable {
 
     @Override
     public int getIntOffset() {
-        return offset;
+        return (int) offset;
     }
 
     @Override
