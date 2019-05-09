@@ -244,7 +244,7 @@ public class KeysetPageableHandlerMethodArgumentResolver extends PageableHandler
 
         int offset;
         if (StringUtils.hasText(offsetString)) {
-            offset = parseAndApplyBoundaries(pageString, Integer.MAX_VALUE, false);
+            offset = parseAndApplyBoundaries(offsetString, Integer.MAX_VALUE, false);
         } else if (StringUtils.hasText(pageString)) {
             offset = pageSize * parseAndApplyBoundaries(pageString, Integer.MAX_VALUE, true);
         } else {
