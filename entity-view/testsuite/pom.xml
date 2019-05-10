@@ -41,19 +41,17 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-core-api</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-core-impl</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-core-testsuite</artifactId>
             <version>${project.version}</version>
             <exclusions>
-                <!-- I honestly don't know why, but the default profile seems to be actived for that dependency -->
+                <!-- I honestly don't know why, but the default profile seems to be active for that dependency -->
                 <exclusion>
                     <groupId>*</groupId>
                     <artifactId>*</artifactId>
@@ -63,28 +61,24 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-entity-view-api</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-entity-view-impl</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-common-utils</artifactId>
-            <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <scope>test</scope>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.googlecode.catch-exception</groupId>
             <artifactId>catch-exception</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
@@ -457,12 +451,10 @@
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-integration-hibernate-4.2</artifactId>
-                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-testsuite-base-hibernate</artifactId>
-                    <scope>test</scope>
                 </dependency>
                 <!-- IntelliJ apparently needs the annotation processor here -->
                 <dependency>
@@ -543,6 +535,18 @@
                                     </sources>
                                 </configuration>
                             </execution>
+                            <execution>
+                                <id>add-test-source-hibernate</id>
+                                <phase>generate-test-sources</phase>
+                                <goals>
+                                    <goal>add-test-source</goal>
+                                </goals>
+                                <configuration>
+                                    <sources>
+                                        <source>src/test/hibernate</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
                         </executions>
                     </plugin>
                 </plugins>
@@ -562,12 +566,10 @@
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-integration-hibernate-4.3</artifactId>
-                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-testsuite-base-hibernate</artifactId>
-                    <scope>test</scope>
                 </dependency>
                 <!-- IntelliJ apparently needs the annotation processor here -->
                 <dependency>
@@ -648,6 +650,18 @@
                                     </sources>
                                 </configuration>
                             </execution>
+                            <execution>
+                                <id>add-test-source-hibernate</id>
+                                <phase>generate-test-sources</phase>
+                                <goals>
+                                    <goal>add-test-source</goal>
+                                </goals>
+                                <configuration>
+                                    <sources>
+                                        <source>src/test/hibernate</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
                         </executions>
                     </plugin>
                 </plugins>
@@ -667,12 +681,10 @@
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-integration-hibernate-5</artifactId>
-                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-testsuite-base-hibernate</artifactId>
-                    <scope>test</scope>
                 </dependency>
                 <!-- IntelliJ apparently needs the annotation processor here -->
                 <dependency>
@@ -753,6 +765,18 @@
                                     </sources>
                                 </configuration>
                             </execution>
+                            <execution>
+                                <id>add-test-source-hibernate</id>
+                                <phase>generate-test-sources</phase>
+                                <goals>
+                                    <goal>add-test-source</goal>
+                                </goals>
+                                <configuration>
+                                    <sources>
+                                        <source>src/test/hibernate</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
                         </executions>
                     </plugin>
                 </plugins>
@@ -772,12 +796,10 @@
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-integration-hibernate-5</artifactId>
-                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-testsuite-base-hibernate</artifactId>
-                    <scope>test</scope>
                 </dependency>
                 <!-- IntelliJ apparently needs the annotation processor here -->
                 <dependency>
@@ -858,6 +880,18 @@
                                     </sources>
                                 </configuration>
                             </execution>
+                            <execution>
+                                <id>add-test-source-hibernate</id>
+                                <phase>generate-test-sources</phase>
+                                <goals>
+                                    <goal>add-test-source</goal>
+                                </goals>
+                                <configuration>
+                                    <sources>
+                                        <source>src/test/hibernate</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
                         </executions>
                     </plugin>
                 </plugins>
@@ -880,12 +914,10 @@
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-integration-hibernate-5.2</artifactId>
-                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-testsuite-base-hibernate</artifactId>
-                    <scope>test</scope>
                 </dependency>
                 <!-- IntelliJ apparently needs the annotation processor here -->
                 <dependency>
@@ -966,6 +998,18 @@
                                     </sources>
                                 </configuration>
                             </execution>
+                            <execution>
+                                <id>add-test-source-hibernate</id>
+                                <phase>generate-test-sources</phase>
+                                <goals>
+                                    <goal>add-test-source</goal>
+                                </goals>
+                                <configuration>
+                                    <sources>
+                                        <source>src/test/hibernate</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
                         </executions>
                     </plugin>
                 </plugins>
@@ -985,12 +1029,10 @@
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-integration-hibernate-5.3</artifactId>
-                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-testsuite-base-hibernate</artifactId>
-                    <scope>test</scope>
                 </dependency>
                 <!-- IntelliJ apparently needs the annotation processor here -->
                 <dependency>
@@ -1071,6 +1113,18 @@
                                     </sources>
                                 </configuration>
                             </execution>
+                            <execution>
+                                <id>add-test-source-hibernate</id>
+                                <phase>generate-test-sources</phase>
+                                <goals>
+                                    <goal>add-test-source</goal>
+                                </goals>
+                                <configuration>
+                                    <sources>
+                                        <source>src/test/hibernate</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
                         </executions>
                     </plugin>
                 </plugins>
@@ -1100,12 +1154,10 @@
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
-                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-testsuite-base-hibernate</artifactId>
-                    <scope>test</scope>
                 </dependency>
                 <!-- IntelliJ apparently needs the annotation processor here -->
                 <dependency>
@@ -1186,6 +1238,18 @@
                                     </sources>
                                 </configuration>
                             </execution>
+                            <execution>
+                                <id>add-test-source-hibernate</id>
+                                <phase>generate-test-sources</phase>
+                                <goals>
+                                    <goal>add-test-source</goal>
+                                </goals>
+                                <configuration>
+                                    <sources>
+                                        <source>src/test/hibernate</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
                         </executions>
                     </plugin>
                 </plugins>
@@ -1212,12 +1276,10 @@
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-integration-hibernate-6.0</artifactId>
-                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-testsuite-base-hibernate</artifactId>
-                    <scope>test</scope>
                 </dependency>
                 <!-- IntelliJ apparently needs the annotation processor here -->
                 <dependency>
@@ -1298,6 +1360,18 @@
                                     </sources>
                                 </configuration>
                             </execution>
+                            <execution>
+                                <id>add-test-source-hibernate</id>
+                                <phase>generate-test-sources</phase>
+                                <goals>
+                                    <goal>add-test-source</goal>
+                                </goals>
+                                <configuration>
+                                    <sources>
+                                        <source>src/test/hibernate</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
                         </executions>
                     </plugin>
                 </plugins>
@@ -1317,7 +1391,6 @@
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-testsuite-base-eclipselink</artifactId>
-                    <scope>test</scope>
                 </dependency>
                 <!-- IntelliJ apparently needs the annotation processor here -->
                 <dependency>
@@ -1454,7 +1527,6 @@
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-testsuite-base-datanucleus</artifactId>
-                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -1615,7 +1687,6 @@
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-testsuite-base-datanucleus</artifactId>
-                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -1883,7 +1954,6 @@
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-testsuite-base-openjpa</artifactId>
-                    <scope>test</scope>
                 </dependency>
             </dependencies>
             <build>
