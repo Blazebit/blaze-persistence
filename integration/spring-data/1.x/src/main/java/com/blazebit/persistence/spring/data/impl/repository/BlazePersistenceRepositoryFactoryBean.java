@@ -87,12 +87,17 @@ public class BlazePersistenceRepositoryFactoryBean<T extends Repository<S, ID>, 
     @Override
     public void setBeanFactory(BeanFactory beanFactory) {
         // Workaround that Spring's version of the SharedEntityManagerCreator requires a transaction for invoking unwrap
+        EntityManagerFactory oldEmf = this.entityManager == null ? null : this.entityManager.getEntityManagerFactory();
         this.entityManager = null;
         ConfigurableListableBeanFactory configurableListableBeanFactory = (ConfigurableListableBeanFactory) beanFactory;
         Iterator<BeanDefinitionUtils.EntityManagerFactoryBeanDefinition> iterator = getEntityManagerFactoryBeanDefinitions(configurableListableBeanFactory).iterator();
-        if (iterator.hasNext()) {
+        while (iterator.hasNext()) {
             BeanDefinitionUtils.EntityManagerFactoryBeanDefinition definition = iterator.next();
-            setEntityManager(SharedEntityManagerCreator.createSharedEntityManager(configurableListableBeanFactory.getBean(definition.getBeanName(), EntityManagerFactory.class)));
+            EntityManagerFactory emf = configurableListableBeanFactory.getBean(definition.getBeanName(), EntityManagerFactory.class);
+            if (oldEmf == null || oldEmf == emf) {
+                setEntityManager(SharedEntityManagerCreator.createSharedEntityManager(emf));
+                break;
+            }
         }
 
         super.setBeanFactory(beanFactory);
