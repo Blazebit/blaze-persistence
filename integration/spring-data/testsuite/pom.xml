@@ -1830,7 +1830,7 @@
                         <version>4.0.0-release</version>
                         <configuration>
                             <api>JPA</api>
-                            <persistenceUnitName>TestsuiteBase</persistenceUnitName>
+                            <persistenceUnitName>TEST-PU</persistenceUnitName>
                             <verbose>false</verbose>
                             <fork>true</fork>
                             <log4jConfiguration>${basedir}/log4j.properties</log4jConfiguration>

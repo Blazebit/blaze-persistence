@@ -639,7 +639,7 @@ public class DocumentRepositoryTest extends AbstractSpringTest {
         // Given
         String doc1 = "D1";
         String doc2 = "D2";
-        String doc3 = "D2";
+        String doc3 = "D3";
         Person person = createPerson("Foo");
         createDocument(doc1, person);
         createDocument(doc2, person);
@@ -701,8 +701,12 @@ public class DocumentRepositoryTest extends AbstractSpringTest {
                 Document d = new Document(name);
                 d.setDescription(description);
                 d.setAge(age);
-                d.setOwner(owner);
                 em.persist(d);
+                if (owner != null) {
+                    d.setOwner(owner);
+                    owner.getDocuments().add(d);
+                    em.merge(owner);
+                }
                 return d;
             }
         });

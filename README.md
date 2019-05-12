@@ -681,9 +681,9 @@ DataNucleus requires bytecode enhancement to work properly which requires an ext
 Usually when switching the JPA provider profile, it is recommended to trigger a _Rebuild Project_ action in IntelliJ to avoid strange errors causes by previous bytecode enhancement runs.
 After that, the entities in the project *core/testsuite* have to be enhanced. This is done through a Maven command.
 
-* DataNucleus 4: `mvn -P "datanucleus-4" -pl core/testsuite datanucleus:enhance`
-* DataNucleus 5: `mvn -P "datanucleus-5" -pl core/testsuite datanucleus:enhance`
-* DataNucleus 5.1: `mvn -P "datanucleus-5.1" -pl core/testsuite datanucleus:enhance`
+* DataNucleus 4: `mvn -P "datanucleus-4,h2,deltaspike-1.8,spring-data-2.0.x,eclipselink" -pl core/testsuite,integration/spring-data/testsuite datanucleus:enhance`
+* DataNucleus 5: `mvn -P "datanucleus-5,h2,deltaspike-1.8,spring-data-2.0.x,eclipselink" -pl core/testsuite,integration/spring-data/testsuite datanucleus:enhance`
+* DataNucleus 5.1: `mvn -P "datanucleus-5.1,h2,deltaspike-1.8,spring-data-2.0.x,eclipselink" -pl core/testsuite,integration/spring-data/testsuite datanucleus:enhance`
 
 After doing that, you should be able to execute any test in IntelliJ.
 
