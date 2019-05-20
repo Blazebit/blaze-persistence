@@ -18,10 +18,13 @@ package com.blazebit.persistence.view.impl.objectbuilder;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import com.blazebit.persistence.CTEBuilder;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.SelectBuilder;
+import com.blazebit.persistence.view.CTEProvider;
 import com.blazebit.persistence.view.impl.macro.EmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleElementMapper;
 import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
@@ -40,6 +43,7 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
     private final ParameterHolder<?> parameterHolder;
     private final Map<String, Object> optionalParameters;
     private final EmbeddingViewJpqlMacro embeddingViewJpqlMacro;
+    private final Set<CTEProvider> cteProviders;
 
     public ViewTypeObjectBuilder(ViewTypeObjectBuilderTemplate<T> template, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean nullIfEmpty) {
         this.hasId = template.hasId();
@@ -49,6 +53,7 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
         this.optionalParameters = optionalParameters;
         this.embeddingViewJpqlMacro = embeddingViewJpqlMacro;
         this.nullIfEmpty = nullIfEmpty;
+        this.cteProviders = template.getViewRoot().getCteProviders();
     }
 
     @Override
@@ -77,6 +82,12 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
 
     @Override
     public <X extends SelectBuilder<X>> void applySelects(X queryBuilder) {
+        if (this.cteProviders != null && queryBuilder instanceof CTEBuilder) {
+            CTEBuilder<?> cteBuilder = (CTEBuilder<?>) queryBuilder;
+            for (CTEProvider cteProvider : this.cteProviders) {
+                cteProvider.applyCtes(cteBuilder);
+            }
+        }
         for (int i = 0; i < mappers.length; i++) {
             mappers[i].applyMapping(queryBuilder, parameterHolder, optionalParameters, embeddingViewJpqlMacro);
         }

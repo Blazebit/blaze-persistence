@@ -40,6 +40,8 @@ public interface ManagedViewTypeImplementor<X> extends ManagedViewType<X> {
 
     NavigableMap<String, AbstractMethodAttribute<? super X, ?>> getRecursiveAttributes();
 
+    NavigableMap<String, AbstractMethodAttribute<? super X, ?>> getRecursiveSubviewAttributes();
+
     LockMode getLockMode();
 
     ManagedType<?> getJpaManagedType();

@@ -17,8 +17,6 @@
 package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
 
 import com.blazebit.persistence.FullQueryBuilder;
-import com.blazebit.persistence.parser.SimpleQueryGenerator;
-import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.JpaProvider;
@@ -36,7 +34,6 @@ import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
@@ -84,12 +81,7 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
         if (correlationResult.isEmpty()) {
             this.correlationResult = correlationAlias;
         } else {
-            StringBuilder sb = new StringBuilder(correlationAlias.length() + correlationResult.length() + 1);
-            Expression expr = ef.createSimpleExpression(correlationResult, false);
-            SimpleQueryGenerator generator = new PrefixingQueryGenerator(Collections.singletonList(correlationAlias));
-            generator.setQueryBuffer(sb);
-            expr.accept(generator);
-            this.correlationResult = sb.toString();
+            this.correlationResult = PrefixingQueryGenerator.prefix(ef, correlationResult, correlationAlias);
         }
     }
 

@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
+import com.blazebit.persistence.view.CTEProvider;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.LockMode;
@@ -93,6 +94,8 @@ public class ViewMappingImpl implements ViewMapping {
     private final List<Runnable> finishListeners = new ArrayList<>();
     private ManagedViewTypeImplementor<?> viewType;
     private Map<EmbeddableOwner, ManagedViewTypeImplementor<?>> embeddableViewTypeMap;
+
+    private Set<Class<? extends CTEProvider>> cteProviders;
 
     public ViewMappingImpl(Class<?> entityViewClass, Class<?> entityClass, String name, MetamodelBootContext context) {
         this.entityViewClass = entityViewClass;
@@ -199,8 +202,19 @@ public class ViewMappingImpl implements ViewMapping {
         return specialMethods;
     }
 
+    @Override
     public void setSpecialMethods(List<Method> specialMethods) {
         this.specialMethods = specialMethods;
+    }
+
+    @Override
+    public Set<Class<? extends CTEProvider>> getCteProviders() {
+        return this.cteProviders;
+    }
+
+    @Override
+    public void setCteProviders(Set<Class<? extends CTEProvider>> cteProviders) {
+        this.cteProviders = cteProviders;
     }
 
     @Override

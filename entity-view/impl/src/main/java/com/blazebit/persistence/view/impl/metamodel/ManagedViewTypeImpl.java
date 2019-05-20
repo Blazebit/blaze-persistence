@@ -19,10 +19,13 @@ package com.blazebit.persistence.view.impl.metamodel;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
+import com.blazebit.persistence.view.CTEProvider;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.LockMode;
+import com.blazebit.persistence.view.impl.PrefixingQueryGenerator;
+import com.blazebit.persistence.view.impl.SimpleCTEProviderFactory;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
@@ -55,7 +58,6 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.concurrent.ConcurrentSkipListMap;
 
 /**
  *
@@ -78,6 +80,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
     private final int defaultBatchSize;
     private final Map<String, AbstractMethodAttribute<? super X, ?>> attributes;
     private final NavigableMap<String, AbstractMethodAttribute<? super X, ?>> recursiveAttributes;
+    private final NavigableMap<String, AbstractMethodAttribute<? super X, ?>> recursiveSubviewAttributes;
     private final Set<AbstractMethodAttribute<? super X, ?>> updateMappableAttributes;
     private final AbstractMethodAttribute<? super X, ?>[] mutableAttributes;
     private final Map<ParametersKey, MappingConstructorImpl<X>> constructors;
@@ -87,9 +90,10 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
     private final InheritanceSubtypeConfiguration<X> overallInheritanceSubtypeConfiguration;
     private final Map<Map<ManagedViewTypeImplementor<? extends X>, String>, InheritanceSubtypeConfiguration<X>> inheritanceSubtypeConfigurations;
     private final boolean hasJoinFetchedCollections;
+    private final Set<CTEProvider> cteProviders = new LinkedHashSet<>();
 
     @SuppressWarnings("unchecked")
-    public ManagedViewTypeImpl(ViewMapping viewMapping, ManagedType<?> managedType, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
+    public ManagedViewTypeImpl(ViewMapping viewMapping, ManagedType<?> managedType, final MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
         context.addManagedViewType(viewMapping, embeddableMapping, this);
         this.javaType = (Class<X>) viewMapping.getEntityViewClass();
         this.jpaManagedType = managedType;
@@ -259,27 +263,26 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
 
         this.inheritanceSubtypeConfigurations = Collections.unmodifiableMap(inheritanceSubtypeConfigurations);
 
-        final NavigableMap<String, AbstractMethodAttribute<? super X, ?>> recursiveAttributes = new ConcurrentSkipListMap<>();
+        final NavigableMap<String, AbstractMethodAttribute<? super X, ?>> recursiveAttributes = new TreeMap<>();
+        final NavigableMap<String, AbstractMethodAttribute<? super X, ?>> recursiveSubviewAttributes = new TreeMap<>();
         for (Map.Entry<AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<? super X, ?>>> entry : defaultInheritanceSubtypeConfiguration.getAttributesClosure().entrySet()) {
             final AbstractMethodAttribute<? super X, ?> attribute = entry.getValue().getAttribute();
+            if (attribute.getKeyType() instanceof ManagedViewTypeImplementor<?>) {
+                final ManagedViewTypeImplementor<Object> keyType = (ManagedViewTypeImplementor<Object>) attribute.getKeyType();
+                // TODO: introduce a special/synthetic singular key attribute that has a different mapping and type?
+                // recursiveSubviewAttributes.put("KEY(" + attribute.getName() + ")", attribute.key());
+                context.onViewTypeFinished(keyType, new KeyTypeSubviewAttributeCollector<>(attribute, recursiveAttributes, recursiveSubviewAttributes, keyType, context));
+            }
             if (attribute.getElementType() instanceof ManagedViewTypeImplementor<?>) {
                 final ManagedViewTypeImplementor<Object> elementType = (ManagedViewTypeImplementor<Object>) attribute.getElementType();
-                context.onViewTypeFinished(elementType, new Runnable() {
-                    @Override
-                    public void run() {
-                        // Cyclic models can run into this condition, but it's ok because we only allow cycles at non-cascading attributes
-                        if (elementType.getRecursiveAttributes() != null) {
-                            for (Map.Entry<String, AbstractMethodAttribute<? super Object, ?>> subEntry : elementType.getRecursiveAttributes().entrySet()) {
-                                recursiveAttributes.put(attribute.getName() + "." + subEntry.getKey(), subEntry.getValue());
-                            }
-                        }
-                    }
-                });
+                recursiveSubviewAttributes.put(attribute.getName(), attribute);
+                context.onViewTypeFinished(elementType, new ElementTypeSubviewAttributeCollector<>(attribute, recursiveAttributes, recursiveSubviewAttributes, elementType, context));
             } else {
                 recursiveAttributes.put(attribute.getName(), attribute);
             }
         }
         this.recursiveAttributes = recursiveAttributes;
+        this.recursiveSubviewAttributes = recursiveSubviewAttributes;
 
         Map<ParametersKey, MappingConstructorImpl<X>> constructors = new HashMap<>();
         Map<String, MappingConstructorImpl<X>> constructorIndex = new TreeMap<>();
@@ -345,6 +348,8 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
                 }
             }
         }
+
+        context.onViewTypeFinished(this, new CTEProviderCollector(this, context, viewMapping));
     }
 
     private static void removeRequiredUpdatableAttribute(Set<String> requiredUpdatableAttributes, Set<String> mappedColumns, ExtendedManagedType<?> extendedManagedType, AbstractMethodAttribute<?, ?> attribute) {
@@ -403,15 +408,15 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
                 }
             }
         }
-        
+
         if (!constructorIndex.isEmpty()) {
             for (MappingConstructorImpl<X> constructor : constructorIndex.values()) {
                 Map<String, List<String>> constructorCollectionMappings = new HashMap<>();
-                
+
                 for (Map.Entry<String, List<String>> entry : collectionMappings.entrySet()) {
                     constructorCollectionMappings.put(entry.getKey(), new ArrayList<>(entry.getValue()));
                 }
-                
+
                 constructor.checkParameters(jpaManagedType, constructorCollectionMappings, collectionMappingSingulars, context);
                 reportCollectionMappingErrors(context, collectionMappings, collectionMappingSingulars);
             }
@@ -578,6 +583,11 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
     }
 
     @Override
+    public NavigableMap<String, AbstractMethodAttribute<? super X, ?>> getRecursiveSubviewAttributes() {
+        return recursiveSubviewAttributes;
+    }
+
+    @Override
     public String getInheritanceMapping() {
         return inheritanceMapping;
     }
@@ -653,6 +663,128 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
             return "TYPE(this) = " + ((EntityType<?>) jpaManagedType).getName();
         }
         return null;
+    }
+
+    @Override
+    public Set<CTEProvider> getCteProviders() {
+        return cteProviders;
+    }
+
+    /**
+     *
+     * @author Giovanni Lovato
+     * @since 1.4.0
+     */
+    private static final class CTEProviderCollector implements Runnable {
+        private final ManagedViewTypeImpl<?> viewType;
+        private final MetamodelBuildingContext context;
+        private final ViewMapping viewMapping;
+
+        private CTEProviderCollector(ManagedViewTypeImpl<?> viewType, MetamodelBuildingContext context, ViewMapping viewMapping) {
+            this.viewType = viewType;
+            this.viewMapping = viewMapping;
+            this.context = context;
+        }
+
+        @Override
+        public void run() {
+            Set<Class<? extends CTEProvider>> rootProviders = viewMapping.getCteProviders();
+            if (rootProviders != null) {
+                Map<Class<?>, CTEProvider> providers = context.getCteProviders();
+                for (Class<? extends CTEProvider> clazz : rootProviders) {
+                    CTEProvider provider = providers.get(clazz);
+                    if (provider == null) {
+                        provider = new SimpleCTEProviderFactory(clazz).create();
+                        providers.put(clazz, provider);
+                    }
+                    this.viewType.cteProviders.add(provider);
+                }
+            }
+            for (AbstractMethodAttribute<?, ?> attribute : this.viewType.recursiveSubviewAttributes.values()) {
+                com.blazebit.persistence.view.metamodel.Type<?> elementType = attribute.getElementType();
+                if (elementType instanceof ManagedViewTypeImpl) {
+                    ManagedViewType<?> viewType = (ManagedViewType<?>) attribute.getElementType();
+                    this.viewType.cteProviders.addAll(viewType.getCteProviders());
+                }
+            }
+        }
+    }
+
+    /**
+     *
+     * @author Christian Beikov
+     * @since 1.4.0
+     */
+    private static final class ElementTypeSubviewAttributeCollector<X> implements Runnable {
+        private final AbstractMethodAttribute<? super X, ?> attribute;
+        private final NavigableMap<String, AbstractMethodAttribute<? super X, ?>> recursiveAttributes;
+        private final NavigableMap<String, AbstractMethodAttribute<? super X, ?>> recursiveSubviewAttributes;
+        private final ManagedViewTypeImplementor<Object> elementType;
+        private final MetamodelBuildingContext context;
+
+        private ElementTypeSubviewAttributeCollector(AbstractMethodAttribute<? super X, ?> attribute,
+                NavigableMap<String, AbstractMethodAttribute<? super X, ?>> recursiveAttributes,
+                NavigableMap<String, AbstractMethodAttribute<? super X, ?>> recursiveSubviewAttributes,
+                ManagedViewTypeImplementor<Object> elementType, MetamodelBuildingContext context) {
+            this.attribute = attribute;
+            this.recursiveAttributes = recursiveAttributes;
+            this.recursiveSubviewAttributes = recursiveSubviewAttributes;
+            this.elementType = elementType;
+            this.context = context;
+        }
+
+        @Override
+        public void run() {
+            if (elementType.getRecursiveSubviewAttributes() != null) {
+                for (Map.Entry<String, AbstractMethodAttribute<? super Object, ?>> subEntry : elementType.getRecursiveSubviewAttributes().entrySet()) {
+                    recursiveSubviewAttributes.put(PrefixingQueryGenerator.prefix(context.getExpressionFactory(), subEntry.getKey(), attribute.getName()), subEntry.getValue());
+                }
+            }
+            // Cyclic models can run into this condition, but it's ok because we only allow cycles at non-cascading attributes
+            if (elementType.getRecursiveAttributes() != null) {
+                for (Map.Entry<String, AbstractMethodAttribute<? super Object, ?>> subEntry : elementType.getRecursiveAttributes().entrySet()) {
+                    recursiveAttributes.put(PrefixingQueryGenerator.prefix(context.getExpressionFactory(), subEntry.getKey(), attribute.getName()), subEntry.getValue());
+                }
+            }
+        }
+    }
+
+    /**
+     *
+     * @author Christian Beikov
+     * @since 1.4.0
+     */
+    private static final class KeyTypeSubviewAttributeCollector<X> implements Runnable {
+        private final AbstractMethodAttribute<? super X, ?> attribute;
+        private final NavigableMap<String, AbstractMethodAttribute<? super X, ?>> recursiveAttributes;
+        private final NavigableMap<String, AbstractMethodAttribute<? super X, ?>> recursiveSubviewAttributes;
+        private final ManagedViewTypeImplementor<Object> keyType;
+        private final MetamodelBuildingContext context;
+
+        private KeyTypeSubviewAttributeCollector(AbstractMethodAttribute<? super X, ?> attribute,
+                NavigableMap<String, AbstractMethodAttribute<? super X, ?>> recursiveAttributes,
+                NavigableMap<String, AbstractMethodAttribute<? super X, ?>> recursiveSubviewAttributes,
+                ManagedViewTypeImplementor<Object> keyType, MetamodelBuildingContext context) {
+            this.attribute = attribute;
+            this.recursiveAttributes = recursiveAttributes;
+            this.recursiveSubviewAttributes = recursiveSubviewAttributes;
+            this.keyType = keyType;
+            this.context = context;
+        }
+
+        @Override
+        public void run() {
+            if (keyType.getRecursiveSubviewAttributes() != null) {
+                for (Map.Entry<String, AbstractMethodAttribute<? super Object, ?>> subEntry : keyType.getRecursiveSubviewAttributes().entrySet()) {
+                    recursiveSubviewAttributes.put("KEY(" + PrefixingQueryGenerator.prefix(context.getExpressionFactory(), subEntry.getKey(), attribute.getName()) + ")", subEntry.getValue());
+                }
+            }
+            if (keyType.getRecursiveAttributes() != null) {
+                for (Map.Entry<String, AbstractMethodAttribute<? super Object, ?>> subEntry : keyType.getRecursiveAttributes().entrySet()) {
+                    recursiveAttributes.put("KEY(" + PrefixingQueryGenerator.prefix(context.getExpressionFactory(), subEntry.getKey(), attribute.getName()) + ")", subEntry.getValue());
+                }
+            }
+        }
     }
 
     /**

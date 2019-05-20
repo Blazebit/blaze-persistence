@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.view.BatchFetch;
+import com.blazebit.persistence.view.CTEProvider;
 import com.blazebit.persistence.view.CreatableEntityView;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.EntityViewInheritance;
@@ -28,6 +29,7 @@ import com.blazebit.persistence.view.LockOwner;
 import com.blazebit.persistence.view.PostCreate;
 import com.blazebit.persistence.view.UpdatableEntityView;
 import com.blazebit.persistence.view.ViewConstructor;
+import com.blazebit.persistence.view.With;
 import com.blazebit.reflection.ReflectionUtils;
 
 import java.lang.annotation.Annotation;
@@ -37,6 +39,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -83,6 +86,14 @@ public class AnnotationViewMappingReader implements ViewMappingReader {
         if (batchFetch != null) {
             viewMapping.setDefaultBatchSize(batchFetch.size());
         }
+
+        Set<Class<? extends CTEProvider>> cteProviders = new LinkedHashSet<>();
+        for (Annotation a : AnnotationUtils.getAllAnnotations(entityViewClass)) {
+            if (a instanceof With) {
+                cteProviders.addAll(Arrays.asList(((With) a).value()));
+            }
+        }
+        viewMapping.setCteProviders(cteProviders);
 
         UpdatableEntityView updatableEntityView = AnnotationUtils.findAnnotation(entityViewClass, UpdatableEntityView.class);
 
