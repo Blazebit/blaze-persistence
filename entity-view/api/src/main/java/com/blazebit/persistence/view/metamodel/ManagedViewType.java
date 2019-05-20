@@ -16,8 +16,10 @@
 
 package com.blazebit.persistence.view.metamodel;
 
+import com.blazebit.persistence.view.CTEProvider;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
+import com.blazebit.persistence.view.With;
 
 import java.lang.reflect.Method;
 import java.util.Set;
@@ -161,5 +163,13 @@ public interface ManagedViewType<X> extends Type<X> {
      * @since 1.2.0
      */
     public Set<String> getPersistabilityValidationExcludedEntityAttributes();
+
+    /**
+     * Returns the set of {@link CTEProvider} defined in the view using the {@link With} annotation.
+     *
+     * @return the set of {@link CTEProvider}
+     * @since 1.4.0
+     */
+    public Set<CTEProvider> getCteProviders();
 
 }

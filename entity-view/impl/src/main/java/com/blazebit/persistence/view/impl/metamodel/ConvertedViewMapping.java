@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
+import com.blazebit.persistence.view.CTEProvider;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.LockMode;
@@ -111,6 +112,16 @@ public class ConvertedViewMapping implements ViewMapping {
     @Override
     public void setSpecialMethods(List<Method> specialMethods) {
         delegate.setSpecialMethods(specialMethods);
+    }
+
+    @Override
+    public Set<Class<? extends CTEProvider>> getCteProviders() {
+        return delegate.getCteProviders();
+    }
+
+    @Override
+    public void setCteProviders(Set<Class<? extends CTEProvider>> cteProviders) {
+        delegate.setCteProviders(cteProviders);
     }
 
     @Override

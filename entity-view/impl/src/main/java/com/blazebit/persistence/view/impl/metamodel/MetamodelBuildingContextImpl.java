@@ -26,6 +26,7 @@ import com.blazebit.persistence.parser.expression.MacroFunction;
 import com.blazebit.persistence.parser.expression.NullExpression;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpqlFunction;
+import com.blazebit.persistence.view.CTEProvider;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.IdMapping;
@@ -55,6 +56,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -94,6 +96,8 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
     private final Map<String, FlushMode> flushModeOverrides;
     private final FlushStrategy flushStrategyOverride;
     private final Map<String, FlushStrategy> flushStrategyOverrides;
+
+    private final Map<Class<?>, CTEProvider> cteProviders = new LinkedHashMap<>();
 
     public MetamodelBuildingContextImpl(Properties properties, BasicUserTypeRegistry basicUserTypeRegistry, EntityMetamodel entityMetamodel, JpaProvider jpaProvider, Map<String, JpqlFunction> jpqlFunctions, ExpressionFactory expressionFactory, ProxyFactory proxyFactory, Map<Class<?>, ViewMapping> viewMappings, Set<String> errors) {
         this.basicUserTypeRegistry = basicUserTypeRegistry;
@@ -530,6 +534,11 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
         }
 
         return supertypes;
+    }
+
+    @Override
+    public Map<Class<?>, CTEProvider> getCteProviders() {
+        return cteProviders;
     }
 
     /**

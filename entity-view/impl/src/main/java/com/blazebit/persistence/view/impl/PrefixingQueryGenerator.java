@@ -16,10 +16,13 @@
 
 package com.blazebit.persistence.view.impl;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
 import com.blazebit.persistence.parser.SimpleQueryGenerator;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.parser.expression.PathElementExpression;
 import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.expression.PropertyExpression;
@@ -31,7 +34,7 @@ import com.blazebit.persistence.parser.expression.TreatExpression;
  * @since 1.0.1
  */
 public class PrefixingQueryGenerator extends SimpleQueryGenerator {
-    
+
     private final String prefix;
     private final String aliasToSkip;
     private final String aliasToReplaceWithSkipAlias;
@@ -43,7 +46,7 @@ public class PrefixingQueryGenerator extends SimpleQueryGenerator {
 
     public PrefixingQueryGenerator(List<String> prefixParts, String aliasToSkip, String aliasToReplaceWithSkipAlias, String secondAliasToSkip) {
         StringBuilder prefixSb = new StringBuilder();
-        
+
         if (prefixParts != null && !prefixParts.isEmpty()) {
             prefixSb.append(prefixParts.get(0));
             for (int i = 1; i < prefixParts.size(); i++) {
@@ -51,11 +54,30 @@ public class PrefixingQueryGenerator extends SimpleQueryGenerator {
                 prefixSb.append(prefixParts.get(i));
             }
         }
-        
+
         this.prefix = prefixSb.toString();
         this.aliasToSkip = aliasToSkip;
         this.aliasToReplaceWithSkipAlias = Objects.equals(aliasToSkip, aliasToReplaceWithSkipAlias) ? null : aliasToReplaceWithSkipAlias;
         this.secondAliasToSkip = secondAliasToSkip;
+    }
+
+    public static String prefix(ExpressionFactory ef, String mapping, String prefix) {
+        int thisIndex = mapping.indexOf("this");
+        if (thisIndex == 0 && mapping.length() == "this".length()) {
+            return prefix;
+        }
+        // Optimize for simple mappings
+        if (mapping.indexOf('(') == -1 && thisIndex == -1) {
+            return prefix + "." + mapping;
+        } else {
+            // Since we have functions in here, we have to parse an properly prefix the mapping
+            Expression expression = ef.createSimpleExpression(mapping, false);
+            SimpleQueryGenerator generator = new PrefixingQueryGenerator(Collections.singletonList(prefix));
+            StringBuilder sb = new StringBuilder(mapping.length() + prefix.length() + 1);
+            generator.setQueryBuffer(sb);
+            expression.accept(generator);
+            return sb.toString();
+        }
     }
 
     @Override

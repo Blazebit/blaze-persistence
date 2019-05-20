@@ -1691,3 +1691,29 @@ FROM Animal animal
 ----
 
 and in case an animal is not of the treated type, a `null` value will be produced.
+
+=== Using CTEs in entity views
+
+A CTE can be used in an entity view by correlating the CTE entity type, but it is still necessary to define the CTE.
+This can be done on the underlying {projectname} core `CriteriaBuilder` before applying an entity view. Doing that is not
+always ideal e.g. when considering repositories for Spring Data or DeltaSpike Data, there is usually no access to the `CriteriaBuilder`.
+
+The `@With` annotation can be applied on an entity view class to register a `CTEProvider` to the entity view class.
+When applying an entity view, it's corresponding registered `CTEProvider` instances are invoked that can define CTEs
+
+[source,java]
+----
+@EntityView(Cat.class)
+@With(MyCteProvider.class)
+public interface BaseCatView {
+
+    class MyCteProvider implements CTEProvider {
+        @Override
+        public void applyCtes(CTEBuilder<?> builder) {
+            builder.with(MyCTE.class)...
+        }
+    }
+}
+----
+
+For more information about CTEs refer to the link:{core_doc}#ctes[CTE section] in the core documentation.

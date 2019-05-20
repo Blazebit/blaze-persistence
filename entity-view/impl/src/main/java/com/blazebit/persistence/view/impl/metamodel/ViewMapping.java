@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
+import com.blazebit.persistence.view.CTEProvider;
 import com.blazebit.persistence.view.LockMode;
 import com.blazebit.persistence.view.spi.EntityViewMapping;
 
@@ -81,4 +82,8 @@ public interface ViewMapping extends Comparable<ViewMapping>, EntityViewMapping 
     List<Method> getSpecialMethods();
 
     void setSpecialMethods(List<Method> specialMethods);
+
+    Set<Class<? extends CTEProvider>> getCteProviders();
+
+    void setCteProviders(Set<Class<? extends CTEProvider>> cteProviders);
 }

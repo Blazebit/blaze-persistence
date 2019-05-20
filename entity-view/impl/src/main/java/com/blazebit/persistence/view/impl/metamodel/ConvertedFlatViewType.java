@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
+import com.blazebit.persistence.view.CTEProvider;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.LockMode;
@@ -87,6 +88,11 @@ public class ConvertedFlatViewType<X> implements FlatViewTypeImplementor<X> {
     @Override
     public NavigableMap<String, AbstractMethodAttribute<? super X, ?>> getRecursiveAttributes() {
         return delegate.getRecursiveAttributes();
+    }
+
+    @Override
+    public NavigableMap<String, AbstractMethodAttribute<? super X, ?>> getRecursiveSubviewAttributes() {
+        return delegate.getRecursiveSubviewAttributes();
     }
 
     @Override
@@ -217,6 +223,11 @@ public class ConvertedFlatViewType<X> implements FlatViewTypeImplementor<X> {
     @Override
     public List<Method> getSpecialMethods() {
         return delegate.getSpecialMethods();
+    }
+
+    @Override
+    public Set<CTEProvider> getCteProviders() {
+        return delegate.getCteProviders();
     }
 
     @Override

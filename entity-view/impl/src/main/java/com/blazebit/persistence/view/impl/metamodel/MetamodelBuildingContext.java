@@ -20,6 +20,7 @@ import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpqlFunction;
+import com.blazebit.persistence.view.CTEProvider;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor;
@@ -97,4 +98,6 @@ public interface MetamodelBuildingContext {
     public void finishViewType(ManagedViewTypeImplementor<?> managedViewType);
 
     public void onViewTypeFinished(ManagedViewTypeImplementor<?> managedViewType, Runnable listener);
+
+    public Map<Class<?>, CTEProvider> getCteProviders();
 }

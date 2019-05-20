@@ -18,8 +18,6 @@ package com.blazebit.persistence.view.impl;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
-import com.blazebit.persistence.parser.SimpleQueryGenerator;
-import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.view.AttributeFilterProvider;
 import com.blazebit.persistence.view.EntityViewSetting;
@@ -41,7 +39,6 @@ import com.blazebit.persistence.view.metamodel.ViewType;
 
 import javax.persistence.metamodel.Metamodel;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -133,19 +130,7 @@ public final class EntityViewSettingHelper {
     }
 
     private static String getMapping(String prefix, MethodAttribute<?, ?> attribute, ExpressionFactory ef) {
-        String mapping = ((MappingAttribute<?, ?>) attribute).getMapping();
-        // Id attributes are normally simple mappings, so we try to improve that case
-        if (mapping.indexOf('(') == -1) {
-            return prefix + "." + mapping;
-        } else {
-            // Since we have functions in here, we have to parse an properly prefix the mapping
-            Expression expression = ef.createSimpleExpression(mapping, false);
-            SimpleQueryGenerator generator = new PrefixingQueryGenerator(Arrays.asList(prefix));
-            StringBuilder sb = new StringBuilder();
-            generator.setQueryBuffer(sb);
-            expression.accept(generator);
-            return sb.toString();
-        }
+        return PrefixingQueryGenerator.prefix(ef, ((MappingAttribute<?, ?>) attribute).getMapping(), prefix);
     }
 
     private static String[] getExpressionArray(List<String> expressions) {
@@ -233,7 +218,7 @@ public final class EntityViewSettingHelper {
                     + "' in the entity view type '" + entityViewRoot.getJavaType()
                         .getName() + "'");
             }
-            
+
             AttributeFilterProvider filter = evm.createAttributeFilter(filterClass, expectedType, filterActivation.getFilterValue());
             if (sb == null) {
                 sb = new StringBuilder(name.length() + attributeName.length() + 1);
