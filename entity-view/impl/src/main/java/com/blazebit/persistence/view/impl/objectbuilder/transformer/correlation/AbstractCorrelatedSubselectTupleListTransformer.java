@@ -57,8 +57,8 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
     protected final String correlationBasisExpression;
     protected final String correlationKeyExpression;
     protected final int valueIndex;
-    protected final int viewIndex;
 
+    protected int viewIndex;
     protected int keyIndex;
     protected FullQueryBuilder<?, ?> criteriaBuilder;
     protected CorrelatedSubqueryViewRootJpqlMacro viewRootJpqlMacro;
@@ -85,7 +85,6 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
         this.correlationBasisExpression = correlationBasisExpression;
         this.correlationKeyExpression = correlationKeyExpression;
         this.valueIndex = correlator.getElementOffset();
-        this.viewIndex = valueIndex + 1;
     }
 
     private static int viewIdMapperCount(ManagedViewType<?> viewRootType) {
@@ -146,7 +145,8 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
         String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
         embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
 
-        SubqueryCorrelationBuilder correlationBuilder = new SubqueryCorrelationBuilder(criteriaBuilder, correlationAlias, correlationResult, correlationBasisType, correlationBasisEntityType, null, 1, true, attributePath);
+        String joinBase = embeddingViewPath;
+        SubqueryCorrelationBuilder correlationBuilder = new SubqueryCorrelationBuilder(criteriaBuilder, correlationAlias, correlationResult, correlationBasisType, correlationBasisEntityType, null, joinBase, 1, true, attributePath);
         CorrelationProvider provider = correlationProviderFactory.create(entityViewConfiguration.getCriteriaBuilder(), entityViewConfiguration.getOptionalParameters());
 
         provider.applyCorrelation(correlationBuilder, correlationBasisExpression);
@@ -170,12 +170,15 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
         if (usesEmbeddingView) {
             maximumSlotsFilled = embeddingViewIdMapperCount == 0 ? 1 : embeddingViewIdMapperCount;
             this.keyIndex = (maximumViewMapperCount - maximumSlotsFilled) + 2 + valueIndex;
+            this.viewIndex = (maximumViewMapperCount - maximumSlotsFilled) + 1 + valueIndex;
         } else if (usesViewRoot) {
             maximumSlotsFilled = viewRootIdMapperCount == 0 ? 1 : viewRootIdMapperCount;
             this.keyIndex = (maximumViewMapperCount - maximumSlotsFilled) + 2 + valueIndex;
+            this.viewIndex = (maximumViewMapperCount - maximumSlotsFilled) + 1 + valueIndex;
         } else {
             maximumSlotsFilled = 0;
             this.keyIndex = maximumViewMapperCount + 1 + valueIndex;
+            this.viewIndex = 1 + valueIndex;
         }
 
         for (int i = maximumSlotsFilled; i < maximumViewMapperCount; i++) {
