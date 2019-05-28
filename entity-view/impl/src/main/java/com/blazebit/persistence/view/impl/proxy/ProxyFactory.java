@@ -84,6 +84,7 @@ import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -526,6 +527,7 @@ public class ProxyFactory {
             // actually has something to offer
             LinkageError error;
             if (ex instanceof LinkageError && (error = (LinkageError) ex) != null
+                    || ex.getCause() instanceof InvocationTargetException && ex.getCause().getCause() instanceof LinkageError && (error = (LinkageError) ex.getCause().getCause()) != null
                     || ex.getCause() instanceof LinkageError && (error = (LinkageError) ex.getCause()) != null) {
                 try {
                     return (Class<? extends T>) pool.getClassLoader().loadClass(proxyClassName);
