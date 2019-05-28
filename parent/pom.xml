@@ -42,7 +42,7 @@
         <version.blazecbav>0.2.0</version.blazecbav>
         <version.blazeutils>0.1.16</version.blazeutils>
         <version.junit>4.12</version.junit>
-        <version.javassist>3.23.1-GA</version.javassist>
+        <version.javassist>3.25.0-GA</version.javassist>
         <!-- 1.18 messed up calculation of load index -->
         <version.bridge-injector>1.17</version.bridge-injector>
         <version.bridge-injector-asm>6.2.1</version.bridge-injector-asm>
