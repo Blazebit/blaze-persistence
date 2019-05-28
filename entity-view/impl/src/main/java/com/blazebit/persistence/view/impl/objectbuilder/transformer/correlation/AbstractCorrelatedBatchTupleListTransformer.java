@@ -396,12 +396,14 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
 
     private void batchLoad(Map<Object, TuplePromise> correlationValues, FixedArrayList batchParameters, FixedArrayList viewRootIds, Object defaultKey, CorrelatedSubqueryViewRootJpqlMacro macro, BatchCorrelationMode batchCorrelationMode) {
         batchParameters.clearRest();
-        if (batchSize > 1 && batchCorrelationMode == BatchCorrelationMode.VALUES) {
-            criteriaBuilder.setParameter(correlationParamName, batchParameters);
-            query.setParameter(correlationParamName, batchParameters);
-        } else {
-            query.setParameter(correlationParamName, batchParameters.get(0));
-            criteriaBuilder.setParameter(correlationParamName, batchParameters.get(0));
+        if (criteriaBuilder.containsParameter(correlationParamName)) {
+            if (batchSize > 1 && batchCorrelationMode == BatchCorrelationMode.VALUES) {
+                criteriaBuilder.setParameter(correlationParamName, batchParameters);
+                query.setParameter(correlationParamName, batchParameters);
+            } else {
+                criteriaBuilder.setParameter(correlationParamName, batchParameters.get(0));
+                query.setParameter(correlationParamName, batchParameters.get(0));
+            }
         }
 
         if (viewRootIds != null) {
