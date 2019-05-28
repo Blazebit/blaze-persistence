@@ -37,17 +37,19 @@ public class SubqueryCorrelationBuilder implements CorrelationBuilder {
     private final Class<?> correlationBasisType;
     private final Class<?> correlationBasisEntity;
     private final String correlationKeyAlias;
+    private final String correlationJoinBase;
     private final int batchSize;
     private final boolean innerJoin;
     private String correlationRoot;
 
-    public SubqueryCorrelationBuilder(FullQueryBuilder<?, ?> criteriaBuilder, String correlationAlias, String correlationResult, Class<?> correlationBasisType, Class<?> correlationBasisEntity, String correlationKeyAlias, int batchSize, boolean innerJoin, String attributePath) {
+    public SubqueryCorrelationBuilder(FullQueryBuilder<?, ?> criteriaBuilder, String correlationAlias, String correlationResult, Class<?> correlationBasisType, Class<?> correlationBasisEntity, String correlationKeyAlias, String correlationJoinBase, int batchSize, boolean innerJoin, String attributePath) {
         this.criteriaBuilder = criteriaBuilder;
         this.correlationAlias = correlationAlias;
         this.correlationResult = correlationResult;
         this.correlationBasisType = correlationBasisType;
         this.correlationBasisEntity = correlationBasisEntity;
         this.correlationKeyAlias = correlationKeyAlias;
+        this.correlationJoinBase = correlationJoinBase;
         this.batchSize = batchSize;
         this.innerJoin = innerJoin;
     }
@@ -85,10 +87,10 @@ public class SubqueryCorrelationBuilder implements CorrelationBuilder {
                 criteriaBuilder.fromValues(correlationBasisType, correlationKeyAlias, batchSize);
             }
 
-            correlationBuilder = (JoinOnBuilder<CorrelationQueryBuilder>) (JoinOnBuilder<?>) criteriaBuilder.innerJoinOn(entityClass, correlationAlias);
+            correlationBuilder = (JoinOnBuilder<CorrelationQueryBuilder>) (JoinOnBuilder<?>) criteriaBuilder.innerJoinOn(correlationJoinBase, entityClass, correlationAlias);
         } else {
             if (innerJoin) {
-                correlationBuilder = (JoinOnBuilder<CorrelationQueryBuilder>) (JoinOnBuilder<?>) criteriaBuilder.innerJoinOn(entityClass, correlationAlias);
+                correlationBuilder = (JoinOnBuilder<CorrelationQueryBuilder>) (JoinOnBuilder<?>) criteriaBuilder.innerJoinOn(correlationJoinBase, entityClass, correlationAlias);
             } else {
                 criteriaBuilder.from(entityClass, correlationAlias);
                 correlationBuilder = criteriaBuilder.getService(JoinOnBuilder.class);
