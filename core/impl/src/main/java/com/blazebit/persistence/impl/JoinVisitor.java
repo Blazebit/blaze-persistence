@@ -44,7 +44,6 @@ import javax.persistence.metamodel.Type;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -137,8 +136,7 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor, Jo
                     // We rewrite the predicate to use correlated subqueries for implicit joins
                     SubqueryInitiatorImpl<Object> subqueryInitiator = (SubqueryInitiatorImpl<Object>) joinManager.getSubqueryInitFactory().createSubqueryInitiator(null, this, true, fromClause);
                     SubqueryBuilderImpl<?> subqueryBuilder = null;
-                    for (Map.Entry<PathExpression, ImplicitJoinCorrelationPathReplacementVisitor.CorrelationTransformEntry> entry : correlationPathReplacementVisitor.getPathsToCorrelate().entrySet()) {
-                        ImplicitJoinCorrelationPathReplacementVisitor.CorrelationTransformEntry correlationTransformEntry = entry.getValue();
+                    for (ImplicitJoinCorrelationPathReplacementVisitor.CorrelationTransformEntry correlationTransformEntry : correlationPathReplacementVisitor.getPathsToCorrelate()) {
                         String alias = correlationTransformEntry.getAlias();
                         String correlationExpression = correlationTransformEntry.getCorrelationExpression();
                         if (subqueryBuilder == null) {

@@ -39,6 +39,7 @@ public class Order implements Serializable {
 
     private Long id;
     private Integer number;
+    private Integer number2;
     private Set<OrderPosition> orderPositions = new HashSet<OrderPosition>(0);
     
     @Id
@@ -58,6 +59,15 @@ public class Order implements Serializable {
 
     public void setNumber(Integer number) {
         this.number = number;
+    }
+
+    @Column(name = "order_nr2")
+    public Integer getNumber2() {
+        return number2;
+    }
+
+    public void setNumber2(Integer number2) {
+        this.number2 = number2;
     }
 
     @OneToMany(mappedBy = "order")
