@@ -382,20 +382,38 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         Collection<Object> removedObjects = Collections.emptyList();
         if (fusedCollectionActions != null) {
             if (fusedCollectionActions.getRemoveCount() > 0) {
-                deleteCb = createCollectionDeleter(context);
+                if (inverseFlusher == null) {
+                    deleteCb = createCollectionDeleter(context);
+                }
                 if (removeSpecific) {
-                    String entityIdAttributeName = elementDescriptor.getEntityIdAttributeName();
-                    if (entityIdAttributeName != null) {
-                        removedObjects = appendRemoveSpecific(context, deleteCb, fusedCollectionActions);
-                        removedAll = false;
-                        if (removedObjects.isEmpty()) {
-                            deleteCb = null;
+                    if (inverseFlusher == null) {
+                        String entityIdAttributeName = elementDescriptor.getEntityIdAttributeName();
+                        if (entityIdAttributeName != null) {
+                            removedObjects = appendRemoveSpecific(context, deleteCb, fusedCollectionActions);
+                            removedAll = false;
+                            if (removedObjects.isEmpty()) {
+                                deleteCb = null;
+                            }
+                        }
+                    } else {
+                        for (Object o : fusedCollectionActions.getRemoved(context)) {
+                            inverseFlusher.flushQuerySetElement(context, o, ownerView, null, null, null);
                         }
                     }
+                } else if (inverseFlusher != null) {
+                    for (Object o : value) {
+                        inverseFlusher.flushQuerySetElement(context, o, ownerView, null, null, null);
+                    }
+                    return true;
                 }
             } else {
                 removedAll = false;
             }
+        } else if (inverseFlusher != null) {
+            for (Object o : value) {
+                inverseFlusher.flushQuerySetElement(context, o, ownerView, null, null, null);
+            }
+            return true;
         } else {
             deleteCb = createCollectionDeleter(context);
         }
@@ -422,7 +440,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
     protected void addElements(UpdateContext context, Object ownerView, Object view, Collection<Object> removedAllObjects, boolean flushAtOnce, V value, List<Object> embeddablesToUpdate, FusedCollectionActions fusedCollectionActions) {
         Collection<Object> elementsToAdd;
         if (fusedCollectionActions == null || !removedAllObjects.isEmpty()) {
-            if (elementDescriptor.getViewToEntityMapper() == null) {
+            if (elementDescriptor.getViewToEntityMapper() == null || inverseFlusher != null) {
                 elementsToAdd = (Collection<Object>) value;
             } else {
                 elementsToAdd = getEntityReferencesForCollectionOperation(context, (Collection<Object>) value);
@@ -430,59 +448,69 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
             removedAllObjects.removeAll(value);
         } else {
             removedAllObjects.removeAll(fusedCollectionActions.getAdded());
-            elementsToAdd = fusedCollectionActions.getAdded(context);
+            if (inverseFlusher == null) {
+                elementsToAdd = fusedCollectionActions.getAdded(context);
+            } else {
+                elementsToAdd = fusedCollectionActions.getAdded();
+            }
         }
         if (elementsToAdd == null || elementsToAdd.isEmpty() || elementsToAdd.size() == 1 && elementsToAdd.iterator().next() == null) {
             return;
         }
 
         String mapping = getMapping();
-        InsertCriteriaBuilder<?> insertCb = context.getEntityViewManager().getCriteriaBuilderFactory().insertCollection(context.getEntityManager(), ownerEntityClass, mapping);
+        if (inverseFlusher == null) {
+            InsertCriteriaBuilder<?> insertCb = context.getEntityViewManager().getCriteriaBuilderFactory().insertCollection(context.getEntityManager(), ownerEntityClass, mapping);
 
-        String entityIdAttributeName = elementDescriptor.getEntityIdAttributeName();
-        if (flushAtOnce) {
-            if (entityIdAttributeName == null) {
-                insertCb.fromValues(ownerEntityClass, mapping, "val", elementsToAdd);
+            String entityIdAttributeName = elementDescriptor.getEntityIdAttributeName();
+            if (flushAtOnce) {
+                if (entityIdAttributeName == null) {
+                    insertCb.fromValues(ownerEntityClass, mapping, "val", elementsToAdd);
+                } else {
+                    insertCb.fromIdentifiableValues((Class<Object>) elementDescriptor.getJpaType(), "val", elementsToAdd);
+                }
             } else {
-                insertCb.fromIdentifiableValues((Class<Object>) elementDescriptor.getJpaType(), "val", elementsToAdd);
+                if (entityIdAttributeName == null) {
+                    insertCb.fromValues(ownerEntityClass, mapping, "val", 1);
+                } else {
+                    insertCb.fromIdentifiableValues((Class<Object>) elementDescriptor.getJpaType(), "val", 1);
+                }
             }
-        } else {
-            if (entityIdAttributeName == null) {
-                insertCb.fromValues(ownerEntityClass, mapping, "val", 1);
-            } else {
-                insertCb.fromIdentifiableValues((Class<Object>) elementDescriptor.getJpaType(), "val", 1);
+            for (int i = 0; i < ownerIdBindFragments.length; i += 2) {
+                insertCb.bind(ownerIdBindFragments[i]).select(ownerIdBindFragments[i + 1]);
             }
-        }
-        for (int i = 0; i < ownerIdBindFragments.length; i += 2) {
-            insertCb.bind(ownerIdBindFragments[i]).select(ownerIdBindFragments[i + 1]);
-        }
-        insertCb.bind(mapping).select("val");
-        Query insertQuery = insertCb.getQuery();
-        ownerIdFlusher.flushQuery(context, null, insertQuery, ownerView, view, ownerIdFlusher.getViewAttributeAccessor().getValue(ownerView), null);
+            insertCb.bind(mapping).select("val");
+            Query insertQuery = insertCb.getQuery();
+            ownerIdFlusher.flushQuery(context, null, insertQuery, ownerView, view, ownerIdFlusher.getViewAttributeAccessor().getValue(ownerView), null);
 
-        boolean checkTransient = elementDescriptor.isJpaEntity() && !elementDescriptor.shouldJpaPersist();
-        if (flushAtOnce) {
-            if (checkTransient) {
+            boolean checkTransient = elementDescriptor.isJpaEntity() && !elementDescriptor.shouldJpaPersist();
+            if (flushAtOnce) {
+                if (checkTransient) {
+                    for (Object o : elementsToAdd) {
+                        if (elementDescriptor.getBasicUserType().shouldPersist(o)) {
+                            throw new IllegalStateException("Collection " + attributeName + " references an unsaved transient instance - save the transient instance before flushing: " + o);
+                        }
+                    }
+                }
+                insertQuery.executeUpdate();
+            } else {
+                // TODO: Use batching when we implement #657
+                Object[] singletonArray = new Object[1];
+                List<Object> singletonList = Arrays.asList(singletonArray);
                 for (Object o : elementsToAdd) {
-                    if (elementDescriptor.getBasicUserType().shouldPersist(o)) {
-                        throw new IllegalStateException("Collection " + attributeName + " references an unsaved transient instance - save the transient instance before flushing: " + o);
+                    if (o != null) {
+                        if (checkTransient && elementDescriptor.getBasicUserType().shouldPersist(o)) {
+                            throw new IllegalStateException("Collection " + attributeName + " references an unsaved transient instance - save the transient instance before flushing: " + o);
+                        }
+                        singletonArray[0] = o;
+                        insertQuery.setParameter("val", singletonList);
+                        insertQuery.executeUpdate();
                     }
                 }
             }
-            insertQuery.executeUpdate();
         } else {
-            // TODO: Use batching when we implement #657
-            Object[] singletonArray = new Object[1];
-            List<Object> singletonList = Arrays.asList(singletonArray);
             for (Object o : elementsToAdd) {
-                if (o != null) {
-                    if (checkTransient && elementDescriptor.getBasicUserType().shouldPersist(o)) {
-                        throw new IllegalStateException("Collection " + attributeName + " references an unsaved transient instance - save the transient instance before flushing: " + o);
-                    }
-                    singletonArray[0] = o;
-                    insertQuery.setParameter("val", singletonList);
-                    insertQuery.executeUpdate();
-                }
+                inverseFlusher.flushQuerySetElement(context, o, null, ownerView, null, null);
             }
         }
     }

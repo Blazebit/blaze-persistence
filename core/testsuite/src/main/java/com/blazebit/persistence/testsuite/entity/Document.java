@@ -24,6 +24,7 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
@@ -435,6 +436,7 @@ public class Document extends Ownable implements Serializable {
     }
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "responsible_person_id")
     public Person getResponsiblePerson() {
         return responsiblePerson;
     }

@@ -34,8 +34,6 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 
 /**
@@ -75,6 +73,7 @@ public class EntityViewUpdateSubviewInverseSimpleTest extends AbstractEntityView
         // When
         UpdatableDocumentView document = evm.create(UpdatableDocumentView.class);
         document.setName("newDoc123");
+        document.setOwner(getP1View(PersonIdView.class));
         newPerson.getOwnedDocuments2().add(document);
         update(newPerson);
 
@@ -84,7 +83,7 @@ public class EntityViewUpdateSubviewInverseSimpleTest extends AbstractEntityView
         // Then
         restartTransaction();
         Document newDocument = em.find(Document.class, document.getId());
-        Assert.assertEquals(newPerson.getId(), newDocument.getOwner().getId());
+        Assert.assertEquals(newPerson.getId(), newDocument.getResponsiblePerson().getId());
     }
 
     @Test
@@ -94,6 +93,7 @@ public class EntityViewUpdateSubviewInverseSimpleTest extends AbstractEntityView
         newPerson.setName("newPers1");
         UpdatableDocumentView document = evm.create(UpdatableDocumentView.class);
         document.setName("newDoc123");
+        document.setOwner(getP1View(PersonIdView.class));
         newPerson.getOwnedDocuments2().add(document);
         update(newPerson);
 
@@ -104,7 +104,7 @@ public class EntityViewUpdateSubviewInverseSimpleTest extends AbstractEntityView
         // Then
         restartTransaction();
         Document newDocument = em.find(Document.class, document.getId());
-        Assert.assertEquals(newPerson.getId(), newDocument.getOwner().getId());
+        Assert.assertEquals(newPerson.getId(), newDocument.getResponsiblePerson().getId());
     }
 
     @Override
