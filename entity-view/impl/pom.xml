@@ -137,6 +137,7 @@
                                     module ${module.name} {
                                         requires java.sql;
                                         requires java.persistence;
+                                        requires org.javassist;
                                         requires com.blazebit.common.utils;
                                         requires com.blazebit.persistence.core;
                                         requires com.blazebit.persistence.core.parser;
