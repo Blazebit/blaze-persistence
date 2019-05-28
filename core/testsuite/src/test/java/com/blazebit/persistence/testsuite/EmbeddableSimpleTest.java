@@ -101,7 +101,7 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
     public void testCyclicDependencyInOnClauseImplicitJoin2() {
         CriteriaBuilder<OrderPosition> criteria = cbf.create(em, OrderPosition.class, "p");
         criteria.leftJoinDefaultOn("p.order", "o")
-                .on("o.orderPositions.head.number").gt(2)
+                    .on("o.orderPositions.head.number").gt(2)
                 .end();
         criteria.getResultList();
     }
@@ -112,7 +112,7 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
     public void testCyclicDependencyInOnClauseImplicitJoin3() {
         CriteriaBuilder<OrderPosition> criteria = cbf.create(em, OrderPosition.class, "p");
         criteria.leftJoinDefaultOn("p.order", "o")
-                .on("TREAT(o AS Order).orderPositions.head.number").gt(2)
+                    .on("TREAT(o AS Order).orderPositions.head.number").gt(2)
                 .end();
         criteria.getResultList();
     }
@@ -123,7 +123,7 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
     public void testCyclicDependencyInOnClauseImplicitJoin4() {
         CriteriaBuilder<OrderPosition> criteria = cbf.create(em, OrderPosition.class, "p");
         criteria.leftJoinDefaultOn("p.order", "o")
-                .on("TREAT(o.orderPositions AS OrderPosition).head.number").gt(2)
+                    .on("TREAT(o.orderPositions AS OrderPosition).head.number").gt(2)
                 .end();
         criteria.getResultList();
     }
@@ -134,7 +134,7 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
     public void testCyclicDependencyInOnClauseImplicitJoin5() {
         CriteriaBuilder<Order> criteria = cbf.create(em, Order.class, "o");
         criteria.leftJoinDefaultOn("o.orderPositions", "p")
-                .on("o.orderPositions.id.position").gt(2)
+                    .on("o.orderPositions.id.position").gt(2)
                 .end();
         criteria.getResultList();
     }
@@ -145,7 +145,7 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
     public void testCyclicDependencyInOnClauseImplicitJoin6() {
         CriteriaBuilder<Order> criteria = cbf.create(em, Order.class, "o");
         criteria.leftJoinDefaultOn("o.orderPositions", "p")
-                .on("o.orderPositions.head.number").gt(2)
+                    .on("o.orderPositions.head.number").gt(2)
                 .end();
         criteria.getResultList();
     }
@@ -157,7 +157,7 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
         CriteriaBuilder<Order> criteria = cbf.create(em, Order.class, "o");
         criteria.leftJoinDefault("o.orderPositions", "p")
                 .leftJoinOn("p", Order.class, "o2")
-                .on("o2.id").eqExpression("o.orderPositions.id.orderId")
+                    .on("o2.id").eqExpression("o.orderPositions.id.orderId")
                 .end();
         assertEquals(
                 "SELECT o FROM Order o " +
@@ -175,7 +175,7 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
         CriteriaBuilder<Order> criteria = cbf.create(em, Order.class, "o");
         criteria.leftJoinDefault("o.orderPositions", "p")
                 .leftJoinOn("p", Order.class, "o2")
-                .on("o2.number").eqExpression("o.orderPositions.order.number")
+                    .on("o2.number").eqExpression("o.orderPositions.order.number")
                 .end();
         assertEquals(
                 "SELECT o FROM Order o " +
@@ -197,7 +197,7 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
         criteria.leftJoinDefault("o.orderPositions", "p")
                 .leftJoinDefault("p.order", "o1")
                 .leftJoinOn("o1", Order.class, "o2")
-                .on("o2.number").eqExpression("o.orderPositions.order.number")
+                    .on("o2.number").eqExpression("o.orderPositions.order.number")
                 .end();
         assertEquals(
                 "SELECT o FROM Order o " +
@@ -215,10 +215,10 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
     public void testCyclicDependencyInOnClauseImplicitJoin10() {
         CriteriaBuilder<Order> criteria = cbf.create(em, Order.class, "o");
         criteria.leftJoinDefaultOn("o.orderPositions", "p")
-                .on("p.id.position").gt(1)
+                    .on("p.id.position").gt(1)
                 .end()
                 .leftJoinOn("p", Order.class, "o2")
-                .on("o2.number").eqExpression("o.orderPositions.order.number")
+                    .on("o2.number").eqExpression("o.orderPositions.order.number")
                 .end();
         String subquery;
         if (jpaProvider.needsCorrelationPredicateWhenCorrelatingWithWhereClause()) {
@@ -230,6 +230,40 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
             subquery = "SELECT 1 FROM o.orderPositions _synth_subquery_0 " +
                     "JOIN _synth_subquery_0.order order_1 " +
                     "WHERE o2.number = order_1.number";
+        }
+        assertEquals(
+                "SELECT o FROM Order o " +
+                        "LEFT JOIN o.orderPositions p ON (p.id.position > :param_0) " +
+                        "LEFT JOIN Order o2 ON (EXISTS (" +
+                        subquery +
+                        "))",
+                criteria.getQueryString()
+        );
+        criteria.getResultList();
+    }
+
+    @Test
+    // Prior to Hibernate 5.1 it wasn't possible reference other from clause elements in the ON clause which is required to support implicit joins in ON clauses
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class })
+    public void testCyclicDependencyInOnClauseImplicitJoin11() {
+        CriteriaBuilder<Order> criteria = cbf.create(em, Order.class, "o");
+        criteria.leftJoinDefaultOn("o.orderPositions", "p")
+                    .on("p.id.position").gt(1)
+                .end()
+                .leftJoinOn("p", Order.class, "o2")
+                    .on("o2.number").eqExpression("o.orderPositions.order.number")
+                    .on("o2.number").eqExpression("o.orderPositions.order.number2")
+                .end();
+        String subquery;
+        if (jpaProvider.needsCorrelationPredicateWhenCorrelatingWithWhereClause()) {
+            subquery = "SELECT 1 FROM OrderPosition _synth_subquery_0 " +
+                    "JOIN _synth_subquery_0.order order_1 " +
+                    "WHERE _synth_subquery_0.order.id = o.id " +
+                    "AND o2.number = order_1.number AND o2.number = order_1.number2";
+        } else {
+            subquery = "SELECT 1 FROM o.orderPositions _synth_subquery_0 " +
+                    "JOIN _synth_subquery_0.order order_1 " +
+                    "WHERE o2.number = order_1.number AND o2.number = order_1.number2";
         }
         assertEquals(
                 "SELECT o FROM Order o " +

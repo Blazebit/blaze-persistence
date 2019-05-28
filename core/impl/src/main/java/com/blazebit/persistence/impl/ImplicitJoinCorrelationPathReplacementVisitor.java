@@ -24,6 +24,8 @@ import com.blazebit.persistence.parser.expression.PropertyExpression;
 import com.blazebit.persistence.parser.expression.TreatExpression;
 import com.blazebit.persistence.parser.predicate.Predicate;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.ListIterator;
@@ -38,14 +40,16 @@ import java.util.Map;
  */
 public class ImplicitJoinCorrelationPathReplacementVisitor extends InplaceModificationResultVisitorAdapter {
 
-    private final Map<PathExpression, CorrelationTransformEntry> pathsToCorrelate;
+    private final Map<PathExpression, CorrelationTransformEntry> pathIdentitiesToCorrelate;
+    private final Map<String, CorrelationTransformEntry> pathsToCorrelate;
 
     public ImplicitJoinCorrelationPathReplacementVisitor() {
-        this.pathsToCorrelate = new IdentityHashMap<>();
+        this.pathIdentitiesToCorrelate = new IdentityHashMap<>();
+        this.pathsToCorrelate = new HashMap<>();
     }
 
     public void addPathExpression(PathExpression pathExpression, ImplicitJoinNotAllowedException ex) {
-        if (!pathsToCorrelate.containsKey(pathExpression)) {
+        if (!pathIdentitiesToCorrelate.containsKey(pathExpression)) {
             StringBuilder sb = new StringBuilder();
             if (ex.getTreatType() != null) {
                 sb.append("TREAT(");
@@ -57,7 +61,15 @@ public class ImplicitJoinCorrelationPathReplacementVisitor extends InplaceModifi
                 sb.append(" AS ").append(ex.getTreatType()).append(')');
             }
             String correlationExpression = sb.toString();
-            String alias = "_synth_subquery_" + pathsToCorrelate.size();
+
+            String alias;
+            CorrelationTransformEntry existingEntry = pathsToCorrelate.get(correlationExpression);
+            if (existingEntry != null) {
+                alias = existingEntry.alias;
+            } else {
+                alias = "_synth_subquery_" + pathIdentitiesToCorrelate.size();
+            }
+
             PathExpression transformedExpression = pathExpression.clone(false);
             // For now, we only support 2 levels of treats, but this obviously should be improved
             if (transformedExpression.getExpressions().get(0) instanceof TreatExpression) {
@@ -94,7 +106,11 @@ public class ImplicitJoinCorrelationPathReplacementVisitor extends InplaceModifi
                 removeMatchingJoinAttributePathElements(ex, transformedExpression);
                 transformedExpression.getExpressions().add(0, new PropertyExpression(alias));
             }
-            pathsToCorrelate.put(pathExpression, new CorrelationTransformEntry(alias, correlationExpression, transformedExpression));
+            CorrelationTransformEntry correlationTransformEntry = new CorrelationTransformEntry(alias, correlationExpression, transformedExpression);
+            pathIdentitiesToCorrelate.put(pathExpression, correlationTransformEntry);
+            if (existingEntry == null) {
+                pathsToCorrelate.put(correlationExpression, correlationTransformEntry);
+            }
         }
     }
 
@@ -112,19 +128,20 @@ public class ImplicitJoinCorrelationPathReplacementVisitor extends InplaceModifi
         }
     }
 
-    public Map<PathExpression, CorrelationTransformEntry> getPathsToCorrelate() {
-        return pathsToCorrelate;
+    public Collection<CorrelationTransformEntry> getPathsToCorrelate() {
+        return pathsToCorrelate.values();
     }
 
     public Predicate rewritePredicate(Predicate predicate) {
         Predicate newPredicate = (Predicate) predicate.accept(this);
+        pathIdentitiesToCorrelate.clear();
         pathsToCorrelate.clear();
         return newPredicate;
     }
 
     @Override
     public Expression visit(PathExpression expression) {
-        CorrelationTransformEntry entry = pathsToCorrelate.get(expression);
+        CorrelationTransformEntry entry = pathIdentitiesToCorrelate.get(expression);
         if (entry == null) {
             return super.visit(expression);
         } else {
