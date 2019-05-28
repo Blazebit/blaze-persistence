@@ -92,7 +92,7 @@ public class Person extends LongSequenceEntity {
 
     @OneToMany
     @JoinColumn(
-            name = "owner_id",
+            name = "responsible_person_id",
             referencedColumnName = "id"
     )
     public Set<Document> getOwnedDocuments2() {

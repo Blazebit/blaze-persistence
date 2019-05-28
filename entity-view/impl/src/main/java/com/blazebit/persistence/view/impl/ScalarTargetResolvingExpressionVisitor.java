@@ -370,8 +370,9 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
         if (!(currentPosition.getAttribute() instanceof MapAttribute<?, ?, ?>)) {
             invalid(expression, "Does not resolve to java.util.Map!");
         } else {
-            currentPosition.setAttribute(new MapKeyAttribute<>((MapAttribute<?, Object, ?>) currentPosition.getAttribute()));
-            currentPosition.setCurrentType(((MapAttribute<?, Object, ?>) currentPosition.getAttribute()).getKeyType());
+            MapKeyAttribute<Object, Object> keyAttribute = new MapKeyAttribute<>((MapAttribute<?, Object, ?>) currentPosition.getAttribute());
+            currentPosition.setAttribute(keyAttribute);
+            currentPosition.setCurrentType(keyAttribute.getType());
         }
     }
 
