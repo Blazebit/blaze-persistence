@@ -9,14 +9,32 @@ Not yet released
 ### New features
 
 * Added startup check for accidental polymorphic CTEs
+* Add new API that allows to specify a collection valued parameter for an IN predicate
+* Upgrade Javassist to 3.25.0-GA
 
 ### Bug fixes
 
 * Fix support for de-referencing map key entity type expressions
+* Fix support for map key subviews
 * Fix for absolute paths referring to dependent joins in ON clauses
 * Attributes having the same name as a correlation basis alias aren't prefixed in the correlation expression
 * Allow use of `TREAT` operator in subview mapping
 * Fix invalid reduction of collection cardinality due to non-consideration of the parent tuple identity
+* Support correlating `TREAT` expression
+* Support using CTE entity type for VALUES clause in INSERT-SELECT
+* Fix integration issue in `HibernateJpqlFunctionAdapter` with Hibernate 5.3
+* Fix issues in `ConstantifiedJoinNodeAttributeCollector` happening when paginating while using an embeddable in the WHERE clause
+* Don't ignore offset query parameter in spring data rest integration
+* Deterministically resolve `EntityManager` in spring data integration
+* Make sure mapping parameters are copied during entity view conversion
+* Fix query flushing of inverse collections in updatable entity views
+* Initialize non-mutable attributes with proper defaults in entity views created via `EntityViewManager.create()`
+* Fix empty correlations due to wrong view index calculation in subselect correlation provider when using `EMBEDDING_VIEW`
+* Reuse correlated attributes during EXISTS subquery rewrite for join ON clause predicates
+* Handle new exception thrown by Javassist 3.24.0-GA when class definition fails
+* Fix support for correlation that don't make use of the correlation key
+* Make sure nested empty collections work properly
+* Clause dependencies are wrongly propagated leading to cardinality mandatory joins not being rendered when copying queries
 
 ### Backwards-incompatible changes
 

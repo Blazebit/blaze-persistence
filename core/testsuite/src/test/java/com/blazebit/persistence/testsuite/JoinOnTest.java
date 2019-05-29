@@ -148,7 +148,7 @@ public class JoinOnTest extends AbstractCoreTest {
                 .end();
         criteriaBuilder.select("d2.name");
 
-        String expectedObjectQuery = "SELECT " + joinAliasValue("d2", "name") + " FROM Document e "
+        String expectedObjectQuery = "SELECT d2.name FROM Document e "
                 + "LEFT JOIN e.responsiblePerson responsiblePerson_1 "
                 + "LEFT JOIN responsiblePerson_1.friend friend_1 "
                 + "JOIN Document d2" + onClause("friend_1.name = d2.name")
