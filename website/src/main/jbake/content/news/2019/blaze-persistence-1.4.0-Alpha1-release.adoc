@@ -1,0 +1,31 @@
+= Blaze-Persistence 1.4.0-Alpha1 Release
+Christian Beikov
+2019-05-29 0
+:description: Blaze-Persistence version 1.4.0-Alpha1 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+We just released Blaze-Persistence version 1.4.0-Alpha1, again with a lot of bug fixes especially in the Spring Data integration.
+Don't be scared about the Alpha bit. By using an Alpha qualifier, we just want to show that new APIs are not final yet, although in this case, the newly introduces APIs are.
+It's completely backwards compatible and as always, we advise you to update quickly to avoid getting bitten by the bugs ;)
+
+The most notable bug fixes are:
+
+* https://github.com/Blazebit/blaze-persistence/issues/812[*#812*, window="_blank"] Clause dependencies are wrongly propagated leading to cardinality mandatory joins not being rendered
+* https://github.com/Blazebit/blaze-persistence/issues/803[*#803*, window="_blank"] Reuse correlated attributes during EXISTS subquery rewrite for implicit joins in ON clause
+* https://github.com/Blazebit/blaze-persistence/issues/801[*#801*, window="_blank"] Wrong calculation of view index in subselect correlator leads to empty correlations
+* https://github.com/Blazebit/blaze-persistence/issues/797[*#797*, window="_blank"] EntityManager resolving in spring data integration is random
+* https://github.com/Blazebit/blaze-persistence/issues/795[*#795*, window="_blank"] Offset query parameter ignored by spring data +++<!-- PREVIEW-SUFFIX --><!-- </p></li></ul></div> --><!-- PREVIEW-END -->+++rest integration
+* https://github.com/Blazebit/blaze-persistence/issues/793[*#793*, window="_blank"] Embeddable attribute not found when paginating with identifier expressions
+* https://github.com/Blazebit/blaze-persistence/issues/792[*#792*, window="_blank"] Init non-mutable attributes in create constructor
+* https://github.com/Blazebit/blaze-persistence/issues/788[*#733*, window="_blank"] HibernateJpqlFunctionAdapter broken for Hibernate 5.3
+
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#140-alpha1[changelog, window="_blank"] for a full list of changes and improvements.
+
+Thanks to all contributors for reporting issues and helping us understand the root causes.
+
+I'm on vacation for about 1 month now, so the next 1.4 release won't happen before end of July.

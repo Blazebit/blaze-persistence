@@ -8,6 +8,22 @@ Not yet released
 
 ### New features
 
+None
+
+### Bug fixes
+
+None
+
+### Backwards-incompatible changes
+
+None
+
+## 1.4.0-Alpha1
+
+Not yet released
+
+### New features
+
 * Added startup check for accidental polymorphic CTEs
 * Add new API that allows to specify a collection valued parameter for an IN predicate
 * Upgrade Javassist to 3.25.0-GA
