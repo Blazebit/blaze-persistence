@@ -14,33 +14,31 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.collections.subview.model.variations;
+package com.blazebit.persistence.view.testsuite.collections.subview.model;
+
+import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.FetchStrategy;
+import com.blazebit.persistence.view.IdMapping;
+import com.blazebit.persistence.view.Mapping;
+import com.blazebit.persistence.view.UpdatableEntityView;
+import com.blazebit.persistence.view.testsuite.collections.entity.simple.PersonForCollections;
 
 import java.util.List;
 import java.util.Set;
 
-import com.blazebit.persistence.view.CollectionMapping;
-import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.IdMapping;
-import com.blazebit.persistence.view.testsuite.collections.entity.simple.PersonForCollections;
-import com.blazebit.persistence.view.testsuite.collections.subview.model.PersonForCollectionsListNestedView;
-import com.blazebit.persistence.view.testsuite.collections.subview.model.SubviewDocumentCollectionsView;
-
 /**
  *
  * @author Christian Beikov
- * @since 1.0.0
+ * @since 1.4.0
  */
+@UpdatableEntityView
 @EntityView(PersonForCollections.class)
-public interface PersonForCollectionsMasterView {
-    
+public interface PersonForCollectionsListNestedView {
+
     @IdMapping
     public Long getId();
 
     public String getName();
 
-    @CollectionMapping(forceUnique = true, ignoreIndex = true)
-    public Set<? extends SubviewDocumentCollectionsView> getOwnedDocuments();
-
-    public List<PersonForCollectionsListNestedView> getSomeCollection();
+    public List<SubviewPersonForCollectionsView> getSomeCollection();
 }
