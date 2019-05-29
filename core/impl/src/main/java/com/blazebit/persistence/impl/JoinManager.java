@@ -2078,7 +2078,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             // Don't forget to update the clause dependencies, but only for normal attribute accesses, that way paginated queries can prevent joins in certain cases
             if (fromClause != null) {
                 try {
-                    result.baseNode.updateClauseDependencies(fromClause, false, new LinkedHashSet<JoinNode>());
+                    result.baseNode.updateClauseDependencies(fromClause, new LinkedHashSet<JoinNode>());
                 } catch (IllegalStateException ex) {
                     throw new IllegalArgumentException("Implicit join in expression '" + expression + "' introduces cyclic join dependency!", ex);
                 }
@@ -2439,7 +2439,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             }
 
         });
-        joinNode.updateClauseDependencies(ClauseType.JOIN, false, new LinkedHashSet<JoinNode>());
+        joinNode.updateClauseDependencies(ClauseType.JOIN, new LinkedHashSet<JoinNode>());
     }
 
     private void generateAndApplyOnPredicate(JoinNode joinNode, ArrayExpression arrayExpr) {
@@ -2990,7 +2990,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
             });
             joinNode.setOnPredicate((CompoundPredicate) predicate);
-            joinNode.updateClauseDependencies(ClauseType.JOIN, false, new LinkedHashSet<JoinNode>());
+            joinNode.updateClauseDependencies(ClauseType.JOIN, new LinkedHashSet<JoinNode>());
         }
     }
 }

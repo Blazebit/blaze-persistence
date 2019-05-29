@@ -18,7 +18,13 @@ package com.blazebit.persistence.testsuite;
 
 import static org.junit.Assert.assertEquals;
 
+import com.blazebit.persistence.PaginatedCriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus4;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import org.junit.Test;
 
 import com.blazebit.persistence.CriteriaBuilder;
@@ -127,5 +133,28 @@ public class JoinOnTest extends AbstractCoreTest {
                 "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN partners_1.localized l"
                         + onClause(joinAliasValue("l") + " IN (SELECT p.name FROM Person p)"), crit.getQueryString());
         crit.getResultList();
+    }
+
+    @Test
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class})
+    public void testJoinAvoidance() {
+        CriteriaBuilder<String> crit = cbf.create(em, String.class).from(Document.class, "e");
+        crit.select("e.responsiblePerson.name");
+        crit.orderByAsc("e.id");
+
+        CriteriaBuilder<String> criteriaBuilder = crit.copy(String.class);
+        criteriaBuilder.innerJoinOn("e.responsiblePerson.friend", Document.class, "d2")
+                .on("e.responsiblePerson.friend.name").eqExpression("d2.name")
+                .end();
+        criteriaBuilder.select("d2.name");
+
+        String expectedObjectQuery = "SELECT " + joinAliasValue("d2", "name") + " FROM Document e "
+                + "LEFT JOIN e.responsiblePerson responsiblePerson_1 "
+                + "LEFT JOIN responsiblePerson_1.friend friend_1 "
+                + "JOIN Document d2" + onClause("friend_1.name = d2.name")
+                + " ORDER BY e.id ASC";
+
+        assertEquals(expectedObjectQuery, criteriaBuilder.getQueryString());
+        criteriaBuilder.getResultList();
     }
 }

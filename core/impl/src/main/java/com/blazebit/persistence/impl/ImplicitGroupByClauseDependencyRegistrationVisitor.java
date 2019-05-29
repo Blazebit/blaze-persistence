@@ -39,7 +39,7 @@ class ImplicitGroupByClauseDependencyRegistrationVisitor extends VisitorAdapter 
             // This can only be a select alias
             ((SelectInfo) aliasManager.getAliasInfo(expr.toString())).getExpression().accept(this);
         } else {
-            node.updateClauseDependencies(ClauseType.GROUP_BY);
+            node.updateClauseDependencies(ClauseType.GROUP_BY, null);
         }
     }
 
