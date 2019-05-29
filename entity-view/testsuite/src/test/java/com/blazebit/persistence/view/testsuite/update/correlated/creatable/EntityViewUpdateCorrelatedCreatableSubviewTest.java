@@ -35,8 +35,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.*;
 
 /**
  *
@@ -217,6 +216,7 @@ public class EntityViewUpdateCorrelatedCreatableSubviewTest extends AbstractEnti
         // When
         PersonCreateView personCreateView = evm.create(PersonCreateView.class);
         personCreateView.setName("newPers");
+        assertNotNull(personCreateView.getLocalized());
         docView.setResponsiblePerson(personCreateView);
         update(docView);
 
