@@ -926,70 +926,12 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 }
             }
             if (!rootNode.getEntityJoinNodes().isEmpty()) {
-                // TODO: Fix this with #216
-                boolean isCollection = true;
-                if (mainQuery.jpaProvider.supportsEntityJoin() && !emulateJoins) {
-                    valuesNode = applyJoins(sb, rootNode.getAliasInfo(), new ArrayList<>(rootNode.getEntityJoinNodes()), isCollection, clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes, externalRepresentation);
+                if (tempSb == null) {
+                    tempSb = new StringBuilder();
                 } else {
-                    Set<JoinNode> entityNodes = rootNode.getEntityJoinNodes();
-                    for (JoinNode entityNode : entityNodes) {
-                        if (entityNode.getJoinType() != JoinType.INNER) {
-                            throw new IllegalArgumentException("Can't emulate outer join for entity join node: " + entityNode);
-                        }
-
-                        // Collect the join nodes referring to collections
-                        if (collectCollectionJoinNodes && isCollection) {
-                            // TODO: Maybe we can improve this and treat array access joins like non-collection join nodes
-                            collectionJoinNodes.add(entityNode);
-                        }
-
-                        sb.append(", ");
-
-                        EntityType<?> type = entityNode.getEntityType();
-                        sb.append(type.getName());
-
-                        sb.append(' ');
-
-                        if (aliasPrefix != null) {
-                            sb.append(aliasPrefix);
-                        }
-
-                        sb.append(entityNode.getAliasInfo().getAlias());
-
-                        // TODO: not sure if needed since applyImplicitJoins will already invoke that
-                        entityNode.registerDependencies();
-
-                        if (entityNode.getOnPredicate() != null && !entityNode.getOnPredicate().getChildren().isEmpty()) {
-                            if (tempSb == null) {
-                                tempSb = new StringBuilder();
-                            } else {
-                                tempSb.setLength(0);
-                            }
-
-                            if (valuesNode != null) {
-                                renderValuesClausePredicate(tempSb, valuesNode, valuesNode.getAlias(), externalRepresentation);
-                                whereConjuncts.add(tempSb.toString());
-                                tempSb.setLength(0);
-                                valuesNode = null;
-                            }
-                            queryGenerator.setClauseType(ClauseType.JOIN);
-                            queryGenerator.setQueryBuffer(tempSb);
-                            SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.PREDICATE);
-                            queryGenerator.generate(entityNode.getOnPredicate());
-                            queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
-                            queryGenerator.setClauseType(null);
-                            whereConjuncts.add(tempSb.toString());
-                        }
-
-                        renderedJoins.add(entityNode);
-                        if (!entityNode.getNodes().isEmpty()) {
-                            valuesNode = applyJoins(sb, entityNode.getAliasInfo(), entityNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes, externalRepresentation);
-                        }
-                        for (JoinNode treatedNode : entityNode.getTreatedJoinNodes().values()) {
-                            valuesNode = applyJoins(sb, treatedNode.getAliasInfo(), treatedNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes, externalRepresentation);
-                        }
-                    }
+                    tempSb.setLength(0);
                 }
+                valuesNode = applyEntityJoins(sb, tempSb, clauseExclusions, aliasPrefix, rootNode, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes, externalRepresentation);
             }
 
             if (valuesNode != null) {
@@ -1005,6 +947,73 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         }
 
         return collectionJoinNodes;
+    }
+
+    private JoinNode applyEntityJoins(StringBuilder sb, StringBuilder tempSb, Set<ClauseType> clauseExclusions, String aliasPrefix, JoinNode rootNode, boolean collectCollectionJoinNodes, boolean renderFetches, boolean ignoreCardinality, Set<JoinNode> nodesToFetch, List<String> whereConjuncts, JoinNode valuesNode, Set<JoinNode> alwaysIncludedNodes, boolean externalRepresentation) {
+        // TODO: Fix this with #216
+        boolean isCollection = true;
+        if (mainQuery.jpaProvider.supportsEntityJoin() && !emulateJoins) {
+            valuesNode = applyJoins(sb, rootNode.getAliasInfo(), new ArrayList<>(rootNode.getEntityJoinNodes()), isCollection, clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes, externalRepresentation);
+        } else {
+            Set<JoinNode> entityNodes = rootNode.getEntityJoinNodes();
+            for (JoinNode entityNode : entityNodes) {
+                if (entityNode.getJoinType() != JoinType.INNER) {
+                    throw new IllegalArgumentException("Can't emulate outer join for entity join node: " + entityNode);
+                }
+
+                // Collect the join nodes referring to collections
+                if (collectCollectionJoinNodes && isCollection) {
+                    // TODO: Maybe we can improve this and treat array access joins like non-collection join nodes
+                    collectionJoinNodes.add(entityNode);
+                }
+
+                sb.append(", ");
+
+                EntityType<?> type = entityNode.getEntityType();
+                sb.append(type.getName());
+
+                sb.append(' ');
+
+                if (aliasPrefix != null) {
+                    sb.append(aliasPrefix);
+                }
+
+                sb.append(entityNode.getAliasInfo().getAlias());
+
+                // TODO: not sure if needed since applyImplicitJoins will already invoke that
+                entityNode.registerDependencies();
+
+                if (entityNode.getOnPredicate() != null && !entityNode.getOnPredicate().getChildren().isEmpty()) {
+                    tempSb.setLength(0);
+
+                    if (valuesNode != null) {
+                        renderValuesClausePredicate(tempSb, valuesNode, valuesNode.getAlias(), externalRepresentation);
+                        whereConjuncts.add(tempSb.toString());
+                        tempSb.setLength(0);
+                        valuesNode = null;
+                    }
+                    queryGenerator.setClauseType(ClauseType.JOIN);
+                    queryGenerator.setQueryBuffer(tempSb);
+                    SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.PREDICATE);
+                    queryGenerator.generate(entityNode.getOnPredicate());
+                    queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
+                    queryGenerator.setClauseType(null);
+                    whereConjuncts.add(tempSb.toString());
+                }
+
+                renderedJoins.add(entityNode);
+                if (!entityNode.getNodes().isEmpty()) {
+                    valuesNode = applyJoins(sb, entityNode.getAliasInfo(), entityNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes, externalRepresentation);
+                }
+                for (JoinNode treatedNode : entityNode.getTreatedJoinNodes().values()) {
+                    valuesNode = applyJoins(sb, treatedNode.getAliasInfo(), treatedNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes, externalRepresentation);
+                }
+                if (!entityNode.getEntityJoinNodes().isEmpty()) {
+                    valuesNode = applyEntityJoins(sb, tempSb, clauseExclusions, aliasPrefix, entityNode, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes, externalRepresentation);
+                }
+            }
+        }
+        return valuesNode;
     }
 
     void renderValuesClausePredicate(StringBuilder sb, JoinNode rootNode, String alias, boolean externalRepresentation) {
