@@ -691,6 +691,16 @@ public interface RestrictionBuilder<T> {
 
     /**
      * Finishes the IN predicate and adds it to the parent predicate container represented by the type <code>T</code>.
+     * The predicate checks if the left hand side is in the collection parameter-expression denoted by the given parameter.
+     *
+     * @param collectionParameterExpression The collection parameter--expression on the right hand side
+     * @return The parent predicate container builder
+     * @since 1.4.0
+     */
+    public T inCollectionExpression(String collectionParameterExpression);
+
+    /**
+     * Finishes the IN predicate and adds it to the parent predicate container represented by the type <code>T</code>.
      * The predicate checks if the left hand side is in the list of given values.
      *
      * @param values The values on the right hand side
@@ -714,6 +724,15 @@ public interface RestrictionBuilder<T> {
      * @since 1.1.0
      */
     public T notInExpressions(String... parameterOrLiteralExpressions);
+
+    /**
+     * Like {@link RestrictionBuilder#inCollectionExpression(String) } but the result is wrapped in a NOT predicate.
+     *
+     * @param collectionParameterExpression The collection parameter-expression on the right hand side
+     * @return The parent predicate container builder
+     * @since 1.4.0
+     */
+    public T notInCollectionExpression(String collectionParameterExpression);
 
     /**
      * Like {@link RestrictionBuilder#in(java.util.Collection) } but the result is wrapped in a NOT predicate.
