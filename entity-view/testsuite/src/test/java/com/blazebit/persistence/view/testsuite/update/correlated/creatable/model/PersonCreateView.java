@@ -20,6 +20,8 @@ import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.view.CreatableEntityView;
 import com.blazebit.persistence.view.EntityView;
 
+import java.util.Map;
+
 /**
  *
  * @author Christian Beikov
@@ -34,4 +36,6 @@ public interface PersonCreateView extends UpdatablePersonView {
     public DocumentIdView getPartnerDocument();
 
     public void setPartnerDocument(DocumentIdView partnerDocument);
+
+    public Map<Integer, String> getLocalized();
 }
