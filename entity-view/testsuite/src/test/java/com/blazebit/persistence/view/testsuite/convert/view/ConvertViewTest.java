@@ -30,9 +30,11 @@ import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.convert.view.model.DocumentCloneUpdateView;
 import com.blazebit.persistence.view.testsuite.convert.view.model.DocumentCloneView;
+import com.blazebit.persistence.view.testsuite.convert.view.model.DocumentCloneView2;
 import com.blazebit.persistence.view.testsuite.convert.view.model.DocumentIdView;
 import com.blazebit.persistence.view.testsuite.convert.view.model.PersonView;
 import com.blazebit.persistence.view.testsuite.convert.view.model.SimplePersonView;
+import com.blazebit.persistence.view.testsuite.convert.view.model.sub.DocumentCloneParentView;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -57,6 +59,8 @@ public class ConvertViewTest extends AbstractEntityViewTest {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentIdView.class);
         cfg.addEntityView(DocumentCloneView.class);
+        cfg.addEntityView(DocumentCloneView2.class);
+        cfg.addEntityView(DocumentCloneParentView.class);
         cfg.addEntityView(DocumentCloneUpdateView.class);
         cfg.addEntityView(SimplePersonView.class);
         cfg.addEntityView(PersonView.class);
@@ -115,6 +119,17 @@ public class ConvertViewTest extends AbstractEntityViewTest {
         assertEquals(documentView.getPartners().iterator().next().getName(), clone.getPartners().iterator().next().getName());
         assertEquals(documentView.getPartners().iterator().next().getFriend(), clone.getPartners().iterator().next().getFriend());
         assertEquals(documentView.getPartners().iterator().next().getFriend().getName(), clone.getPartners().iterator().next().getFriend().getName());
+    }
+
+    @Test
+    public void testCloneConvert2() {
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class);
+        DocumentCloneView2 documentView = evm.applySetting(EntityViewSetting.create(DocumentCloneView2.class).withOptionalParameter("test", "abc"), criteria)
+                .getSingleResult();
+        DocumentCloneView2 clone = evm.convert(documentView, DocumentCloneView2.class);
+
+        assertEquals(documentView.getId(), clone.getId());
+        assertEquals("abc", clone.getParam2());
     }
 
     @Test
