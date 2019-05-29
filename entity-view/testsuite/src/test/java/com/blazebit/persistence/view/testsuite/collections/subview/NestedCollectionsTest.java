@@ -169,6 +169,7 @@ public class NestedCollectionsTest<T extends PersonForCollectionsMasterView, U e
         cfg.addEntityView(viewType);
         cfg.addEntityView(subviewType);
         cfg.addEntityView(SubviewPersonForCollectionsView.class);
+        cfg.addEntityView(SubviewPersonForCollectionsView.class);
         EntityViewManager evm = cfg.createEntityViewManager(cbf);
 
         CriteriaBuilder<PersonForCollections> criteria = cbf.create(em, PersonForCollections.class, "p")
