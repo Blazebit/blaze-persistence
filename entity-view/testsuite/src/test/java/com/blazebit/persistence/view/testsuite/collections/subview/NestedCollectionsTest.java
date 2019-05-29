@@ -27,6 +27,7 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import com.blazebit.persistence.view.testsuite.collections.subview.model.PersonForCollectionsListNestedView;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -169,7 +170,7 @@ public class NestedCollectionsTest<T extends PersonForCollectionsMasterView, U e
         cfg.addEntityView(viewType);
         cfg.addEntityView(subviewType);
         cfg.addEntityView(SubviewPersonForCollectionsView.class);
-        cfg.addEntityView(SubviewPersonForCollectionsView.class);
+        cfg.addEntityView(PersonForCollectionsListNestedView.class);
         EntityViewManager evm = cfg.createEntityViewManager(cbf);
 
         CriteriaBuilder<PersonForCollections> criteria = cbf.create(em, PersonForCollections.class, "p")

@@ -23,11 +23,11 @@ import com.blazebit.persistence.view.UpdatableEntityView;
 /**
  *
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.4.0
  */
-@UpdatableEntityView
 @EntityView(NameObject.class)
-public interface UpdatableNameObjectView extends NameObjectView{
+public interface NameObjectView {
 
-    public void setPrimaryName(String primaryName);
+    public String getPrimaryName();
+
 }

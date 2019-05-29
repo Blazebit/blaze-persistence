@@ -27,10 +27,14 @@ import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.NameObject;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViews;
+import com.blazebit.persistence.view.impl.ConfigurationProperties;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.basic.model.IntIdEntityView;
+import com.blazebit.persistence.view.testsuite.proxy.model.CreatableEmbeddableTestEntityViewWithEmbeddableContainingConstructor;
+import com.blazebit.persistence.view.testsuite.proxy.model.EmbeddableTestEntityNestedEmbeddableView;
 import com.blazebit.persistence.view.testsuite.proxy.model.EmbeddableTestEntityView;
+import com.blazebit.persistence.view.testsuite.proxy.model.NameObjectView;
 import com.blazebit.persistence.view.testsuite.proxy.model.UpdatableEmbeddableTestEntityNestedEmbeddableView;
 import com.blazebit.persistence.view.testsuite.proxy.model.UpdatableEmbeddableTestEntityView;
 import com.blazebit.persistence.view.testsuite.proxy.model.UpdatableNameObjectView;
@@ -39,6 +43,7 @@ import org.junit.experimental.categories.Category;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  *
@@ -68,15 +73,18 @@ public class ProxyFactoryEmeddableTest extends AbstractEntityViewTest {
         cfg.addEntityView(EmbeddableTestEntityView.Id.class);
         cfg.addEntityView(UpdatableEmbeddableTestEntityView.class);
         cfg.addEntityView(UpdatableEmbeddableTestEntityView.Id.class);
+        cfg.addEntityView(UpdatableEmbeddableTestEntityView.ReadOnlyEmbeddableTestEntityEmbeddableView.class);
         cfg.addEntityView(UpdatableEmbeddableTestEntityView.EmbeddableTestEntityEmbeddableView.class);
+        cfg.addEntityView(EmbeddableTestEntityNestedEmbeddableView.class);
         cfg.addEntityView(UpdatableEmbeddableTestEntityNestedEmbeddableView.class);
+        cfg.addEntityView(NameObjectView.class);
         cfg.addEntityView(UpdatableNameObjectView.class);
         cfg.addEntityView(IntIdEntityView.class);
         return cfg.createEntityViewManager(cbf);
     }
 
     @Test
-    public void testProxyCreateInitialization() throws Exception {
+    public void testProxyCreateInitialization() {
         EntityViewManager evm = getEntityViewManager();
         UpdatableEmbeddableTestEntityView instance = evm.create(UpdatableEmbeddableTestEntityView.class);
 
@@ -91,5 +99,29 @@ public class ProxyFactoryEmeddableTest extends AbstractEntityViewTest {
         assertNotNull(instance.getEmbeddable().getNestedEmbeddable().getNestedOneToMany());
 
         assertNotNull(instance.getEmbeddable().getElementCollection().get("test"));
+
+        assertNotNull(instance.getMyEmbeddable());
+        assertNotNull(instance.getMyEmbeddable().getElementCollection());
+        assertNotNull(instance.getMyEmbeddable().getManyToMany());
+        assertNotNull(instance.getMyEmbeddable().getOneToMany());
+        assertNotNull(instance.getMyEmbeddable().getNestedEmbeddable());
+        assertNotNull(instance.getMyEmbeddable().getNestedEmbeddable().getNestedOneToMany());
+        assertNotNull(instance.getElementCollection4());
+    }
+
+    @Test
+    public void testCreatableEmbeddableWithEmbeddableContainingConstructor() {
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        cfg.setProperty(ConfigurationProperties.PROXY_EAGER_LOADING, "true");
+        cfg.addEntityView(EmbeddableTestEntityView.class);
+        cfg.addEntityView(EmbeddableTestEntityView.Id.class);
+        cfg.addEntityView(CreatableEmbeddableTestEntityViewWithEmbeddableContainingConstructor.class);
+        cfg.addEntityView(CreatableEmbeddableTestEntityViewWithEmbeddableContainingConstructor.ReadOnlyEmbeddableTestEntityEmbeddableView.class);
+
+        try {
+            cfg.createEntityViewManager(cbf);
+        } catch (IllegalArgumentException ex) {
+            assertTrue(ex.getMessage().contains("empty constructor"));
+        }
     }
 }

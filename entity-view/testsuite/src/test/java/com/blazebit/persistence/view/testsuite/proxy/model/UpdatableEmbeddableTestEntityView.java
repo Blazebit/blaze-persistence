@@ -21,10 +21,12 @@ import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityEmbeddable;
 import com.blazebit.persistence.view.CreatableEntityView;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.PostCreate;
 import com.blazebit.persistence.view.UpdatableEntityView;
 import com.blazebit.persistence.view.testsuite.basic.model.IntIdEntityView;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -46,9 +48,23 @@ public abstract class UpdatableEmbeddableTestEntityView extends EmbeddableTestEn
     public abstract EmbeddableTestEntityEmbeddableView getEmbeddable();
     public abstract void setEmbeddable(EmbeddableTestEntityEmbeddableView embeddable);
 
+    @Mapping("embeddable")
+    public abstract ReadOnlyEmbeddableTestEntityEmbeddableView getMyEmbeddable();
+    public abstract List<NameObjectView> getElementCollection4();
+
+    @EntityView(EmbeddableTestEntityEmbeddable.class)
+    public static interface ReadOnlyEmbeddableTestEntityEmbeddableView {
+
+        public EmbeddableTestEntityView getManyToOne();
+        public Set<EmbeddableTestEntityView> getOneToMany();
+        public Map<String, ? extends NameObjectView> getElementCollection();
+        public Map<String, IntIdEntityView> getManyToMany();
+        public EmbeddableTestEntityNestedEmbeddableView getNestedEmbeddable();
+    }
+
     @UpdatableEntityView
     @EntityView(EmbeddableTestEntityEmbeddable.class)
-    public static interface EmbeddableTestEntityEmbeddableView {
+    public static interface EmbeddableTestEntityEmbeddableView extends ReadOnlyEmbeddableTestEntityEmbeddableView {
 
         public EmbeddableTestEntityView getManyToOne();
         public void setManyToOne(EmbeddableTestEntityView manyToOne);

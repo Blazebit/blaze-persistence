@@ -50,6 +50,8 @@ public interface ManagedViewTypeImplementor<X> extends ManagedViewType<X> {
 
     Map<ManagedViewTypeImplementor<? extends X>, String> getInheritanceSubtypeConfiguration();
 
+    boolean hasEmptyConstructor();
+
     boolean hasJoinFetchedCollections();
 
     boolean hasSubtypes();

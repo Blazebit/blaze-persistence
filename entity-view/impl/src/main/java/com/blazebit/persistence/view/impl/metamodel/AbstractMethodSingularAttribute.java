@@ -219,6 +219,13 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
                 }
             }
         }
+        // Within flat views and creatable view we initialize flat view attributes with empty instances
+        if ((viewType.getMappingType() == Type.MappingType.FLAT_VIEW || viewType.isCreatable()) && type.getMappingType() == Type.MappingType.FLAT_VIEW) {
+            // Make sure the type has an empty constructor
+            if (!((ManagedViewTypeImplementor<?>) type).hasEmptyConstructor()) {
+                context.addError("The flat view type '" + type.getJavaType().getName() + "' must provide an empty constructor since empty instances might be created through the  " + mapping.getErrorLocation() + "!");
+            }
+        }
     }
 
     private boolean determineUpdatable(Type<?> elementType) {

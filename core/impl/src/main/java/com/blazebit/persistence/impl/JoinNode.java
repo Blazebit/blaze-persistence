@@ -470,6 +470,9 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         }
 
         if (clauseDependencies.contains(clauseDependency)) {
+            if (seenNodes != null) {
+                seenNodes.remove(this);
+            }
             return true;
         }
 
