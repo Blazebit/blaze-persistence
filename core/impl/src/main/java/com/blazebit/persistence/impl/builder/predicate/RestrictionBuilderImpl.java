@@ -37,6 +37,7 @@ import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedLi
 import com.blazebit.persistence.impl.builder.expression.SuperExpressionSubqueryBuilderListener;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.expression.ParameterExpression;
 import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.expression.SubqueryExpression;
 import com.blazebit.persistence.parser.expression.SyntaxErrorException;
@@ -493,6 +494,17 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     }
 
     @Override
+    public T inCollectionExpression(String collectionParameterExpression) {
+        if (collectionParameterExpression == null) {
+            throw new NullPointerException("parameterOrCollectionExpression");
+        }
+
+        ParameterExpression collectionParameter = (ParameterExpression) expressionFactory.createInItemExpression(collectionParameterExpression);
+        collectionParameter.setCollectionValued(true);
+        return chain(new InPredicate(leftExpression, collectionParameter));
+    }
+
+    @Override
     public T in(Collection<?> values) {
         if (values == null) {
             throw new NullPointerException("values");
@@ -515,6 +527,17 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         }
 
         return chain(new InPredicate(true, leftExpression, expressionFactory.createInItemExpressions(parameterOrLiteralExpressions)));
+    }
+
+    @Override
+    public T notInCollectionExpression(String collectionParameterExpression) {
+        if (collectionParameterExpression == null) {
+            throw new NullPointerException("collectionParameterExpression");
+        }
+
+        ParameterExpression collectionParameter = (ParameterExpression) expressionFactory.createInItemExpression(collectionParameterExpression);
+        collectionParameter.setCollectionValued(true);
+        return chain(new InPredicate(true, leftExpression, collectionParameter));
     }
 
     @Override

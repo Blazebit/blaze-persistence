@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
@@ -155,6 +156,15 @@ public class InTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d")
             .where("d.id").inExpressions("12");
         assertEquals("SELECT d FROM Document d WHERE d.id IN (12)", criteria.getQueryString());
+        criteria.getResultList();
+    }
+
+    @Test
+    public void testInCollectionParameter(){
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d")
+                .where("d.id").inCollectionExpression(":param");
+        assertEquals("SELECT d FROM Document d WHERE d.id IN " + listParameter("param"), criteria.getQueryString());
+        criteria.setParameter("param", Collections.singletonList(1L));
         criteria.getResultList();
     }
 }
