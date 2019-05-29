@@ -103,6 +103,11 @@ public class ConvertedViewType<X> implements ViewTypeImplementor<X> {
     }
 
     @Override
+    public boolean hasEmptyConstructor() {
+        return delegate.hasEmptyConstructor();
+    }
+
+    @Override
     public boolean hasJoinFetchedCollections() {
         return delegate.hasJoinFetchedCollections();
     }

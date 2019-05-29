@@ -456,7 +456,7 @@ public class ProxyFactory {
             createSpecialMethods(managedViewType, cc);
 
             Set<MappingConstructorImpl<T>> constructors = (Set<MappingConstructorImpl<T>>) (Set<?>) managedViewType.getConstructors();
-            boolean hasEmptyConstructor = clazz.isInterface() || hasEmptyConstructor(constructors);
+            boolean hasEmptyConstructor = managedViewType.hasEmptyConstructor();
 
             if (hasEmptyConstructor) {
                 // Create constructor for create models
@@ -556,18 +556,6 @@ public class ProxyFactory {
         return hasEmptyConstructor && (!addedReferenceConstructor && attributeFields.length > 0 || addedReferenceConstructor && attributeFields.length > 1);
     }
 
-    private <T> boolean hasEmptyConstructor(Set<MappingConstructorImpl<T>> constructors) {
-        if (constructors.isEmpty()) {
-            return true;
-        }
-        for (MappingConstructorImpl<?> c : constructors) {
-            if (c.getParameterAttributes().isEmpty()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     @SuppressWarnings("unchecked")
     private <T> void createInheritanceConstructors(EntityViewManager entityViewManager, Set<MappingConstructorImpl<T>> constructors, ManagedViewTypeImplementor<? super T> inheritanceBase, ManagedViewTypeImplementor<T> managedView, int subtypeIndex, boolean addedReferenceConstructor,
                                                    boolean unsafe, CtClass cc, CtField initialStateField, CtField mutableStateField, Map<String, CtField> fieldMap) throws NotFoundException, CannotCompileException, BadBytecode {
@@ -635,7 +623,7 @@ public class ProxyFactory {
                 j++;
             }
 
-            boolean hasEmptyConstructor = managedView.getJavaType().isInterface() || hasEmptyConstructor(constructors);
+            boolean hasEmptyConstructor = managedView.hasEmptyConstructor();
             if (addedDefaultConstructor = shouldAddDefaultConstructor(hasEmptyConstructor, addedReferenceConstructor, fields)) {
                 cc.addConstructor(createNormalConstructor(entityViewManager, managedView, cc, fields, overallParameterTypes, initialStateField, mutableStateField, subtypeAttributes, subtypeMutableAttributeCount, unsafe));
             }

@@ -604,6 +604,19 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
     }
 
     @Override
+    public boolean hasEmptyConstructor() {
+        if (javaType.isInterface() || constructors.isEmpty()) {
+            return true;
+        }
+        for (MappingConstructorImpl<?> c : constructors.values()) {
+            if (c.getParameterAttributes().isEmpty()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
     public boolean hasJoinFetchedCollections() {
         return hasJoinFetchedCollections;
     }

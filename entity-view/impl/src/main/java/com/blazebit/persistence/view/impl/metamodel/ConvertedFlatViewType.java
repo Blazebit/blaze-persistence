@@ -106,6 +106,11 @@ public class ConvertedFlatViewType<X> implements FlatViewTypeImplementor<X> {
     }
 
     @Override
+    public boolean hasEmptyConstructor() {
+        return delegate.hasEmptyConstructor();
+    }
+
+    @Override
     public boolean hasJoinFetchedCollections() {
         return delegate.hasJoinFetchedCollections();
     }

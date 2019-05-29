@@ -29,8 +29,7 @@ import java.util.Set;
  */
 @UpdatableEntityView
 @EntityView(EmbeddableTestEntityNestedEmbeddable.class)
-public interface UpdatableEmbeddableTestEntityNestedEmbeddableView {
+public interface UpdatableEmbeddableTestEntityNestedEmbeddableView extends EmbeddableTestEntityNestedEmbeddableView {
 
-    Set<EmbeddableTestEntityView> getNestedOneToMany();
     void setNestedOneToMany(Set<EmbeddableTestEntityView> nestedOneToMany);
 }
