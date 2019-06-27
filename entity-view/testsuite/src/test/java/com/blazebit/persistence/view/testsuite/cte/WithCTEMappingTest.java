@@ -16,9 +16,6 @@
 
 package com.blazebit.persistence.view.testsuite.cte;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -47,6 +44,8 @@ import com.blazebit.persistence.view.testsuite.cte.model.PersonWithPartnerDocume
 import com.blazebit.persistence.view.testsuite.cte.model.PersonWithPartnerDocumentFullAged.FullAgedCTEProvider;
 import com.blazebit.persistence.view.testsuite.cte.model.PersonWithPartnerDocumentUnderAged;
 import org.junit.experimental.categories.Category;
+
+import static org.junit.Assert.*;
 
 /**
  *
@@ -121,11 +120,14 @@ public class WithCTEMappingTest extends AbstractEntityViewTest {
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class).orderByAsc("id");
         EntityViewSetting<DocumentWithCTE, CriteriaBuilder<DocumentWithCTE>> setting;
         setting = EntityViewSetting.create(DocumentWithCTE.class);
+        setting.addOptionalParameter("ownerMaxAge", 63L);
         List<DocumentWithCTE> list = evm.applySetting(setting, cb).getResultList();
 
         assertEquals(2, list.size());
         assertEquals("doc1", list.get(0).getName());
-        assertEquals(Long.valueOf(1), list.get(0).getOwnedDocumentCount());
+        assertEquals("doc2", list.get(1).getName());
+        assertNull(list.get(0).getOwnedDocumentCount());
+        assertEquals(Long.valueOf(1), list.get(1).getOwnedDocumentCount());
     }
 
     @Test
