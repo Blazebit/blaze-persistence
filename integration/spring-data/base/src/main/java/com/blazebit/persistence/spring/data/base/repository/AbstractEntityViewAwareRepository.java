@@ -450,10 +450,18 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
         Class<V> entityViewClass = metadata == null
             || metadata.getEntityViewClass() == null ? this.entityViewClass : (Class<V>) metadata.getEntityViewClass();
 
-        Sort actualSort = (sort == null || entityViewClass == null) ? sort : EntityViewSortUtil
-            .removeEntityViewSortOrders(evm, entityViewClass, sort);
-        if (actualSort != null) {
-            cq.orderBy(QueryUtils.toOrders(actualSort, root, BlazeCriteria.get(cbf)));
+        Sort entityViewSort;
+        Sort entitySort;
+        if (sort == null || entityViewClass == null) {
+            entityViewSort = null;
+            entitySort = sort;
+        } else {
+            Sort[] splitSorts = EntityViewSortUtil.splitSortOrders(evm, entityViewClass, sort);
+            entityViewSort = splitSorts[0];
+            entitySort = splitSorts[1];
+        }
+        if (entitySort != null) {
+            cq.orderBy(QueryUtils.toOrders(entitySort, root, BlazeCriteria.get(cbf)));
         }
         CriteriaBuilder<S> cb = cq.createCriteriaBuilder(entityManager);
 
@@ -491,22 +499,22 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
         } else {
             if (pageable == null) {
                 EntityViewSetting<V, CriteriaBuilder<V>> setting = EntityViewSetting.create(entityViewClass);
-                if (sort != null) {
+                if (entityViewSort != null) {
                     setting.addAttributeSorters(
-                            EntityViewSortUtil.createEntityViewSortersFromSort(evm, setting.getEntityViewClass(), sort)
+                            EntityViewSortUtil.createEntityViewSortersFromSort(entityViewSort)
                     );
                 }
                 query = evm.applySetting(setting, cb).getQuery();
             } else {
                 EntityViewSetting<V, PaginatedCriteriaBuilder<V>> setting = EntityViewSetting.create(entityViewClass, getOffset(pageable), pageable.getPageSize());
-                if (sort != null) {
+                if (entityViewSort != null) {
                     setting.addAttributeSorters(
-                            EntityViewSortUtil.createEntityViewSortersFromSort(evm, setting.getEntityViewClass(), sort)
+                            EntityViewSortUtil.createEntityViewSortersFromSort(entityViewSort)
                     );
 
                 } else if (pageable.getSort() != null) {
                     setting.addAttributeSorters(
-                            EntityViewSortUtil.createEntityViewSortersFromSort(evm, setting.getEntityViewClass(), pageable.getSort())
+                            EntityViewSortUtil.createEntityViewSortersFromSort(pageable.getSort())
                     );
                 }
                 if (pageable instanceof KeysetPageable) {

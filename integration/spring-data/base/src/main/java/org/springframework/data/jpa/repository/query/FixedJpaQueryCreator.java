@@ -132,7 +132,7 @@ public class FixedJpaQueryCreator extends AbstractQueryCreator<CriteriaQuery<Obj
      * Moritz Becker: Rewrote NOT and NOT_IN cases to explicitely cast criteria IN argument to Expression&lt;Collection&lt;?&gt;&gt; which is needed
      * to work around an EclipseLink bug.
      *
-     * @author Phil Webb
+     * @author Phil Webbare not assignable to the given expression type
      * @author Oliver Gierke
      * @author Moritz Becker
      */

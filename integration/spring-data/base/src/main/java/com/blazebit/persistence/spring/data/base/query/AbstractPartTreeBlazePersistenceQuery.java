@@ -304,10 +304,16 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
             List<ParameterMetadataProvider.ParameterMetadata<?>> expressions = this.expressions;
             ParametersParameterAccessor accessor = new ParametersParameterAccessor(parameters, values);
 
+            Sort[] splitSort = getDynamicSort(values);
             if (cachedCriteriaQuery == null || accessor.hasBindableNullValue()) {
                 FixedJpaQueryCreator creator = createCreator(accessor, persistenceProvider);
-                criteriaQuery = invokeQueryCreator(creator, getDynamicSort(values));
+                Sort entitySort = splitSort == null ? null : splitSort[1];
+                criteriaQuery = invokeQueryCreator(creator, entitySort);
                 expressions = creator.getParameterExpressions();
+            }
+            if (parameters.getSortIndex() != -1) {
+                Sort entityViewSort = splitSort == null ? null : splitSort[0];
+                values[parameters.getSortIndex()] = entityViewSort;
             }
 
             processSpecification(criteriaQuery, values);
@@ -348,13 +354,13 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
             int sortIndex = parameters.getSortIndex();
             if (sortIndex >= 0 && (sort = (Sort) values[sortIndex]) != null) {
                 setting.addAttributeSorters(
-                        EntityViewSortUtil.createEntityViewSortersFromSort(evm, setting.getEntityViewClass(), sort)
+                        EntityViewSortUtil.createEntityViewSortersFromSort(sort)
                 );
             }
             int pageableIndex = parameters.getPageableIndex();
             if (pageableIndex >= 0 && (sort = ((Pageable) values[pageableIndex]).getSort()) != null) {
                 setting.addAttributeSorters(
-                    EntityViewSortUtil.createEntityViewSortersFromSort(evm, setting.getEntityViewClass(), sort)
+                    EntityViewSortUtil.createEntityViewSortersFromSort(sort)
                 );
             }
             int entityViewSettingProcessorIndex = parameters.getEntityViewSettingProcessorIndex();
@@ -421,10 +427,16 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
             List<ParameterMetadataProvider.ParameterMetadata<?>> expressions = this.expressions;
             ParametersParameterAccessor accessor = new ParametersParameterAccessor(parameters, values);
 
+            Sort[] splitSort = getDynamicSort(values);
             if (cachedCriteriaQuery == null || accessor.hasBindableNullValue()) {
                 FixedJpaQueryCreator creator = createCreator(accessor, persistenceProvider);
-                criteriaQuery = invokeQueryCreator(creator, getDynamicSort(values));
+                Sort entitySort = splitSort == null ? null : splitSort[1];
+                criteriaQuery = invokeQueryCreator(creator, entitySort);
                 expressions = creator.getParameterExpressions();
+            }
+            if (parameters.getSortIndex() != -1) {
+                Sort entityViewSort = splitSort == null ? null : splitSort[0];
+                values[parameters.getSortIndex()] = entityViewSort;
             }
 
             TypedQuery<?> jpaQuery = createQuery(criteriaQuery, values);
@@ -482,12 +494,12 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
             return createCriteriaQueryParameterBinder(parameters, values, expressions);
         }
 
-        private Sort getDynamicSort(Object[] values) {
+        private Sort[] getDynamicSort(Object[] values) {
             Sort sort;
             if (parameters.potentiallySortsDynamically()
                 && (sort = new ParametersParameterAccessor(parameters, values).getSort()) != null) {
                 return entityViewClass != null ? EntityViewSortUtil
-                    .removeEntityViewSortOrders(evm, entityViewClass, sort) : sort;
+                    .splitSortOrders(evm, entityViewClass, sort) : new Sort[] { null, sort };
             } else {
                 return null;
             }

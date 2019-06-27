@@ -635,7 +635,7 @@ public class DocumentRepositoryTest extends AbstractSpringTest {
     }
 
     @Test
-    public void testEntityViewPropertySorting() {
+    public void testEntityViewAttributeSorting() {
         // Given
         String doc1 = "D1";
         String doc2 = "D2";
@@ -657,24 +657,39 @@ public class DocumentRepositoryTest extends AbstractSpringTest {
     }
 
     @Test
-    public void testEntityViewPropertySortingPartTree() {
+    public void testMixedEntityViewAndEntityAttributeSortingPartTree() {
         // Given
         String doc1 = "D1";
         String doc2 = "D2";
         String doc3 = "D2";
         Person person = createPerson("Foo");
-        createDocument(doc1, person);
-        createDocument(doc2, person);
+        createDocument(doc1, "A", 0l, person);
+        createDocument(doc2, "B", 0l, person);
         createDocument(doc3, createPerson("Bar"));
 
-        String sortProperty = "ownerDocumentCount";
+        String entityViewSortProperty = "ownerDocumentCount";
+        String entitySortProperty = "description";
 
-        List<DocumentView> list = documentRepository.findAll(new Sort(Direction.ASC, sortProperty), "foo");
+        List<DocumentView> list = documentRepository.findAll(
+                Sort.by(
+                    new Sort.Order(Direction.ASC, entityViewSortProperty),
+                    new Sort.Order(Direction.DESC, entitySortProperty)
+                ),
+                "foo");
 
         assertEquals(doc3, list.get(0).getName());
+        assertEquals(doc2, list.get(1).getName());
+        assertEquals(doc1, list.get(2).getName());
 
-        list = documentRepository.findAll(new Sort(Direction.DESC, sortProperty), "foo");
+        list = documentRepository.findAll(
+                Sort.by(
+                    new Sort.Order(Direction.DESC, entityViewSortProperty),
+                    new Sort.Order(Direction.ASC, entitySortProperty)
+                ),
+                "foo");
 
+        assertEquals(doc1, list.get(0).getName());
+        assertEquals(doc2, list.get(1).getName());
         assertEquals(doc3, list.get(2).getName());
     }
 

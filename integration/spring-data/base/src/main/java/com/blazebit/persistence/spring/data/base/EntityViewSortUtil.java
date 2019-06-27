@@ -38,7 +38,7 @@ import com.blazebit.persistence.view.metamodel.Type;
  * Utility methods to handle entity view sorting.
  * 
  * @author Giovanni Lovato
- * @since 1.3.0
+ * @since 1.4.0
  */
 
 public final class EntityViewSortUtil {
@@ -89,16 +89,14 @@ public final class EntityViewSortUtil {
      * @param sort the sort instance
      * @return the applicable entity view sorters
      */
-    public static Map<String, Sorter> createEntityViewSortersFromSort(EntityViewManager evm, Class<?> entityViewClass, Sort sort) {
+    public static Map<String, Sorter> createEntityViewSortersFromSort(Sort sort) {
         Map<String, Sorter> sorters = new HashMap<>();
         for (Order order : sort) {
-            if (isEntityViewSorting(evm, entityViewClass, order)) {
-                boolean nullsFirst = order.getNullHandling().equals(NullHandling.NULLS_FIRST);
-                Sorter sorter = order.isAscending() ? Sorters.ascending(nullsFirst) : Sorters.descending(nullsFirst);
-                String property = order.getProperty();
-                if (!sorters.containsKey(property)) {
-                    sorters.put(property, sorter);
-                }
+            boolean nullsFirst = order.getNullHandling().equals(NullHandling.NULLS_FIRST);
+            Sorter sorter = order.isAscending() ? Sorters.ascending(nullsFirst) : Sorters.descending(nullsFirst);
+            String property = order.getProperty();
+            if (!sorters.containsKey(property)) {
+                sorters.put(property, sorter);
             }
         }
         return sorters;
@@ -110,16 +108,24 @@ public final class EntityViewSortUtil {
      * @param evm the entity view manager
      * @param entityViewClass the entity view class
      * @param sort the sort instance
-     * @return a new {@link Sort} with only entity related sort orders
+     * @return a 2 element array of new {@link Sort} instances, index 0 for entity view related sort orders and index 1
+     * for entity related sort orders
      */
-    public static Sort removeEntityViewSortOrders(EntityViewManager evm, Class<?> entityViewClass, Sort sort) {
-        List<Order> orders = new ArrayList<>();
+    public static Sort[] splitSortOrders(EntityViewManager evm, Class<?> entityViewClass, Sort sort) {
+        List<Order> entityViewOrders = new ArrayList<>();
+        List<Order> entityOrders = new ArrayList<>();
         for (Order order : sort) {
-            if (!isEntityViewSorting(evm, entityViewClass, order)) {
-                orders.add(order);
+            if (isEntityViewSorting(evm, entityViewClass, order)) {
+                entityViewOrders.add(order);
+                entityOrders.add(order);
+            } else {
+                entityOrders.add(order);
             }
         }
-        return orders.isEmpty() ? null : new Sort(orders);
+        return new Sort[] {
+          entityViewOrders.isEmpty() ? null : new Sort(entityViewOrders),
+          entityOrders.isEmpty() ? null : new Sort(entityOrders)
+        };
     }
 
 }
