@@ -24,6 +24,8 @@ import com.blazebit.persistence.view.EntityViewInheritanceMapping;
 import com.blazebit.persistence.view.With;
 import com.blazebit.persistence.view.testsuite.cte.model.PersonWithPartnerDocumentFullAged.FullAgedCTEProvider;
 
+import java.util.Map;
+
 @With(FullAgedCTEProvider.class)
 @EntityView(Person.class)
 @EntityViewInheritanceMapping("age >= 18")
@@ -32,7 +34,7 @@ public interface PersonWithPartnerDocumentFullAged extends PersonWithPartnerDocu
     class FullAgedCTEProvider implements CTEProvider {
 
         @Override
-        public void applyCtes(CTEBuilder<?> builder) {
+        public void applyCtes(CTEBuilder<?> builder, Map<String, Object> optionalParameters) {
         }
 
     }

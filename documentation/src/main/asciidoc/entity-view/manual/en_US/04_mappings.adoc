@@ -1709,8 +1709,8 @@ public interface BaseCatView {
 
     class MyCteProvider implements CTEProvider {
         @Override
-        public void applyCtes(CTEBuilder<?> builder) {
-            builder.with(MyCTE.class)...
+        public void applyCtes(CTEBuilder<?> builder, Map<String, Object> optionalParameters) {
+            builder.with(MyCTE.class); // ...
         }
     }
 }
