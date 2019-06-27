@@ -18,6 +18,8 @@ package com.blazebit.persistence.view;
 
 import com.blazebit.persistence.CTEBuilder;
 
+import java.util.Map;
+
 /**
  * Provides CTE bindings to a {@link CTEBuilder}.
  *
@@ -31,5 +33,5 @@ public interface CTEProvider {
      *
      * @param builder the builder
      */
-    void applyCtes(CTEBuilder<?> builder);
+    void applyCtes(CTEBuilder<?> builder, Map<String, Object> optionalParameters);
 }

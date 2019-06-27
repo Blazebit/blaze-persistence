@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -50,7 +51,7 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
         this.objectInstantiator = template.getObjectInstantiator();
         this.mappers = template.getMappers();
         this.parameterHolder = parameterHolder;
-        this.optionalParameters = optionalParameters;
+        this.optionalParameters = Collections.unmodifiableMap(optionalParameters);
         this.embeddingViewJpqlMacro = embeddingViewJpqlMacro;
         this.nullIfEmpty = nullIfEmpty;
         this.cteProviders = template.getViewRoot().getCteProviders();
@@ -85,7 +86,7 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
         if (this.cteProviders != null && queryBuilder instanceof CTEBuilder) {
             CTEBuilder<?> cteBuilder = (CTEBuilder<?>) queryBuilder;
             for (CTEProvider cteProvider : this.cteProviders) {
-                cteProvider.applyCtes(cteBuilder);
+                cteProvider.applyCtes(cteBuilder, this.optionalParameters);
             }
         }
         for (int i = 0; i < mappers.length; i++) {
