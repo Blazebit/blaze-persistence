@@ -20,7 +20,7 @@ None
 
 ## 1.4.0-Alpha1
 
-Not yet released
+29/05/2019 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.4.0-Alpha1) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue+milestone%3A1.4.0+is%3Aclosed+closed%3A%3C2019-05-30)
 
 ### New features
 
