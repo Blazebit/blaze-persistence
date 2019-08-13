@@ -97,14 +97,18 @@
                             <goal>add-module-info</goal>
                         </goals>
                         <configuration>
-                            <version>${project.version}-module</version>
                             <module>
                                 <moduleInfoSource>
                                     module ${module.name} {
                                         requires java.sql;
                                         requires java.persistence;
+                                        requires spring.core;
+                                        requires spring.beans;
                                         requires spring.context;
                                         requires com.blazebit.persistence.view;
+                                        exports com.blazebit.persistence.integration.view.spring;
+                                        exports com.blazebit.persistence.integration.view.spring.impl to spring.beans;
+                                        opens com.blazebit.persistence.integration.view.spring.impl to spring.core, spring.context;
                                     }
                                 </moduleInfoSource>
                             </module>

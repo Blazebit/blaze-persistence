@@ -96,21 +96,6 @@
                             </artifactSet>
                         </configuration>
                     </execution>
-                    <execution>
-                        <id>default-module</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                        <configuration>
-                            <shadedClassifierName>module</shadedClassifierName>
-                            <artifactSet>
-                                <includes>
-                                    <include>org.antlr:antlr4-runtime</include>
-                                </includes>
-                            </artifactSet>
-                        </configuration>
-                    </execution>
                 </executions>
             </plugin>
             <plugin>
@@ -159,7 +144,6 @@
                             <goal>add-module-info</goal>
                         </goals>
                         <configuration>
-                            <version>${project.version}-module</version>
                             <module>
                                 <moduleInfoSource>
                                     module ${module.name} {

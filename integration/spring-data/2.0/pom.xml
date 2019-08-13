@@ -139,11 +139,12 @@
                             <goal>add-module-info</goal>
                         </goals>
                         <configuration>
-                            <version>${project.version}-module</version>
                             <module>
                                 <moduleInfoSource>
                                     module ${module.name} {
-                                        requires transitive com.blazebit.persistence.integration.spring.data.base;
+                                        requires transitive com.blazebit.persistence.integration.spring.data;
+                                        exports com.blazebit.persistence.spring.data.impl.query;
+                                        exports com.blazebit.persistence.spring.data.impl.repository;
                                     }
                                 </moduleInfoSource>
                             </module>

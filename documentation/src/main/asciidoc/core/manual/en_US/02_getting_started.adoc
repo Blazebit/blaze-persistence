@@ -368,7 +368,7 @@ Automatic module names for modules.
 |JPA Criteria API
 |com.blazebit.persistence.criteria
 
-|Core Impl
+|JPA Criteria Impl
 |com.blazebit.persistence.criteria.impl
 
 |JPA Criteria JPA2 Compatibility
