@@ -87,6 +87,12 @@ public abstract class PredicateManager<T> extends AbstractManager<ExpressionModi
     void restrictExpression(Predicate predicate) {
         rootPredicate.verifyBuilderEnded();
         parameterManager.collectParameterRegistrations(predicate, getClauseType(), subqueryInitFactory.getQueryBuilder());
+        rootPredicate.getPredicate().getChildren().add(predicate);
+    }
+
+    void restrictSetExpression(Predicate predicate) {
+        rootPredicate.verifyBuilderEnded();
+        parameterManager.collectParameterRegistrations(predicate, getClauseType(), subqueryInitFactory.getQueryBuilder());
 
         List<Predicate> children = rootPredicate.getPredicate().getChildren();
         children.clear();
@@ -129,12 +135,29 @@ public abstract class PredicateManager<T> extends AbstractManager<ExpressionModi
             
             @Override
             public void onBuilderEnded(ExpressionBuilder builder) {
+                rootPredicate.getPredicate().getChildren().add((Predicate) builder.getExpression());
+                currentMultipleSubqueryInitiator = null;
+            }
+            
+        }, subqueryInitFactory, getClauseType());
+        currentMultipleSubqueryInitiator = initiator;
+        return initiator;
+    }
+
+    <X> MultipleSubqueryInitiator<X> restrictSetExpressionSubqueries(X builder, Predicate predicate) {
+        rootPredicate.verifyBuilderEnded();
+        parameterManager.collectParameterRegistrations(predicate, getClauseType(), subqueryInitFactory.getQueryBuilder());
+
+        MultipleSubqueryInitiator<X> initiator = new MultipleSubqueryInitiatorImpl<X>(builder, predicate, new ExpressionBuilderEndedListener() {
+
+            @Override
+            public void onBuilderEnded(ExpressionBuilder builder) {
                 List<Predicate> children = rootPredicate.getPredicate().getChildren();
                 children.clear();
                 children.add((Predicate) builder.getExpression());
                 currentMultipleSubqueryInitiator = null;
             }
-            
+
         }, subqueryInitFactory, getClauseType());
         currentMultipleSubqueryInitiator = initiator;
         return initiator;

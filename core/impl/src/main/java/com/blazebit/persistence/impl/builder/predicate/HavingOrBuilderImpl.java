@@ -25,6 +25,7 @@ import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
+import com.blazebit.persistence.impl.BuilderChainingException;
 import com.blazebit.persistence.impl.ClauseType;
 import com.blazebit.persistence.impl.MultipleSubqueryInitiatorImpl;
 import com.blazebit.persistence.impl.ParameterManager;
@@ -32,11 +33,14 @@ import com.blazebit.persistence.impl.RestrictionBuilderExpressionBuilderListener
 import com.blazebit.persistence.impl.SubqueryBuilderListenerImpl;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
 import com.blazebit.persistence.impl.builder.expression.CaseWhenBuilderImpl;
+import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
+import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListener;
 import com.blazebit.persistence.impl.builder.expression.SimpleCaseWhenBuilderImpl;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.parser.predicate.CompoundPredicate;
 import com.blazebit.persistence.parser.predicate.ExistsPredicate;
+import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.parser.predicate.PredicateBuilder;
 
 /**
@@ -58,6 +62,7 @@ public class HavingOrBuilderImpl<T> extends PredicateBuilderEndedListenerImpl im
     private SubqueryBuilderListenerImpl<HavingOrBuilder<T>> rightSubqueryPredicateBuilderListener;
     private SubqueryBuilderListenerImpl<RestrictionBuilder<HavingOrBuilder<T>>> superExprLeftSubqueryPredicateBuilderListener;
     private CaseExpressionBuilderListener caseExpressionBuilderListener;
+    private MultipleSubqueryInitiator<?> currentMultipleSubqueryInitiator;
 
     public HavingOrBuilderImpl(T result, PredicateBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, ParameterManager parameterManager) {
         this.result = result;
@@ -173,8 +178,35 @@ public class HavingOrBuilderImpl<T> extends PredicateBuilderEndedListenerImpl im
     }
 
     @Override
+    public HavingOrBuilder<T> havingExpression(String expression) {
+        Predicate predicate = expressionFactory.createBooleanExpression(expression, false);
+        this.predicate.getChildren().add(predicate);
+        return this;
+    }
+
+    @Override
+    public MultipleSubqueryInitiator<HavingOrBuilder<T>> havingExpressionSubqueries(String expression) {
+        Predicate predicate = expressionFactory.createBooleanExpression(expression, true);
+        // We don't need a listener or marker here, because the resulting restriction builder can only be ended, when the initiator is ended
+        MultipleSubqueryInitiator<HavingOrBuilder<T>> initiator = new MultipleSubqueryInitiatorImpl<HavingOrBuilder<T>>(this, predicate, new ExpressionBuilderEndedListener() {
+
+            @Override
+            public void onBuilderEnded(ExpressionBuilder builder) {
+                HavingOrBuilderImpl.this.predicate.getChildren().add((Predicate) builder.getExpression());
+                currentMultipleSubqueryInitiator = null;
+            }
+
+        }, subqueryInitFactory, ClauseType.HAVING);
+        currentMultipleSubqueryInitiator = initiator;
+        return initiator;
+    }
+
+    @Override
     public void verifyBuilderEnded() {
         super.verifyBuilderEnded();
+        if (currentMultipleSubqueryInitiator != null) {
+            throw new BuilderChainingException("A builder was not ended properly.");
+        }
         leftSubqueryPredicateBuilderListener.verifySubqueryBuilderEnded();
         if (rightSubqueryPredicateBuilderListener != null) {
             rightSubqueryPredicateBuilderListener.verifySubqueryBuilderEnded();

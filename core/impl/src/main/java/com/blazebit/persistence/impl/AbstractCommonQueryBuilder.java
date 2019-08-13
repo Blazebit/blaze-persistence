@@ -1238,20 +1238,35 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         prepareForModification(ClauseType.WHERE);
         return whereManager.restrict(this, subqueryAlias, expression, criteriaBuilder);
     }
-    
+
     @SuppressWarnings("unchecked")
-    public BuilderType setWhereExpression(String expression) {
+    public BuilderType whereExpression(String expression) {
         prepareForModification(ClauseType.WHERE);
         Predicate predicate = expressionFactory.createBooleanExpression(expression, false);
         whereManager.restrictExpression(predicate);
         return (BuilderType) this;
     }
-    
+
+    @SuppressWarnings("unchecked")
+    public MultipleSubqueryInitiator<BuilderType> whereExpressionSubqueries(String expression) {
+        prepareForModification(ClauseType.WHERE);
+        Predicate predicate = expressionFactory.createBooleanExpression(expression, true);
+        return whereManager.restrictExpressionSubqueries((BuilderType) this, predicate);
+    }
+
+    @SuppressWarnings("unchecked")
+    public BuilderType setWhereExpression(String expression) {
+        prepareForModification(ClauseType.WHERE);
+        Predicate predicate = expressionFactory.createBooleanExpression(expression, false);
+        whereManager.restrictSetExpression(predicate);
+        return (BuilderType) this;
+    }
+
     @SuppressWarnings("unchecked")
     public MultipleSubqueryInitiator<BuilderType> setWhereExpressionSubqueries(String expression) {
         prepareForModification(ClauseType.WHERE);
         Predicate predicate = expressionFactory.createBooleanExpression(expression, true);
-        return whereManager.restrictExpressionSubqueries((BuilderType) this, predicate);
+        return whereManager.restrictSetExpressionSubqueries((BuilderType) this, predicate);
     }
 
     /*
@@ -1390,6 +1405,21 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         }
         return havingManager.restrict(this, subqueryAlias, expression, criteriaBuilder);
     }
+
+    @SuppressWarnings("unchecked")
+    public BuilderType havingExpression(String expression) {
+        prepareForModification(ClauseType.HAVING);
+        Predicate predicate = expressionFactory.createBooleanExpression(expression, false);
+        havingManager.restrictExpression(predicate);
+        return (BuilderType) this;
+    }
+
+    @SuppressWarnings("unchecked")
+    public MultipleSubqueryInitiator<BuilderType> havingExpressionSubqueries(String expression) {
+        prepareForModification(ClauseType.HAVING);
+        Predicate predicate = expressionFactory.createBooleanExpression(expression, true);
+        return havingManager.restrictExpressionSubqueries((BuilderType) this, predicate);
+    }
     
     @SuppressWarnings("unchecked")
     public BuilderType setHavingExpression(String expression) {
@@ -1398,7 +1428,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new IllegalStateException("Having without group by");
         }
         Predicate predicate = expressionFactory.createBooleanExpression(expression, false);
-        havingManager.restrictExpression(predicate);
+        havingManager.restrictSetExpression(predicate);
         return (BuilderType) this;
     }
     
@@ -1409,7 +1439,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new IllegalStateException("Having without group by");
         }
         Predicate predicate = expressionFactory.createBooleanExpression(expression, true);
-        return havingManager.restrictExpressionSubqueries((BuilderType) this, predicate);
+        return havingManager.restrictSetExpressionSubqueries((BuilderType) this, predicate);
     }
 
     /*

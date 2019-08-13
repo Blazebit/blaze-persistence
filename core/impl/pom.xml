@@ -81,7 +81,7 @@
                 <executions>
                     <execution>
                         <id>add-module-infos</id>
-                        <phase>post-package</phase>
+                        <phase>package</phase>
                         <goals>
                             <goal>add-module-info</goal>
                         </goals>
