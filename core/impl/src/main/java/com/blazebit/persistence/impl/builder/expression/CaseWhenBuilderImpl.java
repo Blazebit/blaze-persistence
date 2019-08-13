@@ -42,6 +42,7 @@ import com.blazebit.persistence.parser.expression.WhenClauseExpression;
 import com.blazebit.persistence.parser.predicate.ExistsPredicate;
 import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.parser.predicate.PredicateBuilder;
+import com.blazebit.persistence.parser.util.TypeUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -162,6 +163,20 @@ public class CaseWhenBuilderImpl<T> extends PredicateAndExpressionBuilderEndedLi
     }
 
     @Override
+    public CaseWhenBuilder<T> thenLiteral(Object value) {
+        if (thenExpression != null) {
+            throw new IllegalStateException("Method then/thenExpression called multiple times");
+        }
+        String literal = TypeUtils.asLiteral(value);
+        if (literal == null) {
+            return then(value);
+        }
+        thenExpression = expressionFactory.createInItemExpression(literal);
+        whenClauses.add(new WhenClauseExpression(whenExpression, thenExpression));
+        return this;
+    }
+
+    @Override
     public CaseWhenBuilder<T> then(Object value) {
         if (thenExpression != null) {
             throw new IllegalStateException("Method then/thenExpression called multiple times");
@@ -191,6 +206,24 @@ public class CaseWhenBuilderImpl<T> extends PredicateAndExpressionBuilderEndedLi
             throw new IllegalStateException("Method otherwise/otherwiseExpression called multiple times");
         }
         expression = new GeneralCaseExpression(whenClauses, expressionFactory.createScalarExpression(elseExpression));
+        listener.onBuilderEnded(this);
+        return result;
+    }
+
+    @Override
+    public T otherwiseLiteral(Object value) {
+        verifyBuilderEnded();
+        if (whenClauses.isEmpty()) {
+            throw new IllegalStateException("No when clauses specified");
+        }
+        if (expression != null) {
+            throw new IllegalStateException("Method otherwise/otherwiseExpression called multiple times");
+        }
+        String literal = TypeUtils.asLiteral(value);
+        if (literal == null) {
+            return otherwise(value);
+        }
+        expression = new GeneralCaseExpression(whenClauses, expressionFactory.createInItemExpression(literal));
         listener.onBuilderEnded(this);
         return result;
     }

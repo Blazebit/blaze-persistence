@@ -42,6 +42,7 @@ import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.parser.predicate.LikePredicate;
 import com.blazebit.persistence.parser.predicate.PredicateBuilder;
+import com.blazebit.persistence.parser.util.TypeUtils;
 
 /**
  *
@@ -90,6 +91,19 @@ public class LikeBuilderImpl<T> extends SubqueryAndExpressionBuilderListener<T> 
             throw new NullPointerException("value");
         }
         patternExpression = parameterManager.addParameterExpression(value, clauseType, subqueryInitFactory.getQueryBuilder());
+        return escapeBuilderEndedListener.startBuilder(new EscapeBuilderImpl<T>(escapeBuilderEndedListener, result));
+    }
+
+    @Override
+    public EscapeBuilder<T> literal(Object value) {
+        if (value == null) {
+            throw new NullPointerException("value");
+        }
+        String literal = TypeUtils.asLiteral(value);
+        if (literal == null) {
+            return value(value);
+        }
+        patternExpression = expressionFactory.createInItemExpression(literal);
         return escapeBuilderEndedListener.startBuilder(new EscapeBuilderImpl<T>(escapeBuilderEndedListener, result));
     }
 
@@ -206,7 +220,7 @@ public class LikeBuilderImpl<T> extends SubqueryAndExpressionBuilderListener<T> 
     @Override
     public SimpleCaseWhenBuilder<EscapeBuilder<T>> simpleCase(String caseOperand) {
         EscapeBuilder<T> escapeBuilder = escapeBuilderEndedListener.startBuilder(new EscapeBuilderImpl<T>(escapeBuilderEndedListener, result));
-        return startBuilder(new SimpleCaseWhenBuilderImpl<EscapeBuilder<T>>(escapeBuilder, this, expressionFactory, expressionFactory.createCaseOperandExpression(caseOperand)));
+        return startBuilder(new SimpleCaseWhenBuilderImpl<EscapeBuilder<T>>(escapeBuilder, this, expressionFactory, expressionFactory.createCaseOperandExpression(caseOperand), subqueryInitFactory, parameterManager, clauseType));
     }
 
     @Override

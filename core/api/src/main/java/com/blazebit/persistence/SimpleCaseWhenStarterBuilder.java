@@ -36,5 +36,6 @@ public interface SimpleCaseWhenStarterBuilder<T> {
      * @return This simple case when builder
      */
     public SimpleCaseWhenBuilder<T> when(String expression, String thenExpression);
+    // TODO: literal variants? or wait until we know the LHS type?
     // TODO: subqueries?
 }

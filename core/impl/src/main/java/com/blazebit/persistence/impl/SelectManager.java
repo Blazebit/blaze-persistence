@@ -420,7 +420,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         clearDefaultSelects();
 
         caseExpressionBuilderListener = new CaseExpressionBuilderListener(selectAlias);
-        return caseExpressionBuilderListener.startBuilder(new SimpleCaseWhenBuilderImpl<X>(builder, caseExpressionBuilderListener, expressionFactory, caseOperandExpression));
+        return caseExpressionBuilderListener.startBuilder(new SimpleCaseWhenBuilderImpl<X>(builder, caseExpressionBuilderListener, expressionFactory, caseOperandExpression, subqueryInitFactory, parameterManager, ClauseType.SELECT));
     }
 
     Class<?> getExpectedQueryResultType() {

@@ -109,7 +109,7 @@ public class JoinOnAndBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedLis
     public SimpleCaseWhenStarterBuilder<RestrictionBuilder<JoinOnAndBuilder<T>>> onSimpleCase(String expression) {
         RestrictionBuilderImpl<JoinOnAndBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<JoinOnAndBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager, ClauseType.JOIN));
         caseExpressionBuilderListener = new CaseExpressionBuilderListener(restrictionBuilder);
-        return caseExpressionBuilderListener.startBuilder(new SimpleCaseWhenBuilderImpl<RestrictionBuilder<JoinOnAndBuilder<T>>>(restrictionBuilder, caseExpressionBuilderListener, expressionFactory, expressionFactory.createCaseOperandExpression(expression)));
+        return caseExpressionBuilderListener.startBuilder(new SimpleCaseWhenBuilderImpl<RestrictionBuilder<JoinOnAndBuilder<T>>>(restrictionBuilder, caseExpressionBuilderListener, expressionFactory, expressionFactory.createCaseOperandExpression(expression), subqueryInitFactory, parameterManager, ClauseType.JOIN));
     }
 
     @Override

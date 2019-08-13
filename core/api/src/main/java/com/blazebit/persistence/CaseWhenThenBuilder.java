@@ -34,6 +34,15 @@ public interface CaseWhenThenBuilder<T extends CaseWhenBuilder<?>> {
     public T thenExpression(String expression);
 
     /**
+     * Adds the constructed when expression with the then parameter value to the case when builder rendered as literal.
+     *
+     * @param value The then parameter value
+     * @return This case when builder
+     * @since 1.4.0
+     */
+    public T thenLiteral(Object value);
+
+    /**
      * Adds the constructed when expression with the then parameter value to the case when builder.
      *
      * @param value The then parameter value
