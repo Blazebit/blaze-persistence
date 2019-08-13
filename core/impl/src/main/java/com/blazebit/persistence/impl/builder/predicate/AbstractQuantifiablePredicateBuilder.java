@@ -48,6 +48,7 @@ import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.parser.predicate.PredicateBuilder;
 import com.blazebit.persistence.parser.predicate.PredicateQuantifier;
 import com.blazebit.persistence.parser.predicate.QuantifiableBinaryExpressionPredicate;
+import com.blazebit.persistence.parser.util.TypeUtils;
 
 import javax.persistence.metamodel.EntityType;
 import java.util.Collection;
@@ -111,6 +112,15 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAn
     @Override
     public T value(Object value) {
         return chain(createPredicate(leftExpression, parameterManager.addParameterExpression(value, clauseType, subqueryInitFactory.getQueryBuilder()), PredicateQuantifier.ONE));
+    }
+
+    @Override
+    public T literal(Object value) {
+        String literal = TypeUtils.asLiteral(value);
+        if (literal == null) {
+            return value(value);
+        }
+        return chain(createPredicate(leftExpression, expressionFactory.createInItemExpression(literal), PredicateQuantifier.ONE));
     }
 
     @Override
@@ -206,7 +216,7 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAn
     @Override
     public SimpleCaseWhenBuilder<T> simpleCase(String caseOperand) {
         chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
-        return startBuilder(new SimpleCaseWhenBuilderImpl<T>(result, this, expressionFactory, expressionFactory.createCaseOperandExpression(caseOperand)));
+        return startBuilder(new SimpleCaseWhenBuilderImpl<T>(result, this, expressionFactory, expressionFactory.createCaseOperandExpression(caseOperand), subqueryInitFactory, parameterManager, clauseType));
     }
 
     /* quantification functions */

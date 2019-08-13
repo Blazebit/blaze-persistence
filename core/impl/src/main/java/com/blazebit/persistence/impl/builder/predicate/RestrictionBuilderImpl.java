@@ -35,6 +35,7 @@ import com.blazebit.persistence.impl.SubqueryInternalBuilder;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListener;
 import com.blazebit.persistence.impl.builder.expression.SuperExpressionSubqueryBuilderListener;
+import com.blazebit.persistence.internal.RestrictionBuilderExperimental;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.parser.expression.ParameterExpression;
@@ -53,7 +54,7 @@ import com.blazebit.persistence.parser.predicate.LtPredicate;
 import com.blazebit.persistence.parser.predicate.MemberOfPredicate;
 import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.parser.predicate.PredicateBuilder;
-import com.blazebit.persistence.internal.RestrictionBuilderExperimental;
+import com.blazebit.persistence.parser.util.TypeUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -126,6 +127,18 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     }
 
     @Override
+    public BetweenBuilder<T> betweenLiteral(Object start) {
+        if (start == null) {
+            throw new NullPointerException("start");
+        }
+        String literal = TypeUtils.asLiteral(start);
+        if (literal == null) {
+            return between(start);
+        }
+        return startBuilder(new BetweenBuilderImpl<T>(result, leftExpression, expressionFactory.createInItemExpression(literal), expressionFactory, parameterManager, this, subqueryInitFactory, clause));
+    }
+
+    @Override
     public BetweenBuilder<T> betweenExpression(String start) {
         return startBuilder(new BetweenBuilderImpl<T>(result, leftExpression, expressionFactory.createArithmeticExpression(start), expressionFactory, parameterManager, this, subqueryInitFactory, clause));
     }
@@ -184,6 +197,18 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     }
 
     @Override
+    public BetweenBuilder<T> notBetweenLiteral(Object start) {
+        if (start == null) {
+            throw new NullPointerException("start");
+        }
+        String literal = TypeUtils.asLiteral(start);
+        if (literal == null) {
+            return notBetween(start);
+        }
+        return startBuilder(new BetweenBuilderImpl<T>(result, leftExpression, expressionFactory.createInItemExpression(literal), expressionFactory, parameterManager, this, subqueryInitFactory, clause, true));
+    }
+
+    @Override
     public BetweenBuilder<T> notBetweenExpression(String start) {
         return startBuilder(new BetweenBuilderImpl<T>(result, leftExpression, expressionFactory.createArithmeticExpression(start), expressionFactory, parameterManager, this, subqueryInitFactory, clause, true));
     }
@@ -237,6 +262,18 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     }
 
     @Override
+    public T eqLiteral(Object value) {
+        if (value == null) {
+            throw new NullPointerException("value");
+        }
+        String literal = TypeUtils.asLiteral(value);
+        if (literal == null) {
+            return eq(value);
+        }
+        return chain(new EqPredicate(leftExpression, expressionFactory.createInItemExpression(literal)));
+    }
+
+    @Override
     public T eqExpression(String expression) {
         return chain(new EqPredicate(leftExpression, expressionFactory.createSimpleExpression(expression, false)));
     }
@@ -277,6 +314,18 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
             throw new NullPointerException("value");
         }
         return chain(new EqPredicate(leftExpression, parameterManager.addParameterExpression(value, clause, subqueryInitFactory.getQueryBuilder()), true));
+    }
+
+    @Override
+    public T notEqLiteral(Object value) {
+        if (value == null) {
+            throw new NullPointerException("value");
+        }
+        String literal = TypeUtils.asLiteral(value);
+        if (literal == null) {
+            return notEq(value);
+        }
+        return chain(new EqPredicate(leftExpression, expressionFactory.createInItemExpression(literal), true));
     }
 
     @Override
@@ -323,6 +372,18 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     }
 
     @Override
+    public T gtLiteral(Object value) {
+        if (value == null) {
+            throw new NullPointerException("value");
+        }
+        String literal = TypeUtils.asLiteral(value);
+        if (literal == null) {
+            return gt(value);
+        }
+        return chain(new GtPredicate(leftExpression, expressionFactory.createInItemExpression(literal)));
+    }
+
+    @Override
     public T gtExpression(String expression) {
         return chain(new GtPredicate(leftExpression, expressionFactory.createSimpleExpression(expression, false)));
     }
@@ -363,6 +424,18 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
             throw new NullPointerException("value");
         }
         return chain(new GePredicate(leftExpression, parameterManager.addParameterExpression(value, clause, subqueryInitFactory.getQueryBuilder())));
+    }
+
+    @Override
+    public T geLiteral(Object value) {
+        if (value == null) {
+            throw new NullPointerException("value");
+        }
+        String literal = TypeUtils.asLiteral(value);
+        if (literal == null) {
+            return ge(value);
+        }
+        return chain(new GePredicate(leftExpression, expressionFactory.createInItemExpression(literal)));
     }
 
     @Override
@@ -409,6 +482,18 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     }
 
     @Override
+    public T ltLiteral(Object value) {
+        if (value == null) {
+            throw new NullPointerException("value");
+        }
+        String literal = TypeUtils.asLiteral(value);
+        if (literal == null) {
+            return lt(value);
+        }
+        return chain(new LtPredicate(leftExpression, expressionFactory.createInItemExpression(literal)));
+    }
+
+    @Override
     public T ltExpression(String expression) {
         return chain(new LtPredicate(leftExpression, expressionFactory.createSimpleExpression(expression, false)));
     }
@@ -449,6 +534,18 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
             throw new NullPointerException("value");
         }
         return chain(new LePredicate(leftExpression, parameterManager.addParameterExpression(value, clause, subqueryInitFactory.getQueryBuilder())));
+    }
+
+    @Override
+    public T leLiteral(Object value) {
+        if (value == null) {
+            throw new NullPointerException("value");
+        }
+        String literal = TypeUtils.asLiteral(value);
+        if (literal == null) {
+            return le(value);
+        }
+        return chain(new LePredicate(leftExpression, expressionFactory.createInItemExpression(literal)));
     }
 
     @Override
@@ -518,6 +615,29 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     }
 
     @Override
+    public T inLiterals(Collection<?> values) {
+        if (values == null) {
+            throw new NullPointerException("values");
+        }
+        Expression[] literalValues = new Expression[values.size()];
+        int i = 0;
+        for (Object value : values) {
+            String literal = TypeUtils.asLiteral(value);
+            if (literal == null) {
+                return in(values);
+            } else {
+                literalValues[i++] = expressionFactory.createInItemExpression(literal);
+            }
+        }
+        return chain(new InPredicate(leftExpression, literalValues));
+    }
+
+    @Override
+    public T inLiterals(Object... values) {
+        return inLiterals(Arrays.asList(values));
+    }
+
+    @Override
     public T notInExpressions(String... parameterOrLiteralExpressions) {
         if (parameterOrLiteralExpressions == null) {
             throw new NullPointerException("parameterOrLiteralExpressions");
@@ -553,6 +673,31 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     @Override
     public T notIn(Object... values) {
         return notIn(Arrays.asList(values));
+    }
+
+    @Override
+    public T notInLiterals(Collection<?> values) {
+        if (values == null) {
+            throw new NullPointerException("values");
+        }
+        Expression[] literalValues = new Expression[values.size()];
+        int i = 0;
+        for (Object value : values) {
+            String literal = TypeUtils.asLiteral(value);
+            if (literal == null) {
+                return notIn(values);
+            } else {
+                literalValues[i++] = expressionFactory.createInItemExpression(literal);
+            }
+        }
+        InPredicate inPredicate = new InPredicate(leftExpression, literalValues);
+        inPredicate.setNegated(true);
+        return chain(inPredicate);
+    }
+
+    @Override
+    public T notInLiterals(Object... values) {
+        return notInLiterals(Arrays.asList(values));
     }
 
     @Override

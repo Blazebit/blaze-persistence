@@ -40,6 +40,7 @@ import com.blazebit.persistence.parser.expression.WhenClauseExpression;
 import com.blazebit.persistence.parser.predicate.CompoundPredicate;
 import com.blazebit.persistence.parser.predicate.ExistsPredicate;
 import com.blazebit.persistence.parser.predicate.PredicateBuilder;
+import com.blazebit.persistence.parser.util.TypeUtils;
 
 /**
  *
@@ -155,6 +156,24 @@ public class CaseWhenOrThenBuilderImpl<T extends CaseWhenBuilder<?>> extends Pre
             throw new IllegalStateException("Method then/thenExpression called multiple times");
         }
         whenClause = new WhenClauseExpression(predicate, expressionFactory.createScalarExpression(expression));
+        listener.onBuilderEnded(this);
+        return result;
+    }
+
+    @Override
+    public T thenLiteral(Object value) {
+        verifyBuilderEnded();
+        if (predicate.getChildren().isEmpty()) {
+            throw new IllegalStateException("No and clauses specified!");
+        }
+        if (whenClause != null) {
+            throw new IllegalStateException("Method then/thenExpression called multiple times");
+        }
+        String literal = TypeUtils.asLiteral(value);
+        if (literal == null) {
+            return then(value);
+        }
+        whenClause = new WhenClauseExpression(predicate, expressionFactory.createInItemExpression(literal));
         listener.onBuilderEnded(this);
         return result;
     }

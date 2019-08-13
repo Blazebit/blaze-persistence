@@ -35,5 +35,16 @@ public interface SimpleCaseWhenBuilder<T> extends SimpleCaseWhenStarterBuilder<T
      * @return The parent builder
      */
     public T otherwise(String elseExpression);
+
+    /**
+     * Adds the given else value to the case when builder rendered as literal.
+     *
+     * @param elseValue The else value
+     * @return The parent builder
+     * @since 1.4.0
+     */
+    public T otherwiseLiteral(Object elseValue);
+
+    // TODO: otherwiseValue?
     // TODO: subqueries?
 }

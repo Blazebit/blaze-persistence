@@ -48,6 +48,15 @@ public interface RestrictionBuilder<T> {
     public BetweenBuilder<T> between(Object start);
 
     /**
+     * Starts a builder for a between predicate with parameterized lower bound that is rendered as literal.
+     *
+     * @param start The between start value
+     * @return The {@link BetweenBuilder}
+     * @since 1.4.0
+     */
+    public BetweenBuilder<T> betweenLiteral(Object start);
+
+    /**
      * Starts a builder for a between predicate with a subquery as lower bound.
      * 
      * @return The {@link SubqueryInitiator}
@@ -120,12 +129,21 @@ public interface RestrictionBuilder<T> {
     public BetweenBuilder<T> notBetweenExpression(String start);
 
     /**
-     * Like {@link RestrictionBuilder#notBetween(java.lang.Object)} but the resulting predicate is negated.
+     * Like {@link RestrictionBuilder#between(java.lang.Object)} but the resulting predicate is negated.
      * 
      * @param start The between start value
      * @return The {@link BetweenBuilder}
      */
     public BetweenBuilder<T> notBetween(Object start);
+
+    /**
+     * Like {@link RestrictionBuilder#betweenLiteral(java.lang.Object)} but the resulting predicate is negated.
+     *
+     * @param start The between start value
+     * @return The {@link BetweenBuilder}
+     * @since 1.4.0
+     */
+    public BetweenBuilder<T> notBetweenLiteral(Object start);
 
     /**
      * Like {@link RestrictionBuilder#betweenSubquery()} but the resulting predicate is negated.
@@ -249,6 +267,16 @@ public interface RestrictionBuilder<T> {
 
     /**
      * Finishes the EQ predicate and adds it to the parent predicate container represented by the type <code>T</code>.
+     * The predicate checks if the left hand side is equal to the given value rendered as literal.
+     *
+     * @param value The value on the right hand side
+     * @return The parent predicate container builder
+     * @since 1.4.0
+     */
+    public T eqLiteral(Object value);
+
+    /**
+     * Finishes the EQ predicate and adds it to the parent predicate container represented by the type <code>T</code>.
      * The predicate checks if the left hand side is equal to the given expression.
      *
      * @param expression The expression on the right hand side
@@ -308,6 +336,15 @@ public interface RestrictionBuilder<T> {
      * @return The parent predicate container builder
      */
     public T notEq(Object value);
+
+    /**
+     * Like {@link RestrictionBuilder#eqLiteral(java.lang.Object) } but the result is wrapped in a NOT predicate.
+     *
+     * @param value The value on the right hand side
+     * @return The parent predicate container builder
+     * @since 1.4.0
+     */
+    public T notEqLiteral(Object value);
 
     /**
      * Like {@link RestrictionBuilder#eqExpression(java.lang.String) } but the result is wrapped in a NOT predicate.
@@ -389,6 +426,16 @@ public interface RestrictionBuilder<T> {
      * @return The parent predicate container builder
      */
     public T gt(Object value);
+
+    /**
+     * Finishes the GT predicate and adds it to the parent predicate container represented by the type <code>T</code>.
+     * The predicate checks if the left hand side is greater than the given value rendered as literal.
+     *
+     * @param value The value on the right hand side
+     * @return The parent predicate container builder
+     * @since 1.4.0
+     */
+    public T gtLiteral(Object value);
 
     /**
      * Finishes the GT predicate and adds it to the parent predicate container represented by the type <code>T</code>.
@@ -474,6 +521,16 @@ public interface RestrictionBuilder<T> {
 
     /**
      * Finishes the GE predicate and adds it to the parent predicate container represented by the type <code>T</code>.
+     * The predicate checks if the left hand side is greater or equal to the given value rendered as literal.
+     *
+     * @param value The value on the right hand side
+     * @return The parent predicate container builder
+     * @since 1.4.0
+     */
+    public T geLiteral(Object value);
+
+    /**
+     * Finishes the GE predicate and adds it to the parent predicate container represented by the type <code>T</code>.
      * The predicate checks if the left hand side is greater or equal to the given expression.
      *
      * @param expression The expression on the right hand side
@@ -556,6 +613,16 @@ public interface RestrictionBuilder<T> {
 
     /**
      * Finishes the LT predicate and adds it to the parent predicate container represented by the type <code>T</code>.
+     * The predicate checks if the left hand side is less than the given value rendered as literal.
+     *
+     * @param value The value on the right hand side
+     * @return The parent predicate container builder
+     * @since 1.4.0
+     */
+    public T ltLiteral(Object value);
+
+    /**
+     * Finishes the LT predicate and adds it to the parent predicate container represented by the type <code>T</code>.
      * The predicate checks if the left hand side is less than the given expression.
      *
      * @param expression The expression on the right hand side
@@ -635,6 +702,15 @@ public interface RestrictionBuilder<T> {
      * @return The parent predicate container builder
      */
     public T le(Object value);
+    /**
+     * Finishes the LE predicate and adds it to the parent predicate container represented by the type <code>T</code>.
+     * The predicate checks if the left hand side is less or equal to the given value rendered as literal.
+     *
+     * @param value The value on the right hand side
+     * @return The parent predicate container builder
+     * @since 1.4.0
+     */
+    public T leLiteral(Object value);
 
     /**
      * Finishes the LE predicate and adds it to the parent predicate container represented by the type <code>T</code>.
@@ -717,6 +793,25 @@ public interface RestrictionBuilder<T> {
     public T in(Object... values);
 
     /**
+     * Finishes the IN predicate and adds it to the parent predicate container represented by the type <code>T</code>.
+     * The predicate checks if the left hand side is in the list of given values rendered as literals.
+     *
+     * @param values The values on the right hand side
+     * @return The parent predicate container builder
+     * @since 1.4.0
+     */
+    public T inLiterals(Collection<?> values);
+
+    /**
+     * Like {@link RestrictionBuilder#inLiterals(java.util.Collection) } but the values will be wrapped in a {@link Collection}.
+     *
+     * @param values The values on the right hand side
+     * @return The parent predicate container builder
+     * @since 1.4.0
+     */
+    public T inLiterals(Object... values);
+
+    /**
      * Like {@link RestrictionBuilder#inExpressions(String...) } but the result is wrapped in a NOT predicate.
      *
      * @param parameterOrLiteralExpressions The parameter- or literal-expressions on the right hand side
@@ -749,6 +844,24 @@ public interface RestrictionBuilder<T> {
      * @return The parent predicate container builder
      */
     public T notIn(Object... values);
+
+    /**
+     * Like {@link RestrictionBuilder#inLiterals(java.util.Collection) } but the result is wrapped in a NOT predicate.
+     *
+     * @param values The values on the right hand side
+     * @return The parent predicate container builder
+     * @since 1.4.0
+     */
+    public T notInLiterals(Collection<?> values);
+
+    /**
+     * Like {@link RestrictionBuilder#notInLiterals(java.util.Collection) } but the values will be wrapped in a {@link Collection}.
+     *
+     * @param values The values on the right hand side
+     * @return The parent predicate container builder
+     * @since 1.4.0
+     */
+    public T notInLiterals(Object... values);
 
     /**
      * Finishes the IS NULL predicate and adds it to the parent predicate container represented by the type <code>T</code>.

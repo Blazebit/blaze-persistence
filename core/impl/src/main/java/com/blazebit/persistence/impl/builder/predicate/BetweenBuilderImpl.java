@@ -35,6 +35,7 @@ import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.parser.expression.SubqueryExpression;
 import com.blazebit.persistence.parser.predicate.BetweenPredicate;
+import com.blazebit.persistence.parser.util.TypeUtils;
 
 /**
  *
@@ -77,6 +78,18 @@ public class BetweenBuilderImpl<T> extends SubqueryBuilderListenerImpl<T> implem
             throw new NullPointerException("end");
         }
         return chain(new BetweenPredicate(left, start, parameterManager.addParameterExpression(end, clauseType, subqueryInitFactory.getQueryBuilder()), negated));
+    }
+
+    @Override
+    public T andLiteral(Object end) {
+        if (end == null) {
+            throw new NullPointerException("end");
+        }
+        String literal = TypeUtils.asLiteral(end);
+        if (literal == null) {
+            return and(end);
+        }
+        return chain(new BetweenPredicate(left, start, expressionFactory.createInItemExpression(literal), negated));
     }
 
     @Override

@@ -734,6 +734,15 @@ public class TypeUtils {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
+    public static String asLiteral(Object value) {
+        TypeConverter<Object> converter = (TypeConverter<Object>) getConverter(value.getClass());
+        if (converter == null) {
+            return null;
+        }
+        return converter.toString(value);
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static <T> TypeConverter<T> getConverter(Class<T> targetType) {
         TypeConverter t = CONVERTERS.get(targetType);
         

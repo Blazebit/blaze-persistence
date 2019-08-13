@@ -34,6 +34,15 @@ public interface CaseWhenBuilder<T> extends CaseWhenStarterBuilder<T> {
     public T otherwiseExpression(String elseExpression);
 
     /**
+     * Adds the given else parameter value to the case when builder rendered as literal.
+     *
+     * @param value The else parameter value
+     * @return The parent builder
+     * @since 1.4.0
+     */
+    public T otherwiseLiteral(Object value);
+
+    /**
      * Adds the given else parameter value to the case when builder.
      *
      * @param value The else parameter value

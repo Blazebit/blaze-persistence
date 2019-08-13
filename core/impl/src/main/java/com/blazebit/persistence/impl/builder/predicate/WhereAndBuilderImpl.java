@@ -114,7 +114,7 @@ public class WhereAndBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedList
     public SimpleCaseWhenStarterBuilder<RestrictionBuilder<WhereAndBuilder<T>>> whereSimpleCase(String expression) {
         RestrictionBuilderImpl<WhereAndBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<WhereAndBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager, ClauseType.WHERE));
         caseExpressionBuilderListener = new CaseExpressionBuilderListener(restrictionBuilder);
-        return caseExpressionBuilderListener.startBuilder(new SimpleCaseWhenBuilderImpl<RestrictionBuilder<WhereAndBuilder<T>>>(restrictionBuilder, caseExpressionBuilderListener, expressionFactory, expressionFactory.createCaseOperandExpression(expression)));
+        return caseExpressionBuilderListener.startBuilder(new SimpleCaseWhenBuilderImpl<RestrictionBuilder<WhereAndBuilder<T>>>(restrictionBuilder, caseExpressionBuilderListener, expressionFactory, expressionFactory.createCaseOperandExpression(expression), subqueryInitFactory, parameterManager, ClauseType.WHERE));
     }
 
     @Override

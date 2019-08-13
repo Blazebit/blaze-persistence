@@ -37,6 +37,16 @@ public interface BinaryPredicateBuilder<T> {
     public T value(Object value);
 
     /**
+     * Uses the given value as right hand side for the binary predicate rendered as literal.
+     * Finishes the binary predicate and adds it to the parent predicate container represented by the type <code>T</code>.
+     *
+     * @param value The value to use for the right hand side of the binary predicate
+     * @return The parent predicate container builder
+     * @since 1.4.0
+     */
+    public T literal(Object value);
+
+    /**
      * Uses the given expression as right hand side for the binary predicate.
      * Finishes the binary predicate and adds it to the parent predicate container represented by the type <code>T</code>.
      *

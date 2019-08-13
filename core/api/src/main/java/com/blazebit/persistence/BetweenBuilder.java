@@ -40,6 +40,15 @@ public interface BetweenBuilder<T> {
     public T and(Object end);
 
     /**
+     * Constructs a between predicate with a parameter as upper bound rendered as literal.
+     *
+     * @param end The parameter for the upper bound
+     * @return The parent predicate container builder
+     * @since 1.4.0
+     */
+    public T andLiteral(Object end);
+
+    /**
      * Constructs a between predicate with an expression as upper bound.
      * 
      * @param end The upper bound expression
