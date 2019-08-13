@@ -104,6 +104,7 @@
         <version.injection.plugin>1.0.2</version.injection.plugin>
         <version.moditect.plugin>1.0.0.Beta1</version.moditect.plugin>
         <version.release.plugin>2.5.1</version.release.plugin>
+        <version.shade.plugin>3.1.1</version.shade.plugin>
         <version.surefire.plugin>2.19.1</version.surefire.plugin>
 
         <!-- JVM values for surefire plugin -->

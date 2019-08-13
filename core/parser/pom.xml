@@ -79,6 +79,41 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <createSourcesJar>true</createSourcesJar>
+                            <artifactSet>
+                                <includes>
+                                    <include>org.antlr:antlr4-runtime</include>
+                                </includes>
+                            </artifactSet>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>default-module</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <shadedClassifierName>module</shadedClassifierName>
+                            <artifactSet>
+                                <includes>
+                                    <include>org.antlr:antlr4-runtime</include>
+                                </includes>
+                            </artifactSet>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.antlr</groupId>
                 <artifactId>antlr4-maven-plugin</artifactId>
                 <version>4.6</version>
@@ -130,7 +165,6 @@
                                     module ${module.name} {
                                         requires java.sql;
                                         requires java.persistence;
-                                        requires org.antlr.antlr4.runtime;
                                         requires com.blazebit.common.utils;
                                         exports com.blazebit.persistence.parser;
                                         exports com.blazebit.persistence.parser.expression;
