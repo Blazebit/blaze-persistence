@@ -16,16 +16,32 @@
 
 package com.blazebit.persistence.impl.builder.predicate;
 
+import com.blazebit.persistence.CaseWhenStarterBuilder;
+import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.JoinOnAndBuilder;
 import com.blazebit.persistence.JoinOnOrBuilder;
+import com.blazebit.persistence.MultipleSubqueryInitiator;
 import com.blazebit.persistence.RestrictionBuilder;
+import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
+import com.blazebit.persistence.SubqueryBuilder;
+import com.blazebit.persistence.SubqueryInitiator;
+import com.blazebit.persistence.impl.BuilderChainingException;
 import com.blazebit.persistence.impl.ClauseType;
+import com.blazebit.persistence.impl.MultipleSubqueryInitiatorImpl;
 import com.blazebit.persistence.impl.ParameterManager;
 import com.blazebit.persistence.impl.PredicateAndSubqueryBuilderEndedListener;
+import com.blazebit.persistence.impl.RestrictionBuilderExpressionBuilderListener;
+import com.blazebit.persistence.impl.SubqueryBuilderListenerImpl;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
-import com.blazebit.persistence.parser.predicate.CompoundPredicate;
+import com.blazebit.persistence.impl.builder.expression.CaseWhenBuilderImpl;
+import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
+import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListener;
+import com.blazebit.persistence.impl.builder.expression.SimpleCaseWhenBuilderImpl;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.predicate.CompoundPredicate;
+import com.blazebit.persistence.parser.predicate.ExistsPredicate;
+import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.parser.predicate.PredicateBuilder;
 
 /**
@@ -37,10 +53,15 @@ public class JoinOnOrBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedList
 
     private final T result;
     private final PredicateBuilderEndedListener listener;
-    private final CompoundPredicate expression = new CompoundPredicate(CompoundPredicate.BooleanOperator.OR);
+    private final CompoundPredicate predicate = new CompoundPredicate(CompoundPredicate.BooleanOperator.OR);
     private final ExpressionFactory expressionFactory;
     private final ParameterManager parameterManager;
     private final SubqueryInitiatorFactory subqueryInitFactory;
+    private final SubqueryBuilderListenerImpl<RestrictionBuilder<JoinOnOrBuilder<T>>> leftSubqueryPredicateBuilderListener = new LeftHandsideSubqueryPredicateBuilderListener();
+    private SubqueryBuilderListenerImpl<JoinOnOrBuilder<T>> rightSubqueryPredicateBuilderListener;
+    private SubqueryBuilderListenerImpl<RestrictionBuilder<JoinOnOrBuilder<T>>> superExprLeftSubqueryPredicateBuilderListener;
+    private CaseExpressionBuilderListener caseExpressionBuilderListener;
+    private MultipleSubqueryInitiator<?> currentMultipleSubqueryInitiator;
 
     public JoinOnOrBuilderImpl(T result, PredicateBuilderEndedListener listener, ExpressionFactory expressionFactory, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory) {
         this.result = result;
@@ -53,6 +74,9 @@ public class JoinOnOrBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedList
     @Override
     public T endOr() {
         verifyBuilderEnded();
+        if (currentMultipleSubqueryInitiator != null) {
+            throw new BuilderChainingException("A builder was not ended properly.");
+        }
         listener.onBuilderEnded(this);
         return result;
     }
@@ -60,7 +84,7 @@ public class JoinOnOrBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedList
     @Override
     public void onBuilderEnded(PredicateBuilder builder) {
         super.onBuilderEnded(builder);
-        expression.getChildren().add(builder.getPredicate());
+        predicate.getChildren().add(builder.getPredicate());
     }
 
     @Override
@@ -75,8 +99,106 @@ public class JoinOnOrBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedList
     }
 
     @Override
+    public CaseWhenStarterBuilder<RestrictionBuilder<JoinOnOrBuilder<T>>> onCase() {
+        RestrictionBuilderImpl<JoinOnOrBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<JoinOnOrBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager, ClauseType.JOIN));
+        caseExpressionBuilderListener = new CaseExpressionBuilderListener(restrictionBuilder);
+        return caseExpressionBuilderListener.startBuilder(new CaseWhenBuilderImpl<RestrictionBuilder<JoinOnOrBuilder<T>>>(restrictionBuilder, caseExpressionBuilderListener, subqueryInitFactory, expressionFactory, parameterManager, ClauseType.JOIN));
+    }
+
+    @Override
+    public SimpleCaseWhenStarterBuilder<RestrictionBuilder<JoinOnOrBuilder<T>>> onSimpleCase(String expression) {
+        RestrictionBuilderImpl<JoinOnOrBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<JoinOnOrBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager, ClauseType.JOIN));
+        caseExpressionBuilderListener = new CaseExpressionBuilderListener(restrictionBuilder);
+        return caseExpressionBuilderListener.startBuilder(new SimpleCaseWhenBuilderImpl<RestrictionBuilder<JoinOnOrBuilder<T>>>(restrictionBuilder, caseExpressionBuilderListener, expressionFactory, expressionFactory.createCaseOperandExpression(expression)));
+    }
+
+    @Override
+    public SubqueryInitiator<JoinOnOrBuilder<T>> onExists() {
+        rightSubqueryPredicateBuilderListener = startBuilder(new RightHandsideSubqueryPredicateBuilder<JoinOnOrBuilder<T>>(this, new ExistsPredicate()));
+        return subqueryInitFactory.createSubqueryInitiator((JoinOnOrBuilder<T>) this, rightSubqueryPredicateBuilderListener, true, ClauseType.JOIN);
+    }
+
+    @Override
+    public SubqueryInitiator<JoinOnOrBuilder<T>> onNotExists() {
+        rightSubqueryPredicateBuilderListener = startBuilder(new RightHandsideSubqueryPredicateBuilder<JoinOnOrBuilder<T>>(this, new ExistsPredicate(true)));
+        return subqueryInitFactory.createSubqueryInitiator((JoinOnOrBuilder<T>) this, rightSubqueryPredicateBuilderListener, true, ClauseType.JOIN);
+    }
+
+    @Override
+    public SubqueryBuilder<JoinOnOrBuilder<T>> onExists(FullQueryBuilder<?, ?> criteriaBuilder) {
+        rightSubqueryPredicateBuilderListener = startBuilder(new RightHandsideSubqueryPredicateBuilder<JoinOnOrBuilder<T>>(this, new ExistsPredicate()));
+        return subqueryInitFactory.createSubqueryBuilder((JoinOnOrBuilder<T>) this, rightSubqueryPredicateBuilderListener, true, criteriaBuilder, ClauseType.JOIN);
+    }
+
+    @Override
+    public SubqueryBuilder<JoinOnOrBuilder<T>> onNotExists(FullQueryBuilder<?, ?> criteriaBuilder) {
+        rightSubqueryPredicateBuilderListener = startBuilder(new RightHandsideSubqueryPredicateBuilder<JoinOnOrBuilder<T>>(this, new ExistsPredicate(true)));
+        return subqueryInitFactory.createSubqueryBuilder((JoinOnOrBuilder<T>) this, rightSubqueryPredicateBuilderListener, true, criteriaBuilder, ClauseType.JOIN);
+    }
+
+    @Override
+    public SubqueryInitiator<RestrictionBuilder<JoinOnOrBuilder<T>>> onSubquery() {
+        RestrictionBuilder<JoinOnOrBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<JoinOnOrBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager, ClauseType.JOIN));
+        return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, leftSubqueryPredicateBuilderListener, false, ClauseType.JOIN);
+    }
+
+    @Override
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public SubqueryInitiator<RestrictionBuilder<JoinOnOrBuilder<T>>> onSubquery(String subqueryAlias, String expression) {
+        superExprLeftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression, true));
+        RestrictionBuilder<JoinOnOrBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<JoinOnOrBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager, ClauseType.JOIN));
+        return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, superExprLeftSubqueryPredicateBuilderListener, false, ClauseType.JOIN);
+    }
+
+    @Override
+    public MultipleSubqueryInitiator<RestrictionBuilder<JoinOnOrBuilder<T>>> onSubqueries(String expression) {
+        Expression expr = expressionFactory.createSimpleExpression(expression, true);
+        RestrictionBuilderImpl<JoinOnOrBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<JoinOnOrBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager, ClauseType.JOIN));
+        // We don't need a listener or marker here, because the resulting restriction builder can only be ended, when the initiator is ended
+        MultipleSubqueryInitiator<RestrictionBuilder<JoinOnOrBuilder<T>>> initiator = new MultipleSubqueryInitiatorImpl<RestrictionBuilder<JoinOnOrBuilder<T>>>(restrictionBuilder, expr, new RestrictionBuilderExpressionBuilderListener(restrictionBuilder), subqueryInitFactory, ClauseType.JOIN);
+        return initiator;
+    }
+
+    @Override
+    public SubqueryBuilder<RestrictionBuilder<JoinOnOrBuilder<T>>> onSubquery(FullQueryBuilder<?, ?> criteriaBuilder) {
+        RestrictionBuilder<JoinOnOrBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<JoinOnOrBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager, ClauseType.JOIN));
+        return subqueryInitFactory.createSubqueryBuilder(restrictionBuilder, leftSubqueryPredicateBuilderListener, false, criteriaBuilder, ClauseType.JOIN);
+    }
+
+    @Override
+    public SubqueryBuilder<RestrictionBuilder<JoinOnOrBuilder<T>>> onSubquery(String subqueryAlias, String expression, FullQueryBuilder<?, ?> criteriaBuilder) {
+        superExprLeftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression, true));
+        RestrictionBuilder<JoinOnOrBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<JoinOnOrBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager, ClauseType.JOIN));
+        return subqueryInitFactory.createSubqueryBuilder(restrictionBuilder, superExprLeftSubqueryPredicateBuilderListener, false, criteriaBuilder, ClauseType.JOIN);
+    }
+
+    @Override
+    public JoinOnOrBuilder<T> onExpression(String expression) {
+        Predicate predicate = expressionFactory.createBooleanExpression(expression, false);
+        this.predicate.getChildren().add(predicate);
+        return this;
+    }
+
+    @Override
+    public MultipleSubqueryInitiator<JoinOnOrBuilder<T>> onExpressionSubqueries(String expression) {
+        Predicate predicate = expressionFactory.createBooleanExpression(expression, true);
+        // We don't need a listener or marker here, because the resulting restriction builder can only be ended, when the initiator is ended
+        MultipleSubqueryInitiator<JoinOnOrBuilder<T>> initiator = new MultipleSubqueryInitiatorImpl<JoinOnOrBuilder<T>>(this, predicate, new ExpressionBuilderEndedListener() {
+
+            @Override
+            public void onBuilderEnded(ExpressionBuilder builder) {
+                JoinOnOrBuilderImpl.this.predicate.getChildren().add((Predicate) builder.getExpression());
+                currentMultipleSubqueryInitiator = null;
+            }
+
+        }, subqueryInitFactory, ClauseType.JOIN);
+        currentMultipleSubqueryInitiator = initiator;
+        return initiator;
+    }
+
+    @Override
     public CompoundPredicate getPredicate() {
-        return expression;
+        return predicate;
     }
 
 }

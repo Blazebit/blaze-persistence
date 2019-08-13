@@ -146,7 +146,7 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor, Jo
                         }
                     }
 
-                    subqueryBuilder.whereManager.restrictExpression(correlationPathReplacementVisitor.rewritePredicate(node.getOnPredicate()));
+                    subqueryBuilder.whereManager.restrictSetExpression(correlationPathReplacementVisitor.rewritePredicate(node.getOnPredicate()));
                     node.setOnPredicate(new CompoundPredicate(CompoundPredicate.BooleanOperator.AND, new ExistsPredicate(new SubqueryExpression(subqueryBuilder), false)));
                     node.getOnPredicate().accept(this);
                 }
