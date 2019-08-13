@@ -46,7 +46,6 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-jpa-criteria-api</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <dependency>
@@ -132,13 +131,13 @@
                             <goal>add-module-info</goal>
                         </goals>
                         <configuration>
-                            <version>${project.version}-module</version>
                             <module>
                                 <moduleInfoSource>
                                     module ${module.name} {
                                         requires com.blazebit.common.utils;
                                         requires transitive com.blazebit.persistence.criteria;
                                         exports com.blazebit.persistence.criteria.impl;
+                                        provides com.blazebit.persistence.criteria.spi.BlazeCriteriaBuilderFactory with com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderFactoryImpl;
                                     }
                                 </moduleInfoSource>
                             </module>

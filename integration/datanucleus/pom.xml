@@ -166,16 +166,6 @@
                             <goal>jar</goal>
                         </goals>
                     </execution>
-                    <execution>
-                        <id>modular-jar</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                        <configuration>
-                            <classifier>module</classifier>
-                        </configuration>
-                    </execution>
                 </executions>
             </plugin>
             <plugin>
@@ -189,7 +179,6 @@
                             <goal>add-module-info</goal>
                         </goals>
                         <configuration>
-                            <version>${project.version}-module</version>
                             <module>
                                 <moduleInfoSource>
                                     module ${module.name} {

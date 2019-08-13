@@ -188,6 +188,12 @@
             </dependency>
             <dependency>
                 <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-spring-data-base</artifactId>
+                <version>${project.version}</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
                 <artifactId>blaze-persistence-integration-spring-data-1.x</artifactId>
                 <version>${project.version}</version>
                 <scope>compile</scope>
@@ -218,6 +224,12 @@
             </dependency>
             <dependency>
                 <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-deltaspike-data-base</artifactId>
+                <version>${project.version}</version>
+                <scope>runtime</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
                 <artifactId>blaze-persistence-integration-deltaspike-data-impl-1.7</artifactId>
                 <version>${project.version}</version>
                 <scope>runtime</scope>
@@ -225,6 +237,18 @@
             <dependency>
                 <groupId>com.blazebit</groupId>
                 <artifactId>blaze-persistence-integration-deltaspike-data-impl-1.8</artifactId>
+                <version>${project.version}</version>
+                <scope>runtime</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-deltaspike-data-rest-api</artifactId>
+                <version>${project.version}</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-deltaspike-data-rest-impl</artifactId>
                 <version>${project.version}</version>
                 <scope>runtime</scope>
             </dependency>

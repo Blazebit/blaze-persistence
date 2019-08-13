@@ -16,7 +16,7 @@ None
 
 ### Backwards-incompatible changes
 
-None
+* Dropped module classified artifacts in favor of adding `module-info.class` file to standard artifacts requires e.g. Jandex 2.0.4.Final or later
 
 ## 1.4.0-Alpha1
 

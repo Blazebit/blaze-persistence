@@ -137,6 +137,10 @@
         </dependency>
         <dependency>
             <groupId>com.blazebit</groupId>
+            <artifactId>blaze-persistence-integration-spring-data-base</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.blazebit</groupId>
             <artifactId>blaze-persistence-integration-spring-data-1.x</artifactId>
         </dependency>
         <dependency>
@@ -157,11 +161,23 @@
         </dependency>
         <dependency>
             <groupId>com.blazebit</groupId>
+            <artifactId>blaze-persistence-integration-deltaspike-data-base</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.blazebit</groupId>
             <artifactId>blaze-persistence-integration-deltaspike-data-impl-1.7</artifactId>
         </dependency>
         <dependency>
             <groupId>com.blazebit</groupId>
             <artifactId>blaze-persistence-integration-deltaspike-data-impl-1.8</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.blazebit</groupId>
+            <artifactId>blaze-persistence-integration-deltaspike-data-rest-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.blazebit</groupId>
+            <artifactId>blaze-persistence-integration-deltaspike-data-rest-impl</artifactId>
         </dependency>
     </dependencies>
 

@@ -98,16 +98,6 @@
                             <goal>jar</goal>
                         </goals>
                     </execution>
-                    <execution>
-                        <id>modular-jar</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                        <configuration>
-                            <classifier>module</classifier>
-                        </configuration>
-                    </execution>
                 </executions>
             </plugin>
         </plugins>
