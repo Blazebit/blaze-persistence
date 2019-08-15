@@ -126,6 +126,7 @@ public final class InverseFlusher<E> {
             if (attribute.getWritableMappedByMappings() != null) {
                 // This happens when the mapped by attribute is insertable=false and updatable=false
                 if (childTypeDescriptor.isSubview()) {
+                    // TODO: actually, we need AttributeMapper for all possible subtypes
                     ViewType<?> childViewType = (ViewType<?>) elementType;
                     elementEntityClass = childViewType.getEntityClass();
                     parentEntityOnChildViewMapper = (Mapper<Object, Object>) Mappers.forViewConvertToViewAttributeMapping(
@@ -177,6 +178,7 @@ public final class InverseFlusher<E> {
                 }
             } else {
                 if (childTypeDescriptor.isSubview()) {
+                    // TODO: actually, we need AttributeMapper for all possible subtypes
                     ViewType<?> childViewType = (ViewType<?>) elementType;
                     elementEntityClass = childViewType.getEntityClass();
                     parentReferenceAttributeAccessor = Accessors.forEntityMapping(

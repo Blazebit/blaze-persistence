@@ -104,7 +104,24 @@ public class OpenJPAJpaProvider implements JpaProvider {
 
     @Override
     public void renderNullPrecedence(StringBuilder sb, String expression, String resolvedExpression, String order, String nulls) {
-        throw new UnsupportedOperationException("Not yet implemented!");
+        if (nulls != null) {
+            sb.append("CASE WHEN ").append(resolvedExpression != null ? resolvedExpression : expression).append(" IS NULL THEN ");
+            if ("FIRST".equals(nulls)) {
+                sb.append("0 ELSE 1");
+            } else {
+                sb.append("1 ELSE 0");
+            }
+            sb.append(" END, ");
+            sb.append(expression);
+            if (order != null) {
+                sb.append(' ').append(order);
+            }
+        } else {
+            sb.append(expression);
+            if (order != null) {
+                sb.append(' ').append(order);
+            }
+        }
     }
 
     @Override
@@ -257,7 +274,7 @@ public class OpenJPAJpaProvider implements JpaProvider {
 
     @Override
     public boolean containsEntity(EntityManager em, Class<?> entityClass, Object id) {
-        throw new UnsupportedOperationException("Not yet implemented!");
+        return false;
     }
 
     @Override
