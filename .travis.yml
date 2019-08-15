@@ -1,5 +1,6 @@
 language: java
 sudo: false
+dist: trusty
 notifications:
   slack: "blazebit:$SLACK_API_TOKEN"
 cache:
@@ -36,7 +37,6 @@ matrix:
       jdk: oraclejdk8
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=mysql
       jdk: oraclejdk8
-      dist: trusty
       sudo: required
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=postgresql
       jdk: oraclejdk8
@@ -74,7 +74,6 @@ matrix:
       jdk: oraclejdk8
     - env: JPAPROVIDER=datanucleus-5 RDBMS=mysql
       jdk: oraclejdk8
-      dist: trusty
       sudo: required
     - env: JPAPROVIDER=datanucleus-5 RDBMS=postgresql
       jdk: oraclejdk8
@@ -107,7 +106,6 @@ matrix:
     - env: JPAPROVIDER=eclipselink RDBMS=h2
       jdk: oraclejdk8
 #    - env: JPAPROVIDER=eclipselink RDBMS=mysql
-#      dist: trusty
 #      sudo: required
 #    - env: JPAPROVIDER=eclipselink RDBMS=postgresql
 #      addons:
@@ -136,7 +134,6 @@ matrix:
 ################################################
 #    - env: JPAPROVIDER=openjpa RDBMS=h2
 #    - env: JPAPROVIDER=openjpa RDBMS=mysql
-#      dist: trusty
 #      sudo: required
 #    - env: JPAPROVIDER=openjpa RDBMS=postgresql
 #      addons:
@@ -167,7 +164,6 @@ matrix:
       jdk: oraclejdk8
     - env: JPAPROVIDER=hibernate-5.3 RDBMS=mysql
       jdk: oraclejdk8
-      dist: trusty
       sudo: required
     - env: JPAPROVIDER=hibernate-5.3 RDBMS=postgresql
       jdk: oraclejdk8
@@ -200,7 +196,6 @@ matrix:
       jdk: oraclejdk8
     - env: JPAPROVIDER=hibernate-5.4 RDBMS=mysql
       jdk: oraclejdk8
-      dist: trusty
       sudo: required
     - env: JPAPROVIDER=hibernate-5.4 RDBMS=postgresql
       jdk: oraclejdk8
@@ -234,7 +229,6 @@ matrix:
 #      jdk: oraclejdk8
 #    - env: JPAPROVIDER=datanucleus-5.1 RDBMS=mysql
 #      jdk: oraclejdk8
-#      dist: trusty
 #      sudo: required
 #    - env: JPAPROVIDER=datanucleus-5.1 RDBMS=postgresql
 #      jdk: oraclejdk8
@@ -268,7 +262,6 @@ matrix:
       jdk: oraclejdk8
     - env: JPAPROVIDER=hibernate-5.1 RDBMS=mysql
       jdk: oraclejdk8
-      dist: trusty
       sudo: required
     - env: JPAPROVIDER=hibernate-5.1 RDBMS=postgresql
       jdk: oraclejdk8
@@ -302,7 +295,6 @@ matrix:
       jdk: oraclejdk8
     - env: JPAPROVIDER=hibernate-5.0 RDBMS=mysql
       jdk: oraclejdk8
-      dist: trusty
       sudo: required
     - env: JPAPROVIDER=hibernate-5.0 RDBMS=postgresql
       jdk: oraclejdk8
@@ -336,7 +328,6 @@ matrix:
       jdk: oraclejdk8
     - env: JPAPROVIDER=hibernate-4.3 RDBMS=mysql
       jdk: oraclejdk8
-      dist: trusty
       sudo: required
     - env: JPAPROVIDER=hibernate-4.3 RDBMS=postgresql
       jdk: oraclejdk8
@@ -369,7 +360,6 @@ matrix:
       jdk: oraclejdk8
     - env: JPAPROVIDER=hibernate RDBMS=mysql
       jdk: oraclejdk8
-      dist: trusty
       sudo: required
     - env: JPAPROVIDER=hibernate RDBMS=postgresql
       jdk: oraclejdk8
@@ -402,7 +392,6 @@ matrix:
       jdk: oraclejdk8
     - env: JPAPROVIDER=datanucleus-4 RDBMS=mysql
       jdk: oraclejdk8
-      dist: trusty
       sudo: required
     - env: JPAPROVIDER=datanucleus-4 RDBMS=postgresql
       addons:
