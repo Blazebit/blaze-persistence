@@ -74,6 +74,10 @@ public class CTEManager extends CTEBuilderListenerImpl {
         return ctes.values();
     }
 
+    public boolean hasCte(Class<?> cte) {
+        return ctes.containsKey(cte);
+    }
+
     public CTEInfo getCte(Class<?> cteType) {
         return ctes.get(cteType);
     }
@@ -191,5 +195,4 @@ public class CTEManager extends CTEBuilderListenerImpl {
         }
         ctes.put(cteInfo.cteType.getJavaType(), cteInfo);
     }
-
 }

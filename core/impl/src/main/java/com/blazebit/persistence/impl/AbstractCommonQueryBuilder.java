@@ -449,6 +449,10 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return mainQuery.cteManager.withStartSet(cteClass, (BuilderType) this);
     }
 
+    public boolean hasCte(Class<?> cte) {
+        return mainQuery.cteManager.hasCte(cte);
+    }
+
     @SuppressWarnings("unchecked")
     public FullSelectCTECriteriaBuilder<BuilderType> with(Class<?> cteClass) {
         if (!mainQuery.dbmsDialect.supportsWithClause()) {

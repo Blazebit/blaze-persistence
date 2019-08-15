@@ -68,4 +68,12 @@ public interface CTEBuilder<T extends CTEBuilder<T>> {
      */
     public ReturningModificationCriteriaBuilderFactory<T> withReturning(Class<?> cteClass);
 
+    /**
+     * Returns whether a CTE for the given type is defined.
+     *
+     * @param cte The type of the CTE to check
+     * @return true when a CTE for the given type is defined
+     */
+    public boolean hasCte(Class<?> cte);
+
 }
