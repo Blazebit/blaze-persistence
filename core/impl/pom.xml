@@ -68,9 +68,6 @@
         <resources>
             <resource>
                 <filtering>true</filtering>
-                <includes>
-                    <include>META-INF/blaze-persistence.properties</include>
-                </includes>
                 <directory>src/main/resources</directory>
             </resource>
         </resources>

@@ -135,6 +135,19 @@
             <artifactId>weld-se-core</artifactId>
             <version>\${version.weld}</version>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.jboss</groupId>
+                    <artifactId>jandex</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- Since we are including a module-info.class file, we need at least 2.0.4.Final -->
+        <dependency>
+            <groupId>org.jboss</groupId>
+            <artifactId>jandex</artifactId>
+            <version>2.0.4.Final</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
