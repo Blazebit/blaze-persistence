@@ -35,5 +35,9 @@
         <module>impl</module>
         <module>jpa-2-compatibility</module>
         <module>testsuite</module>
+
+        <module>api-jar</module>
+        <module>impl-jar</module>
+        <module>jpa-2-compatibility-jar</module>
     </modules>
 </project>
