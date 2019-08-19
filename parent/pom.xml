@@ -82,7 +82,7 @@
 
         <version.deltaspike-1.7>1.7.2</version.deltaspike-1.7>
         <version.deltaspike-1.8>1.8.1</version.deltaspike-1.8>
-        <version.deltaspike-1.9>1.9.0</version.deltaspike-1.9>
+        <version.deltaspike-1.9>1.9.1</version.deltaspike-1.9>
 
         <version.spring-data-1.x>1.11.10.RELEASE</version.spring-data-1.x>
         <version.spring-data-1.x-spring>4.3.3.RELEASE</version.spring-data-1.x-spring>

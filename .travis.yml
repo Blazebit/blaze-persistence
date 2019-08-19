@@ -267,21 +267,21 @@ matrix:
       jdk: oraclejdk8
       addons:
         postgresql: "9.3"
-    - env: JPAPROVIDER=hibernate-5.1 RDBMS=mssql
-      jdk: oraclejdk8
-      sudo: true
-      services:
-        - docker
-    - env: JPAPROVIDER=hibernate-5.1 RDBMS=db2
-      jdk: oraclejdk8
-      sudo: true
-      services:
-        - docker
-    - env: JPAPROVIDER=hibernate-5.1 RDBMS=oracle
-      jdk: oraclejdk8
-      sudo: true
-      services:
-        - docker
+#    - env: JPAPROVIDER=hibernate-5.1 RDBMS=mssql
+#      jdk: oraclejdk8
+#      sudo: true
+#      services:
+#        - docker
+#    - env: JPAPROVIDER=hibernate-5.1 RDBMS=db2
+#      jdk: oraclejdk8
+#      sudo: true
+#      services:
+#        - docker
+#    - env: JPAPROVIDER=hibernate-5.1 RDBMS=oracle
+#      jdk: oraclejdk8
+#      sudo: true
+#      services:
+#        - docker
 #    - env: JPAPROVIDER=hibernate-5.1 RDBMS=sqlite
 #      jdk: oraclejdk8
 #    - env: JPAPROVIDER=hibernate-5.1 RDBMS=firebird
@@ -300,21 +300,21 @@ matrix:
       jdk: oraclejdk8
       addons:
         postgresql: "9.3"
-    - env: JPAPROVIDER=hibernate-5.0 RDBMS=mssql
-      jdk: oraclejdk8
-      sudo: true
-      services:
-        - docker
-    - env: JPAPROVIDER=hibernate-5.0 RDBMS=db2
-      jdk: oraclejdk8
-      sudo: true
-      services:
-        - docker
-    - env: JPAPROVIDER=hibernate-5.0 RDBMS=oracle
-      jdk: oraclejdk8
-      sudo: true
-      services:
-        - docker
+#    - env: JPAPROVIDER=hibernate-5.0 RDBMS=mssql
+#      jdk: oraclejdk8
+#      sudo: true
+#      services:
+#        - docker
+#    - env: JPAPROVIDER=hibernate-5.0 RDBMS=db2
+#      jdk: oraclejdk8
+#      sudo: true
+#      services:
+#        - docker
+#    - env: JPAPROVIDER=hibernate-5.0 RDBMS=oracle
+#      jdk: oraclejdk8
+#      sudo: true
+#      services:
+#        - docker
 #    - env: JPAPROVIDER=hibernate-5.0 RDBMS=sqlite
 #      jdk: oraclejdk8
 #    - env: JPAPROVIDER=hibernate-5.0 RDBMS=firebird
@@ -333,21 +333,21 @@ matrix:
       jdk: oraclejdk8
       addons:
         postgresql: "9.3"
-    - env: JPAPROVIDER=hibernate-4.3 RDBMS=mssql
-      jdk: oraclejdk8
-      sudo: true
-      services:
-        - docker
-    - env: JPAPROVIDER=hibernate-4.3 RDBMS=db2
-      jdk: oraclejdk8
-      sudo: true
-      services:
-        - docker
-    - env: JPAPROVIDER=hibernate-4.3 RDBMS=oracle
-      jdk: oraclejdk8
-      sudo: true
-      services:
-        - docker
+#    - env: JPAPROVIDER=hibernate-4.3 RDBMS=mssql
+#      jdk: oraclejdk8
+#      sudo: true
+#      services:
+#        - docker
+#    - env: JPAPROVIDER=hibernate-4.3 RDBMS=db2
+#      jdk: oraclejdk8
+#      sudo: true
+#      services:
+#        - docker
+#    - env: JPAPROVIDER=hibernate-4.3 RDBMS=oracle
+#      jdk: oraclejdk8
+#      sudo: true
+#      services:
+#        - docker
 #    - env: JPAPROVIDER=hibernate-4.3 RDBMS=sqlite
 #      jdk: oraclejdk8
 #    - env: JPAPROVIDER=hibernate-4.3 RDBMS=firebird
@@ -365,21 +365,21 @@ matrix:
       jdk: oraclejdk8
       addons:
         postgresql: "9.3"
-    - env: JPAPROVIDER=hibernate RDBMS=mssql
-      jdk: oraclejdk8
-      sudo: true
-      services:
-        - docker
-    - env: JPAPROVIDER=hibernate RDBMS=db2
-      jdk: oraclejdk8
-      sudo: true
-      services:
-        - docker
-    - env: JPAPROVIDER=hibernate RDBMS=oracle
-      jdk: oraclejdk8
-      sudo: true
-      services:
-        - docker
+#    - env: JPAPROVIDER=hibernate RDBMS=mssql
+#      jdk: oraclejdk8
+#      sudo: true
+#      services:
+#        - docker
+#    - env: JPAPROVIDER=hibernate RDBMS=db2
+#      jdk: oraclejdk8
+#      sudo: true
+#      services:
+#        - docker
+#    - env: JPAPROVIDER=hibernate RDBMS=oracle
+#      jdk: oraclejdk8
+#      sudo: true
+#      services:
+#        - docker
 #    - env: JPAPROVIDER=hibernate RDBMS=sqlite
 #      jdk: oraclejdk8
 #    - env: JPAPROVIDER=hibernate RDBMS=firebird
@@ -390,13 +390,13 @@ matrix:
 ################################################
     - env: JPAPROVIDER=datanucleus-4 RDBMS=h2
       jdk: oraclejdk8
-    - env: JPAPROVIDER=datanucleus-4 RDBMS=mysql
-      jdk: oraclejdk8
-      sudo: required
-    - env: JPAPROVIDER=datanucleus-4 RDBMS=postgresql
-      addons:
-        postgresql: "9.3"
-      jdk: oraclejdk8
+#    - env: JPAPROVIDER=datanucleus-4 RDBMS=mysql
+#      jdk: oraclejdk8
+#      sudo: required
+#    - env: JPAPROVIDER=datanucleus-4 RDBMS=postgresql
+#      addons:
+#        postgresql: "9.3"
+#      jdk: oraclejdk8
 #    - env: JPAPROVIDER=datanucleus-4 RDBMS=mssql
 #      jdk: oraclejdk8
 #      sudo: true
@@ -443,6 +443,14 @@ matrix:
       before_install:
       - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
       - . ./install-jdk.sh -F 12 -L GPL
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=13
+      before_install:
+        - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
+        - . ./install-jdk.sh -F 13 -L GPL
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=14
+      before_install:
+        - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
+        - . ./install-jdk.sh -F 14 -L GPL
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=10 BUILD_JDK=10 DELTASPIKE=deltaspike-1.9
       before_install:
         - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
@@ -457,6 +465,14 @@ matrix:
       before_install:
       - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
       - . ./install-jdk.sh -F 12 -L GPL
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=13 BUILD_JDK=13 DELTASPIKE=deltaspike-1.9
+      before_install:
+        - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
+        - . ./install-jdk.sh -F 13 -L GPL
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=14 BUILD_JDK=14 DELTASPIKE=deltaspike-1.9
+      before_install:
+        - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
+        - . ./install-jdk.sh -F 14 -L GPL
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=9
       before_install:
         - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
@@ -501,8 +517,10 @@ matrix:
 #        - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
 #        - . ./install-jdk.sh -F 9 -L GPL
   allow_failures:
-    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=12 BUILD_JDK=12 DELTASPIKE=deltaspike-1.9
-    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=12
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=13 BUILD_JDK=13 DELTASPIKE=deltaspike-1.9
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=13
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=14 BUILD_JDK=14 DELTASPIKE=deltaspike-1.9
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=14
 #    - env: JPAPROVIDER=datanucleus-5.1 RDBMS=h2 JDK=9
 #      before_install:
 #        - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
