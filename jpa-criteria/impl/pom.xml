@@ -50,16 +50,6 @@
 
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-common-utils</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.javassist</groupId>
-            <artifactId>javassist</artifactId>
-            <version>${version.javassist}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-apt-utils</artifactId>
             <scope>provided</scope>
         </dependency>

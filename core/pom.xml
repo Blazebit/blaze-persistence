@@ -35,5 +35,9 @@
         <module>parser</module>
         <module>impl</module>
         <module>testsuite</module>
+
+        <module>api-jar</module>
+        <module>impl-jar</module>
+        <module>parser-jar</module>
     </modules>
 </project>

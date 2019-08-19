@@ -48,5 +48,9 @@
         <module>entity-view-spring</module>
         <module>spring-data</module>
         <module>deltaspike-data</module>
+
+        <module>jpa-base-jar</module>
+        <module>openjpa-jar</module>
+        <module>entity-view-cdi-jar</module>
     </modules>
 </project>

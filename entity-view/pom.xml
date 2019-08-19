@@ -34,5 +34,8 @@
         <module>api</module>
         <module>impl</module>
         <module>testsuite</module>
+
+        <module>api-jar</module>
+        <module>impl-jar</module>
     </modules>
 </project>
