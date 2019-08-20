@@ -89,6 +89,12 @@
                         </goals>
                         <configuration>
                             <createSourcesJar>true</createSourcesJar>
+                            <relocations>
+                                <relocation>
+                                    <pattern>org.antlr.v4.runtime</pattern>
+                                    <shadedPattern>com.blazebit.persistence.parser.antlr</shadedPattern>
+                                </relocation>
+                            </relocations>
                             <artifactSet>
                                 <includes>
                                     <include>org.antlr:antlr4-runtime</include>

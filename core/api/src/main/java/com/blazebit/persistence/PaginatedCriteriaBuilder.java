@@ -85,6 +85,23 @@ public interface PaginatedCriteriaBuilder<T> extends FullQueryBuilder<T, Paginat
     public boolean isKeysetExtraction();
 
     /**
+     * Enable or disables keyset extraction for all rows which influences whether {@link PagedList#getKeysetPage()} is available.
+     *
+     * @param withExtractAllKeysets true to enable, false to disable keyset extraction for all rows
+     * @return The query builder for chaining calls
+     * @since 1.4.0
+     */
+    public PaginatedCriteriaBuilder<T> withExtractAllKeysets(boolean withExtractAllKeysets);
+
+    /**
+     * Returns whether keyset extraction is enabled or not.
+     *
+     * @return true when enabled, false otherwise
+     * @since 1.4.0
+     */
+    public boolean isWithExtractAllKeysets();
+
+    /**
      * Enables or disables execution of the count query which determines whether {@link PagedList#getTotalSize()} is available.
      *
      * @param withCountQuery true to enable, false to disable the count query execution

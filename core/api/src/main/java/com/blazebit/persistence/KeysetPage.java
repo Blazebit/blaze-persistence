@@ -17,6 +17,7 @@
 package com.blazebit.persistence;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * An interface that represents the key set of a {@link PagedList}.
@@ -56,4 +57,12 @@ public interface KeysetPage extends Serializable {
      * @return The key set for the highest entry
      */
     public Keyset getHighest();
+
+    /**
+     * Returns the key set list of the corresponding {@link PagedList}.
+     *
+     * @return The key set list
+     * @since 1.4.0
+     */
+    public List<Keyset> getKeysets();
 }

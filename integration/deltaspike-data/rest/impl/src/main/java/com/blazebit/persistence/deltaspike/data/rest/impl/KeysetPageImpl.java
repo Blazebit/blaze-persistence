@@ -20,6 +20,8 @@ import com.blazebit.persistence.Keyset;
 import com.blazebit.persistence.KeysetPage;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -34,6 +36,7 @@ public class KeysetPageImpl implements KeysetPage {
     private final int maxResults;
     private final Keyset lowest;
     private final Keyset highest;
+    private final List<Keyset> keysets;
 
     public KeysetPageImpl(int firstResult, int maxResults, Serializable[] lowest, Serializable[] highest) {
         this(firstResult, maxResults, new KeysetImpl(lowest), new KeysetImpl(highest));
@@ -44,6 +47,14 @@ public class KeysetPageImpl implements KeysetPage {
         this.maxResults = maxResults;
         this.lowest = lowest;
         this.highest = highest;
+        List<Keyset> keysets = new ArrayList<>(2);
+        if (lowest != null) {
+            keysets.add(lowest);
+        }
+        if (highest != null) {
+            keysets.add(highest);
+        }
+        this.keysets = keysets;
     }
 
     @Override
@@ -64,5 +75,10 @@ public class KeysetPageImpl implements KeysetPage {
     @Override
     public Keyset getHighest() {
         return highest;
+    }
+
+    @Override
+    public List<Keyset> getKeysets() {
+        return keysets;
     }
 }
