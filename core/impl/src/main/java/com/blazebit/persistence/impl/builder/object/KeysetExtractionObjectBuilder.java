@@ -17,6 +17,7 @@
 package com.blazebit.persistence.impl.builder.object;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.blazebit.persistence.ObjectBuilder;
@@ -37,11 +38,15 @@ public class KeysetExtractionObjectBuilder<T> implements ObjectBuilder<T> {
     private final boolean unwrap;
     private Object[] first;
     private Object[] last;
+    private ArrayList<Object[]> keysets;
 
-    public KeysetExtractionObjectBuilder(int[] keysetToSelectIndexMapping, KeysetMode keysetMode, boolean unwrap) {
+    public KeysetExtractionObjectBuilder(int[] keysetToSelectIndexMapping, KeysetMode keysetMode, boolean unwrap, boolean extractAll) {
         this.keysetToSelectIndexMapping = keysetToSelectIndexMapping;
         this.keysetMode = keysetMode;
         this.unwrap = unwrap;
+        if (extractAll) {
+            this.keysets = new ArrayList<>();
+        }
         int suffix = 0;
         for (int i = 0; i < keysetToSelectIndexMapping.length; i++) {
             if (keysetToSelectIndexMapping[i] == -1) {
@@ -55,6 +60,9 @@ public class KeysetExtractionObjectBuilder<T> implements ObjectBuilder<T> {
     @Override
     public T build(Object[] tuple) {
         if (keysetMode == KeysetMode.PREVIOUS) {
+            if (keysets != null) {
+                keysets.add(0, tuple);
+            }
             if (first == null) {
                 first = tuple;
                 last = tuple;
@@ -62,6 +70,9 @@ public class KeysetExtractionObjectBuilder<T> implements ObjectBuilder<T> {
                 first = tuple;
             }
         } else {
+            if (keysets != null) {
+                keysets.add(tuple);
+            }
             if (first == null) {
                 first = tuple;
                 last = tuple;
@@ -93,6 +104,19 @@ public class KeysetExtractionObjectBuilder<T> implements ObjectBuilder<T> {
         }
 
         return KeysetPaginationHelper.extractKey(last, keysetToSelectIndexMapping, keysetSuffix);
+    }
+
+    public Serializable[][] getKeysets() {
+        if (keysets == null) {
+            return null;
+        }
+
+        Serializable[][] keysetArray = new Serializable[keysets.size()][];
+        for (int i = 0; i < keysetArray.length; i++) {
+            keysetArray[i] = KeysetPaginationHelper.extractKey(keysets.get(i), keysetToSelectIndexMapping, keysetSuffix);
+        }
+
+        return keysetArray;
     }
 
     @Override

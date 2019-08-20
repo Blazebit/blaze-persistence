@@ -71,6 +71,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     private static final ResolvedExpression[] EMPTY = new ResolvedExpression[0];
 
     private boolean keysetExtraction;
+    private boolean withExtractAllKeysets = false;
     private boolean withCountQuery = true;
     private boolean withForceIdQuery = false;
     private int highestOffset = 0;
@@ -131,6 +132,10 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
 
         builder.withKeysetExtraction(keysetExtraction);
+        builder.withExtractAllKeysets(withExtractAllKeysets);
+        builder.withCountQuery(withCountQuery);
+        builder.withForceIdQuery(withForceIdQuery);
+        builder.withHighestKeysetOffset(highestOffset);
         return builder;
     }
 
@@ -167,12 +172,29 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     @Override
     public PaginatedCriteriaBuilder<T> withKeysetExtraction(boolean keysetExtraction) {
         this.keysetExtraction = keysetExtraction;
+        if (!keysetExtraction) {
+            this.withExtractAllKeysets = false;
+        }
         return this;
     }
 
     @Override
     public boolean isKeysetExtraction() {
         return keysetExtraction;
+    }
+
+    @Override
+    public PaginatedCriteriaBuilder<T> withExtractAllKeysets(boolean withExtractAllKeysets) {
+        this.withExtractAllKeysets = withExtractAllKeysets;
+        if (withExtractAllKeysets) {
+            this.keysetExtraction = true;
+        }
+        return this;
+    }
+
+    @Override
+    public boolean isWithExtractAllKeysets() {
+        return withExtractAllKeysets;
     }
 
     @Override
@@ -281,7 +303,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             objectBuilder = entry.getValue();
         }
         PaginatedTypedQueryImpl<T> query = new PaginatedTypedQueryImpl<>(
-                withCountQuery,
+                withExtractAllKeysets, withCountQuery,
                 highestOffset,
                 countQuery,
                 idQuery,
@@ -588,9 +610,9 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
         if (keysetExtraction) {
             if (transformerObjectBuilder == null) {
-                objectBuilder = new KeysetExtractionObjectBuilder<T>(keysetToSelectIndexMapping, keysetMode, selectManager.getExpectedQueryResultType() != Object[].class);
+                objectBuilder = new KeysetExtractionObjectBuilder<T>(keysetToSelectIndexMapping, keysetMode, selectManager.getExpectedQueryResultType() != Object[].class, withExtractAllKeysets);
             } else {
-                objectBuilder = new DelegatingKeysetExtractionObjectBuilder<T>(transformerObjectBuilder, keysetToSelectIndexMapping, keysetMode);
+                objectBuilder = new DelegatingKeysetExtractionObjectBuilder<T>(transformerObjectBuilder, keysetToSelectIndexMapping, keysetMode, withExtractAllKeysets);
             }
 
             transformerObjectBuilder = objectBuilder;

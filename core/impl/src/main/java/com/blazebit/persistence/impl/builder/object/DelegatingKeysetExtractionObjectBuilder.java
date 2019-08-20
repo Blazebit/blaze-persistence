@@ -31,8 +31,8 @@ public class DelegatingKeysetExtractionObjectBuilder<T> extends KeysetExtraction
 
     private final ObjectBuilder<T> objectBuilder;
 
-    public DelegatingKeysetExtractionObjectBuilder(ObjectBuilder<T> objectBuilder, int[] keysetToSelectIndexMapping, KeysetMode keysetMode) {
-        super(keysetToSelectIndexMapping, keysetMode, false);
+    public DelegatingKeysetExtractionObjectBuilder(ObjectBuilder<T> objectBuilder, int[] keysetToSelectIndexMapping, KeysetMode keysetMode, boolean extractAll) {
+        super(keysetToSelectIndexMapping, keysetMode, false, extractAll);
         this.objectBuilder = objectBuilder;
     }
 

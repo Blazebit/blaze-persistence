@@ -17,11 +17,14 @@
 package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Person;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import javax.persistence.TypedQuery;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -29,6 +32,8 @@ import java.util.Properties;
  * @since 1.2.0
  */
 public class QueryResultCachingTest extends AbstractCoreTest {
+
+    private Document d;
 
     @Override
     protected Properties applyProperties(Properties properties) {
@@ -40,25 +45,35 @@ public class QueryResultCachingTest extends AbstractCoreTest {
 
     @Before
     public final void setUp() {
+        d = new Document("a", new Person("a"));
+        em.persist(d);
+        em.flush();
+        em.clear();
+        em.getTransaction().commit();
+        em.close();
+        em = emf.createEntityManager();
+        em.getTransaction().begin();
         enableQueryCollecting();
     }
 
     @After
     public final void tearDown() {
         disableQueryCollecting();
+        Document document = em.find(Document.class, d.getId());
+        em.remove(document);
+        em.remove(document.getOwner());
+        em.flush();
     }
 
-    // NOTE: not sure why, but this fails for Datanucleus/PostgreSQL combination on TravisCI only...
     @Test
     public void queryResultCachingTest() {
         TypedQuery<String> query = cbf.create(em, String.class)
                 .from(Document.class)
                 .select("name")
-                .where("id").in(1L)
+                .where("id").in(d.getId())
                 .setCacheable(true)
                 .getQuery();
 
-        clearQueries();
         // Iterate through the results so that DataNucleus properly fills the cache...
         for (String s : query.getResultList()) {
             s.length();
@@ -66,5 +81,35 @@ public class QueryResultCachingTest extends AbstractCoreTest {
         assertQueryCount(1);
         query.getResultList();
         assertQueryCount(1);
+    }
+
+    @Test
+    public void queryResultCachingWithObjectBuilderTest() {
+        TypedQuery<TestObject> query = cbf.create(em, String.class)
+                .from(Document.class)
+                .selectNew(TestObject.class)
+                    .with("name")
+                .end()
+                .where("id").in(d.getId())
+                .setCacheable(true)
+                .getQuery();
+
+        clearQueries();
+        // Iterate through the results so that DataNucleus properly fills the cache...
+        for (TestObject testObject : query.getResultList()) {
+
+        }
+
+        assertQueryCount(1);
+        query.getResultList();
+        assertQueryCount(1);
+    }
+
+    public static class TestObject {
+        private final String name;
+
+        public TestObject(String name) {
+            this.name = name;
+        }
     }
 }

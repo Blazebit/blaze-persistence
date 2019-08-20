@@ -36,7 +36,16 @@ import javax.persistence.Query;
 import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Christian Beikov
@@ -44,6 +53,7 @@ import java.util.*;
  */
 public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
 
+    private final boolean withExtractAllKeysets;
     private final boolean withCount;
     private final int highestOffset;
     private final TypedQuery<?> countQuery;
@@ -63,8 +73,9 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
     private final KeysetMode keysetMode;
     private final KeysetPage keysetPage;
 
-    public PaginatedTypedQueryImpl(boolean withCount, int highestOffset, TypedQuery<?> countQuery, TypedQuery<?> idQuery, TypedQuery<X> objectQuery, KeysetExtractionObjectBuilder<X> objectBuilder, Set<Parameter<?>> parameters,
+    public PaginatedTypedQueryImpl(boolean withExtractAllKeysets, boolean withCount, int highestOffset, TypedQuery<?> countQuery, TypedQuery<?> idQuery, TypedQuery<X> objectQuery, KeysetExtractionObjectBuilder<X> objectBuilder, Set<Parameter<?>> parameters,
                                    Object entityId, int firstResult, int pageSize, int identifierCount, boolean needsNewIdList, int[] keysetToSelectIndexMapping, KeysetMode keysetMode, KeysetPage keysetPage) {
+        this.withExtractAllKeysets = withExtractAllKeysets;
         this.withCount = withCount;
         this.highestOffset = highestOffset;
         this.countQuery = countQuery;
@@ -203,16 +214,37 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
 
             Serializable[] lowest = null;
             Serializable[] highest = null;
+            Serializable[][] keysets = null;
 
             if (needsNewIdList) {
                 if (keysetToSelectIndexMapping != null) {
                     int keysetPageSize = pageSize - highestOffset;
                     if (ids.get(0) instanceof Object[]) {
-                        lowest = KeysetPaginationHelper.extractKey((Object[]) ids.get(0), keysetToSelectIndexMapping, keysetSuffix);
-                        highest = KeysetPaginationHelper.extractKey((Object[]) (ids.size() >= keysetPageSize ? ids.get(keysetPageSize - 1) : ids.get(ids.size() - 1)), keysetToSelectIndexMapping, keysetSuffix);
+                        if (withExtractAllKeysets) {
+                            int size = ids.size() >= keysetPageSize ? keysetPageSize : ids.size();
+                            keysets = new Serializable[ids.size()][];
+                            for (int i = 0; i < size; i++) {
+                                keysets[i] = KeysetPaginationHelper.extractKey((Object[]) ids.get(i), keysetToSelectIndexMapping, keysetSuffix);
+                            }
+                            lowest = keysets[0];
+                            highest = keysets[size - 1];
+                        } else {
+                            lowest = KeysetPaginationHelper.extractKey((Object[]) ids.get(0), keysetToSelectIndexMapping, keysetSuffix);
+                            highest = KeysetPaginationHelper.extractKey((Object[]) (ids.size() >= keysetPageSize ? ids.get(keysetPageSize - 1) : ids.get(ids.size() - 1)), keysetToSelectIndexMapping, keysetSuffix);
+                        }
                     } else {
-                        lowest = new Serializable[]{ (Serializable) ids.get(0) };
-                        highest = new Serializable[]{ (Serializable) (ids.size() >= keysetPageSize ? ids.get(keysetPageSize - 1) : ids.get(ids.size() - 1)) };
+                        if (withExtractAllKeysets) {
+                            int size = ids.size() >= keysetPageSize ? keysetPageSize : ids.size();
+                            keysets = new Serializable[ids.size()][];
+                            for (int i = 0; i < size; i++) {
+                                keysets[i] = new Serializable[]{ (Serializable) (ids.get(i)) };
+                            }
+                            lowest = keysets[0];
+                            highest = keysets[size - 1];
+                        } else {
+                            lowest = new Serializable[]{ (Serializable) ids.get(0) };
+                            highest = new Serializable[]{ (Serializable) (ids.size() >= keysetPageSize ? ids.get(keysetPageSize - 1) : ids.get(ids.size() - 1)) };
+                        }
                     }
 
                     // Swap keysets as we have inverse ordering when going to the previous page
@@ -220,6 +252,15 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
                         Serializable[] tmp = lowest;
                         lowest = highest;
                         highest = tmp;
+                        if (withExtractAllKeysets) {
+                            int size = keysets.length;
+                            // Reverse the keysets
+                            for (int i = 0, mid = size >> 1, j = size - 1; i < mid; i++, j--) {
+                                tmp = keysets[i];
+                                keysets[i] = keysets[j];
+                                keysets[j] = tmp;
+                            }
+                        }
                     }
                 }
 
@@ -270,7 +311,7 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
             KeysetPage newKeyset = null;
 
             if (keysetToSelectIndexMapping != null) {
-                newKeyset = new KeysetPageImpl(firstRow, pageSize, lowest, highest);
+                newKeyset = new KeysetPageImpl(firstRow, pageSize, lowest, highest, keysets);
             }
 
             List<X> queryResultList = objectQuery.getResultList();
@@ -307,7 +348,8 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
             if (keysetToSelectIndexMapping != null) {
                 Serializable[] lowest = objectBuilder.getLowest();
                 Serializable[] highest = objectBuilder.getHighest();
-                newKeyset = new KeysetPageImpl(firstRow, pageSize, lowest, highest);
+                Serializable[][] keysets = objectBuilder.getKeysets();
+                newKeyset = new KeysetPageImpl(firstRow, pageSize, lowest, highest, keysets);
             }
 
             PagedList<X> pagedResultList = new PagedArrayList<X>(result, newKeyset, totalSize, queryFirstResult, pageSize);
