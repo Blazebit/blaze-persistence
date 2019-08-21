@@ -51,7 +51,7 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
         this.objectInstantiator = template.getObjectInstantiator();
         this.mappers = template.getMappers();
         this.parameterHolder = parameterHolder;
-        this.optionalParameters = Collections.unmodifiableMap(optionalParameters);
+        this.optionalParameters = optionalParameters == null ? Collections.<String, Object>emptyMap() : Collections.unmodifiableMap(optionalParameters);
         this.embeddingViewJpqlMacro = embeddingViewJpqlMacro;
         this.nullIfEmpty = nullIfEmpty;
         this.cteProviders = template.getViewRoot().getCteProviders();

@@ -108,6 +108,8 @@ public abstract class AbstractFrom<Z, X> extends AbstractPath<X> implements Blaz
         if (getAlias() == null) {
             if (isCorrelated()) {
                 setAlias(getCorrelationParent().getAlias());
+            } else if (getJavaType() == null) {
+                setAlias(context.generateAlias(((EntityType<?>) getManagedType()).getName()));
             } else {
                 setAlias(context.generateAlias(getJavaType()));
             }
