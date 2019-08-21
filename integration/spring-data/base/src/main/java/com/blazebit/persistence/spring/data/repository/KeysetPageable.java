@@ -35,6 +35,22 @@ public interface KeysetPageable extends Pageable {
     public KeysetPage getKeysetPage();
 
     /**
+     * Returns whether count query execution is enabled or not.
+     *
+     * @return true when enabled, false otherwise
+     * @since 1.4.0
+     */
+    public boolean isWithCountQuery();
+
+    /**
+     * Returns whether extraction for all keysets is enabled or not.
+     *
+     * @return true when enabled, false otherwise
+     * @since 1.4.0
+     */
+    public boolean isWithExtractAllKeysets();
+
+    /**
      * Returns the offset as int.
      *
      * @return The offset as int

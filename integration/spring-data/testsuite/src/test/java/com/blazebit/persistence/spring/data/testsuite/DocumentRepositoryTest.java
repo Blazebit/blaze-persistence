@@ -52,6 +52,7 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.ImportResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
@@ -605,6 +606,31 @@ public class DocumentRepositoryTest extends AbstractSpringTest {
 
         // Then
         assertEquals(0, actual.size());
+    }
+
+    @Test
+    public void testFindAllBySpecWithKeysetExtraction() {
+        // Given
+        final Document d3 = createDocument("d3", null, 3L, null);
+        final Document d2 = createDocument("d2", null, 2L, null);
+        final Document d1 = createDocument("d1", null, 1L, null);
+
+        final String param = "Foo";
+
+        Pageable pageable = new KeysetPageRequest(null, new Sort("id"), 0, 3, true, true);
+
+        // When
+        Page<?> actual = documentRepository.findAll(new Specification<Document>() {
+
+            @Override
+            public Predicate toPredicate(Root<Document> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                return criteriaBuilder.conjunction();
+            }
+        }, pageable);
+        KeysetAwarePage<?> keysetAwarePage = (KeysetAwarePage<?>) actual;
+
+        // Then
+        assertEquals(3, keysetAwarePage.getKeysetPage().getKeysets().size());
     }
 
     private List<Long> getIdsFromViews(Iterable<DocumentAccessor> views) {

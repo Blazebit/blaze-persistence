@@ -31,6 +31,8 @@ public class KeysetPageRequest extends PageRequest implements KeysetPageable {
 
     private final KeysetPage keysetPage;
     private final int offset;
+    private final boolean withCountQuery;
+    private final boolean withExtractAllKeysets;
 
     /**
      * Construct a page request with an optional keyset page that may be used for keyset pagination.
@@ -41,9 +43,7 @@ public class KeysetPageRequest extends PageRequest implements KeysetPageable {
      * @param sort       The sort specification
      */
     public KeysetPageRequest(int page, int pageSize, KeysetPage keysetPage, Sort sort) {
-        super(page, pageSize, sort);
-        this.keysetPage = keysetPage;
-        this.offset = page * pageSize;
+        this(keysetPage, sort, page * pageSize, pageSize);
     }
 
     /**
@@ -53,9 +53,7 @@ public class KeysetPageRequest extends PageRequest implements KeysetPageable {
      * @param pageable   The pageable
      */
     public KeysetPageRequest(KeysetPage keysetPage, Pageable pageable) {
-        super(pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
-        this.keysetPage = keysetPage;
-        this.offset = pageable.getPageNumber() * pageable.getPageSize();
+        this(keysetPage, pageable.getSort(), pageable.getPageNumber() * pageable.getPageSize(), pageable.getPageSize());
     }
 
     /**
@@ -65,9 +63,7 @@ public class KeysetPageRequest extends PageRequest implements KeysetPageable {
      * @param sort       The sort specification
      */
     public KeysetPageRequest(KeysetPage keysetPage, Sort sort) {
-        super(keysetPage.getFirstResult() == 0 ? 0 : keysetPage.getFirstResult() / keysetPage.getMaxResults(), keysetPage.getMaxResults(), sort);
-        this.keysetPage = keysetPage;
-        this.offset = keysetPage.getFirstResult();
+        this(keysetPage, sort, keysetPage.getFirstResult(), keysetPage.getMaxResults());
     }
 
     /**
@@ -80,15 +76,43 @@ public class KeysetPageRequest extends PageRequest implements KeysetPageable {
      * @since 1.3.0
      */
     public KeysetPageRequest(KeysetPage keysetPage, Sort sort, int offset, int pageSize) {
+        this(keysetPage, sort, offset, pageSize, true, false);
+    }
+
+    /**
+     * Construct a page request with an optional keyset page that may be used for keyset pagination and flags to enable the count query and keyset extraction.
+     *
+     * @param keysetPage The keyset page
+     * @param sort       The sort specification
+     * @param offset     The offset number, 0-based
+     * @param pageSize   The number of elements per page
+     * @param withCountQuery True to enable the count query
+     * @param withExtractAllKeysets True to enable extraction of all keysets
+     * @since 1.4.0
+     */
+    public KeysetPageRequest(KeysetPage keysetPage, Sort sort, int offset, int pageSize, boolean withCountQuery, boolean withExtractAllKeysets) {
         super(offset / pageSize, pageSize, sort);
         this.keysetPage = keysetPage;
         this.offset = offset;
+        this.withCountQuery = withCountQuery;
+        this.withExtractAllKeysets = withExtractAllKeysets;
+    }
+
+    @Override
+    public boolean isWithCountQuery() {
+        return withCountQuery;
+    }
+
+    @Override
+    public boolean isWithExtractAllKeysets() {
+        return withExtractAllKeysets;
     }
 
     @Override
     public int getIntOffset() {
-        return (int) offset;
+        return offset;
     }
+
 
     @Override
     public KeysetPage getKeysetPage() {
@@ -97,7 +121,7 @@ public class KeysetPageRequest extends PageRequest implements KeysetPageable {
 
     @Override
     public Pageable next() {
-        return new KeysetPageRequest(keysetPage, getSort(), getIntOffset() + getPageSize(), getPageSize());
+        return new KeysetPageRequest(keysetPage, getSort(), getIntOffset() + getPageSize(), getPageSize(), isWithCountQuery(), isWithExtractAllKeysets());
     }
 
     @Override
@@ -105,7 +129,7 @@ public class KeysetPageRequest extends PageRequest implements KeysetPageable {
         if (getIntOffset() == 0) {
             return this;
         }
-        return new KeysetPageRequest(keysetPage, getSort(), getIntOffset() - getPageSize(), getPageSize());
+        return new KeysetPageRequest(keysetPage, getSort(), getIntOffset() - getPageSize(), getPageSize(), isWithCountQuery(), isWithExtractAllKeysets());
     }
 
     @Override
@@ -113,7 +137,7 @@ public class KeysetPageRequest extends PageRequest implements KeysetPageable {
         if (getIntOffset() == 0) {
             return this;
         }
-        return new KeysetPageRequest(keysetPage, getSort(), 0, getPageSize());
+        return new KeysetPageRequest(keysetPage, getSort(), 0, getPageSize(), isWithCountQuery(), isWithExtractAllKeysets());
     }
 
     @Override
@@ -127,6 +151,12 @@ public class KeysetPageRequest extends PageRequest implements KeysetPageable {
 
         KeysetPageable that = (KeysetPageable) o;
 
+        if (isWithCountQuery() != that.isWithCountQuery()) {
+            return false;
+        }
+        if (isWithExtractAllKeysets() != that.isWithExtractAllKeysets()) {
+            return false;
+        }
         if (getIntOffset() != that.getIntOffset()) {
             return false;
         }
@@ -143,6 +173,8 @@ public class KeysetPageRequest extends PageRequest implements KeysetPageable {
     public int hashCode() {
         int result = getKeysetPage() != null ? getKeysetPage().hashCode() : 0;
         result = 31 * result + (getSort() != null ? getSort().hashCode() : 0);
+        result = 31 * result + (isWithCountQuery() ? 1 : 0);
+        result = 31 * result + (isWithExtractAllKeysets() ? 1 : 0);
         result = 31 * result + getIntOffset();
         result = 31 * result + getPageSize();
         return result;
