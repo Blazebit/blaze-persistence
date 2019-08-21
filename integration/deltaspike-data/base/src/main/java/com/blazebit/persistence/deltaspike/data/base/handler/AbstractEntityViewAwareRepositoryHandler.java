@@ -263,23 +263,42 @@ public abstract class AbstractEntityViewAwareRepositoryHandler<E, V, PK extends 
             cb.fetch(fetches);
         }
 
+        boolean withCountQuery = true;
+        boolean withKeysetExtraction = false;
+        boolean withExtractAllKeysets = false;
+
         TypedQuery<V> query;
         if (viewClass() == null) {
             PaginatedCriteriaBuilder<V> pcb;
             if (pageable instanceof KeysetPageable) {
-                pcb = (PaginatedCriteriaBuilder<V>) cb.page(((KeysetPageable) pageable).getKeysetPage(), pageable.getOffset(), pageable.getPageSize());
+                KeysetPageable keysetPageable = (KeysetPageable) pageable;
+                pcb = (PaginatedCriteriaBuilder<V>) cb.page(keysetPageable.getKeysetPage(), pageable.getOffset(), pageable.getPageSize());
+                withCountQuery = keysetPageable.isWithCountQuery();
+                withKeysetExtraction = true;
+                withExtractAllKeysets = keysetPageable.isWithExtractAllKeysets();
             } else {
                 pcb = (PaginatedCriteriaBuilder<V>) cb.page(pageable.getOffset(), pageable.getPageSize());
             }
             QueryBuilderUtils.applySort(pageable.getSort(), pcb);
+            pcb.withCountQuery(withCountQuery);
+            pcb.withKeysetExtraction(withKeysetExtraction);
+            pcb.withExtractAllKeysets(withExtractAllKeysets);
             query = pcb.getQuery();
         } else {
             EntityViewSetting<V, PaginatedCriteriaBuilder<V>> setting = EntityViewSetting.create(viewClass(), pageable.getOffset(), pageable.getPageSize());
             if (pageable instanceof KeysetPageable) {
-                setting.withKeysetPage(((KeysetPageable) pageable).getKeysetPage());
+                KeysetPageable keysetPageable = (KeysetPageable) pageable;
+                setting.withKeysetPage(keysetPageable.getKeysetPage());
+                withCountQuery = keysetPageable.isWithCountQuery();
+                withKeysetExtraction = true;
+                withExtractAllKeysets = keysetPageable.isWithExtractAllKeysets();
             }
             QueryBuilderUtils.applySort(pageable.getSort(), setting);
-            query = applySetting(setting, cb).getQuery();
+            PaginatedCriteriaBuilder<V> pcb = applySetting(setting, cb);
+            pcb.withCountQuery(withCountQuery);
+            pcb.withKeysetExtraction(withKeysetExtraction);
+            pcb.withExtractAllKeysets(withExtractAllKeysets);
+            query = pcb.getQuery();
         }
 
         applyQueryHints(query, fetches.length == 0);

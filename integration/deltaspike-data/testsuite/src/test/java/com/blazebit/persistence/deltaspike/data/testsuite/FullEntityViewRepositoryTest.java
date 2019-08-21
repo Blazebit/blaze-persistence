@@ -22,6 +22,7 @@ import com.blazebit.persistence.deltaspike.data.KeysetPageRequest;
 import com.blazebit.persistence.deltaspike.data.KeysetPageable;
 import com.blazebit.persistence.deltaspike.data.Page;
 import com.blazebit.persistence.deltaspike.data.PageRequest;
+import com.blazebit.persistence.deltaspike.data.Pageable;
 import com.blazebit.persistence.deltaspike.data.Slice;
 import com.blazebit.persistence.deltaspike.data.Sort;
 import com.blazebit.persistence.deltaspike.data.testsuite.entity.Person;
@@ -223,5 +224,14 @@ public class FullEntityViewRepositoryTest extends AbstractEntityViewRepositoryTe
         List<PersonView> page1 = personViewRepository.findByLike(example, 0, 1, Person_.name);
         assertEquals(1, page1.size());
         assertEquals(persons[1].getId(), page1.get(0).getId());
+    }
+
+    @Test
+    public void testFindAllWithKeysetExtraction() {
+        Pageable pageable = new KeysetPageRequest(null, new Sort("id"), 0, 5, true, true);
+        Page<PersonView> page = personViewRepository.findAll(pageable);
+        KeysetAwarePage<PersonView> keysetAwarePage = (KeysetAwarePage<PersonView>) page;
+
+        assertEquals(5, keysetAwarePage.getKeysetPage().getKeysets().size());
     }
 }

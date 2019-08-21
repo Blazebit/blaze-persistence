@@ -356,7 +356,7 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
     }
 
     public List<V> findAll() {
-        return getQuery(null, getDomainClass(), null, null, false).getResultList();
+        return getQuery(null, getDomainClass(), null, null).getResultList();
     }
 
     public List<V> findAllById(Iterable<ID> idIterable) {
@@ -426,23 +426,23 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
 
     protected TypedQuery<V> getQuery(Specification<E> spec, Pageable pageable) {
         Sort sort = pageable == null ? null : pageable.getSort();
-        return this.getQuery(spec, getDomainClass(), pageable, sort, false);
+        return this.getQuery(spec, getDomainClass(), pageable, sort);
     }
 
     protected <S extends E> TypedQuery<S> getQuery(Specification<S> spec, Class<S> domainClass, Pageable pageable) {
         Sort sort = pageable == null ? null : pageable.getSort();
-        return (TypedQuery<S>) this.getQuery(spec, domainClass, pageable, sort, false);
+        return (TypedQuery<S>) this.getQuery(spec, domainClass, pageable, sort);
     }
 
     protected TypedQuery<E> getQuery(Specification<E> spec, Sort sort) {
-        return (TypedQuery<E>) this.getQuery(spec, getDomainClass(), null, sort, false);
+        return (TypedQuery<E>) this.getQuery(spec, getDomainClass(), null, sort);
     }
 
     protected <S extends E> TypedQuery<S> getQuery(Specification<S> spec, Class<S> domainClass, Sort sort) {
-        return (TypedQuery<S>) this.getQuery(spec, domainClass, null, sort, false);
+        return (TypedQuery<S>) this.getQuery(spec, domainClass, null, sort);
     }
 
-    protected <S extends E> TypedQuery<V> getQuery(Specification<S> spec, Class<S> domainClass, Pageable pageable, Sort sort, boolean keysetExtraction) {
+    protected <S extends E> TypedQuery<V> getQuery(Specification<S> spec, Class<S> domainClass, Pageable pageable, Sort sort) {
         BlazeCriteriaQuery<S> cq = BlazeCriteria.get(cbf, domainClass);
         Root<S> root = this.applySpecificationToCriteria(spec, domainClass, cq);
 
@@ -455,6 +455,11 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
         if (metadata != null && metadata.getEntityGraph() != null && (fetches = metadata.getEntityGraph().attributePaths()).length != 0) {
             cb.fetch(fetches);
         }
+
+        boolean withCountQuery = true;
+        boolean withKeysetExtraction = false;
+        boolean withExtractAllKeysets = false;
+
         TypedQuery<V> query;
         Class<V> entityViewClass = metadata == null || metadata.getEntityViewClass() == null ? this.entityViewClass : (Class<V>) metadata.getEntityViewClass();
         if (entityViewClass == null) {
@@ -463,13 +468,19 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
             } else {
                 PaginatedCriteriaBuilder<S> paginatedCriteriaBuilder;
                 if (pageable instanceof KeysetPageable) {
-                    paginatedCriteriaBuilder = cb.page(((KeysetPageable) pageable).getKeysetPage(), getOffset(pageable), pageable.getPageSize());
+                    KeysetPageable keysetPageable = (KeysetPageable) pageable;
+                    paginatedCriteriaBuilder = cb.page(keysetPageable.getKeysetPage(), getOffset(pageable), pageable.getPageSize());
+                    withCountQuery = keysetPageable.isWithCountQuery();
+                    withKeysetExtraction = true;
+                    withExtractAllKeysets = keysetPageable.isWithExtractAllKeysets();
                 } else {
                     paginatedCriteriaBuilder = cb.page(getOffset(pageable), pageable.getPageSize());
                 }
-                if (keysetExtraction) {
+                if (withKeysetExtraction) {
                     paginatedCriteriaBuilder.withKeysetExtraction(true);
+                    paginatedCriteriaBuilder.withExtractAllKeysets(withExtractAllKeysets);
                 }
+                paginatedCriteriaBuilder.withCountQuery(withCountQuery);
                 query = (TypedQuery<V>) paginatedCriteriaBuilder.getQuery();
             }
         } else {
@@ -479,12 +490,18 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
             } else {
                 EntityViewSetting<V, PaginatedCriteriaBuilder<V>> setting = EntityViewSetting.create(entityViewClass, getOffset(pageable), pageable.getPageSize());
                 if (pageable instanceof KeysetPageable) {
-                    setting.withKeysetPage(((KeysetPageable) pageable).getKeysetPage());
+                    KeysetPageable keysetPageable = (KeysetPageable) pageable;
+                    setting.withKeysetPage(keysetPageable.getKeysetPage());
+                    withCountQuery = keysetPageable.isWithCountQuery();
+                    withKeysetExtraction = true;
+                    withExtractAllKeysets = keysetPageable.isWithExtractAllKeysets();
                 }
                 PaginatedCriteriaBuilder<V> paginatedCriteriaBuilder = evm.applySetting(setting, cb);
-                if (keysetExtraction) {
+                if (withKeysetExtraction) {
                     paginatedCriteriaBuilder.withKeysetExtraction(true);
+                    paginatedCriteriaBuilder.withExtractAllKeysets(withExtractAllKeysets);
                 }
+                paginatedCriteriaBuilder.withCountQuery(withCountQuery);
                 query = paginatedCriteriaBuilder.getQuery();
             }
         }
