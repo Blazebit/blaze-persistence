@@ -16,12 +16,16 @@
 
 package com.blazebit.persistence.testsuite;
 
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import javax.persistence.TypedQuery;
 import java.util.List;
@@ -65,7 +69,9 @@ public class QueryResultCachingTest extends AbstractCoreTest {
         em.flush();
     }
 
+    // Apparently, only Hibernate is able to cache scalar queries...
     @Test
+    @Category({ NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
     public void queryResultCachingTest() {
         TypedQuery<String> query = cbf.create(em, String.class)
                 .from(Document.class)
@@ -83,7 +89,9 @@ public class QueryResultCachingTest extends AbstractCoreTest {
         assertQueryCount(1);
     }
 
+    // Apparently, only Hibernate is able to cache scalar queries...
     @Test
+    @Category({ NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
     public void queryResultCachingWithObjectBuilderTest() {
         TypedQuery<TestObject> query = cbf.create(em, String.class)
                 .from(Document.class)

@@ -52,6 +52,8 @@ public interface RenderContext {
 
     public String generateAlias(Class<?> entityClass);
 
+    public String generateAlias(String name);
+
     public String generateSubqueryAlias(InternalQuery<?> query);
 
     public String registerExplicitParameter(ParameterExpression<?> criteriaQueryParameter);

@@ -94,7 +94,16 @@ public class RenderContextImpl implements RenderContext {
 
     @Override
     public String generateAlias(Class<?> entityClass) {
-        return "generated" + entityClass.getSimpleName() + "_" + aliasCount++;
+        return generateAlias(entityClass.getSimpleName());
+    }
+
+    @Override
+    public String generateAlias(String name) {
+        int dotIndex = name.lastIndexOf('.');
+        if (dotIndex != -1) {
+            name = name.substring(dotIndex + 1);
+        }
+        return "generated" + name + "_" + aliasCount++;
     }
 
     @Override
