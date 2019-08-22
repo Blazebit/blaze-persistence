@@ -162,15 +162,15 @@ public abstract class AbstractEntityViewUpdateTest<T> extends AbstractEntityView
     protected void assertNullCollection(Collection<?> collection) {
         // Currently, setting a collection to null will result in an empty recording collection after update
 //        assertNull(collection);
-        assertTrue(collection instanceof RecordingCollection);
-        assertEquals(0, collection.size());
+        Assert.assertTrue(collection instanceof RecordingCollection);
+        Assert.assertEquals(0, collection.size());
     }
 
     protected void assertNullMap(Map<?, ?> map) {
         // Currently, setting a collection to null will result in an empty recording collection after update
 //        assertNull(map);
-        assertTrue(map instanceof RecordingMap);
-        assertEquals(0, map.size());
+        Assert.assertTrue(map instanceof RecordingMap);
+        Assert.assertEquals(0, map.size());
     }
 
     protected void registerViewTypes(EntityViewConfiguration cfg) {
@@ -240,12 +240,12 @@ public abstract class AbstractEntityViewUpdateTest<T> extends AbstractEntityView
     protected void assertVersionDiff(long oldVersion, long currentVersion, long diff, long fullDiff) {
         if (version) {
             if (isFullMode()) {
-                assertEquals(oldVersion + fullDiff, currentVersion);
+                Assert.assertEquals(oldVersion + fullDiff, currentVersion);
             } else {
-                assertEquals(oldVersion + diff, currentVersion);
+                Assert.assertEquals(oldVersion + diff, currentVersion);
             }
         } else {
-            assertEquals(oldVersion, currentVersion);
+            Assert.assertEquals(oldVersion, currentVersion);
         }
     }
 
