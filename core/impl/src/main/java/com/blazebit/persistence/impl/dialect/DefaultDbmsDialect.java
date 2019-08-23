@@ -125,6 +125,21 @@ public class DefaultDbmsDialect implements DbmsDialect {
     }
 
     @Override
+    public boolean supportsFilterClause() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsNullPrecedence() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsBooleanAggregation() {
+        return false;
+    }
+
+    @Override
     public String getSqlType(Class<?> castType) {
         return sqlTypes.get(castType);
     }

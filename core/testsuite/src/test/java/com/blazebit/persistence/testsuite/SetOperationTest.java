@@ -1090,7 +1090,8 @@ public class SetOperationTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    // H2 broke in 1.4.198, will be fixed in 1.4.200
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoH2.class })
     public void testSetSubqueryAliasIsolation() {
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class)
                 .from(Document.class, "d1")

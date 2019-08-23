@@ -118,4 +118,10 @@ public class MySQLDbmsDialect extends DefaultDbmsDialect {
     protected boolean needsAliasForFromClause() {
         return true;
     }
+
+    @Override
+    public boolean supportsNullPrecedence() {
+        return false;
+    }
+
 }

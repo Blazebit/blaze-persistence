@@ -145,6 +145,21 @@ public class DelegatingDbmsDialect implements DbmsDialect {
     }
 
     @Override
+    public boolean supportsFilterClause() {
+        return delegate.supportsFilterClause();
+    }
+
+    @Override
+    public boolean supportsNullPrecedence() {
+        return delegate.supportsNullPrecedence();
+    }
+
+    @Override
+    public boolean supportsBooleanAggregation() {
+        return delegate.supportsBooleanAggregation();
+    }
+
+    @Override
     public boolean supportsFullRowValueComparison() {
         return delegate.supportsFullRowValueComparison();
     }
