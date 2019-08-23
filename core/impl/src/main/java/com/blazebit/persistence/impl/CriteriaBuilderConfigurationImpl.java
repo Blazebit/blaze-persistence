@@ -25,7 +25,31 @@ import com.blazebit.persistence.impl.dialect.MySQLDbmsDialect;
 import com.blazebit.persistence.impl.dialect.OracleDbmsDialect;
 import com.blazebit.persistence.impl.dialect.PostgreSQLDbmsDialect;
 import com.blazebit.persistence.impl.function.entity.EntityFunction;
+import com.blazebit.persistence.impl.function.every.EveryFunction;
+import com.blazebit.persistence.impl.function.every.FallbackEveryFunction;
+import com.blazebit.persistence.impl.function.oragg.FallbackOrAggFunction;
+import com.blazebit.persistence.impl.function.oragg.OrAggFunction;
 import com.blazebit.persistence.impl.function.subquery.SubqueryFunction;
+import com.blazebit.persistence.impl.function.window.avg.AvgFunction;
+import com.blazebit.persistence.impl.function.window.count.CountFunction;
+import com.blazebit.persistence.impl.function.window.cumedist.CumeDistFunction;
+import com.blazebit.persistence.impl.function.window.denserank.DenseRankFunction;
+import com.blazebit.persistence.impl.function.window.every.FallbackWindowEveryFunction;
+import com.blazebit.persistence.impl.function.window.every.WindowEveryFunction;
+import com.blazebit.persistence.impl.function.window.first.FirstValueFunction;
+import com.blazebit.persistence.impl.function.window.lag.LagFunction;
+import com.blazebit.persistence.impl.function.window.last.LastValueFunction;
+import com.blazebit.persistence.impl.function.window.lead.LeadFunction;
+import com.blazebit.persistence.impl.function.window.max.MaxFunction;
+import com.blazebit.persistence.impl.function.window.min.MinFunction;
+import com.blazebit.persistence.impl.function.window.nth.NthValueFunction;
+import com.blazebit.persistence.impl.function.window.ntile.NtileFunction;
+import com.blazebit.persistence.impl.function.window.oragg.FallbackWindowOrAggFunction;
+import com.blazebit.persistence.impl.function.window.oragg.WindowOrAggFunction;
+import com.blazebit.persistence.impl.function.window.percentrank.PercentRankFunction;
+import com.blazebit.persistence.impl.function.window.rank.RankFunction;
+import com.blazebit.persistence.impl.function.window.row.RowNumberFunction;
+import com.blazebit.persistence.impl.function.window.sum.SumFunction;
 import com.blazebit.persistence.parser.expression.ConcurrentHashMapExpressionCache;
 import com.blazebit.persistence.impl.function.cast.CastFunction;
 import com.blazebit.persistence.impl.function.count.AbstractCountFunction;
@@ -533,6 +557,204 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         jpqlFunctionGroup = new JpqlFunctionGroup(SubqueryFunction.FUNCTION_NAME, false);
         jpqlFunctionGroup.add(null, new SubqueryFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        // every
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(EveryFunction.FUNCTION_NAME, true);
+        jpqlFunctionGroup.add(null, new EveryFunction());
+        for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
+            jpqlFunctionGroup.add(dialectEntry.getKey(),
+                    dialectEntry.getValue().supportsBooleanAggregation() ?
+                            new EveryFunction() :
+                            new FallbackEveryFunction());
+        }
+        registerFunction(jpqlFunctionGroup);
+
+        // andagg
+
+        jpqlFunctionGroup = new JpqlFunctionGroup("AND_AGG", true);
+        jpqlFunctionGroup.add(null, new EveryFunction());
+        for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
+            jpqlFunctionGroup.add(dialectEntry.getKey(),
+                    dialectEntry.getValue().supportsBooleanAggregation() ?
+                            new EveryFunction() :
+                            new FallbackEveryFunction());
+        }
+        registerFunction(jpqlFunctionGroup);
+
+        // oragg
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(OrAggFunction.FUNCTION_NAME, true);
+        jpqlFunctionGroup.add(null, new OrAggFunction());
+        for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
+            jpqlFunctionGroup.add(dialectEntry.getKey(),
+                    dialectEntry.getValue().supportsBooleanAggregation() ?
+                            new OrAggFunction() :
+                            new FallbackOrAggFunction());
+        }
+        registerFunction(jpqlFunctionGroup);
+
+
+        // window every
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(WindowEveryFunction.FUNCTION_NAME, false);
+        for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
+            jpqlFunctionGroup.add(dialectEntry.getKey(),
+                    dialectEntry.getValue().supportsBooleanAggregation() ?
+                            new WindowEveryFunction(dialectEntry.getValue()) :
+                            new FallbackWindowEveryFunction(dialectEntry.getValue()));
+        }
+        registerFunction(jpqlFunctionGroup);
+
+        // window andagg
+
+        jpqlFunctionGroup = new JpqlFunctionGroup("AND_AGG", false);
+        for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
+            jpqlFunctionGroup.add(dialectEntry.getKey(),
+                    dialectEntry.getValue().supportsBooleanAggregation() ?
+                            new WindowEveryFunction(dialectEntry.getValue()) :
+                            new FallbackWindowEveryFunction(dialectEntry.getValue()));
+        }
+        registerFunction(jpqlFunctionGroup);
+
+        // window oragg
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(WindowOrAggFunction.FUNCTION_NAME, false);
+        for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
+            jpqlFunctionGroup.add(dialectEntry.getKey(),
+                    dialectEntry.getValue().supportsBooleanAggregation() ?
+                        new WindowOrAggFunction(dialectEntry.getValue()) :
+                        new FallbackWindowOrAggFunction(dialectEntry.getValue()));
+        }
+        registerFunction(jpqlFunctionGroup);
+
+        // window sum
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(SumFunction.FUNCTION_NAME, false);
+        for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
+            jpqlFunctionGroup.add(dialectEntry.getKey(), new SumFunction(dialectEntry.getValue()));
+        }
+        registerFunction(jpqlFunctionGroup);
+
+        // window avg
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(AvgFunction.FUNCTION_NAME, false);
+        for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
+            jpqlFunctionGroup.add(dialectEntry.getKey(), new AvgFunction(dialectEntry.getValue()));
+        }
+        registerFunction(jpqlFunctionGroup);
+
+        // window min
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(MinFunction.FUNCTION_NAME, false);
+        for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
+            jpqlFunctionGroup.add(dialectEntry.getKey(), new MinFunction(dialectEntry.getValue()));
+        }
+        registerFunction(jpqlFunctionGroup);
+
+        // window max
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(MaxFunction.FUNCTION_NAME, false);
+        for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
+            jpqlFunctionGroup.add(dialectEntry.getKey(), new MaxFunction(dialectEntry.getValue()));
+        }
+        registerFunction(jpqlFunctionGroup);
+
+        // window count
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(CountFunction.FUNCTION_NAME, false);
+        for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
+            jpqlFunctionGroup.add(dialectEntry.getKey(), new CountFunction(dialectEntry.getValue()));
+        }
+        registerFunction(jpqlFunctionGroup);
+
+        // row number
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(RowNumberFunction.FUNCTION_NAME, false);
+        for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
+            jpqlFunctionGroup.add(dialectEntry.getKey(), new RowNumberFunction(dialectEntry.getValue()));
+        }
+        registerFunction(jpqlFunctionGroup);
+
+        // rank
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(RankFunction.FUNCTION_NAME, false);
+        for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
+            jpqlFunctionGroup.add(dialectEntry.getKey(), new RankFunction(dialectEntry.getValue()));
+        }
+        registerFunction(jpqlFunctionGroup);
+
+        // dense_rank
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(DenseRankFunction.FUNCTION_NAME, false);
+        for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
+            jpqlFunctionGroup.add(dialectEntry.getKey(), new DenseRankFunction(dialectEntry.getValue()));
+        }
+        registerFunction(jpqlFunctionGroup);
+
+        // PERCENT_RANK
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(PercentRankFunction.FUNCTION_NAME, false);
+        for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
+            jpqlFunctionGroup.add(dialectEntry.getKey(), new PercentRankFunction(dialectEntry.getValue()));
+        }
+        registerFunction(jpqlFunctionGroup);
+
+        // CUME_DIST
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(CumeDistFunction.FUNCTION_NAME, false);
+        for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
+            jpqlFunctionGroup.add(dialectEntry.getKey(), new CumeDistFunction(dialectEntry.getValue()));
+        }
+        registerFunction(jpqlFunctionGroup);
+
+        // NTILE
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(NtileFunction.FUNCTION_NAME, false);
+        for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
+            jpqlFunctionGroup.add(dialectEntry.getKey(), new NtileFunction(dialectEntry.getValue()));
+        }
+        registerFunction(jpqlFunctionGroup);
+
+        // LAG
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(LagFunction.FUNCTION_NAME, false);
+        for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
+            jpqlFunctionGroup.add(dialectEntry.getKey(), new LagFunction(dialectEntry.getValue()));
+        }
+        registerFunction(jpqlFunctionGroup);
+
+        // LEAD
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(LeadFunction.FUNCTION_NAME, false);
+        for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
+            jpqlFunctionGroup.add(dialectEntry.getKey(), new LeadFunction(dialectEntry.getValue()));
+        }
+        registerFunction(jpqlFunctionGroup);
+
+        // FIRST_VALUE
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(FirstValueFunction.FUNCTION_NAME, false);
+        for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
+            jpqlFunctionGroup.add(dialectEntry.getKey(), new FirstValueFunction(dialectEntry.getValue()));
+        }
+        registerFunction(jpqlFunctionGroup);
+
+        // LAST_VALUE
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(LastValueFunction.FUNCTION_NAME, false);
+        for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
+            jpqlFunctionGroup.add(dialectEntry.getKey(), new LastValueFunction(dialectEntry.getValue()));
+        }
+        registerFunction(jpqlFunctionGroup);
+
+        // NTH_VALUE
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(NthValueFunction.FUNCTION_NAME, false);
+        for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
+            jpqlFunctionGroup.add(dialectEntry.getKey(), new NthValueFunction(dialectEntry.getValue()));
+        }
         registerFunction(jpqlFunctionGroup);
     }
 

@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.testsuite.update.converter;
 import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.entity.BlobEntity;
@@ -215,7 +216,7 @@ public class EntityViewUpdateBlobTest extends AbstractEntityViewUpdateTest<Updat
     // Oracle keeps LOBs open/tied to a result set so we can't write to it by means of setBytes.
     // For Oracle it would be more appropriate to treat writes like "replacements" i.e. remember the written bytes and replace the underlying object on flush
     // NOTE: No Datanucleus support yet
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOracle.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOracle.class, NoH2.class})
     public void testUpdateBlob() throws Exception {
         // Given
         {

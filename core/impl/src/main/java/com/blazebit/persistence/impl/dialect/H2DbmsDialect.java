@@ -90,4 +90,9 @@ public class H2DbmsDialect extends DefaultDbmsDialect {
     public ValuesStrategy getValuesStrategy() {
         return ValuesStrategy.SELECT_VALUES;
     }
+
+    @Override
+    public boolean supportsBooleanAggregation() {
+        return true;
+    }
 }

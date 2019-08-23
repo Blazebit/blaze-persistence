@@ -255,5 +255,9 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
         
         return endIndex;
     }
-    
+
+    @Override
+    public boolean supportsBooleanAggregation() {
+        return true;
+    }
 }

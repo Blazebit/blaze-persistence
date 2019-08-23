@@ -30,7 +30,9 @@ import com.blazebit.persistence.deltaspike.data.testsuite.entity.Person_;
 import com.blazebit.persistence.deltaspike.data.testsuite.repository.FullPersonViewRepository;
 import com.blazebit.persistence.deltaspike.data.testsuite.repository.PersonRepository;
 import com.blazebit.persistence.deltaspike.data.testsuite.view.PersonView;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
@@ -99,6 +101,7 @@ public class FullEntityViewRepositoryTest extends AbstractEntityViewRepositoryTe
     }
 
     @Test
+    @Category(NoH2.class)
     public void testFindByNameKeysetPaginated() {
         // we do not test DeltaSpike's findAll(int, int) method here because its results are non-deterministic
         Page<PersonView> actual = personViewRepository.findByNameLike("John %", new KeysetPageRequest(null, new PageRequest(0, 1, Sort.Direction.ASC, "id")));
@@ -112,6 +115,7 @@ public class FullEntityViewRepositoryTest extends AbstractEntityViewRepositoryTe
     }
 
     @Test
+    @Category(NoH2.class)
     public void testFindSliceKeyset() {
         Slice<PersonView> actual = personViewRepository.findByIdIsNotNull(new KeysetPageRequest(null, new PageRequest(0, 1, Sort.Direction.ASC, "id")));
         assertEquals(1, actual.getSize());

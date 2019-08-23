@@ -215,6 +215,32 @@ public interface DbmsDialect {
     public boolean supportsFullRowValueComparison();
 
     /**
+     * Returns true if the dbms supports the filter clause on aggregrate functions.
+     *
+     * @return Whether the dbms supports the filter clause on aggregrate functions
+     * @since 1.4.0
+     */
+    public boolean supportsFilterClause();
+
+    /**
+     * Returns true if the dbms supports null precedence for order clauses.
+     *
+     * @return whether the dbms supports null precedence for order clauses.
+     * @since 1.4.0
+     */
+    public boolean supportsNullPrecedence();
+
+    /**
+     * Returns true if the dbms supports boolean aggregration through EVERY / SOME / ANY
+     * / BOOL_AND / BOOL_OR.
+     *
+     * @return whether the dbms supports boolean aggregration through EVERY / SOME / ANY
+     * / BOOL_AND / BOOL_OR.
+     * @since 1.4.0
+     */
+    public boolean supportsBooleanAggregation();
+
+    /**
      * Returns the sql type for the java class type for usage in cast expressions.
      *
      * @param castType The java class type
