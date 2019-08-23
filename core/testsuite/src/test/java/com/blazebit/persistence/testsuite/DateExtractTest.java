@@ -35,6 +35,7 @@ import javax.sql.DataSource;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -55,7 +56,11 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class DateExtractTest extends AbstractCoreTest {
 
-    private final TimeZone dbmsTimeZone = TimeZone.getDefault();
+    // The previous timezones so we can cache the datasources for one configuration run
+    private static TimeZone previousProducerTimeZone;
+    private static TimeZone previousClientTimeZone;
+
+    private static final TimeZone dbmsTimeZone = TimeZone.getDefault();
     private Calendar c1;
     private Calendar c2;
     private Calendar lastModified;
@@ -92,7 +97,10 @@ public class DateExtractTest extends AbstractCoreTest {
     protected boolean recreateDataSource() {
         // Some drivers have timezone information bound to the connection
         // So we have to recreate the data source to get the newly configured time zones for connections
-        return true;
+        boolean recreate = previousProducerTimeZone != null && previousClientTimeZone != null && (!producerTimeZone.equals(previousProducerTimeZone) || !clientTimeZone.equals(previousClientTimeZone));
+        previousProducerTimeZone = producerTimeZone;
+        previousClientTimeZone = clientTimeZone;
+        return recreate;
     }
 
     @Override
@@ -101,6 +109,11 @@ public class DateExtractTest extends AbstractCoreTest {
         TimeZone.setDefault(producerTimeZone);
         resetTimeZoneCaches();
 
+        return super.createDataSource(properties);
+    }
+
+    @Before
+    public void setup() {
         c1 = Calendar.getInstance();
         c1.set(2000, Calendar.JANUARY, 1, 0, 0, 0);
         c1.set(Calendar.MILLISECOND, 213);
@@ -116,14 +129,13 @@ public class DateExtractTest extends AbstractCoreTest {
         lastModified = Calendar.getInstance();
         lastModified.setMinimalDaysInFirstWeek(4);
         lastModified.setFirstDayOfWeek(Calendar.MONDAY);
-
-        return super.createDataSource(properties);
     }
 
+    @Override
     // Doing this for every timezone
-    @Before
-    public void setUp() {
+    protected void setUpOnce() {
         cleanDatabase();
+        setup();
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {
@@ -143,8 +155,8 @@ public class DateExtractTest extends AbstractCoreTest {
         });
     }
 
-    @After
-    public void after() {
+    @AfterClass
+    public static void after() {
         TimeZone.setDefault(dbmsTimeZone);
         resetTimeZoneCaches();
     }

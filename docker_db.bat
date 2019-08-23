@@ -31,7 +31,7 @@ goto:EOF
 
 :db2
 docker rm -f db2 || true
-docker run --name db2 --privileged -e DB2INST1_PASSWORD=db2inst1-pwd -e DBNAME=testdb -e LICENSE=accept -p 50000:50000 -d ibmcom/db2:11.5.0.0a
+docker run --name db2 --privileged -e DB2INST1_PASSWORD=db2inst1-pwd -e DBNAME=test -e LICENSE=accept -p 50000:50000 -d ibmcom/db2:11.5.0.0a
 REM Give the container some time to start
 ping -n 5 127.0.0.1 >nul
 goto:EOF
