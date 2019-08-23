@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 
 mysql_5_6() {
     docker rm -f mysql || true
@@ -17,7 +17,7 @@ mysql_8_0() {
 
 db2() {
     docker rm -f db2 || true
-    docker run --name db2 --privileged -e DB2INST1_PASSWORD=db2inst1-pwd -e DBNAME=testdb -e LICENSE=accept -p 50000:50000 -d ibmcom/db2:11.5.0.0a
+    docker run --name db2 --privileged -e DB2INST1_PASSWORD=db2inst1-pwd -e DBNAME=test -e LICENSE=accept -p 50000:50000 -d ibmcom/db2:11.5.0.0a
     # Give the container some time to start
     OUTPUT=
     while [[ $OUTPUT != *"Setup has completed"* ]]; do

@@ -83,6 +83,7 @@ public abstract class AbstractJpaPersistenceTest {
     private static boolean resolvedNoop = false;
     private static boolean databaseClean = false;
     private static Class<?> lastTestClass;
+    private static Class<?> recreateTestClass;
     private static Set<Class<?>> databaseCleanerClasses;
     private static DatabaseCleaner databaseCleaner;
     private static HikariDataSource dataSource;
@@ -282,8 +283,15 @@ public abstract class AbstractJpaPersistenceTest {
         databaseClean = schemaChanged;
 
         if (dataSource != null && recreateDataSource()) {
+            recreateTestClass = getClass();
             dataSource.close();
             dataSource = null;
+        } else if (recreateTestClass != null && recreateTestClass != getClass()) {
+            recreateTestClass = null;
+            if (dataSource != null) {
+                dataSource.close();
+                dataSource = null;
+            }
         }
 
         emf = createEntityManagerFactory("TestsuiteBase", createProperties("none"));
