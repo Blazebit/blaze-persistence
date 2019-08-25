@@ -29,12 +29,11 @@ public class WindowEveryFunction extends AbstractWindowFunction {
     public static final String FUNCTION_NAME = "WINDOW_EVERY";
 
     public WindowEveryFunction(DbmsDialect dbmsDialect) {
-        super(dbmsDialect);
+        super("EVERY", dbmsDialect);
     }
 
-    @Override
-    protected String getFunctionName() {
-        return "EVERY";
+    public WindowEveryFunction(String functionName, DbmsDialect dbmsDialect) {
+        super(functionName, dbmsDialect);
     }
 
     @Override

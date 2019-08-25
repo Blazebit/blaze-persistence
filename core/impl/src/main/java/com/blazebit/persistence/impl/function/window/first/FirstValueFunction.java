@@ -29,12 +29,7 @@ public class FirstValueFunction extends AbstractWindowFunction {
     public static final String FUNCTION_NAME = "FIRST_VALUE";
 
     public FirstValueFunction(DbmsDialect dbmsDialect) {
-        super(dbmsDialect);
-    }
-
-    @Override
-    protected String getFunctionName() {
-        return FUNCTION_NAME;
+        super(FUNCTION_NAME, dbmsDialect);
     }
 
 }

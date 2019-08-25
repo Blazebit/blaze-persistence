@@ -30,12 +30,7 @@ public class AvgFunction extends AbstractWindowFunction {
     public static final String FUNCTION_NAME = "WINDOW_AVG";
 
     public AvgFunction(DbmsDialect dbmsDialect) {
-        super(dbmsDialect);
-    }
-
-    @Override
-    protected String getFunctionName() {
-        return "AVG";
+        super("AVG", dbmsDialect);
     }
 
 }

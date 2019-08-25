@@ -30,12 +30,7 @@ public class SumFunction extends AbstractWindowFunction {
     public static final String FUNCTION_NAME = "WINDOW_SUM";
 
     public SumFunction(DbmsDialect dbmsDialect) {
-        super(dbmsDialect);
-    }
-
-    @Override
-    protected String getFunctionName() {
-        return "SUM";
+        super("SUM", dbmsDialect);
     }
 
 }

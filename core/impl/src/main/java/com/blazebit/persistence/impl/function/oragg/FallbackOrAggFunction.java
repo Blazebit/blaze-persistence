@@ -26,21 +26,16 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
  */
 public class FallbackOrAggFunction extends OrAggFunction {
 
+    public static final FallbackOrAggFunction INSTANCE = new FallbackOrAggFunction();
+
+    private FallbackOrAggFunction() {
+    }
+
     @Override
     public void render(FunctionRenderContext context) {
-        renderLhs(context);
-        renderRhs(context);
-    }
-
-
-    public void renderLhs(FunctionRenderContext context) {
-        context.addChunk("SUM(CASE WHEN ");
+        context.addChunk("MAX(");
         context.addArgument(0);
-        context.addChunk(" THEN 1 ELSE 0 END)");
-    }
-
-    public void renderRhs(FunctionRenderContext context) {
-        context.addChunk(">0");
+        context.addChunk(")");
     }
 
 }

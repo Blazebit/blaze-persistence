@@ -31,12 +31,7 @@ public class PercentRankFunction extends AbstractWindowFunction {
     public static final String FUNCTION_NAME = "PERCENT_RANK";
 
     public PercentRankFunction(DbmsDialect dbmsDialect) {
-        super(dbmsDialect);
-    }
-
-    @Override
-    protected String getFunctionName() {
-        return FUNCTION_NAME;
+        super(FUNCTION_NAME, dbmsDialect);
     }
 
     @Override

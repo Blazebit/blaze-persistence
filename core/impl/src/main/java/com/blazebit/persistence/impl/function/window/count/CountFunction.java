@@ -31,17 +31,12 @@ public class CountFunction extends AbstractWindowFunction {
     public static final String FUNCTION_NAME = "WINDOW_COUNT";
 
     public CountFunction(DbmsDialect dbmsDialect) {
-        super(dbmsDialect);
-    }
-
-    @Override
-    protected String getFunctionName() {
-        return "COUNT";
+        super("COUNT", dbmsDialect);
     }
 
     @Override
     public Class<?> getReturnType(Class<?> firstArgumentType) {
-        return Integer.class;
+        return Long.class;
     }
 
     @Override

@@ -30,12 +30,7 @@ public class LastValueFunction extends AbstractWindowFunction {
     public static final String FUNCTION_NAME = "LAST_VALUE";
 
     public LastValueFunction(DbmsDialect dbmsDialect) {
-        super(dbmsDialect);
-    }
-
-    @Override
-    protected String getFunctionName() {
-        return FUNCTION_NAME;
+        super(FUNCTION_NAME, dbmsDialect);
     }
 
 }

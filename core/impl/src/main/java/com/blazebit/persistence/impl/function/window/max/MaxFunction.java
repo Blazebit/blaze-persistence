@@ -30,12 +30,7 @@ public class MaxFunction extends AbstractWindowFunction {
     public static final String FUNCTION_NAME = "WINDOW_MAX";
 
     public MaxFunction(DbmsDialect dbmsDialect) {
-        super(dbmsDialect);
-    }
-
-    @Override
-    protected String getFunctionName() {
-        return "MAX";
+        super("MAX", dbmsDialect);
     }
 
 }

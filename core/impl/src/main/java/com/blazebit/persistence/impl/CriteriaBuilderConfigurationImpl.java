@@ -562,36 +562,36 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         // every
 
         jpqlFunctionGroup = new JpqlFunctionGroup(EveryFunction.FUNCTION_NAME, true);
-        jpqlFunctionGroup.add(null, new EveryFunction());
+        jpqlFunctionGroup.add(null, EveryFunction.INSTANCE);
         for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
             jpqlFunctionGroup.add(dialectEntry.getKey(),
                     dialectEntry.getValue().supportsBooleanAggregation() ?
-                            new EveryFunction() :
-                            new FallbackEveryFunction());
+                            EveryFunction.INSTANCE :
+                            FallbackEveryFunction.INSTANCE);
         }
         registerFunction(jpqlFunctionGroup);
 
         // andagg
 
         jpqlFunctionGroup = new JpqlFunctionGroup("AND_AGG", true);
-        jpqlFunctionGroup.add(null, new EveryFunction());
+        jpqlFunctionGroup.add(null, EveryFunction.INSTANCE);
         for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
             jpqlFunctionGroup.add(dialectEntry.getKey(),
                     dialectEntry.getValue().supportsBooleanAggregation() ?
-                            new EveryFunction() :
-                            new FallbackEveryFunction());
+                            EveryFunction.INSTANCE :
+                            FallbackEveryFunction.INSTANCE);
         }
         registerFunction(jpqlFunctionGroup);
 
         // oragg
 
         jpqlFunctionGroup = new JpqlFunctionGroup(OrAggFunction.FUNCTION_NAME, true);
-        jpqlFunctionGroup.add(null, new OrAggFunction());
+        jpqlFunctionGroup.add(null, OrAggFunction.INSTANCE);
         for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
             jpqlFunctionGroup.add(dialectEntry.getKey(),
                     dialectEntry.getValue().supportsBooleanAggregation() ?
-                            new OrAggFunction() :
-                            new FallbackOrAggFunction());
+                            OrAggFunction.INSTANCE :
+                            FallbackOrAggFunction.INSTANCE);
         }
         registerFunction(jpqlFunctionGroup);
 

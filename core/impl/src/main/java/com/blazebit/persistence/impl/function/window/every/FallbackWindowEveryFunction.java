@@ -16,9 +16,7 @@
 
 package com.blazebit.persistence.impl.function.window.every;
 
-import com.blazebit.persistence.impl.function.every.FallbackEveryFunction;
 import com.blazebit.persistence.spi.DbmsDialect;
-import com.blazebit.persistence.spi.FunctionRenderContext;
 
 /**
  * @author Jan-Willem Gmelig Meyling
@@ -27,21 +25,8 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
  */
 public class FallbackWindowEveryFunction extends WindowEveryFunction {
 
-    private final FallbackEveryFunction fallbackEveryFunction = new FallbackEveryFunction();
-
     public FallbackWindowEveryFunction(DbmsDialect dbmsDialect) {
-        super(dbmsDialect);
-    }
-
-    @Override
-    protected void render(FunctionRenderContext context, WindowFunction windowFunction) {
-        super.render(context, windowFunction);
-        fallbackEveryFunction.renderRhs(context);
-    }
-
-    @Override
-    protected void renderFunction(FunctionRenderContext context, WindowFunction windowFunction) {
-        fallbackEveryFunction.renderLhs(context);
+        super("MIN", dbmsDialect);
     }
 
 }
