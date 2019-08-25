@@ -31,12 +31,7 @@ public class DenseRankFunction extends AbstractWindowFunction {
     public static final String FUNCTION_NAME = "DENSE_RANK";
 
     public DenseRankFunction(DbmsDialect dbmsDialect) {
-        super(dbmsDialect);
-    }
-
-    @Override
-    protected String getFunctionName() {
-        return FUNCTION_NAME;
+        super(FUNCTION_NAME, dbmsDialect);
     }
 
     @Override

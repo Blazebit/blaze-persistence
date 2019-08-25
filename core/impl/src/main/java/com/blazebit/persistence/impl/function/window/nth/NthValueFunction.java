@@ -30,12 +30,7 @@ public class NthValueFunction extends AbstractWindowFunction {
     public static final String FUNCTION_NAME = "NTH_VALUE";
 
     public NthValueFunction(DbmsDialect dbmsDialect) {
-        super(dbmsDialect);
-    }
-
-    @Override
-    protected String getFunctionName() {
-        return FUNCTION_NAME;
+        super(FUNCTION_NAME, dbmsDialect);
     }
 
 }

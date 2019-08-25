@@ -29,12 +29,11 @@ public class WindowOrAggFunction extends AbstractWindowFunction {
     public static final String FUNCTION_NAME = "WINDOW_OR_AGG";
 
     public WindowOrAggFunction(DbmsDialect dbmsDialect) {
-        super(dbmsDialect);
+        super("BOOL_OR", dbmsDialect);
     }
 
-    @Override
-    protected String getFunctionName() {
-        return "BOOL_OR";
+    public WindowOrAggFunction(String functionName, DbmsDialect dbmsDialect) {
+        super(functionName, dbmsDialect);
     }
 
     @Override

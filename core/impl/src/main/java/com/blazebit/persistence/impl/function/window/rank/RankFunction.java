@@ -31,12 +31,7 @@ public class RankFunction extends AbstractWindowFunction {
     public static final String FUNCTION_NAME = "RANK";
 
     public RankFunction(DbmsDialect dbmsDialect) {
-        super(dbmsDialect);
-    }
-
-    @Override
-    protected String getFunctionName() {
-        return FUNCTION_NAME;
+        super(FUNCTION_NAME, dbmsDialect);
     }
 
     @Override

@@ -30,12 +30,7 @@ public class MinFunction extends AbstractWindowFunction {
     public static final String FUNCTION_NAME = "WINDOW_MIN";
 
     public MinFunction(DbmsDialect dbmsDialect) {
-        super(dbmsDialect);
-    }
-
-    @Override
-    protected String getFunctionName() {
-        return "MIN";
+        super("MIN", dbmsDialect);
     }
 
 }

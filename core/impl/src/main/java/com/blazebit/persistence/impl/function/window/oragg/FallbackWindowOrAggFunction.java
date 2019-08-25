@@ -16,9 +16,7 @@
 
 package com.blazebit.persistence.impl.function.window.oragg;
 
-import com.blazebit.persistence.impl.function.oragg.FallbackOrAggFunction;
 import com.blazebit.persistence.spi.DbmsDialect;
-import com.blazebit.persistence.spi.FunctionRenderContext;
 
 /**
  * @author Jan-Willem Gmelig Meyling
@@ -27,21 +25,8 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
  */
 public class FallbackWindowOrAggFunction extends WindowOrAggFunction {
 
-    private final FallbackOrAggFunction fallbackOrAggFunction = new FallbackOrAggFunction();
-
     public FallbackWindowOrAggFunction(DbmsDialect dbmsDialect) {
-        super(dbmsDialect);
-    }
-
-    @Override
-    protected void render(FunctionRenderContext context, WindowFunction windowFunction) {
-        super.render(context, windowFunction);
-        fallbackOrAggFunction.renderRhs(context);
-    }
-
-    @Override
-    protected void renderFunction(FunctionRenderContext context, WindowFunction windowFunction) {
-        fallbackOrAggFunction.renderLhs(context);
+        super("MAX", dbmsDialect);
     }
 
 }

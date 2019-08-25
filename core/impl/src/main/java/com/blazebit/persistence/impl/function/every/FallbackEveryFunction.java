@@ -26,20 +26,16 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
  */
 public class FallbackEveryFunction extends EveryFunction {
 
+    public static final FallbackEveryFunction INSTANCE = new FallbackEveryFunction();
+
+    private FallbackEveryFunction() {
+    }
+
     @Override
     public void render(FunctionRenderContext context) {
-        renderLhs(context);
-        renderRhs(context);
-    }
-
-    public void renderLhs(FunctionRenderContext context) {
-        context.addChunk("SUM(CASE WHEN ");
+        context.addChunk("MIN(");
         context.addArgument(0);
-        context.addChunk(" THEN 0 ELSE 1 END)");
-    }
-
-    public void renderRhs(FunctionRenderContext context) {
-        context.addChunk("=0");
+        context.addChunk(")");
     }
 
 }

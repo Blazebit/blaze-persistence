@@ -30,12 +30,7 @@ public class LeadFunction extends AbstractWindowFunction {
     public static final String FUNCTION_NAME = "LEAD";
 
     public LeadFunction(DbmsDialect dbmsDialect) {
-        super(dbmsDialect);
-    }
-
-    @Override
-    protected String getFunctionName() {
-        return FUNCTION_NAME;
+        super(FUNCTION_NAME, dbmsDialect);
     }
 
 }

@@ -28,6 +28,10 @@ import com.blazebit.persistence.spi.JpqlFunction;
 public class EveryFunction implements JpqlFunction {
 
     public static final String FUNCTION_NAME = "EVERY";
+    public static final EveryFunction INSTANCE = new EveryFunction();
+
+    protected EveryFunction() {
+    }
 
     @Override
     public boolean hasArguments() {

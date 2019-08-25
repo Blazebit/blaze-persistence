@@ -31,12 +31,7 @@ public class NtileFunction extends AbstractWindowFunction {
     public static final String FUNCTION_NAME = "NTILE";
 
     public NtileFunction(DbmsDialect dbmsDialect) {
-        super(dbmsDialect);
-    }
-
-    @Override
-    protected String getFunctionName() {
-        return FUNCTION_NAME;
+        super(FUNCTION_NAME, dbmsDialect);
     }
 
     @Override
