@@ -58,6 +58,11 @@ public class MySQLDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
+    public boolean isNullSmallest() {
+        return true;
+    }
+
+    @Override
     public String getWithClause(boolean recursive) {
         throw new UnsupportedOperationException("With clause is not supported!");
     }

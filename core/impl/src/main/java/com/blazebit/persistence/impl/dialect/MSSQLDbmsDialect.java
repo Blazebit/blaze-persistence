@@ -56,6 +56,11 @@ public class MSSQLDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
+    public boolean isNullSmallest() {
+        return true;
+    }
+
+    @Override
     protected String getOperator(SetOperationType type) {
         if (type == null) {
             return null;

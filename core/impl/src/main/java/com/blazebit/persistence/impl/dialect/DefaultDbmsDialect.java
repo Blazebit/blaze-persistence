@@ -135,7 +135,17 @@ public class DefaultDbmsDialect implements DbmsDialect {
     }
 
     @Override
+    public boolean supportsWindowNullPrecedence() {
+        return false;
+    }
+
+    @Override
     public boolean supportsBooleanAggregation() {
+        return false;
+    }
+
+    @Override
+    public boolean isNullSmallest() {
         return false;
     }
 

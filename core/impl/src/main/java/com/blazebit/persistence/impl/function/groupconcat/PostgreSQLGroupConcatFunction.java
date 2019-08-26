@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl.function.groupconcat;
 
 import java.util.List;
 
+import com.blazebit.persistence.impl.function.Order;
 import com.blazebit.persistence.spi.FunctionRenderContext;
 
 /**

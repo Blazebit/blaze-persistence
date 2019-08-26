@@ -37,6 +37,11 @@ import com.blazebit.persistence.impl.function.window.denserank.DenseRankFunction
 import com.blazebit.persistence.impl.function.window.every.FallbackWindowEveryFunction;
 import com.blazebit.persistence.impl.function.window.every.WindowEveryFunction;
 import com.blazebit.persistence.impl.function.window.first.FirstValueFunction;
+import com.blazebit.persistence.impl.function.window.groupconcat.DB2GroupConcatWindowFunction;
+import com.blazebit.persistence.impl.function.window.groupconcat.H2GroupConcatWindowFunction;
+import com.blazebit.persistence.impl.function.window.groupconcat.MySQLGroupConcatWindowFunction;
+import com.blazebit.persistence.impl.function.window.groupconcat.OracleListaggGroupConcatWindowFunction;
+import com.blazebit.persistence.impl.function.window.groupconcat.PostgreSQLGroupConcatWindowFunction;
 import com.blazebit.persistence.impl.function.window.lag.LagFunction;
 import com.blazebit.persistence.impl.function.window.last.LastValueFunction;
 import com.blazebit.persistence.impl.function.window.lead.LeadFunction;
@@ -366,6 +371,16 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("h2", new H2GroupConcatFunction());
         jpqlFunctionGroup.add("mysql", new MySQLGroupConcatFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLGroupConcatFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        // window_group_concat
+
+        jpqlFunctionGroup = new JpqlFunctionGroup("window_group_concat", false);
+        jpqlFunctionGroup.add("db2", new DB2GroupConcatWindowFunction(dbmsDialects.get("db2")));
+        jpqlFunctionGroup.add("oracle", new OracleListaggGroupConcatWindowFunction(dbmsDialects.get("oracle")));
+        jpqlFunctionGroup.add("h2", new H2GroupConcatWindowFunction(dbmsDialects.get("h2")));
+        jpqlFunctionGroup.add("mysql", new MySQLGroupConcatWindowFunction(dbmsDialects.get("mysql")));
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLGroupConcatWindowFunction(dbmsDialects.get("postgresql")));
         registerFunction(jpqlFunctionGroup);
         
         // datetime

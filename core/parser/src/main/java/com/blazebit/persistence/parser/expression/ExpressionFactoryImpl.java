@@ -21,7 +21,6 @@ import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
 
 /**
  *
@@ -39,12 +38,12 @@ public final class ExpressionFactoryImpl extends AbstractExpressionFactory {
         }
     };
 
-    public ExpressionFactoryImpl(Set<String> aggregateFunctions, boolean allowTreatJoinExtension, boolean optimize) {
-        this(aggregateFunctions, Collections.EMPTY_MAP, Collections.EMPTY_MAP, allowTreatJoinExtension, optimize);
+    public ExpressionFactoryImpl(Map<String, Boolean> functions, boolean allowTreatJoinExtension, boolean optimize) {
+        this(functions, Collections.EMPTY_MAP, Collections.EMPTY_MAP, allowTreatJoinExtension, optimize);
     }
 
-    public ExpressionFactoryImpl(Set<String> aggregateFunctions, Map<String, Class<?>> entityTypes, Map<String, Class<Enum<?>>> enumTypes, boolean allowTreatJoinExtension, boolean optimize) {
-        super(aggregateFunctions, entityTypes, enumTypes, allowTreatJoinExtension, optimize);
+    public ExpressionFactoryImpl(Map<String, Boolean> functions, Map<String, Class<?>> entityTypes, Map<String, Class<Enum<?>>> enumTypes, boolean allowTreatJoinExtension, boolean optimize) {
+        super(functions, entityTypes, enumTypes, allowTreatJoinExtension, optimize);
     }
 
     @Override

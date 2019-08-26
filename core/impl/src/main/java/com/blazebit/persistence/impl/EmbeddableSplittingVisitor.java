@@ -275,7 +275,9 @@ class EmbeddableSplittingVisitor extends AbortableVisitorAdapter {
         switch (expression.getFunctionName().toUpperCase()) {
             // MIN and MAX work with embeddables
             case "MIN":
-            case "MAX": {
+            case "MAX":
+            case "WINDOW_MIN":
+            case "WINDOW_MAX": {
                 Expression expr = expression.getExpressions().get(0);
                 return expr instanceof PathExpression && visit((PathExpression) expr);
             }

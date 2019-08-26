@@ -220,6 +220,11 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
         // See for reference: https://www.ibm.com/developerworks/community/blogs/SQLTips4DB2LUW/entry/limit_offset?lang=en
         return false;
     }
+
+    @Override
+    public boolean supportsNullPrecedence() {
+        return false;
+    }
     
     @Override
     protected void appendOrderByElement(StringBuilder sqlSb, OrderByElement element, String[] aliases) {

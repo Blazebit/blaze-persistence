@@ -104,6 +104,35 @@ public abstract class VisitorAdapter implements Expression.Visitor {
         for (int i = 0; i < size; i++) {
             expressions.get(i).accept(this);
         }
+        WindowDefinition windowDefinition = expression.getWindowDefinition();
+        if (windowDefinition != null) {
+            Predicate filterPredicate = windowDefinition.getFilterPredicate();
+            if (filterPredicate != null) {
+                filterPredicate.accept(this);
+            }
+
+            List<Expression> partitionExpressions = windowDefinition.getPartitionExpressions();
+            size = partitionExpressions.size();
+            for (int i = 0; i < size; i++) {
+                partitionExpressions.get(i).accept(this);
+            }
+
+            List<OrderByItem> orderByExpressions = windowDefinition.getOrderByExpressions();
+            size = orderByExpressions.size();
+            for (int i = 0; i < size; i++) {
+                orderByExpressions.get(i).getExpression().accept(this);
+            }
+
+            Expression frameStartExpression = windowDefinition.getFrameStartExpression();
+            if (frameStartExpression != null) {
+                frameStartExpression.accept(this);
+            }
+
+            Expression frameEndExpression = windowDefinition.getFrameEndExpression();
+            if (frameEndExpression != null) {
+                frameEndExpression.accept(this);
+            }
+        }
     }
 
     @Override

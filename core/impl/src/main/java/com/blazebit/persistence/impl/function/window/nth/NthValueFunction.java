@@ -30,7 +30,7 @@ public class NthValueFunction extends AbstractWindowFunction {
     public static final String FUNCTION_NAME = "NTH_VALUE";
 
     public NthValueFunction(DbmsDialect dbmsDialect) {
-        super(FUNCTION_NAME, dbmsDialect);
+        super(FUNCTION_NAME, dbmsDialect.isNullSmallest(), dbmsDialect.supportsWindowNullPrecedence(), dbmsDialect.supportsFilterClause(), true);
     }
 
 }

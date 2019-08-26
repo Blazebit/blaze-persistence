@@ -44,10 +44,8 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.metamodel.Metamodel;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  *
@@ -61,7 +59,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
     private final EntityMetamodelImpl metamodel;
     private final AssociationParameterTransformerFactory transientEntityParameterTransformerFactory;
     private final ExtendedQuerySupport extendedQuerySupport;
-    private final Set<String> aggregateFunctions;
+    private final Map<String, Boolean> functions;
     private final Map<Class<?>, String> namedTypes;
     private final ExpressionCache expressionCache;
     private final ExpressionFactory expressionFactory;
@@ -111,13 +109,13 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
 
         this.transientEntityParameterTransformerFactory = new TransientEntityAssociationParameterTransformerFactory(metamodel, new AssociationToIdParameterTransformer(jpaProvider));
         this.extendedQuerySupport = config.getExtendedQuerySupport();
-        this.aggregateFunctions = resolveAggregateFunctions(config.getFunctions());
+        this.functions = resolveFunctions(config.getFunctions());
         this.namedTypes = resolveNamedTypes(config.getNamedTypes());
 
-        ExpressionFactory originalExpressionFactory = new ExpressionFactoryImpl(aggregateFunctions, metamodel.getEntityTypes(), metamodel.getEnumTypes(), !compatibleMode, optimize);
+        ExpressionFactory originalExpressionFactory = new ExpressionFactoryImpl(functions, metamodel.getEntityTypes(), metamodel.getEnumTypes(), !compatibleMode, optimize);
         this.expressionCache = createCache(queryConfiguration.getExpressionCacheClass());
         ExpressionFactory cachingExpressionFactory = new SimpleCachingExpressionFactory(originalExpressionFactory, expressionCache);
-        ExpressionFactory cachingSubqueryExpressionFactory = new SimpleCachingExpressionFactory(new SubqueryExpressionFactory(aggregateFunctions, metamodel.getEntityTypes(), metamodel.getEnumTypes(), !compatibleMode, optimize, originalExpressionFactory));
+        ExpressionFactory cachingSubqueryExpressionFactory = new SimpleCachingExpressionFactory(new SubqueryExpressionFactory(functions, metamodel.getEntityTypes(), metamodel.getEnumTypes(), !compatibleMode, optimize, originalExpressionFactory));
         this.macroConfiguration = MacroConfiguration.of(JpqlMacroAdapter.createMacros(config.getMacros(), cachingExpressionFactory));
         JpqlMacroStorage macroStorage = new JpqlMacroStorage(null, macroConfiguration);
         this.expressionFactory = new JpqlMacroAwareExpressionFactory(cachingExpressionFactory, macroStorage);
@@ -132,20 +130,18 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         }
     }
 
-    private static Set<String> resolveAggregateFunctions(Map<String, JpqlFunctionGroup> functions) {
-        Set<String> aggregateFunctions = new HashSet<String>();
+    private static Map<String, Boolean> resolveFunctions(Map<String, JpqlFunctionGroup> functions) {
+        Map<String, Boolean> map = new HashMap<>();
         for (Map.Entry<String, JpqlFunctionGroup> entry : functions.entrySet()) {
-            if (entry.getValue().isAggregate()) {
-                aggregateFunctions.add(entry.getKey().toLowerCase());
-            }
+            map.put(entry.getKey().toLowerCase(), entry.getValue().isAggregate());
         }
         // add standard JPQL aggregate functions
-        aggregateFunctions.add("sum");
-        aggregateFunctions.add("min");
-        aggregateFunctions.add("max");
-        aggregateFunctions.add("avg");
-        aggregateFunctions.add("count");
-        return aggregateFunctions;
+        map.put("sum", true);
+        map.put("min", true);
+        map.put("max", true);
+        map.put("avg", true);
+        map.put("count", true);
+        return map;
     }
 
     private static Map<Class<?>, String> resolveNamedTypes(Map<String, Class<?>> namedTypes) {
@@ -180,8 +176,8 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         return extendedQuerySupport;
     }
 
-    public Set<String> getAggregateFunctions() {
-        return aggregateFunctions;
+    public Map<String, Boolean> getFunctions() {
+        return functions;
     }
 
     public Map<Class<?>, String> getNamedTypes() {

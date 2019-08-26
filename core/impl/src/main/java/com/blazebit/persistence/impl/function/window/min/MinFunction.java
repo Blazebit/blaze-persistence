@@ -30,7 +30,7 @@ public class MinFunction extends AbstractWindowFunction {
     public static final String FUNCTION_NAME = "WINDOW_MIN";
 
     public MinFunction(DbmsDialect dbmsDialect) {
-        super("MIN", dbmsDialect);
+        super("MIN", dbmsDialect.isNullSmallest(), dbmsDialect.supportsWindowNullPrecedence(), dbmsDialect.supportsFilterClause(), true);
     }
 
 }

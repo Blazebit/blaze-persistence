@@ -29,11 +29,11 @@ public class WindowOrAggFunction extends AbstractWindowFunction {
     public static final String FUNCTION_NAME = "WINDOW_OR_AGG";
 
     public WindowOrAggFunction(DbmsDialect dbmsDialect) {
-        super("BOOL_OR", dbmsDialect);
+        super("BOOL_OR", dbmsDialect.isNullSmallest(), dbmsDialect.supportsWindowNullPrecedence(), dbmsDialect.supportsFilterClause(), true);
     }
 
     public WindowOrAggFunction(String functionName, DbmsDialect dbmsDialect) {
-        super(functionName, dbmsDialect);
+        super(functionName, dbmsDialect.isNullSmallest(), dbmsDialect.supportsWindowNullPrecedence(), dbmsDialect.supportsFilterClause(), true);
     }
 
     @Override

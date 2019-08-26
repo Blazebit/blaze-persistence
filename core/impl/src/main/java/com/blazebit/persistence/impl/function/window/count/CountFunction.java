@@ -20,6 +20,8 @@ import com.blazebit.persistence.impl.function.window.AbstractWindowFunction;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.FunctionRenderContext;
 
+import java.util.List;
+
 /**
  *
  * @author Jan-Willem Gmelig Meyling
@@ -31,7 +33,7 @@ public class CountFunction extends AbstractWindowFunction {
     public static final String FUNCTION_NAME = "WINDOW_COUNT";
 
     public CountFunction(DbmsDialect dbmsDialect) {
-        super("COUNT", dbmsDialect);
+        super("COUNT", dbmsDialect.isNullSmallest(), dbmsDialect.supportsWindowNullPrecedence(), dbmsDialect.supportsFilterClause(), true);
     }
 
     @Override
@@ -42,7 +44,16 @@ public class CountFunction extends AbstractWindowFunction {
     @Override
     protected void renderArguments(FunctionRenderContext context, WindowFunction windowFunction) {
         if (windowFunction.getArguments().isEmpty()) {
-            context.addChunk("*");
+            List<String> filterExpressions = windowFunction.getFilterExpressions();
+            if (filterExpressions.isEmpty()) {
+                context.addChunk("*");
+            } else {
+                String caseWhenPre = getCaseWhenPre(filterExpressions);
+                String caseWhenPost = getCaseWhenPost();
+                context.addChunk(caseWhenPre);
+                context.addChunk("1");
+                context.addChunk(caseWhenPost);
+            }
         } else {
             super.renderArguments(context, windowFunction);
         }

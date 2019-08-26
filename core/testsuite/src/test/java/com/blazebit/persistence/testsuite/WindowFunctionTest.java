@@ -158,7 +158,6 @@ public class WindowFunctionTest extends AbstractCoreTest {
         assertNotNull(resultList);
     }
 
-
     @Test
     @Category({NoMSSQL.class, NoOracle.class}) // MSSQL demands a specific ordering for row_number
     public void testRowNumberBaseWindow() {

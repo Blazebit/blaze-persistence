@@ -129,6 +129,56 @@ TREAT: [Tt] [Rr] [Ee] [Aa] [Tt];
 
 AS: [Aa] [Ss];
 
+ASC: [Aa] [Ss] [Cc];
+
+DESC: [Dd] [Ee] [Ss] [Cc];
+
+NULLS: [Nn] [Uu] [Ll] [Ll] [Ss];
+
+FIRST: [Ff] [Ii] [Rr] [Ss] [Tt];
+
+LAST: [Ll] [Aa] [Ss] [Tt];
+
+FILTER: [Ff] [Ii] [Ll] [Tt] [Ee] [Rr];
+
+WHERE: [Ww] [Hh] [Ee] [Rr] [Ee];
+
+OVER: [Oo] [Vv] [Ee] [Rr];
+
+PARTITION: [Pp] [Aa] [Rr] [Tt] [Ii] [Tt] [Ii] [Oo] [Nn];
+
+ORDER: [Oo] [Rr] [Dd] [Ee] [Rr];
+
+BY: [Bb] [Yy];
+
+RANGE: [Rr] [Aa] [Nn] [Gg] [Ee];
+
+ROWS: [Rr] [Oo] [Ww] [Ss];
+
+GROUPS: [Gg] [Rr] [Oo] [Uu] [Pp] [Ss];
+
+UNBOUNDED: [Uu] [Nn] [Bb] [Oo] [Uu] [Nn] [Dd] [Ee] [Dd];
+
+BOUNDED: [Bb] [Oo] [Uu] [Nn] [Dd] [Ee] [Dd];
+
+PRECEDING: [Pp] [Rr] [Ee] [Cc] [Ee] [Dd] [Ii] [Nn] [Gg];
+
+FOLLOWING: [Ff] [Oo] [Ll] [Ll] [Oo] [Ww] [Ii] [Nn] [Gg];
+
+CURRENT: [Cc] [Uu] [Rr] [Rr] [Ee] [Nn] [Tt];
+
+ROW: [Rr] [Oo] [Ww];
+
+EXCLUDE: [Ee] [Xx] [Cc] [Ll] [Uu] [Dd] [Ee];
+
+GROUP: [Gg] [Rr] [Oo] [Uu] [Pp];
+
+TIES: [Tt] [Ii] [Ee] [Ss];
+
+NO: [Nn] [Oo];
+
+OTHERS: [Oo] [Tt] [Hh] [Ee] [Rr] [Ss];
+
 Outer_function : [Oo][Uu][Tt][Ee][Rr];
 
 Character_literal : '\'' JavaLetter '\'';

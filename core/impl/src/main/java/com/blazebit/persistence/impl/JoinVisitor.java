@@ -56,6 +56,7 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor, Jo
 
     private final AssociationParameterTransformerFactory parameterTransformerFactory;
     private final EntityMetamodelImpl metamodel;
+    private final WindowManager windowManager;
     private final JoinVisitor parentVisitor;
     private final JoinManager joinManager;
     private final ParameterManager parameterManager;
@@ -69,9 +70,10 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor, Jo
     private boolean joinWithObjectLeafAllowed = true;
     private ClauseType fromClause;
 
-    public JoinVisitor(MainQuery mainQuery, JoinVisitor parentVisitor, JoinManager joinManager, ParameterManager parameterManager, boolean needsSingleValuedAssociationIdRemoval) {
+    public JoinVisitor(MainQuery mainQuery, WindowManager windowManager, JoinVisitor parentVisitor, JoinManager joinManager, ParameterManager parameterManager, boolean needsSingleValuedAssociationIdRemoval) {
         this.parameterTransformerFactory = mainQuery.parameterTransformerFactory;
         this.metamodel = mainQuery.metamodel;
+        this.windowManager = windowManager;
         this.parentVisitor = parentVisitor;
         this.joinManager = joinManager;
         this.parameterManager = parameterManager;
@@ -233,6 +235,9 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor, Jo
             expression.getExpressions().get(0).accept(parentVisitor);
         } else {
             super.visit(expression);
+            if (expression.getWindowDefinition() != null) {
+                expression.setResolvedWindowDefinition(windowManager.resolve(expression.getWindowDefinition()));
+            }
         }
     }
 

@@ -32,6 +32,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
@@ -44,7 +45,7 @@ public class SimpleCachingExpressionFactoryTest {
 
     @Test
     public void testCreateSimpleExpressionCache() {
-        ExpressionFactory ef = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl(new HashSet<String>(), true, true));
+        ExpressionFactory ef = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl(new HashMap<String, Boolean>(), true, true));
         String expressionString = "SIZE(Hello.world[:hahaha].criteria[1].api.lsls[a.b.c.d.e]) + SIZE(Hello.world[:hahaha].criteria[1].api.lsls[a.b.c.d.e])";
         
         Expression expr1 = ef.createSimpleExpression(expressionString, true, null, null);
@@ -56,7 +57,7 @@ public class SimpleCachingExpressionFactoryTest {
 
     @Test
     public void testCreateSimpleExpressionCacheWithMacros() {
-        ExpressionFactory ef = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl(new HashSet<String>(), true, true));
+        ExpressionFactory ef = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl(new HashMap<String, Boolean>(), true, true));
         MacroConfiguration macroConfiguration = MacroConfiguration.of(Collections.singletonMap("my_macro", (MacroFunction) new MacroFunction() {
             @Override
             public Expression apply(List<Expression> expressions) {

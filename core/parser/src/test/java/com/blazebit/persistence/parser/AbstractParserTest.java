@@ -53,7 +53,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.LogManager;
@@ -64,11 +63,11 @@ import java.util.logging.LogManager;
  */
 public class AbstractParserTest {
 
-    private final SetDelegate<String> setDelegate = new SetDelegate<String>() {
+    private final MapDelegate<String, Boolean> functionsDelegate = new MapDelegate<String, Boolean>() {
 
         @Override
-        protected Set<String> getDelegate() {
-            return AbstractParserTest.this.aggregateFunctions;
+        protected Map<String, Boolean> getDelegate() {
+            return AbstractParserTest.this.functions;
         }
         
     };
@@ -85,7 +84,7 @@ public class AbstractParserTest {
         }
     };
     protected ExpressionFactory ef() {
-        return new AbstractTestExpressionFactory(setDelegate, entityTypesDelegate, enumTypesDelegate, false) {
+        return new AbstractTestExpressionFactory(functionsDelegate, entityTypesDelegate, enumTypesDelegate, false) {
 
             private final AbstractExpressionFactory.RuleInvoker simpleExpressionRuleInvoker = new AbstractExpressionFactory.RuleInvoker() {
 
@@ -103,7 +102,7 @@ public class AbstractParserTest {
         };
     }
     protected ExpressionFactory optimizingEf() {
-        return new AbstractTestExpressionFactory(setDelegate, entityTypesDelegate, enumTypesDelegate, true) {
+        return new AbstractTestExpressionFactory(functionsDelegate, entityTypesDelegate, enumTypesDelegate, true) {
 
             private final AbstractExpressionFactory.RuleInvoker simpleExpressionRuleInvoker = new AbstractExpressionFactory.RuleInvoker() {
 
@@ -121,7 +120,7 @@ public class AbstractParserTest {
         };
     }
     protected ExpressionFactory subqueryEf() {
-        return new AbstractTestExpressionFactory(setDelegate, entityTypesDelegate, enumTypesDelegate, false) {
+        return new AbstractTestExpressionFactory(functionsDelegate, entityTypesDelegate, enumTypesDelegate, false) {
 
             private final AbstractExpressionFactory.RuleInvoker simpleExpressionRuleInvoker = new AbstractExpressionFactory.RuleInvoker() {
 
@@ -139,7 +138,7 @@ public class AbstractParserTest {
         };
     }
     
-    protected Set<String> aggregateFunctions;
+    protected Map<String, Boolean> functions;
     protected Map<String, Class<?>> entityTypes;
     protected Map<String, Class<Enum<?>>> enumTypes;
     protected MacroConfiguration macroConfiguration;
@@ -156,7 +155,7 @@ public class AbstractParserTest {
 
     @Before
     public void initTest() {
-        aggregateFunctions = new HashSet<>();
+        functions = new HashMap<>();
         entityTypes = new HashMap<>();
         enumTypes = new HashMap<>();
         macroConfiguration = null;
@@ -234,7 +233,7 @@ public class AbstractParserTest {
     }
 
     protected FunctionExpression function(String name, Expression... args) {
-        if (aggregateFunctions.contains(name)) {
+        if (Boolean.TRUE.equals(functions.get(name))) {
             return new AggregateExpression(false, name, Arrays.asList(args));
         } else {
             return new FunctionExpression(name, Arrays.asList(args));

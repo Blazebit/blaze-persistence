@@ -59,6 +59,7 @@ public abstract class LazyCopyingResultVisitorAdapter implements Expression.Resu
                     for (int j = 0; j < i; j++) {
                         newExpressions.add(expressions.get(j));
                     }
+                    newExpressions.add(newExpr);
                 }
             } else {
                 newExpressions.add(newExpr);
@@ -146,10 +147,85 @@ public abstract class LazyCopyingResultVisitorAdapter implements Expression.Resu
     @Override
     public Expression visit(FunctionExpression expression) {
         List<Expression> newExpressions = visitExpressionList(expression.getExpressions());
-        if (newExpressions != null) {
-            return new FunctionExpression(expression.getFunctionName(), newExpressions);
+        boolean copy = false;
+        if (newExpressions == null) {
+            newExpressions = expression.getExpressions();
+        } else {
+            copy = true;
+        }
+        WindowDefinition newWindowDefinition = expression.getWindowDefinition();
+        if (newWindowDefinition != null) {
+            Predicate newFilterPredicate = newWindowDefinition.getFilterPredicate() == null ? null : (Predicate) newWindowDefinition.getFilterPredicate().accept(this);
+            if (newFilterPredicate != newWindowDefinition.getFilterPredicate()) {
+                copy = true;
+            }
+
+            List<Expression> newPartitionExpressions = visitExpressionList(newWindowDefinition.getPartitionExpressions());
+            if (newPartitionExpressions == null) {
+                newPartitionExpressions = newWindowDefinition.getPartitionExpressions();
+            } else {
+                copy = true;
+            }
+
+            List<OrderByItem> newOrderByExpressions = visitOrderByList(newWindowDefinition.getOrderByExpressions());
+            if (newOrderByExpressions == null) {
+                newOrderByExpressions = newWindowDefinition.getOrderByExpressions();
+            } else {
+                copy = true;
+            }
+
+            Expression newFrameStartExpression = newWindowDefinition.getFrameStartExpression() == null ? null : newWindowDefinition.getFrameStartExpression().accept(this);
+            if (newFrameStartExpression != newWindowDefinition.getFrameStartExpression()) {
+                copy = true;
+            }
+
+            Expression newFrameEndExpression = newWindowDefinition.getFrameEndExpression() == null ? null : newWindowDefinition.getFrameEndExpression().accept(this);
+            if (newFrameEndExpression != newWindowDefinition.getFrameEndExpression()) {
+                copy = true;
+            }
+
+            if (copy) {
+                newWindowDefinition = new WindowDefinition(
+                        newWindowDefinition.getWindowName(),
+                        newPartitionExpressions,
+                        newOrderByExpressions,
+                        newFilterPredicate,
+                        newWindowDefinition.getFrameMode(),
+                        newWindowDefinition.getFrameStartType(),
+                        newFrameStartExpression,
+                        newWindowDefinition.getFrameEndType(),
+                        newFrameEndExpression,
+                        newWindowDefinition.getFrameExclusionType()
+                );
+            }
+        }
+        if (copy) {
+            return new FunctionExpression(expression.getFunctionName(), newExpressions, newWindowDefinition);
         }
         return expression;
+    }
+
+    private List<OrderByItem> visitOrderByList(List<OrderByItem> expressions) {
+        List<OrderByItem> newExpressions = null;
+        int size = expressions.size();
+        for (int i = 0; i < size; i++) {
+            OrderByItem orderByItem = expressions.get(i);
+            Expression originalExpr = orderByItem.getExpression();
+            Expression newExpr = originalExpr.accept(this);
+            if (newExpressions == null) {
+                if (originalExpr != newExpr) {
+                    newExpressions = new ArrayList<>(expressions.size());
+                    for (int j = 0; j < i; j++) {
+                        newExpressions.add(expressions.get(j));
+                    }
+                    newExpressions.add(new OrderByItem(orderByItem.isAscending(), orderByItem.isNullFirst(), newExpr));
+                }
+            } else {
+                newExpressions.add(new OrderByItem(orderByItem.isAscending(), orderByItem.isNullFirst(), newExpr));
+            }
+        }
+
+        return newExpressions;
     }
 
     @Override

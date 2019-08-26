@@ -215,30 +215,46 @@ public interface DbmsDialect {
     public boolean supportsFullRowValueComparison();
 
     /**
-     * Returns true if the dbms supports the filter clause on aggregrate functions.
+     * Returns true if the dbms supports the FILTER clause on aggregate functions.
      *
-     * @return Whether the dbms supports the filter clause on aggregrate functions
+     * @return Whether the dbms supports the FILTER clause on aggregate functions
      * @since 1.4.0
      */
     public boolean supportsFilterClause();
 
     /**
-     * Returns true if the dbms supports null precedence for order clauses.
+     * Returns true if the dbms supports null precedence for ORDER BY clause.
      *
-     * @return whether the dbms supports null precedence for order clauses.
+     * @return whether the dbms supports null precedence for ORDER BY clause.
      * @since 1.4.0
      */
     public boolean supportsNullPrecedence();
 
     /**
-     * Returns true if the dbms supports boolean aggregration through EVERY / SOME / ANY
+     * Returns true if the dbms supports null precedence for order clauses in the WINDOW clause.
+     *
+     * @return whether the dbms supports null precedence for order clauses in the WINDOW clause.
+     * @since 1.4.0
+     */
+    public boolean supportsWindowNullPrecedence();
+
+    /**
+     * Returns true if the dbms supports boolean aggregation through EVERY / SOME / ANY
      * / BOOL_AND / BOOL_OR.
      *
-     * @return whether the dbms supports boolean aggregration through EVERY / SOME / ANY
+     * @return whether the dbms supports boolean aggregation through EVERY / SOME / ANY
      * / BOOL_AND / BOOL_OR.
      * @since 1.4.0
      */
     public boolean supportsBooleanAggregation();
+
+    /**
+     * Returns true if the dbms treats null as the smallest value, false is highest.
+     *
+     * @return whether the dbms treats null as the smallest value, false if highest.
+     * @since 1.4.0
+     */
+    public boolean isNullSmallest();
 
     /**
      * Returns the sql type for the java class type for usage in cast expressions.

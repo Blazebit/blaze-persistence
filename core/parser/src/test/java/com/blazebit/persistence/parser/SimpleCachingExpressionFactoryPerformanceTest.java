@@ -26,12 +26,12 @@ import com.carrotsearch.junitbenchmarks.BenchmarkOptions;
 import com.carrotsearch.junitbenchmarks.BenchmarkRule;
 import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.NavigableMap;
@@ -50,8 +50,8 @@ public class SimpleCachingExpressionFactoryPerformanceTest {
 
     @Rule
     public TestRule benchmarkRun = new BenchmarkRule();
-    private final ExpressionFactory cachingExpressionFactory = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl(new HashSet<String>(), true, true));
-    private final ExpressionFactory nonCachingExpressionFactory = new ExpressionFactoryImpl(new HashSet<String>(), true, true);
+    private final ExpressionFactory cachingExpressionFactory = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl(new HashMap<String, Boolean>(), true, true));
+    private final ExpressionFactory nonCachingExpressionFactory = new ExpressionFactoryImpl(new HashMap<String, Boolean>(), true, true);
 
     private final MacroConfiguration tenMacros;
     private final MacroConfiguration hundredMacros;

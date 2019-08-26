@@ -95,4 +95,15 @@ public class H2DbmsDialect extends DefaultDbmsDialect {
     public boolean supportsBooleanAggregation() {
         return true;
     }
+
+    @Override
+    public boolean supportsWindowNullPrecedence() {
+        return true;
+    }
+
+    @Override
+    public boolean isNullSmallest() {
+        // Actually, H2 always shows NULL first, regardless of the ordering, but we don't care because it supports null precedence handling
+        return true;
+    }
 }

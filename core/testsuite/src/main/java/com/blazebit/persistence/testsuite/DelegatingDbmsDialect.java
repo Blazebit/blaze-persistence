@@ -155,8 +155,18 @@ public class DelegatingDbmsDialect implements DbmsDialect {
     }
 
     @Override
+    public boolean supportsWindowNullPrecedence() {
+        return delegate.supportsWindowNullPrecedence();
+    }
+
+    @Override
     public boolean supportsBooleanAggregation() {
         return delegate.supportsBooleanAggregation();
+    }
+
+    @Override
+    public boolean isNullSmallest() {
+        return delegate.isNullSmallest();
     }
 
     @Override

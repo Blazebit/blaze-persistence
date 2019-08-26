@@ -28,12 +28,22 @@ import java.util.List;
 public class FunctionExpression extends AbstractExpression {
 
     protected final String functionName;
+    protected final WindowDefinition windowDefinition;
     protected List<Expression> expressions;
+    protected WindowDefinition resolvedWindowDefinition;
 
     @SuppressWarnings("unchecked")
     public FunctionExpression(String functionName, List<? extends Expression> expressions) {
         this.functionName = functionName;
         this.expressions = (List<Expression>) expressions;
+        this.windowDefinition = null;
+    }
+
+    @SuppressWarnings("unchecked")
+    public FunctionExpression(String functionName, List<? extends Expression> expressions, WindowDefinition windowDefinition) {
+        this.functionName = functionName;
+        this.expressions = (List<Expression>) expressions;
+        this.windowDefinition = windowDefinition;
     }
 
     @Override
@@ -45,7 +55,7 @@ public class FunctionExpression extends AbstractExpression {
             newExpressions.add(expressions.get(i).clone(resolved));
         }
 
-        return new FunctionExpression(functionName, newExpressions);
+        return new FunctionExpression(functionName, newExpressions, windowDefinition == null ? null : windowDefinition.clone(resolved));
     }
 
     @Override
@@ -70,10 +80,21 @@ public class FunctionExpression extends AbstractExpression {
         this.expressions = expressions;
     }
 
+    public WindowDefinition getWindowDefinition() {
+        return windowDefinition;
+    }
+
+    public WindowDefinition getResolvedWindowDefinition() {
+        return resolvedWindowDefinition;
+    }
+
+    public void setResolvedWindowDefinition(WindowDefinition resolvedWindowDefinition) {
+        this.resolvedWindowDefinition = resolvedWindowDefinition;
+    }
+
     @Override
     public int hashCode() {
-        int hash = 7;
-        return hash;
+        return functionName.hashCode();
     }
 
     @Override

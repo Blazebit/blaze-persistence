@@ -537,9 +537,12 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
             case "NULLIF":
                 // See visit(NullExpression) for reasoning
                 return expression.getExpressions().get(0).accept(this);
-            // MIN and MAX are special aggregate functions that preserve uniqueness
+            case "ROW_NUMBER":
+                // ROW_NUMBER is unique when using no partitions
+                return expression.getWindowDefinition() == null || expression.getWindowDefinition().getFilterPredicate() == null && expression.getWindowDefinition().getPartitionExpressions().isEmpty() && expression.getWindowDefinition().getWindowName() == null;
             case "MIN":
             case "MAX": {
+                // MIN and MAX are special aggregate functions that preserve uniqueness
                 Expression expr = expression.getExpressions().get(0);
                 return expr instanceof PathExpression && visit((PathExpression) expr);
             }

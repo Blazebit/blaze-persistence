@@ -78,6 +78,7 @@ import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -90,7 +91,7 @@ import java.util.Set;
  */
 public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionParserBaseVisitor<Expression> {
 
-    private final Set<String> aggregateFunctions;
+    private final Map<String, Boolean> functions;
     private final Map<String, Class<Enum<?>>> enums;
     private final Map<String, Class<?>> entities;
     private final int minEnumSegmentCount;
@@ -98,8 +99,8 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionParserB
     private final Map<String, MacroFunction> macros;
     private final Set<String> usedMacros;
 
-    public JPQLSelectExpressionVisitorImpl(Set<String> aggregateFunctions, Map<String, Class<Enum<?>>> enums, Map<String, Class<?>> entities, int minEnumSegmentCount, int minEntitySegmentCount, Map<String, MacroFunction> macros, Set<String> usedMacros) {
-        this.aggregateFunctions = aggregateFunctions;
+    public JPQLSelectExpressionVisitorImpl(Map<String, Boolean> functions, Map<String, Class<Enum<?>>> enums, Map<String, Class<?>> entities, int minEnumSegmentCount, int minEntitySegmentCount, Map<String, MacroFunction> macros, Set<String> usedMacros) {
+        this.functions = functions;
         this.enums = enums;
         this.entities = entities;
         this.minEnumSegmentCount = minEnumSegmentCount;
@@ -156,9 +157,7 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionParserB
 
     @Override
     public Expression visitFunctions_returning_numerics_size(JPQLSelectExpressionParser.Functions_returning_numerics_sizeContext ctx) {
-        FunctionExpression func = handleFunction(ctx.getStart().getText(), ctx);
-        ((PathExpression) func.getExpressions().get(0)).setUsedInCollectionFunction(true);
-        return func;
+        return handleFunction(ctx.getStart().getText(), ctx);
     }
 
     @Override
@@ -211,24 +210,83 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionParserB
         return new NullExpression();
     }
 
-    private FunctionExpression handleFunction(String name, ParseTree ctx) {
+    private Expression handleFunction(String name, ParseTree ctx) {
         List<Expression> funcArgs = new ArrayList<Expression>(ctx.getChildCount());
         for (int i = 0; i < ctx.getChildCount(); i++) {
             if (!(ctx.getChild(i) instanceof TerminalNode)) {
                 funcArgs.add(ctx.getChild(i).accept(this));
             }
         }
+        return handleFunction(name, funcArgs, null);
+    }
 
-        if ("FUNCTION".equalsIgnoreCase(name) && funcArgs.size() > 0
-            && aggregateFunctions.contains(getLiteralString(funcArgs.get(0)).toLowerCase())) {
-            return new AggregateExpression(false, name, funcArgs);
+    private Expression handleFunction(String name, List<Expression> funcArgs, WindowDefinition windowDefinition) {
+        String lowerName = name.toLowerCase();
+        Boolean aggregate;
+        // Builtin functions
+        switch (lowerName) {
+            case "concat":
+            case "substring":
+            case "lower":
+            case "upper":
+            case "length":
+            case "locate":
+            case "abs":
+            case "sqrt":
+            case "mod":
+            case "coalesce":
+            case "nullif":
+            case "outer":
+            case "current_date":
+            case "current_time":
+            case "current_timestamp":
+                return new FunctionExpression(name, funcArgs);
+            case "trim":
+                return new TrimExpression(Trimspec.BOTH, null, funcArgs.get(0));
+            case "size":
+                ((PathExpression) funcArgs.get(0)).setUsedInCollectionFunction(true);
+                return new FunctionExpression(name, funcArgs);
+            case "index":
+                PathExpression listIndexPath = (PathExpression) funcArgs.get(0);
+                listIndexPath.setCollectionKeyPath(true);
+                return new ListIndexExpression(listIndexPath);
+            case "key":
+                PathExpression mapKeyPath = (PathExpression) funcArgs.get(0);
+                mapKeyPath.setCollectionKeyPath(true);
+                return new MapKeyExpression(mapKeyPath);
+            case "value":
+                PathExpression mapValuePath = (PathExpression) funcArgs.get(0);
+                mapValuePath.setCollectionKeyPath(true);
+                return new MapValueExpression(mapValuePath);
+            case "type":
+                return new TypeFunctionExpression(funcArgs.get(0));
+            case "function":
+                String functionName = getLiteralString(funcArgs.get(0));
+                aggregate = functions.get(functionName.toLowerCase());
+                if (aggregate == null) {
+                    throw new SyntaxErrorException("No function with the name '" + functionName + "' exists!");
+                }
+                break;
+            default:
+                aggregate = functions.get(lowerName);
+                break;
+        }
+        if (aggregate == null) {
+            throw new SyntaxErrorException("No function with the name '" + name + "' exists!");
+        }
+        if (aggregate) {
+            if (windowDefinition != null) {
+                return new FunctionExpression("window_" + name, funcArgs, windowDefinition);
+            } else {
+                return new AggregateExpression(false, name, funcArgs);
+            }
         } else {
-            return new FunctionExpression(name, funcArgs);
+            return new FunctionExpression(name, funcArgs, windowDefinition);
         }
     }
 
     @Override
-    public Expression visitFunction_invocation(JPQLSelectExpressionParser.Function_invocationContext ctx) {
+    public Expression visitFunctionInvocation(JPQLSelectExpressionParser.FunctionInvocationContext ctx) {
         List<Expression> funcArgs = new ArrayList<Expression>(ctx.getChildCount());
         funcArgs.add(ctx.string_literal().accept(this));
         for (JPQLSelectExpressionParser.Function_argContext argCtx : ctx.args) {
@@ -236,12 +294,147 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionParserB
         }
 
         String name = ctx.getStart().getText();
-        if ("FUNCTION".equalsIgnoreCase(name) && funcArgs.size() > 0
-            && aggregateFunctions.contains(getLiteralString(funcArgs.get(0)).toLowerCase())) {
-            return new AggregateExpression(false, name, funcArgs);
-        } else {
-            return new FunctionExpression(name, funcArgs);
+        return handleFunction(name, funcArgs, null);
+    }
+
+    @Override
+    public Expression visitGenericFunctionInvocation(JPQLSelectExpressionParser.GenericFunctionInvocationContext ctx) {
+        List<Expression> funcArgs = new ArrayList<Expression>(ctx.getChildCount());
+        String name = ctx.name.getText();
+        for (JPQLSelectExpressionParser.Simple_expressionContext argCtx : ctx.args) {
+            funcArgs.add(argCtx.accept(this));
         }
+
+        Predicate filterPredicate = null;
+        JPQLSelectExpressionParser.Where_clauseContext whereClauseContext = ctx.where_clause();
+        if (whereClauseContext != null) {
+            filterPredicate = (Predicate) whereClauseContext.accept(this);
+        }
+
+        WindowDefinition windowDefinition = null;
+        if (ctx.windowName != null) {
+            windowDefinition = new WindowDefinition(ctx.windowName.getText());
+            windowDefinition.setFilterPredicate(filterPredicate);
+        } else {
+            JPQLSelectExpressionParser.Window_definitionContext windowDefinitionContext = ctx.window_definition();
+            if (windowDefinitionContext != null) {
+                windowDefinition = createWindowDefinition(windowDefinitionContext, filterPredicate);
+            }
+        }
+
+        if (filterPredicate != null && windowDefinition == null) {
+            // NOTE: We currently don't support JUST filtering for aggregate functions, but maybe in the future
+//            windowDefinition = new WindowDefinition(filterPredicate);
+        }
+
+        return handleFunction(name, funcArgs, windowDefinition);
+    }
+
+    private WindowDefinition createWindowDefinition(JPQLSelectExpressionParser.Window_definitionContext ctx, Predicate filterPredicate) {
+        String windowName = null;
+        if (ctx.windowName != null) {
+            windowName = ctx.windowName.getText();
+        }
+        List<Expression> partitionExpressions;
+        int size = ctx.partitionExpressions.size();
+        if (size == 0) {
+            partitionExpressions = Collections.emptyList();
+        } else {
+            partitionExpressions = new ArrayList<>(size);
+            List<JPQLSelectExpressionParser.Simple_expressionContext> expressions = ctx.partitionExpressions;
+            for (int i = 0; i < expressions.size(); i++) {
+                partitionExpressions.add(expressions.get(i).accept(this));
+            }
+        }
+
+        List<OrderByItem> orderByExpressions = createOrderByItems(ctx.order_by_clause());
+
+        WindowFrameMode frameMode = null;
+        WindowFramePositionType frameStartType = null;
+        WindowFramePositionType frameEndType = null;
+        Expression frameStartExpression = null;
+        Expression frameEndExpression = null;
+        WindowFrameExclusionType frameExclusionType = null;
+        if (ctx.frameMode != null) {
+            frameMode = WindowFrameMode.valueOf(ctx.frameMode.getText().toUpperCase());
+            if (ctx.start.simple_expression() != null) {
+                frameStartExpression = ctx.start.simple_expression().accept(this);
+                frameStartType = ctx.start.PRECEDING() != null ? WindowFramePositionType.BOUNDED_PRECEDING : WindowFramePositionType.BOUNDED_FOLLOWING;
+            } else if (ctx.start.CURRENT() != null) {
+                frameStartType = WindowFramePositionType.CURRENT_ROW;
+            } else if (ctx.start.PRECEDING() != null) {
+                frameStartType = WindowFramePositionType.UNBOUNDED_PRECEDING;
+            } else {
+                throw new IllegalStateException("Unexpected state!");
+            }
+            if (ctx.end != null) {
+                if (ctx.end.simple_expression() != null) {
+                    frameEndExpression = ctx.end.simple_expression().accept(this);
+                    frameEndType = ctx.end.PRECEDING() != null ? WindowFramePositionType.BOUNDED_PRECEDING : WindowFramePositionType.BOUNDED_FOLLOWING;
+                } else if (ctx.end.CURRENT() != null) {
+                    frameEndType = WindowFramePositionType.CURRENT_ROW;
+                } else if (ctx.end.FOLLOWING() != null) {
+                    frameEndType = WindowFramePositionType.UNBOUNDED_FOLLOWING;
+                } else {
+                    throw new IllegalStateException("Unexpected state!");
+                }
+            }
+            JPQLSelectExpressionParser.Frame_exclusionContext frameExclusionContext = ctx.frame_exclusion();
+            if (frameExclusionContext != null) {
+                if (frameExclusionContext.CURRENT() != null) {
+                    frameExclusionType = WindowFrameExclusionType.EXCLUDE_CURRENT_ROW;
+                } else if (frameExclusionContext.GROUP() != null) {
+                    frameExclusionType = WindowFrameExclusionType.EXCLUDE_GROUP;
+                } else if (frameExclusionContext.NO() != null) {
+                    frameExclusionType = WindowFrameExclusionType.EXCLUDE_NO_OTHERS;
+                } else if (frameExclusionContext.TIES() != null) {
+                    frameExclusionType = WindowFrameExclusionType.EXCLUDE_TIES;
+                } else {
+                    throw new IllegalStateException("Unexpected state!");
+                }
+            }
+        }
+
+        return new WindowDefinition(
+                windowName,
+                partitionExpressions,
+                orderByExpressions,
+                filterPredicate,
+                frameMode,
+                frameStartType,
+                frameStartExpression,
+                frameEndType,
+                frameEndExpression,
+                frameExclusionType
+        );
+    }
+
+    private List<OrderByItem> createOrderByItems(JPQLSelectExpressionParser.Order_by_clauseContext ctx) {
+        List<OrderByItem> orderByExpressions;
+        if (ctx == null) {
+            orderByExpressions = Collections.emptyList();
+        } else {
+            int size = ctx.orderByItems.size();
+            orderByExpressions = new ArrayList<>(size);
+            List<JPQLSelectExpressionParser.Order_by_itemContext> orderByItems = ctx.orderByItems;
+            for (int i = 0; i < orderByItems.size(); i++) {
+                orderByExpressions.add(createOrderByItem(orderByItems.get(i)));
+            }
+        }
+        return orderByExpressions;
+    }
+
+    private OrderByItem createOrderByItem(JPQLSelectExpressionParser.Order_by_itemContext ctx) {
+        Expression expression = ctx.expression.accept(this);
+        boolean asc = true;
+        boolean nullsFirst = true;
+        if (ctx.order != null && "DESC".equalsIgnoreCase(ctx.order.getText())) {
+            asc = false;
+        }
+        if (ctx.nulls != null && "LAST".equalsIgnoreCase(ctx.nulls.getText())) {
+            nullsFirst = false;
+        }
+        return new OrderByItem(asc, nullsFirst, expression);
     }
 
     private String getLiteralString(Expression expr) {
