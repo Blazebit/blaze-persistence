@@ -29,5 +29,6 @@ public enum ClauseType {
     HAVING,
     JOIN,
     SET,
-    CTE
+    CTE,
+    WINDOW
 }

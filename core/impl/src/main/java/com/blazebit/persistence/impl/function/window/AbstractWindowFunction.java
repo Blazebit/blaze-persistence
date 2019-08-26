@@ -16,7 +16,10 @@
 
 package com.blazebit.persistence.impl.function.window;
 
-import com.blazebit.persistence.spi.DbmsDialect;
+import com.blazebit.persistence.parser.expression.WindowFrameExclusionType;
+import com.blazebit.persistence.parser.expression.WindowFrameMode;
+import com.blazebit.persistence.parser.expression.WindowFramePositionType;
+import com.blazebit.persistence.impl.function.Order;
 import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.JpqlFunction;
 
@@ -25,6 +28,8 @@ import java.util.List;
 
 /**
  *
+ * See the following for details: https://www.postgresql.org/docs/current/sql-expressions.html#SYNTAX-WINDOW-FUNCTIONS
+ *
  * @author Jan-Willem Gmelig Meyling
  * @author Sayra Ranjha
  * @since 1.4.0
@@ -32,11 +37,17 @@ import java.util.List;
 public abstract class AbstractWindowFunction implements JpqlFunction {
 
     protected final String functionName;
-    protected final DbmsDialect dbmsDialect;
+    protected final boolean nullIsSmallest;
+    protected final boolean supportsNullPrecedence;
+    protected final boolean supportsFilterClause;
+    protected final boolean allowsFilterClause;
 
-    protected AbstractWindowFunction(String functionName, DbmsDialect dbmsDialect) {
+    protected AbstractWindowFunction(String functionName, boolean nullIsSmallest, boolean supportsNullPrecedence, boolean supportsFilterClause, boolean allowsFilterClause) {
         this.functionName = functionName;
-        this.dbmsDialect = dbmsDialect;
+        this.nullIsSmallest = nullIsSmallest;
+        this.supportsNullPrecedence = supportsNullPrecedence;
+        this.supportsFilterClause = supportsFilterClause;
+        this.allowsFilterClause = allowsFilterClause;
     }
 
     @Override
@@ -56,15 +67,28 @@ public abstract class AbstractWindowFunction implements JpqlFunction {
 
     @Override
     public final void render(FunctionRenderContext context) {
-        WindowFunction windowFunction = new WindowFunction(functionName);
+        WindowFunction windowFunction = getWindowFunction(context);
+        render(context, windowFunction);
+    }
+
+    protected WindowFunction getWindowFunction(FunctionRenderContext context) {
+        return getWindowFunction(context, new WindowFunction(functionName), 0);
+    }
+
+    protected <T extends WindowFunction> T getWindowFunction(FunctionRenderContext context, T function, int startIndex) {
+        WindowFunction windowFunction = function;
         Mode mode = Mode.ARGUMENTS;
+        Enum<?> argumentMode = null;
         Boolean startFrame = null;
 
-        for (int parameterIndex = 0; parameterIndex < context.getArgumentsSize(); parameterIndex++) {
+        for (int parameterIndex = startIndex; parameterIndex < context.getArgumentsSize(); parameterIndex++) {
             String argument = context.getArgument(parameterIndex);
 
             switch (argument.toUpperCase()) {
                 case "'FILTER'":
+                    if (!allowsFilterClause) {
+                        throw new IllegalArgumentException("FILTER clause is disallowed for function: " + functionName);
+                    }
                     mode = Mode.FILTER;
                     break;
                 case "'PARTITION BY'":
@@ -75,18 +99,23 @@ public abstract class AbstractWindowFunction implements JpqlFunction {
                     break;
                 case "'RANGE'":
                     mode = Mode.FRAME_CLAUSE;
-                    windowFunction.frameMode = FrameMode.RANGE;
+                    windowFunction.frameMode = WindowFrameMode.RANGE;
                     startFrame = true;
                     break;
                 case "'ROWS'":
                     mode = Mode.FRAME_CLAUSE;
-                    windowFunction.frameMode = FrameMode.ROWS;
+                    windowFunction.frameMode = WindowFrameMode.ROWS;
+                    startFrame = true;
+                    break;
+                case "'GROUPS'":
+                    mode = Mode.FRAME_CLAUSE;
+                    windowFunction.frameMode = WindowFrameMode.GROUPS;
                     startFrame = true;
                     break;
                 default:
                     switch (mode) {
                         case ARGUMENTS:
-                            windowFunction.arguments.add(argument);
+                            argumentMode = processArgument(argumentMode, windowFunction, argument);
                             break;
                         case FILTER:
                             windowFunction.filterExpressions.add(argument);
@@ -124,37 +153,37 @@ public abstract class AbstractWindowFunction implements JpqlFunction {
                                     break;
                                 case "'UNBOUNDED PRECEDING'":
                                     if (startFrame) {
-                                        windowFunction.frameStartType = FramePositionType.UNBOUNDED_PRECEDING;
+                                        windowFunction.frameStartType = WindowFramePositionType.UNBOUNDED_PRECEDING;
                                     } else {
-                                        windowFunction.frameEndType = FramePositionType.UNBOUNDED_PRECEDING;
+                                        throw new IllegalArgumentException("Illegal frame clause! The end frame type can't be UNBOUNDED_PRECEDING");
                                     }
                                     break;
                                 case "'PRECEDING'":
                                     if (startFrame) {
-                                        windowFunction.frameStartType = FramePositionType.BOUNDED_PRECEDING;
+                                        windowFunction.frameStartType = WindowFramePositionType.BOUNDED_PRECEDING;
                                     } else {
-                                        windowFunction.frameEndType = FramePositionType.BOUNDED_PRECEDING;
+                                        windowFunction.frameEndType = WindowFramePositionType.BOUNDED_PRECEDING;
                                     }
                                     break;
                                 case "'CURRENT ROW'":
                                     if (startFrame) {
-                                        windowFunction.frameStartType = FramePositionType.CURRENT_ROW;
+                                        windowFunction.frameStartType = WindowFramePositionType.CURRENT_ROW;
                                     } else {
-                                        windowFunction.frameEndType = FramePositionType.CURRENT_ROW;
+                                        windowFunction.frameEndType = WindowFramePositionType.CURRENT_ROW;
                                     }
                                     break;
                                 case "'FOLLOWING'":
                                     if (startFrame) {
-                                        windowFunction.frameStartType = FramePositionType.BOUNDED_FOLLOWING;
+                                        windowFunction.frameStartType = WindowFramePositionType.BOUNDED_FOLLOWING;
                                     } else {
-                                        windowFunction.frameEndType = FramePositionType.BOUNDED_FOLLOWING;
+                                        windowFunction.frameEndType = WindowFramePositionType.BOUNDED_FOLLOWING;
                                     }
                                     break;
                                 case "'UNBOUNDED FOLLOWING'":
                                     if (startFrame) {
-                                        windowFunction.frameStartType = FramePositionType.UNBOUNDED_FOLLOWING;
+                                        throw new IllegalArgumentException("Illegal frame clause! The start frame type can't be UNBOUNDED_FOLLOWING");
                                     } else {
-                                        windowFunction.frameEndType = FramePositionType.UNBOUNDED_FOLLOWING;
+                                        windowFunction.frameEndType = WindowFramePositionType.UNBOUNDED_FOLLOWING;
                                     }
                                     break;
                                 default:
@@ -173,9 +202,13 @@ public abstract class AbstractWindowFunction implements JpqlFunction {
             }
         }
 
-        render(context, windowFunction);
+        return function;
     }
 
+    protected Enum<?> processArgument(Enum<?> mode, WindowFunction windowFunction, String argument) {
+        windowFunction.arguments.add(argument);
+        return null;
+    }
 
     private static Order getOrder(String sort, String expression) {
         String type = sort.trim().toUpperCase();
@@ -203,7 +236,13 @@ public abstract class AbstractWindowFunction implements JpqlFunction {
 
         context.addChunk(" OVER (");
         renderPartitions(context, windowFunction.getPartitionExpressions());
+        if (!windowFunction.getOrderBys().isEmpty() && !windowFunction.getPartitionExpressions().isEmpty()) {
+            context.addChunk(" ");
+        }
         renderOrderBy(context, windowFunction.getOrderBys());
+        if (windowFunction.getFrameMode() != null && !windowFunction.getOrderBys().isEmpty()) {
+            context.addChunk(" ");
+        }
         renderFrame(context, windowFunction);
         context.addChunk(")");
     }
@@ -223,44 +262,62 @@ public abstract class AbstractWindowFunction implements JpqlFunction {
         if (size != 0) {
             List<String> filterExpressions = windowFunction.getFilterExpressions();
             int filtersSize = filterExpressions.size();
-            if (dbmsDialect.supportsFilterClause() || filtersSize == 0) {
-                context.addChunk(arguments.get(0));
+            if (supportsFilterClause || filtersSize == 0) {
+                renderArgument(context, windowFunction, null, null, arguments.get(0), 0);
                 for (int i = 1; i < size; i++) {
                     context.addChunk(", ");
-                    context.addChunk(arguments.get(i));
+                    renderArgument(context, windowFunction, null, null, arguments.get(i), i);
                 }
             } else {
-                StringBuilder sb = new StringBuilder();
-                sb.append("CASE WHEN ");
-                sb.append(filterExpressions.get(0));
-                for (int i = 1; i < filtersSize; i++) {
-                    sb.append(" AND ");
-                    sb.append(filterExpressions.get(i));
-                }
-                sb.append(" THEN ");
-                String caseWhenPart = sb.toString();
-                context.addChunk(caseWhenPart);
-                context.addChunk(arguments.get(0));
+                String caseWhenPre = getCaseWhenPre(filterExpressions);
+                String caseWhenPost = getCaseWhenPost();
+                renderArgument(context, windowFunction, caseWhenPre, caseWhenPost, arguments.get(0), 0);
                 for (int i = 1; i < size; i++) {
-                    context.addChunk(" ELSE NULL END, ");
-                    context.addChunk(caseWhenPart);
-                    context.addChunk(arguments.get(i));
+                    context.addChunk(", ");
+                    renderArgument(context, windowFunction, caseWhenPre, caseWhenPost, arguments.get(i), i);
                 }
-                context.addChunk(" ELSE NULL END");
             }
+        }
+    }
+
+    protected static String getCaseWhenPre(List<String> filterExpressions) {
+        int size = filterExpressions.size();
+        StringBuilder sb = new StringBuilder();
+        sb.append("CASE WHEN ");
+        sb.append(filterExpressions.get(0));
+        for (int i = 1; i < size; i++) {
+            sb.append(" AND ");
+            sb.append(filterExpressions.get(i));
+        }
+        sb.append(" THEN ");
+        return sb.toString();
+    }
+
+    protected static String getCaseWhenPost() {
+        return " ELSE NULL END";
+    }
+
+    protected void renderArgument(FunctionRenderContext context, WindowFunction windowFunction, String caseWhenPre, String caseWhenPost, String argument, int argumentIndex) {
+        // Only the first argument will receive the CASE WHEN wrapper
+        if (caseWhenPre == null || argumentIndex != 0) {
+            context.addChunk(argument);
+        } else {
+            context.addChunk(caseWhenPre);
+            context.addChunk(argument);
+            context.addChunk(caseWhenPost);
         }
     }
 
     protected void renderFilterExpressions(FunctionRenderContext context, List<String> filterExpressions) {
         int size = filterExpressions.size();
-        if (size != 0 && dbmsDialect.supportsFilterClause()) {
-            context.addChunk("FILTER ( WHERE ");
+        if (size != 0 && supportsFilterClause) {
+            context.addChunk(" FILTER ( WHERE ");
             context.addChunk(filterExpressions.get(0));
             for (int i = 1; i < size; i++) {
                 context.addChunk(" AND ");
                 context.addChunk(filterExpressions.get(i));
             }
-            context.addChunk(") ");
+            context.addChunk(")");
         }
     }
 
@@ -273,7 +330,6 @@ public abstract class AbstractWindowFunction implements JpqlFunction {
                 context.addChunk(", ");
                 context.addChunk(partitionExpressions.get(i));
             }
-            context.addChunk(" ");
         }
     }
 
@@ -286,12 +342,11 @@ public abstract class AbstractWindowFunction implements JpqlFunction {
                 context.addChunk(", ");
                 renderOrder(context, orderBys.get(i));
             }
-            context.addChunk(" ");
         }
     }
 
     protected void renderOrder(FunctionRenderContext context, Order order) {
-        if (dbmsDialect.supportsNullPrecedence()) {
+        if (supportsNullPrecedence) {
             context.addChunk(order.getExpression());
             context.addChunk(" ");
             context.addChunk(order.isAscending() ? "ASC " : "DESC ");
@@ -314,10 +369,29 @@ public abstract class AbstractWindowFunction implements JpqlFunction {
                 context.addChunk("AND ");
                 renderFramePosition(context, windowFunction.getFrameEndType(), windowFunction.getFrameEndExpression());
             }
+
+            if (windowFunction.getFrameExclusionType() != null) {
+                switch (windowFunction.getFrameExclusionType()) {
+                    case EXCLUDE_CURRENT_ROW:
+                        context.addChunk("EXCLUDE CURRENT ROW");
+                        break;
+                    case EXCLUDE_GROUP:
+                        context.addChunk("EXCLUDE GROUP");
+                        break;
+                    case EXCLUDE_NO_OTHERS:
+                        context.addChunk("EXCLUDE NO OTHERS");
+                        break;
+                    case EXCLUDE_TIES:
+                        context.addChunk("EXCLUDE TIES");
+                        break;
+                    default:
+                        throw new IllegalArgumentException("No branch for " + windowFunction.getFrameExclusionType());
+                }
+            }
         }
     }
 
-    protected void renderFramePosition(FunctionRenderContext context, FramePositionType type, String frameExpression) {
+    protected void renderFramePosition(FunctionRenderContext context, WindowFramePositionType type, String frameExpression) {
         switch (type) {
             case UNBOUNDED_PRECEDING:
                 context.addChunk("UNBOUNDED PRECEDING");
@@ -342,14 +416,25 @@ public abstract class AbstractWindowFunction implements JpqlFunction {
         context.addChunk(" ");
     }
 
+    protected boolean optimizeNullPrecedence() {
+        return true;
+    }
+
     protected void appendEmulatedOrderByElementWithNulls(FunctionRenderContext context, Order element) {
-        context.addChunk("case when ");
-        context.addChunk(element.getExpression());
-        context.addChunk(" is null then ");
-        context.addChunk(element.isNullsFirst() ? "0" : "1");
-        context.addChunk(" else ");
-        context.addChunk(element.isNullsFirst() ? "1" : "0");
-        context.addChunk(" end, ");
+        boolean optimizeNullPrecedence = optimizeNullPrecedence();
+        if (optimizeNullPrecedence && nullIsSmallest && element.isAscending() == element.isNullsFirst()) {
+            // Since null is the smallest, we don't need to apply the nulls emulation when we want ASC NULLS FIRST or DESC NULLS LAST
+        } else if (optimizeNullPrecedence && !nullIsSmallest && element.isAscending() != element.isNullsFirst()) {
+            // Since null is the highest, we don't need to apply the nulls emulation when we want ASC NULLS LAST or DESC NULLS FIRST
+        } else if (element.isNullsFirst()) {
+            context.addChunk("case when ");
+            context.addChunk(element.getExpression());
+            context.addChunk(" is null then 0 else 1 end, ");
+        } else {
+            context.addChunk("case when ");
+            context.addChunk(element.getExpression());
+            context.addChunk(" is null then 1 else 0 end, ");
+        }
         context.addChunk(element.getExpression());
         context.addChunk(element.isAscending() ? " asc" : " desc");
     }
@@ -375,18 +460,21 @@ public abstract class AbstractWindowFunction implements JpqlFunction {
      * @author Sayra Ranjha
      * @since 1.4.0
      */
-    protected static final class WindowFunction {
+    protected static class WindowFunction {
 
         private final String functionName;
         private final List<String> arguments = new ArrayList<>();
         private final List<String> filterExpressions = new ArrayList<>();
         private final List<String> partitionExpressions = new ArrayList<>();
         private final List<Order> orderBys  = new ArrayList<>();
-        private FrameMode frameMode;
-        private FramePositionType frameStartType;
+        private WindowFrameMode frameMode;
+        // The default frame start is UNBOUNDED_PRECEDING
+        private WindowFramePositionType frameStartType;
         private String frameStartExpression;
-        private FramePositionType frameEndType;
+        // The default frame end is CURRENT_ROW
+        private WindowFramePositionType frameEndType;
         private String frameEndExpression;
+        private WindowFrameExclusionType frameExclusionType;
 
         public WindowFunction(String functionName) {
             this.functionName = functionName;
@@ -412,19 +500,19 @@ public abstract class AbstractWindowFunction implements JpqlFunction {
             return orderBys;
         }
 
-        public FrameMode getFrameMode() {
+        public WindowFrameMode getFrameMode() {
             return frameMode;
         }
 
-        public void setFrameMode(FrameMode frameMode) {
+        public void setFrameMode(WindowFrameMode frameMode) {
             this.frameMode = frameMode;
         }
 
-        public FramePositionType getFrameStartType() {
+        public WindowFramePositionType getFrameStartType() {
             return frameStartType;
         }
 
-        public void setFrameStartType(FramePositionType frameStartType) {
+        public void setFrameStartType(WindowFramePositionType frameStartType) {
             this.frameStartType = frameStartType;
         }
 
@@ -436,11 +524,11 @@ public abstract class AbstractWindowFunction implements JpqlFunction {
             this.frameStartExpression = frameStartExpression;
         }
 
-        public FramePositionType getFrameEndType() {
+        public WindowFramePositionType getFrameEndType() {
             return frameEndType;
         }
 
-        public void setFrameEndType(FramePositionType frameEndType) {
+        public void setFrameEndType(WindowFramePositionType frameEndType) {
             this.frameEndType = frameEndType;
         }
 
@@ -451,79 +539,15 @@ public abstract class AbstractWindowFunction implements JpqlFunction {
         public void setFrameEndExpression(String frameEndExpression) {
             this.frameEndExpression = frameEndExpression;
         }
-    }
 
-    /**
-     *
-     * @author Jan-Willem Gmelig Meyling
-     * @author Sayra Ranjha
-     * @since 1.4.0
-     */
-    protected enum FramePositionType {
-        UNBOUNDED_PRECEDING,
-        BOUNDED_PRECEDING,
-        CURRENT_ROW,
-        UNBOUNDED_FOLLOWING,
-        BOUNDED_FOLLOWING
-    }
-
-    /**
-     *
-     * @author Jan-Willem Gmelig Meyling
-     * @author Sayra Ranjha
-     * @since 1.4.0
-     */
-    protected enum FrameMode {
-        RANGE, ROWS;
-    }
-
-    /**
-     *
-     * @author Jan-Willem Gmelig Meyling
-     * @author Sayra Ranjha
-     * @since 1.4.0
-     */
-    protected static final class Order {
-
-        private final String expression;
-        private final boolean ascending;
-        private final boolean nullsFirst;
-
-        public Order(String expression, Boolean ascending, Boolean nullsFirst) {
-            this.expression = expression;
-
-            if (Boolean.FALSE.equals(ascending)) {
-                this.ascending = false;
-                // Default NULLS FIRST
-                if (nullsFirst == null) {
-                    this.nullsFirst = true;
-                } else {
-                    this.nullsFirst = nullsFirst;
-                }
-            } else {
-                this.ascending = true;
-                // Default NULLS LAST
-                if (nullsFirst == null) {
-                    this.nullsFirst = false;
-                } else {
-                    this.nullsFirst = nullsFirst;
-                }
-            }
+        public WindowFrameExclusionType getFrameExclusionType() {
+            return frameExclusionType;
         }
 
-        public String getExpression() {
-            return expression;
-        }
-
-        public boolean isAscending() {
-            return ascending;
-        }
-
-        public boolean isNullsFirst() {
-            return nullsFirst;
+        public void setFrameExclusionType(WindowFrameExclusionType frameExclusionType) {
+            this.frameExclusionType = frameExclusionType;
         }
     }
-
 
 
 }

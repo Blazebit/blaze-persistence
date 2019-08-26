@@ -66,6 +66,11 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
+    public boolean supportsWindowNullPrecedence() {
+        return true;
+    }
+
+    @Override
     protected boolean needsSetOperationWrapper() {
         return false;
     }

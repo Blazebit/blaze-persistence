@@ -33,6 +33,7 @@ import com.blazebit.persistence.parser.expression.MapKeyExpression;
 import com.blazebit.persistence.parser.expression.MapValueExpression;
 import com.blazebit.persistence.parser.expression.NullExpression;
 import com.blazebit.persistence.parser.expression.NumericLiteral;
+import com.blazebit.persistence.parser.expression.OrderByItem;
 import com.blazebit.persistence.parser.expression.ParameterExpression;
 import com.blazebit.persistence.parser.expression.PathElementExpression;
 import com.blazebit.persistence.parser.expression.PathExpression;
@@ -46,6 +47,9 @@ import com.blazebit.persistence.parser.expression.TreatExpression;
 import com.blazebit.persistence.parser.expression.TrimExpression;
 import com.blazebit.persistence.parser.expression.TypeFunctionExpression;
 import com.blazebit.persistence.parser.expression.WhenClauseExpression;
+import com.blazebit.persistence.parser.expression.WindowDefinition;
+import com.blazebit.persistence.parser.expression.WindowFrameExclusionType;
+import com.blazebit.persistence.parser.expression.WindowFramePositionType;
 import com.blazebit.persistence.parser.predicate.BetweenPredicate;
 import com.blazebit.persistence.parser.predicate.BooleanLiteral;
 import com.blazebit.persistence.parser.predicate.CompoundPredicate;
@@ -542,7 +546,9 @@ public class SimpleQueryGenerator implements Expression.Visitor {
     public void visit(FunctionExpression expression) {
         BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = setBooleanLiteralRenderingContext(BooleanLiteralRenderingContext.PLAIN);
         ParameterRenderingMode oldParameterRenderingMode = setParameterRenderingMode(ParameterRenderingMode.PLACEHOLDER);
-        boolean hasExpressions = expression.getExpressions().size() > 0;
+        List<Expression> expressions = expression.getExpressions();
+        int size = expressions.size();
+        boolean hasExpressions = size != 0;
         String functionName = expression.getFunctionName();
         sb.append(functionName);
 
@@ -564,17 +570,139 @@ public class SimpleQueryGenerator implements Expression.Visitor {
             }
 
             if (hasExpressions) {
-                expression.getExpressions().get(0).accept(this);
-                for (int i = 1; i < expression.getExpressions().size(); i++) {
+                expressions.get(0).accept(this);
+                for (int i = 1; i < size; i++) {
                     sb.append(",");
-                    expression.getExpressions().get(i).accept(this);
+                    expressions.get(i).accept(this);
                 }
             }
             sb.append(')');
+
+            visitWindowDefinition(expression.getWindowDefinition());
         }
 
         setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
         setParameterRenderingMode(oldParameterRenderingMode);
+    }
+
+    protected void visitWindowDefinition(WindowDefinition windowDefinition) {
+        if (windowDefinition != null) {
+            Predicate filterPredicate = windowDefinition.getFilterPredicate();
+            if (filterPredicate != null) {
+                sb.append(" FILTER (WHERE ");
+                filterPredicate.accept(this);
+                sb.append(")");
+            }
+
+            int resetLength = sb.length();
+            List<Expression> partitionExpressions = windowDefinition.getPartitionExpressions();
+            List<OrderByItem> orderByExpressions = windowDefinition.getOrderByExpressions();
+            boolean hasPartitionOrderByOrFrameClause = partitionExpressions.size() != 0 || orderByExpressions.size() != 0 || windowDefinition.getFrameMode() != null || windowDefinition.getFrameExclusionType() != null;
+
+            sb.append(" OVER ");
+            if (hasPartitionOrderByOrFrameClause) {
+                sb.append('(');
+            }
+
+            if (windowDefinition.getWindowName() != null) {
+                sb.append(windowDefinition.getWindowName());
+                if (hasPartitionOrderByOrFrameClause) {
+                    sb.append(' ');
+                }
+            }
+
+            int size = partitionExpressions.size();
+            if (size != 0) {
+                sb.append("PARTITION BY ");
+                partitionExpressions.get(0).accept(this);
+                for (int i = 1; i < size; i++) {
+                    sb.append(", ");
+                    partitionExpressions.get(i).accept(this);
+                }
+            }
+
+            size = orderByExpressions.size();
+            if (size != 0) {
+                if (partitionExpressions.size() != 0) {
+                    sb.append(' ');
+                }
+                sb.append("ORDER BY ");
+                visit(orderByExpressions.get(0));
+                for (int i = 1; i < size; i++) {
+                    sb.append(", ");
+                    visit(orderByExpressions.get(i));
+                }
+            }
+
+            if (windowDefinition.getFrameMode() != null) {
+                sb.append(' ');
+                sb.append(windowDefinition.getFrameMode().name());
+                if (windowDefinition.getFrameEndType() != null) {
+                    sb.append(" BETWEEN ");
+                }
+
+                if (windowDefinition.getFrameStartExpression() != null) {
+                    windowDefinition.getFrameStartExpression().accept(this);
+                }
+
+                sb.append(getFrameType(windowDefinition.getFrameStartType()));
+
+                if (windowDefinition.getFrameEndType() != null) {
+                    sb.append(" AND ");
+                    if (windowDefinition.getFrameEndExpression() != null) {
+                        windowDefinition.getFrameEndExpression().accept(this);
+                    }
+
+                    sb.append(getFrameType(windowDefinition.getFrameEndType()));
+                }
+
+                if (windowDefinition.getFrameExclusionType() != null) {
+                    sb.append(getFrameExclusionType(windowDefinition.getFrameExclusionType()));
+                }
+            }
+
+            if (hasPartitionOrderByOrFrameClause) {
+                sb.append(')');
+            }
+        }
+    }
+
+    protected String getFrameExclusionType(WindowFrameExclusionType frameExclusionType) {
+        switch (frameExclusionType) {
+            case EXCLUDE_CURRENT_ROW:
+                return " EXCLUDE CURRENT ROW";
+            case EXCLUDE_GROUP:
+                return " EXCLUDE GROUP";
+            case EXCLUDE_NO_OTHERS:
+                return " EXCLUDE NO OTHERS";
+            case EXCLUDE_TIES:
+                return " EXCLUDE TIES";
+            default:
+                throw new IllegalArgumentException("No branch for " + frameExclusionType);
+        }
+    }
+
+    protected String getFrameType(WindowFramePositionType frameStartType) {
+        switch (frameStartType) {
+            case CURRENT_ROW:
+                return "CURRENT ROW";
+            case BOUNDED_FOLLOWING:
+                return " FOLLOWING";
+            case BOUNDED_PRECEDING:
+                return " PRECEDING";
+            case UNBOUNDED_FOLLOWING:
+                return "UNBOUNDED FOLLOWING";
+            case UNBOUNDED_PRECEDING:
+                return "UNBOUNDED PRECEDING";
+            default:
+                throw new IllegalArgumentException("No branch for " + frameStartType);
+        }
+    }
+
+    private void visit(OrderByItem orderByItem) {
+        orderByItem.getExpression().accept(this);
+        sb.append(orderByItem.isAscending() ? " ASC" : " DESC");
+        sb.append(orderByItem.isNullFirst() ? " NULLS FIRST" : " NULLS LAST");
     }
 
     @Override

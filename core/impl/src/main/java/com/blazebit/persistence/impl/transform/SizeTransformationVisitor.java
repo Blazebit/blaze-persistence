@@ -153,7 +153,7 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
         if (clause != ClauseType.WHERE && ExpressionUtils.isSizeFunction(expression)) {
             return true;
         }
-        if (!aggregateFunctionContext && mainQuery.getCbf().getAggregateFunctions().contains(expression.getFunctionName().toLowerCase())) {
+        if (!aggregateFunctionContext && Boolean.TRUE.equals(mainQuery.getCbf().getFunctions().get(expression.getFunctionName().toLowerCase()))) {
             aggregateFunctionContext = true;
             Boolean result = super.visit(expression);
             aggregateFunctionContext = false;

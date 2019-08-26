@@ -28,12 +28,14 @@ import com.blazebit.persistence.parser.expression.MapValueExpression;
 import com.blazebit.persistence.parser.expression.NullExpression;
 import com.blazebit.persistence.parser.expression.NumericLiteral;
 import com.blazebit.persistence.parser.expression.NumericType;
+import com.blazebit.persistence.parser.expression.OrderByItem;
 import com.blazebit.persistence.parser.expression.ParameterExpression;
 import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.expression.StringLiteral;
 import com.blazebit.persistence.parser.expression.Subquery;
 import com.blazebit.persistence.parser.expression.SubqueryExpression;
 import com.blazebit.persistence.parser.expression.TreatExpression;
+import com.blazebit.persistence.parser.expression.WindowDefinition;
 import com.blazebit.persistence.parser.predicate.BetweenPredicate;
 import com.blazebit.persistence.parser.predicate.CompoundPredicate;
 import com.blazebit.persistence.parser.predicate.EqPredicate;
@@ -77,6 +79,8 @@ import java.util.Set;
  */
 public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
+    private static final Set<String> BUILT_IN_FUNCTIONS;
+
     protected String aliasPrefix;
     private boolean resolveSelectAliases = true;
     private boolean externalRepresentation;
@@ -90,6 +94,32 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     private final JpaProvider jpaProvider;
     private final Map<String, JpqlFunction> registeredFunctions;
     private final Map<String, String> registeredFunctionsNames;
+
+    static {
+        Set<String> functions = new HashSet<>();
+        functions.add("concat");
+        functions.add("substring");
+        functions.add("lower");
+        functions.add("upper");
+        functions.add("length");
+        functions.add("locate");
+        functions.add("abs");
+        functions.add("sqrt");
+        functions.add("mod");
+        functions.add("coalesce");
+        functions.add("nullif");
+        functions.add("size");
+        functions.add("type");
+        functions.add("avg");
+        functions.add("max");
+        functions.add("min");
+        functions.add("sum");
+        functions.add("count");
+        functions.add("current_date");
+        functions.add("current_time");
+        functions.add("current_timestamp");
+        BUILT_IN_FUNCTIONS = functions;
+    }
 
     public ResolvingQueryGenerator(AliasManager aliasManager, ParameterManager parameterManager, AssociationParameterTransformerFactory parameterTransformerFactory, JpaProvider jpaProvider, Map<String, JpqlFunction> registeredFunctions) {
         this.aliasManager = aliasManager;
@@ -153,11 +183,13 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             } else {
                 argumentsWithoutFunctionName = Collections.emptyList();
             }
-            renderFunctionFunction(resolvedFunctionName, argumentsWithoutFunctionName);
+            renderFunctionFunction(resolvedFunctionName, argumentsWithoutFunctionName, expression.getResolvedWindowDefinition());
         } else if (isCountStarFunction(expression)) {
-            renderCountStar();
-        } else {
+            renderCountStar(expression.getResolvedWindowDefinition());
+        } else if (BUILT_IN_FUNCTIONS.contains(expression.getFunctionName().toLowerCase()) && expression.getResolvedWindowDefinition() == null) {
             super.visit(expression);
+        } else {
+            renderFunctionFunction(expression.getFunctionName(), expression.getExpressions(), expression.getResolvedWindowDefinition());
         }
 
         treatedJoinNodesForConstraints = oldTreatedJoinNodesForConstraints;
@@ -169,11 +201,13 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     }
 
     @SuppressWarnings("unchecked")
-    protected void renderCountStar() {
-        if (jpaProvider.supportsCountStar()) {
+    protected void renderCountStar(WindowDefinition windowDefinition) {
+        if (jpaProvider.supportsCountStar() && windowDefinition == null) {
             sb.append("COUNT(*)");
+        } else if (windowDefinition != null) {
+            renderFunctionFunction(resolveRenderedFunctionName("WINDOW_COUNT"), (List<Expression>) (List<?>) Collections.emptyList(), windowDefinition);
         } else {
-            renderFunctionFunction(resolveRenderedFunctionName("COUNT_STAR"), (List<Expression>) (List<?>) Collections.emptyList());
+            renderFunctionFunction(resolveRenderedFunctionName("COUNT_STAR"), (List<Expression>) (List<?>) Collections.emptyList(), null);
         }
     }
 
@@ -313,15 +347,22 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         return expression;
     }
 
-    protected void renderFunctionFunction(String functionName, List<Expression> arguments) {
+    protected void renderFunctionFunction(String functionName, List<Expression> arguments, WindowDefinition windowDefinition) {
         ParameterRenderingMode oldParameterRenderingMode = setParameterRenderingMode(ParameterRenderingMode.PLACEHOLDER);
+        int size = arguments.size();
         if (registeredFunctions.containsKey(functionName)) {
-            sb.append(jpaProvider.getCustomFunctionInvocation(functionName, arguments.size()));
-            if (arguments.size() > 0) {
+            sb.append(jpaProvider.getCustomFunctionInvocation(functionName, size));
+            if (size == 0) {
+                visitWindowDefinition(windowDefinition);
+            } else {
                 arguments.get(0).accept(this);
-                for (int i = 1; i < arguments.size(); i++) {
+                for (int i = 1; i < size; i++) {
                     sb.append(",");
                     arguments.get(i).accept(this);
+                }
+                if (windowDefinition != null) {
+                    sb.append(",");
+                    visitWindowDefinition(windowDefinition);
                 }
             }
             sb.append(')');
@@ -331,9 +372,13 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             sb.append(functionName);
             sb.append('\'');
 
-            for (int i = 0; i < arguments.size(); i++) {
+            for (int i = 0; i < size; i++) {
                 sb.append(',');
                 arguments.get(i).accept(this);
+            }
+            if (windowDefinition != null) {
+                sb.append(",");
+                visitWindowDefinition(windowDefinition);
             }
 
             sb.append(')');
@@ -341,6 +386,88 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             throw new IllegalArgumentException("Unknown function [" + functionName + "] is used!");
         }
         setParameterRenderingMode(oldParameterRenderingMode);
+    }
+
+    @Override
+    protected void visitWindowDefinition(WindowDefinition windowDefinition) {
+        if (windowDefinition != null) {
+            Predicate filterPredicate = windowDefinition.getFilterPredicate();
+            if (filterPredicate != null) {
+                sb.append("'FILTER',");
+                filterPredicate.accept(this);
+                sb.append(",");
+            }
+
+            List<Expression> partitionExpressions = windowDefinition.getPartitionExpressions();
+
+            int size = partitionExpressions.size();
+            if (size != 0) {
+                sb.append(",'PARTITION BY',");
+                partitionExpressions.get(0).accept(this);
+                for (int i = 1; i < size; i++) {
+                    sb.append(", ");
+                    partitionExpressions.get(i).accept(this);
+                }
+            }
+
+            List<OrderByItem> orderByExpressions = windowDefinition.getOrderByExpressions();
+            size = orderByExpressions.size();
+            if (size != 0) {
+                if (partitionExpressions.size() != 0) {
+                    sb.append(' ');
+                }
+                sb.append(",'ORDER BY',");
+                visit(orderByExpressions.get(0));
+                for (int i = 1; i < size; i++) {
+                    sb.append(", ");
+                    visit(orderByExpressions.get(i));
+                }
+            }
+
+            if (windowDefinition.getFrameMode() != null) {
+                sb.append(",'");
+                sb.append(windowDefinition.getFrameMode().name());
+                sb.append("'");
+                if (windowDefinition.getFrameEndType() != null) {
+                    sb.append(",'BETWEEN'");
+                }
+
+                if (windowDefinition.getFrameStartExpression() != null) {
+                    sb.append(",");
+                    windowDefinition.getFrameStartExpression().accept(this);
+                }
+
+                sb.append(",'");
+                sb.append(getFrameType(windowDefinition.getFrameStartType()));
+                sb.append("'");
+
+                if (windowDefinition.getFrameEndType() != null) {
+                    sb.append(",'AND'");
+                    if (windowDefinition.getFrameEndExpression() != null) {
+                        sb.append(",");
+                        windowDefinition.getFrameEndExpression().accept(this);
+                    }
+
+                    sb.append(",'");
+                    sb.append(getFrameType(windowDefinition.getFrameEndType()));
+                    sb.append("'");
+                }
+
+                if (windowDefinition.getFrameExclusionType() != null) {
+                    sb.append(",'");
+                    sb.append(getFrameExclusionType(windowDefinition.getFrameExclusionType()));
+                    sb.append("'");
+                }
+            }
+        }
+    }
+
+    private void visit(OrderByItem orderByItem) {
+        orderByItem.getExpression().accept(this);
+        sb.append(",'");
+        sb.append(orderByItem.isAscending() ? "ASC" : "DESC");
+        sb.append(orderByItem.isNullFirst() ? " NULLS FIRST" : " NULLS LAST");
+        sb.append("'");
     }
 
     private boolean isCountStarFunction(FunctionExpression expression) {

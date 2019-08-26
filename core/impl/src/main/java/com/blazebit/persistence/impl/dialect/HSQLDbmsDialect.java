@@ -47,6 +47,12 @@ public class HSQLDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
+    public boolean isNullSmallest() {
+        // Actually, HSQLDB always shows NULL first, regardless of the ordering, but we don't care because it supports null precedence handling
+        return true;
+    }
+
+    @Override
     public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
         if (isSubquery && returningColumns != null) {
             throw new IllegalArgumentException("Returning columns in a subquery is not possible for this dbms!");

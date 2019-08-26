@@ -166,15 +166,15 @@ public abstract class AbstractExpressionFactory extends AbstractExpressionFactor
 
     private final boolean allowTreatJoinExtension;
     private final boolean optimize;
-    private final Set<String> aggregateFunctions;
+    private final Map<String, Boolean> functions;
     private final Map<String, Class<?>> entityTypes;
     private final Map<String, Class<Enum<?>>> enumTypes;
     private final int minEnumSegmentCount;
     private final int minEntitySegmentCount;
     private final ExpressionOptimizer optimizer = new ExpressionOptimizer();
 
-    protected AbstractExpressionFactory(Set<String> aggregateFunctions, Map<String, Class<?>> entityTypes, Map<String, Class<Enum<?>>> enumTypes, boolean allowTreatJoinExtension, boolean optimize) {
-        this.aggregateFunctions = aggregateFunctions;
+    protected AbstractExpressionFactory(Map<String, Boolean> functions, Map<String, Class<?>> entityTypes, Map<String, Class<Enum<?>>> enumTypes, boolean allowTreatJoinExtension, boolean optimize) {
+        this.functions = functions;
         this.entityTypes = entityTypes;
         this.enumTypes = enumTypes;
         this.allowTreatJoinExtension = allowTreatJoinExtension;
@@ -238,7 +238,7 @@ public abstract class AbstractExpressionFactory extends AbstractExpressionFactor
             LOG.finest(ctx.toStringTree());
         }
 
-        JPQLSelectExpressionVisitorImpl visitor = new JPQLSelectExpressionVisitorImpl(aggregateFunctions, enumTypes, entityTypes, minEnumSegmentCount, minEntitySegmentCount, macroConfiguration == null ? Collections.EMPTY_MAP : macroConfiguration.macros, usedMacros);
+        JPQLSelectExpressionVisitorImpl visitor = new JPQLSelectExpressionVisitorImpl(functions, enumTypes, entityTypes, minEnumSegmentCount, minEntitySegmentCount, macroConfiguration == null ? Collections.EMPTY_MAP : macroConfiguration.macros, usedMacros);
         Expression parsedExpression = visitor.visit(ctx);
         if (optimize) {
             parsedExpression = parsedExpression.accept(optimizer);

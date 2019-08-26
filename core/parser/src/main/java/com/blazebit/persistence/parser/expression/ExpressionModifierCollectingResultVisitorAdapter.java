@@ -34,6 +34,7 @@ import com.blazebit.persistence.parser.expression.modifier.ListIndexExpressionMo
 import com.blazebit.persistence.parser.expression.modifier.MapEntryExpressionModifier;
 import com.blazebit.persistence.parser.expression.modifier.MapKeyExpressionModifier;
 import com.blazebit.persistence.parser.expression.modifier.MapValueExpressionModifier;
+import com.blazebit.persistence.parser.expression.modifier.OrderByItemModifier;
 import com.blazebit.persistence.parser.expression.modifier.SimpleCaseExpressionOperandModifier;
 import com.blazebit.persistence.parser.expression.modifier.TreatExpressionModifier;
 import com.blazebit.persistence.parser.expression.modifier.TrimExpressionCharacterModifier;
@@ -41,6 +42,9 @@ import com.blazebit.persistence.parser.expression.modifier.TrimExpressionSourceM
 import com.blazebit.persistence.parser.expression.modifier.UnaryExpressionPredicateModifier;
 import com.blazebit.persistence.parser.expression.modifier.WhenClauseExpressionConditionModifier;
 import com.blazebit.persistence.parser.expression.modifier.WhenClauseExpressionResultModifier;
+import com.blazebit.persistence.parser.expression.modifier.WindowFilterModifier;
+import com.blazebit.persistence.parser.expression.modifier.WindowFrameEndModifier;
+import com.blazebit.persistence.parser.expression.modifier.WindowFrameStartModifier;
 import com.blazebit.persistence.parser.predicate.BetweenPredicate;
 import com.blazebit.persistence.parser.predicate.BinaryExpressionPredicate;
 import com.blazebit.persistence.parser.predicate.BooleanLiteral;
@@ -164,6 +168,45 @@ public abstract class ExpressionModifierCollectingResultVisitorAdapter implement
         for (int i = 0; i < size; i++) {
             if (Boolean.TRUE == expressions.get(i).accept(this)) {
                 onModifier(new ExpressionListModifier(expressions, i));
+            }
+        }
+        WindowDefinition windowDefinition = expression.getWindowDefinition();
+        if (windowDefinition != null) {
+            Predicate filterPredicate = windowDefinition.getFilterPredicate();
+            if (filterPredicate != null) {
+                if (Boolean.TRUE == filterPredicate.accept(this)) {
+                    onModifier(new WindowFilterModifier(windowDefinition));
+                }
+            }
+
+            List<Expression> partitionExpressions = windowDefinition.getPartitionExpressions();
+            size = partitionExpressions.size();
+            for (int i = 0; i < size; i++) {
+                if (Boolean.TRUE == partitionExpressions.get(i).accept(this)) {
+                    onModifier(new ExpressionListModifier(partitionExpressions, i));
+                }
+            }
+
+            List<OrderByItem> orderByExpressions = windowDefinition.getOrderByExpressions();
+            size = orderByExpressions.size();
+            for (int i = 0; i < size; i++) {
+                if (Boolean.TRUE == orderByExpressions.get(i).getExpression().accept(this)) {
+                    onModifier(new OrderByItemModifier(orderByExpressions.get(i)));
+                }
+            }
+
+            Expression frameStartExpression = windowDefinition.getFrameStartExpression();
+            if (frameStartExpression != null) {
+                if (Boolean.TRUE == frameStartExpression.accept(this)) {
+                    onModifier(new WindowFrameStartModifier(windowDefinition));
+                }
+            }
+
+            Expression frameEndExpression = windowDefinition.getFrameEndExpression();
+            if (frameEndExpression != null) {
+                if (Boolean.TRUE == frameEndExpression.accept(this)) {
+                    onModifier(new WindowFrameEndModifier(windowDefinition));
+                }
             }
         }
         return Boolean.FALSE;

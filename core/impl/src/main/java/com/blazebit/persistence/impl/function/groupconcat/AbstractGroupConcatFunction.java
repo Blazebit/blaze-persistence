@@ -19,6 +19,7 @@ package com.blazebit.persistence.impl.function.groupconcat;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.blazebit.persistence.impl.function.Order;
 import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.TemplateRenderer;
@@ -229,51 +230,6 @@ public abstract class AbstractGroupConcatFunction implements JpqlFunction {
 
         public String getSeparator() {
             return separator;
-        }
-    }
-
-    /**
-     * @author Christian Beikov
-     * @since 1.2.0
-     */
-    protected static final class Order {
-        
-        private final String expression;
-        private final boolean ascending;
-        private final boolean nullsFirst;
-        
-        public Order(String expression, Boolean ascending, Boolean nullsFirst) {
-            this.expression = expression;
-
-            if (Boolean.FALSE.equals(ascending)) {
-                this.ascending = false;
-                // Default NULLS FIRST
-                if (nullsFirst == null) {
-                    this.nullsFirst = true;
-                } else {
-                    this.nullsFirst = nullsFirst;
-                }
-            } else {
-                this.ascending = true;
-                // Default NULLS LAST
-                if (nullsFirst == null) {
-                    this.nullsFirst = false;
-                } else {
-                    this.nullsFirst = nullsFirst;
-                }
-            }
-        }
-        
-        public String getExpression() {
-            return expression;
-        }
-
-        public boolean isAscending() {
-            return ascending;
-        }
-        
-        public boolean isNullsFirst() {
-            return nullsFirst;
         }
     }
 }

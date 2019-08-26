@@ -30,7 +30,7 @@ public class SumFunction extends AbstractWindowFunction {
     public static final String FUNCTION_NAME = "WINDOW_SUM";
 
     public SumFunction(DbmsDialect dbmsDialect) {
-        super("SUM", dbmsDialect);
+        super("SUM", dbmsDialect.isNullSmallest(), dbmsDialect.supportsWindowNullPrecedence(), dbmsDialect.supportsFilterClause(), true);
     }
 
 }

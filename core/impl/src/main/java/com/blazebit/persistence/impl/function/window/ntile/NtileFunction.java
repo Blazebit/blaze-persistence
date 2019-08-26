@@ -31,7 +31,7 @@ public class NtileFunction extends AbstractWindowFunction {
     public static final String FUNCTION_NAME = "NTILE";
 
     public NtileFunction(DbmsDialect dbmsDialect) {
-        super(FUNCTION_NAME, dbmsDialect);
+        super(FUNCTION_NAME, dbmsDialect.isNullSmallest(), dbmsDialect.supportsWindowNullPrecedence(), dbmsDialect.supportsFilterClause(), false);
     }
 
     @Override

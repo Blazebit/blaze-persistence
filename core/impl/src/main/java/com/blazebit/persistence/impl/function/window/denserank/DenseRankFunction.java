@@ -31,7 +31,7 @@ public class DenseRankFunction extends AbstractWindowFunction {
     public static final String FUNCTION_NAME = "DENSE_RANK";
 
     public DenseRankFunction(DbmsDialect dbmsDialect) {
-        super(FUNCTION_NAME, dbmsDialect);
+        super(FUNCTION_NAME, dbmsDialect.isNullSmallest(), dbmsDialect.supportsWindowNullPrecedence(), dbmsDialect.supportsFilterClause(), false);
     }
 
     @Override

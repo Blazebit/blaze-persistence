@@ -29,11 +29,11 @@ public class WindowEveryFunction extends AbstractWindowFunction {
     public static final String FUNCTION_NAME = "WINDOW_EVERY";
 
     public WindowEveryFunction(DbmsDialect dbmsDialect) {
-        super("EVERY", dbmsDialect);
+        super("EVERY", dbmsDialect.isNullSmallest(), dbmsDialect.supportsWindowNullPrecedence(), dbmsDialect.supportsFilterClause(), true);
     }
 
     public WindowEveryFunction(String functionName, DbmsDialect dbmsDialect) {
-        super(functionName, dbmsDialect);
+        super(functionName, dbmsDialect.isNullSmallest(), dbmsDialect.supportsWindowNullPrecedence(), dbmsDialect.supportsFilterClause(), true);
     }
 
     @Override

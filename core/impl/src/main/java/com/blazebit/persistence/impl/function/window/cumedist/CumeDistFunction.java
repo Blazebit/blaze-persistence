@@ -31,7 +31,7 @@ public class CumeDistFunction extends AbstractWindowFunction {
     public static final String FUNCTION_NAME = "CUME_DIST";
 
     public CumeDistFunction(DbmsDialect dbmsDialect) {
-        super(FUNCTION_NAME, dbmsDialect);
+        super(FUNCTION_NAME, dbmsDialect.isNullSmallest(), dbmsDialect.supportsWindowNullPrecedence(), dbmsDialect.supportsFilterClause(), false);
     }
 
     @Override

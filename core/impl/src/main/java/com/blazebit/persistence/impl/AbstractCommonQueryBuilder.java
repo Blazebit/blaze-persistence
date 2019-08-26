@@ -40,6 +40,7 @@ import com.blazebit.persistence.StartOngoingSetOperationCTECriteriaBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.WhereOrBuilder;
+import com.blazebit.persistence.WindowBuilder;
 import com.blazebit.persistence.impl.function.entity.ValuesEntity;
 import com.blazebit.persistence.impl.keyset.KeysetBuilderImpl;
 import com.blazebit.persistence.impl.keyset.KeysetImpl;
@@ -146,6 +147,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     protected final GroupByManager groupByManager;
     protected final OrderByManager orderByManager;
     protected final JoinManager joinManager;
+    protected final WindowManager<BuilderType> windowManager;
     protected final KeysetManager keysetManager;
     protected final ResolvingQueryGenerator queryGenerator;
     protected final SubqueryInitiatorFactory subqueryInitFactory;
@@ -200,6 +202,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.groupByManager = builder.groupByManager;
         this.keysetManager = builder.keysetManager;
         this.joinManager = builder.joinManager;
+        this.windowManager = (WindowManager<BuilderType>) builder.windowManager;
         this.queryGenerator = builder.queryGenerator;
         this.em = builder.em;
         this.finalSetOperationBuilder = (FinalSetReturn) builder.finalSetOperationBuilder;
@@ -242,6 +245,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor = new GroupByExpressionGatheringVisitor(false, this.aliasManager, mainQuery.dbmsDialect);
         this.functionalDependencyAnalyzerVisitor = new FunctionalDependencyAnalyzerVisitor(mainQuery.metamodel, splittingVisitor, mainQuery.jpaProvider, this.aliasManager);
 
+        this.windowManager = new WindowManager<>(queryGenerator, parameterManager, subqueryInitFactory);
         this.whereManager = new WhereManager<>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
         this.groupByManager = new GroupByManager(queryGenerator, parameterManager, subqueryInitFactory, mainQuery.jpaProvider, this.aliasManager, embeddableSplittingVisitor, groupByExpressionGatheringVisitor);
         this.havingManager = new HavingManager<>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory, groupByExpressionGatheringVisitor);
@@ -312,6 +316,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor = new GroupByExpressionGatheringVisitor(false, this.aliasManager, mainQuery.dbmsDialect);
         this.functionalDependencyAnalyzerVisitor = new FunctionalDependencyAnalyzerVisitor(mainQuery.metamodel, splittingVisitor, mainQuery.jpaProvider, this.aliasManager);
 
+        this.windowManager = new WindowManager<>(queryGenerator, parameterManager, subqueryInitFactory);
         this.whereManager = new WhereManager<>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
         this.groupByManager = new GroupByManager(queryGenerator, parameterManager, subqueryInitFactory, mainQuery.jpaProvider, this.aliasManager, embeddableSplittingVisitor, groupByExpressionGatheringVisitor);
         this.havingManager = new HavingManager<>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory, groupByExpressionGatheringVisitor);
@@ -351,6 +356,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         }
         aliasManager.applyFrom(builder.aliasManager);
         Map<JoinNode, JoinNode> nodeMapping = joinManager.applyFrom(builder.joinManager);
+        windowManager.applyFrom(builder.windowManager);
         whereManager.applyFrom(builder.whereManager);
         havingManager.applyFrom(builder.havingManager);
         groupByManager.applyFrom(builder.groupByManager);
@@ -1176,17 +1182,17 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     public RestrictionBuilder<BuilderType> where(String expression) {
         prepareForModification(ClauseType.WHERE);
         Expression expr = expressionFactory.createSimpleExpression(expression, false);
-        return whereManager.restrict(this, expr);
+        return whereManager.restrict((BuilderType) this, expr);
     }
 
     public CaseWhenStarterBuilder<RestrictionBuilder<BuilderType>> whereCase() {
         prepareForModification(ClauseType.WHERE);
-        return whereManager.restrictCase(this);
+        return whereManager.restrictCase((BuilderType) this);
     }
 
     public SimpleCaseWhenStarterBuilder<RestrictionBuilder<BuilderType>> whereSimpleCase(String expression) {
         prepareForModification(ClauseType.WHERE);
-        return whereManager.restrictSimpleCase(this, expressionFactory.createCaseOperandExpression(expression));
+        return whereManager.restrictSimpleCase((BuilderType) this, expressionFactory.createCaseOperandExpression(expression));
     }
 
     public WhereOrBuilder<BuilderType> whereOr() {
@@ -1220,27 +1226,27 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     public SubqueryInitiator<RestrictionBuilder<BuilderType>> whereSubquery() {
         prepareForModification(ClauseType.WHERE);
-        return whereManager.restrict(this);
+        return whereManager.restrict((BuilderType) this);
     }
 
     public SubqueryInitiator<RestrictionBuilder<BuilderType>> whereSubquery(String subqueryAlias, String expression) {
         prepareForModification(ClauseType.WHERE);
-        return whereManager.restrict(this, subqueryAlias, expression);
+        return whereManager.restrict((BuilderType) this, subqueryAlias, expression);
     }
 
     public MultipleSubqueryInitiator<RestrictionBuilder<BuilderType>> whereSubqueries(String expression) {
         prepareForModification(ClauseType.WHERE);
-        return whereManager.restrictSubqueries(this, expression);
+        return whereManager.restrictSubqueries((BuilderType) this, expression);
     }
 
     public SubqueryBuilder<RestrictionBuilder<BuilderType>> whereSubquery(FullQueryBuilder<?, ?> criteriaBuilder) {
         prepareForModification(ClauseType.WHERE);
-        return whereManager.restrict(this, criteriaBuilder);
+        return whereManager.restrict((BuilderType) this, criteriaBuilder);
     }
 
     public SubqueryBuilder<RestrictionBuilder<BuilderType>> whereSubquery(String subqueryAlias, String expression, FullQueryBuilder<?, ?> criteriaBuilder) {
         prepareForModification(ClauseType.WHERE);
-        return whereManager.restrict(this, subqueryAlias, expression, criteriaBuilder);
+        return whereManager.restrict((BuilderType) this, subqueryAlias, expression, criteriaBuilder);
     }
 
     @SuppressWarnings("unchecked")
@@ -1307,7 +1313,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new IllegalStateException("Having without group by");
         }
         Expression expr = expressionFactory.createSimpleExpression(expression, false);
-        return havingManager.restrict(this, expr);
+        return havingManager.restrict((BuilderType) this, expr);
     }
 
     public CaseWhenStarterBuilder<RestrictionBuilder<BuilderType>> havingCase() {
@@ -1315,7 +1321,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         if (groupByManager.isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
-        return havingManager.restrictCase(this);
+        return havingManager.restrictCase((BuilderType) this);
     }
 
     public SimpleCaseWhenStarterBuilder<RestrictionBuilder<BuilderType>> havingSimpleCase(String expression) {
@@ -1323,7 +1329,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         if (groupByManager.isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
-        return havingManager.restrictSimpleCase(this, expressionFactory.createCaseOperandExpression(expression));
+        return havingManager.restrictSimpleCase((BuilderType) this, expressionFactory.createCaseOperandExpression(expression));
     }
 
     public HavingOrBuilder<BuilderType> havingOr() {
@@ -1375,7 +1381,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         if (groupByManager.isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
-        return havingManager.restrict(this);
+        return havingManager.restrict((BuilderType) this);
     }
 
     public SubqueryInitiator<RestrictionBuilder<BuilderType>> havingSubquery(String subqueryAlias, String expression) {
@@ -1383,7 +1389,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         if (groupByManager.isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
-        return havingManager.restrict(this, subqueryAlias, expression);
+        return havingManager.restrict((BuilderType) this, subqueryAlias, expression);
     }
 
     public MultipleSubqueryInitiator<RestrictionBuilder<BuilderType>> havingSubqueries(String expression) {
@@ -1391,7 +1397,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         if (groupByManager.isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
-        return havingManager.restrictSubqueries(this, expression);
+        return havingManager.restrictSubqueries((BuilderType) this, expression);
     }
 
     public SubqueryBuilder<RestrictionBuilder<BuilderType>> havingSubquery(FullQueryBuilder<?, ?> criteriaBuilder) {
@@ -1399,7 +1405,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         if (groupByManager.isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
-        return havingManager.restrict(this, criteriaBuilder);
+        return havingManager.restrict((BuilderType) this, criteriaBuilder);
     }
 
     public SubqueryBuilder<RestrictionBuilder<BuilderType>> havingSubquery(String subqueryAlias, String expression, FullQueryBuilder<?, ?> criteriaBuilder) {
@@ -1407,7 +1413,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         if (groupByManager.isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
-        return havingManager.restrict(this, subqueryAlias, expression, criteriaBuilder);
+        return havingManager.restrict((BuilderType) this, subqueryAlias, expression, criteriaBuilder);
     }
 
     @SuppressWarnings("unchecked")
@@ -1483,6 +1489,15 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         orderByManager.orderBy(expression, ascending, nullFirst);
     }
 
+    /*
+     * Window methods
+     */
+    public WindowBuilder<BuilderType> window(String name) {
+        prepareForModification(ClauseType.WINDOW);
+        verifyBuilderEnded();
+        return windowManager.window(name, (BuilderType) this);
+    }
+
     protected void verifySetBuilderEnded() {
         if (finalSetOperationBuilder != null) {
             if (!setOperationEnded) {
@@ -1501,6 +1516,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         havingManager.verifyBuilderEnded();
         selectManager.verifyBuilderEnded();
         joinManager.verifyBuilderEnded();
+        windowManager.verifyBuilderEnded();
     }
 
     /*
@@ -1696,7 +1712,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         // NOTE: If it turns out to be problematic, I can imagine introducing a synthetic SELECT item that is removed in the end for this purpose
         joinManager.reorderSimpleValuesClauses();
 
-        final JoinVisitor joinVisitor = new JoinVisitor(mainQuery, parentVisitor, joinManager, parameterManager, !mainQuery.jpaProvider.supportsSingleValuedAssociationIdExpressions());
+        final JoinVisitor joinVisitor = new JoinVisitor(mainQuery, windowManager, parentVisitor, joinManager, parameterManager, !mainQuery.jpaProvider.supportsSingleValuedAssociationIdExpressions());
         joinVisitor.setFromClause(ClauseType.JOIN);
         joinManager.acceptVisitor(joinVisitor);
         // carry out implicit joins
@@ -1781,7 +1797,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     protected void implicitJoinWhereClause() {
-        final JoinVisitor joinVisitor = new JoinVisitor(mainQuery, null, joinManager, parameterManager, !mainQuery.jpaProvider.supportsSingleValuedAssociationIdExpressions());
+        final JoinVisitor joinVisitor = new JoinVisitor(mainQuery, windowManager, null, joinManager, parameterManager, !mainQuery.jpaProvider.supportsSingleValuedAssociationIdExpressions());
         joinVisitor.setJoinRequired(true);
         joinVisitor.setFromClause(ClauseType.WHERE);
         whereManager.acceptVisitor(joinVisitor);
@@ -2554,6 +2570,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
             appendWhereClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, whereClauseEndConjuncts);
             appendGroupByClause(sbSelectFrom);
+            appendWindowClause(sbSelectFrom, externalRepresentation);
             appendOrderByClause(sbSelectFrom);
             if (externalRepresentation && !isMainQuery) {
                 // Don't render the LIMIT clause for subqueries, but let the parent render it in a LIMIT function
@@ -2618,6 +2635,12 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         if (hasGroupBy) {
             groupByManager.buildGroupBy(sbSelectFrom);
             havingManager.buildClause(sbSelectFrom);
+        }
+    }
+
+    protected void appendWindowClause(StringBuilder sbSelectFrom, boolean externalRepresentation) {
+        if (externalRepresentation) {
+            windowManager.buildWindow(sbSelectFrom);
         }
     }
 

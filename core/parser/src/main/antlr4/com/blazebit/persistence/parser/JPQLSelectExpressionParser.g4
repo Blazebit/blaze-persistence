@@ -317,7 +317,35 @@ trim_specification : LEADING
                    | BOTH
                    ;
 
-function_invocation : FUNCTION LP string_literal (Argument_separator args+=function_arg)* RP;
+function_invocation : FUNCTION LP string_literal (Argument_separator args+=function_arg)* RP # FunctionInvocation
+                    | name=identifier LP args+=simple_expression (Argument_separator args+=simple_expression) RP ((FILTER LP where_clause RP)? (OVER windowName=identifier | (LP window_definition RP)))? # GenericFunctionInvocation
+                    ;
+
+where_clause : WHERE conditional_expression;
+
+order_by_clause : ORDER BY orderByItems+=order_by_item (Argument_separator orderByItems+=order_by_item);
+
+order_by_item: expression=simple_expression order=(ASC|DESC)? (NULLS nulls=(FIRST|LAST))? ;
+
+window_definition : (windowName=identifier)? (PARTITION BY partitionExpressions+=simple_expression (Argument_separator partitionExpressions+=simple_expression)*)? order_by_clause? (frameMode=(RANGE|ROWS|GROUPS) (start=frame_start | ( BETWEEN start=frame_start AND end=frame_end )) (frame_exclusion)? )?;
+
+frame_start : UNBOUNDED PRECEDING
+            | simple_expression PRECEDING
+            | CURRENT ROW
+            | simple_expression FOLLOWING
+            ;
+
+frame_end : simple_expression PRECEDING
+          | CURRENT ROW
+          | simple_expression FOLLOWING
+          | UNBOUNDED FOLLOWING
+          ;
+
+frame_exclusion : EXCLUDE CURRENT ROW
+                | EXCLUDE GROUP
+                | EXCLUDE TIES
+                | EXCLUDE NO OTHERS
+                ;
 
 function_arg :
              state_field_path_expression
@@ -573,6 +601,31 @@ keyword :KEY
        | TREAT
        | AS
        | Outer_function
+       | FILTER
+       | WHERE
+       | OVER
+       | PARTITION
+       | ORDER
+       | BY
+       | ASC
+       | DESC
+       | NULLS
+       | FIRST
+       | LAST
+       | RANGE
+       | ROWS
+       | GROUPS
+       | UNBOUNDED
+       | BOUNDED
+       | PRECEDING
+       | FOLLOWING
+       | CURRENT
+       | ROW
+       | EXCLUDE
+       | GROUP
+       | TIES
+       | NO
+       | OTHERS
        | MACRO
        ;
 

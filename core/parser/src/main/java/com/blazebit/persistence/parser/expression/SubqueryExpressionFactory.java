@@ -42,8 +42,8 @@ public class SubqueryExpressionFactory extends AbstractExpressionFactory {
 
     private final ExpressionFactory delegate;
 
-    public SubqueryExpressionFactory(Set<String> aggregateFunctions, Map<String, Class<?>> entityTypes, Map<String, Class<Enum<?>>> enumTypes, boolean allowTreatJoinExtension, boolean optimize, ExpressionFactory delegate) {
-        super(aggregateFunctions, entityTypes, enumTypes, allowTreatJoinExtension, optimize);
+    public SubqueryExpressionFactory(Map<String, Boolean> functions, Map<String, Class<?>> entityTypes, Map<String, Class<Enum<?>>> enumTypes, boolean allowTreatJoinExtension, boolean optimize, ExpressionFactory delegate) {
+        super(functions, entityTypes, enumTypes, allowTreatJoinExtension, optimize);
         this.delegate = delegate;
     }
 

@@ -16,12 +16,11 @@
 
 package com.blazebit.persistence.view.testsuite.basic.model;
 
-import java.util.Calendar;
-import java.util.Set;
-
+import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.Mapping;
-import com.blazebit.persistence.testsuite.entity.Person;
+
+import java.util.Set;
 
 /**
  *
@@ -38,9 +37,6 @@ public interface PersonValidationView extends IdHolderView<Long> {
     // The case when a collection is mapped, but we are sure there is only one element
     @Mapping("partnerDocument.versions.url")
     public String getVersionUrl();
-    
-    @Mapping("FUNCTION('TIMESTAMP_ADD_DAY', partnerDocument.creationDate, -age)")
-    public Calendar getDateComputation();
     
     @Mapping("CONCAT(COALESCE(name,'-'),' ',COALESCE(partnerDocument.name,'-'))")
     public abstract String getCoalescingConcat();

@@ -31,7 +31,7 @@ public class RankFunction extends AbstractWindowFunction {
     public static final String FUNCTION_NAME = "RANK";
 
     public RankFunction(DbmsDialect dbmsDialect) {
-        super(FUNCTION_NAME, dbmsDialect);
+        super(FUNCTION_NAME, dbmsDialect.isNullSmallest(), dbmsDialect.supportsWindowNullPrecedence(), dbmsDialect.supportsFilterClause(), false);
     }
 
     @Override

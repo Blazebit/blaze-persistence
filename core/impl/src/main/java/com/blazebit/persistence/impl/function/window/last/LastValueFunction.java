@@ -30,7 +30,7 @@ public class LastValueFunction extends AbstractWindowFunction {
     public static final String FUNCTION_NAME = "LAST_VALUE";
 
     public LastValueFunction(DbmsDialect dbmsDialect) {
-        super(FUNCTION_NAME, dbmsDialect);
+        super(FUNCTION_NAME, dbmsDialect.isNullSmallest(), dbmsDialect.supportsWindowNullPrecedence(), dbmsDialect.supportsFilterClause(), true);
     }
 
 }

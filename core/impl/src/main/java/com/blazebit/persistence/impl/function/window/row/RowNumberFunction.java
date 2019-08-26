@@ -20,7 +20,9 @@ import com.blazebit.persistence.impl.function.window.AbstractWindowFunction;
 import com.blazebit.persistence.spi.DbmsDialect;
 
 /**
- * Number of the current row within its partition, counting from 1
+ * Number of the current row within its partition, counting from 1.
+ *
+ * Syntax: row_number()
  *
  * @author Jan-Willem Gmelig Meyling
  * @author Sayra Ranjha
@@ -31,7 +33,7 @@ public class RowNumberFunction extends AbstractWindowFunction {
     public static final String FUNCTION_NAME = "ROW_NUMBER";
 
     public RowNumberFunction(DbmsDialect dbmsDialect) {
-        super(FUNCTION_NAME, dbmsDialect);
+        super(FUNCTION_NAME, dbmsDialect.isNullSmallest(), dbmsDialect.supportsWindowNullPrecedence(), dbmsDialect.supportsFilterClause(), false);
     }
 
     @Override

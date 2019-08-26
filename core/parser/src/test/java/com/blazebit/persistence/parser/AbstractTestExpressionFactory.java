@@ -31,12 +31,12 @@ import java.util.logging.Level;
  */
 public abstract class AbstractTestExpressionFactory extends AbstractExpressionFactory {
 
-    public AbstractTestExpressionFactory(Set<String> aggregateFunctions, boolean optimize) {
-        this(aggregateFunctions, Collections.EMPTY_MAP, Collections.EMPTY_MAP, optimize);
+    public AbstractTestExpressionFactory(Map<String, Boolean> functions, boolean optimize) {
+        this(functions, Collections.EMPTY_MAP, Collections.EMPTY_MAP, optimize);
     }
     
-    public AbstractTestExpressionFactory(Set<String> aggregateFunctions, Map<String, Class<?>> entityTypes, Map<String, Class<Enum<?>>> enumTypes, boolean optimize) {
-        super(aggregateFunctions, entityTypes, enumTypes, true, optimize);
+    public AbstractTestExpressionFactory(Map<String, Boolean> functions, Map<String, Class<?>> entityTypes, Map<String, Class<Enum<?>>> enumTypes, boolean optimize) {
+        super(functions, entityTypes, enumTypes, true, optimize);
     }
 
     @Override

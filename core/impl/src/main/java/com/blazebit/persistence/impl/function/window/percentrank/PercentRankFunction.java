@@ -31,7 +31,7 @@ public class PercentRankFunction extends AbstractWindowFunction {
     public static final String FUNCTION_NAME = "PERCENT_RANK";
 
     public PercentRankFunction(DbmsDialect dbmsDialect) {
-        super(FUNCTION_NAME, dbmsDialect);
+        super(FUNCTION_NAME, dbmsDialect.isNullSmallest(), dbmsDialect.supportsWindowNullPrecedence(), dbmsDialect.supportsFilterClause(), false);
     }
 
     @Override

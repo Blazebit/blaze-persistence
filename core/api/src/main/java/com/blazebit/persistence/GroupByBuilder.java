@@ -17,7 +17,7 @@
 package com.blazebit.persistence;
 
 /**
- * An interface for builders that support groupy by.
+ * An interface for builders that support group by.
  * This is related to the fact, that a query builder supports group by clauses.
  *
  * @param <X> The concrete builder type
@@ -27,7 +27,7 @@ package com.blazebit.persistence;
 public interface GroupByBuilder<X extends GroupByBuilder<X>> extends HavingBuilder<X> {
 
     /**
-     * Adds a multiple group by clause with the given expressions to the query.
+     * Adds a group by clause with the given expressions to the query.
      *
      * @param expressions The expressions for the group by clauses
      * @return The query builder for chaining calls
