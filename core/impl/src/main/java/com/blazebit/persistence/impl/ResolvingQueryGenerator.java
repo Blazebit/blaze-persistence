@@ -402,30 +402,25 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
             int size = partitionExpressions.size();
             if (size != 0) {
-                sb.append(",'PARTITION BY',");
-                partitionExpressions.get(0).accept(this);
-                for (int i = 1; i < size; i++) {
-                    sb.append(", ");
+                sb.append("'PARTITION BY',");
+                for (int i = 0; i < size; i++) {
                     partitionExpressions.get(i).accept(this);
+                    sb.append(",");
                 }
             }
 
             List<OrderByItem> orderByExpressions = windowDefinition.getOrderByExpressions();
             size = orderByExpressions.size();
             if (size != 0) {
-                if (partitionExpressions.size() != 0) {
-                    sb.append(' ');
-                }
-                sb.append(",'ORDER BY',");
-                visit(orderByExpressions.get(0));
-                for (int i = 1; i < size; i++) {
-                    sb.append(", ");
+                sb.append("'ORDER BY',");
+                for (int i = 0; i < size; i++) {
                     visit(orderByExpressions.get(i));
+                    sb.append(",");
                 }
             }
 
             if (windowDefinition.getFrameMode() != null) {
-                sb.append(",'");
+                sb.append("'");
                 sb.append(windowDefinition.getFrameMode().name());
                 sb.append("'");
                 if (windowDefinition.getFrameEndType() != null) {
@@ -458,7 +453,10 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                     sb.append(getFrameExclusionType(windowDefinition.getFrameExclusionType()));
                     sb.append("'");
                 }
+                sb.append(",");
             }
+
+            sb.setLength(sb.length()-1);
         }
     }
 
