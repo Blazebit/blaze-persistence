@@ -221,6 +221,14 @@ public interface JpaProvider {
     public boolean supportsCountStar();
 
     /**
+     * Whether the custom functions are supported.
+     *
+     * @return True if custom functions are supported, false otherwise
+     * @since 1.4.0
+     */
+    public boolean supportsCustomFunctions();
+
+    /**
      * Returns an array with the column name of the discriminator of the given entity type and the discriminator value, or null.
      *
      * @param entityType The entity type

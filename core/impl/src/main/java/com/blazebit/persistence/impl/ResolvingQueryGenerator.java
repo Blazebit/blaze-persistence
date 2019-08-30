@@ -202,12 +202,19 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
     @SuppressWarnings("unchecked")
     protected void renderCountStar(WindowDefinition windowDefinition) {
-        if (jpaProvider.supportsCountStar() && windowDefinition == null) {
-            sb.append("COUNT(*)");
-        } else if (windowDefinition != null) {
-            renderFunctionFunction(resolveRenderedFunctionName("WINDOW_COUNT"), (List<Expression>) (List<?>) Collections.emptyList(), windowDefinition);
+        if (jpaProvider.supportsCustomFunctions()) {
+            if (jpaProvider.supportsCountStar() && windowDefinition == null) {
+                sb.append("COUNT(*)");
+            } else if (windowDefinition != null) {
+                renderFunctionFunction(resolveRenderedFunctionName("WINDOW_COUNT"), (List<Expression>) (List<?>) Collections.emptyList(), windowDefinition);
+            } else {
+                renderFunctionFunction(resolveRenderedFunctionName("COUNT_STAR"), (List<Expression>) (List<?>) Collections.emptyList(), null);
+            }
         } else {
-            renderFunctionFunction(resolveRenderedFunctionName("COUNT_STAR"), (List<Expression>) (List<?>) Collections.emptyList(), null);
+            if (windowDefinition != null) {
+                throw new IllegalArgumentException("JPA provider does not support custom function invocation!");
+            }
+            sb.append("COUNT(1)");
         }
     }
 

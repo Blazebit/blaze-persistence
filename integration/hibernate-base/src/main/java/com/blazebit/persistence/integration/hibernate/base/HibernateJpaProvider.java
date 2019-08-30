@@ -421,6 +421,11 @@ public class HibernateJpaProvider implements JpaProvider {
         return true;
     }
 
+    @Override
+    public boolean supportsCustomFunctions() {
+        return true;
+    }
+
     protected final String getTypeName(ManagedType<?> ownerType) {
         return ownerType.getJavaType() == null ? ((EntityType) ownerType).getName() : ownerType.getJavaType().getName();
     }

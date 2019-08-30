@@ -68,7 +68,7 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
 
         config.registerMacro("prefix", new PrefixJpqlMacro());
 
-        dbms = config.getEntityManagerIntegrators().get(0).getDbms(em.getEntityManagerFactory());
+        dbms = config.getEntityManagerIntegrators().get(0).getDbms(emf);
         if ("postgresql".equals(dbms)) {
             config.setProperty("com.blazebit.persistence.returning_clause_case_sensitive", "false");
         }
@@ -152,8 +152,10 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     protected String countStar() {
         if (jpaProvider.supportsCountStar()) {
             return "COUNT(*)";
-        } else {
+        } else if (jpaProvider.supportsCustomFunctions()) {
             return function("COUNT_STAR");
+        } else {
+            return "COUNT(1)";
         }
     }
 

@@ -76,15 +76,15 @@ public class LocalizedEntity implements Serializable, Cloneable {
 
     @Override
     public LocalizedEntity clone() {
-        return new LocalizedEntity(this.name, this.description);
+        return new LocalizedEntity(this.getName(), this.getDescription());
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((description == null) ? 0 : description.hashCode());
-        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        result = prime * result + ((getDescription() == null) ? 0 : getDescription().hashCode());
+        result = prime * result + ((getName() == null) ? 0 : getName().hashCode());
         return result;
     }
 
@@ -100,18 +100,18 @@ public class LocalizedEntity implements Serializable, Cloneable {
             return false;
         }
         LocalizedEntity other = (LocalizedEntity) obj;
-        if (description == null) {
-            if (other.description != null) {
+        if (getDescription() == null) {
+            if (other.getDescription() != null) {
                 return false;
             }
-        } else if (!description.equals(other.description)) {
+        } else if (!getDescription().equals(other.getDescription())) {
             return false;
         }
-        if (name == null) {
-            if (other.name != null) {
+        if (getName() == null) {
+            if (other.getName() != null) {
                 return false;
             }
-        } else if (!name.equals(other.name)) {
+        } else if (!getName().equals(other.getName())) {
             return false;
         }
         return true;

@@ -190,6 +190,11 @@ public class OpenJPAJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsCustomFunctions() {
+        return false;
+    }
+
+    @Override
     public String[] getDiscriminatorColumnCheck(EntityType<?> entityType) {
         return null;
     }
