@@ -263,6 +263,11 @@ public final class CachingJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsCustomFunctions() {
+        return jpaProvider.supportsCustomFunctions();
+    }
+
+    @Override
     public boolean containsEntity(EntityManager em, Class<?> entityClass, Object id) {
         return jpaProvider.containsEntity(em, entityClass, id);
     }

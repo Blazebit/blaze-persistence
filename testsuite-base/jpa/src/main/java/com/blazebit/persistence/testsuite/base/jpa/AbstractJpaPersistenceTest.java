@@ -137,7 +137,7 @@ public abstract class AbstractJpaPersistenceTest {
         }
 
         boolean wasAutoCommit = false;
-        Connection connection = getConnection(em);
+        Connection connection = getConnection(getEm());
         try {
             // Turn off auto commit if necessary
             wasAutoCommit = connection.getAutoCommit();
@@ -190,7 +190,7 @@ public abstract class AbstractJpaPersistenceTest {
     }
 
     private void clearSchema() {
-        clearSchema(em, databaseCleaner);
+        clearSchema(getEm(), databaseCleaner);
     }
 
     public void clearSchema(EntityManager em, DatabaseCleaner databaseCleaner) {
@@ -298,14 +298,15 @@ public abstract class AbstractJpaPersistenceTest {
         }
 
         emf = createEntityManagerFactory("TestsuiteBase", createProperties("none"));
-        em = emf.createEntityManager();
 
         // Disable query collecting
         QueryInspectorListener.enabled = false;
         QueryInspectorListener.collectSequences = false;
 
         if (!resolvedNoop && databaseCleaner == null) {
-            DatabaseCleaner applicableCleaner = getDatabaseCleaner(em);
+            dropAndCreateSchema();
+            schemaChanged = false;
+            DatabaseCleaner applicableCleaner = getDatabaseCleaner(getEm());
 
             if (applicableCleaner == null) {
                 // If none was found, we use the default cleaner
@@ -332,9 +333,17 @@ public abstract class AbstractJpaPersistenceTest {
             setUpOnce();
         }
 
-        if (runTestInTransaction() && !em.getTransaction().isActive()) {
-            em.getTransaction().begin();
+        if (runTestInTransaction() && !getEm().getTransaction().isActive()) {
+            getEm().getTransaction().begin();
         }
+        getEm();
+    }
+
+    private EntityManager getEm() {
+        if (em == null) {
+            em = emf.createEntityManager();
+        }
+        return em;
     }
 
     protected boolean runTestInTransaction() {
@@ -346,15 +355,30 @@ public abstract class AbstractJpaPersistenceTest {
     }
 
     protected void createSchema() {
-        createEntityManagerFactory("TestsuiteBase", createProperties("create")).close();
+        EntityManagerFactory entityManagerFactory = createEntityManagerFactory("TestsuiteBase", createProperties("create"));
+        try {
+            entityManagerFactory.createEntityManager().close();
+        } finally {
+            entityManagerFactory.close();
+        }
     }
 
     protected void dropSchema() {
-        createEntityManagerFactory("TestsuiteBase", createProperties("drop")).close();
+        EntityManagerFactory entityManagerFactory = createEntityManagerFactory("TestsuiteBase", createProperties("drop"));
+        try {
+            entityManagerFactory.createEntityManager().close();
+        } finally {
+            entityManagerFactory.close();
+        }
     }
 
     protected void dropAndCreateSchema() {
-        createEntityManagerFactory("TestsuiteBase", createProperties("drop-and-create")).close();
+        EntityManagerFactory entityManagerFactory = createEntityManagerFactory("TestsuiteBase", createProperties("drop-and-create"));
+        try {
+            entityManagerFactory.createEntityManager().close();
+        } finally {
+            entityManagerFactory.close();
+        }
     }
 
     protected void recreateOrClearSchema() {

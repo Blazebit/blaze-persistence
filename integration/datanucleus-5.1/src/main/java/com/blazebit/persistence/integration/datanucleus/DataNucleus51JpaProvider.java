@@ -197,6 +197,11 @@ public class DataNucleus51JpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsCustomFunctions() {
+        return true;
+    }
+
+    @Override
     public String[] getDiscriminatorColumnCheck(EntityType<?> entityType) {
         return null;
     }

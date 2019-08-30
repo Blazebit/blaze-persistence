@@ -162,15 +162,28 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         if (countAll) {
             if (mainQuery.jpaProvider.supportsCountStar()) {
                 sbSelectFrom.append("COUNT(*)");
-            } else {
+            } else if (mainQuery.jpaProvider.supportsCustomFunctions()) {
                 sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation("count_star", 0)).append(')');
+            } else {
+                sbSelectFrom.append("COUNT(");
+                appendIdentifierExpressions(sbSelectFrom);
+                sbSelectFrom.append(")");
             }
             countEndIdx = sbSelectFrom.length() - 1;
             isResultUnique = true;
-        } else {
+        } else if (mainQuery.jpaProvider.supportsCustomFunctions()) {
             sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(AbstractCountFunction.FUNCTION_NAME, 1));
             sbSelectFrom.append("'DISTINCT',");
 
+            isResultUnique = appendIdentifierExpressions(sbSelectFrom);
+
+            sbSelectFrom.append(")");
+            countEndIdx = sbSelectFrom.length() - 1;
+
+            appendPageCountQueryStringExtensions(sbSelectFrom);
+        } else {
+            sbSelectFrom.append("COUNT(");
+            sbSelectFrom.append("DISTINCT ");
             isResultUnique = appendIdentifierExpressions(sbSelectFrom);
 
             sbSelectFrom.append(")");
@@ -199,18 +212,28 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
             // Instead of a count distinct, we render a count(*) if we have no collection joins and the identifier expression is result unique
             // It is result unique when it contains the query root primary key or a unique key that of a uniqueness preserving association of that
             if (!hasCollectionJoinUsages && isResultUnique) {
-                String countStar;
-                if (mainQuery.jpaProvider.supportsCountStar()) {
-                    countStar = "COUNT(*";
-                } else {
-                    countStar = mainQuery.jpaProvider.getCustomFunctionInvocation("count_star", 0);
-                }
-                for (int i = countStartIdx, j = 0; i < countEndIdx; i++, j++) {
-                    if (j < countStar.length()) {
-                        sbSelectFrom.setCharAt(i, countStar.charAt(j));
+                if (mainQuery.jpaProvider.supportsCustomFunctions()) {
+                    String countStar;
+                    if (mainQuery.jpaProvider.supportsCountStar()) {
+                        countStar = "COUNT(*";
                     } else {
+                        countStar = mainQuery.jpaProvider.getCustomFunctionInvocation("count_star", 0);
+                    }
+                    for (int i = countStartIdx, j = 0; i < countEndIdx; i++, j++) {
+                        if (j < countStar.length()) {
+                            sbSelectFrom.setCharAt(i, countStar.charAt(j));
+                        } else {
+                            sbSelectFrom.setCharAt(i, ' ');
+                        }
+                    }
+                } else {
+                    // Strip off the distinct part
+                    int i = countStartIdx + "COUNT(".length();
+                    countEndIdx = i + "DISTINCT ".length();
+                    for (; i < countEndIdx; i++) {
                         sbSelectFrom.setCharAt(i, ' ');
                     }
+
                 }
             }
         }

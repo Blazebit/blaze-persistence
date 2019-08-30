@@ -152,7 +152,7 @@ public class JpaMetamodelUtils {
         Class<?> jpaReportedFieldClass;
         Class<?> fieldClass;
 
-        if (attr.isCollection()) {
+        if (attr instanceof PluralAttribute<?, ?, ?>) {
             PluralAttribute<?, ?, ?> collectionAttr = (PluralAttribute<?, ?, ?>) attr;
             // If it's a raw type, we use the element type the jpa provider thinks is right
             fieldClass = collectionAttr.getElementType().getJavaType();

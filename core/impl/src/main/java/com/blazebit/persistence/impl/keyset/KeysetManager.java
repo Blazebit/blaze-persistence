@@ -88,7 +88,7 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
 
         // We can only use row value based keyset predicates if the dbms supports row values and row value comparison and
         // if all order bys are non-nullable because null elements would break the row value comparison.
-        if (hasNullableOrderBys || hasParameterInOrderBy || !dbmsDialect.supportsFullRowValueComparison()) {
+        if (hasNullableOrderBys || hasParameterInOrderBy || !dbmsDialect.supportsFullRowValueComparison() || !jpaProvider.supportsCustomFunctions()) {
             // Under certain conditions, we cannot render an optimized form because we would need to include
             // null checks involving disjunction on the top predicate level which would contradict the main idea of the
             // optimization.

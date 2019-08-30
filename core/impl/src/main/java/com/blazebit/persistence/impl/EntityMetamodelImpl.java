@@ -307,7 +307,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
                     if (elementCollectionPath == null && (extendedEmbeddableType.singularOwnerType == null || shouldReplaceOwner(attributeName, extendedEmbeddableType.singularOwnerType.getValue()))) {
                         extendedEmbeddableType.singularOwnerType = new AbstractMap.SimpleEntry(e, attributeName);
                     }
-                } else if (attribute.isCollection()) {
+                } else if (attribute instanceof PluralAttribute<?, ?, ?>) {
                     if (((PluralAttribute<?, ?, ?>) attribute).getElementType() instanceof EmbeddableType<?>) {
                         EmbeddableType<?> embeddableType;
                         // Hibernate Envers reports java.util.Map as type for the embedded id of an audited entity which we have to handle specially
