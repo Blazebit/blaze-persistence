@@ -478,4 +478,181 @@ public class WindowFunctionTest extends AbstractCoreTest {
         assertNotNull(resultList);
     }
 
+
+    @Test
+    public void testParsedInlineWindowDefinition() {
+        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
+                .from(Person.class, "per")
+                .select("per.age")
+                .select("WINDOW_SUM(per.age) OVER (ORDER BY per.age ASC ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)")
+                .orderByAsc("per.age")
+                ;
+
+        List<Tuple> resultList = criteria.getResultList();
+        assertNotNull(resultList);
+    }
+
+    @Test
+    public void testWrappedParsedInlineWindowDefinition() {
+        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
+                .from(Person.class, "per")
+                .select("per.age")
+                .select("FUNCTION('WINDOW_SUM', per.age) OVER (ORDER BY per.age ASC ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)")
+                .orderByAsc("per.age")
+                ;
+
+        List<Tuple> resultList = criteria.getResultList();
+        assertNotNull(resultList);
+    }
+
+
+    @Test
+    public void testParsedNamedWindowDefinition() {
+        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
+                .from(Person.class, "per")
+                .window("x").orderByAsc("per.age").end()
+                .select("per.age")
+                .select("WINDOW_SUM(per.age) OVER x")
+                .orderByAsc("per.age")
+                ;
+
+        List<Tuple> resultList = criteria.getResultList();
+        assertNotNull(resultList);
+    }
+
+
+    @Test
+    public void testParsedCopiedNamedWindowDefinition() {
+        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
+                .from(Person.class, "per")
+                .window("x").orderByAsc("per.age").end()
+                .select("per.age")
+                .select("WINDOW_SUM(per.age) OVER (x)")
+                .orderByAsc("per.age")
+                ;
+
+        List<Tuple> resultList = criteria.getResultList();
+        assertNotNull(resultList);
+    }
+
+    @Test
+    public void testWrappedParsedNamedWindowDefinition() {
+        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
+                .from(Person.class, "per")
+                .window("x").orderByAsc("per.age").end()
+                .select("per.age")
+                .select("FUNCTION('WINDOW_SUM', per.age) OVER x")
+                .orderByAsc("per.age")
+                ;
+
+        List<Tuple> resultList = criteria.getResultList();
+        assertNotNull(resultList);
+    }
+
+
+    @Test
+    public void testWrappedParsedCopiedNamedWindowDefinition() {
+        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
+                .from(Person.class, "per")
+                .window("x").orderByAsc("per.age").end()
+                .select("per.age")
+                .select("FUNCTION('WINDOW_SUM', per.age) OVER (x)")
+                .orderByAsc("per.age")
+                ;
+
+        List<Tuple> resultList = criteria.getResultList();
+        assertNotNull(resultList);
+    }
+
+    /**
+     * A window function over a named window with specified range
+     */
+    @Test
+    public void testParsedNamedWindowDefinitionWithRange() {
+        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
+                .from(Person.class, "per")
+                .window("x").orderByAsc("per.age").rows().betweenUnboundedPreceding().andCurrentRow().end()
+                .select("per.age")
+                .select("FUNCTION('WINDOW_SUM', per.age) OVER x")
+                .orderByAsc("per.age")
+                ;
+
+        List<Tuple> resultList = criteria.getResultList();
+        assertNotNull(resultList);
+    }
+
+    /**
+     * Copy-and-modify syntax is only allowed for windows that do not specify a range
+     *
+     * @see #testParsedNamedWindowDefinitionWithRange()
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testCopyAndModifyWindowDefinitionWithRangeFails() {
+        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
+                .from(Person.class, "per")
+                .window("x").orderByAsc("per.age").rows().betweenUnboundedPreceding().andCurrentRow().end()
+                .select("per.age")
+                .select("FUNCTION('WINDOW_SUM', per.age) OVER (x)")
+                .orderByAsc("per.age")
+                ;
+
+        List<Tuple> resultList = criteria.getResultList();
+        assertNotNull(resultList);
+    }
+
+    /**
+     * Adding ordering through copy-and-modify syntax
+     */
+    @Test
+    public void testParsedNamedWindowSpecifyOrdering() {
+        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
+                .from(Person.class, "per")
+                .window("x").partitionBy("per.age").end()
+                .select("per.age")
+                .select("FUNCTION('WINDOW_SUM', per.age) OVER (x ORDER BY per.id)")
+                .orderByAsc("per.age")
+                ;
+
+        List<Tuple> resultList = criteria.getResultList();
+        assertNotNull(resultList);
+    }
+
+
+    /**
+     * Specifying an ORDER in a WINDOW DEF is only allowed if the base window did not specify ordering
+     *
+     * @see #testParsedNamedWindowSpecifyOrdering()
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testParsedNamedWindowRespecifyOrdering() {
+        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
+                .from(Person.class, "per")
+                .window("x").orderByAsc("per.age").end()
+                .select("per.age")
+                .select("FUNCTION('WINDOW_SUM', per.age) OVER (x ORDER BY per.id)")
+                .orderByAsc("per.age")
+                ;
+
+        List<Tuple> resultList = criteria.getResultList();
+        assertNotNull(resultList);
+    }
+
+    /**
+     * WINDOW DEF that specifies previous window should not specify a partition
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testCopyAndModifyWindowDefinitionWithPartitionFails() {
+        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
+                .from(Person.class, "per")
+                .window("x").partitionBy("per.age").end()
+                .select("per.age")
+                .select("FUNCTION('WINDOW_SUM', per.age) OVER (x PARTITION BY per.id)")
+                .orderByAsc("per.age")
+                ;
+
+        List<Tuple> resultList = criteria.getResultList();
+        assertNotNull(resultList);
+    }
+
+
 }
