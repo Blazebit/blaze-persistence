@@ -32,7 +32,6 @@ import org.junit.Test;
 import org.junit.rules.TestRule;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.NavigableMap;
 import java.util.TreeMap;
@@ -166,8 +165,8 @@ public class SimpleCachingExpressionFactoryPerformanceTest {
     private void testCreateSimpleExpressionPerformance(ExpressionFactory ef, MacroConfiguration macroConfiguration) {
         String expressionString = "SIZE(Hello.world[:hahaha].criteria[1].api.lsls[a.b.c.d.e]) + SIZE(Hello.world[:hahaha].criteria[1].api.lsls[a.b.c.d.e])";
 
-        Expression expr1 = ef.createSimpleExpression(expressionString, true, macroConfiguration, null);
-        Expression expr2 = ef.createSimpleExpression(expressionString, true, macroConfiguration, null);
+        Expression expr1 = ef.createSimpleExpression(expressionString, false, true, false, macroConfiguration, null);
+        Expression expr2 = ef.createSimpleExpression(expressionString, false, true, false, macroConfiguration, null);
 
         Assert.assertFalse(expr1 == expr2);
         Assert.assertEquals(expr1, expr2);

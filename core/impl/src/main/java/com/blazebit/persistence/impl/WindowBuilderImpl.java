@@ -290,7 +290,7 @@ public class WindowBuilderImpl<T> extends PredicateManager<WindowBuilderImpl<T>>
     }
 
     public SimpleCaseWhenStarterBuilder<RestrictionBuilder<WindowBuilderImpl<T>>> whereSimpleCase(String expression) {
-        return restrictSimpleCase(this, expressionFactory.createCaseOperandExpression(expression));
+        return restrictSimpleCase(this, expressionFactory.createSimpleExpression(expression, false));
     }
 
     public WhereOrBuilder<WindowBuilderImpl<T>> whereOr() {

@@ -277,7 +277,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
             MappingSubquery mappingSubquery = (MappingSubquery) mapping;
             if (!mappingSubquery.expression().isEmpty()) {
                 Expression simpleExpression = typeValidationExpressionFactory.createSimpleExpression(((MappingSubquery)mapping).expression(), true);
-                AliasReplacementVisitor aliasReplacementVisitor = new AliasReplacementVisitor(new NullExpression(), mappingSubquery.subqueryAlias());
+                AliasReplacementVisitor aliasReplacementVisitor = new AliasReplacementVisitor(NullExpression.INSTANCE, mappingSubquery.subqueryAlias());
                 simpleExpression.accept(aliasReplacementVisitor);
                 ScalarTargetResolvingExpressionVisitor visitor = new ScalarTargetResolvingExpressionVisitor((ManagedType<?>) null, entityMetamodel, jpqlFunctions);
                 simpleExpression.accept(visitor);
@@ -306,7 +306,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
                     null
             ));
         }
-        Expression simpleExpression = typeValidationExpressionFactory.createSimpleOrObjectExpression(expression, true);
+        Expression simpleExpression = typeValidationExpressionFactory.createSimpleExpression(expression, false, true, true);
         ScalarTargetResolvingExpressionVisitor visitor = new ScalarTargetResolvingExpressionVisitor(managedType, entityMetamodel, jpqlFunctions);
         simpleExpression.accept(visitor);
         return visitor.getPossibleTargetTypes();

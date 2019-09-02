@@ -54,7 +54,6 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.LogManager;
 
 /**
@@ -89,8 +88,8 @@ public class AbstractParserTest {
             private final AbstractExpressionFactory.RuleInvoker simpleExpressionRuleInvoker = new AbstractExpressionFactory.RuleInvoker() {
 
                 @Override
-                public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
-                    return parser.parseSimpleExpression();
+                public ParserRuleContext invokeRule(JPQLNextParser parser) {
+                    return parser.parseExpression();
                 }
             };
 
@@ -107,8 +106,8 @@ public class AbstractParserTest {
             private final AbstractExpressionFactory.RuleInvoker simpleExpressionRuleInvoker = new AbstractExpressionFactory.RuleInvoker() {
 
                 @Override
-                public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
-                    return parser.parseSimpleExpression();
+                public ParserRuleContext invokeRule(JPQLNextParser parser) {
+                    return parser.parseExpression();
                 }
             };
 
@@ -125,8 +124,8 @@ public class AbstractParserTest {
             private final AbstractExpressionFactory.RuleInvoker simpleExpressionRuleInvoker = new AbstractExpressionFactory.RuleInvoker() {
 
                 @Override
-                public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
-                    return parser.parseSimpleSubqueryExpression();
+                public ParserRuleContext invokeRule(JPQLNextParser parser) {
+                    return parser.parseExpression();
                 }
             };
 
@@ -159,6 +158,12 @@ public class AbstractParserTest {
         entityTypes = new HashMap<>();
         enumTypes = new HashMap<>();
         macroConfiguration = null;
+        // Register builtin aggregate functions
+        functions.put("sum", true);
+        functions.put("min", true);
+        functions.put("max", true);
+        functions.put("avg", true);
+        functions.put("count", true);
     }
 
     protected Predicate not(Predicate p) {
@@ -173,23 +178,23 @@ public class AbstractParserTest {
     }
 
     protected Expression parseOrderBy(String expr) {
-        return ef().createOrderByExpression(expr, macroConfiguration, null);
+        return ef().createPathExpression(expr, macroConfiguration, null);
     }
     
     protected Expression parseArithmeticExpr(String expr) {
-        return ef().createArithmeticExpression(expr, macroConfiguration, null);
+        return ef().createSimpleExpression(expr,false, false, false, macroConfiguration, null);
     }
     
     protected Expression parse(String expr) {
-        return ef().createSimpleExpression(expr, false, macroConfiguration, null);
+        return ef().createSimpleExpression(expr, false, false, false, macroConfiguration, null);
     }
 
     protected Expression parseSimpleOrObjectExpression(String expr) {
-        return ef().createSimpleOrObjectExpression(expr, false, macroConfiguration, null);
+        return ef().createSimpleExpression(expr, false, false, true, macroConfiguration, null);
     }
 
     protected Expression parseOptimized(String expr) {
-        return optimizingEf().createSimpleExpression(expr, false, macroConfiguration, null);
+        return optimizingEf().createSimpleExpression(expr, false, false, false, macroConfiguration, null);
     }
 
     protected Expression parseJoin(String expr) {
@@ -205,15 +210,15 @@ public class AbstractParserTest {
     }
 
     protected Expression parseSubqueryExpression(String expr) {
-        return subqueryEf().createSimpleExpression(expr, false, macroConfiguration, null);
+        return subqueryEf().createSimpleExpression(expr, true, false, false, macroConfiguration, null);
     }
     
     protected PathExpression parsePath(String expr){
-        return ef().createPathExpression(expr, macroConfiguration, null);
+        return (PathExpression) ef().createPathExpression(expr, macroConfiguration, null);
     }
 
     protected PathExpression parseJoinBasePath(String expr){
-        return ef().createJoinBasePathExpression(expr, macroConfiguration, null);
+        return (PathExpression) ef().createPathExpression(expr, macroConfiguration, null);
     }
 
     protected MapKeyExpression keyExpression(String expression) {

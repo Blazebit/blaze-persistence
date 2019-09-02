@@ -392,7 +392,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             return Collections.emptyMap();
         }
 
-        context.getTypeValidationExpressionFactory().createSimpleOrObjectExpression(expression, false).accept(visitor);
+        context.getTypeValidationExpressionFactory().createSimpleExpression(expression, false).accept(visitor);
         Map<String, Boolean> mappings = new HashMap<>();
         boolean aggregate = getAttributeType() == AttributeType.SINGULAR;
         
@@ -589,7 +589,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         ScalarTargetResolvingExpressionVisitor visitor = new ScalarTargetResolvingExpressionVisitor(managedType, context.getEntityMetamodel(), context.getJpqlFunctions());
 
         try {
-            context.getTypeValidationExpressionFactory().createSimpleOrObjectExpression(expression, false).accept(visitor);
+            context.getTypeValidationExpressionFactory().createSimpleExpression(expression, false).accept(visitor);
         } catch (SyntaxErrorException ex) {
             context.addError("Syntax error in " + expressionLocation + " '" + expression + "' of the " + location + ": " + ex.getMessage());
         } catch (IllegalArgumentException ex) {

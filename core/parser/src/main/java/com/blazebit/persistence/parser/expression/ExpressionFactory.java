@@ -33,45 +33,23 @@ public interface ExpressionFactory {
 
     public MacroConfiguration getDefaultMacroConfiguration();
 
-    public PathExpression createPathExpression(String expression);
-
-    public PathExpression createPathExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros);
-
-    public PathExpression createJoinBasePathExpression(String expression);
-
-    public PathExpression createJoinBasePathExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros);
-
     public Expression createJoinPathExpression(String expression);
 
     public Expression createJoinPathExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros);
 
+    public PathExpression createPathExpression(String expression);
+
+    public Expression createPathExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros);
+
+    public Expression createSimpleExpression(String expression);
+
     public Expression createSimpleExpression(String expression, boolean allowQuantifiedPredicates);
 
-    public Expression createSimpleExpression(String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration, Set<String> usedMacros);
+    public Expression createSimpleExpression(String expression, boolean allowOuter, boolean allowQuantifiedPredicates);
 
-    public Expression createSimpleOrObjectExpression(String expression, boolean allowQuantifiedPredicates);
+    public Expression createSimpleExpression(String expression, boolean allowOuter, boolean allowQuantifiedPredicates, boolean allowObjectExpression);
 
-    public Expression createSimpleOrObjectExpression(String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration, Set<String> usedMacros);
-
-    public Expression createCaseOperandExpression(String caseOperandExpression);
-
-    public Expression createCaseOperandExpression(String caseOperandExpression, MacroConfiguration macroConfiguration, Set<String> usedMacros);
-
-    public Expression createScalarExpression(String expression);
-
-    public Expression createScalarExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros);
-
-    public Expression createArithmeticExpression(String expression);
-
-    public Expression createArithmeticExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros);
-
-    public Expression createStringExpression(String expression);
-
-    public Expression createStringExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros);
-
-    public Expression createOrderByExpression(String expression);
-
-    public Expression createOrderByExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros);
+    public Expression createSimpleExpression(String expression, boolean allowOuter, boolean allowQuantifiedPredicates, boolean allowObjectExpression, MacroConfiguration macroConfiguration, Set<String> usedMacros);
 
     public List<Expression> createInItemExpressions(String[] parameterOrLiteralExpressions);
 

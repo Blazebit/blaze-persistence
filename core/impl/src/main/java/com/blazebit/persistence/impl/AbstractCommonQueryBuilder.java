@@ -1050,7 +1050,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new IllegalArgumentException("selectAlias");
         }
         prepareForModification(ClauseType.SELECT);
-        return selectManager.selectSimpleCase((BuilderType) this, selectAlias, expressionFactory.createCaseOperandExpression(caseOperandExpression));
+        return selectManager.selectSimpleCase((BuilderType) this, selectAlias, expressionFactory.createSimpleExpression(caseOperandExpression, false));
     }
 
     public BuilderType select(String expression) {
@@ -1192,7 +1192,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     public SimpleCaseWhenStarterBuilder<RestrictionBuilder<BuilderType>> whereSimpleCase(String expression) {
         prepareForModification(ClauseType.WHERE);
-        return whereManager.restrictSimpleCase((BuilderType) this, expressionFactory.createCaseOperandExpression(expression));
+        return whereManager.restrictSimpleCase((BuilderType) this, expressionFactory.createSimpleExpression(expression, false));
     }
 
     public WhereOrBuilder<BuilderType> whereOr() {
@@ -1329,7 +1329,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         if (groupByManager.isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
-        return havingManager.restrictSimpleCase((BuilderType) this, expressionFactory.createCaseOperandExpression(expression));
+        return havingManager.restrictSimpleCase((BuilderType) this, expressionFactory.createSimpleExpression(expression, false));
     }
 
     public HavingOrBuilder<BuilderType> havingOr() {
@@ -1475,7 +1475,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     public BuilderType orderBy(String expression, boolean ascending, boolean nullFirst) {
         Expression expr;
         if (mainQuery.getQueryConfiguration().isCompatibleModeEnabled()) {
-            expr = expressionFactory.createOrderByExpression(expression);
+            expr = expressionFactory.createPathExpression(expression);
         } else {
             expr = expressionFactory.createSimpleExpression(expression, false);
         }

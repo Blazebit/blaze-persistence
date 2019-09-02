@@ -39,21 +39,8 @@ public class WindowDefinition {
     private Expression frameEndExpression;
     private final WindowFrameExclusionType frameExclusionType;
 
-    public WindowDefinition(String windowName) {
+    public WindowDefinition(String windowName, Predicate filterPredicate) {
         this.windowName = windowName;
-        this.partitionExpressions = Collections.emptyList();
-        this.filterPredicate = null;
-        this.orderByExpressions = Collections.emptyList();
-        this.frameMode = null;
-        this.frameStartType = null;
-        this.frameStartExpression = null;
-        this.frameEndType = null;
-        this.frameEndExpression = null;
-        this.frameExclusionType = null;
-    }
-
-    public WindowDefinition(Predicate filterPredicate) {
-        this.windowName = null;
         this.partitionExpressions = Collections.emptyList();
         this.filterPredicate = filterPredicate;
         this.orderByExpressions = Collections.emptyList();

@@ -91,7 +91,7 @@ public abstract class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCrite
     public X setExpression(String attributeName, String expression) {
         verifyBuilderEnded();
         addAttribute(attributeName);
-        Expression attributeExpression = expressionFactory.createScalarExpression(expression);
+        Expression attributeExpression = expressionFactory.createSimpleExpression(expression, false);
         parameterManager.collectParameterRegistrations(attributeExpression, ClauseType.SET, this);
         selectManager.select(attributeExpression, null);
         return (X) this;

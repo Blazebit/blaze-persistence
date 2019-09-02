@@ -112,13 +112,13 @@ public class LikeBuilderImpl<T> extends SubqueryAndExpressionBuilderListener<T> 
         if (expression == null) {
             throw new NullPointerException("expression");
         }
-        patternExpression = expressionFactory.createStringExpression(expression);
+        patternExpression = expressionFactory.createSimpleExpression(expression);
         return escapeBuilderEndedListener.startBuilder(new EscapeBuilderImpl<T>(escapeBuilderEndedListener, result));
     }
 
     @Override
     public MultipleSubqueryInitiator<EscapeBuilder<T>> subqueries(String expression) {
-        Expression expr = expressionFactory.createStringExpression(expression);
+        Expression expr = expressionFactory.createSimpleExpression(expression);
         ExpressionToEscapeBuilderEndedListener listener = new ExpressionToEscapeBuilderEndedListener();
         return new MultipleSubqueryInitiatorImpl<EscapeBuilder<T>>(new EscapeBuilderImpl<T>(listener, result), expr, listener, subqueryInitFactory, clauseType);
     }
@@ -220,7 +220,7 @@ public class LikeBuilderImpl<T> extends SubqueryAndExpressionBuilderListener<T> 
     @Override
     public SimpleCaseWhenBuilder<EscapeBuilder<T>> simpleCase(String caseOperand) {
         EscapeBuilder<T> escapeBuilder = escapeBuilderEndedListener.startBuilder(new EscapeBuilderImpl<T>(escapeBuilderEndedListener, result));
-        return startBuilder(new SimpleCaseWhenBuilderImpl<EscapeBuilder<T>>(escapeBuilder, this, expressionFactory, expressionFactory.createCaseOperandExpression(caseOperand), subqueryInitFactory, parameterManager, clauseType));
+        return startBuilder(new SimpleCaseWhenBuilderImpl<EscapeBuilder<T>>(escapeBuilder, this, expressionFactory, expressionFactory.createSimpleExpression(caseOperand, false), subqueryInitFactory, parameterManager, clauseType));
     }
 
     @Override

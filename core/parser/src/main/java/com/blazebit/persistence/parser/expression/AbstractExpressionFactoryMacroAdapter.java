@@ -19,6 +19,7 @@ package com.blazebit.persistence.parser.expression;
 import com.blazebit.persistence.parser.predicate.Predicate;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -32,53 +33,47 @@ public abstract class AbstractExpressionFactoryMacroAdapter implements Expressio
     }
 
     @Override
-    public PathExpression createPathExpression(String expression) {
-        return createPathExpression(expression, getDefaultMacroConfiguration(), null);
-    }
-
-    @Override
-    public PathExpression createJoinBasePathExpression(String expression) {
-        return createJoinBasePathExpression(expression, getDefaultMacroConfiguration(), null);
-    }
-
-    @Override
     public Expression createJoinPathExpression(String expression) {
         return createJoinPathExpression(expression, getDefaultMacroConfiguration(), null);
     }
 
     @Override
+    public Expression createJoinPathExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        Expression pathExpression = createPathExpression(expression, macroConfiguration, usedMacros);
+        if (pathExpression instanceof PathExpression) {
+            List<PathElementExpression> expressions = ((PathExpression) pathExpression).getExpressions();
+            PathElementExpression first;
+            if (expressions.size() > 1 || (first = expressions.get(0)) instanceof PropertyExpression || first instanceof ArrayExpression) {
+                return pathExpression;
+            }
+            return first;
+        }
+        return pathExpression;
+    }
+
+    @Override
+    public PathExpression createPathExpression(String expression) {
+        return (PathExpression) createPathExpression(expression, getDefaultMacroConfiguration(), null);
+    }
+
+    @Override
+    public Expression createSimpleExpression(String expression) {
+        return createSimpleExpression(expression, false, false, false, getDefaultMacroConfiguration(), null);
+    }
+
+    @Override
     public Expression createSimpleExpression(String expression, boolean allowQuantifiedPredicates) {
-        return createSimpleExpression(expression, allowQuantifiedPredicates, getDefaultMacroConfiguration(), null);
+        return createSimpleExpression(expression, false, allowQuantifiedPredicates, false, getDefaultMacroConfiguration(), null);
     }
 
     @Override
-    public Expression createSimpleOrObjectExpression(String expression, boolean allowQuantifiedPredicates) {
-        return createSimpleOrObjectExpression(expression, allowQuantifiedPredicates, getDefaultMacroConfiguration(), null);
+    public Expression createSimpleExpression(String expression, boolean allowOuter, boolean allowQuantifiedPredicates, boolean allowObjectExpression) {
+        return createSimpleExpression(expression, allowOuter, allowQuantifiedPredicates, allowObjectExpression, getDefaultMacroConfiguration(), null);
     }
 
     @Override
-    public Expression createCaseOperandExpression(String caseOperandExpression) {
-        return createCaseOperandExpression(caseOperandExpression, getDefaultMacroConfiguration(), null);
-    }
-
-    @Override
-    public Expression createScalarExpression(String expression) {
-        return createScalarExpression(expression, getDefaultMacroConfiguration(), null);
-    }
-
-    @Override
-    public Expression createArithmeticExpression(String expression) {
-        return createArithmeticExpression(expression, getDefaultMacroConfiguration(), null);
-    }
-
-    @Override
-    public Expression createStringExpression(String expression) {
-        return createStringExpression(expression, getDefaultMacroConfiguration(), null);
-    }
-
-    @Override
-    public Expression createOrderByExpression(String expression) {
-        return createOrderByExpression(expression, getDefaultMacroConfiguration(), null);
+    public Expression createSimpleExpression(String expression, boolean allowOuter, boolean allowQuantifiedPredicates) {
+        return createSimpleExpression(expression, allowOuter, allowQuantifiedPredicates, false, getDefaultMacroConfiguration(), null);
     }
 
     @Override

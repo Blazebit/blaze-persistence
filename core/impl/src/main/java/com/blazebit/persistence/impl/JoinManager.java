@@ -1611,7 +1611,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
     }
 
     <X> JoinOnBuilder<X> joinOn(X result, String base, EntityType<?> entityType, String alias, JoinType type) {
-        PathExpression basePath = expressionFactory.createJoinBasePathExpression(base);
+        PathExpression basePath = expressionFactory.createPathExpression(base);
 
         if (alias == null || alias.isEmpty()) {
             throw new IllegalArgumentException("Invalid empty alias!");
@@ -1694,6 +1694,10 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             elementExpr = pathElements.get(pathElements.size() - 1);
             result = implicitJoin(null, pathExpression, null, null, null, new HashSet<String>(), 0, pathElements.size() - 1, false, true);
             current = result.baseNode;
+        } else if (expr instanceof QualifiedExpression) {
+            elementExpr = (PathElementExpression) expr;
+            result = null;
+            current = null;
         } else if (expr instanceof TreatExpression) {
             TreatExpression treatExpression = (TreatExpression) expr;
 

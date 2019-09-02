@@ -16,8 +16,6 @@
 
 package com.blazebit.persistence.parser;
 
-import com.blazebit.persistence.parser.JPQLSelectExpressionLexer;
-import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
 import com.carrotsearch.junitbenchmarks.BenchmarkOptions;
 import com.carrotsearch.junitbenchmarks.BenchmarkRule;
 import org.antlr.v4.runtime.ANTLRInputStream;
@@ -35,7 +33,7 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
  */
 public class ParserPerformanceTest {
     
@@ -72,19 +70,19 @@ public class ParserPerformanceTest {
     }
     
     private void doTest(String expression) {
-        JPQLSelectExpressionLexer l = new JPQLSelectExpressionLexer(new ANTLRInputStream(expression));
+        JPQLNextLexer l = new JPQLNextLexer(new ANTLRInputStream(expression));
         CommonTokenStream tokens = new CommonTokenStream(l);
-        JPQLSelectExpressionParser p = new JPQLSelectExpressionParser(tokens, true, true, true);
+        JPQLNextParser p = new JPQLNextParser(tokens);
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);
         p.setErrorHandler(new BailErrorStrategy());
         
         try {
-            p.parseSimpleExpression();  // STAGE 1
+            p.parseExpression();  // STAGE 1
         } catch (Exception ex) {
             tokens.reset(); // rewind input stream
             p.reset();
             p.getInterpreter().setPredictionMode(PredictionMode.LL);
-            p.parseSimpleExpression();  // STAGE 2
+            p.parseExpression();  // STAGE 2
             // if we parse ok, it's LL not SLL
         }
     }

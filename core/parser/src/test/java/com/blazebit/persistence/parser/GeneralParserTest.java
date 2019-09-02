@@ -652,12 +652,13 @@ public class GeneralParserTest extends AbstractParserTest {
         assertEquals(expected, result);
     }
 
-    @Test
+//    @Test
+    @Test(expected = SyntaxErrorException.class)
     public void testLikeEscapeParameter() {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x LIKE 'abc' ESCAPE :x THEN 0 ELSE 1 END");
-
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new LikePredicate(path("a", "x"), _string("abc"), true, 'x'), _int("0"))), _int("1"));
-        assertEquals(expected, result);
+//
+//        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new LikePredicate(path("a", "x"), _string("abc"), true, 'x'), _int("0"))), _int("1"));
+//        assertEquals(expected, result);
     }
 
     @Test

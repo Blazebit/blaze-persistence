@@ -116,7 +116,7 @@ public class CaseWhenBuilderImpl<T> extends PredicateAndExpressionBuilderEndedLi
 
     @Override
     public MultipleSubqueryInitiator<RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>>> whenSubqueries(String expression) {
-        return startMultipleSubqueryInitiator(expressionFactory.createArithmeticExpression(expression));
+        return startMultipleSubqueryInitiator(expressionFactory.createSimpleExpression(expression));
     }
 
     private MultipleSubqueryInitiator<RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>>> startMultipleSubqueryInitiator(Expression expression) {
@@ -157,7 +157,7 @@ public class CaseWhenBuilderImpl<T> extends PredicateAndExpressionBuilderEndedLi
         if (thenExpression != null) {
             throw new IllegalStateException("Method then/thenExpression called multiple times");
         }
-        thenExpression = expressionFactory.createScalarExpression(expression);
+        thenExpression = expressionFactory.createSimpleExpression(expression, false);
         whenClauses.add(new WhenClauseExpression(whenExpression, thenExpression));
         return this;
     }
@@ -205,7 +205,7 @@ public class CaseWhenBuilderImpl<T> extends PredicateAndExpressionBuilderEndedLi
         if (expression != null) {
             throw new IllegalStateException("Method otherwise/otherwiseExpression called multiple times");
         }
-        expression = new GeneralCaseExpression(whenClauses, expressionFactory.createScalarExpression(elseExpression));
+        expression = new GeneralCaseExpression(whenClauses, expressionFactory.createSimpleExpression(elseExpression, false));
         listener.onBuilderEnded(this);
         return result;
     }

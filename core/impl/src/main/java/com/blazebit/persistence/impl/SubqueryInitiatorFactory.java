@@ -83,7 +83,7 @@ public class SubqueryInitiatorFactory {
         // TODO: set operations?
 
         if (inExists) {
-            subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(mainQuery.expressionFactory.createArithmeticExpression("1"))));
+            subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(mainQuery.expressionFactory.createSimpleExpression("1"))));
         } else {
             subqueryBuilder.selectManager.setDefaultSelect(null, builder.selectManager.getSelectInfos());
         }

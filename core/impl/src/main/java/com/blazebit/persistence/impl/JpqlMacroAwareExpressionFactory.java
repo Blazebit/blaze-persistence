@@ -16,10 +16,13 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.parser.expression.ArrayExpression;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.parser.expression.MacroConfiguration;
+import com.blazebit.persistence.parser.expression.PathElementExpression;
 import com.blazebit.persistence.parser.expression.PathExpression;
+import com.blazebit.persistence.parser.expression.PropertyExpression;
 import com.blazebit.persistence.parser.predicate.Predicate;
 
 import java.util.List;
@@ -54,104 +57,57 @@ public final class JpqlMacroAwareExpressionFactory implements ExpressionFactory 
     }
 
     @Override
-    public PathExpression createPathExpression(String expression) {
-        return expressionFactory.createPathExpression(expression, getDefaultMacroConfiguration(), null);
-    }
-
-    @Override
-    public PathExpression createPathExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
-        return expressionFactory.createPathExpression(expression, macroConfiguration, usedMacros);
-    }
-
-    @Override
-    public PathExpression createJoinBasePathExpression(String expression) {
-        return expressionFactory.createJoinBasePathExpression(expression);
-    }
-
-    @Override
-    public PathExpression createJoinBasePathExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
-        return expressionFactory.createJoinBasePathExpression(expression, macroConfiguration, usedMacros);
-    }
-
-    @Override
     public Expression createJoinPathExpression(String expression) {
-        return expressionFactory.createJoinPathExpression(expression, getDefaultMacroConfiguration(), null);
+        return createJoinPathExpression(expression, getDefaultMacroConfiguration(), null);
     }
 
     @Override
     public Expression createJoinPathExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
-        return expressionFactory.createJoinPathExpression(expression, macroConfiguration, usedMacros);
+        Expression pathExpression = createPathExpression(expression, macroConfiguration, usedMacros);
+        if (pathExpression instanceof PathExpression) {
+            List<PathElementExpression> expressions = ((PathExpression) pathExpression).getExpressions();
+            PathElementExpression first;
+            if (expressions.size() > 1 || (first = expressions.get(0)) instanceof PropertyExpression || first instanceof ArrayExpression) {
+                return pathExpression;
+            }
+            return first;
+        }
+        return pathExpression;
+    }
+
+    @Override
+    public PathExpression createPathExpression(String expression) {
+        return (PathExpression) expressionFactory.createPathExpression(expression, getDefaultMacroConfiguration(), null);
+    }
+
+    @Override
+    public Expression createPathExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return expressionFactory.createPathExpression(expression, macroConfiguration, usedMacros);
+    }
+
+    @Override
+    public Expression createSimpleExpression(String expression) {
+        return expressionFactory.createSimpleExpression(expression, false, false, false, getDefaultMacroConfiguration(), null);
     }
 
     @Override
     public Expression createSimpleExpression(String expression, boolean allowQuantifiedPredicates) {
-        return expressionFactory.createSimpleExpression(expression, allowQuantifiedPredicates, getDefaultMacroConfiguration(), null);
+        return expressionFactory.createSimpleExpression(expression, false, allowQuantifiedPredicates, false, getDefaultMacroConfiguration(), null);
     }
 
     @Override
-    public Expression createSimpleExpression(String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
-        return expressionFactory.createSimpleExpression(expression, allowQuantifiedPredicates, macroConfiguration, usedMacros);
+    public Expression createSimpleExpression(String expression, boolean allowOuter, boolean allowQuantifiedPredicates) {
+        return expressionFactory.createSimpleExpression(expression, allowOuter, allowQuantifiedPredicates, false, getDefaultMacroConfiguration(), null);
     }
 
     @Override
-    public Expression createSimpleOrObjectExpression(String expression, boolean allowQuantifiedPredicates) {
-        return expressionFactory.createSimpleOrObjectExpression(expression, allowQuantifiedPredicates, getDefaultMacroConfiguration(), null);
+    public Expression createSimpleExpression(String expression, boolean allowOuter, boolean allowQuantifiedPredicates, boolean allowObjectExpression) {
+        return expressionFactory.createSimpleExpression(expression, allowOuter, allowQuantifiedPredicates, allowObjectExpression, getDefaultMacroConfiguration(), null);
     }
 
     @Override
-    public Expression createSimpleOrObjectExpression(String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
-        return expressionFactory.createSimpleOrObjectExpression(expression, allowQuantifiedPredicates, macroConfiguration, usedMacros);
-    }
-
-
-    @Override
-    public Expression createCaseOperandExpression(String caseOperandExpression) {
-        return expressionFactory.createCaseOperandExpression(caseOperandExpression, getDefaultMacroConfiguration(), null);
-    }
-
-    @Override
-    public Expression createCaseOperandExpression(String caseOperandExpression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
-        return expressionFactory.createCaseOperandExpression(caseOperandExpression, macroConfiguration, usedMacros);
-    }
-
-    @Override
-    public Expression createScalarExpression(String expression) {
-        return expressionFactory.createScalarExpression(expression, getDefaultMacroConfiguration(), null);
-    }
-
-    @Override
-    public Expression createScalarExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
-        return expressionFactory.createScalarExpression(expression, macroConfiguration, usedMacros);
-    }
-
-    @Override
-    public Expression createArithmeticExpression(String expression) {
-        return expressionFactory.createArithmeticExpression(expression, getDefaultMacroConfiguration(), null);
-    }
-
-    @Override
-    public Expression createArithmeticExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
-        return expressionFactory.createArithmeticExpression(expression, macroConfiguration, usedMacros);
-    }
-
-    @Override
-    public Expression createStringExpression(String expression) {
-        return expressionFactory.createStringExpression(expression, getDefaultMacroConfiguration(), null);
-    }
-
-    @Override
-    public Expression createStringExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
-        return expressionFactory.createStringExpression(expression, macroConfiguration, usedMacros);
-    }
-
-    @Override
-    public Expression createOrderByExpression(String expression) {
-        return expressionFactory.createOrderByExpression(expression, getDefaultMacroConfiguration(), null);
-    }
-
-    @Override
-    public Expression createOrderByExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
-        return expressionFactory.createOrderByExpression(expression, macroConfiguration, usedMacros);
+    public Expression createSimpleExpression(String expression, boolean allowOuter, boolean allowQuantifiedPredicates, boolean allowObjectExpression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return expressionFactory.createSimpleExpression(expression, allowOuter, allowQuantifiedPredicates, allowObjectExpression, macroConfiguration, usedMacros);
     }
 
     @Override

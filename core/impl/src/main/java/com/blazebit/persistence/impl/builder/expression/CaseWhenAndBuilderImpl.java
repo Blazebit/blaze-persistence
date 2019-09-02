@@ -103,7 +103,7 @@ public class CaseWhenAndBuilderImpl<T> extends PredicateBuilderEndedListenerImpl
 
     @Override
     public MultipleSubqueryInitiator<RestrictionBuilder<CaseWhenAndBuilder<T>>> andSubqueries(String expression) {
-        return startMultipleSubqueryInitiator(expressionFactory.createArithmeticExpression(expression));
+        return startMultipleSubqueryInitiator(expressionFactory.createSimpleExpression(expression));
     }
 
     private MultipleSubqueryInitiator<RestrictionBuilder<CaseWhenAndBuilder<T>>> startMultipleSubqueryInitiator(Expression expression) {

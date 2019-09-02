@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.parser.expression;
 
-import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
+import com.blazebit.persistence.parser.JPQLNextParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.util.Collections;
@@ -33,8 +33,8 @@ public final class ExpressionFactoryImpl extends AbstractExpressionFactory {
     private static final RuleInvoker SIMPLE_EXPRESSION_RULE_INVOKER = new RuleInvoker() {
 
         @Override
-        public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
-            return parser.parseSimpleExpression();
+        public ParserRuleContext invokeRule(JPQLNextParser parser) {
+            return parser.parseExpression();
         }
     };
 
@@ -43,7 +43,7 @@ public final class ExpressionFactoryImpl extends AbstractExpressionFactory {
     }
 
     public ExpressionFactoryImpl(Map<String, Boolean> functions, Map<String, Class<?>> entityTypes, Map<String, Class<Enum<?>>> enumTypes, boolean allowTreatJoinExtension, boolean optimize) {
-        super(functions, entityTypes, enumTypes, allowTreatJoinExtension, optimize);
+        super(functions, entityTypes, enumTypes, optimize);
     }
 
     @Override

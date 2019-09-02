@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.parser.expression;
 
-import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
+import com.blazebit.persistence.parser.JPQLNextParser;
 import com.blazebit.persistence.parser.predicate.Predicate;
 import org.antlr.v4.runtime.ParserRuleContext;
 
@@ -35,21 +35,16 @@ public class SubqueryExpressionFactory extends AbstractExpressionFactory {
     private static final RuleInvoker SIMPLE_EXPRESSION_RULE_INVOKER = new RuleInvoker() {
 
         @Override
-        public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
-            return parser.parseSimpleSubqueryExpression();
+        public ParserRuleContext invokeRule(JPQLNextParser parser) {
+            return parser.parseExpression();
         }
     };
 
     private final ExpressionFactory delegate;
 
     public SubqueryExpressionFactory(Map<String, Boolean> functions, Map<String, Class<?>> entityTypes, Map<String, Class<Enum<?>>> enumTypes, boolean allowTreatJoinExtension, boolean optimize, ExpressionFactory delegate) {
-        super(functions, entityTypes, enumTypes, allowTreatJoinExtension, optimize);
+        super(functions, entityTypes, enumTypes, optimize);
         this.delegate = delegate;
-    }
-
-    @Override
-    public Expression createSimpleExpression(String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
-        return super.createSimpleExpression(expression, allowQuantifiedPredicates, macroConfiguration, usedMacros);
     }
 
     @Override
@@ -68,53 +63,28 @@ public class SubqueryExpressionFactory extends AbstractExpressionFactory {
     // Delegates
 
     @Override
-    public Expression createCaseOperandExpression(String caseOperandExpression) {
-        return delegate.createCaseOperandExpression(caseOperandExpression);
+    public Expression createSimpleExpression(String expression) {
+        return delegate.createSimpleExpression(expression);
     }
 
     @Override
-    public Expression createCaseOperandExpression(String caseOperandExpression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
-        return delegate.createCaseOperandExpression(caseOperandExpression, macroConfiguration, usedMacros);
+    public Expression createSimpleExpression(String expression, boolean allowQuantifiedPredicates) {
+        return delegate.createSimpleExpression(expression, true, allowQuantifiedPredicates);
     }
 
     @Override
-    public Expression createScalarExpression(String expression) {
-        return delegate.createScalarExpression(expression);
+    public Expression createSimpleExpression(String expression, boolean allowOuter, boolean allowQuantifiedPredicates) {
+        return delegate.createSimpleExpression(expression, true, allowQuantifiedPredicates);
     }
 
     @Override
-    public Expression createScalarExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
-        return delegate.createScalarExpression(expression, macroConfiguration, usedMacros);
+    public Expression createSimpleExpression(String expression, boolean allowOuter, boolean allowQuantifiedPredicates, boolean allowObjectExpression) {
+        return delegate.createSimpleExpression(expression, allowOuter, allowQuantifiedPredicates, allowObjectExpression);
     }
 
     @Override
-    public Expression createArithmeticExpression(String expression) {
-        return delegate.createArithmeticExpression(expression);
-    }
-
-    @Override
-    public Expression createArithmeticExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
-        return delegate.createArithmeticExpression(expression, macroConfiguration, usedMacros);
-    }
-
-    @Override
-    public Expression createStringExpression(String expression) {
-        return delegate.createStringExpression(expression);
-    }
-
-    @Override
-    public Expression createStringExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
-        return delegate.createStringExpression(expression, macroConfiguration, usedMacros);
-    }
-
-    @Override
-    public Expression createOrderByExpression(String expression) {
-        return delegate.createOrderByExpression(expression);
-    }
-
-    @Override
-    public Expression createOrderByExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
-        return delegate.createOrderByExpression(expression, macroConfiguration, usedMacros);
+    public Expression createSimpleExpression(String expression, boolean allowOuter, boolean allowQuantifiedPredicates, boolean allowObjectExpression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return super.createSimpleExpression(expression, true, allowQuantifiedPredicates, allowObjectExpression, macroConfiguration, usedMacros);
     }
 
     @Override
@@ -153,26 +123,6 @@ public class SubqueryExpressionFactory extends AbstractExpressionFactory {
     }
 
     @Override
-    public PathExpression createPathExpression(String expression) {
-        return delegate.createPathExpression(expression);
-    }
-
-    @Override
-    public PathExpression createPathExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
-        return delegate.createPathExpression(expression, macroConfiguration, usedMacros);
-    }
-
-    @Override
-    public PathExpression createJoinBasePathExpression(String expression) {
-        return delegate.createJoinBasePathExpression(expression);
-    }
-
-    @Override
-    public PathExpression createJoinBasePathExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
-        return delegate.createJoinBasePathExpression(expression, macroConfiguration, usedMacros);
-    }
-
-    @Override
     public Expression createJoinPathExpression(String expression) {
         return delegate.createJoinPathExpression(expression);
     }
@@ -183,7 +133,12 @@ public class SubqueryExpressionFactory extends AbstractExpressionFactory {
     }
 
     @Override
-    public Expression createSimpleExpression(String expression, boolean allowQuantifiedPredicates) {
-        return delegate.createSimpleExpression(expression, allowQuantifiedPredicates);
+    public PathExpression createPathExpression(String expression) {
+        return delegate.createPathExpression(expression);
+    }
+
+    @Override
+    public Expression createPathExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return delegate.createPathExpression(expression, macroConfiguration, usedMacros);
     }
 }
