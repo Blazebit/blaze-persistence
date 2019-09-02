@@ -106,7 +106,7 @@ public class CaseWhenOrThenBuilderImpl<T extends CaseWhenBuilder<?>> extends Pre
 
     @Override
     public MultipleSubqueryInitiator<RestrictionBuilder<CaseWhenOrThenBuilder<T>>> orSubqueries(String expression) {
-        return startMultipleSubqueryInitiator(expressionFactory.createArithmeticExpression(expression));
+        return startMultipleSubqueryInitiator(expressionFactory.createSimpleExpression(expression));
     }
 
     private MultipleSubqueryInitiator<RestrictionBuilder<CaseWhenOrThenBuilder<T>>> startMultipleSubqueryInitiator(Expression expression) {
@@ -155,7 +155,7 @@ public class CaseWhenOrThenBuilderImpl<T extends CaseWhenBuilder<?>> extends Pre
         if (whenClause != null) {
             throw new IllegalStateException("Method then/thenExpression called multiple times");
         }
-        whenClause = new WhenClauseExpression(predicate, expressionFactory.createScalarExpression(expression));
+        whenClause = new WhenClauseExpression(predicate, expressionFactory.createSimpleExpression(expression, false));
         listener.onBuilderEnded(this);
         return result;
     }

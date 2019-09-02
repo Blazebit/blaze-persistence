@@ -582,11 +582,12 @@ public class WindowFunctionTest extends AbstractCoreTest {
     }
 
     /**
-     * Copy-and-modify syntax is only allowed for windows that do not specify a range
+     * Copy-and-modify syntax is only allowed for windows that do not specify a range.
+     * Yet, we allow it and re-render it as `OVER x` instead.
      *
      * @see #testParsedNamedWindowDefinitionWithRange()
      */
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testCopyAndModifyWindowDefinitionWithRangeFails() {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
                 .from(Person.class, "per")

@@ -141,7 +141,7 @@ public class SelectObjectBuilderImpl<T extends FullQueryBuilder<?, T>> extends S
     public SubqueryInitiator<SelectObjectBuilder<T>> withSubquery(String subqueryAlias, String expression, String selectAlias) {
         verifySubqueryBuilderEnded();
         this.subqueryAlias = selectAlias;
-        SubqueryBuilderListenerImpl<SelectObjectBuilder<T>> superExpressionSubqueryListener = new SuperExpressionSubqueryBuilderListener<SelectObjectBuilder<T>>(subqueryAlias, expressionFactory.createArithmeticExpression(expression));
+        SubqueryBuilderListenerImpl<SelectObjectBuilder<T>> superExpressionSubqueryListener = new SuperExpressionSubqueryBuilderListener<SelectObjectBuilder<T>>(subqueryAlias, expressionFactory.createSimpleExpression(expression));
         return startSubqueryInitiator(subqueryInitFactory.createSubqueryInitiator((SelectObjectBuilder<T>) this, superExpressionSubqueryListener, false, ClauseType.SELECT));
     }
 
@@ -185,7 +185,7 @@ public class SelectObjectBuilderImpl<T extends FullQueryBuilder<?, T>> extends S
     public SubqueryBuilder<SelectObjectBuilder<T>> withSubquery(String subqueryAlias, String expression, String selectAlias, FullQueryBuilder<?, ?> criteriaBuilder) {
         verifySubqueryBuilderEnded();
         this.subqueryAlias = selectAlias;
-        SubqueryBuilderListenerImpl<SelectObjectBuilder<T>> superExpressionSubqueryListener = new SuperExpressionSubqueryBuilderListener<SelectObjectBuilder<T>>(subqueryAlias, expressionFactory.createArithmeticExpression(expression));
+        SubqueryBuilderListenerImpl<SelectObjectBuilder<T>> superExpressionSubqueryListener = new SuperExpressionSubqueryBuilderListener<SelectObjectBuilder<T>>(subqueryAlias, expressionFactory.createSimpleExpression(expression));
         return startSubqueryBuilder(subqueryInitFactory.createSubqueryBuilder(this, superExpressionSubqueryListener, false, criteriaBuilder, ClauseType.SELECT));
     }
 
@@ -226,7 +226,7 @@ public class SelectObjectBuilderImpl<T extends FullQueryBuilder<?, T>> extends S
     @Override
     public MultipleSubqueryInitiator<SelectObjectBuilder<T>> withSubqueries(String expression, String selectAlias) {
         this.subqueryAlias = selectAlias;
-        return startMultipleSubqueryInitiator(expressionFactory.createArithmeticExpression(expression));
+        return startMultipleSubqueryInitiator(expressionFactory.createSimpleExpression(expression));
     }
 
     private MultipleSubqueryInitiator<SelectObjectBuilder<T>> startMultipleSubqueryInitiator(Expression expression) {

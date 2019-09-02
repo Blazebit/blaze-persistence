@@ -33,7 +33,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -48,8 +47,8 @@ public class SimpleCachingExpressionFactoryTest {
         ExpressionFactory ef = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl(new HashMap<String, Boolean>(), true, true));
         String expressionString = "SIZE(Hello.world[:hahaha].criteria[1].api.lsls[a.b.c.d.e]) + SIZE(Hello.world[:hahaha].criteria[1].api.lsls[a.b.c.d.e])";
         
-        Expression expr1 = ef.createSimpleExpression(expressionString, true, null, null);
-        Expression expr2 = ef.createSimpleExpression(expressionString, true, null, null);
+        Expression expr1 = ef.createSimpleExpression(expressionString, false, true, false, null, null);
+        Expression expr2 = ef.createSimpleExpression(expressionString, false, true, false, null, null);
         
         Assert.assertFalse(expr1 == expr2);
         Assert.assertEquals(expr1, expr2);
@@ -99,8 +98,8 @@ public class SimpleCachingExpressionFactoryTest {
         }));
         String expressionString = "SIZE(my_macro(Hello.world[:hahaha].criteria[1].api)) + SIZE(my_macro(Hello.world[:hahaha].criteria[1].api))";
 
-        Expression expr1 = ef.createSimpleExpression(expressionString, true, macroConfiguration, null);
-        Expression expr2 = ef.createSimpleExpression(expressionString, true, macroConfiguration, null);
+        Expression expr1 = ef.createSimpleExpression(expressionString, false, true, false, macroConfiguration, null);
+        Expression expr2 = ef.createSimpleExpression(expressionString, false, true, false, macroConfiguration, null);
 
         Assert.assertFalse(expr1 == expr2);
         Assert.assertEquals(expr1, expr2);

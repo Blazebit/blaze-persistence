@@ -94,7 +94,7 @@ public class BetweenBuilderImpl<T> extends SubqueryBuilderListenerImpl<T> implem
 
     @Override
     public T andExpression(String end) {
-        return chain(new BetweenPredicate(left, start, expressionFactory.createArithmeticExpression(end), negated));
+        return chain(new BetweenPredicate(left, start, expressionFactory.createSimpleExpression(end), negated));
     }
 
     @Override
@@ -106,7 +106,7 @@ public class BetweenBuilderImpl<T> extends SubqueryBuilderListenerImpl<T> implem
     @Override
     public SubqueryInitiator<T> andSubqery(String subqueryAlias, String expression) {
         verifySubqueryBuilderEnded();
-        SubqueryBuilderListenerImpl<T> superExpressionSubqueryListener = new SuperExpressionSubqueryBuilderListener<T>(subqueryAlias, expressionFactory.createArithmeticExpression(expression)) {
+        SubqueryBuilderListenerImpl<T> superExpressionSubqueryListener = new SuperExpressionSubqueryBuilderListener<T>(subqueryAlias, expressionFactory.createSimpleExpression(expression)) {
 
             @Override
             public void onBuilderEnded(SubqueryInternalBuilder<T> builder) {
@@ -128,7 +128,7 @@ public class BetweenBuilderImpl<T> extends SubqueryBuilderListenerImpl<T> implem
     @Override
     public SubqueryBuilder<T> andSubqery(String subqueryAlias, String expression, FullQueryBuilder<?, ?> criteriaBuilder) {
         verifySubqueryBuilderEnded();
-        SubqueryBuilderListenerImpl<T> superExpressionSubqueryListener = new SuperExpressionSubqueryBuilderListener<T>(subqueryAlias, expressionFactory.createArithmeticExpression(expression)) {
+        SubqueryBuilderListenerImpl<T> superExpressionSubqueryListener = new SuperExpressionSubqueryBuilderListener<T>(subqueryAlias, expressionFactory.createSimpleExpression(expression)) {
 
             @Override
             public void onBuilderEnded(SubqueryInternalBuilder<T> builder) {
@@ -143,7 +143,7 @@ public class BetweenBuilderImpl<T> extends SubqueryBuilderListenerImpl<T> implem
 
     @Override
     public MultipleSubqueryInitiator<T> andSubqueries(String expression) {
-        return startMultipleSubqueryInitiator(expressionFactory.createArithmeticExpression(expression));
+        return startMultipleSubqueryInitiator(expressionFactory.createSimpleExpression(expression));
     }
 
     private MultipleSubqueryInitiator<T> startMultipleSubqueryInitiator(Expression expression) {

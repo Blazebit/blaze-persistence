@@ -216,7 +216,7 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAn
     @Override
     public SimpleCaseWhenBuilder<T> simpleCase(String caseOperand) {
         chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
-        return startBuilder(new SimpleCaseWhenBuilderImpl<T>(result, this, expressionFactory, expressionFactory.createCaseOperandExpression(caseOperand), subqueryInitFactory, parameterManager, clauseType));
+        return startBuilder(new SimpleCaseWhenBuilderImpl<T>(result, this, expressionFactory, expressionFactory.createSimpleExpression(caseOperand, false), subqueryInitFactory, parameterManager, clauseType));
     }
 
     /* quantification functions */

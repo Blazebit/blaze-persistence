@@ -140,7 +140,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
 
     @Override
     public BetweenBuilder<T> betweenExpression(String start) {
-        return startBuilder(new BetweenBuilderImpl<T>(result, leftExpression, expressionFactory.createArithmeticExpression(start), expressionFactory, parameterManager, this, subqueryInitFactory, clause));
+        return startBuilder(new BetweenBuilderImpl<T>(result, leftExpression, expressionFactory.createSimpleExpression(start), expressionFactory, parameterManager, this, subqueryInitFactory, clause));
     }
 
     @Override
@@ -210,7 +210,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
 
     @Override
     public BetweenBuilder<T> notBetweenExpression(String start) {
-        return startBuilder(new BetweenBuilderImpl<T>(result, leftExpression, expressionFactory.createArithmeticExpression(start), expressionFactory, parameterManager, this, subqueryInitFactory, clause, true));
+        return startBuilder(new BetweenBuilderImpl<T>(result, leftExpression, expressionFactory.createSimpleExpression(start), expressionFactory, parameterManager, this, subqueryInitFactory, clause, true));
     }
 
     @Override
@@ -802,7 +802,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         verifyBuilderEnded();
 
         this.predicate = new InPredicate(negated, leftExpression);
-        Expression superExpression = expressionFactory.createArithmeticExpression(expression);
+        Expression superExpression = expressionFactory.createSimpleExpression(expression);
         rightSuperExprSubqueryBuilderListener = new SuperExpressionSubqueryBuilderListener<T>(subqueryAlias, superExpression) {
 
             @Override
@@ -820,7 +820,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         verifyBuilderEnded();
 
         this.predicate = new InPredicate(negated, leftExpression);
-        Expression superExpression = expressionFactory.createArithmeticExpression(expression);
+        Expression superExpression = expressionFactory.createSimpleExpression(expression);
         rightSuperExprSubqueryBuilderListener = new SuperExpressionSubqueryBuilderListener<T>(subqueryAlias, superExpression) {
 
             @Override

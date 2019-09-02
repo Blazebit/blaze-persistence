@@ -45,7 +45,7 @@ public class AggregateExpression extends FunctionExpression {
 
     @Override
     public AggregateExpression clone(boolean resolved) {
-        if (expressions.isEmpty()) {
+        if (!distinct && expressions.isEmpty()) {
             return new AggregateExpression();
         } else {
             int size = expressions.size();

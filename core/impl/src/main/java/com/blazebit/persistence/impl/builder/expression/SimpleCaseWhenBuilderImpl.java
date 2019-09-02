@@ -61,7 +61,7 @@ public class SimpleCaseWhenBuilderImpl<T> implements SimpleCaseWhenBuilder<T>, E
 
     @Override
     public SimpleCaseWhenBuilder<T> when(String condition, String thenExpression) {
-        whenExpressions.add(new WhenClauseExpression(expressionFactory.createScalarExpression(condition), expressionFactory.createScalarExpression(thenExpression)));
+        whenExpressions.add(new WhenClauseExpression(expressionFactory.createSimpleExpression(condition, false), expressionFactory.createSimpleExpression(thenExpression, false)));
         return this;
     }
 
@@ -93,7 +93,7 @@ public class SimpleCaseWhenBuilderImpl<T> implements SimpleCaseWhenBuilder<T>, E
         if (whenExpressions.isEmpty()) {
             throw new IllegalStateException("No when clauses specified");
         }
-        expression = new SimpleCaseExpression(caseOperandExpression, whenExpressions, expressionFactory.createScalarExpression(elseExpression));
+        expression = new SimpleCaseExpression(caseOperandExpression, whenExpressions, expressionFactory.createSimpleExpression(elseExpression, false));
         listener.onBuilderEnded(this);
         return result;
     }

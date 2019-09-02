@@ -22,7 +22,6 @@ import org.antlr.v4.runtime.atn.PredictionMode;
 
 import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 
 /**
@@ -36,17 +35,17 @@ public abstract class AbstractTestExpressionFactory extends AbstractExpressionFa
     }
     
     public AbstractTestExpressionFactory(Map<String, Boolean> functions, Map<String, Class<?>> entityTypes, Map<String, Class<Enum<?>>> enumTypes, boolean optimize) {
-        super(functions, entityTypes, enumTypes, true, optimize);
+        super(functions, entityTypes, enumTypes, optimize);
     }
 
     @Override
-    protected void configureLexer(JPQLSelectExpressionLexer lexer) {
+    protected void configureLexer(JPQLNextLexer lexer) {
         lexer.removeErrorListeners();
         lexer.addErrorListener(ERR_LISTENER);
     }
 
     @Override
-    protected void configureParser(JPQLSelectExpressionParser parser) {
+    protected void configureParser(JPQLNextParser parser) {
         if (LOG.isLoggable(Level.FINEST)) {
             parser.setTrace(true);
         }

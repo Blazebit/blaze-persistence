@@ -402,15 +402,19 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             if (filterPredicate != null) {
                 sb.append("'FILTER',");
                 filterPredicate.accept(this);
-                sb.append(",");
             }
 
             List<Expression> partitionExpressions = windowDefinition.getPartitionExpressions();
 
             int size = partitionExpressions.size();
             if (size != 0) {
+                if (filterPredicate != null) {
+                    sb.append(", ");
+                }
                 sb.append("'PARTITION BY',");
-                for (int i = 0; i < size; i++) {
+                partitionExpressions.get(0).accept(this);
+                for (int i = 1; i < size; i++) {
+                    sb.append(", ");
                     partitionExpressions.get(i).accept(this);
                     sb.append(",");
                 }
@@ -419,15 +423,23 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             List<OrderByItem> orderByExpressions = windowDefinition.getOrderByExpressions();
             size = orderByExpressions.size();
             if (size != 0) {
+                if (filterPredicate != null || partitionExpressions.size() != 0) {
+                    sb.append(", ");
+                }
                 sb.append("'ORDER BY',");
-                for (int i = 0; i < size; i++) {
+                visit(orderByExpressions.get(0));
+                for (int i = 1; i < size; i++) {
+                    sb.append(", ");
                     visit(orderByExpressions.get(i));
                     sb.append(",");
                 }
             }
 
             if (windowDefinition.getFrameMode() != null) {
-                sb.append("'");
+                if (filterPredicate != null || partitionExpressions.size() != 0 || orderByExpressions.size() != 0) {
+                    sb.append(", ");
+                }
+                sb.append('\'');
                 sb.append(windowDefinition.getFrameMode().name());
                 sb.append("'");
                 if (windowDefinition.getFrameEndType() != null) {
@@ -460,10 +472,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                     sb.append(getFrameExclusionType(windowDefinition.getFrameExclusionType()));
                     sb.append("'");
                 }
-                sb.append(",");
             }
-
-            sb.setLength(sb.length()-1);
         }
     }
 

@@ -61,7 +61,7 @@ public class WindowManager<T> extends AbstractManager<ExpressionModifier> {
         if (baseWindowDefinition == null) {
             throw new IllegalArgumentException("There is no window named '" + windowDefinition.getWindowName() + "' registered!");
         }
-        if (baseWindowDefinition.getFrameMode() != null) {
+        if (baseWindowDefinition.getFrameMode() != null && (!windowDefinition.getPartitionExpressions().isEmpty() || !windowDefinition.getOrderByExpressions().isEmpty() || windowDefinition.getFrameMode() != null)) {
             throw new IllegalArgumentException("The base window '" + windowDefinition.getWindowName() + "' is not allowed to specify a frame clause when being reused!");
         }
         if (!windowDefinition.getPartitionExpressions().isEmpty()) {
