@@ -55,6 +55,7 @@ public class Issue519Test extends AbstractCoreTest {
             @Override
             public void work(EntityManager em) {
                 instance = new A();
+                instance.id = 1L;
                 em.persist(instance);
                 em.flush();
                 em.refresh(instance);
@@ -78,7 +79,6 @@ public class Issue519Test extends AbstractCoreTest {
     public static class A {
 
         @Id
-        @GeneratedValue
         private Long id;
 
         @Generated(GenerationTime.INSERT)

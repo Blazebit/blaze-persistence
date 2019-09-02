@@ -20,7 +20,7 @@ import com.blazebit.persistence.parser.JPQLNextLexer;
 import com.blazebit.persistence.parser.JPQLNextParser;
 import com.blazebit.persistence.parser.predicate.Predicate;
 import org.antlr.v4.runtime.ANTLRErrorListener;
-import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -157,7 +157,7 @@ public abstract class AbstractExpressionFactory extends AbstractExpressionFactor
         if (expression.isEmpty()) {
             throw new IllegalArgumentException("expression");
         }
-        JPQLNextLexer l = new JPQLNextLexer(new ANTLRInputStream(expression));
+        JPQLNextLexer l = new JPQLNextLexer(CharStreams.fromString(expression));
         configureLexer(l);
         CommonTokenStream tokens = new CommonTokenStream(l);
         JPQLNextParser p = new JPQLNextParser(tokens);
@@ -168,7 +168,7 @@ public abstract class AbstractExpressionFactory extends AbstractExpressionFactor
             try {
                 ctx = ruleInvoker.invokeRule(p);  // STAGE 1
             } catch (Exception ex) {
-                tokens.reset(); // rewind input stream
+                tokens.seek(0); // rewind input stream
                 p.reset();
                 p.getInterpreter().setPredictionMode(PredictionMode.LL);
                 ctx = ruleInvoker.invokeRule(p);  // STAGE 2

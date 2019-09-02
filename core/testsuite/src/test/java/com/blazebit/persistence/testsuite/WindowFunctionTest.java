@@ -19,6 +19,7 @@ package com.blazebit.persistence.testsuite;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDB2;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
@@ -41,6 +42,7 @@ import static org.junit.Assert.assertNotNull;
  * @author Sayra Ranjha
  * @since 1.4.0
  */
+@Category({ NoMySQLOld.class })
 public class WindowFunctionTest extends AbstractCoreTest {
 
     @Override
@@ -70,10 +72,10 @@ public class WindowFunctionTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
             .from(Person.class, "per")
             .select("per.age")
-            .select("FUNCTION('WINDOW_SUM', per.age, 'ORDER BY', per.age, 'ROWS', 'BETWEEN', 'UNBOUNDED PRECEDING', 'AND', 'CURRENT ROW')")
-            .select("FUNCTION('WINDOW_MAX', per.age, 'ORDER BY', per.age, 'ROWS', 'BETWEEN', 'UNBOUNDED PRECEDING', 'AND', 'CURRENT ROW')")
-            .select("FUNCTION('WINDOW_MIN', per.age, 'ORDER BY', per.age, 'ROWS', 'BETWEEN', 'UNBOUNDED PRECEDING', 'AND', 'CURRENT ROW')")
-            .select("FUNCTION('WINDOW_AVG', per.age, 'ORDER BY', per.age, 'ROWS', 'BETWEEN', 'UNBOUNDED PRECEDING', 'AND', 'CURRENT ROW')")
+            .select("SUM(per.age) OVER (ORDER BY per.age ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)")
+            .select("MAX(per.age) OVER (ORDER BY per.age ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)")
+            .select("MIN(per.age) OVER (ORDER BY per.age ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)")
+            .select("AVG(per.age) OVER (ORDER BY per.age ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)")
             .orderByAsc("per.age")
             ;
 
@@ -86,7 +88,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
                 .from(Person.class, "per")
                 .select("per.age")
-                .select("FUNCTION('WINDOW_COUNT', per.age, 'ORDER BY', per.age, 'ROWS', 'BETWEEN', 'UNBOUNDED PRECEDING', 'AND', 'CURRENT ROW')")
+                .select("COUNT(per.age) OVER (ORDER BY per.age ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)")
                 .orderByAsc("per.age")
                 ;
 
@@ -99,7 +101,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
                 .from(Person.class, "per")
                 .select("per.age")
-                .select("FUNCTION('WINDOW_COUNT', 'ORDER BY', per.age, 'ROWS', 'BETWEEN', 'UNBOUNDED PRECEDING', 'AND', 'CURRENT ROW')")
+                .select("COUNT(*) OVER (ORDER BY per.age ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)")
                 .orderByAsc("per.age")
                 ;
 
@@ -112,10 +114,10 @@ public class WindowFunctionTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
             .from(Person.class, "per")
             .select("per.age")
-            .select("FUNCTION('WINDOW_SUM', per.age, 'ORDER BY', per.age, 'RANGE', 'BETWEEN', 'UNBOUNDED PRECEDING', 'AND', 'CURRENT ROW')")
-            .select("FUNCTION('WINDOW_MAX', per.age, 'ORDER BY', per.age, 'RANGE', 'BETWEEN', 'UNBOUNDED PRECEDING', 'AND', 'CURRENT ROW')")
-            .select("FUNCTION('WINDOW_MIN', per.age, 'ORDER BY', per.age, 'RANGE', 'BETWEEN', 'UNBOUNDED PRECEDING', 'AND', 'CURRENT ROW')")
-            .select("FUNCTION('WINDOW_AVG', per.age, 'ORDER BY', per.age, 'RANGE', 'BETWEEN', 'UNBOUNDED PRECEDING', 'AND', 'CURRENT ROW')")
+            .select("SUM(per.age) OVER (ORDER BY per.age RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)")
+            .select("MAX(per.age) OVER (ORDER BY per.age RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)")
+            .select("MIN(per.age) OVER (ORDER BY per.age RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)")
+            .select("AVG(per.age) OVER (ORDER BY per.age RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)")
             .orderByAsc("per.age")
             ;
 
@@ -128,15 +130,15 @@ public class WindowFunctionTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
             .from(Person.class, "per")
             .select("per.age")
-            .select("FUNCTION('WINDOW_SUM', per.age, 'ORDER BY', per.age, 'ROWS', 'CURRENT ROW')")
-            .select("FUNCTION('WINDOW_SUM', per.age, 'ORDER BY', per.age, 'ROWS', 'UNBOUNDED PRECEDING')")
-            .select("FUNCTION('WINDOW_SUM', per.age, 'ORDER BY', per.age, 'ROWS', 1, 'PRECEDING')")
-            .select("FUNCTION('WINDOW_SUM', per.age, 'ORDER BY', per.age, 'ROWS', 'BETWEEN', 'CURRENT ROW', 'AND', 'CURRENT ROW')")
-            .select("FUNCTION('WINDOW_SUM', per.age, 'ORDER BY', per.age, 'ROWS', 'BETWEEN', 'UNBOUNDED PRECEDING', 'AND', 'CURRENT ROW')")
-            .select("FUNCTION('WINDOW_SUM', per.age, 'ORDER BY', per.age, 'ROWS', 'BETWEEN', 1, 'PRECEDING', 'AND', 'CURRENT ROW')")
-            .select("FUNCTION('WINDOW_SUM', per.age, 'ORDER BY', per.age, 'ROWS', 'BETWEEN', 'CURRENT ROW', 'AND', 'CURRENT ROW')")
-            .select("FUNCTION('WINDOW_SUM', per.age, 'ORDER BY', per.age, 'ROWS', 'BETWEEN', 'CURRENT ROW', 'AND', 'UNBOUNDED FOLLOWING')")
-            .select("FUNCTION('WINDOW_SUM', per.age, 'ORDER BY', per.age, 'ROWS', 'BETWEEN', 'CURRENT ROW', 'AND', 1, 'FOLLOWING')")
+            .select("SUM(per.age) OVER (ORDER BY per.age ROWS CURRENT ROW)")
+            .select("SUM(per.age) OVER (ORDER BY per.age ROWS UNBOUNDED PRECEDING)")
+            .select("SUM(per.age) OVER (ORDER BY per.age ROWS 1 PRECEDING)")
+            .select("SUM(per.age) OVER (ORDER BY per.age ROWS BETWEEN CURRENT ROW AND CURRENT ROW)")
+            .select("SUM(per.age) OVER (ORDER BY per.age ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)")
+            .select("SUM(per.age) OVER (ORDER BY per.age ROWS BETWEEN 1 PRECEDING AND CURRENT ROW)")
+            .select("SUM(per.age) OVER (ORDER BY per.age ROWS BETWEEN CURRENT ROW AND CURRENT ROW)")
+            .select("SUM(per.age) OVER (ORDER BY per.age ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)")
+            .select("SUM(per.age) OVER (ORDER BY per.age ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING)")
             .orderByAsc("per.age")
             ;
 
@@ -149,8 +151,8 @@ public class WindowFunctionTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
                 .from(Person.class, "per")
                 .select("per.age")
-                .select("FUNCTION('WINDOW_EVERY', true, 'ORDER BY', per.id, 'ROWS', 'BETWEEN', 'UNBOUNDED PRECEDING', 'AND', 'CURRENT ROW')")
-                .select("FUNCTION('WINDOW_OR_AGG', true, 'ORDER BY', per.id, 'ROWS', 'BETWEEN', 'UNBOUNDED PRECEDING', 'AND', 'CURRENT ROW')")
+                .select("EVERY(true) OVER (ORDER BY per.id ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)")
+                .select("OR_AGG(true) OVER (ORDER BY per.id ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)")
                 .orderByAsc("per.age")
                 ;
 
@@ -164,7 +166,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
             .from(Person.class, "per")
             .select("per.age")
-            .select("FUNCTION('ROW_NUMBER')")
+            .select("ROW_NUMBER()")
             ;
 
         List<Tuple> resultList = criteria.getResultList();
@@ -176,13 +178,13 @@ public class WindowFunctionTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
                 .from(Person.class, "per")
                 .select("per.age")
-                .select("FUNCTION('ROW_NUMBER', 'ORDER BY', per.age)")
-                .select("FUNCTION('ROW_NUMBER', 'ORDER BY', per.age, 'ASC')")
-                .select("FUNCTION('ROW_NUMBER', 'ORDER BY', per.age, 'DESC')")
-                .select("FUNCTION('ROW_NUMBER', 'ORDER BY', per.age, 'ASC NULLS FIRST')")
-                .select("FUNCTION('ROW_NUMBER', 'ORDER BY', per.age, 'ASC NULLS LAST')")
-                .select("FUNCTION('ROW_NUMBER', 'ORDER BY', per.age, 'DESC NULLS FIRST')")
-                .select("FUNCTION('ROW_NUMBER', 'ORDER BY', per.age, 'DESC NULLS LAST')")
+                .select("ROW_NUMBER() OVER (ORDER BY per.age)")
+                .select("ROW_NUMBER() OVER (ORDER BY per.age ASC)")
+                .select("ROW_NUMBER() OVER (ORDER BY per.age DESC)")
+                .select("ROW_NUMBER() OVER (ORDER BY per.age ASC NULLS FIRST)")
+                .select("ROW_NUMBER() OVER (ORDER BY per.age ASC NULLS LAST)")
+                .select("ROW_NUMBER() OVER (ORDER BY per.age DESC NULLS FIRST)")
+                .select("ROW_NUMBER() OVER (ORDER BY per.age DESC NULLS LAST)")
                 ;
 
         List<Tuple> resultList = criteria.getResultList();
@@ -195,7 +197,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
             .from(Person.class, "per")
             .select("per.age")
-            .select("FUNCTION('ROW_NUMBER', 'ORDER BY', per.age)")
+            .select("ROW_NUMBER() OVER (ORDER BY per.age)")
             ;
 
         List<Tuple> resultList = criteria.getResultList();
@@ -207,7 +209,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
             .from(Person.class, "per")
             .select("per.age")
-            .select("FUNCTION('ROW_NUMBER', 'PARTITION BY', per.name, 'ORDER BY', per.age)")
+            .select("ROW_NUMBER() OVER (PARTITION BY per.name ORDER BY per.age)")
             ;
 
         List<Tuple> resultList = criteria.getResultList();
@@ -219,7 +221,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
             .from(Person.class, "per")
             .select("per.age")
-            .select("FUNCTION('RANK', 'ORDER BY', per.age)")
+            .select("RANK() OVER (ORDER BY per.age)")
             ;
 
         List<Tuple> resultList = criteria.getResultList();
@@ -231,7 +233,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
             .from(Person.class, "per")
             .select("per.age")
-            .select("FUNCTION('RANK', 'PARTITION BY', per.name, 'ORDER BY', per.age)")
+            .select("RANK() OVER (PARTITION BY per.name ORDER BY per.age)")
             ;
 
         List<Tuple> resultList = criteria.getResultList();
@@ -243,7 +245,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
             .from(Person.class, "per")
             .select("per.age")
-            .select("FUNCTION('DENSE_RANK', 'ORDER BY', per.age)")
+            .select("DENSE_RANK() OVER (ORDER BY per.age)")
             ;
 
         List<Tuple> resultList = criteria.getResultList();
@@ -255,7 +257,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
             .from(Person.class, "per")
             .select("per.age")
-            .select("FUNCTION('DENSE_RANK', 'PARTITION BY', per.name, 'ORDER BY', per.age)")
+            .select("DENSE_RANK() OVER (PARTITION BY per.name ORDER BY per.age)")
             ;
 
         List<Tuple> resultList = criteria.getResultList();
@@ -267,7 +269,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
             .from(Person.class, "per")
             .select("per.age")
-            .select("FUNCTION('PERCENT_RANK', 'ORDER BY', per.age)")
+            .select("PERCENT_RANK() OVER (ORDER BY per.age)")
             ;
 
         List<Tuple> resultList = criteria.getResultList();
@@ -279,7 +281,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
             .from(Person.class, "per")
             .select("per.age")
-            .select("FUNCTION('PERCENT_RANK', 'PARTITION BY', per.name, 'ORDER BY', per.age)")
+            .select("PERCENT_RANK() OVER (PARTITION BY per.name ORDER BY per.age)")
             ;
 
         List<Tuple> resultList = criteria.getResultList();
@@ -291,7 +293,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
             .from(Person.class, "per")
             .select("per.age")
-            .select("FUNCTION('PERCENT_RANK', 'PARTITION BY', per.name, 'ORDER BY', per.age, per.name)")
+            .select("PERCENT_RANK() OVER (PARTITION BY per.name ORDER BY per.age, per.name)")
             ;
 
         List<Tuple> resultList = criteria.getResultList();
@@ -303,7 +305,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
             .from(Person.class, "per")
             .select("per.age")
-            .select("FUNCTION('CUME_DIST', 'ORDER BY', per.age)")
+            .select("CUME_DIST() OVER (ORDER BY per.age)")
             ;
 
         List<Tuple> resultList = criteria.getResultList();
@@ -315,7 +317,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
             .from(Person.class, "per")
             .select("per.age")
-            .select("FUNCTION('CUME_DIST', 'PARTITION BY', per.name, 'ORDER BY', per.age)")
+            .select("CUME_DIST() OVER (PARTITION BY per.name ORDER BY per.age)")
             ;
 
         List<Tuple> resultList = criteria.getResultList();
@@ -327,7 +329,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
             .from(Person.class, "per")
             .select("per.age")
-            .select("FUNCTION('NTILE', 10, 'ORDER BY', per.age)")
+            .select("NTILE(10) OVER (ORDER BY per.age)")
             ;
 
         List<Tuple> resultList = criteria.getResultList();
@@ -339,7 +341,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
             .from(Person.class, "per")
             .select("per.age")
-            .select("FUNCTION('NTILE', 10, 'PARTITION BY', per.name, 'ORDER BY', per.age)")
+            .select("NTILE(10) OVER (PARTITION BY per.name ORDER BY per.age)")
             ;
 
         List<Tuple> resultList = criteria.getResultList();
@@ -352,7 +354,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
             .from(Person.class, "per")
             .select("per.id")
             .select("per.age")
-            .select("FUNCTION('LEAD', per.age, 'ORDER BY', per.id)")
+            .select("LEAD(per.age) OVER (ORDER BY per.id)")
             ;
 
         List<Tuple> resultList = criteria.getResultList();
@@ -365,7 +367,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
                 .from(Person.class, "per")
                 .select("per.id")
                 .select("per.age")
-                .select("FUNCTION('LEAD', per.age, 2, 'PARTITION BY', per.name, 'ORDER BY', per.id)")
+                .select("LEAD(per.age, 2) OVER (PARTITION BY per.name ORDER BY per.id)")
                 ;
 
         List<Tuple> resultList = criteria.getResultList();
@@ -378,7 +380,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
             .from(Person.class, "per")
             .select("per.id")
             .select("per.age")
-            .select("FUNCTION('LAG', per.age, 'ORDER BY', per.id)")
+            .select("LAG(per.age) OVER (ORDER BY per.id)")
             ;
 
         List<Tuple> resultList = criteria.getResultList();
@@ -391,7 +393,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
                 .from(Person.class, "per")
                 .select("per.id")
                 .select("per.age")
-                .select("FUNCTION('LAG', per.age, 2, 'PARTITION BY', per.name, 'ORDER BY', per.id)")
+                .select("LAG(per.age, 2) OVER (PARTITION BY per.name ORDER BY per.id)")
                 ;
 
         List<Tuple> resultList = criteria.getResultList();
@@ -404,7 +406,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
             .from(Person.class, "per")
             .select("per.id")
             .select("per.age")
-            .select("FUNCTION('FIRST_VALUE', per.age, 'ORDER BY', per.id)")
+            .select("FIRST_VALUE(per.age) OVER (ORDER BY per.id)")
             ;
 
         List<Tuple> resultList = criteria.getResultList();
@@ -417,7 +419,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
                 .from(Person.class, "per")
                 .select("per.id")
                 .select("per.age")
-                .select("FUNCTION('FIRST_VALUE', per.age,'PARTITION BY', per.name, 'ORDER BY', per.id)")
+                .select("FIRST_VALUE(per.age) OVER (PARTITION BY per.name ORDER BY per.id)")
                 ;
 
         List<Tuple> resultList = criteria.getResultList();
@@ -430,7 +432,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
             .from(Person.class, "per")
             .select("per.id")
             .select("per.age")
-            .select("FUNCTION('LAST_VALUE', per.age, 'ORDER BY', per.id)")
+            .select("LAST_VALUE(per.age) OVER (ORDER BY per.id)")
             ;
 
         List<Tuple> resultList = criteria.getResultList();
@@ -443,7 +445,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
                 .from(Person.class, "per")
                 .select("per.id")
                 .select("per.age")
-                .select("FUNCTION('LAST_VALUE', per.age,'PARTITION BY', per.name, 'ORDER BY', per.id)")
+                .select("LAST_VALUE(per.age) OVER (PARTITION BY per.name ORDER BY per.id)")
                 ;
 
         List<Tuple> resultList = criteria.getResultList();
@@ -457,7 +459,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
             .from(Person.class, "per")
             .select("per.id")
             .select("per.age")
-            .select("FUNCTION('NTH_VALUE', per.age, 1, 'ORDER BY', per.id)")
+            .select("NTH_VALUE(per.age, 1) OVER (ORDER BY per.id)")
             ;
 
         List<Tuple> resultList = criteria.getResultList();
@@ -471,7 +473,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
                 .from(Person.class, "per")
                 .select("per.id")
                 .select("per.age")
-                .select("FUNCTION('NTH_VALUE', per.age, 1, 'PARTITION BY', per.name, 'ORDER BY', per.id)")
+                .select("NTH_VALUE(per.age, 1) OVER (PARTITION BY per.name ORDER BY per.id)")
                 ;
 
         List<Tuple> resultList = criteria.getResultList();
@@ -484,7 +486,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
                 .from(Person.class, "per")
                 .select("per.age")
-                .select("WINDOW_SUM(per.age) OVER (ORDER BY per.age ASC ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)")
+                .select("SUM(per.age) OVER (ORDER BY per.age ASC ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)")
                 .orderByAsc("per.age")
                 ;
 
@@ -497,7 +499,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
                 .from(Person.class, "per")
                 .select("per.age")
-                .select("FUNCTION('WINDOW_SUM', per.age) OVER (ORDER BY per.age ASC ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)")
+                .select("SUM(per.age) OVER (ORDER BY per.age ASC ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)")
                 .orderByAsc("per.age")
                 ;
 
@@ -512,7 +514,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
                 .from(Person.class, "per")
                 .window("x").orderByAsc("per.age").end()
                 .select("per.age")
-                .select("WINDOW_SUM(per.age) OVER x")
+                .select("SUM(per.age) OVER x")
                 .orderByAsc("per.age")
                 ;
 
@@ -527,7 +529,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
                 .from(Person.class, "per")
                 .window("x").orderByAsc("per.age").end()
                 .select("per.age")
-                .select("WINDOW_SUM(per.age) OVER (x)")
+                .select("SUM(per.age) OVER (x)")
                 .orderByAsc("per.age")
                 ;
 
@@ -541,7 +543,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
                 .from(Person.class, "per")
                 .window("x").orderByAsc("per.age").end()
                 .select("per.age")
-                .select("FUNCTION('WINDOW_SUM', per.age) OVER x")
+                .select("SUM(per.age) OVER x")
                 .orderByAsc("per.age")
                 ;
 
@@ -556,7 +558,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
                 .from(Person.class, "per")
                 .window("x").orderByAsc("per.age").end()
                 .select("per.age")
-                .select("FUNCTION('WINDOW_SUM', per.age) OVER (x)")
+                .select("SUM(per.age) OVER (x)")
                 .orderByAsc("per.age")
                 ;
 
@@ -573,7 +575,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
                 .from(Person.class, "per")
                 .window("x").orderByAsc("per.age").rows().betweenUnboundedPreceding().andCurrentRow().end()
                 .select("per.age")
-                .select("FUNCTION('WINDOW_SUM', per.age) OVER x")
+                .select("SUM(per.age) OVER x")
                 .orderByAsc("per.age")
                 ;
 
@@ -593,7 +595,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
                 .from(Person.class, "per")
                 .window("x").orderByAsc("per.age").rows().betweenUnboundedPreceding().andCurrentRow().end()
                 .select("per.age")
-                .select("FUNCTION('WINDOW_SUM', per.age) OVER (x)")
+                .select("SUM(per.age) OVER (x)")
                 .orderByAsc("per.age")
                 ;
 
@@ -610,7 +612,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
                 .from(Person.class, "per")
                 .window("x").partitionBy("per.age").end()
                 .select("per.age")
-                .select("FUNCTION('WINDOW_SUM', per.age) OVER (x ORDER BY per.id)")
+                .select("SUM(per.age) OVER (x ORDER BY per.id)")
                 .orderByAsc("per.age")
                 ;
 
@@ -630,7 +632,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
                 .from(Person.class, "per")
                 .window("x").orderByAsc("per.age").end()
                 .select("per.age")
-                .select("FUNCTION('WINDOW_SUM', per.age) OVER (x ORDER BY per.id)")
+                .select("SUM(per.age) OVER (x ORDER BY per.id)")
                 .orderByAsc("per.age")
                 ;
 
@@ -647,7 +649,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
                 .from(Person.class, "per")
                 .window("x").partitionBy("per.age").end()
                 .select("per.age")
-                .select("FUNCTION('WINDOW_SUM', per.age) OVER (x PARTITION BY per.id)")
+                .select("SUM(per.age) OVER (x PARTITION BY per.id)")
                 .orderByAsc("per.age")
                 ;
 

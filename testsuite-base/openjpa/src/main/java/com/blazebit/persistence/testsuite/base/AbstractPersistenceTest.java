@@ -48,6 +48,11 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
     }
 
     @Override
+    protected boolean needsEntityManagerForDbAction() {
+        return true;
+    }
+
+    @Override
     protected boolean supportsMapKeyDeReference() {
         return true;
     }

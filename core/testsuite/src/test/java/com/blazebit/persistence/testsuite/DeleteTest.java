@@ -31,6 +31,7 @@ import javax.persistence.EntityManager;
 
 import com.blazebit.persistence.ReturningObjectBuilder;
 import com.blazebit.persistence.SimpleReturningBuilder;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -232,7 +233,7 @@ public class DeleteTest extends AbstractCoreTest {
     // NOTE: H2 only supports with clause in select statement
     // NOTE: MySQL does not support CTEs
     @Test
-    @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoMySQLOld.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testSimpleWithCte() {
         transactional(new TxVoidWork() {
             @Override

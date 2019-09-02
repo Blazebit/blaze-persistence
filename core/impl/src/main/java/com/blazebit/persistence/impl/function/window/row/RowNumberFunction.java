@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl.function.window.row;
 
 import com.blazebit.persistence.impl.function.window.AbstractWindowFunction;
 import com.blazebit.persistence.spi.DbmsDialect;
+import com.blazebit.persistence.spi.FunctionRenderContext;
 
 /**
  * Number of the current row within its partition, counting from 1.
@@ -39,5 +40,10 @@ public class RowNumberFunction extends AbstractWindowFunction {
     @Override
     public Class<?> getReturnType(Class<?> firstArgumentType) {
         return Integer.class;
+    }
+
+    @Override
+    protected void renderArguments(FunctionRenderContext context, WindowFunction windowFunction) {
+        // No-op
     }
 }

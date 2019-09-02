@@ -177,8 +177,8 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor, Jo
                 // We initialize the aliased PathExpression properly
                 if (aliasedExpression instanceof PathExpression) {
                     PathExpression aliasedPathExpression = (PathExpression) aliasedExpression;
-                    if (aliasedPathExpression.isCollectionKeyPath()) {
-                        expression.setCollectionKeyPath(true);
+                    if (aliasedPathExpression.isCollectionQualifiedPath()) {
+                        expression.setCollectionQualifiedPath(true);
                     }
                     if (aliasedPathExpression.isUsedInCollectionFunction()) {
                         expression.setUsedInCollectionFunction(true);

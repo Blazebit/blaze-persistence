@@ -25,6 +25,7 @@ import com.blazebit.persistence.spi.JpaProviderFactory;
 import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
 import org.eclipse.persistence.expressions.ExpressionOperator;
+import org.eclipse.persistence.internal.databaseaccess.FieldTypeDefinition;
 import org.eclipse.persistence.internal.helper.ClassConstants;
 import org.eclipse.persistence.internal.sessions.AbstractSession;
 import org.eclipse.persistence.jpa.JpaEntityManagerFactory;
@@ -32,7 +33,9 @@ import org.eclipse.persistence.platform.database.DatabasePlatform;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
 import javax.persistence.PersistenceUnitUtil;
+import java.sql.Connection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -207,7 +210,29 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerFactoryI
         platform.setShouldBindLiterals(false);
 
         if (platform.isMySQL()) {
-            dbms = "mysql";
+            EntityManager em = entityManagerFactory.createEntityManager();
+            EntityTransaction tx = null;
+            boolean startedTransaction = false;
+            try {
+                tx = em.getTransaction();
+                startedTransaction = !tx.isActive();
+                if (startedTransaction) {
+                    tx.begin();
+                }
+                Connection connection = em.unwrap(Connection.class);
+                if (connection.getMetaData().getDatabaseMajorVersion() > 7) {
+                    dbms = "mysql8";
+                } else {
+                    dbms = "mysql";
+                }
+            } catch (Exception ex) {
+                throw new RuntimeException("Could not determine the MySQL Server version!", ex);
+            } finally {
+                if (startedTransaction) {
+                    tx.commit();
+                }
+                em.close();
+            }
         } else if (platform.isOracle()) {
             dbms = "oracle";
         } else if (platform.isSQLServer()) {
@@ -240,11 +265,24 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerFactoryI
     }
 
     private Map<Class<?>, String> getClassToTypeMap(DatabasePlatform platform) {
-        @SuppressWarnings({ "unchecked", "rawtypes" })
-        Map<String, Class<?>> classTypes = (Map<String, Class<?>>) (Map) platform.getClassTypes();
+        Map<Class, FieldTypeDefinition> fieldTypes = platform.getFieldTypes();
         Map<Class<?>, String> classToTypesMap = new HashMap<>();
-        for (Map.Entry<String, Class<?>> classTypeEntry : classTypes.entrySet()) {
-            classToTypesMap.put(classTypeEntry.getValue(), classTypeEntry.getKey());
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<Class, FieldTypeDefinition> entry : fieldTypes.entrySet()) {
+            FieldTypeDefinition fieldTypeDefinition = entry.getValue();
+            sb.setLength(0);
+            sb.append(fieldTypeDefinition.getName());
+            if (fieldTypeDefinition.isSizeRequired()) {
+                sb.append('(');
+                sb.append(fieldTypeDefinition.getDefaultSize());
+                int defaultSubSize = fieldTypeDefinition.getDefaultSubSize();
+                if (defaultSubSize != 0) {
+                    sb.append(',');
+                    sb.append(defaultSubSize);
+                }
+                sb.append(')');
+            }
+            classToTypesMap.put(entry.getKey(), sb.toString());
         }
         return classToTypesMap;
     }

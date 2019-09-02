@@ -12,7 +12,8 @@ install:
 # Skip the first maven execution for downloading dependencies by using this command
   - /bin/true
 before_script:
-  - bash -c "if [ '$RDBMS' = 'mysql' ]; then mysql -e 'create database IF NOT EXISTS test DEFAULT CHARACTER SET utf8mb4 DEFAULT COLLATE utf8mb4_bin;'; fi"
+  - bash -c "if [ '$RDBMS' = 'mysql' ]; then bash travis/before_script_mysql.sh; fi"
+  - bash -c "if [ '$RDBMS' = 'mysql8' ]; then MYSQL_VERSION=8.0 bash travis/before_script_mysql.sh; fi"
   - bash -c "if [ '$RDBMS' = 'postgresql' ]; then psql -c 'create database test;' -U postgres; fi"
   - bash -c "if [ '$RDBMS' = 'db2' ]; then bash travis/before_script_db2.sh; fi"
   - bash -c "if [ '$RDBMS' = 'firebird' ]; then bash travis/before_script_firebird.sh; fi"
@@ -36,6 +37,9 @@ matrix:
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2
       jdk: oraclejdk8
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=mysql
+      jdk: oraclejdk8
+      sudo: required
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=mysql8
       jdk: oraclejdk8
       sudo: required
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=postgresql

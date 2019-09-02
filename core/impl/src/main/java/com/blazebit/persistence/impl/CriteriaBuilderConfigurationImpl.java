@@ -21,6 +21,7 @@ import com.blazebit.persistence.impl.dialect.DB2DbmsDialect;
 import com.blazebit.persistence.impl.dialect.DefaultDbmsDialect;
 import com.blazebit.persistence.impl.dialect.H2DbmsDialect;
 import com.blazebit.persistence.impl.dialect.MSSQLDbmsDialect;
+import com.blazebit.persistence.impl.dialect.MySQL8DbmsDialect;
 import com.blazebit.persistence.impl.dialect.MySQLDbmsDialect;
 import com.blazebit.persistence.impl.dialect.OracleDbmsDialect;
 import com.blazebit.persistence.impl.dialect.PostgreSQLDbmsDialect;
@@ -237,6 +238,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup = new JpqlFunctionGroup("limit", false);
         jpqlFunctionGroup.add(null, new LimitFunction(dbmsDialects.get(null)));
         jpqlFunctionGroup.add("mysql", new LimitFunction(dbmsDialects.get("mysql")));
+        jpqlFunctionGroup.add("mysql8", new LimitFunction(dbmsDialects.get("mysql8")));
         jpqlFunctionGroup.add("oracle", new LimitFunction(dbmsDialects.get("oracle")));
         jpqlFunctionGroup.add("db2", new LimitFunction(dbmsDialects.get("db2")));
         jpqlFunctionGroup.add("sybase", null); // Does not support limit
@@ -248,6 +250,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup = new JpqlFunctionGroup(PagePositionFunction.FUNCTION_NAME, false);
         jpqlFunctionGroup.add(null, new PagePositionFunction());
         jpqlFunctionGroup.add("mysql", new MySQLPagePositionFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLPagePositionFunction());
         jpqlFunctionGroup.add("oracle", new OraclePagePositionFunction());
         jpqlFunctionGroup.add("sybase", new TransactSQLPagePositionFunction());
         jpqlFunctionGroup.add("microsoft", new TransactSQLPagePositionFunction());
@@ -370,6 +373,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("oracle", new OracleListaggGroupConcatFunction());
         jpqlFunctionGroup.add("h2", new H2GroupConcatFunction());
         jpqlFunctionGroup.add("mysql", new MySQLGroupConcatFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLGroupConcatFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLGroupConcatFunction());
         registerFunction(jpqlFunctionGroup);
 
@@ -380,6 +384,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("oracle", new OracleListaggGroupConcatWindowFunction(dbmsDialects.get("oracle")));
         jpqlFunctionGroup.add("h2", new H2GroupConcatWindowFunction(dbmsDialects.get("h2")));
         jpqlFunctionGroup.add("mysql", new MySQLGroupConcatWindowFunction(dbmsDialects.get("mysql")));
+        jpqlFunctionGroup.add("mysql8", new MySQLGroupConcatWindowFunction(dbmsDialects.get("mysql8")));
         jpqlFunctionGroup.add("postgresql", new PostgreSQLGroupConcatWindowFunction(dbmsDialects.get("postgresql")));
         registerFunction(jpqlFunctionGroup);
         
@@ -448,6 +453,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("oracle", new OracleEpochFunction());
         jpqlFunctionGroup.add("db2", new DB2EpochFunction());
         jpqlFunctionGroup.add("mysql", new MySQLEpochFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLEpochFunction());
         registerFunction(jpqlFunctionGroup);
 
         // datediff
@@ -458,6 +464,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("h2", new DefaultYearDiffFunction());
         jpqlFunctionGroup.add("microsoft", new DefaultYearDiffFunction());
         jpqlFunctionGroup.add("mysql", new MySQLYearDiffFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLYearDiffFunction());
         jpqlFunctionGroup.add("sybase", new DefaultYearDiffFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLYearDiffFunction());
         jpqlFunctionGroup.add("oracle", new OracleYearDiffFunction());
@@ -469,6 +476,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("h2", new DefaultMonthDiffFunction());
         jpqlFunctionGroup.add("microsoft", new DefaultMonthDiffFunction());
         jpqlFunctionGroup.add("mysql", new MySQLMonthDiffFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLMonthDiffFunction());
         jpqlFunctionGroup.add("sybase", new DefaultMonthDiffFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLMonthDiffFunction());
         jpqlFunctionGroup.add("oracle", new OracleMonthDiffFunction());
@@ -480,6 +488,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("h2", new DefaultDayDiffFunction());
         jpqlFunctionGroup.add("microsoft", new DefaultDayDiffFunction());
         jpqlFunctionGroup.add("mysql", new MySQLDayDiffFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLDayDiffFunction());
         jpqlFunctionGroup.add("sybase", new DefaultDayDiffFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLDayDiffFunction());
         jpqlFunctionGroup.add("oracle", new OracleDayDiffFunction());
@@ -491,6 +500,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("h2", new DefaultHourDiffFunction());
         jpqlFunctionGroup.add("microsoft", new DefaultHourDiffFunction());
         jpqlFunctionGroup.add("mysql", new MySQLHourDiffFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLHourDiffFunction());
         jpqlFunctionGroup.add("sybase", new DefaultHourDiffFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLHourDiffFunction());
         jpqlFunctionGroup.add("oracle", new OracleHourDiffFunction());
@@ -502,6 +512,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("h2", new DefaultMinuteDiffFunction());
         jpqlFunctionGroup.add("microsoft", new DefaultMinuteDiffFunction());
         jpqlFunctionGroup.add("mysql", new MySQLMinuteDiffFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLMinuteDiffFunction());
         jpqlFunctionGroup.add("sybase", new DefaultMinuteDiffFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLMinuteDiffFunction());
         jpqlFunctionGroup.add("oracle", new OracleMinuteDiffFunction());
@@ -513,6 +524,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("db2", new DB2SecondDiffFunction());
         jpqlFunctionGroup.add("microsoft", new SQLServerSecondDiffFunction());
         jpqlFunctionGroup.add("mysql", new MySQLSecondDiffFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLSecondDiffFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLSecondDiffFunction());
         jpqlFunctionGroup.add("oracle", new OracleSecondDiffFunction());
         registerFunction(jpqlFunctionGroup);
@@ -523,6 +535,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("db2", new DB2MillisecondDiffFunction());
         jpqlFunctionGroup.add("microsoft", new SQLServerMillisecondDiffFunction());
         jpqlFunctionGroup.add("mysql", new MySQLMillisecondDiffFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLMillisecondDiffFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLMillisecondDiffFunction());
         jpqlFunctionGroup.add("oracle", new OracleMillisecondDiffFunction());
         registerFunction(jpqlFunctionGroup);
@@ -532,6 +545,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup = new JpqlFunctionGroup(AbstractCountFunction.FUNCTION_NAME, true);
         jpqlFunctionGroup.add(null, new CountTupleFunction());
         jpqlFunctionGroup.add("mysql", new MySQLCountTupleFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLCountTupleFunction());
         jpqlFunctionGroup.add("db2", new CountTupleEmulationFunction());
         jpqlFunctionGroup.add("microsoft", new CountTupleEmulationFunction("+", "varchar(max)"));
         jpqlFunctionGroup.add("oracle", new CountTupleEmulationFunction());
@@ -776,6 +790,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
     private void loadDbmsDialects() {
         registerDialect(null, new DefaultDbmsDialect());
         registerDialect("mysql", new MySQLDbmsDialect());
+        registerDialect("mysql8", new MySQL8DbmsDialect());
         registerDialect("h2", new H2DbmsDialect());
         registerDialect("db2", new DB2DbmsDialect());
         registerDialect("postgresql", new PostgreSQLDbmsDialect());

@@ -35,6 +35,7 @@ public class MySQLDatabaseCleaner implements DatabaseCleaner {
     private static final Logger LOG = Logger.getLogger(MySQLDatabaseCleaner.class.getName());
     private static final String SYSTEM_SCHEMAS = "'information_schema'," +
             "'mysql'," +
+            "'sys'," +
             "'performance_schema'";
 
     private List<String> ignoredTables = new ArrayList<>();

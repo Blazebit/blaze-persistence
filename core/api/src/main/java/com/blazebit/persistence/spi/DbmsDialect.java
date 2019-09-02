@@ -215,6 +215,14 @@ public interface DbmsDialect {
     public boolean supportsFullRowValueComparison();
 
     /**
+     * Returns true if the dbms supports window functions.
+     *
+     * @return Whether the dbms supports window functions
+     * @since 1.4.0
+     */
+    public boolean supportsWindowFunctions();
+
+    /**
      * Returns true if the dbms supports the FILTER clause on aggregate functions.
      *
      * @return Whether the dbms supports the FILTER clause on aggregate functions

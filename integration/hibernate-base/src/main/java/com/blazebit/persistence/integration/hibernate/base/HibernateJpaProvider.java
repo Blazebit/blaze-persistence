@@ -166,7 +166,7 @@ public class HibernateJpaProvider implements JpaProvider {
     public HibernateJpaProvider(PersistenceUnitUtil persistenceUnitUtil, String dbms, Map<String, EntityPersister> entityPersisters, Map<String, CollectionPersister> collectionPersisters, int major, int minor, int fix, String type) {
         this.persistenceUnitUtil = persistenceUnitUtil;
         try {
-            if ("mysql".equals(dbms)) {
+            if ("mysql".equals(dbms) || "mysql8".equals(dbms)) {
                 db = DB.MY_SQL;
             } else if ("db2".equals(dbms)) {
                 db = DB.DB2;

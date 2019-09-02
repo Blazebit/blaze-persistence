@@ -45,6 +45,11 @@ public class DelegatingDbmsDialect implements DbmsDialect {
     }
 
     @Override
+    public boolean supportsWindowFunctions() {
+        return delegate.supportsWindowFunctions();
+    }
+
+    @Override
     public boolean supportsWithClause() {
         return delegate.supportsWithClause();
     }

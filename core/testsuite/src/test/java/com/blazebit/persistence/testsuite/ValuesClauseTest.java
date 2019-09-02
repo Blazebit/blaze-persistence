@@ -27,12 +27,15 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.*;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.googlecode.catchexception.CatchException;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -44,6 +47,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.TimeZone;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -56,8 +60,24 @@ import static org.junit.Assert.assertNull;
  */
 public class ValuesClauseTest extends AbstractCoreTest {
 
+    private static TimeZone timeZone;
+
     private Document d1;
     private Person p1;
+
+    // Thanks to the MySQL driver not being able to handle timezones correctly, we must run this in the UTC timezone...
+
+    @BeforeClass
+    public static void beforeClass() {
+        timeZone = TimeZone.getDefault();
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+    }
+
+    @AfterClass
+    public static void afterClass() {
+        TimeZone.setDefault(timeZone);
+        timeZone = null;
+    }
 
     @Override
     protected Class<?>[] getEntityClasses() {
@@ -551,7 +571,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
 //    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     // No hibernate for now, see https://hibernate.atlassian.net/browse/HHH-11340
     // H2 does not support parameters in the CTE http://dba.stackexchange.com/a/78449
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class, NoH2.class })
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class, NoH2.class })
     public void testValuesEntityFunctionInCte() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.setProperty(ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS, "false");
@@ -620,7 +640,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
 
     @Test
     // H2 does not support parameters in the CTE http://dba.stackexchange.com/a/78449
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class, NoH2.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class, NoH2.class })
     public void testValuesEntityFunctionWithCteInCteWithSetOperation() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.setProperty(ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS, "false");
@@ -655,7 +675,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
 
     @Test
     // H2 does not support parameters in the CTE http://dba.stackexchange.com/a/78449
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class, NoH2.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class, NoH2.class })
     public void testIdentifiableValuesEntityFunction() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.setProperty(ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS, "false");

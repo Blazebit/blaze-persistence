@@ -5,6 +5,7 @@ if "%1"=="" (
     echo "Provide one of:"
     echo -e "\tmysql_5_6"
     echo -e "\tmysql_5_7"
+    echo -e "\tmysql_8_0"
     echo -e "\tdb2"
     echo -e "\tmssql"
     echo -e "\toracle"
@@ -21,6 +22,11 @@ goto:EOF
 :mysql_5_7
 docker rm -f mysql || true
 docker run --name mysql -e MYSQL_ALLOW_EMPTY_PASSWORD=yes -e MYSQL_DATABASE=test -p3306:3306 -d mysql:5.7 --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+goto:EOF
+
+:mysql_8_0
+docker rm -f mysql || true
+docker run --name mysql -e MYSQL_ALLOW_EMPTY_PASSWORD=yes -e MYSQL_DATABASE=test -p3306:3306 -d mysql:8.0 --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
 goto:EOF
 
 :db2

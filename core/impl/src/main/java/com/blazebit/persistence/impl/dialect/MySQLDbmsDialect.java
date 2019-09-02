@@ -46,6 +46,10 @@ public class MySQLDbmsDialect extends DefaultDbmsDialect {
 
         return types;
     }
+    @Override
+    public boolean supportsWindowFunctions() {
+        return false;
+    }
 
     @Override
     public boolean supportsWithClause() {

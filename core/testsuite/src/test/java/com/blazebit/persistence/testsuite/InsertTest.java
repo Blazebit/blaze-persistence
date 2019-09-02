@@ -22,6 +22,7 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
+import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
 import com.blazebit.persistence.testsuite.tx.TxWork;
 import org.junit.Before;
 import org.junit.Test;
@@ -302,7 +303,7 @@ public class InsertTest extends AbstractCoreTest {
     // NOTE: H2 only supports with clause in select statement
     // NOTE: MySQL does not support CTEs
     @Test
-    @Category({ NoH2.class, NoOracle.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoOracle.class, NoMySQLOld.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testReturningLastWithCte() {
         ReturningResult<Long> result = transactional(new TxWork<ReturningResult<Long>>() {
             @Override
@@ -343,7 +344,7 @@ public class InsertTest extends AbstractCoreTest {
     // NOTE: H2 only supports with clause in select statement
     // NOTE: MySQL does not support CTEs
     @Test
-    @Category({ NoH2.class, NoOracle.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoOracle.class, NoMySQLOld.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testReturningLastWithCteAndLimit() {
         ReturningResult<Long> result = transactional(new TxWork<ReturningResult<Long>>() {
             @Override
