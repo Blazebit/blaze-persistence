@@ -149,16 +149,8 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
     @Override
     public void visit(MapValueExpression expression) {
-        // NOTE: Hibernate uses the column from a join table if VALUE is used which is wrong, so drop the VALUE here
-        String valueFunction = jpaProvider.getCollectionValueFunction();
-        if (valueFunction != null) {
-            sb.append(valueFunction);
-            sb.append('(');
-            expression.getPath().accept(this);
-            sb.append(')');
-        } else {
-            expression.getPath().accept(this);
-        }
+        // NOTE: We decide if we need a VALUE wrapper during the rendering of the path expression anyway
+        expression.getPath().accept(this);
     }
 
     @Override
@@ -189,7 +181,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         } else if (BUILT_IN_FUNCTIONS.contains(expression.getFunctionName().toLowerCase()) && expression.getResolvedWindowDefinition() == null) {
             super.visit(expression);
         } else {
-            renderFunctionFunction(expression.getFunctionName(), expression.getExpressions(), expression.getResolvedWindowDefinition());
+            renderFunctionFunction(resolveRenderedFunctionName(expression.getFunctionName()), expression.getExpressions(), expression.getResolvedWindowDefinition());
         }
 
         treatedJoinNodesForConstraints = oldTreatedJoinNodesForConstraints;
@@ -358,7 +350,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         ParameterRenderingMode oldParameterRenderingMode = setParameterRenderingMode(ParameterRenderingMode.PLACEHOLDER);
         int size = arguments.size();
         if (registeredFunctions.containsKey(functionName)) {
-            sb.append(jpaProvider.getCustomFunctionInvocation(functionName, size));
+            sb.append(jpaProvider.getCustomFunctionInvocation(functionName, windowDefinition == null ? size : size + 1));
             if (size == 0) {
                 visitWindowDefinition(windowDefinition);
             } else {
@@ -431,7 +423,6 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                 for (int i = 1; i < size; i++) {
                     sb.append(", ");
                     visit(orderByExpressions.get(i));
-                    sb.append(",");
                 }
             }
 
@@ -512,14 +503,14 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                         SelectInfo selectAliasInfo = (SelectInfo) aliasInfo;
                         if (selectAliasInfo.getExpression() instanceof PathExpression) {
                             PathExpression aliasedExpression = (PathExpression) selectAliasInfo.getExpression();
-                            boolean collectionKeyPath = aliasedExpression.isCollectionKeyPath();
+                            boolean collectionKeyPath = aliasedExpression.isCollectionQualifiedPath();
                             boolean usedInCollectionFunction = aliasedExpression.isUsedInCollectionFunction();
-                            aliasedExpression.setCollectionKeyPath(expression.isCollectionKeyPath());
+                            aliasedExpression.setCollectionQualifiedPath(expression.isCollectionQualifiedPath());
                             aliasedExpression.setUsedInCollectionFunction(expression.isUsedInCollectionFunction());
                             try {
                                 selectAliasInfo.getExpression().accept(this);
                             } finally {
-                                aliasedExpression.setCollectionKeyPath(collectionKeyPath);
+                                aliasedExpression.setCollectionQualifiedPath(collectionKeyPath);
                                 aliasedExpression.setUsedInCollectionFunction(usedInCollectionFunction);
                             }
                         } else {
@@ -536,100 +527,104 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         String field;
         if ((baseNode = (JoinNode) expression.getBaseNode()) == null) {
             super.visit(expression);
-        } else if ((field = expression.getField()) == null) {
-            if (expression.isUsedInCollectionFunction() || renderAbsolutePath(expression)) {
-                super.visit(expression);
-            } else {
-                boolean valueFunction = needsValueFunction(expression, baseNode, field) && jpaProvider.getCollectionValueFunction() != null;
-
-                if (valueFunction) {
-                    sb.append(jpaProvider.getCollectionValueFunction());
-                    sb.append('(');
-                }
-
-                if (aliasPrefix != null) {
-                    sb.append(aliasPrefix);
-                }
-
-                baseNode.appendAlias(sb, externalRepresentation);
-
-                if (valueFunction) {
-                    sb.append(')');
-                }
-            }
         } else {
-            List<JoinNode> treatedJoinNodes = baseNode.getJoinNodesForTreatConstraint();
-            if (treatedJoinNodesForConstraints != null) {
-                for (JoinNode node : treatedJoinNodes) {
-                    treatedJoinNodesForConstraints.put(node, Boolean.FALSE);
-                }
-            }
+            String collectionValueFunction = jpaProvider.getCollectionValueFunction();
+            if ((field = expression.getField()) == null) {
+                if (expression.isUsedInCollectionFunction() || renderAbsolutePath(expression)) {
+                    super.visit(expression);
+                } else {
+                    // NOTE: Hibernate uses the column from a join table if VALUE is used which is wrong, so drop the VALUE here
+                    boolean valueFunction = collectionValueFunction != null && needsValueFunction(expression, baseNode, field);
 
-            ManagedType<?> baseNodeType = baseNode.getManagedType();
-            boolean addTypeCaseWhen = !treatedJoinNodes.isEmpty()
-                    && baseNodeType instanceof EntityType<?>
-                    && jpaProvider.needsTypeConstraintForColumnSharing()
-                    && jpaProvider.isColumnShared((EntityType<?>) baseNodeType, field);
-            if (addTypeCaseWhen) {
-                sb.append("CASE WHEN ");
-                boolean first = true;
-
-                for (int i = 0; i < treatedJoinNodes.size(); i++) {
-                    JoinNode treatedJoinNode = treatedJoinNodes.get(i);
-
-                    // When the JPA provider supports rendering treat joins and we have a treat join node
-                    // we skip the type constraint as that is already applied through the join
-                    if (jpaProvider.supportsTreatJoin() && treatedJoinNode.isTreatJoinNode()) {
-                        continue;
+                    if (valueFunction) {
+                        sb.append(collectionValueFunction);
+                        sb.append('(');
                     }
 
-                    if (first) {
-                        first = false;
-                    } else {
-                        sb.append(" AND ");
+                    if (aliasPrefix != null) {
+                        sb.append(aliasPrefix);
                     }
 
-                    sb.append("TYPE(");
-                    sb.append(treatedJoinNode.getAlias());
-                    sb.append(") = ");
-                    sb.append(treatedJoinNode.getTreatType().getName());
+                    baseNode.appendAlias(sb, externalRepresentation);
+
+                    if (valueFunction) {
+                        sb.append(')');
+                    }
                 }
-
-                sb.append(" THEN ");
-            }
-
-            boolean valueFunction = needsValueFunction(expression, baseNode, field) && jpaProvider.getCollectionValueFunction() != null;
-            // NOTE: There is no need to check for whether the JPA provider support implicit downcasting here
-            // If it didn't, the query building would have already failed before. Here we just decide whether to render the treat or not
-            boolean renderTreat = jpaProvider.supportsRootTreat();
-
-            if (valueFunction) {
-                sb.append(jpaProvider.getCollectionValueFunction());
-                sb.append('(');
-
-                if (aliasPrefix != null) {
-                    sb.append(aliasPrefix);
-                }
-
-                baseNode.appendAlias(sb, renderTreat, externalRepresentation);
-                sb.append(')');
-                sb.append(".").append(field);
             } else {
-                if (aliasPrefix != null) {
-                    sb.append(aliasPrefix);
+                List<JoinNode> treatedJoinNodes = baseNode.getJoinNodesForTreatConstraint();
+                if (treatedJoinNodesForConstraints != null) {
+                    for (JoinNode node : treatedJoinNodes) {
+                        treatedJoinNodesForConstraints.put(node, Boolean.FALSE);
+                    }
                 }
 
-                baseNode.appendDeReference(sb, field, renderTreat, externalRepresentation, jpaProvider.needsElementCollectionIdCutoff());
-            }
+                ManagedType<?> baseNodeType = baseNode.getManagedType();
+                boolean addTypeCaseWhen = !treatedJoinNodes.isEmpty()
+                        && baseNodeType instanceof EntityType<?>
+                        && jpaProvider.needsTypeConstraintForColumnSharing()
+                        && jpaProvider.isColumnShared((EntityType<?>) baseNodeType, field);
+                if (addTypeCaseWhen) {
+                    sb.append("CASE WHEN ");
+                    boolean first = true;
 
-            if (addTypeCaseWhen) {
-                sb.append(" END");
+                    for (int i = 0; i < treatedJoinNodes.size(); i++) {
+                        JoinNode treatedJoinNode = treatedJoinNodes.get(i);
+
+                        // When the JPA provider supports rendering treat joins and we have a treat join node
+                        // we skip the type constraint as that is already applied through the join
+                        if (jpaProvider.supportsTreatJoin() && treatedJoinNode.isTreatJoinNode()) {
+                            continue;
+                        }
+
+                        if (first) {
+                            first = false;
+                        } else {
+                            sb.append(" AND ");
+                        }
+
+                        sb.append("TYPE(");
+                        sb.append(treatedJoinNode.getAlias());
+                        sb.append(") = ");
+                        sb.append(treatedJoinNode.getTreatType().getName());
+                    }
+
+                    sb.append(" THEN ");
+                }
+
+                boolean valueFunction = collectionValueFunction != null && needsValueFunction(expression, baseNode, field);
+                // NOTE: There is no need to check for whether the JPA provider support implicit downcasting here
+                // If it didn't, the query building would have already failed before. Here we just decide whether to render the treat or not
+                boolean renderTreat = jpaProvider.supportsRootTreat();
+
+                if (valueFunction) {
+                    sb.append(collectionValueFunction);
+                    sb.append('(');
+
+                    if (aliasPrefix != null) {
+                        sb.append(aliasPrefix);
+                    }
+
+                    baseNode.appendAlias(sb, renderTreat, externalRepresentation);
+                    sb.append(')');
+                    sb.append(".").append(field);
+                } else {
+                    if (aliasPrefix != null) {
+                        sb.append(aliasPrefix);
+                    }
+
+                    baseNode.appendDeReference(sb, field, renderTreat, externalRepresentation, jpaProvider.needsElementCollectionIdCutoff());
+                }
+
+                if (addTypeCaseWhen) {
+                    sb.append(" END");
+                }
             }
         }
     }
 
     private boolean needsValueFunction(PathExpression expression, JoinNode baseNode, String field) {
-        return !expression.isCollectionKeyPath() && baseNode.getParentTreeNode() != null && baseNode.getParentTreeNode().isMap() && (field == null || jpaProvider.supportsCollectionValueDereference());
+        return !expression.isCollectionQualifiedPath() && baseNode.getParentTreeNode() != null && baseNode.getParentTreeNode().isMap() && (field == null || jpaProvider.supportsCollectionValueDereference());
     }
 
     private boolean renderAbsolutePath(PathExpression expression) {

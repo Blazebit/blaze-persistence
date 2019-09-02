@@ -643,6 +643,7 @@ public class SimpleQueryGenerator implements Expression.Visitor {
 
                 if (windowDefinition.getFrameStartExpression() != null) {
                     windowDefinition.getFrameStartExpression().accept(this);
+                    sb.append(' ');
                 }
 
                 sb.append(getFrameType(windowDefinition.getFrameStartType()));
@@ -651,12 +652,14 @@ public class SimpleQueryGenerator implements Expression.Visitor {
                     sb.append(" AND ");
                     if (windowDefinition.getFrameEndExpression() != null) {
                         windowDefinition.getFrameEndExpression().accept(this);
+                        sb.append(' ');
                     }
 
                     sb.append(getFrameType(windowDefinition.getFrameEndType()));
                 }
 
                 if (windowDefinition.getFrameExclusionType() != null) {
+                    sb.append(' ');
                     sb.append(getFrameExclusionType(windowDefinition.getFrameExclusionType()));
                 }
             }
@@ -670,13 +673,13 @@ public class SimpleQueryGenerator implements Expression.Visitor {
     protected String getFrameExclusionType(WindowFrameExclusionType frameExclusionType) {
         switch (frameExclusionType) {
             case EXCLUDE_CURRENT_ROW:
-                return " EXCLUDE CURRENT ROW";
+                return "EXCLUDE CURRENT ROW";
             case EXCLUDE_GROUP:
-                return " EXCLUDE GROUP";
+                return "EXCLUDE GROUP";
             case EXCLUDE_NO_OTHERS:
-                return " EXCLUDE NO OTHERS";
+                return "EXCLUDE NO OTHERS";
             case EXCLUDE_TIES:
-                return " EXCLUDE TIES";
+                return "EXCLUDE TIES";
             default:
                 throw new IllegalArgumentException("No branch for " + frameExclusionType);
         }
@@ -687,9 +690,9 @@ public class SimpleQueryGenerator implements Expression.Visitor {
             case CURRENT_ROW:
                 return "CURRENT ROW";
             case BOUNDED_FOLLOWING:
-                return " FOLLOWING";
+                return "FOLLOWING";
             case BOUNDED_PRECEDING:
-                return " PRECEDING";
+                return "PRECEDING";
             case UNBOUNDED_FOLLOWING:
                 return "UNBOUNDED FOLLOWING";
             case UNBOUNDED_PRECEDING:

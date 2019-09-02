@@ -25,6 +25,7 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoFirebird;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoSQLite;
@@ -169,7 +170,7 @@ public class UpdatePolymorphicTest extends AbstractCoreTest {
     @Test
     // NOTE: MySQL does not support CTEs
     // NOTE: H2 only supports with clause in select statement
-    @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoMySQLOld.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testTablePerClassWithCte() {
         transactional(new TxVoidWork() {
             @Override
@@ -202,7 +203,7 @@ public class UpdatePolymorphicTest extends AbstractCoreTest {
     @Test
     // NOTE: MySQL does not support CTEs
     // NOTE: H2 only supports with clause in select statement
-    @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoMySQLOld.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testJoinedWithCte() {
         transactional(new TxVoidWork() {
             @Override
@@ -235,7 +236,7 @@ public class UpdatePolymorphicTest extends AbstractCoreTest {
     @Test
     // NOTE: MySQL does not support CTEs
     // NOTE: H2 only supports with clause in select statement
-    @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoMySQLOld.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testSingleTableWithCte() {
         transactional(new TxVoidWork() {
             @Override

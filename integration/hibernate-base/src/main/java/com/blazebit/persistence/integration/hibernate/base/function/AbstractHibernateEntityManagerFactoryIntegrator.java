@@ -39,10 +39,12 @@ import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import java.lang.reflect.Field;
+import java.sql.Connection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -80,9 +82,26 @@ public abstract class AbstractHibernateEntityManagerFactoryIntegrator implements
         TYPE = parts[3];
     }
 
-    protected String getDbmsName(Dialect dialect) {
+    protected String getDbmsName(EntityManagerFactory emf, EntityManager em, Dialect dialect) {
         if (dialect instanceof MySQLDialect) {
-            return "mysql";
+            try {
+                boolean close = em == null;
+                EntityManager entityManager = em == null ? emf.createEntityManager() : em;
+                try {
+                    Connection connection = entityManager.unwrap(SessionImplementor.class).connection();
+                    if (connection.getMetaData().getDatabaseMajorVersion() > 7) {
+                        return "mysql8";
+                    } else {
+                        return "mysql";
+                    }
+                } finally {
+                    if (close) {
+                        entityManager.close();
+                    }
+                }
+            } catch (Exception ex) {
+                throw new RuntimeException("Could not determine the MySQL Server version!", ex);
+            }
         } else if (dialect instanceof DB2Dialect) {
             return "db2";
         } else if (dialect instanceof PostgreSQL81Dialect) {
@@ -121,7 +140,7 @@ public abstract class AbstractHibernateEntityManagerFactoryIntegrator implements
             Map<String, SQLFunction> functions = new TreeMap<String, SQLFunction>(String.CASE_INSENSITIVE_ORDER);
             functions.putAll(originalFunctions);
             Dialect dialect = getDialect(s);
-            String dbms = getDbmsName(dialect);
+            String dbms = getDbmsName(entityManagerFactory, em, dialect);
             
             for (Map.Entry<String, JpqlFunctionGroup> functionEntry : dbmsFunctions.entrySet()) {
                 String functionName = functionEntry.getKey();

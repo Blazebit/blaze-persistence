@@ -2988,7 +2988,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
                 @Override
                 public void visit(PathExpression expression) {
-                    expression.setCollectionKeyPath(isKeyFunction);
+                    expression.setCollectionQualifiedPath(isKeyFunction);
                     super.visit(expression);
                 }
 

@@ -14,25 +14,8 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.testsuite.base;
+package com.blazebit.persistence.testsuite.base.jpa.category;
 
-import org.hibernate.dialect.MySQL5InnoDBDialect;
+public interface NoMySQLOld {
 
-import java.sql.Types;
-
-/**
- * @author Moritz Becker
- * @since 1.2.0
- */
-public class SaneMySQLDialect extends MySQL5InnoDBDialect {
-
-    public SaneMySQLDialect() {
-        registerColumnType( Types.TIME, "time(6)" );
-        registerColumnType( Types.TIMESTAMP, "datetime(6)" );
-    }
-
-    @Override
-    public String getTableTypeString() {
-        return " ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin";
-    }
 }

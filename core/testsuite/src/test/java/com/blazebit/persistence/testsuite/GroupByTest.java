@@ -143,7 +143,7 @@ public class GroupByTest extends AbstractCoreTest {
                 assertEquals("SELECT d.id FROM Document d LEFT JOIN d.nameMap nameMap_1 GROUP BY nameMap_1.intIdEntity.id, nameMap_1.primaryName, nameMap_1.secondaryName, d.id", cb.getQueryString());
             }
         } else {
-            assertEquals("SELECT d.id FROM Document d LEFT JOIN d.nameMap nameMap_1 LEFT JOIN nameMap_1.intIdEntity intIdEntity_1 GROUP BY intIdEntity_1.id, nameMap_1.primaryName, nameMap_1.secondaryName, d.id", cb.getQueryString());
+            assertEquals("SELECT d.id FROM Document d LEFT JOIN d.nameMap nameMap_1 LEFT JOIN nameMap_1.intIdEntity intIdEntity_1 GROUP BY intIdEntity_1.id, " + joinAliasValue("nameMap_1", "primaryName") + ", " + joinAliasValue("nameMap_1", "secondaryName") + ", d.id", cb.getQueryString());
         }
         cb.getResultList();
     }

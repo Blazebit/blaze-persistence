@@ -43,6 +43,7 @@ parseExpression
 
 parseInItemExpression
     : parameterOrLiteral EOF
+    | entityTypeOrEnumLiteral EOF
     ;
 
 parseInItemOrPathExpression
@@ -391,6 +392,10 @@ keysetClause
 parameterOrLiteral
     : parameter
     | literal
+    ;
+
+entityTypeOrEnumLiteral
+    : identifier ((DOT | DOLLAR) identifier)*
     ;
 
 // ############################################################################

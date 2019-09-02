@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Calendar;
 import java.util.List;
+import java.util.TimeZone;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
@@ -27,7 +28,9 @@ import javax.persistence.TemporalType;
 import javax.persistence.Tuple;
 
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.blazebit.persistence.CriteriaBuilder;
@@ -43,7 +46,9 @@ import com.blazebit.persistence.testsuite.entity.Version;
  * @since 1.1.0
  */
 public class DateDiffTest extends AbstractCoreTest {
-    
+
+    private static TimeZone timeZone;
+
     private Calendar c1;
     private Calendar c2;
     private Calendar l1;
@@ -65,6 +70,20 @@ public class DateDiffTest extends AbstractCoreTest {
         l2 = Calendar.getInstance();
         l2.set(2003, 1, 2, 1, 1, 1);
         l2.set(Calendar.MILLISECOND, 40);
+    }
+
+    // Thanks to the MySQL driver not being able to handle timezones correctly, we must run this in the UTC timezone...
+
+    @BeforeClass
+    public static void beforeClass() {
+        timeZone = TimeZone.getDefault();
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+    }
+
+    @AfterClass
+    public static void afterClass() {
+        TimeZone.setDefault(timeZone);
+        timeZone = null;
     }
 
     @Override

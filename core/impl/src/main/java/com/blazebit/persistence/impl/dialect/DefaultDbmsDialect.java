@@ -125,6 +125,11 @@ public class DefaultDbmsDialect implements DbmsDialect {
     }
 
     @Override
+    public boolean supportsWindowFunctions() {
+        return true;
+    }
+
+    @Override
     public boolean supportsFilterClause() {
         return true;
     }

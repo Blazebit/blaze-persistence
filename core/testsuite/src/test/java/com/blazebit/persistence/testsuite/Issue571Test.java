@@ -24,6 +24,7 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.entity.IdClassEntity;
@@ -74,8 +75,8 @@ public class Issue571Test extends AbstractCoreTest {
     }
 
     @Test
-    // Ignore MySQL / Oracle because of unsuppored use of CTE's, ignore Hibernate 4.3 and 4.3 metamodel bug
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class, NoOracle.class, NoHibernate42.class, NoHibernate43.class })
+    // Ignore MySQL / Oracle because of unsupported use of CTE's, ignore Hibernate 4.3 and 4.3 metamodel bug
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class, NoOracle.class, NoHibernate42.class, NoHibernate43.class })
     public void testBindingCteAssociationToEntity() {
         transactional(new TxVoidWork() {
             @Override
@@ -115,7 +116,7 @@ public class Issue571Test extends AbstractCoreTest {
 
     @Test
     // Ignore MySQL / Oracle because of unsuppored use of CTE's, ignore Hibernate 4.3 and 4.3 metamodel bug
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class, NoOracle.class, NoHibernate42.class, NoHibernate43.class  })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class, NoOracle.class, NoHibernate42.class, NoHibernate43.class  })
     public void testBindingCteAssociationToEntityId() {
         expectedException.expectMessage("An association should be bound to its association type and not its identifier type");
 
@@ -158,7 +159,7 @@ public class Issue571Test extends AbstractCoreTest {
 
     @Test
     // Ignore MySQL / Oracle because of unsuppored use of CTE's, ignore Hibernate 4.3 and 4.3 metamodel bug
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class, NoOracle.class, NoHibernate42.class, NoHibernate43.class  })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class, NoOracle.class, NoHibernate42.class, NoHibernate43.class  })
     public void testBindingCteAssociationIdToEntityId() {
         transactional(new TxVoidWork() {
             @Override
@@ -199,7 +200,7 @@ public class Issue571Test extends AbstractCoreTest {
 
     @Test
     // Ignore MySQL / Oracle because of unsupported use of CTE's, ignore Hibernate 4.3 and 4.3 metamodel bug
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class, NoOracle.class, NoHibernate42.class, NoHibernate43.class  })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class, NoOracle.class, NoHibernate42.class, NoHibernate43.class  })
     public void testBindingCteUsingNestedIdClass() {
         transactional(new TxVoidWork() {
             @Override

@@ -109,7 +109,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
 
         this.transientEntityParameterTransformerFactory = new TransientEntityAssociationParameterTransformerFactory(metamodel, new AssociationToIdParameterTransformer(jpaProvider));
         this.extendedQuerySupport = config.getExtendedQuerySupport();
-        this.functions = resolveFunctions(config.getFunctions());
+        this.functions = resolveFunctions(config.getFunctions(), configuredRegisteredFunctions);
         this.namedTypes = resolveNamedTypes(config.getNamedTypes());
 
         ExpressionFactory originalExpressionFactory = new ExpressionFactoryImpl(functions, metamodel.getEntityTypes(), metamodel.getEnumTypes(), !compatibleMode, optimize);
@@ -130,7 +130,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         }
     }
 
-    private static Map<String, Boolean> resolveFunctions(Map<String, JpqlFunctionGroup> functions) {
+    private static Map<String, Boolean> resolveFunctions(Map<String, JpqlFunctionGroup> functions, Map<String, JpqlFunction> configuredFunctions) {
         Map<String, Boolean> map = new HashMap<>();
         for (Map.Entry<String, JpqlFunctionGroup> entry : functions.entrySet()) {
             map.put(entry.getKey().toLowerCase(), entry.getValue().isAggregate());
@@ -141,6 +141,13 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         map.put("max", true);
         map.put("avg", true);
         map.put("count", true);
+
+        for (Map.Entry<String, JpqlFunction> entry : configuredFunctions.entrySet()) {
+            if (!map.containsKey(entry.getKey())) {
+                map.put(entry.getKey(), false);
+            }
+        }
+
         return map;
     }
 

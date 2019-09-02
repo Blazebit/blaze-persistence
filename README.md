@@ -641,17 +641,20 @@ To test a specific combination, you need to activate at least 4 profiles
   * `h2`
   * `postgresql`
   * `mysql`
+  * `mysql8`
   * `oracle`
   * `db2`
   * `mssql`
   * `firebird`
   * `sqllite`
 * A Spring data profile
+  * `spring-data-2.1.x`
   * `spring-data-2.0.x`
   * `spring-data-1.11.x`
 * A Deltaspike profile
   * `deltaspike-1.7`
   * `deltaspike-1.8`
+  * `deltaspike-1.9`
 
 The default DBMS connection infos are defined via Maven properties, so you can override them in a build by passing the properties as system properties.
 

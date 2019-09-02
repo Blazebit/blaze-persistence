@@ -223,15 +223,6 @@ public abstract class AbstractJpaPersistenceTest {
         }
     }
 
-
-    public DatabaseCleaner getDatabaseCleanerOrDefault(EntityManager em) {
-        DatabaseCleaner databaseCleaner = getDatabaseCleaner(em);
-        if (databaseCleaner == null) {
-            return getDefaultDatabaseCleaner();
-        }
-        return databaseCleaner;
-    }
-
     public DatabaseCleaner getDefaultDatabaseCleaner() {
         return new DatabaseCleaner() {
             @Override
@@ -259,9 +250,7 @@ public abstract class AbstractJpaPersistenceTest {
         };
     }
 
-    public DatabaseCleaner getDatabaseCleaner(EntityManager em) {
-        // Find an applicable cleaner
-        Connection connection = getConnection(em);
+    public DatabaseCleaner getDatabaseCleaner(Connection connection) {
         DatabaseCleaner applicableCleaner = null;
         for (DatabaseCleaner.Factory factory : DATABASE_CLEANERS) {
             DatabaseCleaner cleaner = factory.create();
@@ -304,14 +293,16 @@ public abstract class AbstractJpaPersistenceTest {
         QueryInspectorListener.collectSequences = false;
 
         if (!resolvedNoop && databaseCleaner == null) {
-            dropAndCreateSchema();
-            schemaChanged = false;
-            DatabaseCleaner applicableCleaner = getDatabaseCleaner(getEm());
+            try (Connection c = dataSource.getConnection()) {
+                DatabaseCleaner applicableCleaner = getDatabaseCleaner(c);
 
-            if (applicableCleaner == null) {
-                // If none was found, we use the default cleaner
-                Logger.getLogger(getClass().getName()).warning("Could not resolve database cleaner for the database, falling back to drop-and-create strategy.");
-                resolvedNoop = true;
+                if (applicableCleaner == null) {
+                    // If none was found, we use the default cleaner
+                    Logger.getLogger(getClass().getName()).warning("Could not resolve database cleaner for the database, falling back to drop-and-create strategy.");
+                    resolvedNoop = true;
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
             }
         }
 
@@ -354,30 +345,40 @@ public abstract class AbstractJpaPersistenceTest {
         // No-op
     }
 
+    protected boolean needsEntityManagerForDbAction() {
+        return false;
+    }
+
     protected void createSchema() {
         EntityManagerFactory entityManagerFactory = createEntityManagerFactory("TestsuiteBase", createProperties("create"));
-        try {
-            entityManagerFactory.createEntityManager().close();
-        } finally {
-            entityManagerFactory.close();
+        if (needsEntityManagerForDbAction()) {
+            try {
+                entityManagerFactory.createEntityManager().close();
+            } finally {
+                entityManagerFactory.close();
+            }
         }
     }
 
     protected void dropSchema() {
         EntityManagerFactory entityManagerFactory = createEntityManagerFactory("TestsuiteBase", createProperties("drop"));
-        try {
-            entityManagerFactory.createEntityManager().close();
-        } finally {
-            entityManagerFactory.close();
+        if (needsEntityManagerForDbAction()) {
+            try {
+                entityManagerFactory.createEntityManager().close();
+            } finally {
+                entityManagerFactory.close();
+            }
         }
     }
 
     protected void dropAndCreateSchema() {
         EntityManagerFactory entityManagerFactory = createEntityManagerFactory("TestsuiteBase", createProperties("drop-and-create"));
-        try {
-            entityManagerFactory.createEntityManager().close();
-        } finally {
-            entityManagerFactory.close();
+        if (needsEntityManagerForDbAction()) {
+            try {
+                entityManagerFactory.createEntityManager().close();
+            } finally {
+                entityManagerFactory.close();
+            }
         }
     }
 

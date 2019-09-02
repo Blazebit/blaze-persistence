@@ -48,7 +48,7 @@ public class Hibernate43EntityManagerFactoryIntegrator extends AbstractHibernate
             return null;
         }
 
-        return getDbmsName(entityManagerFactory.unwrap(SessionFactoryImplementor.class).getDialect());
+        return getDbmsName(entityManagerFactory, null, entityManagerFactory.unwrap(SessionFactoryImplementor.class).getDialect());
     }
 
     private String getDbms(EntityManager entityManager) {
@@ -57,7 +57,7 @@ public class Hibernate43EntityManagerFactoryIntegrator extends AbstractHibernate
         }
         Session s = entityManager.unwrap(Session.class);
         Dialect dialect = getDialect(s);
-        return getDbmsName(dialect);
+        return getDbmsName(entityManager.getEntityManagerFactory(), entityManager, dialect);
     }
 
     private Map<String, CollectionPersister> getCollectionPersisters(EntityManager em) {
@@ -96,7 +96,7 @@ public class Hibernate43EntityManagerFactoryIntegrator extends AbstractHibernate
                         factory = entityManagerFactory.unwrap(SessionFactoryImplementor.class);
                     }
                     if (factory != null) {
-                        return new HibernateJpa21Provider(persistenceUnitUtil, getDbmsName(factory.getDialect()), factory.getEntityPersisters(), factory.getCollectionPersisters(), MAJOR, MINOR, FIX, TYPE);
+                        return new HibernateJpa21Provider(persistenceUnitUtil, getDbmsName(entityManagerFactory, em, factory.getDialect()), factory.getEntityPersisters(), factory.getCollectionPersisters(), MAJOR, MINOR, FIX, TYPE);
                     }
                 }
                 return new HibernateJpa21Provider(persistenceUnitUtil, getDbms(em), getEntityPersisters(em), getCollectionPersisters(em), MAJOR, MINOR, FIX, TYPE);

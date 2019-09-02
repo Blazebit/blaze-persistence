@@ -30,7 +30,7 @@ public class PathExpression extends AbstractExpression implements Expression {
     private List<PathElementExpression> pathProperties;
     private PathReference pathReference;
     private boolean usedInCollectionFunction = false;
-    private boolean collectionKeyPath;
+    private boolean collectionQualifiedPath;
 
     public PathExpression() {
         this(new ArrayList<PathElementExpression>(), false);
@@ -42,14 +42,14 @@ public class PathExpression extends AbstractExpression implements Expression {
 
     public PathExpression(List<PathElementExpression> pathProperties, boolean isCollectionKeyPath) {
         this.pathProperties = pathProperties;
-        this.collectionKeyPath = isCollectionKeyPath;
+        this.collectionQualifiedPath = isCollectionKeyPath;
     }
 
-    public PathExpression(List<PathElementExpression> pathProperties, PathReference pathReference, boolean usedInCollectionFunction, boolean collectionKeyPath) {
+    public PathExpression(List<PathElementExpression> pathProperties, PathReference pathReference, boolean usedInCollectionFunction, boolean collectionQualifiedPath) {
         this.pathProperties = pathProperties;
         this.pathReference = pathReference;
         this.usedInCollectionFunction = usedInCollectionFunction;
-        this.collectionKeyPath = collectionKeyPath;
+        this.collectionQualifiedPath = collectionQualifiedPath;
     }
 
     @Override
@@ -57,7 +57,7 @@ public class PathExpression extends AbstractExpression implements Expression {
         if (resolved && pathReference != null) {
             PathExpression expression = (PathExpression) pathReference.getBaseNode().createExpression(pathReference.getField());
             expression.usedInCollectionFunction = usedInCollectionFunction;
-            expression.collectionKeyPath = collectionKeyPath;
+            expression.collectionQualifiedPath = collectionQualifiedPath;
             return expression;
         }
 
@@ -69,7 +69,7 @@ public class PathExpression extends AbstractExpression implements Expression {
         }
 
         // NOTE: don't copy the path reference, it has to be set manually on the copy
-        return new PathExpression(newPathProperties, null, usedInCollectionFunction, collectionKeyPath);
+        return new PathExpression(newPathProperties, null, usedInCollectionFunction, collectionQualifiedPath);
     }
 
     @Override
@@ -126,12 +126,12 @@ public class PathExpression extends AbstractExpression implements Expression {
         return toString();
     }
 
-    public boolean isCollectionKeyPath() {
-        return collectionKeyPath;
+    public boolean isCollectionQualifiedPath() {
+        return collectionQualifiedPath;
     }
 
-    public void setCollectionKeyPath(boolean collectionKeyPath) {
-        this.collectionKeyPath = collectionKeyPath;
+    public void setCollectionQualifiedPath(boolean collectionQualifiedPath) {
+        this.collectionQualifiedPath = collectionQualifiedPath;
     }
 
     /*

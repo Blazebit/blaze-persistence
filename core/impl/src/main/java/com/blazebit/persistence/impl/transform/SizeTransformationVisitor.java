@@ -295,7 +295,7 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
                     countArguments.add(sizeArg);
                 }
             } else {
-                sizeArg.setCollectionKeyPath(true);
+                sizeArg.setCollectionQualifiedPath(true);
                 if (collectionType == PluralAttribute.CollectionType.LIST) {
                     countArguments.add(new ListIndexExpression(sizeArg));
                 } else {

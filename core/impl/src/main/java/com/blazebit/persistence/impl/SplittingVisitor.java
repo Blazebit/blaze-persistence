@@ -115,7 +115,7 @@ public class SplittingVisitor extends LazyCopyingResultVisitorAdapter {
                     expressions,
                     new SimplePathReference(node, field, fieldType),
                     expression.isUsedInCollectionFunction(),
-                    expression.isCollectionKeyPath()
+                    expression.isCollectionQualifiedPath()
             );
         }
 

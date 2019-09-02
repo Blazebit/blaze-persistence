@@ -27,6 +27,7 @@ import com.blazebit.persistence.spi.JpqlFunctionGroup;
 import org.datanucleus.NucleusContext;
 import org.datanucleus.store.StoreManager;
 import org.datanucleus.store.rdbms.RDBMSStoreManager;
+import org.datanucleus.store.rdbms.adapter.DatastoreAdapter;
 import org.datanucleus.store.rdbms.identifier.DatastoreIdentifier;
 import org.datanucleus.store.rdbms.query.QueryGenerator;
 import org.datanucleus.store.rdbms.sql.SQLStatement;
@@ -94,7 +95,15 @@ public class DataNucleusEntityManagerFactoryIntegrator implements EntityManagerF
     @Override
     public String getDbms(EntityManagerFactory entityManagerFactory) {
         RDBMSStoreManager storeMgr = (RDBMSStoreManager) entityManagerFactory.unwrap(StoreManager.class);
-        return VENDOR_TO_DBMS_MAPPING.get(storeMgr.getDatastoreAdapter().getVendorID());
+        DatastoreAdapter datastoreAdapter = storeMgr.getDatastoreAdapter();
+        String vendorID = datastoreAdapter.getVendorID();
+        if ("mysql".equals(vendorID)) {
+            String datastoreProductVersion = datastoreAdapter.getDatastoreProductVersion();
+            if (Integer.parseInt(datastoreProductVersion.substring(0, datastoreProductVersion.indexOf('.'))) > 7) {
+                return "mysql8";
+            }
+        }
+        return VENDOR_TO_DBMS_MAPPING.get(vendorID);
     }
 
     @Override

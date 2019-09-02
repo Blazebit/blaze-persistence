@@ -238,6 +238,22 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
     }
 
     @Override
+    public Expression visitEntityTypeOrEnumLiteral(JPQLNextParser.EntityTypeOrEnumLiteralContext ctx) {
+        String literalStr = ctx.getText();
+        Expression literalExpression = createEnumLiteral(literalStr);
+        if (literalExpression != null) {
+            return literalExpression;
+        }
+
+        literalExpression = createEntityTypeLiteral(literalStr);
+        if (literalExpression != null) {
+            return literalExpression;
+        }
+
+        throw new SyntaxErrorException("Invalid literal: " + literalStr);
+    }
+
+    @Override
     public Expression visitTerminal(TerminalNode node) {
         if (node.getSymbol().getType() == JPQLNextLexer.EOF) {
             return null;
@@ -361,19 +377,23 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
             case "index":
                 failDistinct(distinct, ctx);
                 PathExpression listIndexPath = (PathExpression) arguments.get(0);
-                listIndexPath.setCollectionKeyPath(true);
+                listIndexPath.setCollectionQualifiedPath(true);
                 return new ListIndexExpression(listIndexPath);
             case "key":
                 failDistinct(distinct, ctx);
                 PathExpression mapKeyPath = (PathExpression) arguments.get(0);
-                mapKeyPath.setCollectionKeyPath(true);
+                mapKeyPath.setCollectionQualifiedPath(true);
                 return new MapKeyExpression(mapKeyPath);
             case "value":
                 failDistinct(distinct, ctx);
-                return new MapValueExpression((PathExpression) arguments.get(0));
+                PathExpression mapValuePath = (PathExpression) arguments.get(0);
+                mapValuePath.setCollectionQualifiedPath(true);
+                return new MapValueExpression(mapValuePath);
             case "entry":
                 failDistinct(distinct, ctx);
-                return new MapEntryExpression((PathExpression) arguments.get(0));
+                PathExpression mapEntryPath = (PathExpression) arguments.get(0);
+                mapEntryPath.setCollectionQualifiedPath(true);
+                return new MapEntryExpression(mapEntryPath);
             case "type":
                 failDistinct(distinct, ctx);
                 return new TypeFunctionExpression(arguments.get(0));
@@ -606,7 +626,7 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
     @Override
     public Expression visitMapKeyPath(JPQLNextParser.MapKeyPathContext ctx) {
         PathExpression collectionPath = (PathExpression) visitPath(ctx.path());
-        collectionPath.setCollectionKeyPath(true);
+        collectionPath.setCollectionQualifiedPath(true);
         return new MapKeyExpression(collectionPath);
     }
 
@@ -892,11 +912,18 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
         int size = expressions.size();
         List<Expression> right = new ArrayList<>(size);
         if (size == 1 && inListContext.LP() == null) {
-            Expression expression = expressions.get(0).accept(this);
-            if (expression instanceof ParameterExpression) {
+            JPQLNextParser.ExpressionContext expressionContext = expressions.get(0);
+            Expression expression = expressionContext.accept(this);
+            boolean collectionValuedAllowed = true;
+            right.add(expression);
+
+            if (expressionContext instanceof JPQLNextParser.FunctionExpressionContext && expressionContext.getChild(0) instanceof JPQLNextParser.GenericFunctionInvocationContext) {
+                // Even if a macro expressions produces a parameter, we will never consider it being collection valued
+                collectionValuedAllowed = false;
+            }
+            if (collectionValuedAllowed && expression instanceof ParameterExpression) {
                 ((ParameterExpression) expression).setCollectionValued(true);
             }
-            right.add(expression);
         } else {
             for (int i = 0; i < size; i++) {
                 right.add(expressions.get(i).accept(this));

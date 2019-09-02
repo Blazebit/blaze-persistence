@@ -202,13 +202,10 @@ MINUS                   : '-';
 ASTERISK                : '*';
 SLASH                   : '/';
 PERCENT                 : '%';
-AMPERSAND               : '&';
-SEMICOLON               : ';';
 COLON                   : ':';
-PIPE                    : '|';
 DOUBLE_PIPE             : '||';
 QUESTION_MARK           : '?';
-ARROW                   : '->';
+DOLLAR                  : '$';
 
 IDENTIFIER
     : ('a'..'z'|'A'..'Z'|'_'|'$'|'\u0080'..'\ufffe')('a'..'z'|'A'..'Z'|'_'|'$'|'0'..'9'|'\u0080'..'\ufffe')*

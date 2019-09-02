@@ -10,6 +10,11 @@ mysql_5_7() {
     docker run --name mysql -e MYSQL_ALLOW_EMPTY_PASSWORD=yes -e MYSQL_DATABASE=test -p3306:3306 -d mysql:5.7 --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
 }
 
+mysql_8_0() {
+    docker rm -f mysql || true
+    docker run --name mysql -e MYSQL_ALLOW_EMPTY_PASSWORD=yes -e MYSQL_DATABASE=test -p3306:3306 -d mysql:8.0 --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+}
+
 db2() {
     docker rm -f db2 || true
     docker run --name db2 --privileged -e DB2INST1_PASSWORD=db2inst1-pwd -e DBNAME=testdb -e LICENSE=accept -p 50000:50000 -d ibmcom/db2:11.5.0.0a
@@ -45,6 +50,7 @@ if [ -z ${1} ]; then
     echo "Provide one of:"
     echo -e "\tmysql_5_6"
     echo -e "\tmysql_5_7"
+    echo -e "\tmysql_8_0"
     echo -e "\tdb2"
     echo -e "\tmssql"
     echo -e "\toracle"

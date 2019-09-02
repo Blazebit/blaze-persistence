@@ -19,7 +19,7 @@ package com.blazebit.persistence.testsuite;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.IdHolderCTE;
 import com.blazebit.persistence.testsuite.entity.TPCBase;
@@ -67,7 +67,7 @@ public class SelectPolymorphicTest extends AbstractCoreTest {
 
     // NOTE: MySQL has no CTE support
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
     public void testSelectTablePerClassWithCte() throws Exception {
         CriteriaBuilder<TPCBase> cb = cbf.create(em, TPCBase.class, "t")
                 .with(IdHolderCTE.class)
