@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl;
 
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
+import com.blazebit.persistence.view.ConfigurationProperties;
 import com.blazebit.persistence.view.impl.macro.EmbeddingViewJpqlMacro;
 
 import java.util.Collections;

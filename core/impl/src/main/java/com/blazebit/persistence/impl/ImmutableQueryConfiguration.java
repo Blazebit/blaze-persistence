@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.ConfigurationProperties;
 import com.blazebit.persistence.impl.util.PropertyUtils;
 
 import java.util.HashMap;

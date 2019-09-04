@@ -21,14 +21,13 @@ import static org.junit.Assert.assertEquals;
 
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.entity.Person;
-import com.googlecode.catchexception.CatchException;
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.blazebit.persistence.Criteria;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
-import com.blazebit.persistence.impl.ConfigurationProperties;
+import com.blazebit.persistence.ConfigurationProperties;
 import com.blazebit.persistence.parser.expression.SyntaxErrorException;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.testsuite.entity.Document;

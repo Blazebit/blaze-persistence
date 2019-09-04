@@ -23,7 +23,7 @@ import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.change.ChangeModel;
 import com.blazebit.persistence.view.change.SingularChangeModel;
-import com.blazebit.persistence.view.impl.ConfigurationProperties;
+import com.blazebit.persistence.view.ConfigurationProperties;
 import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.impl.collection.RecordingMap;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;

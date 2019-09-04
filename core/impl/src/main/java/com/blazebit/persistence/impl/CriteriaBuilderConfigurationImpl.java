@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.ConfigurationProperties;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.impl.dialect.DB2DbmsDialect;
 import com.blazebit.persistence.impl.dialect.DefaultDbmsDialect;

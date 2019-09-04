@@ -22,7 +22,7 @@ import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.SelectBuilder;
-import com.blazebit.persistence.impl.ConfigurationProperties;
+import com.blazebit.persistence.ConfigurationProperties;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL;

@@ -34,7 +34,7 @@ import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingCorrelated;
 import com.blazebit.persistence.view.MappingCorrelatedSimple;
 import com.blazebit.persistence.view.MappingSubquery;
-import com.blazebit.persistence.view.impl.ConfigurationProperties;
+import com.blazebit.persistence.view.ConfigurationProperties;
 import com.blazebit.persistence.view.impl.JpqlMacroAdapter;
 import com.blazebit.persistence.view.impl.MacroConfigurationExpressionFactory;
 import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor;

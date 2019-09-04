@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.view.ConfigurationProperties;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.impl.metamodel.AnnotationViewMappingReader;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBootContext;

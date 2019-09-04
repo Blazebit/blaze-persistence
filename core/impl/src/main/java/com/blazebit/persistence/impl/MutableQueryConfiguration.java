@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.ConfigurationProperties;
+
 import java.util.Map;
 
 /**

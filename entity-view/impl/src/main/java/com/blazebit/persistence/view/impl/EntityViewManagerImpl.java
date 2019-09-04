@@ -34,6 +34,7 @@ import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpqlMacro;
 import com.blazebit.persistence.spi.PackageOpener;
 import com.blazebit.persistence.view.AttributeFilterProvider;
+import com.blazebit.persistence.view.ConfigurationProperties;
 import com.blazebit.persistence.view.ConvertOption;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;

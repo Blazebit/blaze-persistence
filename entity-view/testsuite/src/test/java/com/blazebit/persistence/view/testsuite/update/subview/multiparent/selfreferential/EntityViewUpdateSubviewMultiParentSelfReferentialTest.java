@@ -22,7 +22,7 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
-import com.blazebit.persistence.view.impl.ConfigurationProperties;
+import com.blazebit.persistence.view.ConfigurationProperties;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateTest;
 import com.blazebit.persistence.view.testsuite.update.subview.multiparent.selfreferential.model.PersonView;

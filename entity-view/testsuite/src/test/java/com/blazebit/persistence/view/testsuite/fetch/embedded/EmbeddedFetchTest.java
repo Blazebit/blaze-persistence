@@ -31,7 +31,7 @@ import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.EntityViews;
-import com.blazebit.persistence.view.impl.ConfigurationProperties;
+import com.blazebit.persistence.view.ConfigurationProperties;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntity2;

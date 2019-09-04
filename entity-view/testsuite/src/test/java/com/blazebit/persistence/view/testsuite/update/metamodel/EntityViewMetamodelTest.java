@@ -32,7 +32,7 @@ import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.UpdatableEntityView;
 import com.blazebit.persistence.view.UpdatableMapping;
 import com.blazebit.persistence.view.ViewConstructor;
-import com.blazebit.persistence.view.impl.ConfigurationProperties;
+import com.blazebit.persistence.view.ConfigurationProperties;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
