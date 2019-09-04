@@ -19,6 +19,7 @@ package com.blazebit.persistence.testsuite;
 import java.util.*;
 
 import com.blazebit.lang.StringUtils;
+import com.blazebit.persistence.ConfigurationProperties;
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.spi.DbmsDialect;
@@ -70,7 +71,7 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
 
         dbms = config.getEntityManagerIntegrators().get(0).getDbms(emf);
         if ("postgresql".equals(dbms)) {
-            config.setProperty("com.blazebit.persistence.returning_clause_case_sensitive", "false");
+            config.setProperty(ConfigurationProperties.RETURNING_CLAUSE_CASE_SENSITIVE, "false");
         }
         
         return config;

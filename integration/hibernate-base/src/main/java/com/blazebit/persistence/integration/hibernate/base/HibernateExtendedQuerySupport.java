@@ -18,6 +18,7 @@ package com.blazebit.persistence.integration.hibernate.base;
 
 import antlr.collections.AST;
 import com.blazebit.apt.service.ServiceProvider;
+import com.blazebit.persistence.ConfigurationProperties;
 import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.spi.ConfigurationSource;
 import com.blazebit.persistence.spi.CteQueryWrapper;
@@ -421,7 +422,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             return hibernateAccess.performExecuteUpdate(queryPlan, session, queryParameters);
         }
 
-        boolean caseInsensitive = !Boolean.valueOf(serviceProvider.getService(ConfigurationSource.class).getProperty("com.blazebit.persistence.returning_clause_case_sensitive"));
+        boolean caseInsensitive = !Boolean.valueOf(serviceProvider.getService(ConfigurationSource.class).getProperty(ConfigurationProperties.RETURNING_CLAUSE_CASE_SENSITIVE));
         String exampleQuerySql = queryPlan.getSqlStrings()[0];
         String[][] returningColumns = getReturningColumns(caseInsensitive, exampleQuerySql);
         int[] returningColumnTypes = dbmsDialect.needsReturningSqlTypes() ? getReturningColumnTypes(queryPlan, sfi) : null;
@@ -476,7 +477,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         StringBuilder sqlSb = new StringBuilder(sqlOverride.length() + 100);
         sqlSb.append(sqlOverride);
 
-        boolean caseInsensitive = !Boolean.valueOf(serviceProvider.getService(ConfigurationSource.class).getProperty("com.blazebit.persistence.returning_clause_case_sensitive"));
+        boolean caseInsensitive = !Boolean.valueOf(serviceProvider.getService(ConfigurationSource.class).getProperty(ConfigurationProperties.RETURNING_CLAUSE_CASE_SENSITIVE));
         String[][] returningColumns = getReturningColumns(caseInsensitive, exampleQuerySql);
         int[] returningColumnTypes = dbmsDialect.needsReturningSqlTypes() ? getReturningColumnTypes(queryPlan, sfi) : null;
         String finalSql = sqlSb.toString();

@@ -317,7 +317,7 @@ PagedList<Cat> page3 = cbf.create(em, Cat.class)
 [.Count query]
 [source,sql]
 ----
-SELECT COUNT(*), FUNCTION('PAGE_POSITION',(
+SELECT COUNT(*), PAGE_POSITION((
     SELECT _page_position_cat.id
     FROM Cat _page_position_cat
     GROUP BY _page_position_cat.id, _page_position_cat.birthday

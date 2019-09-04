@@ -155,7 +155,7 @@ The property can be changed for a criteria builder before constructing a query.
 [[configuration-jpql-functions]]
 === Jpql functions
 
-Custom functions that can be invoked via the JPA 2.1 function syntax `FUNCTION('function_name', args...)` can be registered with `registerFunction(JpqlFunctionGroup)`.
+Custom functions that can be invoked via the JPA 2.1 function syntax `FUNCTION('function_name', args...)` or the non-standard function syntax `function_name(args...)` can be registered with `registerFunction(JpqlFunctionGroup)`.
 A `JpqlFunctionGroup` represents a logical function that can contain multiple implementations for various dbms and can be defined as being an aggregate function.
 
 These functions are registered as native persistence provider functions and can therefore also be used with plain JPA APIs or the native persistence provider APIs.

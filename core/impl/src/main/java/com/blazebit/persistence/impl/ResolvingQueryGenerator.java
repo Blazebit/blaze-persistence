@@ -680,7 +680,9 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
         if (value != null) {
             final TypeConverter<Object> converter = (TypeConverter<Object>) TypeUtils.getConverter(value.getClass());
-            return converter.toString(value);
+            if (converter != null) {
+                return converter.toString(value);
+            }
         }
 
         return null;

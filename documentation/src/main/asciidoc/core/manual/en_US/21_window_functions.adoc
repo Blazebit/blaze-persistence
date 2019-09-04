@@ -14,6 +14,7 @@ Any built-in aggregate function can be used as a window function. These are:
 * `AVG` - Returns the average value across the rows in the window
 * `MAX` - Returns the maximal across the rows in the window
 * `MIN` - Returns the minimal across the rows in the window
+* `COUNT` - Returns the count across the rows in the window
 
 [source,java]
 ----
@@ -81,4 +82,4 @@ CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
     .select("SUM(per.age) OVER (x ORDER BY per.id)")
 ----
 
-WARNING: Note that the partition, order or range of a window definition can only bee specified if the base window does not specify any partition, order or range.
+WARNING: Note that the partition, order or range of a window definition can only be specified if the base window does not specify any partition, order or range.
