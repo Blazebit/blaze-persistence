@@ -54,3 +54,5 @@ include::18_jpql_functions.adoc[]
 include::19_customize_dbms_dialect.adoc[]
 
 include::20_configuration.adoc[]
+
+include::21_window_functions.adoc[]

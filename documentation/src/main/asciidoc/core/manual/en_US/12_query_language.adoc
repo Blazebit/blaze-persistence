@@ -173,9 +173,10 @@ window_clause
 
 window_definition
     : existing_window_name?
+      ( FILTER BY expression ( ',' expression )* )?
       ( PARTITION BY expression ( ',' expression )* )?
       ( ORDER BY order_by_expression ( ',' order_by_expression )* )?
-      ( ( RANGE | ROWS ) ( frame_start | BETWEEN frame_spec AND frame_spec ) )?
+      ( ( RANGE | ROWS | GROUPS ) ( frame_start | BETWEEN frame_spec AND frame_spec ) )?
     ;
 
 frame_spec
