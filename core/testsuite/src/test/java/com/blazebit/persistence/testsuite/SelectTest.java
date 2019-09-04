@@ -19,10 +19,8 @@ package com.blazebit.persistence.testsuite;
 import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
-import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
@@ -33,7 +31,7 @@ import org.junit.Test;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
-import com.blazebit.persistence.impl.ConfigurationProperties;
+import com.blazebit.persistence.ConfigurationProperties;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
 import com.blazebit.persistence.testsuite.entity.Document;

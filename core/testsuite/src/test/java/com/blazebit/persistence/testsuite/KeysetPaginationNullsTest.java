@@ -19,7 +19,7 @@ package com.blazebit.persistence.testsuite;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
-import com.blazebit.persistence.impl.ConfigurationProperties;
+import com.blazebit.persistence.ConfigurationProperties;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.testsuite.entity.KeysetEntity;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
