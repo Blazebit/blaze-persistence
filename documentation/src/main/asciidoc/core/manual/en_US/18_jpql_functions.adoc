@@ -300,6 +300,38 @@ Aggregates/concatenates the values produced by `expression` to a single string s
 
 WARNING: This function might not be supported by all DBMS, so make sure your target database does before using it
 
+===== WINDOW functions
+
+Syntax: `FUNCTION( 'WINDOW_XXX', arguments+, (, 'FILTER BY' (, filter_by_expression)+ )? (, 'PARTITION BY' (, partition_by_expression)+ )? (, 'ORDER BY' (, order_by_expression (, order_specification ) )+ )? ((, 'RANGE' | 'ROWS' | 'GROUPS') (, ( 'UNBOUNDED PRECEDING' | ( number_expression, 'PRECEDING') | 'CURRENT ROW'), 'AND', ( 'UNBOUNDED FOLLOWING' | ( number_expression, 'FOLLOWING') | 'CURRENT ROW' ) ) )`
+
+Where `order_specification` is one of `'ASC'`, `'DESC'`, `'ASC NULLS FIRST'`, `'ASC NULLS LAST'`, `'DESC NULLS FIRST'`, `'DESC NULLS LAST'`.
+
+For every aggregate function, there is a window function.
+
+* `SUM` - `WINDOW_SUM`
+* `AVG` - `WINDOW_AVG`
+* `MAX` - `WINDOW_MAX`
+* `MIN` - `WINDOW_MIN`
+* `GROUP_CONCAT` - `WINDOW_GROUP_CONCAT`
+* `EVERY` - `WINDOW_EVERY`
+* `OR_AGG` - `WINDOW_OR_AGG`
+
+There also are the following window functions:
+
+* `ROW_NUMBER`
+* `RANK`
+* `DENSE_RANK`
+* `PERCENT_RANK`
+* `CUME_DIST`
+* `NTILE`
+* `LEAD`
+* `LAG`
+* `FIRST_VALUE`
+* `LAST_VALUE`
+* `NTH_VALUE`
+
+WARNING: This function might not be supported by all DBMS, so make sure your target database does before using it
+
 // TODO: compatibility matrix
 
 ==== SET functions

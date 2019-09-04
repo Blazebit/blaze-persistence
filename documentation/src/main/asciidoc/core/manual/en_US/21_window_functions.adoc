@@ -1,0 +1,84 @@
+== Window functions
+
+
+Window functions provide the ability to perform aggregate calculations across sets of rows that are related to the current query row.
+Unlike regular aggregate functions, use of a window function does not cause rows to become grouped into a single output row.
+
+WARNING: This function might not be supported by all DBMS, so make sure your target database does before using it
+
+=== Aggregate window functions
+
+Any built-in aggregate function can be used as a window function. These are:
+
+* `SUM` - Returns the sum across the rows in the window
+* `AVG` - Returns the average value across the rows in the window
+* `MAX` - Returns the maximal across the rows in the window
+* `MIN` - Returns the minimal across the rows in the window
+
+[source,java]
+----
+CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
+    .from(Person.class, "per")
+    .select("per.age")
+    .select("SUM(per.age) OVER (ORDER BY per.age ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)")
+    .orderByAsc("per.age")
+----
+
+[source,sql]
+----
+select SUM(person0_.age) OVER (ORDER BY person0_.age DESC NULLS LAST ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW ) as col_1_0_ from person person0_ order by person0_.age ASC
+----
+
+=== General-Purpose Window Functions
+
+The SQL standard defines the following window functions:
+
+* `ROW_NUMBER` - Returns the number of the current row within its partition, counting from `1`
+* `RANK` - Returns the rank of the current row considering gaps
+* `DENSE_RANK` - Returns the rank of the current row disregarding gaps
+* `PERCENT_RANK` - Returns the relative rank of the current row: `(rank - 1) / (total rows - 1)`
+* `CUME_DIST` - Returns the relative rank of the current row: `(number of rows preceding or peer with current row) / (total rows)`
+* `NTILE` - Returns an integer ranging from 1 to the argument value, dividing the partition as equally as possible
+* `LEAD` - Returns the value evaluated at the row that is offset rows after the current row within the partition; if there is no such row, instead return the specified `default` value (which must be of the same type as value). Both the `offset` and `default` value are evaluated with respect to the current row. If omitted, the `offset` defaults to `1` and default to `null`.
+* `LAG` - Returns the value evaluated at the row that is offset rows before the current row within the partition; if there is no such row, instead return the specified `default` value (which must be of the same type as value). Both the `offset` and `default` value are evaluated with respect to the current row. If omitted, the `offset` defaults to `1` and default to `null`.
+* `FIRST_VALUE` - Returns the value evaluated at the row that is the first row of the window frame
+* `LAST_VALUE` - Returns the value evaluated at the row that is the last row of the window frame
+* `NTH_VALUE` - Returns the value evaluated at the row that is the nth row of the window frame
+
+[source,java]
+----
+CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
+    .from(Person.class, "per")
+    .select("ROW_NUMBER() OVER (ORDER BY per.age)");
+----
+
+[source,sql]
+----
+select ROW_NUMBER() OVER (ORDER BY person0_.age DESC NULLS LAST) as col_0_0_ from person person0_
+----
+
+=== Named Windows
+
+Through the CriteriaBuilder API one can create named windows which can be reused between window function calls.
+
+
+[source,java]
+----
+CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
+    .from(Person.class, "per")
+    .window("x").orderByAsc("per.age").rows().betweenUnboundedPreceding().andCurrentRow().end()
+    .select("MIN(per.age) OVER (x)")
+    .select("MAX(per.age) OVER (x)")
+----
+
+Named Windows can also be copied and modified in the OVER clause.
+
+[source,java]
+----
+CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
+    .from(Person.class, "per")
+    .window("x").partitionBy("per.age").end()
+    .select("SUM(per.age) OVER (x ORDER BY per.id)")
+----
+
+WARNING: Note that the partition, order or range of a window definition can only bee specified if the base window does not specify any partition, order or range.
