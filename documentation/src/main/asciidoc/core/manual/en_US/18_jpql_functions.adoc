@@ -2,7 +2,8 @@
 
 JPQL offers many built-in functions as you can see in the <<string-functions,expressions>> chapter and as of JPA 2.1 has a syntax for calling database specific functions.
 Normally when using the function syntax `FUNCTION ( function_name (, args)* )`, the JPA provider puts a function call into the SQL like `function_name ( args* )`.
-Instead of simply passing through the function invocation to the SQL, {projectname} decided to reuse the function syntax to allow calling so called JPQL functions.
+Instead of simply passing through the function invocation to the SQL, {projectname} decided to reuse the function syntax but also allows the direct function call syntax `function_name ( args* )`
+to allow calling custom `JpqlFunction` implementations that can be registered.
 
 JPQL functions are registered at configuration time and are integrated into a persistence unit, so you could even use the functions by using the JPA provider specific invocation syntax directly.
 Except for a few special built-in functions, every function has DBMS specific implementations of the link:{core_jdoc}/persistence/spi/JpqlFunction.html[`JpqlFunction`] interface
@@ -54,7 +55,7 @@ CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
 
 [source,sql]
 ----
-SELECT cat.name, FUNCTION('COUNT_TUPLE', kittens_1.id)
+SELECT cat.name, COUNT_TUPLE(kittens_1.id)
 FROM Cat cat
 LEFT JOIN cat.kittens kittens_1
 GROUP BY cat.id, cat.name
@@ -102,7 +103,7 @@ Every of the following functions has to be invoked with the JPA 2.1 function syn
 
 ==== COUNT_TUPLE function
 
-Syntax: `FUNCTION ( 'COUNT_TUPLE' (, 'DISTINCT' )?, args+ )`
+Syntax: `COUNT_TUPLE ( ('DISTINCT')?, args+ )`
 
 The `COUNT_TUPLE` function is like the regular `COUNT` function, but in addition allows to do distinct counting on multiple and embeddable attributes.
 Some JPA providers ignore that some DBMS don't support distinct counts on multiple columns and generate broken SQL.
@@ -147,7 +148,7 @@ By doing a distinct count on the resulting string, the ANSI SQL distinct countin
 
 ==== CAST functions
 
-Syntax: `FUNCTION ( 'CAST_XXX', argument (, sqlCastTypeOverride)? )`
+Syntax: `CAST_XXX ( argument (, sqlCastTypeOverride)? )`
 
 There are multiple different cast functions for different data types.
 
@@ -175,18 +176,18 @@ By providing a <<customize-dbms-dialect,custom DBMS dialect>> you can override t
 ----
 CriteriaBuilder<String> cb = cbf.create(em, String.class)
     .from(Cat.class, "cat")
-    .select("FUNCTION('CAST_STRING', cat.age)");
+    .select("CAST_STRING(cat.age)");
 ----
 
 [source,sql]
 ----
-SELECT FUNCTION('CAST_STRING', cat.age)
+SELECT CAST_STRING(cat.age)
 FROM Cat cat
 ----
 
 ==== TREAT functions
 
-Syntax: `FUNCTION ( 'TREAT_XXX', argument )`
+Syntax: `TREAT_XXX ( argument )`
 
 WARNING: This function is used internally and no user should ever have the need for this!
 
@@ -215,7 +216,7 @@ WARNING: This is an internal function that is used to implement the <<values-cla
 
 ==== Temporal DIFF functions
 
-Syntax: `FUNCTION ( 'XXX_DIFF', start, end )`
+Syntax: `XXX_DIFF ( start, end )`
 
 Calculates the difference between the two given temporals like `end - start` and returning the difference in the requested unit as truncated integer.
 
@@ -233,7 +234,7 @@ If `end < start` i.e. the value of `end` is before `start`, the result is negati
 
 ==== Temporal extract functions
 
-Syntax: `FUNCTION ( 'XXX', argument )`
+Syntax: `XXX ( argument )`
 
 Extracts the requested field of temporal argument like specified by the ANSI SQL `EXTRACT` expression.
 
@@ -249,25 +250,25 @@ The possible fields and the respective function names are:
 
 ==== GREATEST function
 
-Syntax: `FUNCTION ( 'GREATEST', argument1, argument2 (, ...)? )`
+Syntax: `GREATEST ( argument1, argument2 (, ...)? )`
 
 Returns the greatest value of all given arguments.
 
 ==== LEAST function
 
-Syntax: `FUNCTION ( 'LEAST', argument1, argument2 (, ...)? )`
+Syntax: `LEAST ( argument1, argument2 (, ...)? )`
 
 Returns the smallest value of all given arguments.
 
 ==== REPEAT function
 
-Syntax: `FUNCTION ( 'REPEAT', argument1, argument2 )`
+Syntax: `REPEAT ( argument1, argument2 )`
 
 Returns a string with the _argument1_ repeated for _argument2_ times.
 
 ==== LIMIT function
 
-Syntax: `FUNCTION ( 'LIMIT', subquery, limit (, offset )? )`
+Syntax: `LIMIT ( subquery, limit (, offset )? )`
 
 Applies the DBMS native way of doing `LIMIT` and `OFFSET` with the given values `limit` and `offset` on the given subquery.
 
@@ -283,7 +284,7 @@ WARNING: If you use this function directly, beware that for some DBMS it might n
 
 ==== PAGE_POSITION function
 
-Syntax: `FUNCTION ( 'PAGE_POSITION', id_query, entity_id )`
+Syntax: `PAGE_POSITION ( id_query, entity_id )`
 
 Returns the absolute 1-based position of the entity with the given id within the result produced by the given id query.
 The id query must select only the id of an entity and must be of a basic type. The entity id can be a parameter or plain value.
@@ -292,7 +293,7 @@ WARNING: This is an internal function that is used to implement link:{core_jdoc}
 
 ==== GROUP_CONCAT function
 
-Syntax: `FUNCTION ( 'GROUP_CONCAT' (, DISTINCT)?, expression (, 'SEPARATOR', separator_expression)? (, 'ORDER BY' (, order_by_expression (, order_specification ) )+ )? )`
+Syntax: `GROUP_CONCAT ( ('DISTINCT')?, expression (, 'SEPARATOR', separator_expression)? (, 'ORDER BY' (, order_by_expression (, order_specification ) )+ )? )`
 
 Where `order_specification` is one of `'ASC'`, `'DESC'`, `'ASC NULLS FIRST'`, `'ASC NULLS LAST'`, `'DESC NULLS FIRST'`, `'DESC NULLS LAST'` and `separator_expression` by is `','` by default.
 
@@ -302,7 +303,7 @@ WARNING: This function might not be supported by all DBMS, so make sure your tar
 
 ===== WINDOW functions
 
-Syntax: `FUNCTION( 'WINDOW_XXX', arguments+, (, 'FILTER BY' (, filter_by_expression)+ )? (, 'PARTITION BY' (, partition_by_expression)+ )? (, 'ORDER BY' (, order_by_expression (, order_specification ) )+ )? ((, 'RANGE' | 'ROWS' | 'GROUPS') (, ( 'UNBOUNDED PRECEDING' | ( number_expression, 'PRECEDING') | 'CURRENT ROW'), 'AND', ( 'UNBOUNDED FOLLOWING' | ( number_expression, 'FOLLOWING') | 'CURRENT ROW' ) ) )`
+Syntax: `WINDOW_XXX ( arguments+, (, 'FILTER BY' (, filter_by_expression)+ )? (, 'PARTITION BY' (, partition_by_expression)+ )? (, 'ORDER BY' (, order_by_expression (, order_specification ) )+ )? ((, 'RANGE' | 'ROWS' | 'GROUPS') (, ( 'UNBOUNDED PRECEDING' | ( number_expression, 'PRECEDING') | 'CURRENT ROW'), 'AND', ( 'UNBOUNDED FOLLOWING' | ( number_expression, 'FOLLOWING') | 'CURRENT ROW' ) ) )`
 
 Where `order_specification` is one of `'ASC'`, `'DESC'`, `'ASC NULLS FIRST'`, `'ASC NULLS LAST'`, `'DESC NULLS FIRST'`, `'DESC NULLS LAST'`.
 
@@ -312,6 +313,7 @@ For every aggregate function, there is a window function.
 * `AVG` - `WINDOW_AVG`
 * `MAX` - `WINDOW_MAX`
 * `MIN` - `WINDOW_MIN`
+* `COUNT` - `WINDOW_COUNT`
 * `GROUP_CONCAT` - `WINDOW_GROUP_CONCAT`
 * `EVERY` - `WINDOW_EVERY`
 * `OR_AGG` - `WINDOW_OR_AGG`
@@ -330,13 +332,17 @@ There also are the following window functions:
 * `LAST_VALUE`
 * `NTH_VALUE`
 
+Window functions are explained in more depth in the <<window-functions,window functions>> chapter.
+
+WARNING: This is an internal function which is not intended for direct use and might change without notice.
+
 WARNING: This function might not be supported by all DBMS, so make sure your target database does before using it
 
 // TODO: compatibility matrix
 
 ==== SET functions
 
-Syntax: `FUNCTION ( 'SET_XXX', subqueries+ (, 'ORDER BY' (, order_by_expression (, order_specification ) )+ )? (, 'LIMIT', limit_expression (, 'OFFSET', offset_expression )? )? )`
+Syntax: `SET_XXX ( subqueries+ (, 'ORDER BY' (, order_by_expression (, order_specification ) )+ )? (, 'LIMIT', limit_expression (, 'OFFSET', offset_expression )? )? )`
 
 WARNING: This function is used internally and no user should ever have the need for this!
 
@@ -358,7 +364,7 @@ For further information on DBMS support take a look at the <<anchor-set-dbms-com
 
 ==== COMPARE_ROW_VALUE function
 
-Syntax: `FUNCTION ( 'COMPARE_ROW_VALUE', comparison_operator, CASE WHEN (1=NULLIF(1,1) AND row_value_1_1=row_value_2_1 AND row_value_1_2=nullif(1,1) ... AND row_value_1_n=row_value_2_n AND row_value_1_2=row_value_2_2 THEN 1 ELSE 0 END)`
+Syntax: `COMPARE_ROW_VALUE ( comparison_operator, CASE WHEN (1=NULLIF(1,1) AND row_value_1_1=row_value_2_1 AND row_value_1_2=nullif(1,1) ... AND row_value_1_n=row_value_2_n AND row_value_1_2=row_value_2_2 THEN 1 ELSE 0 END )`
 
 Produces a DBMS native row value comparison expression such as `(row_value_1_1, row_value_1_2, ..., row_value_1_n) < (row_value_2_1, row_value_2_2, ..., row_value_2_n)`.
 
@@ -366,7 +372,7 @@ WARNING: This is an internal function that is used to implement optimized keyset
 
 ==== SUBQUERY function
 
-Syntax: `FUNCTION ( 'SUBQUERY', subquery)`
+Syntax: `SUBQUERY ( subquery )`
 
 Simply renders the subquery argument.
 
@@ -374,7 +380,7 @@ WARNING: This is an internal function that is used to bypass the Hibernate parse
 
 ==== ENTITY_FUNCTION function
 
-Syntax: `FUNCTION ( 'ENTITY_FUNCTION', subquery, entityName, valuesClause, valuesAliases, syntheticPredicate)`
+Syntax: `ENTITY_FUNCTION ( subquery, entityName, valuesClause, valuesAliases, syntheticPredicate )`
 
 Rewrites the passed in query by replacing placeholder SQL parts with the proper SQL.
 

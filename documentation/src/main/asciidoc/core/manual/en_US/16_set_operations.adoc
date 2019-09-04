@@ -145,8 +145,7 @@ CriteriaBuilder<Cat> cb =
 [source,sql]
 ----
 SELECT cat FROM Cat cat WHERE cat.id IN (
-    FUNCTION(
-        'SET_UNION_ALL',
+    SET_UNION_ALL(
         (SELECT cat1.id FROM Cat cat1 WHERE cat1.name = :param_1),
         (SELECT cat2.id FROM Cat cat2 WHERE cat2.name = :param_2),
         (SELECT cat3.id FROM Cat cat3 WHERE cat3.name = :param_3)

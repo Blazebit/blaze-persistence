@@ -16,25 +16,21 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static com.googlecode.catchexception.CatchException.verifyException;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Set;
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.DocumentType;
+import org.junit.Assert;
+import org.junit.Test;
 
 import javax.persistence.Parameter;
 import javax.persistence.TemporalType;
 import javax.persistence.Tuple;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Set;
 
-import org.junit.Assert;
-import org.junit.Test;
-
-import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.AbstractCoreTest;
-import com.blazebit.persistence.testsuite.entity.Document;
+import static com.googlecode.catchexception.CatchException.verifyException;
+import static org.junit.Assert.*;
 
 /**
  *
@@ -163,5 +159,16 @@ public class ParameterAPITest extends AbstractCoreTest {
         cb.setParameter("param", "test");
 
         assertEquals("SELECT 'test' FROM Document d", cb.getQueryString());
+    }
+
+    // Test for #566
+    @Test
+    public void testRenderEnumParameterAsLiteral() {
+        CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
+        cb.from(Document.class, "d")
+                .select(":param");
+        cb.setParameter("param", DocumentType.NOVEL);
+
+        assertEquals("SELECT :param FROM Document d", cb.getQueryString());
     }
 }

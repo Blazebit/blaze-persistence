@@ -182,8 +182,8 @@ The operators can't be used for date arithmetic. Instead the _date diff function
 
 === Function expressions
 
-{projectname} decided to only allow the standard JPQL and some extension functions to be used directly with the function call syntax `FUNCTION_NAME ( (args)* )`.
-Non-standard functions have to be used via the `FUNCTION ( function_name (, args)* )` syntax that got introduced in JPA 2.1.
+{projectname} supports a direct function call syntax `FUNCTION_NAME ( (args)* )` for all functions and translates that to the JPA provider specific syntax.
+Non-standard functions may also use the `FUNCTION ( function_name (, args)* )` syntax that got introduced in JPA 2.1 and are handled equally.
 
 ==== String functions
 
@@ -577,7 +577,7 @@ SELECT SUM(cat.age)
 FROM Cat cat
 ----
 
-`FUNCTION ( 'GROUP_CONCAT' (, 'DISTINCT' )? , string (, 'SEPARATOR', separatorString)? (, 'ORDER BY', ( orderByExpr, ( 'ASC' | 'DESC' ) )+ ) )`::
+`GROUP_CONCAT ( ('DISTINCT' )? , string (, 'SEPARATOR', separatorString)? (, 'ORDER BY', ( orderByExpr, ( 'ASC' | 'DESC' ) )+ ) )`::
 Concatenates elements to a single string connected with the `separatorString` in the requested order.
 
 WARN: This is a non-standard function that might not be supported on all DBMS. See <<group_concat-function,JPQL functions>> for further information.
@@ -586,12 +586,12 @@ WARN: This is a non-standard function that might not be supported on all DBMS. S
 ----
 CriteriaBuilder<String> cb = cbf.create(em, String.class)
     .from(Cat.class, "cat")
-    .select("FUNCTION('GROUP_CONCAT', cat.name, 'SEPARATOR', ' - ', 'ORDER BY', cat.name, 'ASC')");
+    .select("GROUP_CONCAT(cat.name, 'SEPARATOR', ' - ', 'ORDER BY', cat.name, 'ASC')");
 ----
 
 [source,sql]
 ----
-SELECT FUNCTION('GROUP_CONCAT', cat.name, 'SEPARATOR', ' - ', 'ORDER BY', cat.name, 'ASC')
+SELECT GROUP_CONCAT(cat.name, 'SEPARATOR', ' - ', 'ORDER BY', cat.name, 'ASC')
 FROM Cat cat
 ----
 
@@ -623,11 +623,10 @@ Normally, users shouldn't get in touch with this directly. It is currently used 
 
 ==== Function function
 
-As of JPA 2.1 it is possible to invoke non-standard functions via the `FUNCTION ( function_name (, args)* )`. {projectname} not only has support for that,
-but prefers this syntax for non-standard functions over a proprietary syntax. The reason for that is mainly that the JPQL rendered by {projectname} stays directly executable, even if proprietary functions are used.
+As of JPA 2.1 it is possible to invoke non-standard functions via the `FUNCTION ( function_name (, args)* )`.
 
 By default, all non-standard functions of the JPA provider are imported. This means that you can make use of functions provided by the JPA provider with the `FUNCTION ( function_name (, args)* )` syntax
-and it will get rendered into the JPA provider specific way of invoking such functions automatically.
+as well as with the direct function call syntax `function_name ( args* )` and it will get rendered into the JPA provider specific way of invoking such functions automatically.
 
 A list of functions provided by {projectname} and information on how to implement a custom function can be found in the <<JPQL functions>> chapter.
 

@@ -8,15 +8,31 @@ Not yet released
 
 ### New features
 
-None
+* Introduce support for adding whole predicates to predicate builders via `whereExpression`/`whereExpressionSubqueries` etc.
+* Add support for subquery expression in the `ON` clause
+* Introduce new comparison methods in predicate builders to allow making use of literal rendering in a type safe way
+* Introduce new `*-jar` artifacts for modules to allow using Blaze-Persistence with older JVMs/ASM versions
+* Shade ANTLR into parser to avoid conflicts
+* Update ANTLR to 4.7.2
+* Rework the parser grammar for better performance and to get rid of semantic predicates
+* Introduce possibility to check if CTE type has been defined
+* Add DeltaSpike 1.9 and Java 12 build support
+* Introduce method to allow controlling the amount of extracted keyset objects
+* Pass optional parameters to entity view `CTEProvider`
+* Add support for window functions and named windows in builder and expressions via e.g. `SUM(x) OVER(PARTITION BY y)`
+* Improve OpenJPA support
+* Add support for MySQL 8
+* Move `ConfigurationProperties` classes to API artifacts
 
 ### Bug fixes
 
-None
+* Fix Hibernate Envers issues with JPA Criteria implementation
+* Fix a NPE happening due to doing a manual select in an exists subquery that joins associations
+* Avoid a NPE happening when trying to render a parameter as literal that has no literal representation
 
 ### Backwards-incompatible changes
 
-* Dropped module classified artifacts in favor of adding `module-info.class` file to standard artifacts requires e.g. Jandex 2.0.4.Final or later
+* Dropped module classified artifacts in favor of adding `module-info.class` file to standard artifacts which now requires e.g. Jandex 2.0.4.Final or later
 
 ## 1.4.0-Alpha1
 
