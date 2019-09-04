@@ -563,7 +563,9 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         selectInfos.clear();
         hasDefaultSelect = false;
         hasSizeSelect = false;
-        joinManager.removeSelectOnlyNodes(defaultSelectNodes);
+        if (defaultSelectNodes != null) {
+            joinManager.removeSelectOnlyNodes(defaultSelectNodes);
+        }
         defaultSelectNodes = null;
     }
 

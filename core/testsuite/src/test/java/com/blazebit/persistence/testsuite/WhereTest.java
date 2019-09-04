@@ -204,6 +204,16 @@ public class WhereTest extends AbstractCoreTest {
     }
 
     @Test
+    public void testWhereExistsIssue776() {
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
+        crit.whereExists().from(Person.class, "p").leftJoin("p.friend", "f").select("1").where("name").eqExpression("d.name").end();
+        String expected = "SELECT d FROM Document d WHERE EXISTS (SELECT 1 FROM Person p LEFT JOIN p.friend f WHERE p.name = d.name)";
+
+        assertEquals(expected, crit.getQueryString());
+        crit.getResultList();
+    }
+
+    @Test
     public void testWhereNotExists() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.whereNotExists().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
