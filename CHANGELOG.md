@@ -23,6 +23,7 @@ Not yet released
 * Improve OpenJPA support
 * Add support for MySQL 8
 * Move `ConfigurationProperties` classes to API artifacts
+* Add support for view property sorting in Spring Data
 
 ### Bug fixes
 
