@@ -450,18 +450,8 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
         Class<V> entityViewClass = metadata == null
             || metadata.getEntityViewClass() == null ? this.entityViewClass : (Class<V>) metadata.getEntityViewClass();
 
-        Sort entityViewSort;
-        Sort entitySort;
-        if (sort == null || entityViewClass == null) {
-            entityViewSort = null;
-            entitySort = sort;
-        } else {
-            Sort[] splitSorts = EntityViewSortUtil.splitSortOrders(evm, entityViewClass, sort);
-            entityViewSort = splitSorts[0];
-            entitySort = splitSorts[1];
-        }
-        if (entitySort != null) {
-            cq.orderBy(QueryUtils.toOrders(entitySort, root, BlazeCriteria.get(cbf)));
+        if (sort != null && entityViewClass == null) {
+            cq.orderBy(QueryUtils.toOrders(sort, root, BlazeCriteria.get(cbf)));
         }
         CriteriaBuilder<S> cb = cq.createCriteriaBuilder(entityManager);
 
@@ -499,24 +489,13 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
         } else {
             if (pageable == null) {
                 EntityViewSetting<V, CriteriaBuilder<V>> setting = EntityViewSetting.create(entityViewClass);
-                if (entityViewSort != null) {
-                    setting.addAttributeSorters(
-                            EntityViewSortUtil.createEntityViewSortersFromSort(entityViewSort)
-                    );
+                CriteriaBuilder<V> fqb = evm.applySetting(setting, cb);
+                if (sort != null) {
+                    EntityViewSortUtil.applySort(evm, entityViewClass, fqb, sort);
                 }
-                query = evm.applySetting(setting, cb).getQuery();
+                query = fqb.getQuery();
             } else {
                 EntityViewSetting<V, PaginatedCriteriaBuilder<V>> setting = EntityViewSetting.create(entityViewClass, getOffset(pageable), pageable.getPageSize());
-                if (entityViewSort != null) {
-                    setting.addAttributeSorters(
-                            EntityViewSortUtil.createEntityViewSortersFromSort(entityViewSort)
-                    );
-
-                } else if (pageable.getSort() != null) {
-                    setting.addAttributeSorters(
-                            EntityViewSortUtil.createEntityViewSortersFromSort(pageable.getSort())
-                    );
-                }
                 if (pageable instanceof KeysetPageable) {
                     KeysetPageable keysetPageable = (KeysetPageable) pageable;
                     setting.withKeysetPage(keysetPageable.getKeysetPage());
@@ -530,6 +509,9 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
                     paginatedCriteriaBuilder.withExtractAllKeysets(withExtractAllKeysets);
                 }
                 paginatedCriteriaBuilder.withCountQuery(withCountQuery);
+                if (sort != null || (sort = pageable.getSort()) != null) {
+                    EntityViewSortUtil.applySort(evm, entityViewClass, paginatedCriteriaBuilder, sort);
+                }
                 query = paginatedCriteriaBuilder.getQuery();
             }
         }

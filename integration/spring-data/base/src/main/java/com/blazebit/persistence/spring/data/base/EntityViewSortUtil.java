@@ -16,27 +16,20 @@
 
 package com.blazebit.persistence.spring.data.base;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Sort.NullHandling;
-import org.springframework.data.domain.Sort.Order;
-
+import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.view.EntityViewManager;
-import com.blazebit.persistence.view.Sorter;
-import com.blazebit.persistence.view.Sorters;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
+import com.blazebit.persistence.view.metamodel.ViewType;
+import org.springframework.data.domain.Sort;
 
 /**
  * Utility methods to handle entity view sorting.
  * 
+ * @author Moritz Becker
  * @author Giovanni Lovato
  * @since 1.4.0
  */
@@ -47,85 +40,53 @@ public final class EntityViewSortUtil {
     }
 
     /**
-     * Checks if the given {@link Order} refers to a property of {@code entityViewClass}.
-     * 
-     * @param evm the entity view manager
-     * @param entityViewClass the entity view class
-     * @param order the order
-     * @return true, if the given order refers to a view property
-     */
-    private static boolean isEntityViewSorting(EntityViewManager evm, Class<?> entityViewClass, Order order) {
-        String property = order.getProperty();
-        ManagedViewType<?> viewType = evm.getMetamodel().view(entityViewClass);
-        for (String path : property.split("\\.")) {
-            MethodAttribute<?, ?> attribute = viewType.getAttribute(path);
-            if (attribute == null) {
-                return false;
-            } else {
-                Type<?> type;
-                if (attribute instanceof SingularAttribute) {
-                    type = ((SingularAttribute<?, ?>) attribute).getType();
-                } else {
-                    type = ((PluralAttribute<?, ?, ?>) attribute).getElementType();
-                }
-                if (type instanceof ManagedViewType) {
-                    // It's a view type, continue descending
-                    viewType = (ManagedViewType<?>) type;
-                } else {
-                    // It's a basic type, sort by that
-                    return true;
-                }
-            }
-        }
-        return viewType != null;
-    }
-
-    /**
-     * Process a {@link Sort} instance applying entity-view related sort orders to {@code setting} and
-     * returning a new {@link Sort} instance with only entity related sort orders.
-     * 
-     * @param evm the entity view manager
-     * @param entityViewClass the entity view class
-     * @param sort the sort instance
-     * @return the applicable entity view sorters
-     */
-    public static Map<String, Sorter> createEntityViewSortersFromSort(Sort sort) {
-        Map<String, Sorter> sorters = new HashMap<>();
-        for (Order order : sort) {
-            boolean nullsFirst = order.getNullHandling().equals(NullHandling.NULLS_FIRST);
-            Sorter sorter = order.isAscending() ? Sorters.ascending(nullsFirst) : Sorters.descending(nullsFirst);
-            String property = order.getProperty();
-            if (!sorters.containsKey(property)) {
-                sorters.put(property, sorter);
-            }
-        }
-        return sorters;
-    }
-
-    /**
-     * Returns a new {@link Sort} instance with only entity related sort orders.
+     * Resolves the deterministic select item alias for an entity view attribute.
      *
-     * @param evm the entity view manager
-     * @param entityViewClass the entity view class
-     * @param sort the sort instance
-     * @return a 2 element array of new {@link Sort} instances, index 0 for entity view related sort orders and index 1
-     * for entity related sort orders
+     * @param evm entity view manager
+     * @param entityViewClass entity view class
+     * @param attributePath the absolute attribute path based on the {@code entityViewClass} for which the select alias should be resolved
+     * @return the select item alias for the (nested) entity view attribute targeted by {@code attributePath} or {@code null}
+     * if the {@code attributePath} cannot be resolved
      */
-    public static Sort[] splitSortOrders(EntityViewManager evm, Class<?> entityViewClass, Sort sort) {
-        List<Order> entityViewOrders = new ArrayList<>();
-        List<Order> entityOrders = new ArrayList<>();
-        for (Order order : sort) {
-            if (isEntityViewSorting(evm, entityViewClass, order)) {
-                entityViewOrders.add(order);
-                entityOrders.add(order);
+    private static String resolveViewAttributeSelectAlias(EntityViewManager evm, Class<?> entityViewClass, String attributePath) {
+        ManagedViewType<?> viewType = evm.getMetamodel().view(entityViewClass);
+        StringBuilder aliasBuilder = new StringBuilder(((ViewType<?>) viewType).getName());
+        for (String pathElement : attributePath.split("\\.")) {
+            if (viewType == null) {
+                return null;
             } else {
-                entityOrders.add(order);
+                MethodAttribute<?, ?> attribute = viewType.getAttribute(pathElement);
+                if (attribute == null) {
+                    return null;
+                } else {
+                    aliasBuilder.append('_').append(pathElement);
+                    Type<?> type;
+                    if (attribute instanceof SingularAttribute) {
+                        type = ((SingularAttribute<?, ?>) attribute).getType();
+                    } else {
+                        type = ((PluralAttribute<?, ?, ?>) attribute).getElementType();
+                    }
+                    if (type instanceof ManagedViewType) {
+                        // It's a view type, continue descending
+                        viewType = (ManagedViewType<?>) type;
+                    } else {
+                        // It's a basic type, so we cannot got further
+                        viewType = null;
+                    }
+                }
             }
         }
-        return new Sort[] {
-          entityViewOrders.isEmpty() ? null : new Sort(entityViewOrders),
-          entityOrders.isEmpty() ? null : new Sort(entityOrders)
-        };
+        return aliasBuilder.toString();
     }
 
+    public static void applySort(EntityViewManager evm, Class<?> entityViewClass, FullQueryBuilder<?, ?> cb, Sort sort) {
+        for (Sort.Order order : sort) {
+            String entityViewAttributeAlias;
+            if ((entityViewAttributeAlias = EntityViewSortUtil.resolveViewAttributeSelectAlias(evm, entityViewClass, order.getProperty())) == null) {
+                cb.orderBy(order.getProperty(), order.isAscending(), order.getNullHandling() == Sort.NullHandling.NULLS_FIRST);
+            } else {
+                cb.orderBy(entityViewAttributeAlias, order.isAscending(), order.getNullHandling() == Sort.NullHandling.NULLS_FIRST);
+            }
+        }
+    }
 }

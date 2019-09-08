@@ -663,15 +663,15 @@ public class DocumentRepositoryTest extends AbstractSpringTest {
         String doc2 = "D2";
         String doc3 = "D2";
         Person person = createPerson("Foo");
-        createDocument(doc1, "A", 0l, person);
-        createDocument(doc2, "B", 0l, person);
+        createDocument(doc1, "A", 0L, person);
+        createDocument(doc2, "B", 0L, person);
         createDocument(doc3, createPerson("Bar"));
 
         String entityViewSortProperty = "ownerDocumentCount";
         String entitySortProperty = "description";
 
         List<DocumentView> list = documentRepository.findAll(
-                Sort.by(
+                new Sort(
                     new Sort.Order(Direction.ASC, entityViewSortProperty),
                     new Sort.Order(Direction.DESC, entitySortProperty)
                 ),
@@ -682,15 +682,15 @@ public class DocumentRepositoryTest extends AbstractSpringTest {
         assertEquals(doc1, list.get(2).getName());
 
         list = documentRepository.findAll(
-                Sort.by(
-                    new Sort.Order(Direction.DESC, entityViewSortProperty),
-                    new Sort.Order(Direction.ASC, entitySortProperty)
+                new Sort(
+                    new Sort.Order(Direction.ASC, entitySortProperty),
+                    new Sort.Order(Direction.ASC, entityViewSortProperty)
                 ),
                 "foo");
 
         assertEquals(doc1, list.get(0).getName());
-        assertEquals(doc2, list.get(1).getName());
-        assertEquals(doc3, list.get(2).getName());
+        assertEquals(doc3, list.get(1).getName());
+        assertEquals(doc2, list.get(2).getName());
     }
 
     private List<Long> getIdsFromViews(Iterable<DocumentAccessor> views) {
@@ -706,7 +706,7 @@ public class DocumentRepositoryTest extends AbstractSpringTest {
     }
 
     private Document createDocument(final String name, final Person owner) {
-        return createDocument(name, null, 0l, owner);
+        return createDocument(name, null, 0L, owner);
     }
 
     private Document createDocument(final String name, final String description, final long age, final Person owner) {
