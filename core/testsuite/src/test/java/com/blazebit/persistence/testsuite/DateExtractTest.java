@@ -32,10 +32,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 import javax.sql.DataSource;
 
-import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
@@ -228,16 +226,6 @@ public class DateExtractTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({
-            /*
-             * H2 returns 1999-01, which means they likely intent to support IYYY-IW formatting, but currently do not.
-             * The workaround would not be nice: we'd have to compute iso_week() and DATE_TRUNC('week', ?1),
-             * then convert to strings while prefixing with zeros, and add concatenate a - separator in between.
-             * Because the produced SQL will be really nasty and rather slow I suggest we let H2 fix it
-             * on their side.
-             */
-            NoH2.class
-    })
     public void testDateExtractYearWeek() {
         // Set the client timezone
         TimeZone.setDefault(clientTimeZone);
