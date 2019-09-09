@@ -32,6 +32,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 import javax.sql.DataSource;
 
+import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.After;
@@ -206,6 +207,58 @@ public class DateExtractTest extends AbstractCoreTest {
     }
 
     @Test
+    public void testDateExtractYearOfWeek() {
+        // Set the client timezone
+        TimeZone.setDefault(clientTimeZone);
+        resetTimeZoneCaches();
+
+        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
+            .from(Document.class, "doc")
+            .select("FUNCTION('YEAR_OF_WEEK',   creationDate)")
+            .select("FUNCTION('YEAR_OF_WEEK',   lastModified)")
+            ;
+
+        List<Tuple> list = criteria.getResultList();
+        assertEquals(1, list.size());
+
+        Tuple actual = list.get(0);
+
+        assertEquals(1999, actual.get(0));
+        assertEquals(1999, actual.get(1));
+    }
+
+    @Test
+    @Category({
+            /*
+             * H2 returns 1999-01, which means they likely intent to support IYYY-IW formatting, but currently do not.
+             * The workaround would not be nice: we'd have to compute iso_week() and DATE_TRUNC('week', ?1),
+             * then convert to strings while prefixing with zeros, and add concatenate a - separator in between.
+             * Because the produced SQL will be really nasty and rather slow I suggest we let H2 fix it
+             * on their side.
+             */
+            NoH2.class
+    })
+    public void testDateExtractYearWeek() {
+        // Set the client timezone
+        TimeZone.setDefault(clientTimeZone);
+        resetTimeZoneCaches();
+
+        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
+            .from(Document.class, "doc")
+            .select("FUNCTION('YEAR_WEEK',   creationDate)")
+            .select("FUNCTION('YEAR_WEEK',   lastModified)")
+            ;
+
+        List<Tuple> list = criteria.getResultList();
+        assertEquals(1, list.size());
+
+        Tuple actual = list.get(0);
+
+        assertEquals("1999-52", actual.get(0));
+        assertEquals("1999-52", actual.get(1));
+    }
+
+    @Test
     public void testDateExtractMonth() {
         // Set the client timezone
         TimeZone.setDefault(clientTimeZone);
@@ -249,7 +302,7 @@ public class DateExtractTest extends AbstractCoreTest {
 
 
     @Test
-    public void testDateExtractWeekOfYear() {
+    public void testDateExtractIsoWeekOfYear() {
         // Set the client timezone
         TimeZone.setDefault(clientTimeZone);
         resetTimeZoneCaches();
@@ -267,6 +320,27 @@ public class DateExtractTest extends AbstractCoreTest {
 
         assertEquals(c1.get(Calendar.WEEK_OF_YEAR), (int) actual.get(0));
         assertEquals(c2.get(Calendar.WEEK_OF_YEAR), (int) actual.get(1));
+    }
+
+    @Test
+    public void testDateExtractWeekInYear() {
+        // Set the client timezone
+        TimeZone.setDefault(clientTimeZone);
+        resetTimeZoneCaches();
+
+        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
+                .from(Document.class, "doc")
+                .select("FUNCTION('WEEK_IN_YEAR',   creationDate)")
+                .select("FUNCTION('WEEK_IN_YEAR',   lastModified)")
+                ;
+
+        List<Tuple> list = criteria.getResultList();
+        assertEquals(1, list.size());
+
+        Tuple actual = list.get(0);
+
+        assertEquals(1, (int) actual.get(0));
+        assertEquals(1, (int) actual.get(1));
     }
 
     @Test

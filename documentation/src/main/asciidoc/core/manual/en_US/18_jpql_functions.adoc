@@ -247,10 +247,35 @@ The possible fields and the respective function names are:
 * *Day* - `DAY`
 * *Day of week* - `DAYOFWEEK`
 * *Day of year* - `DAYOFYEAR`
-* *Week* - `WEEK`
+* *Week* - `WEEK` or `ISO_WEEK`
+* *Year week* - `YEAR_WEEK`
+* *Week of year* - `WEEK_OF_YEAR`
+* *Year of week* - `YEAR_OF_WEEK`
 * *Month* - `MONTH`
 * *Year* - `YEAR`
 * *Epoch* - `EPOCH`
+
+WARNING: `WEEK` and `ISO_WEEK` return the ISO based week number, which may be in the previous year, whereas `WEEK_IN_YEAR` returns the week number counting from the first day of the year. To determine the year of that the ISO based week started on, use the `YEAR_OF_WEEK`, or use the `YEAR_WEEK` which returns the week and its year as a string in `YYYY-MM` format.
+
+==== Temporal truncate functions
+
+Syntax: `XXX ( argument )`
+
+Truncate to specified precision.
+
+The possible fields and the respective function names are:
+
+
+* *Microseconds* - `TRUNC_MICROSECONDS`
+* *Millisecond* - `TRUNC_MILLISECONDS`
+* *Second* - `TRUNC_SECOND`
+* *Minute* - `TRUNC_MINUTE`
+* *Hour* - `TRUNC_HOUR`
+* *Day* - `TRUNC_DAY`
+* *ISO Week* - `TRUNC_WEEK`
+* *Month* - `TRUNC_MONTH`
+* *Quarter* - `TRUNC_QUARTER`
+* *Year* - `TRUNC_YEAR`
 
 ==== GREATEST function
 

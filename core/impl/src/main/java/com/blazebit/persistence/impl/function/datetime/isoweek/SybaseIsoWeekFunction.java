@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.trunc.week;
+package com.blazebit.persistence.impl.function.datetime.isoweek;
 
 /**
+ *
  * @author Jan-Willem Gmelig Meyling
  * @since 1.4.0
  */
-public class DB2TruncWeekFunction extends TruncWeekFunction {
+public class SybaseIsoWeekFunction extends IsoWeekFunction {
 
-    public DB2TruncWeekFunction() {
-        super("DATE_TRUNC('week', ?1)");
+    public SybaseIsoWeekFunction() {
+        super("datepart(cwk, ?1)");
     }
-
 }

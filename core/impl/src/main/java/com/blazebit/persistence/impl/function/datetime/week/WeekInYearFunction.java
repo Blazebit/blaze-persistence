@@ -21,19 +21,18 @@ import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.TemplateRenderer;
 
 /**
- *
  * @author Jan-Willem Gmelig Meyling
  * @since 1.4.0
  */
-public class WeekFunction implements JpqlFunction {
+public class WeekInYearFunction implements JpqlFunction {
 
     private final TemplateRenderer renderer;
 
-    public WeekFunction() {
-        this.renderer = new TemplateRenderer("extract(week from ?1)");
+    public WeekInYearFunction() {
+        this.renderer = new TemplateRenderer("floor((6 + extract(doy from ?1)) / 7)");
     }
 
-    public WeekFunction(String template) {
+    public WeekInYearFunction(String template) {
         this.renderer = new TemplateRenderer(template);
     }
 
@@ -55,7 +54,7 @@ public class WeekFunction implements JpqlFunction {
     @Override
     public void render(FunctionRenderContext context) {
         if (context.getArgumentsSize() != 1) {
-            throw new RuntimeException("The year function needs exactly one argument <datetime>! args=" + context);
+            throw new RuntimeException("The day function needs exactly one argument <datetime>! args=" + context);
         }
 
         renderer.start(context).addArgument(0).build();

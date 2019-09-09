@@ -61,21 +61,34 @@ import com.blazebit.persistence.impl.function.datetime.quarter.QuarterFunction;
 import com.blazebit.persistence.impl.function.datetime.quarter.SQLServerQuarterFunction;
 import com.blazebit.persistence.impl.function.datetime.quarter.SqliteQuarterFunction;
 import com.blazebit.persistence.impl.function.datetime.quarter.SybaseQuarterFunction;
-import com.blazebit.persistence.impl.function.datetime.week.AccessWeekFunction;
-import com.blazebit.persistence.impl.function.datetime.week.DB2WeekFunction;
-import com.blazebit.persistence.impl.function.datetime.week.H2WeekFunction;
-import com.blazebit.persistence.impl.function.datetime.week.MySQLWeekFunction;
-import com.blazebit.persistence.impl.function.datetime.week.OracleWeekFunction;
-import com.blazebit.persistence.impl.function.datetime.week.SQLServerWeekFunction;
-import com.blazebit.persistence.impl.function.datetime.week.SqliteWeekFunction;
-import com.blazebit.persistence.impl.function.datetime.week.SybaseWeekFunction;
-import com.blazebit.persistence.impl.function.datetime.week.WeekFunction;
+import com.blazebit.persistence.impl.function.datetime.isoweek.AccessIsoWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.isoweek.DB2IsoWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.isoweek.H2IsoWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.isoweek.MySQLIsoWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.isoweek.OracleIsoWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.isoweek.SQLServerIsoWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.isoweek.SqliteIsoWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.isoweek.SybaseIsoWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.isoweek.IsoWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.week.DB2WeekInYearFunction;
+import com.blazebit.persistence.impl.function.datetime.week.MySQLWeekInYearFunction;
+import com.blazebit.persistence.impl.function.datetime.week.OracleWeekInYearFunction;
+import com.blazebit.persistence.impl.function.datetime.week.SQLServerWeekInYearFunction;
+import com.blazebit.persistence.impl.function.datetime.week.WeekInYearFunction;
+import com.blazebit.persistence.impl.function.datetime.yearofweek.DB2YearOfWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.yearofweek.MSSQLYearOfWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.yearofweek.MySQLYearOfWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.yearofweek.OracleYearOfWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.yearofweek.YearOfWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.yearweek.MySQLYearWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.yearweek.YearWeekFunction;
 import com.blazebit.persistence.impl.function.entity.EntityFunction;
 import com.blazebit.persistence.impl.function.every.EveryFunction;
 import com.blazebit.persistence.impl.function.every.FallbackEveryFunction;
 import com.blazebit.persistence.impl.function.oragg.FallbackOrAggFunction;
 import com.blazebit.persistence.impl.function.oragg.OrAggFunction;
 import com.blazebit.persistence.impl.function.subquery.SubqueryFunction;
+import com.blazebit.persistence.impl.function.trunc.week.TruncWeekFunction;
 import com.blazebit.persistence.impl.function.window.avg.AvgFunction;
 import com.blazebit.persistence.impl.function.window.count.CountFunction;
 import com.blazebit.persistence.impl.function.window.cumedist.CumeDistFunction;
@@ -149,12 +162,9 @@ import com.blazebit.persistence.impl.function.trunc.second.MSSQLTruncSecondFunct
 import com.blazebit.persistence.impl.function.trunc.second.MySQLTruncSecondFunction;
 import com.blazebit.persistence.impl.function.trunc.second.OracleTruncSecondFunction;
 import com.blazebit.persistence.impl.function.trunc.second.PostgreSQLTruncSecondFunction;
-import com.blazebit.persistence.impl.function.trunc.week.DB2TruncWeekFunction;
-import com.blazebit.persistence.impl.function.trunc.week.H2TruncWeekFunction;
 import com.blazebit.persistence.impl.function.trunc.week.MSSQLTruncWeekFunction;
 import com.blazebit.persistence.impl.function.trunc.week.MySQLTruncWeekFunction;
 import com.blazebit.persistence.impl.function.trunc.week.OracleTruncWeekFunction;
-import com.blazebit.persistence.impl.function.trunc.week.PostgreSQLTruncWeekFunction;
 import com.blazebit.persistence.impl.function.trunc.year.DB2TruncYearFunction;
 import com.blazebit.persistence.impl.function.trunc.year.H2TruncYearFunction;
 import com.blazebit.persistence.impl.function.trunc.year.MSSQLTruncYearFunction;
@@ -504,6 +514,19 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("sybase", new SybaseYearFunction());
         registerFunction(jpqlFunctionGroup);
 
+        jpqlFunctionGroup = new JpqlFunctionGroup("year_of_week", false);
+        jpqlFunctionGroup.add(null, new YearOfWeekFunction());
+        jpqlFunctionGroup.add("db2", new DB2YearOfWeekFunction());
+        jpqlFunctionGroup.add("microsoft", new MSSQLYearOfWeekFunction());
+        jpqlFunctionGroup.add("mysql", new MySQLYearOfWeekFunction());
+        jpqlFunctionGroup.add("oracle", new OracleYearOfWeekFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        jpqlFunctionGroup = new JpqlFunctionGroup("year_week", false);
+        jpqlFunctionGroup.add(null, new YearWeekFunction());
+        jpqlFunctionGroup.add("mysql", new MySQLYearWeekFunction());
+        registerFunction(jpqlFunctionGroup);
+
         jpqlFunctionGroup = new JpqlFunctionGroup("month", false);
         jpqlFunctionGroup.add(null, new MonthFunction());
         jpqlFunctionGroup.add("access", new AccessMonthFunction());
@@ -514,15 +537,35 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         registerFunction(jpqlFunctionGroup);
 
         jpqlFunctionGroup = new JpqlFunctionGroup("week", false);
-        jpqlFunctionGroup.add(null, new WeekFunction());
-        jpqlFunctionGroup.add("access", new AccessWeekFunction());
-        jpqlFunctionGroup.add("db2", new DB2WeekFunction());
-        jpqlFunctionGroup.add("h2", new H2WeekFunction());
-        jpqlFunctionGroup.add("microsoft", new SQLServerWeekFunction());
-        jpqlFunctionGroup.add("sybase", new SybaseWeekFunction());
-        jpqlFunctionGroup.add("sqlite", new SqliteWeekFunction());
-        jpqlFunctionGroup.add("mysql", new MySQLWeekFunction());
-        jpqlFunctionGroup.add("oracle", new OracleWeekFunction());
+        jpqlFunctionGroup.add(null, new IsoWeekFunction());
+        jpqlFunctionGroup.add("access", new AccessIsoWeekFunction());
+        jpqlFunctionGroup.add("db2", new DB2IsoWeekFunction());
+        jpqlFunctionGroup.add("h2", new H2IsoWeekFunction());
+        jpqlFunctionGroup.add("microsoft", new SQLServerIsoWeekFunction());
+        jpqlFunctionGroup.add("sybase", new SybaseIsoWeekFunction());
+        jpqlFunctionGroup.add("sqlite", new SqliteIsoWeekFunction());
+        jpqlFunctionGroup.add("mysql", new MySQLIsoWeekFunction());
+        jpqlFunctionGroup.add("oracle", new OracleIsoWeekFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        jpqlFunctionGroup = new JpqlFunctionGroup("isoweek", false);
+        jpqlFunctionGroup.add(null, new IsoWeekFunction());
+        jpqlFunctionGroup.add("access", new AccessIsoWeekFunction());
+        jpqlFunctionGroup.add("db2", new DB2IsoWeekFunction());
+        jpqlFunctionGroup.add("h2", new H2IsoWeekFunction());
+        jpqlFunctionGroup.add("microsoft", new SQLServerIsoWeekFunction());
+        jpqlFunctionGroup.add("sybase", new SybaseIsoWeekFunction());
+        jpqlFunctionGroup.add("sqlite", new SqliteIsoWeekFunction());
+        jpqlFunctionGroup.add("mysql", new MySQLIsoWeekFunction());
+        jpqlFunctionGroup.add("oracle", new OracleIsoWeekFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        jpqlFunctionGroup = new JpqlFunctionGroup("week_in_year", false);
+        jpqlFunctionGroup.add(null, new WeekInYearFunction());
+        jpqlFunctionGroup.add("db2", new DB2WeekInYearFunction());
+        jpqlFunctionGroup.add("microsoft", new SQLServerWeekInYearFunction());
+        jpqlFunctionGroup.add("mysql", new MySQLWeekInYearFunction());
+        jpqlFunctionGroup.add("oracle", new OracleWeekInYearFunction());
         registerFunction(jpqlFunctionGroup);
 
         jpqlFunctionGroup = new JpqlFunctionGroup("quarter", false);
@@ -791,13 +834,10 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         registerFunction(jpqlFunctionGroup);
 
         jpqlFunctionGroup = new JpqlFunctionGroup("trunc_week", false);
-        jpqlFunctionGroup.add(null, new PostgreSQLTruncWeekFunction());
-        jpqlFunctionGroup.add("db2", new DB2TruncWeekFunction());
-        jpqlFunctionGroup.add("h2", new H2TruncWeekFunction());
+        jpqlFunctionGroup.add(null, new TruncWeekFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLTruncWeekFunction());
         jpqlFunctionGroup.add("mysql", new MySQLTruncWeekFunction());
         jpqlFunctionGroup.add("oracle", new OracleTruncWeekFunction());
-        jpqlFunctionGroup.add("postgresql", new PostgreSQLTruncWeekFunction());
         registerFunction(jpqlFunctionGroup);
 
         jpqlFunctionGroup = new JpqlFunctionGroup("trunc_year", false);

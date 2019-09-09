@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.trunc.week;
+package com.blazebit.persistence.impl.function.datetime.yearofweek;
 
 /**
  * @author Jan-Willem Gmelig Meyling
  * @since 1.4.0
  */
-public class PostgreSQLTruncWeekFunction extends TruncWeekFunction {
+public class OracleYearOfWeekFunction extends YearOfWeekFunction {
 
-    public PostgreSQLTruncWeekFunction() {
-        super("DATE_TRUNC('week', ?1)");
+    public OracleYearOfWeekFunction() {
+        super("EXTRACT(YEAR FROM TRUNC(?1, 'IW'))");
     }
 
 }

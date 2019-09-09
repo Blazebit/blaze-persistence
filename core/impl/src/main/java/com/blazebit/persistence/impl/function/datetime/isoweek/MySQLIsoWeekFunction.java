@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.datetime.week;
+package com.blazebit.persistence.impl.function.datetime.isoweek;
 
 /**
  *
  * @author Jan-Willem Gmelig Meyling
  * @since 1.4.0
  */
-public class MySQLWeekFunction extends WeekFunction {
+public class MySQLIsoWeekFunction extends IsoWeekFunction {
 
-    public MySQLWeekFunction() {
+    public MySQLIsoWeekFunction() {
         super("WEEK(?1, 3)");
     }
 }

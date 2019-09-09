@@ -21,9 +21,9 @@ package com.blazebit.persistence.impl.function.datetime.week;
  * @author Jan-Willem Gmelig Meyling
  * @since 1.4.0
  */
-public class DB2WeekFunction extends WeekFunction {
+public class SQLServerWeekInYearFunction extends WeekInYearFunction {
 
-    public DB2WeekFunction() {
-        super("week_iso(?1)");
+    public SQLServerWeekInYearFunction() {
+        super("floor((6 + datepart(dy, convert(date, ?1))) / 7)");
     }
 }
