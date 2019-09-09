@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.datetime.week;
+package com.blazebit.persistence.impl.function.datetime.isoweek;
 
 /**
  *
  * @author Jan-Willem Gmelig Meyling
  * @since 1.4.0
  */
-public class AccessWeekFunction extends WeekFunction {
+public class OracleIsoWeekFunction extends IsoWeekFunction {
 
-    public AccessWeekFunction() {
-        super("datepart('ww', ?1)");
+    public OracleIsoWeekFunction() {
+        super("to_number(to_char(?1, 'IW'))");
     }
 }

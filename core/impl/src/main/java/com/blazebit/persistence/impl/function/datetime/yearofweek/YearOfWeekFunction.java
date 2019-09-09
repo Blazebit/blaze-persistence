@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.trunc.week;
+package com.blazebit.persistence.impl.function.datetime.yearofweek;
 
 import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.JpqlFunction;
@@ -24,15 +24,15 @@ import com.blazebit.persistence.spi.TemplateRenderer;
  * @author Jan-Willem Gmelig Meyling
  * @since 1.4.0
  */
-public class TruncWeekFunction implements JpqlFunction {
+public class YearOfWeekFunction implements JpqlFunction {
 
     protected final TemplateRenderer renderer;
 
-    public TruncWeekFunction() {
-        this("DATE_TRUNC('week', ?1)");
+    public YearOfWeekFunction() {
+        this("EXTRACT(YEAR FROM DATE_TRUNC('week', ?1))");
     }
 
-    public TruncWeekFunction(String template) {
+    public YearOfWeekFunction(String template) {
         this.renderer = new TemplateRenderer(template);
     }
 
@@ -48,7 +48,7 @@ public class TruncWeekFunction implements JpqlFunction {
 
     @Override
     public Class<?> getReturnType(Class<?> firstArgumentType) {
-        return firstArgumentType;
+        return Integer.class;
     }
 
     @Override

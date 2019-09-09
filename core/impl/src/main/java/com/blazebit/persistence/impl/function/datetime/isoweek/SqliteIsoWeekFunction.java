@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.datetime.week;
+package com.blazebit.persistence.impl.function.datetime.isoweek;
 
 /**
  *
  * @author Jan-Willem Gmelig Meyling
  * @since 1.4.0
  */
-public class OracleWeekFunction extends WeekFunction {
+public class SqliteIsoWeekFunction extends IsoWeekFunction {
 
-    public OracleWeekFunction() {
-        super("to_number(to_char(?1, 'IW'))");
+    public SqliteIsoWeekFunction() {
+        super("(strftime('%j', date(?1, '-3 days', 'weekday 4')) - 1) / 7 + 1");
     }
 }

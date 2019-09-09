@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.datetime.week;
+package com.blazebit.persistence.impl.function.datetime.yearofweek;
 
 /**
- *
  * @author Jan-Willem Gmelig Meyling
  * @since 1.4.0
  */
-public class SybaseWeekFunction extends WeekFunction {
+public class MySQLYearOfWeekFunction extends YearOfWeekFunction {
 
-    public SybaseWeekFunction() {
-        super("datepart(cwk, ?1)");
+    public MySQLYearOfWeekFunction() {
+        super("extract(YEAR FROM date_add('1900-01-01', interval TIMESTAMPDIFF(WEEK, '1900-01-01', ?1) WEEK))");
     }
+
 }

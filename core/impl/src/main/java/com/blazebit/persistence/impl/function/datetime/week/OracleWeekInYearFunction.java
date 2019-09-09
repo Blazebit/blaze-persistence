@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.trunc.week;
+package com.blazebit.persistence.impl.function.datetime.week;
 
 /**
  * @author Jan-Willem Gmelig Meyling
  * @since 1.4.0
  */
-public class H2TruncWeekFunction extends TruncWeekFunction {
+public class OracleWeekInYearFunction extends WeekInYearFunction {
 
-    public H2TruncWeekFunction() {
-        super("DATEADD(WEEK, DATEDIFF(WEEK, '1900-01-01', ?1), '1900-01-01')");
+    public OracleWeekInYearFunction() {
+        super("floor((6 + to_number(to_char(?1, 'DDD'))) / 7)");
     }
-
 }

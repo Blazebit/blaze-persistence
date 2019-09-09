@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.datetime.week;
+package com.blazebit.persistence.impl.function.datetime.yearofweek;
 
 /**
- *
  * @author Jan-Willem Gmelig Meyling
  * @since 1.4.0
  */
-public class SqliteWeekFunction extends WeekFunction {
+public class MSSQLYearOfWeekFunction extends YearOfWeekFunction {
 
-    public SqliteWeekFunction() {
-        super("(strftime('%j', date(?1, '-3 days', 'weekday 4')) - 1) / 7 + 1");
+    public MSSQLYearOfWeekFunction() {
+        super("datepart(yy, DATEADD(WEEK, DATEDIFF(WEEK, 0, ?1), 0))");
     }
+
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.trunc.week;
+package com.blazebit.persistence.impl.function.datetime.yearweek;
 
 import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.JpqlFunction;
@@ -24,15 +24,18 @@ import com.blazebit.persistence.spi.TemplateRenderer;
  * @author Jan-Willem Gmelig Meyling
  * @since 1.4.0
  */
-public class TruncWeekFunction implements JpqlFunction {
+public class YearWeekFunction implements JpqlFunction {
 
     protected final TemplateRenderer renderer;
 
-    public TruncWeekFunction() {
-        this("DATE_TRUNC('week', ?1)");
+    public YearWeekFunction() {
+        // Work in PostgreSQL (verified), Oracle 10g (according to SO)
+        // Does not work in H2, although it should. Interestingly, IYYY is returned correctly, but IW is not.
+        // Does not work in MySQL, as it lacks the TO_CHAR method.
+        this("TO_CHAR(?1, 'IYYY-IW')");
     }
 
-    public TruncWeekFunction(String template) {
+    public YearWeekFunction(String template) {
         this.renderer = new TemplateRenderer(template);
     }
 
@@ -48,7 +51,7 @@ public class TruncWeekFunction implements JpqlFunction {
 
     @Override
     public Class<?> getReturnType(Class<?> firstArgumentType) {
-        return firstArgumentType;
+        return String.class;
     }
 
     @Override

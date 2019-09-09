@@ -17,14 +17,12 @@
 package com.blazebit.persistence.impl.function.datetime.week;
 
 /**
- *
  * @author Jan-Willem Gmelig Meyling
  * @since 1.4.0
  */
-public class H2WeekFunction extends WeekFunction {
+public class DB2WeekInYearFunction extends WeekInYearFunction {
 
-    public H2WeekFunction() {
-        super("iso_week(?1)");
+    public DB2WeekInYearFunction() {
+        super("floor((6 + dayofyear(?1)) / 7)");
     }
-
 }
