@@ -184,6 +184,6 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
         assertEquals("pers2", result.get(0).getName());
         assertEquals("pers2", result.get(1).getName());
     }
-    
+
     // TODO: needs more tests
 }

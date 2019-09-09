@@ -577,6 +577,18 @@ public class SubqueryTest extends AbstractCoreTest {
     }
 
     @Test
+    public void testPaginationWithOuterAttributeInSubquery() {
+        CriteriaBuilder<Document> cb = cbf.create(em, Document.class)
+                .whereExists()
+                    .from(Person.class)
+                    .where("id").eqExpression("owner.id")
+                .end();
+
+        // It is disallowed to refer to implicitly refer to attributes of the outer query root
+        verifyException(cb, IllegalArgumentException.class).getQueryString();
+    }
+
+    @Test
     // NOTE: Datanucleus has a bug here: https://github.com/datanucleus/datanucleus-core/issues/173
     @Category({ NoDatanucleus.class })
     public void testMultiLevelSubqueryAliasVisibility() {

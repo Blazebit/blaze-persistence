@@ -241,7 +241,7 @@
                 <site>
                     <id>staging-persistence.blazebit.com</id>
                     <name>persistence.blazebit.com Staging</name>
-                    <url>scp://staging-persistence.blazebit.com/var/www/virtual/staging-persistence.blazebit.com/htdocs</url>
+                    <url>scp://staging-persistence.blazebit.com:10022/var/www/virtual/staging-persistence.blazebit.com/htdocs</url>
                 </site>
             </distributionManagement>
         </profile>
@@ -254,7 +254,7 @@
                 <site>
                     <id>persistence.blazebit.com</id>
                     <name>persistence.blazebit.com</name>
-                    <url>scp://persistence.blazebit.com/var/www/virtual/persistence.blazebit.com/htdocs</url>
+                    <url>scp://persistence.blazebit.com:10022/var/www/virtual/persistence.blazebit.com/htdocs</url>
                 </site>
             </distributionManagement>
         </profile>

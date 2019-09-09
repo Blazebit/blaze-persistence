@@ -1,0 +1,40 @@
+= Blaze-Persistence 1.4.0-Alpha2 Release
+Christian Beikov
+2019-09-17 0
+:description: Blaze-Persistence version 1.4.0-Alpha2 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+We just released Blaze-Persistence version 1.4.0-Alpha2, this time, mostly with new features!
+The most exciting feature of this release is obviously window function support and the new expression syntax support for it.
+
+If you want to get the number of objects while fetching them and avoid the need for grouping or subqueries, you can now do something like
+
+[source,java]
+----
+criteriaBuilder.select("count(*) over (partition by entity.id)")
+----
+
+We added support for the most common window functions, also see +++<!-- PREVIEW-SUFFIX --><!-- </p></div> --><!-- PREVIEW-END -->+++the new window function chapter: https://persistence.blazebit.com/documentation/core/manual/en_US/index.html#window-functions-2
+
+Other new notable features are:
+
+* https://github.com/Blazebit/blaze-persistence/issues/812[*#812*, window="_blank"] Temporal extraction, diff, truncation and arithmetic functions
+* https://github.com/Blazebit/blaze-persistence/issues/803[*#803*, window="_blank"] Introduction of comparison methods that render literals
+* https://github.com/Blazebit/blaze-persistence/issues/801[*#801*, window="_blank"] MySQL 8 support
+* https://github.com/Blazebit/blaze-persistence/issues/797[*#797*, window="_blank"] EntityManager resolving in spring data integration is random
+* https://github.com/Blazebit/blaze-persistence/issues/795[*#795*, window="_blank"] Move available configuration properties to API artifacts
+* https://github.com/Blazebit/blaze-persistence/issues/793[*#793*, window="_blank"] Shade ANTLR into parser
+
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#140-alpha2[changelog, window="_blank"] for a full list of changes and improvements.
+
+A big thank you goes out to Jan-Willem Gmelig Meyling and his colleague Sayra Ranjha for implementing the initial window functions as well as the temporal functions!
+
+The long awaited feature entity view lifecycle listeners will take some more time as I'm currently working on a new project called https://github.com/Blazebit/blaze-notify[blaze-notify, window="_blank"]
+that will make it super easy to integrate transactional notifications(E-Mail, App notifications, etc.) into your own applications.
+
+Unless someone works on a PR for other new features, the next release will be about preliminary support for entity view lifecycle listeners!

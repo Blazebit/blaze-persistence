@@ -8,6 +8,22 @@ Not yet released
 
 ### New features
 
+None
+
+### Bug fixes
+
+None
+
+### Backwards-incompatible changes
+
+None
+
+## 1.4.0-Alpha2
+
+10/09/2019 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.4.0-Alpha2) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue+milestone%3A1.4.0+is%3Aclosed+closed%3A%3C2019-09-17)
+
+### New features
+
 * Introduce support for adding whole predicates to predicate builders via `whereExpression`/`whereExpressionSubqueries` etc.
 * Add support for subquery expression in the `ON` clause
 * Introduce new comparison methods in predicate builders to allow making use of literal rendering in a type safe way
@@ -24,12 +40,21 @@ Not yet released
 * Add support for MySQL 8
 * Move `ConfigurationProperties` classes to API artifacts
 * Add support for view property sorting in Spring Data
+* Complete the set of date extraction, date diff and date arithmetic functions
+* Add `ANY` as alias for the `OR_AGG` function
+* Add support for using entity views as parameters in Spring Data repositories
+* Add support for boolean wrapper type when using `is` method prefix
+* Add support for Date and Calendar to Instant conversion for entity views
 
 ### Bug fixes
 
 * Fix Hibernate Envers issues with JPA Criteria implementation
 * Fix a NPE happening due to doing a manual select in an exists subquery that joins associations
 * Avoid a NPE happening when trying to render a parameter as literal that has no literal representation
+* Fix wrong instantiation of inheritance base type when null is expected
+* Fix an issue with using a sub-association as correlation basis
+* Don't treat creatable or updatable subtypes for mutable attributes as readonly
+* Prevent cache trashing object builder cache when macros don't support caching
 
 ### Backwards-incompatible changes
 
