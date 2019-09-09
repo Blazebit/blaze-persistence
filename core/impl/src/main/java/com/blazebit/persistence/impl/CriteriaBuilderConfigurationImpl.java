@@ -80,7 +80,12 @@ import com.blazebit.persistence.impl.function.datetime.yearofweek.MSSQLYearOfWee
 import com.blazebit.persistence.impl.function.datetime.yearofweek.MySQLYearOfWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.yearofweek.OracleYearOfWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.yearofweek.YearOfWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.yearweek.DB2YearWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.yearweek.H2YearWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.yearweek.MySQLYearWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.yearweek.OracleYearWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.yearweek.PostgreSQLYearWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.yearweek.SQLServerYearWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.yearweek.YearWeekFunction;
 import com.blazebit.persistence.impl.function.entity.EntityFunction;
 import com.blazebit.persistence.impl.function.every.EveryFunction;
@@ -525,6 +530,11 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup = new JpqlFunctionGroup("year_week", false);
         jpqlFunctionGroup.add(null, new YearWeekFunction());
         jpqlFunctionGroup.add("mysql", new MySQLYearWeekFunction());
+        jpqlFunctionGroup.add("db2", new DB2YearWeekFunction());
+        jpqlFunctionGroup.add("oracle", new OracleYearWeekFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLYearWeekFunction());
+        jpqlFunctionGroup.add("h2", new H2YearWeekFunction());
+        jpqlFunctionGroup.add("microsoft", new SQLServerYearWeekFunction());
         registerFunction(jpqlFunctionGroup);
 
         jpqlFunctionGroup = new JpqlFunctionGroup("month", false);
