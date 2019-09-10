@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.dateadd.minute;
 public class DB2MinuteAddFunction extends MinuteAddFunction {
 
     public DB2MinuteAddFunction() {
-        super("?1 + ?2 MINUTE");
+        super("?1 + (?2) MINUTE");
     }
 
 }

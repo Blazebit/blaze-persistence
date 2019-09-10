@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.datetime.yearweek;
 public class DB2YearWeekFunction extends YearWeekFunction {
 
     public DB2YearWeekFunction() {
-        super("VARCHAR_FORMAT('IYYY-IW', ?1)");
+        super("VARCHAR_FORMAT(?1, 'IYYY-IW')");
     }
 
 }

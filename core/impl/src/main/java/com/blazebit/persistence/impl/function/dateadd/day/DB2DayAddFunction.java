@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.dateadd.day;
 public class DB2DayAddFunction extends DayAddFunction {
 
     public DB2DayAddFunction() {
-        super("?1 + ?2 DAY");
+        super("?1 + (?2) DAY");
     }
 
 }

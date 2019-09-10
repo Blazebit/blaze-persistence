@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.dateadd.hour;
 public class DB2HourAddFunction extends HourAddFunction {
 
     public DB2HourAddFunction() {
-        super("?1 + ?2 HOUR");
+        super("?1 + (?2) HOUR");
     }
 
 }

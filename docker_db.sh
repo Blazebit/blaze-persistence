@@ -42,7 +42,12 @@ mssql() {
 
 oracle() {
     docker rm -f oracle || true
-    docker run --shm-size=1536m --name oracle -d -p 1521:1521 wnameless/oracle-xe-11g
+    docker run --shm-size=1536m --name oracle -d -p 1521:1521 wnameless/oracle-xe-11g || echo "Clone and build the docker image from Github first.
+    git clone https://github.com/wnameless/docker-oracle-xe-11g.git
+    cd docker-oracle-xe-11g
+    docker build -t wnameless/oracle-xe-11g .
+    cd -
+    docker run --shm-size=1536m --name oracle -d -p 1521:1521 wnameless/oracle-xe-11g"
 }
 
 if [ -z ${1} ]; then

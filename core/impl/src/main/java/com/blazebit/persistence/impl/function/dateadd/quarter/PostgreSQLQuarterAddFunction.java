@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.dateadd.quarter;
 public class PostgreSQLQuarterAddFunction extends QuarterAddFunction {
 
     public PostgreSQLQuarterAddFunction() {
-        super("?1 + INTERVAL ?2 * '1 QUARTER'");
+        super("?1 + ?2 * INTERVAL '3 MONTH'");
     }
 
 }

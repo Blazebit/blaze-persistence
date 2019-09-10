@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.dateadd.month;
 public class DB2MonthAddFunction extends MonthAddFunction {
 
     public DB2MonthAddFunction() {
-        super("?1 + ?2 MONTH");
+        super("?1 + (?2) MONTH");
     }
 
 }

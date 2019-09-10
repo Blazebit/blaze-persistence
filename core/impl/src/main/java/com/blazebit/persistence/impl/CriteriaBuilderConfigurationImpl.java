@@ -806,6 +806,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("h2", new H2MillisecondsAddFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLMillisecondsAddFunction());
         jpqlFunctionGroup.add("mysql", new MySQLMillisecondsAddFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLMillisecondsAddFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLMillisecondsAddFunction());
         jpqlFunctionGroup.add("oracle", new OracleMillisecondsAddFunction());
         registerFunction(jpqlFunctionGroup);
