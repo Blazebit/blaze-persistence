@@ -32,6 +32,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -42,7 +43,7 @@ import java.util.List;
 public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
     
     private final List<String> chunks = new ArrayList<String>();
-    private final int[] argumentIndices;
+    private final List<Integer> argumentIndices;
     private final List<Expression> arguments;
 
     private final DatasourceCallMock datasourceCallMock = new DatasourceCallMock();
@@ -53,10 +54,13 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
     private Boolean chunkFirst;
 
     public EclipseLinkFunctionRenderContext(List<Expression> arguments, AbstractSession session, ExpressionSQLPrinter printer) {
-        this.argumentIndices = new int[arguments.size()];
-        Arrays.fill(this.argumentIndices, -1);
+        int size = arguments.size();
+        this.argumentIndices = new ArrayList<>(size);
+        for (int i = 0; i < size; i++) {
+            this.argumentIndices.add(-1);
+        }
         this.arguments = arguments;
-        this.argumentStrings = new String[arguments.size()];
+        this.argumentStrings = new String[size];
         // Since there are no public getters we can use to extract the translation row or whether we should print qualified names, we render dummy expressions
         Writer oldWriter = printer.getWriter();
         try {
@@ -101,7 +105,11 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         if (chunkFirst == null) {
             chunkFirst = false;
         }
-        argumentIndices[currentIndex++] = index;
+        if (currentIndex == argumentIndices.size()) {
+            argumentIndices.add(currentIndex++, index);
+        } else {
+            argumentIndices.set(currentIndex++, index);
+        }
     }
 
     @Override
@@ -121,7 +129,11 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
     }
     
     public int[] getArgumentIndices() {
-        return argumentIndices;
+        int[] indices = new int[argumentIndices.size()];
+        for (int i = 0; i < indices.length; i++) {
+            indices[i] = argumentIndices.get(i);
+        }
+        return indices;
     }
 
     /**
