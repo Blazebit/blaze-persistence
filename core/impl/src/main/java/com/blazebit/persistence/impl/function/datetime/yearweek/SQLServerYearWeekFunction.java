@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.datetime.yearweek;
 public class SQLServerYearWeekFunction extends YearWeekFunction {
 
     public SQLServerYearWeekFunction() {
-        super("CONCAT(datepart(yy, CONVERT(date, DATEADD(WEEK, DATEDIFF(WEEK, 0, ?1), 0))), '-', DATEPART(isowk, CONVERT(date, ?1)))");
+        super("(select CONCAT(datepart(yy, CONVERT(date, DATEADD(WEEK, DATEDIFF(WEEK, 0, x.y), 0))), '-', DATEPART(isowk, CONVERT(date, x.y))) from (values (?1)) x(y))");
     }
 
 }

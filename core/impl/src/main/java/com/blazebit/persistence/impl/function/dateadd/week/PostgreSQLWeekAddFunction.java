@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.dateadd.week;
 public class PostgreSQLWeekAddFunction extends WeekAddFunction {
 
     public PostgreSQLWeekAddFunction() {
-        super("?1 + INTERVAL ?2 WEEK");
+        super("?1 + INTERVAL ?2 * '1 WEEK'");
     }
 
 }

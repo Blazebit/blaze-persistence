@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.dateadd.milliseconds;
 public class MSSQLMillisecondsAddFunction extends MillisecondsAddFunction {
 
     public MSSQLMillisecondsAddFunction() {
-        super("DATEADD(milliseconds, ?2, ?1)");
+        super("DATEADD(millisecond, ?2, ?1)");
     }
 
 }

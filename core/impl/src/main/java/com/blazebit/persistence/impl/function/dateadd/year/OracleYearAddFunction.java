@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.dateadd.year;
 public class OracleYearAddFunction extends YearAddFunction {
 
     public OracleYearAddFunction() {
-        super("?1 + INTERVAL ?2 YEAR");
+        super("?1 + INTERVAL ?2 || '' YEAR");
     }
 
 }

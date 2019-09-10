@@ -23,6 +23,7 @@ package com.blazebit.persistence.impl.function.trunc.week;
 public class MSSQLTruncWeekFunction extends TruncWeekFunction {
 
     public MSSQLTruncWeekFunction() {
+        // Implementation from https://stackoverflow.com/a/32955740/2104280
         super("DATEADD(WEEK, DATEDIFF(WEEK, 0, ?1), 0)");
     }
 

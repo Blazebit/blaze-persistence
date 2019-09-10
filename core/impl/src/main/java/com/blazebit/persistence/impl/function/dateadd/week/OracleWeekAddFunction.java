@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.dateadd.week;
 public class OracleWeekAddFunction extends WeekAddFunction {
 
     public OracleWeekAddFunction() {
-        super("?1 + INTERVAL ?2 WEEK");
+        super("?1 + INTERVAL ?2 || '' WEEK");
     }
 
 }

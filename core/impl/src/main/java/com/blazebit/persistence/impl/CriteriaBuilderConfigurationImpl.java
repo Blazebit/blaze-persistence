@@ -163,7 +163,16 @@ import com.blazebit.persistence.impl.function.every.FallbackEveryFunction;
 import com.blazebit.persistence.impl.function.oragg.FallbackOrAggFunction;
 import com.blazebit.persistence.impl.function.oragg.OrAggFunction;
 import com.blazebit.persistence.impl.function.subquery.SubqueryFunction;
+import com.blazebit.persistence.impl.function.trunc.day.TruncDayFunction;
+import com.blazebit.persistence.impl.function.trunc.hour.TruncHourFunction;
+import com.blazebit.persistence.impl.function.trunc.microseconds.TruncMicrosecondsFunction;
+import com.blazebit.persistence.impl.function.trunc.milliseconds.TruncMillisecondsFunction;
+import com.blazebit.persistence.impl.function.trunc.minute.TruncMinuteFunction;
+import com.blazebit.persistence.impl.function.trunc.month.TruncMonthFunction;
+import com.blazebit.persistence.impl.function.trunc.quarter.TruncQuarterFunction;
+import com.blazebit.persistence.impl.function.trunc.second.TruncSecondFunction;
 import com.blazebit.persistence.impl.function.trunc.week.TruncWeekFunction;
+import com.blazebit.persistence.impl.function.trunc.year.TruncYearFunction;
 import com.blazebit.persistence.impl.function.window.avg.AvgFunction;
 import com.blazebit.persistence.impl.function.window.count.CountFunction;
 import com.blazebit.persistence.impl.function.window.cumedist.CumeDistFunction;
@@ -631,7 +640,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("oracle", new OracleIsoWeekFunction());
         registerFunction(jpqlFunctionGroup);
 
-        jpqlFunctionGroup = new JpqlFunctionGroup("isoweek", false);
+        jpqlFunctionGroup = new JpqlFunctionGroup("iso_week", false);
         jpqlFunctionGroup.add(null, new IsoWeekFunction());
         jpqlFunctionGroup.add("access", new AccessIsoWeekFunction());
         jpqlFunctionGroup.add("db2", new DB2IsoWeekFunction());
@@ -953,7 +962,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         // date trunc
 
-        jpqlFunctionGroup = new JpqlFunctionGroup("trunc_day", false);
+        jpqlFunctionGroup = new JpqlFunctionGroup(TruncDayFunction.NAME, false);
         jpqlFunctionGroup.add(null, new PostgreSQLTruncDayFunction());
         jpqlFunctionGroup.add("db2", new DB2TruncDayFunction());
         jpqlFunctionGroup.add("h2", new H2TruncDayFunction());
@@ -964,7 +973,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("postgresql", new PostgreSQLTruncDayFunction());
         registerFunction(jpqlFunctionGroup);
 
-        jpqlFunctionGroup = new JpqlFunctionGroup("trunc_hour", false);
+        jpqlFunctionGroup = new JpqlFunctionGroup(TruncHourFunction.NAME, false);
         jpqlFunctionGroup.add(null, new PostgreSQLTruncHourFunction());
         jpqlFunctionGroup.add("db2", new DB2TruncHourFunction());
         jpqlFunctionGroup.add("h2", new H2TruncHourFunction());
@@ -975,7 +984,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("postgresql", new PostgreSQLTruncHourFunction());
         registerFunction(jpqlFunctionGroup);
 
-        jpqlFunctionGroup = new JpqlFunctionGroup("trunc_microseconds", false);
+        jpqlFunctionGroup = new JpqlFunctionGroup(TruncMicrosecondsFunction.NAME, false);
         jpqlFunctionGroup.add(null, new PostgreSQLTruncMicrosecondsFunction());
         jpqlFunctionGroup.add("db2", new DB2TruncMicrosecondsFunction());
         jpqlFunctionGroup.add("h2", new H2TruncMicrosecondsFunction());
@@ -986,7 +995,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("postgresql", new PostgreSQLTruncMicrosecondsFunction());
         registerFunction(jpqlFunctionGroup);
 
-        jpqlFunctionGroup = new JpqlFunctionGroup("trunc_milliseconds", false);
+        jpqlFunctionGroup = new JpqlFunctionGroup(TruncMillisecondsFunction.NAME, false);
         jpqlFunctionGroup.add(null, new PostgreSQLTruncMillisecondsFunction());
         jpqlFunctionGroup.add("db2", new DB2TruncMillisecondsFunction());
         jpqlFunctionGroup.add("h2", new H2TruncMillisecondsFunction());
@@ -997,7 +1006,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("postgresql", new PostgreSQLTruncMillisecondsFunction());
         registerFunction(jpqlFunctionGroup);
 
-        jpqlFunctionGroup = new JpqlFunctionGroup("trunc_minute", false);
+        jpqlFunctionGroup = new JpqlFunctionGroup(TruncMinuteFunction.NAME, false);
         jpqlFunctionGroup.add(null, new PostgreSQLTruncMinuteFunction());
         jpqlFunctionGroup.add("db2", new DB2TruncMinuteFunction());
         jpqlFunctionGroup.add("h2", new H2TruncMinuteFunction());
@@ -1008,7 +1017,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("postgresql", new PostgreSQLTruncMinuteFunction());
         registerFunction(jpqlFunctionGroup);
 
-        jpqlFunctionGroup = new JpqlFunctionGroup("trunc_month", false);
+        jpqlFunctionGroup = new JpqlFunctionGroup(TruncMonthFunction.NAME, false);
         jpqlFunctionGroup.add(null, new PostgreSQLTruncMonthFunction());
         jpqlFunctionGroup.add("db2", new DB2TruncMonthFunction());
         jpqlFunctionGroup.add("h2", new H2TruncMonthFunction());
@@ -1019,7 +1028,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("postgresql", new PostgreSQLTruncMonthFunction());
         registerFunction(jpqlFunctionGroup);
 
-        jpqlFunctionGroup = new JpqlFunctionGroup("trunc_quarter", false);
+        jpqlFunctionGroup = new JpqlFunctionGroup(TruncQuarterFunction.NAME, false);
         jpqlFunctionGroup.add(null, new PostgreSQLTruncQuarterFunction());
         jpqlFunctionGroup.add("db2", new DB2TruncQuarterFunction());
         jpqlFunctionGroup.add("h2", new H2TruncQuarterFunction());
@@ -1030,7 +1039,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("postgresql", new PostgreSQLTruncQuarterFunction());
         registerFunction(jpqlFunctionGroup);
 
-        jpqlFunctionGroup = new JpqlFunctionGroup("trunc_second", false);
+        jpqlFunctionGroup = new JpqlFunctionGroup(TruncSecondFunction.NAME, false);
         jpqlFunctionGroup.add(null, new PostgreSQLTruncSecondFunction());
         jpqlFunctionGroup.add("db2", new DB2TruncSecondFunction());
         jpqlFunctionGroup.add("h2", new H2TruncSecondFunction());
@@ -1041,7 +1050,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("postgresql", new PostgreSQLTruncSecondFunction());
         registerFunction(jpqlFunctionGroup);
 
-        jpqlFunctionGroup = new JpqlFunctionGroup("trunc_week", false);
+        jpqlFunctionGroup = new JpqlFunctionGroup(TruncWeekFunction.NAME, false);
         jpqlFunctionGroup.add(null, new TruncWeekFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLTruncWeekFunction());
         jpqlFunctionGroup.add("mysql", new MySQLTruncWeekFunction());
@@ -1049,7 +1058,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("oracle", new OracleTruncWeekFunction());
         registerFunction(jpqlFunctionGroup);
 
-        jpqlFunctionGroup = new JpqlFunctionGroup("trunc_year", false);
+        jpqlFunctionGroup = new JpqlFunctionGroup(TruncYearFunction.NAME, false);
         jpqlFunctionGroup.add(null, new PostgreSQLTruncYearFunction());
         jpqlFunctionGroup.add("db2", new DB2TruncYearFunction());
         jpqlFunctionGroup.add("h2", new H2TruncYearFunction());

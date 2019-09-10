@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.dateadd.quarter;
 public class DB2QuarterAddFunction extends QuarterAddFunction {
 
     public DB2QuarterAddFunction() {
-        super("?1 + ?2 QUARTER");
+        super("?1 + ?2 * 3 MONTH");
     }
 
 }

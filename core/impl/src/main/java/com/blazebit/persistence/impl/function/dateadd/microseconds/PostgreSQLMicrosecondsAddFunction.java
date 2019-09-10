@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.dateadd.microseconds;
 public class PostgreSQLMicrosecondsAddFunction extends MicrosecondsAddFunction {
 
     public PostgreSQLMicrosecondsAddFunction() {
-        super("?1 + INTERVAL ?2 MICROSECONDS");
+        super("?1 + INTERVAL ?2 * '1 MICROSECONDS'");
     }
 
 }
