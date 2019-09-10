@@ -16,51 +16,22 @@
 
 package com.blazebit.persistence.impl.function.trunc.week;
 
-import com.blazebit.persistence.spi.FunctionRenderContext;
-import com.blazebit.persistence.spi.JpqlFunction;
-import com.blazebit.persistence.spi.TemplateRenderer;
+import com.blazebit.persistence.impl.function.trunc.TruncFunction;
 
 /**
  * @author Jan-Willem Gmelig Meyling
  * @since 1.4.0
  */
-public class TruncWeekFunction implements JpqlFunction {
+public class TruncWeekFunction extends TruncFunction {
 
-    protected final TemplateRenderer renderer;
+    public static final String NAME = "TRUNC_WEEK";
 
     public TruncWeekFunction() {
         this("DATE_TRUNC('week', ?1)");
     }
 
     public TruncWeekFunction(String template) {
-        this.renderer = new TemplateRenderer(template);
+        super(NAME, template);
     }
 
-    @Override
-    public boolean hasArguments() {
-        return true;
-    }
-
-    @Override
-    public boolean hasParenthesesIfNoArguments() {
-        return true;
-    }
-
-    @Override
-    public Class<?> getReturnType(Class<?> firstArgumentType) {
-        return firstArgumentType;
-    }
-
-    @Override
-    public void render(FunctionRenderContext context) {
-        if (context.getArgumentsSize() != 1) {
-            throw new RuntimeException("The second function needs exactly one argument <datetime>! args=" + context);
-        }
-
-        renderDiff(context);
-    }
-
-    protected void renderDiff(FunctionRenderContext context) {
-        renderer.start(context).addArgument(0).build();
-    }
 }

@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.dateadd.microseconds;
 public class MySQLMicrosecondsAddFunction extends MicrosecondsAddFunction {
 
     public MySQLMicrosecondsAddFunction() {
-        super("DATE_ADD(?1, INTERVAL ?2 MICROSECONDS)");
+        super("DATE_ADD(?1, INTERVAL ?2 MICROSECOND)");
     }
 
 }

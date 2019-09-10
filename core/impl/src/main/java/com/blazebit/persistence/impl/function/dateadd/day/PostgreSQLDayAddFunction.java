@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.dateadd.day;
 public class PostgreSQLDayAddFunction extends DayAddFunction {
 
     public PostgreSQLDayAddFunction() {
-        super("?1 + INTERVAL ?2 DAY");
+        super("?1 + INTERVAL ?2 * '1 DAY'");
     }
 
 }

@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.dateadd.hour;
 public class OracleHourAddFunction extends HourAddFunction {
 
     public OracleHourAddFunction() {
-        super("?1 + INTERVAL ?2 HOUR");
+        super("?1 + INTERVAL ?2 || '' HOUR");
     }
 
 }

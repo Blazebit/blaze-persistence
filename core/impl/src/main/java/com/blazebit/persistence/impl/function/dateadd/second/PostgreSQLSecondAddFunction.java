@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.dateadd.second;
 public class PostgreSQLSecondAddFunction extends SecondAddFunction {
 
     public PostgreSQLSecondAddFunction() {
-        super("?1 + INTERVAL ?2 SECOND");
+        super("?1 + INTERVAL ?2 * '1 SECOND'");
     }
 
 }
