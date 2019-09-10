@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.datetime.yearweek;
+package com.blazebit.persistence.impl.function.dateadd.year;
 
 /**
  * @author Jan-Willem Gmelig Meyling
  * @since 1.4.0
  */
-public class SQLServerYearWeekFunction extends YearWeekFunction {
+public class DB2YearAddFunction extends YearAddFunction {
 
-    public SQLServerYearWeekFunction() {
-        super("CONCAT(datepart(yy, CONVERT(date, DATEADD(WEEK, DATEDIFF(WEEK, 0, ?1), 0))), '-', DATEPART(isowk, CONVERT(date, ?1)))");
+    public DB2YearAddFunction() {
+        super("?1 + ?2 YEAR");
     }
 
 }
