@@ -30,7 +30,7 @@ public class H2YearWeekFunction extends YearWeekFunction {
 
     @Override
     public void render(FunctionRenderContext context) {
-        if (context.getArgumentsSize() == 0 || context.getArgument(0).contains(":")) {
+        if (context.getArgumentsSize() == 0 || context.getArgument(0).contains("?")) {
             throw new RuntimeException("The second function does not support parameterized arguments for H2! args=" + context);
         }
         super.render(context);

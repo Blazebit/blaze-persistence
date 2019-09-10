@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.dateadd.month;
 public class OracleMonthAddFunction extends MonthAddFunction {
 
     public OracleMonthAddFunction() {
-        super("?1 + INTERVAL ?2 || '' MONTH");
+        super("?1 + ?2 * INTERVAL '1' MONTH");
     }
 
 }

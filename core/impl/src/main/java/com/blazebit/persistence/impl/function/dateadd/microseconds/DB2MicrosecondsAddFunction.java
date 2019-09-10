@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.dateadd.microseconds;
 public class DB2MicrosecondsAddFunction extends MicrosecondsAddFunction {
 
     public DB2MicrosecondsAddFunction() {
-        super("?1 + ?2 MICROSECONDS");
+        super("?1 + (?2) MICROSECONDS");
     }
 
 }

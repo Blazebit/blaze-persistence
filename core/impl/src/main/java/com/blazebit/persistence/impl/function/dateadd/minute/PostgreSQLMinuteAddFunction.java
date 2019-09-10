@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.dateadd.minute;
 public class PostgreSQLMinuteAddFunction extends MinuteAddFunction {
 
     public PostgreSQLMinuteAddFunction() {
-        super("?1 + INTERVAL ?2 * '1 MINUTE'");
+        super("?1 + ?2 * INTERVAL '1 MINUTE'");
     }
 
 }

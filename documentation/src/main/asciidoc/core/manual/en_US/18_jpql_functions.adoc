@@ -249,7 +249,7 @@ The possible fields and the respective function names are:
 * *Day of week* - `DAYOFWEEK` -  an integer between 1 (Monday) and 7 (Sunday)
 * *Day of year* - `DAYOFYEAR`
 * *Week* - `WEEK` or `ISO_WEEK` - an integer between 1 and 53
-* *Year week* - `YEAR_WEEK` - a string with the forma`t `IYYY-IW`
+* *Year week* - `YEAR_WEEK` - a string with the format `IYYY-IW`
 * *Week of year* - `WEEK_OF_YEAR`
 * *Year of week* - `YEAR_OF_WEEK`
 * *Month* - `MONTH`

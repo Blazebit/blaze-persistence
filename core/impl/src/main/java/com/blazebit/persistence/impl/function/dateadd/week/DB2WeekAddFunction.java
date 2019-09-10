@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.dateadd.week;
 public class DB2WeekAddFunction extends WeekAddFunction {
 
     public DB2WeekAddFunction() {
-        super("?1 + ?2 * 7 DAY");
+        super("?1 + (?2 * 7) DAY");
     }
 
 }

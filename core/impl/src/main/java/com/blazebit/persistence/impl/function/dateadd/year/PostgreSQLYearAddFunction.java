@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.dateadd.year;
 public class PostgreSQLYearAddFunction extends YearAddFunction {
 
     public PostgreSQLYearAddFunction() {
-        super("?1 + INTERVAL ?2 * '1 YEAR'");
+        super("?1 + ?2 * INTERVAL '1 YEAR'");
     }
 
 }

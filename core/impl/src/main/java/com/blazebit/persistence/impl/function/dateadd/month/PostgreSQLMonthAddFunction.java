@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.dateadd.month;
 public class PostgreSQLMonthAddFunction extends MonthAddFunction {
 
     public PostgreSQLMonthAddFunction() {
-        super("?1 + INTERVAL ?2 * '1 MONTH'");
+        super("?1 + ?2 * INTERVAL '1 MONTH'");
     }
 
 }

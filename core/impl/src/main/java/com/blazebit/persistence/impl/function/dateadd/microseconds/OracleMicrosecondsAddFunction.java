@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.dateadd.microseconds;
 public class OracleMicrosecondsAddFunction extends MicrosecondsAddFunction {
 
     public OracleMicrosecondsAddFunction() {
-        super("?1 + INTERVAL ?2 || '' MICROSECONDS");
+        super("?1 + ?2 * INTERVAL '0.000001' SECOND");
     }
 
 }

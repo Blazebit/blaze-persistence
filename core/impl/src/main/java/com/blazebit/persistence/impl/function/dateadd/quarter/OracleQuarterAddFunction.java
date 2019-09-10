@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.dateadd.quarter;
 public class OracleQuarterAddFunction extends QuarterAddFunction {
 
     public OracleQuarterAddFunction() {
-        super("?1 + INTERVAL ?2 || '' QUARTER");
+        super("?1 + ?2 * 3 * INTERVAL '1' MONTH");
     }
 
 }

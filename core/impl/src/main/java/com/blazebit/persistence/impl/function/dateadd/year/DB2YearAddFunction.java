@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.dateadd.year;
 public class DB2YearAddFunction extends YearAddFunction {
 
     public DB2YearAddFunction() {
-        super("?1 + ?2 YEAR");
+        super("?1 + (?2) YEAR");
     }
 
 }

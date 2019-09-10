@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.dateadd.second;
 public class OracleSecondAddFunction extends SecondAddFunction {
 
     public OracleSecondAddFunction() {
-        super("?1 + INTERVAL ?2 || '' SECOND");
+        super("?1 + ?2 * INTERVAL '1' SECOND");
     }
 
 }

@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.dateadd.day;
 public class OracleDayAddFunction extends DayAddFunction {
 
     public OracleDayAddFunction() {
-        super("?1 + INTERVAL ?2 || '' DAY");
+        super("?1 + ?2 * INTERVAL '1' DAY");
     }
 
 }
