@@ -277,6 +277,26 @@ The possible fields and the respective function names are:
 * *Quarter* - `TRUNC_QUARTER`
 * *Year* - `TRUNC_YEAR`
 
+==== Temporal addition functions
+
+Syntax: `XXX ( date, number )`
+
+This function takes a timestamp and an integer value representing the value to be added as unit as defined by the function name. The return type is a timestamp. The value obviously can be negative which allows to subtract a value.
+
+The possible fields and the respective function names are:
+
+
+* *Microseconds* - `ADD_MICROSECONDS`
+* *Millisecond* - `ADD_MILLISECONDS`
+* *Second* - `ADD_SECOND`
+* *Minute* - `ADD_MINUTE`
+* *Hour* - `ADD_HOUR`
+* *Day* - `ADD_DAY`
+* *ISO Week* - `ADD_WEEK`
+* *Month* - `ADD_MONTH`
+* *Quarter* - `ADD_QUARTER`
+* *Year* - `ADD_YEAR`
+
 ==== GREATEST function
 
 Syntax: `GREATEST ( argument1, argument2 (, ...)? )`

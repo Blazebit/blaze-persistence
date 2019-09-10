@@ -26,6 +26,76 @@ import com.blazebit.persistence.impl.dialect.MySQL8DbmsDialect;
 import com.blazebit.persistence.impl.dialect.MySQLDbmsDialect;
 import com.blazebit.persistence.impl.dialect.OracleDbmsDialect;
 import com.blazebit.persistence.impl.dialect.PostgreSQLDbmsDialect;
+import com.blazebit.persistence.impl.function.dateadd.day.DB2DayAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.day.DayAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.day.H2DayAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.day.MSSQLDayAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.day.MySQLDayAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.day.OracleDayAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.day.PostgreSQLDayAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.hour.DB2HourAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.hour.H2HourAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.hour.HourAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.hour.MSSQLHourAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.hour.MySQLHourAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.hour.OracleHourAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.hour.PostgreSQLHourAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.microseconds.DB2MicrosecondsAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.microseconds.H2MicrosecondsAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.microseconds.MSSQLMicrosecondsAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.microseconds.MicrosecondsAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.microseconds.MySQLMicrosecondsAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.microseconds.OracleMicrosecondsAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.microseconds.PostgreSQLMicrosecondsAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.milliseconds.DB2MillisecondsAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.milliseconds.H2MillisecondsAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.milliseconds.MSSQLMillisecondsAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.milliseconds.MillisecondsAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.milliseconds.MySQLMillisecondsAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.milliseconds.OracleMillisecondsAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.milliseconds.PostgreSQLMillisecondsAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.minute.DB2MinuteAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.minute.H2MinuteAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.minute.MSSQLMinuteAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.minute.MinuteAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.minute.MySQLMinuteAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.minute.OracleMinuteAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.minute.PostgreSQLMinuteAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.month.DB2MonthAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.month.H2MonthAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.month.MSSQLMonthAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.month.MonthAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.month.MySQLMonthAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.month.OracleMonthAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.month.PostgreSQLMonthAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.quarter.DB2QuarterAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.quarter.H2QuarterAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.quarter.MSSQLQuarterAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.quarter.MySQLQuarterAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.quarter.OracleQuarterAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.quarter.PostgreSQLQuarterAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.quarter.QuarterAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.second.DB2SecondAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.second.H2SecondAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.second.MSSQLSecondAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.second.MySQLSecondAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.second.OracleSecondAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.second.PostgreSQLSecondAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.second.SecondAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.week.DB2WeekAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.week.H2WeekAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.week.MSSQLWeekAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.week.MySQLWeekAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.week.OracleWeekAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.week.PostgreSQLWeekAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.week.WeekAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.year.DB2YearAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.year.H2YearAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.year.MSSQLYearAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.year.MySQLYearAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.year.OracleYearAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.year.PostgreSQLYearAddFunction;
+import com.blazebit.persistence.impl.function.dateadd.year.YearAddFunction;
 import com.blazebit.persistence.impl.function.datetime.dayofweek.AccessDayOfWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.dayofweek.DB2DayOfWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.dayofweek.DayOfWeekFunction;
@@ -524,12 +594,14 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("db2", new DB2YearOfWeekFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLYearOfWeekFunction());
         jpqlFunctionGroup.add("mysql", new MySQLYearOfWeekFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLYearOfWeekFunction());
         jpqlFunctionGroup.add("oracle", new OracleYearOfWeekFunction());
         registerFunction(jpqlFunctionGroup);
 
         jpqlFunctionGroup = new JpqlFunctionGroup("year_week", false);
         jpqlFunctionGroup.add(null, new YearWeekFunction());
         jpqlFunctionGroup.add("mysql", new MySQLYearWeekFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLYearWeekFunction());
         jpqlFunctionGroup.add("db2", new DB2YearWeekFunction());
         jpqlFunctionGroup.add("oracle", new OracleYearWeekFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLYearWeekFunction());
@@ -555,6 +627,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("sybase", new SybaseIsoWeekFunction());
         jpqlFunctionGroup.add("sqlite", new SqliteIsoWeekFunction());
         jpqlFunctionGroup.add("mysql", new MySQLIsoWeekFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLIsoWeekFunction());
         jpqlFunctionGroup.add("oracle", new OracleIsoWeekFunction());
         registerFunction(jpqlFunctionGroup);
 
@@ -567,6 +640,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("sybase", new SybaseIsoWeekFunction());
         jpqlFunctionGroup.add("sqlite", new SqliteIsoWeekFunction());
         jpqlFunctionGroup.add("mysql", new MySQLIsoWeekFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLIsoWeekFunction());
         jpqlFunctionGroup.add("oracle", new OracleIsoWeekFunction());
         registerFunction(jpqlFunctionGroup);
 
@@ -575,6 +649,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("db2", new DB2WeekInYearFunction());
         jpqlFunctionGroup.add("microsoft", new SQLServerWeekInYearFunction());
         jpqlFunctionGroup.add("mysql", new MySQLWeekInYearFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLWeekInYearFunction());
         jpqlFunctionGroup.add("oracle", new OracleWeekInYearFunction());
         registerFunction(jpqlFunctionGroup);
 
@@ -603,6 +678,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("access", new AccessDayOfYearFunction());
         jpqlFunctionGroup.add("db2", new DB2DayOfYearFunction());
         jpqlFunctionGroup.add("mysql", new MySQLDayOfYearFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLDayOfYearFunction());
         jpqlFunctionGroup.add("microsoft", new SQLServerDayOfYearFunction());
         jpqlFunctionGroup.add("sybase", new SybaseDayOfYearFunction());
         jpqlFunctionGroup.add("oracle", new OracleDayOfYearFunction());
@@ -614,6 +690,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("access", new AccessDayOfWeekFunction());
         jpqlFunctionGroup.add("db2", new DB2DayOfWeekFunction());
         jpqlFunctionGroup.add("mysql", new MySQLDayOfWeekFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLDayOfWeekFunction());
         jpqlFunctionGroup.add("microsoft", new SQLServerDayOfWeekFunction());
         jpqlFunctionGroup.add("sybase", new SybaseDayOfWeekFunction());
         jpqlFunctionGroup.add("oracle", new OracleDayOfWeekFunction());
@@ -654,6 +731,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("postgresql", new PostgreSQLMillisecondFunction());
         jpqlFunctionGroup.add("db2", new DB2MillisecondFunction());
         jpqlFunctionGroup.add("mysql", new MySQLMillisecondFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLMillisecondFunction());
         jpqlFunctionGroup.add("microsoft", new SQLServerMillisecondFunction());
         jpqlFunctionGroup.add("sybase", new SybaseMillisecondFunction());
         jpqlFunctionGroup.add("oracle", new OracleMillisecondFunction());
@@ -664,6 +742,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("postgresql", new PostgreSQLMicrosecondFunction());
         jpqlFunctionGroup.add("db2", new DB2MicrosecondFunction());
         jpqlFunctionGroup.add("mysql", new MySQLMicrosecondFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLMicrosecondFunction());
         jpqlFunctionGroup.add("microsoft", new SQLServerMicrosecondFunction());
         jpqlFunctionGroup.add("sybase", new SybaseMicrosecondFunction());
         registerFunction(jpqlFunctionGroup);
@@ -675,6 +754,117 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("db2", new DB2EpochFunction());
         jpqlFunctionGroup.add("mysql", new MySQLEpochFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLEpochFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        // dateadd
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(DayAddFunction.NAME, false);
+        jpqlFunctionGroup.add(null, new DayAddFunction());
+        jpqlFunctionGroup.add("db2", new DB2DayAddFunction());
+        jpqlFunctionGroup.add("h2", new H2DayAddFunction());
+        jpqlFunctionGroup.add("microsoft", new MSSQLDayAddFunction());
+        jpqlFunctionGroup.add("mysql", new MySQLDayAddFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLDayAddFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLDayAddFunction());
+        jpqlFunctionGroup.add("oracle", new OracleDayAddFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(HourAddFunction.NAME, false);
+        jpqlFunctionGroup.add(null, new HourAddFunction());
+        jpqlFunctionGroup.add("db2", new DB2HourAddFunction());
+        jpqlFunctionGroup.add("h2", new H2HourAddFunction());
+        jpqlFunctionGroup.add("microsoft", new MSSQLHourAddFunction());
+        jpqlFunctionGroup.add("mysql", new MySQLHourAddFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLHourAddFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLHourAddFunction());
+        jpqlFunctionGroup.add("oracle", new OracleHourAddFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(MicrosecondsAddFunction.NAME, false);
+        jpqlFunctionGroup.add(null, new MicrosecondsAddFunction());
+        jpqlFunctionGroup.add("db2", new DB2MicrosecondsAddFunction());
+        jpqlFunctionGroup.add("h2", new H2MicrosecondsAddFunction());
+        jpqlFunctionGroup.add("microsoft", new MSSQLMicrosecondsAddFunction());
+        jpqlFunctionGroup.add("mysql", new MySQLMicrosecondsAddFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLMicrosecondsAddFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLMicrosecondsAddFunction());
+        jpqlFunctionGroup.add("oracle", new OracleMicrosecondsAddFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(MillisecondsAddFunction.NAME, false);
+        jpqlFunctionGroup.add(null, new MillisecondsAddFunction());
+        jpqlFunctionGroup.add("db2", new DB2MillisecondsAddFunction());
+        jpqlFunctionGroup.add("h2", new H2MillisecondsAddFunction());
+        jpqlFunctionGroup.add("microsoft", new MSSQLMillisecondsAddFunction());
+        jpqlFunctionGroup.add("mysql", new MySQLMillisecondsAddFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLMillisecondsAddFunction());
+        jpqlFunctionGroup.add("oracle", new OracleMillisecondsAddFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(MinuteAddFunction.NAME, false);
+        jpqlFunctionGroup.add(null, new MinuteAddFunction());
+        jpqlFunctionGroup.add("db2", new DB2MinuteAddFunction());
+        jpqlFunctionGroup.add("h2", new H2MinuteAddFunction());
+        jpqlFunctionGroup.add("microsoft", new MSSQLMinuteAddFunction());
+        jpqlFunctionGroup.add("mysql", new MySQLMinuteAddFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLMinuteAddFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLMinuteAddFunction());
+        jpqlFunctionGroup.add("oracle", new OracleMinuteAddFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(MonthAddFunction.NAME, false);
+        jpqlFunctionGroup.add(null, new MonthAddFunction());
+        jpqlFunctionGroup.add("db2", new DB2MonthAddFunction());
+        jpqlFunctionGroup.add("h2", new H2MonthAddFunction());
+        jpqlFunctionGroup.add("microsoft", new MSSQLMonthAddFunction());
+        jpqlFunctionGroup.add("mysql", new MySQLMonthAddFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLMonthAddFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLMonthAddFunction());
+        jpqlFunctionGroup.add("oracle", new OracleMonthAddFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(QuarterAddFunction.NAME, false);
+        jpqlFunctionGroup.add(null, new QuarterAddFunction());
+        jpqlFunctionGroup.add("db2", new DB2QuarterAddFunction());
+        jpqlFunctionGroup.add("h2", new H2QuarterAddFunction());
+        jpqlFunctionGroup.add("microsoft", new MSSQLQuarterAddFunction());
+        jpqlFunctionGroup.add("mysql", new MySQLQuarterAddFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLQuarterAddFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLQuarterAddFunction());
+        jpqlFunctionGroup.add("oracle", new OracleQuarterAddFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(SecondAddFunction.NAME, false);
+        jpqlFunctionGroup.add(null, new SecondAddFunction());
+        jpqlFunctionGroup.add("db2", new DB2SecondAddFunction());
+        jpqlFunctionGroup.add("h2", new H2SecondAddFunction());
+        jpqlFunctionGroup.add("microsoft", new MSSQLSecondAddFunction());
+        jpqlFunctionGroup.add("mysql", new MySQLSecondAddFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLSecondAddFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLSecondAddFunction());
+        jpqlFunctionGroup.add("oracle", new OracleSecondAddFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(WeekAddFunction.NAME, false);
+        jpqlFunctionGroup.add(null, new WeekAddFunction());
+        jpqlFunctionGroup.add("db2", new DB2WeekAddFunction());
+        jpqlFunctionGroup.add("h2", new H2WeekAddFunction());
+        jpqlFunctionGroup.add("microsoft", new MSSQLWeekAddFunction());
+        jpqlFunctionGroup.add("mysql", new MySQLWeekAddFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLWeekAddFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLWeekAddFunction());
+        jpqlFunctionGroup.add("oracle", new OracleWeekAddFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(YearAddFunction.NAME, false);
+        jpqlFunctionGroup.add(null, new YearAddFunction());
+        jpqlFunctionGroup.add("db2", new DB2YearAddFunction());
+        jpqlFunctionGroup.add("h2", new H2YearAddFunction());
+        jpqlFunctionGroup.add("microsoft", new MSSQLYearAddFunction());
+        jpqlFunctionGroup.add("mysql", new MySQLYearAddFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLYearAddFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLYearAddFunction());
+        jpqlFunctionGroup.add("oracle", new OracleYearAddFunction());
         registerFunction(jpqlFunctionGroup);
 
         // datediff
@@ -769,6 +959,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("h2", new H2TruncDayFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLTruncDayFunction());
         jpqlFunctionGroup.add("mysql", new MySQLTruncDayFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLTruncDayFunction());
         jpqlFunctionGroup.add("oracle", new OracleTruncDayFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLTruncDayFunction());
         registerFunction(jpqlFunctionGroup);
@@ -779,6 +970,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("h2", new H2TruncHourFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLTruncHourFunction());
         jpqlFunctionGroup.add("mysql", new MySQLTruncHourFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLTruncHourFunction());
         jpqlFunctionGroup.add("oracle", new OracleTruncHourFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLTruncHourFunction());
         registerFunction(jpqlFunctionGroup);
@@ -789,6 +981,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("h2", new H2TruncMicrosecondsFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLTruncMicrosecondsFunction());
         jpqlFunctionGroup.add("mysql", new MySQLTruncMicrosecondsFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLTruncMicrosecondsFunction());
         jpqlFunctionGroup.add("oracle", new OracleTruncMicrosecondsFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLTruncMicrosecondsFunction());
         registerFunction(jpqlFunctionGroup);
@@ -799,6 +992,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("h2", new H2TruncMillisecondsFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLTruncMillisecondsFunction());
         jpqlFunctionGroup.add("mysql", new MySQLTruncMillisecondsFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLTruncMillisecondsFunction());
         jpqlFunctionGroup.add("oracle", new OracleTruncMillisecondsFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLTruncMillisecondsFunction());
         registerFunction(jpqlFunctionGroup);
@@ -809,6 +1003,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("h2", new H2TruncMinuteFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLTruncMinuteFunction());
         jpqlFunctionGroup.add("mysql", new MySQLTruncMinuteFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLTruncMinuteFunction());
         jpqlFunctionGroup.add("oracle", new OracleTruncMinuteFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLTruncMinuteFunction());
         registerFunction(jpqlFunctionGroup);
@@ -819,6 +1014,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("h2", new H2TruncMonthFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLTruncMonthFunction());
         jpqlFunctionGroup.add("mysql", new MySQLTruncMonthFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLTruncMonthFunction());
         jpqlFunctionGroup.add("oracle", new OracleTruncMonthFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLTruncMonthFunction());
         registerFunction(jpqlFunctionGroup);
@@ -829,6 +1025,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("h2", new H2TruncQuarterFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLTruncQuarterFunction());
         jpqlFunctionGroup.add("mysql", new MySQLTruncQuarterFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLTruncQuarterFunction());
         jpqlFunctionGroup.add("oracle", new OracleTruncQuarterFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLTruncQuarterFunction());
         registerFunction(jpqlFunctionGroup);
@@ -839,6 +1036,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("h2", new H2TruncSecondFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLTruncSecondFunction());
         jpqlFunctionGroup.add("mysql", new MySQLTruncSecondFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLTruncSecondFunction());
         jpqlFunctionGroup.add("oracle", new OracleTruncSecondFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLTruncSecondFunction());
         registerFunction(jpqlFunctionGroup);
@@ -847,6 +1045,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add(null, new TruncWeekFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLTruncWeekFunction());
         jpqlFunctionGroup.add("mysql", new MySQLTruncWeekFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLTruncWeekFunction());
         jpqlFunctionGroup.add("oracle", new OracleTruncWeekFunction());
         registerFunction(jpqlFunctionGroup);
 
@@ -856,6 +1055,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("h2", new H2TruncYearFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLTruncYearFunction());
         jpqlFunctionGroup.add("mysql", new MySQLTruncYearFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLTruncYearFunction());
         jpqlFunctionGroup.add("oracle", new OracleTruncYearFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLTruncYearFunction());
         registerFunction(jpqlFunctionGroup);
