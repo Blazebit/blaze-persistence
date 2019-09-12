@@ -77,7 +77,12 @@ import java.util.regex.Pattern;
  */
 public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQuery {
 
-    private static final Pattern QUERY_PATTERN = Pattern.compile("^(((find|read|get|query)(All|One))|streamAll)$");
+    private static final String QUERY_PATTERN = "find|read|get|query|stream";
+    private static final String COUNT_PATTERN = "count";
+    private static final String EXISTS_PATTERN = "exists";
+    private static final String DELETE_PATTERN = "delete|remove";
+    private static final Pattern PREFIX_TEMPLATE = Pattern.compile( //
+                    "^(" + QUERY_PATTERN + "|" + COUNT_PATTERN + "|" + EXISTS_PATTERN + "|" + DELETE_PATTERN + ")((\\p{Lu}.*?))??By");
 
     private final Class<?> domainClass;
     private final Class<?> entityViewClass;
@@ -100,7 +105,7 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
 
         this.parameters = method.getJpaParameters();
         String methodName = method.getName();
-        boolean skipMethodNamePredicateMatching = QUERY_PATTERN.matcher(methodName).matches();
+        boolean skipMethodNamePredicateMatching = !PREFIX_TEMPLATE.matcher(methodName).find();
         String source = skipMethodNamePredicateMatching ? "" : methodName;
         this.tree = new PartTree(source, domainClass);
 
