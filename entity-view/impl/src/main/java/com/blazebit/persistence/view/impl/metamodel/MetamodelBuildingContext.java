@@ -23,6 +23,7 @@ import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.view.CTEProvider;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
+import com.blazebit.persistence.view.impl.MacroConfigurationExpressionFactory;
 import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
 import com.blazebit.persistence.view.metamodel.Type;
@@ -69,9 +70,9 @@ public interface MetamodelBuildingContext {
 
     public ExpressionFactory getTypeValidationExpressionFactory();
 
-    public ExpressionFactory createMacroAwareExpressionFactory();
+    public MacroConfigurationExpressionFactory createMacroAwareExpressionFactory();
 
-    public ExpressionFactory createMacroAwareExpressionFactory(String viewRoot);
+    public MacroConfigurationExpressionFactory createMacroAwareExpressionFactory(String viewRoot);
 
     public boolean isDisallowOwnedUpdatableSubview();
 

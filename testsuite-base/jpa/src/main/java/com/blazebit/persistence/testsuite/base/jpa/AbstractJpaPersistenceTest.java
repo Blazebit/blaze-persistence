@@ -55,6 +55,7 @@ import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.sql.DataSource;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -67,6 +68,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
@@ -355,6 +357,29 @@ public abstract class AbstractJpaPersistenceTest {
 
     protected boolean needsEntityManagerForDbAction() {
         return false;
+    }
+
+    protected static void resetTimeZoneCaches() {
+        // The H2 JDBC driver is not able to handle timezone changes because of an internal cache
+        try {
+            Class.forName("org.h2.util.DateTimeUtils").getMethod("resetCalendar").invoke(null);
+        } catch (Exception e) {
+            // Ignore any exceptions. If it is H2 it will succeed, otherwise will fail on class lookup already
+        }
+
+        // EclipseLink caches the timezone so we have to purge that cache
+        try {
+            Class<?> helperClass = Class.forName("org.eclipse.persistence.internal.helper.Helper");
+            Field f = helperClass.getDeclaredField("defaultTimeZone");
+            f.setAccessible(true);
+            f.set(null, TimeZone.getDefault());
+
+            f = helperClass.getDeclaredField("calendarCache");
+            f.setAccessible(true);
+            f.set(null, helperClass.getMethod("initCalendarCache").invoke(null));
+        } catch (Exception e) {
+            // Ignore any exceptions. If it is EclipseLink it will succeed, otherwise will fail on class lookup already
+        }
     }
 
     protected void createSchema() {

@@ -197,7 +197,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
             for (ViewTypeImpl<?> view : metamodel.views()) {
                 // TODO: Might be a good idea to let the view root be overridden or specified via the annotation
                 String probableViewRoot = StringUtils.firstToLower(view.getEntityClass().getSimpleName());
-                ExpressionFactory macroAwareExpressionFactory = context.createMacroAwareExpressionFactory(probableViewRoot);
+                MacroConfigurationExpressionFactory macroAwareExpressionFactory = context.createMacroAwareExpressionFactory(probableViewRoot);
                 EmbeddingViewJpqlMacro embeddingViewJpqlMacro = (EmbeddingViewJpqlMacro) macroAwareExpressionFactory.getDefaultMacroConfiguration().get("EMBEDDING_VIEW").getState()[0];
                 getTemplate(macroAwareExpressionFactory, view, null, null, null, embeddingViewJpqlMacro);
 
@@ -619,10 +619,10 @@ public class EntityViewManagerImpl implements EntityViewManager {
         macros.put("view_root", new JpqlMacroAdapter(viewRootJpqlMacro, cachingExpressionFactory));
         macros.put("embedding_view", new JpqlMacroAdapter(embeddingViewJpqlMacro, cachingExpressionFactory));
         MacroConfiguration macroConfiguration = originalMacroConfiguration.with(macros);
-        ef = new MacroConfigurationExpressionFactory(cachingExpressionFactory, macroConfiguration);
+        MacroConfigurationExpressionFactory macroEf = new MacroConfigurationExpressionFactory(cachingExpressionFactory, macroConfiguration);
         criteriaBuilder.registerMacro("view_root", viewRootJpqlMacro);
 
-        return getTemplate(ef, viewType, mappingConstructor, viewName, entityViewRoot, embeddingViewPath, embeddingViewJpqlMacro, offset)
+        return getTemplate(macroEf, viewType, mappingConstructor, viewName, entityViewRoot, embeddingViewPath, embeddingViewJpqlMacro, offset)
             .createObjectBuilder(criteriaBuilder, configuration.getOptionalParameters(), configuration, suffix);
     }
 
@@ -631,16 +631,19 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
 
     @SuppressWarnings("unchecked")
-    public ViewTypeObjectBuilderTemplate<?> getTemplate(ExpressionFactory ef, ViewTypeImpl<?> viewType, MappingConstructorImpl<?> mappingConstructor, String entityViewRoot, String embeddingViewPath, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
+    public ViewTypeObjectBuilderTemplate<?> getTemplate(MacroConfigurationExpressionFactory ef, ViewTypeImpl<?> viewType, MappingConstructorImpl<?> mappingConstructor, String entityViewRoot, String embeddingViewPath, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
         return getTemplate(ef, viewType, mappingConstructor, viewType.getName(), entityViewRoot, embeddingViewPath, embeddingViewJpqlMacro, 0);
     }
 
-    public ViewTypeObjectBuilderTemplate<?> getTemplate(ExpressionFactory ef, ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> mappingConstructor, String name, String entityViewRoot, String embeddingViewPath, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, int offset) {
+    public ViewTypeObjectBuilderTemplate<?> getTemplate(MacroConfigurationExpressionFactory ef, ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> mappingConstructor, String name, String entityViewRoot, String embeddingViewPath, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, int offset) {
         ViewTypeObjectBuilderTemplate.Key key = new ViewTypeObjectBuilderTemplate.Key(ef, viewType, mappingConstructor, name, entityViewRoot, embeddingViewPath, offset);
+        if (!key.isCacheable()) {
+            return key.createValue(this, proxyFactory, embeddingViewJpqlMacro, ef);
+        }
         ViewTypeObjectBuilderTemplate<?> value = objectBuilderCache.get(key);
 
         if (value == null) {
-            value = key.createValue(this, proxyFactory, embeddingViewJpqlMacro);
+            value = key.createValue(this, proxyFactory, embeddingViewJpqlMacro, ef);
             ViewTypeObjectBuilderTemplate<?> oldValue = objectBuilderCache.putIfAbsent(key, value);
 
             if (oldValue != null) {

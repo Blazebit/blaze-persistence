@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.parser.expression;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,7 +30,7 @@ public final class MacroConfiguration {
     final int hash;
 
     private MacroConfiguration(Map<String, MacroFunction> macros) {
-        this.macros = macros;
+        this.macros = Collections.unmodifiableMap(macros);
         this.hash = macros == null ? 0 : macros.hashCode();
     }
 
@@ -52,6 +53,10 @@ public final class MacroConfiguration {
             map.put(entry.getKey().toUpperCase(), entry.getValue());
         }
         return new MacroConfiguration(map);
+    }
+
+    public Map<String, MacroFunction> getMacros() {
+        return macros;
     }
 
     @Override

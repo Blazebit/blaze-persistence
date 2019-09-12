@@ -20,6 +20,7 @@ import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
+import com.blazebit.persistence.view.impl.MacroConfigurationExpressionFactory;
 import com.blazebit.persistence.view.impl.accessor.Accessors;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.entity.EntityTupleizer;
@@ -150,7 +151,7 @@ public final class Mappers {
                     if (attributeViewIdType instanceof ManagedViewType<?>) {
                         entityTupleizer = new DefaultEntityTupleizer(evm, (ManagedViewType<?>) attributeViewIdType);
                         idViewBuilder = (ObjectBuilder<Object>) evm.getTemplate(
-                                ef,
+                                new MacroConfigurationExpressionFactory(ef, ef.getDefaultMacroConfiguration()),
                                 (ManagedViewTypeImplementor<?>) attributeViewIdType,
                                 null,
                                 attributeViewIdType.getJavaType().getSimpleName(),

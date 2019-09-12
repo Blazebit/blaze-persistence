@@ -29,6 +29,7 @@ import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.InverseRemoveStrategy;
 import com.blazebit.persistence.view.OptimisticLockException;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
+import com.blazebit.persistence.view.impl.MacroConfigurationExpressionFactory;
 import com.blazebit.persistence.view.impl.accessor.Accessors;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.accessor.InitialValueAttributeAccessor;
@@ -158,7 +159,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                     tupleizer = new DefaultEntityTupleizer(evm, viewIdType);
                     ExpressionFactory ef = evm.getCriteriaBuilderFactory().getService(ExpressionFactory.class);
                     idViewBuilder = (ObjectBuilder<Object>) evm.getTemplate(
-                            ef,
+                            new MacroConfigurationExpressionFactory(ef, ef.getDefaultMacroConfiguration()),
                             viewIdType,
                             null,
                             viewIdType.getJavaType().getSimpleName(),
