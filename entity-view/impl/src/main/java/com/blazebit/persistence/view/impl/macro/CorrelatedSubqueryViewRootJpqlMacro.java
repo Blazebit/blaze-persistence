@@ -60,18 +60,18 @@ public class CorrelatedSubqueryViewRootJpqlMacro implements ViewRootJpqlMacro {
         this.viewRootExpression = viewRootExpression;
     }
 
-    public void setParameters(Query query, Object viewRootId) {
+    public void setParameters(FullQueryBuilder<?, ?> criteriaBuilder, Query query, Object viewRootId) {
         if (batchedViewRoot) {
             if (originalViewRootExpression != null) {
-                setEntityParam(query, originalViewRootExpression, viewRootId);
+                setEntityParam(criteriaBuilder, query, originalViewRootExpression, viewRootId);
             } else {
-                setEntityParam(query, viewRootExpression, viewRootId);
+                setEntityParam(criteriaBuilder, query, viewRootExpression, viewRootId);
             }
             return;
         }
 
         if (viewRootParamName != null) {
-            setEntityParam(query, viewRootParamName, viewRootId);
+            setEntityParam(criteriaBuilder, query, viewRootParamName, viewRootId);
         }
         if (viewRootIdParamName != null) {
             if (criteriaBuilder.containsParameter(viewRootIdParamName)) {
@@ -81,7 +81,7 @@ public class CorrelatedSubqueryViewRootJpqlMacro implements ViewRootJpqlMacro {
         }
     }
 
-    protected final void setEntityParam(Query query, String paramName, Object viewRootId) {
+    protected final void setEntityParam(FullQueryBuilder<?, ?> criteriaBuilder, Query query, String paramName, Object viewRootId) {
         EntityManager em = criteriaBuilder.getEntityManager();
         if (viewRootId instanceof Collection) {
             Collection<Object> paramCollection = (Collection<Object>) viewRootId;
@@ -112,6 +112,10 @@ public class CorrelatedSubqueryViewRootJpqlMacro implements ViewRootJpqlMacro {
             return null;
         }
         return viewRootExpression;
+    }
+
+    public Class<?> getViewRootEntityType() {
+        return viewRootEntityType;
     }
 
     public boolean usesViewRootEntityParameter() {

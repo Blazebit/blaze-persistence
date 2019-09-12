@@ -45,6 +45,10 @@ public class MacroConfigurationExpressionFactory extends AbstractExpressionFacto
         return macroConfiguration;
     }
 
+    public ExpressionFactory getExpressionFactory() {
+        return expressionFactory;
+    }
+
     @Override
     public <T extends ExpressionFactory> T unwrap(Class<T> clazz) {
         if (MacroConfigurationExpressionFactory.class.isAssignableFrom(clazz)) {

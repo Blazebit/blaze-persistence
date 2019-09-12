@@ -22,6 +22,7 @@ import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.expression.MacroFunction;
 import com.blazebit.persistence.parser.predicate.EqPredicate;
 import com.blazebit.persistence.parser.predicate.InPredicate;
 import com.blazebit.persistence.parser.predicate.Predicate;
@@ -34,6 +35,7 @@ import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
+import com.blazebit.persistence.view.impl.MacroConfigurationExpressionFactory;
 import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.view.impl.SubqueryProviderFactory;
 import com.blazebit.persistence.view.impl.SubqueryProviderHelper;
@@ -109,6 +111,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -147,7 +150,6 @@ public class ViewTypeObjectBuilderTemplate<T> {
     private final int[] idPositions;
     private final int tupleOffset;
     private final EntityViewManagerImpl evm;
-    private final ExpressionFactory ef;
     private final ProxyFactory proxyFactory;
     private final TupleTransformatorFactory tupleTransformatorFactory;
 
@@ -180,7 +182,6 @@ public class ViewTypeObjectBuilderTemplate<T> {
         this.managedTypeClass = managedViewType.getEntityClass();
         this.tupleOffset = tupleOffset;
         this.evm = evm;
-        this.ef = ef;
         this.proxyFactory = proxyFactory;
 
         ManagedViewTypeImpl.InheritanceSubtypeConfiguration<T> inheritanceSubtypeConfiguration = managedViewType.getInheritanceSubtypeConfiguration(inheritanceSubtypeMappings);
@@ -238,7 +239,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
             if (idAttribute.isSubview()) {
                 ManagedViewTypeImpl<Object[]> subViewType = (ManagedViewTypeImpl<Object[]>) ((SingularAttribute<?, ?>) mappingAttribute).getType();
                 featuresFound[FEATURE_SUBVIEWS] = true;
-                applySubviewIdMapping(mappingAttribute, attributePath, tupleIdDescriptor, subViewType, mainMapperBuilder, embeddingViewJpqlMacro, false);
+                applySubviewIdMapping(mappingAttribute, attributePath, tupleIdDescriptor, subViewType, mainMapperBuilder, embeddingViewJpqlMacro, ef, false);
             } else {
                 applyBasicIdMapping(mappingAttribute, mainMapperBuilder);
             }
@@ -264,7 +265,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         treatType = getTreatType(metamodel, managedViewType, attribute.getDeclaringType());
                     }
                     TupleElementMapperBuilder mapperBuilder = new TupleElementMapperBuilder(mappingList.size(), constraint, entry.getSubtypeIndex(), aliasPrefix, mappingPrefix, idPrefix, treatType, metamodel, ef);
-                    applyMapping(attribute, attributePath, mapperBuilder, featuresFound, tupleIdDescriptor, embeddingViewJpqlMacro);
+                    applyMapping(attribute, attributePath, mapperBuilder, featuresFound, tupleIdDescriptor, embeddingViewJpqlMacro, ef);
                     builders.add(new ConstrainedTupleElementMapper.ConstrainedTupleElementMapperBuilder(constraint, entry.getSubtypeIndexes(), mapperBuilder));
                 }
                 ConstrainedTupleElementMapper.addMappers(classMappingIndex, mappingList, parameterMappingList, tupleTransformatorFactory, builders);
@@ -311,7 +312,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
                 EntityType<?> treatType = getTreatType(metamodel, managedViewType, attribute.getDeclaringType());
                 TupleElementMapperBuilder mapperBuilder = new TupleElementMapperBuilder(0, null, null, aliasPrefix, mappingPrefix, idPrefix, treatType, metamodel, ef, mappingList, parameterMappingList, tupleTransformatorFactory);
-                applyMapping(attribute, attributePath, mapperBuilder, featuresFound, tupleIdDescriptor, embeddingViewJpqlMacro);
+                applyMapping(attribute, attributePath, mapperBuilder, featuresFound, tupleIdDescriptor, embeddingViewJpqlMacro, ef);
             }
         }
 
@@ -335,7 +336,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
             parameterTypes.add(parameterAttribute.getConvertedJavaType());
             EntityType<?> treatType = getTreatType(metamodel, managedViewType, parameterAttribute.getDeclaringType());
             TupleElementMapperBuilder mapperBuilder = new TupleElementMapperBuilder(0, null, null, paramAliasPrefix, mappingPrefix, idPrefix, treatType, metamodel, ef, mappingList, parameterMappingList, tupleTransformatorFactory);
-            applyMapping((AbstractAttribute<?, ?>) parameterAttribute, attributePath, mapperBuilder, featuresFound, tupleIdDescriptor, embeddingViewJpqlMacro);
+            applyMapping((AbstractAttribute<?, ?>) parameterAttribute, attributePath, mapperBuilder, featuresFound, tupleIdDescriptor, embeddingViewJpqlMacro, ef);
         }
 
         ManagedViewTypeImplementor<T> viewTypeBase = null;
@@ -457,7 +458,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
     }
 
     @SuppressWarnings("unchecked")
-    private void applyMapping(AbstractAttribute<?, ?> attribute, String parentAttributePath, TupleElementMapperBuilder mapperBuilder, boolean[] featuresFound, TupleIdDescriptor tupleIdDescriptor, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
+    private void applyMapping(AbstractAttribute<?, ?> attribute, String parentAttributePath, TupleElementMapperBuilder mapperBuilder, boolean[] featuresFound, TupleIdDescriptor tupleIdDescriptor, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, ExpressionFactory ef) {
         String attributePath = getAttributePath(parentAttributePath, attribute, false);
         int batchSize = attribute.getBatchSize();
 
@@ -502,7 +503,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                     if (mapAttribute.isKeySubview()) {
                         featuresFound[FEATURE_SUBVIEWS] = true;
                         ManagedViewTypeImpl<Object[]> managedViewType = (ManagedViewTypeImpl<Object[]>) mapAttribute.getKeyType();
-                        applySubviewMapping(mappingAttribute, attributePath, tupleIdDescriptor, managedViewType, mapperBuilder, embeddingViewJpqlMacro, true, true);
+                        applySubviewMapping(mappingAttribute, attributePath, tupleIdDescriptor, managedViewType, mapperBuilder, embeddingViewJpqlMacro, ef, true, true);
                         mapValueStartIndex = tupleOffset + mapperBuilder.mapperIndex();
                     } else {
                         applyCollectionFunctionMapping("KEY", "_KEY", mappingAttribute, mapperBuilder, EMPTY);
@@ -524,20 +525,20 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
                     if (pluralAttribute.isCorrelated() || pluralAttribute.getFetchStrategy() != FetchStrategy.JOIN) {
                         ManagedViewTypeImplementor<Object> managedViewType = (ManagedViewTypeImplementor<Object>) pluralAttribute.getElementType();
-                        applyCorrelatedSubviewMapping(attribute, attributePath, newTupleIdDescriptor, (ManagedViewTypeImplementor<Object[]>) (ManagedViewTypeImplementor<?>) managedViewType, mapperBuilder, embeddingViewJpqlMacro, batchSize, dirtyTracking);
+                        applyCorrelatedSubviewMapping(attribute, attributePath, newTupleIdDescriptor, (ManagedViewTypeImplementor<Object[]>) (ManagedViewTypeImplementor<?>) managedViewType, mapperBuilder, embeddingViewJpqlMacro, ef, batchSize, dirtyTracking);
                     } else {
                         MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) attribute;
                         ManagedViewTypeImplementor<Object[]> managedViewType = (ManagedViewTypeImplementor<Object[]>) pluralAttribute.getElementType();
                         // Obviously, we produce null if the object type is identifiable i.e. a ViewType and it is empty = null id
                         // Additionally, we also consider empty embeddables as null when we have a non-indexed collection so we can filter out these elements
-                        applySubviewMapping(mappingAttribute, attributePath, newTupleIdDescriptor, managedViewType, mapperBuilder, embeddingViewJpqlMacro, false, managedViewType instanceof ViewType<?> || !listKey && !mapKey);
+                        applySubviewMapping(mappingAttribute, attributePath, newTupleIdDescriptor, managedViewType, mapperBuilder, embeddingViewJpqlMacro, ef, false, managedViewType instanceof ViewType<?> || !listKey && !mapKey);
                     }
                 } else if (mapKey) {
                     MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) attribute;
                     applyCollectionFunctionMapping("VALUE", "", mappingAttribute, mapperBuilder, mappingAttribute.getFetches());
                 } else {
                     if (pluralAttribute.isCorrelated() || pluralAttribute.getFetchStrategy() != FetchStrategy.JOIN) {
-                        applyBasicCorrelatedMapping(attribute, attributePath, mapperBuilder, batchSize, dirtyTracking);
+                        applyBasicCorrelatedMapping(attribute, attributePath, mapperBuilder, ef, batchSize, dirtyTracking);
                     } else {
                         MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) attribute;
                         applyBasicMapping(mappingAttribute, mapperBuilder);
@@ -581,15 +582,15 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 featuresFound[FEATURE_SUBVIEWS] = true;
                 if (attribute.isCorrelated() || attribute.getFetchStrategy() != FetchStrategy.JOIN) {
                     ManagedViewTypeImplementor<Object> managedViewType = (ManagedViewTypeImplementor<Object>) ((SingularAttribute<?, ?>) attribute).getType();
-                    applyCorrelatedSubviewMapping(attribute, attributePath, tupleIdDescriptor, (ManagedViewTypeImplementor<Object[]>) (ManagedViewTypeImplementor<?>) managedViewType, mapperBuilder, embeddingViewJpqlMacro, batchSize, false);
+                    applyCorrelatedSubviewMapping(attribute, attributePath, tupleIdDescriptor, (ManagedViewTypeImplementor<Object[]>) (ManagedViewTypeImplementor<?>) managedViewType, mapperBuilder, embeddingViewJpqlMacro, ef, batchSize, false);
                 } else {
                     MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) attribute;
                     ManagedViewTypeImplementor<Object[]> managedViewType = (ManagedViewTypeImplementor<Object[]>) ((SingularAttribute<?, ?>) attribute).getType();
-                    applySubviewMapping(mappingAttribute, attributePath, tupleIdDescriptor, managedViewType, mapperBuilder, embeddingViewJpqlMacro, false, managedViewType instanceof ViewType<?>);
+                    applySubviewMapping(mappingAttribute, attributePath, tupleIdDescriptor, managedViewType, mapperBuilder, embeddingViewJpqlMacro, ef, false, managedViewType instanceof ViewType<?>);
                 }
             } else {
                 if (attribute.isCorrelated() || attribute.getFetchStrategy() != FetchStrategy.JOIN) {
-                    applyBasicCorrelatedMapping(attribute, attributePath, mapperBuilder, batchSize, false);
+                    applyBasicCorrelatedMapping(attribute, attributePath, mapperBuilder, ef, batchSize, false);
                 } else {
                     MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) attribute;
                     applyBasicMapping(mappingAttribute, mapperBuilder);
@@ -610,12 +611,12 @@ public class ViewTypeObjectBuilderTemplate<T> {
         mapperBuilder.addMapper(mapper);
     }
 
-    private void applySubviewIdMapping(MappingAttribute<? super T, ?> mappingAttribute, String attributePath, TupleIdDescriptor tupleIdDescriptor, ManagedViewTypeImplementor<Object[]> managedViewType, TupleElementMapperBuilder mapperBuilder, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean isKey) {
-        applySubviewMapping(mappingAttribute, attributePath, tupleIdDescriptor, managedViewType, mapperBuilder, embeddingViewJpqlMacro, isKey, true);
+    private void applySubviewIdMapping(MappingAttribute<? super T, ?> mappingAttribute, String attributePath, TupleIdDescriptor tupleIdDescriptor, ManagedViewTypeImplementor<Object[]> managedViewType, TupleElementMapperBuilder mapperBuilder, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, ExpressionFactory ef, boolean isKey) {
+        applySubviewMapping(mappingAttribute, attributePath, tupleIdDescriptor, managedViewType, mapperBuilder, embeddingViewJpqlMacro, ef, isKey, true);
     }
 
     @SuppressWarnings("unchecked")
-    private void applySubviewMapping(MappingAttribute<? super T, ?> mappingAttribute, String subviewAttributePath, TupleIdDescriptor tupleIdDescriptor, ManagedViewTypeImplementor<Object[]> managedViewType, TupleElementMapperBuilder mapperBuilder, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean isKey, boolean nullIfEmpty) {
+    private void applySubviewMapping(MappingAttribute<? super T, ?> mappingAttribute, String subviewAttributePath, TupleIdDescriptor tupleIdDescriptor, ManagedViewTypeImplementor<Object[]> managedViewType, TupleElementMapperBuilder mapperBuilder, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, ExpressionFactory ef, boolean isKey, boolean nullIfEmpty) {
         String subviewAliasPrefix = mapperBuilder.getAlias(mappingAttribute, isKey);
         String subviewMappingPrefix = mapperBuilder.getMapping(mappingAttribute, isKey);
         String subviewIdPrefix = mapperBuilder.getMapping(mappingAttribute, isKey);
@@ -660,7 +661,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
     }
 
     @SuppressWarnings("unchecked")
-    private void applyCorrelatedSubviewMapping(AbstractAttribute<?, ?> attribute, String attributePath, TupleIdDescriptor tupleIdDescriptor, ManagedViewTypeImplementor<Object[]> managedViewType, TupleElementMapperBuilder mapperBuilder, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, int batchSize, boolean dirtyTracking) {
+    private void applyCorrelatedSubviewMapping(AbstractAttribute<?, ?> attribute, String attributePath, TupleIdDescriptor tupleIdDescriptor, ManagedViewTypeImplementor<Object[]> managedViewType, TupleElementMapperBuilder mapperBuilder, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, ExpressionFactory ef, int batchSize, boolean dirtyTracking) {
         String correlationResult = attribute.getCorrelationResult();
         Class<? extends CorrelationProvider> correlationProvider = attribute.getCorrelationProvider();
         String correlationBasis = attribute.getCorrelationBasis();
@@ -717,12 +718,12 @@ public class ViewTypeObjectBuilderTemplate<T> {
             int viewRootIndex = viewRoot.hasSubtypes() ? 1 : 0;
             int embeddingViewIndex = tupleOffset;
             int startIndex = tupleOffset + mapperBuilder.mapperIndex();
-            Class<?> correlationBasisType = getCorrelationBasisType(AbstractAttribute.stripThisFromMapping(correlationBasis));
+            Class<?> correlationBasisType = getCorrelationBasisType(AbstractAttribute.stripThisFromMapping(correlationBasis), ef);
             Class<?> correlationBasisEntity = getCorrelationBasisEntityType(correlationBasisType);
             String correlationBasisExpression = AbstractAttribute.stripThisFromMapping(correlationBasis);
             String correlationKeyExpression = mapperBuilder.getMapping(correlationBasis, correlationBasisEntity);
             String embeddingViewPath = mapperBuilder.getMapping("");
-            boolean correlatesThis = correlatesThis(evm, managedTypeClass, attribute.getCorrelated(), correlationBasisExpression, attribute.getCorrelationExpression(), attribute.getCorrelationKeyAlias());
+            boolean correlatesThis = correlatesThis(evm, ef, managedTypeClass, attribute.getCorrelated(), correlationBasisExpression, attribute.getCorrelationExpression(), attribute.getCorrelationKeyAlias());
 
             mapperBuilder.addMapper(createMapper(correlationKeyExpression, subviewAliasPrefix, embeddingViewPath, attribute.getFetches()));
 
@@ -768,7 +769,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
             int viewRootIndex = viewRoot.hasSubtypes() ? 1 : 0;
             int embeddingViewIndex = tupleOffset;
             int startIndex = tupleOffset + mapperBuilder.mapperIndex();
-            Class<?> correlationBasisType = getCorrelationBasisType(AbstractAttribute.stripThisFromMapping(correlationBasis));
+            Class<?> correlationBasisType = getCorrelationBasisType(AbstractAttribute.stripThisFromMapping(correlationBasis), ef);
             Class<?> correlationBasisEntity = getCorrelationBasisEntityType(correlationBasisType);
             String correlationBasisExpression = mapperBuilder.getMapping(AbstractAttribute.stripThisFromMapping(correlationBasis));
             String correlationKeyExpression = mapperBuilder.getMapping(AbstractAttribute.stripThisFromMapping(correlationBasis), correlationBasisEntity);
@@ -815,7 +816,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         }
     }
 
-    private boolean correlatesThis(EntityViewManagerImpl evm, Class<?> managedTypeClass, Class<?> correlationBasisEntity, String correlationBasisExpression, String correlationExpression, String correlationKeyAlias) {
+    private boolean correlatesThis(EntityViewManagerImpl evm, ExpressionFactory ef, Class<?> managedTypeClass, Class<?> correlationBasisEntity, String correlationBasisExpression, String correlationExpression, String correlationKeyAlias) {
         if (correlationBasisEntity == null || !correlationBasisEntity.isAssignableFrom(managedTypeClass)) {
             return false;
         }
@@ -946,7 +947,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         mapperBuilder.addMapper(mapper);
     }
 
-    private void applyBasicCorrelatedMapping(AbstractAttribute<?, ?> attribute, String attributePath, TupleElementMapperBuilder mapperBuilder, int batchSize, boolean dirtyTracking) {
+    private void applyBasicCorrelatedMapping(AbstractAttribute<?, ?> attribute, String attributePath, TupleElementMapperBuilder mapperBuilder, ExpressionFactory ef, int batchSize, boolean dirtyTracking) {
         String correlationResult = attribute.getCorrelationResult();
         Class<? extends CorrelationProvider> correlationProvider = attribute.getCorrelationProvider();
         String correlationBasis = attribute.getCorrelationBasis();
@@ -971,12 +972,12 @@ public class ViewTypeObjectBuilderTemplate<T> {
             int viewRootIndex = viewRoot.hasSubtypes() ? 1 : 0;
             int embeddingViewIndex = tupleOffset;
             int startIndex = tupleOffset + mapperBuilder.mapperIndex();
-            Class<?> correlationBasisType = getCorrelationBasisType(AbstractAttribute.stripThisFromMapping(correlationBasis));
+            Class<?> correlationBasisType = getCorrelationBasisType(AbstractAttribute.stripThisFromMapping(correlationBasis), ef);
             Class<?> correlationBasisEntity = getCorrelationBasisEntityType(correlationBasisType);
             String correlationBasisExpression = AbstractAttribute.stripThisFromMapping(correlationBasis);
             String correlationKeyExpression = mapperBuilder.getMapping(correlationBasisExpression, correlationBasisEntity);
             String embeddingViewPath = mapperBuilder.getMapping("");
-            boolean correlatesThis = correlatesThis(evm, managedTypeClass, attribute.getCorrelated(), correlationBasisExpression, attribute.getCorrelationExpression(), attribute.getCorrelationKeyAlias());
+            boolean correlatesThis = correlatesThis(evm, ef, managedTypeClass, attribute.getCorrelated(), correlationBasisExpression, attribute.getCorrelationExpression(), attribute.getCorrelationKeyAlias());
 
             mapperBuilder.addMapper(createMapper(correlationKeyExpression, subviewAliasPrefix, embeddingViewPath, attribute.getFetches()));
 
@@ -1025,7 +1026,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
             int viewRootIndex = viewRoot.hasSubtypes() ? 1 : 0;
             int embeddingViewIndex = tupleOffset;
             int startIndex = tupleOffset + mapperBuilder.mapperIndex();
-            Class<?> correlationBasisType = getCorrelationBasisType(AbstractAttribute.stripThisFromMapping(correlationBasis));
+            Class<?> correlationBasisType = getCorrelationBasisType(AbstractAttribute.stripThisFromMapping(correlationBasis), ef);
             Class<?> correlationBasisEntity = getCorrelationBasisEntityType(correlationBasisType);
             String correlationBasisExpression = mapperBuilder.getMapping(AbstractAttribute.stripThisFromMapping(correlationBasis));
             String correlationKeyExpression = mapperBuilder.getMapping(AbstractAttribute.stripThisFromMapping(correlationBasis), correlationBasisEntity);
@@ -1073,7 +1074,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         }
     }
 
-    private Class<?> getCorrelationBasisType(String correlationBasis) {
+    private Class<?> getCorrelationBasisType(String correlationBasis, ExpressionFactory ef) {
         if (correlationBasis.isEmpty()) {
             return managedTypeClass;
         }
@@ -1201,15 +1202,44 @@ public class ViewTypeObjectBuilderTemplate<T> {
     public static class Key {
 
         private final ExpressionFactory ef;
+        private final Map<String, MacroFunction> macros;
         private final ManagedViewTypeImpl<Object> viewType;
         private final MappingConstructorImpl<Object> constructor;
         private final String name;
         private final String entityViewRoot;
         private final String embeddingViewPath;
         private final int offset;
+        private final boolean cacheable;
 
-        public Key(ExpressionFactory ef, ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> constructor, String name, String entityViewRoot, String embeddingViewPath, int offset) {
-            this.ef = ef;
+        public Key(MacroConfigurationExpressionFactory ef, ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> constructor, String name, String entityViewRoot, String embeddingViewPath, int offset) {
+            this.ef = ef.getExpressionFactory();
+            Map<String, MacroFunction> macros;
+            if (ef.getDefaultMacroConfiguration() == null) {
+                macros = Collections.emptyMap();
+                this.cacheable = true;
+            } else {
+                boolean cacheable = true;
+                Map<String, MacroFunction> map = ef.getDefaultMacroConfiguration().getMacros();
+                macros = new HashMap<>(Math.max(0, map.size() - 2));
+                // We don't care about the view root and embedding view macro as the relevant state that is interesting for caching is already present in entityViewRoot and embeddingViewPath
+                for (Map.Entry<String, MacroFunction> entry : map.entrySet()) {
+                    switch (entry.getKey()) {
+                        case "VIEW_ROOT":
+                            break;
+                        case "EMBEDDING_VIEW":
+                            break;
+                        default:
+                            if (!entry.getValue().supportsCaching()) {
+                                cacheable = false;
+                            }
+                            macros.put(entry.getKey(), entry.getValue());
+                            break;
+                    }
+                }
+
+                this.cacheable = cacheable;
+            }
+            this.macros = macros;
             this.viewType = (ManagedViewTypeImpl<Object>) viewType;
             this.constructor = (MappingConstructorImpl<Object>) constructor;
             this.name = name;
@@ -1218,14 +1248,19 @@ public class ViewTypeObjectBuilderTemplate<T> {
             this.offset = offset;
         }
 
-        public ViewTypeObjectBuilderTemplate<?> createValue(EntityViewManagerImpl evm, ProxyFactory proxyFactory, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
+        public ViewTypeObjectBuilderTemplate<?> createValue(EntityViewManagerImpl evm, ProxyFactory proxyFactory, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, MacroConfigurationExpressionFactory ef) {
             return new ViewTypeObjectBuilderTemplate<Object>(viewType, entityViewRoot, "", name, entityViewRoot, entityViewRoot, new TupleIdDescriptor(), new TupleIdDescriptor(), offset, embeddingViewJpqlMacro, null, evm, ef, viewType, constructor, proxyFactory);
+        }
+
+        public boolean isCacheable() {
+            return cacheable;
         }
 
         @Override
         public int hashCode() {
             int hash = 3;
             hash = 83 * hash + (this.ef != null ? this.ef.hashCode() : 0);
+            hash = 83 * hash + (this.macros != null ? this.macros.hashCode() : 0);
             hash = 83 * hash + (this.viewType != null ? this.viewType.hashCode() : 0);
             hash = 83 * hash + (this.constructor != null ? this.constructor.hashCode() : 0);
             hash = 83 * hash + (this.name != null ? this.name.hashCode() : 0);
@@ -1245,6 +1280,9 @@ public class ViewTypeObjectBuilderTemplate<T> {
             }
             final Key other = (Key) obj;
             if (this.ef != other.ef && (this.ef == null || !this.ef.equals(other.ef))) {
+                return false;
+            }
+            if (this.macros != other.macros && (this.macros == null || !this.macros.equals(other.macros))) {
                 return false;
             }
             if (this.viewType != other.viewType && (this.viewType == null || !this.viewType.equals(other.viewType))) {

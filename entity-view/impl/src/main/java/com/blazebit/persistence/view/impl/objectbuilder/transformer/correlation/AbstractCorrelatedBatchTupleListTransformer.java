@@ -274,29 +274,31 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
             Object viewRootKey = tuple[viewIndex];
             Object correlationValueKey = tuple[startIndex];
 
-            Map<Object, TuplePromise> viewRootCorrelationValues = viewRoots.get(viewRootKey);
-            if (viewRootCorrelationValues == null) {
-                viewRootCorrelationValues = new HashMap<>();
-                viewRoots.put(viewRootKey, viewRootCorrelationValues);
-            }
-            TuplePromise viewRootPromise = viewRootCorrelationValues.get(correlationValueKey);
-            if (viewRootPromise == null) {
-                viewRootPromise = new TuplePromise(startIndex);
-                viewRootCorrelationValues.put(correlationValueKey, viewRootPromise);
-            }
-            viewRootPromise.add(tuple);
+            if (viewRootKey != null && correlationValueKey != null) {
+                Map<Object, TuplePromise> viewRootCorrelationValues = viewRoots.get(viewRootKey);
+                if (viewRootCorrelationValues == null) {
+                    viewRootCorrelationValues = new HashMap<>();
+                    viewRoots.put(viewRootKey, viewRootCorrelationValues);
+                }
+                TuplePromise viewRootPromise = viewRootCorrelationValues.get(correlationValueKey);
+                if (viewRootPromise == null) {
+                    viewRootPromise = new TuplePromise(startIndex);
+                    viewRootCorrelationValues.put(correlationValueKey, viewRootPromise);
+                }
+                viewRootPromise.add(tuple);
 
-            Map<Object, TuplePromise> correlationValueViewRoots = correlationValues.get(correlationValueKey);
-            if (correlationValueViewRoots == null) {
-                correlationValueViewRoots = new HashMap<>();
-                correlationValues.put(correlationValueKey, correlationValueViewRoots);
+                Map<Object, TuplePromise> correlationValueViewRoots = correlationValues.get(correlationValueKey);
+                if (correlationValueViewRoots == null) {
+                    correlationValueViewRoots = new HashMap<>();
+                    correlationValues.put(correlationValueKey, correlationValueViewRoots);
+                }
+                TuplePromise correlationValuePromise = correlationValueViewRoots.get(viewRootKey);
+                if (correlationValuePromise == null) {
+                    correlationValuePromise = new TuplePromise(startIndex);
+                    correlationValueViewRoots.put(viewRootKey, correlationValuePromise);
+                }
+                correlationValuePromise.add(tuple);
             }
-            TuplePromise correlationValuePromise = correlationValueViewRoots.get(viewRootKey);
-            if (correlationValuePromise == null) {
-                correlationValuePromise = new TuplePromise(startIndex);
-                correlationValueViewRoots.put(viewRootKey, correlationValuePromise);
-            }
-            correlationValuePromise.add(tuple);
         }
 
         boolean batchCorrelationValues = !macro.usesViewMacro() && viewRoots.size() <= correlationValues.size();
@@ -409,9 +411,9 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
         if (viewRootIds != null) {
             viewRootIds.clearRest();
             if (viewRootIds.size() == 1) {
-                macro.setParameters(query, viewRootIds.get(0));
+                macro.setParameters(criteriaBuilder, query, viewRootIds.get(0));
             } else {
-                macro.setParameters(query, viewRootIds);
+                macro.setParameters(criteriaBuilder, query, viewRootIds);
             }
         }
 

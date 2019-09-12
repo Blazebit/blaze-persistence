@@ -20,12 +20,14 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Calendar;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.TemporalType;
 import javax.persistence.Tuple;
+import javax.sql.DataSource;
 
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.AfterClass;
@@ -54,7 +56,35 @@ public class DateDiffTest extends AbstractCoreTest {
     private Calendar l1;
     private Calendar l2;
 
-    public DateDiffTest() {
+    // Thanks to the MySQL driver not being able to handle timezones correctly, we must run this in the UTC timezone...
+
+    @Override
+    protected boolean recreateDataSource() {
+        // Some drivers have timezone information bound to the connection
+        // So we have to recreate the data source to get the newly configured time zones for connections
+        if (timeZone == null) {
+            timeZone = TimeZone.getDefault();
+        }
+        return true;
+    }
+
+    @Override
+    protected DataSource createDataSource(Map<Object, Object> properties) {
+        // Set the producer timezone
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+        resetTimeZoneCaches();
+
+        return super.createDataSource(properties);
+    }
+
+    @AfterClass
+    public static void after() {
+        TimeZone.setDefault(timeZone);
+        resetTimeZoneCaches();
+    }
+
+    @Before
+    public void setup() {
         c1 = Calendar.getInstance();
         c1.set(2000, 0, 1, 0, 0, 0);
         c1.set(Calendar.MILLISECOND, 0);
@@ -72,23 +102,10 @@ public class DateDiffTest extends AbstractCoreTest {
         l2.set(Calendar.MILLISECOND, 40);
     }
 
-    // Thanks to the MySQL driver not being able to handle timezones correctly, we must run this in the UTC timezone...
-
-    @BeforeClass
-    public static void beforeClass() {
-        timeZone = TimeZone.getDefault();
-        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-    }
-
-    @AfterClass
-    public static void afterClass() {
-        TimeZone.setDefault(timeZone);
-        timeZone = null;
-    }
-
     @Override
     public void setUpOnce() {
         cleanDatabase();
+        setup();
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {

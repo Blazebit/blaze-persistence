@@ -199,17 +199,19 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
                 Object embeddingViewKey = tuple[embeddingViewIndex];
                 Object correlationValueKey = tuple[startIndex];
 
-                Map<Object, TuplePromise> viewRootCorrelationValues = viewRoots.get(embeddingViewKey);
-                if (viewRootCorrelationValues == null) {
-                    viewRootCorrelationValues = new HashMap<>();
-                    viewRoots.put(embeddingViewKey, viewRootCorrelationValues);
+                if (embeddingViewKey != null && correlationValueKey != null) {
+                    Map<Object, TuplePromise> viewRootCorrelationValues = viewRoots.get(embeddingViewKey);
+                    if (viewRootCorrelationValues == null) {
+                        viewRootCorrelationValues = new HashMap<>();
+                        viewRoots.put(embeddingViewKey, viewRootCorrelationValues);
+                    }
+                    TuplePromise viewRootPromise = viewRootCorrelationValues.get(correlationValueKey);
+                    if (viewRootPromise == null) {
+                        viewRootPromise = new TuplePromise(startIndex);
+                        viewRootCorrelationValues.put(correlationValueKey, viewRootPromise);
+                    }
+                    viewRootPromise.add(tuple);
                 }
-                TuplePromise viewRootPromise = viewRootCorrelationValues.get(correlationValueKey);
-                if (viewRootPromise == null) {
-                    viewRootPromise = new TuplePromise(startIndex);
-                    viewRootCorrelationValues.put(correlationValueKey, viewRootPromise);
-                }
-                viewRootPromise.add(tuple);
             }
         } else if (usesViewRoot) {
             ExpressionFactory ef = criteriaBuilder.getService(ExpressionFactory.class);
@@ -225,17 +227,19 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
                 Object viewRootKey = tuple[viewRootIndex];
                 Object correlationValueKey = tuple[startIndex];
 
-                Map<Object, TuplePromise> viewRootCorrelationValues = viewRoots.get(viewRootKey);
-                if (viewRootCorrelationValues == null) {
-                    viewRootCorrelationValues = new HashMap<>();
-                    viewRoots.put(viewRootKey, viewRootCorrelationValues);
+                if (viewRootKey != null && correlationValueKey != null) {
+                    Map<Object, TuplePromise> viewRootCorrelationValues = viewRoots.get(viewRootKey);
+                    if (viewRootCorrelationValues == null) {
+                        viewRootCorrelationValues = new HashMap<>();
+                        viewRoots.put(viewRootKey, viewRootCorrelationValues);
+                    }
+                    TuplePromise viewRootPromise = viewRootCorrelationValues.get(correlationValueKey);
+                    if (viewRootPromise == null) {
+                        viewRootPromise = new TuplePromise(startIndex);
+                        viewRootCorrelationValues.put(correlationValueKey, viewRootPromise);
+                    }
+                    viewRootPromise.add(tuple);
                 }
-                TuplePromise viewRootPromise = viewRootCorrelationValues.get(correlationValueKey);
-                if (viewRootPromise == null) {
-                    viewRootPromise = new TuplePromise(startIndex);
-                    viewRootCorrelationValues.put(correlationValueKey, viewRootPromise);
-                }
-                viewRootPromise.add(tuple);
             }
         } else {
             Map<Object, TuplePromise> viewRootCorrelationValues = new HashMap<>(tuples.size());
@@ -244,12 +248,14 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
             for (Object[] tuple : tuples) {
                 Object correlationValueKey = tuple[startIndex];
 
-                TuplePromise viewRootPromise = viewRootCorrelationValues.get(correlationValueKey);
-                if (viewRootPromise == null) {
-                    viewRootPromise = new TuplePromise(startIndex);
-                    viewRootCorrelationValues.put(correlationValueKey, viewRootPromise);
+                if (correlationValueKey != null) {
+                    TuplePromise viewRootPromise = viewRootCorrelationValues.get(correlationValueKey);
+                    if (viewRootPromise == null) {
+                        viewRootPromise = new TuplePromise(startIndex);
+                        viewRootCorrelationValues.put(correlationValueKey, viewRootPromise);
+                    }
+                    viewRootPromise.add(tuple);
                 }
-                viewRootPromise.add(tuple);
             }
         }
 

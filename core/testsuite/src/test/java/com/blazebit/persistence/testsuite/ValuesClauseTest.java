@@ -40,11 +40,13 @@ import org.junit.experimental.categories.Category;
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
+import javax.sql.DataSource;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 
 import static org.junit.Assert.assertEquals;
@@ -63,26 +65,39 @@ public class ValuesClauseTest extends AbstractCoreTest {
     private Document d1;
     private Person p1;
 
-    // Thanks to the MySQL driver not being able to handle timezones correctly, we must run this in the UTC timezone...
-
-    @BeforeClass
-    public static void beforeClass() {
-        timeZone = TimeZone.getDefault();
-        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-    }
-
-    @AfterClass
-    public static void afterClass() {
-        TimeZone.setDefault(timeZone);
-        timeZone = null;
-    }
-
     @Override
     protected Class<?>[] getEntityClasses() {
         return concat(super.getEntityClasses(), new Class<?>[]{
-            PersonCTE.class,
-            DocumentNodeCTE.class
+                PersonCTE.class,
+                DocumentNodeCTE.class
         });
+    }
+
+    // Thanks to the MySQL driver not being able to handle timezones correctly, we must run this in the UTC timezone...
+
+    @Override
+    protected boolean recreateDataSource() {
+        // Some drivers have timezone information bound to the connection
+        // So we have to recreate the data source to get the newly configured time zones for connections
+        if (timeZone == null) {
+            timeZone = TimeZone.getDefault();
+        }
+        return true;
+    }
+
+    @Override
+    protected DataSource createDataSource(Map<Object, Object> properties) {
+        // Set the producer timezone
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+        resetTimeZoneCaches();
+
+        return super.createDataSource(properties);
+    }
+
+    @AfterClass
+    public static void after() {
+        TimeZone.setDefault(timeZone);
+        resetTimeZoneCaches();
     }
 
     @Override
@@ -101,6 +116,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
                 em.persist(d1);
             }
         });
+        setUp();
     }
 
     @Before

@@ -84,7 +84,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
     private final JpaProvider jpaProvider;
     private final Map<String, JpqlFunction> jpqlFunctions;
     private final ExpressionFactory expressionFactory;
-    private final ExpressionFactory typeValidationExpressionFactory;
+    private final MacroConfigurationExpressionFactory typeValidationExpressionFactory;
     private final ProxyFactory proxyFactory;
     private final Map<Class<?>, ViewMapping> viewMappings;
     private final Map<ViewMappingInitializationKey, ManagedViewTypeImplementor<?>> initializingManagedViews;
@@ -429,17 +429,17 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
     }
 
     @Override
-    public ExpressionFactory getTypeValidationExpressionFactory() {
+    public MacroConfigurationExpressionFactory getTypeValidationExpressionFactory() {
         return typeValidationExpressionFactory;
     }
 
     @Override
-    public ExpressionFactory createMacroAwareExpressionFactory() {
+    public MacroConfigurationExpressionFactory createMacroAwareExpressionFactory() {
         return createMacroAwareExpressionFactory("syntax_checking_placeholder");
     }
 
     @Override
-    public ExpressionFactory createMacroAwareExpressionFactory(String viewRoot) {
+    public MacroConfigurationExpressionFactory createMacroAwareExpressionFactory(String viewRoot) {
         MacroConfiguration originalMacroConfiguration = expressionFactory.getDefaultMacroConfiguration();
         ExpressionFactory cachingExpressionFactory = expressionFactory.unwrap(AbstractCachingExpressionFactory.class);
         Map<String, MacroFunction> macros = new HashMap<>();
@@ -449,7 +449,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
         return new MacroConfigurationExpressionFactory(cachingExpressionFactory, macroConfiguration);
     }
 
-    private ExpressionFactory createTypeValidationExpressionFactory() {
+    private MacroConfigurationExpressionFactory createTypeValidationExpressionFactory() {
         MacroConfiguration originalMacroConfiguration = expressionFactory.getDefaultMacroConfiguration();
         ExpressionFactory cachingExpressionFactory = expressionFactory.unwrap(AbstractCachingExpressionFactory.class);
         Map<String, MacroFunction> macros = new HashMap<>();

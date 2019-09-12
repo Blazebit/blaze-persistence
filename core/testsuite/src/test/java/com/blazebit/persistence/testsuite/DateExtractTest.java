@@ -160,29 +160,6 @@ public class DateExtractTest extends AbstractCoreTest {
         resetTimeZoneCaches();
     }
 
-    private static void resetTimeZoneCaches() {
-        // The H2 JDBC driver is not able to handle timezone changes because of an internal cache
-        try {
-            Class.forName("org.h2.util.DateTimeUtils").getMethod("resetCalendar").invoke(null);
-        } catch (Exception e) {
-            // Ignore any exceptions. If it is H2 it will succeed, otherwise will fail on class lookup already
-        }
-
-        // EclipseLink caches the timezone so we have to purge that cache
-        try {
-            Class<?> helperClass = Class.forName("org.eclipse.persistence.internal.helper.Helper");
-            Field f = helperClass.getDeclaredField("defaultTimeZone");
-            f.setAccessible(true);
-            f.set(null, TimeZone.getDefault());
-
-            f = helperClass.getDeclaredField("calendarCache");
-            f.setAccessible(true);
-            f.set(null, helperClass.getMethod("initCalendarCache").invoke(null));
-        } catch (Exception e) {
-            // Ignore any exceptions. If it is EclipseLink it will succeed, otherwise will fail on class lookup already
-        }
-    }
-
     @Test
     public void testDateExtractYear() {
         // Set the client timezone
