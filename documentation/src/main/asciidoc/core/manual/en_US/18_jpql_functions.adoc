@@ -222,12 +222,15 @@ Calculates the difference between the two given temporals like `end - start` and
 
 The possible units and the respective function names are:
 
+* *Microsecond* - `MICROSECOND_DIFF`
 * *Millisecond* - `MILLISECOND_DIFF`
-* *Second* - `SECOND_DIFF`
+* *Second* - `SECOND_DIFF` or `EPOCH_DIFF`
 * *Minute* - `MINUTE_DIFF`
 * *Hour* - `HOUR_DIFF`
 * *Day* - `DAY_DIFF`
+* *Week* - `WEEK_DIFF`
 * *Month* - `MONTH_DIFF`
+* *Quarter* - `QUARTER_DIFF`
 * *Year* - `YEAR_DIFF`
 
 If `end < start` i.e. the value of `end` is before `start`, the result is negative. You are advised to explicitly handle this case or use the `ABS` function.
@@ -254,7 +257,7 @@ The possible fields and the respective function names are:
 * *Year of week* - `YEAR_OF_WEEK`
 * *Month* - `MONTH`
 * *Year* - `YEAR`
-* *Epoch* - `EPOCH`
+* *Epoch* - `EPOCH` or `EPOCH_SECONDS`
 
 WARNING: `WEEK` and `ISO_WEEK` return the ISO based week number, which may be in the previous year, whereas `WEEK_IN_YEAR` returns the week number counting from the first day of the year. To determine the year of that the ISO based week started on, use the `YEAR_OF_WEEK`, or use the `YEAR_WEEK` which returns the week and its year as a string in `IYYY-IW` format.
 

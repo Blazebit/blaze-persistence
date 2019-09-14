@@ -96,6 +96,28 @@ import com.blazebit.persistence.impl.function.dateadd.year.MySQLYearAddFunction;
 import com.blazebit.persistence.impl.function.dateadd.year.OracleYearAddFunction;
 import com.blazebit.persistence.impl.function.dateadd.year.PostgreSQLYearAddFunction;
 import com.blazebit.persistence.impl.function.dateadd.year.YearAddFunction;
+import com.blazebit.persistence.impl.function.datediff.microsecond.AccessMicrosecondDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.microsecond.DB2MicrosecondDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.microsecond.DefaultMicrosecondDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.microsecond.MSSQLMicrosecondDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.microsecond.MySQLMicrosecondDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.microsecond.OracleMicrosecondDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.microsecond.PostgreSQLMicrosecondDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.quarter.AccessQuarterDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.quarter.DB2QuarterDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.quarter.DefaultQuarterDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.quarter.H2QuarterDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.quarter.MSSQLQuarterDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.quarter.MySQLQuarterDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.quarter.OracleQuarterDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.quarter.PostgreSQLQuarterDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.week.DB2WeekDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.week.DefaultWeekDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.week.H2WeekDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.week.MSSQLWeekDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.week.MySQLWeekDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.week.OracleWeekDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.week.PostgreSQLWeekDiffFunction;
 import com.blazebit.persistence.impl.function.datetime.dayofweek.AccessDayOfWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.dayofweek.DB2DayOfWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.dayofweek.DayOfWeekFunction;
@@ -765,6 +787,15 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("mysql8", new MySQLEpochFunction());
         registerFunction(jpqlFunctionGroup);
 
+        jpqlFunctionGroup = new JpqlFunctionGroup("epoch_seconds", false);
+        jpqlFunctionGroup.add(null, new DefaultEpochFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLEpochFunction());
+        jpqlFunctionGroup.add("oracle", new OracleEpochFunction());
+        jpqlFunctionGroup.add("db2", new DB2EpochFunction());
+        jpqlFunctionGroup.add("mysql", new MySQLEpochFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLEpochFunction());
+        registerFunction(jpqlFunctionGroup);
+
         // dateadd
 
         jpqlFunctionGroup = new JpqlFunctionGroup(DayAddFunction.NAME, false);
@@ -950,6 +981,17 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("oracle", new OracleSecondDiffFunction());
         registerFunction(jpqlFunctionGroup);
 
+        jpqlFunctionGroup = new JpqlFunctionGroup("epoch_diff", false);
+        jpqlFunctionGroup.add(null, new DefaultSecondDiffFunction());
+        jpqlFunctionGroup.add("access", new AccessSecondDiffFunction());
+        jpqlFunctionGroup.add("db2", new DB2SecondDiffFunction());
+        jpqlFunctionGroup.add("microsoft", new SQLServerSecondDiffFunction());
+        jpqlFunctionGroup.add("mysql", new MySQLSecondDiffFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLSecondDiffFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLSecondDiffFunction());
+        jpqlFunctionGroup.add("oracle", new OracleSecondDiffFunction());
+        registerFunction(jpqlFunctionGroup);
+
         jpqlFunctionGroup = new JpqlFunctionGroup("millisecond_diff", false);
         jpqlFunctionGroup.add(null, new DefaultMillisecondDiffFunction());
         jpqlFunctionGroup.add("access", new AccessMillisecondDiffFunction());
@@ -959,6 +1001,40 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("mysql8", new MySQLMillisecondDiffFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLMillisecondDiffFunction());
         jpqlFunctionGroup.add("oracle", new OracleMillisecondDiffFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        jpqlFunctionGroup = new JpqlFunctionGroup("microsecond_diff", false);
+        jpqlFunctionGroup.add(null, new DefaultMicrosecondDiffFunction());
+        jpqlFunctionGroup.add("access", new AccessMicrosecondDiffFunction());
+        jpqlFunctionGroup.add("db2", new DB2MicrosecondDiffFunction());
+        jpqlFunctionGroup.add("mysql", new MySQLMicrosecondDiffFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLMicrosecondDiffFunction());
+        jpqlFunctionGroup.add("microsoft", new MSSQLMicrosecondDiffFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLMicrosecondDiffFunction());
+        jpqlFunctionGroup.add("oracle", new OracleMicrosecondDiffFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        jpqlFunctionGroup = new JpqlFunctionGroup("week_diff", false);
+        jpqlFunctionGroup.add(null, new DefaultWeekDiffFunction());
+        jpqlFunctionGroup.add("h2", new H2WeekDiffFunction());
+        jpqlFunctionGroup.add("db2", new DB2WeekDiffFunction());
+        jpqlFunctionGroup.add("mysql", new MySQLWeekDiffFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLWeekDiffFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLWeekDiffFunction());
+        jpqlFunctionGroup.add("oracle", new OracleWeekDiffFunction());
+        jpqlFunctionGroup.add("microsoft", new MSSQLWeekDiffFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        jpqlFunctionGroup = new JpqlFunctionGroup("quarter_diff", false);
+        jpqlFunctionGroup.add(null, new DefaultQuarterDiffFunction());
+        jpqlFunctionGroup.add("access", new AccessQuarterDiffFunction());
+        jpqlFunctionGroup.add("h2", new H2QuarterDiffFunction());
+        jpqlFunctionGroup.add("db2", new DB2QuarterDiffFunction());
+        jpqlFunctionGroup.add("mysql", new MySQLQuarterDiffFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLQuarterDiffFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLQuarterDiffFunction());
+        jpqlFunctionGroup.add("microsoft", new MSSQLQuarterDiffFunction());
+        jpqlFunctionGroup.add("oracle", new OracleQuarterDiffFunction());
         registerFunction(jpqlFunctionGroup);
 
         // date trunc

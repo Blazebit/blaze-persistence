@@ -19,7 +19,6 @@ package com.blazebit.persistence.testsuite;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
-import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
@@ -54,10 +53,6 @@ import org.junit.runners.Parameterized;
  */
 @RunWith(Parameterized.class)
 public class DateExtractTest extends AbstractCoreTest {
-
-    // The previous timezones so we can cache the datasources for one configuration run
-    private static TimeZone previousProducerTimeZone;
-    private static TimeZone previousClientTimeZone;
 
     private static final TimeZone dbmsTimeZone = TimeZone.getDefault();
     private Calendar c1;
@@ -94,12 +89,7 @@ public class DateExtractTest extends AbstractCoreTest {
 
     @Override
     protected boolean recreateDataSource() {
-        // Some drivers have timezone information bound to the connection
-        // So we have to recreate the data source to get the newly configured time zones for connections
-        boolean recreate = previousProducerTimeZone != null && previousClientTimeZone != null && (!producerTimeZone.equals(previousProducerTimeZone) || !clientTimeZone.equals(previousClientTimeZone));
-        previousProducerTimeZone = producerTimeZone;
-        previousClientTimeZone = clientTimeZone;
-        return recreate;
+        return true;
     }
 
     @Override
@@ -497,6 +487,29 @@ public class DateExtractTest extends AbstractCoreTest {
                 .from(Document.class, "doc")
                 .select("FUNCTION('EPOCH',   creationDate)")
                 .select("FUNCTION('EPOCH',   lastModified)")
+                ;
+
+        List<Tuple> list = criteria.getResultList();
+        assertEquals(1, list.size());
+
+        Tuple actual = list.get(0);
+
+        int offsetInMillis1 = producerTimeZone.getOffset(c1.getTimeInMillis());
+        int offsetInMillis2 = producerTimeZone.getOffset(c2.getTimeInMillis());
+        assertEquals((int) (c1.getTimeInMillis() / 1000L), (int) actual.get(0) - (offsetInMillis1 / 1000L));
+        assertEquals((int) (c2.getTimeInMillis() / 1000L), (int) actual.get(1) - (offsetInMillis2 / 1000L));
+    }
+
+    @Test
+    public void testDateExtractEpochSeconds() {
+        // Set the client timezone
+        TimeZone.setDefault(clientTimeZone);
+        resetTimeZoneCaches();
+
+        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
+                .from(Document.class, "doc")
+                .select("FUNCTION('EPOCH_SECONDS',   creationDate)")
+                .select("FUNCTION('EPOCH_SECONDS',   lastModified)")
                 ;
 
         List<Tuple> list = criteria.getResultList();

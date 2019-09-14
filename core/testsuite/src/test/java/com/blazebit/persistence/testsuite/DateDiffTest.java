@@ -18,6 +18,9 @@ package com.blazebit.persistence.testsuite;
 
 import static org.junit.Assert.assertEquals;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
@@ -140,6 +143,10 @@ public class DateDiffTest extends AbstractCoreTest {
             .select("FUNCTION('MINUTE_DIFF',        creationDate, creationDate)")
             .select("FUNCTION('SECOND_DIFF',        creationDate, creationDate)")
             .select("FUNCTION('MILLISECOND_DIFF',   creationDate, creationDate)")
+            .select("FUNCTION('EPOCH_DIFF',         creationDate, creationDate)")
+            .select("FUNCTION('MICROSECOND_DIFF',   creationDate, creationDate)")
+            .select("FUNCTION('WEEK_DIFF',   creationDate, creationDate)")
+            .select("FUNCTION('QUARTER_DIFF',   creationDate, creationDate)")
             ;
         
         List<Tuple> list = criteria.getResultList();
@@ -154,6 +161,9 @@ public class DateDiffTest extends AbstractCoreTest {
         assertEquals(0, actual.get(4));
         assertEquals(0, actual.get(5));
         assertEquals(0L, actual.get(6));
+        assertEquals(0, actual.get(7));
+        assertEquals(0L, actual.get(8));
+        assertEquals(0, actual.get(9));
     }
     
     @Test
@@ -174,6 +184,10 @@ public class DateDiffTest extends AbstractCoreTest {
             .select("FUNCTION('MINUTE_DIFF',        creationDate2, creationDate)")
             .select("FUNCTION('SECOND_DIFF',        creationDate2, creationDate)")
             .select("FUNCTION('MILLISECOND_DIFF',   creationDate2, creationDate)")
+            .select("FUNCTION('EPOCH_DIFF',         creationDate2, creationDate)")
+            .select("FUNCTION('MICROSECOND_DIFF',   creationDate2, creationDate)")
+            .select("FUNCTION('WEEK_DIFF',   creationDate2, creationDate)")
+            .select("FUNCTION('QUARTER_DIFF',   creationDate2, creationDate)")
             ;
         
         List<Tuple> list = criteria.getResultList();
@@ -196,6 +210,10 @@ public class DateDiffTest extends AbstractCoreTest {
         assertEquals(minutesBetween(c2, c1), actual.get(11));
         assertEquals(secondsBetween(c2, c1), actual.get(12));
         assertEquals(millisecondsBetween(c2, c1), actual.get(13));
+        assertEquals(secondsBetween(c2, c1), actual.get(14));
+        assertEquals(microsecondsBetween(c2, c1), actual.get(15));
+        assertEquals(weeksBetween(c2, c1), actual.get(16));
+        assertEquals(quartersBetween(c2, c1), actual.get(17));
     }
     
     @Test
@@ -216,6 +234,10 @@ public class DateDiffTest extends AbstractCoreTest {
             .select("FUNCTION('MINUTE_DIFF', lastModified2, lastModified)")
             .select("FUNCTION('SECOND_DIFF', lastModified2, lastModified)")
             .select("FUNCTION('MILLISECOND_DIFF', lastModified2, lastModified)")
+            .select("FUNCTION('EPOCH_DIFF', lastModified2, lastModified)")
+            .select("FUNCTION('MICROSECOND_DIFF', lastModified2, lastModified)")
+            .select("FUNCTION('WEEK_DIFF', lastModified2, lastModified)")
+            .select("FUNCTION('QUARTER_DIFF', lastModified2, lastModified)")
             ;
         
         List<Tuple> list = criteria.getResultList();
@@ -238,6 +260,10 @@ public class DateDiffTest extends AbstractCoreTest {
         assertEquals(minutesBetween(l2, l1), actual.get(11));
         assertEquals(secondsBetween(l2, l1), actual.get(12));
         assertEquals(millisecondsBetween(l2, l1), actual.get(13));
+        assertEquals(secondsBetween(l2, l1), actual.get(14));
+        assertEquals(microsecondsBetween(l2, l1), actual.get(15));
+        assertEquals(weeksBetween(l2, l1), actual.get(16));
+        assertEquals(quartersBetween(l2, l1), actual.get(17));
     }
     
     @Test
@@ -258,6 +284,10 @@ public class DateDiffTest extends AbstractCoreTest {
             .select("FUNCTION('MINUTE_DIFF', creationDate, lastModified)")
             .select("FUNCTION('SECOND_DIFF', creationDate, lastModified)")
             .select("FUNCTION('MILLISECOND_DIFF', creationDate, lastModified)")
+            .select("FUNCTION('EPOCH_DIFF', creationDate, lastModified)")
+            .select("FUNCTION('MICROSECOND_DIFF', creationDate, lastModified)")
+            .select("FUNCTION('WEEK_DIFF', creationDate, lastModified)")
+            .select("FUNCTION('QUARTER_DIFF', creationDate, lastModified)")
             ;
 
         List<Tuple> list = criteria.getResultList();
@@ -280,6 +310,10 @@ public class DateDiffTest extends AbstractCoreTest {
         assertEquals(minutesBetween(c1, l1), actual.get(11));
         assertEquals(secondsBetween(c1, l1), actual.get(12));
         assertEquals(millisecondsBetween(c1, l1), actual.get(13));
+        assertEquals(secondsBetween(c1, l1), actual.get(14));
+        assertEquals(microsecondsBetween(c1, l1), actual.get(15));
+        assertEquals(weeksBetween(c1, l1), actual.get(16));
+        assertEquals(quartersBetween(c1, l1), actual.get(17));
     }
 
     @Test
@@ -307,6 +341,10 @@ public class DateDiffTest extends AbstractCoreTest {
                 .select("FUNCTION('MINUTE_DIFF', :lastModified2, :lastModified)")
                 .select("FUNCTION('SECOND_DIFF', :lastModified2, :lastModified)")
                 .select("FUNCTION('MILLISECOND_DIFF', :lastModified2, :lastModified)")
+                .select("FUNCTION('EPOCH_DIFF', :lastModified2, :lastModified)")
+                .select("FUNCTION('MICROSECOND_DIFF', :lastModified2, :lastModified)")
+                .select("FUNCTION('WEEK_DIFF', :lastModified2, :lastModified)")
+                .select("FUNCTION('QUARTER_DIFF', :lastModified2, :lastModified)")
                 ;
 
         criteria.setParameter("lastModified", l1, TemporalType.TIMESTAMP);
@@ -339,6 +377,10 @@ public class DateDiffTest extends AbstractCoreTest {
         assertEquals(minutesBetween(l2, l1), actual.get(18));
         assertEquals(secondsBetween(l2, l1), actual.get(19));
         assertEquals(millisecondsBetween(l2, l1), actual.get(20));
+        assertEquals(secondsBetween(l2, l1), actual.get(21));
+        assertEquals(microsecondsBetween(l2, l1), actual.get(22));
+        assertEquals(weeksBetween(l2, l1), actual.get(23));
+        assertEquals(quartersBetween(l2, l1), actual.get(24));
     }
 
     @Test
@@ -366,6 +408,10 @@ public class DateDiffTest extends AbstractCoreTest {
                 .select("FUNCTION('MINUTE_DIFF', :creationDate2, :creationDate)")
                 .select("FUNCTION('SECOND_DIFF', :creationDate2, :creationDate)")
                 .select("FUNCTION('MILLISECOND_DIFF', :creationDate2, :creationDate)")
+                .select("FUNCTION('EPOCH_DIFF', :creationDate2, :creationDate)")
+                .select("FUNCTION('MICROSECOND_DIFF', :creationDate2, :creationDate)")
+                .select("FUNCTION('WEEK_DIFF', :creationDate2, :creationDate)")
+                .select("FUNCTION('QUARTER_DIFF', :creationDate2, :creationDate)")
                 ;
 
         criteria.setParameter("creationDate", c1, TemporalType.DATE);
@@ -398,10 +444,18 @@ public class DateDiffTest extends AbstractCoreTest {
         assertEquals(minutesBetween(c2, c1), actual.get(18));
         assertEquals(secondsBetween(c2, c1), actual.get(19));
         assertEquals(millisecondsBetween(c2, c1), actual.get(20));
+        assertEquals(secondsBetween(c2, c1), actual.get(21));
+        assertEquals(microsecondsBetween(c2, c1), actual.get(22));
+        assertEquals(weeksBetween(c2, c1), actual.get(23));
+        assertEquals(quartersBetween(c2, c1), actual.get(24));
     }
 
     public static long millisecondsBetween(Calendar day1, Calendar day2) {
         return day2.getTimeInMillis() - day1.getTimeInMillis();
+    }
+
+    public static long microsecondsBetween(Calendar day1, Calendar day2) {
+        return (day2.getTimeInMillis() - day1.getTimeInMillis()) * 1000;
     }
     
     public static int secondsBetween(Calendar day1, Calendar day2) {
@@ -450,7 +504,24 @@ public class DateDiffTest extends AbstractCoreTest {
             return offset + (day2.get(Calendar.DAY_OF_YEAR) - day1.get(Calendar.DAY_OF_YEAR));
         }
     }
-    
+
+    public static int weeksBetween(Calendar day1, Calendar day2) {
+        return daysBetween(day1, day2) / 7;
+    }
+
+    public static int quartersBetween(Calendar day1, Calendar day2) {
+        return monthsBetween(day1, day2) / 3;
+    }
+
+    public static int floorDiv(int x, int y) {
+        int r = x / y;
+        // if the signs are different and modulo not zero, round down
+        if ((x ^ y) < 0 && (r * y != x)) {
+            r--;
+        }
+        return r;
+    }
+
     public static int monthsBetween(Calendar day1, Calendar day2) {
         int offset = (day2.get(Calendar.YEAR) - day1.get(Calendar.YEAR)) * 12;
         return offset + (day2.get(Calendar.MONTH) - day1.get(Calendar.MONTH));
