@@ -1139,7 +1139,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         result = new ViewTypeObjectBuilder<T>(this, parameterHolder, optionalParameters, entityViewConfiguration == null ? null : entityViewConfiguration.getEmbeddingViewJpqlMacro(), nullIfEmpty);
 
         if (hasSubtypes) {
-            result = new InheritanceReducerViewTypeObjectBuilder<>(result, tupleOffset, suffix, mappers.length, !isSubview && (tupleOffset > 0 || suffix > 0), subtypeInstantiators);
+            result = new InheritanceReducerViewTypeObjectBuilder<>((ViewTypeObjectBuilder<T>) result, tupleOffset, suffix, mappers.length, !isSubview && (tupleOffset > 0 || suffix > 0), subtypeInstantiators);
         } else if (hasOffset || isSubview || hasIndexedCollections || hasSubviews) {
             result = new ReducerViewTypeObjectBuilder<T>(result, tupleOffset, suffix, mappers.length, !isSubview && (tupleOffset > 0 || suffix > 0));
         }

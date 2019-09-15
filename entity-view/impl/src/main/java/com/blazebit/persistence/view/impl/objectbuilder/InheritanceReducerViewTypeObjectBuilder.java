@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder;
 
-import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
 
 /**
@@ -26,11 +25,15 @@ import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
  */
 public class InheritanceReducerViewTypeObjectBuilder<T> extends ReducerViewTypeObjectBuilder<T> {
 
+    private final boolean hasId;
+    private final boolean nullIfEmpty;
     private final int subtypeDiscriminatorIndex;
     private final ObjectInstantiator<T>[] subtypeInstantiators;
 
-    public InheritanceReducerViewTypeObjectBuilder(ObjectBuilder<T> delegate, int subtypeDiscriminatorIndex, int suffix, int length, boolean keepTuplePrefix, ObjectInstantiator<T>[] subtypeInstantiators) {
+    public InheritanceReducerViewTypeObjectBuilder(ViewTypeObjectBuilder<T> delegate, int subtypeDiscriminatorIndex, int suffix, int length, boolean keepTuplePrefix, ObjectInstantiator<T>[] subtypeInstantiators) {
         super(delegate, subtypeDiscriminatorIndex + 1, suffix, length - 1, keepTuplePrefix);
+        this.hasId = delegate.hasId;
+        this.nullIfEmpty = delegate.nullIfEmpty;
         this.subtypeDiscriminatorIndex = subtypeDiscriminatorIndex;
         this.subtypeInstantiators = subtypeInstantiators;
     }
@@ -42,6 +45,19 @@ public class InheritanceReducerViewTypeObjectBuilder<T> extends ReducerViewTypeO
         if (index == null) {
             return null;
         } else {
+            if (hasId) {
+                if (tuple[0] == null) {
+                    return null;
+                }
+            } else if (nullIfEmpty) {
+                for (int i = 0; i < tuple.length; i++) {
+                    if (tuple[i] != null) {
+                        return subtypeInstantiators[index.intValue()].newInstance(tuple);
+                    }
+                }
+
+                return null;
+            }
             return subtypeInstantiators[index.intValue()].newInstance(tuple);
         }
     }
