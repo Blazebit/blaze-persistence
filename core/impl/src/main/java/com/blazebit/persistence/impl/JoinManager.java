@@ -2089,7 +2089,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             }
 
             if (result.isLazy()) {
-                pathExpression.setPathReference(new LazyPathReference(result.baseNode, result.joinFields(), result.type));
+                pathExpression.setPathReference(new LazyPathReference(result.baseNode, result.joinFields(), result.type, joinAllowed));
             } else {
                 pathExpression.setPathReference(new SimplePathReference(result.baseNode, result.joinFields(), result.type));
             }
@@ -2121,18 +2121,22 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         private final JoinNode baseNode;
         private final String field;
         private final Type<?> type;
+        private final boolean joinAllowed;
 
-        public LazyPathReference(JoinNode baseNode, String field, Type<?> type) {
+        public LazyPathReference(JoinNode baseNode, String field, Type<?> type, boolean joinAllowed) {
             this.baseNode = baseNode;
             this.field = field;
             this.type = type;
+            this.joinAllowed = joinAllowed;
         }
 
         @Override
         public JoinNode getBaseNode() {
-            JoinTreeNode subNode = baseNode.getNodes().get(field);
-            if (subNode != null && subNode.getDefaultNode() != null) {
-                return subNode.getDefaultNode();
+            if (joinAllowed) {
+                JoinTreeNode subNode = baseNode.getNodes().get(field);
+                if (subNode != null && subNode.getDefaultNode() != null) {
+                    return subNode.getDefaultNode();
+                }
             }
 
             return baseNode;
@@ -2140,9 +2144,11 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
         @Override
         public String getField() {
-            JoinTreeNode subNode = baseNode.getNodes().get(field);
-            if (subNode != null && subNode.getDefaultNode() != null) {
-                return null;
+            if (joinAllowed) {
+                JoinTreeNode subNode = baseNode.getNodes().get(field);
+                if (subNode != null && subNode.getDefaultNode() != null) {
+                    return null;
+                }
             }
 
             return field;
