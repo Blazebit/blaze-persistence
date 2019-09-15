@@ -15,13 +15,15 @@
  */
 package com.blazebit.persistence.spring.data.base.query;
 
+import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 import org.springframework.data.repository.query.Parameters;
 import org.springframework.util.Assert;
 
+import javax.persistence.EntityManager;
 import javax.persistence.Parameter;
 import javax.persistence.Query;
 import javax.persistence.criteria.CriteriaQuery;
-import java.io.Serializable;
 import java.util.Date;
 import java.util.Iterator;
 
@@ -36,6 +38,8 @@ import java.util.Iterator;
  */
 public abstract class AbstractCriteriaQueryParameterBinder extends ParameterBinder {
 
+    private final EntityManager em;
+    private final EntityViewManager evm;
     private final Iterator<ParameterMetadataProvider.ParameterMetadata<?>> expressions;
 
     /**
@@ -46,11 +50,13 @@ public abstract class AbstractCriteriaQueryParameterBinder extends ParameterBind
      * @param values must not be {@literal null}.
      * @param expressions must not be {@literal null}.
      */
-    public AbstractCriteriaQueryParameterBinder(JpaParameters parameters, Object[] values, Iterable<ParameterMetadataProvider.ParameterMetadata<?>> expressions) {
+    public AbstractCriteriaQueryParameterBinder(EntityManager em, EntityViewManager evm, JpaParameters parameters, Object[] values, Iterable<ParameterMetadataProvider.ParameterMetadata<?>> expressions) {
 
         super(parameters, values);
 
         Assert.notNull(expressions, "Iterable of ParameterMetadata must not be null!");
+        this.em = em;
+        this.evm = evm;
         this.expressions = expressions.iterator();
     }
 
@@ -67,30 +73,34 @@ public abstract class AbstractCriteriaQueryParameterBinder extends ParameterBind
         if (metadata.isIsNullParameter()) {
             return;
         }
+        Object paramValue = metadata.prepare(value);
 
         // Christian Beikov: Parameters are now set by name or position instead of by the ParameterExpression object if possible
         if (parameter.isTemporalParameter()) {
             if (metadata.getExpression().getPosition() == null) {
                 if (metadata.getExpression().getName() == null) {
-                    query.setParameter((Parameter) metadata.getExpression(), (Date) metadata.prepare(value),
+                    query.setParameter((Parameter) metadata.getExpression(), (Date) paramValue,
                             parameter.getTemporalType());
                 } else {
-                    query.setParameter(metadata.getExpression().getName(), (Date) metadata.prepare(value),
+                    query.setParameter(metadata.getExpression().getName(), (Date) paramValue,
                             parameter.getTemporalType());
                 }
             } else {
-                query.setParameter(metadata.getExpression().getPosition(), (Date) metadata.prepare(value),
+                query.setParameter(metadata.getExpression().getPosition(), (Date) paramValue,
                         parameter.getTemporalType());
             }
         } else {
+            if (paramValue instanceof EntityViewProxy) {
+                paramValue = evm.getEntityReference(em, paramValue);
+            }
             if (metadata.getExpression().getPosition() == null) {
                 if (metadata.getExpression().getName() == null) {
-                    query.setParameter(metadata.getExpression(), metadata.prepare(value));
+                    query.setParameter(metadata.getExpression(), paramValue);
                 } else {
-                    query.setParameter(metadata.getExpression().getName(), metadata.prepare(value));
+                    query.setParameter(metadata.getExpression().getName(), paramValue);
                 }
             } else {
-                query.setParameter(metadata.getExpression().getPosition(), metadata.prepare(value));
+                query.setParameter(metadata.getExpression().getPosition(), paramValue);
             }
         }
     }
