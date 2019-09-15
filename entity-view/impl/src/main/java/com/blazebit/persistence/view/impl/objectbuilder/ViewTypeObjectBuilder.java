@@ -37,8 +37,8 @@ import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
  */
 public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
 
-    private final boolean hasId;
-    private final boolean nullIfEmpty;
+    final boolean hasId;
+    final boolean nullIfEmpty;
     private final ObjectInstantiator<T> objectInstantiator;
     private final TupleElementMapper[] mappers;
     private final ParameterHolder<?> parameterHolder;
