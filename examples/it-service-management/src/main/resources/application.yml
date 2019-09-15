@@ -1,0 +1,15 @@
+spring:
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        globally_quoted_identifiers: true
+        implicit_naming_strategy: com.blazebit.persistence.examples.itsm.ImplicitNamingStrategyComponentPathJoinTable
+        ejb:
+          metamodel:
+            population: enabled
+      org.hibernate.envers:
+        store_data_at_delete: true
+        global_with_modified_flag: true
+        audit_strategy: org.hibernate.envers.strategy.ValidityAuditStrategy
+        audit_strategy_validity_store_revend_timestamp: true

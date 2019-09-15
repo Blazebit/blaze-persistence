@@ -152,6 +152,12 @@ public class MutableBasicUserTypeRegistry implements BasicUserTypeRegistry {
             map.put(java.util.Calendar.class, CalendarToLocalDateTimeTypeConverter.JAVA_UTIL_CALENDAR_CONVERTER);
             map.put(java.util.GregorianCalendar.class, CalendarToLocalDateTimeTypeConverter.JAVA_UTIL_GREGORIAN_CALENDAR_CONVERTER);
             converters.put(Class.forName("java.time.LocalDateTime"), map);
+            map = new HashMap<>();
+            map.put(java.util.Date.class, DateToInstantTypeConverter.JAVA_UTIL_DATE_CONVERTER);
+            map.put(java.sql.Timestamp.class, DateToInstantTypeConverter.JAVA_SQL_TIMESTAMP_CONVERTER);
+            map.put(java.util.Calendar.class, CalendarToInstantTypeConverter.JAVA_UTIL_CALENDAR_CONVERTER);
+            map.put(java.util.GregorianCalendar.class, CalendarToInstantTypeConverter.JAVA_UTIL_GREGORIAN_CALENDAR_CONVERTER);
+            converters.put(Class.forName("java.time.Instant"), map);
             map.put(java.sql.Time.class, new TimeToLocalTimeTypeConverter());
             converters.put(Class.forName("java.time.LocalTime"), map);
         } catch (ClassNotFoundException ex) {
