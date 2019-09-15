@@ -52,6 +52,33 @@ public class EntityEqualityNoRewriteToIdTest extends AbstractCoreTest {
     }
 
     @Test
+    public void neverRewriteEntityAssociationEqualsEntityInOnIfSupported1() {
+        CriteriaBuilder<Person> criteria = cbf.create(em, Person.class, "p");
+        criteria.innerJoinOn(Document.class,"correlated_ownedDocuments")
+                .on("correlated_ownedDocuments.owner").eqExpression("p")
+                .end();
+        criteria.innerJoinDefault("correlated_ownedDocuments.owner", "o1");
+
+        assertEquals("SELECT p FROM Person p JOIN Document correlated_ownedDocuments"
+                + onClause("correlated_ownedDocuments.owner = p") + " JOIN correlated_ownedDocuments.owner o1", criteria.getQueryString());
+        criteria.getResultList();
+    }
+
+    @Test
+    public void neverRewriteEntityAssociationEqualsEntityInOnIfSupported2() {
+        CriteriaBuilder<Person> criteria = cbf.create(em, Person.class, "p");
+        criteria.select("correlated_ownedDocuments.owner.name");
+        criteria.innerJoinOn(Document.class,"correlated_ownedDocuments")
+                .on("correlated_ownedDocuments.owner").eqExpression("p")
+                .end();
+        criteria.innerJoinDefault("correlated_ownedDocuments.owner", "o1");
+
+        assertEquals("SELECT o1.name FROM Person p JOIN Document correlated_ownedDocuments"
+                + onClause("correlated_ownedDocuments.owner = p") + " JOIN correlated_ownedDocuments.owner o1", criteria.getQueryString());
+        criteria.getResultList();
+    }
+
+    @Test
     // NOTE: Datanucleus does not support transient objects as parameters
     @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoDatanucleus.class })
     public void neverRewriteEntityAssociationEqualsTransientEntityParameterInOnIfSupported() {

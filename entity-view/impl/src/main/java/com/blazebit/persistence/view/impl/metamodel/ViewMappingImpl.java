@@ -29,6 +29,7 @@ import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.SingularAttribute;
+import javax.persistence.metamodel.Type;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -513,6 +514,11 @@ public class ViewMappingImpl implements ViewMapping {
                 }
                 if (versionAttribute != null) {
                     context.addError("Invalid version attribute mapping for embeddable entity type '" + entityClass.getName() + "' at " + versionAttribute.getErrorLocation() + " for managed view type '" + entityViewClass.getName() + "'!");
+                }
+                // Even if the annotated model is missing the @CreatableEntityView annotation, we treat updatable entity views for embeddable also as creatable
+                if (managedType.getPersistenceType() == Type.PersistenceType.EMBEDDABLE && isUpdatable()) {
+                    setCreatable(true);
+                    setValidatePersistability(true);
                 }
             } else {
                 // If the identifiable type has an id attribute and is creatable or updatable
