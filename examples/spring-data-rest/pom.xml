@@ -224,23 +224,13 @@
                 <dependency>
                     <groupId>org.aspectj</groupId>
                     <artifactId>aspectjweaver</artifactId>
-                    <version>1.9.0.RC4</version>
+                    <version>1.9.4</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-integration-spring-data-2.0</artifactId>
                 </dependency>
             </dependencies>
-            <repositories>
-                <repository>
-                    <id>spring-milestones</id>
-                    <name>Spring Milestones</name>
-                    <url>https://repo.spring.io/libs-milestone</url>
-                    <snapshots>
-                        <enabled>false</enabled>
-                    </snapshots>
-                </repository>
-            </repositories>
         </profile>
         <profile>
             <id>spring-data-2.1.x</id>
@@ -257,33 +247,13 @@
                 <dependency>
                     <groupId>org.aspectj</groupId>
                     <artifactId>aspectjweaver</artifactId>
-                    <version>1.9.0.RC4</version>
+                    <version>1.9.4</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-integration-spring-data-2.1</artifactId>
                 </dependency>
             </dependencies>
-            <repositories>
-                <repository>
-                    <id>spring-milestones</id>
-                    <name>Spring Milestones</name>
-                    <url>https://repo.spring.io/libs-milestone</url>
-                    <snapshots>
-                        <enabled>false</enabled>
-                    </snapshots>
-                </repository>
-            </repositories>
-            <pluginRepositories>
-                <pluginRepository>
-                    <id>spring-milestones</id>
-                    <name>Spring Milestones</name>
-                    <url>https://repo.spring.io/libs-milestone</url>
-                    <snapshots>
-                        <enabled>false</enabled>
-                    </snapshots>
-                </pluginRepository>
-            </pluginRepositories>
         </profile>
     </profiles>
 </project>

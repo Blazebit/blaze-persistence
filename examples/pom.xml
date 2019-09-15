@@ -31,6 +31,7 @@
         <module>showcase</module>
         <module>deltaspike-data-rest</module>
         <module>spring-data-rest</module>
+        <module>it-service-management</module>
     </modules>
 
 </project>
