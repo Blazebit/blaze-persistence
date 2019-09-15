@@ -452,7 +452,7 @@ public class ProxyFactory {
                 }
             }
 
-            createEqualsHashCodeMethods(viewType, clazz, cc, superCc, attributeFields, idField);
+            createEqualsHashCodeMethods(viewType, managedViewType, cc, superCc, attributeFields, idField);
             createSpecialMethods(managedViewType, cc);
 
             Set<MappingConstructorImpl<T>> constructors = (Set<MappingConstructorImpl<T>>) (Set<?>) managedViewType.getConstructors();
@@ -768,7 +768,7 @@ public class ProxyFactory {
         return method;
     }
 
-    private <T> void createEqualsHashCodeMethods(ViewType<T> viewType, Class<?> entityViewClass, CtClass cc, CtClass superCc, CtField[] attributeFields, CtField idField) throws NotFoundException, CannotCompileException {
+    private <T> void createEqualsHashCodeMethods(ViewType<T> viewType, ManagedViewType<T> managedViewType, CtClass cc, CtClass superCc, CtField[] attributeFields, CtField idField) throws NotFoundException, CannotCompileException {
         CtClass equalsDeclaringClass = superCc.getMethod("equals", getEqualsDesc()).getDeclaringClass();
         CtClass hashCodeDeclaringClass = superCc.getMethod("hashCode", getHashCodeDesc()).getDeclaringClass();
         boolean hasCustomEqualsHashCode = false;
@@ -784,10 +784,10 @@ public class ProxyFactory {
 
         if (!hasCustomEqualsHashCode) {
             if (viewType != null) {
-                cc.addMethod(createIdEquals(entityViewClass, cc));
+                cc.addMethod(createIdEquals(managedViewType, cc));
                 cc.addMethod(createHashCode(cc, idField));
             } else {
-                cc.addMethod(createEquals(entityViewClass, cc, attributeFields));
+                cc.addMethod(createEquals(managedViewType, cc, attributeFields));
                 cc.addMethod(createHashCode(cc, attributeFields));
             }
         }
@@ -1821,15 +1821,15 @@ public class ProxyFactory {
         return "(" + Descriptor.of("java.lang.Object") + ")" + Descriptor.of(returnType);
     }
 
-    private CtMethod createEquals(Class<?> viewClass, CtClass cc, CtField... fields) throws NotFoundException, CannotCompileException {
-        return createEquals(viewClass, cc, false, fields);
+    private CtMethod createEquals(ManagedViewType<?> managedViewType, CtClass cc, CtField... fields) throws NotFoundException, CannotCompileException {
+        return createEquals(managedViewType, cc, false, fields);
     }
 
-    private CtMethod createIdEquals(Class<?> viewClass, CtClass cc) throws NotFoundException, CannotCompileException {
-        return createEquals(viewClass, cc, true, null);
+    private CtMethod createIdEquals(ManagedViewType<?> managedViewType, CtClass cc) throws NotFoundException, CannotCompileException {
+        return createEquals(managedViewType, cc, true, null);
     }
 
-    private CtMethod createEquals(Class<?> viewClass, CtClass cc, boolean idBased, CtField[] fields) throws NotFoundException, CannotCompileException {
+    private CtMethod createEquals(ManagedViewType<?> managedViewType, CtClass cc, boolean idBased, CtField[] fields) throws NotFoundException, CannotCompileException {
         ConstPool cp = cc.getClassFile2().getConstPool();
         MethodInfo method = new MethodInfo(cp, "equals", getEqualsDesc());
         method.setAccessFlags(AccessFlag.PUBLIC);
@@ -1844,11 +1844,12 @@ public class ProxyFactory {
         if (idBased) {
             sb.append("\treturn $0.$$_getId() != null && $0.$$_getId().equals(((").append(EntityViewProxy.class.getName()).append(") $1).$$_getId());\n");
         } else {
+            Class<?> viewClass = managedViewType.getJavaType();
             sb.append("\tfinal ").append(viewClass.getName()).append(" other = (").append(viewClass.getName()).append(") $1;\n");
 
             for (CtField field : fields) {
                 if (field.getType().isPrimitive()) {
-                    if (CtClass.booleanType == field.getType()) {
+                    if (CtClass.booleanType == field.getType() && managedViewType.getAttribute(field.getName()).getJavaMethod().getName().startsWith("is")) {
                         sb.append("\tif ($0.").append(field.getName()).append(" != other.is");
                         StringUtils.addFirstToUpper(sb, field.getName()).append("()");
                         sb.append(") {\n");
@@ -1858,12 +1859,21 @@ public class ProxyFactory {
                         sb.append(") {\n");
                     }
                 } else {
-                    sb.append("\tif ($0.").append(field.getName()).append(" != other.get");
-                    StringUtils.addFirstToUpper(sb, field.getName()).append("()");
-                    sb.append(" && ($0.").append(field.getName()).append(" == null");
-                    sb.append(" || !$0.").append(field.getName()).append(".equals(other.get");
-                    StringUtils.addFirstToUpper(sb, field.getName()).append("()");
-                    sb.append("))) {\n");
+                    if (Boolean.class.getName().equals(field.getType().getName()) && managedViewType.getAttribute(field.getName()).getJavaMethod().getName().startsWith("is")) {
+                        sb.append("\tif ($0.").append(field.getName()).append(" != other.is");
+                        StringUtils.addFirstToUpper(sb, field.getName()).append("()");
+                        sb.append(" && ($0.").append(field.getName()).append(" == null");
+                        sb.append(" || !$0.").append(field.getName()).append(".equals(other.is");
+                        StringUtils.addFirstToUpper(sb, field.getName()).append("()");
+                        sb.append("))) {\n");
+                    } else {
+                        sb.append("\tif ($0.").append(field.getName()).append(" != other.get");
+                        StringUtils.addFirstToUpper(sb, field.getName()).append("()");
+                        sb.append(" && ($0.").append(field.getName()).append(" == null");
+                        sb.append(" || !$0.").append(field.getName()).append(".equals(other.get");
+                        StringUtils.addFirstToUpper(sb, field.getName()).append("()");
+                        sb.append("))) {\n");
+                    }
                 }
                 sb.append("\t\treturn false;\n\t}\n");
             }
