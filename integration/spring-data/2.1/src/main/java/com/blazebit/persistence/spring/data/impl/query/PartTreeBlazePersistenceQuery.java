@@ -80,6 +80,6 @@ public class PartTreeBlazePersistenceQuery extends AbstractPartTreeBlazePersiste
 
     @Override
     protected ParameterBinder createCriteriaQueryParameterBinder(JpaParameters parameters, Object[] values, List<ParameterMetadataProvider.ParameterMetadata<?>> expressions) {
-        return new CriteriaQueryParameterBinder(parameters, values, expressions);
+        return new CriteriaQueryParameterBinder(getEntityManager(), evm, parameters, values, expressions);
     }
 }

@@ -91,7 +91,7 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
 
     private final AbstractPartTreeBlazePersistenceQuery.QueryPreparer query;
     private final CriteriaBuilderFactory cbf;
-    private final EntityViewManager evm;
+    protected final EntityViewManager evm;
 
     public AbstractPartTreeBlazePersistenceQuery(EntityViewAwareJpaQueryMethod method, EntityManager em, PersistenceProvider persistenceProvider, CriteriaBuilderFactory cbf, EntityViewManager evm) {
 

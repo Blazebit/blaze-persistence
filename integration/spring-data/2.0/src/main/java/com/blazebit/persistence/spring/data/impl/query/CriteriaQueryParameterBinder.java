@@ -20,7 +20,10 @@ import com.blazebit.persistence.spring.data.base.query.AbstractCriteriaQueryPara
 import com.blazebit.persistence.spring.data.base.query.JpaParameters;
 import com.blazebit.persistence.spring.data.base.query.ParameterMetadataProvider;
 import com.blazebit.persistence.spring.data.repository.KeysetPageable;
+import com.blazebit.persistence.view.EntityViewManager;
 import org.springframework.data.domain.Pageable;
+
+import javax.persistence.EntityManager;
 
 /**
  * Concrete version for Spring Data 2.x.
@@ -30,8 +33,8 @@ import org.springframework.data.domain.Pageable;
  */
 public class CriteriaQueryParameterBinder extends AbstractCriteriaQueryParameterBinder {
 
-    public CriteriaQueryParameterBinder(JpaParameters parameters, Object[] values, Iterable<ParameterMetadataProvider.ParameterMetadata<?>> expressions) {
-        super(parameters, values, expressions);
+    public CriteriaQueryParameterBinder(EntityManager em, EntityViewManager evm, JpaParameters parameters, Object[] values, Iterable<ParameterMetadataProvider.ParameterMetadata<?>> expressions) {
+        super(em, evm, parameters, values, expressions);
     }
 
     @Override
