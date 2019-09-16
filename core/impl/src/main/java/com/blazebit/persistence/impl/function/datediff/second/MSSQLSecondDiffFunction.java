@@ -14,16 +14,22 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.datetime.isoweek;
+package com.blazebit.persistence.impl.function.datediff.second;
+
+import com.blazebit.persistence.spi.FunctionRenderContext;
 
 /**
- *
- * @author Jan-Willem Gmelig Meyling
- * @since 1.4.0
+ * @author Moritz Becker
+ * @since 1.2.0
  */
-public class SQLServerIsoWeekFunction extends IsoWeekFunction {
+public class MSSQLSecondDiffFunction extends SecondDiffFunction {
 
-    public SQLServerIsoWeekFunction() {
-        super("datepart(isowk, convert(date, ?1))");
+    public MSSQLSecondDiffFunction() {
+        super("datediff(ss,?1,?2)");
+    }
+
+    @Override
+    protected void renderDiff(FunctionRenderContext context) {
+        renderer.start(context).addArgument(0).addArgument(1).build();
     }
 }

@@ -23,6 +23,6 @@ package com.blazebit.persistence.impl.function.datetime.epochday;
 public class DB2EpochDayFunction extends EpochDayFunction {
 
     public DB2EpochDayFunction() {
-        super("DAYS(cast(t1 as timestamp))-DAYS('1970-01-01'))");
+        super("DAYS(cast(?1 as timestamp))-DAYS('1970-01-01')");
     }
 }

@@ -14,22 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.datediff.second;
-
-import com.blazebit.persistence.spi.FunctionRenderContext;
+package com.blazebit.persistence.impl.function.datetime.dayofweek;
 
 /**
- * @author Moritz Becker
- * @since 1.2.0
+ *
+ * @author Jan-Willem Gmelig Meyling
+ * @since 1.4.0
  */
-public class SQLServerSecondDiffFunction extends SecondDiffFunction {
+public class MSSQLDayOfWeekFunction extends DayOfWeekFunction {
 
-    public SQLServerSecondDiffFunction() {
-        super("datediff(ss,?1,?2)");
-    }
-
-    @Override
-    protected void renderDiff(FunctionRenderContext context) {
-        renderer.start(context).addArgument(0).addArgument(1).build();
+    public MSSQLDayOfWeekFunction() {
+        super("datepart(dw, convert(date, ?1))");
     }
 }

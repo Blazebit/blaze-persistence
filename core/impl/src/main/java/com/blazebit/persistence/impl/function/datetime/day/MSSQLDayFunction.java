@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.datetime.microsecond;
+package com.blazebit.persistence.impl.function.datetime.day;
 
 /**
  *
- * @author Jan-Willem Gmelig Meyling
- * @since 1.4.0
+ * @author Christian Beikov
+ * @since 1.0.0
  */
-public class SQLServerMicrosecondFunction extends MicrosecondFunction {
+public class MSSQLDayFunction extends DayFunction {
 
-    public SQLServerMicrosecondFunction() {
-        super("datepart(mcs, convert(datetime, ?1))");
+    public MSSQLDayFunction() {
+        super("datepart(dd, convert(date, ?1))");
     }
 }

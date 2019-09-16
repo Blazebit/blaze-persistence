@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.datetime.month;
+package com.blazebit.persistence.impl.function.datetime.year;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.0.0
  */
-public class SQLServerMonthFunction extends MonthFunction {
+public class MSSQLYearFunction extends YearFunction {
 
-    public SQLServerMonthFunction() {
-        super("datepart(mm, convert(date, ?1))");
+    public MSSQLYearFunction() {
+        super("datepart(yy, convert(date, ?1))");
     }
 }

@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.dateadd.second;
 public class DB2SecondAddFunction extends SecondAddFunction {
 
     public DB2SecondAddFunction() {
-        super("?1 + (?2) SECOND");
+        super("cast(?1 as timestamp) + (?2) SECOND");
     }
 
 }

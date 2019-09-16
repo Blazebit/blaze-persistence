@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.dateadd.year;
 public class MSSQLYearAddFunction extends YearAddFunction {
 
     public MSSQLYearAddFunction() {
-        super("DATEADD(year, ?2, ?1)");
+        super("(select DATEADD(year, t2, t1) from (values (?1,?2)) as temp(t1, t2))");
     }
 
 }

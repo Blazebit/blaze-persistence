@@ -28,7 +28,7 @@ import com.blazebit.persistence.testsuite.base.jpa.cleaner.H2DatabaseCleaner;
 import com.blazebit.persistence.testsuite.base.jpa.cleaner.MySQLDatabaseCleaner;
 import com.blazebit.persistence.testsuite.base.jpa.cleaner.OracleDatabaseCleaner;
 import com.blazebit.persistence.testsuite.base.jpa.cleaner.PostgreSQLDatabaseCleaner;
-import com.blazebit.persistence.testsuite.base.jpa.cleaner.SQLServerDatabaseCleaner;
+import com.blazebit.persistence.testsuite.base.jpa.cleaner.MSSQLDatabaseCleaner;
 import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -95,7 +95,7 @@ public abstract class AbstractJpaPersistenceTest {
             new PostgreSQLDatabaseCleaner.Factory(),
             new DB2DatabaseCleaner.Factory(),
             new MySQLDatabaseCleaner.Factory(),
-            new SQLServerDatabaseCleaner.Factory(),
+            new MSSQLDatabaseCleaner.Factory(),
             new OracleDatabaseCleaner.Factory()
     );
 

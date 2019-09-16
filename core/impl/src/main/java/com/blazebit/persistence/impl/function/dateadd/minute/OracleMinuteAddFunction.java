@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.dateadd.minute;
 public class OracleMinuteAddFunction extends MinuteAddFunction {
 
     public OracleMinuteAddFunction() {
-        super("?1 + ?2 * INTERVAL '1' MINUTE");
+        super("cast(?1 as timestamp) + ?2 * INTERVAL '1' MINUTE");
     }
 
 }
