@@ -18,8 +18,8 @@ package com.blazebit.persistence.impl.function.datediff.microsecond;
 
 /**
  *
- * @author Moritz Becker
- * @since 1.2.0
+ * @author Jan-Willem Gmelig Meyling
+ * @since 1.4.0
  */
 public class MySQLMicrosecondDiffFunction extends MicrosecondDiffFunction {
 

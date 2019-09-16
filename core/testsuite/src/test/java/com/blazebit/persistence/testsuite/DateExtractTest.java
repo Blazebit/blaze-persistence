@@ -31,12 +31,11 @@ import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 import javax.sql.DataSource;
 
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.entity.Document;
@@ -53,6 +52,10 @@ import org.junit.runners.Parameterized;
  */
 @RunWith(Parameterized.class)
 public class DateExtractTest extends AbstractCoreTest {
+
+    // The previous timezones so we can cache the datasources for one configuration run
+    private static TimeZone previousProducerTimeZone;
+    private static TimeZone previousClientTimeZone;
 
     private static final TimeZone dbmsTimeZone = TimeZone.getDefault();
     private Calendar c1;
@@ -89,7 +92,12 @@ public class DateExtractTest extends AbstractCoreTest {
 
     @Override
     protected boolean recreateDataSource() {
-        return true;
+        // Some drivers have timezone information bound to the connection
+        // So we have to recreate the data source to get the newly configured time zones for connections
+        boolean recreate = previousProducerTimeZone != null && previousClientTimeZone != null && (!producerTimeZone.equals(previousProducerTimeZone) || !clientTimeZone.equals(previousClientTimeZone));
+        previousProducerTimeZone = producerTimeZone;
+        previousClientTimeZone = clientTimeZone;
+        return recreate;
     }
 
     @Override
@@ -118,6 +126,13 @@ public class DateExtractTest extends AbstractCoreTest {
         lastModified = Calendar.getInstance();
         lastModified.setMinimalDaysInFirstWeek(4);
         lastModified.setFirstDayOfWeek(Calendar.MONDAY);
+    }
+
+    @After
+    public void tearDown() {
+        // Back to the produce time zone like after recreation of the data source
+        TimeZone.setDefault(producerTimeZone);
+        resetTimeZoneCaches();
     }
 
     @Override
@@ -426,7 +441,6 @@ public class DateExtractTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category(NoOracle.class) // Supported according to docs, but not on version available on CI
     public void testDateExtractMillisecond() {
         // Set the client timezone
         TimeZone.setDefault(clientTimeZone);
@@ -452,7 +466,6 @@ public class DateExtractTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category(NoOracle.class) // Oracle does not support microsecond extraction
     public void testDateExtractMicrosecond() {
         // Set the client timezone
         TimeZone.setDefault(clientTimeZone);

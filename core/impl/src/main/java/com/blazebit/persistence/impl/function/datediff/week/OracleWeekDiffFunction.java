@@ -23,6 +23,6 @@ package com.blazebit.persistence.impl.function.datediff.week;
 public class OracleWeekDiffFunction extends WeekDiffFunction {
 
     public OracleWeekDiffFunction() {
-        super("(select sign(i1) * floor(abs(i1)) from (values (trunc(-(cast(?1 as date) - cast(?2 as date))) / 7)) as temp(i1))");
+        super("trunc(-(cast(?1 as date) - cast(?2 as date))/7)");
     }
 }

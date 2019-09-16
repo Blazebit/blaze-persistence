@@ -23,6 +23,6 @@ package com.blazebit.persistence.impl.function.datediff.quarter;
 public class H2QuarterDiffFunction extends QuarterDiffFunction {
 
     public H2QuarterDiffFunction() {
-        super("cast((datediff(mm, ?1, ?2) / 3) as int)");
+        super("cast((datediff(mm, ?1, ?2) / 3) as bigint)");
     }
 }

@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.datediff.week;
+package com.blazebit.persistence.impl.function.datetime.microsecond;
 
 /**
  * @author Jan-Willem Gmelig Meyling
  * @since 1.4.0
  */
-public class MSSQLWeekDiffFunction extends WeekDiffFunction {
+public class OracleMicrosecondFunction extends MicrosecondFunction {
 
-    public MSSQLWeekDiffFunction() {
-        super("round(datediff(dd, ?1, ?2)/7,0,1)");
+    public OracleMicrosecondFunction() {
+        super("to_number(to_char(cast(?1 as timestamp),'FF'))");
     }
-
 }

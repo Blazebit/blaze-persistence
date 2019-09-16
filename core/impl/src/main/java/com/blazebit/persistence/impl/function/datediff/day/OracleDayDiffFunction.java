@@ -16,8 +16,6 @@
 
 package com.blazebit.persistence.impl.function.datediff.day;
 
-import com.blazebit.persistence.spi.FunctionRenderContext;
-
 /**
  *
  * @author Christian Beikov
@@ -27,10 +25,5 @@ public class OracleDayDiffFunction extends DayDiffFunction {
 
     public OracleDayDiffFunction() {
         super("trunc(-(cast(?1 as date) - cast(?2 as date)))");
-    }
-
-    @Override
-    protected void renderDiff(FunctionRenderContext context) {
-        renderer.start(context).addArgument(0).addArgument(1).build();
     }
 }

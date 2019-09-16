@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.datediff.week;
 public class H2WeekDiffFunction extends WeekDiffFunction {
 
     public H2WeekDiffFunction() {
-        super("cast((datediff(dd, ?1, ?2) / 7) as int)");
+        super("cast((datediff(dd, ?1, ?2) / 7) as bigint)");
     }
 
 }

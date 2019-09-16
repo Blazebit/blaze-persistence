@@ -222,16 +222,16 @@ Calculates the difference between the two given temporals like `end - start` and
 
 The possible units and the respective function names are:
 
-* *Microsecond* - `MICROSECOND_DIFF`
-* *Millisecond* - `MILLISECOND_DIFF`
-* *Second* - `SECOND_DIFF` or `EPOCH_DIFF`
-* *Minute* - `MINUTE_DIFF`
-* *Hour* - `HOUR_DIFF`
-* *Day* - `DAY_DIFF`
-* *Week* - `WEEK_DIFF`
-* *Month* - `MONTH_DIFF`
-* *Quarter* - `QUARTER_DIFF`
-* *Year* - `YEAR_DIFF`
+* *Microsecond* - `MICROSECOND_DIFF` - Extract 'EPOCH_MICROSECOND' and subtract
+* *Millisecond* - `MILLISECOND_DIFF` - Extract 'EPOCH_MILLISECOND' and subtract
+* *Second* - `SECOND_DIFF` or `EPOCH_DIFF` - Extract 'EPOCH' and subtract
+* *Minute* - `MINUTE_DIFF` - Extract 'EPOCH' and subtract divided by 60
+* *Hour* - `HOUR_DIFF` - Extract 'EPOCH' and subtract divided by 60 * 60
+* *Day* - `DAY_DIFF` - Extract days and subtract
+* *Week* - `WEEK_DIFF` - Extract days and subtract dived by 7
+* *Month* - `MONTH_DIFF` - Extract months and subtract
+* *Quarter* - `QUARTER_DIFF` - Extract months and subtract divided by 3
+* *Year* - `YEAR_DIFF` - Extract months and subtract divided by 12
 
 If `end < start` i.e. the value of `end` is before `start`, the result is negative. You are advised to explicitly handle this case or use the `ABS` function.
 
@@ -250,7 +250,7 @@ The possible fields and the respective function names are:
 * *Hour* - `HOUR`
 * *Day* - `DAY`
 * *Day of week* - `DAYOFWEEK` -  an integer between 1 (Monday) and 7 (Sunday)
-* *Day of year* - `DAYOFYEAR`
+* *Day of year* - `DAYOFYEAR` - an integer between 1 and 366
 * *Week* - `WEEK` or `ISO_WEEK` - an integer between 1 and 53
 * *Year week* - `YEAR_WEEK` - a string with the format `IYYY-IW`
 * *Week of year* - `WEEK_OF_YEAR`

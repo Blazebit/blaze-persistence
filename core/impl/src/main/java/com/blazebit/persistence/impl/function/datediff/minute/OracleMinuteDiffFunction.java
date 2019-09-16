@@ -32,6 +32,7 @@ public class OracleMinuteDiffFunction extends MinuteDiffFunction {
 
     public OracleMinuteDiffFunction() {
         super("(extract(day from cast(?2 as timestamp) - cast(?1 as timestamp)) * " + (24 * 60) + " + extract(hour from cast(?2 as timestamp) - cast(?1 as timestamp)) * 60 + extract(minute from cast(?2 as timestamp) - cast(?1 as timestamp)))");
+        // TODO: When parameters are part of more complex expressions this won't work, but we don't care about that for now
         this.bothParamRenderer = new TemplateRenderer("(select extract(day from t2 - t1) * " + (24 * 60) + " + extract(hour from t2 - t1) * 60 + extract(minute from t2 - t1) from (select cast(?1 as timestamp) as t1, cast(?2 as timestamp) as t2 from dual))");
         this.firstParamRenderer = new TemplateRenderer("(select extract(day from cast(?2 as timestamp) - t1) * " + (24 * 60) + " + extract(hour from cast(?2 as timestamp) - t1) * 60 + extract(minute from cast(?2 as timestamp) - t1) from (select cast(?1 as timestamp) as t1 from dual))");
         this.secondParamRenderer = new TemplateRenderer("(select extract(day from t2 - cast(?1 as timestamp)) * " + (24 * 60) + " + extract(hour from t2 - cast(?1 as timestamp)) * 60 + extract(minute from t2 - cast(?1 as timestamp)) from (select cast(?2 as timestamp) as t2 from dual))");
