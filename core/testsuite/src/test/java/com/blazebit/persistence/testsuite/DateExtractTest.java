@@ -173,8 +173,8 @@ public class DateExtractTest extends AbstractCoreTest {
 
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
             .from(Document.class, "doc")
-            .select("FUNCTION('YEAR',   creationDate)")
-            .select("FUNCTION('YEAR',   lastModified)")
+            .select("YEAR(creationDate)")
+            .select("YEAR(lastModified)")
             ;
 
         List<Tuple> list = criteria.getResultList();
@@ -194,8 +194,8 @@ public class DateExtractTest extends AbstractCoreTest {
 
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
             .from(Document.class, "doc")
-            .select("FUNCTION('YEAR_OF_WEEK',   creationDate)")
-            .select("FUNCTION('YEAR_OF_WEEK',   lastModified)")
+            .select("YEAR_OF_WEEK(creationDate)")
+            .select("YEAR_OF_WEEK(lastModified)")
             ;
 
         List<Tuple> list = criteria.getResultList();
@@ -215,8 +215,8 @@ public class DateExtractTest extends AbstractCoreTest {
 
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
             .from(Document.class, "doc")
-            .select("FUNCTION('YEAR_WEEK',   creationDate)")
-            .select("FUNCTION('YEAR_WEEK',   lastModified)")
+            .select("YEAR_WEEK(creationDate)")
+            .select("YEAR_WEEK(lastModified)")
             ;
 
         List<Tuple> list = criteria.getResultList();
@@ -236,8 +236,8 @@ public class DateExtractTest extends AbstractCoreTest {
 
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
                 .from(Document.class, "doc")
-                .select("FUNCTION('MONTH',   creationDate)")
-                .select("FUNCTION('MONTH',   lastModified)")
+                .select("MONTH(creationDate)")
+                .select("MONTH(lastModified)")
                 ;
 
         List<Tuple> list = criteria.getResultList();
@@ -257,8 +257,8 @@ public class DateExtractTest extends AbstractCoreTest {
 
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
                 .from(Document.class, "doc")
-                .select("FUNCTION('DAY',   creationDate)")
-                .select("FUNCTION('DAY',   lastModified)")
+                .select("DAY(creationDate)")
+                .select("DAY(lastModified)")
                 ;
 
         List<Tuple> list = criteria.getResultList();
@@ -279,8 +279,8 @@ public class DateExtractTest extends AbstractCoreTest {
 
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
                 .from(Document.class, "doc")
-                .select("FUNCTION('WEEK',   creationDate)")
-                .select("FUNCTION('WEEK',   lastModified)")
+                .select("WEEK(creationDate)")
+                .select("WEEK(lastModified)")
                 ;
 
         List<Tuple> list = criteria.getResultList();
@@ -300,8 +300,8 @@ public class DateExtractTest extends AbstractCoreTest {
 
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
                 .from(Document.class, "doc")
-                .select("FUNCTION('WEEK_IN_YEAR',   creationDate)")
-                .select("FUNCTION('WEEK_IN_YEAR',   lastModified)")
+                .select("WEEK_IN_YEAR(creationDate)")
+                .select("WEEK_IN_YEAR(lastModified)")
                 ;
 
         List<Tuple> list = criteria.getResultList();
@@ -321,8 +321,8 @@ public class DateExtractTest extends AbstractCoreTest {
 
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
                 .from(Document.class, "doc")
-                .select("FUNCTION('DAYOFYEAR',   creationDate)")
-                .select("FUNCTION('DAYOFYEAR',   lastModified)")
+                .select("DAYOFYEAR(creationDate)")
+                .select("DAYOFYEAR(lastModified)")
                 ;
 
         List<Tuple> list = criteria.getResultList();
@@ -343,8 +343,8 @@ public class DateExtractTest extends AbstractCoreTest {
 
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
                 .from(Document.class, "doc")
-                .select("FUNCTION('DAYOFWEEK',   creationDate)")
-                .select("FUNCTION('DAYOFWEEK',   lastModified)")
+                .select("DAYOFWEEK(creationDate)")
+                .select("DAYOFWEEK(lastModified)")
                 ;
 
         List<Tuple> list = criteria.getResultList();
@@ -364,8 +364,8 @@ public class DateExtractTest extends AbstractCoreTest {
 
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
                 .from(Document.class, "doc")
-                .select("FUNCTION('QUARTER',   creationDate)")
-                .select("FUNCTION('QUARTER',   lastModified)")
+                .select("QUARTER(creationDate)")
+                .select("QUARTER(lastModified)")
                 ;
 
         List<Tuple> list = criteria.getResultList();
@@ -385,8 +385,8 @@ public class DateExtractTest extends AbstractCoreTest {
 
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
                 .from(Document.class, "doc")
-                .select("FUNCTION('HOUR',   creationDate)")
-                .select("FUNCTION('HOUR',   lastModified)")
+                .select("HOUR(creationDate)")
+                .select("HOUR(lastModified)")
                 ;
 
         List<Tuple> list = criteria.getResultList();
@@ -406,8 +406,8 @@ public class DateExtractTest extends AbstractCoreTest {
 
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
                 .from(Document.class, "doc")
-                .select("FUNCTION('MINUTE',   creationDate)")
-                .select("FUNCTION('MINUTE',   lastModified)")
+                .select("MINUTE(creationDate)")
+                .select("MINUTE(lastModified)")
                 ;
 
         List<Tuple> list = criteria.getResultList();
@@ -427,8 +427,8 @@ public class DateExtractTest extends AbstractCoreTest {
 
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
                 .from(Document.class, "doc")
-                .select("FUNCTION('SECOND',   creationDate)")
-                .select("FUNCTION('SECOND',   lastModified)")
+                .select("SECOND(creationDate)")
+                .select("SECOND(lastModified)")
                 ;
 
         List<Tuple> list = criteria.getResultList();
@@ -448,8 +448,8 @@ public class DateExtractTest extends AbstractCoreTest {
 
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
                 .from(Document.class, "doc")
-                .select("FUNCTION('MILLISECOND',   creationDate)")
-                .select("FUNCTION('MILLISECOND',   lastModified)")
+                .select("MILLISECOND(creationDate)")
+                .select("MILLISECOND(lastModified)")
                 .select("lastModified")
                 ;
 
@@ -473,8 +473,8 @@ public class DateExtractTest extends AbstractCoreTest {
 
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
                 .from(Document.class, "doc")
-                .select("FUNCTION('MICROSECOND',   creationDate)")
-                .select("FUNCTION('MICROSECOND',   lastModified)")
+                .select("MICROSECOND(creationDate)")
+                .select("MICROSECOND(lastModified)")
                 .select("lastModified")
                 ;
 
@@ -498,8 +498,8 @@ public class DateExtractTest extends AbstractCoreTest {
 
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
                 .from(Document.class, "doc")
-                .select("FUNCTION('EPOCH',   creationDate)")
-                .select("FUNCTION('EPOCH',   lastModified)")
+                .select("EPOCH(creationDate)")
+                .select("EPOCH(lastModified)")
                 ;
 
         List<Tuple> list = criteria.getResultList();
@@ -521,8 +521,8 @@ public class DateExtractTest extends AbstractCoreTest {
 
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
                 .from(Document.class, "doc")
-                .select("FUNCTION('EPOCH_SECONDS',   creationDate)")
-                .select("FUNCTION('EPOCH_SECONDS',   lastModified)")
+                .select("EPOCH_SECONDS(creationDate)")
+                .select("EPOCH_SECONDS(lastModified)")
                 ;
 
         List<Tuple> list = criteria.getResultList();
@@ -534,6 +534,75 @@ public class DateExtractTest extends AbstractCoreTest {
         int offsetInMillis2 = producerTimeZone.getOffset(c2.getTimeInMillis());
         assertEquals((int) (c1.getTimeInMillis() / 1000L), (int) actual.get(0) - (offsetInMillis1 / 1000L));
         assertEquals((int) (c2.getTimeInMillis() / 1000L), (int) actual.get(1) - (offsetInMillis2 / 1000L));
+    }
+
+    @Test
+    public void testDateExtractEpochDays() {
+        // Set the client timezone
+        TimeZone.setDefault(clientTimeZone);
+        resetTimeZoneCaches();
+
+        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
+                .from(Document.class, "doc")
+                .select("EPOCH_DAYS(creationDate)")
+                .select("EPOCH_DAYS(lastModified)")
+                ;
+
+        List<Tuple> list = criteria.getResultList();
+        assertEquals(1, list.size());
+
+        Tuple actual = list.get(0);
+
+        assertEquals((int) ((c1.getTimeInMillis() / (1000L * 60L * 60L * 24L) - (producerTimeZone.getOffset(c1.getTimeInMillis()) > clientTimeZone.getOffset(c1.getTimeInMillis()) ? 1 : 0))), (int) actual.get(0, Integer.class));
+        assertEquals((int) ((c2.getTimeInMillis() / (1000L * 60L * 60L * 24L) - (producerTimeZone.getOffset(c2.getTimeInMillis()) > clientTimeZone.getOffset(c2.getTimeInMillis()) ? 1 : 0))), (int) actual.get(1, Integer.class));
+    }
+
+    @Test
+    public void testDateExtractEpochMilliseconds() {
+        // Set the client timezone
+        TimeZone.setDefault(clientTimeZone);
+        resetTimeZoneCaches();
+
+        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
+                .from(Document.class, "doc")
+                .select("EPOCH_MILLISECONDS(creationDate)")
+                .select("EPOCH_MILLISECONDS(lastModified)")
+                ;
+
+        List<Tuple> list = criteria.getResultList();
+        assertEquals(1, list.size());
+
+        Tuple actual = list.get(0);
+
+        int offsetInMillis1 = producerTimeZone.getOffset(c1.getTimeInMillis());
+        int offsetInMillis2 = producerTimeZone.getOffset(c2.getTimeInMillis());
+        // A date has no fractional part
+        assertEquals(((long) (c1.getTimeInMillis() / 1000L)) * 1000L, actual.get(0, Long.class) - offsetInMillis1);
+        assertEquals(c2.getTimeInMillis(), actual.get(1, Long.class) - offsetInMillis2);
+    }
+
+    @Test
+    public void testDateExtractEpochMicroseconds() {
+        // Set the client timezone
+        TimeZone.setDefault(clientTimeZone);
+        resetTimeZoneCaches();
+
+        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
+                .from(Document.class, "doc")
+                .select("EPOCH_MICROSECONDS(ADD_MICROSECONDS(creationDate, 1))")
+                .select("EPOCH_MICROSECONDS(ADD_MICROSECONDS(lastModified, 1))")
+                ;
+
+        List<Tuple> list = criteria.getResultList();
+        assertEquals(1, list.size());
+
+        Tuple actual = list.get(0);
+
+        int offsetInMillis1 = producerTimeZone.getOffset(c1.getTimeInMillis());
+        int offsetInMillis2 = producerTimeZone.getOffset(c2.getTimeInMillis());
+        // A date has no fractional part
+        assertEquals(((long) (c1.getTimeInMillis() / 1000L)) * 1000000L + 1L, actual.get(0, Long.class) - offsetInMillis1 * 1000L + 1L);
+        assertEquals(c2.getTimeInMillis() * 1000L + 1L, actual.get(1, Long.class) - offsetInMillis2 * 1000L);
     }
 
 }

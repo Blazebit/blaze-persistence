@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.datetime.microsecond;
+package com.blazebit.persistence.impl.function.datetime.epochday;
 
 /**
- * @author Jan-Willem Gmelig Meyling
- * @since 1.4.0
+ * @author Moritz Becker
+ * @since 1.2.0
  */
-public class OracleMicrosecondFunction extends MicrosecondFunction {
+public class MySQLEpochDayFunction extends EpochDayFunction {
 
-    public OracleMicrosecondFunction() {
-        super("to_number(to_char(cast(?1 as timestamp),'FF6'))");
+    public MySQLEpochDayFunction() {
+        super("unix_timestamp(?1) / " + (24 * 60 * 60));
     }
 }
