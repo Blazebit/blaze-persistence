@@ -17,8 +17,8 @@
 package com.blazebit.persistence.impl.function.datetime.epochmilli;
 
 /**
- * @author Moritz Becker
- * @since 1.2.0
+ * @author Christian Beikov
+ * @since 1.4.0
  */
 public class DefaultEpochMillisecondFunction extends EpochMillisecondFunction {
     public DefaultEpochMillisecondFunction() {

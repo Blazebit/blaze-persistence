@@ -20,8 +20,8 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.TemplateRenderer;
 
 /**
- * @author Moritz Becker
- * @since 1.2.0
+ * @author Christian Beikov
+ * @since 1.4.0
  */
 public class OracleEpochMillisecondFunction extends EpochMillisecondFunction {
 

@@ -553,8 +553,8 @@ public class DateExtractTest extends AbstractCoreTest {
 
         Tuple actual = list.get(0);
 
-        assertEquals((int) ((c1.getTimeInMillis() / (1000L * 60L * 60L * 24L) - (producerTimeZone.getOffset(c1.getTimeInMillis()) > clientTimeZone.getOffset(c1.getTimeInMillis()) ? 1 : 0))), (int) actual.get(0, Integer.class));
-        assertEquals((int) ((c2.getTimeInMillis() / (1000L * 60L * 60L * 24L) - (producerTimeZone.getOffset(c2.getTimeInMillis()) > clientTimeZone.getOffset(c2.getTimeInMillis()) ? 1 : 0))), (int) actual.get(1, Integer.class));
+        assertEquals((int) (((c1.getTimeInMillis() + producerTimeZone.getOffset(c1.getTimeInMillis())) / (1000L * 60L * 60L * 24L))), (int) actual.get(0, Integer.class));
+        assertEquals((int) (((c2.getTimeInMillis() + producerTimeZone.getOffset(c2.getTimeInMillis())) / (1000L * 60L * 60L * 24L))), (int) actual.get(1, Integer.class));
     }
 
     @Test
@@ -600,8 +600,8 @@ public class DateExtractTest extends AbstractCoreTest {
 
         int offsetInMillis1 = producerTimeZone.getOffset(c1.getTimeInMillis());
         int offsetInMillis2 = producerTimeZone.getOffset(c2.getTimeInMillis());
-        // A date has no fractional part
-        assertEquals(((long) (c1.getTimeInMillis() / 1000L)) * 1000000L + 1L, actual.get(0, Long.class) - offsetInMillis1 * 1000L + 1L);
+        // Hours, minutes, seconds, milliseconds were lost in calendar to date conversion, only check whether the epoch ends with a 1.
+        assertEquals(actual.get(0, Long.class) & 1L, 1L);
         assertEquals(c2.getTimeInMillis() * 1000L + 1L, actual.get(1, Long.class) - offsetInMillis2 * 1000L);
     }
 

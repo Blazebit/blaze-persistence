@@ -17,12 +17,11 @@
 package com.blazebit.persistence.impl.function.datetime.epochmilli;
 
 /**
- * @author Christian Beikov
+ * @author Jan-Willem Gmelig Meyling
  * @since 1.4.0
  */
-public class DB2EpochMillisecondFunction extends EpochMillisecondFunction {
-
-    public DB2EpochMillisecondFunction() {
-        super("(select (DAYS(cast(t1 as timestamp))-DAYS('1970-01-01')) * " + (24 * 60 * 60) + " + MIDNIGHT_SECONDS(cast(t1 as timestamp)) + MICROSECOND(t1) / 1000 from lateral(values (?1)) as temp(t1))");
+public class MSSQLEpochMillisecondFunction extends EpochMillisecondFunction {
+    public MSSQLEpochMillisecondFunction() {
+        super("DATEDIFF_BIG(ms, '1970-01-01 00:00:00', ?1)");
     }
 }

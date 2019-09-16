@@ -17,12 +17,12 @@
 package com.blazebit.persistence.impl.function.datetime.epochmilli;
 
 /**
- * @author Moritz Becker
- * @since 1.2.0
+ * @author Christian Beikov
+ * @since 1.4.0
  */
 public class PostgreSQLEpochMillisecondFunction extends EpochMillisecondFunction {
 
     public PostgreSQLEpochMillisecondFunction() {
-        super("-cast(trunc(date_part('epoch', (?1)::timestamp - DATE '1970-01-01') * 1000) as bigint)");
+        super("cast(trunc(date_part('epoch', (?1)::timestamp - DATE '1970-01-01') * 1000) as bigint)");
     }
 }
