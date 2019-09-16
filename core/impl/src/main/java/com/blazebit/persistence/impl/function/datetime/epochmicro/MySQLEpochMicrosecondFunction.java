@@ -17,12 +17,12 @@
 package com.blazebit.persistence.impl.function.datetime.epochmicro;
 
 /**
- * @author Moritz Becker
- * @since 1.2.0
+ * @author Christian Beikov
+ * @since 1.4.0
  */
 public class MySQLEpochMicrosecondFunction extends EpochMicrosecondFunction {
 
     public MySQLEpochMicrosecondFunction() {
-        super("TIMESTAMPDIFF(MICROSECOND, ?1, '1970-01-01')");
+        super("TIMESTAMPDIFF(MICROSECOND, '1970-01-01', ?1)");
     }
 }

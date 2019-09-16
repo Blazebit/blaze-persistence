@@ -140,11 +140,13 @@ import com.blazebit.persistence.impl.function.datetime.epochday.OracleEpochDayFu
 import com.blazebit.persistence.impl.function.datetime.epochday.PostgreSQLEpochDayFunction;
 import com.blazebit.persistence.impl.function.datetime.epochmicro.DB2EpochMicrosecondFunction;
 import com.blazebit.persistence.impl.function.datetime.epochmicro.DefaultEpochMicrosecondFunction;
+import com.blazebit.persistence.impl.function.datetime.epochmicro.MSSQLEpochMicrosecondFunction;
 import com.blazebit.persistence.impl.function.datetime.epochmicro.MySQLEpochMicrosecondFunction;
 import com.blazebit.persistence.impl.function.datetime.epochmicro.OracleEpochMicrosecondFunction;
 import com.blazebit.persistence.impl.function.datetime.epochmicro.PostgreSQLEpochMicrosecondFunction;
 import com.blazebit.persistence.impl.function.datetime.epochmilli.DB2EpochMillisecondFunction;
 import com.blazebit.persistence.impl.function.datetime.epochmilli.DefaultEpochMillisecondFunction;
+import com.blazebit.persistence.impl.function.datetime.epochmilli.MSSQLEpochMillisecondFunction;
 import com.blazebit.persistence.impl.function.datetime.epochmilli.MySQLEpochMillisecondFunction;
 import com.blazebit.persistence.impl.function.datetime.epochmilli.OracleEpochMillisecondFunction;
 import com.blazebit.persistence.impl.function.datetime.epochmilli.PostgreSQLEpochMillisecondFunction;
@@ -825,6 +827,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup = new JpqlFunctionGroup("epoch_milliseconds", false);
         jpqlFunctionGroup.add(null, new DefaultEpochMillisecondFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLEpochMillisecondFunction());
+        jpqlFunctionGroup.add("microsoft", new MSSQLEpochMillisecondFunction());
         jpqlFunctionGroup.add("oracle", new OracleEpochMillisecondFunction());
         jpqlFunctionGroup.add("db2", new DB2EpochMillisecondFunction());
         jpqlFunctionGroup.add("mysql", new MySQLEpochMillisecondFunction());
@@ -834,6 +837,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup = new JpqlFunctionGroup("epoch_microseconds", false);
         jpqlFunctionGroup.add(null, new DefaultEpochMicrosecondFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLEpochMicrosecondFunction());
+        jpqlFunctionGroup.add("microsoft", new MSSQLEpochMicrosecondFunction());
         jpqlFunctionGroup.add("oracle", new OracleEpochMicrosecondFunction());
         jpqlFunctionGroup.add("db2", new DB2EpochMicrosecondFunction());
         jpqlFunctionGroup.add("mysql", new MySQLEpochMicrosecondFunction());
