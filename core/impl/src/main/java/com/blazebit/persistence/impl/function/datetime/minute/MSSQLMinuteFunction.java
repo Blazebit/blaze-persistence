@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.datetime.dayofweek;
+package com.blazebit.persistence.impl.function.datetime.minute;
 
 /**
  *
- * @author Jan-Willem Gmelig Meyling
- * @since 1.4.0
+ * @author Christian Beikov
+ * @since 1.0.0
  */
-public class SQLServerDayOfWeekFunction extends DayOfWeekFunction {
+public class MSSQLMinuteFunction extends MinuteFunction {
 
-    public SQLServerDayOfWeekFunction() {
-        super("datepart(dw, convert(date, ?1))");
+    public MSSQLMinuteFunction() {
+        super("datepart(mi, convert(datetime, ?1))");
     }
 }

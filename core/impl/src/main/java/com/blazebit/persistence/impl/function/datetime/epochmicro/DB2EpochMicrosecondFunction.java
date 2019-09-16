@@ -23,6 +23,6 @@ package com.blazebit.persistence.impl.function.datetime.epochmicro;
 public class DB2EpochMicrosecondFunction extends EpochMicrosecondFunction {
 
     public DB2EpochMicrosecondFunction() {
-        super("(select ((DAYS(cast(t1 as timestamp))-DAYS('1970-01-01')) * " + (24 * 60 * 60) + " + MIDNIGHT_SECONDS(cast(t1 as timestamp))) * 1000 + MICROSECOND(t1) from lateral(values (?1)) as temp(t1))");
+        super("(select (cast(DAYS(cast(t1 as timestamp))-DAYS('1970-01-01') as bigint) * " + (24L * 60L * 60L * 1000000L) + " + cast(MIDNIGHT_SECONDS(cast(t1 as timestamp)) as bigint) * 1000000) + MICROSECOND(t1) from lateral(values (cast(?1 as timestamp))) as temp(t1))");
     }
 }

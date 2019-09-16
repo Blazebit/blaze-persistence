@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.datetime.week;
+package com.blazebit.persistence.impl.function.datetime.quarter;
 
 /**
  *
  * @author Jan-Willem Gmelig Meyling
  * @since 1.4.0
  */
-public class SQLServerWeekInYearFunction extends WeekInYearFunction {
+public class MSSQLQuarterFunction extends QuarterFunction {
 
-    public SQLServerWeekInYearFunction() {
-        super("floor((6 + datepart(dy, convert(date, ?1))) / 7)");
+    public MSSQLQuarterFunction() {
+        super("datepart(q, convert(date, ?1))");
     }
 }

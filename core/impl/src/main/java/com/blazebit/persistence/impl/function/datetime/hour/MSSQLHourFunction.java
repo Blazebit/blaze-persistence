@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.datetime.dayofyear;
+package com.blazebit.persistence.impl.function.datetime.hour;
 
 /**
  *
- * @author Jan-Willem Gmelig Meyling
- * @since 1.4.0
+ * @author Christian Beikov
+ * @since 1.0.0
  */
-public class SQLServerDayOfYearFunction extends DayOfYearFunction {
+public class MSSQLHourFunction extends HourFunction {
 
-    public SQLServerDayOfYearFunction() {
-        super("datepart(dy, convert(date, ?1))");
+    public MSSQLHourFunction() {
+        super("datepart(hh, convert(datetime, ?1))");
     }
 }

@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.dateadd.week;
 public class MSSQLWeekAddFunction extends WeekAddFunction {
 
     public MSSQLWeekAddFunction() {
-        super("DATEADD(week, ?2, ?1)");
+        super("(select DATEADD(week, t2, t1) from (values (?1,?2)) as temp(t1, t2))");
     }
 
 }

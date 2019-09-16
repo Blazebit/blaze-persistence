@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.datetime.quarter;
+package com.blazebit.persistence.impl.function.datetime.dayofyear;
 
 /**
  *
  * @author Jan-Willem Gmelig Meyling
  * @since 1.4.0
  */
-public class SQLServerQuarterFunction extends QuarterFunction {
+public class MSSQLDayOfYearFunction extends DayOfYearFunction {
 
-    public SQLServerQuarterFunction() {
-        super("datepart(q, convert(date, ?1))");
+    public MSSQLDayOfYearFunction() {
+        super("datepart(dy, convert(date, ?1))");
     }
 }

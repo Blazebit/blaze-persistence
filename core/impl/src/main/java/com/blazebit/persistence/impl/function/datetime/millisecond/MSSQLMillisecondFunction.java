@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.datetime.minute;
+package com.blazebit.persistence.impl.function.datetime.millisecond;
 
 /**
  *
- * @author Christian Beikov
- * @since 1.0.0
+ * @author Jan-Willem Gmelig Meyling
+ * @since 1.4.0
  */
-public class SQLServerMinuteFunction extends MinuteFunction {
+public class MSSQLMillisecondFunction extends MillisecondFunction {
 
-    public SQLServerMinuteFunction() {
-        super("datepart(mi, convert(datetime, ?1))");
+    public MSSQLMillisecondFunction() {
+        super("datepart(millisecond, convert(datetime, ?1))");
     }
 }

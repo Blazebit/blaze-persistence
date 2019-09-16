@@ -30,9 +30,9 @@ import java.util.logging.Logger;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class SQLServerDatabaseCleaner implements DatabaseCleaner {
+public class MSSQLDatabaseCleaner implements DatabaseCleaner {
 
-    private static final Logger LOG = Logger.getLogger(SQLServerDatabaseCleaner.class.getName());
+    private static final Logger LOG = Logger.getLogger(MSSQLDatabaseCleaner.class.getName());
 
     private List<String> ignoredTables = new ArrayList<>();
     private List<String> cachedTableNames;
@@ -41,7 +41,7 @@ public class SQLServerDatabaseCleaner implements DatabaseCleaner {
 
         @Override
         public DatabaseCleaner create() {
-            return new SQLServerDatabaseCleaner();
+            return new MSSQLDatabaseCleaner();
         }
 
     }

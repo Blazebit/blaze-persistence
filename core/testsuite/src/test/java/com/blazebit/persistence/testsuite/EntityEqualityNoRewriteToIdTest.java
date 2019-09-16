@@ -18,6 +18,7 @@ package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus4;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
@@ -52,6 +53,7 @@ public class EntityEqualityNoRewriteToIdTest extends AbstractCoreTest {
     }
 
     @Test
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoDatanucleus4.class })
     public void neverRewriteEntityAssociationEqualsEntityInOnIfSupported1() {
         CriteriaBuilder<Person> criteria = cbf.create(em, Person.class, "p");
         criteria.innerJoinOn(Document.class,"correlated_ownedDocuments")
@@ -65,6 +67,7 @@ public class EntityEqualityNoRewriteToIdTest extends AbstractCoreTest {
     }
 
     @Test
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoDatanucleus4.class })
     public void neverRewriteEntityAssociationEqualsEntityInOnIfSupported2() {
         CriteriaBuilder<Person> criteria = cbf.create(em, Person.class, "p");
         criteria.select("correlated_ownedDocuments.owner.name");

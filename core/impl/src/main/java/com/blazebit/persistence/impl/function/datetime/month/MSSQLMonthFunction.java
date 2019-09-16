@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.datetime.day;
+package com.blazebit.persistence.impl.function.datetime.month;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.0.0
  */
-public class SQLServerDayFunction extends DayFunction {
+public class MSSQLMonthFunction extends MonthFunction {
 
-    public SQLServerDayFunction() {
-        super("datepart(dd, convert(date, ?1))");
+    public MSSQLMonthFunction() {
+        super("datepart(mm, convert(date, ?1))");
     }
 }

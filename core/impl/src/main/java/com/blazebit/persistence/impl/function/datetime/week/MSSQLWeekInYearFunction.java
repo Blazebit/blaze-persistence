@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.datediff.millisecond;
+package com.blazebit.persistence.impl.function.datetime.week;
 
 /**
- * @author Moritz Becker
- * @since 1.2.0
+ *
+ * @author Jan-Willem Gmelig Meyling
+ * @since 1.4.0
  */
-public class SQLServerMillisecondDiffFunction extends MillisecondDiffFunction {
+public class MSSQLWeekInYearFunction extends WeekInYearFunction {
 
-    public SQLServerMillisecondDiffFunction() {
-        super("(select cast(datediff(ss,t1,t2) as bigint) * 1000 + cast(datepart(ms,t2) as bigint) - cast(datepart(ms,t1) as bigint) from (values (cast(?1 as datetime),cast(?2 as datetime))) as temp(t1,t2))");
+    public MSSQLWeekInYearFunction() {
+        super("floor((6 + datepart(dy, convert(date, ?1))) / 7)");
     }
 }

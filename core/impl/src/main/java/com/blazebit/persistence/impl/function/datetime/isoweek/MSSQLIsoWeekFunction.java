@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.datetime.hour;
+package com.blazebit.persistence.impl.function.datetime.isoweek;
 
 /**
  *
- * @author Christian Beikov
- * @since 1.0.0
+ * @author Jan-Willem Gmelig Meyling
+ * @since 1.4.0
  */
-public class SQLServerHourFunction extends HourFunction {
+public class MSSQLIsoWeekFunction extends IsoWeekFunction {
 
-    public SQLServerHourFunction() {
-        super("datepart(hh, convert(datetime, ?1))");
+    public MSSQLIsoWeekFunction() {
+        super("datepart(isowk, convert(date, ?1))");
     }
 }
