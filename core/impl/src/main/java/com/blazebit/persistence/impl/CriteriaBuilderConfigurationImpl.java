@@ -1278,6 +1278,16 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         }
         registerFunction(jpqlFunctionGroup);
 
+        jpqlFunctionGroup = new JpqlFunctionGroup("OR_AGG", true);
+        jpqlFunctionGroup.add(null, OrAggFunction.INSTANCE);
+        for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
+            jpqlFunctionGroup.add(dialectEntry.getKey(),
+                    dialectEntry.getValue().supportsBooleanAggregation() ?
+                            OrAggFunction.INSTANCE :
+                            FallbackOrAggFunction.INSTANCE);
+        }
+        registerFunction(jpqlFunctionGroup);
+
 
         // window every
 

@@ -27,7 +27,7 @@ import com.blazebit.persistence.spi.JpqlFunction;
  */
 public class OrAggFunction implements JpqlFunction {
 
-    public static final String FUNCTION_NAME = "OR_AGG";
+    public static final String FUNCTION_NAME = "ANY";
     public static final OrAggFunction INSTANCE = new OrAggFunction();
 
     protected OrAggFunction() {
