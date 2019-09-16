@@ -21,7 +21,7 @@
     <parent>
         <groupId>com.blazebit</groupId>
         <artifactId>blaze-persistence-parent</artifactId>
-        <version>1.4.0-SNAPSHOT</version>
+        <version>1.4.0-Alpha2</version>
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
