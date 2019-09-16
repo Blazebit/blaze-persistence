@@ -23,8 +23,7 @@ package com.blazebit.persistence.impl.function.datediff.week;
 public class DB2WeekDiffFunction extends WeekDiffFunction {
 
     public DB2WeekDiffFunction() {
-        // NOTE: we need lateral, otherwise the alias will be lost in the subquery
-        super("(select sign(i1) * floor(abs(i1)) from lateral(values (trunc(-(cast(?1 as date) - cast(?2 as date))) / 7)) as temp(i1))");
+        super("-int((days(cast(?1 as timestamp)) - days(cast(?2 as timestamp))) / 7)");
     }
 
 }

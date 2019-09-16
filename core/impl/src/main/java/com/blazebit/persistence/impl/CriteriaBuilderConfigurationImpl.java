@@ -136,6 +136,7 @@ import com.blazebit.persistence.impl.function.datetime.dayofyear.SybaseDayOfYear
 import com.blazebit.persistence.impl.function.datetime.microsecond.DB2MicrosecondFunction;
 import com.blazebit.persistence.impl.function.datetime.microsecond.MicrosecondFunction;
 import com.blazebit.persistence.impl.function.datetime.microsecond.MySQLMicrosecondFunction;
+import com.blazebit.persistence.impl.function.datetime.microsecond.OracleMicrosecondFunction;
 import com.blazebit.persistence.impl.function.datetime.microsecond.PostgreSQLMicrosecondFunction;
 import com.blazebit.persistence.impl.function.datetime.microsecond.SQLServerMicrosecondFunction;
 import com.blazebit.persistence.impl.function.datetime.microsecond.SybaseMicrosecondFunction;
@@ -776,6 +777,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("mysql8", new MySQLMicrosecondFunction());
         jpqlFunctionGroup.add("microsoft", new SQLServerMicrosecondFunction());
         jpqlFunctionGroup.add("sybase", new SybaseMicrosecondFunction());
+        jpqlFunctionGroup.add("oracle", new OracleMicrosecondFunction());
         registerFunction(jpqlFunctionGroup);
 
         jpqlFunctionGroup = new JpqlFunctionGroup("epoch", false);

@@ -23,6 +23,6 @@ package com.blazebit.persistence.impl.function.datediff.quarter;
 public class OracleQuarterDiffFunction extends QuarterDiffFunction {
 
     public OracleQuarterDiffFunction() {
-        super("(select sign(i1) * floor(abs(i1)) from (values (trunc(-months_between(?1, ?2))/3)) as temp(i1))");
+        super("trunc(-months_between(?1, ?2)/3)");
     }
 }

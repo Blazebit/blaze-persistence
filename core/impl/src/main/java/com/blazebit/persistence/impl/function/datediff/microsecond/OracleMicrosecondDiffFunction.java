@@ -36,6 +36,7 @@ public class OracleMicrosecondDiffFunction extends MicrosecondDiffFunction {
                 "    + 60 * (extract(minute from cast(?2 as timestamp) - cast(?1 as timestamp))" +
                 "      + 60 * (extract(hour from cast(?2 as timestamp) - cast(?1 as timestamp))" +
                 "        + 24 * (extract(day from cast(?2 as timestamp) - cast(?1 as timestamp))))))");
+        // TODO: When parameters are part of more complex expressions this won't work, but we don't care about that for now
         this.bothParamRenderer = new TemplateRenderer("(select 1000000 * (extract(second from t2 - t1)" +
                 "    + 60 * (extract(minute from t2 - t1)" +
                 "      + 60 * (extract(hour from t2 - t1)" +

@@ -24,6 +24,6 @@ public class DB2MicrosecondDiffFunction extends MicrosecondDiffFunction {
 
     public DB2MicrosecondDiffFunction() {
         // NOTE: we need lateral, otherwise the alias will be lost in the subquery
-        super("(select cast((days(t2) - days(t1)) as bigint) * (24 * 60 * 60 * 1000000) + (midnight_seconds(t2) - midnight_seconds(t1)) * 1000000 + (microsecond(t2) - microsecond(t1)) from lateral(values (cast(?1 as timestamp), cast(?2 as timestamp))) as temp(t1,t2))");
+        super("(select cast((days(t2) - days(t1)) as bigint) * (" + (24L * 60L * 60L * 1000000L) + ") + cast((midnight_seconds(t2) - midnight_seconds(t1)) as bigint) * 1000000 + (microsecond(t2) - microsecond(t1)) from lateral(values (cast(?1 as timestamp), cast(?2 as timestamp))) as temp(t1,t2))");
     }
 }

@@ -26,8 +26,7 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
 public class DB2YearDiffFunction extends YearDiffFunction {
 
     public DB2YearDiffFunction() {
-        // NOTE: we need lateral, otherwise the alias will be lost in the subquery
-        super("(select year(cast(t2 as timestamp)) - year(cast(t1 as timestamp)) from lateral(values (?1,?2)) as temp(t1,t2))");
+        super("-(year(cast(?1 as timestamp)) - year(cast(?2 as timestamp)))");
     }
 
     @Override

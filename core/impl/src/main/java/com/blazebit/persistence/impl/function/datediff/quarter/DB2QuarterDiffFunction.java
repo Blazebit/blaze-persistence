@@ -23,8 +23,7 @@ package com.blazebit.persistence.impl.function.datediff.quarter;
 public class DB2QuarterDiffFunction extends QuarterDiffFunction {
 
     public DB2QuarterDiffFunction() {
-        // NOTE: we need lateral, otherwise the alias will be lost in the subquery
-        super("(select sign(i1) * floor(abs(i1)) from lateral(values (trunc(-months_between(?1, ?2))/3)) as temp(i1))");
+        super("-int(months_between(cast(?1 as timestamp),cast(?2 as timestamp))/3)");
     }
 
 }

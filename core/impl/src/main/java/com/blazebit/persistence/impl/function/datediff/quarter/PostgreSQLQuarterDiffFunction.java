@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.datediff.quarter;
 public class PostgreSQLQuarterDiffFunction extends QuarterDiffFunction {
 
     public PostgreSQLQuarterDiffFunction() {
-        super("(select sign(i2) * floor(abs(i2)) from ( select (date_part('year', t1) * 12 + date_part('month', t1))/-3 from (values (age(?1,?2))) as temp(t1)) as temp2(i2))");
+        super("(select -cast(trunc((date_part('year', t1) * 12 + date_part('month', t1))/3) as integer) from (values (age(?1,?2))) as temp(t1))");
     }
 
 }

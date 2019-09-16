@@ -27,7 +27,7 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
 public class DefaultSecondDiffFunction extends SecondDiffFunction {
 
     public DefaultSecondDiffFunction() {
-        super("cast(datediff(ss, ?1, ?2) as integer)");
+        super("cast(datediff(ss, ?1, ?2) as bigint)");
     }
 
     @Override

@@ -28,4 +28,9 @@ public abstract class SecondDiffFunction extends DateDiffFunction {
     public SecondDiffFunction(String template) {
         super("second_diff", template);
     }
+
+    @Override
+    public Class<?> getReturnType(Class<?> firstArgumentType) {
+        return Long.class;
+    }
 }

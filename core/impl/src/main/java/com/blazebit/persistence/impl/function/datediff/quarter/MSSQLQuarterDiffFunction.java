@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.datediff.quarter;
 public class MSSQLQuarterDiffFunction extends QuarterDiffFunction {
 
     public MSSQLQuarterDiffFunction() {
-        super("(select sign(i1) * floor(abs(i1)) from (values (datediff(mm, ?1, ?2)/3)) as temp(i1))");
+        super("round(datediff(mm, ?1, ?2)/3,0,1)");
     }
 
 }

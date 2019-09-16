@@ -26,8 +26,7 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
 public class DB2DayDiffFunction extends DayDiffFunction {
 
     public DB2DayDiffFunction() {
-        // NOTE: we need lateral, otherwise the alias will be lost in the subquery
-        super("(select days(cast(t2 as timestamp)) - days(cast(t1 as timestamp)) from lateral(values (?1,?2)) as temp(t1,t2))");
+        super("-(days(cast(?1 as timestamp)) - days(cast(?2 as timestamp)))");
     }
 
     @Override
