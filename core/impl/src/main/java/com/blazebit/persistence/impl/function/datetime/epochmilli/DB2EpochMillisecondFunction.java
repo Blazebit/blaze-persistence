@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.datetime.microsecond;
+package com.blazebit.persistence.impl.function.datetime.epochmilli;
 
 /**
- * @author Jan-Willem Gmelig Meyling
- * @since 1.4.0
+ * @author Moritz Becker
+ * @since 1.2.0
  */
-public class OracleMicrosecondFunction extends MicrosecondFunction {
+public class DB2EpochMillisecondFunction extends EpochMillisecondFunction {
 
-    public OracleMicrosecondFunction() {
-        super("to_number(to_char(cast(?1 as timestamp),'FF6'))");
+    public DB2EpochMillisecondFunction() {
+        super("(select (DAYS(cast(t1 as timestamp))-DAYS('1970-01-01')) * " + (24 * 60 * 60) + " + MIDNIGHT_SECONDS(cast(t1 as timestamp)) + MICROSECOND(t1) / 1000 from lateral(values (?1)) as temp(t1))");
     }
 }

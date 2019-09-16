@@ -23,6 +23,6 @@ package com.blazebit.persistence.impl.function.datetime.millisecond;
 public class OracleMillisecondFunction extends MillisecondFunction {
 
     public OracleMillisecondFunction() {
-        super("trunc(to_number(to_char(cast(?1 as timestamp),'FF'))/1000)");
+        super("to_number(to_char(cast(?1 as timestamp),'FF3'))");
     }
 }
