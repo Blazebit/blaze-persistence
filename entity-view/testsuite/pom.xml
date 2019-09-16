@@ -21,11 +21,12 @@
     <parent>
         <groupId>com.blazebit</groupId>
         <artifactId>blaze-persistence-entity-view</artifactId>
-        <version>1.4.0-Alpha2</version>
+        <version>1.4.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>blaze-persistence-entity-view-testsuite</artifactId>
+  <version>1.4.0-Alpha2</version>
     <packaging>jar</packaging>
 
     <name>Blazebit Persistence Entity-View Testsuite</name>
@@ -51,7 +52,7 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-core-testsuite</artifactId>
-            <version>${project.version}</version>
+            <version>1.4.0-SNAPSHOT</version>
             <exclusions>
                 <!-- I honestly don't know why, but the default profile seems to be actived for that dependency -->
                 <exclusion>
@@ -1529,7 +1530,7 @@
                             <dependency>
                                 <groupId>${project.groupId}</groupId>
                                 <artifactId>blaze-persistence-testsuite-base-datanucleus</artifactId>
-                                <version>${project.version}</version>
+                                <version>1.4.0-SNAPSHOT</version>
                             </dependency>
                         </dependencies>
                     </plugin>
@@ -1682,7 +1683,7 @@
                             <dependency>
                                 <groupId>${project.groupId}</groupId>
                                 <artifactId>blaze-persistence-testsuite-base-datanucleus</artifactId>
-                                <version>${project.version}</version>
+                                <version>1.4.0-SNAPSHOT</version>
                             </dependency>
                         </dependencies>
                     </plugin>
@@ -1830,7 +1831,7 @@
                             <dependency>
                                 <groupId>${project.groupId}</groupId>
                                 <artifactId>blaze-persistence-testsuite-base-datanucleus</artifactId>
-                                <version>${project.version}</version>
+                                <version>1.4.0-SNAPSHOT</version>
                             </dependency>
                         </dependencies>
                     </plugin>
