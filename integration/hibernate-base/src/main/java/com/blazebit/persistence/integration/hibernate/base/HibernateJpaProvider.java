@@ -47,6 +47,7 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.ForeignKeyDirection;
+import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.OneToOneType;
 import org.hibernate.type.Type;
 
@@ -1102,7 +1103,9 @@ public class HibernateJpaProvider implements JpaProvider {
                 if (!queryableCollection.getTableName().equals(elementTableName)) {
                     String[] targetColumnMetaData = queryableCollection.getElementColumnNames();
                     AbstractEntityPersister elementPersister = (AbstractEntityPersister) queryableCollection.getElementPersister();
-                    String[] targetPrimaryKeyColumnMetaData = elementPersister.getKeyColumnNames();
+                    String identifierOrUniqueKeyPropertyName = ((ManyToOneType) persister.getElementType()).getIdentifierOrUniqueKeyPropertyName(persister.getFactory());
+                    String[] targetPrimaryKeyColumnMetaData = elementPersister.getPropertyColumnNames(identifierOrUniqueKeyPropertyName);
+
                     Map<String, String> targetIdColumnMapping = new HashMap<>();
 
                     for (int i = 0; i < targetColumnMetaData.length; i++) {
