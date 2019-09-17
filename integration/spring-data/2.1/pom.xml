@@ -74,6 +74,7 @@
             <groupId>org.jenkins-ci</groupId>
             <artifactId>annotation-indexer</artifactId>
             <version>${version.bridge-injector-indexer}</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
