@@ -1104,7 +1104,9 @@ public class HibernateJpaProvider implements JpaProvider {
                     String[] targetColumnMetaData = queryableCollection.getElementColumnNames();
                     AbstractEntityPersister elementPersister = (AbstractEntityPersister) queryableCollection.getElementPersister();
                     String identifierOrUniqueKeyPropertyName = ((ManyToOneType) persister.getElementType()).getIdentifierOrUniqueKeyPropertyName(persister.getFactory());
-                    String[] targetPrimaryKeyColumnMetaData = elementPersister.getPropertyColumnNames(identifierOrUniqueKeyPropertyName);
+                    String[] targetPrimaryKeyColumnMetaData = identifierOrUniqueKeyPropertyName == null ?
+                            elementPersister.getKeyColumnNames() : // IdClass returns null for getIdentifierOrUniqueKeyPropertyName
+                            elementPersister.getPropertyColumnNames(identifierOrUniqueKeyPropertyName);
 
                     Map<String, String> targetIdColumnMapping = new HashMap<>();
 
