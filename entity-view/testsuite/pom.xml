@@ -26,7 +26,6 @@
     </parent>
 
     <artifactId>blaze-persistence-entity-view-testsuite</artifactId>
-  <version>1.4.0-Alpha2</version>
     <packaging>jar</packaging>
 
     <name>Blazebit Persistence Entity-View Testsuite</name>

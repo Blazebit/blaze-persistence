@@ -4,7 +4,8 @@ if [ "$TRAVIS_REPO_SLUG" == "Blazebit/blaze-persistence" ] &&
     [ "$TRAVIS_BRANCH" == "master" ] &&
     [ "$TRAVIS_PULL_REQUEST" == "false" ] &&
     [ "$JPAPROVIDER" == "hibernate-5.2" ] &&
-    [ "$RDBMS" == "h2" ]; then
+    [ "$RDBMS" == "h2" ] &&
+    [ "x$JDK" == "x" ]; then
 
   echo "Starting snapshot deployment..."
   mvn -s .travis-settings.xml -DperformRelease -DskipTests -Dgpg.skip=true -Dquiet=true deploy
