@@ -149,4 +149,9 @@ public class BlazePersistenceRepositoryFactoryBean<T extends Repository<S, ID>, 
         // Needed to work with Spring Boot 2.1.4
     }
 
+    public char getEscapeCharacter() {
+        // Needed to work with Spring Boot 2.1.4
+        return '\\';
+    }
+
 }
