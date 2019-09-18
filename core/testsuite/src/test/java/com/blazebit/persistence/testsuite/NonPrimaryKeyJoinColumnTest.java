@@ -31,6 +31,7 @@ import com.blazebit.persistence.testsuite.entity.BookEntity;
 import com.blazebit.persistence.testsuite.entity.BookISBNReferenceEntity;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
+import com.blazebit.persistence.testsuite.entity.NaturalIdJoinTableEntity;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.Version;
 import com.blazebit.persistence.testsuite.entity.Workflow;
@@ -56,6 +57,7 @@ public class NonPrimaryKeyJoinColumnTest extends AbstractCoreTest {
         return new Class<?>[] {
                 BookEntity.class,
                 BookISBNReferenceEntity.class,
+                NaturalIdJoinTableEntity.class,
                 Document.class,
                 Version.class,
                 Person.class,
