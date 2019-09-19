@@ -17,7 +17,6 @@
 package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.persistence.view.metamodel.FlatViewType;
-import com.blazebit.persistence.view.metamodel.MethodAttribute;
 
 import javax.persistence.metamodel.ManagedType;
 import java.lang.reflect.Method;

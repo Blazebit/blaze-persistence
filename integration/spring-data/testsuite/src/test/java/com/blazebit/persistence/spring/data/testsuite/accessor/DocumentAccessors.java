@@ -16,14 +16,14 @@
 
 package com.blazebit.persistence.spring.data.testsuite.accessor;
 
-import com.blazebit.persistence.spring.data.testsuite.entity.Document;
 import com.blazebit.persistence.spring.data.base.query.KeysetAwarePageImpl;
-import com.blazebit.persistence.spring.data.testsuite.view.DocumentView;
 import com.blazebit.persistence.spring.data.repository.KeysetAwarePage;
 import com.blazebit.persistence.spring.data.repository.KeysetPageRequest;
+import com.blazebit.persistence.spring.data.testsuite.PageRequest;
+import com.blazebit.persistence.spring.data.testsuite.entity.Document;
+import com.blazebit.persistence.spring.data.testsuite.view.DocumentView;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
 

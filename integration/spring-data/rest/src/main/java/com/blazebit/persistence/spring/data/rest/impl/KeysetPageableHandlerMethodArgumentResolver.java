@@ -28,7 +28,6 @@ import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.data.web.SortHandlerMethodArgumentResolver;
@@ -70,7 +69,7 @@ public class KeysetPageableHandlerMethodArgumentResolver extends PageableHandler
     private static final String INVALID_DEFAULT_PAGE_SIZE = "Invalid default page size configured for method %s! Must not be less than one!";
     private static final String INVALID_KEYSET_DOMAIN_CLASS = "Invalid keyset domain class configured for method %s! Should be an entity type!";
     private static final KeysetPageable DEFAULT_PAGE_REQUEST = new KeysetPageRequest(null, null, 0, 20);
-    private static final Object UNSORTED;
+    private static final org.springframework.data.domain.Sort UNSORTED;
     private final ConcurrentMap<PropertyCacheKey, Class<? extends Serializable>> propertyTypeCache = new ConcurrentHashMap<>();
     private final ObjectMapper mapper = new ObjectMapper();
     private final SortHandlerMethodArgumentResolver sortResolver;
@@ -84,11 +83,11 @@ public class KeysetPageableHandlerMethodArgumentResolver extends PageableHandler
     private String highestParameterName = DEFAULT_HIGHEST_PARAMETER;
 
     static {
-        Object unsorted = null;
+        org.springframework.data.domain.Sort unsorted = null;
         try {
-            for (Method unsortedCandidate : Sort.class.getDeclaredMethods()) {
+            for (Method unsortedCandidate : org.springframework.data.domain.Sort.class.getDeclaredMethods()) {
                 if ("unsorted".equals(unsortedCandidate.getName())) {
-                    unsorted = unsortedCandidate.invoke(null);
+                    unsorted = (org.springframework.data.domain.Sort) unsortedCandidate.invoke(null);
                     break;
                 }
             }
@@ -251,13 +250,13 @@ public class KeysetPageableHandlerMethodArgumentResolver extends PageableHandler
             offset = pageSize * defaultOrFallback.getPageNumber();
         }
 
-        Sort sort = sortResolver.resolveArgument(methodParameter, mavContainer, webRequest, binderFactory);
+        org.springframework.data.domain.Sort sort = sortResolver.resolveArgument(methodParameter, mavContainer, webRequest, binderFactory);
 
         // Default if necessary and default configured
         sort = sort == UNSORTED && defaultOrFallback != null ? defaultOrFallback.getSort() : sort;
 
         KeysetPage keysetPage = null;
-        Iterator<Sort.Order> iterator;
+        Iterator<org.springframework.data.domain.Sort.Order> iterator;
         if (sort != null && (iterator = sort.iterator()).hasNext()) {
             KeysetConfig keysetConfig = methodParameter.getParameterAnnotation(KeysetConfig.class);
             Class<?> domainClass = keysetConfig.keysetClass();
@@ -310,7 +309,7 @@ public class KeysetPageableHandlerMethodArgumentResolver extends PageableHandler
                     }
 
                     while (iterator.hasNext()) {
-                        Sort.Order o = iterator.next();
+                        org.springframework.data.domain.Sort.Order o = iterator.next();
                         JsonNode low = lowestObject;
                         JsonNode high = highestObject;
                         String[] propertyParts = o.getProperty().split("\\.");
@@ -448,7 +447,7 @@ public class KeysetPageableHandlerMethodArgumentResolver extends PageableHandler
         if (defaults.sort().length == 0) {
             return new KeysetPageRequest(defaultPageNumber, defaultPageSize, null, null);
         }
-        return new KeysetPageRequest(defaultPageNumber, defaultPageSize, null, new Sort(defaults.direction(), defaults.sort()));
+        return new KeysetPageRequest(defaultPageNumber, defaultPageSize, null, Sort.of(defaults.direction(), defaults.sort()));
     }
 
     private int parseAndApplyBoundaries(String parameter, int upper, boolean shiftIndex) {

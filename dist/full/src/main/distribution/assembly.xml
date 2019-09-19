@@ -101,6 +101,7 @@
                 <include>com.blazebit:blaze-persistence-integration-spring-data-1.x</include>
                 <include>com.blazebit:blaze-persistence-integration-spring-data-2.0</include>
                 <include>com.blazebit:blaze-persistence-integration-spring-data-2.1</include>
+                <include>com.blazebit:blaze-persistence-integration-spring-data-2.2</include>
                 <include>com.blazebit:blaze-persistence-integration-deltaspike-data-*</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}-${project.version}.${artifact.extension}</outputFileNameMapping>

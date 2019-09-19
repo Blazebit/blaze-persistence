@@ -17,18 +17,28 @@
 package com.blazebit.persistence.spring.data.impl.query;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.spring.data.base.query.AbstractPartTreeBlazePersistenceQuery;
 import com.blazebit.persistence.spring.data.base.query.EntityViewAwareJpaQueryMethod;
 import com.blazebit.persistence.spring.data.base.query.JpaParameters;
+import com.blazebit.persistence.spring.data.base.query.KeysetAwarePageImpl;
+import com.blazebit.persistence.spring.data.base.query.KeysetAwareSliceImpl;
 import com.blazebit.persistence.spring.data.base.query.ParameterBinder;
 import com.blazebit.persistence.spring.data.base.query.ParameterMetadataProvider;
 import com.blazebit.persistence.spring.data.repository.KeysetPageable;
 import com.blazebit.persistence.view.EntityViewManager;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.provider.PersistenceProvider;
+import org.springframework.data.jpa.repository.query.AbstractJpaQuery;
+import org.springframework.data.jpa.repository.query.JpaQueryExecution;
+import org.springframework.data.repository.query.ParameterAccessor;
+import org.springframework.data.repository.query.Parameters;
+import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.parser.PartTree;
 
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -41,6 +51,124 @@ public class PartTreeBlazePersistenceQuery extends AbstractPartTreeBlazePersiste
 
     public PartTreeBlazePersistenceQuery(EntityViewAwareJpaQueryMethod method, EntityManager em, PersistenceProvider persistenceProvider, CriteriaBuilderFactory cbf, EntityViewManager evm) {
         super(method, em, persistenceProvider, cbf, evm);
+    }
+
+    @Override
+    protected JpaQueryExecution getExecution() {
+        if (getQueryMethod().isSliceQuery()) {
+            return new PartTreeBlazePersistenceQuery.SlicedExecution(getQueryMethod().getParameters());
+        } else if (getQueryMethod().isPageQuery()) {
+            return new PartTreeBlazePersistenceQuery.PagedExecution(getQueryMethod().getParameters());
+        } else if (isDelete()) {
+            return new PartTreeBlazePersistenceQuery.DeleteExecution(getEntityManager());
+        } else if (isExists()) {
+            return new PartTreeBlazePersistenceQuery.ExistsExecution();
+        } else {
+            return super.getExecution();
+        }
+    }
+
+    /**
+     * {@link JpaQueryExecution} performing an exists check on the query.
+     *
+     * @author Christian Beikov
+     * @since 1.3.0
+     */
+    private static class ExistsExecution extends JpaQueryExecution {
+
+        @Override
+        protected Object doExecute(AbstractJpaQuery repositoryQuery, Object[] values) {
+            return !((PartTreeBlazePersistenceQuery) repositoryQuery).createQuery(values).getResultList().isEmpty();
+        }
+    }
+
+    /**
+     * Uses the {@link com.blazebit.persistence.PaginatedCriteriaBuilder} API for executing the query.
+     *
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
+    private static class SlicedExecution extends JpaQueryExecution {
+
+        private final Parameters<?, ?> parameters;
+
+        public SlicedExecution(Parameters<?, ?> parameters) {
+            this.parameters = parameters;
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        protected Object doExecute(AbstractJpaQuery repositoryQuery, Object[] values) {
+            Query paginatedCriteriaBuilder = ((PartTreeBlazePersistenceQuery) repositoryQuery).createPaginatedQuery(values, false);
+            PagedList<Object> resultList = (PagedList<Object>) paginatedCriteriaBuilder.getResultList();
+            ParameterAccessor accessor = new ParametersParameterAccessor(parameters, values);
+            Pageable pageable = accessor.getPageable();
+
+            return new KeysetAwareSliceImpl<>(resultList, pageable);
+        }
+    }
+
+    /**
+     * Uses the {@link com.blazebit.persistence.PaginatedCriteriaBuilder} API for executing the query.
+     *
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
+    private static class PagedExecution extends JpaQueryExecution {
+
+        private final Parameters<?, ?> parameters;
+
+        public PagedExecution(Parameters<?, ?> parameters) {
+            this.parameters = parameters;
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        protected Object doExecute(AbstractJpaQuery repositoryQuery, Object[] values) {
+            Query paginatedCriteriaBuilder = ((PartTreeBlazePersistenceQuery) repositoryQuery).createPaginatedQuery(values, true);
+            PagedList<Object> resultList = (PagedList<Object>) paginatedCriteriaBuilder.getResultList();
+            Long total = resultList.getTotalSize();
+            ParameterAccessor accessor = new ParametersParameterAccessor(parameters, values);
+            Pageable pageable = accessor.getPageable();
+
+            if (total.equals(0L)) {
+                return new KeysetAwarePageImpl<>(Collections.emptyList(), total, null, pageable);
+            }
+
+            return new KeysetAwarePageImpl<>(resultList, pageable);
+        }
+    }
+
+    /**
+     * {@link JpaQueryExecution} removing entities matching the query.
+     *
+     * @author Thomas Darimont
+     * @author Oliver Gierke
+     * @since 1.6
+     */
+    static class DeleteExecution extends JpaQueryExecution {
+
+        private final EntityManager em;
+
+        public DeleteExecution(EntityManager em) {
+            this.em = em;
+        }
+
+        /*
+         * (non-Javadoc)
+         * @see org.springframework.data.jpa.repository.query.JpaQueryExecution#doExecute(org.springframework.data.jpa.repository.query.AbstractJpaQuery, java.lang.Object[])
+         */
+        @Override
+        protected Object doExecute(AbstractJpaQuery jpaQuery, Object[] values) {
+            Query query = ((PartTreeBlazePersistenceQuery) jpaQuery).createQuery(values);
+            List<?> resultList = query.getResultList();
+
+            for (Object o : resultList) {
+                em.remove(o);
+            }
+
+            return jpaQuery.getQueryMethod().isCollectionQuery() ? resultList : resultList.size();
+        }
     }
 
     @Override

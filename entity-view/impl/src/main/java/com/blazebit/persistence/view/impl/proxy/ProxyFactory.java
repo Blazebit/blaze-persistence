@@ -1878,13 +1878,44 @@ public class ProxyFactory {
         if (idBased) {
             sb.append("\tif ($1 == null || $0.$$_getId() == null) { return false; }\n");
             sb.append("\tif ($1 instanceof ").append(EntityViewProxy.class.getName()).append(") {\n");
-            sb.append("\t\treturn $0.$$_getJpaManagedBaseClass() == ((").append(EntityViewProxy.class.getName()).append(") $1).$$_getJpaManagedBaseClass() && ");
-            sb.append("$0.$$_getId().equals(((").append(EntityViewProxy.class.getName()).append(") $1).$$_getId());\n");
+            sb.append("\t\tif ($0.$$_getJpaManagedBaseClass() == ((").append(EntityViewProxy.class.getName()).append(") $1).$$_getJpaManagedBaseClass() && ");
+            sb.append("$0.$$_getId().equals(((").append(EntityViewProxy.class.getName()).append(") $1).$$_getId())) {\n");
+            sb.append("\t\t\treturn true;\n");
+            sb.append("\t\t} else {\n");
+            sb.append("\t\t\treturn false;\n");
+            sb.append("\t\t}\n");
             sb.append("\t}\n");
             // Here we handle user provided types that implement the interface and we only allow this when the view is defined for a concrete entity type
             if (managedViewType.getJpaManagedType().getPersistenceType() == javax.persistence.metamodel.Type.PersistenceType.ENTITY && (managedViewType.getJpaManagedType().getJavaType().getModifiers() & Modifier.ABSTRACT) != Modifier.ABSTRACT) {
-                sb.append("\treturn $1 instanceof ").append(viewClass.getName()).append(" && $0.$$_getId().equals((").append(viewClass.getName()).append(") $1).get");
-                StringUtils.addFirstToUpper(sb, ((ViewType<?>) managedViewType).getIdAttribute().getName()).append("());\n");
+                String wrap;
+                Class<?> javaType = ((ViewType<?>) managedViewType).getIdAttribute().getJavaType();
+                if (javaType.isPrimitive()) {
+                    if (javaType == long.class) {
+                        wrap = "Long.valueOf";
+                    } else if (javaType == float.class) {
+                        wrap = "Float.valueOf";
+                    } else if (javaType == double.class) {
+                        wrap = "Double.valueOf";
+                    } else if (javaType == short.class) {
+                        wrap = "Short.valueOf";
+                    } else if (javaType == byte.class) {
+                        wrap = "Byte.valueOf";
+                    } else if (javaType == boolean.class) {
+                        wrap = "Boolean.valueOf";
+                    } else if (javaType == char.class) {
+                        wrap = "Character.valueOf";
+                    } else {
+                        wrap = "Integer.valueOf";
+                    }
+                } else {
+                    wrap = "";
+                }
+                sb.append("\tif ($1 instanceof ").append(viewClass.getName()).append(" && $0.$$_getId().equals(").append(wrap).append("(((").append(viewClass.getName()).append(") $1).get");
+                StringUtils.addFirstToUpper(sb, ((ViewType<?>) managedViewType).getIdAttribute().getName()).append("()))) {\n");
+                sb.append("\t\t\treturn true;\n");
+                sb.append("\t\t} else {\n");
+                sb.append("\t\t\treturn false;\n");
+                sb.append("\t\t}\n");
             } else {
                 sb.append("\t\tthrow new IllegalArgumentException(\"The view class ").append(viewClass.getName()).append(" is defined for an abstract or non-entity type which is why id-based equality can't be checked on the user provided instance: \" + $1);\n");
             }
@@ -1896,7 +1927,7 @@ public class ProxyFactory {
                 name = cc.getName();
             }
 
-            sb.append("\tif (other instanceof ").append(name).append(") {\n");
+            sb.append("\tif ($1 instanceof ").append(name).append(") {\n");
             sb.append("\t\tfinal ").append(name).append(" other = (").append(name).append(") $1;\n");
 
             for (CtField field : fields) {
@@ -1930,7 +1961,7 @@ public class ProxyFactory {
                 sb.append("\t\t\treturn false;\n\t\t}\n");
             }
 
-            sb.append("\telse {\n");
+            sb.append("\t} else {\n");
             if (managedViewType.supportsInterfaceEquals()) {
                 sb.append("\t\treturn false;\n");
             } else {
