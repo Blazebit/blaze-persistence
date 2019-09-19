@@ -170,6 +170,28 @@
                 </dependency>
             </dependencies>
         </profile>
+        <profile>
+            <id>spring-data-2.2.x</id>
+            <properties>
+                <version.spring>${version.spring-data-2.2-spring}</version.spring>
+                <maven.compiler.target>1.8</maven.compiler.target>
+                <maven.compiler.source>1.8</maven.compiler.source>
+            </properties>
+            <repositories>
+                <repository>
+                    <id>spring-libs-milestone</id>
+                    <url>https://repo.spring.io/libs-milestone</url>
+                </repository>
+            </repositories>
+            <dependencies>
+                <dependency>
+                    <groupId>org.springframework.data</groupId>
+                    <artifactId>spring-data-jpa</artifactId>
+                    <version>${version.spring-data-2.2}</version>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+        </profile>
     </profiles>
 
 </project>

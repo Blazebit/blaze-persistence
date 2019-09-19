@@ -248,6 +248,17 @@ Blaze-Persistence Entity-View Spring integration dependencies
 </dependency>
 ```
 
+Blaze-Persistence Spring Data 2.2 integration dependencies
+
+```xml
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-spring-data-2.2</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
+</dependency>
+```
+
 Blaze-Persistence Spring Data 2.1 integration dependencies
 
 ```xml
