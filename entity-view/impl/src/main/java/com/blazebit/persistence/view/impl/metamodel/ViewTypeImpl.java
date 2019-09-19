@@ -140,6 +140,11 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewTypeI
     }
 
     @Override
+    public boolean supportsInterfaceEquals() {
+        return true;
+    }
+
+    @Override
     public MethodAttribute<? super X, ?> getIdAttribute() {
         return idAttribute;
     }

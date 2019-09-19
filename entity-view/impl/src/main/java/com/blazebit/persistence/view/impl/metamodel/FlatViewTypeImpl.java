@@ -17,8 +17,13 @@
 package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.persistence.view.metamodel.FlatViewType;
+import com.blazebit.persistence.view.metamodel.MethodAttribute;
 
 import javax.persistence.metamodel.ManagedType;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.Collection;
+import java.util.logging.Logger;
 
 /**
  *
@@ -27,9 +32,24 @@ import javax.persistence.metamodel.ManagedType;
  */
 public class FlatViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements FlatViewTypeImplementor<X> {
 
+    private static final Logger LOG = Logger.getLogger(FlatViewTypeImpl.class.getName());
+
+    private final boolean supportsInterfaceEquals;
+
+    @SuppressWarnings("unchecked")
     public FlatViewTypeImpl(ViewMapping viewMapping, ManagedType<?> managedType, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
         super(viewMapping, managedType, context, embeddableMapping);
         context.finishViewType(this);
+        boolean supportsInterfaceEquals = true;
+        for (AbstractMethodAttribute<?, ?> attribute : (Collection<AbstractMethodAttribute<?, ?>>) (Collection<?>) getAttributes()) {
+            Method javaMethod = attribute.getJavaMethod();
+            if (!Modifier.isPublic(javaMethod.getModifiers()) && !getJavaType().getPackage().getName().equals(javaMethod.getDeclaringClass().getPackage().getName())) {
+                supportsInterfaceEquals = false;
+                LOG.warning("The method for the " + attribute.getLocation() + " is non-public and declared in a different package " + javaMethod.getDeclaringClass().getPackage().getName() + " than the view type which makes it impossible to allow checking for equality with user provided implementations of the view type. If you don't need that, you can ignore this warning.");
+            }
+        }
+
+        this.supportsInterfaceEquals = supportsInterfaceEquals;
     }
 
     @Override
@@ -40,6 +60,11 @@ public class FlatViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements FlatV
     @Override
     protected boolean hasId() {
         return false;
+    }
+
+    @Override
+    public boolean supportsInterfaceEquals() {
+        return supportsInterfaceEquals;
     }
 
     @Override

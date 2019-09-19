@@ -33,6 +33,15 @@ public interface EntityViewProxy {
     public Class<?> $$_getJpaManagedClass();
 
     /**
+     * Returns the base JPA managed type for which this entity view object is a projection.
+     * This is the base entity type if {@link #$$_getJpaManagedClass()} is an inheritance subtype.
+     *
+     * @return The base JPA managed type
+     * @since 1.4.0
+     */
+    public Class<?> $$_getJpaManagedBaseClass();
+
+    /**
      * Returns the entity view type of this object.
      *
      * @return The entity view type

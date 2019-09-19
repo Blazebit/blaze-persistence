@@ -56,6 +56,8 @@ public interface ManagedViewTypeImplementor<X> extends ManagedViewType<X> {
 
     boolean hasSubtypes();
 
+    boolean supportsInterfaceEquals();
+
     ManagedViewTypeImpl.InheritanceSubtypeConfiguration<X> getOverallInheritanceSubtypeConfiguration();
 
     ManagedViewTypeImpl.InheritanceSubtypeConfiguration<X> getInheritanceSubtypeConfiguration(Map<ManagedViewTypeImplementor<? extends X>, String> inheritanceSubtypeMapping);
