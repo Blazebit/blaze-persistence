@@ -27,7 +27,7 @@ import sun.misc.Unsafe;
  * @author Christian Beikov
  * @since 1.0.6
  */
-public class UnsafeHelper {
+public final class UnsafeHelper {
 
     private static final Unsafe UNSAFE;
 

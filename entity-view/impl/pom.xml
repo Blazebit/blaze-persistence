@@ -183,9 +183,12 @@
             </build>
         </profile>
         <profile>
-            <id>post-10-unsafe-code</id>
+            <id>post-10-unsafe-code-non-mac</id>
             <activation>
                 <jdk>[11,)</jdk>
+                <file>
+                    <exists>${jdk8.home}${file.separator}jre${file.separator}lib${file.separator}rt.jar</exists>
+                </file>
             </activation>
             <build>
                 <plugins>
@@ -216,9 +219,9 @@
                                 <configuration>
                                     <!-- When we use a Java 11+ JVM, we need a JDK 8, otherwise we can't compile the old unsafe code -->
                                     <compilerArguments>
-                                        <bootclasspath>${jdk8.classes.jar}</bootclasspath>
-                                        <source>1.8</source>
-                                        <target>1.8</target>
+                                        <bootclasspath>${jdk8.home}${file.separator}jre${file.separator}lib${file.separator}rt.jar</bootclasspath>
+                                        <source>${maven.compiler.argument.source}</source>
+                                        <target>${maven.compiler.argument.target}</target>
                                     </compilerArguments>
                                 </configuration>
                             </execution>
@@ -228,9 +231,63 @@
             </build>
         </profile>
         <profile>
-            <id>post-8-unsafe-code</id>
+            <id>post-10-unsafe-code-mac</id>
+            <activation>
+                <jdk>[11,)</jdk>
+                <file>
+                    <exists>${jdk8.home}${file.separator}jre${file.separator}lib${file.separator}classes.jar</exists>
+                </file>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>add-source</id>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>add-source</goal>
+                                </goals>
+                                <configuration>
+                                    <sources>
+                                        <source>src/main/java8</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>default-compile</id>
+                                <inherited>true</inherited>
+                                <configuration>
+                                    <!-- When we use a Java 11+ JVM, we need a JDK 8, otherwise we can't compile the old unsafe code -->
+                                    <compilerArguments>
+                                        <bootclasspath>${jdk8.home}${file.separator}jre${file.separator}lib${file.separator}classes.jar</bootclasspath>
+                                        <source>${maven.compiler.argument.source}</source>
+                                        <target>${maven.compiler.argument.target}</target>
+                                    </compilerArguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>post-8-unsafe-code-non-mac</id>
             <activation>
                 <jdk>[1.9,)</jdk>
+                <os>
+                    <family>!mac</family>
+                </os>
+                <file>
+                    <exists>${jdk8.home}${file.separator}jre${file.separator}lib${file.separator}rt.jar</exists>
+                </file>
             </activation>
             <properties>
                 <jdkSpecificSourceDirectory>src/main/java9</jdkSpecificSourceDirectory>
@@ -246,7 +303,7 @@
                                 <configuration>
                                     <tasks>
                                         <mkdir dir="${project.build.outputDirectory}/META-INF/versions/9" />
-                                        <javac srcdir="${project.basedir}/src/main/java9" destdir="${project.build.outputDirectory}/META-INF/versions/9" classpath="${project.build.outputDirectory}" includeantruntime="false" />
+                                        <javac srcdir="${project.basedir}/src/main/java9" destdir="${project.build.outputDirectory}/META-INF/versions/9" classpath="${project.build.outputDirectory}" includeantruntime="false" source="9" target="9" />
                                     </tasks>
                                 </configuration>
                                 <goals>
@@ -262,7 +319,7 @@
                                         <copy todir="${project.build.directory}/classes9">
                                             <fileset dir="${project.build.outputDirectory}" excludes="META-INF/versions/**,**/UnsafeHelper.class" />
                                         </copy>
-                                        <javac srcdir="${project.basedir}/src/main/java9" destdir="${project.build.directory}/classes9" classpath="${project.build.outputDirectory}" includeantruntime="false" />
+                                        <javac srcdir="${project.basedir}/src/main/java9" destdir="${project.build.directory}/classes9" classpath="${project.build.outputDirectory}" includeantruntime="false" source="9" target="9" />
                                     </tasks>
                                 </configuration>
                                 <goals>
@@ -298,6 +355,158 @@
                                 <configuration>
                                     <classifier>9</classifier>
                                     <classesDirectory>${project.build.directory}/classes9</classesDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>post-8-unsafe-code-mac</id>
+            <activation>
+                <jdk>[1.9,)</jdk>
+                <os>
+                    <family>mac</family>
+                </os>
+                <file>
+                    <exists>${jdk8.home}${file.separator}jre${file.separator}lib${file.separator}classes.jar</exists>
+                </file>
+            </activation>
+            <properties>
+                <jdkSpecificSourceDirectory>src/main/java9</jdkSpecificSourceDirectory>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>compile-java9</id>
+                                <phase>compile</phase>
+                                <configuration>
+                                    <tasks>
+                                        <mkdir dir="${project.build.outputDirectory}/META-INF/versions/9" />
+                                        <javac srcdir="${project.basedir}/src/main/java9" destdir="${project.build.outputDirectory}/META-INF/versions/9" classpath="${project.build.outputDirectory}" includeantruntime="false" source="9" target="9" />
+                                    </tasks>
+                                </configuration>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>compile-java9-only</id>
+                                <phase>compile</phase>
+                                <configuration>
+                                    <tasks>
+                                        <mkdir dir="${project.build.outputDirectory}/META-INF/versions/9" />
+                                        <copy todir="${project.build.directory}/classes9">
+                                            <fileset dir="${project.build.outputDirectory}" excludes="META-INF/versions/**,**/UnsafeHelper.class" />
+                                        </copy>
+                                        <javac srcdir="${project.basedir}/src/main/java9" destdir="${project.build.directory}/classes9" classpath="${project.build.outputDirectory}" includeantruntime="false" source="9" target="9" />
+                                    </tasks>
+                                </configuration>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <inherited>true</inherited>
+                        <configuration>
+                            <archive>
+                                <manifestEntries>
+                                    <Multi-Release>true</Multi-Release>
+                                </manifestEntries>
+                            </archive>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>default-jar</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>java-9-jar</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                                <configuration>
+                                    <classifier>9</classifier>
+                                    <classesDirectory>${project.build.directory}/classes9</classesDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>post-10-unsafe-code-non-mr-jar-non-mac</id>
+            <activation>
+                <jdk>[11,)</jdk>
+                <os>
+                    <family>!mac</family>
+                </os>
+                <file>
+                    <missing>${jdk8.home}${file.separator}jre${file.separator}lib${file.separator}rt.jar</missing>
+                </file>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>add-source</id>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>add-source</goal>
+                                </goals>
+                                <configuration>
+                                    <sources>
+                                        <source>src/main/java9</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>post-10-unsafe-code-non-mr-jar-mac</id>
+            <activation>
+                <jdk>[11,)</jdk>
+                <os>
+                    <family>mac</family>
+                </os>
+                <file>
+                    <missing>${jdk8.home}${file.separator}jre${file.separator}lib${file.separator}classes.jar</missing>
+                </file>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>add-source</id>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>add-source</goal>
+                                </goals>
+                                <configuration>
+                                    <sources>
+                                        <source>src/main/java9</source>
+                                    </sources>
                                 </configuration>
                             </execution>
                         </executions>

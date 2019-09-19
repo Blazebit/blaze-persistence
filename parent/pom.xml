@@ -106,6 +106,7 @@
         <version.release.plugin>2.5.1</version.release.plugin>
         <version.shade.plugin>3.2.1</version.shade.plugin>
         <version.surefire.plugin>2.19.1</version.surefire.plugin>
+        <asmVersion>7.1</asmVersion>
 
         <!-- JVM values for surefire plugin -->
         <!-- Has a default value for Travis; MUST be set to smaller for 32-bit environment -->
@@ -529,6 +530,22 @@
                     <configuration>
                         <overwriteExistingFiles>true</overwriteExistingFiles>
                     </configuration>
+                </plugin>
+                <!-- This is necessary to allow building with Java 13 source -->
+                <plugin>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.ow2.asm</groupId>
+                            <artifactId>asm</artifactId>
+                            <version>${asmVersion}</version>
+                        </dependency>
+                        <dependency>
+                            <groupId>org.ow2.asm</groupId>
+                            <artifactId>asm-commons</artifactId>
+                            <version>${asmVersion}</version>
+                        </dependency>
+                    </dependencies>
                 </plugin>
                 <!--This plugin's configuration is used to store Eclipse m2e settings 
                     only. It has no influence on the Maven build itself. -->
