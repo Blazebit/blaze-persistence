@@ -82,6 +82,7 @@ import javassist.compiler.ast.Stmnt;
 
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
+import javax.persistence.metamodel.ManagedType;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -307,6 +308,7 @@ public class ProxyFactory {
             CtMethod markDirtyStub = null;
             cc.addInterface(pool.get(EntityViewProxy.class.getName()));
             addGetJpaManagedClass(cc, managedViewType.getEntityClass());
+            addGetJpaManagedBaseClass(cc, getJpaManagedBaseClass(managedViewType));
             addGetEntityViewClass(cc, clazz);
             addIsNewMembers(managedViewType, cc, clazz);
 
@@ -500,6 +502,25 @@ public class ProxyFactory {
         } finally {
             pool.removeClassPath(classPath);
         }
+    }
+
+    private Class<?> getJpaManagedBaseClass(ManagedViewTypeImplementor<?> managedViewType) {
+        ManagedType<?> jpaManagedType = managedViewType.getJpaManagedType();
+        if (jpaManagedType instanceof EntityType<?>) {
+            EntityType<?> entityType = (EntityType<?>) jpaManagedType;
+
+            do {
+                jpaManagedType = entityType.getSupertype();
+                if (jpaManagedType instanceof EntityType<?>) {
+                    entityType = (EntityType<?>) jpaManagedType;
+                } else {
+                    break;
+                }
+            } while (true);
+
+            return entityType.getJavaType();
+        }
+        return managedViewType.getEntityClass();
     }
 
     private <T> Class<? extends T> defineOrGetClass(EntityViewManager entityViewManager, boolean unsafe, Class<?> clazz, String proxyClassName, CtClass cc) throws IOException, IllegalAccessException, NoSuchFieldException, CannotCompileException {
@@ -768,7 +789,7 @@ public class ProxyFactory {
         return method;
     }
 
-    private <T> void createEqualsHashCodeMethods(ViewType<T> viewType, ManagedViewType<T> managedViewType, CtClass cc, CtClass superCc, CtField[] attributeFields, CtField idField) throws NotFoundException, CannotCompileException {
+    private <T> void createEqualsHashCodeMethods(ViewType<T> viewType, ManagedViewTypeImplementor<T> managedViewType, CtClass cc, CtClass superCc, CtField[] attributeFields, CtField idField) throws NotFoundException, CannotCompileException {
         CtClass equalsDeclaringClass = superCc.getMethod("equals", getEqualsDesc()).getDeclaringClass();
         CtClass hashCodeDeclaringClass = superCc.getMethod("hashCode", getHashCodeDesc()).getDeclaringClass();
         boolean hasCustomEqualsHashCode = false;
@@ -820,6 +841,20 @@ public class ProxyFactory {
     private void addGetJpaManagedClass(CtClass cc, Class<?> entityClass) throws CannotCompileException {
         ConstPool cp = cc.getClassFile2().getConstPool();
         MethodInfo minfo = new MethodInfo(cp, "$$_getJpaManagedClass", "()Ljava/lang/Class;");
+        minfo.addAttribute(new SignatureAttribute(cp, "()Ljava/lang/Class<*>;"));
+        minfo.setAccessFlags(AccessFlag.PUBLIC);
+
+        Bytecode code = new Bytecode(cp, 1, 1);
+        code.addLdc(cp.addClassInfo(entityClass.getName()));
+        code.addOpcode(Bytecode.ARETURN);
+
+        minfo.setCodeAttribute(code.toCodeAttribute());
+        cc.addMethod(CtMethod.make(minfo, cc));
+    }
+
+    private void addGetJpaManagedBaseClass(CtClass cc, Class<?> entityClass) throws CannotCompileException {
+        ConstPool cp = cc.getClassFile2().getConstPool();
+        MethodInfo minfo = new MethodInfo(cp, "$$_getJpaManagedBaseClass", "()Ljava/lang/Class;");
         minfo.addAttribute(new SignatureAttribute(cp, "()Ljava/lang/Class<*>;"));
         minfo.setAccessFlags(AccessFlag.PUBLIC);
 
@@ -1821,15 +1856,15 @@ public class ProxyFactory {
         return "(" + Descriptor.of("java.lang.Object") + ")" + Descriptor.of(returnType);
     }
 
-    private CtMethod createEquals(ManagedViewType<?> managedViewType, CtClass cc, CtField... fields) throws NotFoundException, CannotCompileException {
+    private CtMethod createEquals(ManagedViewTypeImplementor<?> managedViewType, CtClass cc, CtField... fields) throws NotFoundException, CannotCompileException {
         return createEquals(managedViewType, cc, false, fields);
     }
 
-    private CtMethod createIdEquals(ManagedViewType<?> managedViewType, CtClass cc) throws NotFoundException, CannotCompileException {
+    private CtMethod createIdEquals(ManagedViewTypeImplementor<?> managedViewType, CtClass cc) throws NotFoundException, CannotCompileException {
         return createEquals(managedViewType, cc, true, null);
     }
 
-    private CtMethod createEquals(ManagedViewType<?> managedViewType, CtClass cc, boolean idBased, CtField[] fields) throws NotFoundException, CannotCompileException {
+    private CtMethod createEquals(ManagedViewTypeImplementor<?> managedViewType, CtClass cc, boolean idBased, CtField[] fields) throws NotFoundException, CannotCompileException {
         ConstPool cp = cc.getClassFile2().getConstPool();
         MethodInfo method = new MethodInfo(cp, "equals", getEqualsDesc());
         method.setAccessFlags(AccessFlag.PUBLIC);
@@ -1838,36 +1873,53 @@ public class ProxyFactory {
 
         sb.append('{');
         sb.append("\tif ($0 == $1) { return true; }\n");
-        sb.append("\tif ($1 == null || !($1 instanceof ").append(EntityViewProxy.class.getName()).append(")) { return false; }\n");
-        sb.append("\tif ($0.$$_getJpaManagedClass() != ((").append(EntityViewProxy.class.getName()).append(") $1).$$_getJpaManagedClass()) { return false; }\n");
 
+        Class<?> viewClass = managedViewType.getJavaType();
         if (idBased) {
-            sb.append("\treturn $0.$$_getId() != null && $0.$$_getId().equals(((").append(EntityViewProxy.class.getName()).append(") $1).$$_getId());\n");
+            sb.append("\tif ($1 == null || $0.$$_getId() == null) { return false; }\n");
+            sb.append("\tif ($1 instanceof ").append(EntityViewProxy.class.getName()).append(") {\n");
+            sb.append("\t\treturn $0.$$_getJpaManagedBaseClass() == ((").append(EntityViewProxy.class.getName()).append(") $1).$$_getJpaManagedBaseClass() && ");
+            sb.append("$0.$$_getId().equals(((").append(EntityViewProxy.class.getName()).append(") $1).$$_getId());\n");
+            sb.append("\t}\n");
+            // Here we handle user provided types that implement the interface and we only allow this when the view is defined for a concrete entity type
+            if (managedViewType.getJpaManagedType().getPersistenceType() == javax.persistence.metamodel.Type.PersistenceType.ENTITY && (managedViewType.getJpaManagedType().getJavaType().getModifiers() & Modifier.ABSTRACT) != Modifier.ABSTRACT) {
+                sb.append("\treturn $1 instanceof ").append(viewClass.getName()).append(" && $0.$$_getId().equals((").append(viewClass.getName()).append(") $1).get");
+                StringUtils.addFirstToUpper(sb, ((ViewType<?>) managedViewType).getIdAttribute().getName()).append("());\n");
+            } else {
+                sb.append("\t\tthrow new IllegalArgumentException(\"The view class ").append(viewClass.getName()).append(" is defined for an abstract or non-entity type which is why id-based equality can't be checked on the user provided instance: \" + $1);\n");
+            }
         } else {
-            Class<?> viewClass = managedViewType.getJavaType();
-            sb.append("\tfinal ").append(viewClass.getName()).append(" other = (").append(viewClass.getName()).append(") $1;\n");
+            String name;
+            if (managedViewType.supportsInterfaceEquals()) {
+                name = viewClass.getName();
+            } else {
+                name = cc.getName();
+            }
+
+            sb.append("\tif (other instanceof ").append(name).append(") {\n");
+            sb.append("\t\tfinal ").append(name).append(" other = (").append(name).append(") $1;\n");
 
             for (CtField field : fields) {
                 if (field.getType().isPrimitive()) {
                     if (CtClass.booleanType == field.getType() && managedViewType.getAttribute(field.getName()).getJavaMethod().getName().startsWith("is")) {
-                        sb.append("\tif ($0.").append(field.getName()).append(" != other.is");
+                        sb.append("\t\tif ($0.").append(field.getName()).append(" != other.is");
                         StringUtils.addFirstToUpper(sb, field.getName()).append("()");
                         sb.append(") {\n");
                     } else {
-                        sb.append("\tif ($0.").append(field.getName()).append(" != other.get");
+                        sb.append("\t\tif ($0.").append(field.getName()).append(" != other.get");
                         StringUtils.addFirstToUpper(sb, field.getName()).append("()");
                         sb.append(") {\n");
                     }
                 } else {
                     if (Boolean.class.getName().equals(field.getType().getName()) && managedViewType.getAttribute(field.getName()).getJavaMethod().getName().startsWith("is")) {
-                        sb.append("\tif ($0.").append(field.getName()).append(" != other.is");
+                        sb.append("\t\tif ($0.").append(field.getName()).append(" != other.is");
                         StringUtils.addFirstToUpper(sb, field.getName()).append("()");
                         sb.append(" && ($0.").append(field.getName()).append(" == null");
                         sb.append(" || !$0.").append(field.getName()).append(".equals(other.is");
                         StringUtils.addFirstToUpper(sb, field.getName()).append("()");
                         sb.append("))) {\n");
                     } else {
-                        sb.append("\tif ($0.").append(field.getName()).append(" != other.get");
+                        sb.append("\t\tif ($0.").append(field.getName()).append(" != other.get");
                         StringUtils.addFirstToUpper(sb, field.getName()).append("()");
                         sb.append(" && ($0.").append(field.getName()).append(" == null");
                         sb.append(" || !$0.").append(field.getName()).append(".equals(other.get");
@@ -1875,8 +1927,17 @@ public class ProxyFactory {
                         sb.append("))) {\n");
                     }
                 }
-                sb.append("\t\treturn false;\n\t}\n");
+                sb.append("\t\t\treturn false;\n\t\t}\n");
             }
+
+            sb.append("\telse {\n");
+            if (managedViewType.supportsInterfaceEquals()) {
+                sb.append("\t\treturn false;\n");
+            } else {
+                sb.append("\t\tif ($1 == null) { return false; }\n");
+                sb.append("\t\tthrow new IllegalArgumentException(\"A superclass of ").append(viewClass.getName()).append(" declares a protected or default attribute that is relevant for checking for state equality which can't be accessed on the user provided instance: \" + $1);\n");
+            }
+            sb.append("\t}\n");
             sb.append("\treturn true;\n");
         }
 

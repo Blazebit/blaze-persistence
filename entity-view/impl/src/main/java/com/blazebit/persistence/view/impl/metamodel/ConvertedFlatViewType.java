@@ -121,6 +121,11 @@ public class ConvertedFlatViewType<X> implements FlatViewTypeImplementor<X> {
     }
 
     @Override
+    public boolean supportsInterfaceEquals() {
+        return delegate.supportsInterfaceEquals();
+    }
+
+    @Override
     public ManagedViewTypeImpl.InheritanceSubtypeConfiguration<X> getInheritanceSubtypeConfiguration(Map<ManagedViewTypeImplementor<? extends X>, String> inheritanceSubtypeMapping) {
         return delegate.getInheritanceSubtypeConfiguration(inheritanceSubtypeMapping);
     }
