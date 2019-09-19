@@ -23,7 +23,10 @@ import java.lang.invoke.MethodHandles;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class UnsafeHelper {
+public final class UnsafeHelper {
+
+    private UnsafeHelper() {
+    }
 
     public static Class<?> define(String name, byte[] bytes, final Class<?> declaringClass) {
         try {
