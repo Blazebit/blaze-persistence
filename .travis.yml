@@ -63,7 +63,9 @@ matrix:
         - docker
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 SPRING_DATA=spring-data-2.0.x DELTASPIKE=deltaspike-1.8
       jdk: oraclejdk8
-    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 SPRING_DATA=spring-data-2.1.x DELTASPIKE=deltaspike-1.8
+    - env: JPAPROVIDER=hibernate-5.3 RDBMS=h2 SPRING_DATA=spring-data-2.1.x DELTASPIKE=deltaspike-1.8
+      jdk: oraclejdk8
+    - env: JPAPROVIDER=hibernate-5.4 RDBMS=h2 SPRING_DATA=spring-data-2.2.x DELTASPIKE=deltaspike-1.8
       jdk: oraclejdk8
 #    - env: JPAPROVIDER=hibernate-5.2 RDBMS=sqlite
 #      jdk: oraclejdk8
