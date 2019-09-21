@@ -42,12 +42,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 /**
- * @author Moritz Becker
- * @since 1.2.0
+ * @author Christian Beikov
+ * @since 1.4.0
  */
-@ContextConfiguration(classes = DocumentRepositoryTest.TestConfig.class)
+@ContextConfiguration(classes = GenericRepositoryTest.TestConfig.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-public class DocumentRepositoryTest extends AbstractSpringTest {
+public class GenericRepositoryTest extends AbstractSpringTest {
 
     @Autowired
     private TransactionalWorkService transactionalWorkService;
