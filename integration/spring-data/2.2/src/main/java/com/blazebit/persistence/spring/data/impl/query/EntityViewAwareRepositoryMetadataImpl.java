@@ -51,6 +51,11 @@ public class EntityViewAwareRepositoryMetadataImpl implements EntityViewAwareRep
     }
 
     @Override
+    public EntityViewManager getEntityViewManager() {
+        return evm;
+    }
+
+    @Override
     public Class<?> getIdType() {
         return metadata.getIdType();
     }

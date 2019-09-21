@@ -17,6 +17,7 @@
 
 package com.blazebit.persistence.spring.data.base.repository;
 
+import com.blazebit.persistence.spring.data.base.query.EntityViewAwareRepositoryMetadata;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.reflection.ReflectionUtils;
@@ -59,21 +60,7 @@ import java.util.concurrent.ConcurrentMap;
  */
 public class EntityViewAwareCrudMethodMetadataPostProcessor implements RepositoryProxyPostProcessor, BeanClassLoaderAware {
 
-    private static final ConcurrentMap<EntityViewManager, MethodInterceptor> INTERCEPTOR_CACHE = new ConcurrentHashMap<>();
-    private final MethodInterceptor interceptor;
     private ClassLoader classLoader = ClassUtils.getDefaultClassLoader();
-
-    public EntityViewAwareCrudMethodMetadataPostProcessor(EntityViewManager evm) {
-        MethodInterceptor methodInterceptor = INTERCEPTOR_CACHE.get(evm);
-        if (methodInterceptor == null) {
-            methodInterceptor = new CrudMethodMetadataPopulatingMethodInterceptor(evm);
-            MethodInterceptor old = INTERCEPTOR_CACHE.putIfAbsent(evm, methodInterceptor);
-            if (old != null) {
-                methodInterceptor = old;
-            }
-        }
-        this.interceptor = methodInterceptor;
-    }
 
     /*
      * (non-Javadoc)
@@ -91,7 +78,7 @@ public class EntityViewAwareCrudMethodMetadataPostProcessor implements Repositor
      */
     @Override
     public void postProcess(ProxyFactory factory, RepositoryInformation repositoryInformation) {
-        factory.addAdvice(interceptor);
+        factory.addAdvice(new CrudMethodMetadataPopulatingMethodInterceptor(((EntityViewAwareRepositoryMetadata) repositoryInformation).getEntityViewManager()));
     }
 
     /**

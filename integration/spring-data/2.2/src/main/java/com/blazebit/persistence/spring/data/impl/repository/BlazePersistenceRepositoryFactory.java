@@ -104,7 +104,7 @@ public class BlazePersistenceRepositoryFactory extends JpaRepositoryFactory {
         this.repositoryInformationCache = new ConcurrentReferenceHashMap<>(16, ConcurrentReferenceHashMap.ReferenceType.WEAK);
         this.cbf = cbf;
         this.evm = evm;
-        addRepositoryProxyPostProcessor(this.crudMethodMetadataPostProcessor = new EntityViewAwareCrudMethodMetadataPostProcessor(evm));
+        addRepositoryProxyPostProcessor(this.crudMethodMetadataPostProcessor = new EntityViewAwareCrudMethodMetadataPostProcessor());
         this.repositoryBaseClass = Optional.empty();
         this.entityViewReplacingMethodInterceptor = new EntityViewReplacingMethodInterceptor(entityManager, evm);
     }

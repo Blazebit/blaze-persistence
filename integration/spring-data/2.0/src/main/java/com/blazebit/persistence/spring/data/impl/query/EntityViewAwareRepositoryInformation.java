@@ -17,6 +17,7 @@
 package com.blazebit.persistence.spring.data.impl.query;
 
 import com.blazebit.persistence.spring.data.base.query.EntityViewAwareRepositoryMetadata;
+import com.blazebit.persistence.view.EntityViewManager;
 import org.springframework.data.repository.core.CrudMethods;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.util.Streamable;
@@ -37,6 +38,11 @@ public class EntityViewAwareRepositoryInformation implements RepositoryInformati
     public EntityViewAwareRepositoryInformation(EntityViewAwareRepositoryMetadata metadata, RepositoryInformation repositoryInformation) {
         this.metadata = metadata;
         this.repositoryInformation = repositoryInformation;
+    }
+
+    @Override
+    public EntityViewManager getEntityViewManager() {
+        return metadata.getEntityViewManager();
     }
 
     @Override

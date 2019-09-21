@@ -28,7 +28,6 @@ import com.blazebit.persistence.spring.data.impl.query.EntityViewAwareRepository
 import com.blazebit.persistence.spring.data.impl.query.PartTreeBlazePersistenceQuery;
 import com.blazebit.persistence.spring.data.repository.EntityViewReplacingMethodInterceptor;
 import com.blazebit.persistence.view.EntityViewManager;
-import org.aopalliance.intercept.MethodInterceptor;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.aop.interceptor.ExposeInvocationInterceptor;
 import org.springframework.beans.BeansException;
@@ -104,7 +103,7 @@ public class BlazePersistenceRepositoryFactory extends JpaRepositoryFactory {
         this.repositoryInformationCache = new ConcurrentReferenceHashMap<>(16, ConcurrentReferenceHashMap.ReferenceType.WEAK);
         this.cbf = cbf;
         this.evm = evm;
-        addRepositoryProxyPostProcessor(this.crudMethodMetadataPostProcessor = new EntityViewAwareCrudMethodMetadataPostProcessor(evm));
+        addRepositoryProxyPostProcessor(this.crudMethodMetadataPostProcessor = new EntityViewAwareCrudMethodMetadataPostProcessor());
         this.repositoryBaseClass = Optional.empty();
         this.entityViewReplacingMethodInterceptor = new EntityViewReplacingMethodInterceptor(entityManager, evm);
     }
