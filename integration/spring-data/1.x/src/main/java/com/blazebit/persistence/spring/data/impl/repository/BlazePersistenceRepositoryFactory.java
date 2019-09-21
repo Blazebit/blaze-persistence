@@ -28,7 +28,6 @@ import com.blazebit.persistence.spring.data.impl.query.EntityViewAwareRepository
 import com.blazebit.persistence.spring.data.impl.query.PartTreeBlazePersistenceQuery;
 import com.blazebit.persistence.spring.data.repository.EntityViewReplacingMethodInterceptor;
 import com.blazebit.persistence.view.EntityViewManager;
-import org.aopalliance.intercept.MethodInterceptor;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.jpa.provider.PersistenceProvider;
 import org.springframework.data.jpa.provider.QueryExtractor;
@@ -74,7 +73,7 @@ public class BlazePersistenceRepositoryFactory extends JpaRepositoryFactory {
         this.extractor = PersistenceProvider.fromEntityManager(entityManager);
         this.cbf = cbf;
         this.evm = evm;
-        addRepositoryProxyPostProcessor(this.crudMethodMetadataPostProcessor = new EntityViewAwareCrudMethodMetadataPostProcessor(evm));
+        addRepositoryProxyPostProcessor(this.crudMethodMetadataPostProcessor = new EntityViewAwareCrudMethodMetadataPostProcessor());
         this.entityViewReplacingMethodInterceptor = new EntityViewReplacingMethodInterceptor(entityManager, evm);
     }
 

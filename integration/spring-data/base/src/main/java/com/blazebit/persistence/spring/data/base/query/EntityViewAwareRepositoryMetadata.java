@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.spring.data.base.query;
 
+import com.blazebit.persistence.view.EntityViewManager;
 import org.springframework.data.repository.core.RepositoryMetadata;
 
 import java.lang.reflect.Method;
@@ -25,6 +26,8 @@ import java.lang.reflect.Method;
  * @since 1.2.0
  */
 public interface EntityViewAwareRepositoryMetadata extends RepositoryMetadata {
+
+    public EntityViewManager getEntityViewManager();
 
     public Class<?> getEntityViewType();
 
