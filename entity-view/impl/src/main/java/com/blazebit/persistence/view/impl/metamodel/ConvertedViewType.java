@@ -123,6 +123,11 @@ public class ConvertedViewType<X> implements ViewTypeImplementor<X> {
     }
 
     @Override
+    public boolean supportsUserTypeEquals() {
+        return delegate.supportsUserTypeEquals();
+    }
+
+    @Override
     public ManagedViewTypeImpl.InheritanceSubtypeConfiguration<X> getInheritanceSubtypeConfiguration(Map<ManagedViewTypeImplementor<? extends X>, String> inheritanceSubtypeMapping) {
         return delegate.getInheritanceSubtypeConfiguration(inheritanceSubtypeMapping);
     }

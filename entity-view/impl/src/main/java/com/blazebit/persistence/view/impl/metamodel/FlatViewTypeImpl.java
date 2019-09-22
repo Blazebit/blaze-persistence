@@ -38,17 +38,18 @@ public class FlatViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements FlatV
     @SuppressWarnings("unchecked")
     public FlatViewTypeImpl(ViewMapping viewMapping, ManagedType<?> managedType, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
         super(viewMapping, managedType, context, embeddableMapping);
-        context.finishViewType(this);
         boolean supportsInterfaceEquals = true;
         for (AbstractMethodAttribute<?, ?> attribute : (Collection<AbstractMethodAttribute<?, ?>>) (Collection<?>) getAttributes()) {
             Method javaMethod = attribute.getJavaMethod();
             if (!Modifier.isPublic(javaMethod.getModifiers()) && !getJavaType().getPackage().getName().equals(javaMethod.getDeclaringClass().getPackage().getName())) {
                 supportsInterfaceEquals = false;
-                LOG.warning("The method for the " + attribute.getLocation() + " is non-public and declared in a different package " + javaMethod.getDeclaringClass().getPackage().getName() + " than the view type which makes it impossible to allow checking for equality with user provided implementations of the view type. If you don't need that, you can ignore this warning.");
+                LOG.warning("The method for the " + attribute.getLocation() + " is non-public and declared in a different package " + javaMethod.getDeclaringClass().getPackage().getName() + " than the view type " + getJavaType().getName() +
+                        " which makes it impossible to allow checking for equality with user provided implementations of the view type. If you don't need that, you can ignore this warning.");
             }
         }
 
         this.supportsInterfaceEquals = supportsInterfaceEquals;
+        context.finishViewType(this);
     }
 
     @Override

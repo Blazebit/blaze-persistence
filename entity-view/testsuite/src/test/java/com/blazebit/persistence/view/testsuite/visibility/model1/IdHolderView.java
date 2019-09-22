@@ -14,17 +14,25 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl.metamodel;
+package com.blazebit.persistence.view.testsuite.visibility.model1;
 
-import com.blazebit.persistence.view.metamodel.ViewType;
+import com.blazebit.persistence.view.IdMapping;
+
+import java.io.Serializable;
 
 /**
+ *
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.4.0
  */
-public interface ViewTypeImplementor<X> extends ViewType<X>, ManagedViewTypeImplementor<X> {
+public abstract class IdHolderView<T> implements Serializable {
 
-    ViewTypeImplementor<X> getRealType();
+    public IdHolderView() {
+        setId((T) (Long) Long.MIN_VALUE);
+    }
 
-    boolean supportsUserTypeEquals();
+    @IdMapping
+    protected abstract T getId();
+
+    abstract void setId(T id);
 }

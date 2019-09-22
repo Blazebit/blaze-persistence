@@ -24,10 +24,13 @@ import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.ViewFilterMapping;
 
 import javax.persistence.metamodel.ManagedType;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 /**
  *
@@ -36,11 +39,15 @@ import java.util.Set;
  */
 public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewTypeImplementor<X> {
 
+    private static final Logger LOG = Logger.getLogger(ViewTypeImpl.class.getName());
+
     private final String name;
     private final String lockOwner;
     private final MethodAttribute<? super X, ?> idAttribute;
     private final MethodAttribute<? super X, ?> versionAttribute;
     private final Map<String, ViewFilterMapping> viewFilters;
+    private final boolean supportsInterfaceEquals;
+    private final boolean supportsUserTypeEquals;
 
     public ViewTypeImpl(ViewMapping viewMapping, ManagedType<?> managedType, MetamodelBuildingContext context) {
         super(viewMapping, managedType, context, null);
@@ -92,6 +99,22 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewTypeI
                 context.addError("Invalid lock owner mapping defined for managed view type '" + getJavaType().getName() + "'!");
             }
         }
+        boolean supportsInterfaceEquals = true;
+        boolean supportsUserTypeEquals = true;
+        Method javaMethod = idAttribute.getJavaMethod();
+        if (!Modifier.isPublic(javaMethod.getModifiers()) && !getJavaType().getPackage().getName().equals(javaMethod.getDeclaringClass().getPackage().getName())) {
+            supportsInterfaceEquals = false;
+            supportsUserTypeEquals = false;
+            LOG.warning("The method for the " + ((AbstractMethodAttribute<?, ?>) idAttribute).getLocation() + " is non-public and declared in a different package " + javaMethod.getDeclaringClass().getPackage().getName() + " than the view type " + getJavaType().getName() +
+                    " which makes it impossible to allow checking for equality with user provided implementations of the view type. If you don't need that, you can ignore this warning.");
+            // We also disallow interface equality when the view is defined for an abstract entity type
+        } else if (getJpaManagedType().getPersistenceType() != javax.persistence.metamodel.Type.PersistenceType.ENTITY || java.lang.reflect.Modifier.isAbstract(getJpaManagedType().getJavaType().getModifiers())) {
+            supportsUserTypeEquals = false;
+            LOG.warning("The view class " + getJavaType().getName() + " is defined for an abstract or non-entity type which is why id-based equality can't be checked on a user provided instance. If you don't need that, you can ignore this warning.");
+        }
+
+        this.supportsInterfaceEquals = supportsInterfaceEquals;
+        this.supportsUserTypeEquals = supportsUserTypeEquals;
         context.finishViewType(this);
     }
 
@@ -141,7 +164,12 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewTypeI
 
     @Override
     public boolean supportsInterfaceEquals() {
-        return true;
+        return supportsInterfaceEquals;
+    }
+
+    @Override
+    public boolean supportsUserTypeEquals() {
+        return supportsUserTypeEquals;
     }
 
     @Override
