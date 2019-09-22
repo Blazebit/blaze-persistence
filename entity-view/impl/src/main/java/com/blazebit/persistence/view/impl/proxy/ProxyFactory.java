@@ -36,6 +36,7 @@ import com.blazebit.persistence.view.impl.metamodel.ConstrainedAttribute;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.MappingConstructorImpl;
+import com.blazebit.persistence.view.impl.metamodel.ViewTypeImplementor;
 import com.blazebit.persistence.view.metamodel.Attribute;
 import com.blazebit.persistence.view.metamodel.BasicType;
 import com.blazebit.persistence.view.metamodel.FlatViewType;
@@ -62,11 +63,13 @@ import javassist.CtMethod;
 import javassist.Modifier;
 import javassist.NotFoundException;
 import javassist.bytecode.AccessFlag;
+import javassist.bytecode.AttributeInfo;
 import javassist.bytecode.BadBytecode;
 import javassist.bytecode.Bytecode;
 import javassist.bytecode.CodeAttribute;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.Descriptor;
+import javassist.bytecode.ExceptionsAttribute;
 import javassist.bytecode.FieldInfo;
 import javassist.bytecode.MethodInfo;
 import javassist.bytecode.Opcode;
@@ -92,11 +95,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -114,6 +119,7 @@ public class ProxyFactory {
     // This has to be static since runtime generated correlation providers can't be matched in a later run, so we always create a new one with a unique name
     private static final ConcurrentMap<Class<?>, AtomicInteger> CORRELATION_PROVIDER_CLASS_COUNT = new ConcurrentHashMap<>();
     private static final Path DEBUG_DUMP_DIRECTORY;
+    private final ConcurrentMap<Class<?>, Class<?>> baseClasses = new ConcurrentHashMap<>();
     private final ConcurrentMap<ProxyClassKey, Class<?>> proxyClasses = new ConcurrentHashMap<>();
     private final ConcurrentMap<ProxyClassKey, Class<?>> unsafeProxyClasses = new ConcurrentHashMap<>();
     private final Object proxyLock = new Object();
@@ -266,6 +272,85 @@ public class ProxyFactory {
         return proxyClass;
     }
 
+    private Class<?> getProxyBase(Class<?> baseClass) {
+        if (baseClass.isInterface() || !java.lang.reflect.Modifier.isAbstract(baseClass.getSuperclass().getModifiers())) {
+            return baseClass;
+        }
+        Class<?> proxyBaseClass = baseClasses.get(baseClass);
+
+        // No need for locking as we are in a locked context in here anyway
+        if (proxyBaseClass == null) {
+            proxyBaseClass = createProxyBaseClass(baseClass);
+            baseClasses.put(baseClass, proxyBaseClass);
+        }
+
+        return proxyBaseClass;
+    }
+
+    private Class<?> createProxyBaseClass(Class<?> baseClass) {
+        String packageName = baseClass.getPackage().getName();
+        Map<String, Class<?>> classesToBaseProxy = new LinkedHashMap<>();
+
+        // Traverse the class hierarchy up and collect abstract classes of packages different than the original package
+        for (Class<?> c = baseClass.getSuperclass(); c != Object.class; c = c.getSuperclass()) {
+            if (java.lang.reflect.Modifier.isAbstract(c.getModifiers()) && !packageName.equals(c.getPackage().getName())) {
+                classesToBaseProxy.put(c.getName(), c);
+            }
+        }
+
+        if (classesToBaseProxy.isEmpty()) {
+            return baseClass;
+        }
+
+        ClassPath classPath = new ClassClassPath(baseClass);
+        pool.insertClassPath(classPath);
+        try {
+            Class<?> proxyClass = baseClass;
+            for (Class<?> classOfPackage : classesToBaseProxy.values()) {
+                CtClass superCc = pool.get(proxyClass.getName());
+                CtClass cc = pool.makeClass(classOfPackage.getName() + "_$$_javassist_proxybase_" + baseClass.getName().replace('.',  '_'));
+                cc.setSuperclass(superCc);
+                String genericSignature = pool.get(classOfPackage.getName()).getGenericSignature();
+                if (genericSignature != null) {
+                    cc.setGenericSignature(genericSignature);
+                }
+
+                // Collect the protected and default visibility methods
+                Map<String, MethodInfo> methods = new TreeMap<>();
+                Map<String, String> classNameMapping = new HashMap<>();
+                CtClass ctClass = pool.get(classOfPackage.getName());
+                classNameMapping.put(classOfPackage.getName(), cc.getName());
+                for (CtMethod method : ctClass.getDeclaredMethods()) {
+                    if (java.lang.reflect.Modifier.isAbstract(method.getModifiers()) && !java.lang.reflect.Modifier.isPublic(method.getModifiers()) && !java.lang.reflect.Modifier.isPrivate(method.getModifiers())) {
+                        methods.put(method.getName() + " " + method.getMethodInfo().getDescriptor(), method.getMethodInfo());
+                    }
+                }
+
+                // Redefine methods in proxy base class as public
+                for (MethodInfo value : methods.values()) {
+                    MethodInfo methodInfo = new MethodInfo(cc.getClassFile().getConstPool(), value.getName(), value.getDescriptor());
+                    if (value.getExceptionsAttribute() != null) {
+                        methodInfo.setExceptionsAttribute((ExceptionsAttribute) value.getExceptionsAttribute().copy(cc.getClassFile().getConstPool(), classNameMapping));
+                    }
+                    for (AttributeInfo attribute : value.getAttributes()) {
+                        methodInfo.addAttribute(attribute.copy(cc.getClassFile().getConstPool(), classNameMapping));
+                    }
+
+                    methodInfo.setAccessFlags(Modifier.setPublic(value.getAccessFlags()));
+                    cc.addMethod(CtMethod.make(methodInfo, cc));
+                }
+
+                proxyClass = defineOrGetClass(proxyClass, cc);
+            }
+
+            return proxyClass;
+        } catch (Exception ex) {
+            throw new RuntimeException("Probably we did something wrong, please contact us if you see this message.", ex);
+        } finally {
+            pool.removeClassPath(classPath);
+        }
+    }
+
     @SuppressWarnings("unchecked")
     private <T> Class<? extends T> createProxyClass(EntityViewManager entityViewManager, ManagedViewTypeImplementor<T> managedViewType, ManagedViewTypeImplementor<? super T> inheritanceBase, boolean unsafe) {
         ViewType<T> viewType = managedViewType instanceof ViewType<?> ? (ViewType<T>) managedViewType : null;
@@ -290,7 +375,7 @@ public class ProxyFactory {
         pool.insertClassPath(classPath);
 
         try {
-            superCc = pool.get(clazz.getName());
+            superCc = pool.get(getProxyBase(clazz).getName());
 
             if (clazz.isInterface()) {
                 cc.addInterface(superCc);
@@ -496,7 +581,7 @@ public class ProxyFactory {
                 createInheritanceConstructors(entityViewManager, constructors, inheritanceBase, managedViewType, subtypeIndex, addedReferenceConstructor, unsafe, cc, initialStateField, mutableStateField, fieldMap);
             }
 
-            return defineOrGetClass(entityViewManager, unsafe, clazz, proxyClassName, cc);
+            return defineOrGetClass(entityViewManager, unsafe, clazz, cc);
         } catch (Exception ex) {
             throw new RuntimeException("Probably we did something wrong, please contact us if you see this message.", ex);
         } finally {
@@ -523,7 +608,11 @@ public class ProxyFactory {
         return managedViewType.getEntityClass();
     }
 
-    private <T> Class<? extends T> defineOrGetClass(EntityViewManager entityViewManager, boolean unsafe, Class<?> clazz, String proxyClassName, CtClass cc) throws IOException, IllegalAccessException, NoSuchFieldException, CannotCompileException {
+    private <T> Class<? extends T> defineOrGetClass(Class<?> clazz, CtClass cc) throws IOException, IllegalAccessException, NoSuchFieldException, CannotCompileException {
+        return defineOrGetClass(null, false, clazz, cc);
+    }
+
+    private <T> Class<? extends T> defineOrGetClass(EntityViewManager entityViewManager, boolean unsafe, Class<?> clazz, CtClass cc) throws IOException, IllegalAccessException, NoSuchFieldException, CannotCompileException {
         try {
             // Ask the package opener to allow deep access, otherwise defining the class will fail
             packageOpener.openPackageIfNeeded(clazz, clazz.getPackage().getName(), ProxyFactory.class);
@@ -539,7 +628,9 @@ public class ProxyFactory {
                 c = (Class<? extends T>) cc.toClass(clazz.getClassLoader(), null);
             }
 
-            c.getField("$$_evm").set(null, entityViewManager);
+            if (entityViewManager != null) {
+                c.getField("$$_evm").set(null, entityViewManager);
+            }
 
             return c;
         } catch (CannotCompileException | LinkageError ex) {
@@ -551,7 +642,7 @@ public class ProxyFactory {
                     || ex.getCause() instanceof InvocationTargetException && ex.getCause().getCause() instanceof LinkageError && (error = (LinkageError) ex.getCause().getCause()) != null
                     || ex.getCause() instanceof LinkageError && (error = (LinkageError) ex.getCause()) != null) {
                 try {
-                    return (Class<? extends T>) pool.getClassLoader().loadClass(proxyClassName);
+                    return (Class<? extends T>) pool.getClassLoader().loadClass(cc.getName());
                 } catch (ClassNotFoundException cnfe) {
                     // Something we can't handle happened
                     throw error;
@@ -563,7 +654,7 @@ public class ProxyFactory {
             // With Java 9 it's actually the case that Javassist doesn't throw the LinkageError but instead tries to define the class differently
             // Too bad that this different path lead to a NullPointerException
             try {
-                return (Class<? extends T>) pool.getClassLoader().loadClass(proxyClassName);
+                return (Class<? extends T>) pool.getClassLoader().loadClass(cc.getName());
             } catch (ClassNotFoundException cnfe) {
                 // Something we can't handle happened
                 throw ex;
@@ -1804,7 +1895,7 @@ public class ProxyFactory {
         Class<?> attributeType = attribute.getConvertedJavaType();
 
         for (Class<?> c : ReflectionUtils.getSuperTypes(clazz)) {
-            METHOD: for (Method m : c.getMethods()) {
+            METHOD: for (Method m : c.getDeclaredMethods()) {
                 if (name.equals(m.getName()) && m.getReturnType().isAssignableFrom(attributeType) && !attributeType.equals(m.getReturnType())) {
                     for (Method b : bridges) {
                         if (b.getReturnType().equals(m.getReturnType())) {
@@ -1826,7 +1917,7 @@ public class ProxyFactory {
         Class<?> attributeType = attribute.getConvertedJavaType();
 
         for (Class<?> c : ReflectionUtils.getSuperTypes(clazz)) {
-            METHOD: for (Method m : c.getMethods()) {
+            METHOD: for (Method m : c.getDeclaredMethods()) {
                 if (name.equals(m.getName()) && m.getParameterTypes()[0].isAssignableFrom(attributeType) && !attributeType.equals(m.getParameterTypes()[0])) {
                     for (Method b : bridges) {
                         if (b.getParameterTypes()[0].equals(m.getParameterTypes()[0])) {
@@ -1885,10 +1976,11 @@ public class ProxyFactory {
             sb.append("\t\t\treturn false;\n");
             sb.append("\t\t}\n");
             sb.append("\t}\n");
-            // Here we handle user provided types that implement the interface and we only allow this when the view is defined for a concrete entity type
-            if (managedViewType.getJpaManagedType().getPersistenceType() == javax.persistence.metamodel.Type.PersistenceType.ENTITY && (managedViewType.getJpaManagedType().getJavaType().getModifiers() & Modifier.ABSTRACT) != Modifier.ABSTRACT) {
+            ViewTypeImplementor<?> viewType = (ViewTypeImplementor<?>) managedViewType;
+            MethodAttribute<?, ?> idAttribute = viewType.getIdAttribute();
+            if (viewType.supportsUserTypeEquals()) {
                 String wrap;
-                Class<?> javaType = ((ViewType<?>) managedViewType).getIdAttribute().getJavaType();
+                Class<?> javaType = idAttribute.getJavaType();
                 if (javaType.isPrimitive()) {
                     if (javaType == long.class) {
                         wrap = "Long.valueOf";
@@ -1911,13 +2003,15 @@ public class ProxyFactory {
                     wrap = "";
                 }
                 sb.append("\tif ($1 instanceof ").append(viewClass.getName()).append(" && $0.$$_getId().equals(").append(wrap).append("(((").append(viewClass.getName()).append(") $1).get");
-                StringUtils.addFirstToUpper(sb, ((ViewType<?>) managedViewType).getIdAttribute().getName()).append("()))) {\n");
+                StringUtils.addFirstToUpper(sb, idAttribute.getName()).append("()))) {\n");
                 sb.append("\t\t\treturn true;\n");
                 sb.append("\t\t} else {\n");
                 sb.append("\t\t\treturn false;\n");
                 sb.append("\t\t}\n");
-            } else {
+            } else if (viewType.supportsInterfaceEquals()) {
                 sb.append("\t\tthrow new IllegalArgumentException(\"The view class ").append(viewClass.getName()).append(" is defined for an abstract or non-entity type which is why id-based equality can't be checked on the user provided instance: \" + $1);\n");
+            } else {
+                sb.append("\t\tthrow new IllegalArgumentException(\"A superclass of ").append(viewClass.getName()).append(" declares a protected or default attribute that is relevant for checking for state equality which can't be accessed on the user provided instance: \" + $1);\n");
             }
         } else {
             String name;
