@@ -23,6 +23,6 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public interface BaseCTECriteriaBuilder<X extends BaseCTECriteriaBuilder<X>> extends CommonQueryBuilder<X>, FromBuilder<X>, KeysetQueryBuilder<X>, WhereBuilder<X>, OrderByBuilder<X>, GroupByBuilder<X>, DistinctBuilder<X>, LimitBuilder<X> {
+public interface BaseCTECriteriaBuilder<X extends BaseCTECriteriaBuilder<X>> extends CommonQueryBuilder<X>, FromBuilder<X>, KeysetQueryBuilder<X>, WhereBuilder<X>, OrderByBuilder<X>, GroupByBuilder<X>, DistinctBuilder<X>, LimitBuilder<X>, WindowContainerBuilder<X> {
 // TODO: maybe also add CTEBuilder?
 }
