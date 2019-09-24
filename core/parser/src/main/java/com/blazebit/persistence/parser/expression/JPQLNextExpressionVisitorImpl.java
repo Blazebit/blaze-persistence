@@ -577,7 +577,7 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
         if (ctx.STRING_LITERAL() != null) {
             throw new SyntaxErrorException("Collations are not yet supported: " + ctx.getText());
         }
-        if (ctx.DESC() == null) {
+        if (ctx.DESC() != null) {
             asc = false;
         }
         if (ctx.FIRST() == null) {
