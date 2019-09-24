@@ -408,7 +408,6 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                 for (int i = 1; i < size; i++) {
                     sb.append(", ");
                     partitionExpressions.get(i).accept(this);
-                    sb.append(",");
                 }
             }
 
