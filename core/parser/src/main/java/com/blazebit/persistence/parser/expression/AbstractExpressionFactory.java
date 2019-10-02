@@ -20,6 +20,7 @@ import com.blazebit.persistence.parser.JPQLNextLexer;
 import com.blazebit.persistence.parser.JPQLNextParser;
 import com.blazebit.persistence.parser.predicate.Predicate;
 import org.antlr.v4.runtime.ANTLRErrorListener;
+import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Parser;
@@ -157,7 +158,8 @@ public abstract class AbstractExpressionFactory extends AbstractExpressionFactor
         if (expression.isEmpty()) {
             throw new IllegalArgumentException("expression");
         }
-        JPQLNextLexer l = new JPQLNextLexer(CharStreams.fromString(expression));
+        CharStream inputCharStream = CharStreams.fromString(expression);
+        JPQLNextLexer l = new JPQLNextLexer(inputCharStream);
         configureLexer(l);
         CommonTokenStream tokens = new CommonTokenStream(l);
         JPQLNextParser p = new JPQLNextParser(tokens);
@@ -182,7 +184,7 @@ public abstract class AbstractExpressionFactory extends AbstractExpressionFactor
             LOG.finest(ctx.toStringTree());
         }
 
-        JPQLNextExpressionVisitorImpl visitor = new JPQLNextExpressionVisitorImpl(functions, enumTypes, entityTypes, minEnumSegmentCount, minEntitySegmentCount, macroConfiguration == null ? Collections.EMPTY_MAP : macroConfiguration.macros, usedMacros, allowOuter, allowQuantifiedPredicates, allowObjectExpression);
+        JPQLNextExpressionVisitorImpl visitor = new JPQLNextExpressionVisitorImpl(functions, enumTypes, entityTypes, minEnumSegmentCount, minEntitySegmentCount, macroConfiguration == null ? Collections.EMPTY_MAP : macroConfiguration.macros, usedMacros, allowOuter, allowQuantifiedPredicates, allowObjectExpression, inputCharStream);
         Expression parsedExpression = visitor.visit(ctx);
         if (optimize) {
             parsedExpression = parsedExpression.accept(optimizer);

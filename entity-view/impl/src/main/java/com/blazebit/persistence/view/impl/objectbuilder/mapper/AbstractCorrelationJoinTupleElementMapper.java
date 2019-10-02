@@ -55,7 +55,7 @@ public abstract class AbstractCorrelationJoinTupleElementMapper implements Alias
             EmbeddingViewJpqlMacro embeddingViewJpqlMacro = (EmbeddingViewJpqlMacro) ef.getDefaultMacroConfiguration().get("EMBEDDING_VIEW").getState()[0];
             String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
             embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
-            Expression expr = ef.createSimpleExpression(correlationResult, false);
+            Expression expr = ef.createSimpleExpression(correlationResult, false, false, true);
             embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
             SimpleQueryGenerator generator = new PrefixingQueryGenerator(Collections.singletonList(correlationAlias), joinBase, null, null);
             generator.setQueryBuffer(sb);

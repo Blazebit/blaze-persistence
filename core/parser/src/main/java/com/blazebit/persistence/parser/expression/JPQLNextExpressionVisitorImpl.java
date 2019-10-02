@@ -36,8 +36,10 @@ import com.blazebit.persistence.parser.predicate.MemberOfPredicate;
 import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.parser.predicate.PredicateQuantifier;
 import com.blazebit.persistence.parser.util.TypeUtils;
+import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.misc.Interval;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
@@ -65,8 +67,9 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
     private final boolean allowOuter;
     private final boolean allowQuantifiedPredicates;
     private final boolean allowObjectExpression;
+    private final CharStream input;
 
-    public JPQLNextExpressionVisitorImpl(Map<String, Boolean> functions, Map<String, Class<Enum<?>>> enums, Map<String, Class<?>> entities, int minEnumSegmentCount, int minEntitySegmentCount, Map<String, MacroFunction> macros, Set<String> usedMacros, boolean allowOuter, boolean allowQuantifiedPredicates, boolean allowObjectExpression) {
+    public JPQLNextExpressionVisitorImpl(Map<String, Boolean> functions, Map<String, Class<Enum<?>>> enums, Map<String, Class<?>> entities, int minEnumSegmentCount, int minEntitySegmentCount, Map<String, MacroFunction> macros, Set<String> usedMacros, boolean allowOuter, boolean allowQuantifiedPredicates, boolean allowObjectExpression, CharStream input) {
         this.functions = functions;
         this.enums = enums;
         this.entities = entities;
@@ -77,6 +80,7 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
         this.allowOuter = allowOuter;
         this.allowQuantifiedPredicates = allowQuantifiedPredicates;
         this.allowObjectExpression = allowObjectExpression;
+        this.input = input;
     }
 
     @Override
@@ -352,7 +356,7 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
                 return new FunctionExpression(name, Collections.<Expression>emptyList());
             case "outer":
                 if (!allowOuter) {
-                    throw new SyntaxErrorException("Invalid disallowed use of OUTER in: " + ctx.getText());
+                    throw new SyntaxErrorException("Invalid disallowed use of OUTER in: " + getInputText(ctx));
                 }
             case "concat":
             case "substring":
@@ -443,13 +447,13 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
         try {
             return macro.apply(arguments);
         } catch (RuntimeException ex) {
-            throw new IllegalArgumentException("Could not apply the macro for the expression: " + ctx.getText(), ex);
+            throw new IllegalArgumentException("Could not apply the macro for the expression: " + getInputText(ctx), ex);
         }
     }
 
     private void failDistinct(boolean distinct, ParserRuleContext ctx) {
         if (distinct) {
-            throw new SyntaxErrorException("Invalid use of DISTINCT for function: " + ctx.getText());
+            throw new SyntaxErrorException("Invalid use of DISTINCT for function: " + getInputText(ctx));
         }
     }
 
@@ -575,7 +579,7 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
         boolean asc = true;
         boolean nullsFirst = true;
         if (ctx.STRING_LITERAL() != null) {
-            throw new SyntaxErrorException("Collations are not yet supported: " + ctx.getText());
+            throw new SyntaxErrorException("Collations are not yet supported: " + getInputText(ctx));
         }
         if (ctx.DESC() != null) {
             asc = false;
@@ -593,10 +597,10 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
             if (expression instanceof PathExpression) {
                 List<PathElementExpression> expressions = ((PathExpression) expression).getExpressions();
                 if (expressions.size() == 1 && expressions.get(0) instanceof TreatExpression) {
-                    throw new SyntaxErrorException("A top level treat expression is not allowed. Consider to further dereference the expression: " + ctx.getText());
+                    throw new SyntaxErrorException("A top level treat expression is not allowed. Consider to further dereference the expression: " + getInputText(ctx));
                 }
             } else if (expression instanceof TreatExpression) {
-                throw new SyntaxErrorException("A top level treat expression is not allowed. Consider to further dereference the expression: " + ctx.getText());
+                throw new SyntaxErrorException("A top level treat expression is not allowed. Consider to further dereference the expression: " + getInputText(ctx));
             }
         }
         return expression;
@@ -870,7 +874,7 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
 
     private void failQuantified(ParserRuleContext ctx, Token qualifier) {
         if (qualifier != null && !allowQuantifiedPredicates) {
-            throw new SyntaxErrorException("The use of quantifiers is not allowed in the context of the expression: " + ctx.getText());
+            throw new SyntaxErrorException("The use of quantifiers is not allowed in the context of the expression: " + getInputText(ctx));
         }
     }
 
@@ -948,7 +952,7 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
             if (expression instanceof LiteralExpression<?>) {
                 escapeCharacter = ((LiteralExpression) expression).getValue().toString().charAt(0);
             } else {
-                throw new SyntaxErrorException("Only a character literal is allowed as escape character in like predicate: " + ctx.getText());
+                throw new SyntaxErrorException("Only a character literal is allowed as escape character in like predicate: " + getInputText(ctx));
             }
         }
         return new LikePredicate(
@@ -1025,5 +1029,12 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
             return null;
         }
         return new EntityLiteral(entityType, entityLiteralStr);
+    }
+
+    private String getInputText(ParserRuleContext ctx) {
+        int from = ctx.start.getStartIndex();
+        int to = ctx.stop.getStopIndex();
+        Interval interval = new Interval(from, to);
+        return input.getText(interval);
     }
 }

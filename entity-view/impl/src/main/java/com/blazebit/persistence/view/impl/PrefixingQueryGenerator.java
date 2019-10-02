@@ -71,7 +71,7 @@ public class PrefixingQueryGenerator extends SimpleQueryGenerator {
             return prefix + "." + mapping;
         } else {
             // Since we have functions in here, we have to parse an properly prefix the mapping
-            Expression expression = ef.createSimpleExpression(mapping, false);
+            Expression expression = ef.createSimpleExpression(mapping, false, false, true);
             SimpleQueryGenerator generator = new PrefixingQueryGenerator(Collections.singletonList(prefix));
             StringBuilder sb = new StringBuilder(mapping.length() + prefix.length() + 1);
             generator.setQueryBuffer(sb);
