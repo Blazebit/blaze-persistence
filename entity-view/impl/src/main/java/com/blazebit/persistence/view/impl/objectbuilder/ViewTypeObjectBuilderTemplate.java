@@ -1080,7 +1080,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         }
         EntityMetamodel entityMetamodel = evm.getMetamodel().getEntityMetamodel();
         ScalarTargetResolvingExpressionVisitor visitor = new ScalarTargetResolvingExpressionVisitor(managedTypeClass, entityMetamodel, evm.getCriteriaBuilderFactory().getRegisteredFunctions());
-        ef.createSimpleExpression(correlationBasis, false).accept(visitor);
+        ef.createSimpleExpression(correlationBasis, false, false, true).accept(visitor);
         Collection<ScalarTargetResolvingExpressionVisitor.TargetType> possibleTypes = visitor.getPossibleTargetTypes();
         if (possibleTypes.size() > 1) {
             throw new IllegalArgumentException("The correlation basis '" + correlationBasis + "' is ambiguous in the context of the managed type '" + managedTypeClass.getName() + "'!");

@@ -191,7 +191,7 @@ public class TupleElementMapperBuilder {
             return;
         }
         if (prefixParts != null && !prefixParts.isEmpty()) {
-            Expression expr = ef.createSimpleExpression(mapping, false);
+            Expression expr = ef.createSimpleExpression(mapping, false, false, true);
             EmbeddingViewJpqlMacro embeddingViewJpqlMacro = (EmbeddingViewJpqlMacro) ef.getDefaultMacroConfiguration().get("EMBEDDING_VIEW").getState()[0];
             SimpleQueryGenerator generator = new PrefixingQueryGenerator(Collections.singletonList(prefixParts), embeddingViewJpqlMacro.getEmbeddingViewPath(), CorrelatedSubqueryEmbeddingViewJpqlMacro.CORRELATION_EMBEDDING_VIEW_ALIAS, skippedAlias);
             generator.setQueryBuffer(sb);
