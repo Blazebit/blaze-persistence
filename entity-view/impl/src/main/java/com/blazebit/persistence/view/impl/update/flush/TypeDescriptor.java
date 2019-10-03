@@ -291,7 +291,7 @@ public class TypeDescriptor {
             viewIdAccessor = Accessors.forViewId(evm, (ViewType<?>) viewType, true);
         }
         Class<?> viewTypeClass = viewType.getJavaType();
-        if ((!viewType.isUpdatable() && !viewType.isCreatable()) || !cascadeUpdate) {
+        if (!cascadeUpdate) {
             return new LoadOrPersistViewToEntityMapper(
                     attributeLocation,
                     evm,

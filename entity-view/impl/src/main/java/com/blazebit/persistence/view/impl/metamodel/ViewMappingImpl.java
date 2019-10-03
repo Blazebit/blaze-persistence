@@ -26,10 +26,10 @@ import com.blazebit.persistence.view.spi.EntityViewAttributeMapping;
 import com.blazebit.persistence.view.spi.EntityViewConstructorMapping;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
+import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.SingularAttribute;
-import javax.persistence.metamodel.Type;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -93,6 +93,7 @@ public class ViewMappingImpl implements ViewMapping {
     private boolean initialized;
     private boolean finished;
     private final List<Runnable> finishListeners = new ArrayList<>();
+    private ManagedType<?> managedType;
     private ManagedViewTypeImplementor<?> viewType;
     private Map<EmbeddableOwner, ManagedViewTypeImplementor<?>> embeddableViewTypeMap;
 
@@ -385,6 +386,25 @@ public class ViewMappingImpl implements ViewMapping {
     }
 
     @Override
+    public boolean isCreatable(MetamodelBuildingContext context) {
+        // When we are dealing with an updatable or creatable flat view, we have to normalize it
+        // i.e. a flat view can only be non-updatable and non-creatable or both, updatable and creatable
+        if (updatable) {
+            // Even if the annotated model is missing the @CreatableEntityView annotation, we treat updatable entity views for embeddable also as creatable
+            if (!creatable && getManagedType(context) instanceof EmbeddableType<?>) {
+                setCreatable(true);
+                setValidatePersistability(true);
+            }
+        } else if (creatable) {
+            if (getManagedType(context) instanceof EmbeddableType<?>) {
+                context.addError("Illegal creatable-only mapping at '" + getEntityViewClass().getName() + "'! Declaring @CreatableEntityView for an entity view that maps a JPA embeddable type is only allowed when also @UpdatableEntityView is defined!");
+            }
+        }
+
+        return creatable;
+    }
+
+    @Override
     public void initializeViewMappings(MetamodelBuildingContext context, Runnable finishListener) {
         // Only initialize a view mapping once
         if (initialized) {
@@ -489,6 +509,15 @@ public class ViewMappingImpl implements ViewMapping {
     }
 
     @Override
+    public ManagedType<?> getManagedType(MetamodelBuildingContext context) {
+        if (managedType != null) {
+            return managedType;
+        }
+
+        return managedType = context.getEntityMetamodel().getManagedType(entityClass);
+    }
+
+    @Override
     public ManagedViewTypeImplementor<?> getManagedViewType(MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
         ManagedViewTypeImplementor<?> viewType;
         if (idAttribute != null) {
@@ -500,10 +529,7 @@ public class ViewMappingImpl implements ViewMapping {
             viewType = embeddableViewTypeMap.get(embeddableMapping);
         }
         if (viewType == null) {
-            if (entityClass == null) {
-                context.addError("The persistence unit metamodel doesn't contain the entity class configured in view mapping for entity view class: " + entityViewClass.getName());
-            }
-            ManagedType<?> managedType = context.getEntityMetamodel().getManagedType(entityClass);
+            ManagedType<?> managedType = getManagedType(context);
             if (managedType == null) {
                 context.addError("The entity class '" + entityClass.getName() + "' used for the entity view '" + entityViewClass.getName() + "' could not be found in the persistence unit!");
                 return null;
@@ -514,11 +540,6 @@ public class ViewMappingImpl implements ViewMapping {
                 }
                 if (versionAttribute != null) {
                     context.addError("Invalid version attribute mapping for embeddable entity type '" + entityClass.getName() + "' at " + versionAttribute.getErrorLocation() + " for managed view type '" + entityViewClass.getName() + "'!");
-                }
-                // Even if the annotated model is missing the @CreatableEntityView annotation, we treat updatable entity views for embeddable also as creatable
-                if (managedType.getPersistenceType() == Type.PersistenceType.EMBEDDABLE && isUpdatable()) {
-                    setCreatable(true);
-                    setValidatePersistability(true);
                 }
             } else {
                 // If the identifiable type has an id attribute and is creatable or updatable

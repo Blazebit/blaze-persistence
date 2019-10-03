@@ -20,6 +20,7 @@ import com.blazebit.persistence.view.CTEProvider;
 import com.blazebit.persistence.view.LockMode;
 import com.blazebit.persistence.view.spi.EntityViewMapping;
 
+import javax.persistence.metamodel.ManagedType;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
@@ -69,7 +70,11 @@ public interface ViewMapping extends Comparable<ViewMapping>, EntityViewMapping 
 
     void onInitializeViewMappingsFinished(Runnable finishListener);
 
+    boolean isCreatable(MetamodelBuildingContext context);
+
     void initializeViewMappings(MetamodelBuildingContext context, Runnable finishListener);
+
+    ManagedType<?> getManagedType(MetamodelBuildingContext context);
 
     ManagedViewTypeImplementor<?> getManagedViewType(MetamodelBuildingContext context, EmbeddableOwner embeddableMapping);
 

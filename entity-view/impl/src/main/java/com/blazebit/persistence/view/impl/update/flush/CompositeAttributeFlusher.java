@@ -705,8 +705,6 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                     newObject = persistViewMapper.map(newObject);
                     context.getInitialStateResetter().addPersistedViewNewObject(newObjectIndex, newObject);
                 }
-            }
-            if (doPersist) {
                 if (recordingCollection != null && (recordingCollection.isHashBased() || persistViewMapper != null)) {
                     // Reset the parent accordingly
                     resetParents(updatableProxy, parentIndex, parent, newObject);

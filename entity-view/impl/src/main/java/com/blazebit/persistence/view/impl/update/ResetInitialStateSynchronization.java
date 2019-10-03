@@ -205,7 +205,10 @@ public class ResetInitialStateSynchronization implements Synchronization, Initia
                         view.$$_setId(id);
                     }
                     if (parent != null) {
-                        parent.$$_replaceAttribute(newObject, parentIndex, view);
+                        // This is not needed as this will happen when rolling back collection actions already
+                        if (!(parent instanceof RecordingCollection<?, ?> || parent instanceof RecordingMap<?, ?, ?>)) {
+                            parent.$$_replaceAttribute(newObject, parentIndex, view);
+                        }
                         for (int j = 0; j < readOnlyParents.size(); j += 2) {
                             DirtyTracker readOnlyParent = (DirtyTracker) readOnlyParents.get(j);
                             int readOnlyParentIndex = (int) readOnlyParents.get(j + 1);

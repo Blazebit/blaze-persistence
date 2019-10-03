@@ -115,10 +115,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
         ExtendedManagedType<?> extendedManagedType = context.getEntityMetamodel().getManagedType(ExtendedManagedType.class, jpaManagedType);
         boolean embeddable = !(jpaManagedType instanceof EntityType<?>);
 
-        if (viewMapping.isCreatable()) {
-            if (embeddable && !updatable) {
-                context.addError("Illegal creatable-only mapping at '" + javaType.getName() + "'! Declaring @CreatableEntityView for an entity view that maps a JPA embeddable type is only allowed when also @UpdatableEntityView is defined!");
-            }
+        if (viewMapping.isCreatable(context)) {
             this.creatable = true;
             this.validatePersistability = viewMapping.isValidatePersistability();
             if (validatePersistability) {

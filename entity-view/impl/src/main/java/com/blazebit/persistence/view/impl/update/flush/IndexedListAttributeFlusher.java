@@ -326,13 +326,19 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
                 if (flusher != null) {
                     EntryState state = EntryState.EXISTED;
                     for (CollectionAction<?> action : actions) {
-                        if (identityContains(action.getRemovedObjects(), element)) {
+                        Collection<Object> removedObjects = action.getRemovedObjects();
+                        if (identityContains(removedObjects, element)) {
                             state = state.onRemove();
                             if (identityContains(action.getAddedObjects(), element)) {
                                 state = state.onAdd();
                             }
                         } else if (identityContains(action.getAddedObjects(), element)) {
-                            state = state.onAdd();
+                            if (removedObjects.isEmpty()) {
+                                state = state.onAdd();
+                            } else {
+                                // This is like replacing an existing entry
+                                state = EntryState.ADDED;
+                            }
                         }
                     }
 

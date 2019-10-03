@@ -97,14 +97,14 @@ public class EntityViewMetamodelFlatViewTest extends AbstractEntityViewTest {
     public void updatableReadOnlyFlatView() {
         ViewMetamodel metamodel = build(DocumentViewWithUpdatableReadOnlyFlatView.class, NameObjectView.class);
         ManagedViewType<?> docViewType = metamodel.managedView(DocumentViewWithUpdatableReadOnlyFlatView.class);
-        assertFalse(docViewType.getAttribute("nameObject").isUpdatable());
+        assertTrue(docViewType.getAttribute("nameObject").isUpdatable());
 
         assertFalse(docViewType.getAttribute("nameObject").isPersistCascaded());
         assertFalse(docViewType.getAttribute("nameObject").isUpdateCascaded());
         assertTrue(docViewType.getAttribute("nameObject").getPersistCascadeAllowedSubtypes().isEmpty());
         assertTrue(docViewType.getAttribute("nameObject").getUpdateCascadeAllowedSubtypes().isEmpty());
 
-        assertFalse(docViewType.getAttribute("nameObject").isMutable());
+        assertTrue(docViewType.getAttribute("nameObject").isMutable());
     }
 
     /*
