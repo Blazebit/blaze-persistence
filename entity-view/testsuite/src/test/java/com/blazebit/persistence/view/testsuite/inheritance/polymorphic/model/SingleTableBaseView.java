@@ -40,4 +40,7 @@ public interface SingleTableBaseView {
     public Integer getSub1ValueOrNull();
 
     public SingleTableSimpleBaseView getParent();
+
+    @Mapping("TREAT(parent AS SingleTableSub1)")
+    public SingleTableSimpleSub1View getParentAsSingleTableSub1();
 }

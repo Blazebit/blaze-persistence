@@ -148,7 +148,7 @@ public abstract class AbstractCachingExpressionFactory extends AbstractExpressio
 
     private <E extends Expression> E getOrDefault(String cacheName, ExpressionFactory expressionFactory, String expression, boolean allowOuter, boolean allowQuantifiedPredicates, boolean allowObjectExpression, MacroConfiguration macroConfiguration, ExpressionSupplier defaultExpressionSupplier) {
         // Find the expression cache entry
-        ExpressionCacheEntry exprEntry = expressionCache.get(cacheName, expression);
+        ExpressionCacheEntry exprEntry = expressionCache.get(cacheName, new ExpressionCache.Key(expression, allowOuter, allowQuantifiedPredicates, allowObjectExpression));
         MacroConfiguration macroKey = null;
         Expression expr;
 
@@ -168,7 +168,7 @@ public abstract class AbstractCachingExpressionFactory extends AbstractExpressio
                 exprEntry.addMacroConfigurationExpression(macroKey, expr);
             }
 
-            expressionCache.putIfAbsent(cacheName, expression, exprEntry);
+            expressionCache.putIfAbsent(cacheName, new ExpressionCache.Key(expression, allowOuter, allowQuantifiedPredicates, allowObjectExpression), exprEntry);
             return (E) expr.clone(false);
         }
 

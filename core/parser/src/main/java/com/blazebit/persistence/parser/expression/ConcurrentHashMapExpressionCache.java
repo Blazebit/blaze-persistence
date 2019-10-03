@@ -26,33 +26,33 @@ import java.util.concurrent.ConcurrentMap;
  */
 public class ConcurrentHashMapExpressionCache<T> implements ExpressionCache<T> {
 
-    private final ConcurrentMap<String, ConcurrentMap<String, T>> cacheManager;
+    private final ConcurrentMap<String, ConcurrentMap<Key, T>> cacheManager;
 
     public ConcurrentHashMapExpressionCache() {
         this.cacheManager = new ConcurrentHashMap<>();
     }
 
     @Override
-    public T get(String cacheName, String expression) {
-        final ConcurrentMap<String, T> cache = cacheManager.get(cacheName);
-        return cache == null ? null : cache.get(expression);
+    public T get(String cacheName, Key key) {
+        final ConcurrentMap<Key, T> cache = cacheManager.get(cacheName);
+        return cache == null ? null : cache.get(key);
     }
 
     @Override
-    public T putIfAbsent(String cacheName, String expression, T value) {
+    public T putIfAbsent(String cacheName, Key key, T value) {
         // Find the cache manager
-        ConcurrentMap<String, T> cache = cacheManager.get(cacheName);
+        ConcurrentMap<Key, T> cache = cacheManager.get(cacheName);
 
         if (cache == null) {
             cache = new ConcurrentHashMap<>();
-            ConcurrentMap<String, T> oldCache = cacheManager.putIfAbsent(cacheName, cache);
+            ConcurrentMap<Key, T> oldCache = cacheManager.putIfAbsent(cacheName, cache);
 
             if (oldCache != null) {
                 cache = oldCache;
             }
         }
 
-        T oldValue = cache.putIfAbsent(expression, value);
+        T oldValue = cache.putIfAbsent(key, value);
         if (oldValue != null) {
             return oldValue;
         }
