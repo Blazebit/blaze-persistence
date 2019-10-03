@@ -241,7 +241,7 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
         // If the type is a flat view, it must be updatable or creatable and have a setter
         if (elementType instanceof FlatViewType<?>) {
             FlatViewType<?> t = (FlatViewType<?>) elementType;
-            return t.isUpdatable() || hasSetter && t.isCreatable();
+            return hasSetter || t.isUpdatable() || t.isCreatable();
         }
 
         // We exclude entity types from this since there is no clear intent

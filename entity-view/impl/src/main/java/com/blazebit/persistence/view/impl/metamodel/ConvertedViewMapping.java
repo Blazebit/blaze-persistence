@@ -25,6 +25,7 @@ import com.blazebit.persistence.view.spi.EntityViewAttributeMapping;
 import com.blazebit.persistence.view.spi.EntityViewConstructorMapping;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 
+import javax.persistence.metamodel.ManagedType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.List;
@@ -217,6 +218,16 @@ public class ConvertedViewMapping implements ViewMapping {
     @Override
     public void onInitializeViewMappingsFinished(Runnable finishListener) {
         delegate.onInitializeViewMappingsFinished(finishListener);
+    }
+
+    @Override
+    public boolean isCreatable(MetamodelBuildingContext context) {
+        return delegate.isCreatable(context);
+    }
+
+    @Override
+    public ManagedType<?> getManagedType(MetamodelBuildingContext context) {
+        return delegate.getManagedType(context);
     }
 
     @Override

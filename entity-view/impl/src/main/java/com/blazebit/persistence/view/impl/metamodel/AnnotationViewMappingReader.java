@@ -112,7 +112,7 @@ public class AnnotationViewMappingReader implements ViewMappingReader {
             viewMapping.getExcludedAttributes().addAll(Arrays.asList(creatableEntityView.excludedEntityAttributes()));
         }
 
-        if (viewMapping.isCreatable() || viewMapping.isUpdatable()) {
+        if (updatableEntityView != null || creatableEntityView != null) {
             LockOwner lockOwner = AnnotationUtils.findAnnotation(entityViewClass, LockOwner.class);
             if (lockOwner != null) {
                 viewMapping.setLockOwner(lockOwner.value());

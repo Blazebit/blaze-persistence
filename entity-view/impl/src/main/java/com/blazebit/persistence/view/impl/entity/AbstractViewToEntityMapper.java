@@ -29,6 +29,7 @@ import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
 import javax.persistence.Query;
+import javax.persistence.metamodel.EntityType;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -57,7 +58,7 @@ public abstract class AbstractViewToEntityMapper implements ViewToEntityMapper {
     public AbstractViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, Class<?> viewTypeClass, Set<Type<?>> readOnlyAllowedSubtypes, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes, EntityLoader entityLoader, AttributeAccessor viewIdAccessor, boolean persistAllowed, EntityViewUpdaterImpl owner, String ownerMapping) {
         this.attributeLocation = attributeLocation;
         ManagedViewTypeImplementor<?> managedViewTypeImplementor = evm.getMetamodel().managedView(viewTypeClass);
-        this.isEmbeddable = evm.getMetamodel().getEntityMetamodel().getEntity(managedViewTypeImplementor.getEntityClass()) == null;
+        this.isEmbeddable = !(managedViewTypeImplementor.getJpaManagedType() instanceof EntityType<?>);
         Map<Class<?>, EntityViewUpdater> persistUpdater = new HashMap<>();
         Map<Class<?>, EntityViewUpdater> updateUpdater = new HashMap<>();
         Map<Class<?>, EntityViewUpdater> removeUpdater = new HashMap<>();

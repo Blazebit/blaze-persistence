@@ -19,10 +19,10 @@ package com.blazebit.persistence.view.impl.update.flush;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.change.DirtyChecker;
 import com.blazebit.persistence.view.impl.entity.EmbeddableUpdaterBasedViewToEntityMapper;
-import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
 import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
+import com.blazebit.persistence.view.impl.update.UpdateContext;
 
 import javax.persistence.Query;
 import java.util.Collections;
@@ -129,8 +129,12 @@ public class EmbeddableAttributeFlusher<E, V> extends EmbeddableAttributeFetchGr
             }
             if (supportsQueryFlush) {
                 query.setParameter(parameter, viewToEntityMapper.applyToEntity(context, null, value));
-            } else {
+            } else if (value == null || nestedGraphNode != viewToEntityMapper.getFullGraphNode()) {
+                // When the nested graph node does not equal the full graph node, this is a state based dirty flusher
                 nestedGraphNode.flushQuery(context, parameter, query, ownerView, view, value, ownerAwareDeleter);
+            } else {
+                // In here, we might be in the executePersist path so we have to consider the runtime type of the value and can't simply invoke the full graph node of the declared type
+                ((DirtyAttributeFlusher<?, E, V>) viewToEntityMapper.getUpdater(value).getFullGraphNode()).flushQuery(context, parameter, query, ownerView, view, value, ownerAwareDeleter);
             }
         } finally {
             if (value instanceof MutableStateTrackable) {
@@ -160,7 +164,14 @@ public class EmbeddableAttributeFlusher<E, V> extends EmbeddableAttributeFetchGr
                     entityAttributeAccessor.setValue(entity, embeddableValue);
                 }
             }
-            return nestedGraphNode.flushEntity(context, embeddableValue, ownerView, value, value, postReplaceListener);
+
+            // When the nested graph node does not equal the full graph node, this is a state based dirty flusher
+            if (nestedGraphNode != viewToEntityMapper.getFullGraphNode()) {
+                return nestedGraphNode.flushEntity(context, embeddableValue, ownerView, value, value, postReplaceListener);
+            } else {
+                // In here, we might be in the executePersist path so we have to consider the runtime type of the value and can't simply invoke the full graph node of the declared type
+                return ((DirtyAttributeFlusher<?, E, V>) viewToEntityMapper.getUpdater(value).getFullGraphNode()).flushEntity(context, embeddableValue, ownerView, value, value, postReplaceListener);
+            }
         } else {
             if (entity != null) {
                 entityAttributeAccessor.setValue(entity, viewToEntityMapper.applyToEntity(context, embeddableValue, value));
