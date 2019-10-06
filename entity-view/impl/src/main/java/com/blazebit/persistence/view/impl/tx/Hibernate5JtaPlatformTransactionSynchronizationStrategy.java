@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.tx;
 
+import com.blazebit.persistence.view.spi.TransactionAccess;
 import com.blazebit.reflection.ReflectionUtils;
 
 import javax.transaction.Status;
@@ -27,7 +28,7 @@ import java.lang.reflect.Method;
  * @author Moritz Becker
  * @since 1.4.0
  */
-public class Hibernate5JtaPlatformTransactionSynchronizationStrategy implements TransactionSynchronizationStrategy {
+public class Hibernate5JtaPlatformTransactionSynchronizationStrategy implements TransactionAccess {
 
     private final Object jtaPlatform;
     private final Object jtaTransactionManager;

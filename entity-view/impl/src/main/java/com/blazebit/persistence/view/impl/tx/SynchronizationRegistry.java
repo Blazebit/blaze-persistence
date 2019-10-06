@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.view.impl.tx;
 
+import com.blazebit.persistence.view.spi.TransactionAccess;
+
 import javax.transaction.Status;
 import javax.transaction.Synchronization;
 import java.util.ArrayList;
@@ -29,7 +31,7 @@ import java.util.concurrent.ConcurrentMap;
  * @author Christian Beikov
  * @since 1.3.0
  */
-public class SynchronizationRegistry implements Synchronization {
+public class SynchronizationRegistry implements Synchronization, TransactionAccess {
 
     private static final ThreadLocal<Object> THREAD_LOCAL_KEY = new ThreadLocal<Object>() {
         @Override
@@ -38,24 +40,38 @@ public class SynchronizationRegistry implements Synchronization {
         }
     };
     private static final ConcurrentMap<Object, SynchronizationRegistry> REGISTRY = new ConcurrentHashMap<>();
+    private final TransactionAccess transactionAccess;
     private final List<Synchronization> synchronizations;
     private final Object key;
 
-    public SynchronizationRegistry() {
-        this(THREAD_LOCAL_KEY.get());
+    public SynchronizationRegistry(TransactionAccess transactionAccess) {
+        this(transactionAccess, THREAD_LOCAL_KEY.get());
     }
 
-    public SynchronizationRegistry(Object key) {
+    public SynchronizationRegistry(TransactionAccess transactionAccess, Object key) {
+        this.transactionAccess = transactionAccess;
         this.synchronizations = new ArrayList<>(1);
         this.key = key;
+        transactionAccess.registerSynchronization(this);
         REGISTRY.put(key, this);
     }
 
-    public static SynchronizationRegistry getRegistry(Object key) {
-        return REGISTRY.get(key);
+    public static SynchronizationRegistry getRegistry() {
+        return REGISTRY.get(THREAD_LOCAL_KEY.get());
     }
 
-    public void addSynchronization(Synchronization synchronization) {
+    @Override
+    public boolean isActive() {
+        return transactionAccess.isActive();
+    }
+
+    @Override
+    public void markRollbackOnly() {
+        transactionAccess.markRollbackOnly();
+    }
+
+    @Override
+    public void registerSynchronization(Synchronization synchronization) {
         synchronizations.add(synchronization);
     }
 

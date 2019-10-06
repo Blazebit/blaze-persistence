@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.view.impl.tx;
 
+import com.blazebit.persistence.view.spi.TransactionAccess;
+
 import javax.transaction.Status;
 import javax.transaction.Synchronization;
 import javax.transaction.TransactionSynchronizationRegistry;
@@ -25,7 +27,7 @@ import javax.transaction.TransactionSynchronizationRegistry;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class JtaTransactionSynchronizationStrategy implements TransactionSynchronizationStrategy {
+public class JtaTransactionSynchronizationStrategy implements TransactionAccess {
     
     private final TransactionSynchronizationRegistry synchronizationRegistry;
 
@@ -45,12 +47,7 @@ public class JtaTransactionSynchronizationStrategy implements TransactionSynchro
 
     @Override
     public void registerSynchronization(Synchronization synchronization) {
-        SynchronizationRegistry registry = (SynchronizationRegistry) synchronizationRegistry.getResource(SynchronizationRegistry.class.getName());
-        if (registry == null) {
-            registry = new SynchronizationRegistry();
-            synchronizationRegistry.registerInterposedSynchronization(registry);
-        }
-        registry.addSynchronization(synchronization);
+        synchronizationRegistry.registerInterposedSynchronization(synchronization);
     }
 
 }

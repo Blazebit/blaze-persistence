@@ -17,7 +17,7 @@
 package com.blazebit.persistence.view.impl.update;
 
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
-import com.blazebit.persistence.view.impl.tx.TransactionSynchronizationStrategy;
+import com.blazebit.persistence.view.spi.TransactionAccess;
 import com.blazebit.persistence.view.impl.update.flush.PostFlushDeleter;
 
 import javax.persistence.EntityManager;
@@ -44,7 +44,7 @@ public interface UpdateContext {
 
     public boolean isRemovedObject(Object value);
 
-    public TransactionSynchronizationStrategy getSynchronizationStrategy();
+    public TransactionAccess getTransactionAccess();
 
     public InitialStateResetter getInitialStateResetter();
 

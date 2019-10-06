@@ -18,7 +18,7 @@ package com.blazebit.persistence.view.impl.update;
 
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.tx.TransactionHelper;
-import com.blazebit.persistence.view.impl.tx.TransactionSynchronizationStrategy;
+import com.blazebit.persistence.view.spi.TransactionAccess;
 import com.blazebit.persistence.view.impl.update.flush.PostFlushDeleter;
 
 import javax.persistence.EntityManager;
@@ -40,7 +40,7 @@ public class DefaultUpdateContext implements UpdateContext {
     private final EntityViewManagerImpl evm;
     private final EntityManager em;
     private final boolean forceFull;
-    private final TransactionSynchronizationStrategy synchronizationStrategy;
+    private final TransactionAccess transactionAccess;
     private final InitialStateResetter initialStateResetter;
     private Map<Object, Object> removedObjects;
     private Set<EntityKey> versionChecked;
@@ -50,14 +50,14 @@ public class DefaultUpdateContext implements UpdateContext {
         this.evm = evm;
         this.em = em;
         this.forceFull = forceFull;
-        this.synchronizationStrategy = TransactionHelper.getSynchronizationStrategy(em);
+        this.transactionAccess = TransactionHelper.getTransactionAccess(em);
 
-        if (!synchronizationStrategy.isActive()) {
+        if (!transactionAccess.isActive()) {
             throw new IllegalStateException("Transaction is not active!");
         }
 
         this.initialStateResetter = new ResetInitialStateSynchronization();
-        synchronizationStrategy.registerSynchronization((Synchronization) initialStateResetter);
+        transactionAccess.registerSynchronization((Synchronization) initialStateResetter);
     }
 
     @Override
@@ -101,8 +101,8 @@ public class DefaultUpdateContext implements UpdateContext {
         return removedObjects != null && removedObjects.containsKey(value);
     }
 
-    public TransactionSynchronizationStrategy getSynchronizationStrategy() {
-        return synchronizationStrategy;
+    public TransactionAccess getTransactionAccess() {
+        return transactionAccess;
     }
 
     @Override

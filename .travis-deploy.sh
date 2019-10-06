@@ -8,7 +8,7 @@ if [ "$TRAVIS_REPO_SLUG" == "Blazebit/blaze-persistence" ] &&
     [ "x$JDK" == "x" ]; then
 
   echo "Starting snapshot deployment..."
-  mvn -s .travis-settings.xml -DperformRelease -DskipTests -Dgpg.skip=true -Dquiet=true deploy
+  mvn -s .travis-settings.xml -DperformRelease -DskipTests -Dgpg.skip=true -Dquiet=true clean deploy
   echo "Snapshots deployed!"
 
 else

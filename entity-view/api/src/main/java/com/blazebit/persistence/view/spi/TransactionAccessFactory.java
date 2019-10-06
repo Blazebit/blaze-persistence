@@ -14,21 +14,25 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl.tx;
+package com.blazebit.persistence.view.spi;
 
-import javax.transaction.Synchronization;
+import javax.persistence.EntityManager;
 
 /**
+ * A factory for creating a {@link TransactionAccess}.
+ * This is created via the {@link java.util.ServiceLoader} API.
  *
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.4.0
  */
-public interface TransactionSynchronizationStrategy {
+public interface TransactionAccessFactory {
 
-    public boolean isActive();
-
-    public void markRollbackOnly();
-    
-    public void registerSynchronization(Synchronization synchronization);
+    /**
+     * Creates a transaction access object.
+     *
+     * @param entityManager The entity manager associated with the transaction.
+     * @return The transaction access object
+     */
+    public TransactionAccess createTransactionAccess(EntityManager entityManager);
     
 }
