@@ -16,21 +16,21 @@
 
 package com.blazebit.persistence.view.impl.tx;
 
-import java.lang.reflect.Method;
+import com.blazebit.persistence.view.spi.TransactionAccess;
+import com.blazebit.reflection.ExpressionUtils;
+import com.blazebit.reflection.ReflectionUtils;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.transaction.Synchronization;
-
-import com.blazebit.reflection.ExpressionUtils;
-import com.blazebit.reflection.ReflectionUtils;
+import java.lang.reflect.Method;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class Hibernate5EntityTransactionSynchronizationStrategy implements TransactionSynchronizationStrategy {
+public class Hibernate5EntityTransactionSynchronizationStrategy implements TransactionAccess {
     
     private final EntityTransaction tx;
     private final Object synchronizationRegistry;
@@ -64,12 +64,7 @@ public class Hibernate5EntityTransactionSynchronizationStrategy implements Trans
     @Override
     public void registerSynchronization(Synchronization synchronization) {
         try {
-            SynchronizationRegistry registry = SynchronizationRegistry.getRegistry(synchronizationRegistry);
-            if (registry == null) {
-                registry = new SynchronizationRegistry(synchronizationRegistry);
-                registerSynchronization.invoke(synchronizationRegistry, registry);
-            }
-            registry.addSynchronization(synchronization);
+            registerSynchronization.invoke(synchronizationRegistry, synchronization);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

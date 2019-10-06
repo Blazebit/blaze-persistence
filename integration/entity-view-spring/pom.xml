@@ -52,18 +52,24 @@
             <artifactId>spring-context</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.hibernate.javax.persistence</groupId>
+            <artifactId>hibernate-jpa-2.1-api</artifactId>
+            <version>1.0.0.Final</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.transaction</groupId>
+            <artifactId>javax.transaction-api</artifactId>
+            <version>${version.jta}</version>
+            <scope>provided</scope>
+        </dependency>
 
         <!-- Test Dependencies -->
 
         <dependency>
             <groupId>com.blazebit</groupId>
             <artifactId>blaze-persistence-entity-view-impl</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate.javax.persistence</groupId>
-            <artifactId>hibernate-jpa-2.1-api</artifactId>
-            <version>1.0.0.Final</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -109,6 +115,7 @@
                                         exports com.blazebit.persistence.integration.view.spring;
                                         exports com.blazebit.persistence.integration.view.spring.impl to spring.beans;
                                         opens com.blazebit.persistence.integration.view.spring.impl to spring.core, spring.context;
+                                        provides com.blazebit.persistence.view.spi.TransactionAccessFactory with com.blazebit.persistence.integration.view.spring.impl.SpringTransactionAccessFactory;
                                     }
                                 </moduleInfoSource>
                             </module>

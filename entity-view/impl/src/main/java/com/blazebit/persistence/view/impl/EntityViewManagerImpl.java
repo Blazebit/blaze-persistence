@@ -414,7 +414,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
                 updater.remove(context, proxy);
             }
         } catch (Throwable t) {
-            context.getSynchronizationStrategy().markRollbackOnly();
+            context.getTransactionAccess().markRollbackOnly();
             ExceptionUtils.doThrow(t);
         }
     }
@@ -430,7 +430,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         try {
             updater.remove(context, viewId);
         } catch (Throwable t) {
-            context.getSynchronizationStrategy().markRollbackOnly();
+            context.getTransactionAccess().markRollbackOnly();
             ExceptionUtils.doThrow(t);
         }
     }
@@ -455,7 +455,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
                 updater.executeUpdate(context, updatableProxy);
             }
         } catch (Throwable t) {
-            context.getSynchronizationStrategy().markRollbackOnly();
+            context.getTransactionAccess().markRollbackOnly();
             ExceptionUtils.doThrow(t);
         }
     }

@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.view.impl.tx;
 
+import com.blazebit.persistence.view.spi.TransactionAccess;
+import com.blazebit.persistence.view.spi.TransactionAccessFactory;
 import com.blazebit.reflection.ReflectionUtils;
 
 import javax.naming.InitialContext;
@@ -25,6 +27,9 @@ import javax.naming.NoInitialContextException;
 import javax.persistence.EntityManager;
 import javax.transaction.TransactionSynchronizationRegistry;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ServiceLoader;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -33,6 +38,7 @@ import java.lang.reflect.InvocationTargetException;
  */
 public class TransactionHelper {
 
+    private static final Logger LOG = Logger.getLogger(TransactionHelper.class.getName());
     private static final String[] NAMES = {
         "java:comp/TransactionSynchronizationRegistry", // Java EE Standard name
         "java:/TransactionSynchronizationRegistry", // Local providers
@@ -42,7 +48,16 @@ public class TransactionHelper {
     private TransactionHelper() {
     }
 
-    public static TransactionSynchronizationStrategy getSynchronizationStrategy(EntityManager em) {
+    public static TransactionAccess getTransactionAccess(EntityManager em) {
+        SynchronizationRegistry registry = SynchronizationRegistry.getRegistry();
+        if (registry == null) {
+            TransactionAccess transactionAccess = getTransactionAccessInternal(em);
+            registry = new SynchronizationRegistry(transactionAccess);
+        }
+        return registry;
+    }
+
+    private static TransactionAccess getTransactionAccessInternal(EntityManager em) {
         InitialContext context = null;
 
         try {
@@ -63,6 +78,17 @@ public class TransactionHelper {
                 } catch (NamingException e) {
                     throw new IllegalArgumentException("Could not access transaction synchronization registry!", e);
                 }
+            }
+        }
+
+        for (TransactionAccessFactory transactionAccessFactory : ServiceLoader.load(TransactionAccessFactory.class)) {
+            try {
+                TransactionAccess transactionAccess = transactionAccessFactory.createTransactionAccess(em);
+                if (transactionAccess != null) {
+                    return transactionAccess;
+                }
+            } catch (Exception ex) {
+                LOG.log(Level.WARNING, "Error during creation of transaction access!", ex);
             }
         }
 
