@@ -5,10 +5,12 @@ if [ "$TRAVIS_REPO_SLUG" == "Blazebit/blaze-persistence" ] &&
     [ "$TRAVIS_PULL_REQUEST" == "false" ] &&
     [ "$JPAPROVIDER" == "hibernate-5.2" ] &&
     [ "$RDBMS" == "h2" ] &&
-    [ "x$JDK" == "x" ]; then
+    [ "$JDK" == "9" ] &&
+    [ "$SNAPSHOT_PUBLISH" == "true" ]; then
 
   echo "Starting snapshot deployment..."
-  mvn -s .travis-settings.xml -DperformRelease -DskipTests -Dgpg.skip=true -Dquiet=true clean deploy
+  export MAVEN_OPTS="$MAVEN_OPTS -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn"
+  mvn -B -P blazebit-release -s .travis-settings.xml -DperformRelease -DskipTests -Dgpg.skip=true -Dquiet=true clean deploy
   echo "Snapshots deployed!"
 
 else

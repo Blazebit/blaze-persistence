@@ -256,7 +256,7 @@
                                     <rules>
                                         <evaluateBeanshell>
                                             <message>To create a release build of this project with JDK 11+ you need to provide a system property "jdk8.home" that can be used to access the rt.jar or classes.jar on Mac</message>
-                                            <condition>new java.io.File(System.getProperty("jdk8.classes.jar.escaped")).exists()</condition>
+                                            <condition>System.getProperty("java.specification.version").contains(".") || Integer.parseInt(System.getProperty("java.specification.version")) &lt; 11 || new java.io.File(System.getProperty("jdk8.classes.jar.escaped")).exists()</condition>
                                         </evaluateBeanshell>
                                     </rules>
                                 </configuration>
