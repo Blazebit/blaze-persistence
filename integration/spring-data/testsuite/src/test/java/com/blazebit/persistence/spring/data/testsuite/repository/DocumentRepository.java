@@ -85,4 +85,8 @@ public interface DocumentRepository<T> extends EntityViewRepository<T, Long>, En
     List<DocumentView> findAll(Sort sort);
 
     List<DocumentView> findAll(Sort sort, @OptionalParam("optionalParameter") String optionalParameter);
+
+    Page<DocumentView> findAllByOrderByNameAsc(Pageable pageable, EntityViewSettingProcessor<DocumentView> processor);
+
+    List<DocumentView> findAllByOrderByNameAsc(Sort sort, EntityViewSettingProcessor<DocumentView> processor);
 }

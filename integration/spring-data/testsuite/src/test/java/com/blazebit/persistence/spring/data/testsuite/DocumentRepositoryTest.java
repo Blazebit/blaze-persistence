@@ -37,6 +37,7 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
 import com.blazebit.persistence.view.EntityViewSetting;
+import com.blazebit.persistence.view.Sorters;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
@@ -687,6 +688,71 @@ public class DocumentRepositoryTest extends AbstractSpringTest {
         assertEquals(doc1, list.get(0).getName());
         assertEquals(doc3, list.get(1).getName());
         assertEquals(doc2, list.get(2).getName());
+    }
+
+    @Test
+    public void testPageableSortOrder() {
+        // Given
+        String doc1 = "D1";
+        String doc2 = "D2";
+        String doc3 = "D2";
+        String doc4 = "D2";
+        Person person = createPerson("Foo");
+        Document d1 = createDocument(doc1, "A", 0L, person);
+        Document d2 = createDocument(doc2, "B", 0L, person);
+        Document d3 = createDocument(doc3, "B", 0L, person);
+        Document d4 = createDocument(doc4, createPerson("Bar"));
+
+        String entityViewSortProperty = "ownerDocumentCount";
+        String entitySortProperty = "description";
+
+        // When
+        Page<DocumentAccessor> actual = DocumentAccessors.of(((DocumentRepository) documentRepository).findAllByOrderByNameAsc(
+                new PageRequest(0, 3, entityViewSortProperty, entitySortProperty), evs -> {
+                    evs.addAttributeSorter("id", Sorters.ascending());
+                    return evs;
+                }
+        ));
+        List<Long> actualIds = getIdsFromViews(actual);
+
+        // Then
+        assertEquals(3, actual.getNumberOfElements());
+        assertEquals(actualIds.get(0), d1.getId());
+        assertEquals(actualIds.get(1), d4.getId());
+        assertEquals(actualIds.get(2), d2.getId() < d3.getId() ? d2.getId() : d3.getId());
+    }
+
+     @Test
+    public void testNonPageableSortOrder() {
+        // Given
+        String doc1 = "D1";
+        String doc2 = "D2";
+        String doc3 = "D2";
+        String doc4 = "D2";
+        Person person = createPerson("Foo");
+        Document d1 = createDocument(doc1, "A", 0L, person);
+        Document d2 = createDocument(doc2, "B", 0L, person);
+        Document d3 = createDocument(doc3, "B", 0L, person);
+        Document d4 = createDocument(doc4, createPerson("Bar"));
+
+        String entityViewSortProperty = "ownerDocumentCount";
+        String entitySortProperty = "description";
+
+        // When
+        List<DocumentAccessor> actual = DocumentAccessors.of(((DocumentRepository) documentRepository).findAllByOrderByNameAsc(
+                Sort.asc(entityViewSortProperty, entitySortProperty),evs -> {
+                    evs.addAttributeSorter("id", Sorters.ascending());
+                    return evs;
+                }
+        ));
+        List<Long> actualIds = getIdsFromViews(actual);
+
+        // Then
+        assertEquals(4, actual.size());
+        assertEquals(actualIds.get(0), d1.getId());
+        assertEquals(actualIds.get(1), d4.getId());
+        assertEquals(actualIds.get(2), d2.getId() < d3.getId() ? d2.getId() : d3.getId());
+        assertEquals(actualIds.get(3), d2.getId() < d3.getId() ? d3.getId() : d2.getId());
     }
 
     private List<Long> getIdsFromViews(Iterable<DocumentAccessor> views) {
