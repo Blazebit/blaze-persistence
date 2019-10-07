@@ -30,6 +30,7 @@ import com.blazebit.persistence.spring.data.repository.BlazeSpecification;
 import com.blazebit.persistence.spring.data.repository.EntityViewSettingProcessor;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
+import com.blazebit.persistence.view.Sorter;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
@@ -50,6 +51,8 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -66,6 +69,11 @@ import java.util.regex.Pattern;
  *   - For entity view attribute sorts we resolve deterministic aliases from the order property that correspond to the
  *     select item aliases
  *   - For entity attribute sorts we just use the order property as is
+ *
+ * Sorters are retrieved from 4 sources. The order these sources are applied to the final query is as follows:
+ *   1. method name sorters e.g. findAllByOrderByNameAsc()
+ *   2./3. {@link Pageable} or {@link Sort} method parameter
+ *   4. {@link EntityViewSettingProcessor} method parameter that adds attribute sorters to the entity view settings
  *
  * @author Moritz Becker
  * @author Christian Beikov
@@ -215,9 +223,14 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
                 return cb.getQuery();
             } else {
                 EntityViewSetting<?, ?> setting = EntityViewSetting.create(entityViewClass);
+                // the entity view processor may append attribute sorters to the settings
                 setting = processSetting(setting, values);
+                // we do not want to apply the sorters during evm.applySetting so we extract them here for later application
+                // in order to maintain the defined order of sort applications
+                Map<String, Sorter> settingProcessorAttributeSorters = new HashMap<>(setting.getAttributeSorters());
+                setting.getAttributeSorters().clear();
                 FullQueryBuilder<?, ?> fqb = evm.applySetting(setting, cb);
-                processSort(fqb, values);
+                processSort(fqb, values, settingProcessorAttributeSorters);
                 return fqb.getQuery();
             }
         }
@@ -253,14 +266,16 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
                 if (withCount) {
                     EntityViewSetting<?, ?> setting = EntityViewSetting.create(entityViewClass, firstResult, maxResults);
                     setting = processSetting(setting, values);
+                    Map<String, Sorter> settingProcessorAttributeSorters = new HashMap<>(setting.getAttributeSorters());
+                    setting.getAttributeSorters().clear();
                     PaginatedCriteriaBuilder<?> pcb = ((PaginatedCriteriaBuilder<?>) evm.applySetting(setting, cb)).withCountQuery(true);
-                    processSort(pcb, values);
+                    processSort(pcb, values, settingProcessorAttributeSorters);
                     jpaQuery = (TypedQuery<Object>) pcb.getQuery();
                 } else {
                     EntityViewSetting<?, ?> setting = EntityViewSetting.create(entityViewClass, firstResult, maxResults + 1);
                     setting = processSetting(setting, values);
                     PaginatedCriteriaBuilder<?> pcb = ((PaginatedCriteriaBuilder<?>) evm.applySetting(setting, cb)).withHighestKeysetOffset(1).withCountQuery(false);
-                    processSort(pcb, values);
+                    processSort(pcb, values, Collections.<String, Sorter>emptyMap());
                     jpaQuery = (TypedQuery<Object>) pcb.getQuery();
                 }
             }
@@ -286,7 +301,7 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
             return setting;
         }
 
-        protected void processSort(FullQueryBuilder<?, ?> cb, Object[] values) {
+        protected void processSort(FullQueryBuilder<?, ?> cb, Object[] values, Map<String, Sorter> evsAttributeSorter) {
             Sort sort;
             int sortIndex;
             int pageableIndex;
@@ -294,6 +309,9 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
                 EntityViewSortUtil.applySort(evm, entityViewClass, cb, sort);
             } else if ((pageableIndex = parameters.getPageableIndex()) >= 0 && (sort = ((Pageable) values[pageableIndex]).getSort()) != null) {
                 EntityViewSortUtil.applySort(evm, entityViewClass, cb, sort);
+            }
+            for (Map.Entry<String, Sorter> attributeSorterEntry : evsAttributeSorter.entrySet()) {
+                attributeSorterEntry.getValue().apply((OrderByBuilder) cb, attributeSorterEntry.getKey());
             }
         }
 
