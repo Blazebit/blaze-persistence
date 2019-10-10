@@ -31,6 +31,9 @@
     <name>Blazebit Persistence Entity-View Testsuite</name>
 
     <properties>
+        <!-- We use Java 8 for a few tests -->
+        <test.java.version>1.8</test.java.version>
+        <java.version>${test.java.version}</java.version>
         <module.name>com.blazebit.persistence.view.testsuite</module.name>
     </properties>
 
@@ -199,7 +202,7 @@
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:mysql://localhost:3306/test?useUnicode=true&amp;characterEncoding=utf8</jdbc.url>
                                 <jdbc.user>root</jdbc.user>
-                                <jdbc.password />
+                                <jdbc.password/>
                                 <jdbc.driver>com.mysql.jdbc.Driver</jdbc.driver>
                             </systemPropertyVariables>
                         </configuration>
@@ -233,7 +236,7 @@
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:mysql://localhost:3306/test?useUnicode=true&amp;characterEncoding=utf8</jdbc.url>
                                 <jdbc.user>root</jdbc.user>
-                                <jdbc.password />
+                                <jdbc.password/>
                                 <jdbc.driver>com.mysql.jdbc.Driver</jdbc.driver>
                             </systemPropertyVariables>
                         </configuration>
@@ -300,8 +303,8 @@
                             <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoSQLite,${jpa.excludedGroups}</excludedGroups>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:sqlite:test.db</jdbc.url>
-                                <jdbc.user />
-                                <jdbc.password />
+                                <jdbc.user/>
+                                <jdbc.password/>
                                 <jdbc.driver>org.sqlite.JDBC</jdbc.driver>
                             </systemPropertyVariables>
                         </configuration>
