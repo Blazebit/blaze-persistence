@@ -2257,7 +2257,8 @@ public class ProxyFactory {
             } else {
                 postCreateMethodDescriptor = "()V";
             }
-            bc.addInvokespecial(managedViewType.getJavaType().getName(), postCreateMethod.getName(), postCreateMethodDescriptor);
+            // Since we implement this default method, we must use invokevirtual
+            bc.addInvokevirtual(cc, postCreateMethod.getName(), postCreateMethodDescriptor);
             bc.addReturn(null);
 
             CodeAttribute newCodeAttribute = bc.toCodeAttribute();
