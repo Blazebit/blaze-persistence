@@ -71,6 +71,7 @@ import static org.springframework.data.jpa.repository.query.QueryUtils.getQueryS
  * @author Christian Beikov
  * @since 1.2.0
  */
+@Transactional(readOnly = true)
 public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Serializable> {
 
     private static final String ID_MUST_NOT_BE_NULL = "The given id must not be null!";
@@ -237,6 +238,7 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
                 .executeUpdate();
     }
 
+    @Transactional
     public void deleteAllInBatch() {
         entityManager.createQuery(getQueryString(DELETE_ALL_QUERY_STRING, entityInformation.getEntityName())).executeUpdate();
     }
