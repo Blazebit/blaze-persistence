@@ -40,7 +40,6 @@ public interface SubviewPersonForCollectionsSelectFetchView {
 
     public Set<SubviewPersonForCollectionsView> getSomeCollection();
 
-    @UpdatableEntityView
     @EntityView(PersonForCollections.class)
     interface Id {
         Long getId();

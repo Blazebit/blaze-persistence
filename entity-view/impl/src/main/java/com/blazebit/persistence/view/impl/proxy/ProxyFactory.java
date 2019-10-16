@@ -540,6 +540,7 @@ public class ProxyFactory {
             }
 
             createEqualsHashCodeMethods(viewType, managedViewType, cc, superCc, attributeFields, idField);
+            cc.addMethod(createToString(managedViewType, cc, viewType != null, attributeFields));
             createSpecialMethods(managedViewType, cc);
 
             Set<MappingConstructorImpl<T>> constructors = (Set<MappingConstructorImpl<T>>) (Set<?>) managedViewType.getConstructors();
@@ -2123,6 +2124,45 @@ public class ProxyFactory {
         }
 
         sb.append("\treturn hash;\n");
+        sb.append('}');
+        m.setBody(sb.toString());
+        return m;
+    }
+
+    private CtMethod createToString(ManagedViewTypeImplementor<?> managedViewType, CtClass cc, boolean idBased, CtField[] fields) throws NotFoundException, CannotCompileException {
+        ConstPool cp = cc.getClassFile2().getConstPool();
+        MethodInfo method = new MethodInfo(cp, "toString", "()" + Descriptor.of("java.lang.String"));
+        method.setAccessFlags(AccessFlag.PUBLIC);
+        CtMethod m = CtMethod.make(method, cc);
+        StringBuilder sb = new StringBuilder();
+
+        sb.append('{');
+
+        if (idBased) {
+            ViewTypeImplementor<?> viewType = (ViewTypeImplementor<?>) managedViewType;
+            MethodAttribute<?, ?> idAttribute = viewType.getIdAttribute();
+            sb.append("\treturn \"").append(managedViewType.getJavaType().getSimpleName()).append("(").append(idAttribute.getName()).append(" = \" + $0.").append(idAttribute.getName()).append(" + \")\";\n");
+        } else {
+            int sizeEstimate = managedViewType.getJavaType().getSimpleName().length() + 2;
+            for (int i = 0; i < fields.length; i++) {
+                // 5 is the amount of chars for the format
+                // 10 is the amount of chars that we assume is needed to represent a value on average
+                sizeEstimate += fields[i].getName().length() + 5 + 10;
+            }
+            sb.append("\tStringBuilder sb = new StringBuilder(").append(sizeEstimate).append(");\n");
+            sb.append("\tsb.append(\"").append(managedViewType.getJavaType().getSimpleName()).append("(\");\n");
+
+            sb.append("\tsb.append(\"").append(fields[0].getName()).append(" = \").append($0.").append(fields[0].getName()).append(");\n");
+
+            for (int i = 1; i < fields.length; i++) {
+                sb.append("\tsb.append(\", \");\n");
+                sb.append("\tsb.append(\"").append(fields[i].getName()).append(" = \").append($0.").append(fields[i].getName()).append(");\n");
+            }
+
+            sb.append("\tsb.append(\")\");\n");
+            sb.append("\treturn sb.toString();\n");
+        }
+
         sb.append('}');
         m.setBody(sb.toString());
         return m;

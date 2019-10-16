@@ -682,4 +682,9 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
     public boolean equals(Object obj) {
         return delegate.equals(obj);
     }
+
+    @Override
+    public String toString() {
+        return delegate.toString();
+    }
 }
