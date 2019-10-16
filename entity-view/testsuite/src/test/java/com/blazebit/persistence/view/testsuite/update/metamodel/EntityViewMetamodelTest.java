@@ -37,6 +37,7 @@ import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -63,6 +64,7 @@ public class EntityViewMetamodelTest extends AbstractEntityViewTest {
     }
 
     @Test
+    @Ignore("This got obsolete when fixing #869. Not sure anymore why we deferred the check to the runtime")
     public void updatableEntityViewRequiresId() {
         cleanDatabase();
         build(DocumentViewWithoutId.class);
@@ -451,6 +453,44 @@ public class EntityViewMetamodelTest extends AbstractEntityViewTest {
             fail("Expected validation failure because of invalid inverse remove strategy usage!");
         } catch (IllegalArgumentException ex) {
             assertTrue(ex.getMessage().contains("'owner'"));
+        }
+    }
+
+    @UpdatableEntityView
+    @EntityView(Person.class)
+    public static interface InvalidPersonUpdateView {
+        String getName();
+        void setName(String name);
+    }
+
+    @Test
+    public void missingIdMappingForUpdatable() {
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        cfg.addEntityView(InvalidPersonUpdateView.class);
+        try {
+            cfg.createEntityViewManager(cbf);
+            fail("Expected validation failure because of missing id mapping!");
+        } catch (IllegalArgumentException ex) {
+            assertTrue(ex.getMessage().contains("@IdMapping"));
+        }
+    }
+
+    @CreatableEntityView
+    @EntityView(Person.class)
+    public static interface InvalidPersonCreateView {
+        String getName();
+        void setName(String name);
+    }
+
+    @Test
+    public void missingIdMappingForCreatable() {
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        cfg.addEntityView(InvalidPersonCreateView.class);
+        try {
+            cfg.createEntityViewManager(cbf);
+            fail("Expected validation failure because of missing id mapping!");
+        } catch (IllegalArgumentException ex) {
+            assertTrue(ex.getMessage().contains("@IdMapping"));
         }
     }
 }

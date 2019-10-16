@@ -544,8 +544,14 @@ public class ViewMappingImpl implements ViewMapping {
             } else {
                 // If the identifiable type has an id attribute and is creatable or updatable
                 // We try to infer the lock mode and other attributes if necessary
-                if (idAttribute != null && (isCreatable() || isUpdatable())) {
-                    if (resolvedLockMode == null) {
+                if (isCreatable() || isUpdatable()) {
+                    if (idAttribute == null) {
+                        if (isUpdatable()) {
+                            context.addError("Missing @IdMapping which is required for @UpdatableEntityView '" + entityViewClass.getName() + "'!");
+                        } else {
+                            context.addError("Missing @IdMapping which is required for @CreatableEntityView '" + entityViewClass.getName() + "'!");
+                        }
+                    } else if (resolvedLockMode == null) {
                         SingularAttribute<?, ?> versionAttribute = JpaMetamodelUtils.getVersionAttribute((IdentifiableType<?>) managedType);
                         if (versionAttribute == null) {
                             // If there is no lock mode defined, we default to the AUTO mode which will inherit lock modes of an owner
