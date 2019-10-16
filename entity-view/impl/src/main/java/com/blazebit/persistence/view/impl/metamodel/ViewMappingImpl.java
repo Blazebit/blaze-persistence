@@ -29,6 +29,7 @@ import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.MappedSuperclassType;
 import javax.persistence.metamodel.SingularAttribute;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -534,7 +535,10 @@ public class ViewMappingImpl implements ViewMapping {
                 context.addError("The entity class '" + entityClass.getName() + "' used for the entity view '" + entityViewClass.getName() + "' could not be found in the persistence unit!");
                 return null;
             }
-            if (!(managedType instanceof IdentifiableType<?>)) {
+            if (managedType instanceof MappedSuperclassType) {
+                // It's not necessary for a MappedSuperclassType to define an ID
+                // attribute, so we skip the check for @IdMapping
+            } else if (!(managedType instanceof IdentifiableType<?>)) {
                 if (idAttribute != null) {
                     context.addError("Invalid id attribute mapping for embeddable entity type '" + entityClass.getName() + "' at " + idAttribute.getErrorLocation() + " for managed view type '" + entityViewClass.getName() + "'!");
                 }
