@@ -164,7 +164,7 @@ public interface CatView {
 
     String getName();
 
-    class AgeFilterProvider implements ViewFilterProvider {
+    class AgeFilterProvider extends ViewFilterProvider {
         @Override
         public <T extends WhereBuilder<T>> T apply(T whereBuilder) {
             return whereBuilder.where("age").gt(2L);
