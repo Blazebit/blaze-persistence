@@ -119,22 +119,45 @@ public interface EntityViewManager {
     public <T> T convert(Object source, Class<T> entityViewClass, ConvertOption... convertOptions);
 
     /**
-     * Updates the entity which the given entity view maps to.
+     * Saves the entity which the given entity view maps to.
      * Issues a partial update if enabled for the given view.
      * 
-     * @param entityManager The entity manager to use for the update
-     * @param view The view to use for updating
-     * @since 1.1.0
+     * @param entityManager The entity manager to use for the save
+     * @param view The view to use for saving
+     * @since 1.4.0
      */
-    public void update(EntityManager entityManager, Object view);
+    public void save(EntityManager entityManager, Object view);
     
     /**
-     * Fully updates the entity which the given entity view maps to.
+     * Fully saves the entity which the given entity view maps to.
      * 
+     * @param entityManager The entity manager to use for the save
+     * @param view The view to use for saving
+     * @since 1.4.0
+     */
+    public void saveFull(EntityManager entityManager, Object view);
+
+    /**
+     * Updates the entity which the given entity view maps to.
+     * Issues a partial update if enabled for the given view.
+     *
      * @param entityManager The entity manager to use for the update
      * @param view The view to use for updating
      * @since 1.1.0
+     * @deprecated Use {@link #save(EntityManager, Object)} instead. This will be removed in 2.0
      */
+    @Deprecated
+    public void update(EntityManager entityManager, Object view);
+
+    /**
+     * Fully updates the entity which the given entity view maps to.
+     *
+     * @param entityManager The entity manager to use for the update
+     * @param view The view to use for updating
+     * @since 1.1.0
+     * @deprecated Use {@link #saveFull(EntityManager, Object)} instead. This will be removed in 2.0
+     */
+    @Deprecated
     public void updateFull(EntityManager entityManager, Object view);
 
     /**

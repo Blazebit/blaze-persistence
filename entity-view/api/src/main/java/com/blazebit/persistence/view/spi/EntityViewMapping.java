@@ -68,7 +68,7 @@ public interface EntityViewMapping {
     public void setName(String name);
 
     /**
-     * Returns whether the entity view should be updatable i.e. support updates via {@link com.blazebit.persistence.view.EntityViewManager#update(EntityManager, Object)}.
+     * Returns whether the entity view should be updatable i.e. support updates via {@link com.blazebit.persistence.view.EntityViewManager#save(EntityManager, Object)}.
      *
      * @return Whether the entity view should be updatable
      */
@@ -152,7 +152,7 @@ public interface EntityViewMapping {
     public void setPostCreateMethod(Method postCreateMethod);
 
     /**
-     * Returns whether the entity view should be creatable i.e. support persist via {@link com.blazebit.persistence.view.EntityViewManager#update(EntityManager, Object)}.
+     * Returns whether the entity view should be creatable i.e. support persist via {@link com.blazebit.persistence.view.EntityViewManager#save(EntityManager, Object)}.
      *
      * @return Whether the entity view should be creatable
      */

@@ -384,12 +384,22 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
 
     @Override
-    public void update(EntityManager em, Object view) {
+    public void update(EntityManager entityManager, Object view) {
+        save(entityManager, view);
+    }
+
+    @Override
+    public void updateFull(EntityManager entityManager, Object view) {
+        saveFull(entityManager, view);
+    }
+
+    @Override
+    public void save(EntityManager em, Object view) {
         update(em, view, false);
     }
 
     @Override
-    public void updateFull(EntityManager em, Object view) {
+    public void saveFull(EntityManager em, Object view) {
         update(em, view, true);
     }
 

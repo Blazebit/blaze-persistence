@@ -83,7 +83,7 @@ public class UpdatableCollectionTests {
         UserDetail user = userRepository.findByName("one");
         GroupDetail group = evm.create(GroupDetail.class);
         group.getUsers().add(user);
-        evm.update(em, group);
+        evm.save(em, group);
         em.flush();
         em.clear();
 
@@ -93,7 +93,7 @@ public class UpdatableCollectionTests {
 
         group = evm.find(em, GroupDetail.class, group.getId());
         group.getUsers().remove(user);
-        evm.update(em, group);
+        evm.save(em, group);
         em.flush();
         em.clear();
 
@@ -110,7 +110,7 @@ public class UpdatableCollectionTests {
         UserDetail user2 = userRepository.findByName("two");
         GroupDetail group = evm.create(GroupDetail.class);
         group.getUsers().addAll(Arrays.asList(user1, user2));
-        evm.update(em, group);
+        evm.save(em, group);
         em.flush();
         em.clear();
 
@@ -120,7 +120,7 @@ public class UpdatableCollectionTests {
 
         group = evm.find(em, GroupDetail.class, group.getId());
         group.getUsers().retainAll(Collections.emptyList());
-        evm.update(em, group);
+        evm.save(em, group);
         em.flush();
         em.clear();
 
@@ -136,7 +136,7 @@ public class UpdatableCollectionTests {
         UserDetail user = userRepository.findByName("one");
         RoleDetail role = evm.create(RoleDetail.class);
         role.getUsers().add(user);
-        evm.update(em, role);
+        evm.save(em, role);
         em.flush();
         em.clear();
 
@@ -146,7 +146,7 @@ public class UpdatableCollectionTests {
 
         role = evm.find(em, RoleDetail.class, role.getId());
         role.getUsers().remove(user);
-        evm.update(em, role);
+        evm.save(em, role);
         em.flush();
         em.clear();
 
@@ -163,7 +163,7 @@ public class UpdatableCollectionTests {
         UserDetail user2 = userRepository.findByName("two");
         RoleDetail role = evm.create(RoleDetail.class);
         role.getUsers().addAll(Arrays.asList(user1, user2));
-        evm.update(em, role);
+        evm.save(em, role);
         em.flush();
         em.clear();
 
@@ -173,7 +173,7 @@ public class UpdatableCollectionTests {
 
         role = evm.find(em, RoleDetail.class, role.getId());
         role.getUsers().retainAll(Collections.emptyList());
-        evm.update(em, role);
+        evm.save(em, role);
         em.flush();
         em.clear();
 

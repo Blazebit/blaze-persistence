@@ -82,7 +82,7 @@ Still, the object can safely make use of the primary key based equals-hashCode i
 
 === API usage
 
-An updatable as well as an creatable entity view is flushed by invoking link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#update(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.update(EntityManager em, Object view)`]
+An updatable as well as an creatable entity view is flushed by invoking link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#save(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.save(EntityManager em, Object view)`]
 and will flush changes according to the flush strategy and mode. Changes to collections are flushed depending on the collection mapping, flush strategy and JPA provider support.
 
 The query flush strategy requires support for collection DML queries which is currently only provided with Hibernate.
@@ -154,7 +154,7 @@ Another way to _load_ is to get a _reference_ for an entity view via `EntityView
 
 *create*::: Creating of entity view instances is done by calling `EntityViewManager.create()`.
 
-*flush/update*::: Flushing/Updating happens when invoking `EntityViewManager.update()` or `EntityViewManager.updateFull()` as well as implicitly for `CascadeType.UPDATE` enabled attributes.
+*flush/update*::: Flushing/Updating happens when invoking `EntityViewManager.save()` or `EntityViewManager.saveFull()` as well as implicitly for `CascadeType.UPDATE` enabled attributes.
 
 *convert*::: Conversion happens when calling `EntityViewManager.convert()` which implicitly happens for creatable entity views within a context after persisting.
 
@@ -550,7 +550,7 @@ CatUpdateView view = entityViewManager.find(entityManager, CatUpdateView.class, 
 view.setName("newName");
 
 // Flush the changes to the persistence context
-eventityViewManager.update(entityManager, view);
+eventityViewManager.save(entityManager, view);
 ----
 
 Depending on the configured flush strategy, this will either load the `Cat` entity and apply changes to it
@@ -753,10 +753,10 @@ Cat newKitten = entityManager.find(Cat.class, 2L);
 view.getKittens().add(newKitten);
 
 // Flush the changes to the persistence context
-entityViewManager.update(entityManager, view);
+entityViewManager.save(entityManager, view);
 ----
 
-Will be applied on the collection of an entity reference during `update()` as if the following was done.
+Will be applied on the collection of an entity reference during `EntityViewManager.save()` as if the following was done.
 
 [source,java]
 ----
@@ -820,7 +820,7 @@ PersonUpdateView view = ...;
 view.getKittens().remove(someKitten);
 
 // Flush the changes to the persistence context
-entityViewManager.update(entityManager, view);
+entityViewManager.save(entityManager, view);
 ----
 
 will cause the Cat `someKitten` to be removed.
@@ -889,7 +889,7 @@ CatUpdateView view = ...;
 view.getOwner().setName("newName");
 
 // Flush the changes to the persistence context
-entityViewManager.update(entityManager, view);
+entityViewManager.save(entityManager, view);
 ----
 
 The update of the `CatUpdateView` will cascade to the correlated object.
@@ -1862,7 +1862,7 @@ CatBaseView catBaseView = //...
 CatOwnerUpdateView catOwnerUpdate = entityViewManager.convert(CatOwnerUpdateView.class, catBaseView);
 ----
 
-After setting the new owner and flushing the changes via link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#update(javax.persistence.EntityManager,%20java.lang.Object)[EntityViewManager.update(EntityManager, Object)]
+After setting the new owner and flushing the changes via link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#save(javax.persistence.EntityManager,%20java.lang.Object)[EntityViewManager.save(EntityManager, Object)]
 the view is converted back to the base view by invoking link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#convert(java.lang.Class,%20java.lang.Object,%20com.blazebit.persistence.view.ConvertOption...)[EntityViewManager.convert(Class, Object, ConvertOption...)] again.
 
 [source,java]

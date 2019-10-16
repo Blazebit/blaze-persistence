@@ -133,7 +133,7 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
     @Transactional
     public <S extends E> S save(S entity) {
         if (entity instanceof EntityViewProxy) {
-            evm.update(entityManager, entity);
+            evm.save(entityManager, entity);
             return entity;
         } else if (entityInformation.isNew(entity)) {
             entityManager.persist(entity);

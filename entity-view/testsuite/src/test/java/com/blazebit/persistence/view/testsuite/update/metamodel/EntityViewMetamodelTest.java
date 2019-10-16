@@ -86,7 +86,7 @@ public class EntityViewMetamodelTest extends AbstractEntityViewTest {
             @Override
             public void work(EntityManager em) {
                 try {
-                    evm.update(em, view);
+                    evm.save(em, view);
                     fail("Expected to fail the update");
                 } catch (Exception ex) {
                     assertTrue(ex instanceof IllegalArgumentException);
