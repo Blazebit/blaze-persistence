@@ -462,7 +462,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             sb.setCharAt(0, Character.toLowerCase(sb.charAt(0)));
             String alias = sb.toString();
 
-            if (aliasManager.getAliasInfo(alias) == null && !Keywords.JPQL.contains(alias.toUpperCase())) {
+            if (metamodel.getEntity(alias) == null && aliasManager.getAliasInfo(alias) == null && !Keywords.JPQL.contains(alias.toUpperCase())) {
                 rootAlias = alias;
             } else {
                 rootAlias = aliasManager.generateRootAlias(alias);
@@ -567,11 +567,12 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         Type<?> type = joinResult.getAttributeType();
 
         if (rootAlias == null) {
-            StringBuilder sb = new StringBuilder(JpaMetamodelUtils.getSimpleTypeName(type));
+            String typeName = JpaMetamodelUtils.getSimpleTypeName(type);
+            StringBuilder sb = new StringBuilder(typeName);
             sb.setCharAt(0, Character.toLowerCase(sb.charAt(0)));
             String alias = sb.toString();
 
-            if (aliasManager.getAliasInfo(alias) == null) {
+            if (metamodel.getEntity(alias) == null && aliasManager.getAliasInfo(alias) == null) {
                 rootAlias = alias;
             } else {
                 rootAlias = aliasManager.generateRootAlias(alias);
@@ -593,7 +594,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         } else {
             // This is a deep expression that requires implicit joining
             String rootAliasBase = rootAlias + "_base";
-            if (aliasManager.getAliasInfo(rootAliasBase) != null) {
+            if (metamodel.getEntity(rootAliasBase) != null || aliasManager.getAliasInfo(rootAliasBase) != null) {
                 rootAliasBase = aliasManager.generateRootAlias(rootAliasBase);
             }
 
