@@ -297,7 +297,7 @@ public abstract class AbstractEntityViewUpdateTest<T> extends AbstractEntityView
 
             @Override
             public void work(EntityManager em) {
-                evm.update(em, docView);
+                evm.save(em, docView);
                 em.flush();
             }
         });
@@ -331,7 +331,7 @@ public abstract class AbstractEntityViewUpdateTest<T> extends AbstractEntityView
             @Override
             public void work(EntityManager em) {
                 EntityTransaction tx = em.getTransaction();
-                evm.update(em, docView);
+                evm.save(em, docView);
                 em.flush();
                 tx.setRollbackOnly();
             }

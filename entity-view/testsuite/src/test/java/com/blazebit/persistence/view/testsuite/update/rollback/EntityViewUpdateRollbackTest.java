@@ -130,12 +130,12 @@ public class EntityViewUpdateRollbackTest extends AbstractEntityViewUpdateDocume
             @Override
             public void work(EntityManager em) {
                 EntityTransaction tx = em.getTransaction();
-                evm.update(em, docView);
+                evm.save(em, docView);
                 assertEquals("newDoc", evm.getChangeModel(docView).get("name").getInitialState());
                 em.flush();
                 docView.setName("newNewDoc");
                 assertEquals("newDoc", evm.getChangeModel(docView).get("name").getInitialState());
-                evm.update(em, docView);
+                evm.save(em, docView);
                 assertEquals("newNewDoc", evm.getChangeModel(docView).get("name").getInitialState());
                 em.flush();
                 tx.setRollbackOnly();

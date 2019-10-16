@@ -236,7 +236,7 @@ public class EntityViewUpdateBlobTest extends AbstractEntityViewUpdateTest<Updat
             public void work(EntityManager em) {
                 em.clear();
                 clearQueries();
-                evm.update(em, docView);
+                evm.save(em, docView);
                 em.flush();
             }
         });
