@@ -162,7 +162,6 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                             new MacroConfigurationExpressionFactory(ef, ef.getDefaultMacroConfiguration()),
                             viewIdType,
                             null,
-                            viewIdType.getJavaType().getSimpleName(),
                             null,
                             null,
                             new MutableEmbeddingViewJpqlMacro(),

@@ -28,7 +28,7 @@ import com.blazebit.persistence.testsuite.entity.Person;
  * @author Christian Beikov
  * @since 1.0.0
  */
-@EntityView(name = "PersView", value = Person.class)
+@EntityView(Person.class)
 public interface PersonViewWithSingularMapping extends IdHolderView<Long> {
 
     @MappingSingular

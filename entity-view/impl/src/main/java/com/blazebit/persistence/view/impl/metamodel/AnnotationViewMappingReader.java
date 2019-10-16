@@ -77,9 +77,8 @@ public class AnnotationViewMappingReader implements ViewMappingReader {
             return null;
         }
         Class<?> entityClass = entityView.value();
-        String entityViewName = entityView.name();
 
-        ViewMapping viewMapping = new ViewMappingImpl(entityViewClass, entityClass, entityViewName, context);
+        ViewMapping viewMapping = new ViewMappingImpl(entityViewClass, entityClass, context);
         context.addViewMapping(entityViewClass, viewMapping);
 
         BatchFetch batchFetch = AnnotationUtils.findAnnotation(entityViewClass, BatchFetch.class);

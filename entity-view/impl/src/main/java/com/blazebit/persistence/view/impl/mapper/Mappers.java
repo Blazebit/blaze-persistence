@@ -154,7 +154,6 @@ public final class Mappers {
                                 new MacroConfigurationExpressionFactory(ef, ef.getDefaultMacroConfiguration()),
                                 (ManagedViewTypeImplementor<?>) attributeViewIdType,
                                 null,
-                                attributeViewIdType.getJavaType().getSimpleName(),
                                 null,
                                 null,
                                 new MutableEmbeddingViewJpqlMacro(),

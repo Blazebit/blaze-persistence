@@ -30,13 +30,6 @@ import java.util.Set;
 public interface ViewType<X> extends ManagedViewType<X> {
 
     /**
-     * Returns the name of the entity view.
-     *
-     * @return The name of the entity view.
-     */
-    public String getName();
-
-    /**
      * Returns the id attribute of the entity view.
      *
      * @return The id attribute of the entity view

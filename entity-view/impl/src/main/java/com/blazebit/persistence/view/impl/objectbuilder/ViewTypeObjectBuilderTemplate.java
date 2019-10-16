@@ -1205,13 +1205,12 @@ public class ViewTypeObjectBuilderTemplate<T> {
         private final Map<String, MacroFunction> macros;
         private final ManagedViewTypeImpl<Object> viewType;
         private final MappingConstructorImpl<Object> constructor;
-        private final String name;
         private final String entityViewRoot;
         private final String embeddingViewPath;
         private final int offset;
         private final boolean cacheable;
 
-        public Key(MacroConfigurationExpressionFactory ef, ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> constructor, String name, String entityViewRoot, String embeddingViewPath, int offset) {
+        public Key(MacroConfigurationExpressionFactory ef, ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> constructor, String entityViewRoot, String embeddingViewPath, int offset) {
             this.ef = ef.getExpressionFactory();
             Map<String, MacroFunction> macros;
             if (ef.getDefaultMacroConfiguration() == null) {
@@ -1242,14 +1241,13 @@ public class ViewTypeObjectBuilderTemplate<T> {
             this.macros = macros;
             this.viewType = (ManagedViewTypeImpl<Object>) viewType;
             this.constructor = (MappingConstructorImpl<Object>) constructor;
-            this.name = name;
             this.entityViewRoot = entityViewRoot;
             this.embeddingViewPath = embeddingViewPath;
             this.offset = offset;
         }
 
         public ViewTypeObjectBuilderTemplate<?> createValue(EntityViewManagerImpl evm, ProxyFactory proxyFactory, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, MacroConfigurationExpressionFactory ef) {
-            return new ViewTypeObjectBuilderTemplate<Object>(viewType, entityViewRoot, "", name, entityViewRoot, entityViewRoot, new TupleIdDescriptor(), new TupleIdDescriptor(), offset, embeddingViewJpqlMacro, null, evm, ef, viewType, constructor, proxyFactory);
+            return new ViewTypeObjectBuilderTemplate<Object>(viewType, entityViewRoot, "", viewType.getJavaType().getSimpleName(), entityViewRoot, entityViewRoot, new TupleIdDescriptor(), new TupleIdDescriptor(), offset, embeddingViewJpqlMacro, null, evm, ef, viewType, constructor, proxyFactory);
         }
 
         public boolean isCacheable() {
@@ -1263,7 +1261,6 @@ public class ViewTypeObjectBuilderTemplate<T> {
             hash = 83 * hash + (this.macros != null ? this.macros.hashCode() : 0);
             hash = 83 * hash + (this.viewType != null ? this.viewType.hashCode() : 0);
             hash = 83 * hash + (this.constructor != null ? this.constructor.hashCode() : 0);
-            hash = 83 * hash + (this.name != null ? this.name.hashCode() : 0);
             hash = 83 * hash + (this.entityViewRoot != null ? this.entityViewRoot.hashCode() : 0);
             hash = 83 * hash + (this.embeddingViewPath != null ? this.embeddingViewPath.hashCode() : 0);
             hash = 83 * hash + offset;
@@ -1289,9 +1286,6 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 return false;
             }
             if (this.constructor != other.constructor && (this.constructor == null || !this.constructor.equals(other.constructor))) {
-                return false;
-            }
-            if (this.name != other.name && (this.name == null || !this.name.equals(other.name))) {
                 return false;
             }
             if (this.entityViewRoot != other.entityViewRoot && (this.entityViewRoot == null || !this.entityViewRoot.equals(other.entityViewRoot))) {
