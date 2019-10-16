@@ -177,7 +177,7 @@ public final class EntityViewSettingHelper {
     }
 
     private static void applyAttributeFilters(EntityViewSetting<?, ?> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> cb, ExpressionFactory ef, ViewMetamodel metamodel, Metamodel jpaMetamodel, ManagedViewTypeImplementor<?> entityViewRoot) throws IllegalArgumentException {
-        String name = getName(entityViewRoot);
+        String name = entityViewRoot.getJavaType().getSimpleName();
         StringBuilder sb = null;
         for (Map.Entry<String, EntityViewSetting.AttributeFilterActivation> attributeFilterEntry : setting.getAttributeFilters().entrySet()) {
             String attributeName = attributeFilterEntry.getKey();
@@ -229,13 +229,6 @@ public final class EntityViewSettingHelper {
         }
     }
 
-    private static String getName(ManagedViewTypeImplementor<?> managedViewTypeImplementor) {
-        if (managedViewTypeImplementor instanceof ViewType<?>) {
-            return ((ViewType) managedViewTypeImplementor).getName();
-        }
-        return managedViewTypeImplementor.getJavaType().getName();
-    }
-
     private static String buildAlias(StringBuilder sb, String name, String attributeName) {
         sb.append(name).append('_');
         for (int i = 0; i < attributeName.length(); i++) {
@@ -250,7 +243,7 @@ public final class EntityViewSettingHelper {
     }
 
     private static void applyAttributeSorters(EntityViewSetting<?, ?> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> cb, ExpressionFactory ef, ManagedViewTypeImplementor<?> entityViewRoot) {
-        String name = getName(entityViewRoot);
+        String name = entityViewRoot.getJavaType().getSimpleName();
         StringBuilder sb = null;
 
         for (Map.Entry<String, Sorter> attributeSorterEntry : setting.getAttributeSorters().entrySet()) {

@@ -117,11 +117,9 @@ public class ViewMetamodelTest extends AbstractEntityViewTest {
         ViewMetamodel viewMetamodel = getViewMetamodel();
         Class<?> expectedViewClass = DocumentViewInterface.class;
         Class<?> expectedEntityClass = Document.class;
-        String expectedViewName = expectedViewClass.getSimpleName();
         ViewType<?> docView = viewMetamodel.view(expectedViewClass);
 
         assertEquals(expectedViewClass, docView.getJavaType());
-        assertEquals(expectedViewName, docView.getName());
         assertEquals(expectedEntityClass, docView.getEntityClass());
     }
 
@@ -130,11 +128,9 @@ public class ViewMetamodelTest extends AbstractEntityViewTest {
         ViewMetamodel viewMetamodel = getViewMetamodel();
         Class<?> expectedViewClass = PersonView.class;
         Class<?> expectedEntityClass = Person.class;
-        String expectedViewName = "PersView";
         ViewType<?> docView = viewMetamodel.view(expectedViewClass);
 
         assertEquals(expectedViewClass, docView.getJavaType());
-        assertEquals(expectedViewName, docView.getName());
         assertEquals(expectedEntityClass, docView.getEntityClass());
     }
 

@@ -115,8 +115,7 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
             return null;
         }
         ManagedViewType<?> idViewType = (ManagedViewType<?>) ((SingularAttribute<?, ?>) idAttribute).getType();
-        String viewName = idViewType.getJavaType().getSimpleName();
-        return (ObjectBuilder<Object[]>) evm.createObjectBuilder((ManagedViewTypeImplementor<?>) idViewType, null, viewName, viewRoot, "", criteriaBuilder, configuration, 1, 1);
+        return (ObjectBuilder<Object[]>) evm.createObjectBuilder((ManagedViewTypeImplementor<?>) idViewType, null, viewRoot, "", criteriaBuilder, configuration, 1, 1);
     }
 
     @Override

@@ -41,7 +41,6 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewTypeI
 
     private static final Logger LOG = Logger.getLogger(ViewTypeImpl.class.getName());
 
-    private final String name;
     private final String lockOwner;
     private final MethodAttribute<? super X, ?> idAttribute;
     private final MethodAttribute<? super X, ?> versionAttribute;
@@ -51,14 +50,6 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewTypeI
 
     public ViewTypeImpl(ViewMapping viewMapping, ManagedType<?> managedType, MetamodelBuildingContext context) {
         super(viewMapping, managedType, context, null);
-
-        String name = viewMapping.getName();
-
-        if (name == null || name.isEmpty()) {
-            this.name = getJavaType().getSimpleName();
-        } else {
-            this.name = name;
-        }
 
         Map<String, ViewFilterMapping> viewFilters = new HashMap<String, ViewFilterMapping>();
         
@@ -132,18 +123,13 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewTypeI
         String filterName = filterMapping.name();
         boolean errorOccurred = false;
 
-        if (filterName.isEmpty()) {
-            filterName = name;
-            
-            if (viewFilters.containsKey(filterName)) {
-                errorOccurred = true;
-                context.addError("Illegal duplicate filter name mapping '" + filterName + "' at the class '" + getJavaType().getName() + "'!");
-            }
-        }
-
         if (filterName != null && filterName.isEmpty()) {
+            errorOccurred = true;
             context.addError("Illegal empty name for the filter mapping at the class '" + this.getJavaType().getName() + "' with filter class '"
                     + filterMapping.value().getName() + "'!");
+        } else if (viewFilters.containsKey(filterName)) {
+            errorOccurred = true;
+            context.addError("Illegal duplicate filter name mapping '" + filterName + "' at the class '" + getJavaType().getName() + "'!");
         }
 
         if (!errorOccurred) {
@@ -155,11 +141,6 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewTypeI
     @Override
     public MappingType getMappingType() {
         return MappingType.VIEW;
-    }
-
-    @Override
-    public String getName() {
-        return name;
     }
 
     @Override

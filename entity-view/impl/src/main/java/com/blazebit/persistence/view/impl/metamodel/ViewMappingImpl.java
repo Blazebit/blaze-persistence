@@ -53,7 +53,6 @@ public class ViewMappingImpl implements ViewMapping {
     private final Class<?> entityViewClass;
     // Basic configs
     private Class<?> entityClass;
-    private String name;
 
     // Other configs
     private Integer defaultBatchSize;
@@ -99,10 +98,9 @@ public class ViewMappingImpl implements ViewMapping {
 
     private Set<Class<? extends CTEProvider>> cteProviders;
 
-    public ViewMappingImpl(Class<?> entityViewClass, Class<?> entityClass, String name, MetamodelBootContext context) {
+    public ViewMappingImpl(Class<?> entityViewClass, Class<?> entityClass, MetamodelBootContext context) {
         this.entityViewClass = entityViewClass;
         this.entityClass = entityClass;
-        this.name = name;
         this.context = context;
         this.inheritanceSupertypes = new HashSet<>();
         // Make the order of the inheritanceViewMappings deterministic, otherwise clustering won't work
@@ -127,16 +125,6 @@ public class ViewMappingImpl implements ViewMapping {
     @Override
     public void setEntityClass(Class<?> entityClass) {
         this.entityClass = entityClass;
-    }
-
-    @Override
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public void setName(String name) {
-        this.name = name;
     }
 
     @Override

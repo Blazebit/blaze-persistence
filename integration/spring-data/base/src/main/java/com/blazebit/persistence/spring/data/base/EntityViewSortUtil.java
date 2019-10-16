@@ -23,7 +23,6 @@ import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
-import com.blazebit.persistence.view.metamodel.ViewType;
 import org.springframework.data.domain.Sort;
 
 /**
@@ -50,7 +49,7 @@ public final class EntityViewSortUtil {
      */
     private static String resolveViewAttributeSelectAlias(EntityViewManager evm, Class<?> entityViewClass, String attributePath) {
         ManagedViewType<?> viewType = evm.getMetamodel().view(entityViewClass);
-        StringBuilder aliasBuilder = new StringBuilder(((ViewType<?>) viewType).getName());
+        StringBuilder aliasBuilder = new StringBuilder(viewType.getJavaType().getSimpleName());
         for (String pathElement : attributePath.split("\\.")) {
             if (viewType == null) {
                 return null;

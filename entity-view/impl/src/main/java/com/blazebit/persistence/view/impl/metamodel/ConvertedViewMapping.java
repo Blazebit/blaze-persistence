@@ -256,16 +256,6 @@ public class ConvertedViewMapping implements ViewMapping {
     }
 
     @Override
-    public String getName() {
-        return delegate.getName();
-    }
-
-    @Override
-    public void setName(String name) {
-        delegate.setName(name);
-    }
-
-    @Override
     public boolean isUpdatable() {
         return delegate.isUpdatable();
     }

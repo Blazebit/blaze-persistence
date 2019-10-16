@@ -589,28 +589,22 @@ public class EntityViewManagerImpl implements EntityViewManager {
             throw new IllegalArgumentException("There is no entity view for the class '" + clazz.getName() + "' registered!");
         }
         MappingConstructorImpl<?> mappingConstructor = (MappingConstructorImpl<?>) viewType.getConstructor(mappingConstructorName);
-        String viewName;
-        if (viewType instanceof ViewType<?>) {
-            viewName = ((ViewType) viewType).getName();
-        } else {
-            viewName = viewType.getJavaType().getSimpleName();
-        }
-        return applyObjectBuilder(viewType, mappingConstructor, viewName, entityViewRoot, configuration.getCriteriaBuilder(), configuration, 0);
+        return applyObjectBuilder(viewType, mappingConstructor, entityViewRoot, configuration.getCriteriaBuilder(), configuration, 0);
     }
 
-    public String applyObjectBuilder(ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> mappingConstructor, String viewName, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset) {
+    public String applyObjectBuilder(ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> mappingConstructor, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset) {
         Path root = getPath(criteriaBuilder, entityViewRoot);
         String path = root.getPath();
-        criteriaBuilder.selectNew(createObjectBuilder(viewType, mappingConstructor, viewName, root.getJavaType(), path, null, criteriaBuilder, configuration, offset, 0));
+        criteriaBuilder.selectNew(createObjectBuilder(viewType, mappingConstructor, root.getJavaType(), path, null, criteriaBuilder, configuration, offset, 0));
         return path;
     }
 
-    public ObjectBuilder<?> createObjectBuilder(ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> mappingConstructor, String viewName, String entityViewRoot, String embeddingViewPath, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, int suffix) {
+    public ObjectBuilder<?> createObjectBuilder(ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> mappingConstructor, String entityViewRoot, String embeddingViewPath, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, int suffix) {
         Path root = getPath(criteriaBuilder, entityViewRoot);
-        return createObjectBuilder(viewType, mappingConstructor, viewName, root.getJavaType(), root.getPath(), embeddingViewPath, criteriaBuilder, configuration, offset, suffix);
+        return createObjectBuilder(viewType, mappingConstructor, root.getJavaType(), root.getPath(), embeddingViewPath, criteriaBuilder, configuration, offset, suffix);
     }
 
-    public ObjectBuilder<?> createObjectBuilder(ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> mappingConstructor, String viewName, Class<?> rootType, String entityViewRoot, String embeddingViewPath, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, int suffix) {
+    public ObjectBuilder<?> createObjectBuilder(ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> mappingConstructor, Class<?> rootType, String entityViewRoot, String embeddingViewPath, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, int suffix) {
         ExpressionFactory ef = criteriaBuilder.getService(ExpressionFactory.class);
         if (!viewType.getEntityClass().isAssignableFrom(rootType)) {
             if (rootType.isAssignableFrom(viewType.getEntityClass())) {
@@ -632,7 +626,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         MacroConfigurationExpressionFactory macroEf = new MacroConfigurationExpressionFactory(cachingExpressionFactory, macroConfiguration);
         criteriaBuilder.registerMacro("view_root", viewRootJpqlMacro);
 
-        return getTemplate(macroEf, viewType, mappingConstructor, viewName, entityViewRoot, embeddingViewPath, embeddingViewJpqlMacro, offset)
+        return getTemplate(macroEf, viewType, mappingConstructor, entityViewRoot, embeddingViewPath, embeddingViewJpqlMacro, offset)
             .createObjectBuilder(criteriaBuilder, configuration.getOptionalParameters(), configuration, suffix);
     }
 
@@ -642,11 +636,11 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
     @SuppressWarnings("unchecked")
     public ViewTypeObjectBuilderTemplate<?> getTemplate(MacroConfigurationExpressionFactory ef, ViewTypeImpl<?> viewType, MappingConstructorImpl<?> mappingConstructor, String entityViewRoot, String embeddingViewPath, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
-        return getTemplate(ef, viewType, mappingConstructor, viewType.getName(), entityViewRoot, embeddingViewPath, embeddingViewJpqlMacro, 0);
+        return getTemplate(ef, viewType, mappingConstructor, entityViewRoot, embeddingViewPath, embeddingViewJpqlMacro, 0);
     }
 
-    public ViewTypeObjectBuilderTemplate<?> getTemplate(MacroConfigurationExpressionFactory ef, ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> mappingConstructor, String name, String entityViewRoot, String embeddingViewPath, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, int offset) {
-        ViewTypeObjectBuilderTemplate.Key key = new ViewTypeObjectBuilderTemplate.Key(ef, viewType, mappingConstructor, name, entityViewRoot, embeddingViewPath, offset);
+    public ViewTypeObjectBuilderTemplate<?> getTemplate(MacroConfigurationExpressionFactory ef, ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> mappingConstructor, String entityViewRoot, String embeddingViewPath, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, int offset) {
+        ViewTypeObjectBuilderTemplate.Key key = new ViewTypeObjectBuilderTemplate.Key(ef, viewType, mappingConstructor, entityViewRoot, embeddingViewPath, offset);
         if (!key.isCacheable()) {
             return key.createValue(this, proxyFactory, embeddingViewJpqlMacro, ef);
         }

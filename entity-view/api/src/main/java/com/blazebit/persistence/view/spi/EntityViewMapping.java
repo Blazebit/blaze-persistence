@@ -54,20 +54,6 @@ public interface EntityViewMapping {
     public void setEntityClass(Class<?> entityClass);
 
     /**
-     * Returns the name of the entity view, typically the simple type name.
-     *
-     * @return The entity view name
-     */
-    public String getName();
-
-    /**
-     * Set the entity view name.
-     *
-     * @param name The name
-     */
-    public void setName(String name);
-
-    /**
      * Returns whether the entity view should be updatable i.e. support updates via {@link com.blazebit.persistence.view.EntityViewManager#save(EntityManager, Object)}.
      *
      * @return Whether the entity view should be updatable

@@ -32,13 +32,6 @@ import java.lang.annotation.Target;
 public @interface EntityView {
 
     /**
-     * The name of the entity view. It is defaulted to the simple class name.
-     *
-     * @return The name of the entity view
-     */
-    String name() default "";
-
-    /**
      * The entity class on which this view is based on.
      *
      * @return The entity class
