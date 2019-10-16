@@ -22,12 +22,14 @@ import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.proxy.ConstructorReflectionInstantiator;
 import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
+import com.blazebit.persistence.view.metamodel.FlatViewType;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.proxy.model.DocumentClassView;
 import com.blazebit.persistence.view.testsuite.proxy.model.DocumentCreateView;
 import com.blazebit.persistence.view.testsuite.proxy.model.DocumentInterfaceView;
+import com.blazebit.persistence.view.testsuite.proxy.model.NameObjectView;
 import com.blazebit.persistence.view.testsuite.proxy.model.UnsafeDocumentClassView;
 import com.blazebit.reflection.ReflectionUtils;
 import org.junit.Test;
@@ -56,7 +58,8 @@ public class ProxyFactoryTest extends AbstractEntityViewTest {
                 DocumentInterfaceView.class,
                 DocumentClassView.class,
                 UnsafeDocumentClassView.class,
-                DocumentCreateView.class
+                DocumentCreateView.class,
+                NameObjectView.class
         );
     }
 
@@ -237,8 +240,8 @@ public class ProxyFactoryTest extends AbstractEntityViewTest {
 
         // 5 Fields, 1 static field for EntityViewManager
         assertEquals(6, proxyClass.getDeclaredFields().length);
-        // 5 Getters, 2 Setter, 1 Bridge-Getter, 1 Bridge-Setter, 1 Equals, 1 HashCode, 7 EntityViewProxy methods
-        assertEquals(18, proxyClass.getDeclaredMethods().length);
+        // 5 Getters, 2 Setter, 1 Bridge-Getter, 1 Bridge-Setter, 1 Equals, 1 HashCode, 1 ToString, 7 EntityViewProxy methods
+        assertEquals(19, proxyClass.getDeclaredMethods().length);
         assertAttribute(proxyClass, "contacts", Modifier.PRIVATE, Map.class, Integer.class, Person.class);
         assertAttribute(proxyClass, "myContactPerson", Modifier.PRIVATE | Modifier.FINAL, Person.class);
         assertAttribute(proxyClass, "firstContactPerson", Modifier.PRIVATE | Modifier.FINAL, Person.class);
@@ -257,8 +260,8 @@ public class ProxyFactoryTest extends AbstractEntityViewTest {
 
         // 5 Fields, 1 static field for EntityViewManager
         assertEquals(6, proxyClass.getDeclaredFields().length);
-        // 5 Getters, 2 Setter, 1 Bridge-Getter, 1 Bridge-Setter, 1 Equals, 1 HashCode, 7 EntityViewProxy methods
-        assertEquals(18, proxyClass.getDeclaredMethods().length);
+        // 5 Getters, 2 Setter, 1 Bridge-Getter, 1 Bridge-Setter, 1 Equals, 1 HashCode, 1 ToString, 7 EntityViewProxy methods
+        assertEquals(19, proxyClass.getDeclaredMethods().length);
         assertAttribute(proxyClass, "contacts", Modifier.PRIVATE, Map.class, Integer.class, Person.class);
         assertAttribute(proxyClass, "myContactPerson", Modifier.PRIVATE | Modifier.FINAL, Person.class);
         assertAttribute(proxyClass, "firstContactPerson", Modifier.PRIVATE | Modifier.FINAL, Person.class);
@@ -275,6 +278,46 @@ public class ProxyFactoryTest extends AbstractEntityViewTest {
 
         assertTrue(instance.isPostCreated());
         assertNotNull(instance.getContacts());
+    }
+
+    @Test
+    public void testProxyToStringEmpty() throws Exception {
+        ViewType<DocumentCreateView> viewType = getViewMetamodel().view(DocumentCreateView.class);
+        Class<? extends DocumentCreateView> proxyClass = proxyFactory.getProxy(evm, (ManagedViewTypeImplementor<DocumentCreateView>) viewType, null);
+
+        DocumentCreateView instance = proxyClass.getConstructor().newInstance();
+
+        assertEquals(DocumentCreateView.class.getSimpleName() + "(id = null)", instance.toString());
+    }
+
+    @Test
+    public void testProxyToStringWithId() throws Exception {
+        ViewType<DocumentCreateView> viewType = getViewMetamodel().view(DocumentCreateView.class);
+        Class<? extends DocumentCreateView> proxyClass = proxyFactory.getProxy(evm, (ManagedViewTypeImplementor<DocumentCreateView>) viewType, null);
+
+        DocumentCreateView instance = proxyClass.getConstructor(Long.class).newInstance(1L);
+
+        assertEquals(DocumentCreateView.class.getSimpleName() + "(id = 1)", instance.toString());
+    }
+
+    @Test
+    public void testProxyToStringFlatViewEmpty() throws Exception {
+        FlatViewType<NameObjectView> viewType = getViewMetamodel().flatView(NameObjectView.class);
+        Class<? extends NameObjectView> proxyClass = proxyFactory.getProxy(evm, (ManagedViewTypeImplementor<NameObjectView>) viewType, null);
+
+        NameObjectView instance = proxyClass.getConstructor().newInstance();
+
+        assertEquals(NameObjectView.class.getSimpleName() + "(primaryName = null)", instance.toString());
+    }
+
+    @Test
+    public void testProxyToStringFlatView() throws Exception {
+        FlatViewType<NameObjectView> viewType = getViewMetamodel().flatView(NameObjectView.class);
+        Class<? extends NameObjectView> proxyClass = proxyFactory.getProxy(evm, (ManagedViewTypeImplementor<NameObjectView>) viewType, null);
+
+        NameObjectView instance = proxyClass.getConstructor(String.class).newInstance("test");
+
+        assertEquals(NameObjectView.class.getSimpleName() + "(primaryName = test)", instance.toString());
     }
 
     private void assertAttribute(Class<?> proxyClass, String fieldName, int modifiers, Class<?> type, Class<?>... typeArguments) throws Exception {

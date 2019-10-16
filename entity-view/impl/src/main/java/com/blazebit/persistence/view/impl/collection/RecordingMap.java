@@ -799,4 +799,9 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
     public boolean equals(Object obj) {
         return delegate.equals(obj);
     }
+
+    @Override
+    public String toString() {
+        return delegate.toString();
+    }
 }
