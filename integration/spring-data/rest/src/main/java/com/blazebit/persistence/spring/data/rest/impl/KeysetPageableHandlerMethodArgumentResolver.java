@@ -68,7 +68,7 @@ public class KeysetPageableHandlerMethodArgumentResolver extends PageableHandler
     private static final String DEFAULT_HIGHEST_PARAMETER = "highest";
     private static final String INVALID_DEFAULT_PAGE_SIZE = "Invalid default page size configured for method %s! Must not be less than one!";
     private static final String INVALID_KEYSET_DOMAIN_CLASS = "Invalid keyset domain class configured for method %s! Should be an entity type!";
-    private static final KeysetPageable DEFAULT_PAGE_REQUEST = new KeysetPageRequest(null, null, 0, 20);
+    private static final KeysetPageable DEFAULT_PAGE_REQUEST;
     private static final org.springframework.data.domain.Sort UNSORTED;
     private final ConcurrentMap<PropertyCacheKey, Class<? extends Serializable>> propertyTypeCache = new ConcurrentHashMap<>();
     private final ObjectMapper mapper = new ObjectMapper();
@@ -95,6 +95,7 @@ public class KeysetPageableHandlerMethodArgumentResolver extends PageableHandler
             throw new RuntimeException(e);
         }
         UNSORTED = unsorted;
+        DEFAULT_PAGE_REQUEST = new KeysetPageRequest(null, UNSORTED, 0, 20);
     }
 
     public KeysetPageableHandlerMethodArgumentResolver() {
