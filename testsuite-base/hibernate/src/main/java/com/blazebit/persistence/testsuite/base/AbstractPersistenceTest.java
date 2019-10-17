@@ -124,6 +124,16 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
         return !isHibernate4();
     }
 
+    @Override
+    public boolean supportsTableGroupJoins() {
+        String version = org.hibernate.Version.getVersionString();
+        String[] versionParts = version.split("[\\.-]");
+        int major = Integer.parseInt(versionParts[0]);
+        int minor = Integer.parseInt(versionParts[1]);
+        int fix = Integer.parseInt(versionParts[2]);
+        return major > 5 || (major == 5 && (minor > 2 || (minor == 2 && fix >= 8)));
+    }
+
     protected boolean doesJpaMergeOfRecentlyPersistedEntityForceUpdate() {
         // Not sure when exactly this got fixed, but 5.1 doesn't seem to have that problem
         String version = org.hibernate.Version.getVersionString();
