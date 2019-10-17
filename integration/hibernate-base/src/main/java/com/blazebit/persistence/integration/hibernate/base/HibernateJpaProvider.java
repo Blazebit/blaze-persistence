@@ -100,6 +100,7 @@ public class HibernateJpaProvider implements JpaProvider {
     private final boolean supportsJoinTableCleanupOnDelete;
     private final boolean needsCorrelationPredicateWhenCorrelatingWithWhereClause;
     private final boolean supportsSingleValuedAssociationNaturalIdExpressions;
+    private final boolean supportsTableGroupJoins;
     private final boolean needsElementCollectionIdCutoffForCompositeIdOwner;
 
     static {
@@ -145,7 +146,7 @@ public class HibernateJpaProvider implements JpaProvider {
         }
 
         try {
-            Method isNullable = OneToOneType.class.getDeclaredMethod("isNullable");
+            Method isNullable = org.hibernate.type.EntityType.class.getDeclaredMethod("isNullable");
             isNullable.setAccessible(true);
             IS_NULLABLE = isNullable;
         } catch (Exception ex) {
@@ -198,6 +199,8 @@ public class HibernateJpaProvider implements JpaProvider {
             this.supportsSingleValuedAssociationNaturalIdExpressions = major > 5 || major == 5 && minor >= 4;
             // See https://hibernate.atlassian.net/browse/HHH-13045 for details
             this.needsElementCollectionIdCutoffForCompositeIdOwner = major < 5 || major == 5 && minor < 4;
+            // Table group joins are added in Hibernate 5.2.8
+            this.supportsTableGroupJoins = major > 5 || (major == 5 && (minor > 2 || (minor == 2 && fix >= 8)));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -484,11 +487,19 @@ public class HibernateJpaProvider implements JpaProvider {
         AbstractEntityPersister persister = getEntityPersister(ownerType);
         Type propertyType = persister.getPropertyType(attributeName);
 
-        if (propertyType instanceof OneToOneType) {
-            OneToOneType oneToOneType = (OneToOneType) propertyType;
-            // It is foreign if there is a mapped by attribute
-            // But as of Hibernate 5.4 we noticed that we have to treat nullable one-to-ones as "foreign" as well
-            return (oneToOneType).getRHSUniqueKeyPropertyName() != null || isNullable(oneToOneType);
+        if (propertyType instanceof org.hibernate.type.EntityType) {
+            org.hibernate.type.EntityType entityType = (org.hibernate.type.EntityType) propertyType;
+            // As of Hibernate 5.4 we noticed that we have to treat nullable associations as "foreign" as well
+            if (isNullable(entityType)) {
+                return true;
+            }
+
+            // OneToOnes can't have JoinTables as per spec
+            // ManyToOnes can have JoinTables, which can be treated as non-foreign
+            // if table group joins are supported.
+            if (supportsTableGroupJoins || propertyType instanceof OneToOneType) {
+                return (entityType).getRHSUniqueKeyPropertyName() != null;
+            }
         }
 
         // Every entity persister has "owned" properties on table number 0, others have higher numbers
@@ -496,7 +507,7 @@ public class HibernateJpaProvider implements JpaProvider {
         return tableNumber >= persister.getEntityMetamodel().getSubclassEntityNames().size();
     }
 
-    private boolean isNullable(OneToOneType oneToOneType) {
+    private boolean isNullable(org.hibernate.type.EntityType oneToOneType) {
         try {
             return (boolean) IS_NULLABLE.invoke(oneToOneType);
         } catch (Exception e) {

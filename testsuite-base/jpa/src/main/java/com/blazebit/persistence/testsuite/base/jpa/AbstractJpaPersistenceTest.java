@@ -436,6 +436,10 @@ public abstract class AbstractJpaPersistenceTest {
         return false;
     }
 
+    public boolean supportsTableGroupJoins() {
+        return false;
+    }
+
     protected boolean doesJpaMergeOfRecentlyPersistedEntityForceUpdate() {
         return true;
     }
