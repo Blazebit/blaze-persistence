@@ -31,7 +31,7 @@ public class PageRequest extends org.springframework.data.domain.PageRequest {
     static {
         org.springframework.data.domain.Sort unsorted = null;
         try {
-            for (Method unsortedCandidate : Sort.class.getDeclaredMethods()) {
+            for (Method unsortedCandidate : org.springframework.data.domain.Sort.class.getDeclaredMethods()) {
                 if ("unsorted".equals(unsortedCandidate.getName())) {
                     unsorted = (org.springframework.data.domain.Sort) unsortedCandidate.invoke(null);
                     break;
