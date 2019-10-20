@@ -1471,6 +1471,10 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return orderBy(expression, true, nullFirst);
     }
 
+    public BuilderType orderBy(String expression, boolean ascending) {
+        return orderBy(expression, ascending, false);
+    }
+
     @SuppressWarnings("unchecked")
     public BuilderType orderBy(String expression, boolean ascending, boolean nullFirst) {
         Expression expr;

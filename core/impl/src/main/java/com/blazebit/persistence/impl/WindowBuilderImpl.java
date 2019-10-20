@@ -119,6 +119,10 @@ public class WindowBuilderImpl<T> extends PredicateManager<WindowBuilderImpl<T>>
         return this;
     }
 
+    public WindowBuilder<T> orderBy(String expression, boolean ascending) {
+        return orderBy(expression, ascending, false);
+    }
+
     @Override
     public WindowBuilder<T> orderBy(String expression, boolean ascending, boolean nullFirst) {
         Expression expr = expressionFactory.createSimpleExpression(expression, false);

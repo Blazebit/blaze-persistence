@@ -27,6 +27,16 @@ package com.blazebit.persistence;
 public interface OrderByBuilder<T extends OrderByBuilder<T>> {
 
     /**
+     * Like {@link BaseQueryBuilder#orderBy(java.lang.String, boolean, boolean) } but with <code>nullFirst</code> set to false.
+     *
+     * @param expression The expression for the order by clause
+     * @param ascending Wether the order should be ascending or descending.
+     * @return The query builder for chaining calls
+     * @since 1.4.0
+     */
+    public T orderBy(String expression, boolean ascending);
+
+    /**
      * Adds an order by clause with the given expression to the query.
      *
      * @param expression The expression for the order by clause
