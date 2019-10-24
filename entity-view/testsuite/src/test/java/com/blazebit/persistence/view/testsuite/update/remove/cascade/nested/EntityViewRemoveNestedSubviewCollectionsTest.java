@@ -81,6 +81,11 @@ public class EntityViewRemoveNestedSubviewCollectionsTest extends AbstractEntity
                     .select(Version.class);
         }
 
+        if (isQueryStrategy()) {
+            // Need to select the version id to be able to delete the localized set
+            builder.select(Version.class);
+        }
+
         deleteDocumentOwned(builder);
         deletePersonOwned(builder);
         deletePersonOwned(builder);
@@ -93,6 +98,7 @@ public class EntityViewRemoveNestedSubviewCollectionsTest extends AbstractEntity
                 .update(Document.class)
                 // document.versions
                 .delete(Version.class)
+                .delete(Version.class, "localized")
                 .delete(Document.class)
                 .validate();
 
@@ -121,6 +127,11 @@ public class EntityViewRemoveNestedSubviewCollectionsTest extends AbstractEntity
             // Select for deletion because of possible cycle
             // document.people.id
             builder.select(Document.class);
+        }
+
+        if (isQueryStrategy()) {
+            // Need to select the version id to be able to delete the localized set
+            builder.select(Version.class);
         }
 
         deleteDocumentOwned(builder, true);
@@ -160,6 +171,7 @@ public class EntityViewRemoveNestedSubviewCollectionsTest extends AbstractEntity
                 .update(Document.class)
                 // document.versions
                 .delete(Version.class)
+                .delete(Version.class, "localized")
                 .delete(Document.class)
                 .validate();
 

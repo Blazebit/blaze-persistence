@@ -81,6 +81,11 @@ public class EntityViewRemoveNestedSubviewMapsTest extends AbstractEntityViewRem
                     .select(Version.class);
         }
 
+        if (isQueryStrategy()) {
+            // Need to select the version id to be able to delete the localized set
+            builder.select(Version.class);
+        }
+
         deleteDocumentOwned(builder);
         deletePersonOwned(builder);
         deletePersonOwned(builder);
@@ -93,6 +98,7 @@ public class EntityViewRemoveNestedSubviewMapsTest extends AbstractEntityViewRem
                 .update(Document.class)
                 // document.versions
                 .delete(Version.class)
+                .delete(Version.class, "localized")
                 .delete(Document.class)
                 .validate();
 
@@ -154,6 +160,11 @@ public class EntityViewRemoveNestedSubviewMapsTest extends AbstractEntityViewRem
             builder.select(Person.class);
         }
 
+        if (isQueryStrategy()) {
+            // Need to select the version id to be able to delete the localized set
+            builder.select(Version.class);
+        }
+
         builder.delete(Person.class)
                 .update(Document.class)
                 // document.contacts.friend
@@ -161,6 +172,7 @@ public class EntityViewRemoveNestedSubviewMapsTest extends AbstractEntityViewRem
                 .update(Document.class)
                 // document.versions
                 .delete(Version.class)
+                .delete(Version.class, "localized")
                 .delete(Document.class)
                 .validate();
 
