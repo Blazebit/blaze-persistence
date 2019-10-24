@@ -157,4 +157,26 @@ public class JoinOnTest extends AbstractCoreTest {
         assertEquals(expectedObjectQuery, criteriaBuilder.getQueryString());
         criteriaBuilder.getResultList();
     }
+
+    @Test
+    @Category({ NoEclipselink.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
+    // NOTE: Subquery support in ON clause is only possible with Hibernate 5.1+
+    // TODO: report eclipselink does not support subqueries in functions
+    public void testJoinWithSubqueryBuilder() {
+        CriteriaBuilder<String> crit = cbf.create(em, String.class).from(Document.class, "e");
+        crit.innerJoinOn("e.owner", "o")
+                .onOr()
+                    .on("o.name").eq("Test")
+                    .on("o.age").eqSubqueries("maximize")
+                        .with("maximize")
+                            .from(Person.class, "p")
+                            .select("p.age")
+                            .orderByDesc("p.age")
+                            .setMaxResults(1)
+                        .end()
+                    .end()
+                .endOr()
+            .end();
+        crit.getResultList();
+    }
 }

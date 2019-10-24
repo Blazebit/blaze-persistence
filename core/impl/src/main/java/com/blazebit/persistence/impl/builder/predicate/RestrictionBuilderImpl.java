@@ -54,6 +54,7 @@ import com.blazebit.persistence.parser.predicate.LtPredicate;
 import com.blazebit.persistence.parser.predicate.MemberOfPredicate;
 import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.parser.predicate.PredicateBuilder;
+import com.blazebit.persistence.parser.predicate.PredicateQuantifier;
 import com.blazebit.persistence.parser.util.TypeUtils;
 
 import java.util.ArrayList;
@@ -183,8 +184,19 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         return initiator;
     }
     
-    private <X> MultipleSubqueryInitiator<X> simpleMultipleBuilder(X result, Expression expr, ExpressionBuilderEndedListener listener) {
-        MultipleSubqueryInitiator<X> initiator = new MultipleSubqueryInitiatorImpl<X>(result, expr, listener, subqueryInitFactory, clause);
+    private <X> MultipleSubqueryInitiator<X> simpleMultipleBuilder(X result, Expression expr, final AbstractQuantifiablePredicateBuilder predicateBuilder) {
+        MultipleSubqueryInitiatorImpl<X> initiator = new MultipleSubqueryInitiatorImpl<X>(result, expr, new ExpressionBuilderEndedListener() {
+
+            @Override
+            public void onBuilderEnded(ExpressionBuilder builder) {
+                RestrictionBuilderImpl.this.predicate = predicateBuilder.createPredicate(leftExpression, builder.getExpression(), PredicateQuantifier.ONE);
+                listener.onBuilderEnded(RestrictionBuilderImpl.this);
+            }
+
+        }, subqueryInitFactory, clause);
+
+        startBuilder(predicateBuilder);
+        predicateBuilder.startBuilder(initiator);
         return initiator;
     }
 
@@ -288,7 +300,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     @Override
     public MultipleSubqueryInitiator<T> eqSubqueries(String expression) {
         Expression expr = expressionFactory.createSimpleExpression(expression, true);
-        return simpleMultipleBuilder(result, expr, new EqPredicateBuilder<T>(result, null, leftExpression, false, subqueryInitFactory, expressionFactory, parameterManager, clause));
+        return simpleMultipleBuilder(result, expr, new EqPredicateBuilder<T>(result, this, leftExpression, false, subqueryInitFactory, expressionFactory, parameterManager, clause));
     }
 
     @Override
@@ -343,7 +355,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     @Override
     public MultipleSubqueryInitiator<T> notEqSubqueries(String expression) {
         Expression expr = expressionFactory.createSimpleExpression(expression, true);
-        return simpleMultipleBuilder(result, expr, new EqPredicateBuilder<T>(result, null, leftExpression, true, subqueryInitFactory, expressionFactory, parameterManager, clause));
+        return simpleMultipleBuilder(result, expr, new EqPredicateBuilder<T>(result, this, leftExpression, true, subqueryInitFactory, expressionFactory, parameterManager, clause));
     }
 
     @Override
@@ -398,7 +410,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     @Override
     public MultipleSubqueryInitiator<T> gtSubqueries(String expression) {
         Expression expr = expressionFactory.createSimpleExpression(expression, true);
-        return simpleMultipleBuilder(result, expr, new GtPredicateBuilder<T>(result, null, leftExpression, subqueryInitFactory, expressionFactory, parameterManager, clause));
+        return simpleMultipleBuilder(result, expr, new GtPredicateBuilder<T>(result, this, leftExpression, subqueryInitFactory, expressionFactory, parameterManager, clause));
     }
 
     @Override
@@ -453,7 +465,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     @Override
     public MultipleSubqueryInitiator<T> geSubqueries(String expression) {
         Expression expr = expressionFactory.createSimpleExpression(expression, true);
-        return simpleMultipleBuilder(result, expr, new GePredicateBuilder<T>(result, null, leftExpression, subqueryInitFactory, expressionFactory, parameterManager, clause));
+        return simpleMultipleBuilder(result, expr, new GePredicateBuilder<T>(result, this, leftExpression, subqueryInitFactory, expressionFactory, parameterManager, clause));
     }
 
     @Override
@@ -508,7 +520,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     @Override
     public MultipleSubqueryInitiator<T> ltSubqueries(String expression) {
         Expression expr = expressionFactory.createSimpleExpression(expression, true);
-        return simpleMultipleBuilder(result, expr, new LtPredicateBuilder<T>(result, null, leftExpression, subqueryInitFactory, expressionFactory, parameterManager, clause));
+        return simpleMultipleBuilder(result, expr, new LtPredicateBuilder<T>(result, this, leftExpression, subqueryInitFactory, expressionFactory, parameterManager, clause));
     }
 
     @Override
@@ -563,7 +575,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     @Override
     public MultipleSubqueryInitiator<T> leSubqueries(String expression) {
         Expression expr = expressionFactory.createSimpleExpression(expression, true);
-        return simpleMultipleBuilder(result, expr, new LePredicateBuilder<T>(result, null, leftExpression, subqueryInitFactory, expressionFactory, parameterManager, clause));
+        return simpleMultipleBuilder(result, expr, new LePredicateBuilder<T>(result, this, leftExpression, subqueryInitFactory, expressionFactory, parameterManager, clause));
     }
 
     @Override

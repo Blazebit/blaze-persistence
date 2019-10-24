@@ -57,6 +57,10 @@ public class SubqueryAndExpressionBuilderListener<T> implements SubqueryBuilderL
         expressionBuilderEndedListener.onBuilderEnded(builder);
     }
 
+    public void startBuilder(MultipleSubqueryInitiatorImpl builder) {
+        expressionBuilderEndedListener.startBuilder(builder);
+    }
+
     protected void verifyBuilderEnded() {
         expressionBuilderEndedListener.verifyBuilderEnded();
         subqueryBuilderListener.verifySubqueryBuilderEnded();
