@@ -18,13 +18,18 @@ package com.blazebit.persistence.testsuite.entity;
 
 import java.io.Serializable;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.MapKeyColumn;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -46,6 +51,7 @@ public class Version implements Serializable {
     private Calendar date;
     private int idx;
     private String url;
+    private Map<Integer, String> localized = new HashMap<Integer, String>();
 
     public Version() {
     }
@@ -98,5 +104,16 @@ public class Version implements Serializable {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    @ElementCollection
+    @MapKeyColumn(nullable = false)
+    @CollectionTable(name = "version_localized")
+    public Map<Integer, String> getLocalized() {
+        return localized;
+    }
+
+    public void setLocalized(Map<Integer, String> localized) {
+        this.localized = localized;
     }
 }

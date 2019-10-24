@@ -104,6 +104,7 @@ public abstract class AbstractEntityViewRemoveDocumentTest<T> extends AbstractEn
         doc1.getContacts2().put(2, p1);
         doc1.getStrings().add("asd");
         doc1.getStringMap().put("doc1", "doc1");
+        doc1.getVersions().iterator().next().getLocalized().put(1, "1");
 
         doc2.setOwner(p6);
         doc2.setResponsiblePerson(p2);

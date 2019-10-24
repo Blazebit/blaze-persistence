@@ -124,13 +124,24 @@ public class UnmappedBasicAttributeCascadeDeleter extends AbstractUnmappedAttrib
                     cb.select(attribute);
                 }
                 cb.select(elementIdAttributeName);
-                for (Object[] returnedValues : cb.getResultList()) {
-                    Object id = returnedValues[returnedValues.length - 1];
+                List<Object[]> resultList = cb.getResultList();
+                if (!resultList.isEmpty() && resultList.get(0) instanceof Object[]) {
+                    for (Object[] returnedValues : resultList) {
+                        Object id = returnedValues[returnedValues.length - 1];
 
-                    for (int i = 0; i < unmappedPreRemoveCascadeDeleters.length; i++) {
-                        unmappedPreRemoveCascadeDeleters[i].removeByOwnerId(context, id);
+                        for (int i = 0; i < unmappedPreRemoveCascadeDeleters.length; i++) {
+                            unmappedPreRemoveCascadeDeleters[i].removeByOwnerId(context, id);
+                        }
+                        removeWithoutPreCascadeDelete(context, ownerId, returnedValues, id);
                     }
-                    removeWithoutPreCascadeDelete(context, ownerId, returnedValues, id);
+                } else {
+                    // Hibernate returns the scalar value directly when using only a single select item
+                    for (Object id : resultList) {
+                        for (int i = 0; i < unmappedPreRemoveCascadeDeleters.length; i++) {
+                            unmappedPreRemoveCascadeDeleters[i].removeByOwnerId(context, id);
+                        }
+                        removeWithoutPreCascadeDelete(context, ownerId, null, id);
+                    }
                 }
             } else {
                 removeWithoutPreCascadeDelete(context, ownerId, null, null);
