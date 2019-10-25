@@ -123,6 +123,8 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
     // Setting to force entity joins being rendered as cross joins. Needed for recursive CTEs with DB2..
     private boolean emulateJoins;
 
+    private boolean hasFullJoin;
+
     JoinManager(MainQuery mainQuery, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder, ResolvingQueryGenerator queryGenerator, AliasManager aliasManager, JoinManager parent, ExpressionFactory expressionFactory) {
         super(queryGenerator, mainQuery.parameterManager, null);
         this.mainQuery = mainQuery;
@@ -1149,6 +1151,9 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 case RIGHT:
                     sb.append(" RIGHT JOIN ");
                     break;
+                case FULL:
+                    sb.append(" FULL JOIN ");
+                    break;
                 default:
                     throw new IllegalArgumentException("Unknown join type: " + node.getJoinType());
             }
@@ -1614,6 +1619,10 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
     <X> JoinOnBuilder<X> joinOn(X result, String base, EntityType<?> entityType, String alias, JoinType type) {
         PathExpression basePath = expressionFactory.createPathExpression(base);
 
+        if (type == JoinType.FULL) {
+            hasFullJoin = true;
+        }
+
         if (alias == null || alias.isEmpty()) {
             throw new IllegalArgumentException("Invalid empty alias!");
         }
@@ -1684,6 +1693,11 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         String treatType = null;
         JoinResult result;
         JoinNode current;
+
+        if (type == JoinType.FULL) {
+            hasFullJoin = true;
+        }
+
         if (expr instanceof PathExpression) {
             PathExpression pathExpression = (PathExpression) expr;
 
@@ -2701,7 +2715,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
     }
 
     private JoinType getModelAwareType(JoinNode baseNode, Attribute<?, ?> attr) {
-        if (baseNode.getJoinType() == JoinType.LEFT) {
+        if (baseNode.getJoinType() == JoinType.LEFT || baseNode.getJoinType() == JoinType.FULL) {
             return JoinType.LEFT;
         }
 
@@ -3004,4 +3018,9 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             joinNode.updateClauseDependencies(ClauseType.JOIN, new LinkedHashSet<JoinNode>());
         }
     }
+
+    public boolean hasFullJoin() {
+        return hasFullJoin;
+    }
+
 }

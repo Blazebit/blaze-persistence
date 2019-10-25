@@ -249,7 +249,7 @@ public class ExpressionUtils {
         // Since implicit joining would produce inner joins, using LEFT can only be a deliberate decision of the user
         // If the user wants to avoid implications of this path being considered nullable, the join should be changed
         // Note that a VALUES clause does not adhere to the nullability guarantees
-        return baseNode.getValueCount() > 0 && baseNode.getValuesCastedParameter() == null || baseNode.getJoinType() == JoinType.LEFT;
+        return baseNode.getValueCount() > 0 && baseNode.getValuesCastedParameter() == null || baseNode.getJoinType() == JoinType.LEFT || baseNode.getJoinType() == JoinType.FULL;
     }
 
     private static boolean isNullable(Attribute<?, ?> attr) {
