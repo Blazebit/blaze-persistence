@@ -27,8 +27,8 @@ import java.util.Set;
  */
 public class RecordingNavigableSet<E> extends RecordingSortedSet<NavigableSet<E>, E> implements NavigableSet<E> {
 
-    public RecordingNavigableSet(NavigableSet<E> delegate, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringSubtypes, Set<Class<?>> parentRequiringCreateSubtypes, boolean updatable, boolean optimize) {
-        super(delegate, allowedSubtypes, parentRequiringSubtypes, parentRequiringCreateSubtypes, updatable, optimize);
+    public RecordingNavigableSet(NavigableSet<E> delegate, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringSubtypes, Set<Class<?>> parentRequiringCreateSubtypes, boolean updatable, boolean optimize, boolean strictCascadingCheck) {
+        super(delegate, allowedSubtypes, parentRequiringSubtypes, parentRequiringCreateSubtypes, updatable, optimize, strictCascadingCheck);
     }
 
     @Override

@@ -76,6 +76,10 @@ public interface MetamodelBuildingContext {
 
     public boolean isDisallowOwnedUpdatableSubview();
 
+    public boolean isStrictCascadingCheck();
+
+    public boolean isErrorOnInvalidPluralSetter();
+
     public ProxyFactory getProxyFactory();
 
     public FlushMode getFlushMode(Class<?> clazz, FlushMode defaultValue);

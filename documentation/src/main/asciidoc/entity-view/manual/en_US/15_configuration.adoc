@@ -168,3 +168,33 @@ Beware that allowing updatable entity view types for *ToOne relationships might 
 | Default | true
 | Applicable | Configuration only
 |====================
+
+==== UPDATER_STRICT_CASCADING_CHECK
+
+Defines whether the strict cascading check that disallows setting updatable or creatable entity views on non-cascading attributes
+before being associated with a cascading attribute is enabled.
+When disabled, it is possible, like in JPA, that the changes done to an updatable entity view are not flushed when it is not associated with an attribute that cascades updates.
+By default the use is enabled i.e. the default value is `true`.
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.view.updater.strict_cascading_check
+| Type | boolean
+| Default | true
+| Applicable | Configuration only
+|====================
+
+==== UPDATER_ERROR_ON_INVALID_PLURAL_SETTER
+
+Defines whether warnings or boot time validation errors should be emitted when invalid plural attribute setters are encountered while the strict cascading check is enabled.
+When `true`, a boot time validation error is thrown when encountering an invalid setter, otherwise just a warning.
+This configuration has no effect when the strict cascading check is disabled.
+By default the use is disabled i.e. the default value is `false`.
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.view.updater.error_on_invalid_plural_setter
+| Type | boolean
+| Default | true
+| Applicable | Configuration only
+|====================

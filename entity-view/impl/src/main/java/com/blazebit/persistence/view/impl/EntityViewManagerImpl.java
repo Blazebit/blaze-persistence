@@ -129,6 +129,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     private final Map<String, Class<? extends AttributeFilterProvider>> filterMappings;
     
     private final boolean unsafeDisabled;
+    private final boolean strictCascadingCheck;
 
     public EntityViewManagerImpl(EntityViewConfigurationImpl config, CriteriaBuilderFactory cbf) {
         this.cbf = cbf;
@@ -139,7 +140,8 @@ public class EntityViewManagerImpl implements EntityViewManager {
         this.packageOpener = cbf.getService(PackageOpener.class);
         this.entityIdAccessor = new EntityIdAttributeAccessor(jpaProvider);
         this.unsafeDisabled = !Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.PROXY_UNSAFE_ALLOWED)));
-        this.proxyFactory = new ProxyFactory(unsafeDisabled, packageOpener);
+        this.strictCascadingCheck = Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.UPDATER_STRICT_CASCADING_CHECK)));
+        this.proxyFactory = new ProxyFactory(unsafeDisabled, strictCascadingCheck, packageOpener);
 
         boolean validateManagedTypes = !Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.MANAGED_TYPE_VALIDATION_DISABLED)));
         boolean validateExpressions = !Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.EXPRESSION_VALIDATION_DISABLED)));

@@ -21,6 +21,7 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.view.ConfigurationProperties;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
@@ -60,6 +61,7 @@ public class EntityViewUpdateNestedUpdatableOnlySubviewCollectionsTest extends A
 
     @Override
     protected void registerViewTypes(EntityViewConfiguration cfg) {
+        cfg.setProperty(ConfigurationProperties.UPDATER_STRICT_CASCADING_CHECK, "false");
         cfg.addEntityView(UpdatableResponsiblePersonView.class);
         cfg.addEntityView(UpdatableFriendPersonView.class);
     }

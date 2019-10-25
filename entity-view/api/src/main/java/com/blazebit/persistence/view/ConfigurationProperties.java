@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view;
 
 /**
+ * Configuration properties that can be specified via {@link com.blazebit.persistence.view.spi.EntityViewConfiguration#setProperty(String, String)}.
  *
  * @author Christian Beikov
  * @since 1.0.6
@@ -143,6 +144,28 @@ public final class ConfigurationProperties {
      * @since 1.3.0
      */
     public static final String UPDATER_DISALLOW_OWNED_UPDATABLE_SUBVIEW = "com.blazebit.persistence.view.updater.disallow_owned_updatable_subview";
+
+    /**
+     * A boolean flag to make it possible to disable the strict cascading check that disallows setting updatable or creatable entity views on non-cascading attributes
+     * before being associated with a cascading attribute. When disabled, it is possible, like in JPA, that the changes done to an updatable entity view are not flushed
+     * when it is not associated with an attribute that cascades updates.
+     * By default the use is enabled i.e. the default value is <code>true</code>.
+     * Valid values for this property are <code>true</code> or <code>false</code>.
+     *
+     * @since 1.4.0
+     */
+    public static final String UPDATER_STRICT_CASCADING_CHECK = "com.blazebit.persistence.view.updater.strict_cascading_check";
+
+    /**
+     * A boolean flag that allows to switch from warnings to boot time validation errors when invalid plural attribute setters are encountered while the strict cascading check is enabled.
+     * When <code>true</code>, a boot time validation error is thrown when encountering an invalid setter, otherwise just a warning.
+     * This configuration has no effect when the strict cascading check is disabled.
+     * By default the use is disabled i.e. the default value is <code>false</code>.
+     * Valid values for this property are <code>true</code> or <code>false</code>.
+     *
+     * @since 1.4.0
+     */
+    public static final String UPDATER_ERROR_ON_INVALID_PLURAL_SETTER = "com.blazebit.persistence.view.updater.error_on_invalid_plural_setter";
 
     private ConfigurationProperties() {
     }

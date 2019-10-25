@@ -37,9 +37,10 @@ public class OrderedCollectionInstantiator  extends AbstractCollectionInstantiat
     private final boolean updatable;
     private final boolean optimize;
     private final boolean forceUnique;
+    private final boolean strictCascadingCheck;
     private final Comparator<Object> comparator;
 
-    public OrderedCollectionInstantiator(PluralObjectFactory<Collection<?>> collectionFactory, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringUpdateSubtypes, Set<Class<?>> parentRequiringCreateSubtypes, boolean updatable, boolean optimize, boolean forceUnique, Comparator<?> comparator) {
+    public OrderedCollectionInstantiator(PluralObjectFactory<Collection<?>> collectionFactory, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringUpdateSubtypes, Set<Class<?>> parentRequiringCreateSubtypes, boolean updatable, boolean optimize, boolean forceUnique, boolean strictCascadingCheck, Comparator<?> comparator) {
         super(collectionFactory);
         this.allowedSubtypes = allowedSubtypes;
         this.parentRequiringUpdateSubtypes = parentRequiringUpdateSubtypes;
@@ -47,6 +48,7 @@ public class OrderedCollectionInstantiator  extends AbstractCollectionInstantiat
         this.updatable = updatable;
         this.optimize = optimize;
         this.forceUnique = forceUnique;
+        this.strictCascadingCheck = strictCascadingCheck;
         this.comparator = (Comparator<Object>) comparator;
     }
 
@@ -91,6 +93,6 @@ public class OrderedCollectionInstantiator  extends AbstractCollectionInstantiat
 
     @Override
     public RecordingCollection<Collection<?>, ?> createRecordingCollection(int size) {
-        return new RecordingCollection(createCollection(size), false, true, allowedSubtypes, parentRequiringUpdateSubtypes, parentRequiringCreateSubtypes, updatable, optimize);
+        return new RecordingCollection(createCollection(size), false, true, allowedSubtypes, parentRequiringUpdateSubtypes, parentRequiringCreateSubtypes, updatable, optimize, strictCascadingCheck);
     }
 }

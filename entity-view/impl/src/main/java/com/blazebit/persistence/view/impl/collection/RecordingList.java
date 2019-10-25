@@ -30,8 +30,8 @@ import java.util.Set;
  */
 public class RecordingList<E> extends RecordingCollection<List<E>, E> implements List<E> {
 
-    public RecordingList(List<E> delegate, boolean indexed, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringSubtypes, Set<Class<?>> parentRequiringCreateSubtypes, boolean updatable, boolean optimize) {
-        super(delegate, indexed, indexed, allowedSubtypes, parentRequiringSubtypes, parentRequiringCreateSubtypes, updatable, optimize);
+    public RecordingList(List<E> delegate, boolean indexed, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringSubtypes, Set<Class<?>> parentRequiringCreateSubtypes, boolean updatable, boolean optimize, boolean strictCascadingCheck) {
+        super(delegate, indexed, indexed, allowedSubtypes, parentRequiringSubtypes, parentRequiringCreateSubtypes, updatable, optimize, strictCascadingCheck);
     }
 
     @Override
