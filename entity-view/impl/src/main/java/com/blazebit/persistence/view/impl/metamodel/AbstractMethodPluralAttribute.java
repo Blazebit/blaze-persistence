@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 /**
  *
@@ -39,6 +40,8 @@ import java.util.Set;
  * @since 1.0.0
  */
 public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMethodAttribute<X, C> implements PluralAttribute<X, C, Y> {
+
+    private static final Logger LOG = Logger.getLogger(AbstractMethodPluralAttribute.class.getName());
 
     private final Type<Y> elementType;
     private final int dirtyStateIndex;
@@ -195,6 +198,19 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
                 boolean jpaDeleteCascaded = context.getJpaProvider().isDeleteCascaded(declaringType.getJpaManagedType(), mappingExpression);
                 if (jpaDeleteCascaded && !deleteCascaded) {
                     context.addError("Delete cascading configuration via @UpdatableMapping must be defined if entity attribute defines delete cascading. Invalid definition found on the  " + mapping.getErrorLocation() + "!");
+                }
+            }
+        }
+
+        if (context.isStrictCascadingCheck() && (updateCascaded || persistCascaded) && (declaringType.isUpdatable() || declaringType.isCreatable())) {
+            Method setter = ReflectionUtils.getSetter(declaringType.getJavaType(), getName());
+            if (setter != null) {
+                String message = "The setter '" + setter.getName() + "' for the type " + declaringType.getJavaType().getName() + " will always produce an exception due to enabled strict cascading checks and should be removed! " +
+                        "Use @UpdatableMapping on the getter instead to make this attribute updatable!";
+                if (context.isErrorOnInvalidPluralSetter()) {
+                    context.addError(message);
+                } else {
+                    LOG.warning(message);
                 }
             }
         }

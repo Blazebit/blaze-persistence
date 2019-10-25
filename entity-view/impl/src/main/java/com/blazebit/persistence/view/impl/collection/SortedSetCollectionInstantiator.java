@@ -34,15 +34,17 @@ public class SortedSetCollectionInstantiator  extends AbstractCollectionInstanti
     private final Set<Class<?>> parentRequiringCreateSubtypes;
     private final boolean updatable;
     private final boolean optimize;
+    private final boolean strictCascadingCheck;
     private final Comparator<?> comparator;
 
-    public SortedSetCollectionInstantiator(PluralObjectFactory<Collection<?>> collectionFactory, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringUpdateSubtypes, Set<Class<?>> parentRequiringCreateSubtypes, boolean updatable, boolean optimize, Comparator<?> comparator) {
+    public SortedSetCollectionInstantiator(PluralObjectFactory<Collection<?>> collectionFactory, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringUpdateSubtypes, Set<Class<?>> parentRequiringCreateSubtypes, boolean updatable, boolean optimize, boolean strictCascadingCheck, Comparator<?> comparator) {
         super(collectionFactory);
         this.allowedSubtypes = allowedSubtypes;
         this.parentRequiringUpdateSubtypes = parentRequiringUpdateSubtypes;
         this.parentRequiringCreateSubtypes = parentRequiringCreateSubtypes;
         this.updatable = updatable;
         this.optimize = optimize;
+        this.strictCascadingCheck = strictCascadingCheck;
         this.comparator = comparator;
     }
 
@@ -58,6 +60,6 @@ public class SortedSetCollectionInstantiator  extends AbstractCollectionInstanti
 
     @Override
     public RecordingSortedSet<NavigableSet<?>, ?> createRecordingCollection(int size) {
-        return new RecordingNavigableSet(createCollection(size), allowedSubtypes, parentRequiringUpdateSubtypes, parentRequiringCreateSubtypes, updatable, optimize);
+        return new RecordingNavigableSet(createCollection(size), allowedSubtypes, parentRequiringUpdateSubtypes, parentRequiringCreateSubtypes, updatable, optimize, strictCascadingCheck);
     }
 }

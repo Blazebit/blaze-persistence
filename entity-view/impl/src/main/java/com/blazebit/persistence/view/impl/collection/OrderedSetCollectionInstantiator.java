@@ -32,14 +32,16 @@ public class OrderedSetCollectionInstantiator  extends AbstractCollectionInstant
     private final Set<Class<?>> parentRequiringCreateSubtypes;
     private final boolean updatable;
     private final boolean optimize;
+    private final boolean strictCascadingCheck;
 
-    public OrderedSetCollectionInstantiator(PluralObjectFactory<Collection<?>> collectionFactory, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringUpdateSubtypes, Set<Class<?>> parentRequiringCreateSubtypes, boolean updatable, boolean optimize) {
+    public OrderedSetCollectionInstantiator(PluralObjectFactory<Collection<?>> collectionFactory, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringUpdateSubtypes, Set<Class<?>> parentRequiringCreateSubtypes, boolean updatable, boolean optimize, boolean strictCascadingCheck) {
         super(collectionFactory);
         this.allowedSubtypes = allowedSubtypes;
         this.parentRequiringUpdateSubtypes = parentRequiringUpdateSubtypes;
         this.parentRequiringCreateSubtypes = parentRequiringCreateSubtypes;
         this.updatable = updatable;
         this.optimize = optimize;
+        this.strictCascadingCheck = strictCascadingCheck;
     }
 
     @Override
@@ -54,6 +56,6 @@ public class OrderedSetCollectionInstantiator  extends AbstractCollectionInstant
 
     @Override
     public RecordingSet<Set<?>, ?> createRecordingCollection(int size) {
-        return new RecordingSet(createCollection(size), true, allowedSubtypes, parentRequiringUpdateSubtypes, parentRequiringCreateSubtypes, updatable, optimize);
+        return new RecordingSet(createCollection(size), true, allowedSubtypes, parentRequiringUpdateSubtypes, parentRequiringCreateSubtypes, updatable, optimize, strictCascadingCheck);
     }
 }

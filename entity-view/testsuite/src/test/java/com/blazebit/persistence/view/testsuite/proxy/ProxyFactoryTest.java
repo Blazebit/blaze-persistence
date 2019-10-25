@@ -51,7 +51,7 @@ import static org.junit.Assert.*;
  */
 public class ProxyFactoryTest extends AbstractEntityViewTest {
 
-    private final ProxyFactory proxyFactory = new ProxyFactory(false, PackageOpener.NOOP);
+    private final ProxyFactory proxyFactory = new ProxyFactory(false, false, PackageOpener.NOOP);
 
     private ViewMetamodel getViewMetamodel() {
         return build(

@@ -131,6 +131,7 @@ public abstract class AbstractEntityViewUpdateTest<T> extends AbstractEntityView
 
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.setProperty(ConfigurationProperties.UPDATER_DISALLOW_OWNED_UPDATABLE_SUBVIEW, "false");
+        cfg.setProperty(ConfigurationProperties.UPDATER_STRICT_CASCADING_CHECK, "false");
         cfg.addEntityView(viewType);
         for (Class<?> view : views) {
             cfg.addEntityView(view);

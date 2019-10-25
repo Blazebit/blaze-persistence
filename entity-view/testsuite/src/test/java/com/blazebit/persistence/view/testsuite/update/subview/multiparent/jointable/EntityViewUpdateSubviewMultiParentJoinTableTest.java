@@ -24,6 +24,7 @@ import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.ConfigurationProperties;
+import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateDocumentTest;
 import com.blazebit.persistence.view.testsuite.update.subview.multiparent.jointable.model.DocumentIdView;
@@ -62,6 +63,7 @@ public class EntityViewUpdateSubviewMultiParentJoinTableTest extends AbstractEnt
     @Override
     protected void registerViewTypes(EntityViewConfiguration cfg) {
         cfg.setProperty(ConfigurationProperties.UPDATER_DISALLOW_OWNED_UPDATABLE_SUBVIEW, "true");
+        cfg.setProperty(ConfigurationProperties.UPDATER_STRICT_CASCADING_CHECK, "true");
         cfg.addEntityView(DocumentIdView.class);
         cfg.addEntityView(PersonView.class);
         cfg.addEntityView(UpdatablePersonView.class);

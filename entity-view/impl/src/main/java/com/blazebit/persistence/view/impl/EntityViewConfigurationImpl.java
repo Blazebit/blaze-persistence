@@ -67,6 +67,8 @@ public class EntityViewConfigurationImpl implements EntityViewConfiguration {
         properties.put(ConfigurationProperties.PROXY_UNSAFE_ALLOWED, "true");
         properties.put(ConfigurationProperties.MANAGED_TYPE_VALIDATION_DISABLED, "false");
         properties.put(ConfigurationProperties.UPDATER_DISALLOW_OWNED_UPDATABLE_SUBVIEW, "true");
+        properties.put(ConfigurationProperties.UPDATER_STRICT_CASCADING_CHECK, "true");
+        properties.put(ConfigurationProperties.UPDATER_ERROR_ON_INVALID_PLURAL_SETTER, "false");
 
         typeTestValues.put(boolean.class, true);
         typeTestValues.put(byte.class, Byte.MAX_VALUE);

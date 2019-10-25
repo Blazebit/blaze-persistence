@@ -32,14 +32,16 @@ public class UnorderedMapInstantiator extends AbstractMapInstantiator<Map<?, ?>,
     private final Set<Class<?>> parentRequiringCreateSubtypes;
     private final boolean updatable;
     private final boolean optimize;
+    private final boolean strictCascadingCheck;
 
-    public UnorderedMapInstantiator(PluralObjectFactory<Map<?, ?>> collectionFactory, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringUpdateSubtypes, Set<Class<?>> parentRequiringCreateSubtypes, boolean updatable, boolean optimize) {
+    public UnorderedMapInstantiator(PluralObjectFactory<Map<?, ?>> collectionFactory, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringUpdateSubtypes, Set<Class<?>> parentRequiringCreateSubtypes, boolean updatable, boolean optimize, boolean strictCascadingCheck) {
         super(collectionFactory);
         this.allowedSubtypes = allowedSubtypes;
         this.parentRequiringUpdateSubtypes = parentRequiringUpdateSubtypes;
         this.parentRequiringCreateSubtypes = parentRequiringCreateSubtypes;
         this.updatable = updatable;
         this.optimize = optimize;
+        this.strictCascadingCheck = strictCascadingCheck;
     }
 
     @Override
@@ -49,6 +51,6 @@ public class UnorderedMapInstantiator extends AbstractMapInstantiator<Map<?, ?>,
 
     @Override
     public RecordingMap<Map<?, ?>, ?, ?> createRecordingCollection(int size) {
-        return new RecordingMap(createCollection(size), false, allowedSubtypes, parentRequiringUpdateSubtypes, parentRequiringCreateSubtypes, updatable, optimize);
+        return new RecordingMap(createCollection(size), false, allowedSubtypes, parentRequiringUpdateSubtypes, parentRequiringCreateSubtypes, updatable, optimize, strictCascadingCheck);
     }
 }

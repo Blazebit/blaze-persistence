@@ -45,7 +45,7 @@ public abstract class AbstractMethodMapAttribute<X, K, V> extends AbstractMethod
         super(viewType, mapping, context, attributeIndex, dirtyStateIndex, embeddableMapping);
         this.keyType = (Type<K>) mapping.getKeyType(context, embeddableMapping);
         this.keyInheritanceSubtypes = (Map<ManagedViewType<? extends K>, String>) (Map<?, ?>) mapping.getKeyInheritanceSubtypes(context, embeddableMapping);
-        this.mapInstantiator = createMapInstantiator(createMapFactory(context), isSorted(), isOrdered(), getComparator());
+        this.mapInstantiator = createMapInstantiator(context, createMapFactory(context), isSorted(), isOrdered(), getComparator());
     }
 
     @Override

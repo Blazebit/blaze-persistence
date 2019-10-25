@@ -54,6 +54,7 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
     private final boolean ordered;
     private final boolean optimize;
     private final boolean hashBased;
+    private final boolean strictCascadingCheck;
     private BasicDirtyTracker parent;
     private int parentIndex;
     private boolean dirty;
@@ -63,7 +64,7 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
     // We remember the iterator so we can do a proper hash based collection replacement
     private transient RecordingReplacingIterator<E> currentIterator;
 
-    protected RecordingCollection(C delegate, boolean indexed, boolean ordered, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringUpdateSubtypes, Set<Class<?>> parentRequiringCreateSubtypes, boolean updatable, boolean optimize, boolean hashBased) {
+    protected RecordingCollection(C delegate, boolean indexed, boolean ordered, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringUpdateSubtypes, Set<Class<?>> parentRequiringCreateSubtypes, boolean updatable, boolean optimize, boolean hashBased, boolean strictCascadingCheck) {
         this.delegate = delegate;
         this.allowedSubtypes = allowedSubtypes;
         this.parentRequiringUpdateSubtypes = parentRequiringUpdateSubtypes;
@@ -73,9 +74,10 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
         this.ordered = ordered;
         this.optimize = optimize;
         this.hashBased = hashBased;
+        this.strictCascadingCheck = strictCascadingCheck;
     }
 
-    public RecordingCollection(C delegate, boolean indexed, boolean ordered, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringUpdateSubtypes, Set<Class<?>> parentRequiringCreateSubtypes, boolean updatable, boolean optimize) {
+    public RecordingCollection(C delegate, boolean indexed, boolean ordered, Set<Class<?>> allowedSubtypes, Set<Class<?>> parentRequiringUpdateSubtypes, Set<Class<?>> parentRequiringCreateSubtypes, boolean updatable, boolean optimize, boolean strictCascadingCheck) {
         this.delegate = delegate;
         this.allowedSubtypes = allowedSubtypes;
         this.parentRequiringUpdateSubtypes = parentRequiringUpdateSubtypes;
@@ -84,6 +86,7 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
         this.indexed = indexed;
         this.ordered = ordered;
         this.optimize = optimize;
+        this.strictCascadingCheck = strictCascadingCheck;
         this.hashBased = false;
     }
 
@@ -544,11 +547,17 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
             if (!allowedSubtypes.contains(c)) {
                 throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed!");
             }
-            if (e != parent && !isNew && parentRequiringUpdateSubtypes.contains(c) && !((DirtyTracker) e).$$_hasParent()) {
-                throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed until they are assigned to an attribute that update cascades the type! If you want this attribute to cascade, annotate it with @UpdatableMapping(cascade = { UPDATE })");
-            }
-            if (e != parent && isNew && parentRequiringCreateSubtypes.contains(c) && !((DirtyTracker) e).$$_hasParent()) {
-                throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed until they are assigned to an attribute that persist cascades the type! If you want this attribute to cascade, annotate it with @UpdatableMapping(cascade = { PERSIST })");
+            if (strictCascadingCheck) {
+                if (e != parent && !isNew && parentRequiringUpdateSubtypes.contains(c) && !((DirtyTracker) e).$$_hasParent()) {
+                    throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed until they are assigned to an attribute that update cascades the type! " +
+                            "If you want this attribute to cascade, annotate it with @UpdatableMapping(cascade = { UPDATE }). " +
+                            "You can also turn off strict cascading checks by setting ConfigurationProperties.UPDATER_STRICT_CASCADING_CHECK to false");
+                }
+                if (e != parent && isNew && parentRequiringCreateSubtypes.contains(c) && !((DirtyTracker) e).$$_hasParent()) {
+                    throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed until they are assigned to an attribute that persist cascades the type! " +
+                            "If you want this attribute to cascade, annotate it with @UpdatableMapping(cascade = { PERSIST }). " +
+                            "You can also turn off strict cascading checks by setting ConfigurationProperties.UPDATER_STRICT_CASCADING_CHECK to false");
+                }
             }
         }
     }
@@ -569,11 +578,13 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
                 if (!allowedSubtypes.contains(c)) {
                     throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed!");
                 }
-                if (!isNew && parentRequiringUpdateSubtypes.contains(c) && !((DirtyTracker) e).$$_hasParent()) {
-                    throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed until they are assigned to an attribute that update cascades the type! If you want this attribute to cascade, annotate it with @UpdatableMapping(cascade = { UPDATE })");
-                }
-                if (isNew && parentRequiringCreateSubtypes.contains(c) && !((DirtyTracker) e).$$_hasParent()) {
-                    throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed until they are assigned to an attribute that persist cascades the type! If you want this attribute to cascade, annotate it with @UpdatableMapping(cascade = { PERSIST })");
+                if (strictCascadingCheck) {
+                    if (!isNew && parentRequiringUpdateSubtypes.contains(c) && !((DirtyTracker) e).$$_hasParent()) {
+                        throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed until they are assigned to an attribute that update cascades the type! If you want this attribute to cascade, annotate it with @UpdatableMapping(cascade = { UPDATE })");
+                    }
+                    if (isNew && parentRequiringCreateSubtypes.contains(c) && !((DirtyTracker) e).$$_hasParent()) {
+                        throw new IllegalArgumentException(action + " instances of type [" + c.getName() + "] is not allowed until they are assigned to an attribute that persist cascades the type! If you want this attribute to cascade, annotate it with @UpdatableMapping(cascade = { PERSIST })");
+                    }
                 }
             }
         }

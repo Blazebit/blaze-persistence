@@ -30,6 +30,7 @@ import com.blazebit.persistence.view.impl.collection.RecordingNavigableMap;
 import com.blazebit.persistence.view.impl.collection.RecordingNavigableSet;
 import com.blazebit.persistence.view.impl.collection.RecordingSet;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
+import com.blazebit.persistence.view.impl.metamodel.AbstractMethodPluralAttribute;
 import com.blazebit.persistence.view.impl.metamodel.AbstractParameterAttribute;
 import com.blazebit.persistence.view.impl.metamodel.BasicTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.ConstrainedAttribute;
@@ -125,6 +126,7 @@ public class ProxyFactory {
     private final Object proxyLock = new Object();
     private final ClassPool pool;
     private final boolean unsafeDisabled;
+    private final boolean strictCascadingCheck;
     private final PackageOpener packageOpener;
 
     static {
@@ -173,9 +175,10 @@ public class ProxyFactory {
         }
     }
 
-    public ProxyFactory(boolean unsafeDisabled, PackageOpener packageOpener) {
+    public ProxyFactory(boolean unsafeDisabled, boolean strictCascadingCheck, PackageOpener packageOpener) {
         this.pool = new ClassPool(ClassPool.getDefault());
         this.unsafeDisabled = unsafeDisabled;
+        this.strictCascadingCheck = strictCascadingCheck;
         this.packageOpener = packageOpener;
     }
 
@@ -1432,9 +1435,11 @@ public class ProxyFactory {
         sb.append("{\n");
 
         // Strict check for write-parent
-        sb.append("\tif ($0 != $1 && $0.").append(parentFieldName).append(" == null) {\n");
-        sb.append("\t\tthrow new IllegalStateException(\"Can't set read only parent for object \" + $0.toString() + \" util it doesn't have a writable parent! First add the object to an attribute with proper cascading. If you just want to reference it convert the object with EntityViewManager.getReference() or EntityViewManager.convert()!\");\n");
-        sb.append("\t}\n");
+        if (strictCascadingCheck) {
+            sb.append("\tif ($0 != $1 && $0.").append(parentFieldName).append(" == null) {\n");
+            sb.append("\t\tthrow new IllegalStateException(\"Can't set read only parent for object \" + $0.toString() + \" util it doesn't have a writable parent! First add the object to an attribute with proper cascading. If you just want to reference it convert the object with EntityViewManager.getReference() or EntityViewManager.convert()!\");\n");
+            sb.append("\t}\n");
+        }
 
         sb.append("\tif ($0.").append(readOnlyParentFieldName).append(" == null) {\n");
         sb.append("\t\t$0.").append(readOnlyParentFieldName).append(" = new java.util.ArrayList();\n");
@@ -1768,9 +1773,16 @@ public class ProxyFactory {
             sb.append("\t}\n");
         }
 
-        if (attribute != null && attribute.isUpdatable()) {
-            // Collections do type checking in their recording collection implementations
-            if (!attribute.isCollection() && dirtyChecking) {
+        if (attribute != null && attribute.isUpdatable() && dirtyChecking) {
+            if (attribute.isCollection()) {
+                if (strictCascadingCheck) {
+                    // With strict cascading checks enabled, we don't allow setting collections of mutable subviews
+                    boolean mutableElement = !attribute.getUpdateCascadeAllowedSubtypes().isEmpty() || !attribute.getPersistCascadeAllowedSubtypes().isEmpty();
+                    if (mutableElement && ((AbstractMethodPluralAttribute<?, ?, ?>) attribute).getElementType().getMappingType() != Type.MappingType.BASIC) {
+                        sb.append("\t\tthrow new IllegalArgumentException(\"Replacing a collection that PERSIST or UPDATE cascades is prohibited by default! Instead, replace the contents by doing clear() and addAll()!\");\n");
+                    }
+                }
+            } else {
                 // Only consider subviews here for now
                 if (attribute.isSubview()) {
                     String subtypeArray = addAllowedSubtypeField(cc, attribute);
@@ -1794,17 +1806,22 @@ public class ProxyFactory {
                     sb.append(");\n");
                     sb.append("\t\t}\n");
 
-                    sb.append("\t\tif ($0 != $1 && !isNew && ").append(attributeField.getDeclaringClass().getName()).append('#').append(attribute.getName()).append("_$$_parentRequiringUpdateSubtypes.contains(c) && !((").append(DirtyTracker.class.getName()).append(") $1).$$_hasParent()) {\n");
-                    sb.append("\t\t\tthrow new IllegalArgumentException(");
-                    sb.append("\"Setting instances of type [\" + c.getName() + \"] on attribute '").append(attribute.getName()).append("' is not allowed until they are assigned to an attribute that cascades the type! If you want this attribute to cascade, annotate it with @UpdatableMapping(cascade = { UPDATE })\"");
-                    sb.append(");\n");
-                    sb.append("\t\t}\n");
+                    if (strictCascadingCheck) {
+                        sb.append("\t\tif ($0 != $1 && !isNew && ").append(attributeField.getDeclaringClass().getName()).append('#').append(attribute.getName()).append("_$$_parentRequiringUpdateSubtypes.contains(c) && !((").append(DirtyTracker.class.getName()).append(") $1).$$_hasParent()) {\n");
+                        sb.append("\t\t\tthrow new IllegalArgumentException(");
+                        sb.append("\"Setting instances of type [\" + c.getName() + \"] on attribute '").append(attribute.getName()).append("' is not allowed until they are assigned to an attribute that cascades the type! ");
+                        sb.append("If you want this attribute to cascade, annotate it with @UpdatableMapping(cascade = { UPDATE }). You can also turn off strict cascading checks by setting ConfigurationProperties.UPDATER_STRICT_CASCADING_CHECK to false\"");
+                        sb.append(");\n");
+                        sb.append("\t\t}\n");
 
-                    sb.append("\t\tif ($0 != $1 && isNew && ").append(attributeField.getDeclaringClass().getName()).append('#').append(attribute.getName()).append("_$$_parentRequiringCreateSubtypes.contains(c) && !((").append(DirtyTracker.class.getName()).append(") $1).$$_hasParent()) {\n");
-                    sb.append("\t\t\tthrow new IllegalArgumentException(");
-                    sb.append("\"Setting instances of type [\" + c.getName() + \"] on attribute '").append(attribute.getName()).append("' is not allowed until they are assigned to an attribute that cascades the type! If you want this attribute to cascade, annotate it with @UpdatableMapping(cascade = { PERSIST })\"");
-                    sb.append(");\n");
-                    sb.append("\t\t}\n");
+                        sb.append("\t\tif ($0 != $1 && isNew && ").append(attributeField.getDeclaringClass().getName()).append('#').append(attribute.getName()).append("_$$_parentRequiringCreateSubtypes.contains(c) && !((").append(DirtyTracker.class.getName()).append(") $1).$$_hasParent()) {\n");
+                        sb.append("\t\t\tthrow new IllegalArgumentException(");
+                        sb.append("\"Setting instances of type [\" + c.getName() + \"] on attribute '").append(attribute.getName()).append("' is not allowed until they are assigned to an attribute that cascades the type! ");
+                        sb.append("If you want this attribute to cascade, annotate it with @UpdatableMapping(cascade = { PERSIST }). You can also turn off strict cascading checks by setting ConfigurationProperties.UPDATER_STRICT_CASCADING_CHECK to false\"");
+                        sb.append(");\n");
+                        sb.append("\t\t}\n");
+                    }
+
                     sb.append("\t}\n");
                 }
             }
@@ -2466,7 +2483,8 @@ public class ProxyFactory {
                             sb.append(attributeFields[i].getDeclaringClass().getName()).append('#');
                             sb.append(methodAttribute.getName()).append("_$$_parentRequiringCreateSubtypes").append(',');
                             sb.append(methodAttribute.isUpdatable()).append(',');
-                            sb.append(methodAttribute.isOptimizeCollectionActionsEnabled());
+                            sb.append(methodAttribute.isOptimizeCollectionActionsEnabled()).append(',');
+                            sb.append(strictCascadingCheck);
                             sb.append(");\n");
                         } else {
                             SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) methodAttribute;
