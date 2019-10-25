@@ -35,5 +35,9 @@ public enum JoinType {
     /**
      * Right outer join.
      */
-    RIGHT;
+    RIGHT,
+    /**
+     * Full outer join.
+     */
+    FULL;
 }

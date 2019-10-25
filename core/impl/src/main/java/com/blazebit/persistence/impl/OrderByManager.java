@@ -178,7 +178,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
 
             // Note that we could actually determine a lot more non-nullable cases, but this requires analyzing the query for top level predicates
             // Detecting top-level predicates is out of scope right now and will be done as part of #610
-            boolean nullable = ExpressionUtils.isNullable(metamodel, expr);
+            boolean nullable = joinManager.hasFullJoin() || ExpressionUtils.isNullable(metamodel, expr);
 
             // Note that there are actually two notions of uniqueness that we have to check for
             // There is a result uniqueness which is relevant for the safety checks we do
@@ -193,7 +193,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
             boolean unique;
             List<Expression> splitOffExpressions;
             // Determining general uniqueness requires that no collection joins are involved in a query which is kind of guaranteed by design by the PaginatedCriteriaBuilder
-            if (joinManager.getRoots().size() == 1 && !hasCollections) {
+            if (!joinManager.hasFullJoin() && joinManager.getRoots().size() == 1 && !hasCollections) {
                 unique = functionalDependencyAnalyzerVisitor.analyzeFormsUniqueTuple(expr);
                 splitOffExpressions = functionalDependencyAnalyzerVisitor.getSplittedOffExpressions();
             } else {
@@ -201,7 +201,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
                 splitOffExpressions = embeddableSplittingVisitor.splitOff(expr);
             }
 
-            resultUnique = resultUnique || unique || clausesRequiredForResultUniqueness != null && clausesRequiredForResultUniqueness.isEmpty();
+            resultUnique = !joinManager.hasFullJoin() && (resultUnique || unique || clausesRequiredForResultUniqueness != null && clausesRequiredForResultUniqueness.isEmpty());
             boolean resUnique = resultUnique || (i + 1) == size && functionalDependencyAnalyzerVisitor.isResultUnique();
             if (splitOffExpressions == null || splitOffExpressions.isEmpty()) {
                 realExpressions.add(new OrderByExpression(orderByInfo.ascending, orderByInfo.nullFirst, expr, nullable, unique, resUnique));
@@ -404,6 +404,8 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
 
     private void applyOrderBy(StringBuilder sb, OrderByInfo orderBy, boolean inverseOrder, boolean resolveSimpleSelectAliases) {
         AliasInfo aliasInfo = aliasManager.getAliasInfo(orderBy.getExpressionString());
+        boolean hasFullJoin = joinManager.hasFullJoin();
+
         if (jpaProvider.supportsNullPrecedenceExpression()) {
             queryGenerator.setClauseType(ClauseType.ORDER_BY);
             queryGenerator.setQueryBuffer(sb);
@@ -415,10 +417,10 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
                 } else {
                     queryGenerator.generate(orderBy.getExpression());
                 }
-                nullable = ExpressionUtils.isNullable(metamodel, selectExpression);
+                nullable = hasFullJoin || ExpressionUtils.isNullable(metamodel, selectExpression);
             } else {
                 queryGenerator.generate(orderBy.getExpression());
-                nullable = ExpressionUtils.isNullable(metamodel, orderBy.getExpression());
+                nullable = hasFullJoin || ExpressionUtils.isNullable(metamodel, orderBy.getExpression());
             }
 
             if (orderBy.ascending == inverseOrder) {
@@ -454,10 +456,10 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
                 if (resolveSimpleSelectAliases && selectExpression instanceof PathExpression) {
                     orderExpression = selectExpression;
                 }
-                nullable = ExpressionUtils.isNullable(metamodel, selectExpression);
+                nullable = hasFullJoin || ExpressionUtils.isNullable(metamodel, selectExpression);
             } else {
                 resolvedExpression = null;
-                nullable = ExpressionUtils.isNullable(metamodel, orderExpression);
+                nullable = hasFullJoin || ExpressionUtils.isNullable(metamodel, orderExpression);
             }
 
             if (queryGenerator.isResolveSelectAliases() && resolvedExpression != null) {

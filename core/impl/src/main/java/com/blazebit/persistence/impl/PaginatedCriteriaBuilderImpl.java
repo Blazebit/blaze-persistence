@@ -440,6 +440,10 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         applyExpressionTransformersAndBuildGroupByClauses(true, joinVisitor);
         hasCollections = joinManager.hasCollections();
 
+        if (joinManager.hasFullJoin()) {
+            throw new IllegalStateException("Cannot paginate with full outer joins!");
+        }
+
         if (hasGroupBy) {
             if (identifierExpressions != null) {
                 ResolvedExpression[] missingExpressions;
