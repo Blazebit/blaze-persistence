@@ -1,0 +1,27 @@
+= Blaze-Persistence 1.4.0-Alpha3 Release
+Christian Beikov
+2019-10-26 0
+:description: Blaze-Persistence version 1.4.0-Alpha3 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+We just released Blaze-Persistence version 1.4.0-Alpha3 containing quite a few bug fixes as well as a few new features!
+We support the newest Spring Boot and Spring Data version 2.2 and now also have support for `FULL JOIN` which is supported by Hibernate.
+Entity Views equality is now based on the entity inheritance top type and we now also provide a default implementation for `toString()`.
+We made a few Entity View annotations +++<!-- PREVIEW-SUFFIX --><!-- </p></div> --><!-- PREVIEW-END -->+++repeatable.
+
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#140-alpha3[changelog, window="_blank"] for a full list of changes and improvements.
+
+A big thank you goes out to Jan-Willem Gmelig Meyling for supporting users and helping with Spring and Hibernate integration issues!
+I would also like to thank Eugen Mayer and his colleague Sebastian Ulrich for reporting documentation issues and questioning a few naming and design choices.
+
+As you might notice, the announced preliminary support for entity view lifecycle listeners didn't make it into this release, mainly because other issues were more important.
+The next release will be about entity view lifecycle listeners though, I promise :)
+
+I'm aiming to finish work on that by end of November or the beginning of December.
+
+Have fun with this release and stay tuned for the next one!

@@ -18,9 +18,47 @@ None
 
 None
 
+## 1.4.0-Alpha3
+
+26/10/2019 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.4.0-Alpha3) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue+milestone%3A1.4.0+is%3Aclosed+closed%3A%3C2019-10-27+sort%3Aupdated-desc)
+
+### New features
+
+* Add support for Spring Boot 2.2 and Spring Data 2.2 through a new integration module
+* Add `@Repeatable` annotation to `@ViewFilter` and `@AttributeFilter` annotations
+* Add support for Spring managed transactions for entity view aware repositories and updatable entity views
+* Implement `toString()` for entity views showing the id or whole state for flat views
+* Introduce new method `EntityViewManager.save()` to replace the now deprecated `EntityViewManager.update()`
+* Performance optimization for group joins that were introduced in Hibernate 5.2
+* Add new `orderByAsc`/`orderByDesc` variants with null ordering defaults
+* Add deactivatable strict cascading check for updatable/creatable entity views
+* Add support for `FULL JOIN` as provided by Hibernate
+
+### Bug fixes
+
+* Entity view generated equality is now based on the entity inheritance top type
+* Properly support getters/setters with `protected` or `default` visibility
+* Add support for natural id-based join tables
+* Fix a `StackOverflowException` exception appearing in a special unbounded type variable scenario
+* Fix a window function parsing issue that appears when using multiple partitions
+* A parser regression regarding top-level treat expressions was fixed
+* Fix problems during flushing of a declared a read-only flat view attribute with updatable subtype
+* Resolve problems with multi-query repository methods by using Spring managed transactions and remove custom `SharedEntityManager`
+* Show proper error message for creatable/updatable views that don't have an `@IdMapping`
+* Properly implement invocation of `@PostCreate` annotated default method for Java 9+
+* Avoid generating a default from clause alias that could clash with an entity name
+* Fix startup problems for Hibernate 5.4+ with associations that use `@NotFound(action = NotFoundAction.IGNORE)`
+* Fix problems with `MultipleSubqueryInitiator` on `RestrictionBuilder` that always reported a build was not closed
+* Fix issues with `EntityViewManager.remove()` due to Hibernate returning scalar results rather than an `Object[]`
+
+### Backwards-incompatible changes
+
+* The `name` attribute of the `EntityView` annotation was removed because it had no purpose and only lead to problems
+* The `com.blazebit.persistence.parser.expression.ExpressionCache` interface changed. For details see [#857](https://github.com/Blazebit/blaze-persistence/issues/857)
+
 ## 1.4.0-Alpha2
 
-10/09/2019 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.4.0-Alpha2) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue+milestone%3A1.4.0+is%3Aclosed+closed%3A%3C2019-09-17)
+17/09/2019 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.4.0-Alpha2) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue+milestone%3A1.4.0+is%3Aclosed+closed%3A%3C2019-09-18+sort%3Aupdated-desc)
 
 ### New features
 
@@ -62,7 +100,7 @@ None
 
 ## 1.4.0-Alpha1
 
-29/05/2019 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.4.0-Alpha1) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue+milestone%3A1.4.0+is%3Aclosed+closed%3A%3C2019-05-30)
+29/05/2019 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.4.0-Alpha1) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue+milestone%3A1.4.0+is%3Aclosed+closed%3A%3C2019-05-30+sort%3Aupdated-desc)
 
 ### New features
 
@@ -100,7 +138,7 @@ None
 
 ## 1.3.2
 
-26/02/2019 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.3.2) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+milestone%3A1.4.0+is%3Aclosed+closed%3A%3C2019-02-26+label%3Abug)
+26/02/2019 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.3.2) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+milestone%3A1.4.0+is%3Aclosed+closed%3A%3C2019-02-26+label%3Abug+sort%3Aupdated-desc)
 
 ### New features
 
@@ -125,7 +163,7 @@ None
 
 ## 1.3.1
 
-15/01/2019 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.3.1) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+milestone%3A1.4.0+is%3Aclosed+closed%3A%3C2019-01-15+label%3Abug)
+15/01/2019 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.3.1) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+milestone%3A1.4.0+is%3Aclosed+closed%3A%3C2019-01-15+label%3Abug+sort%3Aupdated-desc)
 
 ### New features
 
@@ -154,7 +192,7 @@ None
 
 ## 1.3.0
 
-23/11/2018 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.3.0) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue+milestone%3A1.3.0+is%3Aclosed+closed%3A%3C2018-11-23)
+23/11/2018 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.3.0) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue+milestone%3A1.3.0+is%3Aclosed+closed%3A%3C2018-11-23+sort%3Aupdated-desc)
 
 ### New features
 
@@ -201,7 +239,7 @@ None
 
 ## 1.3.0-Alpha3
 
-20/07/2018 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.3.0-Alpha3) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue+milestone%3A1.3.0+is%3Aclosed+closed%3A%3C2018-09-06)
+20/07/2018 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.3.0-Alpha3) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue+milestone%3A1.3.0+is%3Aclosed+closed%3A%3C2018-09-06+sort%3Aupdated-desc)
 
 ### New features
 
@@ -264,7 +302,7 @@ None
 
 ## 1.3.0-Alpha2
 
-20/07/2018 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.3.0-Alpha2) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue+milestone%3A1.3.0+is%3Aclosed+closed%3A%3C2018-07-21)
+20/07/2018 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.3.0-Alpha2) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue+milestone%3A1.3.0+is%3Aclosed+closed%3A%3C2018-07-21+sort%3Aupdated-desc)
 
 ### New features
 
@@ -285,7 +323,7 @@ None
 
 ## 1.3.0-Alpha1
 
-05/07/2018 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.3.0-Alpha1) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=✓&q=is%3Aissue+milestone%3A1.3.0+is%3Aclosed+closed%3A<2018-07-06)
+05/07/2018 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.3.0-Alpha1) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=✓&q=is%3Aissue+milestone%3A1.3.0+is%3Aclosed+closed%3A<2018-07-06+sort%3Aupdated-desc)
 
 Note that 1.3.0-Alpha1 contains all fixes from 1.2.1 as well.
 
@@ -316,7 +354,7 @@ Note that 1.3.0-Alpha1 contains all fixes from 1.2.1 as well.
 
 ## 1.2.1
 
-05/07/2018 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.2.1) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue+milestone%3A1.2.1+is%3Aclosed)
+05/07/2018 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.2.1) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue+milestone%3A1.2.1+is%3Aclosed+sort%3Aupdated-desc)
 
 ### New features
 
@@ -341,7 +379,7 @@ None
 
 ## 1.2.0
 
-08/05/2018 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.2.0) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+closed%3A2018-03-18..2018-05-08)
+08/05/2018 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.2.0) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+closed%3A2018-03-18..2018-05-08+sort%3Aupdated-desc)
 
 ### New features
 
@@ -361,7 +399,7 @@ None
 
 ## 1.2.0-Alpha6
 
-17/03/2018 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.2.0-Alpha6) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+closed%3A2018-03-16..2018-03-17)
+17/03/2018 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.2.0-Alpha6) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+closed%3A2018-03-16..2018-03-17+sort%3Aupdated-desc)
 
 ### New features
 
@@ -378,7 +416,7 @@ None
 
 ## 1.2.0-Alpha5
 
-15/03/2018 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.2.0-Alpha5) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+closed%3A2018-02-09..2018-03-16)
+15/03/2018 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.2.0-Alpha5) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+closed%3A2018-02-09..2018-03-16+sort%3Aupdated-desc)
 
 ### New features
 
@@ -423,7 +461,7 @@ None
 
 ## 1.2.0-Alpha4
 
-10/02/2018 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.2.0-Alpha4) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+project%3ABlazebit%2Fblaze-persistence%2F3+is%3Aclosed)
+10/02/2018 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.2.0-Alpha4) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+project%3ABlazebit%2Fblaze-persistence%2F3+is%3Aclosed+sort%3Aupdated-desc)
 
 ### New features
 
@@ -454,7 +492,7 @@ None
 
 ## 1.2.0-Alpha3
 
-27/04/2017 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.2.0-Alpha3) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue%20is%3Aclosed%20milestone%3A1.2.0%20closed%3A2017-02-01..2017-04-27)
+27/04/2017 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.2.0-Alpha3) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue%20is%3Aclosed%20milestone%3A1.2.0%20closed%3A2017-02-01..2017-04-27+sort%3Aupdated-desc)
 
 ### New features
 
@@ -514,7 +552,7 @@ None
 
 ## 1.2.0-Alpha2
 
-01/02/2017 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.2.0-Alpha2) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue%20is%3Aclosed%20milestone%3A1.2.0%20closed%3A2016-09-29..2017-02-01)
+01/02/2017 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.2.0-Alpha2) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue%20is%3Aclosed%20milestone%3A1.2.0%20closed%3A2016-09-29..2017-02-01+sort%3Aupdated-desc)
 
 ### New features
 
@@ -547,7 +585,7 @@ None
 
 ## 1.2.0-Alpha1
 
-29/09/2016 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.2.0-Alpha1) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue%20is%3Aclosed%20milestone%3A1.2.0%20closed%3A%3C2016-09-29)
+29/09/2016 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.2.0-Alpha1) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue%20is%3Aclosed%20milestone%3A1.2.0%20closed%3A%3C2016-09-29+sort%3Aupdated-desc)
 
 ### New features
 
@@ -575,7 +613,7 @@ None
 
 ## 1.1.1
 
-29/09/2016 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.1.1) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue%20is%3Aclosed%20milestone%3A1.1.1)
+29/09/2016 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.1.1) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue%20is%3Aclosed%20milestone%3A1.1.1+sort%3Aupdated-desc)
 
 ### New features
 
