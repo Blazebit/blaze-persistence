@@ -63,12 +63,12 @@ public class FlusherBasedEntityLoader extends AbstractEntityLoader {
     }
 
     @Override
-    public Object toEntity(UpdateContext context, Object id) {
+    public Object toEntity(UpdateContext context, Object view, Object id) {
         if (id == null || entityIdAccessor == null) {
             return createEntity();
         }
 
-        return getReferenceOrLoad(context, id);
+        return getReferenceOrLoad(context, view, id);
     }
 
     @Override

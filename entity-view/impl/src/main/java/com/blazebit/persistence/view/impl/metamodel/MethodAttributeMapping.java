@@ -347,7 +347,8 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
             if (attributeViewMapping != null) {
                 // For now, we treat flat views as if they had support for multiple parents as they are most likely only used once
                 // When we add support for multiple parents at some point, we would just have to switch to true here
-                boolean allowMultiParent = attributeViewMapping.getManagedType(context).getPersistenceType() == Type.PersistenceType.EMBEDDABLE;
+                ManagedType<?> managedType = attributeViewMapping.getManagedType(context);
+                boolean allowMultiParent = managedType != null && managedType.getPersistenceType() == Type.PersistenceType.EMBEDDABLE;
                 // We also allow creatable/updatable instances if cascade uses AUTO, there is a setter and multiple-parents are allowed
                 boolean allowCreatable = attributeViewMapping.isCreatable(context) || cascadeTypes.contains(CascadeType.PERSIST) || cascadeTypes.contains(CascadeType.AUTO) && hasSetter && allowMultiParent;
                 if (isUpdatable != Boolean.FALSE && getDeclaringView().isUpdatable()) {

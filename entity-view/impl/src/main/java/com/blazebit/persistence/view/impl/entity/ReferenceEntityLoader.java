@@ -18,10 +18,15 @@ package com.blazebit.persistence.view.impl.entity;
 
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
+import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
+import com.blazebit.persistence.view.impl.update.EntityViewUpdaterImpl;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
 import javax.persistence.EntityManager;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -38,16 +43,34 @@ public class ReferenceEntityLoader extends AbstractEntityLoader {
         super(entityClass, idAttribute, viewIdMapper, entityIdAccessor);
     }
 
+    public static EntityLoader forAttribute(EntityViewManagerImpl evm, ManagedViewType<?> subviewType, AbstractMethodAttribute<?, ?> attribute) {
+        return forAttribute(evm, subviewType, attribute.getViewTypes());
+    }
+
+    public static EntityLoader forAttribute(EntityViewManagerImpl evm, ManagedViewType<?> subviewType, Set<? extends ManagedViewType<?>> viewTypes) {
+        if (viewTypes.size() == 1) {
+            return new ReferenceEntityLoader(evm, subviewType, EntityViewUpdaterImpl.createViewIdMapper(evm, subviewType));
+        }
+
+        EntityLoader first = null;
+        Map<Class<?>, EntityLoader> entityLoaderMap = new HashMap<>(viewTypes.size());
+        for (ManagedViewType<?> viewType : viewTypes) {
+            ReferenceEntityLoader referenceEntityLoader = new ReferenceEntityLoader(evm, viewType, EntityViewUpdaterImpl.createViewIdMapper(evm, viewType));
+            entityLoaderMap.put(viewType.getJavaType(), referenceEntityLoader);
+            if (viewType == subviewType) {
+                first = referenceEntityLoader;
+            }
+        }
+        return new TargetViewClassBasedEntityLoader(first, entityLoaderMap);
+    }
+
     @Override
-    public Object toEntity(UpdateContext context, Object id) {
+    public Object toEntity(UpdateContext context, Object view, Object id) {
         if (id == null) {
             return createEntity();
         }
         EntityManager em = context.getEntityManager();
-        if (viewIdMapper != null) {
-            id = viewIdMapper.applyToEntity(context, null, id);
-        }
-        return em.getReference(entityClass, id);
+        return em.getReference(entityClass, getEntityId(context, view, id));
     }
 
     @Override

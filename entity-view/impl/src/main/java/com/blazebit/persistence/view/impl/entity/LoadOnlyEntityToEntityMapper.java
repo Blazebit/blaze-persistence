@@ -38,7 +38,7 @@ public class LoadOnlyEntityToEntityMapper extends AbstractEntityToEntityMapper {
         }
 
         Object id = entityLoaderFetchGraphNode.getEntityId(context, dirtyEntity);
-        return entityLoaderFetchGraphNode.toEntity(context, id);
+        return entityLoaderFetchGraphNode.toEntity(context, null, id);
     }
 
     @Override

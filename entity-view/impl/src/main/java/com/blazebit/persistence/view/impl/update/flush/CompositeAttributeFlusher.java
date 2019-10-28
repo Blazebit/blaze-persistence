@@ -479,7 +479,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                 // Copy the id view to preserve the original values
                 return context.getEntityViewManager().convert(updatableProxy.$$_getId(), ((EntityViewProxy) updatableProxy.$$_getId()).$$_getEntityViewClass());
             } else if (jpaIdInstantiator != null) {
-                Object oldId = jpaIdInstantiator.toEntity(context, null);
+                Object oldId = jpaIdInstantiator.toEntity(context, null, null);
                 ((BasicAttributeFlusher<Object, Object>) idFlusher).flushEntityComponents(context, oldId, updatableProxy.$$_getId());
                 return oldId;
             } else {
@@ -531,7 +531,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
             if (doPersist) {
                 // In case of nested attributes, the entity instance we get is the container of the attribute
                 if (!entityClass.isInstance(entity)) {
-                    entity = entityLoader.toEntity(context, null);
+                    entity = entityLoader.toEntity(context, null, null);
                 }
                 // If the parent is a hash based collection, or the view is re-mapped to a different type, remove before setting the id/re-mapping
                 // There are two cases here, either we are in full flushing and we can get a RecordingIterator via getCurrentIterator
@@ -583,7 +583,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
             } else {
                 // In case of nested attributes, the entity instance we get is the container of the attribute
                 if ((loadForEntityFlush || viewIdAccessor == null) && !entityClass.isInstance(entity)) {
-                    entity = entityLoader.toEntity(context, id);
+                    entity = entityLoader.toEntity(context, view, id);
                 }
             }
             Object[] state = updatableProxy.$$_getMutableState();
@@ -663,7 +663,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                 context.getInitialStateResetter().addVersionedView(updatableProxy, updatableProxy.$$_getVersion());
                 // We might have to load the entity for optimistic locking
                 if (!entityClass.isInstance(entity)) {
-                    entity = entityLoader.toEntity(context, id);
+                    entity = entityLoader.toEntity(context, view, id);
                 }
                 versionFlusher.flushEntity(context, entity, ownerView, value, updatableProxy.$$_getVersion(), null);
             }
@@ -839,7 +839,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
     private void remove(UpdateContext context, Object entity, Object ownerView, Object view, Object viewId, Object version, boolean cascadeMappedDeletes) {
         if (flushStrategy == FlushStrategy.ENTITY) {
             if (entity == null) {
-                entity = referenceEntityLoader.toEntity(context, viewId);
+                entity = referenceEntityLoader.toEntity(context, view, viewId);
             }
 
             // Ensure the entity version is the expected one

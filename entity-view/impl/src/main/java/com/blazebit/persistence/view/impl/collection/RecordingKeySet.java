@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.collection;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
@@ -26,7 +27,7 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class RecordingKeySet<C extends Map<K, V>, K, V> implements Set<K> {
+public class RecordingKeySet<C extends Map<K, V>, K, V> implements Set<K>, Serializable {
 
     protected final Set<K> delegate;
     protected final RecordingMap<C, K, V> recordingMap;

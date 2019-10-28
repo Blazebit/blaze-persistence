@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl.collection;
 import com.blazebit.persistence.view.impl.entity.MapViewToEntityMapper;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +29,7 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public interface MapAction<T extends Map<?, ?>> {
+public interface MapAction<T extends Map<?, ?>> extends Serializable {
 
     public void doAction(T map, UpdateContext context, MapViewToEntityMapper mapper, CollectionRemoveListener keyRemoveListener, CollectionRemoveListener valueRemoveListener);
 

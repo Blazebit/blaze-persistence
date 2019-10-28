@@ -31,11 +31,13 @@ import com.blazebit.persistence.view.impl.entity.InverseViewToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.LoadOnlyViewToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.LoadOrPersistViewToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.ReferenceEntityLoader;
+import com.blazebit.persistence.view.impl.entity.TargetViewClassBasedInverseViewToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.mapper.CollectionAddMapper;
 import com.blazebit.persistence.view.impl.mapper.CollectionRemoveMapper;
 import com.blazebit.persistence.view.impl.mapper.Mapper;
 import com.blazebit.persistence.view.impl.mapper.Mappers;
+import com.blazebit.persistence.view.impl.mapper.NoopMapper;
 import com.blazebit.persistence.view.impl.mapper.NullMapper;
 import com.blazebit.persistence.view.impl.mapper.SimpleMapper;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
@@ -53,7 +55,9 @@ import javax.persistence.Query;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.ManagedType;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -76,7 +80,7 @@ public final class InverseFlusher<E> {
 
     // Maps the parent entity object on to the child view object
     private final Mapper<E, Object> parentEntityOnChildViewMapper;
-    private final InverseViewToEntityMapper childViewToEntityMapper;
+    private final InverseElementToEntityMapper childViewToEntityMapper;
     // Maps a child view object to an entity via means of em.getReference
     private final ViewToEntityMapper childReferenceViewToEntityMapper;
 
@@ -88,7 +92,7 @@ public final class InverseFlusher<E> {
 
     public InverseFlusher(Class<?> parentEntityClass, String attributeName, String parentIdAttributeName, String childIdAttributeName, UnmappedAttributeCascadeDeleter deleter,
                           ViewToEntityMapper parentReferenceViewToEntityMapper, DirtyAttributeFlusher<?, E, Object> parentReferenceAttributeFlusher,
-                          Mapper<E, Object> parentEntityOnChildViewMapper, InverseViewToEntityMapper childViewToEntityMapper, ViewToEntityMapper childReferenceViewToEntityMapper,
+                          Mapper<E, Object> parentEntityOnChildViewMapper, InverseElementToEntityMapper childViewToEntityMapper, ViewToEntityMapper childReferenceViewToEntityMapper,
                           Mapper<E, Object> parentEntityOnChildEntityMapper, InverseEntityToEntityMapper childEntityToEntityMapper) {
         this.parentEntityClass = parentEntityClass;
         this.attributeName = attributeName;
@@ -114,7 +118,7 @@ public final class InverseFlusher<E> {
             Mapper<Object, Object> parentEntityOnChildViewMapper = null;
             Mapper<Object, Object> parentEntityOnChildEntityAddMapper = null;
             Mapper<Object, Object> parentEntityOnChildEntityRemoveMapper = null;
-            InverseViewToEntityMapper childViewToEntityMapper = null;
+            InverseElementToEntityMapper childViewToEntityMapper = null;
             InverseEntityToEntityMapper childEntityToEntityMapper = null;
             ViewToEntityMapper parentReferenceViewToEntityMapper = new LoadOnlyViewToEntityMapper(
                     new ReferenceEntityLoader(evm, viewType, EntityViewUpdaterImpl.createViewIdMapper(evm, viewType)),
@@ -126,21 +130,29 @@ public final class InverseFlusher<E> {
             if (attribute.getWritableMappedByMappings() != null) {
                 // This happens when the mapped by attribute is insertable=false and updatable=false
                 if (childTypeDescriptor.isSubview()) {
-                    // TODO: actually, we need AttributeMapper for all possible subtypes
                     ViewType<?> childViewType = (ViewType<?>) elementType;
                     elementEntityClass = childViewType.getEntityClass();
-                    parentEntityOnChildViewMapper = (Mapper<Object, Object>) Mappers.forViewConvertToViewAttributeMapping(
-                            evm,
-                            (ViewType<Object>) viewType,
-                            (ViewType<Object>) childViewType,
-                            attribute.getMappedBy(),
-                            (Mapper<Object, Object>) Mappers.forEntityAttributeMappingConvertToViewAttributeMapping(
-                                    evm,
-                                    viewType.getEntityClass(),
-                                    childViewType,
-                                    attribute.getWritableMappedByMappings()
-                            )
-                    );
+                    Map<Class<?>, Mapper<Object, Object>> mappers = new HashMap<>();
+                    for (ManagedViewType<?> type : attribute.getViewTypes()) {
+                        Mapper<Object, Object> mapper = Mappers.forViewConvertToViewAttributeMapping(
+                                evm,
+                                (ViewType<Object>) viewType,
+                                (ViewType<Object>) type,
+                                attribute.getWritableMappedByMappings(),
+                                (Mapper<Object, Object>) Mappers.forEntityAttributeMappingConvertToViewAttributeMapping(
+                                        evm,
+                                        viewType.getEntityClass(),
+                                        type,
+                                        attribute.getWritableMappedByMappings()
+                                )
+                        );
+                        if (mapper == null) {
+                            mapper = NoopMapper.INSTANCE;
+                        }
+                        mappers.put(type.getJavaType(), mapper);
+                    }
+
+                    parentEntityOnChildViewMapper = (Mapper<Object, Object>) Mappers.targetViewClassBasedMapper(mappers);
                     parentEntityOnChildEntityAddMapper = parentEntityOnChildEntityRemoveMapper = (Mapper<Object, Object>) Mappers.forEntityAttributeMapping(
                             evm,
                             viewType.getEntityClass(),
@@ -178,7 +190,6 @@ public final class InverseFlusher<E> {
                 }
             } else {
                 if (childTypeDescriptor.isSubview()) {
-                    // TODO: actually, we need AttributeMapper for all possible subtypes
                     ViewType<?> childViewType = (ViewType<?>) elementType;
                     elementEntityClass = childViewType.getEntityClass();
                     parentReferenceAttributeAccessor = Accessors.forEntityMapping(
@@ -200,13 +211,23 @@ public final class InverseFlusher<E> {
                             ownerMapping
                     );
                     parentEntityOnChildEntityAddMapper = parentEntityOnChildEntityRemoveMapper = Mappers.forAccessor(parentReferenceAttributeAccessor);
-                    parentEntityOnChildViewMapper = (Mapper<Object, Object>) Mappers.forViewConvertToViewAttributeMapping(
-                            evm,
-                            (ViewType<Object>) viewType,
-                            childViewType,
-                            attribute.getMappedBy(),
-                            null
-                    );
+
+                    Map<Class<?>, Mapper<Object, Object>> mappers = new HashMap<>();
+                    for (ManagedViewType<?> type : attribute.getViewTypes()) {
+                        Mapper<Object, Object> mapper = (Mapper<Object, Object>) Mappers.forViewConvertToViewAttributeMapping(
+                                evm,
+                                (ViewType<Object>) viewType,
+                                (ViewType<Object>) type,
+                                attribute.getMappedBy(),
+                                null
+                        );
+                        if (mapper == null) {
+                            mapper = NoopMapper.INSTANCE;
+                        }
+                        mappers.put(type.getJavaType(), mapper);
+                    }
+
+                    parentEntityOnChildViewMapper = (Mapper<Object, Object>) Mappers.targetViewClassBasedMapper(mappers);
                 } else if (childTypeDescriptor.isJpaEntity()) {
                     Class<?> childType = elementType.getJavaType();
                     elementEntityClass = childType;
@@ -278,17 +299,25 @@ public final class InverseFlusher<E> {
             }
 
             if (childTypeDescriptor.isSubview()) {
-                ViewType<?> childViewType = (ViewType<?>) elementType;
-                childViewToEntityMapper = new InverseViewToEntityMapper(
-                        evm,
-                        childViewType,
-                        parentEntityOnChildViewMapper,
-                        parentEntityOnChildEntityAddMapper,
-                        parentEntityOnChildEntityRemoveMapper,
-                        childTypeDescriptor.getViewToEntityMapper(),
-                        parentReferenceAttributeFlusher,
-                        EntityViewUpdaterImpl.createIdFlusher(evm, childViewType, EntityViewUpdaterImpl.createViewIdMapper(evm, childViewType))
-                );
+                InverseElementToEntityMapper<?> first = null;
+                Map<Class<?>, InverseElementToEntityMapper<?>> mappers = new HashMap<>();
+                for (ManagedViewType<?> type : attribute.getViewTypes()) {
+                    InverseViewToEntityMapper inverseViewToEntityMapper = new InverseViewToEntityMapper(
+                            evm,
+                            (ViewType<?>) type,
+                            parentEntityOnChildViewMapper,
+                            parentEntityOnChildEntityAddMapper,
+                            parentEntityOnChildEntityRemoveMapper,
+                            childTypeDescriptor.getViewToEntityMapper(),
+                            parentReferenceAttributeFlusher,
+                            EntityViewUpdaterImpl.createIdFlusher(evm, (ViewType<?>) type, EntityViewUpdaterImpl.createViewIdMapper(evm, type))
+                    );
+                    mappers.put(type.getJavaType(), inverseViewToEntityMapper);
+                    if (type == elementType) {
+                        first = inverseViewToEntityMapper;
+                    }
+                }
+                childViewToEntityMapper = new TargetViewClassBasedInverseViewToEntityMapper(first, mappers);
             } else if (childTypeDescriptor.isJpaEntity()) {
                 Class<?> childType = elementType.getJavaType();
                 childEntityToEntityMapper = new InverseEntityToEntityMapper(

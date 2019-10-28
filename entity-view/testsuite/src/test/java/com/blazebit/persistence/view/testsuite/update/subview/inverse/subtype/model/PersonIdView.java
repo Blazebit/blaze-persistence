@@ -14,21 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl.entity;
+package com.blazebit.persistence.view.testsuite.update.subview.inverse.subtype.model;
 
-import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.view.EntityView;
 
 /**
  *
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.3.0
  */
-public interface EntityLoader {
-
-    public Class<?> getEntityClass();
-
-    public Object toEntity(UpdateContext context, Object view, Object id);
-
-    public Object getEntityId(UpdateContext context, Object entity);
-    
+@EntityView(Person.class)
+public interface PersonIdView extends IdHolderView<Long> {
 }

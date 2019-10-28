@@ -44,7 +44,7 @@ public class DefaultEntityLoaderFetchGraphNode extends AbstractEntityLoader impl
     private final String queryString;
 
     public DefaultEntityLoaderFetchGraphNode(EntityViewManagerImpl evm, String attributeName, EntityType<?> entityType, Map<String, Map<?, ?>> fetchGraph) {
-        // TODO: view id mapper?!
+        // ViewIdMapper is not necessary because this is only for entity types
         super(entityType.getJavaType(), JpaMetamodelUtils.getSingleIdAttribute(entityType), null, evm.getEntityIdAccessor());
         this.attributeName = attributeName;
         this.fetchGraph = fetchGraph;
@@ -144,12 +144,12 @@ public class DefaultEntityLoaderFetchGraphNode extends AbstractEntityLoader impl
     }
 
     @Override
-    public Object toEntity(UpdateContext context, Object id) {
+    public Object toEntity(UpdateContext context, Object view, Object id) {
         if (id == null || queryString == null) {
             return createEntity();
         }
 
-        return getReferenceOrLoad(context, id);
+        return getReferenceOrLoad(context, view, id);
     }
 
     @Override

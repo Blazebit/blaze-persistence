@@ -36,6 +36,7 @@ import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.metamodel.ViewType;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +50,10 @@ import java.util.Set;
 public final class Mappers {
 
     private Mappers() {
+    }
+
+    public static <S, T> Mapper<S, T> targetViewClassBasedMapper(Map<Class<?>, Mapper<S, T>> mapperMap) {
+        return new TargetViewClassBasedMapper<>(mapperMap);
     }
 
     public static <S, T> Mapper<S, T> forAccessor(AttributeAccessor accessor) {
@@ -172,6 +177,51 @@ public final class Mappers {
         if (additionalMapper != null) {
             mappers.add(additionalMapper);
         }
+        return new CompositeMapper<>(mappers.toArray(new Mapper[mappers.size()]));
+    }
+
+    public static <S, T> Mapper<S, T> forViewConvertToViewAttributeMapping(EntityViewManagerImpl evm, ViewType<S> sourceViewType, ViewType<T> targetViewType, Map<String, String> mapping, Mapper<S, T> additionalMapper) {
+        List<Mapper<S, T>> mappers = new ArrayList<>();
+        AttributeAccessor entityAccessor = Accessors.forEntityMapping(
+                evm,
+                sourceViewType.getEntityClass(),
+                ((MappingAttribute<?, ?>) sourceViewType.getIdAttribute()).getMapping()
+        );
+        ExpressionFactory ef = evm.getCriteriaBuilderFactory().getService(ExpressionFactory.class);
+        for (MethodAttribute<?, ?> attribute : targetViewType.getAttributes()) {
+            if (attribute.isUpdatable() && attribute instanceof MappingAttribute<?, ?> && attribute instanceof SingularAttribute<?, ?>) {
+                if (mapping.containsValue(((MappingAttribute) attribute).getMapping())) {
+                    Type<?> attributeType = ((SingularAttribute<?, ?>) attribute).getType();
+                    AttributeAccessor targetAttributeAccessor = Accessors.forMutableViewAttribute(evm, attribute);
+                    if (attributeType instanceof ViewType<?>) {
+                        ViewType<?> viewType = (ViewType<?>) attributeType;
+                        Type<?> attributeViewIdType = ((SingularAttribute<?, ?>) viewType.getIdAttribute()).getType();
+                        EntityTupleizer entityTupleizer = null;
+                        ObjectBuilder<?> idViewBuilder = null;
+                        if (attributeViewIdType instanceof ManagedViewType<?>) {
+                            entityTupleizer = new DefaultEntityTupleizer(evm, (ManagedViewType<?>) attributeViewIdType);
+                            idViewBuilder = (ObjectBuilder<Object>) evm.getTemplate(
+                                    new MacroConfigurationExpressionFactory(ef, ef.getDefaultMacroConfiguration()),
+                                    (ManagedViewTypeImplementor<?>) attributeViewIdType,
+                                    null,
+                                    null,
+                                    null,
+                                    new MutableEmbeddingViewJpqlMacro(),
+                                    0
+                            ).createObjectBuilder(null, null, null, 0);
+                        }
+                        mappers.add(new ReferenceViewAttributeMapper<S, T>(evm, entityAccessor, viewType.getJavaType(), entityTupleizer, targetAttributeAccessor, idViewBuilder));
+                    } else {
+                        mappers.add((Mapper<S, T>) new AttributeMapper<>(Collections.singletonList(entityAccessor), Collections.singletonList(targetAttributeAccessor)));
+                    }
+                }
+            }
+        }
+
+        if (mappers.isEmpty()) {
+            return additionalMapper;
+        }
+
         return new CompositeMapper<>(mappers.toArray(new Mapper[mappers.size()]));
     }
 

@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl.entity;
+package com.blazebit.persistence.view.testsuite.update.subview.inverse.subtype.model;
 
-import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.view.CreatableEntityView;
+import com.blazebit.persistence.view.EntityView;
 
 /**
  *
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.3.0
  */
-public interface EntityLoader {
+@CreatableEntityView(excludedEntityAttributes = { "idx", "age" })
+@EntityView(Document.class)
+public interface CreatableDocumentView extends DocumentView {
 
-    public Class<?> getEntityClass();
-
-    public Object toEntity(UpdateContext context, Object view, Object id);
-
-    public Object getEntityId(UpdateContext context, Object entity);
-    
+    void setOwner(PersonIdView owner);
+    void setResponsiblePerson(PersonIdView responsiblePerson);
 }

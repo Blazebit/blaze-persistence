@@ -97,7 +97,7 @@ public class InverseViewToEntityMapper<E> implements InverseElementToEntityMappe
         }
         // If the view doesn't map the parent, we need to set it on the entity
         if (shouldPersist(child)) {
-            elementEntity = entityLoader.toEntity(context, null);
+            elementEntity = entityLoader.toEntity(context, child, null);
 
             if (newParent == null) {
                 parentEntityOnChildEntityRemoveMapper.map(oldParent, elementEntity);
@@ -113,7 +113,7 @@ public class InverseViewToEntityMapper<E> implements InverseElementToEntityMappe
             }
             elementViewToEntityMapper.applyToEntity(context, elementEntity, child);
         } else {
-            elementEntity = entityLoader.toEntity(context, id);
+            elementEntity = entityLoader.toEntity(context, child, id);
 
             if (newParent == null) {
                 parentEntityOnChildEntityRemoveMapper.map(oldParent, elementEntity);

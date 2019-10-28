@@ -280,7 +280,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
             } else if (flushOperation == BasicFlushOperation.MERGE) {
                 if (fetchGraphNode != null) {
                     Object id = fetchGraphNode.getEntityId(context, value);
-                    Object loadedEntity = fetchGraphNode.toEntity(context, id);
+                    Object loadedEntity = fetchGraphNode.toEntity(context, null, id);
                 }
                 value = context.getEntityManager().merge(value);
                 if (updatable && value != this.value) {
@@ -312,7 +312,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
                 } else if (elementDescriptor.shouldJpaMerge()) {
                     if (fetchGraphNode != null) {
                         Object id = fetchGraphNode.getEntityId(context, realValue);
-                        Object loadedEntity = fetchGraphNode.toEntity(context, id);
+                        Object loadedEntity = fetchGraphNode.toEntity(context, null, id);
                     }
                     V newValue = context.getEntityManager().merge(realValue);
                     if (updatable && newValue != realValue) {

@@ -72,7 +72,7 @@ public class DefaultEntityToEntityMapper extends AbstractEntityToEntityMapper {
         }
 
         Object id = entityLoaderFetchGraphNode.getEntityId(context, dirtyEntity);
-        Object loadedEntity = entityLoaderFetchGraphNode.toEntity(context, id);
+        Object loadedEntity = entityLoaderFetchGraphNode.toEntity(context, null, id);
 
         if (shouldMerge) {
             return context.getEntityManager().merge(dirtyEntity);

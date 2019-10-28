@@ -14,21 +14,23 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl.entity;
-
-import com.blazebit.persistence.view.impl.update.UpdateContext;
+package com.blazebit.persistence.view.impl.mapper;
 
 /**
  *
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.4.0
  */
-public interface EntityLoader {
+public final class NoopMapper<S, T> implements Mapper<S, T> {
 
-    public Class<?> getEntityClass();
+    public static final Mapper INSTANCE = new NoopMapper();
 
-    public Object toEntity(UpdateContext context, Object view, Object id);
+    private NoopMapper() {
+    }
 
-    public Object getEntityId(UpdateContext context, Object entity);
-    
+    @Override
+    public void map(S source, T target) {
+        // No-op
+    }
+
 }
