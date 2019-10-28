@@ -23,6 +23,7 @@ import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.spi.type.BasicDirtyTracker;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -41,7 +42,7 @@ import java.util.Set;
  * @since 1.2.0
  */
 @SuppressWarnings("checkstyle:methodname")
-public class RecordingCollection<C extends Collection<E>, E> implements Collection<E>, DirtyTracker {
+public class RecordingCollection<C extends Collection<E>, E> implements Collection<E>, DirtyTracker, Serializable {
 
     private static final long[] DIRTY_MARKER = new long[0];
 

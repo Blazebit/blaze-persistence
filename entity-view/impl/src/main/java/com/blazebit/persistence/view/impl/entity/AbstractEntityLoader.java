@@ -86,15 +86,20 @@ public abstract class AbstractEntityLoader implements EntityLoader {
         }
     }
 
-    protected final Object getReferenceOrLoad(UpdateContext context, Object id) {
-        if (viewIdMapper != null) {
-            id = viewIdMapper.applyToEntity(context, null, id);
-        }
+    protected final Object getReferenceOrLoad(UpdateContext context, Object view, Object id) {
+        id = getEntityId(context, view, id);
         if (context.containsEntity(entityClass, id)) {
             return context.getEntityManager().getReference(entityClass, id);
         } else {
             return queryEntity(context.getEntityManager(), id);
         }
+    }
+
+    protected final Object getEntityId(UpdateContext context, Object view, Object id) {
+        if (viewIdMapper != null) {
+            id = viewIdMapper.applyToEntity(context, null, id);
+        }
+        return id;
     }
 
     protected abstract Object queryEntity(EntityManager em, Object id);

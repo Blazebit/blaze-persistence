@@ -50,7 +50,7 @@ public class EntityIdLoader implements EntityLoader {
     }
 
     @Override
-    public Object toEntity(UpdateContext context, Object id) {
+    public Object toEntity(UpdateContext context, Object view, Object id) {
         if (id == null) {
             try {
                 return entityIdConstructor.newInstance();

@@ -157,8 +157,9 @@ public class TypeDescriptor {
             jpaType = elementType.getEntityClass();
             basicUserType = null;
             mutable = elementType.isUpdatable() || elementType.isCreatable() || !persistAllowedSubtypes.isEmpty() || !updateAllowedSubtypes.isEmpty();
-            viewToEntityMapper = createViewToEntityMapper(evm, updater, attribute.getMapping(), attributeLocation, elementType, cascadePersist, cascadeUpdate, readOnlyAllowedSubtypes, persistAllowedSubtypes, updateAllowedSubtypes, owner, ownerMapping);
-            loadOnlyViewToEntityMapper = createLoadOnlyViewToEntityMapper(attributeLocation, evm, elementType, cascadePersist, cascadeUpdate, readOnlyAllowedSubtypes, persistAllowedSubtypes, updateAllowedSubtypes, owner, ownerMapping);
+            Set<ManagedViewType<?>> viewTypes = attribute.getViewTypes();
+            viewToEntityMapper = createViewToEntityMapper(evm, updater, attribute.getMapping(), attributeLocation, elementType, cascadePersist, cascadeUpdate, readOnlyAllowedSubtypes, persistAllowedSubtypes, updateAllowedSubtypes, viewTypes, owner, ownerMapping);
+            loadOnlyViewToEntityMapper = createLoadOnlyViewToEntityMapper(attributeLocation, evm, elementType, cascadePersist, cascadeUpdate, readOnlyAllowedSubtypes, persistAllowedSubtypes, updateAllowedSubtypes, viewTypes, owner, ownerMapping);
             identifiable = viewToEntityMapper.getViewIdAccessor() != null;
             SingularAttribute idAttribute = evm.getMetamodel().getEntityMetamodel().getManagedType(ExtendedManagedType.class, elementType.getEntityClass()).getIdAttribute();
             if (idAttribute != null) {
@@ -284,8 +285,8 @@ public class TypeDescriptor {
     }
 
     private static ViewToEntityMapper createViewToEntityMapper(EntityViewManagerImpl evm, EntityViewUpdaterImpl updater, String attributeMapping, String attributeLocation, ManagedViewType<?> viewType, boolean cascadePersist, boolean cascadeUpdate,
-                                                               Set<Type<?>> readOnlyAllowedSubtypes, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes, EntityViewUpdaterImpl owner, String ownerMapping) {
-        EntityLoader entityLoader = new ReferenceEntityLoader(evm, viewType, EntityViewUpdaterImpl.createViewIdMapper(evm, viewType));
+                                                               Set<Type<?>> readOnlyAllowedSubtypes, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes, Set<ManagedViewType<?>> viewTypes, EntityViewUpdaterImpl owner, String ownerMapping) {
+        EntityLoader entityLoader = ReferenceEntityLoader.forAttribute(evm, viewType, viewTypes);
         AttributeAccessor viewIdAccessor = null;
         if (viewType instanceof ViewType<?>) {
             viewIdAccessor = Accessors.forViewId(evm, (ViewType<?>) viewType, true);
@@ -338,8 +339,9 @@ public class TypeDescriptor {
         }
     }
 
-    private static ViewToEntityMapper createLoadOnlyViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, ManagedViewType<?> viewType, boolean cascadePersist, boolean cascadeUpdate, Set<Type<?>> readOnlyAllowedSubtypes, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes, EntityViewUpdaterImpl owner, String ownerMapping) {
-        EntityLoader entityLoader = new ReferenceEntityLoader(evm, viewType, EntityViewUpdaterImpl.createViewIdMapper(evm, viewType));
+    private static ViewToEntityMapper createLoadOnlyViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, ManagedViewType<?> viewType, boolean cascadePersist, boolean cascadeUpdate,
+                                                                       Set<Type<?>> readOnlyAllowedSubtypes, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes, Set<ManagedViewType<?>> viewTypes, EntityViewUpdaterImpl owner, String ownerMapping) {
+        EntityLoader entityLoader = ReferenceEntityLoader.forAttribute(evm, viewType, viewTypes);
         AttributeAccessor viewIdAccessor = null;
 
         if (viewType instanceof ViewType<?>) {

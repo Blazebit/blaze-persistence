@@ -96,6 +96,23 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
         this.filterMappings = Collections.unmodifiableMap(filterMappings);
     }
 
+    public Set<ManagedViewType<?>> getViewTypes() {
+        Type<?> elementType = getElementType();
+        if (elementType instanceof ManagedViewType<?>) {
+            Set<Type<?>> updateCascadeAllowedSubtypes = getUpdateCascadeAllowedSubtypes();
+            Set<Type<?>> persistCascadeAllowedSubtypes = getPersistCascadeAllowedSubtypes();
+            Set<Type<?>> readOnlyAllowedSubtypes = getReadOnlyAllowedSubtypes();
+            Set<ManagedViewType<?>> viewTypes = new HashSet<>(persistCascadeAllowedSubtypes.size() + updateCascadeAllowedSubtypes.size() + readOnlyAllowedSubtypes.size() + 1);
+            viewTypes.add((ManagedViewType<?>) elementType);
+            viewTypes.addAll((Collection<? extends ManagedViewType<?>>) (Collection<?>) persistCascadeAllowedSubtypes);
+            viewTypes.addAll((Collection<? extends ManagedViewType<?>>) (Collection<?>) updateCascadeAllowedSubtypes);
+            viewTypes.addAll((Collection<? extends ManagedViewType<?>>) (Collection<?>) readOnlyAllowedSubtypes);
+            return viewTypes;
+        }
+
+        return Collections.emptySet();
+    }
+
     @Override
     protected Class<?>[] getTypeArguments() {
         return ReflectionUtils.getResolvedMethodReturnTypeArguments(getDeclaringType().getJavaType(), getJavaMethod());

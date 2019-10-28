@@ -139,7 +139,7 @@ public class UpdaterBasedViewToEntityMapper extends AbstractViewToEntityMapper {
         }
 
         if (updater.executeUpdate(context, (MutableStateTrackable) view)) {
-            return entityLoader.toEntity(context, id);
+            return entityLoader.toEntity(context, view, id);
         }
 
         return null;
@@ -154,7 +154,7 @@ public class UpdaterBasedViewToEntityMapper extends AbstractViewToEntityMapper {
         if (viewIdAccessor != null) {
             id = viewIdAccessor.getValue(view);
         }
-        return entityLoader.toEntity(context, id);
+        return entityLoader.toEntity(context, view, id);
     }
 
     @Override

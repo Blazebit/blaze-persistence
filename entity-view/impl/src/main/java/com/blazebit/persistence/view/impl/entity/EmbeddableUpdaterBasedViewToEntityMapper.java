@@ -98,7 +98,7 @@ public class EmbeddableUpdaterBasedViewToEntityMapper extends AbstractViewToEnti
             if (view instanceof MutableStateTrackable) {
                 return updater.executePersist(context, (MutableStateTrackable) view);
             } else {
-                entity = entityLoader.toEntity(context, null);
+                entity = entityLoader.toEntity(context, view, null);
                 idViewToEntityMapper.map(view, entity);
                 return entity;
             }
@@ -106,7 +106,7 @@ public class EmbeddableUpdaterBasedViewToEntityMapper extends AbstractViewToEnti
     }
 
     public Object createEmbeddable(UpdateContext context) {
-        return entityLoader.toEntity(context, null);
+        return entityLoader.toEntity(context, null, null);
     }
 
     @Override

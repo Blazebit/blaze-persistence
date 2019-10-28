@@ -23,6 +23,7 @@ import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.spi.type.BasicDirtyTracker;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -42,7 +43,7 @@ import java.util.TreeMap;
  * @since 1.2.0
  */
 @SuppressWarnings("checkstyle:methodname")
-public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, DirtyTracker {
+public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, DirtyTracker, Serializable {
 
     private static final long[] DIRTY_MARKER = new long[0];
 

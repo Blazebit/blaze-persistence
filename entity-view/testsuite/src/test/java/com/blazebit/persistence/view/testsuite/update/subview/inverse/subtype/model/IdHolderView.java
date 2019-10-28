@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl.entity;
+package com.blazebit.persistence.view.testsuite.update.subview.inverse.subtype.model;
 
-import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.view.IdMapping;
+
+import java.io.Serializable;
 
 /**
  *
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.0.0
  */
-public interface EntityLoader {
+public interface IdHolderView<T> extends Serializable {
 
-    public Class<?> getEntityClass();
+    @IdMapping
+    public T getId();
 
-    public Object toEntity(UpdateContext context, Object view, Object id);
-
-    public Object getEntityId(UpdateContext context, Object entity);
-    
+    public void setId(T id);
 }

@@ -46,7 +46,7 @@ public class FullEntityLoader extends AbstractEntityLoader {
     private final String queryString;
 
     public FullEntityLoader(EntityViewManagerImpl evm, ManagedViewType<?> subviewType) {
-        // TODO: view id mapper?!
+        // ViewIdMapper is not necessary because this will always be invoked with a null id
         super(subviewType.getEntityClass(), jpaIdOf(evm , subviewType), null, evm.getEntityIdAccessor());
         this.queryString = createQueryString(evm, subviewType);
     }
@@ -115,12 +115,12 @@ public class FullEntityLoader extends AbstractEntityLoader {
     }
 
     @Override
-    public Object toEntity(UpdateContext context, Object id) {
+    public Object toEntity(UpdateContext context, Object view, Object id) {
         if (id == null || entityIdAccessor == null) {
             return createEntity();
         }
 
-        return getReferenceOrLoad(context, id);
+        return getReferenceOrLoad(context, view, id);
     }
 
     @Override

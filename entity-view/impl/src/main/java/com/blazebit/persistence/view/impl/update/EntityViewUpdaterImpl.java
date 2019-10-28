@@ -693,7 +693,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
 
     @Override
     public Object executePersist(UpdateContext context, MutableStateTrackable updatableProxy) {
-        Object entity = fullEntityLoader.toEntity(context, null);
+        Object entity = fullEntityLoader.toEntity(context, updatableProxy, null);
         return executePersist(context, entity, updatableProxy);
     }
 
@@ -881,7 +881,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                         readOnlyAllowedSubtypes,
                         persistAllowedSubtypes,
                         updateAllowedSubtypes,
-                        new ReferenceEntityLoader(evm, subviewType, createViewIdMapper(evm, subviewType)),
+                        ReferenceEntityLoader.forAttribute(evm, subviewType, attribute),
                         false,
                         null,
                         owner,
@@ -928,7 +928,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
 
                 String[] idAttributeMappings = idComponentMappings.toArray(new String[idComponentMappings.size()]);
 
-                ViewToEntityMapper viewToEntityMapper = createViewToEntityMapper(attributeLocation, evm, attributeViewType, false, false, readOnlyAllowedSubtypes, persistAllowedSubtypes, updateAllowedSubtypes, owner, ownerMapping);
+                ViewToEntityMapper viewToEntityMapper = createViewToEntityMapper(attributeLocation, evm, attributeViewType, false, false, readOnlyAllowedSubtypes, persistAllowedSubtypes, updateAllowedSubtypes, attribute.getViewTypes(), owner, ownerMapping);
                 String parameterName = attributeName;
 
                 return new SubviewAttributeFlusher<>(
@@ -1016,7 +1016,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                             readOnlyAllowedSubtypes,
                             persistAllowedSubtypes,
                             updateAllowedSubtypes,
-                            new ReferenceEntityLoader(evm, subviewType, createViewIdMapper(evm, subviewType)),
+                            ReferenceEntityLoader.forAttribute(evm, subviewType, attribute),
                             shouldFlushPersists,
                             null,
                             owner == null ? this : owner,
@@ -1079,7 +1079,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                     String[] idAttributeMappings = idComponentMappings.toArray(new String[idComponentMappings.size()]);
 
                     if (attribute.isUpdatable()) {
-                        viewToEntityMapper = createViewToEntityMapper(attributeLocation, evm, attributeViewType, cascadePersist, cascadeUpdate, readOnlyAllowedSubtypes, persistAllowedSubtypes, updateAllowedSubtypes, owner, ownerMapping);
+                        viewToEntityMapper = createViewToEntityMapper(attributeLocation, evm, attributeViewType, cascadePersist, cascadeUpdate, readOnlyAllowedSubtypes, persistAllowedSubtypes, updateAllowedSubtypes, attribute.getViewTypes(), owner, ownerMapping);
                         parameterName = attributeName;
                     } else {
                         if (shouldFlushUpdates) {
@@ -1090,7 +1090,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                                     readOnlyAllowedSubtypes,
                                     persistAllowedSubtypes,
                                     updateAllowedSubtypes,
-                                    new ReferenceEntityLoader(evm, subviewType, createViewIdMapper(evm, subviewType)),
+                                    ReferenceEntityLoader.forAttribute(evm, subviewType, attribute),
                                     Accessors.forViewId(evm, attributeViewType, true),
                                     shouldFlushPersists,
                                     owner,
@@ -1118,7 +1118,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                                     readOnlyAllowedSubtypes,
                                     persistAllowedSubtypes,
                                     updateAllowedSubtypes,
-                                    new ReferenceEntityLoader(evm, subviewType, createViewIdMapper(evm, subviewType)),
+                                    ReferenceEntityLoader.forAttribute(evm, subviewType, attribute),
                                     null,
                                     shouldFlushPersists,
                                     owner,
@@ -1253,8 +1253,8 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                 && attribute.isUpdateMappable();
     }
 
-    private static ViewToEntityMapper createViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, ViewType<?> viewType, boolean cascadePersist, boolean cascadeUpdate, Set<Type<?>> readOnlyAllowedSubtypes, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes, EntityViewUpdaterImpl owner, String ownerMapping) {
-        EntityLoader entityLoader = new ReferenceEntityLoader(evm, viewType, createViewIdMapper(evm, viewType));
+    private static ViewToEntityMapper createViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, ViewType<?> viewType, boolean cascadePersist, boolean cascadeUpdate, Set<Type<?>> readOnlyAllowedSubtypes, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes, Set<ManagedViewType<?>> viewTypes, EntityViewUpdaterImpl owner, String ownerMapping) {
+        EntityLoader entityLoader = ReferenceEntityLoader.forAttribute(evm, viewType, viewTypes);
         AttributeAccessor viewIdAccessor = Accessors.forViewId(evm, viewType, true);
 
         Class<?> viewTypeClass = viewType.getJavaType();

@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.collection;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
@@ -25,7 +26,7 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class RecordingValuesCollection<C extends Map<K, V>, K, V> implements Collection<V> {
+public class RecordingValuesCollection<C extends Map<K, V>, K, V> implements Collection<V>, Serializable {
 
     protected final Collection<V> delegate;
     protected final RecordingMap<C, K, V> recordingMap;

@@ -14,21 +14,29 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl.entity;
+package com.blazebit.persistence.view.impl.mapper;
 
-import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.view.spi.type.EntityViewProxy;
+
+import java.util.Map;
 
 /**
  *
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.4.0
  */
-public interface EntityLoader {
+public class TargetViewClassBasedMapper<S, T> implements Mapper<S, T> {
 
-    public Class<?> getEntityClass();
+    private final Map<Class<?>, Mapper<S, T>> mappers;
 
-    public Object toEntity(UpdateContext context, Object view, Object id);
+    public TargetViewClassBasedMapper(Map<Class<?>, Mapper<S, T>> mappers) {
+        this.mappers = mappers;
+    }
 
-    public Object getEntityId(UpdateContext context, Object entity);
+    @Override
+    public void map(S source, T target) {
+        Mapper<S, T> mapper = mappers.get(((EntityViewProxy) target).$$_getEntityViewClass());
+        mapper.map(source, target);
+    }
     
 }
