@@ -514,6 +514,12 @@
                     <version>1.3.0.Final</version>
                     <scope>provided</scope>
                 </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                    <version>${project.version}</version>
+                    <scope>provided</scope>
+                </dependency>
             </dependencies>
             <build>
                 <plugins>
@@ -524,7 +530,7 @@
                             <execution>
                                 <id>process-test</id>
                                 <goals>
-                                    <goal>process</goal>
+                                    <goal>process-test</goal>
                                 </goals>
                                 <phase>generate-test-sources</phase>
                                 <configuration>
@@ -532,6 +538,7 @@
                                     <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
+                                        <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
                                 </configuration>
                             </execution>
@@ -542,6 +549,11 @@
                                 <groupId>org.hibernate</groupId>
                                 <artifactId>hibernate-jpamodelgen</artifactId>
                                 <version>1.3.0.Final</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>${project.groupId}</groupId>
+                                <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                                <version>${project.version}</version>
                             </dependency>
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
@@ -619,6 +631,12 @@
                     <version>${version.hibernate-4.3}</version>
                     <scope>provided</scope>
                 </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                    <version>${project.version}</version>
+                    <scope>provided</scope>
+                </dependency>
             </dependencies>
             <build>
                 <plugins>
@@ -629,7 +647,7 @@
                             <execution>
                                 <id>process-test</id>
                                 <goals>
-                                    <goal>process</goal>
+                                    <goal>process-test</goal>
                                 </goals>
                                 <phase>generate-test-sources</phase>
                                 <configuration>
@@ -637,6 +655,7 @@
                                     <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
+                                        <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
                                 </configuration>
                             </execution>
@@ -647,6 +666,11 @@
                                 <groupId>org.hibernate</groupId>
                                 <artifactId>hibernate-jpamodelgen</artifactId>
                                 <version>${version.hibernate-4.3}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>${project.groupId}</groupId>
+                                <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                                <version>${project.version}</version>
                             </dependency>
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
@@ -724,6 +748,12 @@
                     <version>${version.hibernate-5}</version>
                     <scope>provided</scope>
                 </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                    <version>${project.version}</version>
+                    <scope>provided</scope>
+                </dependency>
             </dependencies>
             <build>
                 <plugins>
@@ -734,7 +764,7 @@
                             <execution>
                                 <id>process-test</id>
                                 <goals>
-                                    <goal>process</goal>
+                                    <goal>process-test</goal>
                                 </goals>
                                 <phase>generate-test-sources</phase>
                                 <configuration>
@@ -742,6 +772,7 @@
                                     <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
+                                        <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
                                 </configuration>
                             </execution>
@@ -752,6 +783,11 @@
                                 <groupId>org.hibernate</groupId>
                                 <artifactId>hibernate-jpamodelgen</artifactId>
                                 <version>${version.hibernate-5}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>${project.groupId}</groupId>
+                                <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                                <version>${project.version}</version>
                             </dependency>
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
@@ -829,6 +865,12 @@
                     <version>${version.hibernate-5.1}</version>
                     <scope>provided</scope>
                 </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                    <version>${project.version}</version>
+                    <scope>provided</scope>
+                </dependency>
             </dependencies>
             <build>
                 <plugins>
@@ -839,7 +881,7 @@
                             <execution>
                                 <id>process-test</id>
                                 <goals>
-                                    <goal>process</goal>
+                                    <goal>process-test</goal>
                                 </goals>
                                 <phase>generate-test-sources</phase>
                                 <configuration>
@@ -847,6 +889,7 @@
                                     <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
+                                        <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
                                 </configuration>
                             </execution>
@@ -857,6 +900,11 @@
                                 <groupId>org.hibernate</groupId>
                                 <artifactId>hibernate-jpamodelgen</artifactId>
                                 <version>${version.hibernate-5.1}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>${project.groupId}</groupId>
+                                <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                                <version>${project.version}</version>
                             </dependency>
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
@@ -937,6 +985,12 @@
                     <version>${version.hibernate-5.2}</version>
                     <scope>provided</scope>
                 </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                    <version>${project.version}</version>
+                    <scope>provided</scope>
+                </dependency>
             </dependencies>
             <build>
                 <plugins>
@@ -947,7 +1001,7 @@
                             <execution>
                                 <id>process-test</id>
                                 <goals>
-                                    <goal>process</goal>
+                                    <goal>process-test</goal>
                                 </goals>
                                 <phase>generate-test-sources</phase>
                                 <configuration>
@@ -955,6 +1009,7 @@
                                     <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
+                                        <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
                                 </configuration>
                             </execution>
@@ -965,6 +1020,11 @@
                                 <groupId>org.hibernate</groupId>
                                 <artifactId>hibernate-jpamodelgen</artifactId>
                                 <version>${version.hibernate-5.2}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>${project.groupId}</groupId>
+                                <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                                <version>${project.version}</version>
                             </dependency>
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
@@ -1042,6 +1102,12 @@
                     <version>${version.hibernate-5.3}</version>
                     <scope>provided</scope>
                 </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                    <version>${project.version}</version>
+                    <scope>provided</scope>
+                </dependency>
             </dependencies>
             <build>
                 <plugins>
@@ -1052,7 +1118,7 @@
                             <execution>
                                 <id>process-test</id>
                                 <goals>
-                                    <goal>process</goal>
+                                    <goal>process-test</goal>
                                 </goals>
                                 <phase>generate-test-sources</phase>
                                 <configuration>
@@ -1060,6 +1126,7 @@
                                     <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
+                                        <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
                                 </configuration>
                             </execution>
@@ -1070,6 +1137,11 @@
                                 <groupId>org.hibernate</groupId>
                                 <artifactId>hibernate-jpamodelgen</artifactId>
                                 <version>${version.hibernate-5.3}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>${project.groupId}</groupId>
+                                <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                                <version>${project.version}</version>
                             </dependency>
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
@@ -1157,6 +1229,12 @@
                     <version>${version.hibernate-5.4}</version>
                     <scope>provided</scope>
                 </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                    <version>${project.version}</version>
+                    <scope>provided</scope>
+                </dependency>
             </dependencies>
             <build>
                 <plugins>
@@ -1167,7 +1245,7 @@
                             <execution>
                                 <id>process-test</id>
                                 <goals>
-                                    <goal>process</goal>
+                                    <goal>process-test</goal>
                                 </goals>
                                 <phase>generate-test-sources</phase>
                                 <configuration>
@@ -1175,6 +1253,7 @@
                                     <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
+                                        <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
                                 </configuration>
                             </execution>
@@ -1185,6 +1264,11 @@
                                 <groupId>org.hibernate</groupId>
                                 <artifactId>hibernate-jpamodelgen</artifactId>
                                 <version>${version.hibernate-5.4}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>${project.groupId}</groupId>
+                                <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                                <version>${project.version}</version>
                             </dependency>
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
@@ -1269,6 +1353,12 @@
                     <version>${version.hibernate-6.0}</version>
                     <scope>provided</scope>
                 </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                    <version>${project.version}</version>
+                    <scope>provided</scope>
+                </dependency>
             </dependencies>
             <build>
                 <plugins>
@@ -1279,7 +1369,7 @@
                             <execution>
                                 <id>process-test</id>
                                 <goals>
-                                    <goal>process</goal>
+                                    <goal>process-test</goal>
                                 </goals>
                                 <phase>generate-test-sources</phase>
                                 <configuration>
@@ -1287,6 +1377,7 @@
                                     <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
+                                        <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
                                 </configuration>
                             </execution>
@@ -1297,6 +1388,11 @@
                                 <groupId>org.hibernate</groupId>
                                 <artifactId>hibernate-jpamodelgen</artifactId>
                                 <version>${version.hibernate-6.0}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>${project.groupId}</groupId>
+                                <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                                <version>${project.version}</version>
                             </dependency>
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
@@ -1369,6 +1465,12 @@
                     <version>${version.eclipselink}</version>
                     <scope>provided</scope>
                 </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                    <version>${project.version}</version>
+                    <scope>provided</scope>
+                </dependency>
                 <!-- We need the JTA API for updatable views -->
                 <dependency>
                     <groupId>javax.transaction</groupId>
@@ -1386,7 +1488,7 @@
                             <execution>
                                 <id>process-test</id>
                                 <goals>
-                                    <goal>process</goal>
+                                    <goal>process-test</goal>
                                 </goals>
                                 <phase>generate-test-sources</phase>
                                 <configuration>
@@ -1394,6 +1496,7 @@
                                     <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.eclipse.persistence.internal.jpa.modelgen.CanonicalModelProcessor</processor>
+                                        <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
                                     <optionMap>
                                         <eclipselink.persistencexml>${basedir}/src/test/resources/META-INF/persistence.xml</eclipselink.persistencexml>
@@ -1407,6 +1510,11 @@
                                 <groupId>org.eclipse.persistence</groupId>
                                 <artifactId>org.eclipse.persistence.jpa.modelgen.processor</artifactId>
                                 <version>${version.eclipselink}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>${project.groupId}</groupId>
+                                <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                                <version>${project.version}</version>
                             </dependency>
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
@@ -1506,6 +1614,12 @@
                     <version>${version.datanucleus.jpa-5}</version>
                     <scope>provided</scope>
                 </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                    <version>${project.version}</version>
+                    <scope>provided</scope>
+                </dependency>
             </dependencies>
             <build>
                 <plugins>
@@ -1534,7 +1648,7 @@
                             <dependency>
                                 <groupId>${project.groupId}</groupId>
                                 <artifactId>blaze-persistence-testsuite-base-datanucleus</artifactId>
-                                <version>1.5.0-SNAPSHOT</version>
+                                <version>${project.version}</version>
                             </dependency>
                         </dependencies>
                     </plugin>
@@ -1545,7 +1659,7 @@
                             <execution>
                                 <id>process-test</id>
                                 <goals>
-                                    <goal>process</goal>
+                                    <goal>process-test</goal>
                                 </goals>
                                 <phase>generate-test-sources</phase>
                                 <configuration>
@@ -1553,6 +1667,7 @@
                                     <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.datanucleus.jpa.query.JPACriteriaProcessor</processor>
+                                        <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
                                 </configuration>
                             </execution>
@@ -1563,6 +1678,11 @@
                                 <groupId>org.datanucleus</groupId>
                                 <artifactId>datanucleus-jpa-query</artifactId>
                                 <version>${version.datanucleus.jpa-5}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>${project.groupId}</groupId>
+                                <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                                <version>${project.version}</version>
                             </dependency>
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
@@ -1659,6 +1779,12 @@
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-integration-datanucleus</artifactId>
                 </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                    <version>${project.version}</version>
+                    <scope>provided</scope>
+                </dependency>
             </dependencies>
             <build>
                 <plugins>
@@ -1687,7 +1813,7 @@
                             <dependency>
                                 <groupId>${project.groupId}</groupId>
                                 <artifactId>blaze-persistence-testsuite-base-datanucleus</artifactId>
-                                <version>1.5.0-SNAPSHOT</version>
+                                <version>${project.version}</version>
                             </dependency>
                         </dependencies>
                     </plugin>
@@ -1698,7 +1824,7 @@
                             <execution>
                                 <id>process-test</id>
                                 <goals>
-                                    <goal>process</goal>
+                                    <goal>process-test</goal>
                                 </goals>
                                 <phase>generate-test-sources</phase>
                                 <configuration>
@@ -1706,11 +1832,17 @@
                                     <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.datanucleus.jpa.query.JPACriteriaProcessor</processor>
+                                        <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
                                 </configuration>
                             </execution>
                         </executions>
                         <dependencies>
+                            <dependency>
+                                <groupId>${project.groupId}</groupId>
+                                <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                                <version>${project.version}</version>
+                            </dependency>
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
                                 <artifactId>jaxb-api</artifactId>
@@ -1807,6 +1939,12 @@
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-integration-datanucleus-5.1</artifactId>
                 </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                    <version>${project.version}</version>
+                    <scope>provided</scope>
+                </dependency>
             </dependencies>
             <build>
                 <plugins>
@@ -1835,7 +1973,7 @@
                             <dependency>
                                 <groupId>${project.groupId}</groupId>
                                 <artifactId>blaze-persistence-testsuite-base-datanucleus</artifactId>
-                                <version>1.5.0-SNAPSHOT</version>
+                                <version>${project.version}</version>
                             </dependency>
                         </dependencies>
                     </plugin>
@@ -1872,11 +2010,17 @@
                                     <outputDirectory>${project.build.directory}/generated-test-sources/metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.datanucleus.jpa.query.JPACriteriaProcessor</processor>
+                                        <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
                                 </configuration>
                             </execution>
                         </executions>
                         <dependencies>
+                            <dependency>
+                                <groupId>${project.groupId}</groupId>
+                                <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                                <version>${project.version}</version>
+                            </dependency>
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
                                 <artifactId>jaxb-api</artifactId>
@@ -1923,6 +2067,12 @@
                     <artifactId>blaze-persistence-testsuite-base-openjpa</artifactId>
                     <scope>test</scope>
                 </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                    <version>${project.version}</version>
+                    <scope>provided</scope>
+                </dependency>
             </dependencies>
             <build>
                 <plugins>
@@ -1933,7 +2083,7 @@
                             <execution>
                                 <id>process-test</id>
                                 <goals>
-                                    <goal>process</goal>
+                                    <goal>process-test</goal>
                                 </goals>
                                 <phase>generate-test-sources</phase>
                                 <configuration>
@@ -1941,6 +2091,7 @@
                                     <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.apache.openjpa.persistence.meta.AnnotationProcessor6</processor>
+                                        <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
                                     <optionMap>
                                         <openjpa.metamodel>true</openjpa.metamodel>
@@ -1953,6 +2104,11 @@
                                 <groupId>org.apache.openjpa</groupId>
                                 <artifactId>openjpa-all</artifactId>
                                 <version>${version.openjpa}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>${project.groupId}</groupId>
+                                <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                                <version>${project.version}</version>
                             </dependency>
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>

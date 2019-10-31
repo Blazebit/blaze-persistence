@@ -87,6 +87,10 @@
             <groupId>com.blazebit</groupId>
             <artifactId>blaze-persistence-entity-view-impl</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.blazebit</groupId>
+            <artifactId>blaze-persistence-entity-view-processor</artifactId>
+        </dependency>
 
         <!-- Spring integration dependencies -->
         <dependency>

@@ -33,6 +33,7 @@
     <modules>
         <module>api</module>
         <module>impl</module>
+        <module>processor</module>
         <module>testsuite</module>
 
         <module>api-jar</module>

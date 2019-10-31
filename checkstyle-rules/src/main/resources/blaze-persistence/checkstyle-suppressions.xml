@@ -39,11 +39,11 @@
     <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]webflux[\\/]impl[\\/]SortArgumentResolver\.java$"/>
 
     <!-- The implementation, testsuite and examples don't have to fit our Javadoc requirements -->
-    <suppress checks="JavadocPackage" files="[\\/](parser|impl|integration|testsuite|examples|org.springframework)[\\/].*\.java$"/>
-    <suppress checks="JavadocMethod" files="[\\/](parser|impl|integration|testsuite|examples|org.springframework)[\\/].*\.java$"/>
-    <suppress checks="JavadocStyle" files="[\\/](parser|impl|integration|testsuite|examples|org.springframework)[\\/].*\.java$"/>
-    <suppress checks="JavadocType" files="[\\/](parser|impl|integration|testsuite|examples|org.springframework)[\\/].*\.java$"/>
-    <suppress checks="NonEmptyAtclauseDescription" files="[\\/](parser|impl|testsuite|examples|org.springframework)[\\/].*\.java$"/>
+    <suppress checks="JavadocPackage" files="[\\/](parser|impl|integration|testsuite|processor|examples|org.springframework)[\\/].*\.java$"/>
+    <suppress checks="JavadocMethod" files="[\\/](parser|impl|integration|testsuite|processor|examples|org.springframework)[\\/].*\.java$"/>
+    <suppress checks="JavadocStyle" files="[\\/](parser|impl|integration|testsuite|processor|examples|org.springframework)[\\/].*\.java$"/>
+    <suppress checks="JavadocType" files="[\\/](parser|impl|integration|testsuite|processor|examples|org.springframework)[\\/].*\.java$"/>
+    <suppress checks="NonEmptyAtclauseDescription" files="[\\/](parser|impl|testsuite|processor|examples|org.springframework)[\\/].*\.java$"/>
     <suppress checks="com.blazebit.persistence.checkstyle.JavadocSinceCheck" files="[\\/](testsuite|examples)[\\/].*\.java$"/>
 
     <!-- Testdata generators may violate that pattern since names need underlines -->
