@@ -113,6 +113,10 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-integration-deltaspike-data-impl-1.8</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.blazebit</groupId>
+            <artifactId>blaze-persistence-entity-view-processor</artifactId>
+        </dependency>
 
         <!-- Test dependencies -->
         <dependency>
@@ -223,6 +227,7 @@
                                     <outputDirectory>\${project.build.directory}/metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
+                                        <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
                                 </configuration>
                             </execution>
@@ -233,6 +238,10 @@
                                 <groupId>org.hibernate</groupId>
                                 <artifactId>hibernate-jpamodelgen</artifactId>
                                 <version>\${version.hibernate}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>com.blazebit</groupId>
+                                <artifactId>blaze-persistence-entity-view-processor</artifactId>
                             </dependency>
                         </dependencies>
                     </plugin>

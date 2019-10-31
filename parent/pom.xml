@@ -190,6 +190,12 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                <version>${project.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-jpa-criteria-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
