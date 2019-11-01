@@ -401,12 +401,12 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             int size = partitionExpressions.size();
             if (size != 0) {
                 if (filterPredicate != null) {
-                    sb.append(", ");
+                    sb.append(",");
                 }
                 sb.append("'PARTITION BY',");
                 partitionExpressions.get(0).accept(this);
                 for (int i = 1; i < size; i++) {
-                    sb.append(", ");
+                    sb.append(",");
                     partitionExpressions.get(i).accept(this);
                 }
             }
@@ -415,19 +415,19 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             size = orderByExpressions.size();
             if (size != 0) {
                 if (filterPredicate != null || partitionExpressions.size() != 0) {
-                    sb.append(", ");
+                    sb.append(",");
                 }
                 sb.append("'ORDER BY',");
                 visit(orderByExpressions.get(0));
                 for (int i = 1; i < size; i++) {
-                    sb.append(", ");
+                    sb.append(",");
                     visit(orderByExpressions.get(i));
                 }
             }
 
             if (windowDefinition.getFrameMode() != null) {
                 if (filterPredicate != null || partitionExpressions.size() != 0 || orderByExpressions.size() != 0) {
-                    sb.append(", ");
+                    sb.append(",");
                 }
                 sb.append('\'');
                 sb.append(windowDefinition.getFrameMode().name());

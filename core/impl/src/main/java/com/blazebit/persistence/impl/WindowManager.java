@@ -75,17 +75,20 @@ public class WindowManager<T> extends AbstractManager<ExpressionModifier> {
         if (orderByExpressions.isEmpty()) {
             orderByExpressions = windowDefinition.getOrderByExpressions();
         }
+
+        WindowDefinition frameClause = windowDefinition.getFrameMode() == null ? baseWindowDefinition : windowDefinition;
+
         return new WindowDefinition(
                 null,
                 partitionExpressions,
                 orderByExpressions,
                 windowDefinition.getFilterPredicate(),
-                windowDefinition.getFrameMode(),
-                windowDefinition.getFrameStartType(),
-                windowDefinition.getFrameStartExpression(),
-                windowDefinition.getFrameEndType(),
-                windowDefinition.getFrameEndExpression(),
-                windowDefinition.getFrameExclusionType()
+                frameClause.getFrameMode(),
+                frameClause.getFrameStartType(),
+                frameClause.getFrameStartExpression(),
+                frameClause.getFrameEndType(),
+                frameClause.getFrameEndExpression(),
+                frameClause.getFrameExclusionType()
         );
     }
 
@@ -209,9 +212,9 @@ public class WindowManager<T> extends AbstractManager<ExpressionModifier> {
                         sb.append(" DESC ");
                     }
                     if (orderByExpression.isNullFirst()) {
-                        sb.append(" NULLS FIRST, ");
+                        sb.append("NULLS FIRST, ");
                     } else {
-                        sb.append(" NULLS LAST, ");
+                        sb.append("NULLS LAST, ");
                     }
 
                 }

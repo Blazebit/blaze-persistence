@@ -17,24 +17,20 @@
 package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDB2;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
-import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
-import com.blazebit.persistence.testsuite.entity.Version;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
-
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  *
@@ -579,6 +575,11 @@ public class WindowFunctionTest extends AbstractCoreTest {
                 .orderByAsc("per.age")
                 ;
 
+        String queryString = criteria.getQueryString();
+
+        assertTrue(queryString.contains(function("window_sum", "per.age", "'ORDER BY'", "per.age",
+                "'ASC NULLS LAST'", "'ROWS'", "'BETWEEN'", "'UNBOUNDED PRECEDING'", "'AND'", "'CURRENT ROW'")));
+
         List<Tuple> resultList = criteria.getResultList();
         assertNotNull(resultList);
     }
@@ -590,7 +591,7 @@ public class WindowFunctionTest extends AbstractCoreTest {
      * @see #testParsedNamedWindowDefinitionWithRange()
      */
     @Test
-    public void testCopyAndModifyWindowDefinitionWithRangeFails() {
+    public void testCopyAndModifyWindowDefinitionWithRange() {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
                 .from(Person.class, "per")
                 .window("x").orderByAsc("per.age").rows().betweenUnboundedPreceding().andCurrentRow().end()
@@ -656,6 +657,4 @@ public class WindowFunctionTest extends AbstractCoreTest {
         List<Tuple> resultList = criteria.getResultList();
         assertNotNull(resultList);
     }
-
-
 }
