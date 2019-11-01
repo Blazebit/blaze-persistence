@@ -240,7 +240,7 @@ public abstract class AbstractWindowFunction implements JpqlFunction {
             context.addChunk(" ");
         }
         renderOrderBy(context, windowFunction.getOrderBys());
-        if (windowFunction.getFrameMode() != null && !windowFunction.getOrderBys().isEmpty()) {
+        if (windowFunction.getFrameMode() != null && (!windowFunction.getOrderBys().isEmpty() || !windowFunction.getPartitionExpressions().isEmpty())) {
             context.addChunk(" ");
         }
         renderFrame(context, windowFunction);
