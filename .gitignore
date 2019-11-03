@@ -63,3 +63,6 @@ integration/hibernate/.factorypath
 integration/hibernate/target/
 /core/impl/nbactions.xml
 */**/dependency-reduced-pom.xml
+out/
+/plugin/intellij/build/
+.gradle/

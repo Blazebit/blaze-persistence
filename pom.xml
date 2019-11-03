@@ -58,6 +58,7 @@
         <module>checkstyle-rules</module>
         <module>archetype</module>
         <module>dist</module>
+        <module>plugin</module>
     </modules>
 
     <issueManagement>
