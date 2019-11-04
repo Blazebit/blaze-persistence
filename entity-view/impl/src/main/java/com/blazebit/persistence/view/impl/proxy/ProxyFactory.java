@@ -2169,11 +2169,13 @@ public class ProxyFactory {
             sb.append("\tStringBuilder sb = new StringBuilder(").append(sizeEstimate).append(");\n");
             sb.append("\tsb.append(\"").append(managedViewType.getJavaType().getSimpleName()).append("(\");\n");
 
-            sb.append("\tsb.append(\"").append(fields[0].getName()).append(" = \").append($0.").append(fields[0].getName()).append(");\n");
+            if (fields.length != 0) {
+                sb.append("\tsb.append(\"").append(fields[0].getName()).append(" = \").append($0.").append(fields[0].getName()).append(");\n");
 
-            for (int i = 1; i < fields.length; i++) {
-                sb.append("\tsb.append(\", \");\n");
-                sb.append("\tsb.append(\"").append(fields[i].getName()).append(" = \").append($0.").append(fields[i].getName()).append(");\n");
+                for (int i = 1; i < fields.length; i++) {
+                    sb.append("\tsb.append(\", \");\n");
+                    sb.append("\tsb.append(\"").append(fields[i].getName()).append(" = \").append($0.").append(fields[i].getName()).append(");\n");
+                }
             }
 
             sb.append("\tsb.append(\")\");\n");

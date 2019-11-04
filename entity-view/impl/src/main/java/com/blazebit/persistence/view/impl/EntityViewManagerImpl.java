@@ -584,16 +584,6 @@ public class EntityViewManagerImpl implements EntityViewManager {
         return null;
     }
 
-    @SuppressWarnings("unchecked")
-    public String applyObjectBuilder(Class<?> clazz, String mappingConstructorName, String entityViewRoot, EntityViewConfiguration configuration) {
-        ManagedViewTypeImplementor<?> viewType = getMetamodel().managedView(clazz);
-        if (viewType == null) {
-            throw new IllegalArgumentException("There is no entity view for the class '" + clazz.getName() + "' registered!");
-        }
-        MappingConstructorImpl<?> mappingConstructor = (MappingConstructorImpl<?>) viewType.getConstructor(mappingConstructorName);
-        return applyObjectBuilder(viewType, mappingConstructor, entityViewRoot, configuration.getCriteriaBuilder(), configuration, 0);
-    }
-
     public String applyObjectBuilder(ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> mappingConstructor, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset) {
         Path root = getPath(criteriaBuilder, entityViewRoot);
         String path = root.getPath();
