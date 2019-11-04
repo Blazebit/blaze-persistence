@@ -67,6 +67,31 @@ public class FlatViewValidationTest extends AbstractEntityViewTest {
     }
 
     /* **************************** *
+     * Collections not allowed in flat view constructors when used as view root
+     * **************************** */
+
+    @EntityView(Document.class)
+    public static abstract class FlatViewWithCollectionInConstructor {
+        public FlatViewWithCollectionInConstructor(@Mapping("partners.id") Set<Long> partnerIds) {
+        }
+    }
+
+    @Test
+    public void flatViewWithCollectionInConstructorQueryingFails() {
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        cfg.addEntityView(FlatViewWithCollectionInConstructor.class);
+        evm = cfg.createEntityViewManager(cbf);
+        try {
+            applySetting(evm, FlatViewWithCollectionInConstructor.class, cbf.create(em, Document.class));
+            fail("Expected querying to fail!");
+        } catch (IllegalArgumentException ex) {
+            assertTrue(ex.getMessage().contains("flat view"));
+            assertTrue(ex.getMessage().contains("collection"));
+            assertTrue(ex.getMessage().contains(FlatViewWithCollectionInConstructor.class.getSimpleName()));
+        }
+    }
+
+    /* **************************** *
      * Collections not allowed in flat views when embedded in view root that is also a flat view
      * **************************** */
 

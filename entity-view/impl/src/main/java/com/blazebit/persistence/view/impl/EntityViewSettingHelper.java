@@ -26,6 +26,7 @@ import com.blazebit.persistence.view.ViewFilterProvider;
 import com.blazebit.persistence.view.impl.macro.MutableEmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
+import com.blazebit.persistence.view.impl.metamodel.MappingConstructorImpl;
 import com.blazebit.persistence.view.impl.metamodel.ViewTypeImplementor;
 import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
 import com.blazebit.persistence.view.metamodel.FlatViewType;
@@ -57,16 +58,31 @@ public final class EntityViewSettingHelper {
     @SuppressWarnings("unchecked")
     public static <T, Q extends FullQueryBuilder<T, Q>> Q apply(EntityViewSetting<T, Q> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> criteriaBuilder, String entityViewRoot) {
         ManagedViewTypeImplementor<?> managedView = evm.getMetamodel().managedView(setting.getEntityViewClass());
+        if (managedView == null) {
+            throw new IllegalArgumentException("There is no entity view for the class '" + setting.getEntityViewClass().getName() + "' registered!");
+        }
+        MappingConstructorImpl<?> mappingConstructor = (MappingConstructorImpl<?>) managedView.getConstructor(setting.getViewConstructorName());
         if (managedView instanceof FlatViewType<?>) {
             if (managedView.hasJoinFetchedCollections()) {
-                throw new IllegalArgumentException("Can't use the flat view '" + managedView.getJavaType().getName() + "' as view root because it contains join fetched collections!");
+                throw new IllegalArgumentException("Can't use the flat view '" + managedView.getJavaType().getName() + "' as view root because it contains join fetched collections! " +
+                        "Consider adding a @IdMapping to the entity view or use a different fetch strategy for the collections!");
+            }
+            if (mappingConstructor == null) {
+                if (managedView.getConstructors().size() > 1) {
+                    mappingConstructor = (MappingConstructorImpl<T>) managedView.getConstructor("init");
+                } else if (managedView.getConstructors().size() == 1) {
+                    mappingConstructor = (MappingConstructorImpl<T>) managedView.getConstructors().toArray()[0];
+                }
+            }
+            if (mappingConstructor != null && mappingConstructor.hasJoinFetchedCollections()) {
+                throw new IllegalArgumentException("Can't use the flat view '" + managedView.getJavaType().getName() + "' with the mapping constructor '" + mappingConstructor.getName() + "' as view root because it contains join fetched collections! " +
+                        "Consider adding a @IdMapping to the entity view or use a different fetch strategy for the collections!");
             }
         }
 
         ExpressionFactory ef = criteriaBuilder.getService(ExpressionFactory.class);
         EntityViewConfiguration configuration = new EntityViewConfiguration(criteriaBuilder, ef, new MutableEmbeddingViewJpqlMacro(), setting.getOptionalParameters(), setting.getProperties());
-        boolean isQueryRoot = entityViewRoot == null || entityViewRoot.isEmpty();
-        entityViewRoot = evm.applyObjectBuilder(setting.getEntityViewClass(), setting.getViewConstructorName(), entityViewRoot, configuration);
+        entityViewRoot = evm.applyObjectBuilder(managedView, mappingConstructor, entityViewRoot, configuration.getCriteriaBuilder(), configuration, 0);
         applyAttributeFilters(setting, evm, criteriaBuilder, ef, managedView);
         applyAttributeSorters(setting, evm, criteriaBuilder, ef, managedView);
         applyOptionalParameters(setting, criteriaBuilder);
