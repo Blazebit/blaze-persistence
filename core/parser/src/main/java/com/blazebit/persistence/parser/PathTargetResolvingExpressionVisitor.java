@@ -361,7 +361,7 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
         boolean handled = false;
         if (expression.getExpression() instanceof PathExpression) {
             PathExpression treatPath = (PathExpression) expression.getExpression();
-            if (treatPath.getExpressions().size() == 1 && skipBaseNodeAlias.equals(treatPath.getExpressions().get(0).toString())) {
+            if (treatPath.getExpressions().size() == 1 && skipBaseNodeAlias != null && skipBaseNodeAlias.equals(treatPath.getExpressions().get(0).toString())) {
                 // When we encounter a naked root treat like "TREAT(alias AS Subtype)" we always skip it
                 handled = true;
             }
