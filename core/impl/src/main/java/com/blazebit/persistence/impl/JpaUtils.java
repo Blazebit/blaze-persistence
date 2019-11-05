@@ -18,11 +18,14 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.PathTargetResolvingExpressionVisitor;
+import com.blazebit.persistence.parser.expression.ArrayExpression;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.NullExpression;
 import com.blazebit.persistence.parser.expression.ParameterExpression;
 import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.expression.PropertyExpression;
+import com.blazebit.persistence.parser.expression.QualifiedExpression;
+import com.blazebit.persistence.parser.expression.TreatExpression;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.spi.JoinTable;
@@ -302,7 +305,19 @@ public final class JpaUtils {
 
     public static AttributeHolder getAttributeForJoining(EntityMetamodel metamodel, PathExpression expression) {
         JoinNode expressionBaseNode = ((JoinNode) expression.getPathReference().getBaseNode());
-        String firstElementString = expression.getExpressions().get(0).toString();
+        Expression p = expression.getExpressions().get(0);
+        while (!(p instanceof PropertyExpression)) {
+            if (p instanceof PathExpression) {
+                p = ((PathExpression) p).getExpressions().get(0);
+            } else if (p instanceof QualifiedExpression) {
+                p = ((QualifiedExpression) p).getPath().getExpressions().get(0);
+            } else if (p instanceof ArrayExpression) {
+                p = ((ArrayExpression) p).getBase();
+            } else {
+                p = ((TreatExpression) p).getExpression();
+            }
+        }
+        String firstElementString = p.toString();
         String baseNodeAlias;
         JoinNode baseNode = expressionBaseNode;
 

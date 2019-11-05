@@ -407,4 +407,17 @@ public class SizeTransformationTest extends AbstractCoreTest {
         assertEquals(expected, cb.getQueryString());
         assertEquals(4L, cb.getResultList().get(0).longValue());
     }
+
+
+    @Test
+    public void testSizeToCountTransformationWithTreat() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
+                .select("SIZE(TREAT(d AS Document).people)");
+        String expectedQuery = "SELECT " + function("COUNT_TUPLE", "INDEX(people_1)") + " " +
+                "FROM Document d " +
+                "LEFT JOIN d.people people_1 " +
+                "GROUP BY d.id";
+        Assert.assertEquals(expectedQuery, cb.getQueryString());
+        cb.getResultList();
+    }
 }
