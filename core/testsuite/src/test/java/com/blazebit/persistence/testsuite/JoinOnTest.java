@@ -179,4 +179,16 @@ public class JoinOnTest extends AbstractCoreTest {
             .end();
         crit.getResultList();
     }
+
+    @Test
+    public void testLeftJoinOnWithExpressionString() {
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
+        crit.leftJoinOn("d.partners.localized", "l").onExpression("l LIKE :param").end();
+
+        assertEquals(
+                "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN partners_1.localized l"
+                        + onClause(joinAliasValue("l") + " LIKE :param"), crit.getQueryString());
+        crit.setParameter("param", "%dld");
+        crit.getResultList();
+    }
 }

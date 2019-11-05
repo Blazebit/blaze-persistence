@@ -157,6 +157,7 @@ public class JoinOnBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedListen
     @Override
     public JoinOnBuilder<T> onExpression(String expression) {
         Predicate predicate = expressionFactory.createBooleanExpression(expression, false);
+        parameterManager.collectParameterRegistrations(predicate, ClauseType.JOIN, subqueryInitFactory.getQueryBuilder());
         rootPredicate.getPredicate().getChildren().add(predicate);
         return this;
     }
