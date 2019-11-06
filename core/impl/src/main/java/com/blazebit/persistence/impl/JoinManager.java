@@ -2182,7 +2182,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         @Override
         public String getPath() {
             StringBuilder sb = new StringBuilder();
-            getBaseNode().appendDeReference(sb, getField(), false);
+            getBaseNode().appendDeReference(sb, getField(), true, false, false);
             return sb.toString();
         }
 

@@ -63,7 +63,7 @@ public class SimplePathReference implements PathReference, Path {
     @Override
     public String getPath() {
         StringBuilder sb = new StringBuilder();
-        baseNode.appendDeReference(sb, field, false);
+        baseNode.appendDeReference(sb, field, true, false, false);
         return sb.toString();
     }
 
