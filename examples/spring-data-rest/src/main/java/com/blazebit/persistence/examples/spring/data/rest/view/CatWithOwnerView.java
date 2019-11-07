@@ -25,7 +25,7 @@ import com.blazebit.persistence.view.EntityView;
  */
 @EntityView(Cat.class)
 public interface CatWithOwnerView extends CatSimpleView {
-    
+
     PersonSimpleView getOwner();
 
 }

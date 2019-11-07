@@ -48,6 +48,8 @@
         <module>entity-view-spring</module>
         <module>spring-data</module>
         <module>deltaspike-data</module>
+        <module>jaxrs</module>
+        <module>jackson</module>
 
         <module>jpa-base-jar</module>
         <module>openjpa-jar</module>

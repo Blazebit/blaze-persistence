@@ -22,6 +22,7 @@ import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.deltaspike.data.base.handler.AbstractEntityViewAwareRepositoryHandler;
 import com.blazebit.persistence.deltaspike.data.base.handler.EntityViewContext;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
+import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import org.apache.deltaspike.data.api.EntityGraph;
 
@@ -42,6 +43,11 @@ public class EntityViewRepositoryHandler<E, V, PK extends Serializable> extends 
     @Inject
     @EntityViewContext
     private EntityViewCdiQueryInvocationContext context;
+
+    @Override
+    protected EntityViewManager entityViewManager() {
+        return context.getEntityViewManager();
+    }
 
     @Override
     protected  <T, Q extends FullQueryBuilder<T, Q>> Q applySetting(EntityViewSetting<T, Q> setting, CriteriaBuilder<?> criteriaBuilder) {

@@ -41,7 +41,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @ImportResource({
         "classpath:/META-INF/application-config.xml"})
 public class Application implements CommandLineRunner {
-    
+
     @Autowired
     EntityManager em;
     @Autowired

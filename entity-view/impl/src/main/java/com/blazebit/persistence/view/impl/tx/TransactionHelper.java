@@ -52,6 +52,9 @@ public class TransactionHelper {
         SynchronizationRegistry registry = SynchronizationRegistry.getRegistry();
         if (registry == null) {
             TransactionAccess transactionAccess = getTransactionAccessInternal(em);
+            if (!transactionAccess.isActive()) {
+                return transactionAccess;
+            }
             registry = new SynchronizationRegistry(transactionAccess);
         }
         return registry;

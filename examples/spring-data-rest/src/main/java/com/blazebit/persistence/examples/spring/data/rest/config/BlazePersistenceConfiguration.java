@@ -38,7 +38,7 @@ import javax.persistence.PersistenceUnit;
  * @since 1.2.0
  */
 @Configuration
-@EnableEntityViews(basePackages = { "com.blazebit.persistence.examples.spring.data.rest.view"})
+@EnableEntityViews(basePackages = {"com.blazebit.persistence.examples.spring.data.rest.view"})
 @EnableJpaRepositories(
         entityManagerFactoryRef = "myEmf",
         basePackages = "com.blazebit.persistence.examples.spring.data.rest.repository",

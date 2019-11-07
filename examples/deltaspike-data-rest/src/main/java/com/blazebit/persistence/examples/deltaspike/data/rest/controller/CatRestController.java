@@ -24,6 +24,8 @@ import com.blazebit.persistence.examples.deltaspike.data.rest.filter.Filter;
 import com.blazebit.persistence.examples.deltaspike.data.rest.model.Cat;
 import com.blazebit.persistence.examples.deltaspike.data.rest.repository.CatRepository;
 import com.blazebit.persistence.examples.deltaspike.data.rest.repository.CatViewRepository;
+import com.blazebit.persistence.examples.deltaspike.data.rest.view.CatCreateView;
+import com.blazebit.persistence.examples.deltaspike.data.rest.view.CatUpdateView;
 import com.blazebit.persistence.examples.deltaspike.data.rest.view.CatWithOwnerView;
 import com.blazebit.text.FormatUtils;
 import com.blazebit.text.ParserContext;
@@ -35,11 +37,16 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -69,6 +76,24 @@ public class CatRestController {
     @Inject
     private CatViewRepository catViewRepository;
 
+    @POST
+    @Path("/cats")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response createCat(CatCreateView catCreateView) {
+        catViewRepository.save(catCreateView);
+
+        return Response.ok(catCreateView.getId().toString()).build();
+    }
+
+    @PUT
+    @Path("/cats/{id}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response updateCat(@PathParam("id") long id, CatUpdateView catUpdateView) {
+        catViewRepository.save(catUpdateView);
+
+        return Response.ok(catUpdateView.getId().toString()).build();
+    }
+
     @GET
     @Path("/cats")
     @Produces(MediaType.APPLICATION_JSON)
@@ -81,7 +106,7 @@ public class CatRestController {
         if (keysetPageable.getPageNumber() > resultPage.getTotalPages()) {
             throw new RuntimeException("Invalid page number!");
         }
- 
+
         return resultPage;
     }
 

@@ -75,8 +75,8 @@ public class TransactionalEntityViewQueryRunner implements EntityViewQueryRunner
     private boolean needsTransaction(EntityViewCdiQueryInvocationContext context) {
         boolean requiresTx = false;
         Method method = context.getMethod();
-        if (ClassUtils.containsMethod(EntityRepositoryHandler.class, method)) {
-            Method executed = ClassUtils.extractMethod(EntityRepositoryHandler.class, method);
+        if (ClassUtils.containsPossiblyGenericMethod(EntityRepositoryHandler.class, method)) {
+            Method executed = ClassUtils.extractPossiblyGenericMethod(EntityRepositoryHandler.class, method);
             requiresTx = executed.isAnnotationPresent(RequiresTransaction.class);
         }
         return requiresTx || context.getRepositoryMethod().requiresTransaction();

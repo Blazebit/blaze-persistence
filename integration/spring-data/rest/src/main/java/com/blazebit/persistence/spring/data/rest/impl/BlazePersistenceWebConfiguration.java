@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.spring.data.rest.impl;
 
+import com.blazebit.persistence.spring.data.rest.impl.json.EntityViewAwareMappingJackson2HttpMessageConverter;
+import com.blazebit.persistence.view.EntityViewManager;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -23,6 +25,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.web.SortHandlerMethodArgumentResolver;
+import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
@@ -35,10 +38,12 @@ import java.util.List;
 @Configuration
 public class BlazePersistenceWebConfiguration extends WebMvcConfigurerAdapter {
 
+    private final EntityViewManager entityViewManager;
     private final ObjectFactory<ConversionService> conversionService;
 
     @Autowired
-    public BlazePersistenceWebConfiguration(@Qualifier("mvcConversionService") ObjectFactory<ConversionService> conversionService) {
+    public BlazePersistenceWebConfiguration(EntityViewManager entityViewManager, @Qualifier("mvcConversionService") ObjectFactory<ConversionService> conversionService) {
+        this.entityViewManager = entityViewManager;
         this.conversionService = conversionService;
     }
 
@@ -55,5 +60,11 @@ public class BlazePersistenceWebConfiguration extends WebMvcConfigurerAdapter {
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
         argumentResolvers.add(keysetPageableResolver());
+    }
+
+    @Override
+    public void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
+        // Add it to the beginning so it has precedence over the builtin
+        converters.add(0, new EntityViewAwareMappingJackson2HttpMessageConverter(entityViewManager));
     }
 }
