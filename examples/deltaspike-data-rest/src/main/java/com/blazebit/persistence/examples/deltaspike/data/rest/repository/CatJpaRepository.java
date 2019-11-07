@@ -31,6 +31,6 @@ import org.apache.deltaspike.data.api.Repository;
 @Repository
 public interface CatJpaRepository extends FullEntityRepository<Cat, Long> {
 
-    @EntityGraph(paths = { "owner" })
+    @EntityGraph(paths = {"owner"})
     public KeysetAwarePage<Cat> findAll(Specification<Cat> specification, Pageable pageable);
 }

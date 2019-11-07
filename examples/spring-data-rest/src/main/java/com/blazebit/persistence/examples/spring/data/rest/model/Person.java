@@ -29,7 +29,7 @@ import java.util.Set;
  */
 @Entity
 public class Person {
-    
+
     @Id
     @GeneratedValue
     private Long id;

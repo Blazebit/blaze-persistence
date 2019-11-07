@@ -218,8 +218,8 @@ public class EntityViewAwareRepositoryMethodMetadataInitializer extends Reposito
     private void initRequiresTransaction(RepositoryMethodMetadata repositoryMethodMetadata) {
         boolean requiresTransaction = false;
 
-        if (ClassUtils.containsMethod(EntityRepositoryHandler.class, repositoryMethodMetadata.getMethod())) {
-            Method originalMethod = ClassUtils.extractMethod(EntityRepositoryHandler.class, repositoryMethodMetadata.getMethod());
+        if (ClassUtils.containsPossiblyGenericMethod(EntityRepositoryHandler.class, repositoryMethodMetadata.getMethod())) {
+            Method originalMethod = ClassUtils.extractPossiblyGenericMethod(EntityRepositoryHandler.class, repositoryMethodMetadata.getMethod());
             if (originalMethod.isAnnotationPresent(RequiresTransaction.class)) {
                 requiresTransaction = true;
             }

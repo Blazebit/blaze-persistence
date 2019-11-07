@@ -20,6 +20,8 @@ import com.blazebit.persistence.examples.spring.data.rest.filter.Filter;
 import com.blazebit.persistence.examples.spring.data.rest.model.Cat;
 import com.blazebit.persistence.examples.spring.data.rest.repository.CatRepository;
 import com.blazebit.persistence.examples.spring.data.rest.repository.CatViewRepository;
+import com.blazebit.persistence.examples.spring.data.rest.view.CatCreateView;
+import com.blazebit.persistence.examples.spring.data.rest.view.CatUpdateView;
 import com.blazebit.persistence.examples.spring.data.rest.view.CatWithOwnerView;
 import com.blazebit.persistence.spring.data.repository.KeysetPageable;
 import com.blazebit.persistence.spring.data.rest.KeysetConfig;
@@ -29,6 +31,10 @@ import com.blazebit.text.SerializableFormat;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -69,6 +75,20 @@ public class CatRestController {
     @Autowired
     private CatViewRepository catViewRepository;
 
+    @RequestMapping(path = "/cats", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> createCat(@RequestBody CatCreateView catCreateView) {
+        catViewRepository.save(catCreateView);
+
+        return ResponseEntity.ok(catCreateView.getId().toString());
+    }
+
+    @RequestMapping(path = "/cats/{id}", method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> updateCat(@PathVariable("id") long id, @RequestBody CatUpdateView catUpdateView) {
+        catViewRepository.save(catUpdateView);
+
+        return ResponseEntity.ok(catUpdateView.getId().toString());
+    }
+
     @RequestMapping(path = "/cats", method = RequestMethod.GET)
     public Page<Cat> findPaginated(
             @KeysetConfig(Cat.class) KeysetPageable keysetPageable,
@@ -79,7 +99,7 @@ public class CatRestController {
         if (keysetPageable.getPageNumber() > resultPage.getTotalPages()) {
             throw new RuntimeException("Invalid page number!");
         }
- 
+
         return resultPage;
     }
 

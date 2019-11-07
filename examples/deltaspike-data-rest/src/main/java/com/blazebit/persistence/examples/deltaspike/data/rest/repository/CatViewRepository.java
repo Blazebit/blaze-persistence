@@ -21,6 +21,7 @@ import com.blazebit.persistence.deltaspike.data.KeysetAwarePage;
 import com.blazebit.persistence.deltaspike.data.Pageable;
 import com.blazebit.persistence.deltaspike.data.Specification;
 import com.blazebit.persistence.examples.deltaspike.data.rest.model.Cat;
+import com.blazebit.persistence.examples.deltaspike.data.rest.view.CatUpdateView;
 import com.blazebit.persistence.examples.deltaspike.data.rest.view.CatWithOwnerView;
 import org.apache.deltaspike.data.api.Repository;
 
@@ -32,4 +33,6 @@ import org.apache.deltaspike.data.api.Repository;
 public interface CatViewRepository {
 
     public KeysetAwarePage<CatWithOwnerView> findAll(Specification<Cat> specification, Pageable pageable);
+
+    public CatUpdateView save(CatUpdateView catUpdateView);
 }

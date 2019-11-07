@@ -30,6 +30,6 @@ import org.apache.deltaspike.data.api.Repository;
 @Repository(forEntity = Cat.class)
 public interface CatRepository {
 
-    @EntityGraph(paths = { "owner" })
+    @EntityGraph(paths = {"owner"})
     public KeysetAwarePage<Cat> findAll(Specification<Cat> specification, Pageable pageable);
 }

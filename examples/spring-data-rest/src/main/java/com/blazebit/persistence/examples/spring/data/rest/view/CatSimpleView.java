@@ -26,7 +26,7 @@ import com.blazebit.persistence.view.IdMapping;
  */
 @EntityView(Cat.class)
 public interface CatSimpleView {
-    
+
     @IdMapping
     Long getId();
 

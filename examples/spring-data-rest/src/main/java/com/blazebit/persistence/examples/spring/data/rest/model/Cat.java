@@ -34,7 +34,7 @@ import java.util.Set;
  */
 @Entity
 public class Cat {
-    
+
     @Id
     @GeneratedValue
     private Long id;

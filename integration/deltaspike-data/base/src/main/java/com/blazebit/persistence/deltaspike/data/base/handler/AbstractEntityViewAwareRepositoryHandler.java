@@ -31,7 +31,9 @@ import com.blazebit.persistence.deltaspike.data.Pageable;
 import com.blazebit.persistence.deltaspike.data.Sort;
 import com.blazebit.persistence.deltaspike.data.Specification;
 import com.blazebit.persistence.deltaspike.data.base.builder.QueryBuilderUtils;
+import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
+import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 import org.apache.deltaspike.data.impl.builder.QueryBuilder;
 import org.apache.deltaspike.data.impl.meta.RequiresTransaction;
 import org.apache.deltaspike.data.impl.property.Property;
@@ -66,7 +68,10 @@ public abstract class AbstractEntityViewAwareRepositoryHandler<E, V, PK extends 
 
     @RequiresTransaction
     public E save(E entity) {
-        if (isNew(entity)) {
+        if (entity instanceof EntityViewProxy) {
+            entityViewManager().save(entityManager(), entity);
+            return entity;
+        } else if (isNew(entity)) {
             entityManager().persist(entity);
             return entity;
         }
@@ -94,17 +99,29 @@ public abstract class AbstractEntityViewAwareRepositoryHandler<E, V, PK extends 
 
     @SuppressWarnings("unchecked")
     public PK getPrimaryKey(E entity) {
-        return (PK) PersistenceUnitUtilDelegateFactory.get(entityManager()).getIdentifier(entity);
+        if (entity instanceof EntityViewProxy) {
+            return (PK) ((EntityViewProxy) entity).$$_getId();
+        } else {
+            return (PK) PersistenceUnitUtilDelegateFactory.get(entityManager()).getIdentifier(entity);
+        }
     }
 
     @RequiresTransaction
     public void remove(E entity) {
-        entityManager().remove(entity);
+        if (entity instanceof EntityViewProxy) {
+            entityViewManager().remove(entityManager(), entity);
+        } else {
+            entityManager().remove(entity);
+        }
     }
 
     @RequiresTransaction
     public void removeAndFlush(E entity) {
-        entityManager().remove(entity);
+        if (entity instanceof EntityViewProxy) {
+            entityViewManager().remove(entityManager(), entity);
+        } else {
+            entityManager().remove(entity);
+        }
         flush();
     }
 
@@ -414,6 +431,8 @@ public abstract class AbstractEntityViewAwareRepositoryHandler<E, V, PK extends 
     }
 
     protected abstract EntityManager entityManager();
+
+    protected abstract EntityViewManager entityViewManager();
 
     protected abstract CriteriaBuilderFactory criteriaBuilderFactory();
 

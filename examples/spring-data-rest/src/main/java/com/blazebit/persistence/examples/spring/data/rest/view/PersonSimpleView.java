@@ -18,17 +18,13 @@ package com.blazebit.persistence.examples.spring.data.rest.view;
 
 import com.blazebit.persistence.examples.spring.data.rest.model.Person;
 import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.IdMapping;
 
 /**
  * @author Christian Beikov
  * @since 1.2.0
  */
 @EntityView(Person.class)
-public interface PersonSimpleView {
-    
-    @IdMapping
-    Long getId();
+public interface PersonSimpleView extends PersonIdView {
 
     String getName();
 

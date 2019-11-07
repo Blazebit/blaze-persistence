@@ -29,6 +29,6 @@ import org.springframework.data.repository.Repository;
  */
 public interface CatRepository extends Repository<Cat, Long> {
 
-    @EntityGraph(attributePaths = { "owner" })
+    @EntityGraph(attributePaths = {"owner"})
     public KeysetAwarePage<Cat> findAll(Specification<Cat> specification, Pageable pageable);
 }

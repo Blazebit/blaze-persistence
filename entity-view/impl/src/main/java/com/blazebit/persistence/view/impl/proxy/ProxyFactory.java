@@ -2405,23 +2405,7 @@ public class ProxyFactory {
                     sb.append(getDefaultValue(type)).append(";\n");
                     if (mutableStateField != null && methodAttribute != null && methodAttribute.hasDirtyStateIndex()) {
                         sb.append("\tmutableStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
-                        if (type == CtClass.longType) {
-                            sb.append("Long.valueOf(0L);\n");
-                        } else if (type == CtClass.floatType) {
-                            sb.append("Float.valueOf(0F);\n");
-                        } else if (type == CtClass.doubleType) {
-                            sb.append("Double.valueOf(0D);\n");
-                        } else if (type == CtClass.shortType) {
-                            sb.append("Short.valueOf((short) 0);\n");
-                        } else if (type == CtClass.byteType) {
-                            sb.append("Byte.valueOf((byte) 0);\n");
-                        } else if (type == CtClass.booleanType) {
-                            sb.append("Boolean.FALSE;\n");
-                        } else if (type == CtClass.charType) {
-                            sb.append("Character.valueOf('\\u0000');\n");
-                        } else {
-                            sb.append("Integer.valueOf(0);\n");
-                        }
+                        sb.append(getDefaultValueForObject(type)).append(";\n");
                     }
                 } else if (methodAttribute != null && methodAttribute.hasDirtyStateIndex()) {
                     if (mutableStateField != null) {
@@ -2570,7 +2554,7 @@ public class ProxyFactory {
                 sb.append('$').append(i + 1).append(";\n");
             }
 
-            if (kind == ConstructorKind.NORMAL && methodAttribute != null && methodAttribute.hasDirtyStateIndex()) {
+            if ((kind == ConstructorKind.NORMAL || kind == ConstructorKind.CREATE && !managedViewType.isCreatable()) && methodAttribute != null && methodAttribute.hasDirtyStateIndex()) {
                 CtClass type = attributeFields[i].getType();
                 if (mutableStateField != null) {
                     // locvar2[j] = $(i + 1)
@@ -2583,7 +2567,11 @@ public class ProxyFactory {
                 }
 
                 if (mutableStateField != null) {
-                    renderValueForArray(sb, type, i + 1);
+                    if (kind == ConstructorKind.NORMAL) {
+                        renderValueForArray(sb, type, i + 1);
+                    } else {
+                        sb.append(getDefaultValueForObject(type)).append(";\n");
+                    }
                 }
             }
         }
@@ -2605,11 +2593,35 @@ public class ProxyFactory {
             } else if (type == CtClass.doubleType) {
                 return "0D";
             } else if (type == CtClass.charType) {
-                return "'\\0";
+                return "'\\u0000'";
             } else if (type == CtClass.booleanType) {
                 return "false";
             } else {
                 return "0";
+            }
+        } else {
+            return "(" + type.getName() + ") null";
+        }
+    }
+
+    private String getDefaultValueForObject(CtClass type) {
+        if (type.isPrimitive()) {
+            if (type == CtClass.longType) {
+                return "Long.valueOf(0L)";
+            } else if (type == CtClass.floatType) {
+                return "Float.valueOf(0F)";
+            } else if (type == CtClass.doubleType) {
+                return "Double.valueOf(0D)";
+            } else if (type == CtClass.shortType) {
+                return "Short.valueOf((short) 0)";
+            } else if (type == CtClass.byteType) {
+                return "Byte.valueOf((byte) 0)";
+            } else if (type == CtClass.charType) {
+                return "Character.valueOf('\\u0000')";
+            } else if (type == CtClass.booleanType) {
+                return "Boolean#FALSE";
+            } else {
+                return "Integer.valueOf(0)";
             }
         } else {
             return "(" + type.getName() + ") null";

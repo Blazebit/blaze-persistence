@@ -119,6 +119,10 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-integration-deltaspike-data-rest-impl</artifactId>
         </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-persistence-integration-jaxrs</artifactId>
+        </dependency>
 
         <!-- Test dependencies -->
         <dependency>

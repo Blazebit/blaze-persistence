@@ -17,6 +17,7 @@
 package com.blazebit.persistence.examples.spring.data.rest.repository;
 
 import com.blazebit.persistence.examples.spring.data.rest.model.Cat;
+import com.blazebit.persistence.examples.spring.data.rest.view.CatUpdateView;
 import com.blazebit.persistence.examples.spring.data.rest.view.CatWithOwnerView;
 import com.blazebit.persistence.spring.data.repository.KeysetAwarePage;
 import org.springframework.data.domain.Pageable;
@@ -30,4 +31,6 @@ import org.springframework.data.repository.Repository;
 public interface CatViewRepository extends Repository<Cat, Long> {
 
     public KeysetAwarePage<CatWithOwnerView> findAll(Specification<Cat> specification, Pageable pageable);
+
+    public CatUpdateView save(CatUpdateView catCreateView);
 }
