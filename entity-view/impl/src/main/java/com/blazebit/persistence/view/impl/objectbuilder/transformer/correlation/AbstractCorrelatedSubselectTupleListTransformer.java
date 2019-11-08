@@ -186,7 +186,7 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
 
         if (usesEmbeddingView) {
             ExpressionFactory ef = criteriaBuilder.getService(ExpressionFactory.class);
-            EntityViewConfiguration configuration = new EntityViewConfiguration(criteriaBuilder, ef, new MutableEmbeddingViewJpqlMacro(), Collections.<String, Object>emptyMap(), Collections.<String, Object>emptyMap());
+            EntityViewConfiguration configuration = new EntityViewConfiguration(criteriaBuilder, ef, new MutableEmbeddingViewJpqlMacro(), Collections.<String, Object>emptyMap(), Collections.<String, Object>emptyMap(), entityViewConfiguration.getFetches(), attributePath);
             ObjectBuilder<Object[]> embeddingViewObjectBuilder = createViewAwareObjectBuilder(embeddingViewType, configuration, embeddingViewIdExpression);
             if (embeddingViewObjectBuilder == null) {
                 criteriaBuilder.select(embeddingViewIdExpression);
@@ -214,7 +214,7 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
             }
         } else if (usesViewRoot) {
             ExpressionFactory ef = criteriaBuilder.getService(ExpressionFactory.class);
-            EntityViewConfiguration configuration = new EntityViewConfiguration(criteriaBuilder, ef, new MutableEmbeddingViewJpqlMacro(), Collections.<String, Object>emptyMap(), Collections.<String, Object>emptyMap());
+            EntityViewConfiguration configuration = new EntityViewConfiguration(criteriaBuilder, ef, new MutableEmbeddingViewJpqlMacro(), Collections.<String, Object>emptyMap(), Collections.<String, Object>emptyMap(), entityViewConfiguration.getFetches(), attributePath);
             ObjectBuilder<Object[]> viewRootObjectBuilder = createViewAwareObjectBuilder(viewRootType, configuration, viewRootIdExpression);
             if (viewRootObjectBuilder == null) {
                 criteriaBuilder.select(viewRootIdExpression);

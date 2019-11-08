@@ -44,15 +44,17 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
     private final ParameterHolder<?> parameterHolder;
     private final Map<String, Object> optionalParameters;
     private final EmbeddingViewJpqlMacro embeddingViewJpqlMacro;
+    private final Set<String> fetches;
     private final Set<CTEProvider> cteProviders;
 
-    public ViewTypeObjectBuilder(ViewTypeObjectBuilderTemplate<T> template, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean nullIfEmpty) {
+    public ViewTypeObjectBuilder(ViewTypeObjectBuilderTemplate<T> template, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, Set<String> fetches, boolean nullIfEmpty) {
         this.hasId = template.hasId();
         this.objectInstantiator = template.getObjectInstantiator();
         this.mappers = template.getMappers();
         this.parameterHolder = parameterHolder;
         this.optionalParameters = optionalParameters == null ? Collections.<String, Object>emptyMap() : Collections.unmodifiableMap(optionalParameters);
         this.embeddingViewJpqlMacro = embeddingViewJpqlMacro;
+        this.fetches = fetches;
         this.nullIfEmpty = nullIfEmpty;
         this.cteProviders = template.getViewRoot().getCteProviders();
     }
@@ -89,8 +91,19 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
                 cteProvider.applyCtes(cteBuilder, this.optionalParameters);
             }
         }
-        for (int i = 0; i < mappers.length; i++) {
-            mappers[i].applyMapping(queryBuilder, parameterHolder, optionalParameters, embeddingViewJpqlMacro);
+        if (fetches.isEmpty()) {
+            for (int i = 0; i < mappers.length; i++) {
+                mappers[i].applyMapping(queryBuilder, parameterHolder, optionalParameters, embeddingViewJpqlMacro);
+            }
+        } else {
+            for (int i = 0; i < mappers.length; i++) {
+                TupleElementMapper mapper = mappers[i];
+                if (fetches.contains(mapper.getAttributePath())) {
+                    mapper.applyMapping(queryBuilder, parameterHolder, optionalParameters, embeddingViewJpqlMacro);
+                } else {
+                    queryBuilder.select("NULL");
+                }
+            }
         }
     }
 }

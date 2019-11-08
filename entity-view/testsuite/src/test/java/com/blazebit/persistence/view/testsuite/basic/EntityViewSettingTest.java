@@ -16,30 +16,28 @@
 
 package com.blazebit.persistence.view.testsuite.basic;
 
-import static org.junit.Assert.assertEquals;
-
-import javax.persistence.EntityManager;
-
-import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import com.blazebit.persistence.view.testsuite.basic.model.CustomRootPersonView;
-import org.junit.Assert;
-import org.junit.Test;
-
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
+import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.Sorters;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
+import com.blazebit.persistence.view.testsuite.basic.model.CustomRootPersonView;
 import com.blazebit.persistence.view.testsuite.basic.model.DocumentWithEntityView;
 import com.blazebit.persistence.view.testsuite.basic.model.FilteredDocument;
-import com.blazebit.persistence.testsuite.entity.Document;
-import com.blazebit.persistence.testsuite.entity.Person;
+import org.junit.Assert;
+import org.junit.Test;
 
+import javax.persistence.EntityManager;
 import java.util.List;
+
+import static org.junit.Assert.*;
 
 /**
  *
@@ -185,5 +183,19 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
         assertEquals("pers2", result.get(1).getName());
     }
 
-    // TODO: needs more tests
+    @Test
+    public void testEntityViewFetches() {
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        cfg.addEntityView(DocumentWithEntityView.class);
+        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+
+        EntityViewSetting<DocumentWithEntityView, CriteriaBuilder<DocumentWithEntityView>> setting = EntityViewSetting.create(DocumentWithEntityView.class);
+        setting.fetch("id");
+        setting.fetch("name");
+
+        DocumentWithEntityView view = evm.applySetting(setting, cbf.create(em, Document.class).where("name").eq("MyTest")).getSingleResult();
+        assertEquals("MyTest", view.getName());
+        assertNotNull(view.getId());
+        assertNull(view.getOwner());
+    }
 }

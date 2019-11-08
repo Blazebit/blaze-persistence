@@ -43,13 +43,20 @@ public class ConstrainedTupleElementMapper implements AliasedTupleElementMapper 
 
     private final Map.Entry<String, TupleElementMapper>[] mappers;
     private final Map.Entry<String, TupleElementMapper>[] subqueryMappers;
+    private final String attributePath;
     private final String alias;
 
     @SuppressWarnings("unchecked")
-    private ConstrainedTupleElementMapper(List<Map.Entry<String, TupleElementMapper>> mappers, List<Map.Entry<String, TupleElementMapper>> subqueryMappers, String alias) {
+    private ConstrainedTupleElementMapper(List<Map.Entry<String, TupleElementMapper>> mappers, List<Map.Entry<String, TupleElementMapper>> subqueryMappers, String attributePath, String alias) {
         this.mappers = mappers.toArray(new Map.Entry[mappers.size()]);
         this.subqueryMappers = subqueryMappers.toArray(new Map.Entry[subqueryMappers.size()]);
+        this.attributePath = attributePath;
         this.alias = alias;
+    }
+
+    @Override
+    public String getAttributePath() {
+        return attributePath;
     }
 
     @Override
@@ -141,6 +148,7 @@ public class ConstrainedTupleElementMapper implements AliasedTupleElementMapper 
             List<Map.Entry<String, TupleElementMapper>> mappers = new ArrayList<>();
             List<Map.Entry<String, TupleElementMapper>> subqueryMappers = new ArrayList<>();
 
+            String attributePath = null;
             String alias = null;
             Map.Entry<String, TupleElementMapper> defaultEntry = null;
             for (Map.Entry<String, TupleElementMapper> subtypeEntry : attributeEntry) {
@@ -157,7 +165,7 @@ public class ConstrainedTupleElementMapper implements AliasedTupleElementMapper 
                         subqueryExpression = subqueryMapper.getSubqueryExpression().replaceAll(subqueryMapper.getSubqueryAlias(), subqueryAlias);
                     }
 
-                    entry = new AbstractMap.SimpleEntry<String, TupleElementMapper>(constraint, new ExpressionTupleElementMapper(subqueryExpression, subqueryMapper.getEmbeddingViewPath()));
+                    entry = new AbstractMap.SimpleEntry<String, TupleElementMapper>(constraint, new ExpressionTupleElementMapper(subqueryExpression, mapper.getAttributePath(), subqueryMapper.getEmbeddingViewPath()));
                     subqueryMappers.add(new AbstractMap.SimpleEntry<>(subqueryAlias, mapper));
                 } else {
                     entry = new AbstractMap.SimpleEntry<>(constraint, mapper);
@@ -171,6 +179,7 @@ public class ConstrainedTupleElementMapper implements AliasedTupleElementMapper 
 
                 // Extract the alias from the first mapper
                 if (mapper instanceof AliasedTupleElementMapper) {
+                    attributePath = mapper.getAttributePath();
                     alias = ((AliasedTupleElementMapper) mapper).getAlias();
                 }
             }
@@ -179,7 +188,7 @@ public class ConstrainedTupleElementMapper implements AliasedTupleElementMapper 
                 mappers.add(defaultEntry);
             }
 
-            mappingList.add(new ConstrainedTupleElementMapper(mappers, subqueryMappers, alias));
+            mappingList.add(new ConstrainedTupleElementMapper(mappers, subqueryMappers, attributePath, alias));
             parameterMappingList.add(null);
         }
     }

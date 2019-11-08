@@ -80,8 +80,12 @@ public final class EntityViewSettingHelper {
             }
         }
 
+        if (managedView.isUpdatable() && !setting.getFetches().isEmpty()) {
+            throw new IllegalArgumentException("Specifying fetches for @UpdatableEntityViews is currently disallowed. Remove the fetches!");
+        }
+
         ExpressionFactory ef = criteriaBuilder.getService(ExpressionFactory.class);
-        EntityViewConfiguration configuration = new EntityViewConfiguration(criteriaBuilder, ef, new MutableEmbeddingViewJpqlMacro(), setting.getOptionalParameters(), setting.getProperties());
+        EntityViewConfiguration configuration = new EntityViewConfiguration(criteriaBuilder, ef, new MutableEmbeddingViewJpqlMacro(), setting.getOptionalParameters(), setting.getProperties(), setting.getFetches(), managedView);
         entityViewRoot = evm.applyObjectBuilder(managedView, mappingConstructor, entityViewRoot, configuration.getCriteriaBuilder(), configuration, 0);
         applyAttributeFilters(setting, evm, criteriaBuilder, ef, managedView);
         applyAttributeSorters(setting, evm, criteriaBuilder, ef, managedView);

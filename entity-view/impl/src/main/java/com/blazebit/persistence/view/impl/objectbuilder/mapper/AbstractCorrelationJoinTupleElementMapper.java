@@ -37,12 +37,14 @@ public abstract class AbstractCorrelationJoinTupleElementMapper implements Alias
     protected final String correlationAlias;
     protected final String joinBase;
     protected final String alias;
+    protected final String attributePath;
     protected final String embeddingViewPath;
     protected final String[] fetches;
 
     public AbstractCorrelationJoinTupleElementMapper(ExpressionFactory ef, String joinBase, String correlationBasis, String correlationResult, String alias, String attributePath, String embeddingViewPath, String[] fetches) {
         this.correlationBasis = correlationBasis.intern();
         this.alias = alias;
+        this.attributePath = attributePath;
         this.embeddingViewPath = embeddingViewPath;
         this.fetches = fetches;
         this.joinBase = joinBase.intern();
@@ -62,6 +64,11 @@ public abstract class AbstractCorrelationJoinTupleElementMapper implements Alias
             expr.accept(generator);
             this.correlationResult = sb.toString().intern();
         }
+    }
+
+    @Override
+    public String getAttributePath() {
+        return attributePath;
     }
 
     @Override

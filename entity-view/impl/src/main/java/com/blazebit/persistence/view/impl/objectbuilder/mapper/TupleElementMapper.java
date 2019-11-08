@@ -29,5 +29,7 @@ import java.util.Map;
  */
 public interface TupleElementMapper {
 
+    public String getAttributePath();
+
     public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EmbeddingViewJpqlMacro embeddingViewJpqlMacro);
 }

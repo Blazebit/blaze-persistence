@@ -32,8 +32,8 @@ public class AliasExpressionSubqueryTupleElementMapper extends ExpressionSubquer
 
     private final String alias;
 
-    public AliasExpressionSubqueryTupleElementMapper(SubqueryProvider provider, String subqueryExpression, String subqueryAlias, String embeddingViewPath, String alias) {
-        super(provider, subqueryExpression, subqueryAlias, embeddingViewPath);
+    public AliasExpressionSubqueryTupleElementMapper(SubqueryProvider provider, String subqueryExpression, String subqueryAlias, String attributePath, String embeddingViewPath, String alias) {
+        super(provider, subqueryExpression, subqueryAlias, attributePath, embeddingViewPath);
         this.alias = alias;
     }
 

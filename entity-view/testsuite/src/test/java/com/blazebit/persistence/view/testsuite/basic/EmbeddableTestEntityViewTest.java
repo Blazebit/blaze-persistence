@@ -159,6 +159,48 @@ public class EmbeddableTestEntityViewTest extends AbstractEntityViewTest {
     }
 
     @Test
+    public void testEmbeddableViewWithSubViewRelationsFetches() {
+        CriteriaBuilder<EmbeddableTestEntity2> criteria = cbf.create(em, EmbeddableTestEntity2.class, "e")
+                .orderByAsc("id");
+        EntityViewSetting<EmbeddableTestEntityViewWithSubview, CriteriaBuilder<EmbeddableTestEntityViewWithSubview>> setting = EntityViewSetting.create(EmbeddableTestEntityViewWithSubview.class);
+        setting.addOptionalParameter("optionalInteger", 1);
+        setting.fetch("idKey");
+        setting.fetch("embeddable");
+        CriteriaBuilder<EmbeddableTestEntityViewWithSubview> cb = evm.applySetting(setting, criteria);
+        List<EmbeddableTestEntityViewWithSubview> results = cb.getResultList();
+
+        assertEquals(2, results.size());
+        assertEquals(entity1.getId(), results.get(0).getId());
+        assertEquals(entity1.getId().getKey(), results.get(0).getIdKey());
+        assertEquals(entity1.getEmbeddable().getName(), results.get(0).getEmbeddable().getName());
+        assertNull(results.get(0).getIdIntIdEntity());
+        assertEquals(entity2.getId(), results.get(1).getId());
+        assertEquals(entity2.getId().getKey(), results.get(1).getIdKey());
+        assertEquals(entity2.getEmbeddable().getName(), results.get(1).getEmbeddable().getName());
+        assertNull(results.get(1).getIdIntIdEntity());
+    }
+
+    @Test
+    public void testEmbeddableViewWithSubViewRelationsFetchesIdView() {
+        CriteriaBuilder<EmbeddableTestEntity2> criteria = cbf.create(em, EmbeddableTestEntity2.class, "e")
+                .orderByAsc("id");
+        EntityViewSetting<EmbeddableTestEntityIdView, CriteriaBuilder<EmbeddableTestEntityIdView>> setting = EntityViewSetting.create(EmbeddableTestEntityIdView.class);
+        setting.fetch("name");
+        CriteriaBuilder<EmbeddableTestEntityIdView> cb = evm.applySetting(setting, criteria);
+        List<EmbeddableTestEntityIdView> results = cb.getResultList();
+
+        assertEquals(2, results.size());
+        assertEquals(entity1.getId().getIntIdEntity().getId(), results.get(0).getId().getIntIdEntityId());
+        assertEquals(entity1.getId().getKey(), results.get(0).getId().getKey());
+        assertNull(results.get(0).getIdKey());
+        assertEquals(entity1.getEmbeddable().getName(), results.get(0).getName());
+        assertEquals(entity2.getId().getIntIdEntity().getId(), results.get(1).getId().getIntIdEntityId());
+        assertEquals(entity2.getId().getKey(), results.get(1).getId().getKey());
+        assertNull(results.get(1).getIdKey());
+        assertEquals(entity2.getEmbeddable().getName(), results.get(1).getName());
+    }
+
+    @Test
     public void testEntityViewSettingEmbeddableEntityViewRoot() {
         // Base setting
         EntityViewSetting<EmbeddableTestEntityIdView.Id, CriteriaBuilder<EmbeddableTestEntityIdView.Id>> setting =

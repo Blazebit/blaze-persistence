@@ -239,3 +239,74 @@ FROM Cat cat
 LEFT JOIN cat.father father_1
 WHERE father_1 IS NOT NULL
 ----
+
+=== Fetching a data subset
+
+Although an entity view already represents a significantly state-reduced version of an entity, it might still be desirable to reduce the state even further.
+Imagine an UI that allows to configure visible columns in a table where entity view data is presented. Wouldn't it be great if data that isn't shown is not fetched at all?
+On a `EntityViewSetting` you can specify entity view attributes that you would like to fetch via the
+link:{entity_view_jdoc}/persistence/view/EntityViewSetting.html#fetch(java.lang.String)[`fetch(String path)`] method.
+
+As soon as you call it once, you will have to specify all attributes that you want to be fetched.
+
+Here a simple example:
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface CatView {
+    @IdMapping
+    Long getId();
+
+    String getName();
+
+    PersonView getOwner();
+
+    @EntityView(Person.class)
+    interface PersonView {
+
+        @IdMapping
+        Long getId();
+
+        String getName();
+
+        @Mapping("cats.id")
+        Set<Long> getCatIds();
+    }
+}
+----
+
+Normally, when you fetch this, you will get a query like the following
+
+[source,sql]
+----
+SELECT cat.id, cat.name, owner_1.id, owner_1.name, cats_1.id
+FROM Cat cat
+JOIN cat.owner owner_1
+LEFT JOIN owner_1.cats cats_1
+----
+
+But when you use the following settings instead
+
+[source,java]
+----
+CriteriaBuilderFactory criteriaBuilderFactory = ...;
+EntityViewManager entityViewManager = ...;
+CriteriaBuilder<Cat> criteriaBuilder = ...;
+EntityViewSetting<CatView, CriteriaBuilder<CatView>> setting;
+setting = EntityViewSetting.create(CatView.class);
+setting.fetch("name");
+setting.fetch("owner.name");
+List<CatView> list = entityViewManager.applySetting(setting, criteriaBuilder);
+----
+
+You will instead only get the mentioned attributes and the identifiers by which the objects are reachable
+
+[source,sql]
+----
+SELECT cat.id, cat.name, owner_1.id, owner_1.name, NULL
+FROM Cat cat
+JOIN cat.owner owner_1
+----
+
+Even the join was omitted because of this change. You still get the same `CatView` objects returned, but the `getOwner().getCatIds()` is simply empty.
