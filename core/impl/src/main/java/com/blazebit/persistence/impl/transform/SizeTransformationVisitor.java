@@ -182,7 +182,7 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
     private Expression getSizeExpression(ExpressionModifier parentModifier, PathExpression sizeArg) {
         JoinNode sizeArgJoin = (JoinNode) sizeArg.getBaseNode();
         String property = sizeArg.getPathReference().getField();
-        final Type<?> nodeType = ((JoinNode) sizeArg.getBaseNode()).getBaseType();
+        final Type<?> nodeType = ((JoinNode) sizeArg.getBaseNode()).getNodeType();
         if (!(nodeType instanceof EntityType<?>)) {
             throw new IllegalArgumentException("Size on a collection owned by a non-entity type is not supported yet: " + sizeArg);
         }
