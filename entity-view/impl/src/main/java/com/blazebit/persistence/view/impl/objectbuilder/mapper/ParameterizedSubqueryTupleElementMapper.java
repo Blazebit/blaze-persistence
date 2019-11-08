@@ -31,10 +31,12 @@ import java.util.Map;
 public class ParameterizedSubqueryTupleElementMapper implements SubqueryTupleElementMapper {
 
     protected final SubqueryProviderFactory providerFactory;
+    protected final String attributePath;
     protected final String embeddingViewPath;
 
-    public ParameterizedSubqueryTupleElementMapper(SubqueryProviderFactory providerFactory, String embeddingViewPath) {
+    public ParameterizedSubqueryTupleElementMapper(SubqueryProviderFactory providerFactory, String attributePath, String embeddingViewPath) {
         this.providerFactory = providerFactory;
+        this.attributePath = attributePath;
         this.embeddingViewPath = embeddingViewPath;
     }
 
@@ -44,6 +46,11 @@ public class ParameterizedSubqueryTupleElementMapper implements SubqueryTupleEle
         embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
         providerFactory.create(parameterHolder, optionalParameters).createSubquery(queryBuilder.selectSubquery());
         embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
+    }
+
+    @Override
+    public String getAttributePath() {
+        return attributePath;
     }
 
     @Override

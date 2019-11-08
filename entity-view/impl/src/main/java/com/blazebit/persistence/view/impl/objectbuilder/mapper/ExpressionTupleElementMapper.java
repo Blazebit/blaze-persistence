@@ -33,17 +33,20 @@ public class ExpressionTupleElementMapper implements TupleElementMapper {
     private static final String[] EMPTY = new String[0];
 
     protected final String expression;
+    protected final String attributePath;
     protected final String embeddingViewPath;
     protected final String[] fetches;
 
-    public ExpressionTupleElementMapper(String expression, String embeddingViewPath) {
+    public ExpressionTupleElementMapper(String expression, String attributePath, String embeddingViewPath) {
         this.expression = expression.intern();
+        this.attributePath = attributePath;
         this.embeddingViewPath = embeddingViewPath;
         this.fetches = EMPTY;
     }
 
-    public ExpressionTupleElementMapper(String expression, String embeddingViewPath, String[] fetches) {
+    public ExpressionTupleElementMapper(String expression, String attributePath, String embeddingViewPath, String[] fetches) {
         this.expression = expression.intern();
+        this.attributePath = attributePath;
         this.embeddingViewPath = embeddingViewPath;
         this.fetches = fetches;
     }
@@ -60,6 +63,11 @@ public class ExpressionTupleElementMapper implements TupleElementMapper {
             }
         }
         embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
+    }
+
+    @Override
+    public String getAttributePath() {
+        return attributePath;
     }
 
 }

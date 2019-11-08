@@ -33,12 +33,14 @@ public class ParameterizedExpressionSubqueryTupleElementMapper implements Subque
     protected final SubqueryProviderFactory providerFactory;
     protected final String subqueryExpression;
     protected final String subqueryAlias;
+    protected final String attributePath;
     protected final String embeddingViewPath;
 
-    public ParameterizedExpressionSubqueryTupleElementMapper(SubqueryProviderFactory providerFactory, String subqueryExpression, String subqueryAlias, String embeddingViewPath) {
+    public ParameterizedExpressionSubqueryTupleElementMapper(SubqueryProviderFactory providerFactory, String subqueryExpression, String subqueryAlias, String attributePath, String embeddingViewPath) {
         this.providerFactory = providerFactory;
         this.subqueryExpression = subqueryExpression;
         this.subqueryAlias = subqueryAlias;
+        this.attributePath = attributePath;
         this.embeddingViewPath = embeddingViewPath;
     }
 
@@ -48,6 +50,11 @@ public class ParameterizedExpressionSubqueryTupleElementMapper implements Subque
         embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
         providerFactory.create(parameterHolder, optionalParameters).createSubquery(queryBuilder.selectSubquery(subqueryAlias, subqueryExpression));
         embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
+    }
+
+    @Override
+    public String getAttributePath() {
+        return attributePath;
     }
 
     @Override

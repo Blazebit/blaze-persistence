@@ -31,10 +31,12 @@ import java.util.Map;
 public class SimpleSubqueryTupleElementMapper implements SubqueryTupleElementMapper {
 
     protected final SubqueryProvider provider;
+    protected final String attributePath;
     protected final String embeddingViewPath;
 
-    public SimpleSubqueryTupleElementMapper(SubqueryProvider provider, String embeddingViewPath) {
+    public SimpleSubqueryTupleElementMapper(SubqueryProvider provider, String attributePath, String embeddingViewPath) {
         this.provider = provider;
+        this.attributePath = attributePath;
         this.embeddingViewPath = embeddingViewPath;
     }
 
@@ -44,6 +46,11 @@ public class SimpleSubqueryTupleElementMapper implements SubqueryTupleElementMap
         embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
         provider.createSubquery(queryBuilder.selectSubquery());
         embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
+    }
+
+    @Override
+    public String getAttributePath() {
+        return attributePath;
     }
 
     @Override

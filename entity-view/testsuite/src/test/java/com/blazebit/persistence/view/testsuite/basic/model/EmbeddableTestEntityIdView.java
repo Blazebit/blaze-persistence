@@ -31,6 +31,12 @@ import java.io.Serializable;
 @EntityView(EmbeddableTestEntity2.class)
 public interface EmbeddableTestEntityIdView extends IdHolderView<EmbeddableTestEntityIdView.Id> {
 
+    @Mapping("id.key")
+    public String getIdKey();
+
+    @Mapping("embeddable.name")
+    String getName();
+
     @EntityView(EmbeddableTestEntityId2.class)
     interface Id extends Serializable {
         @Mapping("intIdEntity.id")

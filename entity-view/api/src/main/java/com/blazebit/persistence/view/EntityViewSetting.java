@@ -20,6 +20,8 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.KeysetPage;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.view.metamodel.Attribute;
+import com.blazebit.persistence.view.metamodel.MethodAttribute;
 
 import java.util.*;
 
@@ -36,7 +38,7 @@ import java.util.*;
  * @author Moritz Becker
  * @since 1.0.0
  */
-public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> {
+public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> implements SubGraph<T> {
 
     private final Class<T> entityViewClass;
     private final String viewConstructorName;
@@ -49,6 +51,7 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> {
     private final Map<String, AttributeFilterActivation> attributeFilters;
     private final Map<String, Object> optionalParameters;
     private final Map<String, Object> properties;
+    private final List<String> fetches;
     
     private KeysetPage keysetPage;
     private boolean keysetPaginated;
@@ -65,6 +68,7 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> {
         this.attributeFilters = new LinkedHashMap<>();
         this.optionalParameters = new HashMap<>();
         this.properties = new HashMap<>();
+        this.fetches = new ArrayList<>();
     }
 
     private EntityViewSetting(Class<T> entityViewClass, int firstResult, int maxResults, boolean paginate, String viewConstructorName) {
@@ -83,6 +87,7 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> {
         this.attributeFilters = new LinkedHashMap<>();
         this.optionalParameters = new HashMap<>();
         this.properties = new HashMap<>();
+        this.fetches = new ArrayList<>();
     }
 
     private EntityViewSetting(EntityViewSetting<? super T, ?> original, Class<T> subtype) {
@@ -99,6 +104,7 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> {
         this.attributeFilters = new LinkedHashMap<>(original.attributeFilters);
         this.optionalParameters = new HashMap<>(original.optionalParameters);
         this.properties = new HashMap<>(original.properties);
+        this.fetches = new ArrayList<>(original.fetches);
     }
 
     /**
@@ -556,7 +562,30 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> {
         return Collections.unmodifiableMap(properties);
     }
 
+    @Override
+    public <X> SubGraph<X> fetch(String path) {
+        fetches.add(path);
+        return new SubGraphImpl<>(path);
+    }
+
+    @Override
+    public <X> SubGraph<X> fetch(Attribute<T, X> attribute) {
+        return fetch(((MethodAttribute<?, ?>) attribute).getName());
+    }
+
     /**
+     * Returns the attributes that should be fetched or an empty collection if all should be fetched.
+     *
+     * @return the attributes that should be fetched or an empty collection if all should be fetched
+     * @since 1.4.0
+     */
+    public Collection<String> getFetches() {
+        return Collections.unmodifiableList(fetches);
+    }
+
+    /**
+     * The activation of a filter.
+     *
      * @author Moritz Becker
      * @since 1.2.0
      */
@@ -579,6 +608,32 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> {
 
         public Object getFilterValue() {
             return filterValue;
+        }
+    }
+
+    /**
+     * A simple subgraph.
+     *
+     * @author Christian Beikov
+     * @since 1.4.0
+     */
+    private class SubGraphImpl<X> implements SubGraph<X> {
+
+        private final String parent;
+
+        private SubGraphImpl(String parent) {
+            this.parent = parent;
+        }
+
+        @Override
+        public <Y> SubGraph<Y> fetch(String path) {
+            String newParent = parent + "." + path;
+            return EntityViewSetting.this.fetch(newParent);
+        }
+
+        @Override
+        public <Y> SubGraph<Y> fetch(Attribute<X, Y> attribute) {
+            return fetch(((MethodAttribute<?, ?>) attribute).getName());
         }
     }
 }

@@ -32,8 +32,8 @@ public class AliasSubqueryTupleElementMapper extends SimpleSubqueryTupleElementM
 
     private final String alias;
 
-    public AliasSubqueryTupleElementMapper(SubqueryProvider provider, String embeddingViewPath, String alias) {
-        super(provider, embeddingViewPath);
+    public AliasSubqueryTupleElementMapper(SubqueryProvider provider, String attributePath, String embeddingViewPath, String alias) {
+        super(provider, attributePath, embeddingViewPath);
         this.alias = alias;
     }
 

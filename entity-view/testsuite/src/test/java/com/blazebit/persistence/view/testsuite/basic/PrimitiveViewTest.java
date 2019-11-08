@@ -26,17 +26,18 @@ import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
-import com.blazebit.persistence.view.testsuite.basic.model.*;
+import com.blazebit.persistence.view.testsuite.basic.model.PrimitiveDocumentView;
+import com.blazebit.persistence.view.testsuite.basic.model.PrimitivePersonView;
+import com.blazebit.persistence.view.testsuite.basic.model.PrimitiveSimpleDocumentView;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import javax.persistence.EntityManager;
+import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 /**
  *
@@ -136,5 +137,23 @@ public class PrimitiveViewTest extends AbstractEntityViewTest {
         ViewType<PrimitiveSimpleDocumentView> view = evm.getMetamodel().view(PrimitiveSimpleDocumentView.class);
         assertNotNull(view.getAttribute("deleted"));
         assertEquals(boolean.class, view.getAttribute("deleted").getJavaType());
+    }
+
+    @Test
+    public void testEntityViewSubviewFetches() {
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        cfg.addEntityView(PrimitiveSimpleDocumentView.class);
+        cfg.addEntityView(PrimitiveDocumentView.class);
+        cfg.addEntityView(PrimitivePersonView.class);
+        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+
+        EntityViewSetting<PrimitiveDocumentView, CriteriaBuilder<PrimitiveDocumentView>> setting = EntityViewSetting.create(PrimitiveDocumentView.class);
+        setting.fetch("name");
+        setting.fetch("owner.name");
+
+        PrimitiveDocumentView view = evm.applySetting(setting, cbf.create(em, PrimitiveDocument.class).where("id").eq(doc1.getId())).getResultList().get(0);
+        assertEquals("doc1", view.getName());
+        assertEquals("pers1", view.getOwner().getName());
+        assertEquals(Collections.emptyMap(), view.getContacts());
     }
 }

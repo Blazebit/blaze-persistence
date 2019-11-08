@@ -32,8 +32,8 @@ public class AliasExpressionTupleElementMapper extends ExpressionTupleElementMap
 
     private final String alias;
 
-    public AliasExpressionTupleElementMapper(String expression, String alias, String embeddingViewPath, String[] fetches) {
-        super(expression, embeddingViewPath, fetches);
+    public AliasExpressionTupleElementMapper(String expression, String alias, String attributePath, String embeddingViewPath, String[] fetches) {
+        super(expression, attributePath, embeddingViewPath, fetches);
         this.alias = alias.intern();
     }
 

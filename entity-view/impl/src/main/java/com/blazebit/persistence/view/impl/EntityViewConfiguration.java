@@ -20,10 +20,19 @@ import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.view.ConfigurationProperties;
 import com.blazebit.persistence.view.impl.macro.EmbeddingViewJpqlMacro;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
+import com.blazebit.persistence.view.metamodel.MethodAttribute;
+import com.blazebit.persistence.view.metamodel.PluralAttribute;
+import com.blazebit.persistence.view.metamodel.SingularAttribute;
+import com.blazebit.persistence.view.metamodel.Type;
+import com.blazebit.persistence.view.metamodel.ViewType;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Christian Beikov
@@ -35,10 +44,19 @@ public final class EntityViewConfiguration {
     private final ExpressionFactory expressionFactory;
     private final EmbeddingViewJpqlMacro embeddingViewJpqlMacro;
     private final Map<String, Object> optionalParameters;
+    private final Set<String> fetches;
     private final Map<String, Integer> batchSizeConfiguration;
     private final Map<String, BatchCorrelationMode> expectBatchCorrelationValuesConfiguration;
 
-    public EntityViewConfiguration(FullQueryBuilder<?, ?> criteriaBuilder, ExpressionFactory expressionFactory, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, Map<String, Object> optionalParameters, Map<String, Object> properties) {
+    public EntityViewConfiguration(FullQueryBuilder<?, ?> criteriaBuilder, ExpressionFactory expressionFactory, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, Map<String, Object> optionalParameters, Map<String, Object> properties, Collection<String> fetches, String attributePath) {
+        this(criteriaBuilder, expressionFactory, embeddingViewJpqlMacro, optionalParameters, properties, getFetches(fetches, attributePath));
+    }
+
+    public EntityViewConfiguration(FullQueryBuilder<?, ?> criteriaBuilder, ExpressionFactory expressionFactory, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, Map<String, Object> optionalParameters, Map<String, Object> properties, Collection<String> fetches, ManagedViewTypeImplementor<?> managedViewType) {
+        this(criteriaBuilder, expressionFactory, embeddingViewJpqlMacro, optionalParameters, properties, getFetches(fetches, managedViewType));
+    }
+
+    private EntityViewConfiguration(FullQueryBuilder<?, ?> criteriaBuilder, ExpressionFactory expressionFactory, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, Map<String, Object> optionalParameters, Map<String, Object> properties, Set<String> fetches) {
         Map<String, Integer> batchSizeConfiguration = new HashMap<String, Integer>(properties.size());
         Map<String, BatchCorrelationMode> expectBatchCorrelationValuesConfiguration = new HashMap<>(properties.size());
 
@@ -80,7 +98,8 @@ public final class EntityViewConfiguration {
         this.criteriaBuilder = criteriaBuilder;
         this.expressionFactory = expressionFactory;
         this.embeddingViewJpqlMacro = embeddingViewJpqlMacro;
-        this.optionalParameters = new HashMap<String, Object>(optionalParameters);
+        this.optionalParameters = new HashMap<>(optionalParameters);
+        this.fetches = fetches;
         this.batchSizeConfiguration = Collections.unmodifiableMap(batchSizeConfiguration);
         this.expectBatchCorrelationValuesConfiguration = Collections.unmodifiableMap(expectBatchCorrelationValuesConfiguration);
         this.criteriaBuilder.registerMacro("embedding_view", embeddingViewJpqlMacro);
@@ -91,8 +110,93 @@ public final class EntityViewConfiguration {
         this.expressionFactory = original.expressionFactory;
         this.embeddingViewJpqlMacro = embeddingViewJpqlMacro;
         this.optionalParameters = original.optionalParameters;
+        this.fetches = original.fetches;
         this.batchSizeConfiguration = original.batchSizeConfiguration;
         this.expectBatchCorrelationValuesConfiguration = original.expectBatchCorrelationValuesConfiguration;
+    }
+
+    private static Set<String> getFetches(Collection<String> fetches, String attributePath) {
+        Set<String> filteredFetches;
+        if (fetches.isEmpty()) {
+            filteredFetches = Collections.emptySet();
+        } else {
+            filteredFetches = new HashSet<>(fetches.size());
+            String prefix = attributePath + ".";
+            for (String fetch : fetches) {
+                if (fetch.startsWith(prefix)) {
+                    filteredFetches.add(fetch.substring(prefix.length()));
+                }
+            }
+        }
+
+        return filteredFetches;
+    }
+
+    private static Set<String> getFetches(Collection<String> fetches, ManagedViewTypeImplementor<?> managedViewType) {
+        Set<String> filteredFetches;
+        if (fetches.isEmpty()) {
+            filteredFetches = Collections.emptySet();
+        } else {
+            filteredFetches = new HashSet<>(fetches.size());
+            if (managedViewType instanceof ViewType<?>) {
+                addIdFetches((ViewType<?>) managedViewType, filteredFetches, new StringBuilder());
+            }
+            for (String fetch : fetches) {
+                String[] parts = fetch.split("\\.");
+                Type<?> t = managedViewType;
+                StringBuilder sb = new StringBuilder();
+                int i = 0;
+                // NOTE: We could actually also support dynamic entity fetches here
+                while (t instanceof ManagedViewTypeImplementor<?>) {
+                    ManagedViewTypeImplementor<?> viewType = (ManagedViewTypeImplementor<?>) t;
+                    if (i != 0 && viewType instanceof ViewType<?>) {
+                        addIdFetches((ViewType<?>) viewType, filteredFetches, sb);
+                    }
+                    if (i == parts.length) {
+                        // Fetch the whole subtree
+                        int length = sb.length();
+                        for (String path : viewType.getRecursiveAttributes().keySet()) {
+                            sb.setLength(length);
+                            sb.append(path);
+                            filteredFetches.add(sb.toString());
+                        }
+                        break;
+                    } else {
+                        // Fetch a specific attribute
+                        sb.append(parts[i]).append('.');
+                        MethodAttribute<?, ?> attribute = viewType.getAttribute(parts[i]);
+                        if (attribute instanceof PluralAttribute<?, ?, ?>) {
+                            t = ((PluralAttribute) attribute).getElementType();
+                        } else {
+                            t = ((SingularAttribute<?, ?>) attribute).getType();
+                        }
+                        i++;
+                    }
+                }
+                filteredFetches.add(fetch);
+            }
+        }
+
+        return filteredFetches;
+    }
+
+    private static void addIdFetches(ViewType<?> viewType, Set<String> filteredFetches, StringBuilder sb) {
+        MethodAttribute<?, ?> idAttribute = viewType.getIdAttribute();
+        String idName = idAttribute.getName();
+        StringBuilder idSb = new StringBuilder(sb.length() + idName.length()).append(sb).append(idName);
+
+        filteredFetches.add(idSb.toString());
+
+        Type<?> idType = ((SingularAttribute<?, ?>) idAttribute).getType();
+        if (idType instanceof ManagedViewTypeImplementor<?>) {
+            idSb.append('.');
+            int length = idSb.length();
+            for (String path : ((ManagedViewTypeImplementor<?>) idType).getRecursiveAttributes().keySet()) {
+                idSb.setLength(length);
+                idSb.append(path);
+                filteredFetches.add(idSb.toString());
+            }
+        }
     }
 
     public EntityViewConfiguration forSubview(FullQueryBuilder<?, ?> criteriaBuilder, String attributePath, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
@@ -109,6 +213,10 @@ public final class EntityViewConfiguration {
 
     public Map<String, Object> getOptionalParameters() {
         return optionalParameters;
+    }
+
+    public Set<String> getFetches() {
+        return fetches;
     }
 
     public EmbeddingViewJpqlMacro getEmbeddingViewJpqlMacro() {

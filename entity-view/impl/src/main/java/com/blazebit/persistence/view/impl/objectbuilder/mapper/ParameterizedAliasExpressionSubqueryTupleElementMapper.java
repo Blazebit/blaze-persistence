@@ -32,8 +32,8 @@ public class ParameterizedAliasExpressionSubqueryTupleElementMapper extends Para
 
     private final String alias;
 
-    public ParameterizedAliasExpressionSubqueryTupleElementMapper(SubqueryProviderFactory providerFactory, String subqueryExpression, String subqueryAlias, String embeddingViewPath, String alias) {
-        super(providerFactory, subqueryExpression, subqueryAlias, embeddingViewPath);
+    public ParameterizedAliasExpressionSubqueryTupleElementMapper(SubqueryProviderFactory providerFactory, String subqueryExpression, String subqueryAlias, String attributePath, String embeddingViewPath, String alias) {
+        super(providerFactory, subqueryExpression, subqueryAlias, attributePath, embeddingViewPath);
         this.alias = alias;
     }
 
