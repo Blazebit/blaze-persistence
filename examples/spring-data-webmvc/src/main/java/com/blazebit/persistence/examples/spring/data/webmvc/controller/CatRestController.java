@@ -76,14 +76,14 @@ public class CatRestController {
     @Autowired
     private CatViewRepository catViewRepository;
 
-    @RequestMapping(path = "/cats", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(path = "/cats", method = RequestMethod.POST, consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public ResponseEntity<String> createCat(@RequestBody CatCreateView catCreateView) {
         catViewRepository.save(catCreateView);
 
         return ResponseEntity.ok(catCreateView.getId().toString());
     }
 
-    @RequestMapping(path = "/cats/{id}", method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(path = "/cats/{id}", method = RequestMethod.PUT, consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public ResponseEntity<String> updateCat(@PathVariable("id") long id, @RequestBody CatUpdateView catUpdateView) {
         catViewRepository.save(catUpdateView);
 

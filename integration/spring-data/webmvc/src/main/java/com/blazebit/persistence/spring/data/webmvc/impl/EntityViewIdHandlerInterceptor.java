@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.spring.data.webmvc.impl.json;
+package com.blazebit.persistence.spring.data.webmvc.impl;
 
 import com.blazebit.persistence.spring.data.webmvc.EntityViewId;
 import com.blazebit.persistence.view.EntityViewManager;

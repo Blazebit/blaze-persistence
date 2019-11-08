@@ -18,9 +18,6 @@ package com.blazebit.persistence.spring.data.webmvc.impl;
 
 import com.blazebit.persistence.integration.jackson.EntityViewIdValueAccessor;
 import com.blazebit.persistence.spring.data.webmvc.KeysetPageableArgumentResolver;
-import com.blazebit.persistence.spring.data.webmvc.impl.json.EntityViewAwareMappingJackson2HttpMessageConverter;
-import com.blazebit.persistence.spring.data.webmvc.impl.json.EntityViewIdHandlerInterceptor;
-import com.blazebit.persistence.spring.data.webmvc.impl.json.EntityViewIdValueHolder;
 import com.blazebit.persistence.view.EntityViewManager;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,6 +70,7 @@ public class BlazePersistenceWebConfiguration extends WebMvcConfigurerAdapter {
     public void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
         // Add it to the beginning so it has precedence over the builtin
         converters.add(0, new EntityViewAwareMappingJackson2HttpMessageConverter(entityViewManager, idAttributeAccessor()));
+        converters.add(1, new EntityViewAwareJaxb2RootElementHttpMessageConverter(entityViewManager));
     }
 
     @Override

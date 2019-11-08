@@ -20,12 +20,15 @@ import com.blazebit.persistence.examples.spring.data.webmvc.model.Cat;
 import com.blazebit.persistence.view.CreatableEntityView;
 import com.blazebit.persistence.view.EntityView;
 
+import javax.xml.bind.annotation.XmlRootElement;
+
 /**
  * @author Christian Beikov
  * @since 1.4.0
  */
 @CreatableEntityView
 @EntityView(Cat.class)
+@XmlRootElement(name = "cat")
 public interface CatCreateView extends CatUpdateView {
 
     PersonIdView getOwner();
