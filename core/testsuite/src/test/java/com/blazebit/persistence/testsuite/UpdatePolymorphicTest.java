@@ -167,9 +167,9 @@ public class UpdatePolymorphicTest extends AbstractCoreTest {
         });
     }
 
-    @Test
+    // NOTE: H2 and MySQL only support returning generated keys
     // NOTE: MySQL does not support CTEs
-    // NOTE: H2 only supports with clause in select statement
+    @Test
     @Category({ NoH2.class, NoMySQLOld.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testTablePerClassWithCte() {
         transactional(new TxVoidWork() {
@@ -200,9 +200,9 @@ public class UpdatePolymorphicTest extends AbstractCoreTest {
         });
     }
 
-    @Test
+    // NOTE: H2 and MySQL only support returning generated keys
     // NOTE: MySQL does not support CTEs
-    // NOTE: H2 only supports with clause in select statement
+    @Test
     @Category({ NoH2.class, NoMySQLOld.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testJoinedWithCte() {
         transactional(new TxVoidWork() {
@@ -233,9 +233,9 @@ public class UpdatePolymorphicTest extends AbstractCoreTest {
         });
     }
 
-    @Test
+    // NOTE: H2 and MySQL only support returning generated keys
     // NOTE: MySQL does not support CTEs
-    // NOTE: H2 only supports with clause in select statement
+    @Test
     @Category({ NoH2.class, NoMySQLOld.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testSingleTableWithCte() {
         transactional(new TxVoidWork() {

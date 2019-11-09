@@ -83,7 +83,8 @@ public class H2DbmsDialect extends DefaultDbmsDialect {
     
     @Override
     public boolean supportsWithClauseInModificationQuery() {
-        return false;
+        // As of 1.4.199 this is supported
+        return true;
     }
 
     @Override

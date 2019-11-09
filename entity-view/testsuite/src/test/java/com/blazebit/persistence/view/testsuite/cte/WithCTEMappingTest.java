@@ -53,8 +53,8 @@ import static org.junit.Assert.*;
  * @since 1.4.0
  */
 // NOTE: Uses CTEs and entity joins, so only works for a few combinations
-// NOTE: H2 does something weird again when join correlating a CTE..
-@Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoH2.class, NoMySQLOld.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
+// NOTE: H2 before 1.4.199 does something weird again when join correlating a CTE..
+@Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
 public class WithCTEMappingTest extends AbstractEntityViewTest {
 
     private Document doc1;

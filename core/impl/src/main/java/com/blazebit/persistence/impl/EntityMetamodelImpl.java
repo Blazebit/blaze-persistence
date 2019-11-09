@@ -478,6 +478,11 @@ public class EntityMetamodelImpl implements EntityMetamodel {
     }
 
     @Override
+    public Collection<Type<?>> getBasicTypes() {
+        return basicTypeMap.values();
+    }
+
+    @Override
     @SuppressWarnings({ "unchecked" })
     public <X> Type<X> type(Class<X> cls) {
         Type<?> type = classMap.get(cls);

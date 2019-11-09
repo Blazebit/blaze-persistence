@@ -19,6 +19,7 @@ package com.blazebit.persistence.view;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
+import com.blazebit.persistence.spi.ServiceProvider;
 import com.blazebit.persistence.view.change.SingularChangeModel;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 
@@ -30,7 +31,7 @@ import javax.persistence.EntityManager;
  * @author Christian Beikov
  * @since 1.0.0
  */
-public interface EntityViewManager {
+public interface EntityViewManager extends ServiceProvider {
 
     /**
      * Returns the metamodel for this entity view manager.

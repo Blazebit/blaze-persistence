@@ -19,6 +19,7 @@ package com.blazebit.persistence.impl;
 import com.blazebit.persistence.CaseWhenStarterBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.HavingOrBuilder;
+import com.blazebit.persistence.Keyset;
 import com.blazebit.persistence.KeysetPage;
 import com.blazebit.persistence.MultipleSubqueryInitiator;
 import com.blazebit.persistence.ObjectBuilder;
@@ -84,6 +85,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     private int[] keysetToSelectIndexMapping;
     private String[] identifierToUseSelectAliases;
     private KeysetMode keysetMode;
+    private boolean forceFirstResult;
 
     // Cache
     private String cachedIdQueryString;
@@ -150,6 +152,22 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     public PaginatedCriteriaBuilder<T> setMaxResults(int maxResults) {
         super.setMaxResults(maxResults);
         updateKeysetMode();
+        return this;
+    }
+
+    @Override
+    public PaginatedCriteriaBuilder<T> afterKeyset(Keyset keyset) {
+        super.afterKeyset(keyset);
+        this.keysetMode = KeysetMode.NEXT;
+        this.forceFirstResult = true;
+        return this;
+    }
+
+    @Override
+    public PaginatedCriteriaBuilder<T> beforeKeyset(Keyset keyset) {
+        super.beforeKeyset(keyset);
+        this.keysetMode = KeysetMode.PREVIOUS;
+        this.forceFirstResult = true;
         return this;
     }
 
@@ -303,7 +321,8 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             objectBuilder = entry.getValue();
         }
         PaginatedTypedQueryImpl<T> query = new PaginatedTypedQueryImpl<>(
-                withExtractAllKeysets, withCountQuery,
+                withExtractAllKeysets,
+                withCountQuery,
                 highestOffset,
                 countQuery,
                 idQuery,
@@ -317,7 +336,8 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
                 needsNewIdList,
                 keysetToSelectIndexMapping,
                 keysetMode,
-                keysetPage
+                keysetPage,
+                forceFirstResult
         );
         return query;
     }
@@ -790,7 +810,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         Set<JoinNode> identifierExpressionsToUseNonRootJoinNodes = getIdentifierExpressionsToUseNonRootJoinNodes();
         joinManager.buildClause(sbSelectFrom, ID_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, null, false, externalRepresentation, true, optionalWhereClauseConjuncts, whereClauseConjuncts, null, explicitVersionEntities, idNodesToFetch, identifierExpressionsToUseNonRootJoinNodes);
 
-        if (keysetMode == KeysetMode.NONE) {
+        if (keysetMode == KeysetMode.NONE || keysetManager.getKeysetLink().getKeyset().getTuple() == null) {
             whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, null);
         } else {
             sbSelectFrom.append(" WHERE ");
@@ -912,7 +932,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         List<String> optionalWhereClauseConjuncts = new ArrayList<>();
         joinManager.buildClause(sbSelectFrom, hasGroupBy ? NO_CLAUSE_EXCLUSION : OBJECT_QUERY_WITHOUT_GROUP_BY_EXCLUSIONS, null, false, externalRepresentation, false, optionalWhereClauseConjuncts, whereClauseConjuncts, null, explicitVersionEntities, nodesToFetch, Collections.EMPTY_SET);
 
-        if (keysetMode == KeysetMode.NONE) {
+        if (keysetMode == KeysetMode.NONE || keysetManager.getKeysetLink().getKeyset().getTuple() == null) {
             whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, null);
         } else {
             sbSelectFrom.append(" WHERE ");

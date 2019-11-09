@@ -269,7 +269,6 @@ public class SetOperationTest extends AbstractCoreTest {
         assertEquals("D1", resultList.get(0).getName());
     }
 
-
     @Test
     // TODO: why no hibernate 4.2?
     // NOTE: H2 does not support the PARTITION clause in the ROW_NUMBER function, so we can't emulate EXCEPT ALL

@@ -25,6 +25,7 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoFirebird;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoSQLite;
@@ -200,7 +201,7 @@ public class UpdateTest extends AbstractCoreTest {
         });
     }
 
-    // NOTE: H2 only supports with clause in select statement
+    // NOTE: H2 and MySQL only support returning generated keys
     // NOTE: MySQL does not support CTEs
     @Test
     @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
@@ -306,7 +307,7 @@ public class UpdateTest extends AbstractCoreTest {
         });
     }
 
-    // NOTE: H2 only supports with clause in select statement
+    // NOTE: H2 and MySQL only support returning generated keys
     // NOTE: MySQL does not support CTEs
     @Test
     @Category({ NoH2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
@@ -335,7 +336,7 @@ public class UpdateTest extends AbstractCoreTest {
                             .select("dNode.id")
                         .end()
                     .end()
-                    .set("age", 0l)
+                    .set("age", 0L)
                     .executeWithReturning("id", Long.class)
                     .getResultList();
             }

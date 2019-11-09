@@ -43,13 +43,16 @@ public abstract class AbstractKeysetLink implements KeysetLink {
 
         Serializable[] key = keyset.getTuple();
 
-        if (key == null || key.length == 0) {
-            throw new IllegalArgumentException("Invalid empty keyset key given!");
-        }
+        // We treat a null tuple specially to support reverse scanning of a result list
+        if (key != null) {
+            if (key.length == 0) {
+                throw new IllegalArgumentException("Invalid empty keyset key given!");
+            }
 
-        if (key.length != orderByExpressions.size()) {
-            throw new IllegalArgumentException("The given keyset key [" + Arrays.deepToString(key) + "] does not fit the order by expressions "
-                + orderByExpressions + "!");
+            if (key.length != orderByExpressions.size()) {
+                throw new IllegalArgumentException("The given keyset key [" + Arrays.deepToString(key) + "] does not fit the order by expressions "
+                        + orderByExpressions + "!");
+            }
         }
 
         // Unfortunately we can't check types here so we will have to trust the JPA provider to do that

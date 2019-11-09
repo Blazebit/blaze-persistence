@@ -167,6 +167,37 @@ public final class ConfigurationProperties {
      */
     public static final String UPDATER_ERROR_ON_INVALID_PLURAL_SETTER = "com.blazebit.persistence.view.updater.error_on_invalid_plural_setter";
 
+    /**
+     * A boolean flag that allows to disable a count query for a paginated criteria builder.
+     *
+     * By default the count query is enabled i.e. the default value is <code>false</code>.
+     * Valid values for this property are <code>true</code> or <code>false</code>.
+     *
+     * @since 1.4.0
+     */
+    public static final String PAGINATION_DISABLE_COUNT_QUERY = "com.blazebit.persistence.view.pagination.disable_count_query";
+
+    /**
+     * A boolean flag that allows to enable the extraction of all keysets for a paginated criteria builder.
+     *
+     * By default the extraction of all keysets is disabled i.e. the default value is <code>false</code>.
+     * Valid values for this property are <code>true</code> or <code>false</code>.
+     *
+     * @since 1.4.0
+     */
+    public static final String PAGINATION_EXTRACT_ALL_KEYSETS = "com.blazebit.persistence.view.pagination.extract_all_keysets";
+
+    /**
+     * A boolean flag that allows to force the use of the keyset for a paginated criteria builder rather than relying on firstResult/maxResults.
+     * This is useful if a strict keyset based pagination is necessary and the page size or the offset might vary.
+     *
+     * By default forcing keysets is disabled i.e. the default value is <code>false</code>.
+     * Valid values for this property are <code>true</code> or <code>false</code>.
+     *
+     * @since 1.4.0
+     */
+    public static final String PAGINATION_FORCE_USE_KEYSET = "com.blazebit.persistence.view.pagination.force_use_keyset";
+
     private ConfigurationProperties() {
     }
 }

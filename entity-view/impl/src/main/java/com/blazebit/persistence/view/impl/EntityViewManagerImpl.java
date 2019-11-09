@@ -94,6 +94,7 @@ import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
 import javax.persistence.EntityManager;
 import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.SingularAttribute;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
@@ -223,6 +224,14 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
     public CriteriaBuilderFactory getCriteriaBuilderFactory() {
         return cbf;
+    }
+
+    @Override
+    public <T> T getService(Class<T> serviceClass) {
+        if (Metamodel.class.isAssignableFrom(serviceClass)) {
+            return (T) metamodel.getEntityMetamodel();
+        }
+        return null;
     }
 
     @Override

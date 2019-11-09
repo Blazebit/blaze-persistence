@@ -72,9 +72,10 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
     private final int keysetSuffix;
     private final KeysetMode keysetMode;
     private final KeysetPage keysetPage;
+    private final boolean forceFirstResult;
 
     public PaginatedTypedQueryImpl(boolean withExtractAllKeysets, boolean withCount, int highestOffset, TypedQuery<?> countQuery, TypedQuery<?> idQuery, TypedQuery<X> objectQuery, KeysetExtractionObjectBuilder<X> objectBuilder, Set<Parameter<?>> parameters,
-                                   Object entityId, int firstResult, int pageSize, int identifierCount, boolean needsNewIdList, int[] keysetToSelectIndexMapping, KeysetMode keysetMode, KeysetPage keysetPage) {
+                                   Object entityId, int firstResult, int pageSize, int identifierCount, boolean needsNewIdList, int[] keysetToSelectIndexMapping, KeysetMode keysetMode, KeysetPage keysetPage, boolean forceFirstResult) {
         this.withExtractAllKeysets = withExtractAllKeysets;
         this.withCount = withCount;
         this.highestOffset = highestOffset;
@@ -91,6 +92,7 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
         this.keysetToSelectIndexMapping = keysetToSelectIndexMapping;
         this.keysetMode = keysetMode;
         this.keysetPage = keysetPage;
+        this.forceFirstResult = forceFirstResult;
 
         Map<String, Parameter<?>> params = new HashMap<>(parameters.size());
         for (Parameter<?> parameter : parameters) {
@@ -194,7 +196,7 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
         if (idQuery != null) {
             idQuery.setMaxResults(pageSize);
 
-            if (keysetMode == KeysetMode.NONE) {
+            if (forceFirstResult || keysetMode == KeysetMode.NONE) {
                 idQuery.setFirstResult(firstRow);
             } else {
                 idQuery.setFirstResult(0);
@@ -321,7 +323,7 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
         } else {
             objectQuery.setMaxResults(pageSize);
 
-            if (keysetMode == KeysetMode.NONE) {
+            if (forceFirstResult || keysetMode == KeysetMode.NONE) {
                 objectQuery.setFirstResult(firstRow);
             } else {
                 objectQuery.setFirstResult(0);
