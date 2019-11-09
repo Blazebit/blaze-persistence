@@ -2626,7 +2626,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     protected void appendWhereClause(StringBuilder sbSelectFrom, List<String> whereClauseConjuncts, List<String> optionalWhereClauseConjuncts, List<String> whereClauseEndConjuncts) {
         KeysetLink keysetLink = keysetManager.getKeysetLink();
-        if (keysetLink == null || keysetLink.getKeysetMode() == KeysetMode.NONE) {
+        if (keysetLink == null || keysetLink.getKeysetMode() == KeysetMode.NONE || keysetLink.getKeyset().getTuple() == null) {
             whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, whereClauseEndConjuncts);
         } else {
             sbSelectFrom.append(" WHERE ");

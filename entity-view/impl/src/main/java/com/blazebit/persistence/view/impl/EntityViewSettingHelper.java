@@ -18,8 +18,11 @@ package com.blazebit.persistence.view.impl;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.KeysetPage;
+import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.view.AttributeFilterProvider;
+import com.blazebit.persistence.view.ConfigurationProperties;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.Sorter;
 import com.blazebit.persistence.view.ViewFilterProvider;
@@ -90,20 +93,27 @@ public final class EntityViewSettingHelper {
         applyAttributeFilters(setting, evm, criteriaBuilder, ef, managedView);
         applyAttributeSorters(setting, evm, criteriaBuilder, ef, managedView);
         applyOptionalParameters(setting, criteriaBuilder);
+        Map<String, Object> properties = setting.getProperties();
 
         if (setting.isPaginated()) {
+            KeysetPage keysetPage = setting.getKeysetPage();
+            boolean forceUseKeyset = keysetPage != null && getBooleanProperty(properties, ConfigurationProperties.PAGINATION_FORCE_USE_KEYSET, false);
+            if (forceUseKeyset) {
+                setting.withKeysetPage(null);
+            }
+            PaginatedCriteriaBuilder<?> builder;
             if (managedView instanceof FlatViewType<?>) {
                 if (setting.isKeysetPaginated()) {
                     if (setting.getFirstResult() == -1) {
-                        return (Q) criteriaBuilder.pageAndNavigate(setting.getEntityId(), setting.getMaxResults()).withKeysetExtraction(true);
+                        builder = criteriaBuilder.pageAndNavigate(setting.getEntityId(), setting.getMaxResults()).withKeysetExtraction(true);
                     } else {
-                        return (Q) criteriaBuilder.page(setting.getKeysetPage(), setting.getFirstResult(), setting.getMaxResults());
+                        builder = criteriaBuilder.page(setting.getKeysetPage(), setting.getFirstResult(), setting.getMaxResults());
                     }
                 } else {
                     if (setting.getFirstResult() == -1) {
-                        return (Q) criteriaBuilder.page(0, setting.getMaxResults());
+                        builder = criteriaBuilder.page(0, setting.getMaxResults());
                     } else {
-                        return (Q) criteriaBuilder.page(setting.getFirstResult(), setting.getMaxResults());
+                        builder = criteriaBuilder.page(setting.getFirstResult(), setting.getMaxResults());
                     }
                 }
             } else {
@@ -132,21 +142,52 @@ public final class EntityViewSettingHelper {
 
                 if (setting.isKeysetPaginated()) {
                     if (setting.getFirstResult() == -1) {
-                        return (Q) criteriaBuilder.pageByAndNavigate(setting.getEntityId(), setting.getMaxResults(), firstExpression, getExpressionArray(expressions)).withKeysetExtraction(true);
+                        builder = criteriaBuilder.pageByAndNavigate(setting.getEntityId(), setting.getMaxResults(), firstExpression, getExpressionArray(expressions)).withKeysetExtraction(true);
                     } else {
-                        return (Q) criteriaBuilder.pageBy(setting.getKeysetPage(), setting.getFirstResult(), setting.getMaxResults(), firstExpression, getExpressionArray(expressions));
+                        builder = criteriaBuilder.pageBy(setting.getKeysetPage(), setting.getFirstResult(), setting.getMaxResults(), firstExpression, getExpressionArray(expressions));
                     }
                 } else {
                     if (setting.getFirstResult() == -1) {
-                        return (Q) criteriaBuilder.pageBy(0, setting.getMaxResults(), firstExpression, getExpressionArray(expressions));
+                        builder = criteriaBuilder.pageBy(0, setting.getMaxResults(), firstExpression, getExpressionArray(expressions));
                     } else {
-                        return (Q) criteriaBuilder.pageBy(setting.getFirstResult(), setting.getMaxResults(), firstExpression, getExpressionArray(expressions));
+                        builder = criteriaBuilder.pageBy(setting.getFirstResult(), setting.getMaxResults(), firstExpression, getExpressionArray(expressions));
                     }
                 }
             }
+
+            if (forceUseKeyset) {
+                if (keysetPage.getLowest() != null) {
+                    builder.beforeKeyset(keysetPage.getLowest());
+                } else if (keysetPage.getHighest() != null) {
+                    builder.afterKeyset(keysetPage.getHighest());
+                }
+            }
+            boolean disableCountQuery = getBooleanProperty(properties, ConfigurationProperties.PAGINATION_DISABLE_COUNT_QUERY, false);
+            if (disableCountQuery) {
+                builder.withCountQuery(false);
+            }
+            boolean extractAllKeysets = getBooleanProperty(properties, ConfigurationProperties.PAGINATION_EXTRACT_ALL_KEYSETS, false);
+            if (extractAllKeysets) {
+                builder.withExtractAllKeysets(true);
+            }
+
+            return (Q) builder;
         } else {
             return (Q) criteriaBuilder;
         }
+    }
+
+    private static boolean getBooleanProperty(Map<String, Object> properties, String key, boolean defaultValue) {
+        Object o = properties.get(key);
+        if (o == null) {
+            return defaultValue;
+        } else if (o instanceof Boolean) {
+            return (boolean) o;
+        } else if (o instanceof String) {
+            return Boolean.parseBoolean(o.toString());
+        }
+
+        throw new IllegalArgumentException("Invalid value of type " + o.getClass().getName() + " given for the boolean property: " + key);
     }
 
     private static String getMapping(String prefix, MethodAttribute<?, ?> attribute, ExpressionFactory ef) {

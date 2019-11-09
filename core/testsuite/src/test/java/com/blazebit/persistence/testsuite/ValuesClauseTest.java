@@ -20,7 +20,6 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.ConfigurationProperties;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
@@ -584,8 +583,8 @@ public class ValuesClauseTest extends AbstractCoreTest {
     // NOTE: Entity joins are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
 //    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     // No hibernate for now, see https://hibernate.atlassian.net/browse/HHH-11340
-    // H2 does not support parameters in the CTE http://dba.stackexchange.com/a/78449
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class, NoH2.class })
+    // H2 before 1.4.199 does not support parameters in the CTE http://dba.stackexchange.com/a/78449
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
     public void testValuesEntityFunctionInCte() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.setProperty(ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS, "false");
@@ -653,8 +652,8 @@ public class ValuesClauseTest extends AbstractCoreTest {
     }
 
     @Test
-    // H2 does not support parameters in the CTE http://dba.stackexchange.com/a/78449
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class, NoH2.class })
+    // H2 before 1.4.199 does not support parameters in the CTE http://dba.stackexchange.com/a/78449
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
     public void testValuesEntityFunctionWithCteInCteWithSetOperation() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.setProperty(ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS, "false");
@@ -688,8 +687,8 @@ public class ValuesClauseTest extends AbstractCoreTest {
     }
 
     @Test
-    // H2 does not support parameters in the CTE http://dba.stackexchange.com/a/78449
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class, NoH2.class })
+    // H2 before 1.4.199 does not support parameters in the CTE http://dba.stackexchange.com/a/78449
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
     public void testIdentifiableValuesEntityFunction() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.setProperty(ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS, "false");

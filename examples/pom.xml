@@ -32,6 +32,7 @@
         <module>deltaspike-data-rest</module>
         <module>spring-data-webmvc</module>
         <module>spring-data-webflux</module>
+        <module>spring-data-graphql</module>
         <module>it-service-management</module>
     </modules>
 

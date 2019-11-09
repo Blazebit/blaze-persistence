@@ -50,6 +50,7 @@
         <module>deltaspike-data</module>
         <module>jaxrs</module>
         <module>jackson</module>
+        <module>graphql</module>
 
         <module>jpa-base-jar</module>
         <module>openjpa-jar</module>

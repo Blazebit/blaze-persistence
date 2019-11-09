@@ -50,16 +50,6 @@ public class KeysetImpl implements Keyset {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final KeysetImpl other = (KeysetImpl) obj;
-        if (!Arrays.deepEquals(this.tuple, other.tuple)) {
-            return false;
-        }
-        return true;
+        return obj instanceof Keyset && Arrays.deepEquals(this.tuple, ((Keyset) obj).getTuple());
     }
 }

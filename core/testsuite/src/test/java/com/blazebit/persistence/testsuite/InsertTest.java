@@ -299,8 +299,8 @@ public class InsertTest extends AbstractCoreTest {
         assertEquals(1, result.getUpdateCount());
         assertEquals(byOwner(p1).getId(), result.getLastResult());
     }
-    
-    // NOTE: H2 only supports with clause in select statement
+
+    // NOTE: H2 and MySQL only support returning generated keys
     // NOTE: MySQL does not support CTEs
     @Test
     @Category({ NoH2.class, NoOracle.class, NoMySQLOld.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
@@ -341,7 +341,7 @@ public class InsertTest extends AbstractCoreTest {
         assertEquals(byOwner(p2).getId(), result.getLastResult());
     }
 
-    // NOTE: H2 only supports with clause in select statement
+    // NOTE: H2 and MySQL only support returning generated keys
     // NOTE: MySQL does not support CTEs
     @Test
     @Category({ NoH2.class, NoOracle.class, NoMySQLOld.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })

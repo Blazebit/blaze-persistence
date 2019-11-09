@@ -75,76 +75,78 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
         Serializable[] key = keyset.getTuple();
         OrderByExpression extractedNonNullableExpression = null;
 
-        boolean hasNullableOrderBys = false;
-        boolean hasParameterInOrderBy = false; // TODO: Determine if order by expression has parameter as that will ruin reordering of expressions in row value constructor
-        for (OrderByExpression orderByExpression : orderByExpressions) {
-            if (orderByExpression.isNullable()) {
-                hasNullableOrderBys = true;
-                break;
+        if (key != null) {
+            boolean hasNullableOrderBys = false;
+            boolean hasParameterInOrderBy = false; // TODO: Determine if order by expression has parameter as that will ruin reordering of expressions in row value constructor
+            for (OrderByExpression orderByExpression : orderByExpressions) {
+                if (orderByExpression.isNullable()) {
+                    hasNullableOrderBys = true;
+                    break;
+                }
             }
-        }
 
-        extractedNonNullableExpression = orderByExpressions.get(0);
+            extractedNonNullableExpression = orderByExpressions.get(0);
 
-        // We can only use row value based keyset predicates if the dbms supports row values and row value comparison and
-        // if all order bys are non-nullable because null elements would break the row value comparison.
-        if (hasNullableOrderBys || hasParameterInOrderBy || !dbmsDialect.supportsFullRowValueComparison() || !jpaProvider.supportsCustomFunctions()) {
-            // Under certain conditions, we cannot render an optimized form because we would need to include
-            // null checks involving disjunction on the top predicate level which would contradict the main idea of the
-            // optimization.
-            boolean optimizationAllowed = !extractedNonNullableExpression.isNullable()
-                    || keysetMode == KeysetMode.NEXT && extractedNonNullableExpression.isNullFirst() && key[0] != null
-                    || keysetMode == KeysetMode.PREVIOUS && !extractedNonNullableExpression.isNullFirst() && key[0] != null;
-            if (optimizationAllowed) {
-                applyOptimizedKeysetNotNullItem(extractedNonNullableExpression, sb, 0, key[0], keysetMode, false, positionalOffset);
-                if (orderByExpressions.size() > 1) {
-                    sb.append(" AND NOT (");
-                    applyKeysetItem(sb, extractedNonNullableExpression.getExpression(), "=", 0, key[0], positionalOffset);
-                    sb.append(" AND ");
-                    buildOptimizedPredicate0(keysetMode, key, sb, orderByExpressions, positionalOffset);
-                    sb.append(")");
+            // We can only use row value based keyset predicates if the dbms supports row values and row value comparison and
+            // if all order bys are non-nullable because null elements would break the row value comparison.
+            if (hasNullableOrderBys || hasParameterInOrderBy || !dbmsDialect.supportsFullRowValueComparison() || !jpaProvider.supportsCustomFunctions()) {
+                // Under certain conditions, we cannot render an optimized form because we would need to include
+                // null checks involving disjunction on the top predicate level which would contradict the main idea of the
+                // optimization.
+                boolean optimizationAllowed = !extractedNonNullableExpression.isNullable()
+                        || keysetMode == KeysetMode.NEXT && extractedNonNullableExpression.isNullFirst() && key[0] != null
+                        || keysetMode == KeysetMode.PREVIOUS && !extractedNonNullableExpression.isNullFirst() && key[0] != null;
+                if (optimizationAllowed) {
+                    applyOptimizedKeysetNotNullItem(extractedNonNullableExpression, sb, 0, key[0], keysetMode, false, positionalOffset);
+                    if (orderByExpressions.size() > 1) {
+                        sb.append(" AND NOT (");
+                        applyKeysetItem(sb, extractedNonNullableExpression.getExpression(), "=", 0, key[0], positionalOffset);
+                        sb.append(" AND ");
+                        buildOptimizedPredicate0(keysetMode, key, sb, orderByExpressions, positionalOffset);
+                        sb.append(")");
+                    }
+                } else {
+                    buildKeysetPredicate0(keysetMode, key, sb, orderByExpressions, positionalOffset);
                 }
             } else {
-                buildKeysetPredicate0(keysetMode, key, sb, orderByExpressions, positionalOffset);
-            }
-        } else {
-            // we can use row value constructor syntax
-            // the rendering is heavily bound to the way this is parsed in RowValueComparisonFunction
-            queryGenerator.setClauseType(ClauseType.WHERE);
-            queryGenerator.setQueryBuffer(sb);
-            queryGenerator.setClauseType(null);
+                // we can use row value constructor syntax
+                // the rendering is heavily bound to the way this is parsed in RowValueComparisonFunction
+                queryGenerator.setClauseType(ClauseType.WHERE);
+                queryGenerator.setQueryBuffer(sb);
+                queryGenerator.setClauseType(null);
 
-            sb.append(jpaProvider.getCustomFunctionInvocation(RowValueComparisonFunction.FUNCTION_NAME, 1))
-                    .append('\'').append(keysetMode == KeysetMode.SAME ? "<=" : "<").append('\'');
+                sb.append(jpaProvider.getCustomFunctionInvocation(RowValueComparisonFunction.FUNCTION_NAME, 1))
+                        .append('\'').append(keysetMode == KeysetMode.SAME ? "<=" : "<").append('\'');
 
-            for (int i = 0; i < orderByExpressions.size(); i++) {
-                OrderByExpression orderByExpression = orderByExpressions.get(i);
+                for (int i = 0; i < orderByExpressions.size(); i++) {
+                    OrderByExpression orderByExpression = orderByExpressions.get(i);
 
-                sb.append(",CASE WHEN (1=NULLIF(1,1) AND ");
-                if (orderByExpression.isDescending() && keysetMode != KeysetMode.PREVIOUS || orderByExpression.isAscending() && keysetMode == KeysetMode.PREVIOUS) {
-                    // Placeholder is needed as we need to render the parameter at the end to retain JDBC parameter order
-                    sb.append("1=NULLIF(1,1)");
-                } else {
-                    applyKeysetParameter(sb, i, key[i], positionalOffset);
-                    sb.append('=');
-                    queryGenerator.generate(orderByExpression.getExpression());
-                }
-                sb.append(") THEN 1 ELSE 0 END");
-            }
-            // We have to render right hand side parameters at the end to retain the correct order
-            for (int i = 0; i < orderByExpressions.size(); i++) {
-                OrderByExpression orderByExpression = orderByExpressions.get(i);
-
-                if (orderByExpression.isDescending() && keysetMode != KeysetMode.PREVIOUS || orderByExpression.isAscending() && keysetMode == KeysetMode.PREVIOUS) {
                     sb.append(",CASE WHEN (1=NULLIF(1,1) AND ");
-                    queryGenerator.generate(orderByExpression.getExpression());
-                    sb.append('=');
-                    applyKeysetParameter(sb, i, key[i], positionalOffset);
+                    if (orderByExpression.isDescending() && keysetMode != KeysetMode.PREVIOUS || orderByExpression.isAscending() && keysetMode == KeysetMode.PREVIOUS) {
+                        // Placeholder is needed as we need to render the parameter at the end to retain JDBC parameter order
+                        sb.append("1=NULLIF(1,1)");
+                    } else {
+                        applyKeysetParameter(sb, i, key[i], positionalOffset);
+                        sb.append('=');
+                        queryGenerator.generate(orderByExpression.getExpression());
+                    }
                     sb.append(") THEN 1 ELSE 0 END");
                 }
-            }
+                // We have to render right hand side parameters at the end to retain the correct order
+                for (int i = 0; i < orderByExpressions.size(); i++) {
+                    OrderByExpression orderByExpression = orderByExpressions.get(i);
 
-            sb.append(") = true");
+                    if (orderByExpression.isDescending() && keysetMode != KeysetMode.PREVIOUS || orderByExpression.isAscending() && keysetMode == KeysetMode.PREVIOUS) {
+                        sb.append(",CASE WHEN (1=NULLIF(1,1) AND ");
+                        queryGenerator.generate(orderByExpression.getExpression());
+                        sb.append('=');
+                        applyKeysetParameter(sb, i, key[i], positionalOffset);
+                        sb.append(") THEN 1 ELSE 0 END");
+                    }
+                }
+
+                sb.append(") = true");
+            }
         }
     }
 
@@ -152,11 +154,11 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
         KeysetLink keysetLink = getKeysetLink();
         KeysetMode keysetMode = keysetLink.getKeysetMode();
         Keyset keyset = keysetLink.getKeyset();
-        Serializable[] key;
+        Serializable[] key = keyset.getTuple();
 
-        key = keyset.getTuple();
-
-        buildKeysetPredicate0(keysetMode, key, sb, orderByExpressions, positionalOffset);
+        if (key != null) {
+            buildKeysetPredicate0(keysetMode, key, sb, orderByExpressions, positionalOffset);
+        }
     }
 
     private void buildOptimizedPredicate0(KeysetMode keysetMode, Serializable[] key, StringBuilder sb, List<OrderByExpression> orderByExpressions, int positionalOffset) {

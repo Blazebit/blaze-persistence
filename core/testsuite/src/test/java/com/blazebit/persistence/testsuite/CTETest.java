@@ -391,10 +391,10 @@ public class CTETest extends AbstractCoreTest {
         assertEquals("child1_1", resultList.get(1).getName());
     }
 
-    // NOTE: Apparently H2 produces wrong results when a CTE is used with IN predicate
+    // NOTE: Apparently H2 before 1.4.199 produces wrong results when a CTE is used with IN predicate
     // TODO: Oracle requires a cycle clause #295
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class, NoH2.class, NoOracle.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class, NoOracle.class })
     public void testRecursiveCTEPaginationIdQuery() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.withRecursive(TestCTE.class)
@@ -558,9 +558,9 @@ public class CTETest extends AbstractCoreTest {
         }
     }
     
-    // NOTE: Apparently H2 can't handle multiple CTEs
+    // NOTE: Apparently H2 before 1.4.199 can't handle multiple CTEs
     @Test
-    @Category({ NoH2.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
     public void testCTEInSubquery() {
         CriteriaBuilder<String> cb = cbf.create(em, String.class)
             .from(RecursiveEntity.class, "r")
