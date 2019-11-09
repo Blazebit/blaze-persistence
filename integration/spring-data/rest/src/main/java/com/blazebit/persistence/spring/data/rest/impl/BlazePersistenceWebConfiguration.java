@@ -40,21 +40,22 @@ public class BlazePersistenceWebConfiguration extends WebMvcConfigurerAdapter {
 
     private final EntityViewManager entityViewManager;
     private final ObjectFactory<ConversionService> conversionService;
+    private final SortHandlerMethodArgumentResolver sortResolver;
 
     @Autowired
-    public BlazePersistenceWebConfiguration(EntityViewManager entityViewManager, @Qualifier("mvcConversionService") ObjectFactory<ConversionService> conversionService) {
+    public BlazePersistenceWebConfiguration(
+      EntityViewManager entityViewManager,
+      @Qualifier("mvcConversionService") ObjectFactory<ConversionService> conversionService,
+      final SortHandlerMethodArgumentResolver sortResolver
+    ) {
         this.entityViewManager = entityViewManager;
         this.conversionService = conversionService;
+        this.sortResolver = sortResolver;
     }
 
     @Bean
     public KeysetPageableHandlerMethodArgumentResolver keysetPageableResolver() {
-        return new KeysetPageableHandlerMethodArgumentResolver(sortResolver(), conversionService.getObject());
-    }
-
-    @Bean
-    public SortHandlerMethodArgumentResolver sortResolver() {
-        return new SortHandlerMethodArgumentResolver();
+        return new KeysetPageableHandlerMethodArgumentResolver(sortResolver, conversionService.getObject());
     }
 
     @Override
