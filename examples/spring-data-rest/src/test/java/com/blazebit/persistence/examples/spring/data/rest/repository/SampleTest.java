@@ -28,6 +28,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.data.web.config.SpringDataWebConfiguration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -36,7 +37,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @since 1.2.0
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = SampleTest.TestConfig.class)
+@ContextConfiguration(classes = {SampleTest.TestConfig.class, SpringDataWebConfiguration.class})
 public class SampleTest extends AbstractSampleTest {
 
     @Autowired
