@@ -279,14 +279,15 @@ public final class InverseFlusher<E> {
             // Only construct when orphanRemoval or delete cascading is enabled, orphanRemoval implies delete cascading
             if (attribute.isDeleteCascaded()) {
                 EntityMetamodel entityMetamodel = evm.getMetamodel().getEntityMetamodel();
-                ExtendedManagedType elementManagedType = entityMetamodel.getManagedType(ExtendedManagedType.class, elementEntityClass);
-                parentIdAttributeName = entityMetamodel.getManagedType(ExtendedManagedType.class, viewType.getEntityClass()).getIdAttribute().getName();
+                ExtendedManagedType<?> ownerManagedType = entityMetamodel.getManagedType(ExtendedManagedType.class, viewType.getEntityClass());
+                ExtendedManagedType<?> elementManagedType = entityMetamodel.getManagedType(ExtendedManagedType.class, elementEntityClass);
+                parentIdAttributeName = ownerManagedType.getIdAttribute().getName();
                 childIdAttributeName = elementManagedType.getIdAttribute().getName();
 
                 String mapping = attribute.getMappedBy();
                 if (mapping != null) {
                     if (mapping.isEmpty()) {
-                        deleter = new UnmappedWritableBasicAttributeSetNullCascadeDeleter(evm, elementManagedType, attribute.getWritableMappedByMappings());
+                        deleter = new UnmappedWritableBasicAttributeSetNullCascadeDeleter(evm, ownerManagedType.getType(), elementManagedType, attribute.getWritableMappedByMappings());
                     } else {
                         ExtendedAttribute extendedAttribute = elementManagedType.getAttribute(mapping);
                         if (childTypeDescriptor.isSubview()) {

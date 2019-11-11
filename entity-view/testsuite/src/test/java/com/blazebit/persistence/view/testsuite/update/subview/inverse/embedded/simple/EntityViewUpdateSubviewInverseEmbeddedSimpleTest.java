@@ -31,6 +31,7 @@ import com.blazebit.persistence.view.testsuite.entity.LegacyOrder;
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPosition;
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionDefault;
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionDefaultId;
+import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionElement;
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionId;
 import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateTest;
 import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.simple.model.LegacyOrderIdView;
@@ -72,7 +73,8 @@ public class EntityViewUpdateSubviewInverseEmbeddedSimpleTest extends AbstractEn
                 LegacyOrderPosition.class,
                 LegacyOrderPositionId.class,
                 LegacyOrderPositionDefault.class,
-                LegacyOrderPositionDefaultId.class
+                LegacyOrderPositionDefaultId.class,
+                LegacyOrderPositionElement.class
         };
     }
 

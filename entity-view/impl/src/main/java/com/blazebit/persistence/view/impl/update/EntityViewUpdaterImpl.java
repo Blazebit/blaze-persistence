@@ -335,7 +335,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                 if (extendedAttribute.getAttribute().isCollection()) {
                     if ("".equals(extendedAttribute.getMappedBy())) {
                         ExtendedManagedType managedType = entityMetamodel.getManagedType(ExtendedManagedType.class, extendedAttribute.getElementClass());
-                        deleter = new UnmappedWritableBasicAttributeSetNullCascadeDeleter(evm, managedType, extendedAttribute.getWritableMappedByMappings((EntityType<?>) managedType.getType()));
+                        deleter = new UnmappedWritableBasicAttributeSetNullCascadeDeleter(evm, entityType, managedType, extendedAttribute.getWritableMappedByMappings((EntityType<?>) managedType.getType()));
                     } else {
                         if (((javax.persistence.metamodel.PluralAttribute<?, ?, ?>) extendedAttribute.getAttribute()).getCollectionType() == javax.persistence.metamodel.PluralAttribute.CollectionType.MAP) {
                             deleter = new UnmappedMapAttributeCascadeDeleter(evm, unmappedAttributeName, extendedAttribute, entityClass, idAttributeName, false);
@@ -346,7 +346,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                 } else {
                     if ("".equals(extendedAttribute.getMappedBy())) {
                         ExtendedManagedType managedType = entityMetamodel.getManagedType(ExtendedManagedType.class, extendedAttribute.getElementClass());
-                        deleter = new UnmappedWritableBasicAttributeSetNullCascadeDeleter(evm, managedType, extendedAttribute.getWritableMappedByMappings((EntityType<?>) managedType.getType()));
+                        deleter = new UnmappedWritableBasicAttributeSetNullCascadeDeleter(evm, entityType, managedType, extendedAttribute.getWritableMappedByMappings((EntityType<?>) managedType.getType()));
                     } else {
                         deleter = new UnmappedBasicAttributeCascadeDeleter(evm, unmappedAttributeName, extendedAttribute, idAttributeName, false);
                     }
