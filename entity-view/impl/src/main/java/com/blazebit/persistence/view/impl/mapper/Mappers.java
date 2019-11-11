@@ -182,37 +182,48 @@ public final class Mappers {
 
     public static <S, T> Mapper<S, T> forViewConvertToViewAttributeMapping(EntityViewManagerImpl evm, ViewType<S> sourceViewType, ViewType<T> targetViewType, Map<String, String> mapping, Mapper<S, T> additionalMapper) {
         List<Mapper<S, T>> mappers = new ArrayList<>();
-        AttributeAccessor entityAccessor = Accessors.forEntityMapping(
-                evm,
-                sourceViewType.getEntityClass(),
-                ((MappingAttribute<?, ?>) sourceViewType.getIdAttribute()).getMapping()
-        );
         ExpressionFactory ef = evm.getCriteriaBuilderFactory().getService(ExpressionFactory.class);
         for (MethodAttribute<?, ?> attribute : targetViewType.getAttributes()) {
             if (attribute.isUpdatable() && attribute instanceof MappingAttribute<?, ?> && attribute instanceof SingularAttribute<?, ?>) {
-                if (mapping.containsValue(((MappingAttribute) attribute).getMapping())) {
-                    Type<?> attributeType = ((SingularAttribute<?, ?>) attribute).getType();
-                    AttributeAccessor targetAttributeAccessor = Accessors.forMutableViewAttribute(evm, attribute);
-                    if (attributeType instanceof ViewType<?>) {
-                        ViewType<?> viewType = (ViewType<?>) attributeType;
-                        Type<?> attributeViewIdType = ((SingularAttribute<?, ?>) viewType.getIdAttribute()).getType();
-                        EntityTupleizer entityTupleizer = null;
-                        ObjectBuilder<?> idViewBuilder = null;
-                        if (attributeViewIdType instanceof ManagedViewType<?>) {
-                            entityTupleizer = new DefaultEntityTupleizer(evm, (ManagedViewType<?>) attributeViewIdType);
-                            idViewBuilder = (ObjectBuilder<Object>) evm.getTemplate(
-                                    new MacroConfigurationExpressionFactory(ef, ef.getDefaultMacroConfiguration()),
-                                    (ManagedViewTypeImplementor<?>) attributeViewIdType,
-                                    null,
-                                    null,
-                                    null,
-                                    new MutableEmbeddingViewJpqlMacro(),
-                                    0
-                            ).createObjectBuilder(null, null, null, 0);
+                for (Map.Entry<String, String> entry : mapping.entrySet()) {
+                    if (entry.getValue().equals(((MappingAttribute) attribute).getMapping())) {
+                        Type<?> attributeType = ((SingularAttribute<?, ?>) attribute).getType();
+                        AttributeAccessor entityAccessor;
+                        if (entry.getKey().isEmpty()) {
+                            entityAccessor = Accessors.forEntityMapping(
+                                    evm,
+                                    sourceViewType.getEntityClass(),
+                                    ((MappingAttribute<?, ?>) sourceViewType.getIdAttribute()).getMapping()
+                            );
+                        } else {
+                            entityAccessor = Accessors.forEntityMapping(
+                                    evm,
+                                    sourceViewType.getEntityClass(),
+                                    entry.getKey()
+                            );
                         }
-                        mappers.add(new ReferenceViewAttributeMapper<S, T>(evm, entityAccessor, viewType.getJavaType(), entityTupleizer, targetAttributeAccessor, idViewBuilder));
-                    } else {
-                        mappers.add((Mapper<S, T>) new AttributeMapper<>(Collections.singletonList(entityAccessor), Collections.singletonList(targetAttributeAccessor)));
+                        AttributeAccessor targetAttributeAccessor = Accessors.forMutableViewAttribute(evm, attribute);
+                        if (attributeType instanceof ViewType<?>) {
+                            ViewType<?> viewType = (ViewType<?>) attributeType;
+                            Type<?> attributeViewIdType = ((SingularAttribute<?, ?>) viewType.getIdAttribute()).getType();
+                            EntityTupleizer entityTupleizer = null;
+                            ObjectBuilder<?> idViewBuilder = null;
+                            if (attributeViewIdType instanceof ManagedViewType<?>) {
+                                entityTupleizer = new DefaultEntityTupleizer(evm, (ManagedViewType<?>) attributeViewIdType);
+                                idViewBuilder = (ObjectBuilder<Object>) evm.getTemplate(
+                                        new MacroConfigurationExpressionFactory(ef, ef.getDefaultMacroConfiguration()),
+                                        (ManagedViewTypeImplementor<?>) attributeViewIdType,
+                                        null,
+                                        null,
+                                        null,
+                                        new MutableEmbeddingViewJpqlMacro(),
+                                        0
+                                ).createObjectBuilder(null, null, null, 0);
+                            }
+                            mappers.add(new ReferenceViewAttributeMapper<S, T>(evm, entityAccessor, viewType.getJavaType(), entityTupleizer, targetAttributeAccessor, idViewBuilder));
+                        } else {
+                            mappers.add((Mapper<S, T>) new AttributeMapper<>(Collections.singletonList(entityAccessor), Collections.singletonList(targetAttributeAccessor)));
+                        }
                     }
                 }
             }

@@ -30,13 +30,16 @@ import com.blazebit.persistence.view.testsuite.entity.LegacyOrder;
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPosition;
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionDefault;
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionDefaultId;
+import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionElement;
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionId;
 import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateTest;
+import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.complex.model.CreatableLegacyOrderPositionElementView;
 import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.complex.model.CreatableLegacyOrderPositionView;
 import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.complex.model.LegacyOrderIdView;
 import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.complex.model.LegacyOrderPositionDefaultIdView;
 import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.complex.model.LegacyOrderPositionIdView;
 import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.complex.model.UpdatableLegacyOrderPositionDefaultView;
+import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.complex.model.UpdatableLegacyOrderPositionElementView;
 import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.complex.model.UpdatableLegacyOrderPositionView;
 import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.complex.model.UpdatableLegacyOrderView;
 import org.junit.Assert;
@@ -65,7 +68,8 @@ public class EntityViewUpdateSubviewInverseEmbeddedComplexTest extends AbstractE
                 LegacyOrderPosition.class,
                 LegacyOrderPositionId.class,
                 LegacyOrderPositionDefault.class,
-                LegacyOrderPositionDefaultId.class
+                LegacyOrderPositionDefaultId.class,
+                LegacyOrderPositionElement.class
         };
     }
 
@@ -89,6 +93,8 @@ public class EntityViewUpdateSubviewInverseEmbeddedComplexTest extends AbstractE
         cfg.addEntityView(UpdatableLegacyOrderPositionView.class);
         cfg.addEntityView(CreatableLegacyOrderPositionView.class);
         cfg.addEntityView(UpdatableLegacyOrderPositionDefaultView.class);
+        cfg.addEntityView(UpdatableLegacyOrderPositionElementView.class);
+        cfg.addEntityView(CreatableLegacyOrderPositionElementView.class);
     }
 
     @Test
@@ -173,6 +179,32 @@ public class EntityViewUpdateSubviewInverseEmbeddedComplexTest extends AbstractE
         restartTransaction();
         LegacyOrder legacyOrder = em.find(LegacyOrder.class, newOrder.getId());
         Assert.assertEquals(0, legacyOrder.getPositions().size());
+    }
+
+    @Test
+    public void testAddElementCreateViewToCollection() {
+        // Given
+        UpdatableLegacyOrderView newOrder = evm.create(UpdatableLegacyOrderView.class);
+        CreatableLegacyOrderPositionView position = evm.create(CreatableLegacyOrderPositionView.class);
+        position.getId().setPositionId(0);
+        position.setArticleNumber("123");
+        newOrder.getPositions().add(position);
+        update(newOrder);
+
+        // When
+        CreatableLegacyOrderPositionElementView elementView = evm.create(CreatableLegacyOrderPositionElementView.class);
+        elementView.setText("test");
+        newOrder.getPositions().iterator().next().getElems().add(elementView);
+        update(newOrder);
+
+        // Then
+        restartTransaction();
+        LegacyOrder legacyOrder = em.find(LegacyOrder.class, newOrder.getId());
+        Assert.assertEquals(1, legacyOrder.getPositions().size());
+        LegacyOrderPosition orderPosition = legacyOrder.getPositions().iterator().next();
+        Assert.assertEquals(new LegacyOrderPositionId(newOrder.getId(), 0), orderPosition.getId());
+        Assert.assertEquals(1, orderPosition.getElems().size());
+        Assert.assertEquals("test", orderPosition.getElems().iterator().next().getText());
     }
 
     @Override

@@ -26,6 +26,7 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
+import com.blazebit.persistence.testsuite.entity.OrderPositionElement;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -49,7 +50,8 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
         return new Class<?>[]{
             Order.class,
             OrderPosition.class,
-            OrderPositionHead.class
+            OrderPositionHead.class,
+            OrderPositionElement.class
         };
     }
     

@@ -53,6 +53,7 @@
         <class>com.blazebit.persistence.testsuite.entity.OrderPositionHead</class>
         <class>com.blazebit.persistence.testsuite.entity.OrderPositionHeadId</class>
         <class>com.blazebit.persistence.testsuite.entity.OrderPositionId</class>
+        <class>com.blazebit.persistence.testsuite.entity.OrderPositionElement</class>
         <class>com.blazebit.persistence.testsuite.entity.Ownable</class>
         <class>com.blazebit.persistence.testsuite.entity.Person</class>
         <class>com.blazebit.persistence.testsuite.entity.PersonCTE</class>

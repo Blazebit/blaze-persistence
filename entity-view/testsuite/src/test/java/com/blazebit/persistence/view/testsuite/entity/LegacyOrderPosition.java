@@ -21,6 +21,7 @@ import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinColumns;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -40,6 +41,7 @@ public class LegacyOrderPosition implements Serializable {
     private String articleNumber;
     private Calendar creationDate;
     private Set<LegacyOrderPositionDefault> defaults = new HashSet<>();
+    private Set<LegacyOrderPositionElement> elems = new HashSet<>();
 
     public LegacyOrderPosition() {
     }
@@ -97,6 +99,25 @@ public class LegacyOrderPosition implements Serializable {
 
     public void setCreationDate(Calendar creationDate) {
         this.creationDate = creationDate;
+    }
+
+    @OneToMany
+    @JoinColumns({
+            @JoinColumn(
+                    name = "elem_order_id",
+                    referencedColumnName = "pos_order_id",
+                    updatable = false),
+            @JoinColumn(
+                    name = "elem_position",
+                    referencedColumnName = "pos_position",
+                    updatable = false)
+    })
+    public Set<LegacyOrderPositionElement> getElems() {
+        return elems;
+    }
+
+    public void setElems(Set<LegacyOrderPositionElement> elems) {
+        this.elems = elems;
     }
 
     @Override

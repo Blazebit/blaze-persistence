@@ -16,14 +16,17 @@
 
 package com.blazebit.persistence.testsuite.entity;
 
-import java.io.Serializable;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinColumns;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  *
@@ -39,6 +42,7 @@ public class OrderPosition implements Serializable {
     private OrderPositionId id;
     private Order order;
     private OrderPositionHead head;
+    private Set<OrderPositionElement> elements = new HashSet<>(0);
     
     @EmbeddedId
     public OrderPositionId getId() {
@@ -79,4 +83,22 @@ public class OrderPosition implements Serializable {
         this.head = head;
     }
 
+    @OneToMany
+    @JoinColumns({
+        @JoinColumn(
+                name = "elem_order_id",
+                referencedColumnName = "orderId",
+                updatable = false),
+        @JoinColumn(
+                name = "elem_position",
+                referencedColumnName = "position",
+                updatable = false)
+    })
+    public Set<OrderPositionElement> getElements() {
+        return elements;
+    }
+
+    public void setElements(Set<OrderPositionElement> elements) {
+        this.elements = elements;
+    }
 }
