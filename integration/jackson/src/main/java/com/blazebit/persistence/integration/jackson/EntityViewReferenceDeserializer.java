@@ -17,14 +17,15 @@
 package com.blazebit.persistence.integration.jackson;
 
 import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -64,73 +65,61 @@ public class EntityViewReferenceDeserializer extends JsonDeserializer {
     private final String idAttribute;
     private final IdType idType;
     private final boolean updatable;
+    private final boolean creatable;
 
-    public EntityViewReferenceDeserializer(EntityViewManager entityViewManager, ViewType<?> view, JsonDeserializer<Object> defaultDeserializer) {
+    public EntityViewReferenceDeserializer(EntityViewManager entityViewManager, ManagedViewType<?> view, JsonDeserializer<Object> defaultDeserializer) {
         this.entityViewManager = entityViewManager;
         this.defaultDeserializer = defaultDeserializer;
         this.entityViewClass = view.getJavaType();
-        MethodAttribute<?, ?> idAttribute = view.getIdAttribute();
-        this.idAttribute = idAttribute.getName();
-        IdType idType = ID_TYPES.get(idAttribute.getJavaType());
-        if (idType == null) {
-            throw new IllegalArgumentException("Can't create entity view reference deserializer for entity view '" + entityViewClass.getName() + "' because id attribute '" + idAttribute.getName() + "' has an unsupported id type: " + idAttribute.getJavaType().getName());
+        if (view instanceof ViewType<?>) {
+            MethodAttribute<?, ?> idAttribute = ((ViewType<?>) view).getIdAttribute();
+            this.idAttribute = idAttribute.getName();
+            IdType idType = ID_TYPES.get(idAttribute.getJavaType());
+            if (idType == null) {
+                throw new IllegalArgumentException("Can't create entity view reference deserializer for entity view '" + entityViewClass.getName() + "' because id attribute '" + idAttribute.getName() + "' has an unsupported id type: " + idAttribute.getJavaType().getName());
+            }
+            this.idType = idType;
+        } else {
+            this.idAttribute = null;
+            this.idType = null;
         }
-        this.idType = idType;
         this.updatable = view.isUpdatable();
+        this.creatable = view.isCreatable();
     }
 
     @Override
-    public Object deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JsonProcessingException {
+    public Object deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
         Object reference = null;
         ObjectCodec codec = jsonParser.getCodec();
         JsonNode treeNode = codec.readTree(jsonParser);
-        JsonNode jsonNode = treeNode.get(idAttribute);
-        Object id;
-        if (jsonNode != null && !jsonNode.isNull()) {
-            switch (idType) {
-                case BYTE:
-                    id = jsonNode.numberValue().byteValue();
-                    break;
-                case SHORT:
-                    id = jsonNode.numberValue().shortValue();
-                    break;
-                case INTEGER:
-                    id = jsonNode.numberValue().intValue();
-                    break;
-                case LONG:
-                    id = jsonNode.numberValue().longValue();
-                    break;
-                case FLOAT:
-                    id = jsonNode.numberValue().floatValue();
-                    break;
-                case DOUBLE:
-                    id = jsonNode.numberValue().doubleValue();
-                    break;
-                case CHARACTER:
-                    String s = jsonNode.textValue();
-                    if (s.length() != 1) {
-                        throw new IllegalArgumentException("Expected id value to be exactly one character but was: " + s);
-                    }
-                    id = s.charAt(0);
-                    break;
-                case STRING:
-                    id = jsonNode.textValue();
-                    break;
-                default:
-                    id = null;
-                    break;
-            }
 
-            reference = entityViewManager.getReference(entityViewClass, id);
-            if (updatable) {
-                jsonParser = codec.treeAsTokens(treeNode);
-                jsonParser.nextToken();
-                return deserializationContext.findNonContextualValueDeserializer(deserializationContext.constructType(reference.getClass()))
-                        .deserialize(jsonParser, deserializationContext, reference);
+        // We create also creatable & updatable views if no id is given
+        // If an id is given in such a case, we create a reference for updates
+        if (creatable && (!updatable || treeNode.get(idAttribute) == null)) {
+            reference = entityViewManager.create(entityViewClass);
+        } else if (idAttribute != null) {
+            JsonNode jsonNode = treeNode.get(idAttribute);
+            Object id;
+            if (jsonNode != null && !jsonNode.isNull()) {
+                if (idType == null) {
+                    id = null;
+                } else {
+                    id = idType.read(jsonNode);
+                }
+                // Remove the id attribute since we deserialized it already
+                ((ObjectNode) treeNode).without(idAttribute);
+                reference = entityViewManager.getReference(entityViewClass, id);
             }
         }
 
-        return reference;
+        if (reference == null) {
+            return null;
+        }
+
+        jsonParser = codec.treeAsTokens(treeNode);
+        jsonParser.nextToken();
+        return deserializationContext.findNonContextualValueDeserializer(deserializationContext.constructType(reference.getClass()))
+                .deserialize(jsonParser, deserializationContext, reference);
     }
 
     /**
@@ -138,13 +127,60 @@ public class EntityViewReferenceDeserializer extends JsonDeserializer {
      * @since 1.4.0
      */
     enum IdType {
-        BYTE,
-        SHORT,
-        INTEGER,
-        LONG,
-        FLOAT,
-        DOUBLE,
-        CHARACTER,
-        STRING
+        BYTE {
+            @Override
+            Object read(JsonNode jsonNode) {
+                return jsonNode.numberValue().byteValue();
+            }
+        },
+        SHORT {
+            @Override
+            Object read(JsonNode jsonNode) {
+                return jsonNode.numberValue().shortValue();
+            }
+        },
+        INTEGER {
+            @Override
+            Object read(JsonNode jsonNode) {
+                return jsonNode.numberValue().intValue();
+            }
+        },
+        LONG {
+            @Override
+            Object read(JsonNode jsonNode) {
+                return jsonNode.numberValue().longValue();
+            }
+        },
+        FLOAT {
+            @Override
+            Object read(JsonNode jsonNode) {
+                return jsonNode.numberValue().floatValue();
+            }
+        },
+        DOUBLE {
+            @Override
+            Object read(JsonNode jsonNode) {
+                return jsonNode.numberValue().doubleValue();
+            }
+        },
+        CHARACTER {
+            @Override
+            Object read(JsonNode jsonNode) {
+
+                String s = jsonNode.textValue();
+                if (s.length() != 1) {
+                    throw new IllegalArgumentException("Expected id value to be exactly one character but was: " + s);
+                }
+                return s.charAt(0);
+            }
+        },
+        STRING {
+            @Override
+            Object read(JsonNode jsonNode) {
+                return jsonNode.textValue();
+            }
+        };
+
+        abstract Object read(JsonNode jsonNode);
     }
 }

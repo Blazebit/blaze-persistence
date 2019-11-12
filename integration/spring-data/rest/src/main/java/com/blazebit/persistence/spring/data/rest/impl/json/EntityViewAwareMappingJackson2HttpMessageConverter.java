@@ -49,7 +49,21 @@ public class EntityViewAwareMappingJackson2HttpMessageConverter extends MappingJ
     }
 
     @Override
+    public boolean canRead(Type type, Class<?> contextClass, MediaType mediaType) {
+        JavaType javaType = getJavaType(type, contextClass);
+        if (!entityViewAwareObjectMapper.canRead(javaType)) {
+            return false;
+        }
+        return super.canRead(type, contextClass, mediaType);
+    }
+
+    @Override
     public boolean canWrite(Class<?> clazz, MediaType mediaType) {
+        return false;
+    }
+
+    @Override
+    public boolean canWrite(Type type, Class<?> clazz, MediaType mediaType) {
         return false;
     }
 
@@ -68,7 +82,7 @@ public class EntityViewAwareMappingJackson2HttpMessageConverter extends MappingJ
                             readValue(inputMessage.getBody());
                 }
             }
-            return entityViewAwareObjectMapper.readerFor(javaType.getRawClass()).readValue(inputMessage.getBody());
+            return entityViewAwareObjectMapper.readerFor(javaType).readValue(inputMessage.getBody());
         } catch (IOException ex) {
             throw new HttpMessageNotReadableException("Could not read document: " + ex.getMessage(), ex);
         }
