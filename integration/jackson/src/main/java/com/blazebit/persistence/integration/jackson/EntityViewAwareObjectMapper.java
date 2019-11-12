@@ -19,17 +19,18 @@ package com.blazebit.persistence.integration.jackson;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
-import com.blazebit.persistence.view.metamodel.ViewType;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.BeanDescription;
 import com.fasterxml.jackson.databind.DeserializationConfig;
-import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.deser.BeanDeserializerModifier;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+
+import java.util.Collection;
 
 /**
  * @author Christian Beikov
@@ -48,7 +49,7 @@ public class EntityViewAwareObjectMapper {
         module.setDeserializerModifier(new BeanDeserializerModifier() {
             @Override
             public JsonDeserializer<?> modifyDeserializer(DeserializationConfig config, BeanDescription beanDesc, JsonDeserializer<?> deserializer) {
-                ViewType<?> view = metamodel.view(beanDesc.getBeanClass());
+                ManagedViewType<?> view = metamodel.managedView(beanDesc.getBeanClass());
                 if (view != null) {
                     return new EntityViewReferenceDeserializer(entityViewManager, view, (JsonDeserializer<Object>) deserializer);
                 }
@@ -57,22 +58,37 @@ public class EntityViewAwareObjectMapper {
         });
         objectMapper.registerModule(module);
         objectMapper.setVisibility(PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-        objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
         this.objectMapper = objectMapper;
     }
 
+    public ObjectMapper getObjectMapper() {
+        return objectMapper;
+    }
+
     public boolean canRead(Class<?> clazz) {
-        return entityViewManager.getMetamodel().view(clazz) != null;
+        return entityViewManager.getMetamodel().managedView(clazz) != null;
+    }
+
+    public boolean canRead(JavaType javaType) {
+        if (!javaType.isContainerType()) {
+            return canRead(javaType.getRawClass());
+        } else if (javaType.isCollectionLikeType()) {
+            return canRead(javaType.getContentType().getRawClass());
+        }
+        return false;
+    }
+
+    public ObjectReader readerFor(JavaType javaType) {
+        if (Collection.class.isAssignableFrom(javaType.getRawClass())) {
+            return objectMapper.readerFor(javaType);
+        } else {
+            return readerFor(javaType.getRawClass());
+        }
     }
 
     public ObjectReader readerFor(Class<?> type) {
-        ManagedViewType<?> managedViewType = entityViewManager.getMetamodel().managedView(type);
-        if (managedViewType.isCreatable()) {
-            Object createView = entityViewManager.create(managedViewType.getJavaType());
-            return objectMapper.readerForUpdating(createView);
-        }
-        return objectMapper.readerFor(managedViewType.getJavaType());
+        return objectMapper.readerFor(type);
     }
 
 }
