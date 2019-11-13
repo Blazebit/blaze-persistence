@@ -39,6 +39,9 @@ public class PostgreSQLDbmsLimitHandler extends DefaultDbmsLimitHandler {
         // The RETURNING clause must be the last, so we find the index at which we should insert
         int returningIndex = RETURNING_FINDER.indexIn(sqlSb);
         returningIndex = returningIndex == -1 ? sqlSb.length() : returningIndex - 1;
+        if (sqlSb.indexOf(")", returningIndex) >= 0) {
+            returningIndex = sqlSb.length();
+        }
 
         if (offset != null) {
             sqlSb.insert(returningIndex, " offset " + offset);
