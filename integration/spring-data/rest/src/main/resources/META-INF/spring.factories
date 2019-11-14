@@ -1,2 +1,0 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.blazebit.persistence.spring.data.rest.impl.BlazePersistenceWebConfiguration

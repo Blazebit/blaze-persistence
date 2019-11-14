@@ -18,7 +18,7 @@ package com.blazebit.persistence.spring.data.testsuite;
 
 import com.blazebit.persistence.integration.view.spring.EnableEntityViews;
 import com.blazebit.persistence.spring.data.impl.repository.BlazePersistenceRepositoryFactoryBean;
-import com.blazebit.persistence.spring.data.rest.impl.BlazePersistenceWebConfiguration;
+import com.blazebit.persistence.spring.data.webmvc.impl.BlazePersistenceWebConfiguration;
 import com.blazebit.persistence.spring.data.testsuite.entity.Document;
 import com.blazebit.persistence.spring.data.testsuite.entity.Person;
 import com.blazebit.persistence.spring.data.testsuite.tx.TransactionalWorkService;

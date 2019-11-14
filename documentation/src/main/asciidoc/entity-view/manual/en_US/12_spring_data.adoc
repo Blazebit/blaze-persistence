@@ -361,4 +361,4 @@ Note that the client should _drop_ or _forget_ the `lowest`, `highest` and `prev
 * the sorting changes
 * the filtering changes
 
-For a full AngularJS example see the following https://github.com/Blazebit/blaze-persistence/blob/master/examples/spring-data-rest/src/main/resources/static/app.js[example project].
+For a full AngularJS example see the following https://github.com/Blazebit/blaze-persistence/blob/master/examples/spring-data-webmvc/src/main/resources/static/app.js[example project].

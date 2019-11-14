@@ -17,7 +17,7 @@
 package com.blazebit.persistence.spring.data.testsuite.controller;
 
 import com.blazebit.persistence.spring.data.repository.KeysetPageable;
-import com.blazebit.persistence.spring.data.rest.KeysetConfig;
+import com.blazebit.persistence.spring.data.webmvc.KeysetConfig;
 import com.blazebit.persistence.spring.data.testsuite.entity.Document;
 import com.blazebit.persistence.spring.data.testsuite.repository.DocumentViewRepository;
 import com.blazebit.persistence.spring.data.testsuite.view.DocumentView;

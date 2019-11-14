@@ -30,7 +30,8 @@
     <modules>
         <module>showcase</module>
         <module>deltaspike-data-rest</module>
-        <module>spring-data-rest</module>
+        <module>spring-data-webmvc</module>
+        <module>spring-data-webflux</module>
         <module>it-service-management</module>
     </modules>
 

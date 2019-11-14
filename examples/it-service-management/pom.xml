@@ -110,7 +110,7 @@
         <!-- Spring integration dependencies -->
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-spring-data-rest</artifactId>
+            <artifactId>blaze-persistence-integration-spring-data-webmvc</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -133,6 +133,12 @@
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-jpa</artifactId>
+            <version>${version.spring-data-2.1}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjweaver</artifactId>
+            <version>1.9.4</version>
         </dependency>
 
         <!-- Test dependencies -->
@@ -179,17 +185,6 @@
             <groupId>javax.annotation</groupId>
             <artifactId>javax.annotation-api</artifactId>
             <version>${version.annotation}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.data</groupId>
-            <artifactId>spring-data-jpa</artifactId>
-            <version>${version.spring-data-2.1}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.aspectj</groupId>
-            <artifactId>aspectjweaver</artifactId>
-            <version>1.9.4</version>
         </dependency>
 
         <dependency>

@@ -93,6 +93,22 @@
                             <outputDirectory>${project.build.directory}/generated-docs/entity-view/manual/en_US</outputDirectory>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>copy-documentation</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <overwrite>true</overwrite>
+                            <outputDirectory>${project.build.directory}/site/documentation/${series.version}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${basedir}/../documentation/target/generated-docs</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
@@ -206,27 +222,6 @@
                         <version>1.5.9</version>
                     </dependency>
                 </dependencies>
-            </plugin>
-            <plugin>
-                <artifactId>maven-resources-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-documentation</id>
-                        <phase>process-resources</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <overwrite>true</overwrite>
-                            <outputDirectory>${project.build.directory}/site/documentation/${series.version}</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>${basedir}/../documentation/target/generated-docs</directory>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
