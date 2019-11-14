@@ -112,10 +112,17 @@ Older releases can be found on https://github.com/Blazebit/blaze-persistence/rel
     <version>${blaze-persistence.version}</version>
 </dependency>
 
-<!-- Spring Data Rest integration module -->
+<!-- Spring Data WebMvc integration module -->
 <dependency>
     <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-spring-data-rest</artifactId>
+    <artifactId>blaze-persistence-integration-spring-data-webmvc</artifactId>
+    <version>${blaze-persistence.version}</version>
+</dependency>
+
+<!-- Spring Data WebFlux integration module -->
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-spring-data-webflux</artifactId>
     <version>${blaze-persistence.version}</version>
 </dependency>
 

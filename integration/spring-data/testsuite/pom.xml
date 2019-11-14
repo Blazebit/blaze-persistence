@@ -61,7 +61,7 @@
         </dependency>
         <dependency>
             <groupId>com.blazebit</groupId>
-            <artifactId>blaze-persistence-integration-spring-data-rest</artifactId>
+            <artifactId>blaze-persistence-integration-spring-data-webmvc</artifactId>
             <scope>compile</scope>
         </dependency>
         <dependency>

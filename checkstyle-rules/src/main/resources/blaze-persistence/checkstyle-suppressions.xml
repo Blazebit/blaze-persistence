@@ -33,6 +33,9 @@
     <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]impl[\\/]repository[\\/]BlazePersistenceRepositoryFactory\.java$"/>
     <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]impl[\\/]repository[\\/]DefaultRepositoryInformation\.java$"/>
     <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]impl[\\/]repository[\\/]MethodLookups\.java$"/>
+    <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]webflux[\\/]impl[\\/]PageableHandlerMethodArgumentResolver\.java$"/>
+    <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]webflux[\\/]impl[\\/]SortHandlerMethodArgumentResolver\.java$"/>
+    <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]webflux[\\/]impl[\\/]SortArgumentResolver\.java$"/>
 
     <!-- The implementation, testsuite and examples don't have to fit our Javadoc requirements -->
     <suppress checks="JavadocPackage" files="[\\/](parser|impl|integration|testsuite|examples|org.springframework)[\\/].*\.java$"/>

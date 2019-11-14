@@ -20,7 +20,6 @@ import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.BeanDescription;
 import com.fasterxml.jackson.databind.DeserializationConfig;
 import com.fasterxml.jackson.databind.JavaType;
@@ -28,8 +27,11 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.deser.BeanDeserializerModifier;
+import com.fasterxml.jackson.databind.introspect.AnnotatedMethod;
+import com.fasterxml.jackson.databind.introspect.VisibilityChecker;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
+import java.lang.reflect.Method;
 import java.util.Collection;
 
 /**
@@ -57,7 +59,27 @@ public class EntityViewAwareObjectMapper {
             }
         });
         objectMapper.registerModule(module);
-        objectMapper.setVisibility(PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
+        objectMapper.setVisibility(new VisibilityChecker.Std(JsonAutoDetect.Visibility.DEFAULT) {
+            @Override
+            public boolean isGetterVisible(Method m) {
+                return metamodel.managedView(m.getDeclaringClass()) == null && super.isGetterVisible(m);
+            }
+
+            @Override
+            public boolean isGetterVisible(AnnotatedMethod m) {
+                return metamodel.managedView(m.getDeclaringClass()) == null && super.isGetterVisible(m);
+            }
+
+            @Override
+            public boolean isIsGetterVisible(Method m) {
+                return metamodel.managedView(m.getDeclaringClass()) == null && super.isGetterVisible(m);
+            }
+
+            @Override
+            public boolean isIsGetterVisible(AnnotatedMethod m) {
+                return metamodel.managedView(m.getDeclaringClass()) == null && super.isGetterVisible(m);
+            }
+        });
 
         this.objectMapper = objectMapper;
     }

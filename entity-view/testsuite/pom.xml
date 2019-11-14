@@ -1479,11 +1479,6 @@
                 </dependency>
                 <dependency>
                     <groupId>org.datanucleus</groupId>
-                    <artifactId>datanucleus-jpa-query</artifactId>
-                    <version>${version.datanucleus.jpa-4}</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.datanucleus</groupId>
                     <artifactId>datanucleus-rdbms</artifactId>
                     <version>${version.datanucleus.rdbms-4}</version>
                 </dependency>

@@ -310,11 +310,6 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>blaze-persistence-integration-datanucleus-5.1</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-testsuite-base-eclipselink</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -365,7 +360,12 @@
             </dependency>
             <dependency>
                 <groupId>com.blazebit</groupId>
-                <artifactId>blaze-persistence-integration-spring-data-rest</artifactId>
+                <artifactId>blaze-persistence-integration-spring-data-webmvc</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-spring-data-webflux</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

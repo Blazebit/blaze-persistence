@@ -157,7 +157,11 @@
         </dependency>
         <dependency>
             <groupId>com.blazebit</groupId>
-            <artifactId>blaze-persistence-integration-spring-data-rest</artifactId>
+            <artifactId>blaze-persistence-integration-spring-data-webmvc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.blazebit</groupId>
+            <artifactId>blaze-persistence-integration-spring-data-webflux</artifactId>
         </dependency>
         <dependency>
             <groupId>com.blazebit</groupId>
