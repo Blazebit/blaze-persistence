@@ -48,6 +48,7 @@ public class VersionAttributeFlusher<E, V> extends BasicAttributeFlusher<E, V> {
                 null,
                 null,
                 null,
+                null,
                 userType,
                 null,
                 null,

@@ -47,7 +47,7 @@ public class FullEntityLoader extends AbstractEntityLoader {
 
     public FullEntityLoader(EntityViewManagerImpl evm, ManagedViewType<?> subviewType) {
         // ViewIdMapper is not necessary because this will always be invoked with a null id
-        super(subviewType.getEntityClass(), jpaIdOf(evm , subviewType), null, evm.getEntityIdAccessor());
+        super(evm, subviewType.getEntityClass(), jpaIdOf(evm, subviewType), viewIdMappingOf(evm, subviewType), null, evm.getEntityIdAccessor());
         this.queryString = createQueryString(evm, subviewType);
     }
 

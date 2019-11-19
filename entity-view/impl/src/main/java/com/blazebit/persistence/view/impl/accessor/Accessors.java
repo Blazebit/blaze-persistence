@@ -231,7 +231,7 @@ public final class Accessors {
     }
 
     public static AttributeAccessor forEntityMapping(EntityViewManagerImpl evm, Class<?> entityClass, String mapping) {
-        if (mapping.isEmpty()) {
+        if (mapping == null || mapping.isEmpty()) {
             return new NestedAttributeAccessor(Collections.<AttributeAccessor>emptyList());
         }
         EntityMetamodel entityMetamodel = evm.getMetamodel().getEntityMetamodel();

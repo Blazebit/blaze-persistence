@@ -530,6 +530,7 @@ public interface JpaProvider {
      * @param attributeName The association attribute
      * @return the identifier or unique key inverse properties of the association attribute
      * @since 1.2.1
+     * @deprecated Use {@link #getJoinMappingPropertyNames(EntityType, String, String)} instead
      */
     public List<String> getIdentifierOrUniqueKeyEmbeddedPropertyNames(EntityType<?> owner, String attributeName);
 
@@ -541,8 +542,20 @@ public interface JpaProvider {
      * @param attributeName The association attribute
      * @return the identifier or unique key inverse properties of the association attribute
      * @since 1.3.0
+     * @deprecated Use {@link #getJoinMappingPropertyNames(EntityType, String, String)} instead
      */
     public List<String> getIdentifierOrUniqueKeyEmbeddedPropertyNames(EntityType<?> owner, String elementCollectionPath, String attributeName);
+
+    /**
+     * Returns the join mapping property names of an association attribute. This is a mapping from target to source property names.
+     *
+     * @param owner The owning entity type
+     * @param elementCollectionPath The nullable path to the element collection within which the attribute is contained
+     * @param attributeName The association attribute
+     * @return the property names from target type to the source type
+     * @since 1.4.0
+     */
+    public Map<String, String> getJoinMappingPropertyNames(EntityType<?> owner, String elementCollectionPath, String attributeName);
 
     /**
      * Returns the identifier of the entity object.

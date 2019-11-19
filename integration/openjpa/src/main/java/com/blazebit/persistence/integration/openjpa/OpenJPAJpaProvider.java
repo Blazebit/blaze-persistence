@@ -33,6 +33,7 @@ import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -397,6 +398,21 @@ public class OpenJPAJpaProvider implements JpaProvider {
     @Override
     public List<String> getIdentifierOrUniqueKeyEmbeddedPropertyNames(EntityType<?> owner, String elementCollectionPath, String attributeName) {
         return Collections.emptyList();
+    }
+
+    @Override
+    public Map<String, String> getJoinMappingPropertyNames(EntityType<?> owner, String elementCollectionPath, String attributeName) {
+        List<String> keys;
+        if (elementCollectionPath == null) {
+            keys = getIdentifierOrUniqueKeyEmbeddedPropertyNames(owner, attributeName);
+        } else {
+            keys = getIdentifierOrUniqueKeyEmbeddedPropertyNames(owner, elementCollectionPath, attributeName);
+        }
+        Map<String, String> map = new HashMap<>(keys.size());
+        for (String key : keys) {
+            map.put(key, null);
+        }
+        return map;
     }
 
     @Override

@@ -34,6 +34,7 @@ import java.io.Serializable;
 public class BookISBNReferenceEntity extends LongSequenceEntity implements Serializable {
     private static final long serialVersionUID = 1L;
 
+    private Long version;
     private BookEntity book;
     private BookEntity bookNormal;
 
@@ -42,6 +43,14 @@ public class BookISBNReferenceEntity extends LongSequenceEntity implements Seria
 
     public BookISBNReferenceEntity(Long id) {
         super(id);
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 
     @OneToOne

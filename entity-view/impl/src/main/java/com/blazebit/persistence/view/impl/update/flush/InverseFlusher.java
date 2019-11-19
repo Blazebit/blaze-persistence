@@ -168,6 +168,7 @@ public final class InverseFlusher<E> {
                             attribute.getUpdateCascadeAllowedSubtypes(),
                             new ReferenceEntityLoader(evm, childViewType, EntityViewUpdaterImpl.createViewIdMapper(evm, childViewType)),
                             Accessors.forViewId(evm, childViewType, true),
+                            evm.getEntityIdAccessor(),
                             true,
                             owner,
                             ownerMapping
@@ -206,6 +207,7 @@ public final class InverseFlusher<E> {
                             attribute.getUpdateCascadeAllowedSubtypes(),
                             new ReferenceEntityLoader(evm, childViewType, EntityViewUpdaterImpl.createViewIdMapper(evm, childViewType)),
                             Accessors.forViewId(evm, childViewType, true),
+                            evm.getEntityIdAccessor(),
                             true,
                             owner,
                             ownerMapping

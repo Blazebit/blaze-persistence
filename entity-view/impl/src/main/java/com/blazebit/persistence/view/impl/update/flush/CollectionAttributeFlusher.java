@@ -387,7 +387,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 }
                 if (removeSpecific) {
                     if (inverseFlusher == null) {
-                        String entityIdAttributeName = elementDescriptor.getEntityIdAttributeName();
+                        String entityIdAttributeName = elementDescriptor.getAttributeIdAttributeName();
                         if (entityIdAttributeName != null) {
                             removedObjects = appendRemoveSpecific(context, deleteCb, fusedCollectionActions);
                             removedAll = false;
@@ -463,17 +463,22 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
             InsertCriteriaBuilder<?> insertCb = context.getEntityViewManager().getCriteriaBuilderFactory().insertCollection(context.getEntityManager(), ownerEntityClass, mapping);
 
             String entityIdAttributeName = elementDescriptor.getEntityIdAttributeName();
+            String attributeIdAttributeName = elementDescriptor.getAttributeIdAttributeName();
             if (flushAtOnce) {
                 if (entityIdAttributeName == null) {
                     insertCb.fromValues(ownerEntityClass, mapping, "val", elementsToAdd);
-                } else {
+                } else if (attributeIdAttributeName.equals(entityIdAttributeName)) {
                     insertCb.fromIdentifiableValues((Class<Object>) elementDescriptor.getJpaType(), "val", elementsToAdd);
+                } else {
+                    insertCb.fromIdentifiableValues((Class<Object>) elementDescriptor.getJpaType(), attributeIdAttributeName, "val", elementsToAdd);
                 }
             } else {
                 if (entityIdAttributeName == null) {
                     insertCb.fromValues(ownerEntityClass, mapping, "val", 1);
-                } else {
+                } else if (attributeIdAttributeName.equals(entityIdAttributeName)) {
                     insertCb.fromIdentifiableValues((Class<Object>) elementDescriptor.getJpaType(), "val", 1);
+                } else {
+                    insertCb.fromIdentifiableValues((Class<Object>) elementDescriptor.getJpaType(), attributeIdAttributeName, "val", 1);
                 }
             }
             for (int i = 0; i < ownerIdBindFragments.length; i += 2) {
@@ -822,7 +827,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 if (evm.getDbmsDialect().supportsReturningColumns()) {
                     List<Tuple> tuples = evm.getCriteriaBuilderFactory().deleteCollection(context.getEntityManager(), ownerEntityClass, "e", mapping)
                             .where(ownerIdAttributeName).eq(ownerId)
-                            .executeWithReturning(mapping + "." + elementDescriptor.getEntityIdAttributeName())
+                            .executeWithReturning(mapping + "." + elementDescriptor.getAttributeIdAttributeName())
                             .getResultList();
 
                     elementIds = new ArrayList<>(tuples.size());
@@ -832,7 +837,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 } else {
                     elementIds = (List<Object>) evm.getCriteriaBuilderFactory().create(context.getEntityManager(), ownerEntityClass, "e")
                             .where(ownerIdAttributeName).eq(ownerId)
-                            .select("e." + mapping + "." + elementDescriptor.getEntityIdAttributeName())
+                            .select("e." + mapping + "." + elementDescriptor.getAttributeIdAttributeName())
                             .getResultList();
                     if (!elementIds.isEmpty() && !jpaProviderDeletesCollection) {
                         // We must always delete this, otherwise we might get a constraint violation because of the cascading delete

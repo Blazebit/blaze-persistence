@@ -100,6 +100,9 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public X fromIdentifiableValues(Class<?> valueClass, String alias, int valueCount);
 
     @Override
+    public X fromIdentifiableValues(Class<?> valueClass, String identifierAttribute, String alias, int valueCount);
+
+    @Override
     public <T> X fromValues(Class<T> valueClass, String alias, Collection<T> values);
 
     @Override
@@ -107,6 +110,9 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
 
     @Override
     public <T> X fromIdentifiableValues(Class<T> valueClass, String alias, Collection<T> values);
+
+    @Override
+    public <T> X fromIdentifiableValues(Class<T> valueClass, String identifierAttribute, String alias, Collection<T> values);
 
     /*
      * Join methods

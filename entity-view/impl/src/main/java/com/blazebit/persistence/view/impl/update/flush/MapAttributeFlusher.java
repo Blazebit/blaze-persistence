@@ -486,17 +486,23 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
             InsertCriteriaBuilder<?> insertCb = context.getEntityViewManager().getCriteriaBuilderFactory().insertCollection(context.getEntityManager(), ownerEntityClass, mapping);
 
             String keyEntityIdAttributeName = keyDescriptor.getEntityIdAttributeName();
+            String keyAttributeIdAttributeName = keyDescriptor.getAttributeIdAttributeName();
             if (keyEntityIdAttributeName == null) {
                 insertCb.fromValues(ownerEntityClass, "KEY(" + mapping + ")", "key", 1);
-            } else {
+            } else if (keyEntityIdAttributeName.equals(keyAttributeIdAttributeName)) {
                 insertCb.fromIdentifiableValues((Class<Object>) keyDescriptor.getJpaType(), "key", 1);
+            } else {
+                insertCb.fromIdentifiableValues((Class<Object>) keyDescriptor.getJpaType(), keyAttributeIdAttributeName, "key", 1);
             }
 
             String entityIdAttributeName = elementDescriptor.getEntityIdAttributeName();
+            String attributeIdAttributeName = elementDescriptor.getAttributeIdAttributeName();
             if (entityIdAttributeName == null) {
                 insertCb.fromValues(ownerEntityClass, mapping, "val", 1);
-            } else {
+            } else if (entityIdAttributeName.equals(attributeIdAttributeName)) {
                 insertCb.fromIdentifiableValues((Class<Object>) elementDescriptor.getJpaType(), "val", 1);
+            } else {
+                insertCb.fromIdentifiableValues((Class<Object>) elementDescriptor.getJpaType(), attributeIdAttributeName, "val", 1);
             }
             insertCb.bind("KEY(" + mapping + ")").select("key");
             for (int i = 0; i < ownerIdBindFragments.length; i += 2) {
@@ -908,7 +914,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
             if (evm.getDbmsDialect().supportsReturningColumns()) {
                 List<Tuple> tuples = evm.getCriteriaBuilderFactory().deleteCollection(context.getEntityManager(), ownerEntityClass, "e", attributeName)
                         .where(ownerIdAttributeName).eq(ownerId)
-                        .executeWithReturning(attributeName + "." + elementDescriptor.getEntityIdAttributeName())
+                        .executeWithReturning(attributeName + "." + elementDescriptor.getAttributeIdAttributeName())
                         .getResultList();
 
                 elementIds = new ArrayList<>(tuples.size());
@@ -918,7 +924,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
             } else {
                 elementIds = (List<Object>) evm.getCriteriaBuilderFactory().create(context.getEntityManager(), ownerEntityClass, "e")
                         .where(ownerIdAttributeName).eq(ownerId)
-                        .select("e." + attributeName + "." + elementDescriptor.getEntityIdAttributeName())
+                        .select("e." + attributeName + "." + elementDescriptor.getAttributeIdAttributeName())
                         .getResultList();
                 if (!elementIds.isEmpty() && !jpaProviderDeletesCollection) {
                     // We must always delete this, otherwise we might get a constraint violation because of the cascading delete

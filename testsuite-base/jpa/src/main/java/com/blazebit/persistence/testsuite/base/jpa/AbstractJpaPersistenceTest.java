@@ -134,6 +134,10 @@ public abstract class AbstractJpaPersistenceTest {
     }
 
     protected void cleanDatabase() {
+        cleanDatabaseWithCleaner();
+    }
+
+    protected final void cleanDatabaseWithCleaner() {
         // Nothing to delete if the database is "clean"
         if (databaseClean) {
             return;

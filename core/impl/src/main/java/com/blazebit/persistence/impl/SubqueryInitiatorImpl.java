@@ -205,6 +205,17 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     }
 
     @Override
+    public SubqueryBuilder<X> fromIdentifiableValues(Class<?> valueClass, String identifierAttribute, String alias, int valueCount) {
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
+        if (inExists) {
+            subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createSimpleExpression("1"))));
+        }
+        subqueryBuilder.fromIdentifiableValues(valueClass, identifierAttribute, alias, valueCount);
+        listener.onBuilderStarted(subqueryBuilder);
+        return subqueryBuilder;
+    }
+
+    @Override
     public <T> SubqueryBuilder<X> fromValues(Class<T> valueClass, String alias, Collection<T> values) {
         SubqueryBuilder<X> builder = fromValues(valueClass, alias, values.size());
         builder.setParameter(alias, values);
@@ -221,6 +232,13 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     @Override
     public <T> SubqueryBuilder<X> fromIdentifiableValues(Class<T> valueClass, String alias, Collection<T> values) {
         SubqueryBuilder<X> builder = fromIdentifiableValues(valueClass, alias, values.size());
+        builder.setParameter(alias, values);
+        return builder;
+    }
+
+    @Override
+    public <T> SubqueryBuilder<X> fromIdentifiableValues(Class<T> valueClass, String identifierAttribute, String alias, Collection<T> values) {
+        SubqueryBuilder<X> builder = fromIdentifiableValues(valueClass, identifierAttribute, alias, values.size());
         builder.setParameter(alias, values);
         return builder;
     }

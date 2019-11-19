@@ -153,6 +153,24 @@ public interface FromBaseBuilder<X extends FromBaseBuilder<X>> {
     public X fromIdentifiableValues(Class<?> valueClass, String alias, int valueCount);
 
     /**
+     * Add a VALUES clause for values of the given value class to the from clause.
+     * This introduces a parameter named like the given alias.
+     *
+     * In contrast to {@link FromBaseBuilder#fromValues(Class, String, int)} this will only bind the identifier attribute.
+     *
+     * To set the values invoke {@link CommonQueryBuilder#setParameter(String, Object)}
+     * or {@link javax.persistence.Query#setParameter(String, Object)} with the alias and a collection.
+     *
+     * @param valueClass The class of the identifiable type for which to create a VALUES clause
+     * @param identifierAttribute The attribute of the entity type to consider as identifier attribute
+     * @param alias The alias for the entity
+     * @param valueCount The number of values to use for the values clause
+     * @return The query builder for chaining calls
+     * @since 1.4.0
+     */
+    public X fromIdentifiableValues(Class<?> valueClass, String identifierAttribute, String alias, int valueCount);
+
+    /**
      * Like {@link FromBaseBuilder#fromValues(Class, String, int)} but passes the collection size
      * as valueCount and directly binds the collection as parameter via {@link CommonQueryBuilder#setParameter(String, Object)}.
      *
@@ -190,5 +208,19 @@ public interface FromBaseBuilder<X extends FromBaseBuilder<X>> {
      * @since 1.2.0
      */
     public <T> X fromIdentifiableValues(Class<T> valueClass, String alias, Collection<T> values);
+
+    /**
+     * Like {@link FromBaseBuilder#fromIdentifiableValues(Class, String, String, int)} but passes the collection size
+     * as valueCount and directly binds the collection as parameter via {@link CommonQueryBuilder#setParameter(String, Object)}.
+     *
+     * @param valueClass The class of the identifiable type for which to create a VALUES clause
+     * @param identifierAttribute The attribute of the entity type to consider as identifier attribute
+     * @param alias The alias for the entity
+     * @param values The values to use for the values clause
+     * @param <T> The type of the values
+     * @return The query builder for chaining calls
+     * @since 1.4.0
+     */
+    public <T> X fromIdentifiableValues(Class<T> valueClass, String identifierAttribute, String alias, Collection<T> values);
 
 }

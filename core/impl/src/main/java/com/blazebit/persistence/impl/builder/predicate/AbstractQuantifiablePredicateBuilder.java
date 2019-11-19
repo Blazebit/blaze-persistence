@@ -333,6 +333,12 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAn
     }
 
     @Override
+    public SubqueryBuilder<T> fromIdentifiableValues(Class<?> valueClass, String identifierAttribute, String alias, int valueCount) {
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        return getSubqueryInitiator().fromIdentifiableValues(valueClass, identifierAttribute, alias, valueCount);
+    }
+
+    @Override
     public <X> SubqueryBuilder<T> fromValues(Class<X> valueClass, String alias, Collection<X> values) {
         chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
         return getSubqueryInitiator().fromValues(valueClass, alias, values);
@@ -348,6 +354,12 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAn
     public <X> SubqueryBuilder<T> fromIdentifiableValues(Class<X> valueClass, String alias, Collection<X> values) {
         chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
         return getSubqueryInitiator().fromIdentifiableValues(valueClass, alias, values);
+    }
+
+    @Override
+    public <X> SubqueryBuilder<T> fromIdentifiableValues(Class<X> valueClass, String identifierAttribute, String alias, Collection<X> values) {
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        return getSubqueryInitiator().fromIdentifiableValues(valueClass, identifierAttribute, alias, values);
     }
 
     @Override

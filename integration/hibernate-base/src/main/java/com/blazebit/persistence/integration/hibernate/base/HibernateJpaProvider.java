@@ -688,7 +688,7 @@ public class HibernateJpaProvider implements JpaProvider {
         String[] sourcePropertyNames;
         if (identifierType.isComponentType()) {
             ComponentType componentType = (ComponentType) identifierType;
-            sourcePropertyPrefix = sourceType.getIdentifierPropertyName() + ".";
+            sourcePropertyPrefix = sourceType.getIdentifierPropertyName() == null ? "" : sourceType.getIdentifierPropertyName() + ".";
             sourcePropertyNames = componentType.getPropertyNames();
         } else {
             sourcePropertyPrefix = "";
@@ -698,7 +698,7 @@ public class HibernateJpaProvider implements JpaProvider {
         Type targetIdType = entityPersister.getIdentifierType();
         if (targetIdType.isComponentType()) {
             ComponentType targetIdentifierType = (ComponentType) entityPersister.getIdentifierType();
-            String targetPropertyPrefix = entityPersister.getIdentifierPropertyName() + ".";
+            String targetPropertyPrefix = entityPersister.getIdentifierPropertyName() == null ? "" : entityPersister.getIdentifierPropertyName() + ".";
             String[] identifierColumnNames = entityPersister.getIdentifierColumnNames();
             String[] targetIdentifierTypePropertyNames = targetIdentifierType.getPropertyNames();
             Map<String, String> mapping = new HashMap<>();
@@ -737,9 +737,9 @@ public class HibernateJpaProvider implements JpaProvider {
             if (propertyType instanceof org.hibernate.type.EntityType) {
                 // If the columns refer to an association, we map that through instead of trying to set just the identifier properties
                 if (elementPersister.getEntityName().equals(((org.hibernate.type.EntityType) propertyType).getAssociatedEntityName())) {
-                    List<String> identifierPropertyNames = getIdentifierOrUniqueKeyEmbeddedPropertyNames(ownerType, attributeName);
+                    int identifierCount = getJoinMappingPropertyNames(ownerType, null, attributeName).size();
                     iterator.remove();
-                    for (int i = 1; i < identifierPropertyNames.size(); i++) {
+                    for (int i = 1; i < identifierCount; i++) {
                         iterator.next();
                         iterator.remove();
                     }
@@ -757,7 +757,6 @@ public class HibernateJpaProvider implements JpaProvider {
 
         return set;
     }
-
 
     protected String getMappedBy(CollectionPersister persister) {
         if (persister instanceof CustomCollectionPersister) {
@@ -1147,7 +1146,20 @@ public class HibernateJpaProvider implements JpaProvider {
             }
         }
         AbstractEntityPersister ownerEntityPersister = (AbstractEntityPersister) queryableCollection.getOwnerEntityPersister();
-        String[] primaryKeyColumnMetaData = ownerEntityPersister.getKeyColumnNames();
+        String[] primaryKeyColumnMetaData;
+        if (queryableCollection.getKeyType() instanceof EmbeddedComponentType) {
+            String[] propertyNames = ((EmbeddedComponentType) queryableCollection.getKeyType()).getPropertyNames();
+            List<String> columnNames = new ArrayList<>(propertyNames.length);
+            for (String propertyName : propertyNames) {
+                for (String propertyColumnName : ownerEntityPersister.getPropertyColumnNames(propertyName)) {
+                    columnNames.add(propertyColumnName);
+                }
+            }
+
+            primaryKeyColumnMetaData = columnNames.toArray(new String[columnNames.size()]);
+        } else {
+            primaryKeyColumnMetaData = ownerEntityPersister.getKeyColumnNames();
+        }
         String[] foreignKeyColumnMetaData = queryableCollection.getKeyColumnNames();
         Map<String, String> idColumnMapping = new HashMap<>(primaryKeyColumnMetaData.length);
         for (int i = 0; i < foreignKeyColumnMetaData.length; i++) {
@@ -1179,7 +1191,7 @@ public class HibernateJpaProvider implements JpaProvider {
         if (identifierType instanceof ComponentType) {
             String[] idPropertyNames = ((ComponentType) identifierType).getPropertyNames();
             for (String propertyName : idPropertyNames) {
-                String attributeName = ownerEntityPersister.getIdentifierPropertyName() + "." + propertyName;
+                String attributeName = ownerEntityPersister.getIdentifierPropertyName() == null ? "" : ownerEntityPersister.getIdentifierPropertyName() + "." + propertyName;
                 String[] propertyColumnNames = ownerEntityPersister.getSubclassPropertyColumnNames(attributeName);
                 if (propertyColumnNames != null) {
                     for (int j = 0; j < propertyColumnNames.length; j++) {
@@ -1379,51 +1391,109 @@ public class HibernateJpaProvider implements JpaProvider {
 
     @Override
     public List<String> getIdentifierOrUniqueKeyEmbeddedPropertyNames(EntityType<?> owner, String attributeName) {
-        AbstractEntityPersister entityPersister = getEntityPersister(owner);
-        Type propertyType = entityPersister.getPropertyType(attributeName);
-        List<String> identifierOrUniqueKeyPropertyNames = new ArrayList<>();
-
-        if (propertyType instanceof CollectionType) {
-            Type elementType = ((CollectionType) propertyType).getElementType(entityPersister.getFactory());
-            Collection<String> targetAttributeNames = getJoinTable(owner, attributeName).getTargetAttributeNames();
-            if (targetAttributeNames == null) {
-                collectPropertyNames(identifierOrUniqueKeyPropertyNames, null, elementType, entityPersister.getFactory());
-            } else {
-                AbstractEntityPersister elementPersister = (AbstractEntityPersister) entityPersisters.get(((org.hibernate.type.EntityType) elementType).getAssociatedEntityName());
-                for (String targetAttributeName : targetAttributeNames) {
-                    collectPropertyNames(identifierOrUniqueKeyPropertyNames, targetAttributeName, elementPersister.getPropertyType(targetAttributeName), entityPersister.getFactory());
-                }
-            }
-        } else {
-            collectPropertyNames(identifierOrUniqueKeyPropertyNames, null, propertyType, entityPersister.getFactory());
-        }
-
-        return identifierOrUniqueKeyPropertyNames;
+        return new ArrayList<>(getJoinMappingPropertyNames(owner, null, attributeName).keySet());
     }
 
     @Override
     public List<String> getIdentifierOrUniqueKeyEmbeddedPropertyNames(EntityType<?> owner, String elementCollectionPath, String attributeName) {
-        QueryableCollection persister = getCollectionPersister(owner, elementCollectionPath);
-        ComponentType componentType = (ComponentType) persister.getElementType();
-        String subAttribute = attributeName.substring(elementCollectionPath.length() + 1);
-        // Component types only store direct properties, so we have to go deeper
-        String[] propertyParts = subAttribute.split("\\.");
+        return new ArrayList<>(getJoinMappingPropertyNames(owner, elementCollectionPath, attributeName).keySet());
+    }
+
+    @Override
+    public Map<String, String> getJoinMappingPropertyNames(EntityType<?> owner, String elementCollectionPath, String attributeName) {
+        QueryableCollection persister;
         Type propertyType;
-        for (int i = 0; i < propertyParts.length - 1; i++) {
-            int index = componentType.getPropertyIndex(propertyParts[i]);
-            propertyType = componentType.getSubtypes()[index];
-            if (propertyType instanceof ComponentType) {
-                componentType = (ComponentType) propertyType;
-            } else {
-                // A path expression shouldn't navigate over an association..
-                throw new IllegalStateException("Can't get the id properties for: " + attributeName);
+        AbstractEntityPersister entityPersister = getEntityPersister(owner);
+        SessionFactoryImplementor factory = entityPersister.getFactory();
+        if (elementCollectionPath != null && (persister = getCollectionPersister(owner, elementCollectionPath)) != null) {
+            ComponentType componentType = (ComponentType) persister.getElementType();
+            String subAttribute = attributeName.substring(elementCollectionPath.length() + 1);
+            // Component types only store direct properties, so we have to go deeper
+            String[] propertyParts = subAttribute.split("\\.");
+            for (int i = 0; i < propertyParts.length - 1; i++) {
+                int index = componentType.getPropertyIndex(propertyParts[i]);
+                propertyType = componentType.getSubtypes()[index];
+                if (propertyType instanceof ComponentType) {
+                    componentType = (ComponentType) propertyType;
+                } else {
+                    // A path expression shouldn't navigate over an association..
+                    throw new IllegalStateException("Can't get the id properties for: " + attributeName);
+                }
+            }
+
+            propertyType = componentType.getSubtypes()[componentType.getPropertyIndex(propertyParts[propertyParts.length - 1])];
+        } else {
+            propertyType = entityPersister.getPropertyType(attributeName);
+        }
+
+        List<String> identifierOrUniqueKeyPropertyNames = new ArrayList<>();
+        List<String> sourceIdentifierOrUniqueKeyPropertyNames = new ArrayList<>();
+
+        if (propertyType instanceof CollectionType) {
+            Type elementType = ((CollectionType) propertyType).getElementType(factory);
+            if (elementType instanceof org.hibernate.type.EntityType) {
+                JoinTable joinTable = getJoinTable(owner, attributeName);
+                Collection<String> targetAttributeNames = joinTable == null ? null : joinTable.getTargetAttributeNames();
+                if (targetAttributeNames == null) {
+                    collectPropertyNames(identifierOrUniqueKeyPropertyNames, null, elementType, factory);
+                    String mappedBy = getMappedBy(getCollectionPersister(owner, attributeName));
+                    if (mappedBy == null || mappedBy.isEmpty()) {
+                        // Not sure if this can happen. If we can't determine targetAttributeNames or don't have a join table
+                        // but also no mapped by attribute, I don't know if that is even a valid/possible mapping
+                        if (((CollectionType) propertyType).useLHSPrimaryKey()) {
+                            // TODO: this doesn't work for entities using an id class
+                            sourceIdentifierOrUniqueKeyPropertyNames.add(entityPersister.getIdentifierPropertyName());
+                        } else {
+                            throw new IllegalArgumentException("One-to-many using natural key is unsupported!");
+                        }
+                    } else {
+                        AbstractEntityPersister elementPersister = (AbstractEntityPersister) entityPersisters.get(((org.hibernate.type.EntityType) elementType).getAssociatedEntityName());
+                        collectPropertyNames(sourceIdentifierOrUniqueKeyPropertyNames, null, elementPersister.getPropertyType(mappedBy), factory);
+                    }
+                } else {
+                    AbstractEntityPersister elementPersister = (AbstractEntityPersister) entityPersisters.get(((org.hibernate.type.EntityType) elementType).getAssociatedEntityName());
+                    for (String targetAttributeName : targetAttributeNames) {
+                        collectPropertyNames(identifierOrUniqueKeyPropertyNames, targetAttributeName, elementPersister.getPropertyType(targetAttributeName), factory);
+                    }
+                    for (String idAttributeName : joinTable.getIdAttributeNames()) {
+                        collectPropertyNames(sourceIdentifierOrUniqueKeyPropertyNames, idAttributeName, entityPersister.getPropertyType(idAttributeName), factory);
+                    }
+                }
+            }
+        } else {
+            collectPropertyNames(identifierOrUniqueKeyPropertyNames, null, propertyType, factory);
+            if (propertyType instanceof org.hibernate.type.EntityType) {
+                if (((org.hibernate.type.EntityType) propertyType).isReferenceToPrimaryKey()) {
+                    if (entityPersister.getIdentifierType().isComponentType()) {
+                        String targetPropertyPrefix = entityPersister.getIdentifierPropertyName() == null ? attributeName + "." : entityPersister.getIdentifierPropertyName() + ".";
+                        for (int i = 0; i < identifierOrUniqueKeyPropertyNames.size(); i++) {
+                            sourceIdentifierOrUniqueKeyPropertyNames.add(targetPropertyPrefix + identifierOrUniqueKeyPropertyNames.get(i));
+                        }
+                    } else {
+                        sourceIdentifierOrUniqueKeyPropertyNames.add(entityPersister.getIdentifierPropertyName());
+                    }
+                } else if (propertyType instanceof OneToOneType) {
+                    String mappedBy = ((OneToOneType) propertyType).getRHSUniqueKeyPropertyName();
+                    if (mappedBy == null || mappedBy.isEmpty()) {
+                        throw new IllegalArgumentException("One-to-one using natural key is unsupported!");
+                    } else {
+                        AbstractEntityPersister elementPersister = (AbstractEntityPersister) entityPersisters.get(((org.hibernate.type.EntityType) propertyType).getAssociatedEntityName());
+                        collectPropertyNames(sourceIdentifierOrUniqueKeyPropertyNames, null, elementPersister.getPropertyType(mappedBy), factory);
+                    }
+                }
             }
         }
 
-        propertyType = componentType.getSubtypes()[componentType.getPropertyIndex(propertyParts[propertyParts.length - 1])];
-        List<String> identifierOrUniqueKeyPropertyNames = new ArrayList<>();
-        collectPropertyNames(identifierOrUniqueKeyPropertyNames, null, propertyType, persister.getFactory());
-        return identifierOrUniqueKeyPropertyNames;
+        Map<String, String> joinMapping = new HashMap<>(identifierOrUniqueKeyPropertyNames.size());
+        for (int i = 0; i < identifierOrUniqueKeyPropertyNames.size(); i++) {
+            if (sourceIdentifierOrUniqueKeyPropertyNames.size() > i) {
+                joinMapping.put(identifierOrUniqueKeyPropertyNames.get(i), sourceIdentifierOrUniqueKeyPropertyNames.get(i));
+            } else {
+                joinMapping.put(identifierOrUniqueKeyPropertyNames.get(i), null);
+            }
+        }
+
+        return joinMapping;
     }
 
     private void collectPropertyNames(Collection<String> propertyNames, String prefix, Type propertyType, Mapping factory) {

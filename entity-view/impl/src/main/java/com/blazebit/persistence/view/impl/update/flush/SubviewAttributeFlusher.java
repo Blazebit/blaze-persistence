@@ -58,12 +58,13 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
     private final InverseCollectionElementAttributeFlusher.Strategy inverseRemoveStrategy;
     private final V value;
     private final boolean update;
+    private final boolean supportElementIdQueryFlush;
     private final ViewFlushOperation flushOperation;
     private final DirtyAttributeFlusher<?, E, V> nestedFlusher;
 
     @SuppressWarnings("unchecked")
     public SubviewAttributeFlusher(String attributeName, String mapping, boolean optimisticLockProtected, boolean updatable, boolean cascadeDelete, boolean orphanRemoval, boolean viewOnlyDeleteCascaded, TypeConverter<?, ?> converter, boolean fetch, String[] elementIdAttributePaths, String parameterName, boolean passThrough,
-                                   AttributeAccessor entityAttributeAccessor, InitialValueAttributeAccessor viewAttributeAccessor, AttributeAccessor subviewIdAccessor, ViewToEntityMapper viewToEntityMapper, InverseFlusher<E> inverseFlusher, InverseRemoveStrategy inverseRemoveStrategy) {
+                                   boolean isEmbedded, AttributeAccessor entityAttributeAccessor, InitialValueAttributeAccessor viewAttributeAccessor, AttributeAccessor subviewIdAccessor, ViewToEntityMapper viewToEntityMapper, InverseFlusher<E> inverseFlusher, InverseRemoveStrategy inverseRemoveStrategy) {
         super(attributeName, mapping, fetch, viewToEntityMapper.getFullGraphNode());
         this.optimisticLockProtected = optimisticLockProtected;
         this.updatable = updatable;
@@ -82,6 +83,10 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
         this.viewToEntityMapper = viewToEntityMapper;
         this.value = null;
         this.update = updatable && entityAttributeAccessor != null;
+        // When the subview is embedded through a flat view, it seems hibernate is unable to set the association in an update query
+        // like `UPDATE Entity e SET e.embeddable.association = :param` as it will report an unexpected AND AST node, so we need to flush element ids
+        // The effect is, that we can't support natural ids in such a scenario
+        this.supportElementIdQueryFlush = isEmbedded || viewToEntityMapper.getIdFlusher() == null;
         this.flushOperation = null;
         this.nestedFlusher = null;
     }
@@ -103,6 +108,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
         this.viewToEntityMapper = original.viewToEntityMapper;
         this.inverseFlusher = original.inverseFlusher;
         this.inverseRemoveStrategy = original.inverseRemoveStrategy;
+        this.supportElementIdQueryFlush = original.supportElementIdQueryFlush;
         this.value = value;
         this.update = update;
         this.flushOperation = nestedFlusher == null ? ViewFlushOperation.NONE : ViewFlushOperation.CASCADE;
@@ -144,10 +150,23 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
     @Override
     public boolean appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix, String separator) {
         if (update && (updatable || isPassThrough()) && inverseFlusher == null) {
-            if (mappingPrefix == null) {
-                return getElementIdFlusher().appendUpdateQueryFragment(context, sb, mapping + ".", parameterName + "_", separator);
+            if (supportElementIdQueryFlush) {
+                if (mappingPrefix == null) {
+                    return getElementIdFlusher().appendUpdateQueryFragment(context, sb, mapping + ".", parameterName + "_", separator);
+                } else {
+                    return getElementIdFlusher().appendUpdateQueryFragment(context, sb, mappingPrefix + mapping + ".", parameterPrefix + parameterName + "_", separator);
+                }
             } else {
-                return getElementIdFlusher().appendUpdateQueryFragment(context, sb, mappingPrefix + mapping + ".", parameterPrefix + parameterName + "_", separator);
+                if (mappingPrefix == null) {
+                    sb.append(mapping);
+                    sb.append(" = :");
+                    sb.append(parameterName);
+                } else {
+                    sb.append(mappingPrefix).append(mapping);
+                    sb.append(" = :");
+                    sb.append(parameterPrefix).append(parameterName);
+                }
+                return true;
             }
         }
 
@@ -218,10 +237,18 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
             if (query != null && update) {
                 if (inverseFlusher == null) {
                     Object realValue = v == null ? null : subviewIdAccessor.getValue(finalValue);
-                    if (parameterPrefix == null) {
-                        getElementIdFlusher().flushQuery(context, parameterName + "_", query, finalValue, null, realValue, ownerAwareDeleter);
+                    if (supportElementIdQueryFlush) {
+                        if (parameterPrefix == null) {
+                            getElementIdFlusher().flushQuery(context, parameterName + "_", query, finalValue, null, realValue, ownerAwareDeleter);
+                        } else {
+                            getElementIdFlusher().flushQuery(context, parameterPrefix + parameterName + "_", query, finalValue, null, realValue, ownerAwareDeleter);
+                        }
                     } else {
-                        getElementIdFlusher().flushQuery(context, parameterPrefix + parameterName + "_", query, finalValue, null, realValue, ownerAwareDeleter);
+                        if (parameterPrefix == null) {
+                            query.setParameter(parameterName, v);
+                        } else {
+                            query.setParameter(parameterPrefix + parameterName, v);
+                        }
                     }
                 }
             }
@@ -259,10 +286,18 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
             if (query != null && update) {
                 if (inverseFlusher == null) {
                     Object realValue = v == null ? null : subviewIdAccessor.getValue(value);
-                    if (parameterPrefix == null) {
-                        getElementIdFlusher().flushQuery(context, parameterName + "_", query, value, null, realValue, ownerAwareDeleter);
+                    if (supportElementIdQueryFlush) {
+                        if (parameterPrefix == null) {
+                            getElementIdFlusher().flushQuery(context, parameterName + "_", query, value, null, realValue, ownerAwareDeleter);
+                        } else {
+                            getElementIdFlusher().flushQuery(context, parameterPrefix + parameterName + "_", query, value, null, realValue, ownerAwareDeleter);
+                        }
                     } else {
-                        getElementIdFlusher().flushQuery(context, parameterPrefix + parameterName + "_", query, value, null, realValue, ownerAwareDeleter);
+                        if (parameterPrefix == null) {
+                            query.setParameter(parameterName, v);
+                        } else {
+                            query.setParameter(parameterPrefix + parameterName, v);
+                        }
                     }
                 }
             }

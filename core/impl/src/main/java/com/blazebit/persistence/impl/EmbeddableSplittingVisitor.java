@@ -56,6 +56,7 @@ import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -214,11 +215,11 @@ class EmbeddableSplittingVisitor extends AbortableVisitorAdapter {
             }
         } else if (singularAttribute.getType() instanceof ManagedType<?>) {
             String newPrefix = attributeName + ".";
-            List<String> attributeNames;
+            Collection<String> attributeNames;
             if (elementCollectionPath == null) {
-                attributeNames = jpaProvider.getIdentifierOrUniqueKeyEmbeddedPropertyNames(ownerType, fieldPrefix + attributeName);
+                attributeNames = jpaProvider.getJoinMappingPropertyNames(ownerType, elementCollectionPath, fieldPrefix + attributeName).keySet();
             } else {
-                attributeNames = jpaProvider.getIdentifierOrUniqueKeyEmbeddedPropertyNames(ownerType, elementCollectionPath, elementCollectionPath + "." + fieldPrefix + attributeName);
+                attributeNames = jpaProvider.getJoinMappingPropertyNames(ownerType, elementCollectionPath, elementCollectionPath + "." + fieldPrefix + attributeName).keySet();
             }
 
             ExtendedAttribute<?, ?> extendedAttribute = (ExtendedAttribute<?, ?>) metamodel.getManagedType(ExtendedManagedType.class, ownerType).getAttributes().get(fieldPrefix + attributeName);

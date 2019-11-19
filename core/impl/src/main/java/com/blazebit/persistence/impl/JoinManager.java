@@ -348,15 +348,22 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         Type<?> type = mainQuery.metamodel.type(valueClass);
 
         List<String> attributePaths = new ArrayList<>();
-        String simpleValueAttributePrefix = valuesClassAttributeName == null ? "" : valuesClassAttributeName + ".";
+        String simpleValueAttributePrefix = "";
         boolean simpleValue;
         Set<String> idAttributeNames;
 
+        ExtendedManagedType<?> extendedManagedType = mainQuery.metamodel.getManagedType(ExtendedManagedType.class, entityType);
         if (identifiableReference) {
             simpleValue = false;
             idAttributeNames = new LinkedHashSet<>();
-            Map<String, ExtendedAttribute<?, ?>> attributes = new TreeMap<>(mainQuery.metamodel.getManagedType(ExtendedManagedType.class, entityType).getAttributes());
-            for (SingularAttribute<?, ?> attribute : JpaMetamodelUtils.getIdAttributes(entityType)) {
+            Map<String, ExtendedAttribute<?, ?>> attributes = new TreeMap<String, ExtendedAttribute<?, ?>>(extendedManagedType.getAttributes());
+            Set<? extends SingularAttribute<?, ?>> idAttributes;
+            if (valuesClassAttributeName == null) {
+                idAttributes = JpaMetamodelUtils.getIdAttributes(entityType);
+            } else {
+                idAttributes = Collections.singleton((SingularAttribute<?, ?>) JpaMetamodelUtils.getAttribute(entityType, valuesClassAttributeName));
+            }
+            for (SingularAttribute<?, ?> attribute : idAttributes) {
                 idAttributeNames.add(attribute.getName());
                 Collection<String> embeddedPropertyPaths = JpaUtils.getEmbeddedPropertyPaths(attributes, attribute.getName(), mainQuery.jpaProvider.needsElementCollectionIdCutoff(), true);
                 if (embeddedPropertyPaths.isEmpty()) {
@@ -368,6 +375,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 }
             }
         } else {
+            simpleValueAttributePrefix = valuesClassAttributeName == null ? "" : valuesClassAttributeName + ".";
             idAttributeNames = null;
             if (valuesLikeAttribute == null) {
                 // This is a normal values clause
@@ -376,7 +384,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 if (managedType == null) {
                     // When the values type is basic, entityType is ValuesEntity
                     simpleValue = true;
-                    attributes = new TreeMap<>(mainQuery.metamodel.getManagedType(ExtendedManagedType.class, entityType).getAttributes());
+                    attributes = new TreeMap<String, ExtendedAttribute<?, ?>>(extendedManagedType.getAttributes());
                 } else {
                     // Otherwise we consider all attributes
                     simpleValue = false;
@@ -387,7 +395,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             } else {
                 String prefix = valuesClassAttributeName.substring(0, valuesClassAttributeName.length() - valuesLikeAttribute.getAttribute().getName().length());
                 if (qualificationExpression == null) {
-                    Map<String, ExtendedAttribute<?, ?>> attributes = new TreeMap<>(mainQuery.metamodel.getManagedType(ExtendedManagedType.class, entityType).getAttributes());
+                    Map<String, ExtendedAttribute<?, ?>> attributes = new TreeMap<String, ExtendedAttribute<?, ?>>(extendedManagedType.getAttributes());
                     Collection<String> embeddedPropertyPaths = JpaUtils.getEmbeddedPropertyPaths(attributes, valuesClassAttributeName, mainQuery.jpaProvider.needsElementCollectionIdCutoff(), true);
                     if (embeddedPropertyPaths.isEmpty()) {
                         attributePaths.add(valuesClassAttributeName);

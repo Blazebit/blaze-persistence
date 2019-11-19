@@ -17,7 +17,9 @@
 package com.blazebit.persistence.view.impl.update.flush;
 
 import com.blazebit.persistence.parser.EntityMetamodel;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.ExtendedManagedType;
+import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.accessor.Accessors;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
@@ -32,6 +34,7 @@ import com.blazebit.persistence.view.impl.entity.ReferenceEntityLoader;
 import com.blazebit.persistence.view.impl.entity.UpdaterBasedViewToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.update.EntityViewUpdaterImpl;
 import com.blazebit.persistence.view.metamodel.BasicType;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
@@ -44,6 +47,7 @@ import com.blazebit.persistence.view.spi.type.TypeConverter;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.SingularAttribute;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -64,6 +68,7 @@ public class TypeDescriptor {
     private final boolean cascadePersist;
     private final boolean cascadeUpdate;
     private final String entityIdAttributeName;
+    private final String attributeIdAttributeName;
     private final Class<?> jpaType;
     private final TypeConverter<Object, Object> converter;
     private final BasicUserType<Object> basicUserType;
@@ -71,7 +76,7 @@ public class TypeDescriptor {
     private final ViewToEntityMapper viewToEntityMapper;
     private final ViewToEntityMapper loadOnlyViewToEntityMapper;
 
-    public TypeDescriptor(boolean mutable, boolean identifiable, boolean jpaManaged, boolean jpaEntity, boolean shouldJpaMerge, boolean shouldJpaPersist, boolean cascadePersist, boolean cascadeUpdate, String entityIdAttributeName,
+    public TypeDescriptor(boolean mutable, boolean identifiable, boolean jpaManaged, boolean jpaEntity, boolean shouldJpaMerge, boolean shouldJpaPersist, boolean cascadePersist, boolean cascadeUpdate, String entityIdAttributeName, String attributeIdAttributeName,
                           Class<?> jpaType, TypeConverter<Object, Object> converter, BasicUserType<Object> basicUserType, EntityToEntityMapper entityToEntityMapper, ViewToEntityMapper viewToEntityMapper, ViewToEntityMapper loadOnlyViewToEntityMapper) {
         this.mutable = mutable;
         this.identifiable = identifiable;
@@ -82,6 +87,7 @@ public class TypeDescriptor {
         this.cascadePersist = cascadePersist;
         this.cascadeUpdate = cascadeUpdate;
         this.entityIdAttributeName = entityIdAttributeName;
+        this.attributeIdAttributeName = attributeIdAttributeName;
         this.jpaType = jpaType;
         this.converter = converter;
         this.basicUserType = basicUserType;
@@ -109,6 +115,8 @@ public class TypeDescriptor {
         final boolean identifiable;
         TypeConverter<Object, Object> converter = (TypeConverter<Object, Object>) type.getConverter();
         BasicUserType<Object> basicUserType;
+        ManagedType<?> ownerEntityType = owner == null ? attribute.getDeclaringType().getJpaManagedType() : owner.getManagedViewType().getJpaManagedType();
+        String attributeIdAttributeName = null;
         String entityIdAttributeName = null;
         Class<?> jpaType;
         // TODO: currently we only check if the declared type is mutable, but we have to let the collection flusher which types are considered updatable/creatable
@@ -126,21 +134,26 @@ public class TypeDescriptor {
                     fetchGraph = getFetchGraph(attribute.getFetches(), attribute.getMapping(), managedType);
                 }
 
-                entityIdAttributeName = evm.getMetamodel().getEntityMetamodel().getManagedType(ExtendedManagedType.class, type.getJavaType()).getIdAttribute().getName();
+                if (ownerEntityType instanceof EntityType<?>) {
+                    ExtendedManagedType<?> extendedManagedType = evm.getMetamodel().getEntityMetamodel().getManagedType(ExtendedManagedType.class, type.getJavaType());
+                    entityIdAttributeName = extendedManagedType.getIdAttribute().getName();
+                    attributeIdAttributeName = getAttributeElementIdentifier(evm, (EntityType<?>) ownerEntityType, attribute.getName(), ownerMapping, attribute.getMapping(), extendedManagedType.getType());
 
-                // Only construct when orphanRemoval or delete cascading is enabled, orphanRemoval implies delete cascading
-                if (attribute.isDeleteCascaded()) {
-                    String mapping = attribute.getMapping();
-                    ExtendedManagedType elementManagedType = entityMetamodel.getManagedType(ExtendedManagedType.class, attribute.getDeclaringType().getJpaManagedType());
-                    deleter = new UnmappedBasicAttributeCascadeDeleter(
-                            evm,
-                            mapping,
-                            elementManagedType.getAttribute(mapping),
-                            mapping + "." + entityIdAttributeName,
-                            false
-                    );
+                    // Only construct when orphanRemoval or delete cascading is enabled, orphanRemoval implies delete cascading
+                    if (attribute.isDeleteCascaded()) {
+                        String mapping = attribute.getMapping();
+                        ExtendedManagedType elementManagedType = entityMetamodel.getManagedType(ExtendedManagedType.class, attribute.getDeclaringType().getJpaManagedType());
+                        deleter = new UnmappedBasicAttributeCascadeDeleter(
+                                evm,
+                                mapping,
+                                elementManagedType.getAttribute(mapping),
+                                mapping + "." + attributeIdAttributeName,
+                                false
+                        );
+                    }
                 }
 
+                // TODO: EntityToEntityMapper should also use the attributeIdAttributeName
                 entityToEntityMapper = new DefaultEntityToEntityMapper(
                         cascadePersist,
                         cascadeUpdate,
@@ -153,18 +166,19 @@ public class TypeDescriptor {
                 );
             }
         } else {
-            ManagedViewType<?> elementType = (ManagedViewType<?>) type;
+            ManagedViewTypeImplementor<?> elementType = (ManagedViewTypeImplementor<?>) type;
             jpaType = elementType.getEntityClass();
             basicUserType = null;
             mutable = elementType.isUpdatable() || elementType.isCreatable() || !persistAllowedSubtypes.isEmpty() || !updateAllowedSubtypes.isEmpty();
             Set<ManagedViewType<?>> viewTypes = attribute.getViewTypes();
-            viewToEntityMapper = createViewToEntityMapper(evm, updater, attribute.getMapping(), attributeLocation, elementType, cascadePersist, cascadeUpdate, readOnlyAllowedSubtypes, persistAllowedSubtypes, updateAllowedSubtypes, viewTypes, owner, ownerMapping);
-            loadOnlyViewToEntityMapper = createLoadOnlyViewToEntityMapper(attributeLocation, evm, elementType, cascadePersist, cascadeUpdate, readOnlyAllowedSubtypes, persistAllowedSubtypes, updateAllowedSubtypes, viewTypes, owner, ownerMapping);
-            identifiable = viewToEntityMapper.getViewIdAccessor() != null;
-            SingularAttribute idAttribute = evm.getMetamodel().getEntityMetamodel().getManagedType(ExtendedManagedType.class, elementType.getEntityClass()).getIdAttribute();
-            if (idAttribute != null) {
-                entityIdAttributeName = idAttribute.getName();
+            if (elementType.getJpaManagedType() instanceof EntityType<?> && ownerEntityType instanceof EntityType<?>) {
+                ExtendedManagedType<?> extendedManagedType = evm.getMetamodel().getEntityMetamodel().getManagedType(ExtendedManagedType.class, elementType.getEntityClass());
+                entityIdAttributeName = extendedManagedType.getIdAttribute().getName();
+                attributeIdAttributeName = getAttributeElementIdentifier(evm, (EntityType<?>) ownerEntityType, attribute.getName(), ownerMapping, attribute.getMapping(), extendedManagedType.getType());
             }
+            viewToEntityMapper = createViewToEntityMapper(evm, updater, attributeIdAttributeName, attribute.getMapping(), attributeLocation, elementType, cascadePersist, cascadeUpdate, readOnlyAllowedSubtypes, persistAllowedSubtypes, updateAllowedSubtypes, viewTypes, owner, ownerMapping);
+            loadOnlyViewToEntityMapper = createLoadOnlyViewToEntityMapper(attributeLocation, evm, attributeIdAttributeName, attribute.getMapping(), elementType, cascadePersist, cascadeUpdate, readOnlyAllowedSubtypes, persistAllowedSubtypes, updateAllowedSubtypes, viewTypes, owner, ownerMapping);
+            identifiable = viewToEntityMapper.getViewIdAccessor() != null;
         }
 
         final boolean shouldJpaMerge = jpaEntity && mutable && cascadeUpdate;
@@ -181,6 +195,7 @@ public class TypeDescriptor {
                 shouldFlushPersists,
                 shouldFlushUpdates,
                 entityIdAttributeName,
+                attributeIdAttributeName,
                 jpaType,
                 converter,
                 basicUserType,
@@ -205,6 +220,7 @@ public class TypeDescriptor {
                 null,
                 null,
                 null,
+                null,
                 viewToEntityMapper,
                 viewToEntityMapper
         );
@@ -220,6 +236,7 @@ public class TypeDescriptor {
                 false,
                 false,
                 false,
+                null,
                 null,
                 entityClass,
                 null,
@@ -240,6 +257,7 @@ public class TypeDescriptor {
                 false,
                 false,
                 false,
+                null,
                 null,
                 null,
                 null,
@@ -284,12 +302,14 @@ public class TypeDescriptor {
         return fetchGraph;
     }
 
-    private static ViewToEntityMapper createViewToEntityMapper(EntityViewManagerImpl evm, EntityViewUpdaterImpl updater, String attributeMapping, String attributeLocation, ManagedViewType<?> viewType, boolean cascadePersist, boolean cascadeUpdate,
+    private static ViewToEntityMapper createViewToEntityMapper(EntityViewManagerImpl evm, EntityViewUpdaterImpl updater, String attributeIdAttributeName, String attributeMapping, String attributeLocation, ManagedViewType<?> viewType, boolean cascadePersist, boolean cascadeUpdate,
                                                                Set<Type<?>> readOnlyAllowedSubtypes, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes, Set<ManagedViewType<?>> viewTypes, EntityViewUpdaterImpl owner, String ownerMapping) {
         EntityLoader entityLoader = ReferenceEntityLoader.forAttribute(evm, viewType, viewTypes);
         AttributeAccessor viewIdAccessor = null;
+        AttributeAccessor entityIdAccessor = null;
         if (viewType instanceof ViewType<?>) {
             viewIdAccessor = Accessors.forViewId(evm, (ViewType<?>) viewType, true);
+            entityIdAccessor = Accessors.forEntityMapping(evm, viewType.getEntityClass(), attributeIdAttributeName);
         }
         Class<?> viewTypeClass = viewType.getJavaType();
         if (!cascadeUpdate) {
@@ -302,6 +322,7 @@ public class TypeDescriptor {
                     updateAllowedSubtypes,
                     entityLoader,
                     viewIdAccessor,
+                    entityIdAccessor,
                     cascadePersist,
                     owner,
                     ownerMapping
@@ -332,6 +353,7 @@ public class TypeDescriptor {
                     updateAllowedSubtypes,
                     entityLoader,
                     viewIdAccessor,
+                    entityIdAccessor,
                     cascadePersist,
                     owner,
                     ownerMapping
@@ -339,13 +361,14 @@ public class TypeDescriptor {
         }
     }
 
-    private static ViewToEntityMapper createLoadOnlyViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, ManagedViewType<?> viewType, boolean cascadePersist, boolean cascadeUpdate,
+    private static ViewToEntityMapper createLoadOnlyViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, String attributeIdAttributeName, String attributeMapping, ManagedViewType<?> viewType, boolean cascadePersist, boolean cascadeUpdate,
                                                                        Set<Type<?>> readOnlyAllowedSubtypes, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes, Set<ManagedViewType<?>> viewTypes, EntityViewUpdaterImpl owner, String ownerMapping) {
         EntityLoader entityLoader = ReferenceEntityLoader.forAttribute(evm, viewType, viewTypes);
         AttributeAccessor viewIdAccessor = null;
-
+        AttributeAccessor entityIdAccessor = null;
         if (viewType instanceof ViewType<?>) {
             viewIdAccessor = Accessors.forViewId(evm, (ViewType<?>) viewType, true);
+            entityIdAccessor = Accessors.forEntityMapping(evm, viewType.getEntityClass(), attributeIdAttributeName);
         }
         if (evm.getMetamodel().getEntityMetamodel().getEntity(viewType.getEntityClass()) == null) {
             Class<?> viewTypeClass = viewType.getJavaType();
@@ -360,7 +383,7 @@ public class TypeDescriptor {
                     cascadePersist,
                     null,
                     owner,
-                    ownerMapping
+                    ownerMapping == null ? attributeMapping : ownerMapping + "." + attributeMapping
             );
         } else {
             Class<?> viewTypeClass = viewType.getJavaType();
@@ -373,11 +396,42 @@ public class TypeDescriptor {
                     updateAllowedSubtypes,
                     entityLoader,
                     viewIdAccessor,
+                    entityIdAccessor,
                     cascadePersist,
                     owner,
                     ownerMapping
             );
         }
+    }
+
+    public static String getAttributeElementIdentifier(EntityViewManagerImpl evm, EntityType<?> ownerEntityType, String attributeName, String ownerMapping, String attributeMapping, ManagedType<?> elementType) {
+        if (attributeMapping == null) {
+            return null;
+        }
+        JpaProvider jpaProvider = evm.getJpaProvider();
+        Collection<String> joinTableOwnerProperties;
+        if (ownerMapping == null) {
+            joinTableOwnerProperties = jpaProvider.getJoinMappingPropertyNames(ownerEntityType, ownerMapping, attributeMapping).keySet();
+        } else {
+            joinTableOwnerProperties = jpaProvider.getJoinMappingPropertyNames(ownerEntityType, ownerMapping, ownerMapping + "." + attributeMapping).keySet();
+        }
+        if (joinTableOwnerProperties.isEmpty()) {
+            if (elementType instanceof EntityType<?>) {
+                return JpaMetamodelUtils.getSingleIdAttribute((EntityType<?>) elementType).getName();
+            }
+            throw new IllegalArgumentException("Couldn't find joinable owner properties for attribute " + attributeName + " of " + ownerEntityType.getJavaType().getName());
+        } else if (joinTableOwnerProperties.size() != 1) {
+            SingularAttribute<?, ?> singleIdAttribute = JpaMetamodelUtils.getSingleIdAttribute(ownerEntityType);
+            // If the id type is an embeddable, we could get multiple properties, so we need to check if the property paths are properly prefixed
+            String prefix = singleIdAttribute.getName() + ".";
+            for (String joinTableOwnerProperty : joinTableOwnerProperties) {
+                if (!joinTableOwnerProperty.startsWith(prefix)) {
+                    throw new IllegalArgumentException("Multiple joinable owner properties for attribute " + attributeName + " of " + ownerEntityType.getJavaType().getName() + " found which is not yet supported. Consider using the primary key instead!");
+                }
+            }
+            return singleIdAttribute.getName();
+        }
+        return joinTableOwnerProperties.iterator().next();
     }
 
     public Class<?> getJpaType() {
@@ -452,6 +506,10 @@ public class TypeDescriptor {
 
     public String getEntityIdAttributeName() {
         return entityIdAttributeName;
+    }
+
+    public String getAttributeIdAttributeName() {
+        return attributeIdAttributeName;
     }
 
     public TypeConverter<Object, Object> getConverter() {

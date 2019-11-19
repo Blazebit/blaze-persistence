@@ -23,6 +23,7 @@ import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.OptimisticLockException;
+import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.change.DirtyChecker;
 import com.blazebit.persistence.view.impl.collection.RecordingCollection;
@@ -101,7 +102,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
     private final Object element;
 
     @SuppressWarnings("unchecked")
-    public CompositeAttributeFlusher(Class<?> viewType, Class<?> entityClass, ManagedType<?> managedType, boolean persistable, ViewMapper<Object, Object> persistViewMapper, SingularAttribute<?, ?> jpaIdAttribute, AttributeAccessor entityIdAccessor,
+    public CompositeAttributeFlusher(EntityViewManagerImpl evm, Class<?> viewType, Class<?> entityClass, ManagedType<?> managedType, boolean persistable, ViewMapper<Object, Object> persistViewMapper, SingularAttribute<?, ?> jpaIdAttribute, SingularAttribute<?, ?> viewIdMappingAttribute, AttributeAccessor entityIdAccessor,
                                      ViewToEntityMapper viewIdMapper, AttributeAccessor viewIdAccessor, EntityTupleizer tupleizer, EntityLoader jpaIdInstantiator, ObjectBuilder<Object> idViewBuilder, DirtyAttributeFlusher<?, Object, Object> idFlusher,
                                      VersionAttributeFlusher<Object, Object> versionFlusher, UnmappedAttributeCascadeDeleter[] cascadeDeleteUnmappedFlushers, UnmappedAttributeCascadeDeleter[][] flusherWiseCascadeDeleteUnmappedFlushers, DirtyAttributeFlusher[] flushers, FlushMode flushMode, FlushStrategy flushStrategy) {
         super(viewType, flushers, null);
@@ -122,8 +123,8 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
         this.unmappedOwnerAwareCascadeDeleters = getOwnerAwareDeleters(flusherWiseCascadeDeleteUnmappedFlushers);
         this.flushMode = flushMode;
         this.flushStrategy = flushStrategy;
-        this.entityLoader = new FlusherBasedEntityLoader(entityClass, jpaIdAttribute, viewIdMapper, entityIdAccessor, flushers);
-        this.referenceEntityLoader = new ReferenceEntityLoader(entityClass, jpaIdAttribute, viewIdMapper, entityIdAccessor);
+        this.entityLoader = new FlusherBasedEntityLoader(evm, entityClass, jpaIdAttribute, viewIdMapper, entityIdAccessor, flushers);
+        this.referenceEntityLoader = new ReferenceEntityLoader(evm, entityClass, jpaIdAttribute, viewIdMappingAttribute, viewIdMapper, entityIdAccessor);
         this.deleteQuery = createDeleteQuery(managedType, jpaIdAttribute);
         this.versionedDeleteQuery = createVersionedDeleteQuery(deleteQuery, versionFlusher);
         boolean[] features = determineFeatures(flushStrategy, flushers);
@@ -134,7 +135,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
         this.element = null;
     }
 
-    private CompositeAttributeFlusher(CompositeAttributeFlusher original, DirtyAttributeFlusher[] flushers, Object element, boolean persist) {
+    private CompositeAttributeFlusher(EntityViewManagerImpl evm, CompositeAttributeFlusher original, DirtyAttributeFlusher[] flushers, Object element, boolean persist) {
         super(original.viewType, original.attributeIndexMapping, flushers, persist);
         this.entityClass = original.entityClass;
         this.persistable = original.persistable;
@@ -153,7 +154,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
         this.unmappedOwnerAwareCascadeDeleters = original.unmappedOwnerAwareCascadeDeleters;
         this.flushMode = original.flushMode;
         this.flushStrategy = original.flushStrategy;
-        this.entityLoader = new FlusherBasedEntityLoader(entityClass, jpaIdAttribute, viewIdMapper, entityIdAccessor, flushers);
+        this.entityLoader = new FlusherBasedEntityLoader(evm, entityClass, jpaIdAttribute, viewIdMapper, entityIdAccessor, flushers);
         this.referenceEntityLoader = original.referenceEntityLoader;
         this.deleteQuery = original.deleteQuery;
         this.versionedDeleteQuery = original.versionedDeleteQuery;
@@ -1137,7 +1138,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
             }
         }
 
-        return (DirtyAttributeFlusher<T, E, V>) new CompositeAttributeFlusher(this, flushers, updatableProxy, false);
+        return (DirtyAttributeFlusher<T, E, V>) new CompositeAttributeFlusher(context.getEntityViewManager(), this, flushers, updatableProxy, false);
     }
 
 }

@@ -46,7 +46,7 @@ import static org.junit.Assert.*;
  */
 @RunWith(Parameterized.class)
 // NOTE: No Datanucleus support yet
-@Category({ NoDatanucleus.class, NoEclipselink.class})
+@Category({ NoDatanucleus.class, NoEclipselink.class })
 public class EntityViewUpdateNestedMutableSubviewMapsTest extends AbstractEntityViewUpdateDocumentTest<UpdatableDocumentWithMapsView> {
 
     public EntityViewUpdateNestedMutableSubviewMapsTest(FlushMode mode, FlushStrategy strategy, boolean version) {
@@ -67,6 +67,12 @@ public class EntityViewUpdateNestedMutableSubviewMapsTest extends AbstractEntity
     @Override
     protected String[] getFetchedCollections() {
         return new String[] { "contacts" };
+    }
+
+    // NOTE: See https://github.com/h2database/h2database/issues/2288 and wait for 1.4.201
+    @Override
+    protected void cleanDatabase() {
+        cleanDatabaseWithCleaner();
     }
 
     @Test

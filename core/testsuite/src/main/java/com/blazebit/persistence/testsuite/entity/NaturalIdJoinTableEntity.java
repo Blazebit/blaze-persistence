@@ -21,10 +21,14 @@ import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
+import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import java.io.Serializable;
-import java.util.List;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -35,39 +39,46 @@ import java.util.List;
 @Table(name = "nid_join_table")
 public class NaturalIdJoinTableEntity extends Ownable implements Serializable {
 
+    private Long version;
     private String isbn;
-
     private BookEntity oneToOneBook;
+    private Set<BookEntity> oneToManyBook = new HashSet<>();
+    private Map<String, BookEntity> manyToManyBook = new HashMap<>();
 
-    private List<BookEntity> oneToManyBook;
+    public Long getVersion() {
+        return version;
+    }
 
-    private List<BookEntity> manyToManyBook;
+    public void setVersion(Long version) {
+        this.version = version;
+    }
 
     @OneToMany
     @JoinTable(
-            name = "nid_jt_join_table",
+            name = "nid_jt_join_table1",
             joinColumns = @JoinColumn(name = "base_isbn", referencedColumnName = "isbn"),
             inverseJoinColumns = @JoinColumn(name = "ref_isbn", referencedColumnName = "isbn")
     )
-    public List<BookEntity> getOneToManyBook() {
+    public Set<BookEntity> getOneToManyBook() {
         return oneToManyBook;
     }
 
-    public void setOneToManyBook(List<BookEntity> oneToManyBook) {
+    public void setOneToManyBook(Set<BookEntity> oneToManyBook) {
         this.oneToManyBook = oneToManyBook;
     }
 
     @ManyToMany
     @JoinTable(
-            name = "nid_jt_join_table",
+            name = "nid_jt_join_table2",
             joinColumns = @JoinColumn(name = "base_isbn", referencedColumnName = "isbn"),
             inverseJoinColumns = @JoinColumn(name = "ref_isbn", referencedColumnName = "isbn")
     )
-    public List<BookEntity> getManyToManyBook() {
+    @MapKeyColumn(name = "nid_map_key", nullable = false, length = 20)
+    public Map<String, BookEntity> getManyToManyBook() {
         return manyToManyBook;
     }
 
-    public void setManyToManyBook(List<BookEntity> manyToManyBook) {
+    public void setManyToManyBook(Map<String, BookEntity> manyToManyBook) {
         this.manyToManyBook = manyToManyBook;
     }
 

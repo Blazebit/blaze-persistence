@@ -24,7 +24,10 @@ import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityNotFoundException;
+import javax.persistence.metamodel.SingularAttribute;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -35,12 +38,15 @@ import java.util.Set;
  */
 public class ReferenceEntityLoader extends AbstractEntityLoader {
 
+    private final String queryString;
+
     public ReferenceEntityLoader(EntityViewManagerImpl evm, ManagedViewType<?> subviewType, ViewToEntityMapper viewIdMapper) {
-        super(subviewType.getEntityClass(), jpaIdOf(evm, subviewType), viewIdMapper, evm.getEntityIdAccessor());
+        this(evm, subviewType.getEntityClass(), jpaIdOf(evm, subviewType), viewIdMappingOf(evm, subviewType), viewIdMapper, evm.getEntityIdAccessor());
     }
 
-    public ReferenceEntityLoader(Class<?> entityClass, javax.persistence.metamodel.SingularAttribute<?, ?> idAttribute, ViewToEntityMapper viewIdMapper, AttributeAccessor entityIdAccessor) {
-        super(entityClass, idAttribute, viewIdMapper, entityIdAccessor);
+    public ReferenceEntityLoader(EntityViewManagerImpl evm, Class<?> entityClass, SingularAttribute<?, ?> idAttribute, SingularAttribute<?, ?> viewIdMappingAttribute, ViewToEntityMapper viewIdMapper, AttributeAccessor entityIdAccessor) {
+        super(evm, entityClass, idAttribute, viewIdMappingAttribute, viewIdMapper, entityIdAccessor);
+        this.queryString = primaryKeyId ? null : "SELECT e FROM " + evm.getMetamodel().getEntityMetamodel().entity(entityClass).getName() + " e WHERE e." + idAttributeName + " = :id";
     }
 
     public static EntityLoader forAttribute(EntityViewManagerImpl evm, ManagedViewType<?> subviewType, AbstractMethodAttribute<?, ?> attribute) {
@@ -69,13 +75,24 @@ public class ReferenceEntityLoader extends AbstractEntityLoader {
         if (id == null) {
             return createEntity();
         }
-        EntityManager em = context.getEntityManager();
-        return em.getReference(entityClass, getEntityId(context, view, id));
+
+        return getReferenceOrLoad(context, view, id);
     }
 
     @Override
     protected Object queryEntity(EntityManager em, Object id) {
-        throw new UnsupportedOperationException();
+        // TODO: Support natural id access? session.byNaturalId(entityClass).using(idAttributeName, id).getReference()
+        if (queryString == null) {
+            return em.getReference(entityClass, id);
+        }
+        List<Object> list = em.createQuery(queryString)
+                .setParameter("id", id)
+                .getResultList();
+        if (list.isEmpty()) {
+            throw new EntityNotFoundException("Required entity '" + entityClass.getName() + "' with id '" + id + "' couldn't be found!");
+        }
+
+        return list.get(0);
     }
 
     @Override

@@ -261,10 +261,13 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
             InsertCriteriaBuilder<?> insertCb = context.getEntityViewManager().getCriteriaBuilderFactory().insertCollection(context.getEntityManager(), ownerEntityClass, mapping);
 
             String entityIdAttributeName = elementDescriptor.getEntityIdAttributeName();
+            String attributeIdAttributeName = elementDescriptor.getAttributeIdAttributeName();
             if (entityIdAttributeName == null) {
                 insertCb.fromValues(ownerEntityClass, mapping, "val", 1);
-            } else {
+            } else if (entityIdAttributeName.equals(attributeIdAttributeName)) {
                 insertCb.fromIdentifiableValues((Class<Object>) elementDescriptor.getJpaType(), "val", 1);
+            } else {
+                insertCb.fromIdentifiableValues((Class<Object>) elementDescriptor.getJpaType(), attributeIdAttributeName, "val", 1);
             }
             insertCb.bind("INDEX(" + mapping + ")").select("FUNCTION('TREAT_INTEGER', :idx)");
             for (int i = 0; i < ownerIdBindFragments.length; i += 2) {

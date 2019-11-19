@@ -390,11 +390,11 @@ public class EntityMetamodelImpl implements EntityMetamodel {
     }
 
     private void collectIdColumns(EntityType<?> e, Map<String, AttributeEntry<?, ?>> attributeMap, String attributeName, List<Attribute<?, ?>> newParents, String elementCollectionPath, Class<?> fieldType, Map<String, TemporaryExtendedManagedType> temporaryExtendedManagedTypes, Set<Class<?>> seenTypesForEnumResolving, Map<String, Class<Enum<?>>> enumTypes) {
-        List<String> identifierOrUniqueKeyEmbeddedPropertyNames;
+        Collection<String> identifierOrUniqueKeyEmbeddedPropertyNames;
         if (elementCollectionPath == null) {
-            identifierOrUniqueKeyEmbeddedPropertyNames = jpaProvider.getIdentifierOrUniqueKeyEmbeddedPropertyNames(e, attributeName);
+            identifierOrUniqueKeyEmbeddedPropertyNames = jpaProvider.getJoinMappingPropertyNames(e, elementCollectionPath, attributeName).keySet();
         } else {
-            identifierOrUniqueKeyEmbeddedPropertyNames = jpaProvider.getIdentifierOrUniqueKeyEmbeddedPropertyNames(e, elementCollectionPath, attributeName);
+            identifierOrUniqueKeyEmbeddedPropertyNames = jpaProvider.getJoinMappingPropertyNames(e, elementCollectionPath, attributeName).keySet();
         }
         EntityType<?> fieldEntityType = delegate.entity(fieldType);
 

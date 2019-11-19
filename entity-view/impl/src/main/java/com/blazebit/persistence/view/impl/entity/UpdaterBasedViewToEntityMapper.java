@@ -36,8 +36,9 @@ import java.util.Set;
  */
 public class UpdaterBasedViewToEntityMapper extends AbstractViewToEntityMapper {
 
-    public UpdaterBasedViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, Class<?> viewTypeClass, Set<Type<?>> readOnlyAllowedSubtypes, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes, EntityLoader entityLoader, AttributeAccessor viewIdAccessor, boolean persistAllowed, EntityViewUpdaterImpl owner, String ownerMapping) {
-        super(attributeLocation, evm, viewTypeClass, readOnlyAllowedSubtypes, persistAllowedSubtypes, updateAllowedSubtypes, entityLoader, viewIdAccessor, persistAllowed, owner, ownerMapping);
+    public UpdaterBasedViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, Class<?> viewTypeClass, Set<Type<?>> readOnlyAllowedSubtypes, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes,
+                                          EntityLoader entityLoader, AttributeAccessor viewIdAccessor, AttributeAccessor entityIdAccessor, boolean persistAllowed, EntityViewUpdaterImpl owner, String ownerMapping) {
+        super(attributeLocation, evm, viewTypeClass, readOnlyAllowedSubtypes, persistAllowedSubtypes, updateAllowedSubtypes, entityLoader, viewIdAccessor, entityIdAccessor, persistAllowed, owner, ownerMapping);
     }
 
     @Override
