@@ -55,7 +55,8 @@ public abstract class AbstractViewToEntityMapper implements ViewToEntityMapper {
     protected final AttributeAccessor entityIdAccessor;
     protected final boolean persistAllowed;
 
-    public AbstractViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, Class<?> viewTypeClass, Set<Type<?>> readOnlyAllowedSubtypes, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes, EntityLoader entityLoader, AttributeAccessor viewIdAccessor, boolean persistAllowed, EntityViewUpdaterImpl owner, String ownerMapping) {
+    public AbstractViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, Class<?> viewTypeClass, Set<Type<?>> readOnlyAllowedSubtypes, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes,
+                                      EntityLoader entityLoader, AttributeAccessor viewIdAccessor, AttributeAccessor entityIdAccessor, boolean persistAllowed, EntityViewUpdaterImpl owner, String ownerMapping) {
         this.attributeLocation = attributeLocation;
         ManagedViewTypeImplementor<?> managedViewTypeImplementor = evm.getMetamodel().managedView(viewTypeClass);
         this.isEmbeddable = !(managedViewTypeImplementor.getJpaManagedType() instanceof EntityType<?>);
@@ -94,7 +95,7 @@ public abstract class AbstractViewToEntityMapper implements ViewToEntityMapper {
         this.removeUpdater = Collections.unmodifiableMap(removeUpdater);
         this.entityLoader = entityLoader;
         this.viewIdAccessor = viewIdAccessor;
-        this.entityIdAccessor = viewIdAccessor == null ? null : evm.getEntityIdAccessor();
+        this.entityIdAccessor = entityIdAccessor;
         this.persistAllowed = persistAllowed;
     }
 

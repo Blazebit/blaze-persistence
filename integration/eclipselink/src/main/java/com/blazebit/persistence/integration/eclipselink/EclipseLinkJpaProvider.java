@@ -596,7 +596,7 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     @Override
     public List<String> getIdentifierOrUniqueKeyEmbeddedPropertyNames(EntityType<?> ownerType, String attributeName) {
         AttributeImpl<?, ?> attribute = getAttribute(ownerType, attributeName);
-        if (((SingularAttribute<?, ?>) attribute).getType() instanceof EntityType<?>) {
+        if (attribute instanceof SingularAttribute<?, ?> && ((SingularAttribute<?, ?>) attribute).getType() instanceof EntityType<?>) {
             EntityType<?> entityType = (EntityType<?>) ((SingularAttribute<?, ?>) attribute).getType();
             if (entityType.hasSingleIdAttribute()) {
                 Class<?> idClass = entityType.getIdType().getJavaType();
@@ -656,6 +656,21 @@ public class EclipseLinkJpaProvider implements JpaProvider {
             }
         }
         return idProperties;
+    }
+
+    @Override
+    public Map<String, String> getJoinMappingPropertyNames(EntityType<?> owner, String elementCollectionPath, String attributeName) {
+        List<String> keys;
+        if (elementCollectionPath == null) {
+            keys = getIdentifierOrUniqueKeyEmbeddedPropertyNames(owner, attributeName);
+        } else {
+            keys = getIdentifierOrUniqueKeyEmbeddedPropertyNames(owner, elementCollectionPath, attributeName);
+        }
+        Map<String, String> map = new HashMap<>(keys.size());
+        for (String key : keys) {
+            map.put(key, null);
+        }
+        return map;
     }
 
     @Override

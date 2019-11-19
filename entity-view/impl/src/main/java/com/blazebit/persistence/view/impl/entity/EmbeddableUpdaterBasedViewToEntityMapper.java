@@ -37,8 +37,9 @@ public class EmbeddableUpdaterBasedViewToEntityMapper extends AbstractViewToEnti
 
     private final Mapper<Object, Object> idViewToEntityMapper;
 
-    public EmbeddableUpdaterBasedViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, Class<?> viewTypeClass, Set<Type<?>> readOnlyAllowedSubtypes, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes, EntityLoader entityLoader, boolean persistAllowed, Mapper<Object, Object> idViewToEntityMapper, EntityViewUpdaterImpl owner, String ownerMapping) {
-        super(attributeLocation, evm, viewTypeClass, readOnlyAllowedSubtypes, persistAllowedSubtypes, updateAllowedSubtypes, entityLoader, null, persistAllowed, owner, ownerMapping);
+    public EmbeddableUpdaterBasedViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, Class<?> viewTypeClass, Set<Type<?>> readOnlyAllowedSubtypes, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes,
+                                                    EntityLoader entityLoader, boolean persistAllowed, Mapper<Object, Object> idViewToEntityMapper, EntityViewUpdaterImpl owner, String ownerMapping) {
+        super(attributeLocation, evm, viewTypeClass, readOnlyAllowedSubtypes, persistAllowedSubtypes, updateAllowedSubtypes, entityLoader, null, null, persistAllowed, owner, ownerMapping);
         this.idViewToEntityMapper = idViewToEntityMapper;
     }
 

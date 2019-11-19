@@ -45,7 +45,7 @@ public class DefaultEntityLoaderFetchGraphNode extends AbstractEntityLoader impl
 
     public DefaultEntityLoaderFetchGraphNode(EntityViewManagerImpl evm, String attributeName, EntityType<?> entityType, Map<String, Map<?, ?>> fetchGraph) {
         // ViewIdMapper is not necessary because this is only for entity types
-        super(entityType.getJavaType(), JpaMetamodelUtils.getSingleIdAttribute(entityType), null, evm.getEntityIdAccessor());
+        super(evm, entityType.getJavaType(), JpaMetamodelUtils.getSingleIdAttribute(entityType), null, null, evm.getEntityIdAccessor());
         this.attributeName = attributeName;
         this.fetchGraph = fetchGraph;
         this.queryString = createQueryString(evm, entityType, fetchGraph);

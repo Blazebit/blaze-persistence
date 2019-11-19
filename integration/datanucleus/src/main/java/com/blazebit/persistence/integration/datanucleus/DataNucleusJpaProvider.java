@@ -552,6 +552,21 @@ public class DataNucleusJpaProvider implements JpaProvider {
     }
 
     @Override
+    public Map<String, String> getJoinMappingPropertyNames(EntityType<?> owner, String elementCollectionPath, String attributeName) {
+        List<String> keys;
+        if (elementCollectionPath == null) {
+            keys = getIdentifierOrUniqueKeyEmbeddedPropertyNames(owner, attributeName);
+        } else {
+            keys = getIdentifierOrUniqueKeyEmbeddedPropertyNames(owner, elementCollectionPath, attributeName);
+        }
+        Map<String, String> map = new HashMap<>(keys.size());
+        for (String key : keys) {
+            map.put(key, null);
+        }
+        return map;
+    }
+
+    @Override
     public Object getIdentifier(Object entity) {
         return persistenceUnitUtil.getIdentifier(entity);
     }

@@ -28,8 +28,8 @@ import com.blazebit.persistence.view.impl.update.UpdateContext;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.SingularAttribute;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -61,7 +61,7 @@ public class UnmappedWritableBasicAttributeSetNullCascadeDeleter implements Unma
             String elementIdAttribute = extendedManagedType.getIdAttribute().getName();
             removeByIdMappings.put(entry.getValue(), elementIdAttribute);
 
-            List<String> idAttributes = evm.getJpaProvider().getIdentifierOrUniqueKeyEmbeddedPropertyNames((EntityType<?>) extendedManagedType.getType(), entry.getValue());
+            Collection<String> idAttributes = evm.getJpaProvider().getJoinMappingPropertyNames((EntityType<?>) extendedManagedType.getType(), null, entry.getValue()).keySet();
             // NOTE: We ignore the fact that there might be multiple id attributes here because we currently support id class attributes yet anyway
             if (idAttributes.isEmpty()) {
                 if (entry.getKey().startsWith(ownerIdAttributePrefix)) {
@@ -71,7 +71,7 @@ public class UnmappedWritableBasicAttributeSetNullCascadeDeleter implements Unma
                     removeByOwnerIdMappings.put(entry.getValue(), new ByOwnerIdEntry("e." + idAttribute.getName(), ownerType.getJavaType(), "sub." + entry.getKey() + " = e." + entry.getValue(), PassthroughAttributeAccessor.INSTANCE));
                 }
             } else {
-                removeByOwnerIdMappings.put(entry.getValue(), new ByOwnerIdEntry(entry.getValue() + "." + idAttributes.get(0), PassthroughAttributeAccessor.INSTANCE));
+                removeByOwnerIdMappings.put(entry.getValue(), new ByOwnerIdEntry(entry.getValue() + "." + idAttributes.iterator().next(), PassthroughAttributeAccessor.INSTANCE));
             }
         }
 

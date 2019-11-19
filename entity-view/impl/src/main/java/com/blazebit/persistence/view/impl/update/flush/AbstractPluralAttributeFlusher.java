@@ -47,7 +47,6 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
     protected final boolean supportsCollectionDml;
     protected final String ownerIdWhereFragment;
     protected final String[] ownerIdBindFragments;
-    protected final String[] elementBindFragments;
     protected final DirtyAttributeFlusher<?, Object, Object> elementFlusher;
     protected final FlushStrategy flushStrategy;
     protected final AttributeAccessor entityAttributeMapper;
@@ -78,7 +77,6 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
         if (ownerIdFlusher == null) {
             this.ownerIdWhereFragment = null;
             this.ownerIdBindFragments = null;
-            this.elementBindFragments = null;
         } else {
             StringBuilder sb = new StringBuilder();
             ownerIdFlusher.appendUpdateQueryFragment(null, sb, null, null, " AND ");
@@ -92,7 +90,6 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
             this.ownerIdBindFragments = fragments;
             sb.setLength(0);
             ownerIdFlusher.appendUpdateQueryFragment(null, sb, null, null, ",");
-            this.elementBindFragments = sb.toString().split("\\s*(=|,)\\s*");
         }
         this.flushStrategy = flushStrategy;
         this.entityAttributeMapper = entityAttributeMapper;
@@ -141,7 +138,6 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
         this.ownerIdWhereFragment = original.ownerIdWhereFragment;
         this.ownerIdBindFragments = original.ownerIdBindFragments;
         this.elementFlusher = original.elementFlusher;
-        this.elementBindFragments = original.elementBindFragments;
         this.flushStrategy = original.flushStrategy;
         this.entityAttributeMapper = original.entityAttributeMapper;
         this.viewAttributeAccessor = original.viewAttributeAccessor;

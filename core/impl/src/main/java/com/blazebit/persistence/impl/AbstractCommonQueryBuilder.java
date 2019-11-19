@@ -724,7 +724,17 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return result;
     }
 
+    public <T> BuilderType fromIdentifiableValues(Class<T> valueClass, String identifierAttribute, String alias, Collection<T> values) {
+        BuilderType result = fromIdentifiableValues(valueClass, identifierAttribute, alias, values.size());
+        setParameter(alias, values);
+        return result;
+    }
+
     public BuilderType fromIdentifiableValues(Class<?> valueClass, String alias, int valueCount) {
+        return fromIdentifiableValues(valueClass, null, alias, valueCount);
+    }
+
+    public BuilderType fromIdentifiableValues(Class<?> valueClass, String identifierAttribute, String alias, int valueCount) {
         prepareForModification(ClauseType.JOIN);
         if (!fromClassExplicitlySet) {
             // When from is explicitly called we have to revert the implicit root
@@ -738,7 +748,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new IllegalArgumentException("Only identifiable types allowed!");
         }
 
-        joinManager.addRootValues(valueClass, valueClass, alias, valueCount, null, null, true, true, null, null, null, null);
+        joinManager.addRootValues(valueClass, valueClass, alias, valueCount, null, null, true, true, identifierAttribute, null, null, null);
         fromClassExplicitlySet = true;
 
         return (BuilderType) this;

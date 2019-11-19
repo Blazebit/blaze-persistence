@@ -50,6 +50,7 @@ public class DefaultEntityToEntityMapper extends AbstractEntityToEntityMapper {
                 shouldPersist,
                 shouldMerge,
                 null,
+                null,
                 jpaType,
                 null,
                 (BasicUserType<Object>) basicUserType,

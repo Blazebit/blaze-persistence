@@ -42,6 +42,7 @@ import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Type;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -405,11 +406,11 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor, Jo
             if (pathReference != null && pathReference.getField() != null && pathReference.getType() instanceof EntityType<?>) {
                 JoinNode node = (JoinNode) pathReference.getBaseNode();
                 // We need a parent tree node to determine the natural id attribute
-                List<String> identifierOrUniqueKeyEmbeddedPropertyNames = metamodel.getJpaProvider()
-                        .getIdentifierOrUniqueKeyEmbeddedPropertyNames(node.getEntityType(), pathReference.getField());
+                Collection<String> identifierOrUniqueKeyEmbeddedPropertyNames = metamodel.getJpaProvider()
+                        .getJoinMappingPropertyNames(node.getEntityType(), null, pathReference.getField()).keySet();
                 if (identifierOrUniqueKeyEmbeddedPropertyNames.size() == 1) {
                     // This "fix" only works if we have a single id attribute
-                    String naturalIdAttribute = identifierOrUniqueKeyEmbeddedPropertyNames.get(0);
+                    String naturalIdAttribute = identifierOrUniqueKeyEmbeddedPropertyNames.iterator().next();
                     ExtendedManagedType extendedManagedType = metamodel.getManagedType(ExtendedManagedType.class, (ManagedType<?>) pathReference.getType());
                     if (!extendedManagedType.getIdAttribute().getName().equals(naturalIdAttribute)) {
                         // Now we finally know the natural id attribute name

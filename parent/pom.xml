@@ -486,7 +486,7 @@
             <dependency>
                 <groupId>com.h2database</groupId>
                 <artifactId>h2</artifactId>
-                <version>1.4.199</version>
+                <version>1.4.200</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
@@ -660,6 +660,7 @@
                             <!-- Travis build workaround -->
                             <argLine>${surefire.jvm.params}</argLine>
                             <skipTests>${skipTests}</skipTests>
+                            <trimStackTrace>false</trimStackTrace>
                         </configuration>
                     </execution>
                 </executions>

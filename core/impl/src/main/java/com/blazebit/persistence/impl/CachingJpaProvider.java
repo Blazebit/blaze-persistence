@@ -355,6 +355,12 @@ public final class CachingJpaProvider implements JpaProvider {
     }
 
     @Override
+    public Map<String, String> getJoinMappingPropertyNames(EntityType<?> owner, String elementCollectionPath, String attributeName) {
+        // TODO: cache this via extended metamodel
+        return jpaProvider.getJoinMappingPropertyNames(owner, elementCollectionPath, attributeName);
+    }
+
+    @Override
     public Object getIdentifier(Object entity) {
         return jpaProvider.getIdentifier(entity);
     }
