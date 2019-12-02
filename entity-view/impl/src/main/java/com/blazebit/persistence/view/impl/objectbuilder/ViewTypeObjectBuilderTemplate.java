@@ -132,7 +132,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
     private static final String CASE_WHEN_PREFIX = "CASE WHEN ";
     private static final String CASE_WHEN_SUFFIX = " THEN true ELSE false END";
 
-    private final ManagedViewType<?> viewType;
+    private final ManagedViewTypeImplementor<?> viewType;
     private final ObjectInstantiator<T> objectInstantiator;
     private final ObjectInstantiator<T>[] subtypeInstantiators;
     private final TupleElementMapper[] mappers;
@@ -717,7 +717,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         } else if (attribute.getFetchStrategy() == FetchStrategy.SELECT) {
             String subviewAliasPrefix = mapperBuilder.getAlias(attribute, false);
             int viewRootIndex = viewRoot.hasSubtypes() ? 1 : 0;
-            int embeddingViewIndex = tupleOffset;
+            int embeddingViewIndex = (viewType.hasSubtypes() ? 1 : 0) + tupleOffset;
             int startIndex = tupleOffset + mapperBuilder.mapperIndex();
             Class<?> correlationBasisType = getCorrelationBasisType(AbstractAttribute.stripThisFromMapping(correlationBasis), ef);
             Class<?> correlationBasisEntity = getCorrelationBasisEntityType(correlationBasisType);
@@ -768,7 +768,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         } else if (attribute.getFetchStrategy() == FetchStrategy.SUBSELECT) {
             String subviewAliasPrefix = mapperBuilder.getAlias(attribute, false);
             int viewRootIndex = viewRoot.hasSubtypes() ? 1 : 0;
-            int embeddingViewIndex = tupleOffset;
+            int embeddingViewIndex = (viewType.hasSubtypes() ? 1 : 0) + tupleOffset;
             int startIndex = tupleOffset + mapperBuilder.mapperIndex();
             Class<?> correlationBasisType = getCorrelationBasisType(AbstractAttribute.stripThisFromMapping(correlationBasis), ef);
             Class<?> correlationBasisEntity = getCorrelationBasisEntityType(correlationBasisType);
