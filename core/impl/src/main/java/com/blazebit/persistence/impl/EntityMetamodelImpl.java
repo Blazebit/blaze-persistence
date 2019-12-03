@@ -736,6 +736,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         private final String attributePathString;
         private final Class<Y> elementClass;
         private final boolean hasCascadeDeleteCycle;
+        private final boolean hasJoinCondition;
         private final boolean isForeignJoinColumn;
         private final boolean isColumnShared;
         private final boolean isBag;
@@ -765,6 +766,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
                 this.isDeleteCascaded = jpaProvider.isDeleteCascaded(ownerType, elementCollectionPath, attributeName);
             }
             this.hasCascadeDeleteCycle = false;
+            this.hasJoinCondition = jpaProvider.hasJoinCondition(ownerType, elementCollectionPath, attributeName);
             JoinType[] joinTypes = JoinType.values();
             JpaProvider.ConstraintType[] requiresTreatFilter = new JpaProvider.ConstraintType[joinTypes.length];
             if (ownerType instanceof EntityType<?>) {
@@ -812,6 +814,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
             this.attributePathString = original.attributePathString;
             this.elementClass = original.elementClass;
             this.hasCascadeDeleteCycle = hasCascadeDeleteCycle;
+            this.hasJoinCondition = original.hasJoinCondition;
             this.isForeignJoinColumn = original.isForeignJoinColumn;
             this.isColumnShared = original.isColumnShared;
             this.isBag = original.isBag;
@@ -860,6 +863,11 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         @Override
         public Class<Y> getElementClass() {
             return elementClass;
+        }
+
+        @Override
+        public boolean hasJoinCondition() {
+            return hasJoinCondition;
         }
 
         @Override

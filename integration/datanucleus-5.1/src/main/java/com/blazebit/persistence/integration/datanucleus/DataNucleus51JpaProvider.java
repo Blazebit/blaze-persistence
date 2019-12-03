@@ -415,6 +415,11 @@ public class DataNucleus51JpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean hasJoinCondition(ManagedType<?> ownerType, String elementCollectionPath, String attributeName) {
+        return false;
+    }
+
+    @Override
     public boolean containsEntity(EntityManager em, Class<?> entityClass, Object id) {
         ExecutionContext ec = em.unwrap(ExecutionContext.class);
         return ec.getAttachedObjectForId(ec.newObjectId(entityClass, id)) != null;

@@ -392,6 +392,16 @@ public interface JpaProvider {
     public boolean isDeleteCascaded(ManagedType<?> ownerType, String elementCollectionPath, String attributeName);
 
     /**
+     * Whether the given attribute has a join condition.
+     *
+     * @param ownerType The declaring type of the attribute to check
+     * @param elementCollectionPath The nullable path to the element collection within which the attribute is contained
+     * @param attributeName The name of the attribute to check
+     * @return True if it has a join condition, else false
+     */
+    public boolean hasJoinCondition(ManagedType<?> ownerType, String elementCollectionPath, String attributeName);
+
+    /**
      * Returns whether the entity with the id is contained in the entity managers persistence context.
      *
      * @param em The entity manager

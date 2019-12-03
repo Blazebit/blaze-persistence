@@ -279,6 +279,11 @@ public class OpenJPAJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean hasJoinCondition(ManagedType<?> ownerType, String elementCollectionPath, String attributeName) {
+        return false;
+    }
+
+    @Override
     public boolean containsEntity(EntityManager em, Class<?> entityClass, Object id) {
         return false;
     }

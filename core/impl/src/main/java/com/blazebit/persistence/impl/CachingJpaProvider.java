@@ -140,6 +140,13 @@ public final class CachingJpaProvider implements JpaProvider {
     public boolean isDeleteCascaded(ManagedType<?> ownerType, String elementCollectionPath, String attributeName) {
         return isDeleteCascaded(ownerType, attributeName);
     }
+
+    @Override
+    public boolean hasJoinCondition(ManagedType<?> ownerType, String elementCollectionPath, String attributeName) {
+        ExtendedManagedType managedType = entityMetamodel.getManagedType(ExtendedManagedType.class, ownerType);
+        ExtendedAttribute attribute = (ExtendedAttribute) managedType.getAttributes().get(attributeName);
+        return attribute != null && attribute.hasJoinCondition();
+    }
     // Simple delegates
 
     @Override

@@ -172,21 +172,29 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                 ExtendedAttribute<?, ?> attribute = managedType.getOwnedAttributes().get(this.mapping);
 
                 this.correlationKeyAlias = "__correlationAlias";
-                // If the mapping is a deep path expression i.e. contains a dot but no parenthesis, we try to find a mapped by attribute by a prefix
-                int index;
-                if (attribute == null && (index = this.mapping.indexOf('.')) != -1 && this.mapping.indexOf('(') == -1
-                        && (attribute = managedType.getOwnedAttributes().get(this.mapping.substring(0, index))) != null && !StringUtils.isEmpty(attribute.getMappedBy())) {
-                    this.correlated = attribute.getElementClass();
-                    this.correlationExpression = attribute.getMappedBy() + " IN __correlationAlias";
-                    this.correlationResult = this.mapping.substring(index + 1);
-                } else if (attribute != null && !StringUtils.isEmpty(attribute.getMappedBy())) {
-                    this.correlated = attribute.getElementClass();
-                    this.correlationExpression = attribute.getMappedBy() + " IN __correlationAlias";
-                    this.correlationResult = "";
-                } else {
+                // The special case when joining the association results in a different join than when doing it through entity joins
+                // This might be due to a @Where annotation being present on the association
+                if (fetchStrategy == FetchStrategy.SELECT && attribute != null && attribute.hasJoinCondition()) {
                     this.correlated = declaringType.getEntityClass();
                     this.correlationExpression = "this IN __correlationAlias";
                     this.correlationResult = this.mapping;
+                } else {
+                    // If the mapping is a deep path expression i.e. contains a dot but no parenthesis, we try to find a mapped by attribute by a prefix
+                    int index;
+                    if (attribute == null && (index = this.mapping.indexOf('.')) != -1 && this.mapping.indexOf('(') == -1
+                            && (attribute = managedType.getOwnedAttributes().get(this.mapping.substring(0, index))) != null && !StringUtils.isEmpty(attribute.getMappedBy()) && !attribute.hasJoinCondition()) {
+                        this.correlated = attribute.getElementClass();
+                        this.correlationExpression = attribute.getMappedBy() + " IN __correlationAlias";
+                        this.correlationResult = this.mapping.substring(index + 1);
+                    } else if (attribute != null && !StringUtils.isEmpty(attribute.getMappedBy()) && !attribute.hasJoinCondition()) {
+                        this.correlated = attribute.getElementClass();
+                        this.correlationExpression = attribute.getMappedBy() + " IN __correlationAlias";
+                        this.correlationResult = "";
+                    } else {
+                        this.correlated = declaringType.getEntityClass();
+                        this.correlationExpression = "this IN __correlationAlias";
+                        this.correlationResult = this.mapping;
+                    }
                 }
                 this.correlationBasis = "this";
                 this.correlationProvider = CorrelationProviderHelper.createCorrelationProvider(correlated, correlationKeyAlias, correlationExpression, context);

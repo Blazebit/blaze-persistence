@@ -64,6 +64,14 @@ public interface ExtendedAttribute<X, Y> {
     public Class<Y> getElementClass();
 
     /**
+     * Returns whether the attribute has a join condition.
+     *
+     * @return True if it has a join condition, false otherwise
+     * @since 1.4.0
+     */
+    public boolean hasJoinCondition();
+
+    /**
      * Returns whether the type of the attribute causes a cascading delete cycle.
      *
      * @return True if it has a cascading delete cycle, false otherwise

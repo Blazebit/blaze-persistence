@@ -37,10 +37,12 @@ import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
+import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.sql.InFragment;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
@@ -65,6 +67,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -1328,6 +1331,83 @@ public class HibernateJpaProvider implements JpaProvider {
             }
         }
         return componentType.getCascadeStyle(propertyIndex).doCascade(CascadingAction.DELETE);
+    }
+
+    @Override
+    public boolean hasJoinCondition(ManagedType<?> owner, String elementCollectionPath, String attributeName) {
+        QueryableCollection persister;
+        Type propertyType;
+        AbstractEntityPersister entityPersister = getEntityPersister(owner);
+        if (entityPersister == null) {
+            return false;
+        }
+        SessionFactoryImplementor factory = entityPersister.getFactory();
+        if (elementCollectionPath != null && (persister = getCollectionPersister(owner, elementCollectionPath)) != null) {
+            Type elementType = persister.getElementType();
+            if (!(elementType instanceof ComponentType)) {
+                // This can only happen for collection/join table target attributes, where it is irrelevant
+                return false;
+            }
+            ComponentType componentType = (ComponentType) elementType;
+            String subAttribute = attributeName.substring(elementCollectionPath.length() + 1);
+            // Component types only store direct properties, so we have to go deeper
+            String[] propertyParts = subAttribute.split("\\.");
+            for (int i = 0; i < propertyParts.length - 1; i++) {
+                int index = componentType.getPropertyIndex(propertyParts[i]);
+                propertyType = componentType.getSubtypes()[index];
+                if (propertyType instanceof ComponentType) {
+                    componentType = (ComponentType) propertyType;
+                } else {
+                    // This can only happen for collection/join table target attributes, where it is irrelevant
+                    return false;
+                }
+            }
+
+            propertyType = componentType.getSubtypes()[componentType.getPropertyIndex(propertyParts[propertyParts.length - 1])];
+        } else {
+            propertyType = entityPersister.getPropertyType(attributeName);
+        }
+
+        if (propertyType instanceof CollectionType) {
+            return ((QueryableCollection) collectionPersisters.get(((CollectionType) propertyType).getRole())).hasWhere();
+        } else {
+            if (propertyType instanceof org.hibernate.type.EntityType) {
+                AbstractEntityPersister elementPersister = (AbstractEntityPersister) entityPersisters.get(((org.hibernate.type.EntityType) propertyType).getAssociatedEntityName());
+                String filterFragment = elementPersister.filterFragment("x", Collections.emptyMap());
+                if (elementPersister instanceof SingleTableEntityPersister) {
+                    if (!filterFragment.isEmpty()) {
+                        StringBuilder sb = new StringBuilder();
+                        sb.append(" and ");
+                        String discriminatorColumnName = elementPersister.getDiscriminatorColumnName();
+                        InFragment frag = new InFragment();
+                        if (discriminatorColumnName == null) {
+                            frag.setFormula("x", elementPersister.toColumns("x", "class")[0]);
+                        } else {
+                            frag.setColumn("x", discriminatorColumnName);
+                        }
+
+                        String[] subclasses = ((SingleTableEntityPersister) elementPersister).getSubclassClosure();
+                        for (int i = 0; i < subclasses.length; i++) {
+                            final Queryable queryable = (Queryable) factory.getEntityPersister(subclasses[i]);
+                            if (!queryable.isAbstract()) {
+                                frag.addValue(queryable.getDiscriminatorSQLValue());
+                            }
+                        }
+
+                        String fragmentString = frag.toFragmentString();
+                        StringBuilder buf = new StringBuilder(fragmentString.length() + 5)
+                                .append(" and ")
+                                .append(fragmentString);
+
+                        return !filterFragment.startsWith(buf.toString()) || filterFragment.length() > buf.length();
+                    }
+                } else {
+                    return !filterFragment.isEmpty();
+                }
+            }
+        }
+
+        return false;
     }
 
     @Override
