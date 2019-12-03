@@ -491,6 +491,11 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean hasJoinCondition(ManagedType<?> ownerType, String elementCollectionPath, String attributeName) {
+        return false;
+    }
+
+    @Override
     public boolean containsEntity(EntityManager em, Class<?> entityClass, Object id) {
         return em.unwrap(JpaEntityManager.class).getActiveSession().getIdentityMapAccessor().getFromIdentityMap(id, entityClass) != null;
     }
