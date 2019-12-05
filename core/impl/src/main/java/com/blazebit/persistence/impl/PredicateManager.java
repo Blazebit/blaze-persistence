@@ -39,6 +39,7 @@ import com.blazebit.persistence.parser.SimpleQueryGenerator;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.parser.expression.modifier.ExpressionModifier;
+import com.blazebit.persistence.parser.predicate.CompoundPredicate;
 import com.blazebit.persistence.parser.predicate.ExistsPredicate;
 import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
@@ -87,7 +88,17 @@ public abstract class PredicateManager<T> extends AbstractManager<ExpressionModi
     void restrictExpression(Predicate predicate) {
         rootPredicate.verifyBuilderEnded();
         parameterManager.collectParameterRegistrations(predicate, getClauseType(), subqueryInitFactory.getQueryBuilder());
-        rootPredicate.getPredicate().getChildren().add(predicate);
+        List<Predicate> children = rootPredicate.getPredicate().getChildren();
+        if (predicate instanceof CompoundPredicate) {
+            CompoundPredicate compoundPredicate = (CompoundPredicate) predicate;
+            if (compoundPredicate.getOperator() == CompoundPredicate.BooleanOperator.AND ^ compoundPredicate.isNegated()) {
+                children.addAll(compoundPredicate.getChildren());
+            } else {
+                children.add(predicate);
+            }
+        } else {
+            children.add(predicate);
+        }
     }
 
     void restrictSetExpression(Predicate predicate) {
@@ -96,7 +107,16 @@ public abstract class PredicateManager<T> extends AbstractManager<ExpressionModi
 
         List<Predicate> children = rootPredicate.getPredicate().getChildren();
         children.clear();
-        children.add(predicate);
+        if (predicate instanceof CompoundPredicate) {
+            CompoundPredicate compoundPredicate = (CompoundPredicate) predicate;
+            if (compoundPredicate.getOperator() == CompoundPredicate.BooleanOperator.AND ^ compoundPredicate.isNegated()) {
+                children.addAll(compoundPredicate.getChildren());
+            } else {
+                children.add(predicate);
+            }
+        } else {
+            children.add(predicate);
+        }
     }
 
     SimpleCaseWhenStarterBuilder<RestrictionBuilder<T>> restrictSimpleCase(T builder, Expression caseOperand) {

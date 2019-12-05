@@ -16,26 +16,23 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static org.junit.Assert.assertEquals;
-
-import javax.persistence.Tuple;
-
+import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus4;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
-import com.blazebit.persistence.testsuite.entity.OrderPositionElement;
-import org.junit.Ignore;
-import org.junit.Test;
-
-import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.entity.Order;
 import com.blazebit.persistence.testsuite.entity.OrderPosition;
+import com.blazebit.persistence.testsuite.entity.OrderPositionElement;
 import com.blazebit.persistence.testsuite.entity.OrderPositionHead;
+import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
+import javax.persistence.Tuple;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -272,6 +269,34 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
                         "LEFT JOIN o.orderPositions p ON (p.id.position > :param_0) " +
                         "LEFT JOIN Order o2 ON (EXISTS (" +
                         subquery +
+                        "))",
+                criteria.getQueryString()
+        );
+        criteria.getResultList();
+    }
+
+    @Test
+    // Prior to Hibernate 5.1 it wasn't possible reference other from clause elements in the ON clause which is required to support implicit joins in ON clauses
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class })
+    public void testCyclicDependencyInOnClauseImplicitJoinInDisjunction() {
+        CriteriaBuilder<Order> criteria = cbf.create(em, Order.class, "o");
+        criteria.leftJoinDefaultOn("o.orderPositions", "p")
+                .on("p.id.position").gt(1)
+                .end()
+                .leftJoinOn("p", Order.class, "o2")
+                    .onOr()
+                        .on("o2.number").eqExpression("o.orderPositions.order.number")
+                        .on("o2.number").isNull()
+                    .endOr()
+                .end();
+        assertEquals(
+                "SELECT o FROM Order o " +
+                        "LEFT JOIN o.orderPositions p ON (p.id.position > :param_0) " +
+                        "LEFT JOIN Order o2 ON (EXISTS (" +
+                        "SELECT 1 FROM Order _synthetic_o LEFT JOIN _synthetic_o.orderPositions _synth_subquery_0 " +
+                        "LEFT JOIN _synth_subquery_0.order order_1 " +
+                        "WHERE (o2.number = order_1.number " +
+                        "OR o2.number IS NULL) AND _synthetic_o = o" +
                         "))",
                 criteria.getQueryString()
         );

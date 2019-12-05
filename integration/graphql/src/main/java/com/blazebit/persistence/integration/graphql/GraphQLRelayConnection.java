@@ -69,7 +69,7 @@ public class GraphQLRelayConnection<T> implements Serializable {
     private static <X> List<GraphQLRelayEdge<X>> createEdges(List<X> list, GraphQLRelayPageInfo pageInfo) {
         List<GraphQLRelayEdge<X>> edges;
         List<Keyset> keysets;
-        if (list instanceof PagedList<?> && pageInfo != null && (keysets = ((PagedList<?>) list).getKeysetPage().getKeysets()).size() == list.size()) {
+        if (list instanceof PagedList<?> && pageInfo != null && ((PagedList<?>) list).getKeysetPage() != null && (keysets = ((PagedList<?>) list).getKeysetPage().getKeysets()).size() == list.size()) {
             PagedList<?> pagedList = (PagedList<?>) list;
             int offset = pagedList.getFirstResult();
             int pageSize = pagedList.getMaxResults();
