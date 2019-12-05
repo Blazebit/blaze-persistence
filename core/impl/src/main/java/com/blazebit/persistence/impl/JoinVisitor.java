@@ -34,6 +34,7 @@ import com.blazebit.persistence.parser.predicate.InPredicate;
 import com.blazebit.persistence.parser.predicate.IsEmptyPredicate;
 import com.blazebit.persistence.parser.predicate.IsNullPredicate;
 import com.blazebit.persistence.parser.predicate.MemberOfPredicate;
+import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.parser.predicate.PredicateBuilder;
 import com.blazebit.persistence.parser.util.ExpressionUtils;
 import com.blazebit.persistence.spi.ExtendedManagedType;
@@ -70,6 +71,7 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor, Jo
     private boolean joinRequired;
     private boolean joinWithObjectLeafAllowed = true;
     private ClauseType fromClause;
+    private ConjunctionPathExpressionFindingVisitor conjunctionPathExpressionFindingVisitor;
 
     public JoinVisitor(MainQuery mainQuery, WindowManager windowManager, JoinVisitor parentVisitor, JoinManager joinManager, ParameterManager parameterManager, boolean needsSingleValuedAssociationIdRemoval) {
         this.parameterTransformerFactory = mainQuery.parameterTransformerFactory;
@@ -139,17 +141,33 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor, Jo
                     // We rewrite the predicate to use correlated subqueries for implicit joins
                     SubqueryInitiatorImpl<Object> subqueryInitiator = (SubqueryInitiatorImpl<Object>) joinManager.getSubqueryInitFactory().createSubqueryInitiator(null, this, true, fromClause);
                     SubqueryBuilderImpl<?> subqueryBuilder = null;
+                    List<Predicate> additionalPredicates = new ArrayList<>(correlationPathReplacementVisitor.getRootsToCorrelate().size());
+                    for (ImplicitJoinCorrelationPathReplacementVisitor.RootCorrelationEntry entry : correlationPathReplacementVisitor.getRootsToCorrelate()) {
+                        if (subqueryBuilder == null) {
+                            subqueryBuilder = (SubqueryBuilderImpl<?>) subqueryInitiator.from(entry.getEntityClass(), entry.getAlias());
+                        } else {
+                            subqueryBuilder.from(entry.getEntityClass(), entry.getAlias());
+                        }
+                        additionalPredicates.add(entry.getAdditionalPredicate());
+                    }
                     for (ImplicitJoinCorrelationPathReplacementVisitor.CorrelationTransformEntry correlationTransformEntry : correlationPathReplacementVisitor.getPathsToCorrelate()) {
                         String alias = correlationTransformEntry.getAlias();
                         String correlationExpression = correlationTransformEntry.getCorrelationExpression();
-                        if (subqueryBuilder == null) {
-                            subqueryBuilder = (SubqueryBuilderImpl<?>) subqueryInitiator.from(correlationExpression, alias);
+                        if (correlationTransformEntry.isInConjunction()) {
+                            if (subqueryBuilder == null) {
+                                subqueryBuilder = (SubqueryBuilderImpl<?>) subqueryInitiator.from(correlationExpression, alias);
+                            } else {
+                                subqueryBuilder.from(correlationExpression, alias);
+                            }
                         } else {
-                            subqueryBuilder.from(correlationExpression, alias);
+                            subqueryBuilder.leftJoinDefault(correlationExpression, alias);
                         }
                     }
 
                     subqueryBuilder.whereManager.restrictSetExpression(correlationPathReplacementVisitor.rewritePredicate(node.getOnPredicate()));
+                    for (Predicate additionalPredicate : additionalPredicates) {
+                        subqueryBuilder.whereManager.restrictExpression(additionalPredicate);
+                    }
                     node.setOnPredicate(new CompoundPredicate(CompoundPredicate.BooleanOperator.AND, new ExistsPredicate(new SubqueryExpression(subqueryBuilder), false)));
                     node.getOnPredicate().accept(this);
                 }
@@ -205,7 +223,10 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor, Jo
                     }
                 }
             } catch (ImplicitJoinNotAllowedException ex) {
-                correlationPathReplacementVisitor.addPathExpression(expression, ex);
+                if (conjunctionPathExpressionFindingVisitor == null) {
+                    conjunctionPathExpressionFindingVisitor = new ConjunctionPathExpressionFindingVisitor();
+                }
+                correlationPathReplacementVisitor.addPathExpression(expression, ex, conjunctionPathExpressionFindingVisitor.isInConjunction(currentJoinNode.getOnPredicate(), expression));
             }
         }
     }

@@ -22,12 +22,15 @@ import com.blazebit.persistence.parser.expression.PathElementExpression;
 import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.expression.PropertyExpression;
 import com.blazebit.persistence.parser.expression.TreatExpression;
+import com.blazebit.persistence.parser.predicate.EqPredicate;
 import com.blazebit.persistence.parser.predicate.Predicate;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 
@@ -42,20 +45,36 @@ public class ImplicitJoinCorrelationPathReplacementVisitor extends InplaceModifi
 
     private final Map<PathExpression, CorrelationTransformEntry> pathIdentitiesToCorrelate;
     private final Map<String, CorrelationTransformEntry> pathsToCorrelate;
+    private final Map<String, RootCorrelationEntry> rootsToCorrelate;
 
     public ImplicitJoinCorrelationPathReplacementVisitor() {
         this.pathIdentitiesToCorrelate = new IdentityHashMap<>();
         this.pathsToCorrelate = new HashMap<>();
+        this.rootsToCorrelate = new HashMap<>();
     }
 
-    public void addPathExpression(PathExpression pathExpression, ImplicitJoinNotAllowedException ex) {
+    public void addPathExpression(PathExpression pathExpression, ImplicitJoinNotAllowedException ex, boolean isInConjunction) {
         if (!pathIdentitiesToCorrelate.containsKey(pathExpression)) {
             StringBuilder sb = new StringBuilder();
             if (ex.getTreatType() != null) {
                 sb.append("TREAT(");
             }
 
-            ex.getBaseNode().appendDeReference(sb, ex.getJoinRelationName(), true, false, false);
+            if (isInConjunction) {
+                ex.getBaseNode().appendAlias(sb, true, false);
+            } else {
+                String syntheticAlias = "_synthetic_" + ex.getBaseNode().getAlias();
+                List<PathElementExpression> list1 = new ArrayList<>(1);
+                list1.add(new PropertyExpression(syntheticAlias));
+                List<PathElementExpression> list2 = new ArrayList<>(1);
+                list2.add(new PropertyExpression(ex.getBaseNode().getAlias()));
+                Predicate predicate = new EqPredicate(new PathExpression(list1), new PathExpression(list2));
+                rootsToCorrelate.put(syntheticAlias, new RootCorrelationEntry(syntheticAlias, ex.getBaseNode().getNodeType().getJavaType(), predicate));
+                sb.append(syntheticAlias);
+            }
+
+            sb.append('.');
+            sb.append(ex.getJoinRelationName());
 
             if (ex.getTreatType() != null) {
                 sb.append(" AS ").append(ex.getTreatType()).append(')');
@@ -106,7 +125,7 @@ public class ImplicitJoinCorrelationPathReplacementVisitor extends InplaceModifi
                 removeMatchingJoinAttributePathElements(ex, transformedExpression);
                 transformedExpression.getExpressions().add(0, new PropertyExpression(alias));
             }
-            CorrelationTransformEntry correlationTransformEntry = new CorrelationTransformEntry(alias, correlationExpression, transformedExpression);
+            CorrelationTransformEntry correlationTransformEntry = new CorrelationTransformEntry(alias, correlationExpression, transformedExpression, isInConjunction);
             pathIdentitiesToCorrelate.put(pathExpression, correlationTransformEntry);
             if (existingEntry == null) {
                 pathsToCorrelate.put(correlationExpression, correlationTransformEntry);
@@ -132,10 +151,15 @@ public class ImplicitJoinCorrelationPathReplacementVisitor extends InplaceModifi
         return pathsToCorrelate.values();
     }
 
+    public Collection<RootCorrelationEntry> getRootsToCorrelate() {
+        return rootsToCorrelate.values();
+    }
+
     public Predicate rewritePredicate(Predicate predicate) {
         Predicate newPredicate = (Predicate) predicate.accept(this);
         pathIdentitiesToCorrelate.clear();
         pathsToCorrelate.clear();
+        rootsToCorrelate.clear();
         return newPredicate;
     }
 
@@ -159,11 +183,13 @@ public class ImplicitJoinCorrelationPathReplacementVisitor extends InplaceModifi
         private final String alias;
         private final String correlationExpression;
         private final PathExpression transformedExpression;
+        private final boolean isInConjunction;
 
-        public CorrelationTransformEntry(String alias, String correlationExpression, PathExpression transformedExpression) {
+        public CorrelationTransformEntry(String alias, String correlationExpression, PathExpression transformedExpression, boolean isInConjunction) {
             this.alias = alias;
             this.correlationExpression = correlationExpression;
             this.transformedExpression = transformedExpression;
+            this.isInConjunction = isInConjunction;
         }
 
         public String getAlias() {
@@ -176,6 +202,40 @@ public class ImplicitJoinCorrelationPathReplacementVisitor extends InplaceModifi
 
         public PathExpression getTransformedExpression() {
             return transformedExpression;
+        }
+
+        public boolean isInConjunction() {
+            return isInConjunction;
+        }
+    }
+
+    /**
+     *
+     * @author Christian Beikov
+     * @since 1.4.0
+     */
+    public static class RootCorrelationEntry {
+
+        private final String alias;
+        private final Class<?> entityClass;
+        private final Predicate additionalPredicate;
+
+        public RootCorrelationEntry(String alias, Class<?> entityClass, Predicate additionalPredicate) {
+            this.alias = alias;
+            this.entityClass = entityClass;
+            this.additionalPredicate = additionalPredicate;
+        }
+
+        public String getAlias() {
+            return alias;
+        }
+
+        public Class<?> getEntityClass() {
+            return entityClass;
+        }
+
+        public Predicate getAdditionalPredicate() {
+            return additionalPredicate;
         }
     }
 

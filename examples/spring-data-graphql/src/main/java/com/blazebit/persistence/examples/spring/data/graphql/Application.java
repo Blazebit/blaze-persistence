@@ -20,7 +20,6 @@ import com.blazebit.persistence.examples.spring.data.graphql.model.Cat;
 import com.blazebit.persistence.examples.spring.data.graphql.model.Person;
 import com.blazebit.persistence.examples.spring.data.graphql.repository.CatJpaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
@@ -39,7 +38,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @SpringBootApplication
 @EnableSpringDataWebSupport
 @ComponentScan(basePackages = "com.blazebit.persistence.examples")
-public class Application implements CommandLineRunner {
+public class Application {
 
     @Autowired
     EntityManager em;
@@ -47,12 +46,11 @@ public class Application implements CommandLineRunner {
     CatJpaRepository catJpaRepository;
 
     public static void main(String[] args) {
-        SpringApplication.run(Application.class);
+        SpringApplication.run(Application.class).getBean(Application.class).run();
     }
 
-    @Override
     @Transactional
-    public void run(String... strings) throws Exception {
+    public void run() {
         ThreadLocalRandom random = ThreadLocalRandom.current();
         List<Person> people = new ArrayList<>();
         for (int i = 0; i < 4; i++) {
