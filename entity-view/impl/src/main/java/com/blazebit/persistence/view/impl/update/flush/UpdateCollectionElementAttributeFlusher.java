@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl.update.flush;
 import com.blazebit.persistence.view.OptimisticLockException;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.view.impl.update.UpdateQueryFactory;
 
 import javax.persistence.Query;
 
@@ -37,19 +38,17 @@ public class UpdateCollectionElementAttributeFlusher<E, V> extends CollectionEle
     }
 
     @Override
-    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
+    public Query flushQuery(UpdateContext context, String parameterPrefix, UpdateQueryFactory queryFactory, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
         int orphanRemovalStartIndex = context.getOrphanRemovalDeleters().size();
         Query q = null;
         if (viewToEntityMapper != null) {
             if (!nestedGraphNode.supportsQueryFlush()) {
                 nestedGraphNode.flushEntity(context, null, element, (V) element, (V) element, null);
             } else {
-                q = viewToEntityMapper.createUpdateQuery(context, element, nestedGraphNode);
-                nestedGraphNode.flushQuery(context, parameterPrefix, q, element, null, (V) element, ownerAwareDeleter);
+                q = nestedGraphNode.flushQuery(context, parameterPrefix, viewToEntityMapper, q, element, null, (V) element, ownerAwareDeleter);
             }
         } else {
-            q = viewToEntityMapper.createUpdateQuery(context, element, nestedGraphNode);
-            nestedGraphNode.flushQuery(context, parameterPrefix, q, element, null, (V) element, ownerAwareDeleter);
+            q = nestedGraphNode.flushQuery(context, parameterPrefix, viewToEntityMapper, q, element, null, (V) element, ownerAwareDeleter);
         }
         if (q != null) {
             int updated = q.executeUpdate();
@@ -59,5 +58,6 @@ public class UpdateCollectionElementAttributeFlusher<E, V> extends CollectionEle
             }
         }
         context.removeOrphans(orphanRemovalStartIndex);
+        return query;
     }
 }

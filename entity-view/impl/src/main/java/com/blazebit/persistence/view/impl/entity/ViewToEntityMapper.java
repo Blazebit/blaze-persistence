@@ -20,17 +20,16 @@ import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.update.EntityViewUpdater;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.view.impl.update.UpdateQueryFactory;
 import com.blazebit.persistence.view.impl.update.flush.DirtyAttributeFlusher;
 import com.blazebit.persistence.view.impl.update.flush.FetchGraphNode;
-
-import javax.persistence.Query;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public interface ViewToEntityMapper extends ElementToEntityMapper {
+public interface ViewToEntityMapper extends ElementToEntityMapper, UpdateQueryFactory {
 
     public FetchGraphNode<?> getFullGraphNode();
 
@@ -41,8 +40,6 @@ public interface ViewToEntityMapper extends ElementToEntityMapper {
     public AttributeAccessor getViewIdAccessor();
 
     public AttributeAccessor getEntityIdAccessor();
-
-    public Query createUpdateQuery(UpdateContext context, Object view, DirtyAttributeFlusher<?, ?, ?> nestedGraphNode);
 
     public EntityViewUpdater getUpdater(Object view);
 

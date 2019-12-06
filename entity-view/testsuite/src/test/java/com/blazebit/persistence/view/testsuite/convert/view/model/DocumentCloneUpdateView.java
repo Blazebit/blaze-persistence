@@ -35,7 +35,7 @@ import java.util.Set;
  */
 @EntityView(Document.class)
 @UpdatableEntityView
-@CreatableEntityView(validatePersistability = false)
+@CreatableEntityView
 public interface DocumentCloneUpdateView extends DocumentCloneView {
 
     public void setName(String name);

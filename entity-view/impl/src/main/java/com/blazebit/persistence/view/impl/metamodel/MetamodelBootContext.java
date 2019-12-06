@@ -16,6 +16,9 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
+import com.blazebit.persistence.view.impl.EntityViewListenerClassKey;
+import com.blazebit.persistence.view.impl.EntityViewListenerFactory;
+
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -37,9 +40,25 @@ public interface MetamodelBootContext {
 
     public Set<Class<?>> getViewClasses();
 
+    public void addEntityViewListener(Class<?> entityViewClass, Class<?> entityViewListenerClass);
+
+    public void addEntityViewListener(Class<?> entityViewClass, Class<?> entityClass, Class<?> entityViewListenerClass);
+
+    public void addEntityViewListener(Class<?> entityViewClass, Class<?> entityClass, EntityViewListenerFactory<?> entityViewListenerFactory);
+
+    public EntityViewListenerFactory<?>[] createViewListenerFactories(Class<?> entityViewListenerClass);
+
+    public Map<EntityViewListenerClassKey, EntityViewListenerFactory<?>> getViewListeners();
+
     public void addError(String error);
 
     public boolean hasErrors();
 
     public Set<String> getErrors();
+
+    public Set<Class<?>> getViewListenerClasses();
+
+    public Set<Class<?>> getViewListenerClasses(Class<?> entityViewClass);
+
+    public Set<Class<?>> getViewListenerClasses(Class<?> entityViewClass, Class<?> entityClass);
 }

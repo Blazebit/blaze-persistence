@@ -22,6 +22,7 @@ import com.blazebit.persistence.view.impl.accessor.InitialValueAttributeAccessor
 import com.blazebit.persistence.view.impl.entity.EntityLoaderFetchGraphNode;
 import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.view.impl.update.UpdateQueryFactory;
 import com.blazebit.persistence.view.spi.type.BasicUserType;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 
@@ -225,7 +226,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
     }
 
     @Override
-    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
+    public Query flushQuery(UpdateContext context, String parameterPrefix, UpdateQueryFactory queryFactory, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
         V finalValue;
         if (flushOperation == null) {
             finalValue = value;
@@ -238,7 +239,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
         if (doUpdate && orphanRemoval) {
             Object oldValue = initialValueViewAttributeAccessor.getInitialValue(view);
             if (!elementDescriptor.getBasicUserType().isEqual(oldValue, finalValue)) {
-                context.getEntityManager().remove(oldValue);
+                deleter.remove(context, oldValue);
             }
         }
         if (doUpdate && inverseFlusher != null) {
@@ -267,10 +268,11 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
             } else {
                 for (int i = 0; i < componentFlushers.length; i++) {
                     Object val = componentFlushers[i].getKey().getValue(finalValue);
-                    componentFlushers[i].getValue().flushQuery(context, parameterPrefix, query, ownerView, view, val, ownerAwareDeleter);
+                    componentFlushers[i].getValue().flushQuery(context, parameterPrefix, queryFactory, query, ownerView, view, val, ownerAwareDeleter);
                 }
             }
         }
+        return query;
     }
 
     private V persistOrMerge(UpdateContext context, E entity, Object view, V value) {
@@ -351,7 +353,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
         if (doUpdate && orphanRemoval) {
             Object oldValue = initialValueViewAttributeAccessor.getInitialValue(view);
             if (!elementDescriptor.getBasicUserType().isEqual(oldValue, finalValue)) {
-                context.getEntityManager().remove(oldValue);
+                deleter.remove(context, oldValue);
             }
         }
         if (doUpdate && inverseFlusher != null) {
@@ -418,7 +420,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
                 valueToDelete = value;
             }
             if (valueToDelete != null) {
-                context.getEntityManager().remove(getConvertedValue(valueToDelete));
+                deleter.remove(context, getConvertedValue(valueToDelete));
             }
         }
         return Collections.emptyList();
@@ -429,7 +431,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
         if (cascadeDelete) {
             V valueToDelete = (V) entityAttributeAccessor.getValue(entity);
             if (valueToDelete != null) {
-                context.getEntityManager().remove(valueToDelete);
+                deleter.remove(context, valueToDelete);
             }
         }
     }
@@ -502,7 +504,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
     }
 
     @Override
-    public DirtyAttributeFlusher<BasicAttributeFlusher<E, V>, E, V> getDirtyFlusher(UpdateContext context, Object view, Object initial, Object current) {
+    public DirtyAttributeFlusher<BasicAttributeFlusher<E, V>, E, V> getDirtyFlusher(UpdateContext context, Object view, Object initial, Object current, List<Runnable> preFlushListeners) {
         if (updatable) {
             if (initial != current) {
                 if (initial == null) {

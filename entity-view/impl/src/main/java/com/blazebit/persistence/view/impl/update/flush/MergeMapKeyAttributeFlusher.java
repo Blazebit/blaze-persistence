@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl.update.flush;
 import com.blazebit.persistence.view.impl.collection.RecordingEntrySetReplacingIterator;
 import com.blazebit.persistence.view.impl.collection.RecordingMap;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.view.impl.update.UpdateQueryFactory;
 
 import javax.persistence.Query;
 
@@ -34,7 +35,7 @@ public class MergeMapKeyAttributeFlusher<E, V> extends MergeCollectionElementAtt
     }
 
     @Override
-    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
+    public Query flushQuery(UpdateContext context, String parameterPrefix, UpdateQueryFactory queryFactory, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
         RecordingEntrySetReplacingIterator<Object, Object> recordingIterator = (RecordingEntrySetReplacingIterator<Object, Object>) ((RecordingMap<?, ?, ?>) value).recordingIterator();
         try {
             while (recordingIterator.hasNext()) {
@@ -49,6 +50,7 @@ public class MergeMapKeyAttributeFlusher<E, V> extends MergeCollectionElementAtt
             while (recordingIterator.hasNext()) {
                 recordingIterator.next();
             }
+            return query;
         } finally {
             ((RecordingMap<?, ?, ?>) value).resetRecordingIterator();
         }

@@ -750,7 +750,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             Class<?> elementJavaType = getElementType().getJavaType();
             if ((elementJavaType.getModifiers() & Modifier.ABSTRACT) != 0) {
                 // If the element type has an entity view annotation, although it is considered basic, we throw an error as this means, the view was probably not registered
-                if (AnnotationUtils.findAnnotation(elementJavaType, EntityView.class) != null && getElementType().getConvertedType() == null) {
+                if (!isQueryParameter() && AnnotationUtils.findAnnotation(elementJavaType, EntityView.class) != null && getElementType().getConvertedType() == null) {
                     context.addError("The element type '" + elementJavaType.getName() + "' is considered basic although the class is annotated with @EntityView. Add a type converter or add the java class to the entity view configuration! Problematic attribute " + getLocation());
                 }
             }

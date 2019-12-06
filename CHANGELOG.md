@@ -8,15 +8,37 @@ Not yet released
 
 ### New features
 
-None
+* Jackson integration for Entity Views to allow deserializing updatable entity views
+* Enable Jackson integration in the newly added JAX-RS integration
+* Enable Jackson integration in Spring WebMvc integration
+* Allow to define fetch graphs for Entity Views
+* Create integration for Spring WebFlux similar to the Spring WebMvc one
+* Add support for non-primary key associations in updatable entity views
+* GraphQL integration for Entity Views with implementation for Relay spec
+* Introduction of Entity View lifecycle listeners
+* Bytecode analysis for creatable entity views regarding persistability validation
+* Introduce possibility to force `PaginatedCriteriaBuilder` to always use a provided keyset
+* Allow to configure keyset extraction and count query execution through `EntityViewSetting`
 
 ### Bug fixes
 
-None
+* Flushing updatable entity view that has a readonly declared entity view type fails when setting creatable subtype
+* `JoinOnBuilder.onExpression()` doesn't register parameters
+* Flat views without method attributes fail to generate
+* `SIZE` doesn't work with `TREAT` expression
+* Updatable entity views inverse mapping fails to flush when parent has embedded id and child has non-association back-reference or non-primary key mapping is used
+* Fix limit rendering in main query if preceded by a returning cte query
+* `SELECT` fetch mappings should correlate embedding view entity when association has extra join condition e.g. use Hibernate's `@Where`
+* `SELECT` and `SUBSELECT` fetching fail to correctly correlate by embedding view that uses entity view inheritance
+* Synthetic `EXISTS` subquery for association usage in ON clause doesn't preserve cardinality
+* Make recording collections properly `Serializable`
+* Properly inherit `RANGE` clause from `WINDOW` clause into window functions
+* Fix duplicate `sortResolver` issues when using Spring Data WebMvc integration with Spring Boot
+* Fix calling post rollback callbacks necessary for proper updatable entity view state resets
 
 ### Backwards-incompatible changes
 
-None
+* Rename of the maven artifact `blaze-persistence-integration-spring-data-rest` to `blaze-persistence-integration-spring-data-webmvc`
 
 ## 1.4.0-Alpha3
 

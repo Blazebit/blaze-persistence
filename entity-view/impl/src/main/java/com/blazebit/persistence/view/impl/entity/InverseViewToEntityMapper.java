@@ -174,7 +174,7 @@ public class InverseViewToEntityMapper<E> implements InverseElementToEntityMappe
             if (idAttributeFlusher == null) {
                 query.setParameter(ID_PARAM_NAME, viewIdAccessor.getValue(view));
             } else {
-                idAttributeFlusher.flushQuery(context, "_", query, view, view, viewIdAccessor.getValue(view), null);
+                idAttributeFlusher.flushQuery(context, "_", null, query, view, view, viewIdAccessor.getValue(view), null);
             }
         }
 

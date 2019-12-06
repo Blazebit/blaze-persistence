@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.integration.view.spring.impl;
 
+import com.blazebit.persistence.view.EntityView;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
@@ -44,9 +45,15 @@ public class EntityViewConfigurationDelegate {
     @SuppressWarnings("unchecked")
     void registerEntityViews(BeanDefinitionRegistry registry) {
         Set<Class<?>> entityViewClasses = new HashSet<>();
+        Set<Class<?>> entityViewListenerClasses = new HashSet<>();
         for (BeanDefinition candidate : configurationSource.getCandidates(resourceLoader)) {
             try {
-                entityViewClasses.add(Class.forName(candidate.getBeanClassName()));
+                Class<?> clazz = Class.forName(candidate.getBeanClassName());
+                if (clazz.isAnnotationPresent(EntityView.class)) {
+                    entityViewClasses.add(clazz);
+                } else {
+                    entityViewListenerClasses.add(clazz);
+                }
             } catch (ClassNotFoundException e) {
                 throw new RuntimeException(e);
             }
@@ -55,13 +62,16 @@ public class EntityViewConfigurationDelegate {
         final String entityViewClassHolderBeanName = "entityViewConfigurationProducer";
         if (registry.containsBeanDefinition(entityViewClassHolderBeanName)) {
             BeanDefinition existingClassHolder = registry.getBeanDefinition(entityViewClassHolderBeanName);
-            Set<Class<?>> existingEntityViewClasses = (Set<Class<?>>) ((GenericBeanDefinition) existingClassHolder).getConstructorArgumentValues().getGenericArgumentValue(Set.class).getValue();
+            Set<Class<?>> existingEntityViewClasses = (Set<Class<?>>) ((GenericBeanDefinition) existingClassHolder).getConstructorArgumentValues().getGenericArgumentValues().get(0).getValue();
+            Set<Class<?>> existingEntityViewListenerClasses = (Set<Class<?>>) ((GenericBeanDefinition) existingClassHolder).getConstructorArgumentValues().getGenericArgumentValues().get(1).getValue();
             existingEntityViewClasses.addAll(entityViewClasses);
+            existingEntityViewListenerClasses.addAll(entityViewListenerClasses);
         } else {
             // register configuration class
             GenericBeanDefinition beanDefinition = new GenericBeanDefinition();
             beanDefinition.setBeanClass(EntityViewConfigurationProducer.class);
             beanDefinition.getConstructorArgumentValues().addGenericArgumentValue(entityViewClasses);
+            beanDefinition.getConstructorArgumentValues().addGenericArgumentValue(entityViewListenerClasses);
             registry.registerBeanDefinition(entityViewClassHolderBeanName, beanDefinition);
         }
     }

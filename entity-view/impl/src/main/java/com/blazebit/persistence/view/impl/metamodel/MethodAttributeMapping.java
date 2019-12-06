@@ -326,6 +326,10 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
     @Override
     public void initializeViewMappings(MetamodelBuildingContext context) {
         super.initializeViewMappings(context);
+        // No need to check parameter attributes
+        if (mapping.annotationType() == MappingParameter.class) {
+            return;
+        }
 
         if (isEmpty(cascadeSubtypeClasses) && isEmpty(cascadePersistSubtypeClasses) && isEmpty(cascadeUpdateSubtypeClasses)) {
             // If no classes are given, we try to find all subtype classes
@@ -388,6 +392,10 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
 
     @Override
     public boolean validateDependencies(MetamodelBuildingContext context, Set<Class<?>> dependencies, boolean reportError) {
+        // No need to check parameter attributes
+        if (mapping.annotationType() == MappingParameter.class) {
+            return false;
+        }
         boolean error = super.validateDependencies(context, dependencies, reportError);
         if (error && !reportError) {
             return true;

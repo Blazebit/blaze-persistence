@@ -48,7 +48,7 @@ public class SynchronizationRegistry implements Synchronization, TransactionAcce
         this(transactionAccess, THREAD_LOCAL_KEY.get());
     }
 
-    public SynchronizationRegistry(TransactionAccess transactionAccess, Object key) {
+    private SynchronizationRegistry(TransactionAccess transactionAccess, Object key) {
         this.transactionAccess = transactionAccess;
         this.synchronizations = new ArrayList<>(1);
         this.key = key;
@@ -58,6 +58,10 @@ public class SynchronizationRegistry implements Synchronization, TransactionAcce
 
     public static SynchronizationRegistry getRegistry() {
         return REGISTRY.get(THREAD_LOCAL_KEY.get());
+    }
+
+    public TransactionAccess getTransactionAccess() {
+        return transactionAccess;
     }
 
     @Override

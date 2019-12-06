@@ -175,10 +175,11 @@ public class EntityViewUpdateUpdatableOnlyEntityTest extends AbstractEntityViewU
     public void testUpdateToNewPerson() {
         try {
             // Given & When
-            final UpdatableDocumentEntityView docView = updateToNewPerson();
+            final UpdatableDocumentEntityView docView = updateToNewPerson(true);
             fail("Expected a transient reference error for the new person!");
         } catch (PersistenceException | IllegalStateException ex) {
             // Then
+            assertEquals(1L, updateCommitCount.get());
             assertTrue(ex.getMessage().contains("transient"));
             AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
@@ -190,6 +191,8 @@ public class EntityViewUpdateUpdatableOnlyEntityTest extends AbstractEntityViewU
                 }
             }
 
+            // We need to load the rollback view
+            builder.select(Document.class);
             builder.validate();
             restartTransactionAndReload();
             assertEquals(p1.getId(), doc1.getResponsiblePerson().getId());

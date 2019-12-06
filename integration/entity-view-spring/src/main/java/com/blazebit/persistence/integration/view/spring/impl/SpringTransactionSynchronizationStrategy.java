@@ -21,6 +21,7 @@ import org.springframework.transaction.interceptor.TransactionInterceptor;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import javax.transaction.Status;
 import javax.transaction.Synchronization;
 
 /**
@@ -95,6 +96,17 @@ public class SpringTransactionSynchronizationStrategy implements TransactionAcce
 
         @Override
         public void afterCompletion(int status) {
+            switch (status) {
+                case TransactionSynchronization.STATUS_COMMITTED:
+                    status = Status.STATUS_COMMITTED;
+                    break;
+                case TransactionSynchronization.STATUS_ROLLED_BACK:
+                    status = Status.STATUS_ROLLEDBACK;
+                    break;
+                default:
+                    status = Status.STATUS_UNKNOWN;
+                    break;
+            }
             synchronization.afterCompletion(status);
         }
     }

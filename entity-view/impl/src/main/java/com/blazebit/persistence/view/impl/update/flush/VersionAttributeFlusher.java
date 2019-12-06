@@ -20,6 +20,7 @@ import com.blazebit.persistence.view.OptimisticLockException;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.view.impl.update.UpdateQueryFactory;
 import com.blazebit.persistence.view.spi.type.VersionBasicUserType;
 
 import javax.persistence.Query;
@@ -62,7 +63,7 @@ public class VersionAttributeFlusher<E, V> extends BasicAttributeFlusher<E, V> {
     }
 
     @Override
-    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
+    public Query flushQuery(UpdateContext context, String parameterPrefix, UpdateQueryFactory queryFactory, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
         if (query != null) {
             String parameter;
             if (parameterPrefix == null) {
@@ -74,6 +75,7 @@ public class VersionAttributeFlusher<E, V> extends BasicAttributeFlusher<E, V> {
             query.setParameter(parameter, nextValue);
             ((MutableStateTrackable) view).$$_setVersion(nextValue);
         }
+        return query;
     }
 
     public void flushQueryInitialVersion(UpdateContext context, String parameterPrefix, Query query, Object view, V value) {

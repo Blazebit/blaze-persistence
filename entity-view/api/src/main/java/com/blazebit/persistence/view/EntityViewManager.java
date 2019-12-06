@@ -162,6 +162,27 @@ public interface EntityViewManager extends ServiceProvider {
     public void updateFull(EntityManager entityManager, Object view);
 
     /**
+     * Saves the entity which the given entity view maps to.
+     * Issues a partial update if enabled for the given view.
+     *
+     * @param entityManager The entity manager to use for the update
+     * @param view The view to use for updating
+     * @return A flush operation builder for further configuring the flush operation
+     * @since 1.4.0
+     */
+    public FlushOperationBuilder saveWith(EntityManager entityManager, Object view);
+
+    /**
+     * Fully saves the entity which the given entity view maps to.
+     *
+     * @param entityManager The entity manager to use for the update
+     * @param view The view to use for updating
+     * @return A flush operation builder for further configuring the flush operation
+     * @since 1.4.0
+     */
+    public FlushOperationBuilder saveFullWith(EntityManager entityManager, Object view);
+
+    /**
      * Removes the entity represented by the given view.
      * Also cascades deletes to attributes that have {@link CascadeType#DELETE} enabled.
      *
@@ -170,6 +191,17 @@ public interface EntityViewManager extends ServiceProvider {
      * @since 1.2.0
      */
     public void remove(EntityManager entityManager, Object view);
+
+    /**
+     * Removes the entity represented by the given view.
+     * Also cascades deletes to attributes that have {@link CascadeType#DELETE} enabled.
+     *
+     * @param entityManager The entity manager to use for the removing
+     * @param view The view for which the entity should be removed
+     * @return A flush operation builder for further configuring the flush operation
+     * @since 1.4.0
+     */
+    public FlushOperationBuilder removeWith(EntityManager entityManager, Object view);
 
     /**
      * Removes the entity represented by the entity type defiend for the given view and the given entity id.
@@ -181,6 +213,18 @@ public interface EntityViewManager extends ServiceProvider {
      * @since 1.2.0
      */
     public void remove(EntityManager entityManager, Class<?> entityViewClass, Object viewId);
+
+    /**
+     * Removes the entity represented by the entity type defiend for the given view and the given entity id.
+     * Also cascades deletes to attributes that have {@link CascadeType#DELETE} enabled.
+     *
+     * @param entityManager The entity manager to use for the removing
+     * @param entityViewClass The entity view class to use
+     * @param viewId The id of entity view
+     * @return A flush operation builder for further configuring the flush operation
+     * @since 1.4.0
+     */
+    public FlushOperationBuilder removeWith(EntityManager entityManager, Class<?> entityViewClass, Object viewId);
 
     /**
      * Applies the entity view setting to the given criteria builder.

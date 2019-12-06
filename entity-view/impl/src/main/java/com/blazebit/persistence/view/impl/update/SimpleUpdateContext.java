@@ -17,8 +17,10 @@
 package com.blazebit.persistence.view.impl.update;
 
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
+import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
 import com.blazebit.persistence.view.spi.TransactionAccess;
 import com.blazebit.persistence.view.impl.update.flush.PostFlushDeleter;
+import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
 import javax.persistence.EntityManager;
 import java.util.List;
@@ -69,6 +71,10 @@ public class SimpleUpdateContext implements UpdateContext {
     }
 
     @Override
+    public void removeRemovedObject(Object value) {
+    }
+
+    @Override
     public boolean isRemovedObject(Object value) {
         return false;
     }
@@ -91,4 +97,57 @@ public class SimpleUpdateContext implements UpdateContext {
     public void removeOrphans(int orphanRemovalStartIndex) {
     }
 
+    @Override
+    public void invokePrePersist(MutableStateTrackable updatableProxy, Object entity) {
+    }
+
+    @Override
+    public void invokePostPersist(MutableStateTrackable updatableProxy, Object entity) {
+    }
+
+    @Override
+    public void invokePreUpdate(MutableStateTrackable updatableProxy) {
+    }
+
+    @Override
+    public void invokePostUpdate(MutableStateTrackable updatableProxy) {
+    }
+
+    @Override
+    public boolean invokePreRemove(EntityViewProxy entityViewProxy) {
+        return true;
+    }
+
+    @Override
+    public boolean invokePreRemove(Class<?> entityClass, Object entityId) {
+        return true;
+    }
+
+    @Override
+    public void invokePostRemove(EntityViewProxy entityView) {
+    }
+
+    @Override
+    public void invokePostRemove(Class<?> entityClass, Object entityId) {
+    }
+
+    @Override
+    public Object getEntityView(Class<?> viewType, Class<?> entityClass, Object updatableProxy, boolean convertOnly, boolean prePhase) {
+        return null;
+    }
+
+    @Override
+    public Object getEntityView(Class<?> viewType, Class<?> entityClass, Object updatableProxy, boolean convertOnly, boolean prePhase, EntityManager entityManager) {
+        return null;
+    }
+
+    @Override
+    public boolean hasRemoveListeners(Class<?> elementEntityClass) {
+        return false;
+    }
+
+    @Override
+    public boolean hasPossiblyCancellingRemoveListeners(Class<?> elementEntityClass) {
+        return false;
+    }
 }

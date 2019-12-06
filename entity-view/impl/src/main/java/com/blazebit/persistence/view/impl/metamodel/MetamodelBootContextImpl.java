@@ -16,9 +16,25 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
+import com.blazebit.persistence.view.PostCommitListener;
+import com.blazebit.persistence.view.PostPersistListener;
+import com.blazebit.persistence.view.PostRemoveListener;
+import com.blazebit.persistence.view.PostRollbackListener;
+import com.blazebit.persistence.view.PostUpdateListener;
+import com.blazebit.persistence.view.PrePersistEntityListener;
+import com.blazebit.persistence.view.PrePersistListener;
+import com.blazebit.persistence.view.PreRemoveListener;
+import com.blazebit.persistence.view.PreUpdateListener;
+import com.blazebit.persistence.view.impl.EntityViewListenerClassKey;
+import com.blazebit.persistence.view.impl.EntityViewListenerFactory;
+import com.blazebit.persistence.view.impl.SimpleEntityViewListenerFactory;
+
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -29,11 +45,24 @@ import java.util.Set;
  */
 public class MetamodelBootContextImpl implements MetamodelBootContext {
 
+    private static final Class[] LISTENER_CLASSES = {
+        PostCommitListener.class,
+        PostPersistListener.class,
+        PostRemoveListener.class,
+        PostRollbackListener.class,
+        PostUpdateListener.class,
+        PrePersistListener.class,
+        PrePersistEntityListener.class,
+        PreRemoveListener.class,
+        PreUpdateListener.class
+    };
     private final Map<Class<?>, ViewMapping> viewMappings;
+    private final Map<EntityViewListenerClassKey, EntityViewListenerFactory<?>> viewListeners;
     private final Set<String> errors;
 
     public MetamodelBootContextImpl() {
         this.viewMappings = new HashMap<>();
+        this.viewListeners = new HashMap<>();
         this.errors = new LinkedHashSet<>();
     }
 
@@ -45,6 +74,37 @@ public class MetamodelBootContextImpl implements MetamodelBootContext {
     @Override
     public void addViewMapping(Class<?> clazz, ViewMapping viewMapping) {
         viewMappings.put(clazz, viewMapping);
+    }
+
+    @Override
+    public void addEntityViewListener(Class<?> entityViewClass, Class<?> entityViewListenerClass) {
+        for (EntityViewListenerFactory<?> viewListenerFactory : createViewListenerFactories(entityViewListenerClass)) {
+            viewListeners.put(new EntityViewListenerClassKey(entityViewClass, null, viewListenerFactory.getListenerKind(), entityViewListenerClass), viewListenerFactory);
+        }
+    }
+
+    @Override
+    public void addEntityViewListener(Class<?> entityViewClass, Class<?> entityClass, Class<?> entityViewListenerClass) {
+        for (EntityViewListenerFactory<?> viewListenerFactory : createViewListenerFactories(entityViewListenerClass)) {
+            viewListeners.put(new EntityViewListenerClassKey(entityViewClass, entityClass, viewListenerFactory.getListenerKind(), entityViewListenerClass), viewListenerFactory);
+        }
+    }
+
+    @Override
+    public void addEntityViewListener(Class<?> entityViewClass, Class<?> entityClass, EntityViewListenerFactory<?> entityViewListenerFactory) {
+        viewListeners.put(new EntityViewListenerClassKey(entityViewClass, entityClass, entityViewListenerFactory.getListenerKind(), entityViewListenerFactory.getListenerClass()), entityViewListenerFactory);
+    }
+
+    @Override
+    public EntityViewListenerFactory<?>[] createViewListenerFactories(Class<?> entityViewListenerClass) {
+        List<EntityViewListenerFactory<?>> factories = new ArrayList<>();
+        for (Class<?> listenerClass : LISTENER_CLASSES) {
+            if (listenerClass.isAssignableFrom(entityViewListenerClass)) {
+                factories.add(new SimpleEntityViewListenerFactory<>(entityViewListenerClass, (Class<? super Object>) listenerClass));
+            }
+        }
+
+        return factories.toArray(new EntityViewListenerFactory[0]);
     }
 
     @Override
@@ -60,6 +120,45 @@ public class MetamodelBootContextImpl implements MetamodelBootContext {
     @Override
     public Set<Class<?>> getViewClasses() {
         return viewMappings.keySet();
+    }
+
+    @Override
+    public Map<EntityViewListenerClassKey, EntityViewListenerFactory<?>> getViewListeners() {
+        return viewListeners;
+    }
+
+    @Override
+    public Set<Class<?>> getViewListenerClasses() {
+        Set<Class<?>> viewListenerClasses = new HashSet<>(viewListeners.entrySet().size());
+        for (EntityViewListenerClassKey entityViewListenerClassKey : viewListeners.keySet()) {
+            viewListenerClasses.add(entityViewListenerClassKey.getEntityViewListenerClass());
+        }
+
+        return viewListenerClasses;
+    }
+
+    @Override
+    public Set<Class<?>> getViewListenerClasses(Class<?> entityViewClass) {
+        Set<Class<?>> viewListenerClasses = new HashSet<>(viewListeners.entrySet().size());
+        for (EntityViewListenerClassKey entityViewListenerClassKey : viewListeners.keySet()) {
+            if (entityViewListenerClassKey.getEntityViewClass() == entityViewClass) {
+                viewListenerClasses.add(entityViewListenerClassKey.getEntityViewListenerClass());
+            }
+        }
+
+        return viewListenerClasses;
+    }
+
+    @Override
+    public Set<Class<?>> getViewListenerClasses(Class<?> entityViewClass, Class<?> entityClass) {
+        Set<Class<?>> viewListenerClasses = new HashSet<>(viewListeners.entrySet().size());
+        for (EntityViewListenerClassKey entityViewListenerClassKey : viewListeners.keySet()) {
+            if (entityViewListenerClassKey.getEntityViewClass() == entityViewClass && entityViewListenerClassKey.getEntityClass() == entityClass) {
+                viewListenerClasses.add(entityViewListenerClassKey.getEntityViewListenerClass());
+            }
+        }
+
+        return viewListenerClasses;
     }
 
     @Override

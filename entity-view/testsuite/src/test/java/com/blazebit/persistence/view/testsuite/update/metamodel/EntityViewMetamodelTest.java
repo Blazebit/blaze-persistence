@@ -129,12 +129,12 @@ public class EntityViewMetamodelTest extends AbstractEntityViewTest {
         void setName(String name);
     }
 
-    @CreatableEntityView(validatePersistability = false)
+    @CreatableEntityView
     public static interface PersonCreateAndUpdateView extends PersonUpdateView {
 
     }
 
-    @CreatableEntityView(validatePersistability = false)
+    @CreatableEntityView
     public static interface PersonCreateView extends PersonView {
         String getName();
         void setName(String name);
@@ -356,7 +356,7 @@ public class EntityViewMetamodelTest extends AbstractEntityViewTest {
         assertTrue(docViewType.getAttribute("people").isMutable());
     }
 
-    @CreatableEntityView(excludedEntityAttributes = {"name", "idx", "age"})
+    @CreatableEntityView(excludedEntityAttributes = "name")
     @EntityView(Document.class)
     public static interface DocumentViewWithUpdatableCreatableViewTypes {
         @IdMapping

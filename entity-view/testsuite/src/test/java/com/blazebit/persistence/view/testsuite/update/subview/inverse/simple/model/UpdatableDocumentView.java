@@ -26,7 +26,7 @@ import com.blazebit.persistence.view.UpdatableEntityView;
  * @author Christian Beikov
  * @since 1.3.0
  */
-@CreatableEntityView(excludedEntityAttributes = { "idx", "age" })
+@CreatableEntityView
 @UpdatableEntityView
 @EntityView(Document.class)
 public interface UpdatableDocumentView extends DocumentIdView {

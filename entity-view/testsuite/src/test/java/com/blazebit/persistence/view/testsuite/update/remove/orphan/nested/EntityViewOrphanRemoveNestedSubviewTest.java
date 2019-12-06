@@ -34,6 +34,8 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -71,7 +73,18 @@ public class EntityViewOrphanRemoveNestedSubviewTest extends AbstractEntityViewO
 
         // When
         docView.getResponsiblePerson().setFriend(null);
-        update(docView);
+        AtomicInteger removeCount = new AtomicInteger();
+        AtomicInteger removeCommitCount = new AtomicInteger();
+        saveWith(docView, flushOperationBuilder -> {
+            flushOperationBuilder.onPreRemove(FriendPersonView.class, (entityViewManager, entityManager, view) -> {
+                assertEquals(p7.getId(), view.getId());
+                removeCount.incrementAndGet();
+                return true;
+            }).onPostCommitRemove(FriendPersonView.class, (entityViewManager, entityManager, view, transition) -> {
+                assertEquals(p7.getId(), view.getId());
+                removeCommitCount.incrementAndGet();
+            });
+        });
 
         // Then
         AssertStatementBuilder builder = assertUpdateAndRemove();
@@ -79,6 +92,8 @@ public class EntityViewOrphanRemoveNestedSubviewTest extends AbstractEntityViewO
         builder.validate();
 
         restartTransactionAndReload();
+        assertEquals(1, removeCount.get());
+        assertEquals(1, removeCommitCount.get());
         assertNull(p2.getFriend());
         assertNull(p7);
     }
@@ -92,7 +107,18 @@ public class EntityViewOrphanRemoveNestedSubviewTest extends AbstractEntityViewO
 
         // When
         docView.getResponsiblePerson().setFriend(p5View);
-        update(docView);
+        AtomicInteger removeCount = new AtomicInteger();
+        AtomicInteger removeCommitCount = new AtomicInteger();
+        saveWith(docView, flushOperationBuilder -> {
+            flushOperationBuilder.onPreRemove(FriendPersonView.class, (entityViewManager, entityManager, view) -> {
+                assertEquals(p7.getId(), view.getId());
+                removeCount.incrementAndGet();
+                return true;
+            }).onPostCommitRemove(FriendPersonView.class, (entityViewManager, entityManager, view, transition) -> {
+                assertEquals(p7.getId(), view.getId());
+                removeCommitCount.incrementAndGet();
+            });
+        });
 
         // Then
         AssertStatementBuilder builder = assertUpdateAndRemove();
@@ -100,6 +126,8 @@ public class EntityViewOrphanRemoveNestedSubviewTest extends AbstractEntityViewO
         builder.validate();
 
         restartTransactionAndReload();
+        assertEquals(1, removeCount.get());
+        assertEquals(1, removeCommitCount.get());
         assertEquals(p3.getId(), p2.getFriend().getId());
         assertNull(p7);
     }

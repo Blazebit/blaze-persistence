@@ -38,6 +38,7 @@ import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.metamodel.ViewType;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.IdentityHashMap;
@@ -57,6 +58,8 @@ public class ViewMapper<S, T> {
     private final boolean copyInitialState;
     private final AttributeAccessor[] sourceAccessors;
     private final ObjectInstantiator<T> objectInstantiator;
+    private final Method postConvert;
+    private final boolean postConvertUsesSource;
 
     public ViewMapper(ManagedViewType<S> sourceType, ManagedViewType<T> targetType, boolean ignoreMissing, boolean markNew, EntityViewManager entityViewManager, ProxyFactory proxyFactory) {
         if (!targetType.getEntityClass().isAssignableFrom(sourceType.getEntityClass())) {
@@ -120,6 +123,8 @@ public class ViewMapper<S, T> {
         } catch (IllegalArgumentException ex) {
             throw new IllegalArgumentException("Empty constructor is required for conversion. Please make sure " + targetType.getJavaType().getName() + " has an empty constructor!", ex);
         }
+        this.postConvert = targetType.getPostConvertMethod();
+        this.postConvertUsesSource = targetType.getPostConvertMethod() != null && targetType.getPostConvertMethod().getParameterTypes().length != 0;
     }
 
     private AttributeAccessor createAccessor(ManagedViewType<S> sourceType, ManagedViewType<T> targetType, boolean ignoreMissing, boolean markNew, EntityViewManager entityViewManager, ProxyFactory proxyFactory, MethodAttribute<? super T, ?> targetAttribute) {
@@ -229,6 +234,17 @@ public class ViewMapper<S, T> {
                         dirtyTracker.$$_markDirty(i);
                     }
                 }
+            }
+        }
+        if (postConvert != null) {
+            try {
+                if (postConvertUsesSource) {
+                    postConvert.invoke(result, source);
+                } else {
+                    postConvert.invoke(result);
+                }
+            } catch (Exception ex) {
+                throw new RuntimeException("Error during invocation of post convert method!", ex);
             }
         }
         return result;

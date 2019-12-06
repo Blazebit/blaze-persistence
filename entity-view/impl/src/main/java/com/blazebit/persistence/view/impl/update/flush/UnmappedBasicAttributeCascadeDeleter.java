@@ -25,6 +25,7 @@ import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 
+import javax.persistence.PersistenceUnitUtil;
 import javax.persistence.Query;
 import javax.persistence.Tuple;
 import javax.persistence.metamodel.EntityType;
@@ -92,10 +93,25 @@ public class UnmappedBasicAttributeCascadeDeleter extends AbstractUnmappedAttrib
 
     @Override
     public void removeById(UpdateContext context, Object id) {
-        for (int i = 0; i < unmappedPreRemoveCascadeDeleters.length; i++) {
-            unmappedPreRemoveCascadeDeleters[i].removeByOwnerId(context, id);
+        if (context.invokePreRemove(elementEntityClass, id)) {
+            for (int i = 0; i < unmappedPreRemoveCascadeDeleters.length; i++) {
+                unmappedPreRemoveCascadeDeleters[i].removeByOwnerId(context, id);
+            }
+            removeWithoutPreCascadeDelete(context, null, null, id);
         }
-        removeWithoutPreCascadeDelete(context, null, null, id);
+    }
+
+    public void remove(UpdateContext context, Object o) {
+        if (context.hasRemoveListeners(elementEntityClass)) {
+            PersistenceUnitUtil persistenceUnitUtil = context.getEntityManager().getEntityManagerFactory().getPersistenceUnitUtil();
+            Object identifier = persistenceUnitUtil.getIdentifier(o);
+            if (context.invokePreRemove(elementEntityClass, identifier)) {
+                context.getEntityManager().remove(o);
+                context.invokePostRemove(elementEntityClass, identifier);
+            }
+        } else {
+            context.getEntityManager().remove(o);
+        }
     }
 
     @Override
@@ -103,8 +119,20 @@ public class UnmappedBasicAttributeCascadeDeleter extends AbstractUnmappedAttrib
         if (requiresDeleteAsEntity) {
             CriteriaBuilder<?> cb = context.getEntityViewManager().getCriteriaBuilderFactory().create(context.getEntityManager(), elementEntityClass);
             cb.where(ownerIdAttributeName).eq(ownerId);
-            for (Object o : cb.getResultList()) {
-                context.getEntityManager().remove(o);
+
+            if (context.hasRemoveListeners(elementEntityClass)) {
+                PersistenceUnitUtil persistenceUnitUtil = context.getEntityManager().getEntityManagerFactory().getPersistenceUnitUtil();
+                for (Object o : cb.getResultList()) {
+                    Object identifier = persistenceUnitUtil.getIdentifier(o);
+                    if (context.invokePreRemove(elementEntityClass, identifier)) {
+                        context.getEntityManager().remove(o);
+                        context.invokePostRemove(elementEntityClass, identifier);
+                    }
+                }
+            } else {
+                for (Object o : cb.getResultList()) {
+                    context.getEntityManager().remove(o);
+                }
             }
 
             // We need to flush here, otherwise the deletion will be deferred and might cause a constraint violation
@@ -126,25 +154,63 @@ public class UnmappedBasicAttributeCascadeDeleter extends AbstractUnmappedAttrib
                 cb.select(elementIdAttributeName);
                 List<Object[]> resultList = cb.getResultList();
                 if (!resultList.isEmpty() && resultList.get(0) instanceof Object[]) {
-                    for (Object[] returnedValues : resultList) {
-                        Object id = returnedValues[returnedValues.length - 1];
+                    if (context.hasRemoveListeners(elementEntityClass)) {
+                        for (Object[] returnedValues : resultList) {
+                            Object id = returnedValues[returnedValues.length - 1];
 
-                        for (int i = 0; i < unmappedPreRemoveCascadeDeleters.length; i++) {
-                            unmappedPreRemoveCascadeDeleters[i].removeByOwnerId(context, id);
+                            if (context.invokePreRemove(elementEntityClass, id)) {
+                                for (int i = 0; i < unmappedPreRemoveCascadeDeleters.length; i++) {
+                                    unmappedPreRemoveCascadeDeleters[i].removeByOwnerId(context, id);
+                                }
+                                removeWithoutPreCascadeDelete(context, ownerId, returnedValues, id);
+                            }
                         }
-                        removeWithoutPreCascadeDelete(context, ownerId, returnedValues, id);
+                    } else {
+                        for (Object[] returnedValues : resultList) {
+                            Object id = returnedValues[returnedValues.length - 1];
+
+                            for (int i = 0; i < unmappedPreRemoveCascadeDeleters.length; i++) {
+                                unmappedPreRemoveCascadeDeleters[i].removeByOwnerId(context, id);
+                            }
+                            removeWithoutPreCascadeDelete(context, ownerId, returnedValues, id);
+                        }
                     }
                 } else {
                     // Hibernate returns the scalar value directly when using only a single select item
-                    for (Object id : resultList) {
-                        for (int i = 0; i < unmappedPreRemoveCascadeDeleters.length; i++) {
-                            unmappedPreRemoveCascadeDeleters[i].removeByOwnerId(context, id);
+                    if (context.hasRemoveListeners(elementEntityClass)) {
+                        for (Object id : resultList) {
+                            if (context.invokePreRemove(elementEntityClass, id)) {
+                                for (int i = 0; i < unmappedPreRemoveCascadeDeleters.length; i++) {
+                                    unmappedPreRemoveCascadeDeleters[i].removeByOwnerId(context, id);
+                                }
+                                removeWithoutPreCascadeDelete(context, ownerId, null, id);
+                            }
                         }
-                        removeWithoutPreCascadeDelete(context, ownerId, null, id);
+                    } else {
+                        for (Object id : resultList) {
+                            for (int i = 0; i < unmappedPreRemoveCascadeDeleters.length; i++) {
+                                unmappedPreRemoveCascadeDeleters[i].removeByOwnerId(context, id);
+                            }
+                            removeWithoutPreCascadeDelete(context, ownerId, null, id);
+                        }
                     }
                 }
             } else {
-                removeWithoutPreCascadeDelete(context, ownerId, null, null);
+                if (context.hasRemoveListeners(elementEntityClass)) {
+                    CriteriaBuilder<Object[]> cb = context.getEntityViewManager().getCriteriaBuilderFactory().create(context.getEntityManager(), Object[].class);
+                    cb.from(elementEntityClass);
+                    cb.where(ownerIdAttributeName).eq(ownerId);
+                    cb.select(elementIdAttributeName);
+                    List<Object[]> resultList = cb.getResultList();
+
+                    for (Object id : resultList) {
+                        if (context.invokePreRemove(elementEntityClass, id)) {
+                            removeWithoutPreCascadeDelete(context, ownerId, null, id);
+                        }
+                    }
+                } else {
+                    removeWithoutPreCascadeDelete(context, ownerId, null, null);
+                }
             }
         }
     }
@@ -169,12 +235,12 @@ public class UnmappedBasicAttributeCascadeDeleter extends AbstractUnmappedAttrib
                 }
 
                 ReturningResult<Tuple> result = cb.executeWithReturning(returningAttributes.toArray(new String[returningAttributes.size()]));
+                // We make sure in the caller, that when there are post remove transition listeners, we have an id
+                context.invokePostRemove(elementEntityClass, id);
                 returnedValuesList = new ArrayList<>();
                 for (Tuple tuple : result.getResultList()) {
                     returnedValues = tuple.toArray();
                     returnedValuesList.add(returnedValues);
-                    id = returnedValues[returnedValues.length - 1];
-                    deleteElement(context, ownerId, id);
                 }
             } else {
                 // Otherwise we query the attributes
@@ -195,10 +261,12 @@ public class UnmappedBasicAttributeCascadeDeleter extends AbstractUnmappedAttrib
                     returnedValuesList.add(returnedValues);
                     id = returnedValues[returnedValues.length - 1];
                     deleteElement(context, ownerId, id);
+                    context.invokePostRemove(elementEntityClass, id);
                 }
             }
         } else {
             deleteElement(context, ownerId, id);
+            context.invokePostRemove(elementEntityClass, id);
             returnedValuesList = returnedValues == null ? Collections.<Object[]>emptyList() : Collections.singletonList(returnedValues);
         }
 

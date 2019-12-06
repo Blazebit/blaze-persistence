@@ -23,21 +23,35 @@ import com.blazebit.persistence.view.CreatableEntityView;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.EntityViewInheritance;
 import com.blazebit.persistence.view.EntityViewInheritanceMapping;
+import com.blazebit.persistence.view.EntityViewListener;
+import com.blazebit.persistence.view.EntityViewListeners;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.LockMode;
 import com.blazebit.persistence.view.LockOwner;
+import com.blazebit.persistence.view.PostCommit;
+import com.blazebit.persistence.view.PostConvert;
 import com.blazebit.persistence.view.PostCreate;
+import com.blazebit.persistence.view.PostPersist;
+import com.blazebit.persistence.view.PostRemove;
+import com.blazebit.persistence.view.PostRollback;
+import com.blazebit.persistence.view.PostUpdate;
+import com.blazebit.persistence.view.PrePersist;
+import com.blazebit.persistence.view.PreRemove;
+import com.blazebit.persistence.view.PreUpdate;
 import com.blazebit.persistence.view.UpdatableEntityView;
 import com.blazebit.persistence.view.ViewConstructor;
 import com.blazebit.persistence.view.With;
+import com.blazebit.persistence.view.impl.EntityViewListenerFactory;
 import com.blazebit.reflection.ReflectionUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -48,13 +62,37 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class AnnotationViewMappingReader implements ViewMappingReader {
+public class AnnotationMappingReader implements MappingReader {
+
+    private static final Map<Class<?>, LifecycleEntry> LIFECYCLE_ENTRY_MAP;
+    private static final LifecycleEntry[] LIFECYCLE_ENTRIES;
+
+    static {
+        LifecycleEntry[] lifecycleEntries = new LifecycleEntry[10];
+        lifecycleEntries[0] = new LifecycleEntry(0, "post create", PostCreate.class);
+        lifecycleEntries[1] = new LifecycleEntry(1, "pre persist", PrePersist.class);
+        lifecycleEntries[2] = new LifecycleEntry(2, "post persist", PostPersist.class);
+        lifecycleEntries[3] = new LifecycleEntry(3, "pre update", PreUpdate.class);
+        lifecycleEntries[4] = new LifecycleEntry(4, "post update", PostUpdate.class);
+        lifecycleEntries[5] = new LifecycleEntry(5, "pre remove", PreRemove.class);
+        lifecycleEntries[6] = new LifecycleEntry(6, "post remove", PostRemove.class);
+        lifecycleEntries[7] = new LifecycleEntry(7, "post rollback", PostRollback.class);
+        lifecycleEntries[8] = new LifecycleEntry(8, "post commit", PostCommit.class);
+        lifecycleEntries[9] = new LifecycleEntry(9, "post create", PostConvert.class);
+        LIFECYCLE_ENTRIES = lifecycleEntries;
+
+        Map<Class<?>, LifecycleEntry> lifecycleEntryMap = new HashMap<>(lifecycleEntries.length);
+        for (LifecycleEntry lifecycleEntry : lifecycleEntries) {
+            lifecycleEntryMap.put(lifecycleEntry.annotation, lifecycleEntry);
+        }
+        LIFECYCLE_ENTRY_MAP = lifecycleEntryMap;
+    }
 
     private final MetamodelBootContext context;
     private final AnnotationMethodAttributeMappingReader methodAttributeMappingReader;
     private final AnnotationParameterAttributeMappingReader parameterAttributeMappingReader;
 
-    public AnnotationViewMappingReader(MetamodelBootContext context) {
+    public AnnotationMappingReader(MetamodelBootContext context) {
         this.context = context;
         this.methodAttributeMappingReader = new AnnotationMethodAttributeMappingReader(context);
         this.parameterAttributeMappingReader = new AnnotationParameterAttributeMappingReader(context);
@@ -63,6 +101,34 @@ public class AnnotationViewMappingReader implements ViewMappingReader {
     @Override
     public MetamodelBootContext getContext() {
         return context;
+    }
+
+    @Override
+    public void readViewListenerMapping(Class<?> entityViewListenerClass, EntityViewListenerFactory<?> factory) {
+        EntityViewListener entityViewListener = AnnotationUtils.findAnnotation(entityViewListenerClass, EntityViewListener.class);
+        if (entityViewListener == null) {
+            EntityViewListeners entityViewListeners = AnnotationUtils.findAnnotation(entityViewListenerClass, EntityViewListeners.class);
+            if (entityViewListeners == null) {
+                TypeVariable<? extends Class<?>>[] typeParameters = factory.getListenerKind().getTypeParameters();
+                if (typeParameters.length > 0) {
+                    Class<?>[] typeArguments = new Class<?>[typeParameters.length];
+                    for (int i = 0; i < typeParameters.length; i++) {
+                        typeArguments[i] = ReflectionUtils.resolveTypeVariable(entityViewListenerClass, typeParameters[i]);
+                    }
+                    if (typeArguments.length > 1) {
+                        context.addEntityViewListener(typeArguments[0], typeArguments[1], factory);
+                    } else {
+                        context.addEntityViewListener(typeArguments[0], Object.class, factory);
+                    }
+                }
+            } else {
+                for (EntityViewListener viewListener : entityViewListeners.value()) {
+                    context.addEntityViewListener(viewListener.entityView(), viewListener.entity(), factory);
+                }
+            }
+        } else {
+            context.addEntityViewListener(entityViewListener.entityView(), entityViewListener.entity(), factory);
+        }
     }
 
     @Override
@@ -147,31 +213,13 @@ public class AnnotationViewMappingReader implements ViewMappingReader {
 
         Map<String, MethodAttributeMapping> attributes = viewMapping.getMethodAttributes();
 
-        Method postCreateMethod = null;
-        Method postCreateMethodCandidate = null;
         List<Method> specialMethods = new ArrayList<>();
         // Deterministic order of methods for #203
         Method[] methods = entityViewClass.getMethods();
         Set<String> handledMethods = new HashSet<>(methods.length);
         Set<String> concreteMethods = new HashSet<>(methods.length);
-        // mark concrete methods as handled
-        for (Method method : methods) {
-            if (!Modifier.isAbstract(method.getModifiers()) && !method.isBridge()) {
-                handledMethods.add(method.getName());
-                concreteMethods.add(method.getName());
-                if (!entityViewClass.isInterface() && AnnotationUtils.findAnnotation(method, PostCreate.class) != null) {
-                    if (postCreateMethod != null) {
-                        context.addError(
-                                "Multiple post create methods found:" +
-                                "\n\t" + postCreateMethod.getDeclaringClass().getName() + "." + postCreateMethod.getName() +
-                                "\n\t" + method.getDeclaringClass().getName() + "." + method.getName()
-                        );
-                    } else {
-                        postCreateMethod = method;
-                    }
-                }
-            }
-        }
+        Method[] lifecycleMethods = visitAndCollectLifecycleMethods(entityViewClass, methods, handledMethods, concreteMethods);
+        Method[] lifecycleMethodCandidates = new Method[lifecycleMethods.length];
 
         for (Class<?> c : ReflectionUtils.getSuperTypes(entityViewClass)) {
             for (Method method : c.getDeclaredMethods()) {
@@ -219,29 +267,54 @@ public class AnnotationViewMappingReader implements ViewMappingReader {
                     }
                 }
 
-                if (postCreateMethod == null && !Modifier.isAbstract(method.getModifiers()) && !method.isBridge() && AnnotationUtils.findAnnotation(method, PostCreate.class) != null) {
-                    if (postCreateMethodCandidate != null) {
-                        if (postCreateMethodCandidate.getDeclaringClass().isAssignableFrom(method.getDeclaringClass())) {
-                            postCreateMethodCandidate = method;
-                        } else if (!method.getDeclaringClass().isAssignableFrom(postCreateMethodCandidate.getDeclaringClass())) {
-                            context.addError(
-                                    "Multiple post create methods found in super types of entity view '" + entityViewClass.getName() + "':" +
-                                    "\n\t" + postCreateMethodCandidate.getDeclaringClass().getName() + "." + postCreateMethodCandidate.getName() +
-                                    "\n\t" + method.getDeclaringClass().getName() + "." + method.getName()
-                            );
+                if (!Modifier.isAbstract(method.getModifiers()) && !method.isBridge()) {
+                    for (int i = 0; i < lifecycleMethods.length; i++) {
+                        if (lifecycleMethods[i] == null && AnnotationUtils.findAnnotation(method, LIFECYCLE_ENTRIES[i].annotation) != null) {
+                            if (lifecycleMethodCandidates[i] != null) {
+                                if (lifecycleMethodCandidates[i].getDeclaringClass().isAssignableFrom(method.getDeclaringClass())) {
+                                    lifecycleMethodCandidates[i] = method;
+                                } else if (!method.getDeclaringClass().isAssignableFrom(lifecycleMethodCandidates[i].getDeclaringClass())) {
+                                    context.addError(
+                                            "Multiple " + LIFECYCLE_ENTRIES[i].name + " methods found in super types of entity view '" + entityViewClass.getName() + "':" +
+                                                    "\n\t" + lifecycleMethodCandidates[i].getDeclaringClass().getName() + "." + lifecycleMethodCandidates[i].getName() +
+                                                    "\n\t" + method.getDeclaringClass().getName() + "." + method.getName()
+                                    );
+                                }
+                            } else {
+                                lifecycleMethodCandidates[i] = method;
+                            }
                         }
-                    } else {
-                        postCreateMethodCandidate = method;
                     }
                 }
             }
         }
 
-        if (postCreateMethod == null) {
-            postCreateMethod = postCreateMethodCandidate;
+        for (int i = 0; i < lifecycleMethods.length; i++) {
+            if (lifecycleMethods[i] == null) {
+                lifecycleMethods[i] = lifecycleMethodCandidates[i];
+            }
         }
 
-        viewMapping.setPostCreateMethod(postCreateMethod);
+        viewMapping.setPostCreateMethod(lifecycleMethods[LIFECYCLE_ENTRY_MAP.get(PostCreate.class).index]);
+        viewMapping.setPostConvertMethod(lifecycleMethods[LIFECYCLE_ENTRY_MAP.get(PostConvert.class).index]);
+        viewMapping.setPrePersistMethod(lifecycleMethods[LIFECYCLE_ENTRY_MAP.get(PrePersist.class).index]);
+        viewMapping.setPostPersistMethod(lifecycleMethods[LIFECYCLE_ENTRY_MAP.get(PostPersist.class).index]);
+        viewMapping.setPreUpdateMethod(lifecycleMethods[LIFECYCLE_ENTRY_MAP.get(PreUpdate.class).index]);
+        viewMapping.setPostUpdateMethod(lifecycleMethods[LIFECYCLE_ENTRY_MAP.get(PostUpdate.class).index]);
+        viewMapping.setPreRemoveMethod(lifecycleMethods[LIFECYCLE_ENTRY_MAP.get(PreRemove.class).index]);
+        viewMapping.setPostRemoveMethod(lifecycleMethods[LIFECYCLE_ENTRY_MAP.get(PostRemove.class).index]);
+        Method postRollback = lifecycleMethods[LIFECYCLE_ENTRY_MAP.get(PostRollback.class).index];
+        if (postRollback != null) {
+            viewMapping.setPostRollbackMethod(postRollback);
+            PostRollback annotation = AnnotationUtils.findAnnotation(postRollback, PostRollback.class);
+            viewMapping.setPostRollbackTransitions(annotation.transitions());
+        }
+        Method postCommit = lifecycleMethods[LIFECYCLE_ENTRY_MAP.get(PostCommit.class).index];
+        if (postCommit != null) {
+            viewMapping.setPostCommitMethod(postCommit);
+            PostCommit annotation = AnnotationUtils.findAnnotation(postCommit, PostCommit.class);
+            viewMapping.setPostCommitTransitions(annotation.transitions());
+        }
         viewMapping.setSpecialMethods(specialMethods);
         viewMapping.setIdAttributeMapping(idAttribute);
 
@@ -265,6 +338,34 @@ public class AnnotationViewMappingReader implements ViewMappingReader {
         return viewMapping;
     }
 
+    private Method[] visitAndCollectLifecycleMethods(Class<?> entityViewClass, Method[] methods, Set<String> handledMethods, Set<String> concreteMethods) {
+        Method[] foundMethods = new Method[LIFECYCLE_ENTRY_MAP.size()];
+        for (Method method : methods) {
+            if (!Modifier.isAbstract(method.getModifiers()) && !method.isBridge()) {
+                // mark concrete methods as handled
+                handledMethods.add(method.getName());
+                concreteMethods.add(method.getName());
+                if (!entityViewClass.isInterface()) {
+                    for (Annotation annotation : AnnotationUtils.getAllAnnotations(method)) {
+                        LifecycleEntry lifecycleEntry = LIFECYCLE_ENTRY_MAP.get(annotation.annotationType());
+                        if (lifecycleEntry != null) {
+                            if (foundMethods[lifecycleEntry.index] != null) {
+                                context.addError(
+                                        "Multiple " + lifecycleEntry.name + " methods found:" +
+                                                "\n\t" + foundMethods[lifecycleEntry.index].getDeclaringClass().getName() + "." + foundMethods[lifecycleEntry.index].getName() +
+                                                "\n\t" + method.getDeclaringClass().getName() + "." + method.getName()
+                                );
+                            } else {
+                                foundMethods[lifecycleEntry.index] = method;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return foundMethods;
+    }
+
     public static String extractConstructorName(Constructor<?> c) {
         ViewConstructor viewConstructor = c.getAnnotation(ViewConstructor.class);
 
@@ -273,5 +374,21 @@ public class AnnotationViewMappingReader implements ViewMappingReader {
         }
 
         return viewConstructor.value();
+    }
+
+    /**
+     * @author Christian Beikov
+     * @since 1.4.0
+     */
+    private static class LifecycleEntry {
+        private final int index;
+        private final String name;
+        private final Class<? extends Annotation> annotation;
+
+        public LifecycleEntry(int index, String name, Class<? extends Annotation> annotation) {
+            this.index = index;
+            this.name = name;
+            this.annotation = annotation;
+        }
     }
 }

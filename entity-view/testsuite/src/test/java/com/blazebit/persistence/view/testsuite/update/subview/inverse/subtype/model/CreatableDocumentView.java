@@ -25,7 +25,7 @@ import com.blazebit.persistence.view.EntityView;
  * @author Christian Beikov
  * @since 1.3.0
  */
-@CreatableEntityView(excludedEntityAttributes = { "idx", "age" })
+@CreatableEntityView
 @EntityView(Document.class)
 public interface CreatableDocumentView extends DocumentView {
 

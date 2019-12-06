@@ -202,7 +202,7 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
                 updateCb.where("INDEX(" + mapping + ")").geExpression(":minIdx");
                 updateCb.where("INDEX(" + mapping + ")").ltExpression(":maxIdx");
                 Query query = updateCb.getQuery();
-                ownerIdFlusher.flushQuery(context, null, query, ownerView, view, ownerIdFlusher.getViewAttributeAccessor().getValue(ownerView), null);
+                ownerIdFlusher.flushQuery(context, null, null, query, ownerView, view, ownerIdFlusher.getViewAttributeAccessor().getValue(ownerView), null);
                 for (int i = 0; i < translations.size(); i++) {
                     FusedCollectionIndexActions.IndexTranslateOperation translation = translations.get(i);
                     query.setParameter("minIdx", translation.getStartIndex());
@@ -221,7 +221,7 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
                 Query query = updateCb.getQuery();
 
                 if (replaces.size() != 0) {
-                    ownerIdFlusher.flushQuery(context, null, query, ownerView, view, ownerIdFlusher.getViewAttributeAccessor().getValue(ownerView), null);
+                    ownerIdFlusher.flushQuery(context, null, null, query, ownerView, view, ownerIdFlusher.getViewAttributeAccessor().getValue(ownerView), null);
                     boolean checkTransient = elementDescriptor.isJpaEntity() && !elementDescriptor.shouldJpaPersist();
                     if (elementDescriptor.getViewToEntityMapper() == null) {
                         for (int i = 0; i < replaces.size(); i++) {
@@ -275,7 +275,7 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
             }
             insertCb.bind(mapping).select("val");
             Query query = insertCb.getQuery();
-            ownerIdFlusher.flushQuery(context, null, query, ownerView, view, ownerIdFlusher.getViewAttributeAccessor().getValue(ownerView), null);
+            ownerIdFlusher.flushQuery(context, null, null, query, ownerView, view, ownerIdFlusher.getViewAttributeAccessor().getValue(ownerView), null);
 
             // TODO: Use batching when we implement #657
             Object[] singletonArray = new Object[1];

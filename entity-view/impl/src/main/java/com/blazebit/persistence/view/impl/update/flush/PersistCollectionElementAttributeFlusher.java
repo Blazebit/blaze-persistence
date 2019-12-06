@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.update.flush;
 
 import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.view.impl.update.UpdateQueryFactory;
 
 import javax.persistence.Query;
 import java.util.List;
@@ -47,8 +48,9 @@ public class PersistCollectionElementAttributeFlusher<E, V> extends CollectionEl
     }
 
     @Override
-    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
+    public Query flushQuery(UpdateContext context, String parameterPrefix, UpdateQueryFactory queryFactory, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
         context.getEntityManager().persist(element);
+        return query;
     }
 
     @Override
@@ -59,7 +61,7 @@ public class PersistCollectionElementAttributeFlusher<E, V> extends CollectionEl
     }
 
     @Override
-    public DirtyAttributeFlusher<CollectionElementAttributeFlusher<E, V>, E, V> getDirtyFlusher(UpdateContext context, Object view, Object initial, Object current) {
+    public DirtyAttributeFlusher<CollectionElementAttributeFlusher<E, V>, E, V> getDirtyFlusher(UpdateContext context, Object view, Object initial, Object current, List<Runnable> preFlushListeners) {
         // Actually this should never be called, but let's return this to be safe
         return this;
     }

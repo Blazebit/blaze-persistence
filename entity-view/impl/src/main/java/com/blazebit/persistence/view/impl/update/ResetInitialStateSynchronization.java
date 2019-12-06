@@ -16,19 +16,25 @@
 
 package com.blazebit.persistence.view.impl.update;
 
+import com.blazebit.persistence.view.ViewTransition;
 import com.blazebit.persistence.view.impl.collection.CollectionAction;
 import com.blazebit.persistence.view.impl.collection.MapAction;
 import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.impl.collection.RecordingMap;
 import com.blazebit.persistence.view.impl.proxy.DirtyTracker;
 import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
+import com.blazebit.persistence.view.impl.tx.SynchronizationRegistry;
+import com.blazebit.persistence.view.spi.TransactionAccess;
+import com.blazebit.persistence.view.spi.TransactionSupport;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
+import javax.persistence.EntityManager;
 import javax.transaction.Status;
 import javax.transaction.Synchronization;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -40,12 +46,19 @@ import java.util.Map;
 public class ResetInitialStateSynchronization implements Synchronization, InitialStateResetter {
 
     private static final Object NO_ID_MARKER = new Object();
+    private final UpdateContext updateContext;
+    private final ListenerManager listenerManager;
     private List<Object[]> coalescedInitialStates;
     private List<Object> coalescedRecordingActions;
     private List<Object> persistedViews;
     private List<Object> updatedViews;
     private List<Object> removedViews;
     private List<Object> versionedViews;
+
+    public ResetInitialStateSynchronization(UpdateContext updateContext, ListenerManager listenerManager) {
+        this.updateContext = updateContext;
+        this.listenerManager = listenerManager;
+    }
 
     @Override
     public void addRecordingCollection(RecordingCollection<?, ?> recordingCollection, List<? extends CollectionAction<?>> actions, Map<?, ?> addedElements, Map<?, ?> removedElements) {
@@ -162,6 +175,13 @@ public class ResetInitialStateSynchronization implements Synchronization, Initia
     @SuppressWarnings("unchecked")
     public void afterCompletion(int status) {
         if (status != Status.STATUS_COMMITTED) {
+            Map<EntityViewProxy, ViewTransition> objects;
+            if (listenerManager.hasPostRollbackListeners()) {
+                objects = new IdentityHashMap<>();
+            } else {
+                objects = null;
+            }
+
             if (coalescedInitialStates != null) {
                 for (int i = 0; i < coalescedInitialStates.size(); i += 2) {
                     Object[] initialState = coalescedInitialStates.get(i);
@@ -216,12 +236,18 @@ public class ResetInitialStateSynchronization implements Synchronization, Initia
                         }
                     }
                     view.$$_setDirty((long[]) persistedViews.get(i + 6));
+                    if (objects != null) {
+                        objects.put(view, ViewTransition.PERSIST);
+                    }
                 }
             }
             if (updatedViews != null) {
                 for (int i = 0; i < updatedViews.size(); i += 2) {
                     MutableStateTrackable view = (MutableStateTrackable) updatedViews.get(i);
                     view.$$_setDirty((long[]) updatedViews.get(i + 1));
+                    if (objects != null) {
+                        objects.put(view, ViewTransition.UPDATE);
+                    }
                 }
             }
             if (removedViews != null) {
@@ -238,12 +264,86 @@ public class ResetInitialStateSynchronization implements Synchronization, Initia
                             removedView.$$_setDirty(dirtyArray);
                         }
                     }
+                    if (objects != null) {
+                        objects.put(view, ViewTransition.REMOVE);
+                    }
                 }
             }
             if (versionedViews != null) {
                 for (int i = 0; i < versionedViews.size(); i += 2) {
                     MutableStateTrackable view = (MutableStateTrackable) versionedViews.get(i);
                     view.$$_setVersion(versionedViews.get(i + 1));
+                }
+            }
+
+            if (objects != null) {
+                PostRollbackInvoker postRollbackInvoker = new PostRollbackInvoker(updateContext, listenerManager, objects);
+                TransactionSupport txSupport = updateContext.getEntityViewManager().getService(TransactionSupport.class);
+                if (txSupport == null) {
+                    TransactionAccess transactionAccess = updateContext.getTransactionAccess();
+                    if (transactionAccess instanceof SynchronizationRegistry) {
+                        transactionAccess = ((SynchronizationRegistry) transactionAccess).getTransactionAccess();
+                    }
+                    if (transactionAccess instanceof TransactionSupport) {
+                        ((TransactionSupport) transactionAccess).transactional(postRollbackInvoker);
+                    } else {
+                        // Log warning that querying doesn't work because we can't run in a new transaction?
+                        postRollbackInvoker.run();
+                    }
+                } else {
+                    txSupport.transactional(postRollbackInvoker);
+                }
+            }
+        } else {
+            if (listenerManager.hasPostCommitListeners()) {
+                if (persistedViews != null) {
+                    for (int i = 0; i < persistedViews.size(); i += 7) {
+                        listenerManager.invokePostCommit(updateContext, (MutableStateTrackable) persistedViews.get(i), ViewTransition.PERSIST);
+                    }
+                }
+                if (updatedViews != null) {
+                    for (int i = 0; i < updatedViews.size(); i += 2) {
+                        listenerManager.invokePostCommit(updateContext, (MutableStateTrackable) updatedViews.get(i), ViewTransition.UPDATE);
+                    }
+                }
+                if (removedViews != null) {
+                    for (int i = 0; i < removedViews.size(); i += 4) {
+                        listenerManager.invokePostCommit(updateContext, (EntityViewProxy) removedViews.get(i), ViewTransition.REMOVE);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     *
+     * @author Christian Beikov
+     * @since 1.4.0
+     */
+    private static class PostRollbackInvoker implements Runnable {
+
+        private final UpdateContext updateContext;
+        private final ListenerManager listenerManager;
+        private final Map<EntityViewProxy, ViewTransition> objects;
+
+        public PostRollbackInvoker(UpdateContext updateContext, ListenerManager listenerManager, Map<EntityViewProxy, ViewTransition> objects) {
+            this.updateContext = updateContext;
+            this.listenerManager = listenerManager;
+            this.objects = objects;
+        }
+
+        @Override
+        public void run() {
+            EntityManager em = null;
+            try {
+                // We need a new entity manager to load objects.
+                em = updateContext.getEntityManager().getEntityManagerFactory().createEntityManager();
+                for (Map.Entry<EntityViewProxy, ViewTransition> entry : objects.entrySet()) {
+                    listenerManager.invokePostRollback(updateContext, entry.getKey(), entry.getValue(), em);
+                }
+            } finally {
+                if (em != null) {
+                    em.close();
                 }
             }
         }

@@ -25,7 +25,7 @@ import com.blazebit.persistence.view.EntityView;
  * @author Christian Beikov
  * @since 1.3.0
  */
-@CreatableEntityView(excludedEntityAttributes = { "age" })
+@CreatableEntityView
 @EntityView(Person.class)
 public interface CreatePersonRollbackView extends PersonNameView {
 

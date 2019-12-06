@@ -113,8 +113,6 @@ otherwise to the _read-only_ state. If it is used within an updatable view, it i
 
 *updatable*::: An entity view with updatable configuration(`@UpdatableEntityView`).
 
-WARNING: This is still in development, so not all features might be available yet. Also see https://github.com/Blazebit/blaze-persistence/issues/433 for more information.
-
 [ditaa, "entity-view-write-model-lifecycle-diagram"]
 ....
                  @PreRemove/@PostRemove              @PreRemove/@PostRemove
@@ -129,16 +127,16 @@ WARNING: This is still in development, so not all features might be available ye
         @PostCreate  |            |       convert        |            |  @PostCreate
                +-----+ read-only  +--------------------->+ updatable  +------+
        convert |     |            |       convert        |            |      | convert
-               +---->+            +<---------------------+            +<-----+
-                     |            |                      |            |
+  @PostConvert +---->+            +<---------------------+            +<-----+ @PostConvert
+                     |            |     @PostConvert     |            |
                      |            +---------+------------+            +<-----+
                      +---+--------+         |            +---+-----+--+      |
                          ^                  |                ^     |         | @PreUpdate/@PostUpdate
-                         |                  | convert        |     +---------+
-                         |                  |                |        flush/update
+                         |     @PostConvert | convert        |     +---------+
+                         |                  |                |        save
                          |                  |                |
 @PrePersist/@PostPersist |                  v                | @PrePersist/@PostPersist
-            flush/update |              +----+--+            | flush/update
+                 save    |              +----+--+            |    save
                          +--------------+  new  +------------+
                                         +-------+
                                             ^
@@ -154,24 +152,26 @@ Another way to _load_ is to get a _reference_ for an entity view via `EntityView
 
 *create*::: Creating of entity view instances is done by calling `EntityViewManager.create()`.
 
-*flush/update*::: Flushing/Updating happens when invoking `EntityViewManager.save()` or `EntityViewManager.saveFull()` as well as implicitly for `CascadeType.UPDATE` enabled attributes.
+*save*::: Flushing/Updating happens when invoking `EntityViewManager.save()`/`EntityViewManager.saveWith()` or `EntityViewManager.saveFull()`/`EntityViewManager.saveFullWith()` as well as implicitly for `CascadeType.UPDATE` enabled attributes.
 
 *convert*::: Conversion happens when calling `EntityViewManager.convert()` which implicitly happens for creatable entity views within a context after persisting.
 
 For most of the operations it is possible to register a listener which is invoked before or after an operation.
 The listeners can react to specific events but in some cases also alter the state of the corresponding object.
 
-A listener can be defined within an entity view class but within a class hierarchy there may only be one listener. If multiple listeners from e.g. super interfaces are inherited,
-the entity view type must declare a listener to disambiguate the situation. The listener then can invoke other listener methods or skip them.
+A listener can be defined within an entity view class but within a class hierarchy there may only be one listener of a kind.
+If multiple listeners of a single kind from e.g. super interfaces are inherited,
+the entity view type must declare a listener to disambiguate the situation. The listener then can invoke other parent listener methods or skip them.
 
 Most listeners can be defined for a specific update or remove operation to react to change events in a particular manner for a specific use case,
 but it is also possible to register listeners globally. The globally registered listeners can be used to implement cross cutting concerns like soft-deletion, auditing, etc.
-Global listeners are registered via one of the `EntityViewConfiguration.registerListener` methods.
+Global listeners are registered via one of the `EntityViewConfiguration.registerListener` methods or discovered in a CDI or Spring environment
+if the classes are annotated with `@EntityViewListener` or `@EntityViewListeners`.
 
 ==== Post create listener
 
 Within an entity view type a concrete method annotated with `@PostCreate` is considered to be a post create listener.
-It may optionally define a parameter of the type `EntityViewManager` and must have a return type of void.
+It may optionally define a parameter of the type `EntityViewManager` and must have a return type of `void`.
 
 Such a listener is usually used for creatable entity view types to setup default values.
 
@@ -201,294 +201,402 @@ interface CatUpdateView {
 }
 ----
 
+==== Post convert listener
+
+Within an entity view type a concrete method annotated with `@PostConvert` is considered to be a post convert listener.
+It may optionally define a parameter of the type `EntityViewManager` and of the type `Object` for the source view and must have a return type of `void`.
+
+Such a listener is usually used to transfer transient state from a previous object.
+
+[source,java]
+----
+@CreatableEntityView
+@EntityView(Cat.class)
+interface CatUpdateView {
+    @IdMapping
+    Long getId();
+
+    String getName();
+    void setName(String name);
+
+    @MappingParameter("source")
+    CatUpdateView getSource();
+    void setSource(CatUpdateView source);
+
+    @PostConvert
+    default void postConvert(Object source) {
+        setSource((CatUpdateView) source);
+    }
+}
+----
+
 ==== Pre remove listener
 
-WARNING: Not yet available.
+Within an entity view type a concrete method annotated with `@PreRemove` is considered to be a pre remove listener.
+It may optionally define a parameter of the type `EntityViewManager` and of the type `EntityManager` and may have a return type of `boolean` or `void`.
+When the method returns `true`, the element is going to be removed. By returning `false` the removal can be cancelled.
+When the removal is cancelled, the view will be saved by calling `EntityViewManager.save`.
 
-//Within an entity view type a concrete method annotated with `@PreRemove` is considered to be a pre remove listener.
-//It may optionally define a parameter of the type `EntityViewManager` and of the type `EntityManager` and must have a return type of boolean.
-//When the method returns `true`, the element is going to be removed. By returning `false` the removal can be cancelled.
-//
-//Such a listener is usually used for implementing soft-deletion by cancelling the actual removal and instead doing an update.
-//
-//[source,java]
-//----
-//enum LifeState {
-//    ALIVE,
-//    DEAD;
-//}
-//
-//@UpdatableEntityView
-//@EntityView(Cat.class)
-//interface CatUpdateView {
-//    @IdMapping
-//    Long getId();
-//
-//    String getName();
-//    void setName(String name);
-//
-//    LifeState getState();
-//    void setState(LifeState state);
-//
-//    @PreRemove
-//    default boolean preRemove() {
-//        setState(LifeState.DEAD);
-//        return false;
-//    }
-//}
-//----
-//
-//Additional listeners can be attached for an update/flush or remove operation by using the link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#updateWith(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.updateWith(EntityManager em, Object view)`]
-//or link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#removeWith(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.removeWith(EntityManager em, Object view)`] methods.
-//
-//[source,java]
-//----
-//CatUpdateView view = //...
-//entityViewManager.removeWith(em, view)
-//    .listener(CatUpdateView.class, new PreRemoveListener<CatUpdateView>() {
-//        public boolean preRemove(EntityViewManager evm, EntityManager em, CatUpdateView view) {
-//            view.setState(LifeState.DEAD);
-//            return false;
-//        }
-//    })
-//    .flush();
-//}
-//----
+Such a listener is usually used for implementing soft-deletion by cancelling the actual removal and instead doing an update.
+
+[source,java]
+----
+enum LifeState {
+    ALIVE,
+    DEAD;
+}
+
+@UpdatableEntityView
+@EntityView(Cat.class)
+interface CatUpdateView {
+    @IdMapping
+    Long getId();
+
+    String getName();
+    void setName(String name);
+
+    LifeState getState();
+    void setState(LifeState state);
+
+    @PreRemove
+    default boolean preRemove() {
+        setState(LifeState.DEAD);
+        return false;
+    }
+}
+----
+
+Additional listeners can be attached for an save or remove operation by using the link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#saveWith(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.saveWith(EntityManager em, Object view)`]
+or link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#removeWith(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.removeWith(EntityManager em, Object view)`] methods.
+
+[source,java]
+----
+CatUpdateView view = //...
+entityViewManager.removeWith(em, view)
+    .onPreRemove(CatUpdateView.class, new PreRemoveListener<CatUpdateView>() {
+        public boolean preRemove(EntityViewManager evm, EntityManager em, CatUpdateView view) {
+            view.setState(LifeState.DEAD);
+            return false;
+        }
+    })
+    .flush();
+}
+----
 
 ==== Post remove listener
 
-WARNING: Not yet available.
+Within an entity view type a concrete method annotated with `@PostRemove` is considered to be a post remove listener.
+It may optionally define a parameter of the type `EntityViewManager` and of the type `EntityManager` and must have a return type of void.
 
-//Within an entity view type a concrete method annotated with `@PostRemove` is considered to be a post remove listener.
-//It may optionally define a parameter of the type `EntityViewManager` and of the type `EntityManager` and must have a return type of void.
-//
-//Such a listener is usually used for doing cleanups on e.g. external systems.
-//
-//[source,java]
-//----
-//@UpdatableEntityView
-//@EntityView(Cat.class)
-//interface CatUpdateView {
-//    @IdMapping
-//    Long getId();
-//
-//    String getName();
-//    void setName(String name);
-//
-//    @PostRemove
-//    default void postRemove(EntityManager em) {
-//        em.persist(new ClearResourcesJob(getId()));
-//    }
-//}
-//----
-//
-//Additional listeners can be attached for an update/flush or remove operation by using the link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#updateWith(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.updateWith(EntityManager em, Object view)`]
-//or link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#removeWith(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.removeWith(EntityManager em, Object view)`] methods.
-//
-//[source,java]
-//----
-//CatUpdateView view = //...
-//entityViewManager.removeWith(em, view)
-//    .listener(CatUpdateView.class, new PostRemoveListener<CatUpdateView>() {
-//        public void postRemove(EntityViewManager evm, EntityManager em, CatUpdateView view) {
-//            em.persist(new ClearResourcesJob(view.getId()));
-//        }
-//    })
-//    .flush();
-//}
-//----
+Such a listener is usually used for doing cleanups on e.g. external systems.
+
+[source,java]
+----
+@UpdatableEntityView
+@EntityView(Cat.class)
+interface CatUpdateView {
+    @IdMapping
+    Long getId();
+
+    String getName();
+    void setName(String name);
+
+    @PostRemove
+    default void postRemove(EntityManager em) {
+        em.persist(new ClearResourcesJob(getId()));
+    }
+}
+----
+
+Additional listeners can be attached for an save or remove operation by using the link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#saveWith(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.saveWith(EntityManager em, Object view)`]
+or link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#removeWith(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.removeWith(EntityManager em, Object view)`] methods.
+
+[source,java]
+----
+CatUpdateView view = //...
+entityViewManager.removeWith(em, view)
+    .onPostRemove(CatUpdateView.class, new PostRemoveListener<CatUpdateView>() {
+        public void postRemove(EntityViewManager evm, EntityManager em, CatUpdateView view) {
+            em.persist(new ClearResourcesJob(view.getId()));
+        }
+    })
+    .flush();
+}
+----
 
 ==== Pre persist listener
 
-WARNING: Not yet available.
+Within an entity view type a concrete method annotated with `@PrePersist` is considered to be a pre persist listener.
+It may optionally define parameters of the type `EntityViewManager`, of the type `EntityManager` or the entity type of the entity view and must have a return type of void.
 
-//Within an entity view type a concrete method annotated with `@PrePersist` is considered to be a pre persist listener.
-//It may optionally define a parameter of the type `EntityViewManager` and of the type `EntityManager` and must have a return type of void.
-//
-//Such a listener is usually used for implementing setting default values.
-//
-//[source,java]
-//----
-//@CreatableEntityView
-//@EntityView(Cat.class)
-//interface CatUpdateView {
-//    @IdMapping
-//    Long getId();
-//
-//    String getName();
-//    void setName(String name);
-//
-//    Calendar getCreationDate();
-//    void setCreationDate(Calendar creationDate);
-//
-//    @PrePersist
-//    default void prePersist() {
-//        setCreationDate(Calendar.getInstance());
-//    }
-//}
-//----
-//
-//Additional listeners can be attached for an update/flush operation by using the link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#updateWith(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.updateWith(EntityManager em, Object view)`] method.
-//
-//[source,java]
-//----
-//CatUpdateView view = //...
-//entityViewManager.updateWith(em, view)
-//    .listener(CatUpdateView.class, new PrePersistListener<CatUpdateView>() {
-//        public void prePersist(EntityViewManager evm, EntityManager em, CatUpdateView view) {
-//            view.setCreationDate(Calendar.getInstance());
-//        }
-//    })
-//    .flush();
-//}
-//----
-//
-//Next to this _entity view only_ pre persist listener there is also a variation of the listener type that allows to update the entity object.
-//There is no annotation that can be used to create such a listener method within the entity view type as that would expose the JPA model to a method signature.
-//
-//[source,java]
-//----
-//CatUpdateView view = //...
-//entityViewManager.updateWith(em, view)
-//    .listener(CatUpdateView.class, new PrePersistEntityListener<CatUpdateView, Cat>() {
-//        public void prePersist(EntityViewManager evm, EntityManager em, CatUpdateView view, Cat entity) {
-//            entity.setCreationDate(Calendar.getInstance());
-//        }
-//    })
-//    .flush();
-//}
-//----
-//
-//Such a listener is usually used for setting attributes on an entity that shouldn't be exposed through an entity view like e.g. a tenant.
+Such a listener is usually used for implementing setting default values or unmapped entity attributes that should only be set during creation.
+
+[source,java]
+----
+@CreatableEntityView
+@EntityView(Cat.class)
+interface CatUpdateView {
+    @IdMapping
+    Long getId();
+
+    String getName();
+    void setName(String name);
+
+    Calendar getCreationDate();
+    void setCreationDate(Calendar creationDate);
+
+    @PrePersist
+    default void prePersist(Cat c) {
+        c.setAge(1);
+        setCreationDate(Calendar.getInstance());
+    }
+}
+----
+
+Additional listeners can be attached for an save operation by using the link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#saveWith(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.saveWith(EntityManager em, Object view)`] method.
+
+[source,java]
+----
+CatUpdateView view = //...
+entityViewManager.saveWith(em, view)
+    .onPrePersist(CatUpdateView.class, new PrePersistListener<CatUpdateView>() {
+        public void prePersist(EntityViewManager evm, EntityManager em, CatUpdateView view) {
+            view.setCreationDate(Calendar.getInstance());
+        }
+    })
+    .flush();
+}
+----
+
+Next to this _entity view only_ pre persist listener there is also a variation of the listener type that allows to update the entity object.
+There is no annotation that can be used to create such a listener method within the entity view type as that would expose the JPA model to a method signature.
+
+[source,java]
+----
+CatUpdateView view = //...
+entityViewManager.saveWith(em, view)
+    .onPrePersist(CatUpdateView.class, Cat.class, new PrePersistEntityListener<CatUpdateView, Cat>() {
+        public void prePersist(EntityViewManager evm, EntityManager em, CatUpdateView view, Cat entity) {
+            entity.setCreationDate(Calendar.getInstance());
+        }
+    })
+    .flush();
+}
+----
+
+Such a listener is usually used for setting attributes on an entity that shouldn't be exposed through an entity view like e.g. a tenant.
 
 ==== Post persist listener
 
-WARNING: Not yet available.
+Within an entity view type a concrete method annotated with `@PostPersist` is considered to be a post persist listener.
+It may optionally define parameters of the type `EntityViewManager`, of the type `EntityManager` or the entity type of the entity view and must have a return type of void.
 
-//Within an entity view type a concrete method annotated with `@PostPersist` is considered to be a post persist listener.
-//It may optionally define a parameter of the type `EntityViewManager` and of the type `EntityManager` and must have a return type of void.
-//
-//Such a listener is usually used for calling external systems.
-//
-//[source,java]
-//----
-//@CreatableEntityView
-//@EntityView(Cat.class)
-//interface CatUpdateView {
-//    @IdMapping
-//    Long getId();
-//
-//    String getName();
-//    void setName(String name);
-//
-//    @PostPersist
-//    default void postPersist(EntityManager em) {
-//        em.persist(new ReplicationJob(view.getId()));
-//    }
-//}
-//----
-//
-//Additional listeners can be attached for an update/flush operation by using the link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#updateWith(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.updateWith(EntityManager em, Object view)`] method.
-//
-//[source,java]
-//----
-//CatUpdateView view = //...
-//entityViewManager.removeWith(em, view)
-//    .listener(CatUpdateView.class, new PostPersistListener<CatUpdateView>() {
-//        public void postPersist(EntityViewManager evm, EntityManager em, CatUpdateView view) {
-//            em.persist(new ReplicationJob(view.getId()));
-//        }
-//    })
-//    .flush();
-//}
-//----
+Such a listener is usually used for calling external systems.
+
+[source,java]
+----
+@CreatableEntityView
+@EntityView(Cat.class)
+interface CatUpdateView {
+    @IdMapping
+    Long getId();
+
+    String getName();
+    void setName(String name);
+
+    @PostPersist
+    default void postPersist(EntityManager em) {
+        em.persist(new ReplicationJob(view.getId()));
+    }
+}
+----
+
+Additional listeners can be attached for an save operation by using the link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#saveWith(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.saveWith(EntityManager em, Object view)`] method.
+
+[source,java]
+----
+CatUpdateView view = //...
+entityViewManager.saveWith(em, view)
+    .onPostPersist(CatUpdateView.class, new PostPersistListener<CatUpdateView>() {
+        public void postPersist(EntityViewManager evm, EntityManager em, CatUpdateView view) {
+            em.persist(new ReplicationJob(view.getId()));
+        }
+    })
+    .flush();
+}
+----
 
 ==== Pre update listener
 
-WARNING: Not yet available.
+Within an entity view type a concrete method annotated with `@PreUpdate` is considered to be a pre update listener.
+It may optionally define a parameter of the type `EntityViewManager` and of the type `EntityManager` and must have a return type of void.
 
-//Within an entity view type a concrete method annotated with `@PreUpdate` is considered to be a pre update listener.
-//It may optionally define a parameter of the type `EntityViewManager` and of the type `EntityManager` and must have a return type of void.
-//
-//Such a listener is usually used for implementing automatic setting of e.g. modification dates.
-//
-//[source,java]
-//----
-//@UpdatableEntityView
-//@EntityView(Cat.class)
-//interface CatUpdateView {
-//    @IdMapping
-//    Long getId();
-//
-//    String getName();
-//    void setName(String name);
-//
-//    Calendar getModificationDate();
-//    void setModificationDate(Calendar creationDate);
-//
-//    @PreUpdate
-//    default void preUpdate() {
-//        setModificationDate(Calendar.getInstance());
-//    }
-//}
-//----
-//
-//Additional listeners can be attached for an update/flush operation by using the link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#updateWith(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.updateWith(EntityManager em, Object view)`] method.
-//
-//[source,java]
-//----
-//CatUpdateView view = //...
-//entityViewManager.updateWith(em, view)
-//    .listener(CatUpdateView.class, new PreUpdateListener<CatUpdateView>() {
-//        public void preUpdate(EntityViewManager evm, EntityManager em, CatUpdateView view) {
-//            view.setState(LifeState.DEAD);
-//        }
-//    })
-//    .flush();
-//}
-//----
+Such a listener is usually used for implementing automatic setting of e.g. modification dates.
+
+[source,java]
+----
+@UpdatableEntityView
+@EntityView(Cat.class)
+interface CatUpdateView {
+    @IdMapping
+    Long getId();
+
+    String getName();
+    void setName(String name);
+
+    Calendar getModificationDate();
+    void setModificationDate(Calendar creationDate);
+
+    @PreUpdate
+    default void preUpdate() {
+        setModificationDate(Calendar.getInstance());
+    }
+}
+----
+
+Additional listeners can be attached for an save operation by using the link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#saveWith(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.saveWith(EntityManager em, Object view)`] method.
+
+[source,java]
+----
+CatUpdateView view = //...
+entityViewManager.saveWith(em, view)
+    .onPreUpdate(CatUpdateView.class, new PreUpdateListener<CatUpdateView>() {
+        public void preUpdate(EntityViewManager evm, EntityManager em, CatUpdateView view) {
+            view.setState(LifeState.DEAD);
+        }
+    })
+    .flush();
+}
+----
 
 ==== Post update listener
 
-WARNING: Not yet available.
+Within an entity view type a concrete method annotated with `@PostUpdate` is considered to be a post update listener.
+It may optionally define a parameter of the type `EntityViewManager` and of the type `EntityManager` and must have a return type of void.
 
-//Within an entity view type a concrete method annotated with `@PostUpdate` is considered to be a post update listener.
-//It may optionally define a parameter of the type `EntityViewManager` and of the type `EntityManager` and must have a return type of void.
-//
-//Such a listener is usually used for calling external systems.
-//
-//[source,java]
-//----
-//@UpdatableEntityView
-//@EntityView(Cat.class)
-//interface CatUpdateView {
-//    @IdMapping
-//    Long getId();
-//
-//    String getName();
-//    void setName(String name);
-//
-//    @PostUpdate
-//    default void postUpdate(EntityManager em) {
-//        em.persist(new ReplicationJob(view.getId()));
-//    }
-//}
-//----
-//
-//Additional listeners can be attached for an update/flush operation by using the link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#updateWith(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.updateWith(EntityManager em, Object view)`] method.
-//
-//[source,java]
-//----
-//CatUpdateView view = //...
-//entityViewManager.updateWith(em, view)
-//    .listener(CatUpdateView.class, new PostUpdateListener<CatUpdateView>() {
-//        public void postUpdate(EntityViewManager evm, EntityManager em, CatUpdateView view) {
-//            em.persist(new ReplicationJob(view.getId()));
-//        }
-//    })
-//    .flush();
-//}
-//----
+Such a listener is usually used for calling external systems.
+
+[source,java]
+----
+@UpdatableEntityView
+@EntityView(Cat.class)
+interface CatUpdateView {
+    @IdMapping
+    Long getId();
+
+    String getName();
+    void setName(String name);
+
+    @PostUpdate
+    default void postUpdate(EntityManager em) {
+        em.persist(new ReplicationJob(view.getId()));
+    }
+}
+----
+
+Additional listeners can be attached for an save operation by using the link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#saveWith(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.saveWith(EntityManager em, Object view)`] method.
+
+[source,java]
+----
+CatUpdateView view = //...
+entityViewManager.saveWith(em, view)
+    .onPostUpdate(CatUpdateView.class, new PostUpdateListener<CatUpdateView>() {
+        public void postUpdate(EntityViewManager evm, EntityManager em, CatUpdateView view) {
+            em.persist(new ReplicationJob(view.getId()));
+        }
+    })
+    .flush();
+}
+----
+
+==== Post commit listener
+
+Within an entity view type a concrete method annotated with `@PostCommit` is considered to be a post commit listener.
+It may optionally define parameters of the type `EntityViewManager`, of the type `EntityManager` or the type `ViewTransition` and must have a return type of void.
+The `@PostCommit` annotation can define the view transitions(`PERSIST`, `UPDATE`, `REMOVE`) for which the listener should be invoked.
+
+Such a listener is usually used for calling external systems.
+
+[source,java]
+----
+@UpdatableEntityView
+@EntityView(Cat.class)
+interface CatUpdateView {
+    @IdMapping
+    Long getId();
+
+    String getName();
+    void setName(String name);
+
+    @PostCommit(transitions = ViewTransition.UPDATE)
+    default void postCommit(EntityManager em) {
+        em.persist(new ReplicationJob(view.getId()));
+    }
+}
+----
+
+Additional listeners can be attached for an save operation by using the link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#saveWith(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.saveWith(EntityManager em, Object view)`] method.
+
+[source,java]
+----
+CatUpdateView view = //...
+entityViewManager.saveWith(em, view)
+    .onPostCommit(CatUpdateView.class, new PostCommitListener<CatUpdateView>() {
+        public void postCommit(EntityViewManager evm, EntityManager em, CatUpdateView view, ViewTransition transition) {
+            em.persist(new ReplicationJob(view.getId()));
+        }
+    })
+    .flush();
+}
+----
+
+There are various short-had variants to register post commit listeners for specific view transitions like e.g. `onPostCommitPersist()`.
+
+==== Post rollback listener
+
+Within an entity view type a concrete method annotated with `@PostRollback` is considered to be a post rollback listener.
+It may optionally define parameters of the type `EntityViewManager`, of the type `EntityManager` or the type `ViewTransition` and must have a return type of void.
+The `@PostRollback` annotation can define the view transitions(`PERSIST`, `UPDATE`, `REMOVE`) for which the listener should be invoked.
+
+Such a listener is usually used for calling external systems or resetting state.
+
+[source,java]
+----
+@UpdatableEntityView
+@EntityView(Cat.class)
+interface CatUpdateView {
+    @IdMapping
+    Long getId();
+
+    String getName();
+    void setName(String name);
+
+    boolean getDone();
+    void setDone(boolean done);
+
+    @PostRollback(transitions = ViewTransition.UPDATE)
+    default void postRollback() {
+        setDone(false);
+    }
+}
+----
+
+Additional listeners can be attached for an save operation by using the link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#saveWith(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.saveWith(EntityManager em, Object view)`] method.
+
+[source,java]
+----
+CatUpdateView view = //...
+entityViewManager.saveWith(em, view)
+    .onPostRollback(CatUpdateView.class, new PostRollbackListener<CatUpdateView>() {
+        public void postRollback(EntityViewManager evm, EntityManager em, CatUpdateView view, ViewTransition transition) {
+            view.setDone(false);
+        }
+    })
+    .flush();
+}
+----
+
+There are various short-had variants to register post rollback listeners for specific view transitions like e.g. `onPostRollbackPersist()`.
 
 === Attribute mappings
 

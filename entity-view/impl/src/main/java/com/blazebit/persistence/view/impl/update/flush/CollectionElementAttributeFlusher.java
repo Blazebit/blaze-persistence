@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl.update.flush;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.change.DirtyChecker;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.view.impl.update.UpdateQueryFactory;
 
 import javax.persistence.Query;
 import java.util.Collections;
@@ -71,8 +72,9 @@ public abstract class CollectionElementAttributeFlusher<E, V> extends Collection
     }
 
     @Override
-    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
-        nestedGraphNode.flushQuery(context, parameterPrefix, null, element, null, (V) element, ownerAwareDeleter);
+    public Query flushQuery(UpdateContext context, String parameterPrefix, UpdateQueryFactory queryFactory, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
+        nestedGraphNode.flushQuery(context, parameterPrefix, null, null, element, null, (V) element, ownerAwareDeleter);
+        return query;
     }
 
     @Override
@@ -154,7 +156,7 @@ public abstract class CollectionElementAttributeFlusher<E, V> extends Collection
     }
 
     @Override
-    public DirtyAttributeFlusher<CollectionElementAttributeFlusher<E, V>, E, V> getDirtyFlusher(UpdateContext context, Object view, Object initial, Object current) {
+    public DirtyAttributeFlusher<CollectionElementAttributeFlusher<E, V>, E, V> getDirtyFlusher(UpdateContext context, Object view, Object initial, Object current, List<Runnable> preFlushListeners) {
         // Actually this should never be called, but let's return this to be safe
         return this;
     }

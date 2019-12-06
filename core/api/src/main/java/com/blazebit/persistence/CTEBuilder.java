@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence;
 
+import com.blazebit.persistence.spi.ServiceProvider;
+
 /**
  * An interface for builders that support CTEs.
  * This is related to the fact, that a query builder supports the with clause.
@@ -24,7 +26,7 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public interface CTEBuilder<T extends CTEBuilder<T>> {
+public interface CTEBuilder<T extends CTEBuilder<T>> extends ServiceProvider {
 
     /**
      * Creates a builder for a CTE with the given CTE type.

@@ -664,7 +664,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
         if (queryString != null) {
             query = context.getEntityManager().createQuery(queryString);
             if (idFlusher != null) {
-                idFlusher.flushQuery(context, WHERE_CLAUSE_PREFIX, query, updatableProxy, updatableProxy, updatableProxy.$$_getId(), null);
+                idFlusher.flushQuery(context, WHERE_CLAUSE_PREFIX, null, query, updatableProxy, updatableProxy, updatableProxy.$$_getId(), null);
             }
             if (needsOptimisticLocking) {
                 versionFlusher.flushQueryInitialVersion(context, WHERE_CLAUSE_PREFIX, query, updatableProxy, updatableProxy.$$_getVersion());
@@ -692,8 +692,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                 return flusher.flushEntity(context, entity, updatableProxy, updatableProxy, updatableProxy, null);
             } else {
                 int orphanRemovalStartIndex = context.getOrphanRemovalDeleters().size();
-                Query query = createUpdateQuery(context, updatableProxy, flusher);
-                flusher.flushQuery(context, null, query, updatableProxy, updatableProxy, updatableProxy, null);
+                Query query = flusher.flushQuery(context, null, this, null, updatableProxy, updatableProxy, updatableProxy, null);
                 if (query != null) {
                     int updated = query.executeUpdate();
 

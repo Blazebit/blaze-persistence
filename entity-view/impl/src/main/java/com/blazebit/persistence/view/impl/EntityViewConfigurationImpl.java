@@ -19,11 +19,12 @@ package com.blazebit.persistence.view.impl;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.view.ConfigurationProperties;
 import com.blazebit.persistence.view.EntityViewManager;
-import com.blazebit.persistence.view.impl.metamodel.AnnotationViewMappingReader;
+import com.blazebit.persistence.view.impl.metamodel.AnnotationMappingReader;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBootContext;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBootContextImpl;
-import com.blazebit.persistence.view.impl.metamodel.ViewMappingReader;
+import com.blazebit.persistence.view.impl.metamodel.MappingReader;
 import com.blazebit.persistence.view.impl.type.MutableBasicUserTypeRegistry;
+import com.blazebit.persistence.view.spi.TransactionSupport;
 import com.blazebit.persistence.view.spi.type.BasicUserType;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.spi.EntityViewMapping;
@@ -54,9 +55,10 @@ public class EntityViewConfigurationImpl implements EntityViewConfiguration {
 
     private final MutableBasicUserTypeRegistry userTypeRegistry = new MutableBasicUserTypeRegistry();
     private final MetamodelBootContext bootContext = new MetamodelBootContextImpl();
-    private final ViewMappingReader annotationViewMappingReader = new AnnotationViewMappingReader(bootContext);
+    private final MappingReader annotationMappingReader = new AnnotationMappingReader(bootContext);
     private final Map<Class<?>, Object> typeTestValues = new HashMap<>();
     private Properties properties = new Properties();
+    private TransactionSupport transactionSupport;
 
     public EntityViewConfigurationImpl() {
         loadDefaultProperties();
@@ -110,7 +112,43 @@ public class EntityViewConfigurationImpl implements EntityViewConfiguration {
 
     @Override
     public EntityViewMapping createEntityViewMapping(Class<?> clazz) {
-        return annotationViewMappingReader.readViewMapping(clazz);
+        return annotationMappingReader.readViewMapping(clazz);
+    }
+
+    @Override
+    public EntityViewConfiguration addEntityViewListener(Class<?> entityViewListenerClass) {
+        for (EntityViewListenerFactory<?> viewListenerFactory : bootContext.createViewListenerFactories(entityViewListenerClass)) {
+            annotationMappingReader.readViewListenerMapping(entityViewListenerClass, viewListenerFactory);
+        }
+
+        return this;
+    }
+
+    @Override
+    public EntityViewConfiguration addEntityViewListener(Class<?> entityViewClass, Class<?> entityViewListenerClass) {
+        bootContext.addEntityViewListener(entityViewClass, entityViewListenerClass);
+        return this;
+    }
+
+    @Override
+    public EntityViewConfiguration addEntityViewListener(Class<?> entityViewClass, Class<?> entityClass, Class<?> entityViewListenerClass) {
+        bootContext.addEntityViewListener(entityViewClass, entityClass, entityViewListenerClass);
+        return this;
+    }
+
+    @Override
+    public Set<Class<?>> getEntityViewListeners() {
+        return bootContext.getViewListenerClasses();
+    }
+
+    @Override
+    public Set<Class<?>> getEntityViewListeners(Class<?> entityViewClass) {
+        return bootContext.getViewListenerClasses(entityViewClass);
+    }
+
+    @Override
+    public Set<Class<?>> getEntityViewListeners(Class<?> entityViewClass, Class<?> entityClass) {
+        return bootContext.getViewListenerClasses(entityViewClass, entityClass);
     }
 
     @Override
@@ -215,6 +253,17 @@ public class EntityViewConfigurationImpl implements EntityViewConfiguration {
     @Override
     public <T> EntityViewConfiguration setTypeTestValue(Class<T> type, T value) {
         typeTestValues.put(type, value);
+        return this;
+    }
+
+    @Override
+    public TransactionSupport getTransactionSupport() {
+        return transactionSupport;
+    }
+
+    @Override
+    public EntityViewConfiguration setTransactionSupport(TransactionSupport transactionSupport) {
+        this.transactionSupport = transactionSupport;
         return this;
     }
 }

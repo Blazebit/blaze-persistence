@@ -18,6 +18,8 @@ package com.blazebit.persistence.integration.view.cdi;
 
 import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.EntityViewListener;
+import com.blazebit.persistence.view.EntityViewListeners;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import java.util.ArrayList;
@@ -47,6 +49,12 @@ public class EntityViewExtension implements Extension {
         if (pat.getAnnotatedType().isAnnotationPresent(EntityView.class)) {
             try {
                 configuration.addEntityView(pat.getAnnotatedType().getJavaClass());
+            } catch (RuntimeException ex) {
+                exceptions.add(new IllegalArgumentException("Exception occurred while reading entity view class: " + pat.getAnnotatedType().getJavaClass().getName(), ex));
+            }
+        } else if (pat.getAnnotatedType().isAnnotationPresent(EntityViewListener.class) || pat.getAnnotatedType().isAnnotationPresent(EntityViewListeners.class)) {
+            try {
+                configuration.addEntityViewListener(pat.getAnnotatedType().getJavaClass());
             } catch (RuntimeException ex) {
                 exceptions.add(new IllegalArgumentException("Exception occurred while reading entity view class: " + pat.getAnnotatedType().getJavaClass().getName(), ex));
             }

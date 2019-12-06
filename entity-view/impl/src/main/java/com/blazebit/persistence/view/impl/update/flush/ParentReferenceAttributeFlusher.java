@@ -21,6 +21,7 @@ import com.blazebit.persistence.view.impl.accessor.Accessors;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.mapper.Mapper;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.view.impl.update.UpdateQueryFactory;
 
 import javax.persistence.Query;
 import java.util.ArrayList;
@@ -94,7 +95,7 @@ public class ParentReferenceAttributeFlusher<E, V> extends BasicAttributeFlusher
     }
 
     @Override
-    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
+    public Query flushQuery(UpdateContext context, String parameterPrefix, UpdateQueryFactory queryFactory, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
         if (query != null && writableMappings != null) {
             for (int i = 0; i < parameterAccessors.length; i++) {
                 Map.Entry<String, AttributeAccessor> parameterAccessor = parameterAccessors[i];
@@ -107,8 +108,9 @@ public class ParentReferenceAttributeFlusher<E, V> extends BasicAttributeFlusher
                 query.setParameter(parameter, parameterAccessor.getValue().getValue(value));
             }
         } else {
-            super.flushQuery(context, parameterPrefix, query, ownerView, view, value, ownerAwareDeleter);
+            super.flushQuery(context, parameterPrefix, queryFactory, query, ownerView, view, value, ownerAwareDeleter);
         }
+        return query;
     }
 
     @Override

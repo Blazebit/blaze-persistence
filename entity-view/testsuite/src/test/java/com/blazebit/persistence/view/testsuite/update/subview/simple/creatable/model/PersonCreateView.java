@@ -26,7 +26,7 @@ import com.blazebit.persistence.view.EntityView;
  * @since 1.2.0
  */
 @EntityView(Person.class)
-@CreatableEntityView(validatePersistability = false)
+@CreatableEntityView
 public interface PersonCreateView extends PersonView {
 
     public void setName(String name);

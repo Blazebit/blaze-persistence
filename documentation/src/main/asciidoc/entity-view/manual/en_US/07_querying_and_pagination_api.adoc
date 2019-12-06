@@ -159,7 +159,7 @@ Another possible way to integrate this, is to generate URLs that contain the key
 
 Any of these approaches will require custom implementations of the `KeysetPage` and `Keyset` interfaces.
 
-NOTE: We are working on a more easy integration with REST technologies. For further information see https://github.com/Blazebit/blaze-persistence/issues/373[#373]
+NOTE: The GraphQL, JAX-RS and Spring MVC, as well as Spring WebFlux integrations have proper implementations for serializing and deserializing entity view types.
 
 ==== Entity page navigation with entity views
 
