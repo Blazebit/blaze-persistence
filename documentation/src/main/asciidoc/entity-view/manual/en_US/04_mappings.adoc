@@ -787,7 +787,7 @@ interface CatView {
 }
 ----
 
-Beware that you can't re-map the collection type in this case although this might soon be possible. Also see https://github.com/Blazebit/blaze-persistence/issues/361[#361] for further information.
+Beware that you can't re-map the collection type in this case although this might soon be possible.
 
 The query will not generate a join but simply select the `tags` since it's a singular attribute.
 

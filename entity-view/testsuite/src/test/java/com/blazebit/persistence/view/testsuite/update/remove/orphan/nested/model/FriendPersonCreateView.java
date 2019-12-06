@@ -23,7 +23,7 @@ import com.blazebit.persistence.view.CreatableEntityView;
  * @author Christian Beikov
  * @since 1.2.0
  */
-@CreatableEntityView(validatePersistability = false)
+@CreatableEntityView
 public interface FriendPersonCreateView extends FriendPersonView {
 
 }

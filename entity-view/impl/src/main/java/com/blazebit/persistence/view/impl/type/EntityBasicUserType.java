@@ -19,6 +19,8 @@ package com.blazebit.persistence.view.impl.type;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.view.spi.type.BasicUserType;
 
+import java.util.Objects;
+
 /**
  *
  * @author Christian Beikov
@@ -59,7 +61,7 @@ public class EntityBasicUserType implements BasicUserType<Object> {
 
     @Override
     public boolean isEqual(Object initial, Object current) {
-        return jpaProvider.getIdentifier(initial).equals(jpaProvider.getIdentifier(current));
+        return Objects.equals(jpaProvider.getIdentifier(initial), jpaProvider.getIdentifier(current));
     }
 
     @Override
@@ -69,7 +71,7 @@ public class EntityBasicUserType implements BasicUserType<Object> {
 
     @Override
     public int hashCode(Object object) {
-        return jpaProvider.getIdentifier(object).hashCode();
+        return Objects.hashCode(jpaProvider.getIdentifier(object));
     }
 
     @Override

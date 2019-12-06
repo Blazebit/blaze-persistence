@@ -120,8 +120,10 @@ The approach used in {projectname} consists of up to three queries executed cons
 This query uses an `IN` predicate for the ID set retrieved in the previous step to restrict the fetched entities to the target
 page.
 
-NOTE: In a future version it might be possible to combine queries or disable the count query. For more information on that see https://github.com/Blazebit/blaze-persistence/issues/248[#248],
-https://github.com/Blazebit/blaze-persistence/issues/249[#249] and https://github.com/Blazebit/blaze-persistence/issues/255[#255]
+You can disable the *count query* by passing `false` to `PaginatedCriteriaBuilder.withCountQuery(boolean)`.
+
+NOTE: In a future version it might be possible to combine queries. For more information on that see https://github.com/Blazebit/blaze-persistence/issues/248[#248]
+and https://github.com/Blazebit/blaze-persistence/issues/249[#249].
 
 TIP: You can inspect the query strings by using link:{core_jdoc}/persistence/PaginatedCriteriaBuilder.html#getPageCountQueryString()[`getPageCountQueryString()`],
 link:{core_jdoc}/persistence/PaginatedCriteriaBuilder.html#getPageIdQueryString()[`getPageIdQueryString()`] and link:{core_jdoc}/persistence/Queryable.html#getQueryString()[`getQueryString()`]

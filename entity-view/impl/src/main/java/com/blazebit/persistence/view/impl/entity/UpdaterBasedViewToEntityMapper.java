@@ -159,7 +159,7 @@ public class UpdaterBasedViewToEntityMapper extends AbstractViewToEntityMapper {
     }
 
     @Override
-    public Query createUpdateQuery(UpdateContext context, Object view, DirtyAttributeFlusher<?, ?, ?> nestedGraphNode) {
+    public Query createUpdateQuery(UpdateContext context, MutableStateTrackable view, DirtyAttributeFlusher<?, ?, ?> nestedGraphNode) {
         Class<?> viewTypeClass = getViewTypeClass(view);
         EntityViewUpdater updater = updateUpdater.get(viewTypeClass);
         if (updater == null) {
@@ -168,10 +168,10 @@ public class UpdaterBasedViewToEntityMapper extends AbstractViewToEntityMapper {
 
         // If this is updatable, but also createable we check if this object needs persisting
         // If it does need persisting, we can't possibly do an update query
-        if (persistAllowed && persistUpdater.containsKey(viewTypeClass) && ((EntityViewProxy) view).$$_isNew()) {
+        if (persistAllowed && persistUpdater.containsKey(viewTypeClass) && view.$$_isNew()) {
             return null;
         }
 
-        return updater.createUpdateQuery(context, (MutableStateTrackable) view, nestedGraphNode);
+        return updater.createUpdateQuery(context, view, nestedGraphNode);
     }
 }

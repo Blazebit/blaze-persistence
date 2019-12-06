@@ -20,6 +20,8 @@ import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.IdMapping;
+import com.blazebit.persistence.view.MappingParameter;
+import com.blazebit.persistence.view.PostConvert;
 
 import java.io.Serializable;
 import java.util.List;
@@ -48,4 +50,14 @@ public interface DocumentCloneView extends Serializable {
     public Set<PersonView> getPartners();
 
     public Map<Integer, Person> getContacts();
+
+    @MappingParameter("source")
+    public DocumentCloneView getSource();
+
+    public void setSource(DocumentCloneView source);
+
+    @PostConvert
+    default void postConvert(Object source) {
+        setSource((DocumentCloneView) source);
+    }
 }

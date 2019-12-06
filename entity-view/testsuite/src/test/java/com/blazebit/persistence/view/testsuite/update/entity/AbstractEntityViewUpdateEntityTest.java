@@ -16,12 +16,20 @@
 
 package com.blazebit.persistence.view.testsuite.update.entity;
 
+import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
+import com.blazebit.persistence.view.IdMapping;
+import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateDocumentTest;
 import com.blazebit.persistence.view.testsuite.update.entity.model.UpdatableDocumentEntityViewBase;
 import org.junit.runners.Parameterized;
+
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -30,6 +38,8 @@ import org.junit.runners.Parameterized;
  */
 public abstract class AbstractEntityViewUpdateEntityTest<T extends UpdatableDocumentEntityViewBase> extends AbstractEntityViewUpdateDocumentTest<T> {
 
+    protected final AtomicInteger updateCommitCount = new AtomicInteger();
+
     public AbstractEntityViewUpdateEntityTest(FlushMode mode, FlushStrategy strategy, boolean version, Class<T> viewType) {
         super(mode, strategy, version, viewType);
     }
@@ -37,6 +47,11 @@ public abstract class AbstractEntityViewUpdateEntityTest<T extends UpdatableDocu
     @Parameterized.Parameters(name = "{0} - {1} - VERSIONED={2}")
     public static Object[][] combinations() {
         return MODE_STRATEGY_VERSION_COMBINATIONS;
+    }
+
+    @Override
+    protected void registerViewTypes(EntityViewConfiguration cfg) {
+        cfg.addEntityView(DocumentRollbackInfoView.class);
     }
 
     public T simpleUpdate() {
@@ -97,7 +112,7 @@ public abstract class AbstractEntityViewUpdateEntityTest<T extends UpdatableDocu
         return docView;
     }
 
-    public T updateToNewPerson() {
+    public T updateToNewPerson(boolean rollback) {
         // Given
         final T docView = getDoc1View();
         clearQueries();
@@ -105,8 +120,28 @@ public abstract class AbstractEntityViewUpdateEntityTest<T extends UpdatableDocu
         // When
         Person p = new Person("newPerson");
         docView.setResponsiblePerson(p);
-        update(docView);
+        if (rollback) {
+            saveWithRollbackWith(docView, flushOperationBuilder -> {
+                flushOperationBuilder.onPostRollbackUpdate(DocumentRollbackInfoView.class, (entityViewManager, entityManager, view, transition) -> {
+                    assertEquals(10L, view.getAge().longValue());
+                    updateCommitCount.incrementAndGet();
+                });
+                flushOperationBuilder.flush();
+                em.flush();
+            });
+        } else {
+            update(docView);
+        }
         return docView;
+    }
+
+    @EntityView(Document.class)
+    public static interface DocumentRollbackInfoView {
+
+        @IdMapping
+        public Long getId();
+
+        public Long getAge();
     }
 
 }

@@ -26,7 +26,7 @@ import com.blazebit.persistence.view.UpdatableEntityView;
  * @author Christian Beikov
  * @since 1.3.0
  */
-@CreatableEntityView(excludedEntityAttributes = "age")
+@CreatableEntityView
 @UpdatableEntityView
 @EntityView(Person.class)
 public interface UpdatablePersonView extends PersonView {

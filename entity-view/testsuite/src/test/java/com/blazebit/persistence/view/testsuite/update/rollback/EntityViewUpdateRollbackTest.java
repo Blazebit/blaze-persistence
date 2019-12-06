@@ -21,8 +21,10 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
+import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.impl.proxy.DirtyTracker;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateDocumentTest;
@@ -37,6 +39,7 @@ import org.junit.runners.Parameterized;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import java.util.Date;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.*;
 
@@ -63,6 +66,16 @@ public class EntityViewUpdateRollbackTest extends AbstractEntityViewUpdateDocume
     protected void registerViewTypes(EntityViewConfiguration cfg) {
         cfg.addEntityView(PersonNameView.class);
         cfg.addEntityView(CreatePersonRollbackView.class);
+        cfg.addEntityView(DocumentRollbackInfoView.class);
+    }
+
+    @EntityView(Document.class)
+    public static interface DocumentRollbackInfoView {
+
+        @IdMapping
+        public Long getId();
+
+        public Long getAge();
     }
 
     @Test
@@ -72,12 +85,19 @@ public class EntityViewUpdateRollbackTest extends AbstractEntityViewUpdateDocume
         
         // When 1
         docView.setName("newDoc");
-        updateWithRollback(docView);
+        AtomicInteger updateCommitCount = new AtomicInteger();
+        saveWithRollbackWith(docView, flushOperationBuilder -> {
+            flushOperationBuilder.onPostRollbackUpdate(DocumentRollbackInfoView.class, (entityViewManager, entityManager, view, transition) -> {
+                assertEquals(10L, view.getAge().longValue());
+                updateCommitCount.incrementAndGet();
+            });
+        });
 
         // Then 1
         restartTransactionAndReload();
         assertEquals("newDoc", docView.getName());
         assertEquals("doc1", doc1.getName());
+        assertEquals(1, updateCommitCount.get());
 
         // When 2
         update(docView);

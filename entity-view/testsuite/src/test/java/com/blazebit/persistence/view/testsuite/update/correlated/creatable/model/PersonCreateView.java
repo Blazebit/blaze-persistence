@@ -28,7 +28,7 @@ import java.util.Map;
  * @since 1.3.0
  */
 @EntityView(Person.class)
-@CreatableEntityView(validatePersistability = false)
+@CreatableEntityView
 public interface PersonCreateView extends UpdatablePersonView {
 
     public void setName(String name);

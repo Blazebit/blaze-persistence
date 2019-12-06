@@ -20,6 +20,7 @@ import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuil
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.FlushMode;
+import com.blazebit.persistence.view.FlushOperationBuilder;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.change.ChangeModel;
 import com.blazebit.persistence.view.change.SingularChangeModel;
@@ -37,6 +38,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import java.util.Collection;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import static org.junit.Assert.*;
 
@@ -300,6 +302,34 @@ public abstract class AbstractEntityViewUpdateTest<T> extends AbstractEntityView
             public void work(EntityManager em) {
                 evm.save(em, docView);
                 em.flush();
+            }
+        });
+    }
+
+    protected void saveWith(final Object docView, Consumer<FlushOperationBuilder> c) {
+        transactional(new TxVoidWork() {
+
+            @Override
+            public void work(EntityManager em) {
+                FlushOperationBuilder flushOperationBuilder = evm.saveWith(em, docView);
+                c.accept(flushOperationBuilder);
+                flushOperationBuilder.flush();
+                em.flush();
+            }
+        });
+    }
+
+    protected void saveWithRollbackWith(final T docView, Consumer<FlushOperationBuilder> c) {
+        transactional(new TxVoidWork() {
+
+            @Override
+            public void work(EntityManager em) {
+                EntityTransaction tx = em.getTransaction();
+                FlushOperationBuilder flushOperationBuilder = evm.saveWith(em, docView);
+                c.accept(flushOperationBuilder);
+                flushOperationBuilder.flush();
+                em.flush();
+                tx.setRollbackOnly();
             }
         });
     }

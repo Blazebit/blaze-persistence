@@ -183,7 +183,7 @@ public class EntityViewUpdateCreatableEntityTest extends AbstractEntityViewUpdat
     @Test
     public void testUpdateToNewPerson() {
         // Given & When
-        final UpdatableDocumentEntityView docView = updateToNewPerson();
+        final UpdatableDocumentEntityView docView = updateToNewPerson(false);
 
         // Then
         // Since the responsiblePerson changed we don't need to load the old responsiblePerson

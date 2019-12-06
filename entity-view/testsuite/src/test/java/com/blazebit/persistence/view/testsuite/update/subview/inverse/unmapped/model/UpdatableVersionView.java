@@ -26,7 +26,7 @@ import com.blazebit.persistence.view.UpdatableEntityView;
  * @author Christian Beikov
  * @since 1.2.0
  */
-@CreatableEntityView(validatePersistability = false)
+@CreatableEntityView
 @UpdatableEntityView
 @EntityView(Version.class)
 public interface UpdatableVersionView extends VersionIdView {

@@ -18,15 +18,10 @@ package com.blazebit.persistence.view.impl.tx;
 
 import com.blazebit.persistence.view.spi.TransactionAccess;
 import com.blazebit.persistence.view.spi.TransactionAccessFactory;
-import com.blazebit.reflection.ReflectionUtils;
 
 import javax.naming.InitialContext;
-import javax.naming.NameNotFoundException;
 import javax.naming.NamingException;
-import javax.naming.NoInitialContextException;
 import javax.persistence.EntityManager;
-import javax.transaction.TransactionSynchronizationRegistry;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ServiceLoader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -39,11 +34,7 @@ import java.util.logging.Logger;
 public class TransactionHelper {
 
     private static final Logger LOG = Logger.getLogger(TransactionHelper.class.getName());
-    private static final String[] NAMES = {
-        "java:comp/TransactionSynchronizationRegistry", // Java EE Standard name
-        "java:/TransactionSynchronizationRegistry", // Local providers
-        "java:comp/env/TransactionSynchronizationRegistry", // Tomcat
-    };
+    private static volatile TransactionAccessFactory factory;
 
     private TransactionHelper() {
     }
@@ -61,6 +52,11 @@ public class TransactionHelper {
     }
 
     private static TransactionAccess getTransactionAccessInternal(EntityManager em) {
+        TransactionAccessFactory factory = TransactionHelper.factory;
+        if (factory != null) {
+            return factory.createTransactionAccess(em);
+        }
+
         InitialContext context = null;
 
         try {
@@ -70,17 +66,10 @@ public class TransactionHelper {
         }
 
         if (context != null) {
-            for (String name : NAMES) {
-                try {
-                    TransactionSynchronizationRegistry synchronizationRegistry = (TransactionSynchronizationRegistry) context.lookup(name);
-                    if (synchronizationRegistry != null) {
-                        return new JtaTransactionSynchronizationStrategy(synchronizationRegistry);
-                    }
-                } catch (NoInitialContextException | NameNotFoundException e) {
-                    // Maybe in Java SE environment
-                } catch (NamingException e) {
-                    throw new IllegalArgumentException("Could not access transaction synchronization registry!", e);
-                }
+            JtaResources jtaResources = JtaResources.getInstance();
+            if (jtaResources != null) {
+                TransactionHelper.factory = jtaResources;
+                return jtaResources.createTransactionAccess(em);
             }
         }
 
@@ -88,6 +77,7 @@ public class TransactionHelper {
             try {
                 TransactionAccess transactionAccess = transactionAccessFactory.createTransactionAccess(em);
                 if (transactionAccess != null) {
+                    TransactionHelper.factory = transactionAccessFactory;
                     return transactionAccess;
                 }
             } catch (Exception ex) {
@@ -102,28 +92,20 @@ public class TransactionHelper {
             int major = Integer.parseInt(versionParts[0]);
 
             if (major >= 5) {
-                Object jtaPlatform = getHibernate5JtaPlatformPresent(em);
+                Object jtaPlatform = Hibernate5JtaPlatformTransactionAccessFactory.getHibernate5JtaPlatformPresent(em);
                 if (jtaPlatform == null || jtaPlatform.getClass() == Class.forName("org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform")) {
+                    TransactionHelper.factory = new Hibernate5EntityTransactionAccessFactory();
                     return new Hibernate5EntityTransactionSynchronizationStrategy(em);
                 } else {
+                    TransactionHelper.factory = new Hibernate5JtaPlatformTransactionAccessFactory();
                     return new Hibernate5JtaPlatformTransactionSynchronizationStrategy(jtaPlatform);
                 }
             } else {
+                TransactionHelper.factory = new Hibernate4TransactionAccessFactory();
                 return new Hibernate4TransactionSynchronizationStrategy(em);
             }
         } catch (ClassNotFoundException ex) {
             throw new IllegalArgumentException("Unsupported jpa provider!", ex);
-        }
-    }
-
-    private static Object getHibernate5JtaPlatformPresent(EntityManager em) {
-        try {
-            Object hibernateSession = em.unwrap(Class.forName("org.hibernate.Session"));
-            Object hibernateSessionFactory = ReflectionUtils.getMethod(hibernateSession.getClass(), "getSessionFactory").invoke(hibernateSession);
-            Object hibernateServiceRegistry = ReflectionUtils.getMethod(hibernateSessionFactory.getClass(), "getServiceRegistry").invoke(hibernateSessionFactory);
-            return ReflectionUtils.getMethod(hibernateServiceRegistry.getClass(), "getService", Class.class).invoke(hibernateServiceRegistry, Class.forName("org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform"));
-        } catch (ClassNotFoundException | IllegalAccessException | InvocationTargetException e) {
-            throw new IllegalArgumentException("Unexpected error when attempting to retrieve the Hibernate 5 JTA platform!", e);
         }
     }
 }

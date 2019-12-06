@@ -24,13 +24,26 @@ import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.LockMode;
+import com.blazebit.persistence.view.ViewTransition;
 import com.blazebit.persistence.view.impl.PrefixingQueryGenerator;
 import com.blazebit.persistence.view.impl.SimpleCTEProviderFactory;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
+import com.blazebit.reflection.ReflectionUtils;
+import javassist.ClassPool;
+import javassist.CtBehavior;
+import javassist.CtClass;
+import javassist.CtConstructor;
+import javassist.CtMethod;
+import javassist.bytecode.Bytecode;
+import javassist.bytecode.CodeIterator;
+import javassist.bytecode.ConstPool;
+import javassist.bytecode.Descriptor;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PrePersist;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.BasicType;
 import javax.persistence.metamodel.EmbeddableType;
@@ -38,6 +51,8 @@ import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.SingularAttribute;
+import java.lang.reflect.Field;
+import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
@@ -46,6 +61,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -58,6 +74,8 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -69,6 +87,17 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
     private final Class<X> javaType;
     private final ManagedType<?> jpaManagedType;
     private final Method postCreateMethod;
+    private final Method postConvertMethod;
+    private final Method prePersistMethod;
+    private final Method postPersistMethod;
+    private final Method preUpdateMethod;
+    private final Method postUpdateMethod;
+    private final Method preRemoveMethod;
+    private final Method postRemoveMethod;
+    private final Method postRollbackMethod;
+    private final Method postCommitMethod;
+    private final Set<ViewTransition> postRollbackTransitions;
+    private final Set<ViewTransition> postCommitTransitions;
     private final List<Method> specialMethods;
     private final boolean creatable;
     private final boolean updatable;
@@ -98,14 +127,28 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
         this.javaType = (Class<X>) viewMapping.getEntityViewClass();
         this.jpaManagedType = managedType;
         this.postCreateMethod = viewMapping.getPostCreateMethod();
+        this.postConvertMethod = viewMapping.getPostConvertMethod();
+        this.prePersistMethod = viewMapping.getPrePersistMethod();
+        this.postPersistMethod = viewMapping.getPostPersistMethod();
+        this.preUpdateMethod = viewMapping.getPreUpdateMethod();
+        this.postUpdateMethod = viewMapping.getPostUpdateMethod();
+        this.preRemoveMethod = viewMapping.getPreRemoveMethod();
+        this.postRemoveMethod = viewMapping.getPostRemoveMethod();
+        this.postRollbackMethod = viewMapping.getPostRollbackMethod();
+        this.postCommitMethod = viewMapping.getPostCommitMethod();
+        EnumSet<ViewTransition> postRollbackTransitions = EnumSet.noneOf(ViewTransition.class);
+        if (viewMapping.getPostRollbackTransitions() != null) {
+            Collections.addAll(postRollbackTransitions, viewMapping.getPostRollbackTransitions());
+        }
+        this.postRollbackTransitions = Collections.unmodifiableSet(postRollbackTransitions);
+        EnumSet<ViewTransition> postCommitTransitions = EnumSet.noneOf(ViewTransition.class);
+        if (viewMapping.getPostCommitTransitions() != null) {
+            Collections.addAll(postCommitTransitions, viewMapping.getPostCommitTransitions());
+        }
+        this.postCommitTransitions = Collections.unmodifiableSet(postCommitTransitions);
         this.specialMethods = viewMapping.getSpecialMethods();
 
-        if (postCreateMethod != null) {
-            Class<?>[] parameterTypes = postCreateMethod.getParameterTypes();
-            if (!void.class.equals(postCreateMethod.getReturnType()) || parameterTypes.length > 1 || parameterTypes.length == 1 && !EntityViewManager.class.equals(parameterTypes[0])) {
-                context.addError("Invalid signature for post create method at '" + javaType.getName() + "." + postCreateMethod.getName() + "'! A method annotated with @PostCreate must return void and accept no or a single EntityViewManager argument!");
-            }
-        }
+        validateMethods(context);
 
         this.updatable = viewMapping.isUpdatable();
         this.flushMode = context.getFlushMode(javaType, viewMapping.getFlushMode());
@@ -165,7 +208,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
             OUTER: for (Map.Entry<String, ? extends ExtendedAttribute<?, ?>> entry : extendedManagedType.getOwnedSingularAttributes().entrySet()) {
                 ExtendedAttribute<?, ?> extendedAttribute = entry.getValue();
                 SingularAttribute<?, ?> attribute = (SingularAttribute<?, ?>) extendedAttribute.getAttribute();
-                if (!attribute.isVersion() && !attribute.isOptional()) {
+                if (!attribute.isVersion() && !attribute.isOptional() && !extendedAttribute.getElementClass().isPrimitive()) {
                     // The attribute could be the id attribute of an owned *ToOne association
                     if ((attribute.getType() instanceof BasicType<?> || attribute.getType() instanceof EmbeddableType<?>) && extendedAttribute.getAttributePath().size() > 1) {
                         List<Attribute<?, ?>> attributePath = extendedAttribute.getAttributePath();
@@ -316,6 +359,9 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
         }
 
         if (!requiredUpdatableAttributes.isEmpty()) {
+            // If we get here, we start a bytecode analysis for attributes set in the default constructors
+            removeIfSetByDefault(extendedManagedType, requiredUpdatableAttributes);
+
             // Before failing, remove all attribute for which we covered all columns already
             for (Iterator<String> iterator = requiredUpdatableAttributes.iterator(); iterator.hasNext(); ) {
                 ExtendedAttribute<?, ?> extendedAttribute = extendedManagedType.getAttributes().get(iterator.next());
@@ -349,6 +395,306 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
         context.onViewTypeFinished(this, new CTEProviderCollector(this, context, viewMapping));
     }
 
+    private void removeIfSetByDefault(ExtendedManagedType<?> extendedManagedType, Set<String> requiredUpdatableAttributes) {
+        try {
+            Map<String, String> fieldNameToAttribute = new HashMap<>(requiredUpdatableAttributes.size());
+            Map<String, String> setterNameToAttribute = new HashMap<>(requiredUpdatableAttributes.size());
+            Map<String, String> fields = new HashMap<>(requiredUpdatableAttributes.size());
+            Map<String, String> setters = new HashMap<>(requiredUpdatableAttributes.size());
+            Map<String, String> getters = new HashMap<>(requiredUpdatableAttributes.size());
+            Class<?> javaType = jpaManagedType.getJavaType();
+            ClassPool pool = new ClassPool(true);
+            CtClass ctClass = pool.get(javaType.getName());
+
+            for (String attribute : requiredUpdatableAttributes) {
+                ExtendedAttribute<?, ?> extendedAttribute = extendedManagedType.getAttribute(attribute);
+                Attribute<?, ?> attr = extendedAttribute.getAttributePath().get(0);
+                Class<?> type = JpaMetamodelUtils.resolveFieldClass(jpaManagedType.getJavaType(), attr);
+                Member javaMember = attr.getJavaMember();
+                if (javaMember instanceof Method) {
+                    Method getter = null;
+                    String suffix = null;
+                    if (javaMember.getName().startsWith("get")) {
+                        getter = ReflectionUtils.getMethod(javaType, javaMember.getName());
+                        suffix = javaMember.getName().substring(3);
+                    } else if (javaMember.getName().startsWith("is")) {
+                        getter = ReflectionUtils.getMethod(javaType, javaMember.getName());
+                        suffix = javaMember.getName().substring(2);
+                    } else if (javaMember.getName().startsWith("set")) {
+                        suffix = javaMember.getName().substring(3);
+                        getter = ReflectionUtils.getMethod(javaType, "get" + suffix);
+                        if (getter == null && ((Method) javaMember).getParameterTypes().length == 1 && ((Method) javaMember).getParameterTypes()[0] == boolean.class) {
+                            getter = ReflectionUtils.getMethod(javaType, "is" + suffix);
+                        }
+                    }
+
+                    Method setter = suffix != null ? ReflectionUtils.getMethod(javaType, "set" + suffix, type) : null;
+                    String fieldName;
+                    if (getter != null && (fieldName = getSimpleGetterFieldName(ctClass.getDeclaredMethod(getter.getName()))) != null) {
+                        if (setter == null) {
+                            getters.put(attribute, getter.getName());
+                            fields.put(attribute, fieldName);
+                            fieldNameToAttribute.put(fieldName, attribute);
+                        } else if (fieldName.equals(getSimpleSetterFieldName(ctClass.getDeclaredMethod(setter.getName())))) {
+                            getters.put(attribute, getter.getName());
+                            setters.put(attribute, setter.getName());
+                            setterNameToAttribute.put(attribute, setter.getName());
+                            fields.put(attribute, fieldName);
+                            fieldNameToAttribute.put(fieldName, attribute);
+                        }
+                    } else if (setter != null && (fieldName = getSimpleSetterFieldName(ctClass.getDeclaredMethod(setter.getName()))) != null) {
+                        setters.put(attribute, setter.getName());
+                        setterNameToAttribute.put(attribute, setter.getName());
+                        fields.put(attribute, fieldName);
+                        fieldNameToAttribute.put(fieldName, attribute);
+                    }
+                } else {
+                    fields.put(attribute, javaMember.getName());
+                    fieldNameToAttribute.put(javaMember.getName(), attribute);
+                    String suffix = Character.toUpperCase(javaMember.getName().charAt(0)) + javaMember.getName().substring(1);
+                    Method getter = ReflectionUtils.getMethod(javaType, "get" + suffix);
+                    if (getter == null && ((Field) javaMember).getType() == boolean.class) {
+                        getter = ReflectionUtils.getMethod(javaType, "is" + suffix);
+                    }
+                    Method setter = ReflectionUtils.getMethod(javaType, "set" + suffix, type);
+
+                    if (getter != null && javaMember.getName().equals(getSimpleGetterFieldName(ctClass.getDeclaredMethod(getter.getName())))) {
+                        if (setter == null) {
+                            getters.put(attribute, getter.getName());
+                        } else if (javaMember.getName().equals(getSimpleSetterFieldName(ctClass.getDeclaredMethod(setter.getName())))) {
+                            getters.put(attribute, getter.getName());
+                            setters.put(attribute, setter.getName());
+                            setterNameToAttribute.put(attribute, setter.getName());
+                        }
+                    }
+                    if (setter != null && javaMember.getName().equals(getSimpleSetterFieldName(ctClass.getDeclaredMethod(setter.getName())))) {
+                        setters.put(attribute, setter.getName());
+                        setterNameToAttribute.put(attribute, setter.getName());
+                    }
+                }
+            }
+
+            CtClass c = ctClass;
+            CtClass[] constructorParams = new CtClass[0];
+            List<CtClass> superClasses = new ArrayList<>(2);
+            superClasses.add(c);
+            while (c.getSuperclass() != null) {
+                superClasses.add(c = c.getSuperclass());
+            }
+            c = ctClass;
+            do {
+                CtConstructor entityConstructor = c.getDeclaredConstructor(constructorParams);
+                while (!entityConstructor.callsSuper() && entityConstructor.getDeclaringClass().getSuperclass() != null) {
+                    entityConstructor = c.getDeclaredConstructor(findCalledConstructor(entityConstructor));
+                }
+                constructorParams = removeAssignedAttributes(superClasses, entityConstructor, fieldNameToAttribute, setterNameToAttribute, requiredUpdatableAttributes);
+                if (!requiredUpdatableAttributes.isEmpty()) {
+                    for (CtMethod declaredMethod : c.getDeclaredMethods()) {
+                        if (declaredMethod.hasAnnotation(PrePersist.class)) {
+                            removeAssignedAttributes(superClasses, declaredMethod, fieldNameToAttribute, setterNameToAttribute, requiredUpdatableAttributes);
+                        }
+                    }
+                }
+            } while (!requiredUpdatableAttributes.isEmpty() && (c = c.getSuperclass()) != null);
+        } catch (Exception ex) {
+            Logger.getLogger(ManagedViewTypeImpl.class.getName()).log(Level.WARNING, "Bytecode analysis failed. Please report this issue!", ex);
+        }
+    }
+
+    private static String getSimpleGetterFieldName(CtMethod method) throws Exception {
+        String fieldName = null;
+        CodeIterator ci = method.getMethodInfo().getCodeAttribute().iterator();
+        while (ci.hasNext()) {
+            int index = ci.next();
+            int op = ci.byteAt(index);
+            switch (op) {
+                //CHECKSTYLE:OFF: FallThrough
+                case Bytecode.GETFIELD:
+                    ConstPool cp = method.getMethodInfo().getConstPool();
+                    int cpIndex = ci.u16bitAt(index + 1);
+                    if (cp.getFieldrefClass(ci.u16bitAt(index + 1)) != cp.getThisClassInfo()) {
+                        break;
+                    }
+                    fieldName = cp.getFieldrefName(cpIndex);
+                case Bytecode.ALOAD:
+                case Bytecode.ALOAD_0:
+                case Bytecode.CHECKCAST:
+                case Bytecode.RET:
+                case Bytecode.RETURN:
+                case Bytecode.ARETURN:
+                case Bytecode.DRETURN:
+                case Bytecode.FRETURN:
+                case Bytecode.IRETURN:
+                case Bytecode.LRETURN:
+                    continue;
+                default:
+                    break;
+                //CHECKSTYLE:ON: FallThrough
+            }
+            return null;
+        }
+
+        return fieldName;
+    }
+
+    private static String getSimpleSetterFieldName(CtMethod method) throws Exception {
+        String fieldName = null;
+        CodeIterator ci = method.getMethodInfo().getCodeAttribute().iterator();
+        while (ci.hasNext()) {
+            int index = ci.next();
+            int op = ci.byteAt(index);
+            switch (op) {
+                //CHECKSTYLE:OFF: FallThrough
+                case Bytecode.PUTFIELD:
+                    ConstPool cp = method.getMethodInfo().getConstPool();
+                    int cpIndex = ci.u16bitAt(index + 1);
+                    if (cp.getFieldrefClass(cpIndex) != cp.getThisClassInfo()) {
+                        break;
+                    }
+                    fieldName = cp.getFieldrefName(cpIndex);
+                case Bytecode.ALOAD:
+                case Bytecode.ALOAD_0:
+                case Bytecode.ALOAD_1:
+                case Bytecode.DLOAD_1:
+                case Bytecode.FLOAD_1:
+                case Bytecode.ILOAD_1:
+                case Bytecode.LLOAD_1:
+                case Bytecode.CHECKCAST:
+                case Bytecode.RET:
+                case Bytecode.RETURN:
+                    continue;
+                default:
+                    break;
+                //CHECKSTYLE:ON: FallThrough
+            }
+            return null;
+        }
+
+        return fieldName;
+    }
+
+    private static CtClass[] removeAssignedAttributes(List<CtClass> superClasses, CtBehavior method, Map<String, String> fieldNameToAttribute, Map<String, String> setterNameToAttribute, Set<String> requiredUpdatableAttributes) throws Exception {
+        CtClass[] params = new CtClass[0];
+        ConstPool cp = method.getMethodInfo().getConstPool();
+        CodeIterator ci = method.getMethodInfo().getCodeAttribute().iterator();
+        while (ci.hasNext()) {
+            int index = ci.next();
+            int op = ci.byteAt(index);
+            String methodName;
+            String methodClassName;
+            boolean isInterfaceMethod;
+            int methodCpIdx;
+            switch (op) {
+                //CHECKSTYLE:OFF: FallThrough
+                case Bytecode.PUTFIELD:
+                    int cpIndex = ci.u16bitAt(index + 1);
+                    if (cp.getFieldrefClass(cpIndex) != cp.getThisClassInfo()) {
+                        String fieldrefClassName = cp.getFieldrefClassName(cpIndex);
+                        boolean fromSuper = false;
+                        for (CtClass ctClass : superClasses) {
+                            if (fieldrefClassName.equals(ctClass.getName())) {
+                                fromSuper = true;
+                                break;
+                            }
+                        }
+
+                        if (!fromSuper) {
+                            continue;
+                        }
+                    }
+                    String attribute = fieldNameToAttribute.get(cp.getFieldrefName(cpIndex));
+                    if (attribute != null) {
+                        requiredUpdatableAttributes.remove(attribute);
+                        if (requiredUpdatableAttributes.isEmpty()) {
+                            return null;
+                        }
+                    }
+                    continue;
+                case Bytecode.INVOKEINTERFACE:
+                    methodCpIdx = ci.u16bitAt(index + 1);
+                    methodClassName = cp.getInterfaceMethodrefClassName(methodCpIdx);
+                    methodName = cp.getInterfaceMethodrefName(methodCpIdx);
+                    isInterfaceMethod = true;
+                    break;
+                case Bytecode.INVOKEVIRTUAL:
+                    methodCpIdx = ci.u16bitAt(index + 1);
+                    methodClassName = cp.getMethodrefClassName(methodCpIdx);
+                    methodName = cp.getMethodrefName(methodCpIdx);
+                    isInterfaceMethod = false;
+                    break;
+                case Bytecode.INVOKESPECIAL:
+                    methodCpIdx = ci.u16bitAt(index + 1);
+                    methodClassName = cp.getMethodrefClassName(methodCpIdx);
+                    methodName = cp.getMethodrefName(methodCpIdx);
+                    isInterfaceMethod = false;
+                    if ("<init>".equals(methodName)) {
+                        if (method.getDeclaringClass().getSuperclass().getName().equals(methodClassName)) {
+                            params = Descriptor.getParameterTypes(cp.getMethodrefType(methodCpIdx), method.getDeclaringClass().getClassPool());
+                        }
+                        continue;
+                    }
+                    break;
+                default:
+                    continue;
+                //CHECKSTYLE:ON: FallThrough
+            }
+
+            String attributeName = setterNameToAttribute.get(methodName);
+            if (attributeName != null) {
+                boolean fromSuper = false;
+                for (CtClass ctClass : superClasses) {
+                    if (methodClassName.equals(ctClass.getName())) {
+                        fromSuper = true;
+                        break;
+                    }
+                }
+
+                if (fromSuper) {
+                    requiredUpdatableAttributes.remove(attributeName);
+                    if (requiredUpdatableAttributes.isEmpty()) {
+                        return null;
+                    }
+                } else if (isInterfaceMethod) {
+                    List<CtClass> interfaces = new ArrayList<>(superClasses);
+                    while (!interfaces.isEmpty()) {
+                        CtClass ctClass = interfaces.remove(interfaces.size() - 1);
+                        if (methodClassName.equals(ctClass.getName())) {
+                            fromSuper = true;
+                            break;
+                        } else {
+                            for (CtClass ctClassInterface : ctClass.getInterfaces()) {
+                                interfaces.add(ctClassInterface);
+                            }
+                        }
+                    }
+
+                    if (fromSuper) {
+                        requiredUpdatableAttributes.remove(attributeName);
+                        if (requiredUpdatableAttributes.isEmpty()) {
+                            return null;
+                        }
+                    }
+                }
+            }
+        }
+        return params;
+    }
+
+    private static CtClass[] findCalledConstructor(CtBehavior method) throws Exception {
+        ConstPool cp = method.getMethodInfo().getConstPool();
+        CodeIterator ci = method.getMethodInfo().getCodeAttribute().iterator();
+        while (ci.hasNext()) {
+            int index = ci.next();
+            if (ci.byteAt(index) == Bytecode.INVOKESPECIAL) {
+                int methodCpIdx = ci.u16bitAt(index + 1);
+                if (cp.getMethodrefClass(methodCpIdx) == cp.getThisClassInfo() && "<init>".equals(cp.getMethodrefName(methodCpIdx))) {
+                    return Descriptor.getParameterTypes(cp.getMethodrefType(methodCpIdx), method.getDeclaringClass().getClassPool());
+                }
+            }
+        }
+        return new CtClass[0];
+    }
+
     private static void removeRequiredUpdatableAttribute(Set<String> requiredUpdatableAttributes, Set<String> mappedColumns, ExtendedManagedType<?> extendedManagedType, AbstractMethodAttribute<?, ?> attribute) {
         removeRequiredUpdatableAttribute(requiredUpdatableAttributes, mappedColumns, extendedManagedType, attribute.getMapping());
     }
@@ -356,10 +702,13 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
     private static void removeRequiredUpdatableAttribute(Set<String> requiredUpdatableAttributes, Set<String> mappedColumns, ExtendedManagedType<?> extendedManagedType, String mapping) {
         requiredUpdatableAttributes.remove(mapping);
         ExtendedAttribute<?, ?> extendedAttribute = extendedManagedType.getAttributes().get(mapping);
-        if (extendedAttribute != null) {
+        if (!requiredUpdatableAttributes.isEmpty() && extendedAttribute != null) {
             mappedColumns.addAll(Arrays.asList(extendedAttribute.getColumnNames()));
             for (ExtendedAttribute<?, ?> columnEquivalentAttribute : extendedAttribute.getColumnEquivalentAttributes()) {
                 requiredUpdatableAttributes.remove(columnEquivalentAttribute.getAttributePathString());
+                if (requiredUpdatableAttributes.isEmpty()) {
+                    return;
+                }
             }
             if (extendedAttribute.getAttribute() instanceof SingularAttribute<?, ?>) {
                 SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) extendedAttribute.getAttribute();
@@ -370,6 +719,93 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
                 }
             }
         }
+    }
+
+    private void validateMethods(final MetamodelBuildingContext context) {
+        Set<Class<?>> superTypes = null;
+        List<Class<?>> allowedParameterTypes = null;
+        List<Class<?>> managerTypes = Arrays.asList(EntityViewManager.class, EntityManager.class);
+        if (postCreateMethod != null) {
+            Class<?>[] parameterTypes = postCreateMethod.getParameterTypes();
+            if (!void.class.equals(postCreateMethod.getReturnType()) || parameterTypes.length > 1 || parameterTypes.length == 1 && !EntityViewManager.class.equals(parameterTypes[0])) {
+                context.addError("Invalid signature for post create method at '" + javaType.getName() + "." + postCreateMethod.getName() + "'! A method annotated with @PostCreate must return void and accept no or a single EntityViewManager argument!");
+            }
+        }
+        if (postConvertMethod != null) {
+            Class<?>[] parameterTypes = postConvertMethod.getParameterTypes();
+            if (!void.class.equals(postConvertMethod.getReturnType()) || parameterTypes.length > 2 || !Arrays.asList(EntityViewManager.class, Object.class).containsAll(Arrays.asList(parameterTypes))) {
+                context.addError("Invalid signature for post convert method at '" + javaType.getName() + "." + postConvertMethod.getName() + "'! A method annotated with @PostConvert must return void and accept at most 2 arguments, an EntityViewManager and the source entity view argument of type Object!");
+            }
+        }
+        if (prePersistMethod != null) {
+            superTypes = jpaManagedSuperTypes(superTypes);
+            allowedParameterTypes = allowedParameterTypes(allowedParameterTypes, superTypes);
+            Class<?>[] parameterTypes = prePersistMethod.getParameterTypes();
+            if (!void.class.equals(prePersistMethod.getReturnType()) || parameterTypes.length > 3 || !allowedParameterTypes.containsAll(Arrays.asList(parameterTypes))) {
+                context.addError("Invalid signature for pre persist method at '" + javaType.getName() + "." + prePersistMethod.getName() + "'! A method annotated with @PrePersist must return void and accept at most 3 arguments, an EntityViewManager, an EntityManager and one of the compatible entity types: " + superTypes);
+            }
+        }
+        if (postPersistMethod != null) {
+            superTypes = jpaManagedSuperTypes(superTypes);
+            allowedParameterTypes = allowedParameterTypes(allowedParameterTypes, superTypes);
+            Class<?>[] parameterTypes = postPersistMethod.getParameterTypes();
+            if (!void.class.equals(postPersistMethod.getReturnType()) || parameterTypes.length > 3 || !allowedParameterTypes.containsAll(Arrays.asList(parameterTypes))) {
+                context.addError("Invalid signature for post persist method at '" + javaType.getName() + "." + postPersistMethod.getName() + "'! A method annotated with @PostPersist must return void and accept at most 3 arguments, an EntityViewManager, an EntityManager and one of the compatible entity types: " + superTypes);
+            }
+        }
+        if (preUpdateMethod != null) {
+            Class<?>[] parameterTypes = preUpdateMethod.getParameterTypes();
+            if (!void.class.equals(preUpdateMethod.getReturnType()) || parameterTypes.length > 2 || !managerTypes.containsAll(Arrays.asList(parameterTypes))) {
+                context.addError("Invalid signature for pre update method at '" + javaType.getName() + "." + preUpdateMethod.getName() + "'! A method annotated with @PreUpdate must return void and accept at most 2 arguments, an EntityViewManager and an EntityManager!");
+            }
+        }
+        if (postUpdateMethod != null) {
+            Class<?>[] parameterTypes = postUpdateMethod.getParameterTypes();
+            if (!void.class.equals(postUpdateMethod.getReturnType()) || parameterTypes.length > 2 || !managerTypes.containsAll(Arrays.asList(parameterTypes))) {
+                context.addError("Invalid signature for post update method at '" + javaType.getName() + "." + postUpdateMethod.getName() + "'! A method annotated with @PostUpdate must return void and accept at most 2 arguments, an EntityViewManager and an EntityManager!");
+            }
+        }
+        if (preRemoveMethod != null) {
+            Class<?>[] parameterTypes = preRemoveMethod.getParameterTypes();
+            if (!void.class.equals(preRemoveMethod.getReturnType()) && !boolean.class.equals(preRemoveMethod.getReturnType()) || parameterTypes.length > 2 || !managerTypes.containsAll(Arrays.asList(parameterTypes))) {
+                context.addError("Invalid signature for pre remove method at '" + javaType.getName() + "." + preRemoveMethod.getName() + "'! A method annotated with @PreRemove must return void or boolean and accept at most 2 arguments, an EntityViewManager and an EntityManager!");
+            }
+        }
+        if (postRemoveMethod != null) {
+            Class<?>[] parameterTypes = postRemoveMethod.getParameterTypes();
+            if (!void.class.equals(postRemoveMethod.getReturnType()) || parameterTypes.length > 2 || !managerTypes.containsAll(Arrays.asList(parameterTypes))) {
+                context.addError("Invalid signature for post remove method at '" + javaType.getName() + "." + postRemoveMethod.getName() + "'! A method annotated with @PostRemove must return void and accept at most 2 arguments, an EntityViewManager and an EntityManager!");
+            }
+        }
+        if (postCommitMethod != null) {
+            Class<?>[] parameterTypes = postCommitMethod.getParameterTypes();
+            if (!void.class.equals(postCommitMethod.getReturnType()) || parameterTypes.length > 2 || !managerTypes.containsAll(Arrays.asList(parameterTypes))) {
+                context.addError("Invalid signature for post commit method at '" + javaType.getName() + "." + postCommitMethod.getName() + "'! A method annotated with @PostCommit must return void and accept at most 2 arguments, an EntityViewManager and an EntityManager!");
+            }
+        }
+        if (postRollbackMethod != null) {
+            Class<?>[] parameterTypes = postRollbackMethod.getParameterTypes();
+            if (!void.class.equals(postRollbackMethod.getReturnType()) || parameterTypes.length > 2 || !managerTypes.containsAll(Arrays.asList(parameterTypes))) {
+                context.addError("Invalid signature for post rollback method at '" + javaType.getName() + "." + postRollbackMethod.getName() + "'! A method annotated with @PostRollback must return void and accept at most 2 arguments, an EntityViewManager and an EntityManager!");
+            }
+        }
+    }
+
+    private Set<Class<?>> jpaManagedSuperTypes(Set<Class<?>> superTypes) {
+        if (superTypes == null) {
+            superTypes = ReflectionUtils.getSuperTypes(jpaManagedType.getJavaType());
+        }
+        return superTypes;
+    }
+
+    private List<Class<?>> allowedParameterTypes(List<Class<?>> allowedParameterTypes, Set<Class<?>> superTypes) {
+        if (allowedParameterTypes == null) {
+            allowedParameterTypes = new ArrayList<>(superTypes.size() + 2);
+            allowedParameterTypes.add(EntityViewManager.class);
+            allowedParameterTypes.add(EntityManager.class);
+            allowedParameterTypes.addAll(superTypes);
+        }
+        return allowedParameterTypes;
     }
 
     @Override
@@ -479,6 +915,61 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
     @Override
     public Method getPostCreateMethod() {
         return postCreateMethod;
+    }
+
+    @Override
+    public Method getPostConvertMethod() {
+        return postConvertMethod;
+    }
+
+    @Override
+    public Method getPrePersistMethod() {
+        return prePersistMethod;
+    }
+
+    @Override
+    public Method getPostPersistMethod() {
+        return postPersistMethod;
+    }
+
+    @Override
+    public Method getPreUpdateMethod() {
+        return preUpdateMethod;
+    }
+
+    @Override
+    public Method getPostUpdateMethod() {
+        return postUpdateMethod;
+    }
+
+    @Override
+    public Method getPreRemoveMethod() {
+        return preRemoveMethod;
+    }
+
+    @Override
+    public Method getPostRemoveMethod() {
+        return postRemoveMethod;
+    }
+
+    @Override
+    public Method getPostRollbackMethod() {
+        return postRollbackMethod;
+    }
+
+    @Override
+    public Method getPostCommitMethod() {
+        return postCommitMethod;
+    }
+
+    @Override
+    public Set<ViewTransition> getPostRollbackTransitions() {
+        return postRollbackTransitions;
+    }
+
+    @Override
+    public Set<ViewTransition> getPostCommitTransitions() {
+        return postCommitTransitions;
     }
 
     @Override

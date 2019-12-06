@@ -17,6 +17,8 @@
 package com.blazebit.persistence.integration.view.spring.impl;
 
 import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.EntityViewListener;
+import com.blazebit.persistence.view.EntityViewListeners;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.classreading.MetadataReader;
@@ -44,11 +46,15 @@ public class EntityViewComponentProvider extends ClassPathScanningCandidateCompo
             }
         } else {
             super.addIncludeFilter(new AnnotationTypeFilter(EntityView.class, false, false));
+            super.addIncludeFilter(new AnnotationTypeFilter(EntityViewListener.class, false, false));
+            super.addIncludeFilter(new AnnotationTypeFilter(EntityViewListeners.class, false, false));
         }
         super.addExcludeFilter(new TypeFilter() {
             @Override
             public boolean match(MetadataReader metadataReader, MetadataReaderFactory metadataReaderFactory) throws IOException {
-                return !metadataReader.getAnnotationMetadata().hasAnnotation(EntityView.class.getName());
+                return !metadataReader.getAnnotationMetadata().hasAnnotation(EntityView.class.getName())
+                        && !metadataReader.getAnnotationMetadata().hasAnnotation(EntityViewListener.class.getName())
+                        && !metadataReader.getAnnotationMetadata().hasAnnotation(EntityViewListeners.class.getName());
             }
         });
     }

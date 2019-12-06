@@ -20,6 +20,7 @@ import com.blazebit.persistence.view.CTEProvider;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.LockMode;
+import com.blazebit.persistence.view.ViewTransition;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
@@ -260,6 +261,61 @@ public class ConvertedViewType<X> implements ViewTypeImplementor<X> {
     @Override
     public Method getPostCreateMethod() {
         return delegate.getPostCreateMethod();
+    }
+
+    @Override
+    public Method getPostConvertMethod() {
+        return delegate.getPostConvertMethod();
+    }
+
+    @Override
+    public Method getPrePersistMethod() {
+        return delegate.getPrePersistMethod();
+    }
+
+    @Override
+    public Method getPostPersistMethod() {
+        return delegate.getPostPersistMethod();
+    }
+
+    @Override
+    public Method getPreUpdateMethod() {
+        return delegate.getPreUpdateMethod();
+    }
+
+    @Override
+    public Method getPostUpdateMethod() {
+        return delegate.getPostUpdateMethod();
+    }
+
+    @Override
+    public Method getPreRemoveMethod() {
+        return delegate.getPreRemoveMethod();
+    }
+
+    @Override
+    public Method getPostRemoveMethod() {
+        return delegate.getPostRemoveMethod();
+    }
+
+    @Override
+    public Method getPostRollbackMethod() {
+        return delegate.getPostRollbackMethod();
+    }
+
+    @Override
+    public Method getPostCommitMethod() {
+        return delegate.getPostCommitMethod();
+    }
+
+    @Override
+    public Set<ViewTransition> getPostRollbackTransitions() {
+        return delegate.getPostRollbackTransitions();
+    }
+
+    @Override
+    public Set<ViewTransition> getPostCommitTransitions() {
+        return delegate.getPostCommitTransitions();
     }
 
     @Override

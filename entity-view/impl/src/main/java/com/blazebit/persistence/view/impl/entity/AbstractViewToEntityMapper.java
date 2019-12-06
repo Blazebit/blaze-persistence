@@ -185,7 +185,7 @@ public abstract class AbstractViewToEntityMapper implements ViewToEntityMapper {
     }
 
     @Override
-    public Query createUpdateQuery(UpdateContext context, Object view, DirtyAttributeFlusher<?, ?, ?> nestedGraphNode) {
+    public Query createUpdateQuery(UpdateContext context, MutableStateTrackable view, DirtyAttributeFlusher<?, ?, ?> nestedGraphNode) {
         return null;
     }
 

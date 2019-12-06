@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.spi;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.LockMode;
+import com.blazebit.persistence.view.ViewTransition;
 
 import javax.persistence.EntityManager;
 import java.lang.reflect.Method;
@@ -136,6 +137,182 @@ public interface EntityViewMapping {
      * @param postCreateMethod The method
      */
     public void setPostCreateMethod(Method postCreateMethod);
+
+    /**
+     * Returns the post convert method or <code>null</code> if there is none.
+     *
+     * @return The post convert method
+     * @since 1.4.0
+     */
+    public Method getPostConvertMethod();
+
+    /**
+     * Sets the post convert method.
+     *
+     * @param postConvertMethod The method
+     * @since 1.4.0
+     */
+    public void setPostConvertMethod(Method postConvertMethod);
+
+    /**
+     * Returns the pre persist method or <code>null</code> if there is none.
+     *
+     * @return The pre persist method
+     * @since 1.4.0
+     */
+    public Method getPrePersistMethod();
+
+    /**
+     * Sets the pre persist method.
+     *
+     * @param prePersistMethod The method
+     * @since 1.4.0
+     */
+    public void setPrePersistMethod(Method prePersistMethod);
+
+    /**
+     * Returns the post persist method or <code>null</code> if there is none.
+     *
+     * @return The post persist method
+     * @since 1.4.0
+     */
+    public Method getPostPersistMethod();
+
+    /**
+     * Sets the post persist method.
+     *
+     * @param postPersistMethod The method
+     * @since 1.4.0
+     */
+    public void setPostPersistMethod(Method postPersistMethod);
+
+    /**
+     * Returns the pre update method or <code>null</code> if there is none.
+     *
+     * @return The pre update method
+     * @since 1.4.0
+     */
+    public Method getPreUpdateMethod();
+
+    /**
+     * Sets the pre update method.
+     *
+     * @param preUpdateMethod The method
+     * @since 1.4.0
+     */
+    public void setPreUpdateMethod(Method preUpdateMethod);
+
+    /**
+     * Returns the post update method or <code>null</code> if there is none.
+     *
+     * @return The post update method
+     * @since 1.4.0
+     */
+    public Method getPostUpdateMethod();
+
+    /**
+     * Sets the post update method.
+     *
+     * @param postUpdateMethod The method
+     * @since 1.4.0
+     */
+    public void setPostUpdateMethod(Method postUpdateMethod);
+
+    /**
+     * Returns the pre remove method or <code>null</code> if there is none.
+     *
+     * @return The pre remove method
+     * @since 1.4.0
+     */
+    public Method getPreRemoveMethod();
+
+    /**
+     * Sets the pre remove method.
+     *
+     * @param preRemoveMethod The method
+     * @since 1.4.0
+     */
+    public void setPreRemoveMethod(Method preRemoveMethod);
+
+    /**
+     * Returns the post remove method or <code>null</code> if there is none.
+     *
+     * @return The post remove method
+     * @since 1.4.0
+     */
+    public Method getPostRemoveMethod();
+
+    /**
+     * Sets the post remove method.
+     *
+     * @param postRemoveMethod The method
+     * @since 1.4.0
+     */
+    public void setPostRemoveMethod(Method postRemoveMethod);
+
+    /**
+     * Returns the post rollback method or <code>null</code> if there is none.
+     *
+     * @return The post rollback method
+     * @since 1.4.0
+     */
+    public Method getPostRollbackMethod();
+
+    /**
+     * Sets the post rollback method.
+     *
+     * @param postRollbackMethod The method
+     * @since 1.4.0
+     */
+    public void setPostRollbackMethod(Method postRollbackMethod);
+
+    /**
+     * Returns the post commit method or <code>null</code> if there is none.
+     *
+     * @return The post commit method
+     * @since 1.4.0
+     */
+    public Method getPostCommitMethod();
+
+    /**
+     * Sets the post commit method.
+     *
+     * @param postCommitMethod The method
+     * @since 1.4.0
+     */
+    public void setPostCommitMethod(Method postCommitMethod);
+
+    /**
+     * Returns the post rollback view transitions or <code>null</code> if there is none.
+     *
+     * @return The post rollback view transitions
+     * @since 1.4.0
+     */
+    public ViewTransition[] getPostRollbackTransitions();
+
+    /**
+     * Sets the post rollback view transitions.
+     *
+     * @param viewTransitions The view transitions
+     * @since 1.4.0
+     */
+    public void setPostRollbackTransitions(ViewTransition[] viewTransitions);
+
+    /**
+     * Returns the post commit view transitions or <code>null</code> if there is none.
+     *
+     * @return The post commit view transitions
+     * @since 1.4.0
+     */
+    public ViewTransition[] getPostCommitTransitions();
+
+    /**
+     * Sets the post commit view transitions.
+     *
+     * @param viewTransitions The view transitions
+     * @since 1.4.0
+     */
+    public void setPostCommitTransitions(ViewTransition[] viewTransitions);
 
     /**
      * Returns whether the entity view should be creatable i.e. support persist via {@link com.blazebit.persistence.view.EntityViewManager#save(EntityManager, Object)}.

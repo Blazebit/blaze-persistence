@@ -23,6 +23,7 @@ import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
 import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.view.impl.update.UpdateQueryFactory;
 
 import javax.persistence.Query;
 import java.util.Collections;
@@ -119,7 +120,7 @@ public class EmbeddableAttributeFlusher<E, V> extends EmbeddableAttributeFetchGr
     }
 
     @Override
-    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
+    public Query flushQuery(UpdateContext context, String parameterPrefix, UpdateQueryFactory queryFactory, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
         try {
             String parameter;
             if (parameterPrefix == null) {
@@ -131,11 +132,12 @@ public class EmbeddableAttributeFlusher<E, V> extends EmbeddableAttributeFetchGr
                 query.setParameter(parameter, viewToEntityMapper.applyToEntity(context, null, value));
             } else if (value == null || nestedGraphNode != viewToEntityMapper.getFullGraphNode()) {
                 // When the nested graph node does not equal the full graph node, this is a state based dirty flusher
-                nestedGraphNode.flushQuery(context, parameter, query, ownerView, view, value, ownerAwareDeleter);
+                nestedGraphNode.flushQuery(context, parameter, queryFactory, query, ownerView, view, value, ownerAwareDeleter);
             } else {
                 // In here, we might be in the executePersist path so we have to consider the runtime type of the value and can't simply invoke the full graph node of the declared type
-                ((DirtyAttributeFlusher<?, E, V>) viewToEntityMapper.getUpdater(value).getFullGraphNode()).flushQuery(context, parameter, query, ownerView, view, value, ownerAwareDeleter);
+                ((DirtyAttributeFlusher<?, E, V>) viewToEntityMapper.getUpdater(value).getFullGraphNode()).flushQuery(context, parameter, queryFactory, query, ownerView, view, value, ownerAwareDeleter);
             }
+            return query;
         } finally {
             if (value instanceof MutableStateTrackable) {
                 MutableStateTrackable updatableProxy = (MutableStateTrackable) value;
@@ -262,7 +264,7 @@ public class EmbeddableAttributeFlusher<E, V> extends EmbeddableAttributeFetchGr
     }
 
     @Override
-    public DirtyAttributeFlusher<EmbeddableAttributeFlusher<E, V>, E, V> getDirtyFlusher(UpdateContext context, Object view, Object initial, Object current) {
+    public DirtyAttributeFlusher<EmbeddableAttributeFlusher<E, V>, E, V> getDirtyFlusher(UpdateContext context, Object view, Object initial, Object current, List<Runnable> preFlushListeners) {
         if (isPassThrough()) {
             return null;
         }

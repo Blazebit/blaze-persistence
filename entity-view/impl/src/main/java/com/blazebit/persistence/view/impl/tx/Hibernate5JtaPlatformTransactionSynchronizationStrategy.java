@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.tx;
 
 import com.blazebit.persistence.view.spi.TransactionAccess;
+import com.blazebit.persistence.view.spi.TransactionSupport;
 import com.blazebit.reflection.ReflectionUtils;
 
 import javax.transaction.Status;
@@ -28,7 +29,7 @@ import java.lang.reflect.Method;
  * @author Moritz Becker
  * @since 1.4.0
  */
-public class Hibernate5JtaPlatformTransactionSynchronizationStrategy implements TransactionAccess {
+public class Hibernate5JtaPlatformTransactionSynchronizationStrategy implements TransactionAccess, TransactionSupport {
 
     private final Object jtaPlatform;
     private final Object jtaTransactionManager;
@@ -73,6 +74,12 @@ public class Hibernate5JtaPlatformTransactionSynchronizationStrategy implements 
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void transactional(Runnable runnable) {
+        // In resource local mode, we have no global transaction state
+        runnable.run();
     }
 
 }

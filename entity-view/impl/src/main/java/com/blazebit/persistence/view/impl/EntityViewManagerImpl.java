@@ -38,7 +38,19 @@ import com.blazebit.persistence.view.ConfigurationProperties;
 import com.blazebit.persistence.view.ConvertOption;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
+import com.blazebit.persistence.view.FlushOperationBuilder;
+import com.blazebit.persistence.view.PostCommitListener;
+import com.blazebit.persistence.view.PostPersistEntityListener;
+import com.blazebit.persistence.view.PostPersistListener;
+import com.blazebit.persistence.view.PostRemoveListener;
+import com.blazebit.persistence.view.PostRollbackListener;
+import com.blazebit.persistence.view.PostUpdateListener;
+import com.blazebit.persistence.view.PrePersistEntityListener;
+import com.blazebit.persistence.view.PrePersistListener;
+import com.blazebit.persistence.view.PreRemoveListener;
+import com.blazebit.persistence.view.PreUpdateListener;
 import com.blazebit.persistence.view.ViewFilterProvider;
+import com.blazebit.persistence.view.ViewTransition;
 import com.blazebit.persistence.view.change.SingularChangeModel;
 import com.blazebit.persistence.view.filter.ContainsFilter;
 import com.blazebit.persistence.view.filter.ContainsIgnoreCaseFilter;
@@ -84,21 +96,40 @@ import com.blazebit.persistence.view.impl.type.DefaultBasicUserTypeRegistry;
 import com.blazebit.persistence.view.impl.update.DefaultUpdateContext;
 import com.blazebit.persistence.view.impl.update.EntityViewUpdater;
 import com.blazebit.persistence.view.impl.update.EntityViewUpdaterImpl;
+import com.blazebit.persistence.view.impl.update.Listeners;
 import com.blazebit.persistence.view.impl.update.SimpleUpdateContext;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.view.impl.update.listener.ViewInstancePostCommitListener;
+import com.blazebit.persistence.view.impl.update.listener.ViewInstancePostPersistEntityListener;
+import com.blazebit.persistence.view.impl.update.listener.ViewInstancePostRemoveListener;
+import com.blazebit.persistence.view.impl.update.listener.ViewInstancePostRollbackListener;
+import com.blazebit.persistence.view.impl.update.listener.ViewInstancePostUpdateListener;
+import com.blazebit.persistence.view.impl.update.listener.ViewInstancePrePersistEntityListener;
+import com.blazebit.persistence.view.impl.update.listener.ViewInstancePreRemoveListener;
+import com.blazebit.persistence.view.impl.update.listener.ViewInstancePreUpdateListener;
 import com.blazebit.persistence.view.impl.update.flush.CompositeAttributeFlusher;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
+import com.blazebit.persistence.view.metamodel.MapAttribute;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
+import com.blazebit.persistence.view.metamodel.MethodAttribute;
+import com.blazebit.persistence.view.metamodel.PluralAttribute;
+import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
+import com.blazebit.persistence.view.spi.TransactionSupport;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
+import com.blazebit.reflection.ReflectionUtils;
 
 import javax.persistence.EntityManager;
 import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
-import javax.persistence.metamodel.SingularAttribute;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.TypeVariable;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -112,6 +143,8 @@ import java.util.concurrent.ConcurrentMap;
  */
 public class EntityViewManagerImpl implements EntityViewManager {
 
+    private static final Set<ViewTransition> VIEW_TRANSITIONS = EnumSet.allOf(ViewTransition.class);
+
     private final CriteriaBuilderFactory cbf;
     private final JpaProvider jpaProvider;
     private final DbmsDialect dbmsDialect;
@@ -120,6 +153,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     private final AttributeAccessor entityIdAccessor;
     private final ViewMetamodelImpl metamodel;
     private final ProxyFactory proxyFactory;
+    private final TransactionSupport transactionSupport;
     private final boolean supportsTransientReference;
     private final ConcurrentMap<ViewTypeObjectBuilderTemplate.Key, ViewTypeObjectBuilderTemplate<?>> objectBuilderCache;
     private final ConcurrentMap<ManagedViewType<?>, EntityViewUpdaterImpl> entityViewUpdaterCache;
@@ -127,8 +161,11 @@ public class EntityViewManagerImpl implements EntityViewManager {
     private final ConcurrentMap<ViewMapper.Key<?, ?>, ViewMapper<?, ?>> entityViewMappers;
     private final ConcurrentMap<Class<?>, Constructor<?>> createConstructorCache;
     private final ConcurrentMap<Class<?>, Constructor<?>> referenceConstructorCache;
+    private final ConcurrentMap<Class<?>, ListenerTypeInfo> listenerClassTypeInfo;
     private final Map<String, Class<? extends AttributeFilterProvider>> filterMappings;
-    
+    private final Map<Class<?>, Set<Class<?>>> javaTypeToManagedTypeJavaTypes;
+    private final Map<Class<?>, Listeners> listeners; // A mapping from JPA managed type java type and entity view java type to listeners
+    private final Map<Class<?>, Set<Class<?>>> convertibleManagedViewTypes;
     private final boolean unsafeDisabled;
     private final boolean strictCascadingCheck;
 
@@ -143,6 +180,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         this.unsafeDisabled = !Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.PROXY_UNSAFE_ALLOWED)));
         this.strictCascadingCheck = Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.UPDATER_STRICT_CASCADING_CHECK)));
         this.proxyFactory = new ProxyFactory(unsafeDisabled, strictCascadingCheck, packageOpener);
+        this.transactionSupport = config.getTransactionSupport();
 
         boolean validateManagedTypes = !Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.MANAGED_TYPE_VALIDATION_DISABLED)));
         boolean validateExpressions = !Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.EXPRESSION_VALIDATION_DISABLED)));
@@ -193,9 +231,115 @@ public class EntityViewManagerImpl implements EntityViewManager {
         this.entityViewMappers = new ConcurrentHashMap<>();
         this.createConstructorCache = new ConcurrentHashMap<>();
         this.referenceConstructorCache = new ConcurrentHashMap<>();
+        this.listenerClassTypeInfo = new ConcurrentHashMap<>();
         this.filterMappings = new HashMap<>();
         registerFilterMappings();
-        
+
+        // Map all java types part of the JPA Managed types to JPA Managed types
+        // We lookup the registration keys for listeners by java type with this map
+        Map<Class<?>, Set<Class<?>>> javaTypeToManagedTypeJavaTypes = new HashMap<>();
+        for (ManagedType<?> managedType : entityMetamodel.getManagedTypes()) {
+            Class<?> javaType = managedType.getJavaType();
+            if (javaType != null) {
+                for (Class<?> superType : ReflectionUtils.getSuperTypes(javaType)) {
+                    Set<Class<?>> classes = javaTypeToManagedTypeJavaTypes.get(superType);
+                    if (classes == null) {
+                        classes = new HashSet<>();
+                        javaTypeToManagedTypeJavaTypes.put(superType, classes);
+                    }
+                    classes.add(javaType);
+                }
+            }
+        }
+
+        this.javaTypeToManagedTypeJavaTypes = javaTypeToManagedTypeJavaTypes;
+
+        Map<Class<?>, Set<Class<?>>> convertibleManagedViewTypes = new HashMap<>();
+        Map<Class<?>, Listeners> listeners = new HashMap<>();
+        for (ManagedViewType<?> managedView : viewMetamodel.getManagedViews()) {
+            Class<?> javaType = managedView.getJavaType();
+            Listeners l = new Listeners(managedView.getEntityClass());
+            listeners.put(javaType, l);
+            if (managedView.getPrePersistMethod() != null) {
+                l.addPrePersistEntityListener(javaType, new ViewInstancePrePersistEntityListener(managedView.getPrePersistMethod()));
+            }
+            if (managedView.getPostPersistMethod() != null) {
+                l.addPostPersistEntityListener(javaType, new ViewInstancePostPersistEntityListener(managedView.getPostPersistMethod()));
+            }
+            if (managedView.getPreUpdateMethod() != null) {
+                l.addPreUpdateListener(javaType, new ViewInstancePreUpdateListener(managedView.getPreUpdateMethod()));
+            }
+            if (managedView.getPostUpdateMethod() != null) {
+                l.addPostUpdateListener(javaType, new ViewInstancePostUpdateListener(managedView.getPostUpdateMethod()));
+            }
+            if (managedView.getPreRemoveMethod() != null) {
+                l.addPreRemoveListener(javaType, new ViewInstancePreRemoveListener(managedView.getPreRemoveMethod()));
+            }
+            if (managedView.getPostRemoveMethod() != null) {
+                l.addPostRemoveListener(javaType, new ViewInstancePostRemoveListener(managedView.getPostRemoveMethod()));
+            }
+            if (managedView.getPostCommitMethod() != null) {
+                l.addPostCommitListener(javaType, new ViewInstancePostCommitListener(managedView.getPostCommitMethod()), managedView.getPostCommitTransitions());
+            }
+            if (managedView.getPostRollbackMethod() != null) {
+                l.addPostRollbackListener(javaType, new ViewInstancePostRollbackListener(managedView.getPostRollbackMethod()), managedView.getPostCommitTransitions());
+            }
+
+            HashSet<Class<?>> classes = new HashSet<>();
+            convertibleManagedViewTypes.put(javaType, classes);
+
+            for (ManagedViewType<?> targetType : viewMetamodel.getManagedViews()) {
+                if (isConvertible(managedView, targetType)) {
+                    classes.add(targetType.getJavaType());
+                }
+            }
+        }
+
+        this.convertibleManagedViewTypes = convertibleManagedViewTypes;
+
+        for (Map.Entry<EntityViewListenerClassKey, EntityViewListenerFactory<?>> entry : config.getBootContext().getViewListeners().entrySet()) {
+            for (Class<?> clazz : javaTypeToManagedTypeJavaTypes.get(entry.getKey().getEntityClass())) {
+                Class<?> entityViewClass = entry.getKey().getEntityViewClass();
+                ManagedViewTypeImplementor<?> managedView = metamodel.managedView(entityViewClass);
+                // The entity class for which the view type is mapped, must be a super type of the entity type for which to register the listener
+                // If the managed view is null i.e. maybe the type is Object, we want to register the listener for all entity and view types
+                if (managedView != null && !managedView.getEntityClass().isAssignableFrom(clazz)) {
+                    continue;
+                }
+                Listeners l = listeners.get(clazz);
+                if (l == null) {
+                    l = new Listeners(clazz);
+                    listeners.put(clazz, l);
+                }
+
+                Object listener = entry.getValue().createListener();
+                Class<?> kind = entry.getValue().getListenerKind();
+                if (PrePersistListener.class == kind) {
+                    l.addPrePersistListener(entityViewClass, (PrePersistListener<Object>) listener);
+                } else if (PrePersistEntityListener.class == kind) {
+                    l.addPrePersistEntityListener(entityViewClass, (PrePersistEntityListener<Object, Object>) listener);
+                } else if (PostPersistListener.class == kind) {
+                    l.addPostPersistListener(entityViewClass, (PostPersistListener<Object>) listener);
+                } else if (PostPersistEntityListener.class == kind) {
+                    l.addPostPersistEntityListener(entityViewClass, (PostPersistEntityListener<Object, Object>) listener);
+                } else if (PreUpdateListener.class == kind) {
+                    l.addPreUpdateListener(entityViewClass, (PreUpdateListener<Object>) listener);
+                } else if (PostUpdateListener.class == kind) {
+                    l.addPostUpdateListener(entityViewClass, (PostUpdateListener<Object>) listener);
+                } else if (PreRemoveListener.class == kind) {
+                    l.addPreRemoveListener(entityViewClass, (PreRemoveListener<Object>) listener);
+                } else if (PostRemoveListener.class == kind) {
+                    l.addPostRemoveListener(entityViewClass, (PostRemoveListener<Object>) listener);
+                } else if (PostCommitListener.class == kind) {
+                    l.addPostCommitListener(entityViewClass, (PostCommitListener<?>) listener, VIEW_TRANSITIONS);
+                } else if (PostRollbackListener.class == kind) {
+                    l.addPostRollbackListener(entityViewClass, (PostRollbackListener<?>) listener, VIEW_TRANSITIONS);
+                }
+            }
+        }
+
+        this.listeners = listeners;
+
         if (Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.TEMPLATE_EAGER_LOADING)))) {
             for (ViewTypeImpl<?> view : metamodel.views()) {
                 // TODO: Might be a good idea to let the view root be overridden or specified via the annotation
@@ -222,14 +366,128 @@ public class EntityViewManagerImpl implements EntityViewManager {
         }
     }
 
+    private boolean isConvertible(ManagedViewType<?> sourceType, ManagedViewType<?> targetType) {
+        if (targetType.getJavaType().isAssignableFrom(sourceType.getJavaType())) {
+            return true;
+        }
+        if (!targetType.getEntityClass().isAssignableFrom(sourceType.getEntityClass())) {
+            return false;
+        }
+        Set<MethodAttribute<?, ?>> attributes = (Set<MethodAttribute<?, ?>>) targetType.getAttributes();
+        if (attributes.size() > sourceType.getAttributes().size()) {
+            return false;
+        }
+        for (MethodAttribute<?, ?> targetAttribute : attributes) {
+            MethodAttribute<?, ?> sourceAttribute = sourceType.getAttribute(targetAttribute.getName());
+            if (sourceAttribute == null) {
+                return false;
+            }
+            if (targetAttribute.isCollection()) {
+                if (!sourceAttribute.isCollection()) {
+                    return false;
+                }
+                PluralAttribute<?, ?, ?> targetPluralAttribute = (PluralAttribute<?, ?, ?>) targetAttribute;
+                PluralAttribute<?, ?, ?> sourcePluralAttribute = (PluralAttribute<?, ?, ?>) sourceAttribute;
+                if (sourcePluralAttribute.getCollectionType() != targetPluralAttribute.getCollectionType()) {
+                    return false;
+                }
+                if (targetAttribute.isSubview()) {
+                    if (!sourceAttribute.isSubview() || !isConvertible((ManagedViewType<?>) sourcePluralAttribute.getElementType(), (ManagedViewType<?>) targetPluralAttribute.getElementType())) {
+                        return false;
+                    }
+
+                    if (targetPluralAttribute.getCollectionType() == PluralAttribute.CollectionType.MAP) {
+                        MapAttribute<?, ?, ?> targetMapAttr = (MapAttribute<?, ?, ?>) targetAttribute;
+                        MapAttribute<?, ?, ?> sourceMapAttr = (MapAttribute<?, ?, ?>) sourceAttribute;
+                        if (targetMapAttr.isKeySubview()) {
+                            if (!sourceMapAttr.isKeySubview() || !isConvertible((ManagedViewType<?>) sourceMapAttr.getKeyType(), (ManagedViewType<?>) targetMapAttr.getKeyType())) {
+                                return false;
+                            }
+                        } else {
+                            if (sourceMapAttr.isKeySubview() || targetMapAttr.getKeyType().getConvertedType() != sourceMapAttr.getKeyType().getConvertedType()) {
+                                return false;
+                            }
+                        }
+                    }
+                } else {
+                    if (sourceAttribute.isSubview() || targetPluralAttribute.getElementType().getConvertedType() != sourcePluralAttribute.getElementType().getConvertedType()) {
+                        return false;
+                    }
+                }
+            } else if (targetAttribute.isSubview()) {
+                return sourceAttribute.isSubview() && !sourceAttribute.isCollection() && isConvertible((ManagedViewType<?>) ((SingularAttribute<?, ?>) sourceAttribute).getType(), (ManagedViewType<?>) ((SingularAttribute<?, ?>) targetAttribute).getType());
+            } else if (targetAttribute.getConvertedJavaType() != sourceAttribute.getConvertedJavaType()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public CriteriaBuilderFactory getCriteriaBuilderFactory() {
         return cbf;
+    }
+
+    public Map<Class<?>, Listeners> getListeners() {
+        return listeners;
+    }
+
+    public Map<Class<?>, Set<Class<?>>> getConvertibleManagedViewTypes() {
+        return convertibleManagedViewTypes;
+    }
+
+    public ManagedViewType<?> getListenerManagedView(Class<?> listenerClass, Class<?> listenerKindClass) {
+        return getListenerTypeArguments(listenerClass, listenerKindClass).managedViewType;
+    }
+
+    public Class<?> getListenerEntityClass(Class<?> listenerClass, Class<?> listenerKindClass) {
+        return getListenerTypeArguments(listenerClass, listenerKindClass).entityClass;
+    }
+
+    private ListenerTypeInfo getListenerTypeArguments(Class<?> listenerClass, Class<?> listenerKindClass) {
+        ListenerTypeInfo listenerTypeInfo = listenerClassTypeInfo.get(listenerClass);
+        if (listenerTypeInfo == null) {
+            TypeVariable<? extends Class<?>>[] typeParameters = listenerKindClass.getTypeParameters();
+            Class<?> entityViewClass = ReflectionUtils.resolveTypeVariable(listenerClass, typeParameters[0]);
+            ManagedViewTypeImplementor<?> managedViewType = metamodel.managedView(entityViewClass);
+            if (managedViewType == null) {
+                throw new IllegalArgumentException("Lifecycle listener class " + listenerClass.getName() + " uses a non-registered entity view type: " + entityViewClass.getName());
+            }
+            Class<?> entityClass = null;
+            if (typeParameters.length > 1) {
+                entityClass = ReflectionUtils.resolveTypeVariable(listenerClass, typeParameters[1]);
+                entityClass = getCommonClass(entityClass, managedViewType.getEntityClass());
+            }
+
+            listenerClassTypeInfo.putIfAbsent(listenerClass, listenerTypeInfo = new ListenerTypeInfo(managedViewType, entityClass));
+        }
+        return listenerTypeInfo;
+    }
+
+    private static Class<?> getCommonClass(Class<?> class1, Class<?> class2) {
+        if (class2.isAssignableFrom(class1)) {
+            return class2;
+        } else if (class1.isAssignableFrom(class2)) {
+            return class1;
+        } else {
+            throw new IllegalArgumentException("The classes [" + class1.getName() + ", " + class2.getName()
+                    + "] are not in a inheritance relationship, so there is no common class!");
+        }
+    }
+
+    public Set<Class<?>> getJavaTypeToManagedTypeJavaTypes(Class<?> javaType) {
+        Set<Class<?>> classes = javaTypeToManagedTypeJavaTypes.get(javaType);
+        if (classes == null) {
+            return Collections.emptySet();
+        }
+        return classes;
     }
 
     @Override
     public <T> T getService(Class<T> serviceClass) {
         if (Metamodel.class.isAssignableFrom(serviceClass)) {
             return (T) metamodel.getEntityMetamodel();
+        } else if (TransactionSupport.class.isAssignableFrom(serviceClass)) {
+            return (T) transactionSupport;
         }
         return null;
     }
@@ -264,7 +522,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     public <T> T find(EntityManager entityManager, EntityViewSetting<T, CriteriaBuilder<T>> entityViewSetting, Object entityId) {
         ViewTypeImpl<T> managedViewType = metamodel.view(entityViewSetting.getEntityViewClass());
         EntityType<?> entityType = (EntityType<?>) managedViewType.getJpaManagedType();
-        SingularAttribute<?, ?> idAttribute = JpaMetamodelUtils.getSingleIdAttribute(entityType);
+        javax.persistence.metamodel.SingularAttribute<?, ?> idAttribute = JpaMetamodelUtils.getSingleIdAttribute(entityType);
         CriteriaBuilder<?> cb = cbf.create(entityManager, managedViewType.getEntityClass())
                 .where(idAttribute.getName()).eq(entityId);
         List<T> resultList = applySetting(entityViewSetting, cb).getResultList();
@@ -287,18 +545,21 @@ public class EntityViewManagerImpl implements EntityViewManager {
         }
     }
 
+    public Object getEntityId(EntityManager entityManager, EntityViewProxy proxy) {
+        UpdateContext context = new SimpleUpdateContext(this, entityManager);
+        Class<?> entityViewClass = proxy.$$_getEntityViewClass();
+        ManagedViewTypeImplementor<?> viewType = metamodel.managedView(entityViewClass);
+        EntityViewUpdater updater = getUpdater(viewType, null, null, null);
+        return ((CompositeAttributeFlusher) updater.getFullGraphNode()).getEntityIdCopy(context, proxy);
+    }
+
     @Override
     public <T> T getEntityReference(EntityManager entityManager, Object view) {
         if (!(view instanceof EntityViewProxy)) {
             throw new IllegalArgumentException("Can't remove non entity view object: " + view);
         }
-        UpdateContext context = new SimpleUpdateContext(this, entityManager);
         EntityViewProxy proxy = (EntityViewProxy) view;
-        Class<?> entityViewClass = proxy.$$_getEntityViewClass();
-        ManagedViewTypeImplementor<?> viewType = metamodel.managedView(entityViewClass);
-        EntityViewUpdater updater = getUpdater(viewType, null, null, null);
-        Object entityId = ((CompositeAttributeFlusher) updater.getFullGraphNode()).getEntityIdCopy(context, proxy);
-        return (T) entityManager.getReference(proxy.$$_getJpaManagedClass(), entityId);
+        return (T) entityManager.getReference(proxy.$$_getJpaManagedClass(), getEntityId(entityManager, proxy));
     }
 
     @Override
@@ -416,10 +677,13 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
     @Override
     public void remove(EntityManager entityManager, Object view) {
+        remove(new DefaultUpdateContext(this, entityManager, false, true, null, view), view);
+    }
+
+    public void remove(UpdateContext context, Object view) {
         if (!(view instanceof EntityViewProxy)) {
             throw new IllegalArgumentException("Can't remove non entity view object: " + view);
         }
-        DefaultUpdateContext context = new DefaultUpdateContext(this, entityManager, false);
         EntityViewProxy proxy = (EntityViewProxy) view;
         Class<?> entityViewClass = proxy.$$_getEntityViewClass();
         ManagedViewTypeImplementor<?> viewType = metamodel.managedView(entityViewClass);
@@ -432,6 +696,12 @@ public class EntityViewManagerImpl implements EntityViewManager {
                     throw new IllegalStateException("Can't remove not-yet-persisted object [" + view + "] that is referenced by: " + updatableProxy.$$_getParent());
                 }
             } else {
+                if (proxy instanceof MutableStateTrackable) {
+                    MutableStateTrackable updatableProxy = (MutableStateTrackable) proxy;
+                    if (updatableProxy.$$_hasParent()) {
+                        throw new IllegalStateException("Can't remove object [" + view + "] that is still referenced by: " + updatableProxy.$$_getParent());
+                    }
+                }
                 updater.remove(context, proxy);
             }
         } catch (Throwable t) {
@@ -442,7 +712,10 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
     @Override
     public void remove(EntityManager entityManager, Class<?> entityViewClass, Object viewId) {
-        DefaultUpdateContext context = new DefaultUpdateContext(this, entityManager, false);
+        remove(new DefaultUpdateContext(this, entityManager, false, true, entityViewClass, viewId), entityViewClass, viewId);
+    }
+
+    public void remove(UpdateContext context, Class<?> entityViewClass, Object viewId) {
         ManagedViewTypeImplementor<?> viewType = metamodel.managedView(entityViewClass);
         if (viewType == null) {
             throw new IllegalArgumentException("Can't remove non entity view object: " + entityViewClass.getName());
@@ -456,8 +729,28 @@ public class EntityViewManagerImpl implements EntityViewManager {
         }
     }
 
+    @Override
+    public FlushOperationBuilder removeWith(EntityManager entityManager, Object view) {
+        return new DefaultUpdateContext(this, entityManager, false, true, null, view);
+    }
+
+    @Override
+    public FlushOperationBuilder removeWith(EntityManager entityManager, Class<?> entityViewClass, Object viewId) {
+        return new DefaultUpdateContext(this, entityManager, false, true, entityViewClass, viewId);
+    }
+
     public void update(EntityManager em, Object view, boolean forceFull) {
-        update(new DefaultUpdateContext(this, em, forceFull), view);
+        update(new DefaultUpdateContext(this, em, forceFull, false, null, view), view);
+    }
+
+    @Override
+    public FlushOperationBuilder saveWith(EntityManager em, Object view) {
+        return new DefaultUpdateContext(this, em, false, false, null, view);
+    }
+
+    @Override
+    public FlushOperationBuilder saveFullWith(EntityManager em, Object view) {
+        return new DefaultUpdateContext(this, em, true, false, null, view);
     }
     
     public void update(UpdateContext context, Object view) {
@@ -753,6 +1046,20 @@ public class EntityViewManagerImpl implements EntityViewManager {
             result = 31 * result + (owner != null ? owner.hashCode() : 0);
             result = 31 * result + (ownerMapping != null ? ownerMapping.hashCode() : 0);
             return result;
+        }
+    }
+
+    /**
+     * @author Christian Beikov
+     * @since 1.4.0
+     */
+    private static class ListenerTypeInfo {
+        private final ManagedViewType<?> managedViewType;
+        private final Class<?> entityClass;
+
+        public ListenerTypeInfo(ManagedViewType<?> managedViewType, Class<?> entityClass) {
+            this.managedViewType = managedViewType;
+            this.entityClass = entityClass;
         }
     }
 }

@@ -55,6 +55,36 @@ public interface EntityViewConfiguration {
     public EntityViewMapping createEntityViewMapping(Class<?> clazz);
 
     /**
+     * Registers the given entity view listener class.
+     *
+     * @param entityViewListenerClass The entity view listener class to register
+     * @return this for method chaining
+     * @since 1.4.0
+     */
+    public EntityViewConfiguration addEntityViewListener(Class<?> entityViewListenerClass);
+
+    /**
+     * Registers the given entity view listener class for the given entity view class.
+     *
+     * @param entityViewClass The entity view class for which to register the given entity view listener class
+     * @param entityViewListenerClass The entity view listener class to register
+     * @return this for method chaining
+     * @since 1.4.0
+     */
+    public EntityViewConfiguration addEntityViewListener(Class<?> entityViewClass, Class<?> entityViewListenerClass);
+
+    /**
+     * Registers the given entity view listener class for the given entity view and entity class.
+     *
+     * @param entityViewClass The entity view class for which to register the given entity view listener class
+     * @param entityClass The entity class for which to register the given entity view listener class
+     * @param entityViewListenerClass The entity view listener class to register
+     * @return this for method chaining
+     * @since 1.4.0
+     */
+    public EntityViewConfiguration addEntityViewListener(Class<?> entityViewClass, Class<?> entityClass, Class<?> entityViewListenerClass);
+
+    /**
      * Registers the given user type for the given class.
      *
      * @param clazz The class for which to register the user type
@@ -112,6 +142,33 @@ public interface EntityViewConfiguration {
      * @since 1.2.0
      */
     public Collection<EntityViewMapping> getEntityViewMappings();
+
+    /**
+     * Returns the global entity view listener classes.
+     *
+     * @return the global entity view listeners
+     * @since 1.4.0
+     */
+    public Set<Class<?>> getEntityViewListeners();
+
+    /**
+     * Returns the entity view listener classes registered for the given entity view class.
+     *
+     * @param entityViewClass The entity view class for which to retrieve the registered entity view listener classes
+     * @return the entity view listeners registered for the given entity view class
+     * @since 1.4.0
+     */
+    public Set<Class<?>> getEntityViewListeners(Class<?> entityViewClass);
+
+    /**
+     * Returns the entity view listener classes registered for the given entity view and entity class.
+     *
+     * @param entityViewClass The entity view class for which to retrieve the registered entity view listener classes
+     * @param entityClass The entity class for which to retrieve the registered entity view listener classes
+     * @return the entity view listeners registered for the given entity view class and entity class
+     * @since 1.4.0
+     */
+    public Set<Class<?>> getEntityViewListeners(Class<?> entityViewClass, Class<?> entityClass);
 
     /**
      * Returns the currently registered basic user types.
@@ -206,5 +263,21 @@ public interface EntityViewConfiguration {
      * @since 1.3.0
      */
     public <T> EntityViewConfiguration setTypeTestValue(Class<T> type, T value);
+
+    /**
+     * Returns the configured transaction support.
+     *
+     * @return the configured transaction support
+     */
+    public TransactionSupport getTransactionSupport();
+
+    /**
+     * Sets the given transaction support.
+     *
+     * @param transactionSupport The transaction support
+     * @return this for method chaining
+     * @since 1.4.0
+     */
+    public EntityViewConfiguration setTransactionSupport(TransactionSupport transactionSupport);
 
 }

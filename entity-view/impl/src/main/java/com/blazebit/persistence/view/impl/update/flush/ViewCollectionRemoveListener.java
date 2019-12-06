@@ -19,7 +19,6 @@ package com.blazebit.persistence.view.impl.update.flush;
 import com.blazebit.persistence.view.impl.collection.CollectionRemoveListener;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
-import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
 /**
  *
@@ -41,7 +40,6 @@ public class ViewCollectionRemoveListener implements CollectionRemoveListener {
 
     @Override
     public void onCollectionRemove(UpdateContext context, Object element) {
-        context.getInitialStateResetter().addRemovedView((EntityViewProxy) element);
         viewToEntityMapper.remove(context, element);
     }
 

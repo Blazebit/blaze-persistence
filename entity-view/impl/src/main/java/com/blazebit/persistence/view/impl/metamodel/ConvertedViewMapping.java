@@ -20,6 +20,7 @@ import com.blazebit.persistence.view.CTEProvider;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.LockMode;
+import com.blazebit.persistence.view.ViewTransition;
 import com.blazebit.persistence.view.metamodel.FlatViewType;
 import com.blazebit.persistence.view.spi.EntityViewAttributeMapping;
 import com.blazebit.persistence.view.spi.EntityViewConstructorMapping;
@@ -106,6 +107,71 @@ public class ConvertedViewMapping implements ViewMapping {
     }
 
     @Override
+    public Method getPostConvertMethod() {
+        return delegate.getPostConvertMethod();
+    }
+
+    @Override
+    public Method getPrePersistMethod() {
+        return delegate.getPrePersistMethod();
+    }
+
+    @Override
+    public Method getPostPersistMethod() {
+        return delegate.getPostPersistMethod();
+    }
+
+    @Override
+    public Method getPreUpdateMethod() {
+        return delegate.getPreUpdateMethod();
+    }
+
+    @Override
+    public Method getPostUpdateMethod() {
+        return delegate.getPostUpdateMethod();
+    }
+
+    @Override
+    public Method getPreRemoveMethod() {
+        return delegate.getPreRemoveMethod();
+    }
+
+    @Override
+    public Method getPostRemoveMethod() {
+        return delegate.getPostRemoveMethod();
+    }
+
+    @Override
+    public Method getPostRollbackMethod() {
+        return delegate.getPostRollbackMethod();
+    }
+
+    @Override
+    public Method getPostCommitMethod() {
+        return delegate.getPostCommitMethod();
+    }
+
+    @Override
+    public ViewTransition[] getPostRollbackTransitions() {
+        return delegate.getPostRollbackTransitions();
+    }
+
+    @Override
+    public void setPostRollbackTransitions(ViewTransition[] viewTransitions) {
+        delegate.setPostRollbackTransitions(viewTransitions);
+    }
+
+    @Override
+    public ViewTransition[] getPostCommitTransitions() {
+        return delegate.getPostCommitTransitions();
+    }
+
+    @Override
+    public void setPostCommitTransitions(ViewTransition[] viewTransitions) {
+        delegate.setPostCommitTransitions(viewTransitions);
+    }
+
+    @Override
     public List<Method> getSpecialMethods() {
         return delegate.getSpecialMethods();
     }
@@ -128,6 +194,51 @@ public class ConvertedViewMapping implements ViewMapping {
     @Override
     public void setPostCreateMethod(Method postCreateMethod) {
         delegate.setPostCreateMethod(postCreateMethod);
+    }
+
+    @Override
+    public void setPostConvertMethod(Method postConvertMethod) {
+        delegate.setPostConvertMethod(postConvertMethod);
+    }
+
+    @Override
+    public void setPrePersistMethod(Method prePersistMethod) {
+        delegate.setPrePersistMethod(prePersistMethod);
+    }
+
+    @Override
+    public void setPostPersistMethod(Method postPersistMethod) {
+        delegate.setPostPersistMethod(postPersistMethod);
+    }
+
+    @Override
+    public void setPreUpdateMethod(Method preUpdateMethod) {
+        delegate.setPreUpdateMethod(preUpdateMethod);
+    }
+
+    @Override
+    public void setPostUpdateMethod(Method postUpdateMethod) {
+        delegate.setPostUpdateMethod(postUpdateMethod);
+    }
+
+    @Override
+    public void setPreRemoveMethod(Method preRemoveMethod) {
+        delegate.setPreRemoveMethod(preRemoveMethod);
+    }
+
+    @Override
+    public void setPostRemoveMethod(Method postRemoveMethod) {
+        delegate.setPostRemoveMethod(postRemoveMethod);
+    }
+
+    @Override
+    public void setPostRollbackMethod(Method postRollbackMethod) {
+        delegate.setPostRollbackMethod(postRollbackMethod);
+    }
+
+    @Override
+    public void setPostCommitMethod(Method postCommitMethod) {
+        delegate.setPostCommitMethod(postCommitMethod);
     }
 
     @Override

@@ -60,12 +60,12 @@ public class EntityViewMetamodelFlatViewTest extends AbstractEntityViewTest {
         void setPrimaryName(String name);
     }
 
-    @CreatableEntityView(validatePersistability = false)
+    @CreatableEntityView
     public static interface NameObjectCreateAndUpdateView extends NameObjectUpdateView {
 
     }
 
-    @CreatableEntityView(validatePersistability = false)
+    @CreatableEntityView
     public static interface NameObjectCreateView extends NameObjectView {
         void setPrimaryName(String name);
     }

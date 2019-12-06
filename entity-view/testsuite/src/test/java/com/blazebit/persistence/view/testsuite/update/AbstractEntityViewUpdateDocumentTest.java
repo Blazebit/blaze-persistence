@@ -51,7 +51,7 @@ public abstract class AbstractEntityViewUpdateDocumentTest<T> extends AbstractEn
 
     @Override
     protected void prepareData(EntityManager em) {
-        doc1 = new Document("doc1");
+        doc1 = new Document("doc1", 10);
         doc1.setVersion(1L);
         doc1.setLastModified(new Date(EPOCH_2K));
         doc1.getNameObject().setPrimaryName("doc1");

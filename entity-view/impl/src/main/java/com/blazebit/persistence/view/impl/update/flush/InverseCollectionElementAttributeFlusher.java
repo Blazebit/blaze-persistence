@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.update.flush;
 
 import com.blazebit.persistence.view.InverseRemoveStrategy;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.view.impl.update.UpdateQueryFactory;
 
 import javax.persistence.Query;
 
@@ -38,12 +39,13 @@ public class InverseCollectionElementAttributeFlusher<E, V> extends CollectionEl
     }
 
     @Override
-    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
+    public Query flushQuery(UpdateContext context, String parameterPrefix, UpdateQueryFactory queryFactory, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
         if (strategy == Strategy.REMOVE) {
             inverseFlusher.removeElement(context, null, element);
         } else if (strategy != Strategy.IGNORE) {
             inverseFlusher.flushQuerySetElement(context, (V)  element, ownerView, strategy == Strategy.SET_NULL ? null : ownerView, parameterPrefix, (DirtyAttributeFlusher<?, E, Object>) nestedGraphNode);
         }
+        return query;
     }
 
     @Override

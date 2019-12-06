@@ -17,8 +17,10 @@
 package com.blazebit.persistence.view.impl.update;
 
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
+import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
 import com.blazebit.persistence.view.spi.TransactionAccess;
 import com.blazebit.persistence.view.impl.update.flush.PostFlushDeleter;
+import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
 import javax.persistence.EntityManager;
 import java.util.List;
@@ -42,6 +44,8 @@ public interface UpdateContext {
 
     public boolean addRemovedObject(Object value);
 
+    public void removeRemovedObject(Object value);
+
     public boolean isRemovedObject(Object value);
 
     public TransactionAccess getTransactionAccess();
@@ -51,4 +55,28 @@ public interface UpdateContext {
     public List<PostFlushDeleter> getOrphanRemovalDeleters();
 
     public void removeOrphans(int orphanRemovalStartIndex);
+
+    public void invokePrePersist(MutableStateTrackable updatableProxy, Object entity);
+
+    public void invokePostPersist(MutableStateTrackable updatableProxy, Object entity);
+
+    public void invokePreUpdate(MutableStateTrackable updatableProxy);
+
+    public void invokePostUpdate(MutableStateTrackable updatableProxy);
+
+    public boolean invokePreRemove(EntityViewProxy entityViewProxy);
+
+    public boolean invokePreRemove(Class<?> entityClass, Object entityId);
+
+    public void invokePostRemove(EntityViewProxy entityView);
+
+    public void invokePostRemove(Class<?> entityClass, Object entityId);
+
+    public Object getEntityView(Class<?> viewType, Class<?> entityClass, Object updatableProxy, boolean convertOnly, boolean prePhase);
+
+    public Object getEntityView(Class<?> viewType, Class<?> entityClass, Object updatableProxy, boolean convertOnly, boolean prePhase, EntityManager entityManager);
+
+    public boolean hasRemoveListeners(Class<?> elementEntityClass);
+
+    public boolean hasPossiblyCancellingRemoveListeners(Class<?> elementEntityClass);
 }

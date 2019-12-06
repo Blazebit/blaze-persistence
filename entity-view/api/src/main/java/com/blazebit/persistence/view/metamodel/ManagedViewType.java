@@ -17,8 +17,10 @@
 package com.blazebit.persistence.view.metamodel;
 
 import com.blazebit.persistence.view.CTEProvider;
+import com.blazebit.persistence.view.ConvertOption;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
+import com.blazebit.persistence.view.ViewTransition;
 import com.blazebit.persistence.view.With;
 
 import java.lang.reflect.Method;
@@ -131,6 +133,94 @@ public interface ManagedViewType<X> extends Type<X> {
      * @return The method to be invoked after creation.
      */
     public Method getPostCreateMethod();
+
+    /**
+     * Returns the method to be invoked after conversion to this entity view type via {@link com.blazebit.persistence.view.EntityViewManager#convert(Object, Class, ConvertOption...)}.
+     *
+     * @return The method to be invoked after conversion.
+     * @since 1.4.0
+     */
+    public Method getPostConvertMethod();
+
+    /**
+     * Returns the pre persist method or <code>null</code> if there is none.
+     *
+     * @return The pre persist method
+     * @since 1.4.0
+     */
+    public Method getPrePersistMethod();
+
+    /**
+     * Returns the post persist method or <code>null</code> if there is none.
+     *
+     * @return The post persist method
+     * @since 1.4.0
+     */
+    public Method getPostPersistMethod();
+
+    /**
+     * Returns the pre update method or <code>null</code> if there is none.
+     *
+     * @return The pre update method
+     * @since 1.4.0
+     */
+    public Method getPreUpdateMethod();
+
+    /**
+     * Returns the post update method or <code>null</code> if there is none.
+     *
+     * @return The post update method
+     * @since 1.4.0
+     */
+    public Method getPostUpdateMethod();
+
+    /**
+     * Returns the pre remove method or <code>null</code> if there is none.
+     *
+     * @return The pre remove method
+     * @since 1.4.0
+     */
+    public Method getPreRemoveMethod();
+
+    /**
+     * Returns the post remove method or <code>null</code> if there is none.
+     *
+     * @return The post remove method
+     * @since 1.4.0
+     */
+    public Method getPostRemoveMethod();
+
+    /**
+     * Returns the post rollback method or <code>null</code> if there is none.
+     *
+     * @return The post rollback method
+     * @since 1.4.0
+     */
+    public Method getPostRollbackMethod();
+
+    /**
+     * Returns the post commit method or <code>null</code> if there is none.
+     *
+     * @return The post commit method
+     * @since 1.4.0
+     */
+    public Method getPostCommitMethod();
+
+    /**
+     * Returns the post rollback transitions.
+     *
+     * @return The post rollback transitions
+     * @since 1.4.0
+     */
+    public Set<ViewTransition> getPostRollbackTransitions();
+
+    /**
+     * Returns the post commit transitions.
+     *
+     * @return The post commit transitions
+     * @since 1.4.0
+     */
+    public Set<ViewTransition> getPostCommitTransitions();
 
     /**
      * The flush mode to use for the entity view or null if not updatable.

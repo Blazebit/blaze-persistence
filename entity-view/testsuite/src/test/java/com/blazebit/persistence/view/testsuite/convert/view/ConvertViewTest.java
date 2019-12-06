@@ -119,6 +119,7 @@ public class ConvertViewTest extends AbstractEntityViewTest {
         assertEquals(documentView.getPartners().iterator().next().getName(), clone.getPartners().iterator().next().getName());
         assertEquals(documentView.getPartners().iterator().next().getFriend(), clone.getPartners().iterator().next().getFriend());
         assertEquals(documentView.getPartners().iterator().next().getFriend().getName(), clone.getPartners().iterator().next().getFriend().getName());
+        assertTrue(documentView == clone.getSource());
     }
 
     @Test

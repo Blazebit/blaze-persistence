@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl.update.flush;
 import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.impl.collection.RecordingReplacingIterator;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.view.impl.update.UpdateQueryFactory;
 
 import javax.persistence.Query;
 import java.util.List;
@@ -49,7 +50,7 @@ public class MergeCollectionElementAttributeFlusher<E, V> extends CollectionElem
     }
 
     @Override
-    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
+    public Query flushQuery(UpdateContext context, String parameterPrefix, UpdateQueryFactory queryFactory, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
         RecordingReplacingIterator<Object> recordingIterator = (RecordingReplacingIterator<Object>) ((RecordingCollection<?, ?>) value).recordingIterator();
         try {
             while (recordingIterator.hasNext()) {
@@ -64,6 +65,7 @@ public class MergeCollectionElementAttributeFlusher<E, V> extends CollectionElem
             while (recordingIterator.hasNext()) {
                 recordingIterator.next();
             }
+            return query;
         } finally {
             ((RecordingCollection<?, ?>) value).resetRecordingIterator();
         }
@@ -72,12 +74,12 @@ public class MergeCollectionElementAttributeFlusher<E, V> extends CollectionElem
     @Override
     @SuppressWarnings("unchecked")
     public boolean flushEntity(UpdateContext context, E entity, Object ownerView, Object view, V value, Runnable postReplaceListener) {
-        flushQuery(context, null, null, null, view, value, null);
+        flushQuery(context, null, null, null, null, view, value, null);
         return true;
     }
 
     @Override
-    public DirtyAttributeFlusher<CollectionElementAttributeFlusher<E, V>, E, V> getDirtyFlusher(UpdateContext context, Object view, Object initial, Object current) {
+    public DirtyAttributeFlusher<CollectionElementAttributeFlusher<E, V>, E, V> getDirtyFlusher(UpdateContext context, Object view, Object initial, Object current, List<Runnable> preFlushListeners) {
         // Actually this should never be called, but let's return this to be safe
         return this;
     }

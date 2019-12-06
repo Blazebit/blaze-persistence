@@ -22,6 +22,7 @@ import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.LockMode;
 import com.blazebit.persistence.view.Mapping;
+import com.blazebit.persistence.view.ViewTransition;
 import com.blazebit.persistence.view.spi.EntityViewAttributeMapping;
 import com.blazebit.persistence.view.spi.EntityViewConstructorMapping;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
@@ -65,6 +66,17 @@ public class ViewMappingImpl implements ViewMapping {
 
     // Creatable entity view configs
     private Method postCreateMethod;
+    private Method postConvertMethod;
+    private Method prePersistMethod;
+    private Method postPersistMethod;
+    private Method preUpdateMethod;
+    private Method postUpdateMethod;
+    private Method preRemoveMethod;
+    private Method postRemoveMethod;
+    private Method postRollbackMethod;
+    private Method postCommitMethod;
+    private ViewTransition[] postRollbackTransitions;
+    private ViewTransition[] postCommitTransitions;
     private List<Method> specialMethods = new ArrayList<>();
     private boolean creatable;
     private boolean validatePersistability;
@@ -186,6 +198,116 @@ public class ViewMappingImpl implements ViewMapping {
     @Override
     public void setPostCreateMethod(Method postCreateMethod) {
         this.postCreateMethod = postCreateMethod;
+    }
+
+    @Override
+    public Method getPostConvertMethod() {
+        return postConvertMethod;
+    }
+
+    @Override
+    public void setPostConvertMethod(Method postConvertMethod) {
+        this.postConvertMethod = postConvertMethod;
+    }
+
+    @Override
+    public Method getPrePersistMethod() {
+        return prePersistMethod;
+    }
+
+    @Override
+    public void setPrePersistMethod(Method prePersistMethod) {
+        this.prePersistMethod = prePersistMethod;
+    }
+
+    @Override
+    public Method getPostPersistMethod() {
+        return postPersistMethod;
+    }
+
+    @Override
+    public void setPostPersistMethod(Method postPersistMethod) {
+        this.postPersistMethod = postPersistMethod;
+    }
+
+    @Override
+    public Method getPreUpdateMethod() {
+        return preUpdateMethod;
+    }
+
+    @Override
+    public void setPreUpdateMethod(Method preUpdateMethod) {
+        this.preUpdateMethod = preUpdateMethod;
+    }
+
+    @Override
+    public Method getPostUpdateMethod() {
+        return postUpdateMethod;
+    }
+
+    @Override
+    public void setPostUpdateMethod(Method postUpdateMethod) {
+        this.postUpdateMethod = postUpdateMethod;
+    }
+
+    @Override
+    public Method getPreRemoveMethod() {
+        return preRemoveMethod;
+    }
+
+    @Override
+    public void setPreRemoveMethod(Method preRemoveMethod) {
+        this.preRemoveMethod = preRemoveMethod;
+    }
+
+    @Override
+    public Method getPostRemoveMethod() {
+        return postRemoveMethod;
+    }
+
+    @Override
+    public void setPostRemoveMethod(Method postRemoveMethod) {
+        this.postRemoveMethod = postRemoveMethod;
+    }
+
+    @Override
+    public Method getPostRollbackMethod() {
+        return postRollbackMethod;
+    }
+
+    @Override
+    public void setPostRollbackMethod(Method postRollbackMethod) {
+        this.postRollbackMethod = postRollbackMethod;
+    }
+
+    @Override
+    public Method getPostCommitMethod() {
+        return postCommitMethod;
+    }
+
+    @Override
+    public void setPostCommitMethod(Method postCommitMethod) {
+        this.postCommitMethod = postCommitMethod;
+    }
+
+    @Override
+    public ViewTransition[] getPostRollbackTransitions() {
+        return postRollbackTransitions;
+    }
+
+    @Override
+    public void setPostRollbackTransitions(ViewTransition[] postRollbackTransitions) {
+        this.postRollbackTransitions = postRollbackTransitions;
+    }
+
+    @Override
+    public ViewTransition[] getPostCommitTransitions() {
+        return postCommitTransitions;
+    }
+
+    @Override
+    public void setPostCommitTransitions(ViewTransition[] postCommitTransitions) {
+        this.postCommitTransitions = postCommitTransitions;
     }
 
     @Override
