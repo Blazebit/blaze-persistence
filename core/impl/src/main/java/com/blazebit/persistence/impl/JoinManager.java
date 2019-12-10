@@ -963,10 +963,13 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
     private JoinNode applyEntityJoins(StringBuilder sb, StringBuilder tempSb, Set<ClauseType> clauseExclusions, String aliasPrefix, JoinNode rootNode, boolean collectCollectionJoinNodes, boolean renderFetches, boolean ignoreCardinality, Set<JoinNode> nodesToFetch, List<String> whereConjuncts, JoinNode valuesNode, Set<JoinNode> alwaysIncludedNodes, boolean externalRepresentation) {
         // TODO: Fix this with #216
         boolean isCollection = true;
+        Set<JoinNode> entityNodes = rootNode.getEntityJoinNodes();
         if (mainQuery.jpaProvider.supportsEntityJoin() && !emulateJoins) {
-            valuesNode = applyJoins(sb, rootNode.getAliasInfo(), new ArrayList<>(rootNode.getEntityJoinNodes()), isCollection, clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes, externalRepresentation);
+            // We must reverse the order as we process the elements from end to start in the "stack"
+            List<JoinNode> stack = new ArrayList<>(entityNodes);
+            Collections.reverse(stack);
+            valuesNode = applyJoins(sb, rootNode.getAliasInfo(), stack, isCollection, clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes, externalRepresentation);
         } else {
-            Set<JoinNode> entityNodes = rootNode.getEntityJoinNodes();
             for (JoinNode entityNode : entityNodes) {
                 if (entityNode.getJoinType() != JoinType.INNER) {
                     throw new IllegalArgumentException("Can't emulate outer join for entity join node: " + entityNode);
