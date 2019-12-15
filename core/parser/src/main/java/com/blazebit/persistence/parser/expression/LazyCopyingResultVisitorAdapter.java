@@ -241,7 +241,7 @@ public abstract class LazyCopyingResultVisitorAdapter implements Expression.Resu
     @Override
     public Expression visit(TrimExpression expression) {
         Expression newTrimSource = expression.getTrimSource().accept(this);
-        Expression newTrimCharacter = expression.getTrimCharacter().accept(this);
+        Expression newTrimCharacter = expression.getTrimCharacter() == null ? null : expression.getTrimCharacter().accept(this);
         if (expression.getTrimSource() != newTrimSource || expression.getTrimCharacter() != newTrimCharacter) {
             return new TrimExpression(expression.getTrimspec(), newTrimSource, newTrimCharacter);
         }

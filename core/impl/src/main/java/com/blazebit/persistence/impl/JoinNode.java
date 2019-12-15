@@ -29,6 +29,7 @@ import com.blazebit.persistence.parser.expression.PathElementExpression;
 import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.expression.PropertyExpression;
 import com.blazebit.persistence.parser.expression.StringLiteral;
+import com.blazebit.persistence.parser.expression.SubqueryExpression;
 import com.blazebit.persistence.parser.expression.VisitorAdapter;
 import com.blazebit.persistence.parser.expression.modifier.ExpressionModifier;
 import com.blazebit.persistence.parser.predicate.CompoundPredicate;
@@ -336,12 +337,17 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
     public void registerDependencies() {
         if (onPredicate != null) {
             onPredicate.accept(new VisitorAdapter() {
+                @Override
+                public void visit(SubqueryExpression expression) {
+                    ((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) expression.getSubquery()).applyVisitor(this);
+                }
 
                 @Override
                 public void visit(PathExpression pathExpr) {
                     // prevent loop dependencies to the same join node and dependencies to qualified join nodes
                     JoinNode baseNode = (JoinNode) pathExpr.getBaseNode();
-                    if (baseNode != null && baseNode != JoinNode.this && (baseNode.getQualificationExpression() == null || baseNode.parent != JoinNode.this)) {
+                    // Also, we ensure we only add dependencies to nodes that are of the same query. Dependencies on subquery nodes wouldn't make sense
+                    if (baseNode != null && baseNode != JoinNode.this && baseNode.aliasInfo.getAliasOwner() == aliasInfo.getAliasOwner() && (baseNode.getQualificationExpression() == null || baseNode.parent != JoinNode.this)) {
                         dependencies.add(baseNode);
                     }
                 }

@@ -2459,21 +2459,6 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         return new EqPredicate(keyExpression, arrayExpr.getIndex());
     }
 
-    private void registerDependencies(final JoinNode joinNode, CompoundPredicate onExpression) {
-        onExpression.accept(new VisitorAdapter() {
-
-            @Override
-            public void visit(PathExpression pathExpr) {
-                // prevent loop dependencies to the same join node
-                if (pathExpr.getBaseNode() != joinNode) {
-                    joinNode.getDependencies().add((JoinNode) pathExpr.getBaseNode());
-                }
-            }
-
-        });
-        joinNode.updateClauseDependencies(ClauseType.JOIN, new LinkedHashSet<JoinNode>());
-    }
-
     private void generateAndApplyOnPredicate(JoinNode joinNode, ArrayExpression arrayExpr) {
         EqPredicate valueKeyFilterPredicate = getArrayExpressionPredicate(joinNode, arrayExpr);
 
@@ -2483,13 +2468,15 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             // Only add the predicate if it isn't contained yet
             if (!findPredicate(currentPred, valueKeyFilterPredicate)) {
                 currentPred.getChildren().add(valueKeyFilterPredicate);
-                registerDependencies(joinNode, currentPred);
+                joinNode.registerDependencies();
+                joinNode.updateClauseDependencies(ClauseType.JOIN, new LinkedHashSet<JoinNode>());
             }
         } else {
             CompoundPredicate onAndPredicate = new CompoundPredicate(CompoundPredicate.BooleanOperator.AND);
             onAndPredicate.getChildren().add(valueKeyFilterPredicate);
             joinNode.setOnPredicate(onAndPredicate);
-            registerDependencies(joinNode, onAndPredicate);
+            joinNode.registerDependencies();
+            joinNode.updateClauseDependencies(ClauseType.JOIN, new LinkedHashSet<JoinNode>());
         }
     }
 

@@ -1976,7 +1976,7 @@ the view is converted back to the base view by invoking link:{entity_view_jdoc}/
 
 [source,java]
 ----
-CatOwnerUpdateView catOwnerUpdate = //...
+CatOwnerUpdateView catBaseView = //...
 catBaseView = entityViewManager.convert(CatBaseView.class, catBaseView);
 ----
 
@@ -1990,3 +1990,48 @@ For such cases it is often more appropriate to have a specialized service method
 Note that internally, the conversion feature is used for converting successfully persisted creatable entity views to their context specific declaration type.
 
 There are of course other possible use cases for this feature like e.g. conversion from a _more detailed_ view to a view containing only a subset of the information.
+
+A very interesting use case is _duplicating data_. Such a use case requires to partially copy existing data such that it can be saved with a new identity.
+This is where the control over sub-attributes through link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#convertWith(java.lang.Class,%20java.lang.Object,%20com.blazebit.persistence.view.ConvertOption...)[EntityViewManager.convertWith(Class, Object, ConvertOption...)]
+comes in handy. It allows to exclude attributes through `ConvertOperationBuilder.excludeAttributes(String... attributes)` and also convert specific attributes to a specific subtype with custom convert options
+through `ConvertOperationBuilder.convertAttribute(String attributePath, Class<?> attributeViewClass, ConvertOption... convertOptions)`.
+
+Imagine the following model for illustration purposes.
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface KittenView {
+    @IdMapping
+    Long getId();
+}
+
+@EntityView(Cat.class)
+interface CatView extends KittenView {
+    PersonView getOwner();
+
+    Set<KittenView> getKittens();
+}
+
+@CreatableEntityView
+@EntityView(Cat.class)
+interface CatCloneView extends CatView {
+    void setOwner(PersonView owner);
+    @UpdatableMapping(cascade = PERSIST)
+    Set<KittenView> getKittens();
+}
+----
+
+A clone of a cat and kittens could be done by using
+
+[source,java]
+----
+CatView catView = //...
+catBaseView = entityViewManager.convertWith(CatCloneView.class, catView, ConvertOption.CREATE_NEW)
+    .excludeAttribute("id")
+    .excludeAttribute("kittens.id")
+    .convertAttribute("kittens", CatCloneView.class, ConvertOption.CREATE_NEW)
+    .convert();
+----
+
+The resulting object could then be persisted via `EntityViewManager.save()` which represents a duplicate of the original.

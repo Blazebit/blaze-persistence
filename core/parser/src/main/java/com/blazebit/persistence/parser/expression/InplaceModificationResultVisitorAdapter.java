@@ -150,7 +150,9 @@ public abstract class InplaceModificationResultVisitorAdapter implements Express
     @Override
     public Expression visit(TrimExpression expression) {
         expression.setTrimSource(expression.getTrimSource().accept(this));
-        expression.setTrimCharacter(expression.getTrimCharacter().accept(this));
+        if (expression.getTrimCharacter() != null) {
+            expression.setTrimCharacter(expression.getTrimCharacter().accept(this));
+        }
         return expression;
     }
 

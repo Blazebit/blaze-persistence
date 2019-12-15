@@ -183,7 +183,9 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
         List<TargetType> possibleTargets = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
             PathPosition position = positions.get(i);
-            possibleTargets.add(new TargetTypeImpl(position.hasCollectionJoin(), position.getAttribute(), position.getRealCurrentClass(), position.getKeyCurrentClass(), position.getCurrentClass()));
+            if (position.getCurrentClass() != null) {
+                possibleTargets.add(new TargetTypeImpl(position.hasCollectionJoin(), position.getAttribute(), position.getRealCurrentClass(), position.getKeyCurrentClass(), position.getCurrentClass()));
+            }
         }
         
         return possibleTargets;
@@ -288,7 +290,7 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
     @Override
     public void visit(NullExpression expression) {
         // We can't infer a type here
-        // TODO: Not sure what happens when this is the result node of a case when
+        currentPosition.setCurrentType(null);
     }
 
     @Override

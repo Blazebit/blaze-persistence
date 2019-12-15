@@ -24,6 +24,7 @@ Not yet released
 * Add support for enum literals in builder API
 * Allow to flush updatable entity views to entities directly
 * Throw exception when `setFirstResult` or `setMaxResults` is used in a `CorrelationProvider` other than select with batch size 1
+* Allow entity view conversion with fine grained control of attribute subview types
 
 ### Bug fixes
 
@@ -41,6 +42,8 @@ Not yet released
 * Fix duplicate `sortResolver` issues when using Spring Data WebMvc integration with Spring Boot
 * Fix calling post rollback callbacks necessary for proper updatable entity view state resets
 * Fix `TREAT` on super type too restrictive, should allow subtypes too
+* Fix NPE when accessing entity attributes in `@MappingSubquery` expression
+* Invalid path expression generated when using `SUBSELECT` fetching in a `JOIN` correlated view
 
 ### Backwards-incompatible changes
 
