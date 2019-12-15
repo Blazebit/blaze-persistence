@@ -75,10 +75,8 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
         this.embeddingViewPath = embeddingViewPath;
         if (viewRootAlias.equals(embeddingViewPath)) {
             this.embeddingViewIdExpression = viewRootAliasPrefix + getEntityIdName(embeddingViewType.getEntityClass());
-        } else if (embeddingViewPath.startsWith(viewRootAliasPrefix)) {
-            this.embeddingViewIdExpression = embeddingViewPath + "." + getEntityIdName(embeddingViewType.getEntityClass());
         } else {
-            this.embeddingViewIdExpression = viewRootAlias + "." + embeddingViewPath + "." + getEntityIdName(embeddingViewType.getEntityClass());
+            this.embeddingViewIdExpression = embeddingViewPath + "." + getEntityIdName(embeddingViewType.getEntityClass());
         }
         this.embeddingViewIdMapperCount = viewIdMapperCount(embeddingViewType);
         this.maximumViewMapperCount = Math.max(1, Math.max(viewRootIdMapperCount, embeddingViewIdMapperCount));

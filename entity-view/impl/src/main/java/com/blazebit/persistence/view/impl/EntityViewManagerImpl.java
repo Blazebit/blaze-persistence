@@ -35,6 +35,7 @@ import com.blazebit.persistence.spi.JpqlMacro;
 import com.blazebit.persistence.spi.PackageOpener;
 import com.blazebit.persistence.view.AttributeFilterProvider;
 import com.blazebit.persistence.view.ConfigurationProperties;
+import com.blazebit.persistence.view.ConvertOperationBuilder;
 import com.blazebit.persistence.view.ConvertOption;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
@@ -81,6 +82,7 @@ import com.blazebit.persistence.view.impl.filter.StartsWithFilterImpl;
 import com.blazebit.persistence.view.impl.filter.StartsWithIgnoreCaseFilterImpl;
 import com.blazebit.persistence.view.impl.macro.DefaultViewRootJpqlMacro;
 import com.blazebit.persistence.view.impl.macro.EmbeddingViewJpqlMacro;
+import com.blazebit.persistence.view.impl.mapper.ConvertOperationBuilderImpl;
 import com.blazebit.persistence.view.impl.mapper.ViewMapper;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.MappingConstructorImpl;
@@ -99,6 +101,7 @@ import com.blazebit.persistence.view.impl.update.EntityViewUpdaterImpl;
 import com.blazebit.persistence.view.impl.update.Listeners;
 import com.blazebit.persistence.view.impl.update.SimpleUpdateContext;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.view.impl.update.flush.CompositeAttributeFlusher;
 import com.blazebit.persistence.view.impl.update.listener.ViewInstancePostCommitListener;
 import com.blazebit.persistence.view.impl.update.listener.ViewInstancePostPersistEntityListener;
 import com.blazebit.persistence.view.impl.update.listener.ViewInstancePostRemoveListener;
@@ -107,7 +110,6 @@ import com.blazebit.persistence.view.impl.update.listener.ViewInstancePostUpdate
 import com.blazebit.persistence.view.impl.update.listener.ViewInstancePrePersistEntityListener;
 import com.blazebit.persistence.view.impl.update.listener.ViewInstancePreRemoveListener;
 import com.blazebit.persistence.view.impl.update.listener.ViewInstancePreUpdateListener;
-import com.blazebit.persistence.view.impl.update.flush.CompositeAttributeFlusher;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
@@ -159,6 +161,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     private final ConcurrentMap<ManagedViewType<?>, EntityViewUpdaterImpl> entityViewUpdaterCache;
     private final ConcurrentMap<ContextAwareUpdaterKey, EntityViewUpdaterImpl> contextAwareEntityViewUpdaterCache;
     private final ConcurrentMap<ViewMapper.Key<?, ?>, ViewMapper<?, ?>> entityViewMappers;
+    private final ConcurrentMap<ViewMapperConfigKey, ViewMapper<?, ?>> configuredEntityViewMappers;
     private final ConcurrentMap<Class<?>, Constructor<?>> createConstructorCache;
     private final ConcurrentMap<Class<?>, Constructor<?>> referenceConstructorCache;
     private final ConcurrentMap<Class<?>, ListenerTypeInfo> listenerClassTypeInfo;
@@ -229,6 +232,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         this.entityViewUpdaterCache = new ConcurrentHashMap<>();
         this.contextAwareEntityViewUpdaterCache = new ConcurrentHashMap<>();
         this.entityViewMappers = new ConcurrentHashMap<>();
+        this.configuredEntityViewMappers = new ConcurrentHashMap<>();
         this.createConstructorCache = new ConcurrentHashMap<>();
         this.referenceConstructorCache = new ConcurrentHashMap<>();
         this.listenerClassTypeInfo = new ConcurrentHashMap<>();
@@ -585,56 +589,38 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
     @Override
     public <T> T convert(Object source, Class<T> entityViewClass, ConvertOption... convertOptions) {
-        boolean ignoreMissingAttributes = false;
-        boolean markNew = false;
-        for (ConvertOption copyOption : convertOptions) {
-            switch (copyOption) {
-                case CREATE_NEW:
-                    markNew = true;
-                    break;
-                case IGNORE_MISSING_ATTRIBUTES:
-                    ignoreMissingAttributes = true;
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        return convert(source, entityViewClass, ignoreMissingAttributes, markNew);
+        return convert(source, ViewMapper.Key.create(metamodel, source, entityViewClass, convertOptions));
     }
 
-    private <T> T convert(Object source, Class<T> entityViewClass, boolean ignoreMissingAttributes, boolean markNew) {
-        if (!(source instanceof EntityViewProxy)) {
-            throw new IllegalArgumentException("Can only convert one entity view to another. Invalid source type: " + source.getClass());
-        }
+    @Override
+    public <T> ConvertOperationBuilder<T> convertWith(Object source, Class<T> entityViewClass, ConvertOption... convertOptions) {
+        return new ConvertOperationBuilderImpl<>(this, ViewMapper.Key.create(metamodel, source, entityViewClass, convertOptions), source);
+    }
 
-        EntityViewProxy sourceProxy = (EntityViewProxy) source;
-        ManagedViewTypeImplementor<Object> sourceViewType = (ManagedViewTypeImplementor<Object>) metamodel.managedView(sourceProxy.$$_getEntityViewClass());
-        if (sourceViewType == null) {
-            throw new IllegalArgumentException("Unknown source view type: " + sourceProxy.$$_getEntityViewClass().getName());
-        }
-        ManagedViewTypeImplementor<T> targetViewType = metamodel.managedView(entityViewClass);
-        if (targetViewType == null) {
-            throw new IllegalArgumentException("Unknown target view type: " + entityViewClass.getName());
-        }
-        ViewMapper<Object, T> viewMapper = getViewMapper(sourceViewType, targetViewType, ignoreMissingAttributes, markNew);
-        T object = viewMapper.map(source);
-        if (markNew) {
-            if (!targetViewType.isCreatable()) {
-                throw new IllegalArgumentException("Defined to convert to new object but target view type isn't annotated with @CreatableEntityView: " + entityViewClass.getName());
-            }
-            ((MutableStateTrackable) object).$$_setIsNew(true);
-        }
-        return object;
+    private <T> T convert(Object source, ViewMapper.Key<Object, T> key) {
+        return getViewMapper(key).map(source);
     }
 
     @SuppressWarnings("unchecked")
-    public final <S, T> ViewMapper<S, T> getViewMapper(ManagedViewTypeImplementor<S> sourceViewType, ManagedViewTypeImplementor<T> targetViewType, boolean ignoreMissing, boolean markNew) {
-        ViewMapper.Key key = new ViewMapper.Key<>(sourceViewType, targetViewType, ignoreMissing, markNew);
+    public final <S, T> ViewMapper<S, T> getViewMapper(ViewMapper.Key<Object, T> key) {
         ViewMapper<?, ?> viewMapper = entityViewMappers.get(key);
         if (viewMapper == null) {
-            viewMapper = new ViewMapper(sourceViewType, targetViewType, ignoreMissing, markNew, this, proxyFactory);
+            viewMapper = key.createViewMapper(this, proxyFactory, Collections.<String, ViewMapper.Key<Object, Object>>emptyMap());
             ViewMapper<?, ?> old = entityViewMappers.putIfAbsent(key, viewMapper);
+            if (old != null) {
+                viewMapper = old;
+            }
+        }
+        return (ViewMapper<S, T>) viewMapper;
+    }
+
+    @SuppressWarnings("unchecked")
+    public final <S, T> ViewMapper<S, T> getViewMapper(ViewMapper.Key<Object, T> viewMapperKey, Map<String, ViewMapper.Key<Object, Object>> subMappers) {
+        ViewMapperConfigKey key = new ViewMapperConfigKey(viewMapperKey, subMappers);
+        ViewMapper<?, ?> viewMapper = configuredEntityViewMappers.get(key);
+        if (viewMapper == null) {
+            viewMapper = key.key.createViewMapper(this, proxyFactory, key.subMappers);
+            ViewMapper<?, ?> old = configuredEntityViewMappers.putIfAbsent(key, viewMapper);
             if (old != null) {
                 viewMapper = old;
             }
@@ -1104,6 +1090,44 @@ public class EntityViewManagerImpl implements EntityViewManager {
         public ListenerTypeInfo(ManagedViewType<?> managedViewType, Class<?> entityClass) {
             this.managedViewType = managedViewType;
             this.entityClass = entityClass;
+        }
+    }
+
+    /**
+     * @author Christian Beikov
+     * @since 1.4.0
+     */
+    private static class ViewMapperConfigKey {
+        private final ViewMapper.Key<?, ?> key;
+        private final Map<String, ViewMapper.Key<Object, Object>> subMappers;
+
+        public ViewMapperConfigKey(ViewMapper.Key<?, ?> key, Map<String, ViewMapper.Key<Object, Object>> subMappers) {
+            this.key = key;
+            this.subMappers = subMappers;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof ViewMapperConfigKey)) {
+                return false;
+            }
+
+            ViewMapperConfigKey that = (ViewMapperConfigKey) o;
+
+            if (!key.equals(that.key)) {
+                return false;
+            }
+            return subMappers.equals(that.subMappers);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = key.hashCode();
+            result = 31 * result + subMappers.hashCode();
+            return result;
         }
     }
 }

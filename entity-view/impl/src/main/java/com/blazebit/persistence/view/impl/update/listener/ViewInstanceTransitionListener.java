@@ -36,7 +36,6 @@ public class ViewInstanceTransitionListener {
     private final int transitionIndex;
 
     public ViewInstanceTransitionListener(Method listener) {
-        this.listener = listener;
         int entityViewManagerIndex = -1;
         int entityManagerIndex = -1;
         int transitionIndex = -1;
@@ -53,6 +52,8 @@ public class ViewInstanceTransitionListener {
                         "! Allowed argument types are [" + EntityViewManager.class.getSimpleName() + ", " + EntityManager.class.getSimpleName() + ", " + ViewTransition.class.getSimpleName() + "]");
             }
         }
+        listener.setAccessible(true);
+        this.listener = listener;
         this.parameterCount = parameterTypes.length;
         this.entityViewManagerIndex = entityViewManagerIndex;
         this.entityManagerIndex = entityManagerIndex;

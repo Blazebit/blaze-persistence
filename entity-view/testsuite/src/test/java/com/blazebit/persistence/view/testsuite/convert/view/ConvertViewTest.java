@@ -27,7 +27,9 @@ import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.change.ChangeModel;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
+import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
+import com.blazebit.persistence.view.testsuite.convert.view.model.CreatablePersonView;
 import com.blazebit.persistence.view.testsuite.convert.view.model.DocumentCloneUpdateView;
 import com.blazebit.persistence.view.testsuite.convert.view.model.DocumentCloneView;
 import com.blazebit.persistence.view.testsuite.convert.view.model.DocumentCloneView2;
@@ -63,6 +65,7 @@ public class ConvertViewTest extends AbstractEntityViewTest {
         cfg.addEntityView(DocumentCloneParentView.class);
         cfg.addEntityView(DocumentCloneUpdateView.class);
         cfg.addEntityView(SimplePersonView.class);
+        cfg.addEntityView(CreatablePersonView.class);
         cfg.addEntityView(PersonView.class);
         evm = cfg.createEntityViewManager(cbf);
     }
@@ -120,6 +123,35 @@ public class ConvertViewTest extends AbstractEntityViewTest {
         assertEquals(documentView.getPartners().iterator().next().getFriend(), clone.getPartners().iterator().next().getFriend());
         assertEquals(documentView.getPartners().iterator().next().getFriend().getName(), clone.getPartners().iterator().next().getFriend().getName());
         assertTrue(documentView == clone.getSource());
+    }
+
+    @Test
+    public void testCloneConvertWithBuilder() {
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class);
+        DocumentCloneView documentView = evm.applySetting(EntityViewSetting.create(DocumentCloneView.class), criteria)
+                .getSingleResult();
+        DocumentCloneView clone = evm.convertWith(documentView, DocumentCloneView.class)
+                .convertAttribute("owner.friend", CreatablePersonView.class, ConvertOption.CREATE_NEW)
+                .excludeAttribute("people")
+                .convert();
+
+        assertEquals(documentView.getId(), clone.getId());
+        assertEquals(documentView.getAge(), clone.getAge());
+        assertEquals(documentView.getName(), clone.getName());
+        assertEquals(documentView.getContacts(), clone.getContacts());
+        assertEquals(documentView.getOwner(), clone.getOwner());
+        assertEquals(documentView.getOwner().getName(), clone.getOwner().getName());
+        assertEquals(documentView.getOwner().getFriend(), clone.getOwner().getFriend());
+        assertEquals(documentView.getOwner().getFriend().getName(), clone.getOwner().getFriend().getName());
+        assertEquals(documentView.getPartners(), clone.getPartners());
+        assertEquals(documentView.getPartners().iterator().next().getName(), clone.getPartners().iterator().next().getName());
+        assertEquals(documentView.getPartners().iterator().next().getFriend(), clone.getPartners().iterator().next().getFriend());
+        assertEquals(documentView.getPartners().iterator().next().getFriend().getName(), clone.getPartners().iterator().next().getFriend().getName());
+        assertTrue(documentView == clone.getSource());
+
+        assertNull(clone.getPeople());
+        assertTrue(((EntityViewProxy) clone.getOwner().getFriend()).$$_isNew());
+        assertTrue(clone.getOwner().getFriend() instanceof CreatablePersonView);
     }
 
     @Test

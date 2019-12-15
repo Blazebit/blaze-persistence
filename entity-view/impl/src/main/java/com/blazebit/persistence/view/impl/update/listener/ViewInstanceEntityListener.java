@@ -35,7 +35,6 @@ public class ViewInstanceEntityListener {
     private final int entityIndex;
 
     public ViewInstanceEntityListener(Method listener) {
-        this.listener = listener;
         int entityViewManagerIndex = -1;
         int entityManagerIndex = -1;
         int entityIndex = -1;
@@ -52,6 +51,8 @@ public class ViewInstanceEntityListener {
                         "! Allowed argument types are [" + EntityViewManager.class.getSimpleName() + ", " + EntityManager.class.getSimpleName() + ", <Entity type or super type>]");
             }
         }
+        listener.setAccessible(true);
+        this.listener = listener;
         this.parameterCount = parameterTypes.length;
         this.entityViewManagerIndex = entityViewManagerIndex;
         this.entityManagerIndex = entityManagerIndex;

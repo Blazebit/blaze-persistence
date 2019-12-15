@@ -120,6 +120,19 @@ public interface EntityViewManager extends ServiceProvider {
     public <T> T convert(Object source, Class<T> entityViewClass, ConvertOption... convertOptions);
 
     /**
+     * Creates a new instance of the entity view class, copies the values
+     * of matching attributes of the source object and returns the instance.
+     *
+     * @param <T> The type of the entity view class
+     * @param source The source object from which to copy values
+     * @param entityViewClass The entity view class to construct
+     * @param convertOptions The options to use for converting
+     * @return A builder to specify attribute entity view types and conversion options
+     * @since 1.4.0
+     */
+    public <T> ConvertOperationBuilder<T> convertWith(Object source, Class<T> entityViewClass, ConvertOption... convertOptions);
+
+    /**
      * Saves the entity which the given entity view maps to.
      * Issues a partial update if enabled for the given view.
      * 

@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.mapper;
 
+import com.blazebit.persistence.view.ConvertOption;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.impl.accessor.Accessors;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
@@ -25,9 +26,11 @@ import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.impl.collection.RecordingMap;
 import com.blazebit.persistence.view.impl.metamodel.AbstractAttribute;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.proxy.ConvertReflectionInstantiator;
 import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
 import com.blazebit.persistence.view.impl.proxy.DirtyTracker;
+import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
@@ -36,10 +39,13 @@ import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
+import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.metamodel.ViewType;
+import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -58,14 +64,16 @@ public class ViewMapper<S, T> {
     private final boolean copyInitialState;
     private final AttributeAccessor[] sourceAccessors;
     private final ObjectInstantiator<T> objectInstantiator;
+    private final boolean markNew;
     private final Method postConvert;
     private final boolean postConvertUsesSource;
 
-    public ViewMapper(ManagedViewType<S> sourceType, ManagedViewType<T> targetType, boolean ignoreMissing, boolean markNew, EntityViewManager entityViewManager, ProxyFactory proxyFactory) {
+    public ViewMapper(ManagedViewType<S> sourceType, ManagedViewType<T> targetType, boolean ignoreMissing, Boolean maybeMarkNew, EntityViewManager entityViewManager, ProxyFactory proxyFactory, String prefix, Map<String, Key<Object, Object>> subMappers) {
         if (!targetType.getEntityClass().isAssignableFrom(sourceType.getEntityClass())) {
             throw inconvertible("Incompatible entity types!", sourceType, targetType);
         }
 
+        boolean markNew = maybeMarkNew != null ? maybeMarkNew : targetType.isCreatable();
         Set<MethodAttribute<? super T, ?>> attributes = targetType.getAttributes();
         Class<?>[] parameterTypes = new Class[attributes.size()];
         AttributeAccessor[] sourceAccessors = new AttributeAccessor[attributes.size()];
@@ -78,7 +86,7 @@ public class ViewMapper<S, T> {
         if (targetType instanceof ViewType<?>) {
             idAttribute = ((ViewType<T>) targetType).getIdAttribute();
             parameterTypes[i] = idAttribute.getConvertedJavaType();
-            sourceAccessors[i] = createAccessor(sourceType, targetType, ignoreMissing, markNew, entityViewManager, proxyFactory, idAttribute);
+            sourceAccessors[i] = createAccessor(sourceType, targetType, ignoreMissing, markNew, entityViewManager, proxyFactory, idAttribute, prefix, subMappers);
             i++;
         }
 
@@ -87,7 +95,7 @@ public class ViewMapper<S, T> {
             MethodAttribute<? super T, ?> targetAttribute = iterator.next();
             if (targetAttribute != idAttribute) {
                 parameterTypes[i] = targetAttribute.getConvertedJavaType();
-                sourceAccessors[i] = createAccessor(sourceType, targetType, ignoreMissing, markNew, entityViewManager, proxyFactory, targetAttribute);
+                sourceAccessors[i] = createAccessor(sourceType, targetType, ignoreMissing, markNew, entityViewManager, proxyFactory, targetAttribute, prefix, subMappers);
                 // Extract a mapping from target dirty state index to the source
                 int dirtyStateIndex = ((AbstractMethodAttribute<?, ?>) targetAttribute).getDirtyStateIndex();
                 if (dirtyStateIndex != -1) {
@@ -123,11 +131,32 @@ public class ViewMapper<S, T> {
         } catch (IllegalArgumentException ex) {
             throw new IllegalArgumentException("Empty constructor is required for conversion. Please make sure " + targetType.getJavaType().getName() + " has an empty constructor!", ex);
         }
+        if (markNew && !targetType.isCreatable()) {
+            throw new IllegalArgumentException("Defined to convert to new object but target view type isn't annotated with @CreatableEntityView: " + targetType.getJavaType().getName());
+        }
+        this.markNew = markNew;
         this.postConvert = targetType.getPostConvertMethod();
         this.postConvertUsesSource = targetType.getPostConvertMethod() != null && targetType.getPostConvertMethod().getParameterTypes().length != 0;
     }
 
-    private AttributeAccessor createAccessor(ManagedViewType<S> sourceType, ManagedViewType<T> targetType, boolean ignoreMissing, boolean markNew, EntityViewManager entityViewManager, ProxyFactory proxyFactory, MethodAttribute<? super T, ?> targetAttribute) {
+    private AttributeAccessor createAccessor(ManagedViewType<S> sourceType, ManagedViewType<T> targetType, boolean ignoreMissing, boolean markNew, EntityViewManager entityViewManager, ProxyFactory proxyFactory, MethodAttribute<? super T, ?> targetAttribute, String prefix, Map<String, Key<Object, Object>> subMappers) {
+        String newPrefix;
+        if (prefix.isEmpty()) {
+            newPrefix = targetAttribute.getName();
+        } else {
+            newPrefix = prefix + "." + targetAttribute.getName();
+        }
+
+        Type<?> attributeType;
+        Boolean maybeMarkNew = markNew ? null : false;
+        Key<Object, Object> subMapperKey = subMappers.get(newPrefix);
+        if (subMapperKey == Key.EXCLUDE_MARKER) {
+            return null;
+        } else if (subMapperKey != null) {
+            ignoreMissing = subMapperKey.ignoreMissing;
+            maybeMarkNew = subMapperKey.markNew;
+        }
+
         // Try to find a source attribute
         MethodAttribute<? super S, ?> sourceAttribute = sourceType.getAttribute(targetAttribute.getName());
 
@@ -148,8 +177,13 @@ public class ViewMapper<S, T> {
             PluralAttribute<?, ?, ?> sourcePluralAttr = (PluralAttribute<?, ?, ?>) sourceAttribute;
             ViewMapper<Object, Object> valueMapper = null;
 
+            attributeType = targetPluralAttr.getElementType();
+            if (subMapperKey != null) {
+                attributeType = subMapperKey.targetType;
+            }
+
             if (targetAttribute.isSubview()) {
-                valueMapper = createViewMapper(sourcePluralAttr.getElementType(), targetPluralAttr.getElementType(), ignoreMissing, markNew, entityViewManager, proxyFactory);
+                valueMapper = createViewMapper(sourcePluralAttr.getElementType(), attributeType, ignoreMissing, maybeMarkNew, entityViewManager, proxyFactory, newPrefix, subMappers);
             } else if (targetPluralAttr.getElementType() != sourcePluralAttr.getElementType()) {
                 throw inconvertible("Attribute '" + targetAttribute.getName() + "' from target type has a different element type than in source type!", sourceType, targetType);
             }
@@ -161,7 +195,21 @@ public class ViewMapper<S, T> {
                 ViewMapper<Object, Object> keyMapper = null;
 
                 if (targetMapAttr.isKeySubview()) {
-                    keyMapper = createViewMapper(sourceMapAttr.getKeyType(), targetMapAttr.getKeyType(), ignoreMissing, markNew, entityViewManager, proxyFactory);
+                    String newKeyPrefix = "KEY(" + newPrefix + ")";
+                    Key<Object, Object> keySubMapperKey = subMappers.get(newKeyPrefix);
+                    if (keySubMapperKey == Key.EXCLUDE_MARKER) {
+                        keyMapper = null;
+                    } else {
+                        Type<?> keyTargetType = targetMapAttr.getKeyType();
+                        Boolean maybeMarkNewKey = markNew ? null : false;
+                        if (subMapperKey != null) {
+                            keyTargetType = keySubMapperKey.targetType;
+                            ignoreMissing = keySubMapperKey.ignoreMissing;
+                            maybeMarkNewKey = keySubMapperKey.markNew;
+                        }
+
+                        keyMapper = createViewMapper(sourceMapAttr.getKeyType(), keyTargetType, ignoreMissing, maybeMarkNewKey, entityViewManager, proxyFactory, newPrefix, subMappers);
+                    }
                 } else if (targetMapAttr.getKeyType() != sourceMapAttr.getKeyType()) {
                     throw inconvertible("Attribute '" + targetAttribute.getName() + "' from target type has a different key type than in source type!", sourceType, targetType);
                 }
@@ -173,7 +221,11 @@ public class ViewMapper<S, T> {
                 return new CollectionMappingAccessor(Accessors.forViewAttribute(null, sourceAttribute, true), needsDirtyTracker, !markNew, collectionInstantiator, valueMapper);
             }
         } else if (targetAttribute.isSubview()) {
-            ViewMapper<Object, Object> mapper = createViewMapper(((SingularAttribute<?, ?>) sourceAttribute).getType(), ((SingularAttribute<?, ?>) targetAttribute).getType(), ignoreMissing, markNew, entityViewManager, proxyFactory);
+            attributeType = ((SingularAttribute<?, ?>) targetAttribute).getType();
+            if (subMapperKey != null) {
+                attributeType = subMapperKey.targetType;
+            }
+            ViewMapper<Object, Object> mapper = createViewMapper(((SingularAttribute<?, ?>) sourceAttribute).getType(), attributeType, ignoreMissing, maybeMarkNew, entityViewManager, proxyFactory, newPrefix, subMappers);
             return new AttributeMappingAccessor(Accessors.forViewAttribute(null, sourceAttribute, true), mapper);
         } else if (targetAttribute.getConvertedJavaType() != sourceAttribute.getConvertedJavaType()) {
             throw inconvertible("Attribute '" + targetAttribute.getName() + "' from target type has a different type than in source type!", sourceType, targetType);
@@ -182,10 +234,10 @@ public class ViewMapper<S, T> {
         }
     }
 
-    private ViewMapper<Object, Object> createViewMapper(Type<?> source, Type<?> target, boolean ignoreMissing, boolean markNew, EntityViewManager entityViewManager, ProxyFactory proxyFactory) {
+    private ViewMapper<Object, Object> createViewMapper(Type<?> source, Type<?> target, boolean ignoreMissing, Boolean markNew, EntityViewManager entityViewManager, ProxyFactory proxyFactory, String prefix, Map<String, Key<Object, Object>> subMappers) {
         ManagedViewType<Object> sourceType = (ManagedViewType<Object>) source;
         ManagedViewType<Object> targetType = (ManagedViewType<Object>) target;
-        return new ViewMapper<>(sourceType, targetType, ignoreMissing, markNew, entityViewManager, proxyFactory);
+        return new ViewMapper<>(sourceType, targetType, ignoreMissing, markNew, entityViewManager, proxyFactory, prefix, subMappers);
     }
 
     private RuntimeException inconvertible(String reason, ManagedViewType<S> sourceType, ManagedViewType<T> targetType) {
@@ -225,9 +277,7 @@ public class ViewMapper<S, T> {
                 // Reset the initial state i.e. mark it as new
                 if (dirtyTracker instanceof DirtyStateTrackable) {
                     Object[] initialState = ((DirtyStateTrackable) dirtyTracker).$$_getInitialState();
-                    for (int i = 0; i < initialState.length; i++) {
-                        initialState[i] = null;
-                    }
+                    Arrays.fill(initialState, null);
                 }
                 for (int i = 0; i < dirtyMapping.length; i++) {
                     if (oldDirtyTracker.$$_isDirty(dirtyMapping[i])) {
@@ -235,6 +285,9 @@ public class ViewMapper<S, T> {
                     }
                 }
             }
+        }
+        if (markNew) {
+            ((MutableStateTrackable) result).$$_setIsNew(true);
         }
         if (postConvert != null) {
             try {
@@ -255,16 +308,79 @@ public class ViewMapper<S, T> {
      * @since 1.2.0
      */
     public static class Key<S, T> {
-        private final ManagedViewType<S> sourceType;
-        private final ManagedViewType<T> targetType;
+
+        public static final Key<Object, Object> EXCLUDE_MARKER = new Key<>(null, null, false, false);
+
+        private final ManagedViewTypeImplementor<S> sourceType;
+        private final ManagedViewTypeImplementor<T> targetType;
         private final boolean ignoreMissing;
         private final boolean markNew;
 
-        public Key(ManagedViewType<S> sourceType, ManagedViewType<T> targetType, boolean ignoreMissing, boolean markNew) {
+        public Key(ManagedViewTypeImplementor<S> sourceType, ManagedViewTypeImplementor<T> targetType, boolean ignoreMissing, boolean markNew) {
             this.sourceType = sourceType;
             this.targetType = targetType;
             this.ignoreMissing = ignoreMissing;
             this.markNew = markNew;
+        }
+
+        public ViewMapper<S, T> createViewMapper(EntityViewManager entityViewManager, ProxyFactory proxyFactory, Map<String, ViewMapper.Key<Object, Object>> subMappers) {
+            return new ViewMapper<>(sourceType, targetType, ignoreMissing, markNew, entityViewManager, proxyFactory, "", subMappers);
+        }
+
+        public static <Y> Key<Object, Y> create(ViewMetamodel metamodel, Object source, Class<Y> entityViewClass, ConvertOption... convertOptions) {
+            if (!(source instanceof EntityViewProxy)) {
+                throw new IllegalArgumentException("Can only convert one entity view to another. Invalid source type: " + source.getClass());
+            }
+
+            EntityViewProxy sourceProxy = (EntityViewProxy) source;
+            return (Key<Object, Y>) create(metamodel, sourceProxy.$$_getEntityViewClass(), entityViewClass, convertOptions);
+        }
+
+        public static <X, Y> Key<X, Y> create(ViewMetamodel metamodel, Class<X> sourceEntityViewClass, Class<Y> entityViewClass, ConvertOption... convertOptions) {
+            boolean ignoreMissingAttributes = false;
+            boolean markNew = false;
+            for (ConvertOption copyOption : convertOptions) {
+                switch (copyOption) {
+                    case CREATE_NEW:
+                        markNew = true;
+                        break;
+                    case IGNORE_MISSING_ATTRIBUTES:
+                        ignoreMissingAttributes = true;
+                        break;
+                    default:
+                        break;
+                }
+            }
+            return create(metamodel, sourceEntityViewClass, entityViewClass, ignoreMissingAttributes, markNew);
+        }
+
+        public static <X, Y> Key<X, Y> create(ViewMetamodel metamodel, Class<X> sourceEntityViewClass, Class<Y> entityViewClass, boolean ignoreMissingAttributes, boolean markNew) {
+            ManagedViewTypeImplementor<X> sourceViewType = (ManagedViewTypeImplementor<X>) metamodel.managedView(sourceEntityViewClass);
+            if (sourceViewType == null) {
+                throw new IllegalArgumentException("Unknown source view type: " + sourceEntityViewClass.getName());
+            }
+            ManagedViewTypeImplementor<Y> targetViewType = (ManagedViewTypeImplementor<Y>) metamodel.managedView(entityViewClass);
+            if (targetViewType == null) {
+                throw new IllegalArgumentException("Unknown target view type: " + entityViewClass.getName());
+            }
+
+            return new ViewMapper.Key<>(sourceViewType, targetViewType, ignoreMissingAttributes, markNew);
+        }
+
+        public ManagedViewTypeImplementor<S> getSourceType() {
+            return sourceType;
+        }
+
+        public ManagedViewTypeImplementor<T> getTargetType() {
+            return targetType;
+        }
+
+        public boolean isIgnoreMissing() {
+            return ignoreMissing;
+        }
+
+        public boolean isMarkNew() {
+            return markNew;
         }
 
         @Override
@@ -272,7 +388,7 @@ public class ViewMapper<S, T> {
             if (this == o) {
                 return true;
             }
-            if (o == null || getClass() != o.getClass()) {
+            if (o == null || this == EXCLUDE_MARKER || o == EXCLUDE_MARKER || getClass() != o.getClass()) {
                 return false;
             }
 
@@ -292,6 +408,9 @@ public class ViewMapper<S, T> {
 
         @Override
         public int hashCode() {
+            if (this == EXCLUDE_MARKER) {
+                return 0;
+            }
             int result = sourceType.hashCode();
             result = 31 * result + targetType.hashCode();
             result = 31 * result + (ignoreMissing ? 1 : 0);
