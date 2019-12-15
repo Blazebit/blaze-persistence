@@ -23,6 +23,6 @@ package com.blazebit.persistence.impl.function.datetime.dayofyear;
 public class SqliteDayOfYearFunction extends DayOfYearFunction {
 
     public SqliteDayOfYearFunction() {
-        super("strftime('%j',?1)");
+        super("cast(strftime('%j',?1) as integer)");
     }
 }

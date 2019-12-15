@@ -135,7 +135,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
         cb.select("allowedAge");
 
         String expected = ""
-                + "SELECT doc.name, allowedAge FROM Document doc, Long(1 VALUES) allowedAge WHERE doc.age = allowedAge";
+                + "SELECT doc.name, allowedAge FROM Long(1 VALUES) allowedAge, Document doc WHERE doc.age = allowedAge";
         
         assertEquals(expected, cb.getQueryString());
         List<Tuple> resultList = cb.getResultList();
@@ -156,7 +156,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
         cb.select("embeddable");
 
         String expected = ""
-                + "SELECT doc.name, embeddable FROM Document doc, NameObject(1 VALUES) embeddable" +
+                + "SELECT doc.name, embeddable FROM NameObject(1 VALUES) embeddable, Document doc" +
                 " WHERE doc.nameObject.primaryName = embeddable.secondaryName AND doc.nameObject.secondaryName = embeddable.primaryName";
 
         assertEquals(expected, cb.getQueryString());
@@ -180,7 +180,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
         cb.select("embeddable");
 
         String expected = ""
-                + "SELECT doc.name, embeddable FROM Document doc LEFT JOIN doc.nameContainers nameContainers_1, NameObjectContainer(1 VALUES) embeddable" +
+                + "SELECT doc.name, embeddable FROM NameObjectContainer(1 VALUES) embeddable, Document doc LEFT JOIN doc.nameContainers nameContainers_1" +
                 " WHERE nameContainers_1.name = embeddable.name AND nameContainers_1.nameObject.primaryName = embeddable.nameObject.secondaryName AND nameContainers_1.nameObject.secondaryName = embeddable.nameObject.primaryName";
 
         assertEquals(expected, cb.getQueryString());
@@ -375,7 +375,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
         cb.select("allowedAge");
 
         String expected = ""
-                + "SELECT CASE WHEN doc.name = :param THEN doc.name ELSE '' END, allowedAge FROM Document doc, Long(2 VALUES) allowedAge " +
+                + "SELECT CASE WHEN doc.name = :param THEN doc.name ELSE '' END, allowedAge FROM Long(2 VALUES) allowedAge, Document doc " +
                 "WHERE doc.age = allowedAge";
 
         assertEquals(expected, cb.getQueryString());

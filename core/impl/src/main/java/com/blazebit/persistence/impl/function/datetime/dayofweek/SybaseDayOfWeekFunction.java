@@ -21,9 +21,6 @@ package com.blazebit.persistence.impl.function.datetime.dayofweek;
  * @author Jan-Willem Gmelig Meyling
  * @since 1.4.0
  */
-public class SybaseDayOfWeekFunction extends DayOfWeekFunction {
+public class SybaseDayOfWeekFunction extends MSSQLDayOfWeekFunction {
 
-    public SybaseDayOfWeekFunction() {
-        super("datepart(dw, ?1)");
-    }
 }

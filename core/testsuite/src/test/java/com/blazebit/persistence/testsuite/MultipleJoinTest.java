@@ -135,9 +135,9 @@ public class MultipleJoinTest extends AbstractCoreTest {
             + joinAliasValue("l22") + " "
             + "FROM Document document"
             + " LEFT JOIN document.partners p1"
+            + " LEFT JOIN document.partners p2"
             + " LEFT JOIN p1.localized l11"
             + " LEFT JOIN p1.localized l12"
-            + " LEFT JOIN document.partners p2"
             + " LEFT JOIN p2.localized l21"
             + " LEFT JOIN p2.localized l22";
         assertEquals(expectedQuery, cb.getQueryString());
@@ -153,9 +153,9 @@ public class MultipleJoinTest extends AbstractCoreTest {
             .select("l");
 
         String expectedQuery = "SELECT " + joinAliasValue("l") + " FROM Document document"
+            + " LEFT JOIN document.partners partners_1"
             + " LEFT JOIN document.partners p1"
             + " LEFT JOIN p1.partnerDocument partnerDocument_1"
-            + " LEFT JOIN document.partners partners_1"
             + " LEFT JOIN partners_1.localized l"
             + " WHERE partnerDocument_1.name = :param_0";
         assertEquals(expectedQuery, cb.getQueryString());

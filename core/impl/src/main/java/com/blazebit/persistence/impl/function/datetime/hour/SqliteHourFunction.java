@@ -24,6 +24,6 @@ package com.blazebit.persistence.impl.function.datetime.hour;
 public class SqliteHourFunction extends HourFunction {
 
     public SqliteHourFunction() {
-        super("strftime('%H',?1)");
+        super("cast(strftime('%H',?1) as integer)");
     }
 }

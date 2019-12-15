@@ -21,9 +21,9 @@ package com.blazebit.persistence.impl.function.datetime.year;
  * @author Christian Beikov
  * @since 1.0.0
  */
-public class SqliteYearFunction extends YearFunction {
+public class PostgreSQLYearFunction extends YearFunction {
 
-    public SqliteYearFunction() {
-        super("cast(strftime('%Y',?1) as integer)");
+    public PostgreSQLYearFunction() {
+        super("extract(year from ?1)::int");
     }
 }

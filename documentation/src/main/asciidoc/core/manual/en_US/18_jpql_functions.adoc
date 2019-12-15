@@ -249,7 +249,8 @@ The possible fields and the respective function names are:
 * *Minute* - `MINUTE`
 * *Hour* - `HOUR`
 * *Day* - `DAY`
-* *Day of week* - `DAYOFWEEK` -  an integer between 1 (Monday) and 7 (Sunday)
+* *Day of week* - `DAYOFWEEK` -  an integer between 1 (Sunday) and 7 (Saturday)
+* *Day of week* - `ISODAYOFWEEK` -  an integer between 1 (Monday) and 7 (Sunday)
 * *Day of year* - `DAYOFYEAR` - an integer between 1 and 366
 * *Week* - `WEEK` or `ISO_WEEK` - an integer between 1 and 53
 * *Year week* - `YEAR_WEEK` - a string with the format `IYYY-IW`

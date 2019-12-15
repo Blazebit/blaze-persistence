@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.datetime.year;
+package com.blazebit.persistence.impl.function.datetime.minute;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.0.0
  */
-public class SqliteYearFunction extends YearFunction {
+public class PostgreSQLMinuteFunction extends MinuteFunction {
 
-    public SqliteYearFunction() {
-        super("cast(strftime('%Y',?1) as integer)");
+    public PostgreSQLMinuteFunction() {
+        super("extract(minute from ?1)::int");
     }
 }

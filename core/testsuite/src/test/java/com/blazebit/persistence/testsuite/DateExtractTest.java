@@ -334,7 +334,6 @@ public class DateExtractTest extends AbstractCoreTest {
         assertEquals(c2.get(Calendar.DAY_OF_YEAR), (int) actual.get(1));
     }
 
-
     @Test
     public void testDateExtractDayOfWeek() {
         // Set the client timezone
@@ -354,6 +353,27 @@ public class DateExtractTest extends AbstractCoreTest {
 
         assertEquals(c1.get(Calendar.DAY_OF_WEEK), (int) actual.get(0));
         assertEquals(c2.get(Calendar.DAY_OF_WEEK), (int) actual.get(1));
+    }
+
+    @Test
+    public void testDateExtractIsoDayOfWeek() {
+        // Set the client timezone
+        TimeZone.setDefault(clientTimeZone);
+        resetTimeZoneCaches();
+
+        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
+                .from(Document.class, "doc")
+                .select("ISODAYOFWEEK(creationDate)")
+                .select("ISODAYOFWEEK(lastModified)")
+                ;
+
+        List<Tuple> list = criteria.getResultList();
+        assertEquals(1, list.size());
+
+        Tuple actual = list.get(0);
+
+        assertEquals((c1.get(Calendar.DAY_OF_WEEK) + 5) % 7 + 1, (int) actual.get(0));
+        assertEquals((c2.get(Calendar.DAY_OF_WEEK) + 5) % 7 + 1, (int) actual.get(1));
     }
 
     @Test

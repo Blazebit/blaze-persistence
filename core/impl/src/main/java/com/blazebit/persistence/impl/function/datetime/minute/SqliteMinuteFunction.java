@@ -24,6 +24,6 @@ package com.blazebit.persistence.impl.function.datetime.minute;
 public class SqliteMinuteFunction extends MinuteFunction {
 
     public SqliteMinuteFunction() {
-        super("strftime('%M',?1)");
+        super("cast(strftime('%M',?1) as integer)");
     }
 }

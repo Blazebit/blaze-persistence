@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.datetime.year;
+package com.blazebit.persistence.impl.function.datetime.isodayofweek;
 
 /**
  *
- * @author Christian Beikov
- * @since 1.0.0
+ * @author Jan-Willem Gmelig Meyling
+ * @since 1.4.0
  */
-public class SqliteYearFunction extends YearFunction {
+public class AccessIsoDayOfWeekFunction extends IsoDayOfWeekFunction {
 
-    public SqliteYearFunction() {
-        super("cast(strftime('%Y',?1) as integer)");
+    public AccessIsoDayOfWeekFunction() {
+        super("Weekday(?1, 2)");
     }
 }

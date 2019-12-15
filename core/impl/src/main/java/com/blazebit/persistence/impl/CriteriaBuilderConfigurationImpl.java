@@ -118,6 +118,8 @@ import com.blazebit.persistence.impl.function.datediff.week.MSSQLWeekDiffFunctio
 import com.blazebit.persistence.impl.function.datediff.week.MySQLWeekDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.week.OracleWeekDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.week.PostgreSQLWeekDiffFunction;
+import com.blazebit.persistence.impl.function.datetime.day.PostgreSQLDayFunction;
+import com.blazebit.persistence.impl.function.datetime.day.SqliteDayFunction;
 import com.blazebit.persistence.impl.function.datetime.dayofweek.AccessDayOfWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.dayofweek.DB2DayOfWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.dayofweek.DayOfWeekFunction;
@@ -125,6 +127,7 @@ import com.blazebit.persistence.impl.function.datetime.dayofweek.MySQLDayOfWeekF
 import com.blazebit.persistence.impl.function.datetime.dayofweek.OracleDayOfWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.dayofweek.PostgreSQLDayOfWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.dayofweek.MSSQLDayOfWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.dayofweek.SqliteDayOfWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.dayofweek.SybaseDayOfWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.dayofyear.AccessDayOfYearFunction;
 import com.blazebit.persistence.impl.function.datetime.dayofyear.DB2DayOfYearFunction;
@@ -132,6 +135,8 @@ import com.blazebit.persistence.impl.function.datetime.dayofyear.DayOfYearFuncti
 import com.blazebit.persistence.impl.function.datetime.dayofyear.MySQLDayOfYearFunction;
 import com.blazebit.persistence.impl.function.datetime.dayofyear.OracleDayOfYearFunction;
 import com.blazebit.persistence.impl.function.datetime.dayofyear.MSSQLDayOfYearFunction;
+import com.blazebit.persistence.impl.function.datetime.dayofyear.PostgreSQLDayOfYearFunction;
+import com.blazebit.persistence.impl.function.datetime.dayofyear.SqliteDayOfYearFunction;
 import com.blazebit.persistence.impl.function.datetime.dayofyear.SybaseDayOfYearFunction;
 import com.blazebit.persistence.impl.function.datetime.epochday.DB2EpochDayFunction;
 import com.blazebit.persistence.impl.function.datetime.epochday.DefaultEpochDayFunction;
@@ -150,6 +155,18 @@ import com.blazebit.persistence.impl.function.datetime.epochmilli.MSSQLEpochMill
 import com.blazebit.persistence.impl.function.datetime.epochmilli.MySQLEpochMillisecondFunction;
 import com.blazebit.persistence.impl.function.datetime.epochmilli.OracleEpochMillisecondFunction;
 import com.blazebit.persistence.impl.function.datetime.epochmilli.PostgreSQLEpochMillisecondFunction;
+import com.blazebit.persistence.impl.function.datetime.hour.PostgreSQLHourFunction;
+import com.blazebit.persistence.impl.function.datetime.hour.SqliteHourFunction;
+import com.blazebit.persistence.impl.function.datetime.isodayofweek.AccessIsoDayOfWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.isodayofweek.DB2IsoDayOfWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.isodayofweek.IsoDayOfWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.isodayofweek.MSSQLIsoDayOfWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.isodayofweek.MySQLIsoDayOfWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.isodayofweek.OracleIsoDayOfWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.isodayofweek.PostgreSQLIsoDayOfWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.isodayofweek.SqliteIsoDayOfWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.isodayofweek.SybaseIsoDayOfWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.isoweek.PostgreSQLIsoWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.microsecond.DB2MicrosecondFunction;
 import com.blazebit.persistence.impl.function.datetime.microsecond.MicrosecondFunction;
 import com.blazebit.persistence.impl.function.datetime.microsecond.MySQLMicrosecondFunction;
@@ -164,9 +181,14 @@ import com.blazebit.persistence.impl.function.datetime.millisecond.OracleMillise
 import com.blazebit.persistence.impl.function.datetime.millisecond.PostgreSQLMillisecondFunction;
 import com.blazebit.persistence.impl.function.datetime.millisecond.MSSQLMillisecondFunction;
 import com.blazebit.persistence.impl.function.datetime.millisecond.SybaseMillisecondFunction;
+import com.blazebit.persistence.impl.function.datetime.minute.PostgreSQLMinuteFunction;
+import com.blazebit.persistence.impl.function.datetime.minute.SqliteMinuteFunction;
+import com.blazebit.persistence.impl.function.datetime.month.PostgreSQLMonthFunction;
+import com.blazebit.persistence.impl.function.datetime.month.SqliteMonthFunction;
 import com.blazebit.persistence.impl.function.datetime.quarter.AccessQuarterFunction;
 import com.blazebit.persistence.impl.function.datetime.quarter.DB2QuarterFunction;
 import com.blazebit.persistence.impl.function.datetime.quarter.OracleQuarterFunction;
+import com.blazebit.persistence.impl.function.datetime.quarter.PostgreSQLQuarterFunction;
 import com.blazebit.persistence.impl.function.datetime.quarter.QuarterFunction;
 import com.blazebit.persistence.impl.function.datetime.quarter.MSSQLQuarterFunction;
 import com.blazebit.persistence.impl.function.datetime.quarter.SqliteQuarterFunction;
@@ -180,15 +202,21 @@ import com.blazebit.persistence.impl.function.datetime.isoweek.MSSQLIsoWeekFunct
 import com.blazebit.persistence.impl.function.datetime.isoweek.SqliteIsoWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.isoweek.SybaseIsoWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.isoweek.IsoWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.second.PostgreSQLSecondFunction;
+import com.blazebit.persistence.impl.function.datetime.second.SqliteSecondFunction;
 import com.blazebit.persistence.impl.function.datetime.week.DB2WeekInYearFunction;
 import com.blazebit.persistence.impl.function.datetime.week.MySQLWeekInYearFunction;
 import com.blazebit.persistence.impl.function.datetime.week.OracleWeekInYearFunction;
 import com.blazebit.persistence.impl.function.datetime.week.MSSQLWeekInYearFunction;
+import com.blazebit.persistence.impl.function.datetime.week.PostgreSQLWeekInYearFunction;
 import com.blazebit.persistence.impl.function.datetime.week.WeekInYearFunction;
+import com.blazebit.persistence.impl.function.datetime.year.PostgreSQLYearFunction;
+import com.blazebit.persistence.impl.function.datetime.year.SqliteYearFunction;
 import com.blazebit.persistence.impl.function.datetime.yearofweek.DB2YearOfWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.yearofweek.MSSQLYearOfWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.yearofweek.MySQLYearOfWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.yearofweek.OracleYearOfWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.yearofweek.PostgreSQLYearOfWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.yearofweek.YearOfWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.yearweek.DB2YearWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.yearweek.H2YearWeekFunction;
@@ -631,15 +659,18 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         jpqlFunctionGroup = new JpqlFunctionGroup("year", false);
         jpqlFunctionGroup.add(null, new YearFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLYearFunction());
         jpqlFunctionGroup.add("access", new AccessYearFunction());
         jpqlFunctionGroup.add("db2", new DB2YearFunction());
         jpqlFunctionGroup.add("derby", new DerbyYearFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLYearFunction());
         jpqlFunctionGroup.add("sybase", new SybaseYearFunction());
+        jpqlFunctionGroup.add("sqlite", new SqliteYearFunction());
         registerFunction(jpqlFunctionGroup);
 
         jpqlFunctionGroup = new JpqlFunctionGroup("year_of_week", false);
         jpqlFunctionGroup.add(null, new YearOfWeekFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLYearOfWeekFunction());
         jpqlFunctionGroup.add("db2", new DB2YearOfWeekFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLYearOfWeekFunction());
         jpqlFunctionGroup.add("mysql", new MySQLYearOfWeekFunction());
@@ -660,15 +691,18 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         jpqlFunctionGroup = new JpqlFunctionGroup("month", false);
         jpqlFunctionGroup.add(null, new MonthFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLMonthFunction());
         jpqlFunctionGroup.add("access", new AccessMonthFunction());
         jpqlFunctionGroup.add("db2", new DB2MonthFunction());
         jpqlFunctionGroup.add("derby", new DerbyMonthFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLMonthFunction());
         jpqlFunctionGroup.add("sybase", new SybaseMonthFunction());
+        jpqlFunctionGroup.add("sqlite", new SqliteMonthFunction());
         registerFunction(jpqlFunctionGroup);
 
         jpqlFunctionGroup = new JpqlFunctionGroup("week", false);
         jpqlFunctionGroup.add(null, new IsoWeekFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLIsoWeekFunction());
         jpqlFunctionGroup.add("access", new AccessIsoWeekFunction());
         jpqlFunctionGroup.add("db2", new DB2IsoWeekFunction());
         jpqlFunctionGroup.add("h2", new H2IsoWeekFunction());
@@ -678,10 +712,12 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("mysql", new MySQLIsoWeekFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLIsoWeekFunction());
         jpqlFunctionGroup.add("oracle", new OracleIsoWeekFunction());
+        jpqlFunctionGroup.add("sqlite", new SqliteIsoWeekFunction());
         registerFunction(jpqlFunctionGroup);
 
         jpqlFunctionGroup = new JpqlFunctionGroup("iso_week", false);
         jpqlFunctionGroup.add(null, new IsoWeekFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLIsoWeekFunction());
         jpqlFunctionGroup.add("access", new AccessIsoWeekFunction());
         jpqlFunctionGroup.add("db2", new DB2IsoWeekFunction());
         jpqlFunctionGroup.add("h2", new H2IsoWeekFunction());
@@ -691,10 +727,12 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("mysql", new MySQLIsoWeekFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLIsoWeekFunction());
         jpqlFunctionGroup.add("oracle", new OracleIsoWeekFunction());
+        jpqlFunctionGroup.add("sqlite", new SqliteIsoWeekFunction());
         registerFunction(jpqlFunctionGroup);
 
         jpqlFunctionGroup = new JpqlFunctionGroup("week_in_year", false);
         jpqlFunctionGroup.add(null, new WeekInYearFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLWeekInYearFunction());
         jpqlFunctionGroup.add("db2", new DB2WeekInYearFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLWeekInYearFunction());
         jpqlFunctionGroup.add("mysql", new MySQLWeekInYearFunction());
@@ -704,26 +742,30 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         jpqlFunctionGroup = new JpqlFunctionGroup("quarter", false);
         jpqlFunctionGroup.add(null, new QuarterFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLQuarterFunction());
         jpqlFunctionGroup.add("access", new AccessQuarterFunction());
         jpqlFunctionGroup.add("db2", new DB2QuarterFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLQuarterFunction());
         jpqlFunctionGroup.add("sybase", new SybaseQuarterFunction());
         jpqlFunctionGroup.add("sqlite", new SqliteQuarterFunction());
         jpqlFunctionGroup.add("oracle", new OracleQuarterFunction());
+        jpqlFunctionGroup.add("sqlite", new SqliteQuarterFunction());
         registerFunction(jpqlFunctionGroup);
 
         jpqlFunctionGroup = new JpqlFunctionGroup("day", false);
         jpqlFunctionGroup.add(null, new DayFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLDayFunction());
         jpqlFunctionGroup.add("access", new AccessDayFunction());
         jpqlFunctionGroup.add("db2", new DB2DayFunction());
         jpqlFunctionGroup.add("derby", new DerbyDayFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLDayFunction());
         jpqlFunctionGroup.add("sybase", new SybaseDayFunction());
+        jpqlFunctionGroup.add("sqlite", new SqliteDayFunction());
         registerFunction(jpqlFunctionGroup);
 
         jpqlFunctionGroup = new JpqlFunctionGroup("dayofyear", false);
         jpqlFunctionGroup.add(null, new DayOfYearFunction());
-        jpqlFunctionGroup.add("postgresql", new DayOfYearFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLDayOfYearFunction());
         jpqlFunctionGroup.add("access", new AccessDayOfYearFunction());
         jpqlFunctionGroup.add("db2", new DB2DayOfYearFunction());
         jpqlFunctionGroup.add("mysql", new MySQLDayOfYearFunction());
@@ -731,6 +773,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("microsoft", new MSSQLDayOfYearFunction());
         jpqlFunctionGroup.add("sybase", new SybaseDayOfYearFunction());
         jpqlFunctionGroup.add("oracle", new OracleDayOfYearFunction());
+        jpqlFunctionGroup.add("sqlite", new SqliteDayOfYearFunction());
         registerFunction(jpqlFunctionGroup);
 
         jpqlFunctionGroup = new JpqlFunctionGroup("dayofweek", false);
@@ -743,36 +786,56 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("microsoft", new MSSQLDayOfWeekFunction());
         jpqlFunctionGroup.add("sybase", new SybaseDayOfWeekFunction());
         jpqlFunctionGroup.add("oracle", new OracleDayOfWeekFunction());
+        jpqlFunctionGroup.add("sqlite", new SqliteDayOfWeekFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        jpqlFunctionGroup = new JpqlFunctionGroup("isodayofweek", false);
+        jpqlFunctionGroup.add(null, new IsoDayOfWeekFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLIsoDayOfWeekFunction());
+        jpqlFunctionGroup.add("access", new AccessIsoDayOfWeekFunction());
+        jpqlFunctionGroup.add("db2", new DB2IsoDayOfWeekFunction());
+        jpqlFunctionGroup.add("mysql", new MySQLIsoDayOfWeekFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLIsoDayOfWeekFunction());
+        jpqlFunctionGroup.add("microsoft", new MSSQLIsoDayOfWeekFunction());
+        jpqlFunctionGroup.add("sybase", new SybaseIsoDayOfWeekFunction());
+        jpqlFunctionGroup.add("oracle", new OracleIsoDayOfWeekFunction());
+        jpqlFunctionGroup.add("sqlite", new SqliteIsoDayOfWeekFunction());
         registerFunction(jpqlFunctionGroup);
 
         jpqlFunctionGroup = new JpqlFunctionGroup("hour", false);
         jpqlFunctionGroup.add(null, new HourFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLHourFunction());
         jpqlFunctionGroup.add("access", new AccessHourFunction());
         jpqlFunctionGroup.add("db2", new DB2HourFunction());
         jpqlFunctionGroup.add("derby", new DerbyHourFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLHourFunction());
         jpqlFunctionGroup.add("sybase", new SybaseHourFunction());
         jpqlFunctionGroup.add("oracle", new OracleHourFunction());
+        jpqlFunctionGroup.add("sqlite", new SqliteHourFunction());
         registerFunction(jpqlFunctionGroup);
 
         jpqlFunctionGroup = new JpqlFunctionGroup("minute", false);
         jpqlFunctionGroup.add(null, new MinuteFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLMinuteFunction());
         jpqlFunctionGroup.add("access", new AccessMinuteFunction());
         jpqlFunctionGroup.add("db2", new DB2MinuteFunction());
         jpqlFunctionGroup.add("derby", new DerbyMinuteFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLMinuteFunction());
         jpqlFunctionGroup.add("sybase", new SybaseMinuteFunction());
         jpqlFunctionGroup.add("oracle", new OracleMinuteFunction());
+        jpqlFunctionGroup.add("sqlite", new SqliteMinuteFunction());
         registerFunction(jpqlFunctionGroup);
 
         jpqlFunctionGroup = new JpqlFunctionGroup("second", false);
         jpqlFunctionGroup.add(null, new SecondFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLSecondFunction());
         jpqlFunctionGroup.add("access", new AccessSecondFunction());
         jpqlFunctionGroup.add("db2", new DB2SecondFunction());
         jpqlFunctionGroup.add("derby", new DerbySecondFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLSecondFunction());
         jpqlFunctionGroup.add("sybase", new SybaseSecondFunction());
         jpqlFunctionGroup.add("oracle", new OracleSecondFunction());
+        jpqlFunctionGroup.add("sqlite", new SqliteSecondFunction());
         registerFunction(jpqlFunctionGroup);
 
         jpqlFunctionGroup = new JpqlFunctionGroup("millisecond", false);
