@@ -24,6 +24,6 @@ package com.blazebit.persistence.impl.function.datetime.dayofweek;
 public class SqliteDayOfWeekFunction extends DayOfWeekFunction {
 
     public SqliteDayOfWeekFunction() {
-        super("strftime('%w',?1)");
+        super("(cast(strftime('%w',?1) as integer) + 1)");
     }
 }

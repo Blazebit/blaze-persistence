@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.datetime.year;
+package com.blazebit.persistence.impl.function.datetime.day;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.0.0
  */
-public class SqliteYearFunction extends YearFunction {
+public class PostgreSQLDayFunction extends DayFunction {
 
-    public SqliteYearFunction() {
-        super("cast(strftime('%Y',?1) as integer)");
+    public PostgreSQLDayFunction() {
+        super("extract(day from ?1)::int");
     }
 }

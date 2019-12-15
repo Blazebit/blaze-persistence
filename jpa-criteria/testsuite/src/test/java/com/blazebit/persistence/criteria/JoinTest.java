@@ -126,7 +126,11 @@ public class JoinTest extends AbstractCoreTest {
 
         CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         assertEquals("SELECT INDEX(person), KEY(contact), " + joinAliasValue("contact") + ", ENTRY(contact) " +
-                "FROM Document document JOIN document.contacts contact JOIN contact.partnerDocument partnerDoc JOIN document.people person JOIN person.localized localized" +
+                "FROM Document document " +
+                "JOIN document.people person " +
+                "JOIN person.localized localized " +
+                "JOIN document.contacts contact " +
+                "JOIN contact.partnerDocument partnerDoc" +
                 "", criteriaBuilder.getQueryString());
     }
 
@@ -152,11 +156,12 @@ public class JoinTest extends AbstractCoreTest {
 
         CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         assertEquals("SELECT INDEX(person), KEY(contact), " + joinAliasValue("contact") + ", ENTRY(contact) " +
-                "FROM Document document JOIN document.contacts contact " +
-                "JOIN contact.partnerDocument partnerDoc " +
-                "JOIN document.nameObject.intIdEntity intEntity " +
+                "FROM Document document " +
                 "JOIN document.people person " +
-                "JOIN person.localized localized" +
+                "JOIN person.localized localized " +
+                "JOIN document.contacts contact " +
+                "JOIN contact.partnerDocument partnerDoc " +
+                "JOIN document.nameObject.intIdEntity intEntity" +
                 "", criteriaBuilder.getQueryString());
     }
 
@@ -176,13 +181,14 @@ public class JoinTest extends AbstractCoreTest {
         cq.select(root.get(Document_.id));
 
         CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
-        assertEquals("SELECT document.id FROM Document document" +
-                " JOIN document.contacts contact"
-                + onClause("KEY(contact) IS NOT NULL") +
-                " JOIN document.owner owner"
-                + onClause("owner.age IS NOT NULL") +
-                " JOIN document.people person"
-                + onClause("INDEX(person) IS NOT NULL"), criteriaBuilder.getQueryString());
+        assertEquals("SELECT document.id FROM Document document"
+                + " JOIN document.owner owner"
+                + onClause("owner.age IS NOT NULL")
+                + " JOIN document.people person"
+                + onClause("INDEX(person) IS NOT NULL")
+                + " JOIN document.contacts contact"
+                + onClause("KEY(contact) IS NOT NULL")
+                , criteriaBuilder.getQueryString());
     }
 
 }

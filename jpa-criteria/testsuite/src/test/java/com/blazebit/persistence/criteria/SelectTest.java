@@ -114,7 +114,12 @@ public class SelectTest extends AbstractCoreTest {
         );
 
         CriteriaBuilder<Tuple> criteriaBuilder = cq.createCriteriaBuilder(em);
-        assertEquals("SELECT TYPE(document), TYPE(document.id), TYPE(myPerson), TYPE(" + joinAliasValue("contact") + "), TYPE(partner), TYPE(KEY(contact)) FROM Document document JOIN document.contacts contact JOIN document.partners partner JOIN document.people myPerson", criteriaBuilder.getQueryString());
+        assertEquals("SELECT TYPE(document), TYPE(document.id), TYPE(myPerson), TYPE(" + joinAliasValue("contact") + "), TYPE(partner), TYPE(KEY(contact)) " +
+                "FROM Document document " +
+                "JOIN document.people myPerson " +
+                "JOIN document.contacts contact " +
+                "JOIN document.partners partner",
+                criteriaBuilder.getQueryString());
     }
 
     @Test

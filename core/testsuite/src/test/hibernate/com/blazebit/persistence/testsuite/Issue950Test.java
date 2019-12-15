@@ -16,10 +16,19 @@
 
 package com.blazebit.persistence.testsuite;
 
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate52;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate53;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.Id;
@@ -27,6 +36,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToOne;
 import javax.persistence.PrimaryKeyJoinColumn;
+import javax.persistence.Table;
 import javax.persistence.Tuple;
 import java.util.List;
 
@@ -48,6 +58,7 @@ public class Issue950Test extends AbstractCoreTest {
     public static class BaseEntity {
 
         @Id
+        @Column(name = "key_id")
         Long key;
 
         String value;
@@ -66,10 +77,11 @@ public class Issue950Test extends AbstractCoreTest {
     }
 
     @Entity(name = "A")
+    @Table(name = "a")
     public static class A extends BaseEntity {
 
         @OneToOne
-        @PrimaryKeyJoinColumn(columnDefinition = "key", referencedColumnName = "key")
+        @PrimaryKeyJoinColumn(columnDefinition = "association_key", referencedColumnName = "key_id")
         private C cAssociationByKey;
 
         public A() {
@@ -82,6 +94,7 @@ public class Issue950Test extends AbstractCoreTest {
 
 
     @Entity(name = "B")
+    @Table(name = "b")
     public static class B extends BaseEntity {
         public B() {
         }
@@ -92,6 +105,7 @@ public class Issue950Test extends AbstractCoreTest {
     }
 
     @Entity(name = "C")
+    @Table(name = "c")
     public static class C extends BaseEntity {
         public C() {
         }
@@ -102,6 +116,7 @@ public class Issue950Test extends AbstractCoreTest {
     }
 
     @Entity(name = "D")
+    @Table(name = "d")
     public static class D extends BaseEntity {
         public D() {
         }
@@ -113,9 +128,11 @@ public class Issue950Test extends AbstractCoreTest {
     }
 
     @Entity(name = "Association")
+    @Table(name = "association")
     public static class Association {
 
         @Id
+        @Column(name = "key_id")
         private Long key;
 
         private String value;
@@ -156,7 +173,9 @@ public class Issue950Test extends AbstractCoreTest {
         });
     }
 
+    // NOTE: Requires Entity joins
     @Test
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
     public void testJoinOrderWithRightJoin() {
         transactional(new TxVoidWork() {
             @Override
@@ -194,7 +213,9 @@ public class Issue950Test extends AbstractCoreTest {
         });
     }
 
+    // NOTE: Hibernate currently doesn't fully respect the join order, but just renders association joins first
     @Test
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoHibernate52.class, NoHibernate53.class, NoHibernate.class })
     public void testJoinOrderWithRightNormalJoin() {
         transactional(new TxVoidWork() {
             @Override
@@ -232,7 +253,9 @@ public class Issue950Test extends AbstractCoreTest {
         });
     }
 
+    // NOTE: Requires Entity joins
     @Test
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
     public void testJoinOrderWithRightJoinWithIdDereference() {
         transactional(new TxVoidWork() {
             @Override
@@ -279,7 +302,9 @@ public class Issue950Test extends AbstractCoreTest {
         });
     }
 
+    // NOTE: Hibernate currently doesn't fully respect the join order, but just renders association joins first
     @Test
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoHibernate52.class, NoHibernate53.class, NoHibernate.class })
     public void testJoinOrderWithRightNormalJoinWithIdDereference() {
         transactional(new TxVoidWork() {
             @Override
@@ -326,7 +351,9 @@ public class Issue950Test extends AbstractCoreTest {
         });
     }
 
+    // NOTE: Requires Entity joins
     @Test
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
     public void testJoinOrderWithRightJoinWithInnerImplicitJoins() {
         transactional(new TxVoidWork() {
             @Override
@@ -373,7 +400,9 @@ public class Issue950Test extends AbstractCoreTest {
         });
     }
 
+    // NOTE: Hibernate currently doesn't fully respect the join order, but just renders association joins first
     @Test
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoHibernate52.class, NoHibernate53.class, NoHibernate.class })
     public void testJoinOrderWithRightNormalJoinWithInnerImplicitJoins() {
         transactional(new TxVoidWork() {
             @Override
@@ -420,7 +449,9 @@ public class Issue950Test extends AbstractCoreTest {
         });
     }
 
+    // NOTE: Requires Entity joins
     @Test
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
     public void testJoinOrderWithRightJoinWithNonOptionalAssociationProjections() {
         transactional(new TxVoidWork() {
             @Override
@@ -462,7 +493,9 @@ public class Issue950Test extends AbstractCoreTest {
         });
     }
 
+    // NOTE: Hibernate currently doesn't fully respect the join order, but just renders association joins first
     @Test
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoHibernate52.class, NoHibernate53.class, NoHibernate.class })
     public void testJoinOrderWithRightNormalJoinWithNonOptionalAssociationProjections() {
         transactional(new TxVoidWork() {
             @Override

@@ -86,8 +86,11 @@ public class SizeTransformationTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class, "w")
                 .select("SIZE(w.supportedLocales)")
                 .leftJoin("w.localized", "localized");
-        String expectedQuery = "SELECT " + function("COUNT_TUPLE", "'DISTINCT'", "supportedLocales_1") + " FROM Workflow w LEFT JOIN w.localized localized " +
-                "LEFT JOIN w.supportedLocales supportedLocales_1 GROUP BY w.id";
+        String expectedQuery = "SELECT " + function("COUNT_TUPLE", "'DISTINCT'", "supportedLocales_1") + " " +
+                "FROM Workflow w " +
+                "LEFT JOIN w.supportedLocales supportedLocales_1 " +
+                "LEFT JOIN w.localized localized " +
+                "GROUP BY w.id";
         Assert.assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
     }
@@ -329,7 +332,10 @@ public class SizeTransformationTest extends AbstractCoreTest {
         String expectedQuery = "SELECT p.id, ownedDocument.id, favoriteDocument.id, " +
                 "(SELECT " + countStar() + " FROM " + correlationPath("ownedDocument.versions", Version.class,"version", "document.id = ownedDocument.id") + "), " +
                 "(SELECT " + countStar() + " FROM " + correlationPath("favoriteDocument.versions", Version.class,"version", "document.id = favoriteDocument.id") + "), " +
-                "(SELECT " + countStar() + " FROM " + correlationPath("p.ownedDocuments", Document.class,"document", "owner.id = p.id") + ") FROM Person p LEFT JOIN p.favoriteDocuments favoriteDocument LEFT JOIN p.ownedDocuments ownedDocument " +
+                "(SELECT " + countStar() + " FROM " + correlationPath("p.ownedDocuments", Document.class,"document", "owner.id = p.id") + ") " +
+                "FROM Person p " +
+                "LEFT JOIN p.ownedDocuments ownedDocument " +
+                "LEFT JOIN p.favoriteDocuments favoriteDocument " +
                 "ORDER BY p.id ASC, " + renderNullPrecedence("ownedDocument.id", "ASC", "LAST") + ", " + renderNullPrecedence("favoriteDocument.id", "ASC", "LAST");
         Assert.assertEquals(expectedQuery, cb.getQueryString());
     }

@@ -24,6 +24,6 @@ package com.blazebit.persistence.impl.function.datetime.dayofweek;
 public class AccessDayOfWeekFunction extends DayOfWeekFunction {
 
     public AccessDayOfWeekFunction() {
-        super("datepart('w', ?1)");
+        super("Weekday(?1, 1)");
     }
 }

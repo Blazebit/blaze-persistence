@@ -24,6 +24,6 @@ package com.blazebit.persistence.impl.function.datetime.dayofweek;
 public class OracleDayOfWeekFunction extends DayOfWeekFunction {
 
     public OracleDayOfWeekFunction() {
-        super("to_number(to_char(?1, 'D'))");
+        super("(1 + mod(1 + trunc(?1) - trunc(?1, 'IW'), 7))");
     }
 }

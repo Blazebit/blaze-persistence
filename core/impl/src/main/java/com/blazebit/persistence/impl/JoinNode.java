@@ -48,6 +48,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -86,8 +87,8 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
     private final JoinAliasInfo aliasInfo;
     private final List<JoinNode> joinNodesForTreatConstraint;
 
-    private final Map<String, JoinTreeNode> nodes = new TreeMap<>(); // Use TreeMap so that joins get applied alphabetically for easier testing
-    private final Map<String, JoinNode> treatedJoinNodes = new TreeMap<>();
+    private final NavigableMap<String, JoinTreeNode> nodes = new TreeMap<>(); // Use TreeMap so that joins get applied alphabetically for easier testing
+    private final NavigableMap<String, JoinNode> treatedJoinNodes = new TreeMap<>();
     private final Set<JoinNode> entityJoinNodes = new LinkedHashSet<>();
 
     // contains other join nodes which this node depends on
@@ -542,11 +543,11 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         this.fetch = fetch;
     }
 
-    public Map<String, JoinTreeNode> getNodes() {
+    public NavigableMap<String, JoinTreeNode> getNodes() {
         return nodes;
     }
 
-    public Map<String, JoinNode> getTreatedJoinNodes() {
+    public NavigableMap<String, JoinNode> getTreatedJoinNodes() {
         return treatedJoinNodes;
     }
 
@@ -624,6 +625,18 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
 
     public boolean isTreatedJoinNode() {
         return treatType != null && aliasInfo instanceof TreatedJoinAliasInfo;
+    }
+
+    public boolean isEntityJoinNode() {
+        return parentTreeNode == null;
+    }
+
+    public boolean isRootJoinNode() {
+        return parent == null && (parentTreeNode == null || correlationParent != null);
+    }
+
+    public boolean isDefaultJoinNode() {
+        return aliasInfo.isImplicit();
     }
 
     public int getValueCount() {

@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.datetime.year;
+package com.blazebit.persistence.impl.function.datetime.isoweek;
 
 /**
  *
- * @author Christian Beikov
- * @since 1.0.0
+ * @author Jan-Willem Gmelig Meyling
+ * @since 1.4.0
  */
-public class SqliteYearFunction extends YearFunction {
+public class PostgreSQLIsoWeekFunction extends IsoWeekFunction {
 
-    public SqliteYearFunction() {
-        super("cast(strftime('%Y',?1) as integer)");
+    public PostgreSQLIsoWeekFunction() {
+        super("extract(week from ?1)::int");
     }
+
 }

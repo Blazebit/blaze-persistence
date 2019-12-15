@@ -24,6 +24,6 @@ package com.blazebit.persistence.impl.function.datetime.isoweek;
 public class SqliteIsoWeekFunction extends IsoWeekFunction {
 
     public SqliteIsoWeekFunction() {
-        super("(strftime('%j', date(?1, '-3 days', 'weekday 4')) - 1) / 7 + 1");
+        super("(cast(strftime('%j', date(?1, '-3 days', 'weekday 4')) as integer) - 1) / 7 + 1");
     }
 }

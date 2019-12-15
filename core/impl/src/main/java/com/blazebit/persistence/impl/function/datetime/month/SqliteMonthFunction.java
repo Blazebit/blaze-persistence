@@ -24,6 +24,6 @@ package com.blazebit.persistence.impl.function.datetime.month;
 public class SqliteMonthFunction extends MonthFunction {
 
     public SqliteMonthFunction() {
-        super("strftime('%m',?1)");
+        super("cast(strftime('%m',?1) as integer)");
     }
 }

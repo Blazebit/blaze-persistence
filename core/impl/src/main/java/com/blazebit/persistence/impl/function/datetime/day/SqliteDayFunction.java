@@ -24,6 +24,6 @@ package com.blazebit.persistence.impl.function.datetime.day;
 public class SqliteDayFunction extends DayFunction {
 
     public SqliteDayFunction() {
-        super("strftime('%d',?1)");
+        super("cast(strftime('%d',?1) as integer)");
     }
 }

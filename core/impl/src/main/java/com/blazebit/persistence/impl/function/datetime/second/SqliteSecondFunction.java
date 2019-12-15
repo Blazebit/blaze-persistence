@@ -24,6 +24,6 @@ package com.blazebit.persistence.impl.function.datetime.second;
 public class SqliteSecondFunction extends SecondFunction {
 
     public SqliteSecondFunction() {
-        super("strftime('%S',?1)");
+        super("cast(strftime('%S',?1) as integer)");
     }
 }
