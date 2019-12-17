@@ -47,6 +47,9 @@ A simple quickstart section with a usage example for the Entity View module
 
 === Presentations
 
+https://www.meetup.com/de-DE/Java-Vienna/events/263596528[Java Vienna Meetup 2019-12-16]::
+https://www.slideshare.net/blazebitbeikov/blazepersistence-graphql-high-performance-querying-and-relay-pagination-javavienna-16122019[Blaze-Persistence GraphQL - High performance querying and Relay pagination] was a talk by Christian that introduces to GraphQL and the Relay specification and how Blaze-Persistence Entity Views with the new GraphQL integration makes developing super fast with high performance. The demo code can be found on https://github.com/Blazebit/blaze-persistence-presentation/tree/master/graphql-support-relay-pagination/demo[GitHub]
+
 https://www.meetup.com/de-DE/Java-Vienna/events/256644900[Java Vienna Meetup 2018-12-03]::
 https://www.slideshare.net/blazebitbeikov/entity-views-not-your-fathers-dtos-javaviennameetup-20181203[Entity Views - Not your father's DTOs] was a talk by Christian that uncovers the problems with traditional DTO approaches and how Blaze-Persistence Entity Views can help you overcome these issues. The demo code can be found on https://github.com/Blazebit/blaze-persistence/tree/master/examples/spring-data-webmvc[GitHub]
 

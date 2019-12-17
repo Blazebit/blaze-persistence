@@ -41,6 +41,8 @@
         <buildtime>${maven.build.timestamp}</buildtime>
 
         <asciidoctor.option.template_dirs>${basedir}/src/main/jbake/templates/asciidoctor</asciidoctor.option.template_dirs>
+
+        <version.asciidoctor>1.5.6</version.asciidoctor>
     </properties>
 
     <dependencies>
@@ -210,6 +212,11 @@
                             <groupId>org.jbake</groupId>
                             <artifactId>jbake-core</artifactId>
                             <version>2.6.1</version>
+                        </dependency>
+                        <dependency>
+                            <groupId>org.asciidoctor</groupId>
+                            <artifactId>asciidoctorj</artifactId>
+                            <version>${version.asciidoctor}</version>
                         </dependency>
                         <dependency>
                             <groupId>org.jruby</groupId>

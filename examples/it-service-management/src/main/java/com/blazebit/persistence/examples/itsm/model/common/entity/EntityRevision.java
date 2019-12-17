@@ -16,26 +16,23 @@
 
 package com.blazebit.persistence.examples.itsm.model.common.entity;
 
-import java.io.Serializable;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import org.hibernate.envers.ModifiedEntityNames;
+import org.hibernate.envers.RevisionEntity;
+import org.hibernate.envers.RevisionNumber;
+import org.hibernate.envers.RevisionTimestamp;
 
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-
-import org.hibernate.envers.ModifiedEntityNames;
-import org.hibernate.envers.RevisionEntity;
-import org.hibernate.envers.RevisionNumber;
-import org.hibernate.envers.RevisionTimestamp;
+import java.io.Serializable;
+import java.time.Instant;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * @author Giovanni Lovato
@@ -70,13 +67,6 @@ public class EntityRevision
     @Override
     public Optional<Instant> getRevisionInstant() {
         return Optional.of(this.timestamp.toInstant());
-    }
-
-    @Override
-    @Deprecated
-    public Optional<LocalDateTime> getRevisionDate() {
-        return this.getRevisionInstant()
-                .map(i -> LocalDateTime.ofInstant(i, ZoneOffset.UTC));
     }
 
     @Override

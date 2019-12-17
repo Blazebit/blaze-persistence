@@ -35,8 +35,8 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
 
-        <version.spring>${version.spring-data-2.1-spring}</version.spring>
-        <version.spring.boot>${version.spring-data-2.1-spring-boot}</version.spring.boot>
+        <version.spring>${version.spring-data-2.2-spring}</version.spring>
+        <version.spring.boot>${version.spring-data-2.2-spring-boot}</version.spring.boot>
         <version.surefire.plugin>2.22.1</version.surefire.plugin>
         <junit-jupiter.version>5.3.2</junit-jupiter.version>
         <version.hibernate-5.3>5.3.12.Final</version.hibernate-5.3>
@@ -118,7 +118,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-spring-data-2.1</artifactId>
+            <artifactId>blaze-persistence-integration-spring-data-2.2</artifactId>
         </dependency>
 
         <!-- Spring dependencies -->
@@ -133,7 +133,7 @@
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-jpa</artifactId>
-            <version>${version.spring-data-2.1}</version>
+            <version>${version.spring-data-2.2}</version>
         </dependency>
         <dependency>
             <groupId>org.aspectj</groupId>
