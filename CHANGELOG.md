@@ -21,6 +21,7 @@ Not yet released
 * Allow to configure keyset extraction and count query execution through `EntityViewSetting`
 * Add `ISODAYOFWEEK` function to produce _Monday = 1 ... Sunday = 7_ and clarify documentation
 * Official support for Java 13 and 14
+* Add support for enum literals in builder API
 
 ### Bug fixes
 

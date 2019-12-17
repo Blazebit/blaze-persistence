@@ -514,7 +514,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
     private static void buildComponentFlushers(EntityViewManagerImpl evm, Class<?> entityClass, Class<?> rootType, String attributePrefix, String mappingPrefix, String accessorPrefix, Set<Attribute<?, ?>> attributes, Map<AttributeAccessor, BasicAttributeFlusher> componentFlushers) {
         for (Attribute<?, ?> attribute : attributes) {
             if (!(attribute instanceof SingularAttribute<?, ?>)) {
-                throw new IllegalArgumentException("Plural attributes in embedded ids aren't supported yet! Remove attribute " + attribute.getName() + " of type " + attribute.getDeclaringType().getJavaType().getName());
+                throw new IllegalArgumentException("Plural attributes in embeddable types aren't supported yet! Remove attribute " + attribute.getName() + " of type " + attribute.getDeclaringType().getJavaType().getName() + " or use an entity view instead of the embeddable type!");
             }
             SingularAttribute<?, ?> attr = (SingularAttribute<?, ?>) attribute;
             if (attr.getType() instanceof javax.persistence.metamodel.BasicType<?>) {

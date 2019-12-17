@@ -130,6 +130,10 @@ public class SimpleQueryGenerator implements Expression.Visitor {
         return oldBooleanLiteralRenderingContext;
     }
 
+    public BooleanLiteralRenderingContext getBooleanLiteralRenderingContext() {
+        return booleanLiteralRenderingContext;
+    }
+
     public StringBuilder getQueryBuffer() {
         return sb;
     }

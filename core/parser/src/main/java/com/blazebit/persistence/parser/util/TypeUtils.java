@@ -33,6 +33,30 @@ import java.util.Map;
  */
 public class TypeUtils {
 
+    public static final TypeConverter<Enum<?>> ENUM_CONVERTER = new AbstractTypeConverter<Enum<?>>() {
+
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public Enum<?> convert(Object value) {
+            throw unknownConversion(value, Enum.class);
+        }
+
+        @Override
+        public String toString(Enum<?> value) {
+            StringBuilder sb = new StringBuilder(value.getDeclaringClass().getName().length() + value.name().length() + 1);
+            appendTo(value, sb);
+            return sb.toString();
+        }
+
+        @Override
+        public void appendTo(Enum<?> value, StringBuilder sb) {
+            sb.append(value.getDeclaringClass().getName());
+            sb.append('.');
+            sb.append(value.name());
+        }
+    };
+
     public static final TypeConverter<String> STRING_CONVERTER = new AbstractTypeConverter<String>() {
 
         private static final long serialVersionUID = 1L;
@@ -747,7 +771,9 @@ public class TypeUtils {
         TypeConverter t = CONVERTERS.get(targetType);
         
         if (t == null) {
-            if (java.sql.Time.class.isAssignableFrom(targetType)) {
+            if (targetType.isEnum()) {
+                t = TypeUtils.ENUM_CONVERTER;
+            } else if (java.sql.Time.class.isAssignableFrom(targetType)) {
                 t = TypeUtils.TIME_CONVERTER;
             } else if (java.sql.Date.class.isAssignableFrom(targetType)) {
                 t = TypeUtils.DATE_CONVERTER;
