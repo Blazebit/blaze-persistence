@@ -171,4 +171,17 @@ public class ParameterAPITest extends AbstractCoreTest {
 
         assertEquals("SELECT :param FROM Document d", cb.getQueryString());
     }
+
+    @Test
+    public void testRenderEnumAsLiteralInPredicate() {
+        CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
+        cb.from(Document.class, "d")
+                .where("d.documentType").eqLiteral(DocumentType.NOVEL)
+                .where("d.documentType").inLiterals(DocumentType.NOVEL, DocumentType.CONTRACT);
+
+        assertEquals("SELECT d FROM Document d " +
+                "WHERE d.documentType = " + DocumentType.class.getName() + "." + DocumentType.NOVEL.name() + " " +
+                "AND d.documentType IN (" + DocumentType.class.getName() + "." + DocumentType.NOVEL.name() + ", " + DocumentType.class.getName() + "." + DocumentType.CONTRACT.name() + ")",
+                cb.getQueryString());
+    }
 }
