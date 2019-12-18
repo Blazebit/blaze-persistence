@@ -40,6 +40,8 @@ import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.testsuite.tx.TxWork;
 
 import javax.persistence.EntityManager;
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.Metamodel;
 
 /**
  *
@@ -208,10 +210,42 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
         return sb.toString();
     }
 
+    private static List<EntityType<?>> subtypes(EntityType<?> t, Metamodel metamodel) {
+        List<EntityType<?>> list = new ArrayList<>();
+        if (t.getJavaType() == null) {
+            list.add(t);
+        } else {
+            for (EntityType<?> entity : metamodel.getEntities()) {
+                if (entity.getJavaType() != null && t.getJavaType().isAssignableFrom(entity.getJavaType())) {
+                    list.add(entity);
+                }
+            }
+        }
+        return list;
+    }
+
     protected String treatRoot(String path, Class<?> type, String property) {
         if (jpaProvider.supportsRootTreat()) {
             return "TREAT(" + path + " AS " + type.getSimpleName() + ")." + property;
         } else if (jpaProvider.supportsSubtypePropertyResolving()) {
+            EntityType<?> entity = emf.getMetamodel().entity(type);
+            if (jpaProvider.needsTypeConstraintForColumnSharing() && jpaProvider.isColumnShared(entity, property)) {
+                StringBuilder sb = new StringBuilder();
+                sb.append("CASE WHEN ");
+
+                sb.append("TYPE(");
+                sb.append(path);
+                sb.append(") IN (");
+                for (EntityType<?> subtype : subtypes(entity, emf.getMetamodel())) {
+                    sb.append(subtype.getName());
+                    sb.append(", ");
+                }
+
+                sb.setLength(sb.length() - 2);
+                sb.append(") THEN ");
+                sb.append(path).append('.').append(property).append(" END");
+                return sb.toString();
+            }
             return path + "." + property;
         }
 

@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.BaseFinalSetOperationBuilder;
 import com.blazebit.persistence.impl.query.EntityFunctionNode;
+import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.SimpleQueryGenerator;
 import com.blazebit.persistence.parser.expression.AggregateExpression;
 import com.blazebit.persistence.parser.expression.ArithmeticExpression;
@@ -87,6 +88,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     private Set<JoinNode> renderedJoinNodes;
     private ClauseType clauseType;
     private Map<JoinNode, Boolean> treatedJoinNodesForConstraints;
+    private final EntityMetamodel entityMetamodel;
     private final Set<String> currentlyResolvingAliases;
     private final AliasManager aliasManager;
     private final ParameterManager parameterManager;
@@ -121,7 +123,8 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         BUILT_IN_FUNCTIONS = functions;
     }
 
-    public ResolvingQueryGenerator(AliasManager aliasManager, ParameterManager parameterManager, AssociationParameterTransformerFactory parameterTransformerFactory, JpaProvider jpaProvider, Map<String, JpqlFunction> registeredFunctions) {
+    public ResolvingQueryGenerator(EntityMetamodel entityMetamodel, AliasManager aliasManager, ParameterManager parameterManager, AssociationParameterTransformerFactory parameterTransformerFactory, JpaProvider jpaProvider, Map<String, JpqlFunction> registeredFunctions) {
+        this.entityMetamodel = entityMetamodel;
         this.aliasManager = aliasManager;
         this.parameterManager = parameterManager;
         this.parameterTransformerFactory = parameterTransformerFactory;
@@ -584,8 +587,14 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
                         sb.append("TYPE(");
                         sb.append(treatedJoinNode.getAlias());
-                        sb.append(") = ");
-                        sb.append(treatedJoinNode.getTreatType().getName());
+                        sb.append(") IN (");
+                        for (EntityType<?> entitySubtype : entityMetamodel.getEntitySubtypes(treatedJoinNode.getTreatType())) {
+                            sb.append(entitySubtype.getName());
+                            sb.append(", ");
+                        }
+
+                        sb.setLength(sb.length() - 2);
+                        sb.append(')');
                     }
 
                     sb.append(" THEN ");

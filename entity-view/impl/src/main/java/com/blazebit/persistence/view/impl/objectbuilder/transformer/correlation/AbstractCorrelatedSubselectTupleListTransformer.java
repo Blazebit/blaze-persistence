@@ -152,9 +152,9 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
 
         provider.applyCorrelation(correlationBuilder, correlationBasisExpression);
 
-        if (queryBuilder instanceof LimitBuilder<?>) {
-            if (originalFirstResult != ((LimitBuilder<?>) queryBuilder).getFirstResult()
-                    || originalMaxResults != ((LimitBuilder<?>) queryBuilder).getMaxResults()) {
+        if (criteriaBuilder instanceof LimitBuilder<?>) {
+            if (originalFirstResult != ((LimitBuilder<?>) criteriaBuilder).getFirstResult()
+                    || originalMaxResults != ((LimitBuilder<?>) criteriaBuilder).getMaxResults()) {
                 throw new IllegalArgumentException("Correlation provider '" + provider + "' wrongly uses setFirstResult() or setMaxResults() on the query builder which might lead to wrong results. Use SELECT fetching with batch size 1 or reformulate the correlation provider to use the limit/offset in a subquery!");
             }
         }
