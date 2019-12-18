@@ -37,6 +37,7 @@ import javassist.CtBehavior;
 import javassist.CtClass;
 import javassist.CtConstructor;
 import javassist.CtMethod;
+import javassist.NotFoundException;
 import javassist.bytecode.Bytecode;
 import javassist.bytecode.CodeIterator;
 import javassist.bytecode.ConstPool;
@@ -430,19 +431,19 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
 
                     Method setter = suffix != null ? ReflectionUtils.getMethod(javaType, "set" + suffix, type) : null;
                     String fieldName;
-                    if (getter != null && (fieldName = getSimpleGetterFieldName(ctClass.getDeclaredMethod(getter.getName()))) != null) {
+                    if (getter != null && (fieldName = getSimpleGetterFieldName(findMethod(ctClass, getter.getName()))) != null) {
                         if (setter == null) {
                             getters.put(attribute, getter.getName());
                             fields.put(attribute, fieldName);
                             fieldNameToAttribute.put(fieldName, attribute);
-                        } else if (fieldName.equals(getSimpleSetterFieldName(ctClass.getDeclaredMethod(setter.getName())))) {
+                        } else if (fieldName.equals(getSimpleSetterFieldName(findMethod(ctClass, setter.getName())))) {
                             getters.put(attribute, getter.getName());
                             setters.put(attribute, setter.getName());
                             setterNameToAttribute.put(attribute, setter.getName());
                             fields.put(attribute, fieldName);
                             fieldNameToAttribute.put(fieldName, attribute);
                         }
-                    } else if (setter != null && (fieldName = getSimpleSetterFieldName(ctClass.getDeclaredMethod(setter.getName()))) != null) {
+                    } else if (setter != null && (fieldName = getSimpleSetterFieldName(findMethod(ctClass, setter.getName()))) != null) {
                         setters.put(attribute, setter.getName());
                         setterNameToAttribute.put(attribute, setter.getName());
                         fields.put(attribute, fieldName);
@@ -458,16 +459,16 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
                     }
                     Method setter = ReflectionUtils.getMethod(javaType, "set" + suffix, type);
 
-                    if (getter != null && javaMember.getName().equals(getSimpleGetterFieldName(ctClass.getDeclaredMethod(getter.getName())))) {
+                    if (getter != null && javaMember.getName().equals(getSimpleGetterFieldName(findMethod(ctClass, getter.getName())))) {
                         if (setter == null) {
                             getters.put(attribute, getter.getName());
-                        } else if (javaMember.getName().equals(getSimpleSetterFieldName(ctClass.getDeclaredMethod(setter.getName())))) {
+                        } else if (javaMember.getName().equals(getSimpleSetterFieldName(findMethod(ctClass, setter.getName())))) {
                             getters.put(attribute, getter.getName());
                             setters.put(attribute, setter.getName());
                             setterNameToAttribute.put(attribute, setter.getName());
                         }
                     }
-                    if (setter != null && javaMember.getName().equals(getSimpleSetterFieldName(ctClass.getDeclaredMethod(setter.getName())))) {
+                    if (setter != null && javaMember.getName().equals(getSimpleSetterFieldName(findMethod(ctClass, setter.getName())))) {
                         setters.put(attribute, setter.getName());
                         setterNameToAttribute.put(attribute, setter.getName());
                     }
@@ -501,7 +502,18 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
         }
     }
 
+    private static CtMethod findMethod(CtClass ctClass, String methodName) {
+        try {
+            return ctClass.getDeclaredMethod(methodName);
+        } catch (NotFoundException e) {
+            return null;
+        }
+    }
+
     private static String getSimpleGetterFieldName(CtMethod method) throws Exception {
+        if (method == null) {
+            return null;
+        }
         String fieldName = null;
         CodeIterator ci = method.getMethodInfo().getCodeAttribute().iterator();
         while (ci.hasNext()) {
@@ -538,6 +550,9 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
     }
 
     private static String getSimpleSetterFieldName(CtMethod method) throws Exception {
+        if (method == null) {
+            return null;
+        }
         String fieldName = null;
         CodeIterator ci = method.getMethodInfo().getCodeAttribute().iterator();
         while (ci.hasNext()) {
