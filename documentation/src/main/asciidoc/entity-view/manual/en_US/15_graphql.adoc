@@ -1,0 +1,391 @@
+[[graphql-integration]]
+== GraphQL integration
+
+GraphQL is a language for data communication that requires a schema. Defining that schema and keeping it in sync with the model can become a very painful task.
+This is where the GraphQL integration comes to rescue as it is capable of contributing entity view types to the GraphQL schema
+and also create a `EntityViewSetting` object from a GraphQL `DataFetchingEnvironment` with full support for partial loading as defined by selection lists.
+
+In addition it also has support for the Relay pagination specification to allow easy keyset pagination.
+
+[[graphql-setup]]
+=== Setup
+
+To use the GraphQL integration you need the following Maven dependencies:
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-graphql</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
+</dependency>
+----
+
+Note that the integration works with the de facto standard runtime for GraphQL which is `graphql-java`.
+
+=== Usage
+
+The integration works by contributing entity view type as GraphQL types to a GraphQL `TypeDefinitionRegistry`.
+In general, the idea is that you define a custom GraphQL schema for your queries in which you use entity view types.
+
+Let's consider the following sample schema
+
+[source,graphql]
+----
+type Query {
+    catById(id: ID!): CatWithOwnerView
+}
+----
+
+With the following entity views
+
+[source,java]
+----
+@EntityView(Person.class)
+public interface PersonIdView {
+    @IdMapping
+    Long getId();
+}
+@EntityView(Person.class)
+public interface PersonSimpleView extends PersonIdView {
+    String getName();
+}
+@EntityView(Cat.class)
+public interface CatSimpleView {
+    @IdMapping
+    Long getId();
+    String getName();
+}
+@EntityView(Cat.class)
+public interface CatWithOwnerView extends CatSimpleView {
+    PersonSimpleView getOwner();
+}
+----
+
+The integration happens through the class `GraphQLEntityViewSupportFactory` like so:
+
+[source,java]
+----
+EntityViewManager evm = ...
+
+// Read in the GraphQL schema
+URL url = Resources.getResource("schema.graphqls");
+String sdl = Resources.toString(url, StandardCharsets.UTF_8);
+TypeDefinitionRegistry typeRegistry = new SchemaParser().parse(sdl);
+
+// Configure how to integrate entity views
+boolean defineNormalTypes = true;
+boolean defineRelayTypes = false;
+GraphQLEntityViewSupportFactory graphQLEntityViewSupportFactory = new GraphQLEntityViewSupportFactory(defineNormalTypes, defineRelayTypes);
+
+// Integrate and create the support class for extraction of EntityViewSetting objects
+GraphQLEntityViewSupport graphQLEntityViewSupport = graphQLEntityViewSupportFactory.create(typeRegistry, evm);
+----
+
+This will generate the following GraphQL types
+
+[source,graphql]
+----
+type CatSimpleView {
+  id: ID!
+  name: String
+}
+type CatWithOwnerView {
+  id: ID!
+  name: String
+  owner: PersonSimpleView
+}
+type PersonIdView {
+  id: ID!
+}
+type PersonSimpleView {
+  id: ID!
+  name: String
+}
+----
+
+The created `GraphQLEntityViewSupport` object is a singleton that should only be created during boot
+and can be used for creating `EntityViewSetting` objects in GraphQL `DataFetcher` implementations.
+
+Next, one needs to define a `DataFetcher` for the defined query `catById` like so
+
+[source,java]
+----
+CatViewRepository repository;
+
+RuntimeWiring.newRuntimeWiring()
+    .type(TypeRuntimeWiring.newTypeWiring("Query")
+            .dataFetcher("catById", new DataFetcher() {
+                @Override
+                public Object get(DataFetchingEnvironment dataFetchingEnvironment) {
+                    return repository.findById(
+                            graphQLEntityViewSupport.createSetting(dataFetchingEnvironment),
+                            Long.valueOf(dataFetchingEnvironment.getArgument("id"))
+                    );
+                }
+            })
+    )
+    .build();
+----
+
+The `GraphQLEntityViewSupport.createSetting()` method inspects the data fetching environment and knows which entity view type is needed.
+In addition, it will fill the `fetches` according to the `DataFetchingEnvironment.getSelectionList()`.
+This will lead to the optimal query to be generated for the fields that are requested. This is not only about skipping select items, but also avoids unnecessary joins!
+
+Finally, the `RuntimeWiring` and `TypeDefinitionRegistry` are joined together to a `GraphQL` schema which is required for the GraphQL runtime.
+
+[source,java]
+----
+SchemaGenerator schemaGenerator = new SchemaGenerator();
+return schemaGenerator.makeExecutableSchema(typeRegistry, runtimeWiring);
+----
+
+The repository could look like this:
+
+[source,java]
+----
+public class CatViewRepository {
+
+    private final EntityManager em;
+    private final CriteriaBuilderFactory cbf;
+    private final EntityViewManager evm;
+
+    public CatViewRepository(EntityManager em, CriteriaBuilderFactory cbf, EntityViewManager evm) {
+        this.em = em;
+        this.cbf = cbf;
+        this.evm = evm;
+    }
+
+    public <T> T findById(EntityViewSetting<T, CriteriaBuilder<T>> setting, Long id) {
+        return evm.find(em, setting, id);
+    }
+}
+----
+
+A sample GraphQL query
+
+[source,graphql]
+----
+query {
+    findCatById(id: 1) {
+        id
+        name
+    }
+}
+----
+
+will cause a JPQL query similar to the following
+
+[source,sql]
+----
+SELECT
+    c.id,
+    c.name
+FROM Cat c
+WHERE c.id = :param
+----
+
+It does not select or join the owner information although it is specified in the entity view!
+This optimization works through applying the selection list of the `DataFetchingEnvironment` via `EntityViewSetting.fetch()`.
+
+=== Pagination support
+
+GraphQL itself does not really define a standard pagination mechanism, so the integration implements part of the https://facebook.github.io/relay/graphql/connections.htm[Relay pagination specification]
+in order to provide support for keyset pagination in a more or less common format.
+
+To generate the types that are necessary for using a Relay compatible client, the `GraphQLEntityViewSupportFactory` can be further configured.
+
+[source,java]
+----
+boolean defineNormalTypes = true;
+// This time, also define the relay types i.e. Connection, Edge and Node
+boolean defineRelayTypes = true;
+GraphQLEntityViewSupportFactory graphQLEntityViewSupportFactory = new GraphQLEntityViewSupportFactory(defineNormalTypes, defineRelayTypes);
+// Implementing the Node interface requires a custom type resolver which is out of scope here, so configure to not doing that
+graphQLEntityViewSupportFactory.setImplementRelayNode(false);
+// If the type registry does not yet define the Node interface, we specify that it should be generated
+graphQLEntityViewSupportFactory.setDefineRelayNodeIfNotExist(true);
+----
+
+With the entity views defined before, this will generate the following GraphQL types
+
+[source,graphql]
+----
+type PageInfo {
+  startCursor: String
+  endCursor: String
+}
+type CatWithOwnerViewConnection {
+  edges: [CatWithOwnerViewEdge]
+  pageInfo: PageInfo
+}
+type CatWithOwnerViewEdge {
+  node: CatWithOwnerViewNode!
+  cursor: String!
+}
+type CatWithOwnerViewNode {
+  id: ID!
+  name: String
+  owner: PersonSimpleView
+}
+type PersonSimpleView {
+  id: ID!
+  name: String
+}
+----
+
+To use these type, the static GraphQL Schema needs to be extended
+
+[source,graphql]
+----
+type Query {
+    findAll(first: Int, last:Int, offset: Int, before: String, after: String): CatWithOwnerViewConnection!
+}
+----
+
+The Relay specification defines the `first` and `last` arguments to represent the amount of element to fetch.
+Using `first` will fetch the next X elements _after_ the given reference point or the start, according to a specific ordering.
+Using `last` will fetch the last X elements _before_ the given reference point or the end, according to a specific ordering.
+
+If you can't use keyset pagination, the GraphQL integration also allows to use an `offset` argument, but it is not recommended as offset based pagination has scalability problems.
+
+In order to use this, a `RuntimeWiring` that executes a query is required.
+
+
+[source,java]
+----
+CatViewRepository repository;
+
+RuntimeWiring.newRuntimeWiring()
+    .type(TypeRuntimeWiring.newTypeWiring("Query")
+        .dataFetcher("findAll", new DataFetcher() {
+            @Override
+            public Object get(DataFetchingEnvironment dataFetchingEnvironment) {
+                EntityViewSetting<Object, ?> setting = graphQLEntityViewSupport.createPaginatedSetting(dataFetchingEnvironment);
+                // The last order by item must be a unique expression for deterministic ordering
+                setting.addAttributeSorter("id", Sorters.ascending());
+                if (setting.getMaxResults() == 0) {
+                    return new GraphQLRelayConnection<>(Collections.emptyList());
+                }
+                return new GraphQLRelayConnection<>(repository.findAll(setting));
+            }
+        })
+    )
+    .build();
+----
+
+The `GraphQLEntityViewSupport.createPaginatedSetting()` method is capable of reading all necessary information from the `DataFetchingEnvironment` and the schema.
+It knows how to process `first`, `last`, `offset`, `before` and `after` arguments as well as integrates with the selection list feature to
+
+* Avoid count queries to determine the overall count
+* Avoid fetching non-requested node attributes
+
+If the query does not specify `first` or `last`, the `EntityViewSetting.getMaxResults()` will be `0` which will cause an exception if used for querying.
+
+Finally, the `DataFetcher` must return a `GraphQLRelayConnection` object that wraps a `List` or `PagedList` such that the correct result structure is produced.
+
+A sample GraphQL query
+
+[source,graphql]
+----
+query {
+  findAll(first: 1){
+    edges {
+      node {
+        id
+        name
+      }
+    }
+    pageInfo {
+      startCursor
+      endCursor
+    }
+  }
+}
+----
+
+will cause a JPQL query similar to the following
+
+[source,sql]
+----
+SELECT
+    c.id,
+    c.name
+FROM Cat c
+LIMIT 1
+----
+
+and provide a result object like the following
+
+[source]
+----
+query: {
+  findAll: {
+    edges: [{
+      node: {
+        id: 1,
+        name: "Cat 1"
+      }
+    }],
+    pageInfo: {
+      startCursor: "...",
+      endCursor: "..."
+    }
+  }
+}
+----
+
+You can the use the `endCursor` on the client side as value for the `after` argument to get the next page:
+
+[source,graphql]
+----
+query {
+  findAll(first: 1, after: "..."){
+    edges {
+      node {
+        id
+        name
+      }
+    }
+    pageInfo {
+      startCursor
+      endCursor
+    }
+  }
+}
+----
+
+which will cause a JPQL query similar to the following
+
+[source,sql]
+----
+SELECT
+    c.id,
+    c.name
+FROM Cat c
+WHERE c.id > :previousId
+LIMIT 1
+----
+
+and provide a result object like the following
+
+[source]
+----
+query: {
+  findAll: {
+    edges: [{
+      node: {
+        id: 2,
+        name: "Cat 2"
+      }
+    }],
+    pageInfo: {
+      startCursor: "...",
+      endCursor: "..."
+    }
+  }
+}
+----
+
+For a full example see the following https://github.com/Blazebit/blaze-persistence/blob/master/examples/spring-data-graphql/[example project].

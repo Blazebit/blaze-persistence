@@ -19,6 +19,9 @@ var SQL_KEYWORDS = ["ADD,ALL,ALTER,AND,ANY,APPLY,AS,ASC,AUTHORIZATION,BACKUP,BEG
 "SESSION_USER,SET,SETUSER,SHUTDOWN,SOME,START,STATISTICS,SYSTEM_USER,TABLE,TEXTSIZE,THEN,TO,TOP,TRAN,TRANSACTION,TRIGGER,TRUNCATE," +
 "TSEQUAL,UNBOUNDED,UNION,UNIQUE,UNPIVOT,UPDATE,UPDATETEXT,USE,USER,USING,VALUES,VARYING,VIEW,WAITFOR,WHEN,WHERE,WHILE,WITH,WITHIN," +
 "WRITETEXT,XML"];
+var GRAPHQL_KEYWORDS = ["directive,enum,extend,false,fragment,implements,input,interface,mutation,on,query,subscription,true,type,union"];
+var GRAPHQL_TYPE_ATOM = '(?:[@_]?[A-Z]+[a-z][A-Za-z_$@0-9]*)!?';
+var GRAPHQL_TYPE = '(' + GRAPHQL_TYPE_ATOM + '|\\[' + GRAPHQL_TYPE_ATOM + '\\]!?)';
 // Max nesting is 2
 var OPTIONAL_TYPE_PARAMETER = '(?:<[^<>]+(?:<[^<>]+>)?>)?';
 var TYPE = '(?:[@_]?[A-Z]+[a-z][A-Za-z_$@0-9]*' + OPTIONAL_TYPE_PARAMETER + '|void|boolean|byte|char|short|int|long|float|double)';
@@ -94,6 +97,57 @@ PR.registerLangHandler(
 		]),
 	['sqlext']);
 PR.registerLangHandler(
+	PR.createSimpleLexer(
+		[
+			["str", /^(?:\"\"\"(?:[^\"]|\\.)*(?:\"\"\"|$)|\"(?:[^\\\"\r\n]|\\.)*(?:\"|$))/, null, '"\''],
+			["pln", /^\s+/, null, ' \r\n\t\xA0']
+		],
+		[
+			["com", /^\/\/[^\r\n]*/, null],
+			["com", /^\/\*[\s\S]*?(?:\*\/|$)/, null],
+			["kwd", new RegExp('^(?:' + ("" + GRAPHQL_KEYWORDS).replace(/^ | $/g, '').replace(/[\s,]+/g, '|') + ')\\b'), null],
+			["ann", /^@[a-z_$][a-z_$@0-9]*/i, null],
+			["con", /^[A-Z_$][A-Z_$@0-9]+/, null],
+			["lang-mdc", new RegExp(
+				'^' +
+				// Method name
+				'([a-z_$][a-zA-Z_$@0-9]+)' +
+				// Opening parenthesis
+				'\\s*\\('
+			), null],
+			["lang-mdc", new RegExp(
+				'^' +
+				'\\)\\s+:\\s+' +
+				GRAPHQL_TYPE
+			), null],
+			["lang-fdc", new RegExp(
+				'^' +
+				// Field name
+				'([a-z_$][a-zA-Z_$@0-9]+)' +
+				'\\s+:\\s+' +
+				GRAPHQL_TYPE
+			), null],
+			["typ", /^(?:[@_]?[A-Z]+[a-z][A-Za-z_$@0-9]*|\w+_t\b)!?/, null],
+			["pln", /^[a-z_$][a-z_$@0-9]*/i, null],
+			["lit",
+				new RegExp(
+					'^(?:'
+					// A hex number
+					+ '0x[a-f0-9]+'
+					// or an octal or decimal number,
+					+ '|(?:\\d(?:_\\d+)*\\d*(?:\\.\\d*)?|\\.\\d\\+)'
+					// possibly in scientific notation
+					+ '(?:e[+\\-]?\\d+)?'
+					+ ')'
+					// with an optional modifier like UL for unsigned long
+					+ '[a-z]*', 'i'),
+				null, '0123456789'],
+			["pln", /^\\[\s\S]?/, null],
+			["pun", new RegExp('^.[^\\s\\w.$@\'"`/\\\\]*'), null]
+		]
+	), ['graphql']
+);
+PR.registerLangHandler(
 	PR.createSimpleLexer([],[
 		["mdc", /^.+/, null],
 	]), ['mdc']
@@ -102,63 +156,4 @@ PR.registerLangHandler(
 	PR.createSimpleLexer([],[
 		["fdc", /^.+/, null],
 	]), ['fdc']
-);
-/**
- * @license
- * Copyright (C) 2016 Bart Kiers
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * @fileoverview
- * Registers a language handler for ANTLR 4. <http://www.antlr.org>
- *
- * To use, include prettify.js and this file in your HTML page.
- * Then enclose your code in an HTML tag like so:
- *      <pre class="prettyprint lang-antlr4">[your ANTLR grammar]</pre>
- *
- * Note that embedded code blocks, like `@members::` blocks, are not
- * highlighted. These blocks can contain arbitrary target code, containing
- * a large amount of nested curly braces: impossible to define with a (JS)
- * regex.
- *
- * @author Bart Kiers
- */
-PR['registerLangHandler'](
-    PR['createSimpleLexer']([], [
-
-        [PR['PR_PLAIN'],      /^[\t\n\r \xA0]+/],
-
-        // Comments
-        [PR['PR_COMMENT'],    /^\/\/[^\r\n]*/],
-        [PR['PR_COMMENT'],    /^\/\*[\s\S]*?(?:\*\/|$)/],
-
-        // Literal tokens: single quoted strings and character sets
-        [PR['PR_STRING'],     /^'(?:\\.|[^\\'\r\n])+'/],
-        [PR['PR_STRING'],     /^\[(?:\\.|[^\\\[\]])+]/],
-
-        // Keywords: https://github.com/antlr/grammars-v4/blob/master/antlr4/ANTLRv4Lexer.g4
-        [PR['PR_KEYWORD'],    /^(?:options|tokens|import|fragment|lexer|parser|grammar\s+\w+|protected|public|private|returns|locals|throws|catch|finally|mode)\b/],
-
-        // Predicates
-        [PR['PR_SOURCE'],     /^\{.*?}\?/],
-
-        // Lexer- and parser-rules
-        [PR['PR_TYPE'],       /^[A-Z]\w*/],
-        [PR['PR_LITERAL'],    /^[a-z]\w*/],
-
-        // Fall through rule matching any char as a 'plain' char
-        [PR['PR_PLAIN'], /./]
-    ]), ['antlr4']
 );

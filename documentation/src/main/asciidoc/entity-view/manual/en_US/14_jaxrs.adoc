@@ -1,0 +1,66 @@
+[[jaxrs-integration]]
+== JAX-RS integration
+
+The JAX-RS integration provides `MessageBodyReader` and `ParamConverter` implementations to integrate the following serialization integrations with JAX-RS
+
+* <<Jackson integration>>
+* _At some point there will also be support for JAXB_
+
+The integration is discovered automatically through the `javax.ws.rs.ext.Providers` ServiceLoader contract. Simply putting the artifact on the classpath is enough for the integration.
+
+[[jaxrs-setup]]
+=== Setup
+
+To use the Jackson integration directly you need the following Maven dependencies:
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-jaxrs</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+----
+
+[[jaxrs-features]]
+=== Features
+
+The main feature is the possibility to use entity views just like normal POJOs that can be deserialized automatically.
+
+[source,java]
+----
+@EntityView(Cat.class)
+@UpdatableEntityView
+public interface CatUpdateView {
+
+    @IdMapping
+    Long getId();
+    String getName();
+    void setName(String name);
+}
+----
+
+The JAX-RS integration can automatically deserialize entity views of request bodies by simply using the entity view type as parameter like this:
+
+[source,java]
+----
+@Path("")
+public class MyCatController {
+
+    @Inject
+    private EntityManager em;
+    @Inject
+    private EntityViewManager evm;
+
+    @POST
+    @Path("/cats")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Transactional
+    public Response updateCat(CatUpdateView catUpdateView) {
+        evm.save(em, catUpdateView);
+
+        return Response.ok(catUpdateView.getId().toString()).build();
+    }
+}
+----

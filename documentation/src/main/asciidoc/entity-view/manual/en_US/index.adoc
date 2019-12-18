@@ -41,8 +41,14 @@ include::12_spring_data.adoc[]
 
 include::13_deltaspike_data.adoc[]
 
-include::14_metamodel.adoc[]
+include::14_jaxrs.adoc[]
 
-include::15_configuration.adoc[]
+include::15_graphql.adoc[]
 
-include::16_faq.adoc[]
+include::16_serialization_support.adoc[]
+
+include::17_metamodel.adoc[]
+
+include::18_configuration.adoc[]
+
+include::19_faq.adoc[]
