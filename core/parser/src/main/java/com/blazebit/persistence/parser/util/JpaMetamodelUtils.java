@@ -46,6 +46,13 @@ import java.util.TreeSet;
  */
 public class JpaMetamodelUtils {
 
+    public static final Comparator<EntityType<?>> ENTITY_NAME_COMPARATOR = new Comparator<EntityType<?>>() {
+        @Override
+        public int compare(EntityType<?> o1, EntityType<?> o2) {
+            return o1.getName().compareTo(o2.getName());
+        }
+    };
+
     public static final Comparator<Attribute<?, ?>> ATTRIBUTE_NAME_COMPARATOR = new Comparator<Attribute<?, ?>>() {
         @Override
         public int compare(Attribute<?, ?> o1, Attribute<?, ?> o2) {

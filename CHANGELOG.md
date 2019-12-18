@@ -40,6 +40,7 @@ Not yet released
 * Properly inherit `RANGE` clause from `WINDOW` clause into window functions
 * Fix duplicate `sortResolver` issues when using Spring Data WebMvc integration with Spring Boot
 * Fix calling post rollback callbacks necessary for proper updatable entity view state resets
+* Fix `TREAT` on super type too restrictive, should allow subtypes too
 
 ### Backwards-incompatible changes
 

@@ -21,6 +21,7 @@ import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.Type;
 import java.util.Collection;
+import java.util.Set;
 
 /**
  * This is a wrapper around the JPA {@link javax.persistence.metamodel.Metamodel} that allows additionally efficient access by other attributes than a Class.
@@ -31,6 +32,8 @@ import java.util.Collection;
 public interface EntityMetamodel extends Metamodel {
 
     public EntityType<?> getEntity(String name);
+
+    public Set<EntityType<?>> getEntitySubtypes(EntityType<?> entityType);
 
     public ManagedType<?> getManagedType(String name);
 
@@ -49,5 +52,4 @@ public interface EntityMetamodel extends Metamodel {
     public <T> T getManagedType(Class<T> cls, Class<?> managedType);
 
     public <T> T getManagedType(Class<T> cls, String managedTypeName);
-
 }

@@ -52,6 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -66,6 +67,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
     private final Metamodel delegate;
     private final JpaProvider jpaProvider;
     private final Map<String, EntityType<?>> entityNameMap;
+    private final Map<EntityType<?>, Set<EntityType<?>>> entitySubtypes;
     private final Map<String, Class<?>> entityTypes;
     private final Map<String, Class<Enum<?>>> enumTypes;
     private final Map<Class<?>, Type<?>> classMap;
@@ -93,11 +95,15 @@ public class EntityMetamodelImpl implements EntityMetamodel {
 
         Set<Class<?>> seenTypesForEnumResolving = new HashSet<>();
         Map<String, TemporaryExtendedManagedType> temporaryExtendedManagedTypes = new HashMap<>();
+        Map<EntityType<?>, Set<EntityType<?>>> entitySubtypes = new HashMap<>();
 
         for (EntityType<?> e : originalEntityTypes) {
             // Only discover entity types
             nameToType.put(e.getName(), e);
             entityTypes.put(e.getName(), e.getJavaType());
+            Set<EntityType<?>> subtypes = new TreeSet<>(JpaMetamodelUtils.ENTITY_NAME_COMPARATOR);
+            subtypes.add(e);
+            entitySubtypes.put(e, subtypes);
             if (e.getJavaType() != null) {
                 classToType.put(e.getJavaType(), e);
                 entityTypes.put(e.getJavaType().getName(), e.getJavaType());
@@ -125,7 +131,23 @@ public class EntityMetamodelImpl implements EntityMetamodel {
                 if (t.getJavaType() != null) {
                     classToType.put(t.getJavaType(), t);
                 }
+            } else {
+                if (t.getJavaType() != null) {
+                    List<EntityType<?>> types = new ArrayList<>();
+                    types.add((EntityType<?>) t);
+                    IdentifiableType<?> superType = (EntityType<?>) t;
+                    while ((superType = superType.getSupertype()) != null) {
+                        if (superType instanceof EntityType<?> && superType.getJavaType() != null) {
+                            types.add((EntityType<?>) superType);
+                            entitySubtypes.get(superType).addAll(types);
+                        }
+                    }
+                }
             }
+        }
+
+        for (Map.Entry<EntityType<?>, Set<EntityType<?>>> entry : entitySubtypes.entrySet()) {
+            entry.setValue(Collections.unmodifiableSet(entry.getValue()));
         }
 
         Set<Class<?>> cascadingDeleteCycleSet = new HashSet<>();
@@ -157,6 +179,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
 
         this.entityNameMap = Collections.unmodifiableMap(nameToType);
         this.entityTypes = Collections.unmodifiableMap(entityTypes);
+        this.entitySubtypes = Collections.unmodifiableMap(entitySubtypes);
         this.enumTypes = Collections.unmodifiableMap(enumTypes);
         this.classMap = Collections.unmodifiableMap(classToType);
         this.cteMap = Collections.unmodifiableMap(cteToType);
@@ -457,6 +480,11 @@ public class EntityMetamodelImpl implements EntityMetamodel {
     @Override
     public EntityType<?> getEntity(String name) {
         return entityNameMap.get(name);
+    }
+
+    @Override
+    public Set<EntityType<?>> getEntitySubtypes(EntityType<?> entityType) {
+        return entitySubtypes.get(entityType);
     }
 
     @Override
