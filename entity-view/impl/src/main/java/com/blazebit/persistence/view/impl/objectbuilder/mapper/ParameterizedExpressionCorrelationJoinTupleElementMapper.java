@@ -17,10 +17,12 @@
 package com.blazebit.persistence.view.impl.objectbuilder.mapper;
 
 import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.LimitBuilder;
 import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.view.CorrelationBuilder;
+import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.macro.EmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.JoinCorrelationBuilder;
@@ -51,8 +53,22 @@ public class ParameterizedExpressionCorrelationJoinTupleElementMapper extends Ab
         } else {
             fullQueryBuilder = (FullQueryBuilder<?, ?>) queryBuilder;
         }
+        int originalFirstResult = -1;
+        int originalMaxResults = -1;
+        if (queryBuilder instanceof LimitBuilder<?>) {
+            originalFirstResult = ((LimitBuilder<?>) queryBuilder).getFirstResult();
+            originalMaxResults = ((LimitBuilder<?>) queryBuilder).getMaxResults();
+        }
+
         CorrelationBuilder correlationBuilder = new JoinCorrelationBuilder(queryBuilder, fullQueryBuilder, joinBase, correlationAlias, correlationResult, alias);
-        providerFactory.create(parameterHolder, optionalParameters).applyCorrelation(correlationBuilder, correlationBasis);
+        CorrelationProvider provider = providerFactory.create(parameterHolder, optionalParameters);
+        provider.applyCorrelation(correlationBuilder, correlationBasis);
+        if (queryBuilder instanceof LimitBuilder<?>) {
+            if (originalFirstResult != ((LimitBuilder<?>) queryBuilder).getFirstResult()
+                    || originalMaxResults != ((LimitBuilder<?>) queryBuilder).getMaxResults()) {
+                throw new IllegalArgumentException("Correlation provider '" + provider + "' wrongly uses setFirstResult() or setMaxResults() on the query builder which might lead to wrong results. Use SELECT fetching with batch size 1 or reformulate the correlation provider to use the limit/offset in a subquery!");
+            }
+        }
         if (fetches.length != 0) {
             for (int i = 0; i < fetches.length; i++) {
                 fullQueryBuilder.fetch(correlationBuilder.getCorrelationAlias() + "." + fetches[i]);

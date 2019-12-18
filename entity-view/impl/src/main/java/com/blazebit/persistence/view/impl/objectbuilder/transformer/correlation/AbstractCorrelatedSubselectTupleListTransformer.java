@@ -131,11 +131,13 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
 
         EmbeddingViewJpqlMacro embeddingViewJpqlMacro = entityViewConfiguration.getEmbeddingViewJpqlMacro();
         this.criteriaBuilder = queryBuilder.copy(Object[].class);
+        int originalFirstResult = -1;
+        int originalMaxResults = -1;
         // A copied query that is extended with further joins can't possibly use the limits provided by the outer query
         if (criteriaBuilder instanceof LimitBuilder<?>) {
             LimitBuilder<?> limitBuilder = (LimitBuilder<?>) criteriaBuilder;
-            limitBuilder.setFirstResult(0);
-            limitBuilder.setMaxResults(Integer.MAX_VALUE);
+            limitBuilder.setFirstResult(originalFirstResult = 0);
+            limitBuilder.setMaxResults(originalMaxResults = Integer.MAX_VALUE);
         }
         this.viewRootJpqlMacro = new CorrelatedSubqueryViewRootJpqlMacro(criteriaBuilder, optionalParameters, false, viewRootEntityClass, idAttributePath, viewRootExpression);
         this.criteriaBuilder.registerMacro("view_root", viewRootJpqlMacro);
@@ -149,6 +151,13 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
         CorrelationProvider provider = correlationProviderFactory.create(entityViewConfiguration.getCriteriaBuilder(), entityViewConfiguration.getOptionalParameters());
 
         provider.applyCorrelation(correlationBuilder, correlationBasisExpression);
+
+        if (queryBuilder instanceof LimitBuilder<?>) {
+            if (originalFirstResult != ((LimitBuilder<?>) queryBuilder).getFirstResult()
+                    || originalMaxResults != ((LimitBuilder<?>) queryBuilder).getMaxResults()) {
+                throw new IllegalArgumentException("Correlation provider '" + provider + "' wrongly uses setFirstResult() or setMaxResults() on the query builder which might lead to wrong results. Use SELECT fetching with batch size 1 or reformulate the correlation provider to use the limit/offset in a subquery!");
+            }
+        }
         if (fetches.length != 0) {
             for (int i = 0; i < fetches.length; i++) {
                 criteriaBuilder.fetch(correlationBuilder.getCorrelationAlias() + "." + fetches[i]);

@@ -23,6 +23,7 @@ Not yet released
 * Official support for Java 13 and 14
 * Add support for enum literals in builder API
 * Allow to flush updatable entity views to entities directly
+* Throw exception when `setFirstResult` or `setMaxResults` is used in a `CorrelationProvider` other than select with batch size 1
 
 ### Bug fixes
 

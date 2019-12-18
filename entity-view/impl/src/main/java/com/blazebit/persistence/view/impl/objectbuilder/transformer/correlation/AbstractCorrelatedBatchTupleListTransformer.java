@@ -152,10 +152,16 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
             this.correlationSelectExpression = correlationKeyExpression = null;
         }
 
+        int originalFirstResult = criteriaBuilder.getFirstResult();
+        int originalMaxResults = criteriaBuilder.getMaxResults();
         if (batchSize > 1 && batchCorrelationMode == BatchCorrelationMode.VALUES) {
             provider.applyCorrelation(correlationBuilder, correlationKeyExpression);
         } else {
             provider.applyCorrelation(correlationBuilder, ':' + correlationParamName);
+        }
+        if (batchSize > 1 && (originalFirstResult != criteriaBuilder.getFirstResult()
+                || originalMaxResults != criteriaBuilder.getMaxResults())) {
+            throw new IllegalArgumentException("Correlation provider '" + provider + "' wrongly uses setFirstResult() or setMaxResults() on the query builder which might lead to wrong results. Use SELECT fetching with batch size 1 or reformulate the correlation provider to use the limit/offset in a subquery!");
         }
 
         if (fetches.length != 0) {
