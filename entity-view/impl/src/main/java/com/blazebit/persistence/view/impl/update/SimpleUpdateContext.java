@@ -61,6 +61,11 @@ public class SimpleUpdateContext implements UpdateContext {
     }
 
     @Override
+    public boolean isForceEntity() {
+        return false;
+    }
+
+    @Override
     public boolean addVersionCheck(Class<?> entityClass, Object id) {
         return false;
     }

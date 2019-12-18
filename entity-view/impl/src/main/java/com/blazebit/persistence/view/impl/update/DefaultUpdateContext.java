@@ -74,9 +74,11 @@ public class DefaultUpdateContext implements UpdateContext, FlushOperationBuilde
     private final EntityViewManagerImpl evm;
     private final EntityManager em;
     private final boolean forceFull;
+    private final boolean forceEntity;
     private final boolean remove;
     private final Class<?> entityViewClass;
     private final Object object;
+    private final Object entity;
     private final TransactionAccess transactionAccess;
     private final InitialStateResetter initialStateResetter;
     private final ListenerManager listenerManager;
@@ -85,14 +87,16 @@ public class DefaultUpdateContext implements UpdateContext, FlushOperationBuilde
     private Set<EntityKey> versionChecked;
     private List<PostFlushDeleter> orphanRemovalDeleters = new ArrayList<>();
 
-    public DefaultUpdateContext(EntityViewManagerImpl evm, EntityManager em, boolean forceFull, boolean remove, Class<?> entityViewClass, Object object) {
+    public DefaultUpdateContext(EntityViewManagerImpl evm, EntityManager em, boolean forceFull, boolean forceEntity, boolean remove, Class<?> entityViewClass, Object object, Object entity) {
         this.evm = evm;
         this.em = em;
         this.forceFull = forceFull;
         this.transactionAccess = TransactionHelper.getTransactionAccess(em);
+        this.forceEntity = forceEntity;
         this.remove = remove;
         this.entityViewClass = entityViewClass;
         this.object = object;
+        this.entity = entity;
 
         if (!transactionAccess.isActive()) {
             throw new IllegalStateException("Transaction is not active!");
@@ -187,6 +191,11 @@ public class DefaultUpdateContext implements UpdateContext, FlushOperationBuilde
     @Override
     public boolean isForceFull() {
         return forceFull;
+    }
+
+    @Override
+    public boolean isForceEntity() {
+        return forceEntity;
     }
 
     @Override
@@ -636,7 +645,11 @@ public class DefaultUpdateContext implements UpdateContext, FlushOperationBuilde
                 evm.remove(this, entityViewClass, object);
             }
         } else {
-            evm.update(this, object);
+            if (entity == null) {
+                evm.update(this, object);
+            } else {
+                evm.updateTo(this, object, entity);
+            }
         }
     }
 

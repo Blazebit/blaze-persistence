@@ -238,7 +238,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                 action.doAction(targetCollection, context, loadOnlyMapper, keyRemoveListener, removeListener);
             }
         } else {
-            if (flushStrategy == FlushStrategy.QUERY) {
+            if (flushStrategy == FlushStrategy.QUERY && !context.isForceEntity()) {
                 flushCollectionOperations(context, ownerView, view, (V) value, null, collectionActions);
             } else {
                 for (MapAction<V> action : (List<MapAction<V>>) (List<?>) collectionActions) {
@@ -842,7 +842,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
 
         if (map != null && !map.isEmpty()) {
             // Entity flushing will do the delete anyway, so we can skip this
-            if (flushStrategy == FlushStrategy.QUERY && !jpaProviderDeletesCollection) {
+            if (flushStrategy == FlushStrategy.QUERY && !context.isForceEntity() && !jpaProviderDeletesCollection) {
                 removeByOwnerId(context, ((EntityViewProxy) view).$$_getId(), false);
             }
 
@@ -1047,7 +1047,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
     @Override
     protected boolean mergeCollectionElements(UpdateContext context, Object ownerView, Object view, E entity, V value) {
         if (elementFlushers != null) {
-            if (flushStrategy == FlushStrategy.ENTITY) {
+            if (flushStrategy == FlushStrategy.ENTITY || context.isForceEntity()) {
                 for (CollectionElementAttributeFlusher<E, V> elementFlusher : elementFlushers) {
                     elementFlusher.flushEntity(context, entity, ownerView, view, value, null);
                 }

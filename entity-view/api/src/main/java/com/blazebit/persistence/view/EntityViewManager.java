@@ -139,6 +139,27 @@ public interface EntityViewManager extends ServiceProvider {
     public void saveFull(EntityManager entityManager, Object view);
 
     /**
+     * Saves the entity view state onto the given entity.
+     * Issues a partial update if enabled for the given view.
+     *
+     * @param entityManager The entity manager to use for the save
+     * @param view The view to use for saving
+     * @param entity The entity to apply data to
+     * @since 1.4.0
+     */
+    public void saveTo(EntityManager entityManager, Object view, Object entity);
+
+    /**
+     * Fully saves the entity view state onto the given entity.
+     *
+     * @param entityManager The entity manager to use for the save
+     * @param view The view to use for saving
+     * @param entity The entity to apply data to
+     * @since 1.4.0
+     */
+    public void saveFullTo(EntityManager entityManager, Object view, Object entity);
+
+    /**
      * Updates the entity which the given entity view maps to.
      * Issues a partial update if enabled for the given view.
      *
@@ -181,6 +202,29 @@ public interface EntityViewManager extends ServiceProvider {
      * @since 1.4.0
      */
     public FlushOperationBuilder saveFullWith(EntityManager entityManager, Object view);
+
+    /**
+     * Saves the entity view state onto the given entity.
+     * Issues a partial update if enabled for the given view.
+     *
+     * @param entityManager The entity manager to use for the update
+     * @param view The view to use for updating
+     * @param entity The entity to apply data to
+     * @return A flush operation builder for further configuring the flush operation
+     * @since 1.4.0
+     */
+    public FlushOperationBuilder saveWithTo(EntityManager entityManager, Object view, Object entity);
+
+    /**
+     * Fully saves the entity view state onto the given entity.
+     *
+     * @param entityManager The entity manager to use for the update
+     * @param view The view to use for updating
+     * @param entity The entity to apply data to
+     * @return A flush operation builder for further configuring the flush operation
+     * @since 1.4.0
+     */
+    public FlushOperationBuilder saveFullWithTo(EntityManager entityManager, Object view, Object entity);
 
     /**
      * Removes the entity represented by the given view.

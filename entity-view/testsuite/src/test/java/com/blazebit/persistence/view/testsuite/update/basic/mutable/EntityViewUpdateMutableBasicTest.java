@@ -59,6 +59,18 @@ public class EntityViewUpdateMutableBasicTest extends AbstractEntityViewUpdateBa
     }
 
     @Test
+    public void testSaveTo() {
+        final UpdatableDocumentBasicView docView = getDoc1View();
+
+        // When
+        docView.setName("newDoc");
+        saveTo(docView, doc1);
+
+        // Then
+        assertEquals("newDoc", doc1.getName());
+    }
+
+    @Test
     public void testSimpleUpdate() {
         // Given & When
         final UpdatableDocumentBasicView docView = simpleUpdate();

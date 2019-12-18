@@ -259,7 +259,7 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
     protected void invokeFlushOperation(UpdateContext context, Object ownerView, Object view, E entity, V value) {
         switch (flushOperation) {
             case COLLECTION_REPLAY_AND_ELEMENT:
-                if (flushStrategy == FlushStrategy.ENTITY) {
+                if (flushStrategy == FlushStrategy.ENTITY || context.isForceEntity()) {
                     for (CollectionElementAttributeFlusher<E, V> elementFlusher : elementFlushers) {
                         elementFlusher.flushEntity(context, entity, ownerView, view, value, null);
                     }
@@ -274,7 +274,7 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
                 invokeCollectionAction(context, ownerView, view, getEntityAttributeValue(entity), value, collectionActions);
                 return;
             case COLLECTION_REPLACE_AND_ELEMENT:
-                if (flushStrategy == FlushStrategy.ENTITY) {
+                if (flushStrategy == FlushStrategy.ENTITY || context.isForceEntity()) {
                     for (CollectionElementAttributeFlusher<E, V> elementFlusher : elementFlushers) {
                         elementFlusher.flushEntity(context, entity, ownerView, view, value, null);
                     }
@@ -402,7 +402,8 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
 
         // We fetch here, because there is a high probability that elements we update were previously contained in the collection
         // Except when we use a query strategy here, we'd rather use update queries to do the update
-        if (flushStrategy == FlushStrategy.ENTITY) {
+        // We don't fetch if the force entity mode is active because that means, an entity is already given
+        if (flushStrategy == FlushStrategy.ENTITY && !context.isForceEntity()) {
             return partialFlusher(true, PluralFlushOperation.ELEMENT_ONLY, Collections.EMPTY_LIST, elementFlushers);
         } else {
             return partialFlusher(false, PluralFlushOperation.ELEMENT_ONLY, Collections.EMPTY_LIST, elementFlushers);

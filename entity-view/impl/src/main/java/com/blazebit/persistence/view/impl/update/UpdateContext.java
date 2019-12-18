@@ -40,6 +40,8 @@ public interface UpdateContext {
 
     public boolean isForceFull();
 
+    public boolean isForceEntity();
+
     public boolean addVersionCheck(Class<?> entityClass, Object id);
 
     public boolean addRemovedObject(Object value);

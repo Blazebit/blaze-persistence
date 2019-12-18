@@ -306,6 +306,17 @@ public abstract class AbstractEntityViewUpdateTest<T> extends AbstractEntityView
         });
     }
 
+    protected void saveTo(final Object docView, final Object entity) {
+        transactional(new TxVoidWork() {
+
+            @Override
+            public void work(EntityManager em) {
+                evm.saveTo(em, docView, entity);
+                em.flush();
+            }
+        });
+    }
+
     protected void saveWith(final Object docView, Consumer<FlushOperationBuilder> c) {
         transactional(new TxVoidWork() {
 

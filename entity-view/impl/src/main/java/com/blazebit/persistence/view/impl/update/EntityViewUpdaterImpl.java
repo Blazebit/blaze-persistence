@@ -688,7 +688,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
         }
 
         try {
-            if (flushStrategy == FlushStrategy.ENTITY || !flusher.supportsQueryFlush()) {
+            if (flushStrategy == FlushStrategy.ENTITY || context.isForceEntity() || !flusher.supportsQueryFlush()) {
                 return flusher.flushEntity(context, entity, updatableProxy, updatableProxy, updatableProxy, null);
             } else {
                 int orphanRemovalStartIndex = context.getOrphanRemovalDeleters().size();

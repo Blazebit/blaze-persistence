@@ -22,6 +22,7 @@ Not yet released
 * Add `ISODAYOFWEEK` function to produce _Monday = 1 ... Sunday = 7_ and clarify documentation
 * Official support for Java 13 and 14
 * Add support for enum literals in builder API
+* Allow to flush updatable entity views to entities directly
 
 ### Bug fixes
 

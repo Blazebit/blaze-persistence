@@ -56,6 +56,7 @@ That behavior is exactly what you would expect from a HTTP endpoint using the `P
 If you need to flush the full state regardless of the dirty tracking information, you can use `EntityViewManager.saveFull()`,
 but be aware that orphan removals will currently not work when using the `QUERY` flush strategy because the initial state is unknown.
 If you need orphan removal in such a case, you are advised to switch to the `ENTITY` flush strategy for now.
+You could also make use of the `EntityViewManager.saveTo()` and `EntityViewManager.saveFullTo()` variants to flush data to an entity that was loaded via e.g. `EntityManager.find()`.
 
 An alternative to this would be to deserialize the state onto an existing updatable entity view that was loaded via e.g. `EntityViewManager.find()`.
 With the initial state being known due to loading from the database, orphan removal will work correctly,

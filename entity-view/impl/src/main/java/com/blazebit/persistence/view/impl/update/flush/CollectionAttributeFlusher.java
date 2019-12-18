@@ -149,7 +149,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 action.doAction(targetCollection, context, viewToEntityMapper, removeListener);
             }
         } else {
-            if (flushStrategy == FlushStrategy.QUERY) {
+            if (flushStrategy == FlushStrategy.QUERY && !context.isForceEntity()) {
                 flushCollectionOperations(context, ownerView, view, (V) value, null, collectionActions);
             } else {
                 // NOTE: We don't care if the actual collection and the initial collection differ
@@ -608,7 +608,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                     }
                     // It could be the case that entity flushing is triggered by a different dirty collection,
                     // yet we still want elements of this collection to flush with query flushing if configured
-                    if (flushStrategy == FlushStrategy.ENTITY || !inverseFlusher.supportsQueryFlush()) {
+                    if (flushStrategy == FlushStrategy.ENTITY || context.isForceEntity() || !inverseFlusher.supportsQueryFlush()) {
                         visitInverseElementFlushersForActions(context, recordingCollection, added, removed, new ElementFlusherEntityExecutor(context, entity));
                     } else {
                         visitInverseElementFlushersForActions(context, recordingCollection, added, removed, new ElementFlusherQueryExecutor(context, entity, null));
@@ -682,7 +682,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
 
                         // It could be the case that entity flushing is triggered by a different dirty collection,
                         // yet we still want elements of this collection to flush with query flushing if configured
-                        if (flushStrategy == FlushStrategy.ENTITY || !inverseFlusher.supportsQueryFlush()) {
+                        if (flushStrategy == FlushStrategy.ENTITY || context.isForceEntity() || !inverseFlusher.supportsQueryFlush()) {
                             visitInverseElementFlushersForActions(context, value, added, removed, new ElementFlusherEntityExecutor(context, entity));
                         } else {
                             visitInverseElementFlushersForActions(context, value, added, removed, new ElementFlusherQueryExecutor(context, entity, null));
@@ -775,7 +775,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
 
         if (collection != null && !collection.isEmpty()) {
             // Entity flushing will do the delete anyway, so we can skip this
-            if (flushStrategy == FlushStrategy.QUERY && !jpaProviderDeletesCollection) {
+            if (flushStrategy == FlushStrategy.QUERY && !context.isForceEntity() && !jpaProviderDeletesCollection) {
                 removeByOwnerId(context, ((EntityViewProxy) view).$$_getId(), false);
             }
             if (cascadeDeleteListener != null) {
@@ -900,7 +900,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
     @Override
     protected boolean mergeCollectionElements(UpdateContext context, Object ownerView, Object view, E entity, V value) {
         if (elementFlushers != null) {
-            if (flushStrategy == FlushStrategy.ENTITY || !supportsQueryFlush()) {
+            if (flushStrategy == FlushStrategy.ENTITY || context.isForceEntity() || !supportsQueryFlush()) {
                 for (CollectionElementAttributeFlusher<E, V> elementFlusher : elementFlushers) {
                     elementFlusher.flushEntity(context, entity, ownerView, view, value, null);
                 }

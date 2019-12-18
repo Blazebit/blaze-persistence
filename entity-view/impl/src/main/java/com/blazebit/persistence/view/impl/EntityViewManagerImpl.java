@@ -676,8 +676,18 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
 
     @Override
+    public void saveTo(EntityManager em, Object view, Object entity) {
+        updateTo(em, view, entity, false);
+    }
+
+    @Override
+    public void saveFullTo(EntityManager em, Object view, Object entity) {
+        updateTo(em, view, entity, true);
+    }
+
+    @Override
     public void remove(EntityManager entityManager, Object view) {
-        remove(new DefaultUpdateContext(this, entityManager, false, true, null, view), view);
+        remove(new DefaultUpdateContext(this, entityManager, false, false, true, null, view, null), view);
     }
 
     public void remove(UpdateContext context, Object view) {
@@ -712,7 +722,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
     @Override
     public void remove(EntityManager entityManager, Class<?> entityViewClass, Object viewId) {
-        remove(new DefaultUpdateContext(this, entityManager, false, true, entityViewClass, viewId), entityViewClass, viewId);
+        remove(new DefaultUpdateContext(this, entityManager, false, false, true, entityViewClass, viewId, null), entityViewClass, viewId);
     }
 
     public void remove(UpdateContext context, Class<?> entityViewClass, Object viewId) {
@@ -731,26 +741,40 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
     @Override
     public FlushOperationBuilder removeWith(EntityManager entityManager, Object view) {
-        return new DefaultUpdateContext(this, entityManager, false, true, null, view);
+        return new DefaultUpdateContext(this, entityManager, false, false, true, null, view, null);
     }
 
     @Override
     public FlushOperationBuilder removeWith(EntityManager entityManager, Class<?> entityViewClass, Object viewId) {
-        return new DefaultUpdateContext(this, entityManager, false, true, entityViewClass, viewId);
+        return new DefaultUpdateContext(this, entityManager, false, false, true, entityViewClass, viewId, null);
     }
 
     public void update(EntityManager em, Object view, boolean forceFull) {
-        update(new DefaultUpdateContext(this, em, forceFull, false, null, view), view);
+        update(new DefaultUpdateContext(this, em, forceFull, false, false, null, view, null), view);
+    }
+
+    public void updateTo(EntityManager em, Object view, Object entity, boolean forceFull) {
+        updateTo(new DefaultUpdateContext(this, em, forceFull, true, false, null, view, null), view, entity);
     }
 
     @Override
     public FlushOperationBuilder saveWith(EntityManager em, Object view) {
-        return new DefaultUpdateContext(this, em, false, false, null, view);
+        return new DefaultUpdateContext(this, em, false, false, false, null, view, null);
     }
 
     @Override
     public FlushOperationBuilder saveFullWith(EntityManager em, Object view) {
-        return new DefaultUpdateContext(this, em, true, false, null, view);
+        return new DefaultUpdateContext(this, em, true, false, false, null, view, null);
+    }
+
+    @Override
+    public FlushOperationBuilder saveWithTo(EntityManager em, Object view, Object entity) {
+        return new DefaultUpdateContext(this, em, false, true, false, null, view, entity);
+    }
+
+    @Override
+    public FlushOperationBuilder saveFullWithTo(EntityManager em, Object view, Object entity) {
+        return new DefaultUpdateContext(this, em, true, true, false, null, view, entity);
     }
     
     public void update(UpdateContext context, Object view) {
@@ -768,6 +792,26 @@ public class EntityViewManagerImpl implements EntityViewManager {
             } else {
                 updater.executeUpdate(context, updatableProxy);
             }
+        } catch (Throwable t) {
+            context.getTransactionAccess().markRollbackOnly();
+            ExceptionUtils.doThrow(t);
+        }
+    }
+
+    public void updateTo(UpdateContext context, Object view, Object entity) {
+        if (!(view instanceof MutableStateTrackable)) {
+            throw new IllegalArgumentException("Can't update non-updatable entity views: " + view);
+        }
+
+        MutableStateTrackable updatableProxy = (MutableStateTrackable) view;
+        if (updatableProxy.$$_isNew()) {
+            throw new IllegalArgumentException("Can't flush new entity view to existing entity: " + view);
+        }
+        Class<?> entityViewClass = updatableProxy.$$_getEntityViewClass();
+        ManagedViewTypeImplementor<?> viewType = metamodel.managedView(entityViewClass);
+        EntityViewUpdater updater = getUpdater(viewType, null, null, null);
+        try {
+            updater.executeUpdate(context, entity, updatableProxy);
         } catch (Throwable t) {
             context.getTransactionAccess().markRollbackOnly();
             ExceptionUtils.doThrow(t);
