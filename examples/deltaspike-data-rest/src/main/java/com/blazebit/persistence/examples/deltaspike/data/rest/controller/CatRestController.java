@@ -47,6 +47,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -135,54 +136,58 @@ public class CatRestController {
             public Predicate toPredicate(Root<Cat> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
                 List<Predicate> predicates = new ArrayList<>();
                 ParserContext parserContext = new ParserContextImpl();
-                for (Filter f : filters) {
-                    SerializableFormat<?> format = FILTER_ATTRIBUTES.get(f.getField());
-                    if (format != null) {
-                        String[] fieldParts = f.getField().split("\\.");
-                        javax.persistence.criteria.Path<?> path = root.get(fieldParts[0]);
-                        for (int i = 1; i < fieldParts.length; i++) {
-                            path = path.get(fieldParts[i]);
-                        }
-                        switch (f.getKind()) {
-                            case EQ:
-                                predicates.add(criteriaBuilder.equal(path, format.parse(f.getValue(), parserContext)));
-                                break;
-                            case GT:
-                                predicates.add(criteriaBuilder.greaterThan((Expression<Comparable>) path, (Comparable) format.parse(f.getValue(), parserContext)));
-                                break;
-                            case LT:
-                                predicates.add(criteriaBuilder.lessThan((Expression<Comparable>) path, (Comparable) format.parse(f.getValue(), parserContext)));
-                                break;
-                            case GTE:
-                                predicates.add(criteriaBuilder.greaterThanOrEqualTo((Expression<Comparable>) path, (Comparable) format.parse(f.getValue(), parserContext)));
-                                break;
-                            case LTE:
-                                predicates.add(criteriaBuilder.lessThanOrEqualTo((Expression<Comparable>) path, (Comparable) format.parse(f.getValue(), parserContext)));
-                                break;
-                            case IN:
-                                List<String> values = f.getValues();
-                                List<Object> filterValues = new ArrayList<>(values.size());
-                                for (String value : values) {
-                                    filterValues.add(format.parse(value, parserContext));
-                                }
-                                predicates.add(path.in(filterValues));
-                                break;
-                            case BETWEEN:
-                                predicates.add(criteriaBuilder.between((Expression<Comparable>) path, (Comparable) format.parse(f.getLow(), parserContext), (Comparable) format.parse(f.getHigh(), parserContext)));
-                                break;
-                            case STARTS_WITH:
-                                predicates.add(criteriaBuilder.like((Expression<String>) path, format.parse(f.getValue(), parserContext) + "%"));
-                                break;
-                            case ENDS_WITH:
-                                predicates.add(criteriaBuilder.like((Expression<String>) path, "%" + format.parse(f.getValue(), parserContext)));
-                                break;
-                            case CONTAINS:
-                                predicates.add(criteriaBuilder.like((Expression<String>) path, "%" + format.parse(f.getValue(), parserContext) + "%"));
-                                break;
-                            default:
-                                throw new UnsupportedOperationException("Unsupported kind: " + f.getKind());
+                try {
+                    for (Filter f : filters) {
+                        SerializableFormat<?> format = FILTER_ATTRIBUTES.get(f.getField());
+                        if (format != null) {
+                            String[] fieldParts = f.getField().split("\\.");
+                            javax.persistence.criteria.Path<?> path = root.get(fieldParts[0]);
+                            for (int i = 1; i < fieldParts.length; i++) {
+                                path = path.get(fieldParts[i]);
+                            }
+                            switch (f.getKind()) {
+                                case EQ:
+                                    predicates.add(criteriaBuilder.equal(path, format.parse(f.getValue(), parserContext)));
+                                    break;
+                                case GT:
+                                    predicates.add(criteriaBuilder.greaterThan((Expression<Comparable>) path, (Comparable) format.parse(f.getValue(), parserContext)));
+                                    break;
+                                case LT:
+                                    predicates.add(criteriaBuilder.lessThan((Expression<Comparable>) path, (Comparable) format.parse(f.getValue(), parserContext)));
+                                    break;
+                                case GTE:
+                                    predicates.add(criteriaBuilder.greaterThanOrEqualTo((Expression<Comparable>) path, (Comparable) format.parse(f.getValue(), parserContext)));
+                                    break;
+                                case LTE:
+                                    predicates.add(criteriaBuilder.lessThanOrEqualTo((Expression<Comparable>) path, (Comparable) format.parse(f.getValue(), parserContext)));
+                                    break;
+                                case IN:
+                                    List<String> values = f.getValues();
+                                    List<Object> filterValues = new ArrayList<>(values.size());
+                                    for (String value : values) {
+                                        filterValues.add(format.parse(value, parserContext));
+                                    }
+                                    predicates.add(path.in(filterValues));
+                                    break;
+                                case BETWEEN:
+                                    predicates.add(criteriaBuilder.between((Expression<Comparable>) path, (Comparable) format.parse(f.getLow(), parserContext), (Comparable) format.parse(f.getHigh(), parserContext)));
+                                    break;
+                                case STARTS_WITH:
+                                    predicates.add(criteriaBuilder.like((Expression<String>) path, format.parse(f.getValue(), parserContext) + "%"));
+                                    break;
+                                case ENDS_WITH:
+                                    predicates.add(criteriaBuilder.like((Expression<String>) path, "%" + format.parse(f.getValue(), parserContext)));
+                                    break;
+                                case CONTAINS:
+                                    predicates.add(criteriaBuilder.like((Expression<String>) path, "%" + format.parse(f.getValue(), parserContext) + "%"));
+                                    break;
+                                default:
+                                    throw new UnsupportedOperationException("Unsupported kind: " + f.getKind());
+                            }
                         }
                     }
+                } catch (ParseException ex) {
+                    throw new RuntimeException(ex);
                 }
                 return criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
             }
