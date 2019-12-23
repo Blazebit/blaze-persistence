@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl;
 
 import com.blazebit.persistence.view.CorrelationProvider;
+import com.blazebit.persistence.view.CorrelationProviderFactory;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 

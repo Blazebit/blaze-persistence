@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.metamodel;
 
 import com.blazebit.persistence.view.CorrelationProvider;
+import com.blazebit.persistence.view.CorrelationProviderFactory;
 
 /**
  * Instances of the type {@linkplain CorrelatedAttribute} represents single-valued properties or fields.
@@ -27,6 +28,14 @@ import com.blazebit.persistence.view.CorrelationProvider;
  * @since 1.2.0
  */
 public interface CorrelatedAttribute<X, Y> extends Attribute<X, Y> {
+
+    /**
+     * Returns the correlation provider factory of the attribute.
+     *
+     * @return The correlation provider factory of the attribute
+     * @since 1.4.0
+     */
+    public CorrelationProviderFactory getCorrelationProviderFactory();
 
     /**
      * Returns the correlation provider of the attribute.

@@ -21,7 +21,7 @@ import java.util.Map;
 import com.blazebit.persistence.FetchBuilder;
 import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.SelectBuilder;
-import com.blazebit.persistence.view.impl.macro.EmbeddingViewJpqlMacro;
+import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
 
 /**
  *

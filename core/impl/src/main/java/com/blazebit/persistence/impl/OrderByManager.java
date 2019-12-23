@@ -16,12 +16,12 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.SimpleQueryGenerator;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.expression.modifier.ExpressionModifier;
-import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
 import com.blazebit.persistence.parser.predicate.CompoundPredicate;
 import com.blazebit.persistence.spi.JpaProvider;
 
@@ -152,7 +152,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
 
         StringBuilder expressionStringBuilder = new StringBuilder();
         queryGenerator.setQueryBuffer(expressionStringBuilder);
-        functionalDependencyAnalyzerVisitor.clear(rootPredicate);
+        functionalDependencyAnalyzerVisitor.clear(rootPredicate, joinManager.getRoots().get(0), true);
         for (int i = 0; i < size; i++) {
             final OrderByInfo orderByInfo = infos.get(i);
             String expressionString = orderByInfo.getExpressionString();
@@ -176,9 +176,8 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
                 }
             }
 
-            // Note that we could actually determine a lot more non-nullable cases, but this requires analyzing the query for top level predicates
-            // Detecting top-level predicates is out of scope right now and will be done as part of #610
-            boolean nullable = joinManager.hasFullJoin() || ExpressionUtils.isNullable(metamodel, expr);
+            // We analyze the model and join node structure and also detect top-level EQ predicates that constantify attributes which makes them non-null
+            boolean nullable = joinManager.hasFullJoin() || ExpressionUtils.isNullable(metamodel, functionalDependencyAnalyzerVisitor.getConstantifiedJoinNodeAttributeCollector(), expr);
 
             // Note that there are actually two notions of uniqueness that we have to check for
             // There is a result uniqueness which is relevant for the safety checks we do
@@ -417,10 +416,10 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
                 } else {
                     queryGenerator.generate(orderBy.getExpression());
                 }
-                nullable = hasFullJoin || ExpressionUtils.isNullable(metamodel, selectExpression);
+                nullable = hasFullJoin || ExpressionUtils.isNullable(metamodel, functionalDependencyAnalyzerVisitor.getConstantifiedJoinNodeAttributeCollector(), selectExpression);
             } else {
                 queryGenerator.generate(orderBy.getExpression());
-                nullable = hasFullJoin || ExpressionUtils.isNullable(metamodel, orderBy.getExpression());
+                nullable = hasFullJoin || ExpressionUtils.isNullable(metamodel, functionalDependencyAnalyzerVisitor.getConstantifiedJoinNodeAttributeCollector(), orderBy.getExpression());
             }
 
             if (orderBy.ascending == inverseOrder) {
@@ -456,10 +455,10 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
                 if (resolveSimpleSelectAliases && selectExpression instanceof PathExpression) {
                     orderExpression = selectExpression;
                 }
-                nullable = hasFullJoin || ExpressionUtils.isNullable(metamodel, selectExpression);
+                nullable = hasFullJoin || ExpressionUtils.isNullable(metamodel, functionalDependencyAnalyzerVisitor.getConstantifiedJoinNodeAttributeCollector(), selectExpression);
             } else {
                 resolvedExpression = null;
-                nullable = hasFullJoin || ExpressionUtils.isNullable(metamodel, orderExpression);
+                nullable = hasFullJoin || ExpressionUtils.isNullable(metamodel, functionalDependencyAnalyzerVisitor.getConstantifiedJoinNodeAttributeCollector(), orderExpression);
             }
 
             if (queryGenerator.isResolveSelectAliases() && resolvedExpression != null) {

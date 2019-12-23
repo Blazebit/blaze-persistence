@@ -20,6 +20,7 @@ import java.util.Map;
 
 import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.view.SubqueryProvider;
+import com.blazebit.persistence.view.SubqueryProviderFactory;
 
 /**
  * @author Christian Beikov

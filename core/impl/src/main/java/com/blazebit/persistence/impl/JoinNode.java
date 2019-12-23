@@ -401,9 +401,10 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
     }
 
     public <T> T accept(AbortableResultJoinNodeVisitor<T> visitor) {
+        T stopValue = visitor.getStopValue();
         T result = visitor.visit(this);
 
-        if (visitor.getStopValue().equals(result)) {
+        if (stopValue.equals(result)) {
             return result;
         }
 
@@ -411,7 +412,7 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
             for (JoinNode joinNode : treeNode.getJoinNodes().values()) {
                 result = joinNode.accept(visitor);
 
-                if (visitor.getStopValue().equals(result)) {
+                if (stopValue.equals(result)) {
                     return result;
                 }
             }
@@ -419,14 +420,14 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         for (JoinNode joinNode : entityJoinNodes) {
             result = joinNode.accept(visitor);
 
-            if (visitor.getStopValue().equals(result)) {
+            if (stopValue.equals(result)) {
                 return result;
             }
         }
         for (JoinNode joinNode : treatedJoinNodes.values()) {
             result = joinNode.accept(visitor);
 
-            if (visitor.getStopValue().equals(result)) {
+            if (stopValue.equals(result)) {
                 return result;
             }
         }
@@ -720,90 +721,8 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         return dependencies;
     }
 
-    public boolean hasCollections() {
-        if (!entityJoinNodes.isEmpty()) {
-            return true;
-        }
-
-        List<JoinTreeNode> stack = new ArrayList<JoinTreeNode>();
-        stack.addAll(nodes.values());
-
-        for (JoinNode node : entityJoinNodes) {
-            stack.addAll(node.getNodes().values());
-        }
-
-        for (JoinNode node : treatedJoinNodes.values()) {
-            stack.addAll(node.getNodes().values());
-        }
-
-        while (!stack.isEmpty()) {
-            JoinTreeNode treeNode = stack.remove(stack.size() - 1);
-
-            for (JoinNode joinNode : treeNode.getJoinNodes().values()) {
-                if (treeNode.isCollection() && !joinNode.hasArrayExpressionPredicate()) {
-                    return true;
-                }
-                stack.addAll(joinNode.nodes.values());
-            }
-        }
-
-        return false;
-    }
-
-    public boolean hasArrayExpressionPredicate() {
-        CompoundPredicate compoundPredicate = getOnPredicate();
-        if (compoundPredicate == null || compoundPredicate.getChildren().isEmpty()) {
-            return false;
-        }
-        Predicate predicate = compoundPredicate.getChildren().get(0);
-        if (!(predicate instanceof EqPredicate)) {
-            return false;
-        }
-        EqPredicate eqPredicate = (EqPredicate) predicate;
-        JoinNode n;
-        if (eqPredicate.getLeft() instanceof ListIndexExpression) {
-            ListIndexExpression left = (ListIndexExpression) eqPredicate.getLeft();
-            n = (JoinNode) left.getPath().getBaseNode();
-        } else if (eqPredicate.getLeft() instanceof MapKeyExpression) {
-            MapKeyExpression left = (MapKeyExpression) eqPredicate.getLeft();
-            n = (JoinNode) left.getPath().getBaseNode();
-        } else {
-            n = null;
-        }
-
-        return n == this;
-    }
-    
-    Set<JoinNode> getCollectionJoins() {
-        Set<JoinNode> collectionJoins = new HashSet<JoinNode>();
-        List<JoinTreeNode> stack = new ArrayList<JoinTreeNode>();
-        stack.addAll(nodes.values());
-
-        // TODO: Fix this with #216
-        // For now we say entity joins are also collection joins because that affects size to count transformations
-        for (JoinNode node : entityJoinNodes) {
-            stack.addAll(node.getNodes().values());
-        }
-
-        for (JoinNode node : treatedJoinNodes.values()) {
-            stack.addAll(node.getNodes().values());
-        }
-
-        collectionJoins.addAll(entityJoinNodes);
-
-        while (!stack.isEmpty()) {
-            JoinTreeNode treeNode = stack.remove(stack.size() - 1);
-
-            for (JoinNode joinNode : treeNode.getJoinNodes().values()) {
-                if (treeNode.isCollection() && !joinNode.hasArrayExpressionPredicate()) {
-                    collectionJoins.add(joinNode);
-                }
-                stack.addAll(joinNode.nodes.values());
-            }
-        }
-
-
-        return collectionJoins;
+    public boolean isCollection(ConstantifiedJoinNodeAttributeCollector constantifiedJoinNodeAttributeCollector) {
+        return parentTreeNode != null && parentTreeNode.isCollection() && !constantifiedJoinNodeAttributeCollector.isConstantified(this) || parentTreeNode == null && !constantifiedJoinNodeAttributeCollector.isConstantified(this);
     }
 
     List<JoinNode> getJoinNodesNeedingTreatConjunct() {

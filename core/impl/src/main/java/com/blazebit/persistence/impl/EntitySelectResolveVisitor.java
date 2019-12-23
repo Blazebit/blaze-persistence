@@ -26,6 +26,7 @@ import com.blazebit.persistence.parser.expression.PathElementExpression;
 import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.expression.PropertyExpression;
 import com.blazebit.persistence.parser.expression.VisitorAdapter;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.spi.JpaProvider;
@@ -110,7 +111,7 @@ public class EntitySelectResolveVisitor extends VisitorAdapter {
                 ExtendedAttribute<?, ?> extendedAttribute = ownedSingularAttributes.get(propertyPath);
                 Attribute<?, ?> attr = extendedAttribute.getAttribute();
                 boolean resolve = false;
-                if (ExpressionUtils.isAssociation(attr) && !attr.isCollection()) {
+                if (JpaMetamodelUtils.isAssociation(attr) && !attr.isCollection()) {
                     resolve = true;
                 } else if (ExpressionUtils.getFetchType(attr) == FetchType.EAGER) {
                     if (attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION) {

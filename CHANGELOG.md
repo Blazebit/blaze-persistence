@@ -25,6 +25,7 @@ Not yet released
 * Allow to flush updatable entity views to entities directly
 * Throw exception when `setFirstResult` or `setMaxResults` is used in a `CorrelationProvider` other than select with batch size 1
 * Allow entity view conversion with fine grained control of attribute subview types
+* Introduce type converters for entity views between `Calendar`/`GregorianCalendar` and `java.util.Date`
 
 ### Bug fixes
 

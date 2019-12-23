@@ -514,7 +514,7 @@ public class CTETest extends AbstractCoreTest {
                 + "\nUNION ALL\n"
                 + "SELECT e.id, e.name, t.level + 1 FROM TestCTE t" + innerJoinRecursive("RecursiveEntity e", "t.id = e.parent.id")
                 + "\n)\n"
-                + "SELECT " + countPaginated("r.id", true) + " FROM RecursiveEntity r" + innerJoin("TestCTE t", "r.id = t.id AND t.level < 2");
+                + "SELECT " + countPaginated("r.id", false) + " FROM RecursiveEntity r" + innerJoin("TestCTE t", "r.id = t.id AND t.level < 2");
 
         String expectedIdQuery = ""
                 + "WITH RECURSIVE TestCTE(id, name, level) AS(\n"

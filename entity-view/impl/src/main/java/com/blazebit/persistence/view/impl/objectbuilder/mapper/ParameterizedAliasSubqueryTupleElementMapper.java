@@ -20,8 +20,8 @@ import java.util.Map;
 
 import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.SelectBuilder;
-import com.blazebit.persistence.view.impl.SubqueryProviderFactory;
-import com.blazebit.persistence.view.impl.macro.EmbeddingViewJpqlMacro;
+import com.blazebit.persistence.view.SubqueryProviderFactory;
+import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
 
 /**
  *

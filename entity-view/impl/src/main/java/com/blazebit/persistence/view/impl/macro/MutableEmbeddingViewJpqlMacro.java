@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.macro;
 
 import com.blazebit.persistence.spi.FunctionRenderContext;
+import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
 
 /**
  *
@@ -35,6 +36,7 @@ public class MutableEmbeddingViewJpqlMacro implements EmbeddingViewJpqlMacro {
         this.embeddingViewPath = embeddingViewPath;
     }
 
+    @Override
     public boolean usesEmbeddingView() {
         return used;
     }

@@ -22,6 +22,7 @@ import com.blazebit.persistence.parser.expression.SyntaxErrorException;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.view.CorrelationProvider;
+import com.blazebit.persistence.view.CorrelationProviderFactory;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.FetchStrategy;
 import com.blazebit.persistence.view.IdMapping;
@@ -31,10 +32,12 @@ import com.blazebit.persistence.view.MappingCorrelatedSimple;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.SubqueryProvider;
+import com.blazebit.persistence.view.SubqueryProviderFactory;
 import com.blazebit.persistence.view.impl.CollectionJoinMappingGathererExpressionVisitor;
 import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
 import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor.TargetType;
+import com.blazebit.persistence.view.impl.SubqueryProviderHelper;
 import com.blazebit.persistence.view.impl.UpdatableExpressionVisitor;
 import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
 import com.blazebit.persistence.view.impl.collection.ListCollectionInstantiator;
@@ -88,9 +91,11 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     protected final String[] fetches;
     protected final FetchStrategy fetchStrategy;
     protected final int batchSize;
+    protected final SubqueryProviderFactory subqueryProviderFactory;
     protected final Class<? extends SubqueryProvider> subqueryProvider;
     protected final String subqueryExpression;
     protected final String subqueryAlias;
+    protected final CorrelationProviderFactory correlationProviderFactory;
     protected final Class<? extends CorrelationProvider> correlationProvider;
     protected final String correlationBasis;
     protected final String correlationResult;
@@ -136,6 +141,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.fetches = EMPTY;
             this.fetchStrategy = FetchStrategy.JOIN;
             this.batchSize = -1;
+            this.subqueryProviderFactory = null;
             this.subqueryProvider = null;
             this.id = true;
             this.updateMappableAttribute = getUpdateMappableAttribute(this.mapping, context);
@@ -145,6 +151,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.correlationBasis = null;
             this.correlationResult = null;
             this.correlationProvider = null;
+            this.correlationProviderFactory = null;
             this.correlated = null;
             this.correlationKeyAlias = null;
             this.correlationExpression = null;
@@ -154,6 +161,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.fetches = m.fetches();
             this.fetchStrategy = m.fetch();
             this.batchSize = batchSize;
+            this.subqueryProviderFactory = null;
             this.subqueryProvider = null;
             this.id = false;
             this.updateMappableAttribute = getUpdateMappableAttribute(this.mapping, context);
@@ -162,6 +170,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.subqueryAlias = null;
             if (fetchStrategy == FetchStrategy.JOIN) {
                 this.correlationProvider = null;
+                this.correlationProviderFactory = null;
                 this.correlationResult = null;
                 this.correlationBasis = null;
                 this.correlated = null;
@@ -198,12 +207,14 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                 }
                 this.correlationBasis = "this";
                 this.correlationProvider = CorrelationProviderHelper.createCorrelationProvider(correlated, correlationKeyAlias, correlationExpression, context);
+                this.correlationProviderFactory = CorrelationProviderHelper.getFactory(correlationProvider);
             }
         } else if (mappingAnnotation instanceof MappingParameter) {
             this.mapping = ((MappingParameter) mappingAnnotation).value();
             this.fetches = EMPTY;
             this.fetchStrategy = FetchStrategy.JOIN;
             this.batchSize = -1;
+            this.subqueryProviderFactory = null;
             this.subqueryProvider = null;
             this.id = false;
             // Parameters are never update mappable
@@ -214,6 +225,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.correlationBasis = null;
             this.correlationResult = null;
             this.correlationProvider = null;
+            this.correlationProviderFactory = null;
             this.correlated = null;
             this.correlationKeyAlias = null;
             this.correlationExpression = null;
@@ -222,6 +234,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.mapping = null;
             this.fetches = EMPTY;
             this.subqueryProvider = mappingSubquery.value();
+            this.subqueryProviderFactory = SubqueryProviderHelper.getFactory(subqueryProvider);
             this.fetchStrategy = FetchStrategy.JOIN;
             this.batchSize = -1;
             this.id = false;
@@ -233,6 +246,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.correlationBasis = null;
             this.correlationResult = null;
             this.correlationProvider = null;
+            this.correlationProviderFactory = null;
             this.correlated = null;
             this.correlationKeyAlias = null;
             this.correlationExpression = null;
@@ -255,6 +269,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                 this.batchSize = -1;
             }
 
+            this.subqueryProviderFactory = null;
             this.subqueryProvider = null;
             this.id = false;
             this.updateMappableAttribute = null;
@@ -271,6 +286,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             if (correlationProvider.getEnclosingClass() != null && !Modifier.isStatic(correlationProvider.getModifiers())) {
                 context.addError("The correlation provider is defined as non-static inner class. Make it static, otherwise it can't be instantiated: " + mapping.getErrorLocation());
             }
+            this.correlationProviderFactory = CorrelationProviderHelper.getFactory(correlationProvider);
         } else if (mappingAnnotation instanceof MappingCorrelatedSimple) {
             MappingCorrelatedSimple mappingCorrelated = (MappingCorrelatedSimple) mappingAnnotation;
             this.mapping = null;
@@ -283,6 +299,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                 this.batchSize = -1;
             }
 
+            this.subqueryProviderFactory = null;
             this.subqueryProvider = null;
             this.id = false;
             this.updateMappableAttribute = null;
@@ -290,6 +307,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.subqueryExpression = null;
             this.subqueryAlias = null;
             this.correlationProvider = CorrelationProviderHelper.createCorrelationProvider(mappingCorrelated.correlated(), mappingCorrelated.correlationKeyAlias(), mappingCorrelated.correlationExpression(), context);
+            this.correlationProviderFactory = CorrelationProviderHelper.getFactory(correlationProvider);
             this.correlationBasis = mappingCorrelated.correlationBasis();
             this.correlationResult = mappingCorrelated.correlationResult();
             this.correlated = mappingCorrelated.correlated();
@@ -305,6 +323,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.fetches = EMPTY;
             this.fetchStrategy = null;
             this.batchSize = Integer.MIN_VALUE;
+            this.subqueryProviderFactory = null;
             this.subqueryProvider = null;
             this.id = false;
             this.updateMappableAttribute = null;
@@ -314,6 +333,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.correlationBasis = null;
             this.correlationResult = null;
             this.correlationProvider = null;
+            this.correlationProviderFactory = null;
             this.correlated = null;
             this.correlationKeyAlias = null;
             this.correlationExpression = null;
@@ -996,6 +1016,10 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         return id;
     }
 
+    public final SubqueryProviderFactory getSubqueryProviderFactory() {
+        return subqueryProviderFactory;
+    }
+
     public final Class<? extends SubqueryProvider> getSubqueryProvider() {
         return subqueryProvider;
     }
@@ -1006,6 +1030,10 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     public final String getSubqueryAlias() {
         return subqueryAlias;
+    }
+
+    public CorrelationProviderFactory getCorrelationProviderFactory() {
+        return correlationProviderFactory;
     }
 
     public final Class<? extends CorrelationProvider> getCorrelationProvider() {

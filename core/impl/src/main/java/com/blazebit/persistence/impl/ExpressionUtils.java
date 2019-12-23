@@ -53,7 +53,6 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.SingularAttribute;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
@@ -111,11 +110,11 @@ public class ExpressionUtils {
         return "FUNCTION".equalsIgnoreCase(func.getFunctionName());
     }
 
-    public static boolean isNullable(EntityMetamodel metamodel, Expression expr) {
+    public static boolean isNullable(EntityMetamodel metamodel, ConstantifiedJoinNodeAttributeCollector constantifiedJoinNodeAttributeCollector, Expression expr) {
         if (expr instanceof FunctionExpression) {
-            return isNullable(metamodel, (FunctionExpression) expr);
+            return isNullable(metamodel, constantifiedJoinNodeAttributeCollector, (FunctionExpression) expr);
         } else if (expr instanceof PathExpression) {
-            return isNullable(metamodel, (PathExpression) expr);
+            return isNullable(metamodel, constantifiedJoinNodeAttributeCollector, (PathExpression) expr);
         } else if (expr instanceof SubqueryExpression) {
             // Subqueries are always nullable, unless they use a count query
             AbstractCommonQueryBuilder<?, ?, ?, ?, ?> subquery = (AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) ((SubqueryExpression) expr).getSubquery();
@@ -129,7 +128,7 @@ public class ExpressionUtils {
         } else if (expr instanceof ParameterExpression) {
             return true;
         } else if (expr instanceof GeneralCaseExpression) {
-            return isNullable(metamodel, (GeneralCaseExpression) expr);
+            return isNullable(metamodel, constantifiedJoinNodeAttributeCollector, (GeneralCaseExpression) expr);
         } else if (expr instanceof ListIndexExpression) {
             return false;
         } else if (expr instanceof MapKeyExpression) {
@@ -153,27 +152,27 @@ public class ExpressionUtils {
         } else if (expr instanceof TemporalLiteral) {
             return false;
         } else if (expr instanceof ArithmeticFactor) {
-            return isNullable(metamodel, ((ArithmeticFactor) expr).getExpression());
+            return isNullable(metamodel, constantifiedJoinNodeAttributeCollector, ((ArithmeticFactor) expr).getExpression());
         } else if (expr instanceof ArithmeticExpression) {
-            return isNullable(metamodel, (ArithmeticExpression) expr);
+            return isNullable(metamodel, constantifiedJoinNodeAttributeCollector, (ArithmeticExpression) expr);
         } else {
             throw new IllegalArgumentException("The expression of type '" + expr.getClass().getName() + "' can not be analyzed for nullability!");
         }
     }
 
-    private static boolean isNullable(EntityMetamodel metamodel, ArithmeticExpression arithmeticExpression) {
-        return isNullable(metamodel, arithmeticExpression.getLeft()) || isNullable(metamodel, arithmeticExpression.getRight());
+    private static boolean isNullable(EntityMetamodel metamodel, ConstantifiedJoinNodeAttributeCollector constantifiedJoinNodeAttributeCollector, ArithmeticExpression arithmeticExpression) {
+        return isNullable(metamodel, constantifiedJoinNodeAttributeCollector, arithmeticExpression.getLeft()) || isNullable(metamodel, constantifiedJoinNodeAttributeCollector, arithmeticExpression.getRight());
     }
 
-    private static boolean isNullable(EntityMetamodel metamodel, GeneralCaseExpression expr) {
-        if (expr.getDefaultExpr() != null && isNullable(metamodel, expr.getDefaultExpr())) {
+    private static boolean isNullable(EntityMetamodel metamodel, ConstantifiedJoinNodeAttributeCollector constantifiedJoinNodeAttributeCollector, GeneralCaseExpression expr) {
+        if (expr.getDefaultExpr() != null && isNullable(metamodel, constantifiedJoinNodeAttributeCollector, expr.getDefaultExpr())) {
             return true;
         }
 
         List<WhenClauseExpression> expressions = expr.getWhenClauses();
         int size = expressions.size();
         for (int i = 0; i < size; i++) {
-            if (isNullable(metamodel, expressions.get(i).getResult())) {
+            if (isNullable(metamodel, constantifiedJoinNodeAttributeCollector, expressions.get(i).getResult())) {
                 return true;
             }
         }
@@ -181,7 +180,7 @@ public class ExpressionUtils {
         return false;
     }
 
-    private static boolean isNullable(EntityMetamodel metamodel, FunctionExpression expr) {
+    private static boolean isNullable(EntityMetamodel metamodel, ConstantifiedJoinNodeAttributeCollector constantifiedJoinNodeAttributeCollector, FunctionExpression expr) {
         if ("NULLIF".equalsIgnoreCase(expr.getFunctionName())) {
             return true;
         } else if (com.blazebit.persistence.parser.util.ExpressionUtils.isCountFunction(expr)) {
@@ -191,7 +190,7 @@ public class ExpressionUtils {
             List<Expression> expressions = expr.getExpressions();
             int size = expressions.size();
             for (int i = 0; i < size; i++) {
-                nullable = isNullable(metamodel, expressions.get(i));
+                nullable = isNullable(metamodel, constantifiedJoinNodeAttributeCollector, expressions.get(i));
 
                 if (!nullable) {
                     return false;
@@ -205,7 +204,7 @@ public class ExpressionUtils {
             List<Expression> expressions = expr.getExpressions();
             int size = expressions.size();
             for (int i = 0; i < size; i++) {
-                nullable = isNullable(metamodel, expressions.get(i));
+                nullable = isNullable(metamodel, constantifiedJoinNodeAttributeCollector, expressions.get(i));
 
                 if (nullable) {
                     return true;
@@ -216,15 +215,19 @@ public class ExpressionUtils {
         }
     }
 
-    private static boolean isNullable(EntityMetamodel metamodel, PathExpression expr) {
+    private static boolean isNullable(EntityMetamodel metamodel, ConstantifiedJoinNodeAttributeCollector constantifiedJoinNodeAttributeCollector, PathExpression expr) {
         JoinNode baseNode = ((JoinNode) expr.getBaseNode());
         // First we check if the target attribute is optional/nullable, because then we don't need to check the join structure
         if (expr.getField() != null) {
+            // If the attribute is constantified i.e. appears in a top-level EQ predicate, we can be sure it is non-nullable as well
+            if (constantifiedJoinNodeAttributeCollector.isConstantifiedNonOptional(baseNode, expr.getField())) {
+                return false;
+            }
             ManagedType<?> managedType = baseNode.getManagedType();
             ExtendedManagedType extendedManagedType = metamodel.getManagedType(ExtendedManagedType.class, JpaMetamodelUtils.getTypeName(managedType));
             Attribute<?, ?> attr = extendedManagedType.getAttribute(expr.getField()).getAttribute();
 
-            if (isNullable(attr)) {
+            if (JpaMetamodelUtils.isNullable(attr)) {
                 return true;
             }
             // Check if we have a single valued id access
@@ -233,7 +236,7 @@ public class ExpressionUtils {
                 // A single valued id path is nullable if the parent association is nullable
                 String associationName = expr.getField().substring(0, dotIndex);
                 Attribute<?, ?> associationAttribute = extendedManagedType.getAttribute(associationName).getAttribute();
-                if (isNullable(associationAttribute)) {
+                if (JpaMetamodelUtils.isNullable(associationAttribute)) {
                     // Finally check if the association might have been inner joined
                     JoinTreeNode associationNode = baseNode.getNodes().get(associationName);
                     if (associationNode == null || associationNode.getDefaultNode().getJoinType() != JoinType.INNER) {
@@ -250,15 +253,6 @@ public class ExpressionUtils {
         // If the user wants to avoid implications of this path being considered nullable, the join should be changed
         // Note that a VALUES clause does not adhere to the nullability guarantees
         return baseNode.getValueCount() > 0 && baseNode.getValuesCastedParameter() == null || baseNode.getJoinType() == JoinType.LEFT || baseNode.getJoinType() == JoinType.FULL;
-    }
-
-    private static boolean isNullable(Attribute<?, ?> attr) {
-        if (attr.isCollection()) {
-            return true;
-        }
-
-        // !((SingularAttribute<?, ?>) attr).isId() is required as a workaround for Eclipselink
-        return ((SingularAttribute<?, ?>) attr).isOptional() && !((SingularAttribute<?, ?>) attr).isId();
     }
 
     public static FetchType getFetchType(Attribute<?, ?> attr) {
@@ -308,11 +302,6 @@ public class ExpressionUtils {
         }
         return FetchType.EAGER;
 
-    }
-
-    public static boolean isAssociation(Attribute<?, ?> attr) {
-        return attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.MANY_TO_ONE
-            || attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.ONE_TO_ONE;
     }
 
     public static boolean containsSubqueryExpression(Expression e) {

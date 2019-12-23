@@ -21,6 +21,7 @@ import java.lang.reflect.Constructor;
 
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.SubqueryProvider;
+import com.blazebit.persistence.view.SubqueryProviderFactory;
 
 /**
  * @author Christian Beikov

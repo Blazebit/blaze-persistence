@@ -462,4 +462,18 @@ public class JpaMetamodelUtils {
 
         return false;
     }
+
+    public static boolean isAssociation(Attribute<?, ?> attr) {
+        return attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.MANY_TO_ONE
+            || attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.ONE_TO_ONE;
+    }
+
+    public static boolean isNullable(Attribute<?, ?> attr) {
+        if (attr.isCollection()) {
+            return true;
+        }
+
+        // !((SingularAttribute<?, ?>) attr).isId() is required as a workaround for Eclipselink
+        return ((SingularAttribute<?, ?>) attr).isOptional() && !((SingularAttribute<?, ?>) attr).isId();
+    }
 }

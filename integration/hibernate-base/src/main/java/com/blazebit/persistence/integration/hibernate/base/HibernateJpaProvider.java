@@ -1529,6 +1529,13 @@ public class HibernateJpaProvider implements JpaProvider {
                     } else {
                         AbstractEntityPersister elementPersister = (AbstractEntityPersister) entityPersisters.get(((org.hibernate.type.EntityType) elementType).getAssociatedEntityName());
                         collectPropertyNames(sourceIdentifierOrUniqueKeyPropertyNames, null, elementPersister.getPropertyType(mappedBy), factory);
+//                        if (sourceIdentifierOrUniqueKeyPropertyNames.size() != identifierOrUniqueKeyPropertyNames.size()) {
+//                            // We have a inverse map or inverse indexed list here
+//                            // Maybe at some point we can determine the index property name mapping as well
+//                            persister = getCollectionPersister(owner, attributeName);
+//                            Set<String> indexAttributeNames = getColumnMatchingAttributeNames(elementPersister, Arrays.asList(persister.getIndexColumnNames()));
+//                            persister.getIndexType()
+//                        }
                     }
                 } else {
                     AbstractEntityPersister elementPersister = (AbstractEntityPersister) entityPersisters.get(((org.hibernate.type.EntityType) elementType).getAssociatedEntityName());
@@ -1543,21 +1550,21 @@ public class HibernateJpaProvider implements JpaProvider {
         } else {
             collectPropertyNames(identifierOrUniqueKeyPropertyNames, null, propertyType, factory);
             if (propertyType instanceof org.hibernate.type.EntityType) {
+                AbstractEntityPersister elementPersister = (AbstractEntityPersister) entityPersisters.get(((org.hibernate.type.EntityType) propertyType).getAssociatedEntityName());
                 if (((org.hibernate.type.EntityType) propertyType).isReferenceToPrimaryKey()) {
-                    if (entityPersister.getIdentifierType().isComponentType()) {
-                        String targetPropertyPrefix = entityPersister.getIdentifierPropertyName() == null ? attributeName + "." : entityPersister.getIdentifierPropertyName() + ".";
+                    if (elementPersister.getIdentifierType().isComponentType()) {
+                        String targetPropertyPrefix = elementPersister.getIdentifierPropertyName() == null ? attributeName + "." : "";
                         for (int i = 0; i < identifierOrUniqueKeyPropertyNames.size(); i++) {
                             sourceIdentifierOrUniqueKeyPropertyNames.add(targetPropertyPrefix + identifierOrUniqueKeyPropertyNames.get(i));
                         }
                     } else {
-                        sourceIdentifierOrUniqueKeyPropertyNames.add(entityPersister.getIdentifierPropertyName());
+                        sourceIdentifierOrUniqueKeyPropertyNames.add(elementPersister.getIdentifierPropertyName());
                     }
                 } else if (propertyType instanceof OneToOneType) {
                     String mappedBy = ((OneToOneType) propertyType).getRHSUniqueKeyPropertyName();
                     if (mappedBy == null || mappedBy.isEmpty()) {
                         throw new IllegalArgumentException("One-to-one using natural key is unsupported!");
                     } else {
-                        AbstractEntityPersister elementPersister = (AbstractEntityPersister) entityPersisters.get(((org.hibernate.type.EntityType) propertyType).getAssociatedEntityName());
                         collectPropertyNames(sourceIdentifierOrUniqueKeyPropertyNames, null, elementPersister.getPropertyType(mappedBy), factory);
                     }
                 }
@@ -1594,7 +1601,7 @@ public class HibernateJpaProvider implements JpaProvider {
                 }
             } else {
                 String identifierOrUniqueKeyPropertyName = entityType.getIdentifierOrUniqueKeyPropertyName(factory);
-                propertyNames.add(prefix == null ? identifierOrUniqueKeyPropertyName : prefix + "." + identifierOrUniqueKeyPropertyName);
+                collectPropertyNames(propertyNames, prefix == null ? identifierOrUniqueKeyPropertyName : prefix + "." + identifierOrUniqueKeyPropertyName, identifierOrUniqueKeyType, factory);
             }
         } else if (!(propertyType instanceof CollectionType) && prefix != null) {
             propertyNames.add(prefix);

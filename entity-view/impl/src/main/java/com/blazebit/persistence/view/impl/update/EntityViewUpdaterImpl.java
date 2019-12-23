@@ -780,10 +780,15 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
             }
             if (joinTableOwnerProperties.size() != 1) {
                 String idMapping = ownerIdFlusher.getMapping();
-                String prefix = idMapping + ".";
-                for (String joinTableOwnerProperty : joinTableOwnerProperties.values()) {
+                String prefix;
+                if (idMapping.endsWith(".")) {
+                    prefix = idMapping;
+                } else {
+                    prefix = idMapping + ".";
+                }
+                for (String joinTableOwnerProperty : joinTableOwnerProperties.keySet()) {
                     if (!joinTableOwnerProperty.startsWith(prefix)) {
-                        throw new IllegalArgumentException("Multiple joinable owner properties for attribute " + attributeName + " of " + ownerEntityType.getJavaType().getName() + " found which is not yet supported. Consider using the primary key instead!");
+                        throw new IllegalArgumentException("Multiple joinable owner properties for attribute '" + attributeName + "' of " + ownerEntityType.getJavaType().getName() + " found which is not yet supported. Consider using the primary key instead!");
                     }
                 }
                 attributeOwnerFlusher = ownerIdFlusher;

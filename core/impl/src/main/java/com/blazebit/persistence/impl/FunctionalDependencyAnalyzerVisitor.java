@@ -93,14 +93,18 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
         constantifiedJoinNodeAttributeCollector.reset();
     }
 
-    public void clear(CompoundPredicate rootPredicate) {
+    public void clear(CompoundPredicate rootPredicate, JoinNode firstRootNode, boolean innerJoin) {
         super.clear();
         uniquenessMissingJoinNodeAttributes.clear();
         uniquenessFormingJoinNodeExpressions.clear();
         functionalDependencyRootExpressions.clear();
         resultUnique = false;
         lastJoinNode = null;
-        constantifiedJoinNodeAttributeCollector.collectConstantifiedJoinNodeAttributes(rootPredicate);
+        constantifiedJoinNodeAttributeCollector.collectConstantifiedJoinNodeAttributes(rootPredicate, firstRootNode, innerJoin);
+    }
+
+    public ConstantifiedJoinNodeAttributeCollector getConstantifiedJoinNodeAttributeCollector() {
+        return constantifiedJoinNodeAttributeCollector;
     }
 
     public boolean analyzeFormsUniqueTuple(Expression expression) {
@@ -108,19 +112,21 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
         expressionToSplit = null;
         boolean unique = expression.accept(this);
         JoinNode p;
-        if (lastJoinNode instanceof Map.Entry<?, ?>) {
-            p = ((Map.Entry<JoinNode, ?>) lastJoinNode).getKey();
-        } else {
-            p = (JoinNode) lastJoinNode;
-        }
-        if (p != null) {
-            // Traverse join nodes up and if we see that this expression is part of a collection, we revert result uniqueness
-            while (p.getParent() != null) {
-                if (p.getParentTreeNode() == null || p.getParentTreeNode().isCollection()) {
-                    unique = false;
-                    break;
+        if (unique) {
+            if (lastJoinNode instanceof Map.Entry<?, ?>) {
+                p = ((Map.Entry<JoinNode, ?>) lastJoinNode).getKey();
+            } else {
+                p = (JoinNode) lastJoinNode;
+            }
+            if (p != null) {
+                // Traverse join nodes up and if we see that this expression is part of a collection, we revert result uniqueness
+                while (p.getParent() != null) {
+                    if ((p.getParentTreeNode() == null || p.getParentTreeNode().isCollection()) && !constantifiedJoinNodeAttributeCollector.isConstantified(p)) {
+                        unique = false;
+                        break;
+                    }
+                    p = p.getParent();
                 }
-                p = p.getParent();
             }
         }
         resultUnique = resultUnique || unique;
@@ -130,8 +136,8 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
         return unique;
     }
 
-    public ResolvedExpression[] getFunctionalDependencyRootExpressions(CompoundPredicate rootPredicate, ResolvedExpression[] expressions) {
-        clear(rootPredicate);
+    public ResolvedExpression[] getFunctionalDependencyRootExpressions(CompoundPredicate rootPredicate, ResolvedExpression[] expressions, JoinNode firstRootNode) {
+        clear(rootPredicate, firstRootNode, true);
         for (int i = 0; i < expressions.length; i++) {
             currentResolvedExpression = expressions[i];
             if (analyzeFormsUniqueTuple(expressions[i].getExpression())) {
@@ -252,11 +258,11 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
             baseNodeKey = new AbstractMap.SimpleEntry<>(baseNode, associationName);
             if (attribute.getPersistentAttributeType() != Attribute.PersistentAttributeType.ONE_TO_ONE) {
                 boolean nonConstantParent = true;
-                Set<String> constantifiedAttributes = constantifiedJoinNodeAttributeCollector.getConstantifiedJoinNodeAttributes().get(baseNode);
+                Map<String, Boolean> constantifiedAttributes = constantifiedJoinNodeAttributeCollector.getConstantifiedJoinNodeAttributes().get(baseNode);
                 if (constantifiedAttributes != null) {
                     Map<String, Boolean> orderedAttributes = new HashMap<>();
                     addAttributes(baseNode.getEntityType(), null, "", "", (SingularAttribute<?, ?>) attribute, orderedAttributes);
-                    initConstantifiedAttributes(orderedAttributes, constantifiedAttributes);
+                    initConstantifiedAttributes(orderedAttributes, constantifiedAttributes.keySet());
                     orderedAttributes.remove(expr.getField());
                     String singleNonConstantifiedAttribute = getSingleNonConstantifiedAttribute(orderedAttributes);
                     // If the identifiers are constantified, we don't care if this is a one-to-one
@@ -312,9 +318,8 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
         String subPath = field;
         while (baseNode.getParent() != null) {
             if (baseNode.getParentTreeNode() == null) {
-                // Don't assume uniqueness when encountering a cross or entity join
-                // To support this, we need to find top-level equality predicates between unique keys of the joined relations in the query
-                return false;
+                // Only assume uniqueness when the encountered cross or entity join are constantified
+                return constantifiedJoinNodeAttributeCollector.isConstantified(baseNode);
             } else {
                 subPath = baseNode.getParentTreeNode().getRelationName() + "." + subPath;
                 attr = baseNode.getParentTreeNode().getAttribute();
@@ -322,7 +327,7 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
                 baseNode = baseNode.getParent();
 
                 if (attr.getPersistentAttributeType() != Attribute.PersistentAttributeType.ONE_TO_ONE) {
-                    Set<String> constantifiedAttributes = constantifiedJoinNodeAttributeCollector.getConstantifiedJoinNodeAttributes().get(baseNode);
+                    Map<String, Boolean> constantifiedAttributes = constantifiedJoinNodeAttributeCollector.getConstantifiedJoinNodeAttributes().get(baseNode);
                     if (constantifiedAttributes != null) {
                         // If there are constantified attributes for the node, we check if they cover the identifier
                         // This is relevant for queries like `select e.manyToOne.id, e.manyToOne.name from Entity e order by e.manyToOne.id`
@@ -331,7 +336,7 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
                         ExtendedManagedType<?> extendedManagedType = metamodel.getManagedType(ExtendedManagedType.class, baseNode.getManagedType());
                         orderedAttributes = new HashMap<>();
                         addAttributes(baseNode.getEntityType(), null, "", "", (SingularAttribute<?, ?>) attr, orderedAttributes);
-                        initConstantifiedAttributes(orderedAttributes, constantifiedAttributes);
+                        initConstantifiedAttributes(orderedAttributes, constantifiedAttributes.keySet());
                         orderedAttributes.remove(subPath);
                         String singleNonConstantifiedAttribute = getSingleNonConstantifiedAttribute(orderedAttributes);
                         // If the identifiers are constantified, we don't care if this is a one-to-one
@@ -445,9 +450,9 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
                 fieldPrefix = fieldPrefix.substring(0, fieldPrefix.length() - baseNode.getParentTreeNode().getAttribute().getName().length());
                 addAttributes(baseNode.getParent().getEntityType(), null, fieldPrefix, prefix, (SingularAttribute<?, ?>) baseNode.getParentTreeNode().getAttribute(), orderedAttributes);
             }
-            Set<String> constantifiedAttributes = constantifiedJoinNodeAttributeCollector.getConstantifiedJoinNodeAttributes().get(baseNodeKey);
+            Map<String, Boolean> constantifiedAttributes = constantifiedJoinNodeAttributeCollector.getConstantifiedJoinNodeAttributes().get(baseNodeKey);
             if (constantifiedAttributes != null) {
-                initConstantifiedAttributes(orderedAttributes, constantifiedAttributes);
+                initConstantifiedAttributes(orderedAttributes, constantifiedAttributes.keySet());
             }
             uniquenessMissingJoinNodeAttributes.put(baseNodeKey, orderedAttributes);
         }

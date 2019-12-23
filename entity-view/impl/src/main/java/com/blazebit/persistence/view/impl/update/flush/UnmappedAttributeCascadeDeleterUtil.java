@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.update.flush;
 
 import com.blazebit.persistence.parser.EntityMetamodel;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
@@ -63,7 +64,7 @@ public class UnmappedAttributeCascadeDeleterUtil {
                             true
                     ));
                 }
-            } else if (extendedAttribute.getAttribute().isAssociation() && extendedAttribute.isDeleteCascaded()) {
+            } else if (JpaMetamodelUtils.isAssociation(extendedAttribute.getAttribute()) && extendedAttribute.isDeleteCascaded()) {
                 deleters.add(new UnmappedBasicAttributeCascadeDeleter(
                         evm,
                         entry.getKey(),

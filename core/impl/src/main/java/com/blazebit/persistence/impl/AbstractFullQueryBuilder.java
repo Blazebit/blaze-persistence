@@ -273,7 +273,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
             if (identifierExpressions == entityIdentifierExpressions) {
                 uniqueIdentifierExpressions = identifierExpressions;
             } else {
-                uniqueIdentifierExpressions = functionalDependencyAnalyzerVisitor.getFunctionalDependencyRootExpressions(whereManager.rootPredicate.getPredicate(), identifierExpressions);
+                uniqueIdentifierExpressions = functionalDependencyAnalyzerVisitor.getFunctionalDependencyRootExpressions(whereManager.rootPredicate.getPredicate(), identifierExpressions, joinManager.getRoots().get(0));
             }
         }
 
@@ -474,7 +474,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         StringBuilder sb = new StringBuilder();
 
         implicitJoinWhereClause();
-        functionalDependencyAnalyzerVisitor.clear(whereManager.rootPredicate.getPredicate());
+        functionalDependencyAnalyzerVisitor.clear(whereManager.rootPredicate.getPredicate(), joinManager.getRoots().get(0), true);
         functionalDependencyAnalyzerVisitor.analyzeFormsUniqueTuple(expression);
         queryGenerator.setQueryBuffer(sb);
         if (functionalDependencyAnalyzerVisitor.getSplittedOffExpressions().isEmpty()) {

@@ -114,14 +114,8 @@ public class EntityMetamodelImpl implements EntityMetamodel {
                 }
             }
 
-            Set<Attribute<?, ?>> attributes = (Set<Attribute<?, ?>>) (Set) e.getAttributes();
-            Map<String, AttributeEntry<?, ?>> attributeMap = new TreeMap<>();
-            TemporaryExtendedManagedType extendedManagedType = new TemporaryExtendedManagedType(e, attributeMap);
-            temporaryExtendedManagedTypes.put(JpaMetamodelUtils.getTypeName(e), extendedManagedType);
-            if (e.getJavaType() != null) {
-                temporaryExtendedManagedTypes.put(e.getJavaType().getName(), extendedManagedType);
-            }
-            collectColumnNames(e, attributeMap, null, null, null, e, temporaryExtendedManagedTypes, seenTypesForEnumResolving, enumTypes);
+            TemporaryExtendedManagedType extendedManagedType = getTemporaryType(e, temporaryExtendedManagedTypes);
+            collectColumnNames(e, extendedManagedType.attributes, null, null, null, e, temporaryExtendedManagedTypes, seenTypesForEnumResolving, enumTypes);
         }
 
         for (ManagedType<?> t : managedTypes) {
@@ -184,6 +178,18 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         this.classMap = Collections.unmodifiableMap(classToType);
         this.cteMap = Collections.unmodifiableMap(cteToType);
         this.extendedManagedTypes = Collections.unmodifiableMap(extendedManagedTypes);
+    }
+
+    private TemporaryExtendedManagedType getTemporaryType(ManagedType<?> type, Map<String, TemporaryExtendedManagedType> temporaryExtendedManagedTypes) {
+        TemporaryExtendedManagedType extendedManagedType = temporaryExtendedManagedTypes.get(JpaMetamodelUtils.getTypeName(type));
+        if (extendedManagedType == null) {
+            extendedManagedType = new TemporaryExtendedManagedType(type, new TreeMap<String, AttributeEntry<?, ?>>());
+            temporaryExtendedManagedTypes.put(JpaMetamodelUtils.getTypeName(type), extendedManagedType);
+            if (type.getJavaType() != null) {
+                temporaryExtendedManagedTypes.put(type.getJavaType().getName(), extendedManagedType);
+            }
+        }
+        return extendedManagedType;
     }
 
     private Map<String, AttributeEntry<?,?>> initAttributes(Map<String, AttributeEntry<?,?>> attributes) {
@@ -279,14 +285,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private TemporaryExtendedManagedType collectColumnNames(EntityType<?> e, Map<String, AttributeEntry<?, ?>> attributeMap, String parent, List<Attribute<?, ?>> parents, String elementCollectionPath, ManagedType<?> type, Map<String, TemporaryExtendedManagedType> temporaryExtendedManagedTypes, Set<Class<?>> seenTypesForEnumResolving, Map<String, Class<Enum<?>>> enumTypes) {
         Set<Attribute<?, ?>> attributes = (Set<Attribute<?, ?>>) (Set) type.getAttributes();
-        TemporaryExtendedManagedType extendedManagedType = temporaryExtendedManagedTypes.get(JpaMetamodelUtils.getTypeName(type));
-        if (extendedManagedType == null) {
-            extendedManagedType = new TemporaryExtendedManagedType(type, new TreeMap<String, AttributeEntry<?, ?>>());
-            temporaryExtendedManagedTypes.put(JpaMetamodelUtils.getTypeName(type), extendedManagedType);
-            if (type.getJavaType() != null) {
-                temporaryExtendedManagedTypes.put(type.getJavaType().getName(), extendedManagedType);
-            }
-        }
+        TemporaryExtendedManagedType extendedManagedType = getTemporaryType(type, temporaryExtendedManagedTypes);
 
         if (parent != null) {
             Attribute<?, ?> parentAttribute = parents.get(parents.size() - 1);
@@ -330,6 +329,14 @@ public class EntityMetamodelImpl implements EntityMetamodel {
                     if (elementCollectionPath == null && (extendedEmbeddableType.singularOwnerType == null || shouldReplaceOwner(attributeName, extendedEmbeddableType.singularOwnerType.getValue()))) {
                         extendedEmbeddableType.singularOwnerType = new AbstractMap.SimpleEntry(e, attributeName);
                     }
+                    if (attributeMap != managedTypeAttributes) {
+                        for (Map.Entry<String, AttributeEntry<?, ?>> entry : extendedEmbeddableType.attributes.entrySet()) {
+                            AttributeEntry<?, ?> value = entry.getValue();
+                            String idPath = attributeName + "." + entry.getKey();
+                            AttributeEntry attributeEntry = new AttributeEntry(jpaProvider, e, value.attribute, idPath, value.elementClass, new ArrayList<>(value.attributePath), value.getElementCollectionPath() == null ? elementCollectionPath : value.getElementCollectionPath());
+                            managedTypeAttributes.put(attribute.getName() + "." + entry.getKey(), attributeEntry);
+                        }
+                    }
                 } else if (attribute instanceof PluralAttribute<?, ?, ?>) {
                     if (((PluralAttribute<?, ?, ?>) attribute).getElementType() instanceof EmbeddableType<?>) {
                         EmbeddableType<?> embeddableType;
@@ -342,6 +349,14 @@ public class EntityMetamodelImpl implements EntityMetamodel {
                         TemporaryExtendedManagedType extendedEmbeddableType = collectColumnNames(e, attributeMap, attributeName, newParents, attributeName, embeddableType, temporaryExtendedManagedTypes, seenTypesForEnumResolving, enumTypes);
                         if (extendedEmbeddableType.pluralOwnerType == null) {
                             extendedEmbeddableType.pluralOwnerType = new AbstractMap.SimpleEntry(e, attributeName);
+                        }
+                        if (attributeMap != managedTypeAttributes) {
+                            for (Map.Entry<String, AttributeEntry<?, ?>> entry : extendedEmbeddableType.attributes.entrySet()) {
+                                AttributeEntry<?, ?> value = entry.getValue();
+                                String idPath = attributeName + "." + entry.getKey();
+                                AttributeEntry attributeEntry = new AttributeEntry(jpaProvider, e, value.attribute, idPath, value.elementClass, new ArrayList<>(value.attributePath), attributeName);
+                                managedTypeAttributes.put(attribute.getName() + "." + entry.getKey(), attributeEntry);
+                            }
                         }
                     }
                     // If this attribute is part of an element collection, we assume there are no inverse one-to-ones
@@ -422,6 +437,14 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         EntityType<?> fieldEntityType = delegate.entity(fieldType);
 
         for (String name : identifierOrUniqueKeyEmbeddedPropertyNames) {
+            int dotIndex = name.indexOf('.');
+            // We handle deep properties manually, so we only care about the first property part
+            if (dotIndex != -1) {
+                name = name.substring(0, dotIndex);
+                if (attributeMap.containsKey(attributeName + "." + name)) {
+                    continue;
+                }
+            }
             Attribute<?, ?> idAttribute = JpaMetamodelUtils.getAttribute(fieldEntityType, name);
             Class<?> idType = JpaMetamodelUtils.resolveFieldClass(fieldType, idAttribute);
             String idPath = attributeName + "." + name;
@@ -432,6 +455,19 @@ public class EntityMetamodelImpl implements EntityMetamodel {
             attributeMap.put(idPath, attributeEntry);
             if (isAssociation(idAttribute)) {
                 collectIdColumns(e, attributeMap, idPath, newParents, elementCollectionPath, idType, temporaryExtendedManagedTypes, seenTypesForEnumResolving, enumTypes);
+            } else if (idAttribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED) {
+                ArrayList<Attribute<?, ?>> embeddableParents = new ArrayList<>(newParents.size() + 1);
+                embeddableParents.addAll(newParents);
+                embeddableParents.add(idAttribute);
+
+                EmbeddableType<?> embeddableType;
+                // Hibernate Envers reports java.util.Map as type for the embedded id of an audited entity which we have to handle specially
+                if (idType == Map.class) {
+                    embeddableType = (EmbeddableType<?>) ((SingularAttribute<?, ?>) idAttribute).getType();
+                } else {
+                    embeddableType = delegate.embeddable(idType);
+                }
+                collectColumnNames(e, attributeMap, idPath, embeddableParents, elementCollectionPath, embeddableType, temporaryExtendedManagedTypes, seenTypesForEnumResolving, enumTypes);
             }
         }
     }
@@ -767,6 +803,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         private final Attribute<X, Y> attribute;
         private final List<Attribute<?, ?>> attributePath;
         private final String attributePathString;
+        private final String elementCollectionPath;
         private final Class<Y> elementClass;
         private final boolean hasCascadeDeleteCycle;
         private final boolean hasJoinCondition;
@@ -787,7 +824,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
             this.jpaProvider = jpaProvider;
             this.ownerType = ownerType;
             this.attribute = attribute;
-
+            this.elementCollectionPath = elementCollectionPath;
             this.attributePath = Collections.unmodifiableList(parents);
             this.attributePathString = attributeName;
             this.elementClass = fieldType;
@@ -843,6 +880,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
             this.jpaProvider = original.jpaProvider;
             this.ownerType = original.ownerType;
             this.attribute = original.attribute;
+            this.elementCollectionPath = original.elementCollectionPath;
             this.attributePath = original.attributePath;
             this.attributePathString = original.attributePathString;
             this.elementClass = original.elementClass;
@@ -891,6 +929,10 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         @Override
         public String getAttributePathString() {
             return attributePathString;
+        }
+
+        public String getElementCollectionPath() {
+            return elementCollectionPath;
         }
 
         @Override
@@ -965,7 +1007,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
 
         public void initColumnEquivalentAttributes(Collection<AttributeEntry<?, ?>> attributeEntries) {
             for (AttributeEntry<?, ?> attributeEntry : attributeEntries) {
-                if (attributeEntry != this && Arrays.equals(columnNames, attributeEntry.columnNames)) {
+                if (attributeEntry != this && columnNames != null && columnNames.length != 0 && Arrays.equals(columnNames, attributeEntry.columnNames)) {
                     columnEquivalentAttributes.add((ExtendedAttribute<X, ?>) attributeEntry);
                 }
             }

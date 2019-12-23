@@ -134,14 +134,14 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
             List<PathElementExpression> path = new ArrayList<>(2);
             path.add(new PropertyExpression(rootNode.getAlias()));
             path.add(new PropertyExpression(expression));
-            return joinManager.hasFullJoin() || ExpressionUtils.isNullable(getMetamodel(), new PathExpression(
+            return joinManager.hasFullJoin() || ExpressionUtils.isNullable(getMetamodel(), queryBuilder.functionalDependencyAnalyzerVisitor.getConstantifiedJoinNodeAttributeCollector(), new PathExpression(
                     path,
                     new SimplePathReference(rootNode, expression, null),
                     false,
                     false
             ));
         } else {
-            return joinManager.hasFullJoin() || ExpressionUtils.isNullable(getMetamodel(), ((SelectInfo) aliasInfo).getExpression());
+            return joinManager.hasFullJoin() || ExpressionUtils.isNullable(getMetamodel(), queryBuilder.functionalDependencyAnalyzerVisitor.getConstantifiedJoinNodeAttributeCollector(), ((SelectInfo) aliasInfo).getExpression());
         }
     }
     

@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl;
 
 import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.view.CorrelationProvider;
+import com.blazebit.persistence.view.CorrelationProviderFactory;
 
 import java.lang.reflect.Constructor;
 import java.util.Map;

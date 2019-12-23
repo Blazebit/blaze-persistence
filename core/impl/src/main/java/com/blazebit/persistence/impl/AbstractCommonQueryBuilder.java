@@ -2542,6 +2542,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         // in the first case
         JoinVisitor joinVisitor = applyImplicitJoins(null);
         applyExpressionTransformersAndBuildGroupByClauses(false, joinVisitor);
+        analyzeConstantifiedJoinNodes();
         hasCollections = joinManager.hasCollections();
 
         if (keysetManager.hasKeyset()) {
@@ -2555,6 +2556,20 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
         // No need to do all that stuff again if no mutation occurs
         needsCheck = false;
+    }
+
+    protected void analyzeConstantifiedJoinNodes() {
+        final ConstantifiedJoinNodeAttributeCollector constantifiedJoinNodeAttributeCollector = functionalDependencyAnalyzerVisitor.getConstantifiedJoinNodeAttributeCollector();
+        final JoinNode firstRootNode = joinManager.getRoots().get(0);
+        constantifiedJoinNodeAttributeCollector.collectConstantifiedJoinNodeAttributes(whereManager.rootPredicate.getPredicate(), firstRootNode, true);
+        joinManager.acceptVisitor(new JoinNodeVisitor() {
+            @Override
+            public void visit(JoinNode node) {
+                if (node.getOnPredicate() != null) {
+                    constantifiedJoinNodeAttributeCollector.collectConstantifiedJoinNodeAttributes(node.getOnPredicate(), firstRootNode, node.getJoinType() == JoinType.INNER);
+                }
+            }
+        });
     }
 
     protected ResolvedExpression[] getGroupByIdentifierExpressions() {

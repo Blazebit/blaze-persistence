@@ -61,10 +61,9 @@ import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import java.util.AbstractMap;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -79,10 +78,14 @@ import java.util.Set;
  */
 class ConstantifiedJoinNodeAttributeCollector extends VisitorAdapter {
 
+    private static final String KEY_FUNCTION = "key()";
+
     private final EntityMetamodel metamodel;
     private final AliasManager aliasManager;
-    private Map<Object, Set<String>> constantifiedJoinNodeAttributes;
-    private CompoundPredicate rootPredicate;
+    private Map<Object, Map<String, Boolean>> constantifiedJoinNodeAttributes;
+    private Set<CompoundPredicate> analyzedPredicates;
+    private JoinNode firstRootNode;
+    private boolean innerJoin;
     private boolean negated;
     private boolean inKey;
 
@@ -90,24 +93,61 @@ class ConstantifiedJoinNodeAttributeCollector extends VisitorAdapter {
         this.metamodel = metamodel;
         this.aliasManager = aliasManager;
         this.constantifiedJoinNodeAttributes = new HashMap<>();
+        this.analyzedPredicates = Collections.newSetFromMap(new IdentityHashMap<CompoundPredicate, Boolean>());
     }
 
     public void reset() {
-        rootPredicate = null;
+        analyzedPredicates.clear();
+        firstRootNode = null;
+        innerJoin = false;
         negated = false;
         constantifiedJoinNodeAttributes.clear();
     }
 
-    public Map<Object, Set<String>> collectConstantifiedJoinNodeAttributes(CompoundPredicate rootPredicate) {
-        if (this.rootPredicate != rootPredicate) {
-            reset();
+    public void collectConstantifiedJoinNodeAttributes(CompoundPredicate rootPredicate, JoinNode firstRootNode, boolean innerJoin) {
+        if (!analyzedPredicates.add(rootPredicate)) {
+            return;
         }
+        this.firstRootNode = firstRootNode;
+        this.innerJoin = innerJoin;
         rootPredicate.accept(this);
+    }
+
+    public Map<Object, Map<String, Boolean>> getConstantifiedJoinNodeAttributes() {
         return constantifiedJoinNodeAttributes;
     }
 
-    public Map<Object, Set<String>> getConstantifiedJoinNodeAttributes() {
-        return constantifiedJoinNodeAttributes;
+    public boolean isConstantified(JoinNode node) {
+        Map<String, Boolean> constantifiedAttributes = constantifiedJoinNodeAttributes.get(node);
+        if (constantifiedAttributes == null) {
+            return false;
+        }
+        if (constantifiedAttributes.containsKey(KEY_FUNCTION)) {
+            return true;
+        }
+        ExtendedManagedType<?> extendedManagedType = metamodel.getManagedType(ExtendedManagedType.class, node.getManagedType());
+        if (extendedManagedType.getIdAttributes().isEmpty()) {
+            for (ExtendedAttribute<?, ?> attribute : extendedManagedType.getAttributes().values()) {
+                if (attribute.getAttribute() instanceof SingularAttribute<?, ?> && !constantifiedAttributes.containsKey(attribute.getAttributePathString())) {
+                    return false;
+                }
+            }
+        } else {
+            for (SingularAttribute<?, ?> idAttribute : extendedManagedType.getIdAttributes()) {
+                if (!constantifiedAttributes.containsKey(idAttribute.getName())) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public boolean isConstantifiedNonOptional(JoinNode node, String attributeName) {
+        Map<String, Boolean> constantifiedAttributes = constantifiedJoinNodeAttributes.get(node);
+        if (constantifiedAttributes == null) {
+            return false;
+        }
+        return Boolean.TRUE.equals(constantifiedAttributes.containsKey(attributeName));
     }
 
     @Override
@@ -123,7 +163,9 @@ class ConstantifiedJoinNodeAttributeCollector extends VisitorAdapter {
         // We constantify collection as a whole to a single element when reaching this point
         if (pathReference.getField() == null) {
             if (inKey) {
-                constantifiedJoinNodeAttributes.put(baseNode, Collections.singleton("key"));
+                Map<String, Boolean> attributes = new HashMap<>(1);
+                attributes.put(KEY_FUNCTION, innerJoin);
+                constantifiedJoinNodeAttributes.put(baseNode, attributes);
             }
             return;
         }
@@ -134,7 +176,9 @@ class ConstantifiedJoinNodeAttributeCollector extends VisitorAdapter {
         // We constantify collection as a whole to a single element when reaching this point
         if (attr instanceof PluralAttribute<?, ?, ?>) {
             if (inKey) {
-                constantifiedJoinNodeAttributes.put(baseNode, Collections.singleton("key"));
+                Map<String, Boolean> attributes = new HashMap<>(1);
+                attributes.put(KEY_FUNCTION, innerJoin);
+                constantifiedJoinNodeAttributes.put(baseNode, attributes);
             }
             return;
         }
@@ -164,57 +208,60 @@ class ConstantifiedJoinNodeAttributeCollector extends VisitorAdapter {
             baseNodeKey = baseNode;
         }
 
-        Set<String> attributes = constantifiedJoinNodeAttributes.get(baseNodeKey);
+        Map<String, Boolean> attributes = constantifiedJoinNodeAttributes.get(baseNodeKey);
         if (attributes == null) {
-            attributes = new HashSet<>();
+            attributes = new HashMap<>();
             constantifiedJoinNodeAttributes.put(baseNodeKey, attributes);
         }
         String prefix = isEmbeddedIdPart || isEmbeddedPart ? pathReference.getField().substring(0, dotIndex + 1) : "";
         addAttribute(prefix, singularAttr, attributes);
         StringBuilder attributeNameBuilder = null;
-        Set<String> baseNodeAttributes = null;
+        Map<String, Boolean> baseNodeAttributes = null;
         String associationNamePrefix = associationName == null ? "" : associationName + '.';
         // Also add all attributes to the set that resolve to the same column names i.e. which are essentially equivalent
-        List<String> newAttributes = new ArrayList<>();
-        for (String attribute : attributes) {
-            for (ExtendedAttribute<?, ?> columnEquivalentAttribute : managedType.getAttribute(associationNamePrefix + attribute).getColumnEquivalentAttributes()) {
-                List<Attribute<?, ?>> attributePath = columnEquivalentAttribute.getAttributePath();
-                String attributeName;
-                if (attributePath.size() == 1) {
-                    attributeName = attributePath.get(0).getName();
-                } else {
-                    if (attributeNameBuilder == null) {
-                        attributeNameBuilder = new StringBuilder();
+        Map<String, Boolean> newAttributes = new HashMap<>();
+        for (Map.Entry<String, Boolean> entry : attributes.entrySet()) {
+            String attribute = entry.getKey();
+            if (attribute != KEY_FUNCTION) {
+                for (ExtendedAttribute<?, ?> columnEquivalentAttribute : managedType.getAttribute(associationNamePrefix + attribute).getColumnEquivalentAttributes()) {
+                    List<Attribute<?, ?>> attributePath = columnEquivalentAttribute.getAttributePath();
+                    String attributeName;
+                    if (attributePath.size() == 1) {
+                        attributeName = attributePath.get(0).getName();
                     } else {
-                        attributeNameBuilder.setLength(0);
-                    }
-                    attributeNameBuilder.append(attributePath.get(0).getName());
-                    for (int i = 1; i < attributePath.size(); i++) {
-                        attributeNameBuilder.append('.');
-                        attributeNameBuilder.append(attributePath.get(i).getName());
-                    }
-                    attributeName = attributeNameBuilder.toString();
-                }
-
-                // Be careful with single valued association ids, they have a different baseNodeKey
-                if (!associationNamePrefix.isEmpty() && !attributeName.startsWith(associationNamePrefix)) {
-                    if (baseNodeAttributes == null) {
-                        baseNodeAttributes = constantifiedJoinNodeAttributes.get(baseNode);
-                        if (baseNodeAttributes == null) {
-                            baseNodeAttributes = new HashSet<>();
-                            constantifiedJoinNodeAttributes.put(baseNode, baseNodeAttributes);
+                        if (attributeNameBuilder == null) {
+                            attributeNameBuilder = new StringBuilder();
+                        } else {
+                            attributeNameBuilder.setLength(0);
                         }
+                        attributeNameBuilder.append(attributePath.get(0).getName());
+                        for (int i = 1; i < attributePath.size(); i++) {
+                            attributeNameBuilder.append('.');
+                            attributeNameBuilder.append(attributePath.get(i).getName());
+                        }
+                        attributeName = attributeNameBuilder.toString();
                     }
-                    baseNodeAttributes.add(attributeName);
-                } else {
-                    newAttributes.add(attributeName);
+
+                    // Be careful with single valued association ids, they have a different baseNodeKey
+                    if (!associationNamePrefix.isEmpty() && !attributeName.startsWith(associationNamePrefix)) {
+                        if (baseNodeAttributes == null) {
+                            baseNodeAttributes = constantifiedJoinNodeAttributes.get(baseNode);
+                            if (baseNodeAttributes == null) {
+                                baseNodeAttributes = new HashMap<>();
+                                constantifiedJoinNodeAttributes.put(baseNode, baseNodeAttributes);
+                            }
+                        }
+                        baseNodeAttributes.put(attributeName, entry.getValue());
+                    } else {
+                        newAttributes.put(attributeName, entry.getValue());
+                    }
                 }
             }
         }
-        attributes.addAll(newAttributes);
+        attributes.putAll(newAttributes);
     }
 
-    private void addAttribute(String prefix, SingularAttribute<?, ?> singularAttribute, Set<String> orderedAttributes) {
+    private void addAttribute(String prefix, SingularAttribute<?, ?> singularAttribute, Map<String, Boolean> orderedAttributes) {
         String attributeName;
         if (prefix.isEmpty()) {
             attributeName = singularAttribute.getName();
@@ -228,7 +275,7 @@ class ConstantifiedJoinNodeAttributeCollector extends VisitorAdapter {
                 addAttribute(newPrefix, attribute, orderedAttributes);
             }
         } else {
-            orderedAttributes.add(attributeName);
+            orderedAttributes.put(attributeName, innerJoin);
         }
     }
 
@@ -261,9 +308,9 @@ class ConstantifiedJoinNodeAttributeCollector extends VisitorAdapter {
                 }
             } else {
                 // Case for simple OR or a NOT(AND)
-                Map<Object, Set<String>> oldConstantifiedJoinNodeAttributes = constantifiedJoinNodeAttributes;
+                Map<Object, Map<String, Boolean>> oldConstantifiedJoinNodeAttributes = constantifiedJoinNodeAttributes;
                 try {
-                    Map<Object, Set<String>> initialConstantifiedJoinNodeAttributes = constantifiedJoinNodeAttributes = new HashMap<>();
+                    Map<Object, Map<String, Boolean>> initialConstantifiedJoinNodeAttributes = constantifiedJoinNodeAttributes = new HashMap<>();
                     children.get(0).accept(this);
                     constantifiedJoinNodeAttributes = new HashMap<>();
 
@@ -274,12 +321,17 @@ class ConstantifiedJoinNodeAttributeCollector extends VisitorAdapter {
                         }
                         children.get(i).accept(this);
 
-                        Iterator<Map.Entry<Object, Set<String>>> entryIterator = initialConstantifiedJoinNodeAttributes.entrySet().iterator();
+                        Iterator<Map.Entry<Object, Map<String, Boolean>>> entryIterator = initialConstantifiedJoinNodeAttributes.entrySet().iterator();
                         while (entryIterator.hasNext()) {
-                            Map.Entry<Object, Set<String>> entry = entryIterator.next();
-                            Set<String> nodeAttributes = constantifiedJoinNodeAttributes.get(entry.getKey());
+                            Map.Entry<Object, Map<String, Boolean>> entry = entryIterator.next();
+                            Map<String, Boolean> nodeAttributes = constantifiedJoinNodeAttributes.get(entry.getKey());
                             if (nodeAttributes != null) {
-                                entry.getValue().retainAll(nodeAttributes);
+                                Iterator<String> iterator = entry.getValue().keySet().iterator();
+                                while (iterator.hasNext()) {
+                                    if (!nodeAttributes.containsKey(iterator.next())) {
+                                        iterator.remove();
+                                    }
+                                }
                                 if (!entry.getValue().isEmpty()) {
                                     continue;
                                 }
@@ -293,13 +345,13 @@ class ConstantifiedJoinNodeAttributeCollector extends VisitorAdapter {
                     constantifiedJoinNodeAttributes = initialConstantifiedJoinNodeAttributes;
                 } finally {
                     // Merge constantified attributes into the existing ones
-                    for (Map.Entry<Object, Set<String>> entry : constantifiedJoinNodeAttributes.entrySet()) {
-                        Set<String> attributes = oldConstantifiedJoinNodeAttributes.get(entry.getKey());
+                    for (Map.Entry<Object, Map<String, Boolean>> entry : constantifiedJoinNodeAttributes.entrySet()) {
+                        Map<String, Boolean> attributes = oldConstantifiedJoinNodeAttributes.get(entry.getKey());
                         if (attributes == null) {
-                            attributes = new HashSet<>();
+                            attributes = new HashMap<>();
                             oldConstantifiedJoinNodeAttributes.put(entry.getKey(), attributes);
                         }
-                        attributes.addAll(entry.getValue());
+                        attributes.putAll(entry.getValue());
                     }
 
                     constantifiedJoinNodeAttributes = oldConstantifiedJoinNodeAttributes;
@@ -322,6 +374,7 @@ class ConstantifiedJoinNodeAttributeCollector extends VisitorAdapter {
                 return;
             }
             // TODO: at some point we should build an equivalence class to transitively propagate constantification
+            // TODO: also, it would be nice if we could detect constantifications in disjuncts and work with that
             if (isConstant(predicate.getLeft())) {
                 predicate.getRight().accept(this);
             } else if (isConstant(predicate.getRight())) {
@@ -365,8 +418,32 @@ class ConstantifiedJoinNodeAttributeCollector extends VisitorAdapter {
         }
     }
 
-    private static boolean isConstant(Expression expression) {
-        return expression instanceof ParameterExpression || expression instanceof LiteralExpression<?>;
+    private boolean isConstant(Expression expression) {
+        if (expression instanceof ParameterExpression || expression instanceof LiteralExpression<?>) {
+            return true;
+        }
+
+        if (expression instanceof PathExpression) {
+            PathReference pathReference = ((PathExpression) expression).getPathReference();
+            if (pathReference == null) {
+                Expression aliasedExpression = ((SelectInfo) aliasManager.getAliasInfo(expression.toString())).getExpression();
+                return isConstant(aliasedExpression);
+            }
+            JoinNode baseNode = (JoinNode) pathReference.getBaseNode();
+            do {
+                if (baseNode.getParentTreeNode() == null) {
+                    // The first root node is not considered to be a collection, all others are
+                    return baseNode == firstRootNode || isConstantified(baseNode);
+                } else {
+                    if (baseNode.getParentTreeNode().getAttribute().isCollection()) {
+                        return false;
+                    }
+                }
+                baseNode = baseNode.getParent();
+            } while (baseNode != null);
+        }
+
+        return false;
     }
 
     @Override

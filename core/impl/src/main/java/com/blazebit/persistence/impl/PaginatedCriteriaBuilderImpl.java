@@ -458,6 +458,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         JoinVisitor joinVisitor = applyImplicitJoins(null);
         // We pass true here to always generate implicit group bys for select and order by clauses. We filter these out later if necessary
         applyExpressionTransformersAndBuildGroupByClauses(true, joinVisitor);
+        analyzeConstantifiedJoinNodes();
         hasCollections = joinManager.hasCollections();
 
         if (joinManager.hasFullJoin()) {

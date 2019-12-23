@@ -28,18 +28,16 @@ import com.blazebit.persistence.parser.predicate.InPredicate;
 import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.ExtendedManagedType;
-import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.FetchStrategy;
 import com.blazebit.persistence.view.FlushMode;
-import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
+import com.blazebit.persistence.view.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.MacroConfigurationExpressionFactory;
 import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor;
-import com.blazebit.persistence.view.impl.SubqueryProviderFactory;
-import com.blazebit.persistence.view.impl.SubqueryProviderHelper;
-import com.blazebit.persistence.view.impl.macro.EmbeddingViewJpqlMacro;
+import com.blazebit.persistence.view.SubqueryProviderFactory;
+import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.impl.metamodel.AbstractAttribute;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
 import com.blazebit.persistence.view.impl.metamodel.AbstractParameterAttribute;
@@ -664,9 +662,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
     @SuppressWarnings("unchecked")
     private void applyCorrelatedSubviewMapping(AbstractAttribute<?, ?> attribute, String attributePath, TupleIdDescriptor tupleIdDescriptor, ManagedViewTypeImplementor<Object[]> managedViewType, TupleElementMapperBuilder mapperBuilder, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, ExpressionFactory ef, int batchSize, boolean dirtyTracking) {
         String correlationResult = attribute.getCorrelationResult();
-        Class<? extends CorrelationProvider> correlationProvider = attribute.getCorrelationProvider();
         String correlationBasis = attribute.getCorrelationBasis();
-        CorrelationProviderFactory factory = CorrelationProviderHelper.getFactory(correlationProvider);
+        CorrelationProviderFactory factory = attribute.getCorrelationProviderFactory();
 
         if (attribute.getFetchStrategy() == FetchStrategy.JOIN) {
             @SuppressWarnings("unchecked")
@@ -909,7 +906,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
     private void applySubqueryMapping(SubqueryAttribute<?, ?> attribute, String attributePath, TupleElementMapperBuilder mapperBuilder) {
         @SuppressWarnings("unchecked")
-        SubqueryProviderFactory factory = SubqueryProviderHelper.getFactory(attribute.getSubqueryProvider());
+        SubqueryProviderFactory factory = attribute.getSubqueryProviderFactory();
         String alias = mapperBuilder.getAlias(attribute, false);
         String subqueryAlias = attribute.getSubqueryAlias();
         String embeddingViewPath = mapperBuilder.getMapping("");
@@ -951,11 +948,9 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
     private void applyBasicCorrelatedMapping(AbstractAttribute<?, ?> attribute, String attributePath, TupleElementMapperBuilder mapperBuilder, ExpressionFactory ef, int batchSize, boolean dirtyTracking) {
         String correlationResult = attribute.getCorrelationResult();
-        Class<? extends CorrelationProvider> correlationProvider = attribute.getCorrelationProvider();
+        CorrelationProviderFactory factory = attribute.getCorrelationProviderFactory();
         String correlationBasis = attribute.getCorrelationBasis();
         if (attribute.getFetchStrategy() == FetchStrategy.JOIN) {
-            @SuppressWarnings("unchecked")
-            CorrelationProviderFactory factory = CorrelationProviderHelper.getFactory(correlationProvider);
             String alias = mapperBuilder.getAlias(attribute, false);
             correlationBasis = mapperBuilder.getMapping(AbstractAttribute.stripThisFromMapping(correlationBasis));
 
@@ -982,8 +977,6 @@ public class ViewTypeObjectBuilderTemplate<T> {
             boolean correlatesThis = correlatesThis(evm, ef, managedTypeClass, attribute.getCorrelated(), correlationBasisExpression, attribute.getCorrelationExpression(), attribute.getCorrelationKeyAlias());
 
             mapperBuilder.addMapper(createMapper(correlationKeyExpression, subviewAliasPrefix, attributePath, embeddingViewPath, attribute.getFetches()));
-
-            CorrelationProviderFactory factory = CorrelationProviderHelper.getFactory(correlationProvider);
 
             if (batchSize == -1) {
                 batchSize = 1;
@@ -1035,8 +1028,6 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
             String embeddingViewPath = mapperBuilder.getMapping("");
             mapperBuilder.addMapper(createMapper(correlationKeyExpression, subviewAliasPrefix, attributePath, embeddingViewPath, attribute.getFetches()));
-
-            CorrelationProviderFactory factory = CorrelationProviderHelper.getFactory(correlationProvider);
 
             if (attribute.isCollection()) {
                 PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) attribute;
