@@ -16,10 +16,14 @@
 
 package com.blazebit.persistence.criteria;
 
+import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Order;
+import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import javax.persistence.metamodel.Bindable;
 import javax.persistence.metamodel.SingularAttribute;
 import java.util.List;
 import java.util.Set;
@@ -39,6 +43,14 @@ public interface BlazeCTECriteria<T> extends BlazeAbstractQuery<T> {
      * @return the set of query roots
      */
     Set<BlazeRoot<?>> getBlazeRoots();
+
+    /**
+     * Like {@link CriteriaQuery#getOrderList()} but returns the subtype {@link BlazeOrder} instead.
+     *
+     * @return The list of ordering expressions
+     */
+    List<BlazeOrder> getBlazeOrderList();
+
 
     Set<Root<?>> getRoots();
 
@@ -110,7 +122,21 @@ public interface BlazeCTECriteria<T> extends BlazeAbstractQuery<T> {
     @Override
     BlazeCTECriteria<T> having(Predicate... restrictions);
 
+    BlazeCTECriteria<T> orderBy(Order... o);
+
+    BlazeCTECriteria<T> orderBy(List<Order> o);
+
     @Override
     BlazeCTECriteria<T> distinct(boolean distinct);
+
+    Set<ParameterExpression<?>> getParameters();
+
+    // Path-like, except for expression stuff and plural attributes are irrelevant
+
+    Bindable<T> getModel();
+
+    <Y> Path<Y> get(SingularAttribute<? super T, Y> attribute);
+
+    <Y> Path<Y> get(String attributeName);
 
 }
