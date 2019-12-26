@@ -37,6 +37,8 @@ public interface BlazeAbstractQuery<T> extends AbstractQuery<T>, BlazeCommonAbst
     // TODO: integrate support for default join nodes?
     // TODO: maybe add explicit support for limit?
 
+    public <X> BlazeCTECriteria<X> with(Class<X> clasz);
+
     /**
      * Like {@link AbstractQuery#from(Class)} but allows to set the alias of the {@link BlazeRoot}.
      *
