@@ -25,25 +25,14 @@ import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Document_;
 import com.blazebit.persistence.testsuite.entity.NameObjectContainer2_;
-import com.blazebit.persistence.testsuite.entity.NameObject_;
-import com.blazebit.persistence.testsuite.entity.Person;
-import com.googlecode.catchexception.CatchException;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
-import java.sql.Timestamp;
-import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -70,8 +59,8 @@ public class CteTest extends AbstractCoreTest {
         BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(cbf, Long.class);
 
         BlazeCTECriteria<Document> documentCte = cq.with(Document.class);
-        documentCte.set(Document_.name, "");
-        documentCte.set(documentCte.get(Document_.nameContainer).get(NameObjectContainer2_.name), "");
+        documentCte.bind(Document_.name, "");
+        documentCte.bind(documentCte.get(Document_.nameContainer).get(NameObjectContainer2_.name), "");
 
 
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();

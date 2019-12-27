@@ -123,30 +123,30 @@ public class BlazeCTECriteriaImpl<T> implements BlazeCTECriteria<T> {
     }
 
     @Override
-    public BlazeCTECriteria<T> set(String attributeName, Object value) {
+    public BlazeCTECriteria<T> bind(String attributeName, Object value) {
         final Path<?> attributePath = path.get(attributeName);
         return internalSet(attributePath, valueExpression(attributePath, value));
     }
 
     @Override
-    public <Y, X extends Y> BlazeCTECriteria<T> set(SingularAttribute<? super T, Y> attribute, X value) {
+    public <Y, X extends Y> BlazeCTECriteria<T> bind(SingularAttribute<? super T, Y> attribute, X value) {
         Path<?> attributePath = path.get(attribute);
         return internalSet(attributePath, valueExpression(attributePath, value));
     }
 
     @Override
-    public <Y> BlazeCTECriteria<T> set(SingularAttribute<? super T, Y> attribute, Expression<? extends Y> value) {
+    public <Y> BlazeCTECriteria<T> bind(SingularAttribute<? super T, Y> attribute, Expression<? extends Y> value) {
         Path<?> attributePath = path.get(attribute);
         return internalSet(attributePath, value);
     }
 
     @Override
-    public <Y, X extends Y> BlazeCTECriteria<T> set(Path<Y> attribute, X value) {
+    public <Y, X extends Y> BlazeCTECriteria<T> bind(Path<Y> attribute, X value) {
         return internalSet(attribute, valueExpression(attribute, value));
     }
 
     @Override
-    public <Y> BlazeCTECriteria<T> set(Path<Y> attribute, Expression<? extends Y> value) {
+    public <Y> BlazeCTECriteria<T> bind(Path<Y> attribute, Expression<? extends Y> value) {
         return internalSet(attribute, value);
     }
 

@@ -55,54 +55,54 @@ public interface BlazeCTECriteria<T> extends BlazeAbstractQuery<T> {
     Set<Root<?>> getRoots();
 
     /**
-     * Update the value of the specified attribute.
+     * Bind the value of the specified attribute.
      *
      * @param attribute attribute to be updated
      * @param value new value
      *
      * @return the modified query
      */
-    <Y, X extends Y> BlazeCTECriteria<T> set(SingularAttribute<? super T, Y> attribute, X value);
+    <Y, X extends Y> BlazeCTECriteria<T> bind(SingularAttribute<? super T, Y> attribute, X value);
 
     /**
-     * Update the value of the specified attribute.
+     * Bind the value of the specified attribute.
      *
      * @param attribute attribute to be updated
      * @param value new value
      *
      * @return the modified query
      */
-    <Y> BlazeCTECriteria<T> set(SingularAttribute<? super T, Y> attribute, Expression<? extends Y> value);
+    <Y> BlazeCTECriteria<T> bind(SingularAttribute<? super T, Y> attribute, Expression<? extends Y> value);
 
     /**
-     * Update the value of the specified attribute.
+     * Bind the value of the specified attribute.
      *
      * @param attribute attribute to be updated
      * @param value new value
      *
      * @return the modified query
      */
-    <Y, X extends Y> BlazeCTECriteria<T> set(Path<Y> attribute, X value);
+    <Y, X extends Y> BlazeCTECriteria<T> bind(Path<Y> attribute, X value);
 
     /**
-     * Update the value of the specified attribute.
+     * Bind the value of the specified attribute.
      *
      * @param attribute attribute to be updated
      * @param value new value
      *
      * @return the modified query
      */
-    <Y> BlazeCTECriteria<T> set(Path<Y> attribute, Expression<? extends Y> value);
+    <Y> BlazeCTECriteria<T> bind(Path<Y> attribute, Expression<? extends Y> value);
 
     /**
-     * Update the value of the specified attribute.
+     * Bind the value of the specified attribute.
      *
      * @param attributeName name of the attribute to be updated
      * @param value new value
      *
      * @return the modified query
      */
-    BlazeCTECriteria<T> set(String attributeName, Object value);
+    BlazeCTECriteria<T> bind(String attributeName, Object value);
 
     @Override
     BlazeCTECriteria<T> where(Expression<Boolean> restriction);
