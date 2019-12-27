@@ -283,7 +283,7 @@ public class BlazeCriteriaQueryImpl<T> implements BlazeCriteriaQuery<T> {
 
     @Override
     public <X> BlazeCTECriteria<X> with(Class<X> clasz) {
-
-        return null;
+        return query.with(clasz);
     }
+
 }

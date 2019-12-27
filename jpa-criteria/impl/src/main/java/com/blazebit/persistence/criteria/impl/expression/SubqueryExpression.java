@@ -17,6 +17,7 @@
 package com.blazebit.persistence.criteria.impl.expression;
 
 import com.blazebit.persistence.criteria.BlazeAbstractQuery;
+import com.blazebit.persistence.criteria.BlazeCTECriteria;
 import com.blazebit.persistence.criteria.BlazeCollectionJoin;
 import com.blazebit.persistence.criteria.BlazeCommonAbstractCriteria;
 import com.blazebit.persistence.criteria.BlazeJoin;
@@ -70,6 +71,11 @@ public class SubqueryExpression<T> extends AbstractExpression<T> implements Blaz
         super(criteriaBuilder, javaType);
         this.parent = parent;
         this.query = new InternalQuery<T>(this, criteriaBuilder);
+    }
+
+    @Override
+    public <X> BlazeCTECriteria<X> with(Class<X> clasz) {
+        return null;
     }
 
     @Override

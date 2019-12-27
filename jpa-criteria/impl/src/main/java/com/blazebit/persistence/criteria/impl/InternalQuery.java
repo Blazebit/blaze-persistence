@@ -32,6 +32,7 @@ import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.WhereBuilder;
 import com.blazebit.persistence.criteria.BlazeAbstractQuery;
+import com.blazebit.persistence.criteria.BlazeCTECriteria;
 import com.blazebit.persistence.criteria.BlazeJoin;
 import com.blazebit.persistence.criteria.BlazeOrder;
 import com.blazebit.persistence.criteria.BlazeRoot;
@@ -277,6 +278,13 @@ public class InternalQuery<T> implements Serializable {
         }
 
         RenderContextImpl context = new RenderContextImpl();
+
+        if (ctes != null && ctes.size() > 0) {
+            for (BlazeCTECriteriaImpl<?> cte : ctes) {
+                cte.render(cb);
+            }
+        }
+
         renderFrom(cb, context);
         List<TreatedPath<?>> treatedSelections = renderSelect(cb, context);
 
@@ -803,6 +811,21 @@ public class InternalQuery<T> implements Serializable {
                 //            initiator.end();
             }
         }
+    }
+
+    private List<BlazeCTECriteriaImpl<?>> ctes;
+
+    private List<BlazeCTECriteriaImpl<?>> getCtesInternal() {
+        if (ctes == null) {
+            ctes = new ArrayList<>();
+        }
+        return ctes;
+    }
+
+    public <X> BlazeCTECriteria<X> with(Class<X> clasz) {
+        BlazeCTECriteriaImpl<X> cteCriteria = new BlazeCTECriteriaImpl<>(criteriaBuilder, clasz);
+        getCtesInternal().add(cteCriteria);
+        return cteCriteria;
     }
 
 }

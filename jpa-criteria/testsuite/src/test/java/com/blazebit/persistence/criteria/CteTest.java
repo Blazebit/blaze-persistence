@@ -22,26 +22,21 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.testsuite.AbstractCoreTest;
-import com.blazebit.persistence.testsuite.entity.Document;
-import com.blazebit.persistence.testsuite.entity.Document_;
-import com.blazebit.persistence.testsuite.entity.NameObjectContainer2_;
+import com.blazebit.persistence.testsuite.entity.RecursiveEntity;
+import com.blazebit.persistence.testsuite.entity.RecursiveEntity_;
+import com.blazebit.persistence.testsuite.entity.TestAdvancedCTE1;
+import com.blazebit.persistence.testsuite.entity.TestAdvancedCTE1_;
+import com.blazebit.persistence.testsuite.entity.TestAdvancedCTE2;
+import com.blazebit.persistence.testsuite.entity.TestCTE;
+import com.blazebit.persistence.testsuite.entity.TestCTEEmbeddable_;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Root;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 /**
  *
- * @author Christian Beikov
- * @since 1.2.0
+ * @author Jan-Willem Gmelig Meyling
+ * @since 1.4.0
  */
 public class CteTest extends AbstractCoreTest {
 
@@ -54,40 +49,36 @@ public class CteTest extends AbstractCoreTest {
         cbfUnoptimized = config.createCriteriaBuilderFactory(emf);
     }
 
+    @Override
+    protected Class<?>[] getEntityClasses() {
+        return new Class<?>[] {
+                RecursiveEntity.class,
+                TestCTE.class,
+                TestAdvancedCTE1.class,
+                TestAdvancedCTE2.class
+        };
+    }
+
+
     @Test
-    public void singularAttributeWithLiterals() {
-        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(cbf, Long.class);
-
-        BlazeCTECriteria<Document> documentCte = cq.with(Document.class);
-        documentCte.bind(Document_.name, "");
-        documentCte.bind(documentCte.get(Document_.nameContainer).get(NameObjectContainer2_.name), "");
-
-
+    public void testBindEmbeddable() {
+        BlazeCriteriaQuery<TestAdvancedCTE1> cq = BlazeCriteria.get(cbf, TestAdvancedCTE1.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
-        Root<Document> root = cq.from(Document.class, "document");
 
-        Long longValue = 999999999L;
-        Path<Double> doublePath = root.get(Document_.someValue);
-        Path<Integer> integerPath = root.get(Document_.idx);
+        BlazeCTECriteria<TestAdvancedCTE1> documentCte = cq.with(TestAdvancedCTE1.class);
+        BlazeRoot<RecursiveEntity> recursiveEntity = documentCte.from(RecursiveEntity.class);
+        documentCte.bind(TestAdvancedCTE1_.id, recursiveEntity.get(RecursiveEntity_.id));
+        documentCte.bind(documentCte.get(TestAdvancedCTE1_.embeddable).get(TestCTEEmbeddable_.name), recursiveEntity.get(RecursiveEntity_.name));
+        documentCte.bind(documentCte.get(TestAdvancedCTE1_.embeddable).get(TestCTEEmbeddable_.description), "desc");
+        documentCte.bind(documentCte.get(TestAdvancedCTE1_.embeddable).get(TestCTEEmbeddable_.recursiveEntity), recursiveEntity);
+        documentCte.bind(TestAdvancedCTE1_.level, cb.literal(0));
+        documentCte.bind(TestAdvancedCTE1_.parent, recursiveEntity.get(RecursiveEntity_.parent));
 
-        cq.select(root.get(Document_.id));
-        cq.where(cb.and(
-                cb.equal(root.get(Document_.id), 1L),
-                cb.greaterThan(root.get(Document_.creationDate), Calendar.getInstance()),
-                cb.notEqual(root.get(Document_.lastModified), new Date()),
-                cb.equal(cb.lower(cb.literal("ABC")), "abc"),
-                cb.ge(
-                        cb.quot( integerPath, doublePath ),
-                        longValue
-                )
-        ));
+        cq.from(TestAdvancedCTE1.class);
 
         CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
-        assertEquals("SELECT document.id FROM Document document WHERE document.id = 1L AND document.creationDate > :generated_param_0 " +
-                "AND document.lastModified <> :generated_param_1 AND LOWER(:generated_param_2) = :generated_param_3 AND document.idx / document.someValue >= 999999999L", criteriaBuilder.getQueryString());
-        assertEquals(GregorianCalendar.class, criteriaBuilder.getParameter("generated_param_0").getParameterType());
-        assertEquals(Date.class, criteriaBuilder.getParameter("generated_param_1").getParameterType());
-        assertEquals(String.class, criteriaBuilder.getParameter("generated_param_2").getParameterType());
+        String queryString = criteriaBuilder.getQueryString();
+        Assert.assertNotNull(queryString);
     }
 
 }
