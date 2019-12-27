@@ -390,21 +390,25 @@ public class BlazeCTECriteriaImpl<T> implements BlazeCTECriteria<T> {
         FullSelectCTECriteriaBuilder<CriteriaBuilder<X>> fullSelectCTECriteriaBuilder = cbs.with(returnType);
         RenderContextImpl context = new RenderContextImpl();
 
-
         renderFrom(fullSelectCTECriteriaBuilder, context);
-        context.setClauseType(RenderContext.ClauseType.SET);
+        renderWhere(fullSelectCTECriteriaBuilder, context);
+        renderGroupBy(fullSelectCTECriteriaBuilder, context);
+        renderHaving(fullSelectCTECriteriaBuilder, context);
+        renderOrderBy(fullSelectCTECriteriaBuilder, context);
+
+        context.setClauseType(RenderContext.ClauseType.SELECT);
+
         for (Assignment a : assignments) {
             // TODO apply this for AbstractModificationCriteriaQuery as well
             String attribute = a.attributePath.getPathExpression().substring(String.valueOf(path.getAlias()).length() + 1);
 
+            context.getBuffer().setLength(0);
+            a.valueExpression.render(context);
+            String valueExpression = context.takeBuffer();
+
             if (a.valueExpression instanceof LiteralExpression<?>) {
-                Object value = ((LiteralExpression) a.valueExpression).getLiteral();
-                String exp = context.registerLiteralParameterBinding(value, value.getClass());
-                fullSelectCTECriteriaBuilder.bind(attribute).select(":" + exp);
+                fullSelectCTECriteriaBuilder.bind(attribute).select(valueExpression);
             } else {
-                context.getBuffer().setLength(0);
-                a.valueExpression.render(context);
-                String valueExpression = context.takeBuffer();
                 Map<String, InternalQuery<?>> aliasToSubqueries = context.takeAliasToSubqueryMap();
 
                 if (aliasToSubqueries.isEmpty()) {
@@ -422,11 +426,6 @@ public class BlazeCTECriteriaImpl<T> implements BlazeCTECriteria<T> {
                 }
             }
         }
-
-        renderWhere(fullSelectCTECriteriaBuilder, context);
-        renderGroupBy(fullSelectCTECriteriaBuilder, context);
-        renderHaving(fullSelectCTECriteriaBuilder, context);
-        renderOrderBy(fullSelectCTECriteriaBuilder, context);
 
         for (ImplicitParameterBinding b : context.getImplicitParameterBindings()) {
             b.bind(fullSelectCTECriteriaBuilder);
