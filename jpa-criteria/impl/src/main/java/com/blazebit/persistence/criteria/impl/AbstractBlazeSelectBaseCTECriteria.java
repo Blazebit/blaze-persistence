@@ -27,13 +27,16 @@ import com.blazebit.persistence.JoinOnBuilder;
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.MultipleSubqueryInitiator;
 import com.blazebit.persistence.OrderByBuilder;
+import com.blazebit.persistence.SelectBaseCTECriteriaBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.WhereBuilder;
-import com.blazebit.persistence.criteria.BlazeCTECriteria;
+import com.blazebit.persistence.criteria.BlazeFullSelectCTECriteria;
 import com.blazebit.persistence.criteria.BlazeJoin;
 import com.blazebit.persistence.criteria.BlazeOrder;
 import com.blazebit.persistence.criteria.BlazeRoot;
+import com.blazebit.persistence.criteria.BlazeSelectBaseCTECriteria;
+import com.blazebit.persistence.criteria.BlazeSelectRecursiveCTECriteria;
 import com.blazebit.persistence.criteria.BlazeSubquery;
 import com.blazebit.persistence.criteria.impl.expression.AbstractExpression;
 import com.blazebit.persistence.criteria.impl.expression.AbstractSelection;
@@ -68,15 +71,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class BlazeCTECriteriaImpl<T> implements BlazeCTECriteria<T> {
+public abstract class AbstractBlazeSelectBaseCTECriteria<T> implements BlazeSelectBaseCTECriteria<T> {
 
-    private final Class<T> returnType;
+    protected final Class<T> returnType;
     private final BlazeCriteriaBuilderImpl criteriaBuilder;
     private final List<Assignment> assignments = new ArrayList<Assignment>();
     private final Root<T> path;
 
     private boolean distinct;
-    private Selection<? extends T> selection;
     private final Set<RootImpl<?>> roots = new LinkedHashSet<>();
     private Set<AbstractFrom<?, ?>> correlationRoots;
     private Predicate restriction;
@@ -85,7 +87,7 @@ public class BlazeCTECriteriaImpl<T> implements BlazeCTECriteria<T> {
     private List<BlazeOrder> orderList = Collections.emptyList();
     private List<Subquery<?>> subqueries;
 
-    public BlazeCTECriteriaImpl(BlazeCriteriaBuilderImpl criteriaBuilder, Class<T> returnType) {
+    public AbstractBlazeSelectBaseCTECriteria(BlazeCriteriaBuilderImpl criteriaBuilder, Class<T> returnType) {
         this.returnType = returnType;
         this.criteriaBuilder = criteriaBuilder;
         EntityType<T> entityType = criteriaBuilder.getEntityMetamodel().entity(returnType);
@@ -93,7 +95,12 @@ public class BlazeCTECriteriaImpl<T> implements BlazeCTECriteria<T> {
     }
 
     @Override
-    public <X> BlazeCTECriteria<X> with(Class<X> clasz) {
+    public <X> BlazeFullSelectCTECriteria<X> with(Class<X> clasz) {
+        return null;
+    }
+
+    @Override
+    public <X> BlazeSelectRecursiveCTECriteria<X> withRecursive(Class<X> clasz) {
         return null;
     }
 
@@ -137,7 +144,7 @@ public class BlazeCTECriteriaImpl<T> implements BlazeCTECriteria<T> {
     @Override
     @SuppressWarnings("unchecked")
     public Selection<T> getSelection() {
-        return (Selection<T>) selection;
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -146,34 +153,34 @@ public class BlazeCTECriteriaImpl<T> implements BlazeCTECriteria<T> {
     }
 
     @Override
-    public BlazeCTECriteria<T> bind(String attributeName, Object value) {
+    public AbstractBlazeSelectBaseCTECriteria<T> bind(String attributeName, Object value) {
         final Path<?> attributePath = path.get(attributeName);
         return internalSet(attributePath, valueExpression(attributePath, value));
     }
 
     @Override
-    public <Y, X extends Y> BlazeCTECriteria<T> bind(SingularAttribute<? super T, Y> attribute, X value) {
+    public <Y, X extends Y> AbstractBlazeSelectBaseCTECriteria<T> bind(SingularAttribute<? super T, Y> attribute, X value) {
         Path<?> attributePath = path.get(attribute);
         return internalSet(attributePath, valueExpression(attributePath, value));
     }
 
     @Override
-    public <Y> BlazeCTECriteria<T> bind(SingularAttribute<? super T, Y> attribute, Expression<? extends Y> value) {
+    public <Y> AbstractBlazeSelectBaseCTECriteria<T> bind(SingularAttribute<? super T, Y> attribute, Expression<? extends Y> value) {
         Path<?> attributePath = path.get(attribute);
         return internalSet(attributePath, value);
     }
 
     @Override
-    public <Y, X extends Y> BlazeCTECriteria<T> bind(Path<Y> attribute, X value) {
+    public <Y, X extends Y> AbstractBlazeSelectBaseCTECriteria<T> bind(Path<Y> attribute, X value) {
         return internalSet(attribute, valueExpression(attribute, value));
     }
 
     @Override
-    public <Y> BlazeCTECriteria<T> bind(Path<Y> attribute, Expression<? extends Y> value) {
+    public <Y> AbstractBlazeSelectBaseCTECriteria<T> bind(Path<Y> attribute, Expression<? extends Y> value) {
         return internalSet(attribute, value);
     }
 
-    private BlazeCTECriteria<T> internalSet(Path<?> attribute, Expression<?> value) {
+    private AbstractBlazeSelectBaseCTECriteria<T> internalSet(Path<?> attribute, Expression<?> value) {
         if (!(attribute instanceof AbstractPath<?>)) {
             throw new IllegalArgumentException("Illegal custom attribute path: " + attribute.getClass().getName());
         }
@@ -208,13 +215,13 @@ public class BlazeCTECriteriaImpl<T> implements BlazeCTECriteria<T> {
     }
 
     @Override
-    public BlazeCTECriteriaImpl<T> where(Expression<Boolean> restriction) {
+    public AbstractBlazeSelectBaseCTECriteria<T> where(Expression<Boolean> restriction) {
         this.restriction = restriction == null ? null : criteriaBuilder.wrap(restriction);
         return this;
     }
 
     @Override
-    public BlazeCTECriteria<T> where(Predicate... restrictions) {
+    public AbstractBlazeSelectBaseCTECriteria<T> where(Predicate... restrictions) {
         if (restrictions == null || restrictions.length == 0) {
             this.restriction = null;
         } else {
@@ -232,7 +239,7 @@ public class BlazeCTECriteriaImpl<T> implements BlazeCTECriteria<T> {
 
     @Override
     @SuppressWarnings("unchecked")
-    public BlazeCTECriteria<T> groupBy(Expression<?>... groupings) {
+    public AbstractBlazeSelectBaseCTECriteria<T> groupBy(Expression<?>... groupings) {
         if (groupings == null || groupings.length == 0) {
             groupList = Collections.EMPTY_LIST;
         } else {
@@ -243,7 +250,7 @@ public class BlazeCTECriteriaImpl<T> implements BlazeCTECriteria<T> {
     }
 
     @Override
-    public BlazeCTECriteria<T> groupBy(List<Expression<?>> groupings) {
+    public AbstractBlazeSelectBaseCTECriteria<T> groupBy(List<Expression<?>> groupings) {
         groupList = groupings;
         return this;
     }
@@ -256,7 +263,7 @@ public class BlazeCTECriteriaImpl<T> implements BlazeCTECriteria<T> {
     }
 
     @Override
-    public BlazeCTECriteria<T> having(Expression<Boolean> restriction) {
+    public AbstractBlazeSelectBaseCTECriteria<T> having(Expression<Boolean> restriction) {
         if (restriction == null) {
             having = null;
         } else {
@@ -266,7 +273,7 @@ public class BlazeCTECriteriaImpl<T> implements BlazeCTECriteria<T> {
     }
 
     @Override
-    public BlazeCTECriteria<T> having(Predicate... restrictions) {
+    public AbstractBlazeSelectBaseCTECriteria<T> having(Predicate... restrictions) {
         if (restrictions == null || restrictions.length == 0) {
             having = null;
         } else {
@@ -281,7 +288,7 @@ public class BlazeCTECriteriaImpl<T> implements BlazeCTECriteria<T> {
     }
 
     @Override
-    public BlazeCTECriteria<T> distinct(boolean distinct) {
+    public AbstractBlazeSelectBaseCTECriteria<T> distinct(boolean distinct) {
         this.distinct = distinct;
         return this;
     }
@@ -306,7 +313,7 @@ public class BlazeCTECriteriaImpl<T> implements BlazeCTECriteria<T> {
     }
 
     @Override
-    public BlazeCTECriteria<T> orderBy(Order... orders) {
+    public AbstractBlazeSelectBaseCTECriteria<T> orderBy(Order... orders) {
         if (orders == null || orders.length == 0) {
             orderList = Collections.EMPTY_LIST;
         } else {
@@ -317,7 +324,7 @@ public class BlazeCTECriteriaImpl<T> implements BlazeCTECriteria<T> {
     }
 
     @Override
-    public BlazeCTECriteria<T> orderBy(List<Order> orderList) {
+    public AbstractBlazeSelectBaseCTECriteria<T> orderBy(List<Order> orderList) {
         this.orderList = (List<BlazeOrder>) (List<?>) orderList;
         return null;
     }
@@ -327,7 +334,10 @@ public class BlazeCTECriteriaImpl<T> implements BlazeCTECriteria<T> {
         // NOTE: we have to always visit them because it's not possible to cache that easily
         ParameterVisitor visitor = new ParameterVisitor();
 
-        visitor.visit(selection);
+        for (Assignment assignment : assignments) {
+            assignment.valueExpression.visitParameters(visitor);
+        }
+
         visitor.visit(restriction);
         if (subqueries != null) {
             for (Subquery<?> subquery : subqueries) {
@@ -386,10 +396,13 @@ public class BlazeCTECriteriaImpl<T> implements BlazeCTECriteria<T> {
     }
 
     public <X> CriteriaBuilder<X> render(CriteriaBuilder<X> cbs) {
-
         FullSelectCTECriteriaBuilder<CriteriaBuilder<X>> fullSelectCTECriteriaBuilder = cbs.with(returnType);
         RenderContextImpl context = new RenderContextImpl();
+        render(fullSelectCTECriteriaBuilder, context);
+        return fullSelectCTECriteriaBuilder.end();
+    }
 
+    protected void render(SelectBaseCTECriteriaBuilder<?> fullSelectCTECriteriaBuilder, RenderContextImpl context) {
         renderFrom(fullSelectCTECriteriaBuilder, context);
         renderWhere(fullSelectCTECriteriaBuilder, context);
         renderGroupBy(fullSelectCTECriteriaBuilder, context);
@@ -414,7 +427,7 @@ public class BlazeCTECriteriaImpl<T> implements BlazeCTECriteria<T> {
                 if (aliasToSubqueries.isEmpty()) {
                     fullSelectCTECriteriaBuilder.bind(attribute).select(valueExpression);
                 } else {
-                    MultipleSubqueryInitiator<FullSelectCTECriteriaBuilder<CriteriaBuilder<X>>> initiator = fullSelectCTECriteriaBuilder.bind(attribute).selectSubqueries(valueExpression);
+                    MultipleSubqueryInitiator<?> initiator = fullSelectCTECriteriaBuilder.bind(attribute).selectSubqueries(valueExpression);
 
                     for (Map.Entry<String, InternalQuery<?>> subqueryEntry : aliasToSubqueries.entrySet()) {
                         context.pushSubqueryInitiator(initiator.with(subqueryEntry.getKey()));
@@ -434,8 +447,6 @@ public class BlazeCTECriteriaImpl<T> implements BlazeCTECriteria<T> {
         for (Map.Entry<String, ParameterExpression<?>> entry : context.getExplicitParameterNameMapping().entrySet()) {
             fullSelectCTECriteriaBuilder.setParameterType(entry.getKey(), entry.getValue().getParameterType());
         }
-
-        return fullSelectCTECriteriaBuilder.end();
     }
 
 
@@ -687,7 +698,6 @@ public class BlazeCTECriteriaImpl<T> implements BlazeCTECriteria<T> {
             initiator.end();
         }
     }
-
 
     private void renderTreatTypeRestrictions(RenderContextImpl context, List<TreatedPath<?>> treatedSelections) {
         final StringBuilder buffer = context.getBuffer();

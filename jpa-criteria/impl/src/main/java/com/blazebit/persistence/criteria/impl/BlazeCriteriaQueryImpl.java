@@ -17,11 +17,12 @@
 package com.blazebit.persistence.criteria.impl;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.criteria.BlazeCTECriteria;
 import com.blazebit.persistence.criteria.BlazeCriteriaBuilder;
 import com.blazebit.persistence.criteria.BlazeCriteriaQuery;
+import com.blazebit.persistence.criteria.BlazeFullSelectCTECriteria;
 import com.blazebit.persistence.criteria.BlazeOrder;
 import com.blazebit.persistence.criteria.BlazeRoot;
+import com.blazebit.persistence.criteria.BlazeSelectRecursiveCTECriteria;
 import com.blazebit.persistence.criteria.BlazeSubquery;
 
 import javax.persistence.EntityManager;
@@ -282,8 +283,13 @@ public class BlazeCriteriaQueryImpl<T> implements BlazeCriteriaQuery<T> {
     }
 
     @Override
-    public <X> BlazeCTECriteria<X> with(Class<X> clasz) {
+    public <X> BlazeFullSelectCTECriteria<X> with(Class<X> clasz) {
         return query.with(clasz);
+    }
+
+    @Override
+    public <X> BlazeSelectRecursiveCTECriteria<X> withRecursive(Class<X> clasz) {
+        return query.withRecursive(clasz);
     }
 
 }
