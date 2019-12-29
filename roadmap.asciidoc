@@ -41,14 +41,16 @@ As a side note, we are naming releases after http://marvel.com/comics/characters
 ** Allow predicates as array index expression
 ** Allow arbitrary expression as array index expression
 ** Support for mapping List index and Map key through separate expression in Entity Views
+** Support fetching Entity View attributes through JSON/XML functions
+** Entity View builder API
 
 = 1.4 Coulson
 
-_Scheduled for end of February 2019_
+_Scheduled for end of February 2020_
 
 ** Returning clause emulation
-** Safety net for buggy H2 CTE implementation
 ** Option for CTE inlining
+** `LATERAL` join support
 ** Window function support
 ** Entity view lifecycle listeners
 ** Entity view integration with REST technologies

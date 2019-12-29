@@ -1,0 +1,27 @@
+= Blaze-Persistence 1.4.0-Alpha4 Release
+Christian Beikov
+2019-12-29 0
+:description: Blaze-Persistence version 1.4.0-Alpha4 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+Better late than never. Here comes your late christmas present, Blaze-Persistence version 1.4.0-Alpha4!
+Enjoy Entity View lifecycle listeners, an integration for Jackson deserialization of Entity Views
+that is built into the Spring WebMvc and JAX-RS integrations automatically.
+This release also comes with a Spring WebFlux integration and the biggest newcomer is the GraphQL+++<!-- PREVIEW-SUFFIX --><!-- </p></div> --><!-- PREVIEW-END -->+++ integration!
+
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#140-alpha4[changelog, window="_blank"] for a full list of changes and improvements.
+
+I would like to thank the whole community for bug reports, providing test cases and generally giving guidance for some of the new features.
+
+The final 1.4 release is approaching the final stages. The last few planned issues are mostly about performance or emulations for databases providing fewer advanced features.
+We will also start working on a Hibernate 6.0 integration as the new version is almost done and we would like to shape a few features to better fit our needs.
+
+The next release will probably be the final 1.4.0 release which is planned for the end of February 2020.
+After that, we will switch to 1.5 on master. In 1.5 we will be doing a few parser and join related changes to support correlations in JPQL.Next which will reduce the need for subqueries.
+
+I wish you all great holidays and a happy new year! Have fun with this release and stay tuned for the next one!
