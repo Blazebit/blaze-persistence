@@ -24,6 +24,6 @@ package com.blazebit.persistence.impl.function.datetime.hour;
 public class PostgreSQLHourFunction extends HourFunction {
 
     public PostgreSQLHourFunction() {
-        super("extract(hour from ?1)::int");
+        super("cast(extract(hour from ?1) as int)");
     }
 }

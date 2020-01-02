@@ -1665,8 +1665,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         List<PathElementExpression> pathElementExpressions = basePath.getExpressions();
         JoinNode baseNode;
         if (pathElementExpressions.size() > 1 || (pathElementExpressions.size() == 1 && !(pathElementExpressions.get(0) instanceof PropertyExpression))) {
-
-            if (pathElementExpressions.size() == 1 && pathElementExpressions.get(0) instanceof TreatExpression) {
+            if (pathElementExpressions.get(0) instanceof TreatExpression) {
                 // support treated join base (#769)
                 baseNode = implicitJoinTreatExpression((TreatExpression) pathElementExpressions.get(0), true, null, null, null, null, false, false, true, false, false, false);
                 basePath.setPathReference(new SimplePathReference(baseNode, null, baseNode.getType()));

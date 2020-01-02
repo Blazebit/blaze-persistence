@@ -24,6 +24,6 @@ package com.blazebit.persistence.impl.function.datetime.minute;
 public class PostgreSQLMinuteFunction extends MinuteFunction {
 
     public PostgreSQLMinuteFunction() {
-        super("extract(minute from ?1)::int");
+        super("cast(extract(minute from ?1) as int)");
     }
 }

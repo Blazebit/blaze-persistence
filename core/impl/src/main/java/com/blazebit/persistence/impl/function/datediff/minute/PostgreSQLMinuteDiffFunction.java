@@ -26,7 +26,7 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
 public class PostgreSQLMinuteDiffFunction extends MinuteDiffFunction {
 
     public PostgreSQLMinuteDiffFunction() {
-        super("-cast(trunc(date_part('epoch', (?1)::timestamp - (?2)::timestamp)/60) as integer)");
+        super("-cast(trunc(date_part('epoch', cast(?1 as timestamp) - cast(?2 as timestamp))/60) as integer)");
     }
 
     @Override

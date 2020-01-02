@@ -24,6 +24,6 @@ package com.blazebit.persistence.impl.function.datetime.second;
 public class PostgreSQLSecondFunction extends SecondFunction {
 
     public PostgreSQLSecondFunction() {
-        super("extract(second from ?1)::int");
+        super("cast(extract(second from ?1) as int)");
     }
 }

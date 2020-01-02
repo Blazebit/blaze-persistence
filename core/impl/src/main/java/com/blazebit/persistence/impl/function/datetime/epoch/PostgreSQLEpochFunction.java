@@ -23,6 +23,6 @@ package com.blazebit.persistence.impl.function.datetime.epoch;
 public class PostgreSQLEpochFunction extends EpochFunction {
 
     public PostgreSQLEpochFunction() {
-        super("extract(epoch from ?1)::int");
+        super("cast(extract(epoch from ?1) as int)");
     }
 }

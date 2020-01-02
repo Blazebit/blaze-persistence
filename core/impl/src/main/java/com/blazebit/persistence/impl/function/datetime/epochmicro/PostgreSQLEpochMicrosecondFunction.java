@@ -23,6 +23,6 @@ package com.blazebit.persistence.impl.function.datetime.epochmicro;
 public class PostgreSQLEpochMicrosecondFunction extends EpochMicrosecondFunction {
 
     public PostgreSQLEpochMicrosecondFunction() {
-        super("cast(trunc(date_part('epoch', (?1)::timestamp - DATE '1970-01-01') * 1000000) as bigint)");
+        super("cast(trunc(date_part('epoch', cast(?1 as timestamp) - DATE '1970-01-01') * 1000000) as bigint)");
     }
 }

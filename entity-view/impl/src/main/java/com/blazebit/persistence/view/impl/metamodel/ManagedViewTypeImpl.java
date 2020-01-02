@@ -37,6 +37,7 @@ import javassist.CtBehavior;
 import javassist.CtClass;
 import javassist.CtConstructor;
 import javassist.CtMethod;
+import javassist.LoaderClassPath;
 import javassist.NotFoundException;
 import javassist.bytecode.Bytecode;
 import javassist.bytecode.CodeIterator;
@@ -405,6 +406,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
             Map<String, String> getters = new HashMap<>(requiredUpdatableAttributes.size());
             Class<?> javaType = jpaManagedType.getJavaType();
             ClassPool pool = new ClassPool(true);
+            pool.appendClassPath(new LoaderClassPath(javaType.getClassLoader()));
             CtClass ctClass = pool.get(javaType.getName());
 
             for (String attribute : requiredUpdatableAttributes) {
