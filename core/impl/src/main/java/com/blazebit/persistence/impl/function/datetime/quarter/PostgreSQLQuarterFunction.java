@@ -24,6 +24,6 @@ package com.blazebit.persistence.impl.function.datetime.quarter;
 public class PostgreSQLQuarterFunction extends QuarterFunction {
 
     public PostgreSQLQuarterFunction() {
-        super("extract(quarter from ?1)::int");
+        super("cast(extract(quarter from ?1) as int)");
     }
 }

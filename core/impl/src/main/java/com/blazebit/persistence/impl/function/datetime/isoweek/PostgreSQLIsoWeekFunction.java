@@ -24,7 +24,7 @@ package com.blazebit.persistence.impl.function.datetime.isoweek;
 public class PostgreSQLIsoWeekFunction extends IsoWeekFunction {
 
     public PostgreSQLIsoWeekFunction() {
-        super("extract(week from ?1)::int");
+        super("cast(extract(week from ?1) as int)");
     }
 
 }

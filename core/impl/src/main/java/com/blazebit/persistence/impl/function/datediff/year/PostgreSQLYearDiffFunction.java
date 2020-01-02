@@ -26,7 +26,7 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
 public class PostgreSQLYearDiffFunction extends YearDiffFunction {
 
     public PostgreSQLYearDiffFunction() {
-        super("-cast(trunc(date_part('year',(?1)::timestamp)) - trunc(date_part('year',(?2)::timestamp)) as integer)");
+        super("-cast(trunc(date_part('year',cast(?1 as timestamp))) - trunc(date_part('year',cast(?2 as timestamp))) as integer)");
     }
 
     @Override

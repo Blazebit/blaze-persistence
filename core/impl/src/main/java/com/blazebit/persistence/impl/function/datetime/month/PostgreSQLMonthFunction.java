@@ -24,6 +24,6 @@ package com.blazebit.persistence.impl.function.datetime.month;
 public class PostgreSQLMonthFunction extends MonthFunction {
 
     public PostgreSQLMonthFunction() {
-        super("extract(month from ?1)::int");
+        super("cast(extract(month from ?1) as int)");
     }
 }

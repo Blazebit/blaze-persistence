@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.datediff.week;
 public class PostgreSQLWeekDiffFunction extends WeekDiffFunction {
 
     public PostgreSQLWeekDiffFunction() {
-        super("-cast(trunc(date_part('day', (?1)::timestamp - (?2)::timestamp) / 7) as integer)");
+        super("-cast(trunc(date_part('day', cast(?1 as timestamp) - cast(?2 as timestamp)) / 7) as integer)");
     }
 
 }

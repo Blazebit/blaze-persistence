@@ -24,6 +24,6 @@ package com.blazebit.persistence.impl.function.datetime.year;
 public class PostgreSQLYearFunction extends YearFunction {
 
     public PostgreSQLYearFunction() {
-        super("extract(year from ?1)::int");
+        super("cast(extract(year from ?1) as int)");
     }
 }

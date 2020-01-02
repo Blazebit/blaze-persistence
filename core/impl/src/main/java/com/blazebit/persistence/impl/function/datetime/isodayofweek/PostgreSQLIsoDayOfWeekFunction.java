@@ -24,6 +24,6 @@ package com.blazebit.persistence.impl.function.datetime.isodayofweek;
 public class PostgreSQLIsoDayOfWeekFunction extends IsoDayOfWeekFunction {
 
     public PostgreSQLIsoDayOfWeekFunction() {
-        super("extract(isodow from ?1)::int");
+        super("cast(extract(isodow from ?1) as int)");
     }
 }

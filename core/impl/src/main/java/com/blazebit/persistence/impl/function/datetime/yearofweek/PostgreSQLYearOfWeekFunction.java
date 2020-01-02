@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.function.datetime.yearofweek;
 public class PostgreSQLYearOfWeekFunction extends YearOfWeekFunction {
 
     public PostgreSQLYearOfWeekFunction() {
-        super("EXTRACT(YEAR FROM DATE_TRUNC('week', ?1))::int");
+        super("cast(extract(year from date_trunc('week', ?1)) as int)");
     }
 
 }

@@ -24,6 +24,6 @@ package com.blazebit.persistence.impl.function.datediff.microsecond;
 public class PostgreSQLMicrosecondDiffFunction extends MicrosecondDiffFunction {
 
     public PostgreSQLMicrosecondDiffFunction() {
-        super("-cast(trunc(date_part('epoch', (?1)::timestamp - (?2)::timestamp) * 1000000) as bigint)");
+        super("-cast(trunc(date_part('epoch', cast(?1 as timestamp) - cast(?2 as timestamp)) * 1000000) as bigint)");
     }
 }

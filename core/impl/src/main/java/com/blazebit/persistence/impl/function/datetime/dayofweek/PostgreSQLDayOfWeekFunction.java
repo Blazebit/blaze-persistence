@@ -24,6 +24,6 @@ package com.blazebit.persistence.impl.function.datetime.dayofweek;
 public class PostgreSQLDayOfWeekFunction extends DayOfWeekFunction {
 
     public PostgreSQLDayOfWeekFunction() {
-        super("extract(dow from ?1)::int + 1");
+        super("cast(extract(dow from ?1) as int) + 1");
     }
 }

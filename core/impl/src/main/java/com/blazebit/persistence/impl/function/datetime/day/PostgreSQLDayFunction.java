@@ -24,6 +24,6 @@ package com.blazebit.persistence.impl.function.datetime.day;
 public class PostgreSQLDayFunction extends DayFunction {
 
     public PostgreSQLDayFunction() {
-        super("extract(day from ?1)::int");
+        super("cast(extract(day from ?1) as int)");
     }
 }

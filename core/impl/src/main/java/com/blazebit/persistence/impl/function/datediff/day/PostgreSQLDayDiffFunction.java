@@ -26,7 +26,7 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
 public class PostgreSQLDayDiffFunction extends DayDiffFunction {
 
     public PostgreSQLDayDiffFunction() {
-        super("-cast(trunc(date_part('day', (?1)::timestamp - (?2)::timestamp)) as integer)");
+        super("-cast(trunc(date_part('day', cast(?1 as timestamp) - cast(?2 as timestamp))) as integer)");
     }
 
     @Override

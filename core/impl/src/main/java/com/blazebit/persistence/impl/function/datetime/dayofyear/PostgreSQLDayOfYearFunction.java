@@ -23,6 +23,6 @@ package com.blazebit.persistence.impl.function.datetime.dayofyear;
 public class PostgreSQLDayOfYearFunction extends DayOfYearFunction {
 
     public PostgreSQLDayOfYearFunction() {
-        super("extract(doy from ?1)::int");
+        super("cast(extract(doy from ?1) as int)");
     }
 }

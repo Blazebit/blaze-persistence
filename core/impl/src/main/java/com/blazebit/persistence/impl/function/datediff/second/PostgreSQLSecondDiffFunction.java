@@ -27,7 +27,7 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
 public class PostgreSQLSecondDiffFunction extends SecondDiffFunction {
 
     public PostgreSQLSecondDiffFunction() {
-        super("-cast(trunc(EXTRACT(EPOCH FROM (?1)::timestamp)) - trunc(EXTRACT(EPOCH FROM (?2)::timestamp)) as bigint)");
+        super("-cast(trunc(EXTRACT(EPOCH FROM cast(?1 as timestamp))) - trunc(EXTRACT(EPOCH FROM cast(?2 as timestamp))) as bigint)");
     }
 
     @Override
