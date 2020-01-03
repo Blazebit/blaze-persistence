@@ -18,9 +18,13 @@ package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.lang.StringUtils;
+import com.blazebit.persistence.parser.SimpleQueryGenerator;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.parser.expression.SyntaxErrorException;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
+import com.blazebit.persistence.spi.ServiceProvider;
 import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.CorrelationProviderFactory;
 import com.blazebit.persistence.view.EntityView;
@@ -35,6 +39,7 @@ import com.blazebit.persistence.view.SubqueryProvider;
 import com.blazebit.persistence.view.SubqueryProviderFactory;
 import com.blazebit.persistence.view.impl.CollectionJoinMappingGathererExpressionVisitor;
 import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
+import com.blazebit.persistence.view.impl.PrefixingQueryGenerator;
 import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor.TargetType;
 import com.blazebit.persistence.view.impl.SubqueryProviderHelper;
@@ -50,10 +55,12 @@ import com.blazebit.persistence.view.impl.collection.SortedMapInstantiator;
 import com.blazebit.persistence.view.impl.collection.SortedSetCollectionInstantiator;
 import com.blazebit.persistence.view.impl.collection.UnorderedMapInstantiator;
 import com.blazebit.persistence.view.impl.collection.UnorderedSetCollectionInstantiator;
+import com.blazebit.persistence.view.impl.macro.CorrelatedSubqueryEmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.metamodel.Attribute;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
+import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
 import com.blazebit.reflection.ReflectionUtils;
 
 import javax.persistence.metamodel.ManagedType;
@@ -398,6 +405,46 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                 .replaceAll(replacement);
 
         return mapping;
+    }
+
+    public final void renderSubqueryExpression(String parent, ServiceProvider serviceProvider, StringBuilder sb) {
+        renderExpression(parent, subqueryExpression, subqueryAlias, serviceProvider, sb);
+    }
+
+    public final void renderSubqueryExpression(String parent, String subqueryExpression, String subqueryAlias, ServiceProvider serviceProvider, StringBuilder sb) {
+        renderExpression(parent, subqueryExpression, subqueryAlias, serviceProvider, sb);
+    }
+
+    public final void renderCorrelationBasis(String parent, ServiceProvider serviceProvider, StringBuilder sb) {
+        renderExpression(parent, correlationBasis, null, serviceProvider, sb);
+    }
+
+    public final void renderCorrelationResult(String parent, ServiceProvider serviceProvider, StringBuilder sb) {
+        renderExpression(parent, correlationResult, null, serviceProvider, sb);
+    }
+
+    public final void renderMapping(String parent, ServiceProvider serviceProvider, StringBuilder sb) {
+        renderExpression(parent, mapping, null, serviceProvider, sb);
+    }
+
+    private void renderExpression(String parent, String expression, String aliasToSkip, ServiceProvider serviceProvider, StringBuilder sb) {
+        if (expression.isEmpty()) {
+            if (parent != null && !parent.isEmpty()) {
+                sb.append(AbstractAttribute.stripThisFromMapping(parent));
+            }
+
+            return;
+        }
+        if (parent != null && !parent.isEmpty()) {
+            ExpressionFactory ef = serviceProvider.getService(ExpressionFactory.class);
+            Expression expr = ef.createSimpleExpression(expression, false, false, true);
+            EmbeddingViewJpqlMacro embeddingViewJpqlMacro = (EmbeddingViewJpqlMacro) ef.getDefaultMacroConfiguration().get("EMBEDDING_VIEW").getState()[0];
+            SimpleQueryGenerator generator = new PrefixingQueryGenerator(Collections.singletonList(parent), embeddingViewJpqlMacro.getEmbeddingViewPath(), CorrelatedSubqueryEmbeddingViewJpqlMacro.CORRELATION_EMBEDDING_VIEW_ALIAS, aliasToSkip);
+            generator.setQueryBuffer(sb);
+            expr.accept(generator);
+        } else {
+            sb.append(expression);
+        }
     }
 
     /**

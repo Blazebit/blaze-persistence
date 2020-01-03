@@ -18,9 +18,11 @@ package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.PolymorphicBase;
 import com.blazebit.persistence.testsuite.entity.PolymorphicSub1;
@@ -115,5 +117,18 @@ public class TreatedEntityJoinTest extends AbstractCoreTest {
         List<PolymorphicSub1> result = cb.getResultList();
         assertEquals(1, result.size());
         assertEquals(root2.getId(), result.get(0).getId());
+    }
+
+    // NOTE: EclipseLink requires a join for "relation1" that it doesn't add...
+    @Test
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoDatanucleus.class, NoEclipselink.class })
+    public void entityJoinTreat() {
+        CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
+        criteria.from(PolymorphicBase.class, "p");
+        criteria.innerJoinOn("TREAT(p AS PolymorphicSub1).relation1", PolymorphicSub1.class, "r")
+                    .on("r").eqExpression("TREAT(p AS PolymorphicSub1).relation1")
+                .end();
+        assertEquals("SELECT p FROM PolymorphicBase p JOIN PolymorphicSub1 r" + onClause("(TYPE(p) = PolymorphicSub1 AND r = " + treatRoot("p", PolymorphicSub1.class, "relation1") + ")"), criteria.getQueryString());
+        criteria.getResultList();
     }
 }
