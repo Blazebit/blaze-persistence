@@ -31,6 +31,7 @@ None
 * TREAT expression as join basis doesn't work
 * Bytecode analysis fails in application servers
 * Hibernate can't handle when SQL contains PostgreSQL double colon casts
+* Fix entity joins with TREAT basis support
 
 ### Backwards-incompatible changes
 

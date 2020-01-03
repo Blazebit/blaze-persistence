@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.metamodel;
 
+import com.blazebit.persistence.spi.ServiceProvider;
 import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.CorrelationProviderFactory;
 
@@ -57,5 +58,23 @@ public interface CorrelatedAttribute<X, Y> extends Attribute<X, Y> {
      * @return The correlation result of the attribute
      */
     public String getCorrelationResult();
+
+    /**
+     * Renders the correlation basis expression for the given parent expression to the given string builder.
+     *
+     * @param parent The parent expression
+     * @param serviceProvider The service provider
+     * @param sb The string builder
+     */
+    public void renderCorrelationBasis(String parent, ServiceProvider serviceProvider, StringBuilder sb);
+
+    /**
+     * Renders the correlation result expression for the given parent expression to the given string builder.
+     *
+     * @param parent The parent expression
+     * @param serviceProvider The service provider
+     * @param sb The string builder
+     */
+    public void renderCorrelationResult(String parent, ServiceProvider serviceProvider, StringBuilder sb);
 
 }

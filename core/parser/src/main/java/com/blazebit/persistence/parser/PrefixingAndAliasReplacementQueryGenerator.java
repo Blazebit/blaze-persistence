@@ -19,6 +19,7 @@ package com.blazebit.persistence.parser;
 import com.blazebit.persistence.parser.expression.PathElementExpression;
 import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.expression.PropertyExpression;
+import com.blazebit.persistence.parser.expression.TreatExpression;
 
 import java.util.List;
 
@@ -74,6 +75,9 @@ public class PrefixingAndAliasReplacementQueryGenerator extends SimpleQueryGener
                         super.visit(expression);
                         return;
                     }
+                } else if (elementExpression instanceof TreatExpression) {
+                    super.visit(expression);
+                    return;
                 }
             }
             sb.append(prefix);

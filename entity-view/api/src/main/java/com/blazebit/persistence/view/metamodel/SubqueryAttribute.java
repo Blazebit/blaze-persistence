@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.metamodel;
 
+import com.blazebit.persistence.spi.ServiceProvider;
 import com.blazebit.persistence.view.SubqueryProvider;
 import com.blazebit.persistence.view.SubqueryProviderFactory;
 
@@ -57,4 +58,24 @@ public interface SubqueryAttribute<X, Y> extends SingularAttribute<X, Y> {
      * @return The subquery alias of the attribute
      */
     public String getSubqueryAlias();
+
+    /**
+     * Renders the subquery expression for the given parent expression to the given string builder.
+     *
+     * @param parent The parent expression
+     * @param serviceProvider The service provider
+     * @param sb The string builder
+     */
+    public void renderSubqueryExpression(String parent, ServiceProvider serviceProvider, StringBuilder sb);
+
+    /**
+     * Renders the given subquery expression for the given parent expression to the given string builder.
+     *
+     * @param parent The parent expression
+     * @param subqueryExpression The subquery expression
+     * @param subqueryAlias The subquery alias
+     * @param serviceProvider The service provider
+     * @param sb The string builder
+     */
+    public void renderSubqueryExpression(String parent, String subqueryExpression, String subqueryAlias, ServiceProvider serviceProvider, StringBuilder sb);
 }

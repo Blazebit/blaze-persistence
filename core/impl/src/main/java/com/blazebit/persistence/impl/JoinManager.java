@@ -1667,7 +1667,9 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         if (pathElementExpressions.size() > 1 || (pathElementExpressions.size() == 1 && !(pathElementExpressions.get(0) instanceof PropertyExpression))) {
             if (pathElementExpressions.get(0) instanceof TreatExpression) {
                 // support treated join base (#769)
-                baseNode = implicitJoinTreatExpression((TreatExpression) pathElementExpressions.get(0), true, null, null, null, null, false, false, true, false, false, false);
+                Set<String> currentlyResolvingAliases = new HashSet<>();
+                currentlyResolvingAliases.add(alias);
+                baseNode = implicitJoinTreatExpression((TreatExpression) pathElementExpressions.get(0), true, null, null, null, currentlyResolvingAliases, false, false, true, false, false, false);
                 basePath.setPathReference(new SimplePathReference(baseNode, null, baseNode.getType()));
             } else {
                 AliasInfo aliasInfo = aliasManager.getAliasInfo(pathElementExpressions.get(0).toString());
@@ -1677,7 +1679,9 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 }
 
                 baseNode = ((JoinAliasInfo) aliasInfo).getJoinNode();
-                implicitJoin(basePath, true, true, null, null, null, null, null, false, false, true, false, false, false);
+                Set<String> currentlyResolvingAliases = new HashSet<>();
+                currentlyResolvingAliases.add(alias);
+                implicitJoin(basePath, true, true, null, null, null, null, currentlyResolvingAliases, false, false, true, false, false, false);
             }
 
             for (int i = 1; i < pathElementExpressions.size(); i++) {
