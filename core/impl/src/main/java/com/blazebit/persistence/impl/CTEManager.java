@@ -23,6 +23,7 @@ import com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder;
 import com.blazebit.persistence.StartOngoingSetOperationCTECriteriaBuilder;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -164,6 +165,16 @@ public class CTEManager extends CTEBuilderListenerImpl {
         mainQuery.assertSupportsAdvancedSql("Illegal use of WITH clause!");
         String cteName = cteClass.getSimpleName();
         FullSelectCTECriteriaBuilderImpl<Y> cteBuilder = new FullSelectCTECriteriaBuilderImpl<Y>(mainQuery, queryContext, cteName, (Class<Object>) cteClass, result, this);
+        this.onBuilderStarted(cteBuilder);
+        return cteBuilder;
+    }
+
+    @SuppressWarnings("unchecked")
+    <Y> FullSelectCTECriteriaBuilder<Y> with(Class<?> cteClass, Y result, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder) {
+        mainQuery.assertSupportsAdvancedSql("Illegal use of WITH clause!");
+        String cteName = cteClass.getSimpleName();
+        FullSelectCTECriteriaBuilderImpl<Y> cteBuilder = new FullSelectCTECriteriaBuilderImpl<Y>(mainQuery, queryContext, cteName, (Class<Object>) cteClass, result, this);
+        cteBuilder.applyFrom(builder, true, false, false, Collections.<ClauseType>emptySet(), Collections.<JoinNode>emptySet());
         this.onBuilderStarted(cteBuilder);
         return cteBuilder;
     }

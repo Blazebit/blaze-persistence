@@ -17,6 +17,8 @@
 package com.blazebit.persistence.integration.graphql;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.DefaultKeyset;
+import com.blazebit.persistence.DefaultKeysetPage;
 import com.blazebit.persistence.KeysetPage;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.view.ConfigurationProperties;
@@ -375,22 +377,22 @@ public class GraphQLEntityViewSupport {
                     throw new RuntimeException("Can't provide both beforeCursor and afterCursor!");
                 }
                 GraphQLCursor cursor = deserialize(beforeCursor);
-                keysetPage = new KeysetPageImpl(cursor.getOffset(), cursor.getPageSize(), new KeysetImpl(cursor.getTuple()), null);
+                keysetPage = new DefaultKeysetPage(cursor.getOffset(), cursor.getPageSize(), new DefaultKeyset(cursor.getTuple()), null);
             } else if (afterCursor != null) {
                 if (last != null) {
                     // Using an after cursor with last does not make sense, so skip using the cursor
                     // The only problem with that is, that the cursor could refer to the last element
                     // If that is the case, we would still get a result, which is IMO an edge case and can be ignored
-                    keysetPage = new KeysetPageImpl(0, last, new KeysetImpl(null), null);
+                    keysetPage = new DefaultKeysetPage(0, last, new DefaultKeyset(null), null);
                 } else {
                     GraphQLCursor cursor = deserialize(afterCursor);
-                    keysetPage = new KeysetPageImpl(cursor.getOffset(), cursor.getPageSize(), null, new KeysetImpl(cursor.getTuple()));
+                    keysetPage = new DefaultKeysetPage(cursor.getOffset(), cursor.getPageSize(), null, new DefaultKeyset(cursor.getTuple()));
                 }
             } else if (pageSize != null) {
-                keysetPage = new KeysetPageImpl(0, pageSize, null, null);
+                keysetPage = new DefaultKeysetPage(0, pageSize, null, null);
             } else {
                 // Keyset with empty tuple is a special case for traversing the result list in reverse order
-                keysetPage = new KeysetPageImpl(0, last, new KeysetImpl(null), null);
+                keysetPage = new DefaultKeysetPage(0, last, new DefaultKeyset(null), null);
             }
 
             return keysetPage;

@@ -139,23 +139,26 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         this.queryBuilder = queryBuilder;
     }
 
-    Map<JoinNode, JoinNode> applyFrom(JoinManager joinManager) {
+    Map<JoinNode, JoinNode> applyFrom(JoinManager joinManager, Set<ClauseType> clauseExclusions, Set<JoinNode> alwaysIncludedNodes) {
         Map<JoinNode, JoinNode> nodeMapping = new IdentityHashMap<>();
         for (JoinNode node : joinManager.rootNodes) {
-            JoinNode rootNode = applyFrom(nodeMapping, node);
+            JoinNode rootNode = applyFrom(nodeMapping, node, clauseExclusions, alwaysIncludedNodes);
 
             if (node.getValueCount() > 0) {
                 entityFunctionNodes.add(rootNode);
             }
         }
         for (JoinNode explicitJoinNode : joinManager.explicitJoinNodes) {
-            explicitJoinNodes.add(nodeMapping.get(explicitJoinNode));
+            JoinNode joinNode = nodeMapping.get(explicitJoinNode);
+            if (joinNode != null) {
+                explicitJoinNodes.add(joinNode);
+            }
         }
 
         return nodeMapping;
     }
 
-    private JoinNode applyFrom(Map<JoinNode, JoinNode> nodeMapping, JoinNode node) {
+    private JoinNode applyFrom(Map<JoinNode, JoinNode> nodeMapping, JoinNode node, Set<ClauseType> clauseExclusions, Set<JoinNode> alwaysIncludedNodes) {
         String rootAlias = node.getAlias();
         boolean implicit = node.getAliasInfo().isImplicit();
 
@@ -169,30 +172,42 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         nodeMapping.put(node, rootNode);
 
         for (JoinTreeNode treeNode : node.getNodes().values()) {
-            applyFrom(nodeMapping, rootNode, treeNode);
+            applyFrom(nodeMapping, rootNode, treeNode, clauseExclusions, alwaysIncludedNodes);
         }
 
         for (JoinNode entityJoinNode : node.getEntityJoinNodes()) {
-            rootNode.addEntityJoin(applyFrom(nodeMapping, rootNode, null, entityJoinNode.getAlias(), entityJoinNode));
+            JoinNode joinNode = applyFrom(nodeMapping, rootNode, null, entityJoinNode.getAlias(), entityJoinNode, clauseExclusions, alwaysIncludedNodes);
+            if (joinNode != null) {
+                rootNode.addEntityJoin(joinNode);
+            }
         }
 
         for (Map.Entry<String, JoinNode> entry : node.getTreatedJoinNodes().entrySet()) {
             JoinNode treatedNode = entry.getValue();
-            rootNode.getTreatedJoinNodes().put(treatedNode.getTreatType().getName(), applyFrom(nodeMapping, rootNode, null, treatedNode.getAlias(), treatedNode));
+            JoinNode joinNode = applyFrom(nodeMapping, rootNode, null, treatedNode.getAlias(), treatedNode, clauseExclusions, alwaysIncludedNodes);
+            if (joinNode != null) {
+                rootNode.getTreatedJoinNodes().put(treatedNode.getTreatType().getName(), joinNode);
+            }
         }
 
         return rootNode;
     }
 
-    private void applyFrom(Map<JoinNode, JoinNode> nodeMapping, JoinNode parent, JoinTreeNode treeNode) {
+    private void applyFrom(Map<JoinNode, JoinNode> nodeMapping, JoinNode parent, JoinTreeNode treeNode, Set<ClauseType> clauseExclusions, Set<JoinNode> alwaysIncludedNodes) {
         JoinTreeNode newTreeNode = parent.getOrCreateTreeNode(treeNode.getRelationName(), treeNode.getAttribute());
         for (Map.Entry<String, JoinNode> nodeEntry : treeNode.getJoinNodes().entrySet()) {
-            JoinNode newNode = applyFrom(nodeMapping, parent, newTreeNode, nodeEntry.getKey(), nodeEntry.getValue());
-            newTreeNode.addJoinNode(newNode, nodeEntry.getValue() == treeNode.getDefaultNode());
+            JoinNode newNode = applyFrom(nodeMapping, parent, newTreeNode, nodeEntry.getKey(), nodeEntry.getValue(), clauseExclusions, alwaysIncludedNodes);
+            if (newNode != null) {
+                newTreeNode.addJoinNode(newNode, nodeEntry.getValue() == treeNode.getDefaultNode());
+            }
         }
     }
 
-    private JoinNode applyFrom(Map<JoinNode, JoinNode> nodeMapping, JoinNode parent, JoinTreeNode treeNode, String alias, JoinNode oldNode) {
+    private JoinNode applyFrom(Map<JoinNode, JoinNode> nodeMapping, JoinNode parent, JoinTreeNode treeNode, String alias, JoinNode oldNode, Set<ClauseType> clauseExclusions, Set<JoinNode> alwaysIncludedNodes) {
+        if (!clauseExclusions.isEmpty() && clauseExclusions.containsAll(oldNode.getClauseDependencies()) && !alwaysIncludedNodes.contains(oldNode)) {
+            return null;
+        }
+
         JoinNode node;
         JoinAliasInfo newAliasInfo;
         if (oldNode.getTreatType() == null) {
@@ -211,11 +226,14 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         }
 
         for (JoinTreeNode oldTreeNode : oldNode.getNodes().values()) {
-            applyFrom(nodeMapping, node, oldTreeNode);
+            applyFrom(nodeMapping, node, oldTreeNode, clauseExclusions, alwaysIncludedNodes);
         }
 
         for (JoinNode entityJoinNode : oldNode.getEntityJoinNodes()) {
-            node.addEntityJoin(applyFrom(nodeMapping, node, null, entityJoinNode.getAlias(), entityJoinNode));
+            JoinNode joinNode = applyFrom(nodeMapping, node, null, entityJoinNode.getAlias(), entityJoinNode, clauseExclusions, alwaysIncludedNodes);
+            if (joinNode != null) {
+                node.addEntityJoin(joinNode);
+            }
         }
 
         for (Map.Entry<String, JoinNode> entry : oldNode.getTreatedJoinNodes().entrySet()) {
@@ -226,7 +244,10 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             } else {
                 subTreeNode = node.getOrCreateTreeNode(treatedNode.getParentTreeNode().getRelationName(), treatedNode.getParentTreeNode().getAttribute());
             }
-            node.getTreatedJoinNodes().put(entry.getKey(), applyFrom(nodeMapping, node, subTreeNode, treatedNode.getAlias(), treatedNode));
+            JoinNode joinNode = applyFrom(nodeMapping, node, subTreeNode, treatedNode.getAlias(), treatedNode, clauseExclusions, alwaysIncludedNodes);
+            if (joinNode != null) {
+                node.getTreatedJoinNodes().put(entry.getKey(), joinNode);
+            }
         }
 
         return node;

@@ -8,7 +8,8 @@ Not yet released
 
 ### New features
 
-None
+* Allow extraction of `CriteriaBuilder` for id-query from `FullQueryBuilder`
+* Allow definition of CTE based on `CriteriaBuilder`
 
 ### Bug fixes
 

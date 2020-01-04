@@ -154,6 +154,14 @@ public interface PaginatedCriteriaBuilder<T> extends FullQueryBuilder<T, Paginat
     public int getHighestKeysetOffset();
 
     /**
+     * Creates and returns a new {@link CriteriaBuilder} that can be used to query the id values for the current page.
+     *
+     * @return the {@link CriteriaBuilder} to query id values
+     * @since 1.4.1
+     */
+    public CriteriaBuilder<Object[]> createPageIdQuery();
+
+    /**
      * Execute the query and return the result as a type PagedList.
      *
      * @return The paged list of the results

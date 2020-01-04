@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.spring.data.webmvc.impl;
 
+import com.blazebit.persistence.DefaultKeyset;
+import com.blazebit.persistence.DefaultKeysetPage;
 import com.blazebit.persistence.KeysetPage;
 import com.blazebit.persistence.spring.data.repository.KeysetPageRequest;
 import com.blazebit.persistence.spring.data.repository.KeysetPageable;
@@ -324,11 +326,11 @@ public class KeysetPageableHandlerMethodArgumentResolver extends PageableHandler
                         lowest.add(low == null ? null : convert(low, propertyType));
                         highest.add(high == null ? null : convert(high, propertyType));
                     }
-                    keysetPage = new KeysetPageImpl(
+                    keysetPage = new DefaultKeysetPage(
                             previousOffset,
                             previousPageSize,
-                            lowest.toArray(new Serializable[lowest.size()]),
-                            highest.toArray(new Serializable[highest.size()])
+                            new DefaultKeyset(lowest.toArray(new Serializable[lowest.size()])),
+                            new DefaultKeyset(highest.toArray(new Serializable[highest.size()]))
                     );
                 }
             }

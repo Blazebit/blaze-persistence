@@ -14,22 +14,20 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.keyset;
+package com.blazebit.persistence;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.blazebit.persistence.Keyset;
-import com.blazebit.persistence.KeysetPage;
-
 /**
+ * A simple default implementation for the {@link KeysetPage} interface.
  *
  * @author Christian Beikov
- * @since 1.0.0
+ * @since 1.4.1
  */
-public class KeysetPageImpl implements KeysetPage {
+public class DefaultKeysetPage implements KeysetPage {
 
     private static final long serialVersionUID = 1L;
 
@@ -39,11 +37,28 @@ public class KeysetPageImpl implements KeysetPage {
     private final Keyset highest;
     private final List<Keyset> keysets;
 
-    public KeysetPageImpl(int firstResult, int maxResults, Serializable[] lowest, Serializable[] highest, Serializable[][] keysets) {
-        this(firstResult, maxResults, new KeysetImpl(lowest), new KeysetImpl(highest), keysets(keysets));
+    /**
+     * Creates a new {@link KeysetPage}.
+     *
+     * @param firstResult The first result
+     * @param maxResults The max results
+     * @param lowest The lowest keyset
+     * @param highest The highest keyset
+     * @param keysets All extracted keysets
+     */
+    public DefaultKeysetPage(int firstResult, int maxResults, Serializable[] lowest, Serializable[] highest, Serializable[][] keysets) {
+        this(firstResult, maxResults, new DefaultKeyset(lowest), new DefaultKeyset(highest), keysets(keysets));
     }
 
-    public KeysetPageImpl(int firstResult, int maxResults, Keyset lowest, Keyset highest) {
+    /**
+     * Creates a new {@link KeysetPage}.
+     *
+     * @param firstResult The first result
+     * @param maxResults The max results
+     * @param lowest The lowest keyset
+     * @param highest The highest keyset
+     */
+    public DefaultKeysetPage(int firstResult, int maxResults, Keyset lowest, Keyset highest) {
         this.firstResult = firstResult;
         this.maxResults = maxResults;
         this.lowest = lowest;
@@ -58,7 +73,16 @@ public class KeysetPageImpl implements KeysetPage {
         this.keysets = keysets;
     }
 
-    public KeysetPageImpl(int firstResult, int maxResults, Keyset lowest, Keyset highest, List<Keyset> keysets) {
+    /**
+     * Creates a new {@link KeysetPage}.
+     *
+     * @param firstResult The first result
+     * @param maxResults The max results
+     * @param lowest The lowest keyset
+     * @param highest The highest keyset
+     * @param keysets All extracted keysets
+     */
+    public DefaultKeysetPage(int firstResult, int maxResults, Keyset lowest, Keyset highest, List<Keyset> keysets) {
         this.firstResult = firstResult;
         this.maxResults = maxResults;
         this.lowest = lowest;
@@ -72,7 +96,7 @@ public class KeysetPageImpl implements KeysetPage {
         }
         List<Keyset> list = new ArrayList<>(keysets.length);
         for (Serializable[] keyset : keysets) {
-            list.add(new KeysetImpl(keyset));
+            list.add(new DefaultKeyset(keyset));
         }
 
         return list;

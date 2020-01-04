@@ -23,7 +23,7 @@ import com.blazebit.persistence.parser.expression.InplaceModificationResultVisit
 import com.blazebit.persistence.parser.expression.SubqueryExpression;
 import com.blazebit.persistence.parser.predicate.ExistsPredicate;
 
-import java.util.Arrays;
+import java.util.Collections;
 
 /**
  *
@@ -66,26 +66,10 @@ public class SubqueryInitiatorFactory {
 
     private <T> SubqueryBuilderImpl<T> createSubqueryBuilder(T result, SubqueryBuilderListener<T> listener, boolean inExists, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder, ClauseType clause) {
         SubqueryBuilderImpl<T> subqueryBuilder = new SubqueryBuilderImpl<T>(mainQuery, new QueryContext(queryBuilder, clause), aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
-
-        if (builder.isMainQuery) {
-            subqueryBuilder.parameterManager.applyFrom(builder.mainQuery.parameterManager, builder);
-            mainQuery.cteManager.applyFrom(builder.mainQuery.cteManager);
-        }
-        subqueryBuilder.joinManager.applyFrom(builder.joinManager);
-        subqueryBuilder.whereManager.applyFrom(builder.whereManager);
-        subqueryBuilder.havingManager.applyFrom(builder.havingManager);
-        subqueryBuilder.groupByManager.applyFrom(builder.groupByManager);
-        subqueryBuilder.orderByManager.applyFrom(builder.orderByManager);
-
-        subqueryBuilder.setFirstResult(builder.firstResult);
-        subqueryBuilder.setMaxResults(builder.maxResults);
-
-        // TODO: set operations?
+        subqueryBuilder.applyFrom(builder, builder.isMainQuery, !inExists, false, Collections.<ClauseType>emptySet(), Collections.<JoinNode>emptySet());
 
         if (inExists) {
-            subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(mainQuery.expressionFactory.createSimpleExpression("1"))));
-        } else {
-            subqueryBuilder.selectManager.setDefaultSelect(null, builder.selectManager.getSelectInfos());
+            subqueryBuilder.selectManager.setDefaultSelect(null, Collections.singletonList(new SelectInfo(mainQuery.expressionFactory.createSimpleExpression("1"))));
         }
 
         subqueryBuilder.collectParameters();

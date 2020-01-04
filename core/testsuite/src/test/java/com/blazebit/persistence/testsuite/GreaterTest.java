@@ -46,7 +46,7 @@ public class GreaterTest extends AbstractCoreTest {
     @Test
     public void testGtNull() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria.where("d.age"), NullPointerException.class).gt(null);
+        verifyException(criteria.where("d.age"), NullPointerException.class).gt((Object) null);
     }
 
     @Test
@@ -76,7 +76,7 @@ public class GreaterTest extends AbstractCoreTest {
     @Test
     public void testGeNull() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria.where("d.age"), NullPointerException.class).ge(null);
+        verifyException(criteria.where("d.age"), NullPointerException.class).ge((Object) null);
     }
 
     @Test

@@ -94,6 +94,12 @@ public class MainQuery {
         return metamodel;
     }
 
+    void copyConfiguration(QueryConfiguration configuration) {
+        if (configuration instanceof MutableQueryConfiguration) {
+            queryConfiguration = new MutableQueryConfiguration(configuration);
+        }
+    }
+
     public QueryConfiguration getMutableQueryConfiguration() {
         if (!(queryConfiguration instanceof MutableQueryConfiguration)) {
             queryConfiguration = new MutableQueryConfiguration(queryConfiguration);
