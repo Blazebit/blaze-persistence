@@ -32,7 +32,7 @@
     <properties>
         <!-- The current stable version -->
         <stable.version>1.4.0</stable.version>
-        <series.version>1.4</series.version>
+        <series.version>1.4.x</series.version>
         <!-- The current snapshot version -->
         <snapshot.version>1.4.1-SNAPSHOT</snapshot.version>
 
