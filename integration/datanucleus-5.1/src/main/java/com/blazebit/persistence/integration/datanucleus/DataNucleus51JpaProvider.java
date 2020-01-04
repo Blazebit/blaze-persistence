@@ -202,6 +202,21 @@ public class DataNucleus51JpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsNonScalarSubquery() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsSubqueryInFunction() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsSubqueryAliasShadowing() {
+        return false;
+    }
+
+    @Override
     public String[] getDiscriminatorColumnCheck(EntityType<?> entityType) {
         return null;
     }

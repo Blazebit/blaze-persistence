@@ -26,6 +26,8 @@ import com.blazebit.persistence.impl.dialect.MySQL8DbmsDialect;
 import com.blazebit.persistence.impl.dialect.MySQLDbmsDialect;
 import com.blazebit.persistence.impl.dialect.OracleDbmsDialect;
 import com.blazebit.persistence.impl.dialect.PostgreSQLDbmsDialect;
+import com.blazebit.persistence.impl.function.alias.AliasFunction;
+import com.blazebit.persistence.impl.function.coltrunc.ColumnTruncFunction;
 import com.blazebit.persistence.impl.function.dateadd.day.DB2DayAddFunction;
 import com.blazebit.persistence.impl.function.dateadd.day.DayAddFunction;
 import com.blazebit.persistence.impl.function.dateadd.day.H2DayAddFunction;
@@ -230,6 +232,8 @@ import com.blazebit.persistence.impl.function.every.EveryFunction;
 import com.blazebit.persistence.impl.function.every.FallbackEveryFunction;
 import com.blazebit.persistence.impl.function.oragg.FallbackOrAggFunction;
 import com.blazebit.persistence.impl.function.oragg.OrAggFunction;
+import com.blazebit.persistence.impl.function.rowvalue.DB2RowValueSubqueryComparisonFunction;
+import com.blazebit.persistence.impl.function.rowvalue.RowValueSubqueryComparisonFunction;
 import com.blazebit.persistence.impl.function.subquery.SubqueryFunction;
 import com.blazebit.persistence.impl.function.trunc.day.TruncDayFunction;
 import com.blazebit.persistence.impl.function.trunc.hour.TruncHourFunction;
@@ -1273,6 +1277,22 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup = new JpqlFunctionGroup(RowValueComparisonFunction.FUNCTION_NAME, false);
         jpqlFunctionGroup.add(null, new RowValueComparisonFunction());
         jpqlFunctionGroup.add("db2", new DB2RowValueComparisonFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        // row values subquery
+        jpqlFunctionGroup = new JpqlFunctionGroup(RowValueSubqueryComparisonFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup.add(null, new RowValueSubqueryComparisonFunction());
+        jpqlFunctionGroup.add("db2", new DB2RowValueSubqueryComparisonFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        // alias function
+        jpqlFunctionGroup = new JpqlFunctionGroup(AliasFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup.add(null, new AliasFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        // column trunc function
+        jpqlFunctionGroup = new JpqlFunctionGroup(ColumnTruncFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup.add(null, new ColumnTruncFunction());
         registerFunction(jpqlFunctionGroup);
 
         // greatest

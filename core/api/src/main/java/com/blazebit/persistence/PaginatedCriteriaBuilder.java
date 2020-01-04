@@ -154,6 +154,23 @@ public interface PaginatedCriteriaBuilder<T> extends FullQueryBuilder<T, Paginat
     public int getHighestKeysetOffset();
 
     /**
+     * Forces the inlining of an id query into the object query.
+     *
+     * @param withInlineIdQuery true to inline the id query, false otherwise
+     * @return The query builder for chaining calls
+     * @since 1.4.1
+     */
+    public PaginatedCriteriaBuilder<T> withInlineIdQuery(boolean withInlineIdQuery);
+
+    /**
+     * Returns whether id query should be inlined.
+     *
+     * @return true when id query should be inlined, false otherwise
+     * @since 1.4.1
+     */
+    public boolean isWithInlineIdQuery();
+
+    /**
      * Creates and returns a new {@link CriteriaBuilder} that can be used to query the id values for the current page.
      *
      * @return the {@link CriteriaBuilder} to query id values

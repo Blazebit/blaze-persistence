@@ -523,7 +523,8 @@ public class SubqueryTest extends AbstractCoreTest {
                 .end()
                 .orderByAsc("localizedCount")
                 .orderByAsc("id")
-                .page(0, 1);
+                .page(0, 1)
+                .withInlineIdQuery(false);
         // In a paginated query access to outer collections is disallowed in the order by clause
         verifyException(cb, IllegalStateException.class).getPageIdQueryString();
     }
@@ -538,7 +539,8 @@ public class SubqueryTest extends AbstractCoreTest {
                 .end()
                 .orderByAsc("localizedCount")
                 .orderByAsc("id")
-                .page(0, 1);
+                .page(0, 1)
+                .withInlineIdQuery(false);
         // In a paginated query access to outer collections is disallowed in the order by clause
         verifyException(cb, IllegalStateException.class).getPageIdQueryString();
     }

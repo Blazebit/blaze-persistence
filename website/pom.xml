@@ -218,10 +218,11 @@
                             <artifactId>asciidoctorj</artifactId>
                             <version>${version.asciidoctor}</version>
                         </dependency>
+                        <!-- Interesting stuff... https://github.com/asciidoctor/asciidoctorj/issues/680 -->
                         <dependency>
                             <groupId>org.jruby</groupId>
                             <artifactId>jruby-complete</artifactId>
-                            <version>9.1.15.0</version>
+                            <version>9.1.17.0</version>
                         </dependency>
                     </dependencies>
                 </plugin>

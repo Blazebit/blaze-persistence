@@ -433,13 +433,14 @@ public class CTETest extends AbstractCoreTest {
                 + "SELECT " + countPaginated("r.id", false) + " FROM RecursiveEntity r WHERE r.id IN (SELECT t.id FROM TestCTE t WHERE t.level < 2)";
 
         // TODO: check if we can somehow infer that the order by of children.id is unnecessary and thus be able to omit the join
+        String expectedSimpleIdQuery = "SELECT r.id FROM RecursiveEntity r WHERE r.id IN (SELECT t.id FROM TestCTE t WHERE t.level < 2) GROUP BY r.id ORDER BY r.id ASC";
         String expectedIdQuery = ""
                 + "WITH RECURSIVE TestCTE(id, name, level) AS(\n"
                 + "SELECT e.id, e.name, 0 FROM RecursiveEntity e WHERE e.parent IS NULL"
                 + "\nUNION ALL\n"
                 + "SELECT e.id, e.name, t.level + 1 FROM TestCTE t" + innerJoinRecursive("RecursiveEntity e", "t.id = e.parent.id")
                 + "\n)\n"
-                + "SELECT r.id FROM RecursiveEntity r WHERE r.id IN (SELECT t.id FROM TestCTE t WHERE t.level < 2) GROUP BY r.id ORDER BY r.id ASC";
+                + expectedSimpleIdQuery;
 
         String expectedObjectQuery = ""
                 + "WITH RECURSIVE TestCTE(id, name, level) AS(\n"
@@ -449,9 +450,20 @@ public class CTETest extends AbstractCoreTest {
                 + "\n)\n"
                 + "SELECT r.name, children_1.name FROM RecursiveEntity r LEFT JOIN r.children children_1 WHERE r.id IN :ids ORDER BY r.id ASC";
 
+        String expectedInlineObjectQuery = ""
+                + "WITH RECURSIVE TestCTE(id, name, level) AS(\n"
+                + "SELECT e.id, e.name, 0 FROM RecursiveEntity e WHERE e.parent IS NULL"
+                + "\nUNION ALL\n"
+                + "SELECT e.id, e.name, t.level + 1 FROM TestCTE t" + innerJoinRecursive("RecursiveEntity e", "t.id = e.parent.id")
+                + "\n)\n"
+                + "SELECT r.name, children_1.name FROM RecursiveEntity r LEFT JOIN r.children children_1" +
+                " WHERE r.id IN (" + function("limit", "(" + expectedSimpleIdQuery + ")", "2") + ")" +
+                " ORDER BY r.id ASC";
+
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
-        assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
+        assertEquals(expectedIdQuery, pcb.withInlineIdQuery(false).getPageIdQueryString());
         assertEquals(expectedObjectQuery, pcb.getQueryString());
+        assertEquals(expectedInlineObjectQuery, pcb.withInlineIdQuery(true).getQueryString());
 
         PagedList<Tuple> resultList = pcb.getResultList();
         // Well, it's a tuple and contains collections, so result list contains "more" results
@@ -516,14 +528,15 @@ public class CTETest extends AbstractCoreTest {
                 + "\n)\n"
                 + "SELECT " + countPaginated("r.id", false) + " FROM RecursiveEntity r" + innerJoin("TestCTE t", "r.id = t.id AND t.level < 2");
 
+        String expectedSimpleIdQuery = "SELECT r.id FROM RecursiveEntity r" + innerJoin("TestCTE t", "r.id = t.id AND t.level < 2")
+                        + " GROUP BY r.id ORDER BY r.id ASC";
         String expectedIdQuery = ""
                 + "WITH RECURSIVE TestCTE(id, name, level) AS(\n"
                 + "SELECT e.id, e.name, 0 FROM RecursiveEntity e WHERE e.parent IS NULL"
                 + "\nUNION ALL\n"
                 + "SELECT e.id, e.name, t.level + 1 FROM TestCTE t" + innerJoinRecursive("RecursiveEntity e", "t.id = e.parent.id")
                 + "\n)\n"
-                + "SELECT r.id FROM RecursiveEntity r" + innerJoin("TestCTE t", "r.id = t.id AND t.level < 2")
-                + " GROUP BY r.id ORDER BY r.id ASC";
+                + expectedSimpleIdQuery;
 
         String expectedObjectQuery = ""
                 + "WITH RECURSIVE TestCTE(id, name, level) AS(\n"
@@ -534,9 +547,19 @@ public class CTETest extends AbstractCoreTest {
                 + "SELECT r.name, children_1.name FROM RecursiveEntity r LEFT JOIN r.children children_1" + innerJoin("TestCTE t", "r.id = t.id AND t.level < 2", "r.id IN :ids")
                 + " ORDER BY r.id ASC";
 
+        String expectedInlineObjectQuery = ""
+                + "WITH RECURSIVE TestCTE(id, name, level) AS(\n"
+                + "SELECT e.id, e.name, 0 FROM RecursiveEntity e WHERE e.parent IS NULL"
+                + "\nUNION ALL\n"
+                + "SELECT e.id, e.name, t.level + 1 FROM TestCTE t" + innerJoinRecursive("RecursiveEntity e", "t.id = e.parent.id")
+                + "\n)\n"
+                + "SELECT r.name, children_1.name FROM RecursiveEntity r LEFT JOIN r.children children_1" + innerJoin("TestCTE t", "r.id = t.id AND t.level < 2", "r.id IN (" + function("limit", "(" + expectedSimpleIdQuery + ")", "2") + ")")
+                + " ORDER BY r.id ASC";
+
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
-        assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
+        assertEquals(expectedIdQuery, pcb.withInlineIdQuery(false).getPageIdQueryString());
         assertEquals(expectedObjectQuery, pcb.getQueryString());
+        assertEquals(expectedInlineObjectQuery, pcb.withInlineIdQuery(true).getQueryString());
 
         PagedList<Tuple> resultList = pcb.getResultList();
         // Well, it's a tuple and contains collections, so result list contains "more" results

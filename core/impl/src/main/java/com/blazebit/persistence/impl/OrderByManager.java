@@ -16,11 +16,13 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.impl.function.alias.AliasFunction;
 import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.SimpleQueryGenerator;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.PathExpression;
+import com.blazebit.persistence.parser.expression.PropertyExpression;
 import com.blazebit.persistence.parser.expression.modifier.ExpressionModifier;
 import com.blazebit.persistence.parser.predicate.CompoundPredicate;
 import com.blazebit.persistence.spi.JpaProvider;
@@ -43,14 +45,16 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
     private final GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor;
     private final FunctionalDependencyAnalyzerVisitor functionalDependencyAnalyzerVisitor;
     private final List<OrderByInfo> orderByInfos = new ArrayList<OrderByInfo>();
+    private final SelectManager<?> selectManager;
     private final JoinManager joinManager;
     private final AliasManager aliasManager;
     private final EntityMetamodel metamodel;
     private final JpaProvider jpaProvider;
 
-    OrderByManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, JoinManager joinManager, AliasManager aliasManager,
+    OrderByManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, SelectManager<?> selectManager, JoinManager joinManager, AliasManager aliasManager,
                    EmbeddableSplittingVisitor embeddableSplittingVisitor, FunctionalDependencyAnalyzerVisitor functionalDependencyAnalyzerVisitor, EntityMetamodel metamodel, JpaProvider jpaProvider, GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor) {
         super(queryGenerator, parameterManager, subqueryInitFactory);
+        this.selectManager = selectManager;
         this.joinManager = joinManager;
         this.embeddableSplittingVisitor = embeddableSplittingVisitor;
         this.functionalDependencyAnalyzerVisitor = functionalDependencyAnalyzerVisitor;
@@ -285,7 +289,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
         }
     }
 
-    void buildSelectClauses(StringBuilder sb, boolean allClauses, int[] keysetToSelectIndexMapping) {
+    void buildSelectClauses(StringBuilder sb, boolean allClauses, boolean aliasFunction, int[] keysetToSelectIndexMapping) {
         if (orderByInfos.isEmpty()) {
             return;
         }
@@ -308,8 +312,18 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
 
                 if (allClauses || !(selectInfo.getExpression() instanceof PathExpression)) {
                     sb.append(", ");
-                    queryGenerator.generate(selectInfo.getExpression());
-                    sb.append(" AS ").append(potentialSelectAlias);
+                    if (aliasFunction) {
+                        sb.append(jpaProvider.getCustomFunctionInvocation(AliasFunction.FUNCTION_NAME, 1));
+                        queryGenerator.generate(selectInfo.getExpression());
+                        sb.append(",'");
+                        String subquerySelectAlias = selectManager.getSubquerySelectAlias(selectInfo);
+                        sb.append(subquerySelectAlias);
+                        sb.append("')");
+                        sb.append(" AS ").append(subquerySelectAlias);
+                    } else {
+                        queryGenerator.generate(selectInfo.getExpression());
+                        sb.append(" AS ").append(potentialSelectAlias);
+                    }
                 }
             } else if (allClauses) {
                 sb.append(", ");
@@ -375,7 +389,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
         groupByExpressionGatheringVisitor.clear();
     }
 
-    void buildOrderBy(StringBuilder sb, boolean inverseOrder, boolean resolveSelectAliases, boolean resolveSimpleSelectAliases) {
+    void buildOrderBy(StringBuilder sb, boolean inverseOrder, boolean resolveSelectAliases, boolean resolveSimpleSelectAliases, boolean aliasFunction) {
         if (orderByInfos.isEmpty()) {
             return;
         }
@@ -394,14 +408,14 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
                 sb.append(", ");
             }
             
-            applyOrderBy(sb, infos.get(i), inverseOrder, resolveSimpleSelectAliases);
+            applyOrderBy(sb, infos.get(i), inverseOrder, resolveSimpleSelectAliases, aliasFunction);
         }
         queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
         queryGenerator.setClauseType(null);
         queryGenerator.setResolveSelectAliases(originalResolveSelectAliases);
     }
 
-    private void applyOrderBy(StringBuilder sb, OrderByInfo orderBy, boolean inverseOrder, boolean resolveSimpleSelectAliases) {
+    private void applyOrderBy(StringBuilder sb, OrderByInfo orderBy, boolean inverseOrder, boolean resolveSimpleSelectAliases, boolean aliasFunction) {
         AliasInfo aliasInfo = aliasManager.getAliasInfo(orderBy.getExpressionString());
         boolean hasFullJoin = joinManager.hasFullJoin();
 
@@ -413,6 +427,8 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
                 Expression selectExpression = ((SelectInfo) aliasInfo).getExpression();
                 if (resolveSimpleSelectAliases && selectExpression instanceof PathExpression) {
                     queryGenerator.generate(selectExpression);
+                } else if (aliasFunction && !queryGenerator.isResolveSelectAliases()) {
+                    sb.append(selectManager.getSubquerySelectAlias((SelectInfo) aliasInfo));
                 } else {
                     queryGenerator.generate(orderBy.getExpression());
                 }
@@ -454,6 +470,8 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
                 resolvedExpression = expressionSb.toString();
                 if (resolveSimpleSelectAliases && selectExpression instanceof PathExpression) {
                     orderExpression = selectExpression;
+                } else if (aliasFunction) {
+                    orderExpression = new PropertyExpression(selectManager.getSubquerySelectAlias((SelectInfo) aliasInfo));
                 }
                 nullable = hasFullJoin || ExpressionUtils.isNullable(metamodel, functionalDependencyAnalyzerVisitor.getConstantifiedJoinNodeAttributeCollector(), selectExpression);
             } else {

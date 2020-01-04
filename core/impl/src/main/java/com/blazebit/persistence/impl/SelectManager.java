@@ -585,6 +585,28 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         }
     }
 
+    // Thanks to the Oracle 30 characters limitation, we have to substitute the original JPQL alias here since we kind of pass that through to SQL
+
+    public String getSubquerySelectAlias(SelectInfo s) {
+        for (int i = 0; i < selectInfos.size(); i++) {
+            if (s == selectInfos.get(i)) {
+                return "synth_alias_" + i;
+            }
+        }
+
+        return null;
+    }
+
+    public String getSubquerySelectAlias(String alias) {
+        for (int i = 0; i < selectInfos.size(); i++) {
+            if (alias.equals(selectInfos.get(i).alias)) {
+                return "synth_alias_" + i;
+            }
+        }
+
+        return null;
+    }
+
     /**
      * @author Christian Beikov
      * @since 1.2.0

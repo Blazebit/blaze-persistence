@@ -102,7 +102,7 @@ link:{core_jdoc}/persistence/FullQueryBuilder.html#pageAndNavigate(java.lang.Obj
 In {projectname} we have followed a more involved approach for implementing pagination than plainly using JPA standard
 methods like `javax.persistence.Query.setMaxResults()` or `javax.persistence.Query.setFirstResult()` to steer the result set
 dimensions. This is due to deficiencies in some JPA providers when it comes to handling paginated queries containing
-join fetches for collections.
+join fetches for collections, but also to support custom pagination that is necessary for reporting queries or entity views.
 
 NOTE: By default, when using fetch joins for collections with Hibernate, all results are fetched instead of only the selected page.
 
@@ -122,8 +122,10 @@ page.
 
 You can disable the *count query* by passing `false` to `PaginatedCriteriaBuilder.withCountQuery(boolean)`.
 
-NOTE: In a future version it might be possible to combine queries. For more information on that see https://github.com/Blazebit/blaze-persistence/issues/248[#248]
-and https://github.com/Blazebit/blaze-persistence/issues/249[#249].
+By default, a required *ID query* is embedded into the *object query* as subquery if the JPA Provider and DBMS dialect supports that.
+The inlining can be forced or disabled by passing `true` or `false` to `PaginatedCriteriaBuilder.withInlineIdQuery(boolean)`.
+
+NOTE: In a future version it might be possible to also inline the count query. For more information on that see https://github.com/Blazebit/blaze-persistence/issues/249[#249].
 
 TIP: You can inspect the query strings by using link:{core_jdoc}/persistence/PaginatedCriteriaBuilder.html#getPageCountQueryString()[`getPageCountQueryString()`],
 link:{core_jdoc}/persistence/PaginatedCriteriaBuilder.html#getPageIdQueryString()[`getPageIdQueryString()`] and link:{core_jdoc}/persistence/Queryable.html#getQueryString()[`getQueryString()`]

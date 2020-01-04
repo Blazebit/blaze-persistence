@@ -356,11 +356,13 @@ Where `order_specification` is one of `'ASC'`, `'DESC'`, `'ASC NULLS FIRST'`, `'
 
 Aggregates/concatenates the values produced by `expression` to a single string separated by `separator_expression` in the order defined by the `ORDER BY` clause.
 
+Example: `GROUP_CONCAT('DISTINCT', d.name, 'SEPARATOR', ', ', 'ORDER BY', d.name, d.id, 'DESC')`
+
 WARNING: This function might not be supported by all DBMS, so make sure your target database does before using it
 
 ===== WINDOW functions
 
-Syntax: `WINDOW_XXX ( arguments+, (, 'FILTER BY' (, filter_by_expression)+ )? (, 'PARTITION BY' (, partition_by_expression)+ )? (, 'ORDER BY' (, order_by_expression (, order_specification ) )+ )? ((, 'RANGE' | 'ROWS' | 'GROUPS') (, ( 'UNBOUNDED PRECEDING' | ( number_expression, 'PRECEDING') | 'CURRENT ROW'), 'AND', ( 'UNBOUNDED FOLLOWING' | ( number_expression, 'FOLLOWING') | 'CURRENT ROW' ) ) )`
+Syntax: `WINDOW_XXX ( arguments+, (, 'FILTER' (, filter_by_expression)+ )? (, 'PARTITION BY' (, partition_by_expression)+ )? (, 'ORDER BY' (, order_by_expression (, order_specification ) )+ )? ((, 'RANGE' | 'ROWS' | 'GROUPS') (, ( 'UNBOUNDED PRECEDING' | ( number_expression, 'PRECEDING') | 'CURRENT ROW'), 'AND', ( 'UNBOUNDED FOLLOWING' | ( number_expression, 'FOLLOWING') | 'CURRENT ROW' ) ) )`
 
 Where `order_specification` is one of `'ASC'`, `'DESC'`, `'ASC NULLS FIRST'`, `'ASC NULLS LAST'`, `'DESC NULLS FIRST'`, `'DESC NULLS LAST'`.
 
@@ -390,6 +392,8 @@ There also are the following window functions:
 * `NTH_VALUE`
 
 Window functions are explained in more depth in the <<window-functions,window functions>> chapter.
+
+Example: `WINDOW_AVG(c.age, 'FILTER', c.age > 10, 'PARTITION BY', c.name)`
 
 WARNING: This is an internal function which is not intended for direct use and might change without notice.
 
@@ -427,6 +431,14 @@ Produces a DBMS native row value comparison expression such as `(row_value_1_1, 
 
 WARNING: This is an internal function that is used to implement optimized keyset pagination. It is not intended for direct use and might change without notice.
 
+==== COMPARE_ROW_VALUE_SUBQUERY function
+
+Syntax: `COMPARE_ROW_VALUE_SUBQUERY ( comparison_operator, expr1, expr2, ..., subquery )`
+
+Renders `(expr1, expr2, ...) comparison_operator (subquery)`.
+
+WARNING: This is an internal function that is used to implement inlining of an id query as subquery into the main query. It is not intended for direct use and might change without notice.
+
 ==== SUBQUERY function
 
 Syntax: `SUBQUERY ( subquery )`
@@ -442,6 +454,22 @@ Syntax: `ENTITY_FUNCTION ( subquery, entityName, valuesClause, valuesAliases, sy
 Rewrites the passed in query by replacing placeholder SQL parts with the proper SQL.
 
 WARNING: This is an internal function that is used to implement entity functions like the `VALUES` clause for subqueries. It is not intended for direct use and might change without notice.
+
+==== ALIAS function
+
+Syntax: `ALIAS ( expr, alias )`
+
+Renders the expression argument with the given alias like `expr as alias`.
+
+WARNING: This is an internal function that is used to assign SQL aliases for subquery select items.
+
+==== COLUMN_TRUNC function
+
+Syntax: `COLUMN_TRUNC ( subquery, number )`
+
+Renders `(select col0, col1, ... from (subquery) tmp)` until `colX` for `X < number` to truncate the subquery select items.
+
+WARNING: This is an internal function that is used to implement ordering by select aliases of complex expression within subqueries.
 
 === Custom JPQL functions
 

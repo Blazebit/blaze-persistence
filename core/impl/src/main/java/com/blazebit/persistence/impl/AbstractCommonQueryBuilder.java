@@ -252,7 +252,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.havingManager = new HavingManager<>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory, groupByExpressionGatheringVisitor);
 
         this.selectManager = new SelectManager<>(queryGenerator, parameterManager, this, this.joinManager, this.aliasManager, subqueryInitFactory, expressionFactory, mainQuery.jpaProvider, mainQuery, groupByExpressionGatheringVisitor, builder.resultType);
-        this.orderByManager = new OrderByManager(queryGenerator, parameterManager, subqueryInitFactory, this.joinManager, this.aliasManager, embeddableSplittingVisitor, functionalDependencyAnalyzerVisitor, mainQuery.metamodel, mainQuery.jpaProvider, groupByExpressionGatheringVisitor);
+        this.orderByManager = new OrderByManager(queryGenerator, parameterManager, subqueryInitFactory, selectManager, this.joinManager, this.aliasManager, embeddableSplittingVisitor, functionalDependencyAnalyzerVisitor, mainQuery.metamodel, mainQuery.jpaProvider, groupByExpressionGatheringVisitor);
         this.keysetManager = new KeysetManager(this, queryGenerator, parameterManager, mainQuery.jpaProvider, mainQuery.dbmsDialect);
 
         final SizeTransformationVisitor sizeTransformationVisitor = new SizeTransformationVisitor(mainQuery, subqueryInitFactory, joinManager, mainQuery.jpaProvider);
@@ -323,7 +323,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.havingManager = new HavingManager<>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory, groupByExpressionGatheringVisitor);
 
         this.selectManager = new SelectManager<>(queryGenerator, parameterManager, this, this.joinManager, this.aliasManager, subqueryInitFactory, expressionFactory, mainQuery.jpaProvider, mainQuery, groupByExpressionGatheringVisitor, resultClazz);
-        this.orderByManager = new OrderByManager(queryGenerator, parameterManager, subqueryInitFactory, this.joinManager, this.aliasManager, embeddableSplittingVisitor, functionalDependencyAnalyzerVisitor, mainQuery.metamodel, mainQuery.jpaProvider, groupByExpressionGatheringVisitor);
+        this.orderByManager = new OrderByManager(queryGenerator, parameterManager, subqueryInitFactory, selectManager, this.joinManager, this.aliasManager, embeddableSplittingVisitor, functionalDependencyAnalyzerVisitor, mainQuery.metamodel, mainQuery.jpaProvider, groupByExpressionGatheringVisitor);
         this.keysetManager = new KeysetManager(this, queryGenerator, parameterManager, mainQuery.jpaProvider, mainQuery.dbmsDialect);
 
         final SizeTransformationVisitor sizeTransformationVisitor = new SizeTransformationVisitor(mainQuery, subqueryInitFactory, joinManager, mainQuery.jpaProvider);
@@ -2688,7 +2688,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     protected void appendOrderByClause(StringBuilder sbSelectFrom) {
-        orderByManager.buildOrderBy(sbSelectFrom, false, false, false);
+        orderByManager.buildOrderBy(sbSelectFrom, false, false, false, false);
     }
     
     protected Map<DbmsModificationState, String> getModificationStates(Map<Class<?>, Map<String, DbmsModificationState>> explicitVersionEntities) {

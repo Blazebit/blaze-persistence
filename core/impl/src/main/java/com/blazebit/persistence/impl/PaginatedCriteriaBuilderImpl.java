@@ -33,7 +33,10 @@ import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.builder.object.DelegatingKeysetExtractionObjectBuilder;
 import com.blazebit.persistence.impl.builder.object.KeysetExtractionObjectBuilder;
+import com.blazebit.persistence.impl.function.alias.AliasFunction;
+import com.blazebit.persistence.impl.function.coltrunc.ColumnTruncFunction;
 import com.blazebit.persistence.impl.function.pageposition.PagePositionFunction;
+import com.blazebit.persistence.impl.function.rowvalue.RowValueSubqueryComparisonFunction;
 import com.blazebit.persistence.impl.keyset.KeysetMode;
 import com.blazebit.persistence.impl.keyset.KeysetPaginationHelper;
 import com.blazebit.persistence.impl.keyset.SimpleKeysetLink;
@@ -68,12 +71,12 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     private static final String ENTITY_PAGE_POSITION_PARAMETER_NAME = "_entityPagePositionParameter";
     private static final String PAGE_POSITION_ID_QUERY_ALIAS_PREFIX = "_page_position_";
     private static final Set<ClauseType> OBJECT_QUERY_CLAUSE_EXCLUSIONS = EnumSet.complementOf(EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT));
-    private static final ResolvedExpression[] EMPTY = new ResolvedExpression[0];
 
     private boolean keysetExtraction;
     private boolean withExtractAllKeysets = false;
     private boolean withCountQuery = true;
     private boolean withForceIdQuery = false;
+    private Boolean withInlineIdQuery;
     private int highestOffset = 0;
     private final KeysetPage keysetPage;
     private final ResolvedExpression[] identifierExpressions;
@@ -248,6 +251,26 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     }
 
     @Override
+    public PaginatedCriteriaBuilder<T> withInlineIdQuery(boolean withInlineIdQuery) {
+        if (this.withInlineIdQuery != null && this.withInlineIdQuery != withInlineIdQuery) {
+            prepareForModification(ClauseType.SELECT);
+        }
+        this.withInlineIdQuery = withInlineIdQuery;
+        return this;
+    }
+
+    @Override
+    public boolean isWithInlineIdQuery() {
+        if (withInlineIdQuery == null) {
+            // TODO: we could emulate the LIMIT function with window functions
+            // TODO: we could emulate row value constructor support by using an EXISTS predicate and a nested subquery
+            withInlineIdQuery = mainQuery.jpaProvider.supportsSubqueryInFunction() && mainQuery.jpaProvider.supportsSubqueryAliasShadowing()
+                    && (getIdentifierExpressionsToUse().length == 1 || mainQuery.dbmsDialect.supportsRowValueConstructor() && mainQuery.jpaProvider.supportsNonScalarSubquery());
+        }
+        return withInlineIdQuery;
+    }
+
+    @Override
     protected ResolvedExpression[] getIdentifierExpressions() {
         if (identifierExpressions != null) {
             return identifierExpressions;
@@ -314,15 +337,18 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         TypedQuery<?> idQuery = null;
         TypedQuery<T> objectQuery;
         KeysetExtractionObjectBuilder<T> objectBuilder;
-        if (hasCollections || withForceIdQuery) {
+        boolean inlinedIdQuery;
+        if (!isWithInlineIdQuery() && (hasCollections || withForceIdQuery)) {
             String idQueryString = getPageIdQueryStringWithoutCheck();
             idQuery = getIdQuery(idQueryString, normalQueryMode, keyRestrictedLeftJoins);
             objectQuery = getObjectQueryById(normalQueryMode, keyRestrictedLeftJoins);
             objectBuilder = null;
+            inlinedIdQuery = false;
         } else {
             Map.Entry<TypedQuery<T>, KeysetExtractionObjectBuilder<T>> entry = getObjectQuery(normalQueryMode, keyRestrictedLeftJoins);
             objectQuery = entry.getKey();
             objectBuilder = entry.getValue();
+            inlinedIdQuery = isWithInlineIdQuery() && (hasCollections || withForceIdQuery);
         }
         PaginatedTypedQueryImpl<T> query = new PaginatedTypedQueryImpl<>(
                 withExtractAllKeysets,
@@ -341,7 +367,8 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
                 keysetToSelectIndexMapping,
                 keysetMode,
                 keysetPage,
-                forceFirstResult
+                forceFirstResult,
+                inlinedIdQuery
         );
         return query;
     }
@@ -395,7 +422,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     }
 
     private String getPageIdQueryStringWithoutCheck() {
-        if (cachedIdQueryString == null && (hasCollections || withForceIdQuery)) {
+        if (cachedIdQueryString == null && !isWithInlineIdQuery() && (hasCollections || withForceIdQuery)) {
             cachedIdQueryString = buildPageIdQueryString(false);
         }
 
@@ -403,7 +430,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     }
 
     protected String getExternalPageIdQueryString() {
-        if (cachedExternalIdQueryString == null && (hasCollections || withForceIdQuery)) {
+        if (cachedExternalIdQueryString == null && !isWithInlineIdQuery() && (hasCollections || withForceIdQuery)) {
             cachedExternalIdQueryString = buildPageIdQueryString(true);
         }
 
@@ -419,7 +446,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     @Override
     protected String getBaseQueryString() {
         if (cachedQueryString == null) {
-            if ((hasCollections || withForceIdQuery)) {
+            if (!isWithInlineIdQuery() && (hasCollections || withForceIdQuery)) {
                 cachedQueryString = buildBaseQueryString(false);
             } else {
                 cachedQueryString = buildObjectQueryString(false);
@@ -431,7 +458,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
     protected String getExternalQueryString() {
         if (cachedExternalQueryString == null) {
-            if ((hasCollections || withForceIdQuery)) {
+            if (!isWithInlineIdQuery() && (hasCollections || withForceIdQuery)) {
                 cachedExternalQueryString = buildBaseQueryString(true);
             } else {
                 cachedExternalQueryString = buildObjectQueryString(true);
@@ -503,59 +530,53 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
 
         // initialize index mappings that we use to avoid putting keyset expressions into select clauses multiple times
-        if (hasCollections || withForceIdQuery) {
-            ResolvedExpression[] identifierExpressionsToUse = getIdentifierExpressionsToUse();
-            Map<String, Integer> identifierExpressionStringMap = new HashMap<>(identifierExpressionsToUse.length);
-
-            for (int i = 0; i < identifierExpressionsToUse.length; i++) {
-                identifierExpressionStringMap.put(identifierExpressionsToUse[i].getExpressionString(), i);
-            }
-
-            keysetToSelectIndexMapping = new int[orderByExpressions.size()];
-            identifierToUseSelectAliases = new String[identifierExpressionsToUse.length];
-
-            Integer index;
-            for (int i = 0; i < orderByExpressions.size(); i++) {
-                String potentialSelectAlias = orderByExpressions.get(i).getExpression().toString();
-                AliasInfo aliasInfo = aliasManager.getAliasInfo(potentialSelectAlias);
-                if (aliasInfo instanceof SelectInfo) {
-                    index = identifierExpressionStringMap.get(((SelectInfo) aliasInfo).getExpression().toString());
-                    if (index == null) {
-                        keysetToSelectIndexMapping[i] = -1;
-                    } else {
-                        identifierToUseSelectAliases[i] = potentialSelectAlias;
-                        keysetToSelectIndexMapping[i] = index;
+        if (!isWithInlineIdQuery() && (hasCollections || withForceIdQuery)) {
+            initializeOrderByAliasesWithIdentifierToUse(orderByExpressions);
+        } else if (keysetExtraction) {
+            if (isWithInlineIdQuery()) {
+                initializeOrderByAliasesWithIdentifierToUse(orderByExpressions);
+                // If we have no select item, this means we implicitly select the root and thus need to offset the index mapping as we will append that
+                if (selectManager.getSelectInfos().size() == 0) {
+                    for (int j = 0; j < keysetToSelectIndexMapping.length; j++) {
+                        if (keysetToSelectIndexMapping[j] != -1) {
+                            keysetToSelectIndexMapping[j] = keysetToSelectIndexMapping[j] + 1;
+                        }
                     }
-                } else if (keysetExtraction) {
-                    index = identifierExpressionStringMap.get(potentialSelectAlias);
+                }
+            } else {
+                identifierToUseSelectAliases = null;
+            }
+            List<SelectInfo> selectInfos = selectManager.getSelectInfos();
+            if (selectInfos.size() == 0) {
+                if (keysetToSelectIndexMapping == null) {
+                    keysetToSelectIndexMapping = new int[orderByExpressions.size()];
+                    Arrays.fill(keysetToSelectIndexMapping, -1);
+                }
+            } else {
+                Map<String, Integer> selectExpressionStringMap = new HashMap<>(selectInfos.size() * 2);
+                for (int i = 0; i < selectInfos.size(); i++) {
+                    SelectInfo selectInfo = selectInfos.get(i);
+                    selectExpressionStringMap.put(selectInfo.getExpression().toString(), i);
+                    if (selectInfo.getAlias() != null) {
+                        selectExpressionStringMap.put(selectInfo.getAlias(), i);
+                    }
+                }
+
+                keysetToSelectIndexMapping = new int[orderByExpressions.size()];
+
+                Integer index;
+                for (int i = 0; i < orderByExpressions.size(); i++) {
+                    index = selectExpressionStringMap.get(orderByExpressions.get(i).getExpression().toString());
                     keysetToSelectIndexMapping[i] = index == null ? -1 : index;
                 }
             }
-            if (!keysetExtraction) {
-                keysetToSelectIndexMapping = null;
-            }
-        } else if (keysetExtraction) {
-            List<SelectInfo> selectInfos = selectManager.getSelectInfos();
-            Map<String, Integer> selectExpressionStringMap = new HashMap<>(selectInfos.size() * 2);
-            for (int i = 0; i < selectInfos.size(); i++) {
-                SelectInfo selectInfo = selectInfos.get(i);
-                selectExpressionStringMap.put(selectInfo.getExpression().toString(), i);
-                if (selectInfo.getAlias() != null) {
-                    selectExpressionStringMap.put(selectInfo.getAlias(), i);
-                }
-            }
-
-            keysetToSelectIndexMapping = new int[orderByExpressions.size()];
-            identifierToUseSelectAliases = null;
-
-            Integer index;
-            for (int i = 0; i < orderByExpressions.size(); i++) {
-                index = selectExpressionStringMap.get(orderByExpressions.get(i).getExpression().toString());
-                keysetToSelectIndexMapping[i] = index == null ? -1 : index;
-            }
         } else {
             keysetToSelectIndexMapping = null;
-            identifierToUseSelectAliases = null;
+            if (isWithInlineIdQuery()) {
+                initializeOrderByAliasesWithIdentifierToUse(orderByExpressions);
+            } else {
+                identifierToUseSelectAliases = null;
+            }
         }
 
         // When we do keyset extraction of have complex order bys, we have to append additional expression to the end of the select clause which have to be removed later
@@ -564,6 +585,39 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
         // No need to do the check again if no mutation occurs
         needsCheck = false;
+    }
+
+    private void initializeOrderByAliasesWithIdentifierToUse(List<OrderByExpression> orderByExpressions) {
+        ResolvedExpression[] identifierExpressionsToUse = getIdentifierExpressionsToUse();
+        Map<String, Integer> identifierExpressionStringMap = new HashMap<>(identifierExpressionsToUse.length);
+
+        for (int i = 0; i < identifierExpressionsToUse.length; i++) {
+            identifierExpressionStringMap.put(identifierExpressionsToUse[i].getExpressionString(), i);
+        }
+
+        keysetToSelectIndexMapping = new int[orderByExpressions.size()];
+        identifierToUseSelectAliases = new String[identifierExpressionsToUse.length];
+
+        Integer index;
+        for (int i = 0; i < orderByExpressions.size(); i++) {
+            String potentialSelectAlias = orderByExpressions.get(i).getExpression().toString();
+            AliasInfo aliasInfo = aliasManager.getAliasInfo(potentialSelectAlias);
+            if (aliasInfo instanceof SelectInfo) {
+                index = identifierExpressionStringMap.get(((SelectInfo) aliasInfo).getExpression().toString());
+                if (index == null) {
+                    keysetToSelectIndexMapping[i] = -1;
+                } else {
+                    identifierToUseSelectAliases[i] = potentialSelectAlias;
+                    keysetToSelectIndexMapping[i] = index;
+                }
+            } else if (keysetExtraction) {
+                index = identifierExpressionStringMap.get(potentialSelectAlias);
+                keysetToSelectIndexMapping[i] = index == null ? -1 : index;
+            }
+        }
+        if (!keysetExtraction) {
+            keysetToSelectIndexMapping = null;
+        }
     }
 
     private ResolvedExpression[] findMissingExpressions(ResolvedExpression[] targetIdentifierExpressions, ResolvedExpression[] identifierExpressions) {
@@ -604,9 +658,17 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             expectedResultType = selectManager.getExpectedQueryResultType();
         }
 
+        Set<ClauseType> clauseExclusions;
+        if (isWithInlineIdQuery() && (hasCollections || withForceIdQuery)) {
+            clauseExclusions = OBJECT_QUERY_CLAUSE_EXCLUSIONS;
+        } else if (hasGroupBy) {
+            clauseExclusions = NO_CLAUSE_EXCLUSION;
+        } else {
+            clauseExclusions = OBJECT_QUERY_WITHOUT_GROUP_BY_EXCLUSIONS;
+        }
         TypedQuery<T> query;
 
-        if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, hasGroupBy ? NO_CLAUSE_EXCLUSION : OBJECT_QUERY_WITHOUT_GROUP_BY_EXCLUSIONS)) {
+        if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, clauseExclusions)) {
             query = (TypedQuery<T>) em.createQuery(queryString, expectedResultType);
             if (isCacheable()) {
                 mainQuery.jpaProvider.setCacheable(query);
@@ -616,7 +678,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             TypedQuery<T> baseQuery = (TypedQuery<T>) em.createQuery(queryString, expectedResultType);
             Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery);
 
-            List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, hasGroupBy ? NO_CLAUSE_EXCLUSION : OBJECT_QUERY_WITHOUT_GROUP_BY_EXCLUSIONS);
+            List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, clauseExclusions);
             List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
             boolean shouldRenderCteNodes = renderCteNodes(false);
             List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.EMPTY_LIST;
@@ -772,7 +834,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         havingManager.buildClause(sbSelectFrom);
 
         // Resolve select aliases because we might omit the select items
-        orderByManager.buildOrderBy(sbSelectFrom, inverseOrder, true, false);
+        orderByManager.buildOrderBy(sbSelectFrom, inverseOrder, true, false, false);
 
         queryGenerator.setAliasPrefix(null);
         return sbSelectFrom.toString();
@@ -783,28 +845,43 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         if (externalRepresentation && isMainQuery) {
             mainQuery.cteManager.buildClause(sbSelectFrom);
         }
-        buildPageIdQueryString(sbSelectFrom, externalRepresentation);
+        buildPageIdQueryString(sbSelectFrom, false, externalRepresentation);
         return sbSelectFrom.toString();
     }
 
-    private String buildPageIdQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
+    private String buildPageIdQueryString(StringBuilder sbSelectFrom, boolean aliasFunction, boolean externalRepresentation) {
         sbSelectFrom.append("SELECT ");
         queryGenerator.setQueryBuffer(sbSelectFrom);
         queryGenerator.setClauseType(ClauseType.SELECT);
         ResolvedExpression[] identifierExpressionsToUse = getIdentifierExpressionsToUse();
 
-        for (int i = 0; i < identifierExpressionsToUse.length; i++) {
-            identifierExpressionsToUse[i].getExpression().accept(queryGenerator);
-            if (identifierToUseSelectAliases[i] != null) {
-                sbSelectFrom.append(" AS ");
-                sbSelectFrom.append(identifierToUseSelectAliases[i]);
+        if (aliasFunction && !externalRepresentation && needsNewIdList) {
+            for (int i = 0; i < identifierExpressionsToUse.length; i++) {
+                sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(AliasFunction.FUNCTION_NAME, 1));
+                identifierExpressionsToUse[i].getExpression().accept(queryGenerator);
+                sbSelectFrom.append(",'").append(ColumnTruncFunction.SYNTHETIC_COLUMN_PREFIX);
+                sbSelectFrom.append(i);
+                sbSelectFrom.append("')");
+                if (identifierToUseSelectAliases[i] != null) {
+                    sbSelectFrom.append(" AS ");
+                    sbSelectFrom.append(selectManager.getSubquerySelectAlias(identifierToUseSelectAliases[i]));
+                }
+                sbSelectFrom.append(", ");
             }
-            sbSelectFrom.append(", ");
+        } else {
+            for (int i = 0; i < identifierExpressionsToUse.length; i++) {
+                identifierExpressionsToUse[i].getExpression().accept(queryGenerator);
+                if (identifierToUseSelectAliases[i] != null) {
+                    sbSelectFrom.append(" AS ");
+                    sbSelectFrom.append(identifierToUseSelectAliases[i]);
+                }
+                sbSelectFrom.append(", ");
+            }
         }
         sbSelectFrom.setLength(sbSelectFrom.length() - 2);
 
         if (needsNewIdList) {
-            orderByManager.buildSelectClauses(sbSelectFrom, keysetExtraction, keysetToSelectIndexMapping);
+            orderByManager.buildSelectClauses(sbSelectFrom, keysetExtraction, aliasFunction && !externalRepresentation, keysetToSelectIndexMapping);
         }
 
         List<String> whereClauseConjuncts = new ArrayList<>();
@@ -843,7 +920,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         havingManager.buildClause(sbSelectFrom);
 
         // Resolve select aliases to their actual expressions only if the select items aren't included
-        orderByManager.buildOrderBy(sbSelectFrom, inverseOrder, !needsNewIdList, needsNewIdList);
+        orderByManager.buildOrderBy(sbSelectFrom, inverseOrder, !needsNewIdList, needsNewIdList, aliasFunction && !externalRepresentation);
 
         // execute illegal collection access check
         orderByManager.acceptVisitor(new IllegalSubqueryDetector(aliasManager));
@@ -866,7 +943,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         selectManager.buildSelect(sbSelectFrom, false, externalRepresentation);
 
         /**
-         * we have already selected the IDs so now we only need so select the
+         * we have already selected the IDs so now we only need to select the
          * fields and apply the ordering all other clauses are not required any
          * more and therefore we can also omit any joins which the SELECT or the
          * ORDER_BY clause do not depend on
@@ -914,7 +991,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             havingManager.buildClause(sbSelectFrom);
         }
 
-        orderByManager.buildOrderBy(sbSelectFrom, false, false, false);
+        orderByManager.buildOrderBy(sbSelectFrom, false, false, false, false);
     }
 
     private String buildObjectQueryString(boolean externalRepresentation) {
@@ -930,35 +1007,115 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         selectManager.buildSelect(sbSelectFrom, false, externalRepresentation);
 
         if (keysetExtraction) {
-            orderByManager.buildSelectClauses(sbSelectFrom, true, keysetToSelectIndexMapping);
+            if (selectManager.getSelectInfos().size() == 0 && isWithInlineIdQuery()) {
+                // We need to pass a null keysetToSelectIndexMapping in this case to force rendering the keyset relevant expressions to the object query
+                orderByManager.buildSelectClauses(sbSelectFrom, true, false, null);
+            } else {
+                orderByManager.buildSelectClauses(sbSelectFrom, true, false, keysetToSelectIndexMapping);
+            }
         }
 
         List<String> whereClauseConjuncts = new ArrayList<>();
         List<String> optionalWhereClauseConjuncts = new ArrayList<>();
-        joinManager.buildClause(sbSelectFrom, hasGroupBy ? NO_CLAUSE_EXCLUSION : OBJECT_QUERY_WITHOUT_GROUP_BY_EXCLUSIONS, null, false, externalRepresentation, false, optionalWhereClauseConjuncts, whereClauseConjuncts, null, explicitVersionEntities, nodesToFetch, Collections.EMPTY_SET);
 
-        if (keysetMode == KeysetMode.NONE || keysetManager.getKeysetLink().getKeyset().getTuple() == null) {
-            whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, null);
-        } else {
-            sbSelectFrom.append(" WHERE ");
+        if (isWithInlineIdQuery() && (hasCollections || withForceIdQuery)) {
+            joinManager.buildClause(sbSelectFrom, OBJECT_QUERY_CLAUSE_EXCLUSIONS, null, false, externalRepresentation, false, optionalWhereClauseConjuncts, whereClauseConjuncts, null, explicitVersionEntities, nodesToFetch, Collections.EMPTY_SET);
 
-            int positionalOffset = parameterManager.getPositionalOffset();
-            if (mainQuery.getQueryConfiguration().isOptimizedKeysetPredicateRenderingEnabled()) {
-                keysetManager.buildOptimizedKeysetPredicate(sbSelectFrom, positionalOffset);
-            } else {
-                keysetManager.buildKeysetPredicate(sbSelectFrom, positionalOffset);
+            ResolvedExpression[] identifierExpressions = getIdentifierExpressions();
+            ResolvedExpression[] resultUniqueExpressions = getUniqueIdentifierExpressions();
+
+            if (resultUniqueExpressions != null) {
+                identifierExpressions = resultUniqueExpressions;
             }
 
-            if (whereManager.hasPredicates() || !whereClauseConjuncts.isEmpty()) {
+            sbSelectFrom.append(" WHERE ");
+            queryGenerator.setQueryBuffer(sbSelectFrom);
+            if (identifierExpressions.length == 1) {
+                identifierExpressions[0].getExpression().accept(queryGenerator);
+                sbSelectFrom.append(" IN ");
+                sbSelectFrom.append('(');
+
+                if (needsNewIdList && !externalRepresentation) {
+                    sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(ColumnTruncFunction.FUNCTION_NAME, 1));
+                }
+
+                sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation("limit", 1));
+                sbSelectFrom.append('(');
+                buildPageIdQueryString(sbSelectFrom, true, externalRepresentation);
+                sbSelectFrom.append(')');
+                sbSelectFrom.append(',').append(maxResults);
+                if (firstResult != 0 && (keysetMode == KeysetMode.NONE || keysetManager.getKeysetLink().getKeyset().getTuple() == null)) {
+                    sbSelectFrom.append(',').append(firstResult);
+                }
+                sbSelectFrom.append(')');
+                if (needsNewIdList && !externalRepresentation) {
+                    sbSelectFrom.append(",").append(identifierExpressions.length).append(')');
+                }
+                sbSelectFrom.append(')');
+            } else {
+                sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(RowValueSubqueryComparisonFunction.FUNCTION_NAME, 1))
+                        .append('\'').append("IN").append('\'');
+
+                for (int j = 0; j < identifierExpressions.length; j++) {
+                    sbSelectFrom.append(',');
+                    identifierExpressions[j].getExpression().accept(queryGenerator);
+                }
+                sbSelectFrom.append(',');
+
+                if (needsNewIdList && !externalRepresentation) {
+                    sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(ColumnTruncFunction.FUNCTION_NAME, 1));
+                }
+
+                sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation("limit", 1));
+                sbSelectFrom.append('(');
+                buildPageIdQueryString(sbSelectFrom, true, externalRepresentation);
+                sbSelectFrom.append(')');
+                sbSelectFrom.append(',').append(maxResults);
+                if (firstResult != 0 && (keysetMode == KeysetMode.NONE || keysetManager.getKeysetLink().getKeyset().getTuple() == null)) {
+                    sbSelectFrom.append(',').append(firstResult);
+                }
+                sbSelectFrom.append(')');
+                if (needsNewIdList && !externalRepresentation) {
+                    sbSelectFrom.append(",").append(identifierExpressions.length).append(')');
+                }
+                sbSelectFrom.append(") = true");
+            }
+
+            if (!whereClauseConjuncts.isEmpty()) {
                 sbSelectFrom.append(" AND ");
                 whereManager.buildClausePredicate(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, null);
             }
+
+            if (hasGroupBy) {
+                groupByManager.buildGroupBy(sbSelectFrom, OBJECT_QUERY_CLAUSE_EXCLUSIONS);
+                havingManager.buildClause(sbSelectFrom);
+            }
+        } else {
+            joinManager.buildClause(sbSelectFrom, hasGroupBy ? NO_CLAUSE_EXCLUSION : OBJECT_QUERY_WITHOUT_GROUP_BY_EXCLUSIONS, null, false, externalRepresentation, false, optionalWhereClauseConjuncts, whereClauseConjuncts, null, explicitVersionEntities, nodesToFetch, Collections.EMPTY_SET);
+
+            if (keysetMode == KeysetMode.NONE || keysetManager.getKeysetLink().getKeyset().getTuple() == null) {
+                whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, null);
+            } else {
+                sbSelectFrom.append(" WHERE ");
+
+                int positionalOffset = parameterManager.getPositionalOffset();
+                if (mainQuery.getQueryConfiguration().isOptimizedKeysetPredicateRenderingEnabled()) {
+                    keysetManager.buildOptimizedKeysetPredicate(sbSelectFrom, positionalOffset);
+                } else {
+                    keysetManager.buildKeysetPredicate(sbSelectFrom, positionalOffset);
+                }
+
+                if (whereManager.hasPredicates() || !whereClauseConjuncts.isEmpty()) {
+                    sbSelectFrom.append(" AND ");
+                    whereManager.buildClausePredicate(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, null);
+                }
+            }
+            appendGroupByClause(sbSelectFrom);
         }
 
         boolean inverseOrder = keysetMode == KeysetMode.PREVIOUS;
 
-        appendGroupByClause(sbSelectFrom);
-        orderByManager.buildOrderBy(sbSelectFrom, inverseOrder, false, false);
+        orderByManager.buildOrderBy(sbSelectFrom, inverseOrder, false, false, false);
 
         // execute illegal collection access check
         orderByManager.acceptVisitor(new IllegalSubqueryDetector(aliasManager));

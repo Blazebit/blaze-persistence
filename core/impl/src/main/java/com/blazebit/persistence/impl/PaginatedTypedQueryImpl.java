@@ -73,9 +73,10 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
     private final KeysetMode keysetMode;
     private final KeysetPage keysetPage;
     private final boolean forceFirstResult;
+    private final boolean inlinedIdQuery;
 
     public PaginatedTypedQueryImpl(boolean withExtractAllKeysets, boolean withCount, int highestOffset, TypedQuery<?> countQuery, TypedQuery<?> idQuery, TypedQuery<X> objectQuery, KeysetExtractionObjectBuilder<X> objectBuilder, Set<Parameter<?>> parameters,
-                                   Object entityId, int firstResult, int pageSize, int identifierCount, boolean needsNewIdList, int[] keysetToSelectIndexMapping, KeysetMode keysetMode, KeysetPage keysetPage, boolean forceFirstResult) {
+                                   Object entityId, int firstResult, int pageSize, int identifierCount, boolean needsNewIdList, int[] keysetToSelectIndexMapping, KeysetMode keysetMode, KeysetPage keysetPage, boolean forceFirstResult, boolean inlinedIdQuery) {
         this.withExtractAllKeysets = withExtractAllKeysets;
         this.withCount = withCount;
         this.highestOffset = highestOffset;
@@ -93,6 +94,7 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
         this.keysetMode = keysetMode;
         this.keysetPage = keysetPage;
         this.forceFirstResult = forceFirstResult;
+        this.inlinedIdQuery = inlinedIdQuery;
 
         Map<String, Parameter<?>> params = new HashMap<>(parameters.size());
         for (Parameter<?> parameter : parameters) {
@@ -321,12 +323,14 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
             PagedList<X> pagedResultList = new PagedArrayList<X>(queryResultList, newKeyset, totalSize, queryFirstResult, pageSize);
             return pagedResultList;
         } else {
-            objectQuery.setMaxResults(pageSize);
+            if (!inlinedIdQuery) {
+                objectQuery.setMaxResults(pageSize);
 
-            if (forceFirstResult || keysetMode == KeysetMode.NONE) {
-                objectQuery.setFirstResult(firstRow);
-            } else {
-                objectQuery.setFirstResult(0);
+                if (forceFirstResult || keysetMode == KeysetMode.NONE) {
+                    objectQuery.setFirstResult(firstRow);
+                } else {
+                    objectQuery.setFirstResult(0);
+                }
             }
 
             List<X> result = objectQuery.getResultList();
