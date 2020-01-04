@@ -1,0 +1,24 @@
+= Blaze-Persistence 1.4.0 Release
+Christian Beikov
+2020-01-04 0
+:description: Blaze-Persistence version 1.4.0 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+We made a cut for the 1.4 series and decided to do the final 1.4.0 release containing mostly bug fixes on top of 1.4.0-Alpha4!
+The development for 1.4 started in early 2019 and since we received comments, that it appears the 1.3 series is the current stable version,
+we wanted to make it clear that 1.4 is stable enough. We will most likely deliver a few smaller features in 1.4.x releases,
+but at some point+++<!-- PREVIEW-SUFFIX --><!-- </p></div> --><!-- PREVIEW-END -->+++ we are going move issues and switch the master branch to 1.5.0-SNAPSHOT.
+
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#140[changelog, window="_blank"] for a full list of changes and improvements.
+
+A big thanks goes out to the community for bug reports, providing test cases and being great users!
+
+The plan is to provide the last few remaining planned features/improvements during the next 8 weeks via 2-3 fix releases.
+By the end of February we are switching to 1.5 and try to provide 1.5.0-Alpha releases on a monthly basis.
+
+Until then, enjoy the release!

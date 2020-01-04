@@ -2,7 +2,7 @@
 
 Changes that happened in releases
 
-## 1.4.0
+## 1.4.1
 
 Not yet released
 
@@ -18,9 +18,9 @@ None
 
 None
 
-## 1.4.0-Alpha5
+## 1.4.0
 
-Not yet released
+04/01/2020 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.4.0) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue+milestone%3A1.4.0+is%3Aclosed+closed%3A%3C2020-01-05+sort%3Aupdated-desc)
 
 ### New features
 
