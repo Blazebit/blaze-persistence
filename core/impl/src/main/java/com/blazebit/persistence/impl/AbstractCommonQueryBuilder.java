@@ -19,6 +19,7 @@ package com.blazebit.persistence.impl;
 import com.blazebit.persistence.BaseSubqueryBuilder;
 import com.blazebit.persistence.CTEBuilder;
 import com.blazebit.persistence.CaseWhenStarterBuilder;
+import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.From;
 import com.blazebit.persistence.FullQueryBuilder;
@@ -43,7 +44,7 @@ import com.blazebit.persistence.WhereOrBuilder;
 import com.blazebit.persistence.WindowBuilder;
 import com.blazebit.persistence.impl.function.entity.ValuesEntity;
 import com.blazebit.persistence.impl.keyset.KeysetBuilderImpl;
-import com.blazebit.persistence.impl.keyset.KeysetImpl;
+import com.blazebit.persistence.DefaultKeyset;
 import com.blazebit.persistence.impl.keyset.KeysetLink;
 import com.blazebit.persistence.impl.keyset.KeysetManager;
 import com.blazebit.persistence.impl.keyset.KeysetMode;
@@ -261,7 +262,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 new SizeTransformerGroup(sizeTransformationVisitor, orderByManager, selectManager, joinManager, groupByManager));
         this.resultType = builder.resultType;
 
-        applyFrom(builder, true);
+        applyFrom(builder, isMainQuery, true, true, Collections.<ClauseType>emptySet(), Collections.<JoinNode>emptySet());
     }
     
     protected AbstractCommonQueryBuilder(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, DbmsStatementType statementType, Class<QueryResultType> resultClazz, String alias, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, FinalSetReturn finalSetOperationBuilder, boolean implicitFromClause) {
@@ -349,27 +350,30 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     abstract AbstractCommonQueryBuilder<QueryResultType, BuilderType, SetReturn, SubquerySetReturn, FinalSetReturn> copy(QueryContext queryContext);
 
-    void applyFrom(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder, boolean fixedSelect) {
-        if (isMainQuery) {
+    void applyFrom(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder, boolean copyMainQuery, boolean copySelect, boolean fixedSelect, Set<ClauseType> clauseExclusions, Set<JoinNode> alwaysIncludedNodes) {
+        if (copyMainQuery) {
             parameterManager.copyFrom(builder.parameterManager);
             mainQuery.cteManager.applyFrom(builder.mainQuery.cteManager);
         }
         aliasManager.applyFrom(builder.aliasManager);
-        Map<JoinNode, JoinNode> nodeMapping = joinManager.applyFrom(builder.joinManager);
+        Map<JoinNode, JoinNode> nodeMapping = joinManager.applyFrom(builder.joinManager, clauseExclusions, alwaysIncludedNodes);
         windowManager.applyFrom(builder.windowManager);
         whereManager.applyFrom(builder.whereManager);
         havingManager.applyFrom(builder.havingManager);
-        groupByManager.applyFrom(builder.groupByManager);
+        groupByManager.applyFrom(builder.groupByManager, clauseExclusions);
         orderByManager.applyFrom(builder.orderByManager);
 
         setFirstResult(builder.firstResult);
         setMaxResults(builder.maxResults);
 
         // TODO: select aliases that are ordered by?
+        // TODO: set operations?
 
-        selectManager.setDefaultSelect(nodeMapping, builder.selectManager.getSelectInfos());
-        if (fixedSelect) {
-            selectManager.unsetDefaultSelect();
+        if (copySelect) {
+            selectManager.setDefaultSelect(nodeMapping, builder.selectManager.getSelectInfos());
+            if (fixedSelect) {
+                selectManager.unsetDefaultSelect();
+            }
         }
         // No need to copy the finalSetOperationBuilder as that is only necessary for further builders which isn't possible after copying
         collectParameters();
@@ -467,6 +471,16 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
         prepareForModification(ClauseType.CTE);
         return mainQuery.cteManager.with(cteClass, (BuilderType) this);
+    }
+
+    @SuppressWarnings("unchecked")
+    public FullSelectCTECriteriaBuilder<BuilderType> with(Class<?> cteClass, CriteriaBuilder<?> criteriaBuilder) {
+        if (!mainQuery.dbmsDialect.supportsWithClause()) {
+            throw new UnsupportedOperationException("The database does not support the with clause!");
+        }
+
+        prepareForModification(ClauseType.CTE);
+        return mainQuery.cteManager.with(cteClass, (BuilderType) this, (AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) criteriaBuilder);
     }
 
     public BuilderType withCtesFrom(CTEBuilder<?> cteBuilder) {
@@ -2451,7 +2465,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     public BuilderType beforeKeyset(Serializable... values) {
-        return beforeKeyset(new KeysetImpl(values));
+        return beforeKeyset(new DefaultKeyset(values));
     }
 
     @SuppressWarnings("unchecked")
@@ -2469,7 +2483,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     public BuilderType afterKeyset(Serializable... values) {
-        return afterKeyset(new KeysetImpl(values));
+        return afterKeyset(new DefaultKeyset(values));
     }
 
     @SuppressWarnings("unchecked")

@@ -14,25 +14,29 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.spring.data.webflux.impl;
-
-import com.blazebit.persistence.Keyset;
+package com.blazebit.persistence;
 
 import java.io.Serializable;
 import java.util.Arrays;
 
 /**
+ * A simple default implementation for the {@link Keyset} interface.
  *
  * @author Christian Beikov
- * @since 1.4.0
+ * @since 1.4.1
  */
-public class KeysetImpl implements Keyset {
+public class DefaultKeyset implements Keyset {
 
     private static final long serialVersionUID = 1L;
 
     private final Serializable[] tuple;
 
-    public KeysetImpl(Serializable[] tuple) {
+    /**
+     * Creates a new keyset object from the given tuple.
+     *
+     * @param tuple The tuple of the keyset
+     */
+    public DefaultKeyset(Serializable[] tuple) {
         this.tuple = tuple;
     }
 

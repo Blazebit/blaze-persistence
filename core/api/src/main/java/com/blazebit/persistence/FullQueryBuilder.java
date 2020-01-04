@@ -219,6 +219,54 @@ public interface FullQueryBuilder<T, X extends FullQueryBuilder<T, X>> extends Q
      */
     public PaginatedCriteriaBuilder<T> pageBy(KeysetPage keysetPage, int firstResult, int maxResults, String identifierExpression, String... identifierExpressions);
 
+    /**
+     * Like calling {@link #pageBy(int, int, String)} and then {@link PaginatedCriteriaBuilder#createPageIdQuery()} but more efficient.
+     *
+     * @param firstResult The position of the first result to retrieve, numbered from 0
+     * @param maxResults The maximum number of results to retrieve
+     * @param identifierExpression The first identifier expression
+     * @return the {@link CriteriaBuilder} to query id values
+     * @since 1.4.1
+     */
+    public CriteriaBuilder<Object[]> createPageIdQuery(int firstResult, int maxResults, String identifierExpression);
+
+    /**
+     * Like calling {@link #pageBy(KeysetPage, int, int, String)} and then {@link PaginatedCriteriaBuilder#createPageIdQuery()} but more efficient.
+     *
+     * @param keysetPage The key set from a previous result, may be null
+     * @param firstResult The position of the first result to retrieve, numbered from 0
+     * @param maxResults The maximum number of results to retrieve
+     * @param identifierExpression The first identifier expression
+     * @return the {@link CriteriaBuilder} to query id values
+     * @since 1.4.1
+     */
+    public CriteriaBuilder<Object[]> createPageIdQuery(KeysetPage keysetPage, int firstResult, int maxResults, String identifierExpression);
+
+    /**
+     * Like calling {@link #pageBy(int, int, String, String...)} and then {@link PaginatedCriteriaBuilder#createPageIdQuery()} but more efficient.
+     *
+     * @param firstResult The position of the first result to retrieve, numbered from 0
+     * @param maxResults The maximum number of results to retrieve
+     * @param identifierExpression The first identifier expression
+     * @param identifierExpressions The other identifier expressions
+     * @return the {@link CriteriaBuilder} to query id values
+     * @since 1.4.1
+     */
+    public CriteriaBuilder<Object[]> createPageIdQuery(int firstResult, int maxResults, String identifierExpression, String... identifierExpressions);
+
+    /**
+     * Like calling {@link #pageBy(KeysetPage, int, int, String, String...)} and then {@link PaginatedCriteriaBuilder#createPageIdQuery()} but more efficient.
+     *
+     * @param keysetPage The key set from a previous result, may be null
+     * @param firstResult The position of the first result to retrieve, numbered from 0
+     * @param maxResults The maximum number of results to retrieve
+     * @param identifierExpression The first identifier expression
+     * @param identifierExpressions The other identifier expressions
+     * @return the {@link CriteriaBuilder} to query id values
+     * @since 1.4.1
+     */
+    public CriteriaBuilder<Object[]> createPageIdQuery(KeysetPage keysetPage, int firstResult, int maxResults, String identifierExpression, String... identifierExpressions);
+
     /*
      * Join methods
      */

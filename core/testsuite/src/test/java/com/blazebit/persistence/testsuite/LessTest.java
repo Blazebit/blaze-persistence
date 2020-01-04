@@ -46,7 +46,7 @@ public class LessTest extends AbstractCoreTest {
     @Test
     public void testLtNull() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria.where("d.age"), NullPointerException.class).lt(null);
+        verifyException(criteria.where("d.age"), NullPointerException.class).lt((Object) null);
     }
 
     @Test
@@ -76,7 +76,7 @@ public class LessTest extends AbstractCoreTest {
     @Test
     public void testLeNull() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria.where("d.age"), NullPointerException.class).le(null);
+        verifyException(criteria.where("d.age"), NullPointerException.class).le((Object) null);
     }
 
     @Test

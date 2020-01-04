@@ -393,6 +393,66 @@ ORDER BY cat.name
 --LIMIT 1
 ----
 
+=== Extracting page id query
+
+There are certain cases when the `PaginatedCriteriaBuilder` API is not a perfect fit.
+It might be desirable to reuse the ids of a page in multiple contexts or in a subquery or CTE.
+{projectname} provides some `createPageIdQuery()` method variants for this purpose that are analogous to the various `pageBy` method variants.
+The method creates a new `CriteriaBuilder` that represents the id query that would normally be executed when using the `PaginatedCriteriaBuilder` API.
+
+Imagine you take an existing query
+
+[source, java]
+----
+CriteriaBuilder<Cat> baseBuilder = cbf.create(em, Cat.class)
+    .select("cat.name")
+    .select("kittens.name")
+    .orderByAsc("name")
+    .orderByAsc("id");
+----
+
+and turn that into an id query
+
+[source, java]
+----
+CriteriaBuilder<Cat> idBuilder = baseBuilder.createPageIdQuery(0, 10, "id");
+----
+
+executing this query would produce the expected id query
+
+[source,sql]
+----
+SELECT cat.id
+FROM Cat cat
+--LIMIT 10
+----
+
+and when embedding this query into e.g. a subquery like
+
+[source, java]
+----
+CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class)
+    .select("cat.name")
+    .select("kittens.name")
+    .orderByAsc("name")
+    .orderByAsc("id")
+    .where("id").in(idBuilder);
+----
+
+this will execute like
+
+[source,sql]
+----
+SELECT cat.name, kittens_1.name
+FROM Cat cat
+LEFT JOIN cat.kittens kittens_1
+WHERE cat.id IN (LIMIT(
+    SELECT cat.id
+    FROM Cat cat
+),10)--LIMIT 10
+ORDER BY cat.name, cat.id
+----
+
 [[pagination-limitations]]
 === Limitations
 

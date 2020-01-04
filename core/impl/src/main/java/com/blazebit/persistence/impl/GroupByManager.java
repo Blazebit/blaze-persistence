@@ -61,9 +61,17 @@ public class GroupByManager extends AbstractManager<ExpressionModifier> {
         this.groupByClauses = new LinkedHashMap<>();
     }
 
-    void applyFrom(GroupByManager groupByManager) {
-        for (NodeInfo info : groupByManager.groupByInfos) {
-            groupBy(subqueryInitFactory.reattachSubqueries(info.getExpression().clone(true), ClauseType.GROUP_BY));
+    void applyFrom(GroupByManager groupByManager, Set<ClauseType> excludedClauses) {
+        if (excludedClauses.isEmpty() || groupByClauses.isEmpty()) {
+            for (NodeInfo info : groupByManager.groupByInfos) {
+                groupBy(subqueryInitFactory.reattachSubqueries(info.getExpression().clone(true), ClauseType.GROUP_BY));
+            }
+        } else {
+            for (Map.Entry<ResolvedExpression, Set<ClauseType>> entry : groupByClauses.entrySet()) {
+                if (!excludedClauses.containsAll(entry.getValue())) {
+                    groupBy(subqueryInitFactory.reattachSubqueries(entry.getKey().getExpression().clone(true), ClauseType.GROUP_BY));
+                }
+            }
         }
     }
 

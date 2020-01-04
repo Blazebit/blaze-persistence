@@ -23,7 +23,8 @@ public class MyCte {
 ----
 
 The difference to a normal entity is that in addition to that, the `CTE` annotation is applied which treats it like a view i.e. no DDL is generated for it.
-A CTE can be defined on a top level query builder by using the link:{core_jdoc}/persistence/CTEBuilder.html#with(java.lang.Class)[`with(Class<?>)`] method.
+A CTE can be defined on a top level query builder by using link:{core_jdoc}/persistence/CTEBuilder.html#with(java.lang.Class)[`with(Class<?>)`]
+or link:{core_jdoc}/persistence/CTEBuilder.html#with(java.lang.Class,%20com.blazebit.persistence.CriteriaBuilder)[`with(Class<?>, CriteriaBuilder<?> cb)`].
 The created CTE builder has to be finished by calling `end()` on it.
 
 All attributes of a CTE must be bound to expressions with link:{core_jdoc}/SelectBaseCTECriteriaBuilder.html#bind(java.lang.String)[`bind()`] like in the following.

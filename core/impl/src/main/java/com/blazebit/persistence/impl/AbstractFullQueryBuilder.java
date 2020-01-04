@@ -17,6 +17,7 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.CaseWhenStarterBuilder;
+import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.HavingOrBuilder;
 import com.blazebit.persistence.JoinType;
@@ -30,6 +31,9 @@ import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.function.count.AbstractCountFunction;
+import com.blazebit.persistence.impl.keyset.KeysetMode;
+import com.blazebit.persistence.impl.keyset.KeysetPaginationHelper;
+import com.blazebit.persistence.impl.keyset.SimpleKeysetLink;
 import com.blazebit.persistence.impl.query.CTENode;
 import com.blazebit.persistence.impl.query.CustomQuerySpecification;
 import com.blazebit.persistence.impl.query.CustomSQLTypedQuery;
@@ -49,9 +53,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -71,6 +77,8 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
     protected static final Set<ClauseType> OBJECT_QUERY_WITHOUT_GROUP_BY_EXCLUSIONS = EnumSet.of(ClauseType.GROUP_BY);
     protected static final Set<ClauseType> COUNT_QUERY_CLAUSE_EXCLUSIONS = EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT);
     protected static final Set<ClauseType> COUNT_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS = EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT, ClauseType.GROUP_BY);
+    protected static final Set<ClauseType> ID_QUERY_CLAUSE_EXCLUSIONS = EnumSet.of(ClauseType.SELECT);
+    protected static final Set<ClauseType> ID_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS = EnumSet.of(ClauseType.SELECT, ClauseType.GROUP_BY);
 
     protected String cachedCountQueryString;
     protected String cachedExternalCountQueryString;
@@ -122,10 +130,95 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
     public <Y> FullQueryBuilder<Y, ?> copy(Class<Y> resultClass) {
         prepareAndCheck();
         MainQuery mainQuery = cbf.createMainQuery(getEntityManager());
+        mainQuery.copyConfiguration(this.mainQuery.getQueryConfiguration());
         CriteriaBuilderImpl<Y> newBuilder = new CriteriaBuilderImpl<Y>(mainQuery, true, resultClass, null);
         newBuilder.fromClassExplicitlySet = true;
 
-        newBuilder.applyFrom(this, false);
+        newBuilder.applyFrom(this, true, true, false, Collections.<ClauseType>emptySet(), Collections.<JoinNode>emptySet());
+
+        return newBuilder;
+    }
+
+    @Override
+    public CriteriaBuilder<Object[]> createPageIdQuery(int firstResult, int maxResults, String identifierExpression) {
+        return createPageIdQuery(null, firstResult, maxResults, getIdentifierExpressionsToUse(identifierExpression, null));
+    }
+
+    @Override
+    public CriteriaBuilder<Object[]> createPageIdQuery(KeysetPage keysetPage, int firstResult, int maxResults, String identifierExpression) {
+        return createPageIdQuery(keysetPage, firstResult, maxResults, getIdentifierExpressionsToUse(identifierExpression, null));
+    }
+
+    @Override
+    public CriteriaBuilder<Object[]> createPageIdQuery(int firstResult, int maxResults, String identifierExpression, String... identifierExpressions) {
+        return createPageIdQuery(null, firstResult, maxResults, getIdentifierExpressionsToUse(identifierExpression, identifierExpressions));
+    }
+
+    @Override
+    public CriteriaBuilder<Object[]> createPageIdQuery(KeysetPage keysetPage, int firstResult, int maxResults, String identifierExpression, String... identifierExpressions) {
+        return createPageIdQuery(keysetPage, firstResult, maxResults, getIdentifierExpressionsToUse(identifierExpression, identifierExpressions));
+    }
+
+    private ResolvedExpression[] getIdentifierExpressionsToUse(String identifierExpression, String[] identifierExpressions) {
+        ResolvedExpression[] resolvedExpressions = getIdentifierExpressions(identifierExpression, identifierExpressions);
+        ResolvedExpression[] uniqueResolvedExpressions = functionalDependencyAnalyzerVisitor.getFunctionalDependencyRootExpressions(whereManager.rootPredicate.getPredicate(), resolvedExpressions, joinManager.getRoots().get(0));
+        if (uniqueResolvedExpressions != null) {
+            return uniqueResolvedExpressions;
+        }
+        return resolvedExpressions;
+    }
+
+    protected CriteriaBuilder<Object[]> createPageIdQuery(KeysetPage keysetPage, int firstResult, int maxResults, ResolvedExpression[] identifierExpressionsToUse) {
+        prepareAndCheck();
+        MainQuery mainQuery = cbf.createMainQuery(getEntityManager());
+        mainQuery.copyConfiguration(this.mainQuery.getQueryConfiguration());
+        CriteriaBuilderImpl<Object[]> newBuilder = new CriteriaBuilderImpl<>(mainQuery, true, Object[].class, null);
+        newBuilder.fromClassExplicitlySet = true;
+
+        newBuilder.applyFrom(this, true, false, false, ID_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, getIdentifierExpressionsToUseNonRootJoinNodes(identifierExpressionsToUse));
+        newBuilder.setFirstResult(firstResult);
+        newBuilder.setMaxResults(maxResults);
+
+        // Paginated criteria builders always need the last order by expression to be unique
+        List<OrderByExpression> orderByExpressions = orderByManager.getOrderByExpressions(false, whereManager.rootPredicate.getPredicate(), hasGroupBy ? Arrays.asList(getIdentifierExpressions()) : Collections.<ResolvedExpression>emptyList(), null);
+        if (!orderByExpressions.get(orderByExpressions.size() - 1).isResultUnique()) {
+            throw new IllegalStateException("The order by items of the query builder are not guaranteed to produce unique tuples! Consider also ordering by the entity identifier!");
+        }
+
+        if (keysetPage != null) {
+            KeysetMode keysetMode = KeysetPaginationHelper.getKeysetMode(keysetPage, null, firstResult, maxResults);
+            if (keysetMode == KeysetMode.NONE) {
+                newBuilder.keysetManager.setKeysetLink(null);
+            } else if (keysetMode == KeysetMode.NEXT) {
+                newBuilder.keysetManager.setKeysetLink(new SimpleKeysetLink(keysetPage.getHighest(), keysetMode));
+            } else {
+                newBuilder.keysetManager.setKeysetLink(new SimpleKeysetLink(keysetPage.getLowest(), keysetMode));
+            }
+            newBuilder.keysetManager.initialize(orderByExpressions);
+        }
+
+        String[] identifierToUseSelectAliases = new String[identifierExpressionsToUse.length];
+        Map<String, Integer> identifierExpressionStringMap = new HashMap<>(identifierExpressionsToUse.length);
+
+        for (int i = 0; i < identifierExpressionsToUse.length; i++) {
+            identifierExpressionStringMap.put(identifierExpressionsToUse[i].getExpressionString(), i);
+        }
+
+        Integer index;
+        for (int i = 0; i < orderByExpressions.size(); i++) {
+            String potentialSelectAlias = orderByExpressions.get(i).getExpression().toString();
+            AliasInfo aliasInfo = aliasManager.getAliasInfo(potentialSelectAlias);
+            if (aliasInfo instanceof SelectInfo) {
+                index = identifierExpressionStringMap.get(((SelectInfo) aliasInfo).getExpression().toString());
+                if (index != null) {
+                    identifierToUseSelectAliases[i] = potentialSelectAlias;
+                }
+            }
+        }
+        for (int i = 0; i < identifierExpressionsToUse.length; i++) {
+            newBuilder.selectManager.select(identifierExpressionsToUse[i].getExpression().clone(false), identifierToUseSelectAliases[i]);
+        }
+        newBuilder.selectManager.setDefaultSelect();
 
         return newBuilder;
     }
@@ -292,26 +385,32 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
 
     protected Set<JoinNode> getIdentifierExpressionsToUseNonRootJoinNodes() {
         if (cachedIdentifierExpressionsToUseNonRootJoinNodes == null) {
-            if (joinNodeGathererVisitor == null) {
-                joinNodeGathererVisitor = new JoinNodeGathererVisitor();
-            }
-            cachedIdentifierExpressionsToUseNonRootJoinNodes = joinNodeGathererVisitor.collectNonRootJoinNodes(getIdentifierExpressionsToUse());
-            // Remove join nodes that use non-optional one-to-one associations
-            Iterator<JoinNode> iterator = cachedIdentifierExpressionsToUseNonRootJoinNodes.iterator();
-            OUTER: while (iterator.hasNext()) {
-                JoinNode joinNode = iterator.next();
-                JoinTreeNode parentTreeNode;
-                while ((parentTreeNode = joinNode.getParentTreeNode()) != null) {
-                    if (parentTreeNode.isOptional() || parentTreeNode.getAttribute().getPersistentAttributeType() != Attribute.PersistentAttributeType.ONE_TO_ONE) {
-                        continue OUTER;
-                    }
-                    joinNode = joinNode.getParent();
-                }
-                iterator.remove();
-            }
+            cachedIdentifierExpressionsToUseNonRootJoinNodes = getIdentifierExpressionsToUseNonRootJoinNodes(getIdentifierExpressionsToUse());
         }
 
         return cachedIdentifierExpressionsToUseNonRootJoinNodes;
+    }
+
+    protected Set<JoinNode> getIdentifierExpressionsToUseNonRootJoinNodes(ResolvedExpression[] identifierExpressionsToUse) {
+        if (joinNodeGathererVisitor == null) {
+            joinNodeGathererVisitor = new JoinNodeGathererVisitor();
+        }
+        Set<JoinNode> joinNodes = joinNodeGathererVisitor.collectNonRootJoinNodes(identifierExpressionsToUse);
+        // Remove join nodes that use non-optional one-to-one associations
+        Iterator<JoinNode> iterator = joinNodes.iterator();
+        OUTER: while (iterator.hasNext()) {
+            JoinNode joinNode = iterator.next();
+            JoinTreeNode parentTreeNode;
+            while ((parentTreeNode = joinNode.getParentTreeNode()) != null) {
+                if (parentTreeNode.isOptional() || parentTreeNode.getAttribute().getPersistentAttributeType() != Attribute.PersistentAttributeType.ONE_TO_ONE) {
+                    continue OUTER;
+                }
+                joinNode = joinNode.getParent();
+            }
+            iterator.remove();
+        }
+
+        return joinNodes;
     }
 
     protected ResolvedExpression[] getIdentifierExpressions() {

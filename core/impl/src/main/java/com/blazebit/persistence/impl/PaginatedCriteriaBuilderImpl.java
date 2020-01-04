@@ -17,6 +17,7 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.CaseWhenStarterBuilder;
+import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.HavingOrBuilder;
 import com.blazebit.persistence.Keyset;
@@ -66,8 +67,6 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
     private static final String ENTITY_PAGE_POSITION_PARAMETER_NAME = "_entityPagePositionParameter";
     private static final String PAGE_POSITION_ID_QUERY_ALIAS_PREFIX = "_page_position_";
-    private static final Set<ClauseType> ID_QUERY_CLAUSE_EXCLUSIONS = EnumSet.of(ClauseType.SELECT);
-    private static final Set<ClauseType> ID_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS = EnumSet.of(ClauseType.SELECT, ClauseType.GROUP_BY);
     private static final Set<ClauseType> OBJECT_QUERY_CLAUSE_EXCLUSIONS = EnumSet.complementOf(EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT));
     private static final ResolvedExpression[] EMPTY = new ResolvedExpression[0];
 
@@ -257,6 +256,11 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         } else {
             return getQueryRootEntityIdentifierExpressions();
         }
+    }
+
+    @Override
+    public CriteriaBuilder<Object[]> createPageIdQuery() {
+        return createPageIdQuery(keysetPage, firstResult, maxResults, getIdentifierExpressionsToUse());
     }
 
     private <X> TypedQuery<X> getCountQuery(String countQueryString, Class<X> resultType, boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins) {

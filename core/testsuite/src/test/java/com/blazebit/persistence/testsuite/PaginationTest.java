@@ -20,6 +20,7 @@ import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -27,6 +28,9 @@ import java.util.Locale;
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 
+import com.blazebit.persistence.ConfigurationProperties;
+import com.blazebit.persistence.DefaultKeyset;
+import com.blazebit.persistence.DefaultKeysetPage;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
@@ -958,6 +962,66 @@ public class PaginationTest extends AbstractCoreTest {
                 .orderByAsc("d.id")
                 .pageBy(0, 10, "d.id");
 
+        cb.getResultList();
+    }
+
+    @Test
+    public void testExtractIdQuery() {
+        CriteriaBuilder<Tuple> pcb = cbf.create(em, Tuple.class)
+                .from(Document.class, "d")
+                .select("id")
+                .select("contacts[1].name")
+                .where("name").eq("doc1")
+                .orderByAsc("d.id");
+        CriteriaBuilder<Object[]> idQuery = pcb.createPageIdQuery(0, 10, "d.id");
+        assertEquals("SELECT d.id FROM Document d WHERE d.name = :param_0 ORDER BY d.id ASC", idQuery.getQueryString());
+        idQuery.getResultList();
+    }
+
+    @Test
+    public void testExtractIdQueryFromPaginatedCriteriaBuilder() {
+        PaginatedCriteriaBuilder<Tuple> pcb = cbf.create(em, Tuple.class)
+                .from(Document.class, "d")
+                .select("id")
+                .select("contacts[1].name")
+                .where("name").eq("doc1")
+                .orderByAsc("d.id")
+                .pageBy(0, 10, "d.id");
+        CriteriaBuilder<Object[]> idQuery = pcb.createPageIdQuery();
+        assertEquals("SELECT d.id FROM Document d WHERE d.name = :param_0 ORDER BY d.id ASC", idQuery.getQueryString());
+        idQuery.getResultList();
+    }
+
+    @Test
+    public void testExtractIdQueryKeysetPageNonOptimized() {
+        CriteriaBuilder<Tuple> pcb = cbf.create(em, Tuple.class)
+                .from(Document.class, "d")
+                .select("id")
+                .select("contacts[1].name")
+                .where("name").eq("doc1")
+                .orderByAsc("d.id")
+                .setProperty(ConfigurationProperties.OPTIMIZED_KEYSET_PREDICATE_RENDERING, "false");
+        CriteriaBuilder<Object[]> idQuery = pcb.createPageIdQuery(new DefaultKeysetPage(0, 10, null, new DefaultKeyset(new Serializable[]{ 10L })), 10, 10, "d.id");
+        assertEquals("SELECT d.id FROM Document d WHERE d.name = :param_0 AND (d.id > :_keysetParameter_0) ORDER BY d.id ASC", idQuery.getQueryString());
+        idQuery.getResultList();
+    }
+
+    @Test
+    @Category(NoEclipselink.class)
+    // TODO: report eclipselink does not support subqueries in functions
+    public void testExtractIdQueryIntoSubquery() {
+        CriteriaBuilder<Document> cb = cbf.create(em, Document.class)
+                .from(Document.class, "doc")
+                .where("doc.id").in(
+                        cbf.create(em, Tuple.class)
+                        .from(Document.class, "d")
+                        .select("id")
+                        .select("contacts[1].name")
+                        .where("name").eq("doc1")
+                        .orderByAsc("d.id")
+                        .createPageIdQuery(0, 10, "d.id")
+                ).end();
+        assertEquals("SELECT doc FROM Document doc WHERE doc.id IN (" + function("LIMIT", "(SELECT d.id FROM Document d WHERE d.name = :param_0 ORDER BY d.id ASC)", "10") + ")", cb.getQueryString());
         cb.getResultList();
     }
 }

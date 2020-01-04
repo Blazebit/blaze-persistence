@@ -22,7 +22,7 @@ import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedTypedQuery;
 import com.blazebit.persistence.impl.builder.object.KeysetExtractionObjectBuilder;
 import com.blazebit.persistence.impl.keyset.KeysetMode;
-import com.blazebit.persistence.impl.keyset.KeysetPageImpl;
+import com.blazebit.persistence.DefaultKeysetPage;
 import com.blazebit.persistence.impl.keyset.KeysetPaginationHelper;
 import com.blazebit.persistence.impl.util.SetView;
 
@@ -313,7 +313,7 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
             KeysetPage newKeyset = null;
 
             if (keysetToSelectIndexMapping != null) {
-                newKeyset = new KeysetPageImpl(firstRow, pageSize, lowest, highest, keysets);
+                newKeyset = new DefaultKeysetPage(firstRow, pageSize, lowest, highest, keysets);
             }
 
             List<X> queryResultList = objectQuery.getResultList();
@@ -351,7 +351,7 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
                 Serializable[] lowest = objectBuilder.getLowest();
                 Serializable[] highest = objectBuilder.getHighest();
                 Serializable[][] keysets = objectBuilder.getKeysets();
-                newKeyset = new KeysetPageImpl(firstRow, pageSize, lowest, highest, keysets);
+                newKeyset = new DefaultKeysetPage(firstRow, pageSize, lowest, highest, keysets);
             }
 
             PagedList<X> pagedResultList = new PagedArrayList<X>(result, newKeyset, totalSize, queryFirstResult, pageSize);

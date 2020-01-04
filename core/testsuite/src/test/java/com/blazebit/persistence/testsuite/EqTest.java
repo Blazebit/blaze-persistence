@@ -47,7 +47,7 @@ public class EqTest extends AbstractCoreTest {
     @Test
     public void testEqualToNull() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria.where("d.age"), NullPointerException.class).eq(null);
+        verifyException(criteria.where("d.age"), NullPointerException.class).eq((Object) null);
     }
 
     @Test
@@ -84,7 +84,7 @@ public class EqTest extends AbstractCoreTest {
     @Test
     public void testNotEqualToNull() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria.where("d.age"), NullPointerException.class).notEq(null);
+        verifyException(criteria.where("d.age"), NullPointerException.class).notEq((Object) null);
     }
 
     @Test

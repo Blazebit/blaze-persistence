@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.blazebit.persistence.Keyset;
+import com.blazebit.persistence.DefaultKeyset;
 import com.blazebit.persistence.impl.OrderByExpression;
 
 /**
@@ -63,7 +64,7 @@ public class LazyKeysetLink extends AbstractKeysetLink {
             }
         }
 
-        keyset = new KeysetImpl(tuple);
+        keyset = new DefaultKeyset(tuple);
         validate(keyset, orderByExpressions);
     }
 

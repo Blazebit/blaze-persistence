@@ -37,6 +37,16 @@ public interface CTEBuilder<T extends CTEBuilder<T>> extends ServiceProvider {
     public FullSelectCTECriteriaBuilder<T> with(Class<?> cteClass);
 
     /**
+     * Creates a builder for a CTE with the given CTE type with the given criteria builder as basis.
+     *
+     * @param cteClass The type of the CTE
+     * @param criteriaBuilder The criteria builder to copy the query from
+     * @return The CTE builder
+     * @since 1.4.1
+     */
+    public FullSelectCTECriteriaBuilder<T> with(Class<?> cteClass, CriteriaBuilder<?> criteriaBuilder);
+
+    /**
      * Copies the CTEs from the given CTE builder into this CTE builder.
      *
      * @param cteBuilder The CTE builder from which to copy CTEs

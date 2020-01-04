@@ -17,6 +17,8 @@
 package com.blazebit.persistence.deltaspike.data.rest.impl;
 
 import com.blazebit.lang.StringUtils;
+import com.blazebit.persistence.DefaultKeyset;
+import com.blazebit.persistence.DefaultKeysetPage;
 import com.blazebit.persistence.KeysetPage;
 import com.blazebit.persistence.deltaspike.data.KeysetPageRequest;
 import com.blazebit.persistence.deltaspike.data.PageRequest;
@@ -157,11 +159,11 @@ public class KeysetPageableParamConverter implements ParamConverter<Pageable> {
                             lowest.add(low == null ? null : convert(low, propertyType));
                             highest.add(high == null ? null : convert(high, propertyType));
                         }
-                        keysetPage = new KeysetPageImpl(
+                        keysetPage = new DefaultKeysetPage(
                                 previousOffset,
                                 previousPageSize,
-                                lowest.toArray(new Serializable[lowest.size()]),
-                                highest.toArray(new Serializable[highest.size()])
+                                new DefaultKeyset(lowest.toArray(new Serializable[lowest.size()])),
+                                new DefaultKeyset(highest.toArray(new Serializable[highest.size()]))
                         );
                     }
                 }

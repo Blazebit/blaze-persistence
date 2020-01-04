@@ -541,6 +541,10 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         return this.distinct;
     }
 
+    void setDefaultSelect() {
+        hasDefaultSelect = true;
+    }
+
     void unsetDefaultSelect() {
         hasDefaultSelect = false;
     }

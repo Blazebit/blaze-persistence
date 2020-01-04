@@ -17,6 +17,7 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.BaseModificationCriteriaBuilder;
+import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
 import com.blazebit.persistence.ReturningBuilder;
 import com.blazebit.persistence.ReturningModificationCriteriaBuilderFactory;
@@ -136,6 +137,15 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         }
         
         return super.with(cteClass);
+    }
+
+    @Override
+    public FullSelectCTECriteriaBuilder<X> with(Class<?> cteClass, CriteriaBuilder<?> criteriaBuilder) {
+        if (!mainQuery.dbmsDialect.supportsWithClauseInModificationQuery()) {
+            throw new UnsupportedOperationException("The database does not support a with clause in modification queries!");
+        }
+
+        return super.with(cteClass, criteriaBuilder);
     }
 
     @Override
