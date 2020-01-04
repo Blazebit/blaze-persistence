@@ -209,6 +209,11 @@ public class OracleDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
+    public boolean supportsRowValueConstructor() {
+        return false;
+    }
+
+    @Override
     public boolean supportsFullRowValueComparison() {
         return false;
     }

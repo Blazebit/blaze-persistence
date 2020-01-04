@@ -83,6 +83,11 @@ public class MSSQLDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
+    public boolean supportsRowValueConstructor() {
+        return false;
+    }
+
+    @Override
     public boolean supportsFullRowValueComparison() {
         return false;
     }

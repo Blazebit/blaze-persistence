@@ -249,6 +249,21 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsNonScalarSubquery() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsSubqueryInFunction() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsSubqueryAliasShadowing() {
+        return true;
+    }
+
+    @Override
     public String[] getDiscriminatorColumnCheck(EntityType<?> entityType) {
         return null;
     }

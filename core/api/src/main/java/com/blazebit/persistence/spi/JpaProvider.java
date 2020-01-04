@@ -229,6 +229,30 @@ public interface JpaProvider {
     public boolean supportsCustomFunctions();
 
     /**
+     * Whether the non scalar subqueries are supported.
+     *
+     * @return True if non scalar subqueries are supported, false otherwise
+     * @since 1.4.1
+     */
+    public boolean supportsNonScalarSubquery();
+
+    /**
+     * Whether the subqueries in functions are supported.
+     *
+     * @return True if subqueries in functions are supported, false otherwise
+     * @since 1.4.1
+     */
+    public boolean supportsSubqueryInFunction();
+
+    /**
+     * Whether the subqueries alias shadowing is supported.
+     *
+     * @return True if subqueries alias shadowing is supported, false otherwise
+     * @since 1.4.1
+     */
+    public boolean supportsSubqueryAliasShadowing();
+
+    /**
      * Returns an array with the column name of the discriminator of the given entity type and the discriminator value, or null.
      *
      * @param entityType The entity type

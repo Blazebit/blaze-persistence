@@ -19,6 +19,7 @@ package com.blazebit.persistence.impl.builder.object;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.SelectBuilder;
@@ -61,7 +62,11 @@ public class KeysetExtractionObjectBuilder<T> implements ObjectBuilder<T> {
     public T build(Object[] tuple) {
         if (keysetMode == KeysetMode.PREVIOUS) {
             if (keysets != null) {
-                keysets.add(0, tuple);
+                if (keysets.isEmpty()) {
+                    keysets.add(tuple);
+                } else if (!equals(keysets.get(0), tuple)) {
+                    keysets.add(0, tuple);
+                }
             }
             if (first == null) {
                 first = tuple;
@@ -71,7 +76,9 @@ public class KeysetExtractionObjectBuilder<T> implements ObjectBuilder<T> {
             }
         } else {
             if (keysets != null) {
-                keysets.add(tuple);
+                if (keysets.isEmpty() || !equals(keysets.get(keysets.size() - 1), tuple)) {
+                    keysets.add(tuple);
+                }
             }
             if (first == null) {
                 first = tuple;
@@ -88,6 +95,15 @@ public class KeysetExtractionObjectBuilder<T> implements ObjectBuilder<T> {
             System.arraycopy(tuple, 0, newTuple, 0, newTuple.length);
             return (T) newTuple;
         }
+    }
+
+    private boolean equals(Object[] existing, Object[] tuple) {
+        for (int index : keysetToSelectIndexMapping) {
+            if (index == -1 || !Objects.equals(existing[index], tuple[index])) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public Serializable[] getLowest() {

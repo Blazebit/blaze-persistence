@@ -256,6 +256,10 @@ public class PaginationTest extends AbstractCoreTest {
                 "LEFT JOIN d.contacts contacts_contactNr_1"
                 + onClause("KEY(contacts_contactNr_1) = :contactNr")
                 + " WHERE d.id IN :ids ORDER BY d.id ASC";
+        String expectedInlineObjectQuery = "SELECT " + joinAliasValue("contacts_contactNr_1", "name") + " FROM Document d " +
+                "LEFT JOIN d.contacts contacts_contactNr_1"
+                + onClause("KEY(contacts_contactNr_1) = :contactNr")
+                + " WHERE d.id IN (" + function("LIMIT", "(" + expectedIdQuery + ")", "1") + ") ORDER BY d.id ASC";
         PaginatedCriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d")
                 .where("owner.name").eq("Karl1")
                 .select("contacts[:contactNr].name")
@@ -263,8 +267,11 @@ public class PaginationTest extends AbstractCoreTest {
                 .page(0, 1)
                 .withForceIdQuery(true);
         assertEquals(expectedCountQuery, cb.getPageCountQueryString());
-        assertEquals(expectedIdQuery, cb.getPageIdQueryString());
+        assertEquals(expectedIdQuery, cb.withInlineIdQuery(false).getPageIdQueryString());
         assertEquals(expectedObjectQuery, cb.getQueryString());
+        if (jpaProvider.supportsSubqueryInFunction() && jpaProvider.supportsSubqueryAliasShadowing()) {
+            assertEquals(expectedInlineObjectQuery, cb.withInlineIdQuery(true).getQueryString());
+        }
         cb.setParameter("contactNr", 1).getResultList();
     }
 
@@ -377,12 +384,19 @@ public class PaginationTest extends AbstractCoreTest {
                 + " WHERE d.id IN :ids"
                 + " GROUP BY " + groupBy("d.id", "strings_1")
                 + " ORDER BY d.id ASC";
+        String expectedInlineObjectQuery = "SELECT d.id, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
+                + " WHERE d.id IN (" + function("LIMIT", "(" + expectedIdQuery + ")", "1") + ")"
+                + " GROUP BY " + groupBy("d.id", "strings_1")
+                + " ORDER BY d.id ASC";
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.id").select("strings").select("COUNT(contacts.id)").groupBy("id").orderByAsc("d.id");
         PaginatedCriteriaBuilder<Tuple> pcb = cb.pageBy(0, 1, "d.id");
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
-        assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
+        assertEquals(expectedIdQuery, pcb.withInlineIdQuery(false).getPageIdQueryString());
         assertEquals(expectedObjectQuery, pcb.getQueryString());
+        if (dbmsDialect.supportsRowValueConstructor() && jpaProvider.supportsSubqueryInFunction()) {
+            assertEquals(expectedInlineObjectQuery, pcb.withInlineIdQuery(true).getQueryString());
+        }
         pcb.getResultList();
     }
 
@@ -396,12 +410,19 @@ public class PaginationTest extends AbstractCoreTest {
                 + " WHERE (d.id = :ids_0_0 AND strings_1 = :ids_1_0)"
                 + " GROUP BY " + groupBy("d.id", "strings_1")
                 + " ORDER BY d.id ASC";
+        String expectedInlineObjectQuery = "SELECT d.id, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
+                + " WHERE " + function("compare_row_value_subquery", "'IN'", "d.id", "strings_1", function("LIMIT", "(" + expectedIdQuery + ")", "1")) + " = true"
+                + " GROUP BY " + groupBy("d.id", "strings_1")
+                + " ORDER BY d.id ASC";
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.id").select("strings").select("COUNT(contacts.id)").groupBy("id").orderByAsc("d.id");
         PaginatedCriteriaBuilder<Tuple> pcb = cb.page(0, 1);
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
-        assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
+        assertEquals(expectedIdQuery, pcb.withInlineIdQuery(false).getPageIdQueryString());
         assertEquals(expectedObjectQuery, pcb.getQueryString());
+        if (dbmsDialect.supportsRowValueConstructor() && jpaProvider.supportsNonScalarSubquery() && jpaProvider.supportsSubqueryInFunction()) {
+            assertEquals(expectedInlineObjectQuery, pcb.withInlineIdQuery(true).getQueryString());
+        }
         pcb.getResultList();
     }
 
@@ -415,6 +436,10 @@ public class PaginationTest extends AbstractCoreTest {
                 + " WHERE (d.id = :ids_0_0 AND strings_1 = :ids_1_0)"
                 + " GROUP BY " + groupBy("d.id", "strings_1")
                 + " ORDER BY d.id ASC";
+        String expectedInlineObjectQuery = "SELECT d.id, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
+                + " WHERE " + function("compare_row_value_subquery", "'IN'", "d.id", "strings_1", function("LIMIT", "(" + expectedIdQuery + ")", "1")) + " = true"
+                + " GROUP BY " + groupBy("d.id", "strings_1")
+                + " ORDER BY d.id ASC";
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.id").select("strings").select("COUNT(contacts.id)");
         cb.page(0, 1);
@@ -422,8 +447,11 @@ public class PaginationTest extends AbstractCoreTest {
 
         PaginatedCriteriaBuilder<Tuple> pcb = cb.page(0, 1);
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
-        assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
+        assertEquals(expectedIdQuery, pcb.withInlineIdQuery(false).getPageIdQueryString());
         assertEquals(expectedObjectQuery, pcb.getQueryString());
+        if (dbmsDialect.supportsRowValueConstructor() && jpaProvider.supportsNonScalarSubquery() && jpaProvider.supportsSubqueryInFunction()) {
+            assertEquals(expectedInlineObjectQuery, pcb.withInlineIdQuery(true).getQueryString());
+        }
         pcb.getResultList();
     }
 
@@ -437,6 +465,10 @@ public class PaginationTest extends AbstractCoreTest {
                 + " WHERE (d.id = :ids_0_0 AND strings_1 = :ids_1_0)"
                 + " GROUP BY " + groupBy("d.id", "strings_1")
                 + " ORDER BY d.id ASC";
+        String expectedInlineObjectQuery = "SELECT d.id, " + "strings_1" +", COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
+                + " WHERE " + function("compare_row_value_subquery", "'IN'", "d.id", "strings_1", function("LIMIT", "(" + expectedIdQuery + ")", "1")) + " = true"
+                + " GROUP BY " + groupBy("d.id", "strings_1")
+                + " ORDER BY d.id ASC";
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.id").select("strings").select("COUNT(contacts.id)");
         cb.page(0, 1);
@@ -444,8 +476,11 @@ public class PaginationTest extends AbstractCoreTest {
 
         PaginatedCriteriaBuilder<Tuple> pcb = cb.page(0, 1);
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
-        assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
+        assertEquals(expectedIdQuery, pcb.withInlineIdQuery(false).getPageIdQueryString());
         assertEquals(expectedObjectQuery, pcb.getQueryString());
+        if (dbmsDialect.supportsRowValueConstructor() && jpaProvider.supportsNonScalarSubquery() && jpaProvider.supportsSubqueryInFunction()) {
+            assertEquals(expectedInlineObjectQuery, pcb.withInlineIdQuery(true).getQueryString());
+        }
         pcb.getResultList();
     }
 
@@ -459,6 +494,10 @@ public class PaginationTest extends AbstractCoreTest {
                 + " WHERE (d.id = :ids_0_0 AND strings_1 = :ids_1_0)"
                 + " GROUP BY " + groupBy("d.id", "strings_1")
                 + " ORDER BY d.id ASC";
+        String expectedInlineObjectQuery = "SELECT d.id, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
+                + " WHERE " + function("compare_row_value_subquery", "'IN'", "d.id", "strings_1", function("LIMIT", "(" + expectedIdQuery + ")", "1")) + " = true"
+                + " GROUP BY " + groupBy("d.id", "strings_1")
+                + " ORDER BY d.id ASC";
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.id").select("strings").select("COUNT(contacts.id)");
         cb.page(0, 1);
@@ -466,8 +505,11 @@ public class PaginationTest extends AbstractCoreTest {
 
         PaginatedCriteriaBuilder<Tuple> pcb = cb.page(0, 1);
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
-        assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
+        assertEquals(expectedIdQuery, pcb.withInlineIdQuery(false).getPageIdQueryString());
         assertEquals(expectedObjectQuery, pcb.getQueryString());
+        if (dbmsDialect.supportsRowValueConstructor() && jpaProvider.supportsNonScalarSubquery() && jpaProvider.supportsSubqueryInFunction()) {
+            assertEquals(expectedInlineObjectQuery, pcb.withInlineIdQuery(true).getQueryString());
+        }
         pcb.getResultList();
     }
 
@@ -481,6 +523,10 @@ public class PaginationTest extends AbstractCoreTest {
                 + " WHERE (d.id = :ids_0_0 AND strings_1 = :ids_1_0)"
                 + " GROUP BY " + groupBy("d.id", "strings_1", "d.name")
                 + " ORDER BY d.name ASC, d.id ASC";
+        String expectedInlineObjectQuery = "SELECT d.id, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
+                + " WHERE " + function("compare_row_value_subquery", "'IN'", "d.id", "strings_1", function("LIMIT", "(" + expectedIdQuery + ")", "1")) + " = true"
+                + " GROUP BY " + groupBy("d.id", "strings_1", "d.name")
+                + " ORDER BY d.name ASC, d.id ASC";
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.id").select("strings").select("COUNT(contacts.id)");
         cb.page(0, 1);
@@ -488,8 +534,11 @@ public class PaginationTest extends AbstractCoreTest {
 
         PaginatedCriteriaBuilder<Tuple> pcb = cb.page(0, 1);
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
-        assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
+        assertEquals(expectedIdQuery, pcb.withInlineIdQuery(false).getPageIdQueryString());
         assertEquals(expectedObjectQuery, pcb.getQueryString());
+        if (dbmsDialect.supportsRowValueConstructor() && jpaProvider.supportsNonScalarSubquery() && jpaProvider.supportsSubqueryInFunction()) {
+            assertEquals(expectedInlineObjectQuery, pcb.withInlineIdQuery(true).getQueryString());
+        }
         pcb.getResultList();
     }
 
@@ -504,6 +553,10 @@ public class PaginationTest extends AbstractCoreTest {
                 + " WHERE (d.name = :ids_0_0 AND strings_1 = :ids_1_0)"
                 + " GROUP BY " + groupBy("d.name", "strings_1")
                 + " ORDER BY d.name ASC, " + renderNullPrecedence("strings_1", "ASC", "LAST");
+        String expectedInlineObjectQuery = "SELECT d.name, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
+                + " WHERE " + function("compare_row_value_subquery", "'IN'", "d.name", "strings_1", function("LIMIT", "(" + expectedIdQuery + ")", "1")) + " = true"
+                + " GROUP BY " + groupBy("d.name", "strings_1")
+                + " ORDER BY d.name ASC, " + renderNullPrecedence("strings_1", "ASC", "LAST");
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.name").select("strings").select("COUNT(contacts.id)");
         cb.page(0, 1);
@@ -511,8 +564,11 @@ public class PaginationTest extends AbstractCoreTest {
 
         PaginatedCriteriaBuilder<Tuple> pcb = cb.page(0, 1);
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
-        assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
+        assertEquals(expectedIdQuery, pcb.withInlineIdQuery(false).getPageIdQueryString());
         assertEquals(expectedObjectQuery, pcb.getQueryString());
+        if (dbmsDialect.supportsRowValueConstructor() && jpaProvider.supportsNonScalarSubquery() && jpaProvider.supportsSubqueryInFunction()) {
+            assertEquals(expectedInlineObjectQuery, pcb.withInlineIdQuery(true).getQueryString());
+        }
         pcb.getResultList();
     }
 
@@ -527,6 +583,10 @@ public class PaginationTest extends AbstractCoreTest {
                 + " WHERE (d.name = :ids_0_0 AND d.age = :ids_1_0 AND strings_1 = :ids_2_0)"
                 + " GROUP BY " + groupBy("d.name", "strings_1", "d.age")
                 + " ORDER BY d.name ASC, d.age ASC, " + renderNullPrecedence("strings_1", "ASC", "LAST");
+        String expectedInlineObjectQuery = "SELECT d.name, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
+                + " WHERE " + function("compare_row_value_subquery", "'IN'", "d.name", "d.age", "strings_1", function("LIMIT", "(" + expectedIdQuery + ")", "1")) + " = true"
+                + " GROUP BY " + groupBy("d.name", "strings_1", "d.age")
+                + " ORDER BY d.name ASC, d.age ASC, " + renderNullPrecedence("strings_1", "ASC", "LAST");
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.name").select("strings").select("COUNT(contacts.id)");
         cb.page(0, 1);
@@ -534,8 +594,11 @@ public class PaginationTest extends AbstractCoreTest {
 
         PaginatedCriteriaBuilder<Tuple> pcb = cb.page(0, 1);
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
-        assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
+        assertEquals(expectedIdQuery, pcb.withInlineIdQuery(false).getPageIdQueryString());
         assertEquals(expectedObjectQuery, pcb.getQueryString());
+        if (dbmsDialect.supportsRowValueConstructor() && jpaProvider.supportsNonScalarSubquery() && jpaProvider.supportsSubqueryInFunction()) {
+            assertEquals(expectedInlineObjectQuery, pcb.withInlineIdQuery(true).getQueryString());
+        }
         pcb.getResultList();
     }
 
@@ -550,6 +613,11 @@ public class PaginationTest extends AbstractCoreTest {
                 + " WHERE d.id IN :ids"
                 + " GROUP BY " + groupBy("d.id", "d.name", "strings_1", "d.age")
                 + " ORDER BY d.name ASC, d.age ASC, d.id ASC";
+        String expectedInlineObjectQuery = "SELECT d.id, d.name, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
+                + " WHERE d.id IN (" + function("LIMIT", "(" + expectedIdQuery + ")", "1") + ")"
+                + " GROUP BY " + groupBy("d.id", "d.name", "strings_1", "d.age")
+                + " ORDER BY d.name ASC, d.age ASC, d.id ASC";
+
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.id")
                 .select("d.name")
@@ -560,8 +628,11 @@ public class PaginationTest extends AbstractCoreTest {
 
         PaginatedCriteriaBuilder<Tuple> pcb = cb.pageBy(0, 1, "d.id");
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
-        assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
+        assertEquals(expectedIdQuery, pcb.withInlineIdQuery(false).getPageIdQueryString());
         assertEquals(expectedObjectQuery, pcb.getQueryString());
+        if (dbmsDialect.supportsRowValueConstructor() && jpaProvider.supportsSubqueryInFunction()) {
+            assertEquals(expectedInlineObjectQuery, pcb.withInlineIdQuery(true).getQueryString());
+        }
         pcb.getResultList();
     }
 
@@ -576,6 +647,11 @@ public class PaginationTest extends AbstractCoreTest {
                 + " WHERE d.id IN :ids"
                 + " GROUP BY " + groupBy("d.id", "d.name", "strings_1")
                 + " ORDER BY d.id ASC";
+        String expectedInlineObjectQuery = "SELECT d.id, d.name, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
+                + " WHERE d.id IN (" + function("LIMIT", "(" + expectedIdQuery + ")", "1") + ")"
+                + " GROUP BY " + groupBy("d.id", "d.name", "strings_1")
+                + " ORDER BY d.id ASC";
+
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.id")
                 .select("d.name")
@@ -586,8 +662,11 @@ public class PaginationTest extends AbstractCoreTest {
 
         PaginatedCriteriaBuilder<Tuple> pcb = cb.pageBy(0, 1, "d.id");
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
-        assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
+        assertEquals(expectedIdQuery, pcb.withInlineIdQuery(false).getPageIdQueryString());
         assertEquals(expectedObjectQuery, pcb.getQueryString());
+        if (dbmsDialect.supportsRowValueConstructor() && jpaProvider.supportsSubqueryInFunction()) {
+            assertEquals(expectedInlineObjectQuery, pcb.withInlineIdQuery(true).getQueryString());
+        }
         pcb.getResultList();
     }
 
@@ -798,10 +877,17 @@ public class PaginationTest extends AbstractCoreTest {
                 "WHERE (d.id = :ids_0_0 AND strings_1 = :ids_1_0) "
                 + "GROUP BY " + groupBy("d.id", "strings_1")
                 + " ORDER BY contactCount ASC, d.id ASC";
+        String expectedInlineObjectQuery = "SELECT " + function("COUNT_TUPLE", "'DISTINCT',KEY(contacts_1)") + " AS contactCount, strings_1 FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1 " +
+                "WHERE " + function("compare_row_value_subquery", "'IN'", "d.id", "strings_1", function("LIMIT", "(" + expectedIdQuery + ")", "1")) + " = true "
+                + "GROUP BY " + groupBy("d.id", "strings_1")
+                + " ORDER BY contactCount ASC, d.id ASC";
 
-        assertEquals(expectedIdQuery, cb.getPageIdQueryString());
+        assertEquals(expectedIdQuery, cb.withInlineIdQuery(false).getPageIdQueryString());
         assertEquals(expectedCountQuery, cb.getPageCountQueryString());
         assertEquals(expectedObjectQuery, cb.getQueryString());
+        if (dbmsDialect.supportsRowValueConstructor() && jpaProvider.supportsNonScalarSubquery() && jpaProvider.supportsSubqueryInFunction()) {
+            assertEquals(expectedInlineObjectQuery, cb.withInlineIdQuery(true).getQueryString());
+        }
         cb.getResultList();
     }
     
@@ -906,8 +992,15 @@ public class PaginationTest extends AbstractCoreTest {
                 .innerJoinDefault("contacts", "c")
                 .where("c.name").eq("Karl1")
                 .orderByAsc("d.id").page(0, 10);
+        String expectedIdQuery = "SELECT d.id FROM Document d JOIN d.contacts c WHERE " + joinAliasValue("c", "name") + " = :param_0 GROUP BY d.id ORDER BY d.id ASC";
         String query = "SELECT d.id FROM Document d JOIN d.contacts c WHERE d.id IN :ids ORDER BY d.id ASC";
-        assertEquals(query, cb.getQueryString());
+        String expectedInlineObjectQuery = "SELECT d.id FROM Document d JOIN d.contacts c " +
+                "WHERE d.id IN (" + function("LIMIT", "(" + expectedIdQuery + ")", "10") + ") " +
+                "ORDER BY d.id ASC";
+        assertEquals(query, cb.withInlineIdQuery(false).getQueryString());
+        if (jpaProvider.supportsSubqueryInFunction() && jpaProvider.supportsSubqueryAliasShadowing()) {
+            assertEquals(expectedInlineObjectQuery, cb.withInlineIdQuery(true).getQueryString());
+        }
         cb.getResultList();
     }
     
@@ -948,9 +1041,15 @@ public class PaginationTest extends AbstractCoreTest {
                 " GROUP BY " + groupBy("d.id", "d.id") + " ORDER BY d.id ASC";
         String objectQuery = "SELECT (SELECT " + countStar() + " FROM Person pSub WHERE pSub.id = " + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1" +
                 " WHERE d.id IN :ids ORDER BY d.id ASC";
+        String expectedInlineObjectQuery = "SELECT (SELECT " + countStar() + " FROM Person pSub WHERE pSub.id = " + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1" +
+                " WHERE d.id IN (" + function("LIMIT", "(" + idQuery + ")", "10") + ") " +
+                "ORDER BY d.id ASC";
         assertEquals(countQuery, cb.getPageCountQueryString());
-        assertEquals(idQuery, cb.getPageIdQueryString());
+        assertEquals(idQuery, cb.withInlineIdQuery(false).getPageIdQueryString());
         assertEquals(objectQuery, cb.getQueryString());
+        if (jpaProvider.supportsSubqueryInFunction() && jpaProvider.supportsSubqueryAliasShadowing()) {
+            assertEquals(expectedInlineObjectQuery, cb.withInlineIdQuery(true).getQueryString());
+        }
         cb.getResultList();
     }
 

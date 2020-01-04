@@ -275,6 +275,21 @@ public final class CachingJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsNonScalarSubquery() {
+        return jpaProvider.supportsNonScalarSubquery();
+    }
+
+    @Override
+    public boolean supportsSubqueryInFunction() {
+        return jpaProvider.supportsSubqueryInFunction();
+    }
+
+    @Override
+    public boolean supportsSubqueryAliasShadowing() {
+        return jpaProvider.supportsSubqueryAliasShadowing();
+    }
+
+    @Override
     public boolean containsEntity(EntityManager em, Class<?> entityClass, Object id) {
         return jpaProvider.containsEntity(em, entityClass, id);
     }

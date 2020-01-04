@@ -10,6 +10,7 @@ Not yet released
 
 * Allow extraction of `CriteriaBuilder` for id-query from `FullQueryBuilder`
 * Allow definition of CTE based on `CriteriaBuilder`
+* Allow to control embedding of id query into pagination object query and enable by default if DBMS allows it
 
 ### Bug fixes
 

@@ -20,6 +20,8 @@ import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListener;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.FunctionExpression;
+import com.blazebit.persistence.parser.expression.ListIndexExpression;
+import com.blazebit.persistence.parser.expression.MapKeyExpression;
 import com.blazebit.persistence.parser.expression.ParameterExpression;
 import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.expression.PathReference;
@@ -240,6 +242,22 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor, Jo
         } else {
             node.getClauseDependencies().add(fromClause);
         }
+    }
+
+    @Override
+    public void visit(ListIndexExpression expression) {
+        boolean allowed = joinWithObjectLeafAllowed;
+        joinWithObjectLeafAllowed = true;
+        super.visit(expression);
+        joinWithObjectLeafAllowed = allowed;
+    }
+
+    @Override
+    public void visit(MapKeyExpression expression) {
+        boolean allowed = joinWithObjectLeafAllowed;
+        joinWithObjectLeafAllowed = true;
+        super.visit(expression);
+        joinWithObjectLeafAllowed = allowed;
     }
 
     @Override

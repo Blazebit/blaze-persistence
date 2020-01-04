@@ -433,6 +433,21 @@ public class HibernateJpaProvider implements JpaProvider {
         return true;
     }
 
+    @Override
+    public boolean supportsNonScalarSubquery() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsSubqueryInFunction() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsSubqueryAliasShadowing() {
+        return true;
+    }
+
     protected final String getTypeName(ManagedType<?> ownerType) {
         return ownerType.getJavaType() == null ? ((EntityType) ownerType).getName() : ownerType.getJavaType().getName();
     }

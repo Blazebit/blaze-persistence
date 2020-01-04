@@ -475,8 +475,10 @@ public class JoinTest extends AbstractCoreTest {
                 .leftJoinFetch("contacts", "c")
                 .orderByAsc("d.id")
                 .page(0, 10);
-        
-        assertEquals("SELECT d FROM Document d LEFT JOIN FETCH d.contacts c WHERE d.id IN :ids ORDER BY d.id ASC", crit.getQueryString());
+
+        String expectedIdQuery = "SELECT d.id FROM Document d GROUP BY d.id ORDER BY d.id ASC";
+        assertEquals("SELECT d FROM Document d LEFT JOIN FETCH d.contacts c WHERE d.id IN :ids ORDER BY d.id ASC", crit.withInlineIdQuery(false).getQueryString());
+        assertEquals("SELECT d FROM Document d LEFT JOIN FETCH d.contacts c WHERE d.id IN (" + function("limit", "(" + expectedIdQuery + ")", "10") + ") ORDER BY d.id ASC", crit.withInlineIdQuery(true).getQueryString());
     }
     
     // NOTE: DB2 9.7 which is what we've got on Travis CI does not support subqueries in the on clause. See http://www-01.ibm.com/support/knowledgecenter/SSEPGG_9.7.0/com.ibm.db2.luw.messages.sql.doc/doc/msql00338n.html?cp=SSEPGG_9.7.0
