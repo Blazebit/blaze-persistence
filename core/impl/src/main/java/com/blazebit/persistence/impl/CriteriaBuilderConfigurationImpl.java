@@ -1550,6 +1550,8 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         properties.put(ConfigurationProperties.RETURNING_CLAUSE_CASE_SENSITIVE, "true");
         properties.put(ConfigurationProperties.EXPRESSION_CACHE_CLASS, ConcurrentHashMapExpressionCache.class.getName());
         properties.put(ConfigurationProperties.OPTIMIZED_KEYSET_PREDICATE_RENDERING, "true");
+        properties.put(ConfigurationProperties.INLINE_ID_QUERY, "auto");
+        properties.put(ConfigurationProperties.INLINE_COUNT_QUERY, "auto");
     }
 
     private void loadExtendedQuerySupport() {

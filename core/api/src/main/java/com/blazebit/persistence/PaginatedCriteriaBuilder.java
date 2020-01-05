@@ -171,6 +171,23 @@ public interface PaginatedCriteriaBuilder<T> extends FullQueryBuilder<T, Paginat
     public boolean isWithInlineIdQuery();
 
     /**
+     * Forces the inlining of an count query into the object or id query.
+     *
+     * @param withInlineCountQuery true to inline the count query, false otherwise
+     * @return The query builder for chaining calls
+     * @since 1.4.1
+     */
+    public PaginatedCriteriaBuilder<T> withInlineCountQuery(boolean withInlineCountQuery);
+
+    /**
+     * Returns whether count query should be inlined.
+     *
+     * @return true when count query should be inlined, false otherwise
+     * @since 1.4.1
+     */
+    public boolean isWithInlineCountQuery();
+
+    /**
      * Creates and returns a new {@link CriteriaBuilder} that can be used to query the id values for the current page.
      *
      * @return the {@link CriteriaBuilder} to query id values

@@ -179,29 +179,29 @@ public class OptimizedKeysetPaginationTest extends AbstractCoreTest {
 
         // scroll forward
         pcb = crit.page(result.getKeysetPage(), 4, 2);
-        assertEquals(
-                "SELECT d.name, owner_1.name, d.id FROM DocumentWithNullableName d JOIN d.owner owner_1 "
-                        + "WHERE owner_1.name <= :_keysetParameter_0 AND NOT (owner_1.name = :_keysetParameter_0 AND (d.name IS NOT NULL AND d.name > :_keysetParameter_1 OR (d.name IS NOT NULL AND d.name = :_keysetParameter_1 AND d.id <= :_keysetParameter_2)))"
-                        + " ORDER BY owner_1.name DESC, " + renderNullPrecedence("d.name", "DESC", "LAST") + ", d.id ASC",
-                pcb.getQueryString()
-        );
         result = pcb.getResultList();
         assertEquals(2, result.getSize());
         assertEquals("doc2", result.get(0).get(0));
         assertEquals("doc1", result.get(1).get(0));
+        assertEquals(
+                "SELECT d.name, owner_1.name, d.id FROM DocumentWithNullableName d JOIN d.owner owner_1 "
+                        + "WHERE owner_1.name <= :_keysetParameter_0 AND NOT (owner_1.name = :_keysetParameter_0 AND (d.name IS NOT NULL AND d.name > :_keysetParameter_1 OR (d.name IS NOT NULL AND d.name = :_keysetParameter_1 AND d.id <= :_keysetParameter_2)))"
+                        + " ORDER BY owner_1.name DESC, " + renderNullPrecedence("d.name", "DESC", "LAST") + ", d.id ASC",
+                pcb.withInlineCountQuery(false).getQueryString()
+        );
 
         // scroll backwards
         pcb = crit.page(result.getKeysetPage(), 2, 2);
-        assertEquals(
-                "SELECT d.name, owner_1.name, d.id FROM DocumentWithNullableName d JOIN d.owner owner_1 "
-                        + "WHERE owner_1.name >= :_keysetParameter_0 AND NOT (owner_1.name = :_keysetParameter_0 AND (d.name < :_keysetParameter_1 OR (d.name = :_keysetParameter_1 AND d.id >= :_keysetParameter_2)))"
-                        + " ORDER BY owner_1.name ASC, " + renderNullPrecedence("d.name", "ASC", "FIRST") + ", d.id DESC",
-                pcb.getQueryString()
-        );
         result = pcb.getResultList();
         assertEquals(2, result.getSize());
         assertEquals("doc4", result.get(0).get(0));
         assertEquals("doc3", result.get(1).get(0));
+        assertEquals(
+                "SELECT d.name, owner_1.name, d.id FROM DocumentWithNullableName d JOIN d.owner owner_1 "
+                        + "WHERE owner_1.name >= :_keysetParameter_0 AND NOT (owner_1.name = :_keysetParameter_0 AND (d.name < :_keysetParameter_1 OR (d.name = :_keysetParameter_1 AND d.id >= :_keysetParameter_2)))"
+                        + " ORDER BY owner_1.name ASC, " + renderNullPrecedence("d.name", "ASC", "FIRST") + ", d.id DESC",
+                pcb.withInlineCountQuery(false).getQueryString()
+        );
 
         // scroll forward
         result = crit.page(result.getKeysetPage(), 4, 2).getResultList();
@@ -307,7 +307,7 @@ public class OptimizedKeysetPaginationTest extends AbstractCoreTest {
         String expectedObjectQuery = "SELECT d.name, owner_1.name, d.id FROM DocumentWithNullableName d JOIN d.owner owner_1"
                 + " ORDER BY owner_1.name DESC, " + renderNullPrecedence("d.name", "ASC", "LAST") + ", d.id ASC";
         assertNull(pcb.getPageIdQueryString());
-        assertEquals(expectedObjectQuery, pcb.getQueryString());
+        assertEquals(expectedObjectQuery, pcb.withInlineCountQuery(false).getQueryString());
 
         assertEquals(1, result.size());
         assertEquals(6, result.getTotalSize());
@@ -320,7 +320,7 @@ public class OptimizedKeysetPaginationTest extends AbstractCoreTest {
                 + " WHERE owner_1.name <= :_keysetParameter_0 AND NOT (owner_1.name = :_keysetParameter_0 AND (d.name IS NOT NULL AND d.name < :_keysetParameter_1 OR (d.name IS NOT NULL AND d.name = :_keysetParameter_1 AND d.id <= :_keysetParameter_2)))"
                 + " ORDER BY owner_1.name DESC, " + renderNullPrecedence("d.name", "ASC", "LAST") + ", d.id ASC";
         assertNull(pcb.getPageIdQueryString());
-        assertEquals(expectedObjectQuery, pcb.getQueryString());
+        assertEquals(expectedObjectQuery, pcb.withInlineCountQuery(false).getQueryString());
 
         pcb = crit.page(result.getKeysetPage(), 2, 1);
         result = pcb.getResultList();
@@ -329,7 +329,7 @@ public class OptimizedKeysetPaginationTest extends AbstractCoreTest {
                 + " WHERE owner_1.name <= :_keysetParameter_0 AND NOT (owner_1.name = :_keysetParameter_0 AND (d.name < :_keysetParameter_1 OR (d.name IS NOT NULL AND d.name = :_keysetParameter_1 AND d.id < :_keysetParameter_2)))"
                 + " ORDER BY owner_1.name DESC, " + renderNullPrecedence("d.name", "ASC", "LAST") + ", d.id ASC";
         assertNull(pcb.getPageIdQueryString());
-        assertEquals(expectedObjectQuery, pcb.getQueryString());
+        assertEquals(expectedObjectQuery, pcb.withInlineCountQuery(false).getQueryString());
 
         assertEquals(1, result.size());
         assertEquals(6, result.getTotalSize());
@@ -341,7 +341,7 @@ public class OptimizedKeysetPaginationTest extends AbstractCoreTest {
         expectedObjectQuery = "SELECT d.name, owner_1.name, d.id FROM DocumentWithNullableName d JOIN d.owner owner_1"
                 + " ORDER BY owner_1.name DESC, " + renderNullPrecedence("d.name", "ASC", "LAST") + ", d.id ASC";
         assertNull(pcb.getPageIdQueryString());
-        assertEquals(expectedObjectQuery, pcb.getQueryString());
+        assertEquals(expectedObjectQuery, pcb.withInlineCountQuery(false).getQueryString());
 
         assertEquals(2, result.size());
         assertEquals(6, result.getTotalSize());

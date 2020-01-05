@@ -17,9 +17,11 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.KeysetPage;
+import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.PagedArrayList;
 import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedTypedQuery;
+import com.blazebit.persistence.impl.builder.object.CountExtractionObjectBuilder;
 import com.blazebit.persistence.impl.builder.object.KeysetExtractionObjectBuilder;
 import com.blazebit.persistence.impl.keyset.KeysetMode;
 import com.blazebit.persistence.DefaultKeysetPage;
@@ -59,7 +61,7 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
     private final TypedQuery<?> countQuery;
     private final TypedQuery<?> idQuery;
     private final TypedQuery<X> objectQuery;
-    private final KeysetExtractionObjectBuilder<X> objectBuilder;
+    private final ObjectBuilder<X> objectBuilder;
     private final Map<String, Parameter<?>> parameters;
     private final Map<String, ParameterLocation> parameterToQuery;
     private final Object entityId;
@@ -74,9 +76,10 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
     private final KeysetPage keysetPage;
     private final boolean forceFirstResult;
     private final boolean inlinedIdQuery;
+    private final boolean inlinedCountQuery;
 
-    public PaginatedTypedQueryImpl(boolean withExtractAllKeysets, boolean withCount, int highestOffset, TypedQuery<?> countQuery, TypedQuery<?> idQuery, TypedQuery<X> objectQuery, KeysetExtractionObjectBuilder<X> objectBuilder, Set<Parameter<?>> parameters,
-                                   Object entityId, int firstResult, int pageSize, int identifierCount, boolean needsNewIdList, int[] keysetToSelectIndexMapping, KeysetMode keysetMode, KeysetPage keysetPage, boolean forceFirstResult, boolean inlinedIdQuery) {
+    public PaginatedTypedQueryImpl(boolean withExtractAllKeysets, boolean withCount, int highestOffset, TypedQuery<?> countQuery, TypedQuery<?> idQuery, TypedQuery<X> objectQuery, ObjectBuilder<X> objectBuilder, Set<Parameter<?>> parameters,
+                                   Object entityId, int firstResult, int pageSize, int identifierCount, boolean needsNewIdList, int[] keysetToSelectIndexMapping, KeysetMode keysetMode, KeysetPage keysetPage, boolean forceFirstResult, boolean inlinedIdQuery, boolean inlinedCountQuery) {
         this.withExtractAllKeysets = withExtractAllKeysets;
         this.withCount = withCount;
         this.highestOffset = highestOffset;
@@ -95,6 +98,7 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
         this.keysetPage = keysetPage;
         this.forceFirstResult = forceFirstResult;
         this.inlinedIdQuery = inlinedIdQuery;
+        this.inlinedCountQuery = inlinedCountQuery;
 
         Map<String, Parameter<?>> params = new HashMap<>(parameters.size());
         for (Parameter<?> parameter : parameters) {
@@ -168,7 +172,7 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
         int queryFirstResult = firstResult;
         int firstRow = firstResult;
         long totalSize = -1L;
-        if (withCount) {
+        if (withCount && !inlinedCountQuery) {
             if (entityId == null) {
                 totalSize = ((Number) countQuery.getSingleResult()).longValue();
             } else {
@@ -213,7 +217,7 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
                     newKeysetPage = keysetPage;
                 }
 
-                return new PagedArrayList<X>(newKeysetPage, totalSize, queryFirstResult, pageSize);
+                return new PagedArrayList<X>(newKeysetPage, withCount && totalSize == -1 ? getTotalCount() : totalSize, queryFirstResult, pageSize);
             }
 
             Serializable[] lowest = null;
@@ -268,6 +272,11 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
                     }
                 }
 
+                // extract count
+                if (inlinedCountQuery) {
+                    Object[] first = (Object[]) ids.get(0);
+                    totalSize = (long) first[first.length - 1];
+                }
                 List<Object> newIds = new ArrayList<Object>(ids.size());
                 if (identifierCount > 1) {
                     for (int i = 0; i < ids.size(); i++) {
@@ -287,6 +296,25 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
                     }
                 }
 
+                ids = newIds;
+            } else if (inlinedCountQuery) {
+                Object[] first = (Object[]) ids.get(0);
+                int newSize = first.length - 1;
+                totalSize = (long) first[first.length - 1];
+                // If this would have been a non-object array type without the count query, we must unwrap the result
+                List<Object> newIds = new ArrayList<>(ids.size());
+                if (newSize == 1) {
+                    for (int i = 0; i < ids.size(); i++) {
+                        newIds.add(((Object[]) ids.get(i))[0]);
+                    }
+                } else {
+                    for (int i = 0; i < ids.size(); i++) {
+                        Object[] tuple = (Object[]) ids.get(i);
+                        Object newId = new Object[newSize];
+                        System.arraycopy(tuple, 0, newId, 0, newSize);
+                        newIds.add(newId);
+                    }
+                }
                 ids = newIds;
             }
 
@@ -352,10 +380,33 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
             KeysetPage newKeyset = null;
 
             if (keysetToSelectIndexMapping != null) {
-                Serializable[] lowest = objectBuilder.getLowest();
-                Serializable[] highest = objectBuilder.getHighest();
-                Serializable[][] keysets = objectBuilder.getKeysets();
-                newKeyset = new DefaultKeysetPage(firstRow, pageSize, lowest, highest, keysets);
+                if (objectBuilder == null) {
+                    // extract count
+                    if (inlinedCountQuery) {
+                        Object[] first = (Object[]) result.get(0);
+                        totalSize = (long) first[first.length - 1];
+                        // If this would have been a non-object array type without the count query, we must unwrap the result
+                        if (first.length == 2) {
+                            List<X> newResult = new ArrayList<>(result.size());
+                            for (int i = 0; i < result.size(); i++) {
+                                newResult.add((X) ((Object[]) result.get(i))[0]);
+                            }
+                            result = newResult;
+                        }
+                    }
+                } else if (objectBuilder instanceof KeysetExtractionObjectBuilder<?>) {
+                    KeysetExtractionObjectBuilder<?> keysetExtractionObjectBuilder = (KeysetExtractionObjectBuilder<?>) objectBuilder;
+                    Serializable[] lowest = keysetExtractionObjectBuilder.getLowest();
+                    Serializable[] highest = keysetExtractionObjectBuilder.getHighest();
+                    Serializable[][] keysets = keysetExtractionObjectBuilder.getKeysets();
+                    // extract count
+                    if (inlinedCountQuery) {
+                        totalSize = keysetExtractionObjectBuilder.getCount();
+                    }
+                    newKeyset = new DefaultKeysetPage(firstRow, pageSize, lowest, highest, keysets);
+                } else if (objectBuilder instanceof CountExtractionObjectBuilder<?>) {
+                    totalSize = ((CountExtractionObjectBuilder<X>) objectBuilder).getCount();
+                }
             }
 
             PagedList<X> pagedResultList = new PagedArrayList<X>(result, newKeyset, totalSize, queryFirstResult, pageSize);

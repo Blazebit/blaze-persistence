@@ -476,9 +476,12 @@ public class JoinTest extends AbstractCoreTest {
                 .orderByAsc("d.id")
                 .page(0, 10);
 
+        String expectedCountQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d";
         String expectedIdQuery = "SELECT d.id FROM Document d GROUP BY d.id ORDER BY d.id ASC";
-        assertEquals("SELECT d FROM Document d LEFT JOIN FETCH d.contacts c WHERE d.id IN :ids ORDER BY d.id ASC", crit.withInlineIdQuery(false).getQueryString());
-        assertEquals("SELECT d FROM Document d LEFT JOIN FETCH d.contacts c WHERE d.id IN (" + function("limit", "(" + expectedIdQuery + ")", "10") + ") ORDER BY d.id ASC", crit.withInlineIdQuery(true).getQueryString());
+        assertEquals("SELECT d FROM Document d LEFT JOIN FETCH d.contacts c WHERE d.id IN :ids ORDER BY d.id ASC", crit.withInlineIdQuery(false).withInlineCountQuery(false).getQueryString());
+        if (jpaProvider.supportsSubqueryInFunction() && jpaProvider.supportsSubqueryAliasShadowing()) {
+            assertEquals("SELECT d, (" + expectedCountQuery + ") FROM Document d LEFT JOIN FETCH d.contacts c WHERE d.id IN (" + function("limit", "(" + expectedIdQuery + ")", "10") + ") ORDER BY d.id ASC", crit.withInlineIdQuery(true).withInlineCountQuery(true).getQueryString());
+        }
     }
     
     // NOTE: DB2 9.7 which is what we've got on Travis CI does not support subqueries in the on clause. See http://www-01.ibm.com/support/knowledgecenter/SSEPGG_9.7.0/com.ibm.db2.luw.messages.sql.doc/doc/msql00338n.html?cp=SSEPGG_9.7.0

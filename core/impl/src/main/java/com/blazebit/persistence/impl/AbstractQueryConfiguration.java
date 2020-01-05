@@ -41,6 +41,8 @@ public abstract class AbstractQueryConfiguration implements QueryConfiguration {
             case ConfigurationProperties.EXPRESSION_CACHE_CLASS: return getExpressionCacheClass();
             case ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS: return Boolean.toString(isValuesClauseFilterNullsEnabled());
             case ConfigurationProperties.OPTIMIZED_KEYSET_PREDICATE_RENDERING: return Boolean.toString(isOptimizedKeysetPredicateRenderingEnabled());
+            case ConfigurationProperties.INLINE_ID_QUERY: return getInlineIdQueryEnabled() == null ? "auto" : Boolean.toString(getInlineIdQueryEnabled());
+            case ConfigurationProperties.INLINE_COUNT_QUERY: return getInlineCountQueryEnabled() == null ? "auto" : Boolean.toString(getInlineCountQueryEnabled());
             default: return null;
         }
     }
@@ -58,6 +60,8 @@ public abstract class AbstractQueryConfiguration implements QueryConfiguration {
         properties.put(ConfigurationProperties.EXPRESSION_CACHE_CLASS, getExpressionCacheClass());
         properties.put(ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS, Boolean.toString(isValuesClauseFilterNullsEnabled()));
         properties.put(ConfigurationProperties.OPTIMIZED_KEYSET_PREDICATE_RENDERING, Boolean.toString(isOptimizedKeysetPredicateRenderingEnabled()));
+        properties.put(ConfigurationProperties.INLINE_ID_QUERY, getInlineIdQueryEnabled() == null ? "auto" : Boolean.toString(getInlineIdQueryEnabled()));
+        properties.put(ConfigurationProperties.INLINE_COUNT_QUERY, getInlineCountQueryEnabled() == null ? "auto" : Boolean.toString(getInlineCountQueryEnabled()));
         return properties;
     }
 

@@ -47,6 +47,10 @@ public interface QueryConfiguration {
 
     public boolean isOptimizedKeysetPredicateRenderingEnabled();
 
+    public Boolean getInlineIdQueryEnabled();
+
+    public Boolean getInlineCountQueryEnabled();
+
     public String getProperty(String name);
 
     public Map<String, String> getProperties();
