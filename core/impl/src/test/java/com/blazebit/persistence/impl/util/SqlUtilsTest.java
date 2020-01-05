@@ -89,6 +89,17 @@ public class SqlUtilsTest {
         assertItems("select valuesenti0_.\"value\" as col_0_0_ from ( select * from ValuesEntity ) valuesenti0_", "\"value\"");
     }
 
+    @Test
+    public void selectItemAliasesWithSubquery() {
+        assertAliases("with TestCTE(id, name, nesting_level) AS(\n" +
+                        "select recursivee0_.id as col_0_0_, recursivee0_.name as col_1_0_, 0 as col_2_0_ from RecursiveEntity recursivee0_ where recursivee0_.parent_id is null\n" +
+                        "UNION ALL\n" +
+                        "select recursivee1_.id as col_0_0_, recursivee1_.name as col_1_0_, testcte0_.nesting_level+1 as col_2_0_ from TestCTE testcte0_, RecursiveEntity recursivee1_ where testcte0_.id=recursivee1_.parent_id\n" +
+                        ")\n" +
+                        "select testcte0_.id as col_0_0_, (select count(*) from TestCTE testcte1_ where testcte1_.nesting_level<2) as col_1_0_, testcte0_.id as id1_3_, testcte0_.nesting_level as nesting_2_3_, testcte0_.name as name3_3_ from TestCTE testcte0_ where testcte0_.nesting_level<2 order by testcte0_.nesting_level ASC, testcte0_.id ASC",
+                "col_0_0_", "col_1_0_", "id1_3_", "nesting_2_3_", "name3_3_");
+    }
+
     private void testQuotedIdentifiers(String start, String end, String escapeQuote) {
         testQuotedIdentifiersEscaped(start, end, "");
         if (escapeQuote != null) {

@@ -17,6 +17,7 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.CaseWhenStarterBuilder;
+import com.blazebit.persistence.ConfigurationProperties;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.HavingOrBuilder;
@@ -31,6 +32,7 @@ import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
+import com.blazebit.persistence.impl.builder.object.CountExtractionObjectBuilder;
 import com.blazebit.persistence.impl.builder.object.DelegatingKeysetExtractionObjectBuilder;
 import com.blazebit.persistence.impl.builder.object.KeysetExtractionObjectBuilder;
 import com.blazebit.persistence.impl.function.alias.AliasFunction;
@@ -77,6 +79,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     private boolean withCountQuery = true;
     private boolean withForceIdQuery = false;
     private Boolean withInlineIdQuery;
+    private boolean withInlineCountQuery;
     private int highestOffset = 0;
     private final KeysetPage keysetPage;
     private final ResolvedExpression[] identifierExpressions;
@@ -103,6 +106,11 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         this.entityId = entityId;
         this.maxResults = pageSize;
         this.identifierExpressions = identifierExpressions;
+        if (mainQuery.getQueryConfiguration().getInlineCountQueryEnabled() == null) {
+            this.withInlineCountQuery = entityId == null && mainQuery.jpaProvider.supportsSubqueryAliasShadowing();
+        } else {
+            this.withInlineCountQuery = mainQuery.getQueryConfiguration().getInlineCountQueryEnabled();
+        }
         updateKeysetMode();
     }
 
@@ -120,6 +128,11 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         this.entityId = null;
         this.maxResults = pageSize;
         this.identifierExpressions = identifierExpressions;
+        if (mainQuery.getQueryConfiguration().getInlineCountQueryEnabled() == null) {
+            this.withInlineCountQuery = mainQuery.jpaProvider.supportsSubqueryAliasShadowing();
+        } else {
+            this.withInlineCountQuery = mainQuery.getQueryConfiguration().getInlineCountQueryEnabled();
+        }
         updateKeysetMode();
     }
 
@@ -252,6 +265,19 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
     @Override
     public PaginatedCriteriaBuilder<T> withInlineIdQuery(boolean withInlineIdQuery) {
+        if (withInlineIdQuery) {
+            if (!mainQuery.jpaProvider.supportsSubqueryInFunction()) {
+                throw new IllegalStateException("Can't inline the id query because the JPA provider does not support subqueries in functions");
+            } else if (!mainQuery.jpaProvider.supportsSubqueryAliasShadowing()) {
+                throw new IllegalStateException("Can't inline the id query because the JPA provider does not support subquery alias shadowing!");
+            } else if ((!mainQuery.dbmsDialect.supportsRowValueConstructor() || !mainQuery.jpaProvider.supportsNonScalarSubquery()) && getIdentifierExpressionsToUse().length != 1) {
+                if (!mainQuery.jpaProvider.supportsNonScalarSubquery()) {
+                    throw new IllegalStateException("Can't inline the id query because pagination is based on multiple identifier expressions but the JPA provider does not support non-scalar subqueries!");
+                } else {
+                    throw new IllegalStateException("Can't inline the id query because pagination is based on multiple identifier expressions but the database does not support the row value constructor syntax!");
+                }
+            }
+        }
         if (this.withInlineIdQuery != null && this.withInlineIdQuery != withInlineIdQuery) {
             prepareForModification(ClauseType.SELECT);
         }
@@ -262,12 +288,80 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     @Override
     public boolean isWithInlineIdQuery() {
         if (withInlineIdQuery == null) {
-            // TODO: we could emulate the LIMIT function with window functions
-            // TODO: we could emulate row value constructor support by using an EXISTS predicate and a nested subquery
-            withInlineIdQuery = mainQuery.jpaProvider.supportsSubqueryInFunction() && mainQuery.jpaProvider.supportsSubqueryAliasShadowing()
-                    && (getIdentifierExpressionsToUse().length == 1 || mainQuery.dbmsDialect.supportsRowValueConstructor() && mainQuery.jpaProvider.supportsNonScalarSubquery());
+            // To support EclipseLink, we first need a way to get around the subquery alias shadowing issue i.e. an automatic renaming
+            // TODO: we could emulate the LIMIT function with window functions to get around jpaProvider.supportsSubqueryInFunction() for EclipseLink
+            // TODO: we could emulate row value constructor support by using an EXISTS predicate and a nested subquery for Oracle and MSSQL and EclipseLink
+            if (mainQuery.getQueryConfiguration().getInlineIdQueryEnabled() == null) {
+                withInlineIdQuery = mainQuery.jpaProvider.supportsSubqueryInFunction() && mainQuery.jpaProvider.supportsSubqueryAliasShadowing()
+                        && (getIdentifierExpressionsToUse().length == 1 || mainQuery.dbmsDialect.supportsRowValueConstructor() && mainQuery.jpaProvider.supportsNonScalarSubquery());
+            } else {
+                withInlineIdQuery = mainQuery.getQueryConfiguration().getInlineIdQueryEnabled();
+            }
         }
         return withInlineIdQuery;
+    }
+
+    @Override
+    public boolean isWithInlineCountQuery() {
+        return withInlineCountQuery;
+    }
+
+    @Override
+    public PaginatedCriteriaBuilder<T> withInlineCountQuery(boolean withInlineCountQuery) {
+        if (withInlineCountQuery) {
+            if (entityId != null) {
+                throw new IllegalStateException("Can't inline the count query when paginating to a page by entity id!");
+            } else if (!mainQuery.jpaProvider.supportsSubqueryAliasShadowing()) {
+                throw new IllegalStateException("Can't inline the count query because the JPA provider does not support subquery alias shadowing!");
+            }
+        }
+        if (this.withInlineCountQuery != withInlineCountQuery) {
+            prepareForModification(ClauseType.SELECT);
+        }
+        this.withInlineCountQuery = withInlineCountQuery;
+        return this;
+    }
+
+    @Override
+    public PaginatedCriteriaBuilder<T> setProperty(String propertyName, String propertyValue) {
+        super.setProperty(propertyName, propertyValue);
+        Boolean enabled;
+        switch (propertyName) {
+            case ConfigurationProperties.INLINE_ID_QUERY:
+                enabled = mainQuery.getQueryConfiguration().getInlineIdQueryEnabled();
+                if (enabled != null) {
+                    withInlineIdQuery(enabled);
+                }
+                break;
+            case ConfigurationProperties.INLINE_COUNT_QUERY:
+                enabled = mainQuery.getQueryConfiguration().getInlineCountQueryEnabled();
+                if (enabled != null) {
+                    withInlineCountQuery(enabled);
+                }
+                break;
+            default:
+                break;
+        }
+        return this;
+    }
+
+    @Override
+    public PaginatedCriteriaBuilder<T> setProperties(Map<String, String> properties) {
+        super.setProperties(properties);
+        Boolean enabled;
+        if (properties.containsKey(ConfigurationProperties.INLINE_ID_QUERY)) {
+            enabled = mainQuery.getQueryConfiguration().getInlineIdQueryEnabled();
+            if (enabled != null) {
+                withInlineIdQuery(enabled);
+            }
+        }
+        if (properties.containsKey(ConfigurationProperties.INLINE_COUNT_QUERY)) {
+            enabled = mainQuery.getQueryConfiguration().getInlineCountQueryEnabled();
+            if (enabled != null) {
+                withInlineCountQuery(enabled);
+            }
+        }
+        return this;
     }
 
     @Override
@@ -324,7 +418,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         // We can only use the query directly if we have no ctes, entity functions or hibernate bugs
         Set<JoinNode> keyRestrictedLeftJoins = joinManager.getKeyRestrictedLeftJoins();
         boolean normalQueryMode = !isMainQuery || (!mainQuery.cteManager.hasCtes() && !joinManager.hasEntityFunctions() && keyRestrictedLeftJoins.isEmpty());
-        TypedQuery<?> countQuery = null;
+        TypedQuery<?> countQuery;
         String countQueryString = getPageCountQueryStringWithoutCheck();
 
         if (entityId == null) {
@@ -336,8 +430,9 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
         TypedQuery<?> idQuery = null;
         TypedQuery<T> objectQuery;
-        KeysetExtractionObjectBuilder<T> objectBuilder;
+        ObjectBuilder<T> objectBuilder;
         boolean inlinedIdQuery;
+        boolean inlinedCountQuery = withCountQuery && withInlineCountQuery;
         if (!isWithInlineIdQuery() && (hasCollections || withForceIdQuery)) {
             String idQueryString = getPageIdQueryStringWithoutCheck();
             idQuery = getIdQuery(idQueryString, normalQueryMode, keyRestrictedLeftJoins);
@@ -345,7 +440,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             objectBuilder = null;
             inlinedIdQuery = false;
         } else {
-            Map.Entry<TypedQuery<T>, KeysetExtractionObjectBuilder<T>> entry = getObjectQuery(normalQueryMode, keyRestrictedLeftJoins);
+            Map.Entry<TypedQuery<T>, ObjectBuilder<T>> entry = getObjectQuery(normalQueryMode, keyRestrictedLeftJoins);
             objectQuery = entry.getKey();
             objectBuilder = entry.getValue();
             inlinedIdQuery = isWithInlineIdQuery() && (hasCollections || withForceIdQuery);
@@ -368,7 +463,8 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
                 keysetMode,
                 keysetPage,
                 forceFirstResult,
-                inlinedIdQuery
+                inlinedIdQuery,
+                inlinedCountQuery
         );
         return query;
     }
@@ -532,7 +628,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         // initialize index mappings that we use to avoid putting keyset expressions into select clauses multiple times
         if (!isWithInlineIdQuery() && (hasCollections || withForceIdQuery)) {
             initializeOrderByAliasesWithIdentifierToUse(orderByExpressions);
-        } else if (keysetExtraction) {
+        } else if (keysetExtraction || withInlineCountQuery) {
             if (isWithInlineIdQuery()) {
                 initializeOrderByAliasesWithIdentifierToUse(orderByExpressions);
                 // If we have no select item, this means we implicitly select the root and thus need to offset the index mapping as we will append that
@@ -610,12 +706,12 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
                     identifierToUseSelectAliases[i] = potentialSelectAlias;
                     keysetToSelectIndexMapping[i] = index;
                 }
-            } else if (keysetExtraction) {
+            } else if (keysetExtraction || withInlineCountQuery) {
                 index = identifierExpressionStringMap.get(potentialSelectAlias);
                 keysetToSelectIndexMapping[i] = index == null ? -1 : index;
             }
         }
-        if (!keysetExtraction) {
+        if (!keysetExtraction && !withInlineCountQuery) {
             keysetToSelectIndexMapping = null;
         }
     }
@@ -647,12 +743,12 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     }
 
     @SuppressWarnings("unchecked")
-    private Map.Entry<TypedQuery<T>, KeysetExtractionObjectBuilder<T>> getObjectQuery(boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins) {
+    private Map.Entry<TypedQuery<T>, ObjectBuilder<T>> getObjectQuery(boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins) {
         String queryString = getBaseQueryString();
         Class<?> expectedResultType;
 
         // When the keyset is included the query obviously produces an array
-        if (keysetExtraction) {
+        if (keysetExtraction || withCountQuery && withInlineCountQuery) {
             expectedResultType = Object[].class;
         } else {
             expectedResultType = selectManager.getExpectedQueryResultType();
@@ -696,24 +792,27 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             parameterManager.parameterizeQuery(query);
         }
 
-        KeysetExtractionObjectBuilder<T> objectBuilder = null;
+        ObjectBuilder<T> objectBuilder = null;
         ObjectBuilder<T> transformerObjectBuilder = selectManager.getSelectObjectBuilder();
+        boolean inlinedCountQuery = withCountQuery && withInlineCountQuery;
 
         if (keysetExtraction) {
             if (transformerObjectBuilder == null) {
-                objectBuilder = new KeysetExtractionObjectBuilder<T>(keysetToSelectIndexMapping, keysetMode, selectManager.getExpectedQueryResultType() != Object[].class, withExtractAllKeysets);
+                objectBuilder = new KeysetExtractionObjectBuilder<T>(keysetToSelectIndexMapping, keysetMode, selectManager.getExpectedQueryResultType() != Object[].class, withExtractAllKeysets, inlinedCountQuery);
             } else {
-                objectBuilder = new DelegatingKeysetExtractionObjectBuilder<T>(transformerObjectBuilder, keysetToSelectIndexMapping, keysetMode, withExtractAllKeysets);
+                objectBuilder = new DelegatingKeysetExtractionObjectBuilder<T>(transformerObjectBuilder, keysetToSelectIndexMapping, keysetMode, withExtractAllKeysets, inlinedCountQuery);
             }
 
             transformerObjectBuilder = objectBuilder;
+        } else if (inlinedCountQuery && transformerObjectBuilder != null) {
+            transformerObjectBuilder = objectBuilder = new CountExtractionObjectBuilder<>(transformerObjectBuilder);
         }
 
         if (transformerObjectBuilder != null) {
             query = new ObjectBuilderTypedQuery<>(query, transformerObjectBuilder);
         }
 
-        return new AbstractMap.SimpleEntry<TypedQuery<T>, KeysetExtractionObjectBuilder<T>>(query, objectBuilder);
+        return new AbstractMap.SimpleEntry<TypedQuery<T>, ObjectBuilder<T>>(query, objectBuilder);
     }
 
     private TypedQuery<Object[]> getIdQuery(String idQueryString, boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins) {
@@ -878,10 +977,22 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
                 sbSelectFrom.append(", ");
             }
         }
+
         sbSelectFrom.setLength(sbSelectFrom.length() - 2);
 
         if (needsNewIdList) {
-            orderByManager.buildSelectClauses(sbSelectFrom, keysetExtraction, aliasFunction && !externalRepresentation, keysetToSelectIndexMapping);
+            if (isWithInlineIdQuery()) {
+                // We need to pass a null keysetToSelectIndexMapping in this case to force rendering the order by alias expressions to the id query
+                orderByManager.buildSelectClauses(sbSelectFrom, false, aliasFunction && !externalRepresentation, null);
+            } else {
+                orderByManager.buildSelectClauses(sbSelectFrom, keysetExtraction, aliasFunction && !externalRepresentation, keysetToSelectIndexMapping);
+            }
+        }
+
+        if (!aliasFunction && withCountQuery && withInlineCountQuery) {
+            sbSelectFrom.append(", (");
+            buildPageCountQueryString(sbSelectFrom, externalRepresentation, false);
+            sbSelectFrom.append(')');
         }
 
         List<String> whereClauseConjuncts = new ArrayList<>();
@@ -1013,6 +1124,12 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             } else {
                 orderByManager.buildSelectClauses(sbSelectFrom, true, false, keysetToSelectIndexMapping);
             }
+        }
+
+        if (withCountQuery && withInlineCountQuery) {
+            sbSelectFrom.append(", (");
+            buildPageCountQueryString(sbSelectFrom, externalRepresentation, false);
+            sbSelectFrom.append(')');
         }
 
         List<String> whereClauseConjuncts = new ArrayList<>();

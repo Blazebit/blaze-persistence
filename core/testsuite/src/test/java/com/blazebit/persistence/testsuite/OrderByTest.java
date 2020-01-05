@@ -178,7 +178,7 @@ public class OrderByTest extends AbstractCoreTest {
         String expectedQuery = "SELECT UPPER(owner_1.name) AS asd FROM Document d"
                 + " JOIN d.owner owner_1"
                 + " ORDER BY asd ASC, d.id ASC";
-        assertEquals(expectedQuery, criteria.getQueryString());
+        assertEquals(expectedQuery, criteria.withInlineCountQuery(false).getQueryString());
     }
 
     @Test

@@ -141,6 +141,30 @@ public final class ConfigurationProperties {
      * @since 1.2.0
      */
     public static final String OPTIMIZED_KEYSET_PREDICATE_RENDERING = "com.blazebit.persistence.optimized_keyset_predicate_rendering";
+
+    /**
+     * If set to true, the id query in a {@link PaginatedCriteriaBuilder} is inlined into the object query as subquery.
+     * Valid values for this property are <code>true</code>, <code>false</code> or <code>auto</code>.
+     * Default is <code>auto</code> which will make use of inlining if the JPA provider and DBMS dialect support it.
+     *
+     * The property can be changed for a criteria builder before generating the query.
+     *
+     * @since 1.4.1
+     * @see PaginatedCriteriaBuilder#withInlineIdQuery(boolean)
+     */
+    public static final String INLINE_ID_QUERY = "com.blazebit.persistence.inline_id_query";
+
+    /**
+     * If set to true, the count query in a {@link PaginatedCriteriaBuilder} is inlined into the id or object query as select item.
+     * Valid values for this property are <code>true</code>, <code>false</code> or <code>auto</code>.
+     * Default is <code>auto</code> which will make use of inlining if the JPA provider and DBMS dialect support it.
+     *
+     * The property can be changed for a criteria builder before generating the query.
+     *
+     * @since 1.4.1
+     * @see PaginatedCriteriaBuilder#withInlineCountQuery(boolean)
+     */
+    public static final String INLINE_COUNT_QUERY = "com.blazebit.persistence.inline_count_query";
     
     private ConfigurationProperties() {
     }

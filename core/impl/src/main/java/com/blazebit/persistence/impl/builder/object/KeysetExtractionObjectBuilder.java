@@ -37,14 +37,17 @@ public class KeysetExtractionObjectBuilder<T> implements ObjectBuilder<T> {
     private final int keysetSuffix;
     private final KeysetMode keysetMode;
     private final boolean unwrap;
+    private final boolean extractCount;
     private Object[] first;
     private Object[] last;
     private ArrayList<Object[]> keysets;
+    private long count = -1;
 
-    public KeysetExtractionObjectBuilder(int[] keysetToSelectIndexMapping, KeysetMode keysetMode, boolean unwrap, boolean extractAll) {
+    public KeysetExtractionObjectBuilder(int[] keysetToSelectIndexMapping, KeysetMode keysetMode, boolean unwrap, boolean extractAll, boolean extractCount) {
         this.keysetToSelectIndexMapping = keysetToSelectIndexMapping;
         this.keysetMode = keysetMode;
         this.unwrap = unwrap;
+        this.extractCount = extractCount;
         if (extractAll) {
             this.keysets = new ArrayList<>();
         }
@@ -87,11 +90,14 @@ public class KeysetExtractionObjectBuilder<T> implements ObjectBuilder<T> {
                 last = tuple;
             }
         }
+        if (extractCount) {
+            count = (long) tuple[tuple.length - 1];
+        }
 
         if (unwrap) {
             return (T) tuple[0];
         } else {
-            Object[] newTuple = new Object[tuple.length - keysetSuffix];
+            Object[] newTuple = new Object[tuple.length - keysetSuffix - (extractCount ? 1 : 0)];
             System.arraycopy(tuple, 0, newTuple, 0, newTuple.length);
             return (T) newTuple;
         }
@@ -111,7 +117,7 @@ public class KeysetExtractionObjectBuilder<T> implements ObjectBuilder<T> {
             return null;
         }
 
-        return KeysetPaginationHelper.extractKey(first, keysetToSelectIndexMapping, keysetSuffix);
+        return KeysetPaginationHelper.extractKey(first, keysetToSelectIndexMapping, keysetSuffix + (extractCount ? 1 : 0));
     }
 
     public Serializable[] getHighest() {
@@ -119,7 +125,7 @@ public class KeysetExtractionObjectBuilder<T> implements ObjectBuilder<T> {
             return null;
         }
 
-        return KeysetPaginationHelper.extractKey(last, keysetToSelectIndexMapping, keysetSuffix);
+        return KeysetPaginationHelper.extractKey(last, keysetToSelectIndexMapping, keysetSuffix + (extractCount ? 1 : 0));
     }
 
     public Serializable[][] getKeysets() {
@@ -129,10 +135,14 @@ public class KeysetExtractionObjectBuilder<T> implements ObjectBuilder<T> {
 
         Serializable[][] keysetArray = new Serializable[keysets.size()][];
         for (int i = 0; i < keysetArray.length; i++) {
-            keysetArray[i] = KeysetPaginationHelper.extractKey(keysets.get(i), keysetToSelectIndexMapping, keysetSuffix);
+            keysetArray[i] = KeysetPaginationHelper.extractKey(keysets.get(i), keysetToSelectIndexMapping, keysetSuffix + (extractCount ? 1 : 0));
         }
 
         return keysetArray;
+    }
+
+    public long getCount() {
+        return count;
     }
 
     @Override

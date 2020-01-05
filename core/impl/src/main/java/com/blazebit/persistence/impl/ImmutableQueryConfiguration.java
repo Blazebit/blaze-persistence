@@ -41,20 +41,26 @@ public class ImmutableQueryConfiguration extends AbstractQueryConfiguration {
     private final boolean valuesClauseFilterNullsEnabled;
     private final boolean parameterAsLiteralRenderingEnabled;
     private final boolean optimizedKeysetPredicateRenderingEnabled;
+    private final Boolean inlineIdQuery;
+    private final Boolean inlineCountQuery;
 
     public ImmutableQueryConfiguration(Map<String, String> properties) {
         this.compatibleModeEnabled = PropertyUtils.getAsBooleanProperty(properties, ConfigurationProperties.COMPATIBLE_MODE, false);
         this.expressionOptimizationEnabled = PropertyUtils.getAsBooleanProperty(properties, ConfigurationProperties.EXPRESSION_OPTIMIZATION, true);
         this.expressionCacheClass = properties.get(ConfigurationProperties.EXPRESSION_CACHE_CLASS);
 
-        this.returningClauseCaseSensitive =                 getBooleanProperty(properties, ConfigurationProperties.RETURNING_CLAUSE_CASE_SENSITIVE,    "false");
-        this.sizeToCountTransformationEnabled =             getBooleanProperty(properties, ConfigurationProperties.SIZE_TO_COUNT_TRANSFORMATION,       "true");
-        this.implicitGroupByFromSelectEnabled =             getBooleanProperty(properties, ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_SELECT,      "true");
-        this.implicitGroupByFromHavingEnabled =             getBooleanProperty(properties, ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_HAVING,      "true");
-        this.implicitGroupByFromOrderByEnabled =            getBooleanProperty(properties, ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_ORDER_BY,    "true");
-        this.valuesClauseFilterNullsEnabled =               getBooleanProperty(properties, ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS,         "true");
-        this.parameterAsLiteralRenderingEnabled =           getBooleanProperty(properties, ConfigurationProperties.PARAMETER_AS_LITERAL_RENDERING,     "true");
-        this.optimizedKeysetPredicateRenderingEnabled =     getBooleanProperty(properties, ConfigurationProperties.OPTIMIZED_KEYSET_PREDICATE_RENDERING,     "true");
+        this.returningClauseCaseSensitive =                 getBooleanProperty(properties, ConfigurationProperties.RETURNING_CLAUSE_CASE_SENSITIVE,     "false");
+        this.sizeToCountTransformationEnabled =             getBooleanProperty(properties, ConfigurationProperties.SIZE_TO_COUNT_TRANSFORMATION,        "true");
+        this.implicitGroupByFromSelectEnabled =             getBooleanProperty(properties, ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_SELECT,       "true");
+        this.implicitGroupByFromHavingEnabled =             getBooleanProperty(properties, ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_HAVING,       "true");
+        this.implicitGroupByFromOrderByEnabled =            getBooleanProperty(properties, ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_ORDER_BY,     "true");
+        this.valuesClauseFilterNullsEnabled =               getBooleanProperty(properties, ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS,          "true");
+        this.parameterAsLiteralRenderingEnabled =           getBooleanProperty(properties, ConfigurationProperties.PARAMETER_AS_LITERAL_RENDERING,      "true");
+        this.optimizedKeysetPredicateRenderingEnabled =     getBooleanProperty(properties, ConfigurationProperties.OPTIMIZED_KEYSET_PREDICATE_RENDERING,"true");
+        String inlineIdQuery =                              getProperty(properties, ConfigurationProperties.INLINE_ID_QUERY,                            "auto");
+        String inlineCountQuery =                           getProperty(properties, ConfigurationProperties.INLINE_COUNT_QUERY,                         "auto");
+        this.inlineIdQuery = "auto".equalsIgnoreCase(inlineIdQuery) ? null : Boolean.parseBoolean(inlineIdQuery);
+        this.inlineCountQuery = "auto".equalsIgnoreCase(inlineCountQuery) ? null : Boolean.parseBoolean(inlineCountQuery);
     }
 
     @Override
@@ -113,6 +119,16 @@ public class ImmutableQueryConfiguration extends AbstractQueryConfiguration {
     }
 
     @Override
+    public Boolean getInlineIdQueryEnabled() {
+        return inlineIdQuery;
+    }
+
+    @Override
+    public Boolean getInlineCountQueryEnabled() {
+        return inlineCountQuery;
+    }
+
+    @Override
     public void setCacheable(boolean cacheable) {
         throw new UnsupportedOperationException("Can't set cacheable on immutable query configuration!");
     }
@@ -136,6 +152,8 @@ public class ImmutableQueryConfiguration extends AbstractQueryConfiguration {
             case ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS: return Boolean.toString(valuesClauseFilterNullsEnabled);
             case ConfigurationProperties.PARAMETER_AS_LITERAL_RENDERING: return Boolean.toString(parameterAsLiteralRenderingEnabled);
             case ConfigurationProperties.OPTIMIZED_KEYSET_PREDICATE_RENDERING: return Boolean.toString(optimizedKeysetPredicateRenderingEnabled);
+            case ConfigurationProperties.INLINE_ID_QUERY: return inlineIdQuery == null ? "auto" : Boolean.toString(inlineIdQuery);
+            case ConfigurationProperties.INLINE_COUNT_QUERY: return inlineIdQuery == null ? "auto" : Boolean.toString(inlineIdQuery);
             default: return null;
         }
     }
@@ -154,6 +172,8 @@ public class ImmutableQueryConfiguration extends AbstractQueryConfiguration {
         properties.put(ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS, Boolean.toString(valuesClauseFilterNullsEnabled));
         properties.put(ConfigurationProperties.PARAMETER_AS_LITERAL_RENDERING, Boolean.toString(parameterAsLiteralRenderingEnabled));
         properties.put(ConfigurationProperties.OPTIMIZED_KEYSET_PREDICATE_RENDERING, Boolean.toString(optimizedKeysetPredicateRenderingEnabled));
+        properties.put(ConfigurationProperties.INLINE_ID_QUERY, getInlineIdQueryEnabled() == null ? "auto" : Boolean.toString(getInlineIdQueryEnabled()));
+        properties.put(ConfigurationProperties.INLINE_COUNT_QUERY, getInlineCountQueryEnabled() == null ? "auto" : Boolean.toString(getInlineCountQueryEnabled()));
         return properties;
     }
 

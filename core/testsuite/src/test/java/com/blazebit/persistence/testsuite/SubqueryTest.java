@@ -559,9 +559,9 @@ public class SubqueryTest extends AbstractCoreTest {
         
         String expectedCountQuery = "SELECT " + countPaginated("document.id", false) + " FROM Document document" + singleValuedAssociationIdJoin("document.owner", "owner_1", false) + " WHERE " + singleValuedAssociationIdPath("document.owner.id", "owner_1") + " = :param_0 AND document.id NOT IN (SELECT " + singleValuedAssociationIdPath("versions_1.document.id", "document_1") + " FROM Document c2 LEFT JOIN c2.versions versions_1" + singleValuedAssociationIdJoin("versions_1.document", "document_1", true) + " WHERE c2.id = :param_1)";
         String expectedObjectQuery = "SELECT document FROM Document document" + singleValuedAssociationIdJoin("document.owner", "owner_1", false) + " WHERE " + singleValuedAssociationIdPath("document.owner.id", "owner_1") + " = :param_0 AND document.id NOT IN (SELECT " + singleValuedAssociationIdPath("versions_1.document.id", "document_1") + " FROM Document c2 LEFT JOIN c2.versions versions_1" + singleValuedAssociationIdJoin("versions_1.document", "document_1", true) + " WHERE c2.id = :param_1) ORDER BY document.id ASC";
-        assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
-        assertEquals(expectedObjectQuery, pcb.getQueryString());
         pcb.getResultList();
+        assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
+        assertEquals(expectedObjectQuery, pcb.withInlineCountQuery(false).getQueryString());
     }
     
     @Test
@@ -575,9 +575,9 @@ public class SubqueryTest extends AbstractCoreTest {
         
         String expectedCountQuery = "SELECT " + countPaginated("document.id", false) + " FROM Document document";
         String expectedObjectQuery = "SELECT (SELECT COUNT(version.id) FROM Version version" + singleValuedAssociationIdJoin("version.document", "document_1", true) + " WHERE " + singleValuedAssociationIdPath("version.document.id", "document_1") + " = document.id) FROM Document document ORDER BY document.id ASC";
-        assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
-        assertEquals(expectedObjectQuery, pcb.getQueryString());
         pcb.getResultList();
+        assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
+        assertEquals(expectedObjectQuery, pcb.withInlineCountQuery(false).getQueryString());
     }
 
     @Test

@@ -152,6 +152,34 @@ The property can be changed for a criteria builder before constructing a query.
 | Applicable | Always
 |====================
 
+==== INLINE_ID_QUERY
+
+Defines whether the id query in a `PaginatedCriteriaBuilder` is inlined into the object query as subquery.
+Valid values for this property are `true`, `false` or `auto`.
+The property can be changed for a criteria builder before generating the query.
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.inline_id_query
+| Type | String/boolean
+| Default | auto
+| Applicable | Always
+|====================
+
+==== INLINE_COUNT_QUERY
+
+Defines whether the count query in a `PaginatedCriteriaBuilder` is inlined into the id or object query as select item.
+Valid values for this property are `true`, `false` or `auto`.
+The property can be changed for a criteria builder before generating the query.
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.inline_count_query
+| Type | String/boolean
+| Default | auto
+| Applicable | Always
+|====================
+
 [[configuration-jpql-functions]]
 === Jpql functions
 

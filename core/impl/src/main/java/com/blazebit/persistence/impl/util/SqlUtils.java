@@ -213,11 +213,12 @@ public class SqlUtils {
                     parenthesis++;
                 } else if (c == ')') {
                     // When we leave the context, reset the end to the from index
-                    if (i < fromIndex) {
+                    if (i < fromIndex && parenthesis == 1) {
                         end = fromIndex;
                     } else {
                         // If the found from was in the subcontext, find the next from
-                        end = fromIndex = FROM_FINDER.indexIn(sql, i);
+                        // When we are in a subcontext i.e. parenthesis != 1, we have to start searching at i + 2 to avoid running into the subcontext from clause
+                        end = fromIndex = FROM_FINDER.indexIn(sql, parenthesis == 1 ? i : i + 2);
                         // from-less query
                         if (fromIndex == -1) {
                             end = fromIndex = sql.length();

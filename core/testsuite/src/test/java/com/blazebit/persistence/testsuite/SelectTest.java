@@ -408,10 +408,10 @@ public class SelectTest extends AbstractCoreTest {
         String countQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d";
         String objectQuery = "SELECT " + function("COUNT_TUPLE", "versions_1.id") + ", owner_1.name FROM Document d JOIN d.owner owner_1 LEFT JOIN d.versions versions_1 GROUP BY " + groupBy("d.id", "owner_1.name", renderNullPrecedenceGroupBy("d.id")) + " ORDER BY d.id DESC";
 
-        assertEquals(countQuery, cb.getPageCountQueryString());
-        assertEquals(objectQuery, cb.getQueryString());
-
         cb.getResultList();
+
+        assertEquals(countQuery, cb.getPageCountQueryString());
+        assertEquals(objectQuery, cb.withInlineCountQuery(false).getQueryString());
     }
     
     @Test
@@ -441,10 +441,10 @@ public class SelectTest extends AbstractCoreTest {
         String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP END, owner_1.name FROM Document d JOIN d.owner owner_1 "
                 + "GROUP BY " + groupBy("d.creationDate", "owner_1.name", renderNullPrecedenceGroupBy("d.id")) + " ORDER BY d.id DESC";
 
-        assertEquals(countQuery, cb.getPageCountQueryString());
-        assertEquals(objectQuery, cb.getQueryString());
-
         cb.getResultList();
+
+        assertEquals(countQuery, cb.getPageCountQueryString());
+        assertEquals(objectQuery, cb.withInlineCountQuery(false).getQueryString());
     }
     
     @Test
@@ -488,10 +488,10 @@ public class SelectTest extends AbstractCoreTest {
         }
         objectQuery += " ORDER BY d.id DESC";
 
-        assertEquals(countQuery, cb.getPageCountQueryString());
-        assertEquals(objectQuery, cb.getQueryString());
-
         cb.getResultList();
+
+        assertEquals(countQuery, cb.getPageCountQueryString());
+        assertEquals(objectQuery, cb.withInlineCountQuery(false).getQueryString());
     }
     
     @Test

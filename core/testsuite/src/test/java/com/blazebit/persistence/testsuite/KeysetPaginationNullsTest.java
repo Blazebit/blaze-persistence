@@ -356,7 +356,7 @@ public class KeysetPaginationNullsTest extends AbstractCoreTest {
         assertNull(pcb.getPageIdQueryString());
 
         // Optimized object query test
-        String actualObjectQueryString = pcb.getQueryString();
+        String actualObjectQueryString = pcb.withInlineCountQuery(false).getQueryString();
         for (int i = 0; i < key.length; i++) {
             if (key[i] != null) {
                 actualObjectQueryString = actualObjectQueryString.replaceAll(Pattern.quote(":_keysetParameter_" + i), key[i].toString());

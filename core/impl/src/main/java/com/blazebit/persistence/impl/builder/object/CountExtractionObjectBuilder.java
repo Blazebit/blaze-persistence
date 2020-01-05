@@ -16,39 +16,47 @@
 
 package com.blazebit.persistence.impl.builder.object;
 
-import java.util.List;
-
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.SelectBuilder;
-import com.blazebit.persistence.impl.keyset.KeysetMode;
+
+import java.util.List;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.0.0
  */
-public class DelegatingKeysetExtractionObjectBuilder<T> extends KeysetExtractionObjectBuilder<T> {
+public class CountExtractionObjectBuilder<T> implements ObjectBuilder<T> {
 
-    private final ObjectBuilder<T> objectBuilder;
+    private final ObjectBuilder<T> delegate;
+    private long count = -1;
 
-    public DelegatingKeysetExtractionObjectBuilder(ObjectBuilder<T> objectBuilder, int[] keysetToSelectIndexMapping, KeysetMode keysetMode, boolean extractAll, boolean extractCount) {
-        super(keysetToSelectIndexMapping, keysetMode, false, extractAll, extractCount);
-        this.objectBuilder = objectBuilder;
+    public CountExtractionObjectBuilder(ObjectBuilder<T> delegate) {
+        this.delegate = delegate;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public T build(Object[] tuple) {
-        return objectBuilder.build((Object[]) super.build(tuple));
+        count = (long) tuple[tuple.length - 1];
+
+        Object[] newTuple = new Object[tuple.length - 1];
+        System.arraycopy(tuple, 0, newTuple, 0, newTuple.length);
+        return delegate.build(newTuple);
+    }
+
+    public long getCount() {
+        return count;
     }
 
     @Override
     public List<T> buildList(List<T> list) {
-        return objectBuilder.buildList(list);
+        return delegate.buildList(list);
     }
 
     @Override
-    public <X extends SelectBuilder<X>> void applySelects(X selectBuilder) {
-        objectBuilder.applySelects(selectBuilder);
+    public <X extends SelectBuilder<X>> void applySelects(X queryBuilder) {
+        delegate.applySelects(queryBuilder);
     }
 
 }
