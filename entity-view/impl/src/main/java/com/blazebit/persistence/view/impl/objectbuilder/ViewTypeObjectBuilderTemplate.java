@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder;
 
-import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.parser.EntityMetamodel;
@@ -1121,15 +1120,11 @@ public class ViewTypeObjectBuilderTemplate<T> {
         }
     }
 
-    public ObjectBuilder<T> createObjectBuilder(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration, int suffix) {
-        return createObjectBuilder(queryBuilder, optionalParameters, entityViewConfiguration, suffix, false, false);
-    }
-
-    public ObjectBuilder<T> createObjectBuilder(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration, int suffix, boolean isSubview, boolean nullIfEmpty) {
+    public ObjectBuilder<T> createObjectBuilder(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration, int suffix, boolean isSubview, boolean nullFlatViewIfEmpty) {
         boolean hasOffset = tupleOffset != 0 || suffix != 0;
         ObjectBuilder<T> result;
 
-        result = new ViewTypeObjectBuilder<T>(this, parameterHolder, optionalParameters, entityViewConfiguration == null ? null : entityViewConfiguration.getEmbeddingViewJpqlMacro(), entityViewConfiguration == null ? Collections.<String>emptySet() : entityViewConfiguration.getFetches(), nullIfEmpty);
+        result = new ViewTypeObjectBuilder<T>(this, parameterHolder, optionalParameters, entityViewConfiguration == null ? null : entityViewConfiguration.getEmbeddingViewJpqlMacro(), entityViewConfiguration == null ? Collections.<String>emptySet() : entityViewConfiguration.getFetches(), nullFlatViewIfEmpty);
 
         if (hasSubtypes) {
             result = new InheritanceReducerViewTypeObjectBuilder<>((ViewTypeObjectBuilder<T>) result, tupleOffset, suffix, mappers.length, !isSubview && (tupleOffset > 0 || suffix > 0), subtypeInstantiators);

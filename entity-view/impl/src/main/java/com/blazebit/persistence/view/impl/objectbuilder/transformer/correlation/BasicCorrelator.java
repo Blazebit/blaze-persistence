@@ -34,7 +34,7 @@ public final class BasicCorrelator implements Correlator {
     }
 
     @Override
-    public ObjectBuilder<?> finish(FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration entityViewConfiguration, int tupleSuffix, String correlationRoot, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
+    public ObjectBuilder<?> finish(FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration entityViewConfiguration, int tupleSuffix, String correlationRoot, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean nullFlatViewIfEmpty) {
         criteriaBuilder.select(correlationRoot);
         return null;
     }

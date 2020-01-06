@@ -14,22 +14,21 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
+package com.blazebit.persistence.view.testsuite.correlation.subselectsubset.model;
 
-import com.blazebit.persistence.FullQueryBuilder;
-import com.blazebit.persistence.ObjectBuilder;
-import com.blazebit.persistence.view.impl.EntityViewConfiguration;
-import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
+import com.blazebit.persistence.testsuite.entity.NameObject;
+import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.IdMapping;
 
 /**
  *
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.4.1
  */
-public interface Correlator {
-
-    public int getElementOffset();
-
-    public ObjectBuilder<?> finish(FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration entityViewConfiguration, int tupleSuffix, String correlationRoot, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean nullFlatViewIfEmpty);
+@EntityView(NameObject.class)
+public interface NameObjectView {
+    
+    public String getPrimaryName();
 
 }
