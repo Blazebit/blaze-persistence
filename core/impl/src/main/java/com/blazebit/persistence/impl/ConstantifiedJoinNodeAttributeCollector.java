@@ -376,9 +376,17 @@ class ConstantifiedJoinNodeAttributeCollector extends VisitorAdapter {
             // TODO: at some point we should build an equivalence class to transitively propagate constantification
             // TODO: also, it would be nice if we could detect constantifications in disjuncts and work with that
             if (isConstant(predicate.getLeft())) {
-                predicate.getRight().accept(this);
+                if (isParameterOrLiteral(predicate.getRight())) {
+                    predicate.getLeft().accept(this);
+                } else {
+                    predicate.getRight().accept(this);
+                }
             } else if (isConstant(predicate.getRight())) {
-                predicate.getLeft().accept(this);
+                if (isParameterOrLiteral(predicate.getLeft())) {
+                    predicate.getRight().accept(this);
+                } else {
+                    predicate.getLeft().accept(this);
+                }
             }
         } finally {
             negated = originNegated;
@@ -397,7 +405,7 @@ class ConstantifiedJoinNodeAttributeCollector extends VisitorAdapter {
                 return;
             }
             // TODO: at some point we should build an equivalence class to transitively propagate constantification
-            if (isConstant(predicate.getLeft())) {
+            if (isParameterOrLiteral(predicate.getLeft())) {
                 // Only support the simple case here
                 if (predicate.getRight().size() == 1) {
                     predicate.getRight().get(0).accept(this);
@@ -418,8 +426,12 @@ class ConstantifiedJoinNodeAttributeCollector extends VisitorAdapter {
         }
     }
 
+    private static boolean isParameterOrLiteral(Expression expression) {
+        return expression instanceof ParameterExpression || expression instanceof LiteralExpression<?>;
+    }
+
     private boolean isConstant(Expression expression) {
-        if (expression instanceof ParameterExpression || expression instanceof LiteralExpression<?>) {
+        if (isParameterOrLiteral(expression)) {
             return true;
         }
 
