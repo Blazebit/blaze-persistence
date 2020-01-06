@@ -271,6 +271,12 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
                         orderedAttributes.clear();
                         managedType = metamodel.getManagedType(ExtendedManagedType.class, JpaMetamodelUtils.resolveFieldClass(baseNode.getJavaType(), attribute));
                     }
+                } else if (attribute instanceof SingularAttribute<?, ?> && ((SingularAttribute<?, ?>) attribute).isId()) {
+                    baseNodeKey = baseNode;
+                    // This is an id class attribute
+                    nonConstantParent = false;
+                    // This is not 100% correct as it is not an embedded id, but works because we only need to append the association name field part
+                    isEmbeddedIdPart = true;
                 }
                 if (nonConstantParent) {
                     registerFunctionalDependencyRootExpression(baseNodeKey);
