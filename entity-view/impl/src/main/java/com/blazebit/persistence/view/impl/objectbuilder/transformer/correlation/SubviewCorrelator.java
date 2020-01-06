@@ -52,9 +52,9 @@ public final class SubviewCorrelator implements Correlator {
 
     @Override
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public ObjectBuilder<?> finish(FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration entityViewConfiguration, int tupleSuffix, String correlationRoot, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
+    public ObjectBuilder<?> finish(FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration entityViewConfiguration, int tupleSuffix, String correlationRoot, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean nullFlatViewIfEmpty) {
         EntityViewConfiguration subviewConfiguration = entityViewConfiguration.forSubview(criteriaBuilder, attributePath, embeddingViewJpqlMacro);
-        ObjectBuilder builder = evm.createObjectBuilder(managedViewType, mappingConstructor, correlationRoot, attributePath, criteriaBuilder, subviewConfiguration, 0, tupleSuffix);
+        ObjectBuilder builder = evm.createObjectBuilder(managedViewType, mappingConstructor, correlationRoot, attributePath, criteriaBuilder, subviewConfiguration, 0, tupleSuffix, nullFlatViewIfEmpty);
         criteriaBuilder.selectNew(builder);
         return builder;
     }

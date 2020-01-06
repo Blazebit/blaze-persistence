@@ -27,6 +27,7 @@ import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.macro.CorrelatedSubqueryEmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.impl.macro.CorrelatedSubqueryViewRootJpqlMacro;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
+import com.blazebit.persistence.view.metamodel.ViewType;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Parameter;
@@ -181,15 +182,21 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
 
         final String correlationRoot = applyAndGetCorrelationRoot(expectBatchCorrelationMode);
         // Add select items so that macros are properly used and we can query usage
-        correlator.finish(criteriaBuilder, entityViewConfiguration, tupleOffset, correlationRoot, embeddingViewJpqlMacro);
+        correlator.finish(criteriaBuilder, entityViewConfiguration, tupleOffset, correlationRoot, embeddingViewJpqlMacro, true);
         if (batchSize > 1) {
             criteriaBuilder.select(correlationSelectExpression);
         }
 
         // If a view macro is used, we have to decide whether we do batches for each view id or correlation param
         if (embeddingViewJpqlMacro.usesViewMacroNonId() || !correlatesThis && embeddingViewJpqlMacro.usesViewMacro()) {
+            if (!(embeddingViewType instanceof ViewType<?>)) {
+                throw new IllegalStateException("The use of EMBEDDING_VIEW in the correlation for '" + embeddingViewType.getJavaType().getName() + "." + attributePath.substring(attributePath.lastIndexOf('.') + 1) + "' is illegal because the embedding view type '" + embeddingViewType.getJavaType().getName() + "' does not declare a @IdMapping!");
+            }
             transformViewMacroAware(tuples, correlationParams, tupleOffset, correlationRoot, embeddingViewJpqlMacro, BatchCorrelationMode.EMBEDDING_VIEWS, embeddingViewType, embeddingViewIndex);
         } else if (viewRootJpqlMacro.usesViewMacro()) {
+            if (!(viewRootType instanceof ViewType<?>)) {
+                throw new IllegalStateException("The use of VIEW_ROOT in the correlation for '" + embeddingViewType.getJavaType().getName() + "." + attributePath.substring(attributePath.lastIndexOf('.') + 1) + "' is illegal because the view root type '" + viewRootType.getJavaType().getName() + "' does not declare a @IdMapping!");
+            }
             transformViewMacroAware(tuples, correlationParams, tupleOffset, correlationRoot, viewRootJpqlMacro, BatchCorrelationMode.VIEW_ROOTS, viewRootType, viewRootIndex);
         } else {
             EntityManager em = criteriaBuilder.getEntityManager();
@@ -199,7 +206,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
                 // If the expectation was wrong, we have to create a new criteria builder
                 if (expectBatchCorrelationMode != BatchCorrelationMode.VALUES) {
                     applyAndGetCorrelationRoot(BatchCorrelationMode.VALUES);
-                    correlator.finish(criteriaBuilder, entityViewConfiguration, tupleOffset, correlationRoot, embeddingViewJpqlMacro);
+                    correlator.finish(criteriaBuilder, entityViewConfiguration, tupleOffset, correlationRoot, embeddingViewJpqlMacro, true);
                     criteriaBuilder.select(correlationSelectExpression);
                 }
             }
@@ -316,7 +323,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
                 if (expectBatchCorrelationMode != BatchCorrelationMode.VALUES) {
                     applyAndGetCorrelationRoot(BatchCorrelationMode.VALUES);
                     macro = BatchCorrelationMode.VIEW_ROOTS == correlationMode ? viewRootJpqlMacro : embeddingViewJpqlMacro;
-                    correlator.finish(criteriaBuilder, entityViewConfiguration, tupleOffset, correlationRoot, embeddingViewJpqlMacro);
+                    correlator.finish(criteriaBuilder, entityViewConfiguration, tupleOffset, correlationRoot, embeddingViewJpqlMacro, true);
                     criteriaBuilder.select(correlationSelectExpression);
                 }
                 macro.addBatchPredicate(criteriaBuilder);
@@ -361,7 +368,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
                 if (expectBatchCorrelationMode != correlationMode) {
                     applyAndGetCorrelationRoot(correlationMode);
                     macro = BatchCorrelationMode.VIEW_ROOTS == correlationMode ? viewRootJpqlMacro : embeddingViewJpqlMacro;
-                    correlator.finish(criteriaBuilder, entityViewConfiguration, tupleOffset, correlationRoot, embeddingViewJpqlMacro);
+                    correlator.finish(criteriaBuilder, entityViewConfiguration, tupleOffset, correlationRoot, embeddingViewJpqlMacro, true);
                     criteriaBuilder.select(correlationSelectExpression);
                 }
                 macro.addBatchPredicate(criteriaBuilder);

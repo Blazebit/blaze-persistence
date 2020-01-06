@@ -60,6 +60,7 @@ import com.blazebit.persistence.view.metamodel.Attribute;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
+import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
 import com.blazebit.reflection.ReflectionUtils;
 
@@ -322,7 +323,13 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.correlationExpression = mappingCorrelated.correlationExpression();
 
             if (mappingCorrelated.correlationBasis().isEmpty()) {
-                context.addError("Illegal empty correlation basis in the " + getLocation());
+                context.addError("Illegal empty correlation basis in the " + mapping.getErrorLocation());
+            }
+            if (!(declaringType instanceof ViewType<?>) && (fetchStrategy == FetchStrategy.SELECT || fetchStrategy == FetchStrategy.SUBSELECT)) {
+                // This check is not perfect, but good enough since we also check it at runtime
+                if (mappingCorrelated.correlationExpression().toUpperCase().contains("EMBEDDING_VIEW")) {
+                    context.addError("The use of EMBEDDING_VIEW in the correlation for '" + mapping.getErrorLocation() + "' is illegal because the embedding view type '" + declaringType.getJavaType().getName() + "' does not declare a @IdMapping!");
+                }
             }
         } else {
             context.addError("No mapping annotation could be found " + mapping.getErrorLocation());

@@ -86,8 +86,8 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
     }
 
     private static int viewIdMapperCount(ManagedViewType<?> viewRootType) {
-        MethodAttribute<?, ?> idAttribute = ((ViewType<?>) viewRootType).getIdAttribute();
-        if (idAttribute.isSubview()) {
+        MethodAttribute<?, ?> idAttribute;
+        if (viewRootType instanceof ViewType<?> && (idAttribute = ((ViewType<?>) viewRootType).getIdAttribute()).isSubview()) {
             return viewIdMapperCount(idAttribute);
         } else {
             return 0;
@@ -108,12 +108,12 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
     }
 
     private ObjectBuilder<Object[]> createViewAwareObjectBuilder(ManagedViewType<?> viewType, EntityViewConfiguration configuration, String viewRoot) {
-        MethodAttribute<?, ?> idAttribute = ((ViewType<?>) viewType).getIdAttribute();
-        if (!idAttribute.isSubview()) {
+        MethodAttribute<?, ?> idAttribute;
+        if (!(viewType instanceof ViewType<?>) || !(idAttribute = ((ViewType<?>) viewType).getIdAttribute()).isSubview()) {
             return null;
         }
         ManagedViewType<?> idViewType = (ManagedViewType<?>) ((SingularAttribute<?, ?>) idAttribute).getType();
-        return (ObjectBuilder<Object[]>) evm.createObjectBuilder((ManagedViewTypeImplementor<?>) idViewType, null, viewRoot, "", criteriaBuilder, configuration, 1, 1);
+        return (ObjectBuilder<Object[]>) evm.createObjectBuilder((ManagedViewTypeImplementor<?>) idViewType, null, viewRoot, "", criteriaBuilder, configuration, 1, 1, false);
     }
 
     @Override
@@ -164,10 +164,16 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
 
         // Before we can determine whether we use view roots or embedding views, we need to add all selects, otherwise macros might report false although they are used
         final String correlationRoot = correlationBuilder.getCorrelationRoot();
-        ObjectBuilder<Object[]> objectBuilder = (ObjectBuilder<Object[]>) correlator.finish(criteriaBuilder, entityViewConfiguration, maximumViewMapperCount + 1, correlationRoot, embeddingViewJpqlMacro);
+        ObjectBuilder<Object[]> objectBuilder = (ObjectBuilder<Object[]>) correlator.finish(criteriaBuilder, entityViewConfiguration, maximumViewMapperCount + 1, correlationRoot, embeddingViewJpqlMacro, true);
 
         final boolean usesViewRoot = viewRootJpqlMacro.usesViewMacro();
         final boolean usesEmbeddingView = embeddingViewJpqlMacro.usesEmbeddingView();
+
+        if (usesEmbeddingView && !(embeddingViewType instanceof ViewType<?>)) {
+            throw new IllegalStateException("The use of EMBEDDING_VIEW in the correlation for '" + embeddingViewType.getJavaType().getName() + "." + attributePath.substring(attributePath.lastIndexOf('.') + 1) + "' is illegal because the embedding view type '" + embeddingViewType.getJavaType().getName() + "' does not declare a @IdMapping!");
+        } else if (usesViewRoot && !(viewRootType instanceof ViewType<?>)) {
+            throw new IllegalStateException("The use of VIEW_ROOT in the correlation for '" + embeddingViewType.getJavaType().getName() + "." + attributePath.substring(attributePath.lastIndexOf('.') + 1) + "' is illegal because the view root type '" + viewRootType.getJavaType().getName() + "' does not declare a @IdMapping!");
+        }
 
         int totalSize = tuples.size();
         Map<Object, Map<Object, TuplePromise>> viewRoots = new HashMap<Object, Map<Object, TuplePromise>>(totalSize);

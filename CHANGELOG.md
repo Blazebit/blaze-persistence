@@ -15,7 +15,8 @@ Not yet released
 
 ### Bug fixes
 
-None
+* Validate that `VIEW_ROOT` and `EMBEDDING_VIEW` macros can't be used on `SELECT` or `SUBSELECT` fetched correlations when the view type has no `@IdMapping`
+* Fix _null_/_empty_ flat view objects when using SELECT or SUBSELECT fetch strategy for a collection correlation
 
 ### Backwards-incompatible changes
 

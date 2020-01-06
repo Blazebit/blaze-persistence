@@ -163,7 +163,7 @@ public final class Mappers {
                                 null,
                                 new MutableEmbeddingViewJpqlMacro(),
                                 0
-                        ).createObjectBuilder(null, null, null, 0);
+                        ).createObjectBuilder(null, null, null, 0, false, false);
                     }
                     mappers.add(new ReferenceViewAttributeMapper<S, T>(evm, entityAccessor, attributeType.getJavaType(), entityTupleizer, Accessors.forMutableViewAttribute(evm, attribute), idViewBuilder));
                 }
@@ -218,7 +218,7 @@ public final class Mappers {
                                         null,
                                         new MutableEmbeddingViewJpqlMacro(),
                                         0
-                                ).createObjectBuilder(null, null, null, 0);
+                                ).createObjectBuilder(null, null, null, 0, false, false);
                             }
                             mappers.add(new ReferenceViewAttributeMapper<S, T>(evm, entityAccessor, viewType.getJavaType(), entityTupleizer, targetAttributeAccessor, idViewBuilder));
                         } else {
