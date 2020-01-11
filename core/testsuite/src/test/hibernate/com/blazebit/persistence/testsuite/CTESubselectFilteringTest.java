@@ -114,7 +114,7 @@ public class CTESubselectFilteringTest extends AbstractCoreTest {
                 .setParameter("mySuperValue", true);
 
         List<Node> resultList = cbf.create(em, Node.class)
-                .with(NodeCTE.class)
+                .with(NodeCTE.class, false)
                 .from(Node.class)
                     .where("name").eq("bogus")
                     .bind("id").select("name")

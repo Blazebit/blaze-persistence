@@ -43,6 +43,7 @@ public class ImmutableQueryConfiguration extends AbstractQueryConfiguration {
     private final boolean optimizedKeysetPredicateRenderingEnabled;
     private final Boolean inlineIdQuery;
     private final Boolean inlineCountQuery;
+    private final Boolean inlineCtes;
 
     public ImmutableQueryConfiguration(Map<String, String> properties) {
         this.compatibleModeEnabled = PropertyUtils.getAsBooleanProperty(properties, ConfigurationProperties.COMPATIBLE_MODE, false);
@@ -59,8 +60,10 @@ public class ImmutableQueryConfiguration extends AbstractQueryConfiguration {
         this.optimizedKeysetPredicateRenderingEnabled =     getBooleanProperty(properties, ConfigurationProperties.OPTIMIZED_KEYSET_PREDICATE_RENDERING,"true");
         String inlineIdQuery =                              getProperty(properties, ConfigurationProperties.INLINE_ID_QUERY,                            "auto");
         String inlineCountQuery =                           getProperty(properties, ConfigurationProperties.INLINE_COUNT_QUERY,                         "auto");
+        String inlineCtes =                                 getProperty(properties, ConfigurationProperties.INLINE_CTES,                                "auto");
         this.inlineIdQuery = "auto".equalsIgnoreCase(inlineIdQuery) ? null : Boolean.parseBoolean(inlineIdQuery);
         this.inlineCountQuery = "auto".equalsIgnoreCase(inlineCountQuery) ? null : Boolean.parseBoolean(inlineCountQuery);
+        this.inlineCtes = "auto".equalsIgnoreCase(inlineCtes) ? null : Boolean.parseBoolean(inlineCtes);
     }
 
     @Override
@@ -129,6 +132,11 @@ public class ImmutableQueryConfiguration extends AbstractQueryConfiguration {
     }
 
     @Override
+    public Boolean getInlineCtesEnabled() {
+        return inlineCtes;
+    }
+
+    @Override
     public void setCacheable(boolean cacheable) {
         throw new UnsupportedOperationException("Can't set cacheable on immutable query configuration!");
     }
@@ -154,6 +162,7 @@ public class ImmutableQueryConfiguration extends AbstractQueryConfiguration {
             case ConfigurationProperties.OPTIMIZED_KEYSET_PREDICATE_RENDERING: return Boolean.toString(optimizedKeysetPredicateRenderingEnabled);
             case ConfigurationProperties.INLINE_ID_QUERY: return inlineIdQuery == null ? "auto" : Boolean.toString(inlineIdQuery);
             case ConfigurationProperties.INLINE_COUNT_QUERY: return inlineIdQuery == null ? "auto" : Boolean.toString(inlineIdQuery);
+            case ConfigurationProperties.INLINE_CTES: return inlineCtes == null ? "auto" : Boolean.toString(inlineCtes);
             default: return null;
         }
     }
@@ -174,6 +183,7 @@ public class ImmutableQueryConfiguration extends AbstractQueryConfiguration {
         properties.put(ConfigurationProperties.OPTIMIZED_KEYSET_PREDICATE_RENDERING, Boolean.toString(optimizedKeysetPredicateRenderingEnabled));
         properties.put(ConfigurationProperties.INLINE_ID_QUERY, getInlineIdQueryEnabled() == null ? "auto" : Boolean.toString(getInlineIdQueryEnabled()));
         properties.put(ConfigurationProperties.INLINE_COUNT_QUERY, getInlineCountQueryEnabled() == null ? "auto" : Boolean.toString(getInlineCountQueryEnabled()));
+        properties.put(ConfigurationProperties.INLINE_CTES, getInlineCtesEnabled() == null ? "auto" : Boolean.toString(getInlineCtesEnabled()));
         return properties;
     }
 

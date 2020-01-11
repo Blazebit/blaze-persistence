@@ -180,6 +180,20 @@ The property can be changed for a criteria builder before generating the query.
 | Applicable | Always
 |====================
 
+==== INLINE_CTES
+
+Defines whether non-recursive CTEs should be inlined into the query by default.
+Valid values for this property are `true`, `false` or `auto`.
+The property can be changed for a criteria builder before adding a CTE.
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.inline_ctes
+| Type | String/boolean
+| Default | true
+| Applicable | Always
+|====================
+
 [[configuration-jpql-functions]]
 === Jpql functions
 

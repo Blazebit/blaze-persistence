@@ -309,7 +309,7 @@ public class InsertTest extends AbstractCoreTest {
             @Override
             public ReturningResult<Long> work(EntityManager em) {
                 final InsertCriteriaBuilder<Document> cb = cbf.insert(em, Document.class);
-                cb.with(PersonCTE.class)
+                cb.with(PersonCTE.class, false)
                         .from(Person.class, "p")
                         .bind("id").select("p.id")
                         .bind("name").select("CONCAT(p.name,'s document')")
@@ -350,7 +350,7 @@ public class InsertTest extends AbstractCoreTest {
             @Override
             public ReturningResult<Long> work(EntityManager em) {
                 final InsertCriteriaBuilder<Document> cb = cbf.insert(em, Document.class);
-                cb.with(PersonCTE.class)
+                cb.with(PersonCTE.class, false)
                         .from(Person.class, "p")
                         .bind("id").select("p.id")
                         .bind("name").select("CONCAT(p.name,'s document')")

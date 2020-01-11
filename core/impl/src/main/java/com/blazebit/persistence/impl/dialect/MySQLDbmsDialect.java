@@ -17,6 +17,7 @@
 package com.blazebit.persistence.impl.dialect;
 
 import com.blazebit.persistence.spi.DbmsLimitHandler;
+import com.blazebit.persistence.spi.LateralStyle;
 import com.blazebit.persistence.spi.OrderByElement;
 import com.blazebit.persistence.spi.ValuesStrategy;
 
@@ -64,6 +65,16 @@ public class MySQLDbmsDialect extends DefaultDbmsDialect {
     @Override
     public boolean isNullSmallest() {
         return true;
+    }
+
+    @Override
+    public LateralStyle getLateralStyle() {
+        return LateralStyle.NONE;
+    }
+
+    @Override
+    public String getDummyTable() {
+        return "dual";
     }
 
     @Override

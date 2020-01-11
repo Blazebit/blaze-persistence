@@ -29,7 +29,7 @@ import java.util.List;
 public class SelectCTECriteriaBuilderImpl<Y> extends AbstractCTECriteriaBuilder<Y, SelectCTECriteriaBuilder<Y>, Void, Void> implements SelectCTECriteriaBuilder<Y> {
 
     public SelectCTECriteriaBuilderImpl(MainQuery mainQuery, QueryContext queryContext, String cteName, Class<Object> clazz, Y result, CTEBuilderListener listener, boolean emulateJoins) {
-        super(mainQuery, queryContext, cteName, clazz, result, listener, null);
+        super(mainQuery, queryContext, cteName, false, clazz, result, listener, null, null, null);
         joinManager.setEmulateJoins(emulateJoins);
     }
 
@@ -51,7 +51,7 @@ public class SelectCTECriteriaBuilderImpl<Y> extends AbstractCTECriteriaBuilder<
     public CTEInfo createCTEInfo() {
         List<String> attributes = prepareAndGetAttributes();
         List<String> columns = prepareAndGetColumnNames();
-        CTEInfo info = new CTEInfo(cteName, cteType, attributes, columns, false, false, this, null);
+        CTEInfo info = new CTEInfo(cteName, inline, cteType, attributes, columns, false, false, this, null);
         return info;
     }
 

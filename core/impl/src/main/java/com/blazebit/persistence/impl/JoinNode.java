@@ -87,6 +87,7 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
     private final String qualificationExpression;
     private final JoinAliasInfo aliasInfo;
     private final List<JoinNode> joinNodesForTreatConstraint;
+    private final boolean lateral;
 
     private final NavigableMap<String, JoinTreeNode> nodes = new TreeMap<>(); // Use TreeMap so that joins get applied alphabetically for easier testing
     private final NavigableMap<String, JoinNode> treatedJoinNodes = new TreeMap<>();
@@ -95,6 +96,7 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
     // contains other join nodes which this node depends on
     private final Set<JoinNode> dependencies = new HashSet<>();
 
+    private CTEInfo inlineCte;
     private CompoundPredicate onPredicate;
     private List<JoinNode> joinNodesNeedingTreatConjunct;
     
@@ -123,13 +125,14 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         this.valuesCastedParameter = treatedJoinNode.valuesCastedParameter;
         this.valuesAttributes = treatedJoinNode.valuesAttributes;
         this.aliasInfo = treatedJoinAliasInfo;
+        this.lateral = treatedJoinNode.lateral;
         List<JoinNode> joinNodesForTreatConstraint = new ArrayList<>(treatedJoinNode.joinNodesForTreatConstraint.size() + 1);
         joinNodesForTreatConstraint.addAll(treatedJoinNode.joinNodesForTreatConstraint);
         joinNodesForTreatConstraint.add(this);
         this.joinNodesForTreatConstraint = Collections.unmodifiableList(joinNodesForTreatConstraint);
     }
 
-    private JoinNode(JoinNode parent, JoinTreeNode parentTreeNode, JoinType joinType, JoinNode correlationParent, String correlationPath, Type<?> nodeType, EntityType<?> treatType, String qualificationExpression, JoinAliasInfo aliasInfo) {
+    private JoinNode(JoinNode parent, JoinTreeNode parentTreeNode, JoinType joinType, JoinNode correlationParent, String correlationPath, Type<?> nodeType, EntityType<?> treatType, String qualificationExpression, JoinAliasInfo aliasInfo, boolean lateral) {
         this.parent = parent;
         this.parentTreeNode = parentTreeNode;
         this.joinType = joinType;
@@ -137,6 +140,7 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         this.correlationPath = correlationPath;
         this.nodeType = nodeType;
         this.treatType = treatType;
+        this.lateral = lateral;
         this.valuesTypeName = null;
         this.valueCount = 0;
         this.valueType = null;
@@ -189,27 +193,28 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         this.qualificationExpression = valueClazzAttributeQualificationExpression;
         this.aliasInfo = aliasInfo;
         this.joinNodesForTreatConstraint = Collections.emptyList();
+        this.lateral = false;
         onUpdate(null);
     }
 
     public static JoinNode createRootNode(EntityType<?> nodeType, JoinAliasInfo aliasInfo) {
-        return new JoinNode(null, null, null, null, null, nodeType, null, null, aliasInfo);
+        return new JoinNode(null, null, null, null, null, nodeType, null, null, aliasInfo, false);
     }
 
     public static JoinNode createValuesRootNode(Type<?> nodeType, EntityType<?> valueType, String valuesTypeName, int valueCount, Set<String> valuesIdName, String valuesLikeClause, String qualificationExpression, boolean valueClazzAttributeSingular, boolean valueClazzSimpleValue, String valuesLikeAttribute, String valuesCastedParameter, String[] valuesAttributes, JoinAliasInfo aliasInfo) {
         return new JoinNode(nodeType, valueType, valuesTypeName, valueCount, valuesIdName, valuesLikeClause, qualificationExpression, valueClazzAttributeSingular, valueClazzSimpleValue, valuesLikeAttribute, valuesCastedParameter, valuesAttributes, aliasInfo);
     }
 
-    public static JoinNode createCorrelationRootNode(JoinNode correlationParent, String correlationPath, Attribute<?, ?> correlatedAttribute, Type<?> nodeType, EntityType<?> treatType, JoinAliasInfo aliasInfo) {
-        return new JoinNode(null, new JoinTreeNode(correlationPath, correlatedAttribute), null, correlationParent, correlationPath, nodeType, treatType, null, aliasInfo);
+    public static JoinNode createCorrelationRootNode(JoinNode correlationParent, String correlationPath, Attribute<?, ?> correlatedAttribute, Type<?> nodeType, EntityType<?> treatType, JoinAliasInfo aliasInfo, boolean lateral) {
+        return new JoinNode(lateral ? correlationParent : null, new JoinTreeNode(correlationPath, correlatedAttribute), null, correlationParent, correlationPath, nodeType, treatType, null, aliasInfo, lateral);
     }
 
-    public static JoinNode createEntityJoinNode(JoinNode parent, JoinType joinType, EntityType<?> nodeType, JoinAliasInfo aliasInfo) {
-        return new JoinNode(parent, null, joinType, null, null, nodeType, null, null, aliasInfo);
+    public static JoinNode createEntityJoinNode(JoinNode parent, JoinType joinType, EntityType<?> nodeType, JoinAliasInfo aliasInfo, boolean lateral) {
+        return new JoinNode(parent, null, joinType, null, null, nodeType, null, null, aliasInfo, lateral);
     }
 
     public static JoinNode createAssociationJoinNode(JoinNode parent, JoinTreeNode parentTreeNode, JoinType joinType, Type<?> nodeType, EntityType<?> treatType, String qualificationExpression, JoinAliasInfo aliasInfo) {
-        return new JoinNode(parent, parentTreeNode, joinType, null, null, nodeType, treatType, qualificationExpression, aliasInfo);
+        return new JoinNode(parent, parentTreeNode, joinType, null, null, nodeType, treatType, qualificationExpression, aliasInfo, false);
     }
 
     public JoinNode cloneRootNode(JoinAliasInfo aliasInfo) {
@@ -221,7 +226,7 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
             newNode = createRootNode((EntityType<?>) nodeType, aliasInfo);
         } else {
             JoinAliasInfo parentAliasInfo = (JoinAliasInfo) aliasInfo.getAliasOwner().getAliasInfo(correlationParent.getAlias());
-            newNode = createCorrelationRootNode(parentAliasInfo.getJoinNode(), correlationPath, parentTreeNode.getAttribute(), nodeType, treatType, aliasInfo);
+            newNode = createCorrelationRootNode(parentAliasInfo.getJoinNode(), correlationPath, parentTreeNode.getAttribute(), nodeType, treatType, aliasInfo, false);
         }
 
         newNode.getClauseDependencies().addAll(clauseDependencies);
@@ -233,7 +238,7 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         // NOTE: no cloning of onPredicate, treatedJoinNodes and entityJoinNodes is intentional
         JoinNode newNode;
         if (parentTreeNode == null) {
-            newNode = createEntityJoinNode(parent, joinType, (EntityType<?>) nodeType, aliasInfo);
+            newNode = createEntityJoinNode(parent, joinType, (EntityType<?>) nodeType, aliasInfo, lateral);
         } else {
             newNode = createAssociationJoinNode(parent, parentTreeNode, joinType, nodeType, treatType, qualificationExpression, aliasInfo);
         }
@@ -743,6 +748,22 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
 
     public boolean isQualifiedJoin() {
         return qualificationExpression != null;
+    }
+
+    public boolean isLateral() {
+        return lateral;
+    }
+
+    public void setInlineCte(CTEInfo inlineCte) {
+        this.inlineCte = inlineCte;
+    }
+
+    public CTEInfo getInlineCte() {
+        return inlineCte;
+    }
+
+    public boolean isInlineCte() {
+        return inlineCte != null;
     }
 
     /**

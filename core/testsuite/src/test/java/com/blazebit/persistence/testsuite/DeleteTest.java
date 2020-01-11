@@ -205,7 +205,7 @@ public class DeleteTest extends AbstractCoreTest {
             @Override
             public void work(EntityManager em) {
                 final DeleteCriteriaBuilder<Document> cb = cbf.delete(em, Document.class, "d");
-                cb.with(IdHolderCTE.class)
+                cb.with(IdHolderCTE.class, false)
                     .from(Document.class, "subDoc")
                     .bind("id").select("subDoc.id")
                     .orderByAsc("subDoc.id")
@@ -239,7 +239,7 @@ public class DeleteTest extends AbstractCoreTest {
             @Override
             public void work(EntityManager em) {
                 final DeleteCriteriaBuilder<Document> cb = cbf.delete(em, Document.class, "d");
-                cb.with(IdHolderCTE.class)
+                cb.with(IdHolderCTE.class, false)
                     .from(Document.class, "subDoc")
                     .bind("id").select("subDoc.id")
                     .orderByAsc("subDoc.id")

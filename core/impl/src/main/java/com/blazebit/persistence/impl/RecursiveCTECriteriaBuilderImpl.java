@@ -33,7 +33,7 @@ public class RecursiveCTECriteriaBuilderImpl<Y> extends AbstractCTECriteriaBuild
     protected SelectCTECriteriaBuilderImpl<Y> recursiveCteBuilder;
 
     public RecursiveCTECriteriaBuilderImpl(MainQuery mainQuery, QueryContext queryContext, String cteName, Class<Object> clazz, Y result, final CTEBuilderListener listener) {
-        super(mainQuery, queryContext, cteName, clazz, result, listener, null);
+        super(mainQuery, queryContext, cteName, false, clazz, result, listener, null, null, null);
         this.clazz = clazz;
     }
 
@@ -96,7 +96,7 @@ public class RecursiveCTECriteriaBuilderImpl<Y> extends AbstractCTECriteriaBuild
         
         // As a side effect, this will reorder selects according to attribute order
         recursiveCteBuilder.createCTEInfo();
-        CTEInfo info = new CTEInfo(cteName, cteType, attributes, columns, true, unionAll, this, recursiveCteBuilder);
+        CTEInfo info = new CTEInfo(cteName, inline, cteType, attributes, columns, true, unionAll, this, recursiveCteBuilder);
         return info;
     }
 

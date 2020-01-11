@@ -42,6 +42,7 @@ public class MutableQueryConfiguration extends AbstractQueryConfiguration {
     private boolean cacheable;
     private Boolean inlineIdQuery;
     private Boolean inlineCountQuery;
+    private Boolean inlineCtes;
 
     public MutableQueryConfiguration(QueryConfiguration queryConfiguration) {
         this.compatibleModeEnabled = queryConfiguration.isCompatibleModeEnabled();
@@ -58,6 +59,7 @@ public class MutableQueryConfiguration extends AbstractQueryConfiguration {
         this.cacheable = queryConfiguration.isCacheable();
         this.inlineIdQuery = queryConfiguration.getInlineIdQueryEnabled();
         this.inlineCountQuery = queryConfiguration.getInlineCountQueryEnabled();
+        this.inlineCtes = queryConfiguration.getInlineCtesEnabled();
     }
 
     @Override
@@ -126,6 +128,11 @@ public class MutableQueryConfiguration extends AbstractQueryConfiguration {
     }
 
     @Override
+    public Boolean getInlineCtesEnabled() {
+        return inlineCtes;
+    }
+
+    @Override
     public void setCacheable(boolean cacheable) {
         this.cacheable = cacheable;
     }
@@ -159,6 +166,7 @@ public class MutableQueryConfiguration extends AbstractQueryConfiguration {
             case ConfigurationProperties.OPTIMIZED_KEYSET_PREDICATE_RENDERING:  optimizedKeysetPredicateRenderingEnabled = booleanOrFail(propertyName, propertyValue); break;
             case ConfigurationProperties.INLINE_ID_QUERY:                       inlineIdQuery = "auto".equalsIgnoreCase(propertyValue) ? null : booleanOrFail(propertyName, propertyValue); break;
             case ConfigurationProperties.INLINE_COUNT_QUERY:                    inlineCountQuery = "auto".equalsIgnoreCase(propertyValue) ? null : booleanOrFail(propertyName, propertyValue); break;
+            case ConfigurationProperties.INLINE_CTES:                           inlineCtes = "auto".equalsIgnoreCase(propertyValue) ? null : booleanOrFail(propertyName, propertyValue); break;
             default: break;
         }
         // CHECKSTYLE:ON: OneStatementPerLine

@@ -89,7 +89,7 @@ public class CTETest extends AbstractCoreTest {
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
     public void testNotFullyBoundCTE() {
         CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class, "t");
-        FullSelectCTECriteriaBuilder<CriteriaBuilder<TestCTE>> fullSelectCTECriteriaBuilder = cb.with(TestCTE.class)
+        FullSelectCTECriteriaBuilder<CriteriaBuilder<TestCTE>> fullSelectCTECriteriaBuilder = cb.with(TestCTE.class, false)
                 .from(RecursiveEntity.class, "e")
                 .bind("id").select("e.id");
 
@@ -103,7 +103,7 @@ public class CTETest extends AbstractCoreTest {
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
     public void testNotFullyBoundCTEOnSetOperation() {
         CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class);
-        FullSelectCTECriteriaBuilder<CriteriaBuilder<TestCTE>> builder = cb.with(TestCTE.class)
+        FullSelectCTECriteriaBuilder<CriteriaBuilder<TestCTE>> builder = cb.with(TestCTE.class, false)
                 .from(RecursiveEntity.class, "e")
                 .bind("id").select("e.id")
                 .bind("name").select("e.name")
@@ -115,7 +115,7 @@ public class CTETest extends AbstractCoreTest {
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
     public void testNotFullyBoundCTEOnSecondSetOperation() {
         CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class);
-        LeafOngoingSetOperationCTECriteriaBuilder<CriteriaBuilder<TestCTE>> builder = cb.with(TestCTE.class)
+        LeafOngoingSetOperationCTECriteriaBuilder<CriteriaBuilder<TestCTE>> builder = cb.with(TestCTE.class, false)
                     .from(RecursiveEntity.class, "e")
                     .bind("id").select("e.id")
                     .bind("name").select("e.name")
@@ -144,7 +144,7 @@ public class CTETest extends AbstractCoreTest {
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
     public void testCTE() {
         CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class, "t").where("t.level").ltExpression("2");
-        cb.with(TestCTE.class)
+        cb.with(TestCTE.class, false)
             .from(RecursiveEntity.class, "e")
             .bind("id").select("e.id")
             .bind("name").select("e.name")
@@ -167,7 +167,7 @@ public class CTETest extends AbstractCoreTest {
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
     public void testCTEAdvanced() {
         CriteriaBuilder<TestAdvancedCTE1> cb = cbf.create(em, TestAdvancedCTE1.class, "t").where("t.level").ltExpression("2");
-        cb.with(TestAdvancedCTE1.class)
+        cb.with(TestAdvancedCTE1.class, false)
             .from(RecursiveEntity.class, "e")
             .bind("id").select("e.id")
             .bind("embeddable.name").select("e.name")
@@ -196,7 +196,7 @@ public class CTETest extends AbstractCoreTest {
     @Category({ NoH2.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
     public void testCTELimit() {
         CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class, "t");
-        cb.with(TestCTE.class)
+        cb.with(TestCTE.class, false)
             .from(RecursiveEntity.class, "e")
             .bind("id").select("e.id")
             .bind("name").select("e.name")
@@ -595,7 +595,7 @@ public class CTETest extends AbstractCoreTest {
                 .select("a.id")
             .end()
             .select("r.name");
-        cb.with(TestCTE.class)
+        cb.with(TestCTE.class, false)
             .from(RecursiveEntity.class, "e")
             .bind("id").select("e.id")
             .bind("name").select("e.name")
@@ -619,7 +619,7 @@ public class CTETest extends AbstractCoreTest {
     @Category({ NoH2.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
     public void testBindEmbeddable() {
         CriteriaBuilder<TestAdvancedCTE2> cb = cbf.create(em, TestAdvancedCTE2.class);
-        cb.with(TestAdvancedCTE1.class)
+        cb.with(TestAdvancedCTE1.class, false)
             .from(RecursiveEntity.class, "e")
             .bind("id").select("e.id")
             .bind("embeddable.name").select("e.name")
@@ -628,7 +628,7 @@ public class CTETest extends AbstractCoreTest {
             .bind("level").select("0")
             .bind("parent").select("e.parent")
         .end()
-        .with(TestAdvancedCTE2.class)
+        .with(TestAdvancedCTE2.class, false)
             .from(TestAdvancedCTE1.class)
             .bind("id").select("id")
             .bind("embeddable").select("embeddable")
@@ -659,7 +659,7 @@ public class CTETest extends AbstractCoreTest {
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
     public void testBindEmbeddableWithNullBindingsForJoinableAttributes() {
         CriteriaBuilder<TestAdvancedCTE1> cb = cbf.create(em, TestAdvancedCTE1.class);
-        cb.with(TestAdvancedCTE1.class)
+        cb.with(TestAdvancedCTE1.class, false)
             .from(RecursiveEntity.class, "e")
             .bind("id").select("e.id")
             .bind("embeddable.name").select("e.name")
@@ -693,7 +693,7 @@ public class CTETest extends AbstractCoreTest {
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
     public void testWithStartSetEmptyRightSide() {
         CriteriaBuilder<TestAdvancedCTE1> cb = cbf.create(em, TestAdvancedCTE1.class);
-        cb.withStartSet(TestAdvancedCTE1.class)
+        cb.withStartSet(TestAdvancedCTE1.class, false)
                 .from(RecursiveEntity.class, "e")
                 .bind("id").select("e.id")
                 .bind("embeddable.name").select("e.name")
@@ -718,7 +718,7 @@ public class CTETest extends AbstractCoreTest {
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
     public void testWithStartSetEmptyRightSideLeaf() {
         CriteriaBuilder<TestAdvancedCTE1> cb = cbf.create(em, TestAdvancedCTE1.class);
-        cb.withStartSet(TestAdvancedCTE1.class)
+        cb.withStartSet(TestAdvancedCTE1.class, false)
                 .from(RecursiveEntity.class, "e")
                 .bind("id").select("e.id")
                 .bind("embeddable.name").select("e.name")
@@ -744,7 +744,8 @@ public class CTETest extends AbstractCoreTest {
     // NOTE: H2 does not support the PARTITION clause in the ROW_NUMBER function, so we can't emulate EXCEPT ALL
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoH2.class, NoMySQL.class })
     public void testWithStartSetEmptyLeftSideLeaf() {
-        CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class).withStartSet(TestCTE.class)
+        CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class)
+        .withStartSet(TestCTE.class, false)
             .from(RecursiveEntity.class, "e")
             .bind("id").select("e.id")
             .bind("name").select("e.name")
@@ -772,7 +773,7 @@ public class CTETest extends AbstractCoreTest {
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
     public void testBuilderEndTracking() {
-        FullSelectCTECriteriaBuilder<CriteriaBuilder<TestCTE>> cb = cbf.create(em, TestCTE.class).with(TestCTE.class);
+        FullSelectCTECriteriaBuilder<CriteriaBuilder<TestCTE>> cb = cbf.create(em, TestCTE.class).with(TestCTE.class, false);
         cb.from(RecursiveEntity.class, "e")
             .bind("id").select("e.id")
             .bind("name").select("e.name")
@@ -792,7 +793,7 @@ public class CTETest extends AbstractCoreTest {
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
     public void testNestedSizeInCte() {
         CriteriaBuilder<Long> cb = cbf.create(em, Long.class)
-                .with(TestCTE.class)
+                .with(TestCTE.class, false)
                     .from(RecursiveEntity.class, "r")
                     .bind("id").select("r.id")
                     .bind("level").select("FUNCTION('greatest', SIZE(r.children), 1) * r.id")

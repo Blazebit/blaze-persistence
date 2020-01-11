@@ -12,6 +12,7 @@ Not yet released
 * Allow definition of CTE based on `CriteriaBuilder`
 * Allow to control embedding of id query into pagination object query and enable by default if DBMS allows it
 * Allow to control embedding of count query into pagination object/id query and enable by default if possible
+* Implement option for inlining CTEs/Subquery in from clause and add lateral join support
 
 ### Bug fixes
 

@@ -81,14 +81,14 @@ public abstract class BaseFinalSetOperationCTECriteriaBuilderImpl<T, X extends B
             } else {
                 List<String> attributes = setOperationBuilder.initiator.prepareAndGetAttributes();
                 List<String> columns = setOperationBuilder.initiator.prepareAndGetColumnNames();
-                CTEInfo info = new CTEInfo(setOperationBuilder.initiator.cteName, setOperationBuilder.initiator.cteType, attributes, columns, false, false, target, null);
+                CTEInfo info = new CTEInfo(setOperationBuilder.initiator.cteName, setOperationBuilder.initiator.inline, setOperationBuilder.initiator.cteType, attributes, columns, false, false, target, null);
                 return info;
             }
         } else if (queryBuilder instanceof AbstractCTECriteriaBuilder<?, ?, ?, ?>) {
             AbstractCTECriteriaBuilder<?, ?, ?, ?> cteBuilder = (AbstractCTECriteriaBuilder<?, ?, ?, ?>) queryBuilder;
             List<String> attributes = cteBuilder.prepareAndGetAttributes();
             List<String> columns = cteBuilder.prepareAndGetColumnNames();
-            CTEInfo info = new CTEInfo(cteBuilder.cteName, cteBuilder.cteType, attributes, columns, false, false, target, null);
+            CTEInfo info = new CTEInfo(cteBuilder.cteName, cteBuilder.inline, cteBuilder.cteType, attributes, columns, false, false, target, null);
             return info;
         }
         

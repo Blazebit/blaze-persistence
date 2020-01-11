@@ -17,7 +17,6 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.BaseFinalSetOperationBuilder;
-import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.SimpleQueryGenerator;
 import com.blazebit.persistence.parser.expression.AggregateExpression;
@@ -27,13 +26,9 @@ import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.FunctionExpression;
 import com.blazebit.persistence.parser.expression.MapValueExpression;
 import com.blazebit.persistence.parser.expression.NullExpression;
-import com.blazebit.persistence.parser.expression.NumericLiteral;
-import com.blazebit.persistence.parser.expression.NumericType;
 import com.blazebit.persistence.parser.expression.OrderByItem;
 import com.blazebit.persistence.parser.expression.ParameterExpression;
 import com.blazebit.persistence.parser.expression.PathExpression;
-import com.blazebit.persistence.parser.expression.StringLiteral;
-import com.blazebit.persistence.parser.expression.Subquery;
 import com.blazebit.persistence.parser.expression.SubqueryExpression;
 import com.blazebit.persistence.parser.expression.TreatExpression;
 import com.blazebit.persistence.parser.expression.WindowDefinition;
@@ -57,13 +52,11 @@ import com.blazebit.persistence.parser.util.TypeConverter;
 import com.blazebit.persistence.parser.util.TypeUtils;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpqlFunction;
-import com.blazebit.persistence.spi.OrderByElement;
 
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Type;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -217,6 +210,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     public void visit(SubqueryExpression expression) {
         if (expression.getSubquery() instanceof SubqueryInternalBuilder) {
             final AbstractCommonQueryBuilder<?, ?, ?, ?, ?> subquery = (AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) expression.getSubquery();
+            subquery.prepareAndCheck();
             final boolean hasFirstResult = subquery.getFirstResult() != 0;
             final boolean hasMaxResults = subquery.getMaxResults() != Integer.MAX_VALUE;
             final boolean hasLimit = hasFirstResult || hasMaxResults;
@@ -226,10 +220,10 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
             if (isSimple) {
                 sb.append('(');
-                sb.append(subquery.getQueryString());
+                subquery.buildBaseQueryString(sb, externalRepresentation, true, null);
                 sb.append(')');
             } else {
-                asExpression(subquery).accept(this);
+                subquery.asExpression(externalRepresentation).accept(this);
             }
         } else {
             sb.append('(');
@@ -247,106 +241,9 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             final boolean hasLimit = hasFirstResult || hasMaxResults;
             final boolean hasSetOperations = subquery instanceof BaseFinalSetOperationBuilder<?, ?>;
             final boolean hasEntityFunctions = subquery.joinManager.hasEntityFunctions();
-            return !hasLimit && !hasSetOperations && !hasEntityFunctions;
+            return !hasLimit && !hasSetOperations && !hasEntityFunctions && !subquery.joinManager.hasLateInlineNodes();
         }
         return super.isSimpleSubquery(expression);
-    }
-    
-    protected Expression asExpression(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {
-        if (queryBuilder instanceof BaseFinalSetOperationBuilderImpl<?, ?, ?>) {
-            BaseFinalSetOperationBuilderImpl<?, ?, ?> operationBuilder = (BaseFinalSetOperationBuilderImpl<?, ?, ?>) queryBuilder;
-            SetOperationManager operationManager = operationBuilder.setOperationManager;
-            
-            if (operationManager.getOperator() == null || !operationManager.hasSetOperations()) {
-                return asExpression(operationManager.getStartQueryBuilder());
-            }
-            
-            List<Expression> setOperationArgs = new ArrayList<Expression>(operationManager.getSetOperations().size() + 2);
-            // Use prefix because hibernate uses UNION as keyword
-            setOperationArgs.add(new StringLiteral("SET_" + operationManager.getOperator().name()));
-            setOperationArgs.add(asExpression(operationManager.getStartQueryBuilder()));
-
-            List<AbstractCommonQueryBuilder<?, ?, ?, ?, ?>> setOperands = operationManager.getSetOperations();
-            int operandsSize = setOperands.size();
-            for (int i = 0; i < operandsSize; i++) {
-                setOperationArgs.add(asExpression(setOperands.get(i)));
-            }
-            
-            List<? extends OrderByElement> orderByElements = operationBuilder.getOrderByElements();
-            if (orderByElements.size() > 0) {
-                setOperationArgs.add(new StringLiteral("ORDER_BY"));
-                
-                int orderByElementsSize = orderByElements.size();
-                for (int i = 0; i < orderByElementsSize; i++) {
-                    setOperationArgs.add(new StringLiteral(orderByElements.get(i).toString()));
-                }
-            }
-            
-            if (operationBuilder.hasLimit()) {
-                if (operationBuilder.maxResults != Integer.MAX_VALUE) {
-                    setOperationArgs.add(new StringLiteral("LIMIT"));
-                    setOperationArgs.add(new NumericLiteral(Integer.toString(operationBuilder.maxResults), NumericType.INTEGER));
-                }
-                if (operationBuilder.firstResult != 0) {
-                    setOperationArgs.add(new StringLiteral("OFFSET"));
-                    setOperationArgs.add(new NumericLiteral(Integer.toString(operationBuilder.firstResult), NumericType.INTEGER));
-                }
-            }
-            
-            return new FunctionExpression("FUNCTION", setOperationArgs);
-        }
-
-        final String queryString = queryBuilder.buildBaseQueryString(externalRepresentation);
-        Expression expression = new SubqueryExpression(new Subquery() {
-            @Override
-            public String getQueryString() {
-                return queryString;
-            }
-        });
-
-        if (queryBuilder.joinManager.hasEntityFunctions()) {
-            for (EntityFunctionNode node : queryBuilder.getEntityFunctionNodes(null)) {
-                List<Expression> arguments = new ArrayList<Expression>(2);
-                arguments.add(new StringLiteral("ENTITY_FUNCTION"));
-                arguments.add(expression);
-
-                String valuesClause = node.getValuesClause();
-                String valuesAliases = node.getValuesAliases();
-                String syntheticPredicate = node.getSyntheticPredicate();
-
-                // TODO: this is a hibernate specific integration detail
-                // Replace the subview subselect that is generated for this subselect
-                String entityName = node.getEntityName();
-                arguments.add(new StringLiteral(entityName));
-                arguments.add(new StringLiteral(valuesClause));
-                arguments.add(new StringLiteral(valuesAliases == null ? "" : valuesAliases));
-                arguments.add(new StringLiteral(syntheticPredicate));
-
-                expression = new FunctionExpression("FUNCTION", arguments);
-            }
-        }
-
-        if (queryBuilder.hasLimit()) {
-            final boolean hasFirstResult = queryBuilder.getFirstResult() != 0;
-            final boolean hasMaxResults = queryBuilder.getMaxResults() != Integer.MAX_VALUE;
-            List<Expression> arguments = new ArrayList<Expression>(2);
-            arguments.add(new StringLiteral("LIMIT"));
-            arguments.add(expression);
-
-            if (!hasMaxResults) {
-                throw new IllegalArgumentException("First result without max results is not supported!");
-            } else {
-                arguments.add(new NumericLiteral(Integer.toString(queryBuilder.getMaxResults()), NumericType.INTEGER));
-            }
-
-            if (hasFirstResult) {
-                arguments.add(new NumericLiteral(Integer.toString(queryBuilder.getFirstResult()), NumericType.INTEGER));
-            }
-
-            expression = new FunctionExpression("FUNCTION", arguments);
-        }
-
-        return expression;
     }
 
     protected void renderFunctionFunction(String functionName, List<Expression> arguments, WindowDefinition windowDefinition) {

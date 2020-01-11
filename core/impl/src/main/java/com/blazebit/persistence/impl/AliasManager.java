@@ -29,9 +29,9 @@ public class AliasManager {
     private static final int DEFAULT_IMPLICIT_ALIAS_START_IDX = 0;
 
     private final AliasManager parent;
-    private final Map<String, AliasInfo> aliasMap = new HashMap<String, AliasInfo>(); // maps alias to absolute path and join manager of
-                                                                                      // the declaring query
+    private final Map<String, AliasInfo> aliasMap = new HashMap<String, AliasInfo>(); // maps alias to absolute path and join manager of the declaring query
     private final Map<String, Integer> aliasCounterMap = new HashMap<String, Integer>(); // maps non postfixed aliases to alias counter
+    private String forbiddenAlias;
 
     public AliasManager() {
         this.parent = null;
@@ -46,7 +46,11 @@ public class AliasManager {
     }
 
     public AliasInfo getAliasInfo(String alias) {
-        return getHierarchical(alias);
+        AliasInfo aliasInfo = getHierarchical(alias);
+        if (alias.equals(forbiddenAlias)) {
+            throw new IllegalArgumentException("Usage of alias '" + alias + "' is forbidden!");
+        }
+        return aliasInfo;
     }
 
     public AliasInfo getAliasInfoForBottomLevel(String alias) {
@@ -128,6 +132,14 @@ public class AliasManager {
                 }
             }
         }
+    }
+
+    public String getForbiddenAlias() {
+        return forbiddenAlias;
+    }
+
+    public void setForbiddenAlias(String forbiddenAlias) {
+        this.forbiddenAlias = forbiddenAlias;
     }
 
     public Map<String, AliasInfo> getAliasMapForBottomLevel() {

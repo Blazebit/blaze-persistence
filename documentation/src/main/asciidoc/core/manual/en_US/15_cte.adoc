@@ -235,23 +235,22 @@ In general, we advise you to rethink how you do the querying when having a need 
 [[anchor-ctes-dbms-compatibility]]
 === DBMS compatibility
 
-Currently there is no emulation implemented for databases that do not support CTEs natively.
+If a DBMS does not support CTEs natively, the queries are inlined as subqueries in the FROM clause. Note that recursive CTEs can't be emulated.
 CTEs are well tested with *PostgreSQL*, *DB2*, *Oracle* and *Microsoft SQL Server*. Many of the basic features work with *H2*, but beware that H2 support for CTEs is still experimental.
 
-WARNING: We do not recommend using CTEs with H2 because of some very serious limitations. Using a CTE in an `IN` predicate or using `LIMIT` within the CTE have proven to produce wrong results. You also can't have multiple CTEs per query.
+WARNING: We do not recommend using non-inlined CTEs with H2 because of some very serious limitations. Using a non-inlined CTE in an `IN` predicate or using `LIMIT` within the non-inlined CTE have proven to produce wrong results. You also can't have multiple non-inlined CTEs per query.
 
 NOTE: DB2 does not support JOINs in the recursive part of a CTE: https://www.ibm.com/support/knowledgecenter/SSEPEK_10.0.0/com.ibm.db2z10.doc.codes/src/tpc/n345.dita
 
 _CTEs in DML_ are uses of a CTE where the top level statement is a DML. In contrast, _Updatable CTEs_ are CTEs that *contain* DML and get their values from a `RETURNING` clause of the DML.
 
-// TODO: When fixing #337 we could actually fallback to inlining for non-recursive CTEs on DBMS that don't support CTEs
-
 [width="100%",options="header,footer"]
 |====================
 | *DBMS*     | Normal CTEs  | Recursive CTEs    | CTEs in DML  | Updatable CTEs
 | PostgreSQL | yes          | yes               | yes          | yes
-| MySQL      | no           | no                | no           | no
-| H2         | partly       | partly            | no           | no
+| MySQL      | yes(inlined) | no                | yes(inlined) | no
+| MySQL 8+   | yes          | yes               | yes(inlined) | no
+| H2         | yes/partly   | partly            | yes(inlined) | no
 | Oracle     | yes          | partly            | yes          | no
 | SQL Server | yes          | yes               | yes          | no
 | DB2        | yes          | yes               | yes          | yes

@@ -165,6 +165,20 @@ public final class ConfigurationProperties {
      * @see PaginatedCriteriaBuilder#withInlineCountQuery(boolean)
      */
     public static final String INLINE_COUNT_QUERY = "com.blazebit.persistence.inline_count_query";
+
+    /**
+     * If set to true, the CTE queries are inlined by default.
+     * Valid values for this property are <code>true</code>, <code>false</code> or <code>auto</code>.
+     * Default is <code>true</code> which will always inline non-recursive CTEs.
+     * The <code>auto</code> configuration will only make use of inlining if the JPA provider and DBMS dialect support/require it.
+     *
+     * The property can be changed for a criteria builder before constructing a query.
+     *
+     * @since 1.4.1
+     * @see CTEBuilder#with(Class, boolean)
+     * @see CTEBuilder#with(Class, CriteriaBuilder, boolean)
+     */
+    public static final String INLINE_CTES = "com.blazebit.persistence.inline_ctes";
     
     private ConfigurationProperties() {
     }

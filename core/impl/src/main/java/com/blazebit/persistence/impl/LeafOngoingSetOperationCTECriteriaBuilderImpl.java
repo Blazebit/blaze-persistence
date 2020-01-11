@@ -30,8 +30,8 @@ import com.blazebit.persistence.spi.SetOperationType;
  */
 public class LeafOngoingSetOperationCTECriteriaBuilderImpl<T> extends AbstractCTECriteriaBuilder<T, LeafOngoingSetOperationCTECriteriaBuilder<T>, LeafOngoingSetOperationCTECriteriaBuilder<T>, StartOngoingSetOperationCTECriteriaBuilder<T, LeafOngoingFinalSetOperationCTECriteriaBuilder<T>>> implements LeafOngoingSetOperationCTECriteriaBuilder<T>, LeafOngoingFinalSetOperationCTECriteriaBuilder<T> {
 
-    public LeafOngoingSetOperationCTECriteriaBuilderImpl(MainQuery mainQuery, QueryContext queryContext, String cteName, Class<Object> clazz, T result, CTEBuilderListener listener, FinalSetOperationCTECriteriaBuilderImpl<Object> finalSetOperationBuilder) {
-        super(mainQuery, queryContext, cteName, clazz, result, listener, finalSetOperationBuilder);
+    public LeafOngoingSetOperationCTECriteriaBuilderImpl(MainQuery mainQuery, QueryContext queryContext, String cteName, boolean inline, Class<Object> clazz, T result, CTEBuilderListener listener, FinalSetOperationCTECriteriaBuilderImpl<Object> finalSetOperationBuilder, AliasManager parentAliasManager, JoinManager parentJoinManager) {
+        super(mainQuery, queryContext, cteName, inline, clazz, result, listener, finalSetOperationBuilder, parentAliasManager, parentJoinManager);
     }
 
     public LeafOngoingSetOperationCTECriteriaBuilderImpl(AbstractCTECriteriaBuilder<T, LeafOngoingSetOperationCTECriteriaBuilder<T>, LeafOngoingSetOperationCTECriteriaBuilder<T>, StartOngoingSetOperationCTECriteriaBuilder<T, LeafOngoingFinalSetOperationCTECriteriaBuilder<T>>> builder, MainQuery mainQuery, QueryContext queryContext) {

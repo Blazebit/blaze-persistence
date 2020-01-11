@@ -51,6 +51,8 @@ public interface QueryConfiguration {
 
     public Boolean getInlineCountQueryEnabled();
 
+    public Boolean getInlineCtesEnabled();
+
     public String getProperty(String name);
 
     public Map<String, String> getProperties();

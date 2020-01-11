@@ -47,6 +47,27 @@ public interface CTEBuilder<T extends CTEBuilder<T>> extends ServiceProvider {
     public FullSelectCTECriteriaBuilder<T> with(Class<?> cteClass, CriteriaBuilder<?> criteriaBuilder);
 
     /**
+     * Like {@link #with(Class)} but with the option to define whether the query should be inlined.
+     *
+     * @param cteClass The type of the CTE
+     * @param inline Whether to inline the query defined by the CTE
+     * @return The CTE builder
+     * @since 1.4.1
+     */
+    public FullSelectCTECriteriaBuilder<T> with(Class<?> cteClass, boolean inline);
+
+    /**
+     * Like {@link #with(Class, CriteriaBuilder)} but with the option to define whether the query should be inlined.
+     *
+     * @param cteClass The type of the CTE
+     * @param criteriaBuilder The criteria builder to copy the query from
+     * @param inline Whether to inline the query defined by the CTE
+     * @return The CTE builder
+     * @since 1.4.1
+     */
+    public FullSelectCTECriteriaBuilder<T> with(Class<?> cteClass, CriteriaBuilder<?> criteriaBuilder, boolean inline);
+
+    /**
      * Copies the CTEs from the given CTE builder into this CTE builder.
      *
      * @param cteBuilder The CTE builder from which to copy CTEs
@@ -63,6 +84,16 @@ public interface CTEBuilder<T extends CTEBuilder<T>> extends ServiceProvider {
      * @return The CTE set operation builder
      */
     public StartOngoingSetOperationCTECriteriaBuilder<T, LeafOngoingFinalSetOperationCTECriteriaBuilder<T>> withStartSet(Class<?> cteClass);
+
+    /**
+     * Like {@link #withStartSet(Class)} but with the option to define whether the query should be inlined.
+     *
+     * @param cteClass The type of the CTE
+     * @param inline Whether to inline the query defined by the CTE
+     * @return The CTE set operation builder
+     * @since 1.4.1
+     */
+    public StartOngoingSetOperationCTECriteriaBuilder<T, LeafOngoingFinalSetOperationCTECriteriaBuilder<T>> withStartSet(Class<?> cteClass, boolean inline);
 
     /**
      * Creates a builder for a recursive CTE with the given CTE type.
@@ -85,6 +116,7 @@ public interface CTEBuilder<T extends CTEBuilder<T>> extends ServiceProvider {
      *
      * @param cte The type of the CTE to check
      * @return true when a CTE for the given type is defined
+     * @since 1.4.0
      */
     public boolean hasCte(Class<?> cte);
 

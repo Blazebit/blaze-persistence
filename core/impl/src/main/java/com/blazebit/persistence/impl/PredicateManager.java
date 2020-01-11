@@ -258,7 +258,7 @@ public abstract class PredicateManager<T> extends AbstractManager<ExpressionModi
     }
 
     void buildClause(StringBuilder sb, List<String> additionalConjuncts, List<String> optionalConjuncts, List<String> endConjuncts) {
-        if (!hasPredicates() && additionalConjuncts.isEmpty()) {
+        if (!hasPredicates() && additionalConjuncts.isEmpty() && (endConjuncts == null || endConjuncts.isEmpty())) {
             return;
         }
 
@@ -293,14 +293,22 @@ public abstract class PredicateManager<T> extends AbstractManager<ExpressionModi
         }
 
         if (endConjuncts != null && !endConjuncts.isEmpty()) {
-            for (int i = 0; i < optionalConjuncts.size(); i++) {
+            if (hasPredicates) {
                 sb.append(" AND ");
+            } else if (optionalConjuncts.isEmpty()) {
+                // This is required for the EntityFunction when a subquery has no WHERE clause...
+                // We should clean this stuff up as we now have better abstractions...
+                sb.append("1=1 AND ");
+            }
+            for (int i = 0; i < optionalConjuncts.size(); i++) {
                 sb.append(optionalConjuncts.get(i));
+                sb.append(" AND ");
             }
             for (int i = 0; i < endConjuncts.size(); i++) {
-                sb.append(" AND ");
                 sb.append(endConjuncts.get(i));
+                sb.append(" AND ");
             }
+            sb.setLength(sb.length() - " AND ".length());
         } else if (hasPredicates) {
             for (int i = 0; i < optionalConjuncts.size(); i++) {
                 sb.append(" AND ");

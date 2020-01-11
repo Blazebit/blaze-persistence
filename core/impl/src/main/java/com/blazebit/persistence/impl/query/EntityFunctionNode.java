@@ -23,32 +23,34 @@ package com.blazebit.persistence.impl.query;
  */
 public class EntityFunctionNode {
 
-    private final String valuesClause;
-    private final String valuesAliases;
+    private final String subquery;
+    private final String aliases;
     private final String entityName;
     private final String tableAlias;
     private final String pluralCollectionTableAlias;
     private final String pluralTableAlias;
     private final String pluralTableJoin;
     private final String syntheticPredicate;
+    private final boolean lateral;
 
-    public EntityFunctionNode(String valuesClause, String valuesAliases, String entityName, String tableAlias, String pluralCollectionTableAlias, String pluralTableAlias, String pluralTableJoin, String syntheticPredicate) {
-        this.valuesClause = valuesClause;
-        this.valuesAliases = valuesAliases;
+    public EntityFunctionNode(String subquery, String aliases, String entityName, String tableAlias, String pluralCollectionTableAlias, String pluralTableAlias, String pluralTableJoin, String syntheticPredicate, boolean lateral) {
+        this.subquery = subquery;
+        this.aliases = aliases;
         this.entityName = entityName;
         this.tableAlias = tableAlias;
         this.pluralCollectionTableAlias = pluralCollectionTableAlias;
         this.pluralTableAlias = pluralTableAlias;
         this.pluralTableJoin = pluralTableJoin;
         this.syntheticPredicate = syntheticPredicate;
+        this.lateral = lateral;
     }
 
-    public String getValuesClause() {
-        return valuesClause;
+    public String getSubquery() {
+        return subquery;
     }
 
-    public String getValuesAliases() {
-        return valuesAliases;
+    public String getAliases() {
+        return aliases;
     }
 
     public String getEntityName() {
@@ -73,5 +75,9 @@ public class EntityFunctionNode {
 
     public String getSyntheticPredicate() {
         return syntheticPredicate;
+    }
+
+    public boolean isLateral() {
+        return lateral;
     }
 }

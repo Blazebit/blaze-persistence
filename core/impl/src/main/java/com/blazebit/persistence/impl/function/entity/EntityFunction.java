@@ -71,40 +71,42 @@ public class EntityFunction implements JpqlFunction {
         String valuesClause = JpqlFunctionUtil.unquote(functionRenderContext.getArgument(2));
         String valuesAliases = JpqlFunctionUtil.unquote(functionRenderContext.getArgument(3));
         String syntheticPredicate = JpqlFunctionUtil.unquote(functionRenderContext.getArgument(4));
-        String exampleQuerySqlAlias = syntheticPredicate.substring(0, syntheticPredicate.indexOf('.'));
         String valuesTableSqlAlias = subquery.substring(aliasStartIndex, aliasEndIndex);
 
-        syntheticPredicate = syntheticPredicate.replace(exampleQuerySqlAlias, valuesTableSqlAlias);
+        if (!syntheticPredicate.isEmpty()) {
+            String exampleQuerySqlAlias = syntheticPredicate.substring(0, syntheticPredicate.indexOf('.'));
+            syntheticPredicate = syntheticPredicate.replace(exampleQuerySqlAlias, valuesTableSqlAlias);
 
-        // TODO: this is a hibernate specific integration detail
-        // Replace the subview subselect that is generated for this subselect
-        final String subselect = "( select * from " + entityName + " )";
-        final String subselectTableExpr = subselect + " " + valuesTableSqlAlias;
-        int subselectIndex = sb.indexOf(subselectTableExpr, 0);
-        final String andSeparator = " and ";
-        if (subselectIndex == -1) {
-            // this is probably a VALUES clause for an entity type
-            int syntheticPredicateStart = sb.indexOf(syntheticPredicate, SqlUtils.indexOfWhere(sb));
-            int end = syntheticPredicateStart + syntheticPredicate.length();
-            if (sb.indexOf(andSeparator, end) == end) {
-                sb.replace(syntheticPredicateStart, end + andSeparator.length(), "");
-            } else {
-                sb.replace(syntheticPredicateStart, end, "1=1");
-            }
-        } else {
-            while ((subselectIndex = sb.indexOf(subselectTableExpr, subselectIndex)) > -1) {
-                int endIndex = subselectIndex + subselect.length();
-                int syntheticPredicateStart = sb.indexOf(syntheticPredicate, endIndex);
+            // TODO: this is a hibernate specific integration detail
+            // Replace the subview subselect that is generated for this subselect
+            final String subselect = "( select * from " + entityName + " )";
+            final String subselectTableExpr = subselect + " " + valuesTableSqlAlias;
+            int subselectIndex = sb.indexOf(subselectTableExpr, 0);
+            final String andSeparator = " and ";
+            if (subselectIndex == -1) {
+                // this is probably a VALUES clause for an entity type
+                int syntheticPredicateStart = sb.indexOf(syntheticPredicate, sb.indexOf(" " + valuesTableSqlAlias + " "));
                 int end = syntheticPredicateStart + syntheticPredicate.length();
                 if (sb.indexOf(andSeparator, end) == end) {
                     sb.replace(syntheticPredicateStart, end + andSeparator.length(), "");
                 } else {
                     sb.replace(syntheticPredicateStart, end, "1=1");
                 }
-                sb.replace(subselectIndex, endIndex, entityName);
+            } else {
+                while ((subselectIndex = sb.indexOf(subselectTableExpr, subselectIndex)) > -1) {
+                    int endIndex = subselectIndex + subselect.length();
+                    int syntheticPredicateStart = sb.indexOf(syntheticPredicate, endIndex);
+                    int end = syntheticPredicateStart + syntheticPredicate.length();
+                    if (sb.indexOf(andSeparator, end) == end) {
+                        sb.replace(syntheticPredicateStart, end + andSeparator.length(), "");
+                    } else {
+                        sb.replace(syntheticPredicateStart, end, "1=1");
+                    }
+                    sb.replace(subselectIndex, endIndex, entityName);
+                }
             }
         }
-        SqlUtils.applyTableNameRemapping(sb, valuesTableSqlAlias, valuesClause, valuesAliases, null);
+        SqlUtils.applyTableNameRemapping(sb, valuesTableSqlAlias, valuesClause, valuesAliases, null, false);
         functionRenderContext.addChunk("(");
         functionRenderContext.addChunk(sb.toString());
         functionRenderContext.addChunk(")");

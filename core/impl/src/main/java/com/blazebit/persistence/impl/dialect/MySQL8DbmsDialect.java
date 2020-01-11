@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl.dialect;
 
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.spi.LateralStyle;
 
 import java.util.Map;
 
@@ -50,6 +51,11 @@ public class MySQL8DbmsDialect extends MySQLDbmsDialect {
     @Override
     public boolean supportsNonRecursiveWithClause() {
         return true;
+    }
+
+    @Override
+    public LateralStyle getLateralStyle() {
+        return LateralStyle.LATERAL;
     }
 
     @Override

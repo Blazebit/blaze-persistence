@@ -589,7 +589,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.setProperty(ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS, "false");
 
-        cb.with(PersonCTE.class)
+        cb.with(PersonCTE.class, false)
             .fromValues(IntIdEntity.class, "intEntity", 1)
             .leftJoinOn(Document.class, "doc")
                 .on("doc.name").eqExpression("intEntity.name")
@@ -693,7 +693,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.setProperty(ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS, "false");
 
-        cb.with(PersonCTE.class)
+        cb.with(PersonCTE.class, false)
             .fromIdentifiableValues(Person.class, "persons", Arrays.asList(p1))
             .from(Person.class, "p")
             .where("p.id").eqExpression("persons")
