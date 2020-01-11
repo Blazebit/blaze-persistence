@@ -20,6 +20,7 @@ import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.DbmsLimitHandler;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.spi.LateralStyle;
 import com.blazebit.persistence.spi.OrderByElement;
 import com.blazebit.persistence.spi.SetOperationType;
 import com.blazebit.persistence.spi.ValuesStrategy;
@@ -172,6 +173,11 @@ public class DelegatingDbmsDialect implements DbmsDialect {
     @Override
     public boolean isNullSmallest() {
         return delegate.isNullSmallest();
+    }
+
+    @Override
+    public LateralStyle getLateralStyle() {
+        return delegate.getLateralStyle();
     }
 
     @Override

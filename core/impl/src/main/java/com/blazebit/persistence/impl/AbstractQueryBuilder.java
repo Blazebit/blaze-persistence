@@ -49,7 +49,7 @@ public abstract class AbstractQueryBuilder<T, X extends Queryable<T, X>, Z, W, F
 
     @Override
     public TypedQuery<T> getQuery() {
-        return getTypedQuery();
+        return getTypedQuery(null, null);
     }
 
     @Override

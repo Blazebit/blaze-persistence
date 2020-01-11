@@ -265,6 +265,14 @@ public interface DbmsDialect {
     public boolean isNullSmallest();
 
     /**
+     * Returns the lateral style that is supported by the dbms.
+     *
+     * @return the lateral style that is supported by the dbms
+     * @since 1.4.1
+     */
+    public LateralStyle getLateralStyle();
+
+    /**
      * Returns the sql type for the java class type for usage in cast expressions.
      *
      * @param castType The java class type

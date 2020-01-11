@@ -687,7 +687,7 @@ public class SetOperationTest extends AbstractCoreTest {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
                 .create(em, Document.class, "d")
                 .select("d")
-                .with(IdHolderCTE.class)
+                .with(IdHolderCTE.class, false)
                         .from(Document.class, "dCte1")
                         .bind("id").select("dCte1.id")
                         .where("dCte1.name").eq("D1")
@@ -760,7 +760,7 @@ public class SetOperationTest extends AbstractCoreTest {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
                 .create(em, Document.class, "d")
                 .select("d")
-                .with(IdHolderCTE.class)
+                .with(IdHolderCTE.class, false)
                         .from(Document.class, "dCte1")
                         .bind("id").select("dCte1.id")
                         .where("dCte1.name").eq("D1")
@@ -807,7 +807,7 @@ public class SetOperationTest extends AbstractCoreTest {
     @Category({ NoH2.class, NoMySQL.class, NoFirebird.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testCTELeftNesting() {
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class)
-                    .withStartSet(IdHolderCTE.class)
+                    .withStartSet(IdHolderCTE.class, false)
                         .startSet()
                             .from(Document.class, "d1")
                             .bind("id").select("d1.id")
@@ -1063,7 +1063,7 @@ public class SetOperationTest extends AbstractCoreTest {
     @Category({ NoMySQL.class, NoFirebird.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testWithStartSetEmpty() {
         final CriteriaBuilder<IdHolderCTE> cb = cbf.create(em, IdHolderCTE.class)
-                .withStartSet(IdHolderCTE.class)
+                .withStartSet(IdHolderCTE.class, false)
                 .endSet()
                 .unionAll()
                 .from(Document.class, "d")

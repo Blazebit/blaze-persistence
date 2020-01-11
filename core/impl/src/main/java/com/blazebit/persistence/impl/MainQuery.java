@@ -117,7 +117,11 @@ public class MainQuery {
     }
 
     public void assertSupportsAdvancedSql(String message) {
-        if (cbf.getExtendedQuerySupport() == null || !cbf.getExtendedQuerySupport().supportsAdvancedSql()) {
+        assertSupportsAdvancedSql(message, false);
+    }
+
+    public void assertSupportsAdvancedSql(String message, boolean inline) {
+        if (!inline && (cbf.getExtendedQuerySupport() == null || !cbf.getExtendedQuerySupport().supportsAdvancedSql())) {
             throw new IllegalStateException(message + " There is no extended query support for the JPA provider yet!");
         }
     }

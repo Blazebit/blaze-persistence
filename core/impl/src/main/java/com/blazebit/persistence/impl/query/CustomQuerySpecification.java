@@ -25,6 +25,7 @@ import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
+import com.blazebit.persistence.spi.LateralStyle;
 import com.blazebit.persistence.spi.ServiceProvider;
 
 import javax.persistence.EntityManager;
@@ -283,16 +284,8 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
             // TODO: this is a hibernate specific integration detail
             // Replace the subview subselect that is generated for this cte
             final String subselect = "( select * from " + cteName + " )";
-            int subselectIndex = 0;
-            while ((subselectIndex = sb.indexOf(subselect, subselectIndex)) > -1) {
-                sb.replace(subselectIndex, subselectIndex + subselect.length(), cteName);
-            }
-
-            final String mainSubselect = "( select * from " + cteName + " )";
-            subselectIndex = 0;
-            while ((subselectIndex = sqlSb.indexOf(mainSubselect, subselectIndex)) > -1) {
-                sqlSb.replace(subselectIndex, subselectIndex + mainSubselect.length(), cteName);
-            }
+            replaceWithCteName(sb, subselect, cteName);
+            replaceWithCteName(sqlSb, subselect, cteName);
         }
 
         sb.append("\n");
@@ -301,10 +294,17 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
             String sqlAlias = extendedQuerySupport.getSqlAlias(em, baseQuery, tableNameRemappingEntry.getKey());
             String newCteName = tableNameRemappingEntry.getValue();
 
-            SqlUtils.applyTableNameRemapping(sqlSb, sqlAlias, newCteName, null, null);
+            SqlUtils.applyTableNameRemapping(sqlSb, sqlAlias, newCteName, null, null, false);
         }
 
         return sb;
+    }
+
+    private void replaceWithCteName(StringBuilder sqlSb, String mainSubselect, String cteName) {
+        int subselectIndex = 0;
+        while ((subselectIndex = sqlSb.indexOf(mainSubselect, subselectIndex)) > -1) {
+            sqlSb.replace(subselectIndex, subselectIndex + mainSubselect.length(), cteName);
+        }
     }
 
     private boolean applyAddedCtes(QuerySpecification<?> querySpecification, Map<String, String> cteTableNameRemappings, StringBuilder sb, Map<String, String> tableNameRemapping, boolean firstCte) {
@@ -382,12 +382,14 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
             applyLeftJoinSubqueryRewrite(sb, sqlAlias);
         }
 
+        LateralStyle lateralStyle = dbmsDialect.getLateralStyle();
         final String andSeparator = " and ";
         for (EntityFunctionNode node : entityFunctionNodes) {
             String valuesTableSqlAlias = node.getTableAlias();
-            String valuesClause = node.getValuesClause();
-            String valuesAliases = node.getValuesAliases();
+            String valuesClause = node.getSubquery();
+            String valuesAliases = node.getAliases();
             String syntheticPredicate = node.getSyntheticPredicate();
+            boolean useApply = node.isLateral() && lateralStyle == LateralStyle.APPLY;
 
             // TODO: this is a hibernate specific integration detail
             // Replace the subview subselect that is generated for this subselect
@@ -396,23 +398,27 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
             final String subselectTableExpr = subselect + " " + valuesTableSqlAlias;
             int subselectIndex = sb.indexOf(subselectTableExpr, 0);
             if (subselectIndex == -1) {
-                // this is probably a VALUES clause for an entity type
-                int syntheticPredicateStart = sb.indexOf(syntheticPredicate, SqlUtils.indexOfFrom(sb));
-                int end = syntheticPredicateStart + syntheticPredicate.length();
-                if (sb.indexOf(andSeparator, end) == end) {
-                    sb.replace(syntheticPredicateStart, end + andSeparator.length(), "");
-                } else {
-                    sb.replace(syntheticPredicateStart, end, "1=1");
-                }
-            } else {
-                while ((subselectIndex = sb.indexOf(subselectTableExpr, subselectIndex)) > -1) {
-                    int endIndex = subselectIndex + subselect.length();
-                    int syntheticPredicateStart = sb.indexOf(syntheticPredicate, endIndex);
+                if (syntheticPredicate != null) {
+                    // this is probably a VALUES clause for an entity type
+                    int syntheticPredicateStart = sb.indexOf(syntheticPredicate, SqlUtils.indexOfFrom(sb));
                     int end = syntheticPredicateStart + syntheticPredicate.length();
                     if (sb.indexOf(andSeparator, end) == end) {
                         sb.replace(syntheticPredicateStart, end + andSeparator.length(), "");
                     } else {
                         sb.replace(syntheticPredicateStart, end, "1=1");
+                    }
+                }
+            } else {
+                while ((subselectIndex = sb.indexOf(subselectTableExpr, subselectIndex)) > -1) {
+                    int endIndex = subselectIndex + subselect.length();
+                    if (syntheticPredicate != null) {
+                        int syntheticPredicateStart = sb.indexOf(syntheticPredicate, endIndex);
+                        int end = syntheticPredicateStart + syntheticPredicate.length();
+                        if (sb.indexOf(andSeparator, end) == end) {
+                            sb.replace(syntheticPredicateStart, end + andSeparator.length(), "");
+                        } else {
+                            sb.replace(syntheticPredicateStart, end, "1=1");
+                        }
                     }
                     sb.replace(subselectIndex, endIndex, entityName);
                 }
@@ -438,7 +444,7 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
                 }
             }
 
-            SqlUtils.applyTableNameRemapping(sb, valuesTableSqlAlias, valuesClause, valuesAliases, newSqlAlias);
+            SqlUtils.applyTableNameRemapping(sb, valuesTableSqlAlias, valuesClause, valuesAliases, newSqlAlias, useApply);
         }
 
         return sb;

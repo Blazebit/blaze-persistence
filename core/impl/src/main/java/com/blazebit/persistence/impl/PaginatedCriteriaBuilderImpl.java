@@ -540,10 +540,10 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     }
 
     @Override
-    protected String getBaseQueryString() {
+    protected String getBaseQueryString(StringBuilder lateralSb, JoinNode lateralJoinNode) {
         if (cachedQueryString == null) {
             if (!isWithInlineIdQuery() && (hasCollections || withForceIdQuery)) {
-                cachedQueryString = buildBaseQueryString(false);
+                cachedQueryString = buildBaseQueryString(false, false);
             } else {
                 cachedQueryString = buildObjectQueryString(false);
             }
@@ -555,7 +555,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     protected String getExternalQueryString() {
         if (cachedExternalQueryString == null) {
             if (!isWithInlineIdQuery() && (hasCollections || withForceIdQuery)) {
-                cachedExternalQueryString = buildBaseQueryString(true);
+                cachedExternalQueryString = buildBaseQueryString(true, false);
             } else {
                 cachedExternalQueryString = buildObjectQueryString(true);
             }
@@ -578,6 +578,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
 
         verifyBuilderEnded();
+        prepareAndCheckCtes();
         if (!orderByManager.hasOrderBys()) {
             throw new IllegalStateException("Pagination requires at least one order by item!");
         }
@@ -744,7 +745,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
     @SuppressWarnings("unchecked")
     private Map.Entry<TypedQuery<T>, ObjectBuilder<T>> getObjectQuery(boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins) {
-        String queryString = getBaseQueryString();
+        String queryString = getBaseQueryString(null, null);
         Class<?> expectedResultType;
 
         // When the keyset is included the query obviously produces an array
@@ -852,7 +853,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         ResolvedExpression[] identifierExpressionsToUse = getIdentifierExpressionsToUse();
         String skippedParameterPrefix = identifierExpressionsToUse.length == 1 ? ID_PARAM_NAME : ID_PARAM_NAME + "_";
         if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, OBJECT_QUERY_CLAUSE_EXCLUSIONS)) {
-            TypedQuery<T> query = (TypedQuery<T>) em.createQuery(getBaseQueryString(), selectManager.getExpectedQueryResultType());
+            TypedQuery<T> query = (TypedQuery<T>) em.createQuery(getBaseQueryString(null, null), selectManager.getExpectedQueryResultType());
             if (isCacheable()) {
                 mainQuery.jpaProvider.setCacheable(query);
             }
@@ -860,7 +861,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             return applyObjectBuilder(query);
         }
 
-        TypedQuery<T> baseQuery = (TypedQuery<T>) em.createQuery(getBaseQueryString(), selectManager.getExpectedQueryResultType());
+        TypedQuery<T> baseQuery = (TypedQuery<T>) em.createQuery(getBaseQueryString(null, null), selectManager.getExpectedQueryResultType());
         Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery, ID_PARAM_NAME);
 
         if (identifierExpressionsToUse.length == 1) {
@@ -924,7 +925,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         // Note that we always exclude the nodes with group by dependency. We consider just the ones from the identifiers
         Set<JoinNode> idNodesToFetch = Collections.emptySet();
         Set<JoinNode> identifierExpressionsToUseNonRootJoinNodes = getIdentifierExpressionsToUseNonRootJoinNodes();
-        joinManager.buildClause(sbSelectFrom, ID_QUERY_CLAUSE_EXCLUSIONS, PAGE_POSITION_ID_QUERY_ALIAS_PREFIX, false, false, true, optionalWhereClauseConjuncts, whereClauseConjuncts, null, explicitVersionEntities, idNodesToFetch, identifierExpressionsToUseNonRootJoinNodes);
+        joinManager.buildClause(sbSelectFrom, ID_QUERY_CLAUSE_EXCLUSIONS, PAGE_POSITION_ID_QUERY_ALIAS_PREFIX, false, false, true, false, optionalWhereClauseConjuncts, whereClauseConjuncts, null, explicitVersionEntities, idNodesToFetch, identifierExpressionsToUseNonRootJoinNodes);
         whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, null);
 
         boolean inverseOrder = false;
@@ -1001,7 +1002,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         // Note that we always exclude the nodes with group by dependency. We consider just the ones from the identifiers
         Set<JoinNode> idNodesToFetch = Collections.emptySet();
         Set<JoinNode> identifierExpressionsToUseNonRootJoinNodes = getIdentifierExpressionsToUseNonRootJoinNodes();
-        joinManager.buildClause(sbSelectFrom, ID_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, null, false, externalRepresentation, true, optionalWhereClauseConjuncts, whereClauseConjuncts, null, explicitVersionEntities, idNodesToFetch, identifierExpressionsToUseNonRootJoinNodes);
+        joinManager.buildClause(sbSelectFrom, ID_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, null, false, externalRepresentation, true, false, optionalWhereClauseConjuncts, whereClauseConjuncts, null, explicitVersionEntities, idNodesToFetch, identifierExpressionsToUseNonRootJoinNodes);
 
         if (keysetMode == KeysetMode.NONE || keysetManager.getKeysetLink().getKeyset().getTuple() == null) {
             whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, null);
@@ -1040,17 +1041,17 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     }
 
     @Override
-    protected String buildBaseQueryString(boolean externalRepresentation) {
+    protected String buildBaseQueryString(boolean externalRepresentation, boolean embedded) {
         StringBuilder sbSelectFrom = new StringBuilder();
         if (externalRepresentation && isMainQuery) {
             mainQuery.cteManager.buildClause(sbSelectFrom);
         }
-        buildBaseQueryString(sbSelectFrom, externalRepresentation);
+        buildBaseQueryString(sbSelectFrom, externalRepresentation, false, null);
         return sbSelectFrom.toString();
     }
 
     @Override
-    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
+    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, boolean embedded, JoinNode lateralJoinNode) {
         selectManager.buildSelect(sbSelectFrom, false, externalRepresentation);
 
         /**
@@ -1062,7 +1063,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         List<String> whereClauseConjuncts = new ArrayList<>();
         // We always have a where clause, so no need for an separate collection
         List<String> optionalWhereClauseConjuncts = whereClauseConjuncts;
-        joinManager.buildClause(sbSelectFrom, OBJECT_QUERY_CLAUSE_EXCLUSIONS, null, false, externalRepresentation, false, optionalWhereClauseConjuncts, whereClauseConjuncts, null, explicitVersionEntities, nodesToFetch, Collections.EMPTY_SET);
+        joinManager.buildClause(sbSelectFrom, OBJECT_QUERY_CLAUSE_EXCLUSIONS, null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, null, explicitVersionEntities, nodesToFetch, Collections.EMPTY_SET);
         sbSelectFrom.append(" WHERE ");
 
         ResolvedExpression[] identifierExpressions = getIdentifierExpressions();
@@ -1136,7 +1137,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         List<String> optionalWhereClauseConjuncts = new ArrayList<>();
 
         if (isWithInlineIdQuery() && (hasCollections || withForceIdQuery)) {
-            joinManager.buildClause(sbSelectFrom, OBJECT_QUERY_CLAUSE_EXCLUSIONS, null, false, externalRepresentation, false, optionalWhereClauseConjuncts, whereClauseConjuncts, null, explicitVersionEntities, nodesToFetch, Collections.EMPTY_SET);
+            joinManager.buildClause(sbSelectFrom, OBJECT_QUERY_CLAUSE_EXCLUSIONS, null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, null, explicitVersionEntities, nodesToFetch, Collections.EMPTY_SET);
 
             ResolvedExpression[] identifierExpressions = getIdentifierExpressions();
             ResolvedExpression[] resultUniqueExpressions = getUniqueIdentifierExpressions();
@@ -1208,7 +1209,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
                 havingManager.buildClause(sbSelectFrom);
             }
         } else {
-            joinManager.buildClause(sbSelectFrom, hasGroupBy ? NO_CLAUSE_EXCLUSION : OBJECT_QUERY_WITHOUT_GROUP_BY_EXCLUSIONS, null, false, externalRepresentation, false, optionalWhereClauseConjuncts, whereClauseConjuncts, null, explicitVersionEntities, nodesToFetch, Collections.EMPTY_SET);
+            joinManager.buildClause(sbSelectFrom, hasGroupBy ? NO_CLAUSE_EXCLUSION : OBJECT_QUERY_WITHOUT_GROUP_BY_EXCLUSIONS, null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, null, explicitVersionEntities, nodesToFetch, Collections.EMPTY_SET);
 
             if (keysetMode == KeysetMode.NONE || keysetManager.getKeysetLink().getKeyset().getTuple() == null) {
                 whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, null);

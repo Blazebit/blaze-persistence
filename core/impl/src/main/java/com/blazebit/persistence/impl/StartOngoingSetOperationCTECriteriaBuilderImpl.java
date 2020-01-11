@@ -33,8 +33,8 @@ public class StartOngoingSetOperationCTECriteriaBuilderImpl<T, Z extends Abstrac
     
     protected final Z endSetResult;
     
-    public StartOngoingSetOperationCTECriteriaBuilderImpl(MainQuery mainQuery, QueryContext queryContext, String cteName, Class<Object> clazz, T result, CTEBuilderListener listener, OngoingFinalSetOperationCTECriteriaBuilderImpl<Object> finalSetOperationBuilder, Z endSetResult) {
-        super(mainQuery, queryContext, cteName, clazz, result, listener, finalSetOperationBuilder);
+    public StartOngoingSetOperationCTECriteriaBuilderImpl(MainQuery mainQuery, QueryContext queryContext, String cteName, boolean inline, Class<Object> clazz, T result, CTEBuilderListener listener, OngoingFinalSetOperationCTECriteriaBuilderImpl<Object> finalSetOperationBuilder, Z endSetResult, AliasManager parentAliasManager, JoinManager parentJoinManager) {
+        super(mainQuery, queryContext, cteName, inline, clazz, result, listener, finalSetOperationBuilder, parentAliasManager, parentJoinManager);
         this.endSetResult = endSetResult;
     }
 

@@ -232,6 +232,7 @@ import com.blazebit.persistence.impl.function.every.EveryFunction;
 import com.blazebit.persistence.impl.function.every.FallbackEveryFunction;
 import com.blazebit.persistence.impl.function.oragg.FallbackOrAggFunction;
 import com.blazebit.persistence.impl.function.oragg.OrAggFunction;
+import com.blazebit.persistence.impl.function.nullfn.NullfnFunction;
 import com.blazebit.persistence.impl.function.rowvalue.DB2RowValueSubqueryComparisonFunction;
 import com.blazebit.persistence.impl.function.rowvalue.RowValueSubqueryComparisonFunction;
 import com.blazebit.persistence.impl.function.subquery.SubqueryFunction;
@@ -531,6 +532,12 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         jpqlFunctionGroup = new JpqlFunctionGroup(EntityFunction.FUNCTION_NAME, false);
         jpqlFunctionGroup.add(null, new EntityFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        // nullfn
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(NullfnFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup.add(null, new NullfnFunction());
         registerFunction(jpqlFunctionGroup);
         
         // set operations
@@ -1552,6 +1559,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         properties.put(ConfigurationProperties.OPTIMIZED_KEYSET_PREDICATE_RENDERING, "true");
         properties.put(ConfigurationProperties.INLINE_ID_QUERY, "auto");
         properties.put(ConfigurationProperties.INLINE_COUNT_QUERY, "auto");
+        properties.put(ConfigurationProperties.INLINE_CTES, "true");
     }
 
     private void loadExtendedQuerySupport() {

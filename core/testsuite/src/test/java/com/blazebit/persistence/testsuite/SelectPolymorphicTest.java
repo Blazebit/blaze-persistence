@@ -70,7 +70,7 @@ public class SelectPolymorphicTest extends AbstractCoreTest {
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
     public void testSelectTablePerClassWithCte() throws Exception {
         CriteriaBuilder<TPCBase> cb = cbf.create(em, TPCBase.class, "t")
-                .with(IdHolderCTE.class)
+                .with(IdHolderCTE.class, false)
                     .from(TPCBase.class, "t")
                     .bind("id").select("t.id")
                 .end()

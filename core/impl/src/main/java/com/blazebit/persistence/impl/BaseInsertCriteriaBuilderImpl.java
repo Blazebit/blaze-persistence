@@ -128,7 +128,7 @@ public abstract class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCrite
     }
 
     @Override
-    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
+    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, boolean embedded, JoinNode lateralJoinNode) {
         appendInsertIntoFragment(sbSelectFrom, externalRepresentation);
         sbSelectFrom.append('(');
         
@@ -148,7 +148,7 @@ public abstract class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCrite
     }
 
     protected void buildSelectBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
-        super.buildBaseQueryString(sbSelectFrom, externalRepresentation);
+        super.buildBaseQueryString(sbSelectFrom, externalRepresentation, false, null);
     }
 
     protected void appendInsertIntoFragment(StringBuilder sbSelectFrom, boolean externalRepresentation) {
@@ -169,7 +169,7 @@ public abstract class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCrite
     @Override
     protected Query getQuery(Map<DbmsModificationState, String> includedModificationStates) {
         // We need to change the underlying sql when doing a limit with hibernate since it does not support limiting insert ... select statements
-        Query query = em.createQuery(getBaseQueryStringWithCheck());
+        Query query = em.createQuery(getBaseQueryStringWithCheck(null, null));
         Set<String> parameterListNames = parameterManager.getParameterListNames(query);
         Set<JoinNode> keyRestrictedLeftJoins = joinManager.getKeyRestrictedLeftJoins();
 

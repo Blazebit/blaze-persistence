@@ -17,6 +17,7 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.CommonQueryBuilder;
+import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
 import com.blazebit.persistence.LeafOngoingFinalSetOperationSubqueryBuilder;
 import com.blazebit.persistence.StartOngoingSetOperationSubqueryBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
@@ -241,5 +242,40 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
         SubqueryBuilder<X> builder = fromIdentifiableValues(valueClass, identifierAttribute, alias, values.size());
         builder.setParameter(alias, values);
         return builder;
+    }
+
+    @Override
+    public FullSelectCTECriteriaBuilder<SubqueryBuilder<X>> fromSubquery(Class<?> cteClass) {
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
+        listener.onBuilderStarted(subqueryBuilder);
+        return subqueryBuilder.fromSubquery(cteClass);
+    }
+
+    @Override
+    public FullSelectCTECriteriaBuilder<SubqueryBuilder<X>> fromSubquery(Class<?> cteClass, String alias) {
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
+        listener.onBuilderStarted(subqueryBuilder);
+        return subqueryBuilder.fromSubquery(cteClass, alias);
+    }
+
+    @Override
+    public FullSelectCTECriteriaBuilder<SubqueryBuilder<X>> fromEntitySubquery(Class<?> cteClass) {
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
+        listener.onBuilderStarted(subqueryBuilder);
+        return subqueryBuilder.fromEntitySubquery(cteClass);
+    }
+
+    @Override
+    public FullSelectCTECriteriaBuilder<SubqueryBuilder<X>> fromEntitySubquery(Class<?> cteClass, String alias) {
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
+        listener.onBuilderStarted(subqueryBuilder);
+        return subqueryBuilder.fromEntitySubquery(cteClass, alias);
+    }
+
+    @Override
+    public FullSelectCTECriteriaBuilder<SubqueryBuilder<X>> fromEntitySubquery(Class<?> cteClass, String alias, String subqueryAlias) {
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
+        listener.onBuilderStarted(subqueryBuilder);
+        return subqueryBuilder.fromEntitySubquery(cteClass, alias, subqueryAlias);
     }
 }

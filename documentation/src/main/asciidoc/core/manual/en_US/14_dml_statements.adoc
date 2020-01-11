@@ -314,10 +314,9 @@ This will copy all kittens that are associated with the cat with id 1 to the kit
 
 === CTE support
 
-If the underlying DBMS supports the use of CTEs on _modification_ statements, you can make use of those by defining them via link:{core_jdoc}/persistence/CTEBuilder.html#with(java.lang.Class)[`with()`].
+If the underlying DBMS does not support the use of CTEs on _modification_ statements, the CTE's are inlined into the query.
+You can make use of those by defining them via link:{core_jdoc}/persistence/CTEBuilder.html#with(java.lang.Class)[`with()`].
 For further information on this, check out the <<ctes,CTE chapter>>.
-
-// TODO: When fixing #337 we could actually fallback to inlining for non-recursive CTEs on DBMS that don't support CTEs
 
 === RETURNING clause support
 

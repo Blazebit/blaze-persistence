@@ -211,7 +211,7 @@ public class UpdateTest extends AbstractCoreTest {
             public void work(EntityManager em) {
                 final UpdateCriteriaBuilder<Document> cb = cbf.update(em, Document.class, "d");
                 cb.set("name", "NewD1");
-                cb.with(IdHolderCTE.class)
+                cb.with(IdHolderCTE.class, false)
                         .from(Document.class, "subDoc")
                         .bind("id").select("subDoc.id")
                         .orderByAsc("subDoc.id")

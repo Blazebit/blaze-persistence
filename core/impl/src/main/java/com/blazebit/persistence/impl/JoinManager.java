@@ -18,12 +18,14 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.From;
+import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
 import com.blazebit.persistence.JoinOnBuilder;
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.Path;
 import com.blazebit.persistence.impl.builder.predicate.JoinOnBuilderImpl;
 import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListenerImpl;
 import com.blazebit.persistence.impl.function.entity.ValuesEntity;
+import com.blazebit.persistence.impl.function.nullfn.NullfnFunction;
 import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
 import com.blazebit.persistence.impl.util.Keywords;
 import com.blazebit.persistence.parser.ListIndexAttribute;
@@ -103,6 +105,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
     // a is unresolved for both X and Y
     private final List<JoinNode> rootNodes = new ArrayList<JoinNode>(1);
     private final List<JoinNode> entityFunctionNodes = new ArrayList<>();
+    private final List<JoinNode> lateInlineNodes = new ArrayList<>();
     private final List<JoinNode> explicitJoinNodes = new ArrayList<>();
     // root entity class
     private final String joinRestrictionKeyword;
@@ -515,12 +518,12 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         return rootAlias;
     }
 
-    String addRoot(String correlationPath, String rootAlias) {
+    String addRoot(String correlationPath, String rootAlias, boolean lateral) {
         Expression expr = expressionFactory.createJoinPathExpression(correlationPath);
-        return addRoot(correlationPath, expr, rootAlias);
+        return addRoot(correlationPath, expr, rootAlias, lateral);
     }
 
-    String addRoot(String correlationPath, Expression expr, String rootAlias) {
+    String addRoot(String correlationPath, Expression expr, String rootAlias, boolean lateral) {
         PathExpression pathExpression;
         String treatEntityType = null;
         // First we extract the path expression and some parameters from surrounding expressions
@@ -624,7 +627,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             // This is a simple path to an association, no deep expression that requires implicit joining
 
             JoinAliasInfo rootAliasInfo = new JoinAliasInfo(rootAlias, rootAlias, false, true, aliasManager);
-            rootNode = JoinNode.createCorrelationRootNode(correlationParent, correlatedAttribute, joinResult.getAttribute(), type, metamodel.getEntity(treatEntityType), rootAliasInfo);
+            rootNode = JoinNode.createCorrelationRootNode(correlationParent, correlatedAttribute, joinResult.getAttribute(), type, metamodel.getEntity(treatEntityType), rootAliasInfo, lateral);
             rootAliasInfo.setJoinNode(rootNode);
             rootNodes.add(rootNode);
             explicitJoinNodes.add(rootNode);
@@ -638,7 +641,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             }
 
             JoinAliasInfo rootAliasInfo = new JoinAliasInfo(rootAliasBase, rootAliasBase, true, true, aliasManager);
-            rootNode = JoinNode.createCorrelationRootNode(correlationParent, correlatedAttribute, joinResult.getAttribute(), type, null, rootAliasInfo);
+            rootNode = JoinNode.createCorrelationRootNode(correlationParent, correlatedAttribute, joinResult.getAttribute(), type, null, rootAliasInfo, lateral);
             rootAliasInfo.setJoinNode(rootNode);
             rootNodes.add(rootNode);
             explicitJoinNodes.add(rootNode);
@@ -806,7 +809,29 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
     }
 
     boolean hasEntityFunctions() {
-        return entityFunctionNodes.size() > 0;
+        return entityFunctionNodes.size() > 0 || lateInlineNodes.size() > 0;
+    }
+
+    boolean hasLateInlineNodes() {
+        return acceptVisitor(new AbortableResultJoinNodeVisitor<Boolean>() {
+            @Override
+            public Boolean getStopValue() {
+                return Boolean.TRUE;
+            }
+
+            @Override
+            public Boolean visit(JoinNode node) {
+                Class<?> cteType = node.getJavaType();
+                if (cteType != null) {
+                    CTEInfo cte = mainQuery.cteManager.getCte(cteType, node.getAlias());
+                    if (cte == null) {
+                        cte = mainQuery.cteManager.getCte(cteType);
+                    }
+                    return cte != null && cte.inline;
+                }
+                return false;
+            }
+        });
     }
 
     public Set<JoinNode> getCollectionJoins() {
@@ -830,6 +855,10 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
     List<JoinNode> getEntityFunctionNodes() {
         return entityFunctionNodes;
+    }
+
+    List<JoinNode> getLateInlineNodes() {
+        return lateInlineNodes;
     }
 
     public JoinManager getParent() {
@@ -864,7 +893,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         return rootNode.getValueCount() > 0 && rootNode.getNodes().isEmpty() && rootNode.getTreatedJoinNodes().isEmpty() && rootNode.getEntityJoinNodes().isEmpty();
     }
 
-    Set<JoinNode> buildClause(StringBuilder sb, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes, boolean externalRepresentation, boolean ignoreCardinality, List<String> optionalWhereConjuncts,
+    Set<JoinNode> buildClause(StringBuilder sb, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes, boolean externalRepresentation, boolean ignoreCardinality, boolean lateralExample, List<String> optionalWhereConjuncts,
                               List<String> whereConjuncts, List<String> syntheticSubqueryValuesWhereClauseConjuncts, Map<Class<?>, Map<String, DbmsModificationState>> explicitVersionEntities, Set<JoinNode> nodesToFetch, Set<JoinNode> alwaysIncludedNodes) {
         final boolean renderFetches = !clauseExclusions.contains(ClauseType.SELECT);
         collectionJoinNodes.clear();
@@ -875,7 +904,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         // TODO: we might have dependencies to other from clause elements which should also be accounted for
         List<JoinNode> stack = new ArrayList<>(explicitJoinNodes);
         Collections.reverse(stack);
-        JoinNode valuesNode = null;
+        List<JoinNode> placeholderRequiringNodes = new ArrayList<>();
         boolean firstRootNode = true;
         while (!stack.isEmpty()) {
             JoinNode node = stack.remove(stack.size() - 1);
@@ -885,12 +914,12 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 } else {
                     sb.append(", ");
                 }
-                if (valuesNode != null) {
+                if (!placeholderRequiringNodes.isEmpty()) {
                     if (noJoinValuesNodesSb.length() != 0) {
                         noJoinValuesNodesSb.append(" AND ");
                     }
-                    renderValuesClausePredicate(noJoinValuesNodesSb, valuesNode, valuesNode.getAlias(), externalRepresentation);
-                    valuesNode = null;
+                    renderPlaceholderRequiringPredicate(noJoinValuesNodesSb, placeholderRequiringNodes, externalRepresentation);
+                    placeholderRequiringNodes.clear();
                 }
 
                 JoinNode correlationParent = node.getCorrelationParent();
@@ -931,11 +960,16 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                     sb.append(type.getName());
                     sb.append(')');
                 } else {
-                    if (correlationParent != null) {
+                    if (correlationParent != null && !node.isLateral()) {
                         renderAlias = renderCorrelationJoinPath(sb, correlationParent.getAliasInfo(), node, whereConjuncts, optionalWhereConjuncts, externalRepresentation);
                     } else {
                         EntityType<?> type = node.getInternalEntityType();
                         sb.append(type.getName());
+                    }
+                    if (externalRepresentation && node.isInlineCte()) {
+                        sb.append('(');
+                        node.getInlineCte().nonRecursiveCriteriaBuilder.buildExternalQueryString(sb);
+                        sb.append(')');
                     }
                 }
 
@@ -947,6 +981,9 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                     }
 
                     sb.append(node.getAliasInfo().getAlias());
+                    if (externalRepresentation && node.isInlineCte()) {
+                        renderInlineCteAttributes(sb, node);
+                    }
                 }
                 renderedJoins.add(node);
 
@@ -967,7 +1004,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                             sb.append('_').append(node.getQualificationExpression().toLowerCase());
                         }
                     }
-                    valuesNode = node;
+                    placeholderRequiringNodes.add(node);
                     // We add a synthetic where clause conjuncts for subqueries that are removed later to support the values clause in subqueries
                     if (syntheticSubqueryValuesWhereClauseConjuncts != null) {
                         if (syntheticSubqueryValuesWhereClauseConjuncts.isEmpty()) {
@@ -977,6 +1014,16 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                         if (node.getType() instanceof ManagedType<?> && JpaMetamodelUtils.isIdentifiable((ManagedType<?>) node.getType())) {
                             exampleAttributeName = JpaMetamodelUtils.getSingleIdAttribute(node.getEntityType()).getName();
                         }
+                        syntheticSubqueryValuesWhereClauseConjuncts.add(node.getAlias() + "." + exampleAttributeName + " IS NULL");
+                    }
+                } else if (!externalRepresentation && node.isInlineCte()) {
+                    placeholderRequiringNodes.add(node);
+                    // We add a synthetic where clause conjuncts for subqueries that are removed later to support the inline CTEs in subqueries
+                    if (syntheticSubqueryValuesWhereClauseConjuncts != null) {
+                        if (syntheticSubqueryValuesWhereClauseConjuncts.isEmpty()) {
+                            syntheticSubqueryValuesWhereClauseConjuncts.add("1=1");
+                        }
+                        String exampleAttributeName = JpaMetamodelUtils.getSingleIdAttribute(node.getEntityType()).getName();
                         syntheticSubqueryValuesWhereClauseConjuncts.add(node.getAlias() + "." + exampleAttributeName + " IS NULL");
                     }
                 }
@@ -995,15 +1042,15 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                     // If the join node is neither constantified through a WHERE or ON predicate, it is like a collection join
                     isCollection = !constantifiedJoinNodeAttributeCollector.isConstantified(node);
                 }
-                valuesNode = addDefaultJoinsAndRenderJoinNode(sb, node.getParent().getAliasInfo(), stack, node, isCollection, clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes, externalRepresentation);
+                addDefaultJoinsAndRenderJoinNode(sb, node.getParent().getAliasInfo(), stack, node, isCollection, clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, placeholderRequiringNodes, alwaysIncludedNodes, externalRepresentation, lateralExample);
             }
         }
 
-        if (valuesNode != null) {
+        if (!placeholderRequiringNodes.isEmpty()) {
             if (noJoinValuesNodesSb.length() != 0) {
                 noJoinValuesNodesSb.append(" AND ");
             }
-            renderValuesClausePredicate(noJoinValuesNodesSb, valuesNode, valuesNode.getAlias(), externalRepresentation);
+            renderPlaceholderRequiringPredicate(noJoinValuesNodesSb, placeholderRequiringNodes, externalRepresentation);
         }
 
         if (noJoinValuesNodesSb.length() != 0) {
@@ -1013,72 +1060,97 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         return collectionJoinNodes;
     }
 
-    void renderValuesClausePredicate(StringBuilder sb, JoinNode rootNode, String alias, boolean externalRepresentation) {
+    void renderPlaceholderRequiringPredicate(StringBuilder sb, List<JoinNode> placeholderRequiringNodes, boolean externalRepresentation) {
+        JoinNode placeholderRequiringNode = placeholderRequiringNodes.get(0);
+        renderPlaceholderRequiringPredicate(sb, placeholderRequiringNode, placeholderRequiringNode.getAlias(), externalRepresentation);
+        for (int i = 1; i < placeholderRequiringNodes.size(); i++) {
+            placeholderRequiringNode = placeholderRequiringNodes.get(i);
+            sb.append(" AND ");
+            renderPlaceholderRequiringPredicate(sb, placeholderRequiringNode, placeholderRequiringNode.getAlias(), externalRepresentation);
+        }
+    }
+
+    void renderPlaceholderRequiringPredicate(StringBuilder sb, JoinNode rootNode, String alias, boolean externalRepresentation) {
         // The rendering strategy is to render the VALUES clause predicate into JPQL with the values parameters
         // in the correct order. The whole SQL part of that will be replaced later by the correct SQL
         int valueCount = rootNode.getValueCount();
-        if (!externalRepresentation && valueCount > 0) {
-            String typeName = rootNode.getValuesTypeName() == null ? null : rootNode.getValuesTypeName().toUpperCase();
-            String valueClazzAttributeName = rootNode.getValuesLikeAttribute();
-            String[] attributes = rootNode.getValuesAttributes();
-            String prefix = rootNode.getAlias();
+        if (!externalRepresentation) {
+            if (valueCount > 0) {
+                String typeName = rootNode.getValuesTypeName() == null ? null : rootNode.getValuesTypeName().toUpperCase();
+                String[] attributes = rootNode.getValuesAttributes();
+                String valueClazzAttributeName = rootNode.getValuesLikeAttribute();
+                String prefix = rootNode.getAlias();
 
-            for (int i = 0; i < valueCount; i++) {
-                for (int j = 0; j < attributes.length; j++) {
-                    if (typeName != null) {
-                        sb.append("TREAT_");
-                        sb.append(typeName);
-                        sb.append('(');
-                        sb.append(alias);
-                        sb.append('.');
-                        sb.append(attributes[j]);
-                        sb.append(')');
-                    } else {
-                        if (rootNode.getQualificationExpression() != null) {
-                            sb.append(rootNode.getQualificationExpression()).append('(');
-                        }
-                        sb.append(alias);
-                        if (rootNode.isValueClazzAttributeSingular()) {
+                for (int i = 0; i < valueCount; i++) {
+                    for (int j = 0; j < attributes.length; j++) {
+                        if (typeName != null) {
+                            sb.append("TREAT_");
+                            sb.append(typeName);
+                            sb.append('(');
+                            sb.append(alias);
                             sb.append('.');
-                            if (rootNode.isValueClazzSimpleValue()) {
-                                sb.append(valueClazzAttributeName);
-                            } else {
-                                sb.append(attributes[j]);
-                            }
+                            sb.append(attributes[j]);
+                            sb.append(')');
                         } else {
-                            sb.append('_');
-                            sb.append(valueClazzAttributeName.replace('.', '_'));
-                            if (!rootNode.isValueClazzSimpleValue()) {
-                                sb.append(attributes[j], valueClazzAttributeName.length(), attributes[j].length());
+                            if (rootNode.getQualificationExpression() != null) {
+                                sb.append(rootNode.getQualificationExpression()).append('(');
                             }
+                            sb.append(alias);
+                            if (rootNode.isValueClazzAttributeSingular()) {
+                                sb.append('.');
+                                if (rootNode.isValueClazzSimpleValue()) {
+                                    sb.append(valueClazzAttributeName);
+                                } else {
+                                    sb.append(attributes[j]);
+                                }
+                            } else {
+                                sb.append('_');
+                                sb.append(valueClazzAttributeName.replace('.', '_'));
+                                if (!rootNode.isValueClazzSimpleValue()) {
+                                    sb.append(attributes[j], valueClazzAttributeName.length(), attributes[j].length());
+                                }
+                            }
+                            if (rootNode.getQualificationExpression() != null) {
+                                sb.append('_');
+                                sb.append(rootNode.getQualificationExpression().toLowerCase());
+                                sb.append(')');
+                            }
+                        }
+
+                        sb.append(" = ");
+
+                        sb.append(':');
+                        sb.append(prefix);
+                        sb.append('_');
+                        if (rootNode.isValueClazzSimpleValue()) {
+                            sb.append(valueClazzAttributeName.replace('.', '_'));
+                        } else {
+                            sb.append(attributes[j].replace('.', '_'));
                         }
                         if (rootNode.getQualificationExpression() != null) {
                             sb.append('_');
                             sb.append(rootNode.getQualificationExpression().toLowerCase());
-                            sb.append(')');
                         }
+                        sb.append('_').append(i);
+                        sb.append(" OR ");
                     }
-
-                    sb.append(" = ");
-
-                    sb.append(':');
-                    sb.append(prefix);
-                    sb.append('_');
-                    if (rootNode.isValueClazzSimpleValue()) {
-                        sb.append(valueClazzAttributeName.replace('.', '_'));
-                    } else {
-                        sb.append(attributes[j].replace('.', '_'));
-                    }
-                    if (rootNode.getQualificationExpression() != null) {
-                        sb.append('_');
-                        sb.append(rootNode.getQualificationExpression().toLowerCase());
-                    }
-                    sb.append('_').append(i);
-                    sb.append(" OR ");
                 }
-            }
 
-            sb.setLength(sb.length() - " OR ".length());
+                sb.setLength(sb.length() - " OR ".length());
+            } else if (rootNode.isInlineCte()) {
+                sb.append(mainQuery.jpaProvider.getCustomFunctionInvocation(NullfnFunction.FUNCTION_NAME, 1));
+                sb.append('(');
+                StringBuilder oldBuffer = queryGenerator.getQueryBuffer();
+                queryGenerator.setClauseType(ClauseType.SET);
+                queryGenerator.setQueryBuffer(sb);
+                try {
+                    rootNode.getInlineCte().nonRecursiveCriteriaBuilder.asExpression(false).accept(queryGenerator);
+                } finally {
+                    queryGenerator.setClauseType(null);
+                    queryGenerator.setQueryBuffer(oldBuffer);
+                }
+                sb.append(')').append(')').append(" is null");
+            }
         }
     }
 
@@ -1135,19 +1207,19 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         }
     }
 
-    private JoinNode renderJoinNode(StringBuilder sb, JoinAliasInfo joinBase, JoinNode node, String aliasPrefix, boolean renderFetches, Set<JoinNode> nodesToFetch, List<String> whereConjuncts, JoinNode valuesNode, boolean externalRepresentation) {
+    private void renderJoinNode(StringBuilder sb, JoinAliasInfo joinBase, JoinNode node, String aliasPrefix, boolean renderFetches, Set<JoinNode> nodesToFetch, List<String> whereConjuncts, List<JoinNode> placeholderRequiringNodes, boolean externalRepresentation, boolean lateralExample) {
         if (!renderedJoins.contains(node)) {
             // We determine the nodes that should be fetched by analyzing the fetch owners during implicit joining
             final boolean fetch = nodesToFetch.contains(node) && renderFetches;
             // Don't render key joins unless fetching is specified on it
             if (node.isQualifiedJoin() && !fetch) {
                 renderedJoins.add(node);
-                return valuesNode;
+                return;
             }
             // We only render treat joins, but not treated join nodes. These treats are just "optional casts" that don't affect joining
             if (node.isTreatedJoinNode()) {
                 renderedJoins.add(node);
-                return valuesNode;
+                return;
             }
 
             if (node.isEntityJoinNode() && (emulateJoins || !mainQuery.jpaProvider.supportsEntityJoin())) {
@@ -1174,11 +1246,11 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 if (node.getOnPredicate() != null && !node.getOnPredicate().getChildren().isEmpty()) {
                     tempSb.setLength(0);
 
-                    if (valuesNode != null) {
-                        renderValuesClausePredicate(tempSb, valuesNode, valuesNode.getAlias(), externalRepresentation);
+                    if (!placeholderRequiringNodes.isEmpty()) {
+                        renderPlaceholderRequiringPredicate(tempSb, placeholderRequiringNodes, externalRepresentation);
                         whereConjuncts.add(tempSb.toString());
                         tempSb.setLength(0);
-                        valuesNode = null;
+                        placeholderRequiringNodes.clear();
                     }
                     queryGenerator.setClauseType(ClauseType.JOIN);
                     queryGenerator.setQueryBuffer(tempSb);
@@ -1209,6 +1281,10 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                         throw new IllegalArgumentException("Unknown join type: " + node.getJoinType());
                 }
 
+                if (externalRepresentation && node.isLateral()) {
+                    sb.append("LATERAL ");
+                }
+
                 if (fetch) {
                     sb.append("FETCH ");
                 }
@@ -1225,9 +1301,17 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 }
 
                 sb.append(node.getAliasInfo().getAlias());
+                if (externalRepresentation && node.isInlineCte()) {
+                    renderInlineCteAttributes(sb, node);
+                }
                 renderedJoins.add(node);
+
+                if (node.isInlineCte()) {
+                    placeholderRequiringNodes.add(node);
+                }
+
                 boolean realOnClause = node.getOnPredicate() != null && !node.getOnPredicate().getChildren().isEmpty() || onCondition != null;
-                boolean onClause = valuesNode != null || realOnClause;
+                boolean onClause = !placeholderRequiringNodes.isEmpty() || realOnClause;
 
                 if (onClause) {
                     sb.append(joinRestrictionKeyword);
@@ -1238,17 +1322,17 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
                 // This condition will be removed in the final SQL, so no worries about it
                 // It is just there to have parameters at the right position in the final SQL
-                if (valuesNode != null) {
+                if (!placeholderRequiringNodes.isEmpty() && !lateralExample) {
                     if (!externalRepresentation) {
-                        renderValuesClausePredicate(sb, valuesNode, valuesNode.getAlias(), externalRepresentation);
+                        renderPlaceholderRequiringPredicate(sb, placeholderRequiringNodes, externalRepresentation);
                         if (realOnClause) {
                             sb.append(" AND ");
                         }
                     }
-                    valuesNode = null;
+                    placeholderRequiringNodes.clear();
                 }
 
-                if (node.getOnPredicate() != null && !node.getOnPredicate().getChildren().isEmpty()) {
+                if (node.getOnPredicate() != null && !node.getOnPredicate().getChildren().isEmpty() && !lateralExample) {
                     if (onCondition != null) {
                         sb.append(onCondition).append(" AND ");
                     }
@@ -1261,19 +1345,29 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                     queryGenerator.setRenderedJoinNodes(null);
                     queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
                     queryGenerator.setClauseType(null);
-                } else if (onCondition != null) {
+                } else if (onCondition != null && !lateralExample) {
                     sb.append(onCondition);
                 }
 
                 if (onClause) {
-                    sb.append(')');
-                    if (sb != sb) {
-                        whereConjuncts.add(sb.toString());
+                    if (lateralExample) {
+                        sb.append("1=1");
                     }
+                    sb.append(')');
                 }
             }
         }
-        return valuesNode;
+    }
+
+    private void renderInlineCteAttributes(StringBuilder sb, JoinNode node) {
+        sb.append('(');
+        List<String> attributes = node.getInlineCte().attributes;
+        sb.append(attributes.get(0));
+        for (int i = 1; i < attributes.size(); i++) {
+            sb.append(", ").append(attributes.get(i));
+        }
+
+        sb.append(')');
     }
 
     private boolean renderCorrelationJoinPath(StringBuilder sb, JoinAliasInfo joinBase, JoinNode node, List<String> whereConjuncts, List<String> optionalWhereConjuncts, boolean externalRepresentation) {
@@ -1430,8 +1524,13 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 throw new IllegalArgumentException("Treat should not be used as the JPA provider does not support subtype property access!");
             }
             return onCondition;
-        } else if (node.getCorrelationPath() == null && node.getAliasInfo().isRootNode()) {
+        } else if (node.getCorrelationPath() == null && node.getAliasInfo().isRootNode() || node.getCorrelationPath() != null && node.isLateral()) {
             sb.append(node.getEntityType().getName());
+            if (externalRepresentation && node.isInlineCte()) {
+                sb.append('(');
+                node.getInlineCte().nonRecursiveCriteriaBuilder.buildExternalQueryString(sb);
+                sb.append(')');
+            }
         } else if (node.isQualifiedJoin()) {
             sb.append(node.getQualificationExpression());
             sb.append('(');
@@ -1459,10 +1558,10 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         }
     }
 
-    private JoinNode renderReverseDependency(StringBuilder sb, JoinNode dependency, String aliasPrefix, boolean renderFetches, Set<JoinNode> nodesToFetch, List<String> whereConjuncts, JoinNode valuesNode, boolean externalRepresentation) {
+    private void renderReverseDependency(StringBuilder sb, JoinNode dependency, String aliasPrefix, boolean renderFetches, Set<JoinNode> nodesToFetch, List<String> whereConjuncts, List<JoinNode> placeholderRequiringNodes, boolean externalRepresentation, boolean lateralExample) {
         if (dependency.getParent() != null) {
-            if (dependency.getParent() != valuesNode) {
-                valuesNode = renderReverseDependency(sb, dependency.getParent(), aliasPrefix, renderFetches, nodesToFetch, whereConjuncts, valuesNode, externalRepresentation);
+            if (!placeholderRequiringNodes.contains(dependency.getParent())) {
+                renderReverseDependency(sb, dependency.getParent(), aliasPrefix, renderFetches, nodesToFetch, whereConjuncts, placeholderRequiringNodes, externalRepresentation, lateralExample);
             }
             if (!dependency.getDependencies().isEmpty()) {
                 markedJoinNodes.add(dependency);
@@ -1484,16 +1583,14 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                             throw new IllegalStateException(errorSb.toString());
                         }
                         // render reverse dependencies
-                        valuesNode = renderReverseDependency(sb, dep, aliasPrefix, renderFetches, nodesToFetch, whereConjuncts, valuesNode, externalRepresentation);
+                        renderReverseDependency(sb, dep, aliasPrefix, renderFetches, nodesToFetch, whereConjuncts, placeholderRequiringNodes, externalRepresentation, lateralExample);
                     }
                 } finally {
                     markedJoinNodes.remove(dependency);
                 }
             }
-            valuesNode = renderJoinNode(sb, dependency.getParent().getAliasInfo(), dependency, aliasPrefix, renderFetches, nodesToFetch, whereConjuncts, valuesNode, externalRepresentation);
+            renderJoinNode(sb, dependency.getParent().getAliasInfo(), dependency, aliasPrefix, renderFetches, nodesToFetch, whereConjuncts, placeholderRequiringNodes, externalRepresentation, lateralExample);
         }
-
-        return valuesNode;
     }
 
     private void addDefaultJoins(List<JoinNode> stack, Map<String, JoinTreeNode> nodes) {
@@ -1508,11 +1605,11 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         }
     }
 
-    private JoinNode addDefaultJoinsAndRenderJoinNode(StringBuilder sb, JoinAliasInfo joinBase, List<JoinNode> stack, JoinNode node, boolean isCollection, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes, boolean renderFetches, boolean ignoreCardinality,
-                                                      Set<JoinNode> nodesToFetch, List<String> whereConjuncts, JoinNode valuesNode, Set<JoinNode> alwaysIncludedNodes, boolean externalRepresentation) {
+    private void addDefaultJoinsAndRenderJoinNode(StringBuilder sb, JoinAliasInfo joinBase, List<JoinNode> stack, JoinNode node, boolean isCollection, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes, boolean renderFetches, boolean ignoreCardinality,
+                                                  Set<JoinNode> nodesToFetch, List<String> whereConjuncts, List<JoinNode> placeholderRequiringNodes, Set<JoinNode> alwaysIncludedNodes, boolean externalRepresentation, boolean lateralExample) {
         // If the clauses in which a join node occurs are all excluded or the join node is not mandatory for the cardinality, we skip it
         if (!clauseExclusions.isEmpty() && clauseExclusions.containsAll(node.getClauseDependencies()) && (ignoreCardinality || !node.isCardinalityMandatory()) && !alwaysIncludedNodes.contains(node)) {
-            return valuesNode;
+            return;
         }
 
         stack.addAll(node.getTreatedJoinNodes().values());
@@ -1521,7 +1618,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         // Non-Default join nodes are rendered in insertion order but their dependencies doesn't include the parent,
         // so we have to render it here by using renderReverseDependency
         if (!node.getDependencies().isEmpty() || !node.isDefaultJoinNode()) {
-            valuesNode = renderReverseDependency(sb, node, aliasPrefix, renderFetches, nodesToFetch, whereConjuncts, valuesNode, externalRepresentation);
+            renderReverseDependency(sb, node, aliasPrefix, renderFetches, nodesToFetch, whereConjuncts, placeholderRequiringNodes, externalRepresentation, lateralExample);
         }
 
         // Collect the join nodes referring to collections
@@ -1530,13 +1627,12 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         }
 
         // Finally render this join node
-        valuesNode = renderJoinNode(sb, joinBase, node, aliasPrefix, renderFetches, nodesToFetch, whereConjuncts, valuesNode, externalRepresentation);
+        renderJoinNode(sb, joinBase, node, aliasPrefix, renderFetches, nodesToFetch, whereConjuncts, placeholderRequiringNodes, externalRepresentation, lateralExample);
 
         // Add child nodes
         if (!node.getNodes().isEmpty()) {
             addDefaultJoins(stack, node.getNodes().descendingMap());
         }
-        return valuesNode;
     }
 
     private boolean isExternal(PathExpression path) {
@@ -1647,8 +1743,8 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         return null;
     }
 
-    <X> JoinOnBuilder<X> joinOn(X result, String base, Class<?> clazz, String alias, JoinType type) {
-        return joinOn(result, base, metamodel.entity(clazz), alias, type);
+    <X> JoinOnBuilder<X> joinOn(X result, String base, Class<?> clazz, String alias, JoinType type, boolean lateral) {
+        return joinOn(result, base, metamodel.entity(clazz), alias, type, lateral);
     }
 
     private JoinNode implicitJoinTreatExpression(TreatExpression treatExpression, boolean joinAllowed, ClauseType fromClause, JoinType joinType, JoinNode currentJoinNode, Set<String> currentlyResolvingAliases, boolean fromSubquery, boolean fromSelectAlias, boolean joinRequired, boolean idRemovable, boolean fetch, boolean reuseExisting) {
@@ -1669,7 +1765,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         return resultJoinNode;
     }
 
-    <X> JoinOnBuilder<X> joinOn(X result, String base, EntityType<?> entityType, String alias, JoinType type) {
+    <X> JoinOnBuilder<X> joinOn(X result, String base, EntityType<?> entityType, String alias, JoinType type, boolean lateral) {
         PathExpression basePath = expressionFactory.createPathExpression(base);
 
         if (type == JoinType.FULL) {
@@ -1729,7 +1825,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         }
 
         JoinAliasInfo joinAliasInfo = new JoinAliasInfo(alias, null, false, true, aliasManager);
-        JoinNode entityJoinNode = JoinNode.createEntityJoinNode(baseNode, type, entityType, joinAliasInfo);
+        JoinNode entityJoinNode = JoinNode.createEntityJoinNode(baseNode, type, entityType, joinAliasInfo, lateral);
         joinAliasInfo.setJoinNode(entityJoinNode);
         baseNode.addEntityJoin(entityJoinNode);
         explicitJoinNodes.add(entityJoinNode);
@@ -1737,6 +1833,30 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
         joinOnBuilderListener.joinNode = entityJoinNode;
         return joinOnBuilderListener.startBuilder(new JoinOnBuilderImpl<X>(result, joinOnBuilderListener, parameterManager, expressionFactory, subqueryInitFactory));
+    }
+
+    <X> FullSelectCTECriteriaBuilder<X> join(X result, String correlationPath, String alias, String subqueryAlias, JoinType type) {
+        String realAlias = addRoot(correlationPath, alias, true);
+        JoinAliasInfo aliasInfo = (JoinAliasInfo) aliasManager.getAliasInfo(realAlias);
+        JoinNode joinNode = aliasInfo.getJoinNode();
+        joinNode.setJoinType(type);
+        joinOnBuilderListener.joinNode = joinNode;
+        joinOnBuilderListener.startBuilder(new JoinOnBuilderImpl<X>(result, joinOnBuilderListener, parameterManager, expressionFactory, subqueryInitFactory)).onExpression("1=1").end();
+        FullSelectCTECriteriaBuilder<X> cteCriteriaBuilder = mainQuery.cteManager.with(joinNode.getJavaType(), alias, result, true, aliasManager, this);
+        ((AbstractCTECriteriaBuilder<?, ?, ?, ?>) cteCriteriaBuilder).joinManager.addRoot(correlationPath, subqueryAlias, false);
+        return cteCriteriaBuilder;
+    }
+
+    <X> FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> joinOn(X result, String correlationPath, String alias, String subqueryAlias, JoinType type) {
+        String realAlias = addRoot(correlationPath, alias, true);
+        JoinAliasInfo aliasInfo = (JoinAliasInfo) aliasManager.getAliasInfo(realAlias);
+        JoinNode joinNode = aliasInfo.getJoinNode();
+        joinNode.setJoinType(type);
+        joinOnBuilderListener.joinNode = joinNode;
+        JoinOnBuilder<X> joinBuilder = joinOnBuilderListener.startBuilder(new JoinOnBuilderImpl<X>(result, joinOnBuilderListener, parameterManager, expressionFactory, subqueryInitFactory));
+        FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> cteCriteriaBuilder = mainQuery.cteManager.with(joinNode.getJavaType(), alias, joinBuilder, true, aliasManager, this);
+        ((AbstractCTECriteriaBuilder<?, ?, ?, ?>) cteCriteriaBuilder).joinManager.addRoot(correlationPath, subqueryAlias, false);
+        return cteCriteriaBuilder;
     }
 
     <X> JoinOnBuilder<X> joinOn(X result, String path, String alias, JoinType type, boolean defaultJoin) {

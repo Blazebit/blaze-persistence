@@ -30,8 +30,8 @@ import com.blazebit.persistence.spi.SetOperationType;
  */
 public class FullSelectCTECriteriaBuilderImpl<T> extends AbstractCTECriteriaBuilder<T, FullSelectCTECriteriaBuilder<T>, LeafOngoingSetOperationCTECriteriaBuilder<T>, StartOngoingSetOperationCTECriteriaBuilder<T, LeafOngoingFinalSetOperationCTECriteriaBuilder<T>>> implements FullSelectCTECriteriaBuilder<T> {
 
-    public FullSelectCTECriteriaBuilderImpl(MainQuery mainQuery, QueryContext queryContext, String cteName, Class<Object> clazz, T result, CTEBuilderListener listener) {
-        super(mainQuery, queryContext, cteName, clazz, result, listener, null);
+    public FullSelectCTECriteriaBuilderImpl(MainQuery mainQuery, QueryContext queryContext, String cteName, boolean inline, Class<Object> clazz, T result, CTEBuilderListener listener, AliasManager parentAliasManager, JoinManager parentJoinManager) {
+        super(mainQuery, queryContext, cteName, inline, clazz, result, listener, null, parentAliasManager, parentJoinManager);
     }
 
     public FullSelectCTECriteriaBuilderImpl(AbstractCTECriteriaBuilder<T, FullSelectCTECriteriaBuilder<T>, LeafOngoingSetOperationCTECriteriaBuilder<T>, StartOngoingSetOperationCTECriteriaBuilder<T, LeafOngoingFinalSetOperationCTECriteriaBuilder<T>>> builder, MainQuery mainQuery, QueryContext queryContext) {

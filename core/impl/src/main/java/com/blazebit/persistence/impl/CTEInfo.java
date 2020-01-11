@@ -25,6 +25,7 @@ import java.util.List;
  */
 class CTEInfo {
     final String name;
+    final boolean inline;
     final EntityType<?> cteType;
     final List<String> attributes;
     final List<String> columnNames;
@@ -33,8 +34,9 @@ class CTEInfo {
     final AbstractCommonQueryBuilder<?, ?, ?, ?, ?> nonRecursiveCriteriaBuilder;
     final SelectCTECriteriaBuilderImpl<?> recursiveCriteriaBuilder;
     
-    CTEInfo(String name, EntityType<?> cteType, List<String> attributes, List<String> columnNames, boolean recursive, boolean unionAll, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> nonRecursiveCriteriaBuilder, SelectCTECriteriaBuilderImpl<?> recursiveCriteriaBuilder) {
+    CTEInfo(String name, boolean inline, EntityType<?> cteType, List<String> attributes, List<String> columnNames, boolean recursive, boolean unionAll, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> nonRecursiveCriteriaBuilder, SelectCTECriteriaBuilderImpl<?> recursiveCriteriaBuilder) {
         this.name = name;
+        this.inline = inline;
         this.cteType = cteType;
         this.attributes = attributes;
         this.columnNames = columnNames;
@@ -47,6 +49,7 @@ class CTEInfo {
     CTEInfo copy(CTEManager cteManager) {
         CTEInfo cteInfo = new CTEInfo(
                 name,
+                inline,
                 cteType,
                 attributes,
                 columnNames,

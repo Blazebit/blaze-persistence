@@ -24,9 +24,14 @@ import com.blazebit.persistence.impl.query.CustomSQLTypedQuery;
 import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.impl.query.SetOperationQuerySpecification;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.FunctionExpression;
+import com.blazebit.persistence.parser.expression.NumericLiteral;
+import com.blazebit.persistence.parser.expression.NumericType;
 import com.blazebit.persistence.parser.expression.PathElementExpression;
 import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.expression.PropertyExpression;
+import com.blazebit.persistence.parser.expression.StringLiteral;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.OrderByElement;
@@ -54,7 +59,7 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
     protected final List<DefaultOrderByElement> orderByElements;
 
     public BaseFinalSetOperationBuilderImpl(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, Class<T> clazz, SetOperationType operator, boolean nested, T endSetResult) {
-        super(mainQuery, queryContext, isMainQuery, DbmsStatementType.SELECT, clazz, null, null, false);
+        super(mainQuery, queryContext, isMainQuery, DbmsStatementType.SELECT, clazz, null, null, false, null, null);
         this.endSetResult = endSetResult;
         this.setOperationManager = new SetOperationManager(operator, nested);
         this.orderByElements = new ArrayList<DefaultOrderByElement>(0);
@@ -205,14 +210,56 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
         }
     }
 
+    public Expression asExpression(boolean externalRepresentation) {
+        SetOperationManager operationManager = setOperationManager;
+
+        if (operationManager.getOperator() == null || !operationManager.hasSetOperations()) {
+            return asExpression(operationManager.getStartQueryBuilder(), externalRepresentation);
+        }
+
+        List<Expression> setOperationArgs = new ArrayList<Expression>(operationManager.getSetOperations().size() + 2);
+        // Use prefix because hibernate uses UNION as keyword
+        setOperationArgs.add(new StringLiteral("SET_" + operationManager.getOperator().name()));
+        setOperationArgs.add(asExpression(operationManager.getStartQueryBuilder(), externalRepresentation));
+
+        List<AbstractCommonQueryBuilder<?, ?, ?, ?, ?>> setOperands = operationManager.getSetOperations();
+        int operandsSize = setOperands.size();
+        for (int i = 0; i < operandsSize; i++) {
+            setOperationArgs.add(asExpression(setOperands.get(i), externalRepresentation));
+        }
+
+        List<? extends OrderByElement> orderByElements = getOrderByElements();
+        if (orderByElements.size() > 0) {
+            setOperationArgs.add(new StringLiteral("ORDER_BY"));
+
+            int orderByElementsSize = orderByElements.size();
+            for (int i = 0; i < orderByElementsSize; i++) {
+                setOperationArgs.add(new StringLiteral(orderByElements.get(i).toString()));
+            }
+        }
+
+        if (hasLimit()) {
+            if (maxResults != Integer.MAX_VALUE) {
+                setOperationArgs.add(new StringLiteral("LIMIT"));
+                setOperationArgs.add(new NumericLiteral(Integer.toString(maxResults), NumericType.INTEGER));
+            }
+            if (firstResult != 0) {
+                setOperationArgs.add(new StringLiteral("OFFSET"));
+                setOperationArgs.add(new NumericLiteral(Integer.toString(firstResult), NumericType.INTEGER));
+            }
+        }
+
+        return new FunctionExpression("FUNCTION", setOperationArgs);
+    }
+
     @Override
-    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
+    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, boolean embedded, JoinNode lateralJoinNode) {
         boolean nested = isNestedAndComplex(setOperationManager.getStartQueryBuilder());
         if (nested) {
             sbSelectFrom.append('(');
         }
         
-        setOperationManager.getStartQueryBuilder().buildBaseQueryString(sbSelectFrom, externalRepresentation);
+        setOperationManager.getStartQueryBuilder().buildBaseQueryString(sbSelectFrom, externalRepresentation, embedded, lateralJoinNode);
         
         if (nested) {
             sbSelectFrom.append(')');
@@ -230,7 +277,7 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
                     sbSelectFrom.append('(');
                 }
                 
-                setOperand.buildBaseQueryString(sbSelectFrom, externalRepresentation);
+                setOperand.buildBaseQueryString(sbSelectFrom, externalRepresentation, embedded, lateralJoinNode);
                 
                 if (nested) {
                     sbSelectFrom.append(')');
@@ -275,7 +322,10 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
 
     @Override
     @SuppressWarnings("unchecked")
-    protected TypedQuery<T> getTypedQuery() {
+    protected TypedQuery<T> getTypedQuery(StringBuilder lateralSb, JoinNode lateralJoinNode) {
+        if (lateralSb != null) {
+            throw new IllegalStateException("Lateral join with set operations is not yet supported!");
+        }
         Set<String> parameterListNames = new HashSet<String>();
         Query leftMostQuery = setOperationManager.getStartQueryBuilder().getTypedQueryForFinalOperationBuilder();
         Query baseQuery;
@@ -378,15 +428,15 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
 
     @Override
     public TypedQuery<T> getQuery() {
-        return getTypedQuery();
+        return getTypedQuery(null, null);
     }
 
     public List<T> getResultList() {
-        return getTypedQuery().getResultList();
+        return getTypedQuery(null, null).getResultList();
     }
 
     public T getSingleResult() {
-        return getTypedQuery().getSingleResult();
+        return getTypedQuery(null, null).getSingleResult();
     }
 
 }

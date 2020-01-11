@@ -52,7 +52,7 @@ public class SubqueryBuilderImpl<T> extends BaseSubqueryBuilderImpl<T, SubqueryB
 
     public SubqueryBuilderImpl<T> from(Expression expression, String alias) {
         prepareForModification(ClauseType.JOIN);
-        joinManager.addRoot(null, expression, alias);
+        joinManager.addRoot(null, expression, alias, false);
         return this;
     }
 

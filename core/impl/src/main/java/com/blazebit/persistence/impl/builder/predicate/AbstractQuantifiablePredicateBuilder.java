@@ -22,6 +22,7 @@ import com.blazebit.persistence.CaseWhenOrThenBuilder;
 import com.blazebit.persistence.CaseWhenThenBuilder;
 import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
 import com.blazebit.persistence.LeafOngoingFinalSetOperationSubqueryBuilder;
 import com.blazebit.persistence.MultipleSubqueryInitiator;
 import com.blazebit.persistence.QuantifiableBinaryPredicateBuilder;
@@ -360,6 +361,36 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAn
     public <X> SubqueryBuilder<T> fromIdentifiableValues(Class<X> valueClass, String identifierAttribute, String alias, Collection<X> values) {
         chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
         return getSubqueryInitiator().fromIdentifiableValues(valueClass, identifierAttribute, alias, values);
+    }
+
+    @Override
+    public FullSelectCTECriteriaBuilder<SubqueryBuilder<T>> fromSubquery(Class<?> cteClass) {
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        return getSubqueryInitiator().fromSubquery(cteClass);
+    }
+
+    @Override
+    public FullSelectCTECriteriaBuilder<SubqueryBuilder<T>> fromSubquery(Class<?> cteClass, String alias) {
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        return getSubqueryInitiator().fromSubquery(cteClass, alias);
+    }
+
+    @Override
+    public FullSelectCTECriteriaBuilder<SubqueryBuilder<T>> fromEntitySubquery(Class<?> cteClass) {
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        return getSubqueryInitiator().fromEntitySubquery(cteClass);
+    }
+
+    @Override
+    public FullSelectCTECriteriaBuilder<SubqueryBuilder<T>> fromEntitySubquery(Class<?> cteClass, String alias) {
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        return getSubqueryInitiator().fromEntitySubquery(cteClass, alias);
+    }
+
+    @Override
+    public FullSelectCTECriteriaBuilder<SubqueryBuilder<T>> fromEntitySubquery(Class<?> cteClass, String alias, String subqueryAlias) {
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        return getSubqueryInitiator().fromEntitySubquery(cteClass, alias, subqueryAlias);
     }
 
     @Override

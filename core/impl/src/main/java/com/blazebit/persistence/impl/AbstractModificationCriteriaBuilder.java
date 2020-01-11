@@ -133,7 +133,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
     @Override
     public FullSelectCTECriteriaBuilder<X> with(Class<?> cteClass) {
         if (!mainQuery.dbmsDialect.supportsWithClauseInModificationQuery()) {
-            throw new UnsupportedOperationException("The database does not support a with clause in modification queries!");
+            return super.with(cteClass, true);
         }
         
         return super.with(cteClass);
@@ -142,7 +142,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
     @Override
     public FullSelectCTECriteriaBuilder<X> with(Class<?> cteClass, CriteriaBuilder<?> criteriaBuilder) {
         if (!mainQuery.dbmsDialect.supportsWithClauseInModificationQuery()) {
-            throw new UnsupportedOperationException("The database does not support a with clause in modification queries!");
+            return super.with(cteClass, criteriaBuilder, true);
         }
 
         return super.with(cteClass, criteriaBuilder);
@@ -198,7 +198,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
 
             // We need to change the underlying sql when doing a limit with hibernate since it does not support limiting insert ... select statements
             // For CTEs we will also need to change the underlying sql
-            query = em.createQuery(getBaseQueryStringWithCheck());
+            query = em.createQuery(getBaseQueryStringWithCheck(null, null));
             Set<String> parameterListNames = parameterManager.getParameterListNames(query);
 
             boolean isEmbedded = this instanceof ReturningBuilder;
@@ -229,7 +229,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
                     parameterManager.getValuesBinders()
             );
         } else {
-            query = em.createQuery(getBaseQueryStringWithCheck());
+            query = em.createQuery(getBaseQueryStringWithCheck(null, null));
         }
 
         parameterManager.parameterizeQuery(query);
@@ -315,7 +315,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             throw new IllegalArgumentException("Invalid empty attributes");
         }
 
-        Query baseQuery = em.createQuery(getBaseQueryStringWithCheck());
+        Query baseQuery = em.createQuery(getBaseQueryStringWithCheck(null, null));
         List<List<Attribute<?, ?>>> attributeList = getAndCheckAttributes(attributes);
         TypedQuery<Object[]> exampleQuery = getExampleQuery(attributeList);
         String[] returningColumns = getReturningColumns(attributeList);
@@ -348,7 +348,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         List<List<Attribute<?, ?>>> attributes = new ArrayList<List<Attribute<?, ?>>>();
         attributes.add(attrPath.getAttributes());
 
-        Query baseQuery = em.createQuery(getBaseQueryStringWithCheck());
+        Query baseQuery = em.createQuery(getBaseQueryStringWithCheck(null, null));
         TypedQuery<Object[]> exampleQuery = getExampleQuery(attributes);
         String[] returningColumns = getReturningColumns(attributes);
         return getExecuteWithReturningQuery(exampleQuery, baseQuery, returningColumns, null);
@@ -364,7 +364,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         objectBuilder.applyReturning(this);
         List<List<Attribute<?, ?>>> attributes = getAndCheckReturningAttributes();
 
-        Query baseQuery = em.createQuery(getBaseQueryStringWithCheck());
+        Query baseQuery = em.createQuery(getBaseQueryStringWithCheck(null, null));
         TypedQuery<Object[]> exampleQuery = getExampleQuery(attributes);
         String[] returningColumns = getReturningColumns(attributes);
         return getExecuteWithReturningQuery(exampleQuery, baseQuery, returningColumns, objectBuilder);
@@ -512,7 +512,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
     public CTEInfo createCTEInfo() {
         List<String> attributes = prepareAndGetAttributes();
         List<String> columns = prepareAndGetColumnNames();
-        CTEInfo info = new CTEInfo(cteName, cteType, attributes, columns, false, false, this, null);
+        CTEInfo info = new CTEInfo(cteName, false, cteType, attributes, columns, false, false, this, null);
         return info;
     }
     

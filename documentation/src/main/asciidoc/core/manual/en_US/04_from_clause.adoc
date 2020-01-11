@@ -580,3 +580,131 @@ When it is necessary to do that, it is strongly advised to make use of link:{cor
 or link:{core_jdoc}/persistence/FromBuilder.html#fromNew(java.lang.Class)[`fromNew()`] to use the state before or after side-effects happen.
 
 For example usage and further information, take a look into the <<updatable-ctes,Updatable CTEs chapter>>
+
+=== Subquery in FROM clause
+
+In SQL, a from clause item must be a relation which is usually a table name but can also be a subquery, yet most ORMs do not support that directly.
+{projectname} implements support for subqueries in the `FROM` clause by requiring the return type of a subquery to be an entity or CTE type.
+This is similar to how inlined CTEs work and in fact, under the hood, CTE builders are used to make this feature work. For more information about CTEs, go to the <<CTEs,CTE documentation section>>.
+
+Before a subquery can be constructed, one has to think of an entity or CTE type that represents the result of the subquery.
+Consider the following CTE entity as an example.
+
+[source,java]
+----
+@CTE
+@Entity
+class ResultCte {
+    @Id
+    private Long id;
+    private String name;
+}
+----
+
+This CTE entity can then be used as result type for a subquery in link:{core_jdoc}/persistence/FromBaseBuilder.html#fromSubquery(java.lang.Class,%20java.lang.String)[`fromSubquery()`].
+
+[source,java]
+----
+CriteriaBuilder<Long> cb = cbf.create(em, Long.class)
+    .fromSubquery(ResultCte.class, "r")
+        .from(Cat.class, "subCat")
+        .bind("id").select("id")
+        .bind("id").select("name")
+        .orderByDesc("age")
+        .orderByDesc("id")
+        .setMaxResults(5)
+    .end()
+    .select("r.id");
+----
+
+The example doesn't really make sense, it just tries to show off the possibilities.
+The JPQL for such a query looks roughly like the following
+
+[source,sql]
+----
+SELECT r.id
+FROM ResultCte(
+    SELECT subCat.id, subCat.name
+    FROM Cat subCat
+    ORDER BY subCat.age DESC, subCat.id DESC
+    LIMIT 5
+) r(id, name)
+----
+
+Using a dedicated entity or CTE class for a subquery result and binding every attribute might make sense for some cases,
+but most of the time, it is sufficient to re-bind all entity attributes again i.e. the result type matches the query root type `Cat`.
+To help with writing such queries, the link:{core_jdoc}/persistence/FromBaseBuilder.html#fromEntitySubquery(java.lang.Class,%20java.lang.String)[`fromEntitySubquery()`] method can be used.
+Databases are pretty good at eliminating unnecessary/unused projections in such scenarios, so it's no big deal to use this short-cut if applicable.
+
+[source,java]
+----
+CriteriaBuilder<Long> cb = cbf.create(em, Long.class)
+    .fromSubquery(Cat.class, "r")
+        .orderByDesc("age")
+        .orderByDesc("id")
+        .setMaxResults(5)
+    .end()
+    .select("r.id");
+----
+
+will result in something like the following
+
+[source,sql]
+----
+SELECT r.id
+FROM Cat(
+    SELECT r_1.age, r_1.father.id, r_1.id, r_1.mother.id, r_1.name
+    FROM Cat r_1
+    ORDER BY r_1.age DESC, r_1.id DESC
+    LIMIT 5
+) r(age, father.id, id, mother.id, name)
+----
+
+As can be seen, all _owned_ entity attributes of the type `Cat` are bound again.
+
+Apart from the `fromXXX` methods there is also support for joining such subqueries via
+the link:{core_jdoc}/persistence/FromBuilder.html#joinOnSubquery(java.lang.Class,%20java.lang.String,%20com.blazebit.persistence.JoinType)[`joinOnSubquery()`]
+and link:{core_jdoc}/persistence/FromBuilder.html#joinOnEntitySubquery(java.lang.Class,%20java.lang.String,%20com.blazebit.persistence.JoinType)[`joinOnEntitySubquery()`]
+methods or the join type specific variants.
+
+=== Lateral subquery join
+
+{projectname} offers support for doing lateral joins via the methods
+link:{core_jdoc}/persistence/FromBuilder.html#joinLateralOnSubquery(java.lang.Class,%20java.lang.String,%20com.blazebit.persistence.JoinType)[`joinLateralOnSubquery()`]
+and link:{core_jdoc}/persistence/FromBuilder.html#joinLateralOnEntitySubquery(java.lang.Class,%20java.lang.String,%20java.lang.String,%20com.blazebit.persistence.JoinType)[`joinLateralOnEntitySubquery()`].
+A lateral join, which might also be known as _cross apply_ or _outer apply_, allows to refer to aliases on the _left side_ of the subquery i.e. the alias of the join base.
+Such a join is like a correlated subquery for the `FROM` clause.
+
+[source,java]
+----
+CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
+    .from(Cat.class, "c")
+    .leftJoinLateralOnEntitySubquery("c.kittens", "topKitten", "kitten")
+        .orderByDesc("age")
+        .orderByDesc("id")
+        .setMaxResults(5)
+    .end()
+    .select("c.name")
+    .select("COUNT(topKitten.id)");
+----
+
+The example query shows a special feature of lateral joins, which is the possibility to correlate a collection for a lateral join.
+This could also have been written by correlating an entity type and defining the correlation for the collection in the `WHERE` clause manually.
+
+The resulting JPQL might look like the following
+
+[source,sql]
+----
+SELECT c.name, COUNT(topKitten.id)
+FROM Cat c
+LEFT JOIN LATERAL Cat(
+    SELECT kitten.age, kitten.father.id, kitten.id, kitten.mother.id, kitten.name
+    FROM Cat kitten
+    ORDER BY kitten.age DESC, kitten.id DESC
+    LIMIT 5
+) topKitten(age, father.id, id, mother.id, name)
+GROUP BY c.name
+----
+
+Note that lateral joins only work for inner and left joins. Also, not all databases support lateral joins.
+H2 and HSQL do not support that feature. MySQL only supports this since version 8. Oracle supports this since version 12.

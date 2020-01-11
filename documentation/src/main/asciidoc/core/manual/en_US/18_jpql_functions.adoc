@@ -471,6 +471,14 @@ Renders `(select col0, col1, ... from (subquery) tmp)` until `colX` for `X < num
 
 WARNING: This is an internal function that is used to implement ordering by select aliases of complex expression within subqueries.
 
+==== NULLFN function
+
+Syntax: `NULLFN ( ... )`
+
+Just renders `null`.
+
+WARNING: This is an internal function that is used to implement inlining of CTEs or subqueries in the FROM clause.
+
 === Custom JPQL functions
 
 Apart from providing many useful functions out of the box, {projectname} also allows to implement custom JPQL functions that can be called just like any other non-standard function,

@@ -146,7 +146,7 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
     }
 
     @Override
-    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
+    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, boolean embedded, JoinNode lateralJoinNode) {
         if (externalRepresentation) {
             sbSelectFrom.append("UPDATE ");
             sbSelectFrom.append(entityType.getName());
@@ -242,7 +242,7 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
         if (collectionAttribute.getJoinTable() == null) {
             return super.getQuery(includedModificationStates);
         } else {
-            Query baseQuery = em.createQuery(getBaseQueryStringWithCheck());
+            Query baseQuery = em.createQuery(getBaseQueryStringWithCheck(null, null));
             QuerySpecification querySpecification = getQuerySpecification(baseQuery, getCountExampleQuery(), getReturningColumns(), null, includedModificationStates);
 
             Query query = new CustomSQLQuery(

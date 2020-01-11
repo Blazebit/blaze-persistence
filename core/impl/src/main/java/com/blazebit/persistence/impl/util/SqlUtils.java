@@ -82,7 +82,7 @@ public class SqlUtils {
     private SqlUtils() {
     }
 
-    public static void applyTableNameRemapping(StringBuilder sb, String sqlAlias, String newCteName, String aliasExtension, String newSqlAlias) {
+    public static void applyTableNameRemapping(StringBuilder sb, String sqlAlias, String newCteName, String aliasExtension, String newSqlAlias, boolean useApply) {
         final String searchAs = " as";
         final String searchAlias = " " + sqlAlias;
         int searchIndex = 0;
@@ -100,22 +100,57 @@ public class SqlUtils {
                     tableNameIndexRange = rtrimBackwardsToFirstWhitespace(sb, searchIndex);
                 }
 
+                // If the table name is a subquery, we have to respect that and scan back to the start parenthesis
+                if (sb.charAt(tableNameIndexRange[0]) == ')') {
+                    int parenthesis = 1;
+                    QuoteMode mode = QuoteMode.NONE;
+                    for (int i = tableNameIndexRange[0] - 1; i >= 0; i--) {
+                        char c = sb.charAt(i);
+                        mode = mode.onCharBackwards(c);
+
+                        if (mode == QuoteMode.NONE) {
+                            if (c == '(') {
+                                parenthesis--;
+                                if (parenthesis == 0) {
+                                    tableNameIndexRange[0] = i;
+                                    break;
+                                }
+                            } else if (c == ')') {
+                                parenthesis++;
+                            }
+                        }
+                    }
+                }
+
                 if (newSqlAlias != null) {
                     sb.replace(tableNameIndexRange[1] + 1, tableNameIndexRange[1] + 1 + sqlAlias.length(), newSqlAlias);
                     searchIndex += newSqlAlias.length() - sqlAlias.length();
+                    sqlAlias = newSqlAlias;
                 }
 
-                int oldLength = tableNameIndexRange[1] - tableNameIndexRange[0];
+                int oldTableNameLength = tableNameIndexRange[1] - tableNameIndexRange[0];
                 // Replace table name with cte name
-                sb.replace(tableNameIndexRange[0], tableNameIndexRange[1], newCteName);
+                if (useApply) {
+                    int whereIndex = SqlUtils.indexOfWhere(sb, tableNameIndexRange[1]);
+                    if (whereIndex == -1) {
+                        whereIndex = sb.length();
+                    }
+                    int[] indexRange = SqlUtils.indexOfFullJoin(sb, sqlAlias, tableNameIndexRange[1] + 1, whereIndex);
+                    // Since we are moving the sql alias due to the use of apply, we have to adapt the search index
+                    oldTableNameLength += tableNameIndexRange[0] - indexRange[0];
+                    // NOTE: This will remove the ON clause as the APPLY clause doesn't support conditions. The query builder must ensure predicates are put into the query
+                    sb.replace(indexRange[0], indexRange[1], newCteName + sb.substring(tableNameIndexRange[1], tableNameIndexRange[1] + searchAlias.length()));
+                } else {
+                    sb.replace(tableNameIndexRange[0], tableNameIndexRange[1], newCteName);
+                }
 
                 if (aliasExtension != null) {
-                    sb.insert(searchIndex + searchAlias.length() + (newCteName.length() - oldLength), aliasExtension);
+                    sb.insert(searchIndex + searchAlias.length() + (newCteName.length() - oldTableNameLength), aliasExtension);
                     searchIndex += aliasExtension.length();
                 }
 
                 // Adjust index after replacing
-                searchIndex += newCteName.length() - oldLength;
+                searchIndex += newCteName.length() - oldTableNameLength;
             }
 
             searchIndex = searchIndex + 1;
@@ -315,7 +350,11 @@ public class SqlUtils {
      * @return The index of the SELECT keyword if found, or -1
      */
     public static int indexOfWhere(CharSequence sql) {
-        int whereIndex = WHERE_FINDER.indexIn(sql);
+        return indexOfWhere(sql, 0);
+    }
+
+    public static int indexOfWhere(CharSequence sql, int start) {
+        int whereIndex = WHERE_FINDER.indexIn(sql, start);
         int brackets = 0;
         QuoteMode mode = QuoteMode.NONE;
         int i = 0;
@@ -486,8 +525,12 @@ public class SqlUtils {
 
     public static int[] indexOfFullJoin(CharSequence sql, String tableAlias, int whereIndex) {
         // For every table alias we found in the select items that we removed due to the cutoff, we delete the joins
-        String aliasOnPart = " " + tableAlias + " on ";
         int aliasIndex = indexOfJoinTableAlias(sql, tableAlias);
+        return indexOfFullJoin(sql, tableAlias, aliasIndex, whereIndex);
+    }
+
+    public static int[] indexOfFullJoin(CharSequence sql, String tableAlias, int aliasIndex, int whereIndex) {
+        String aliasOnPart = " " + tableAlias + " on ";
         if (aliasIndex > -1 && aliasIndex < whereIndex) {
             // indexOfJoinTableAlias moves the index to the first char of the alias, so move back
             aliasIndex--;

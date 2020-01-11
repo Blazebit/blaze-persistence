@@ -20,6 +20,7 @@ import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.DbmsLimitHandler;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.spi.LateralStyle;
 import com.blazebit.persistence.spi.OrderByElement;
 import com.blazebit.persistence.spi.SetOperationType;
 
@@ -58,6 +59,11 @@ public class MSSQLDbmsDialect extends DefaultDbmsDialect {
     @Override
     public boolean isNullSmallest() {
         return true;
+    }
+
+    @Override
+    public LateralStyle getLateralStyle() {
+        return LateralStyle.APPLY;
     }
 
     @Override

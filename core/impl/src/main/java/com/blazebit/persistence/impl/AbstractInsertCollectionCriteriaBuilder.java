@@ -107,9 +107,9 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
     }
 
     @Override
-    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
+    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, boolean embedded, JoinNode lateralJoinNode) {
         if (externalRepresentation) {
-            super.buildBaseQueryString(sbSelectFrom, externalRepresentation);
+            super.buildBaseQueryString(sbSelectFrom, externalRepresentation, embedded, lateralJoinNode);
         } else {
             buildSelectBaseQueryString(sbSelectFrom, externalRepresentation);
         }
@@ -152,7 +152,7 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
 
     @Override
     protected Query getQuery(Map<DbmsModificationState, String> includedModificationStates) {
-        Query baseQuery = em.createQuery(getBaseQueryStringWithCheck());
+        Query baseQuery = em.createQuery(getBaseQueryStringWithCheck(null, null));
         QuerySpecification querySpecification = getQuerySpecification(baseQuery, getCountExampleQuery(), getReturningColumns(), null, includedModificationStates);
 
         Query query = new CustomSQLQuery(

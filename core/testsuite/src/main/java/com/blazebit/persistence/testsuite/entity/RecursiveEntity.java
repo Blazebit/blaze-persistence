@@ -25,6 +25,7 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
@@ -40,7 +41,8 @@ public class RecursiveEntity implements Serializable {
     private Long id;
     private String name;
     private RecursiveEntity parent;
-    private Set<RecursiveEntity> children = new HashSet<RecursiveEntity>(0);
+    private Set<RecursiveEntity> children = new HashSet<>(0);
+    private Set<RecursiveEntity> children2 = new HashSet<>(0);
 
     public RecursiveEntity() {
     }
@@ -89,5 +91,15 @@ public class RecursiveEntity implements Serializable {
 
     public void setChildren(Set<RecursiveEntity> children) {
         this.children = children;
+    }
+
+    @OneToMany
+    @JoinTable(name = "recursive_children2")
+    public Set<RecursiveEntity> getChildren2() {
+        return children2;
+    }
+
+    public void setChildren2(Set<RecursiveEntity> children2) {
+        this.children2 = children2;
     }
 }
