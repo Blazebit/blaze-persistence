@@ -671,7 +671,7 @@ public class CTETest extends AbstractCoreTest {
         .orderByAsc("id");
         String expected = ""
                 + "WITH " + TestAdvancedCTE1.class.getSimpleName() + "(id, embeddable.name, embeddable.description, embeddable.recursiveEntity, level, parent) AS(\n"
-                + "SELECT e.id, e.name, 'desc', NULLIF(1,1), 0, NULLIF(1,1) FROM RecursiveEntity e\n"
+                + "SELECT e.id, e.name, 'desc', NULL, 0, NULL FROM RecursiveEntity e\n"
                 + ")\n"
                 + "SELECT testAdvancedCTE1 FROM TestAdvancedCTE1 testAdvancedCTE1 ORDER BY testAdvancedCTE1.id ASC";
 
@@ -707,7 +707,7 @@ public class CTETest extends AbstractCoreTest {
 
         String expected = ""
                 + "WITH " + TestAdvancedCTE1.class.getSimpleName() + "(id, embeddable.name, embeddable.description, embeddable.recursiveEntity, level, parent) AS(\n"
-                + "SELECT e.id, e.name, 'desc', NULLIF(1,1), 0, NULLIF(1,1) FROM RecursiveEntity e\n"
+                + "SELECT e.id, e.name, 'desc', NULL, 0, NULL FROM RecursiveEntity e\n"
                 + ")\n"
                 + "SELECT testAdvancedCTE1 FROM TestAdvancedCTE1 testAdvancedCTE1";
         assertEquals(expected, cb.getQueryString());
@@ -733,7 +733,7 @@ public class CTETest extends AbstractCoreTest {
 
         String expected = ""
                 + "WITH " + TestAdvancedCTE1.class.getSimpleName() + "(id, embeddable.name, embeddable.description, embeddable.recursiveEntity, level, parent) AS(\n"
-                + "SELECT e.id, e.name, '', NULLIF(1,1), 0, NULLIF(1,1) FROM RecursiveEntity e\n"
+                + "SELECT e.id, e.name, '', NULL, 0, NULL FROM RecursiveEntity e\n"
                 + ")\n"
                 + "SELECT testAdvancedCTE1 FROM TestAdvancedCTE1 testAdvancedCTE1";
         assertEquals(expected, cb.getQueryString());

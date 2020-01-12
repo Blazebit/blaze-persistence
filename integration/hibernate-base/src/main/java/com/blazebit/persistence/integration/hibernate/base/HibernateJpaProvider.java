@@ -291,7 +291,7 @@ public class HibernateJpaProvider implements JpaProvider {
 
     @Override
     public String getNullExpression() {
-        return "NULLIF(1,1)";
+        return "NULLFN()";
     }
 
     @Override

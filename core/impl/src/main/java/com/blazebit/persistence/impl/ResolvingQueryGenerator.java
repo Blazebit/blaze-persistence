@@ -136,7 +136,11 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         if (expression instanceof NullExpression) {
             // The SET clause always needs the NULL literal
             if (clauseType != ClauseType.SET) {
-                sb.append(jpaProvider.getNullExpression());
+                if (externalRepresentation) {
+                    sb.append("NULL");
+                } else {
+                    sb.append(jpaProvider.getNullExpression());
+                }
                 return;
             }
         }
@@ -151,6 +155,10 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
     @Override
     public void visit(FunctionExpression expression) {
+        if (externalRepresentation && expression.getRealArgument() != -1) {
+            expression.getExpressions().get(expression.getRealArgument()).accept(this);
+            return;
+        }
         // A type constraint of a treat expression from within an aggregate may not "escape" the aggregate
         Map<JoinNode, Boolean> oldTreatedJoinNodesForConstraints = treatedJoinNodesForConstraints;
         if (expression instanceof AggregateExpression) {

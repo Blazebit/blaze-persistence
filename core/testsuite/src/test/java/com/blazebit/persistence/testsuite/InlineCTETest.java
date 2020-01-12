@@ -114,6 +114,26 @@ public class InlineCTETest extends AbstractCoreTest {
 
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testInlineCTENullExpression() {
+        CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class, "t").where("t.level").ltExpression("2");
+        cb.with(TestCTE.class, true)
+                .from(RecursiveEntity.class, "e")
+                .bind("id").select("e.id")
+                .bind("name").select("e.name")
+                .bind("level").select("null")
+                .where("e.parent").isNull()
+                .end();
+        String subquery = "SELECT e.id, e.name, NULL FROM RecursiveEntity e WHERE e.parent IS NULL";
+        String expected = ""
+                + "SELECT t FROM TestCTE(" + subquery + ") t(id, name, level) WHERE t.level < 2";
+
+        assertEquals(expected, cb.getQueryString());
+        List<TestCTE> resultList = cb.getResultList();
+        assertEquals(0, resultList.size());
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testInlineCTEWithParam() {
         CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class, "t").where("t.level").ltExpression("2");
         cb.with(TestCTE.class, true)

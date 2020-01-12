@@ -50,6 +50,7 @@ import org.hibernate.hql.internal.ast.exec.StatementExecutor;
 import org.hibernate.hql.internal.ast.tree.AbstractStatement;
 import org.hibernate.hql.internal.ast.tree.DotNode;
 import org.hibernate.hql.internal.ast.tree.FromElement;
+import org.hibernate.hql.internal.ast.tree.InsertStatement;
 import org.hibernate.hql.internal.ast.tree.QueryNode;
 import org.hibernate.hql.internal.ast.tree.SelectClause;
 import org.hibernate.hql.spi.ParameterTranslations;
@@ -184,6 +185,8 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
         if (statement instanceof QueryNode) {
             queryNode = (QueryNode) statement;
+        } else if (statement instanceof InsertStatement) {
+            queryNode = (QueryNode) ((InsertStatement) statement).getIntoClause().getNextSibling();
         } else {
             queryNode = (QueryNode) statement.getNextSibling();
         }

@@ -293,7 +293,7 @@ public class SelectTest extends AbstractCoreTest {
         cq.select(cb.nullLiteral(Integer.class));
 
         CriteriaBuilder<Integer> criteriaBuilder = cq.createCriteriaBuilder(em);
-        assertEquals("SELECT " + STATIC_JPA_PROVIDER.getNullExpression()+ " FROM Document document", criteriaBuilder.getQueryString());
+        assertEquals("SELECT NULL FROM Document document", criteriaBuilder.getQueryString());
     }
 
     @Test
