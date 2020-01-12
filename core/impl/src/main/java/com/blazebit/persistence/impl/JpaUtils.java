@@ -20,11 +20,13 @@ import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.PathTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.parser.expression.ArrayExpression;
 import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.FunctionExpression;
 import com.blazebit.persistence.parser.expression.NullExpression;
 import com.blazebit.persistence.parser.expression.ParameterExpression;
 import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.expression.PropertyExpression;
 import com.blazebit.persistence.parser.expression.QualifiedExpression;
+import com.blazebit.persistence.parser.expression.StringLiteral;
 import com.blazebit.persistence.parser.expression.TreatExpression;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
@@ -97,11 +99,12 @@ public final class JpaUtils {
                     }
                 }
 
+                SelectInfo selectInfo = selectManager.getSelectInfos().get(tupleIndex);
                 if (splitExpression) {
                     // We have to map *-to-one relationships to their id or unique props
                     // NOTE: Since we are talking about *-to-ones, the expression can only be a path to an object
                     // so it is safe to just append the id to the path
-                    Expression selectExpression = selectManager.getSelectInfos().get(tupleIndex).getExpression();
+                    Expression selectExpression = selectInfo.getExpression();
 
                     // TODO: Maybe also allow Treat, Case-When, Array?
                     if (selectExpression instanceof NullExpression) {
@@ -213,6 +216,15 @@ public final class JpaUtils {
                         }
                     } else {
                         throw new IllegalArgumentException("Illegal expression '" + selectExpression.toString() + "' for binding relation '" + attributeName + "'!");
+                    }
+                } else {
+                    // We must add a cast for null expressions, otherwise DBMS might assume some text type
+                    Expression selectExpression = selectInfo.getExpression();
+                    if (selectExpression instanceof NullExpression) {
+                        List<Expression> arguments = new ArrayList<>(2);
+                        arguments.add(selectExpression);
+                        arguments.add(new StringLiteral(attributeEntry.getColumnTypes()[0]));
+                        selectInfo.set(new FunctionExpression("CAST_" + attributeEntry.getElementClass().getSimpleName(), arguments, 0));
                     }
                 }
             }

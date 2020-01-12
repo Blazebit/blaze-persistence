@@ -29,6 +29,7 @@ public class FunctionExpression extends AbstractExpression {
 
     protected final String functionName;
     protected final WindowDefinition windowDefinition;
+    protected final int realArgument;
     protected List<Expression> expressions;
     protected WindowDefinition resolvedWindowDefinition;
 
@@ -36,6 +37,15 @@ public class FunctionExpression extends AbstractExpression {
     public FunctionExpression(String functionName, List<? extends Expression> expressions) {
         this.functionName = functionName;
         this.expressions = (List<Expression>) expressions;
+        this.realArgument = -1;
+        this.windowDefinition = null;
+    }
+
+    @SuppressWarnings("unchecked")
+    public FunctionExpression(String functionName, List<? extends Expression> expressions, int realArgument) {
+        this.functionName = functionName;
+        this.expressions = (List<Expression>) expressions;
+        this.realArgument = realArgument;
         this.windowDefinition = null;
     }
 
@@ -43,6 +53,7 @@ public class FunctionExpression extends AbstractExpression {
     public FunctionExpression(String functionName, List<? extends Expression> expressions, WindowDefinition windowDefinition) {
         this.functionName = functionName;
         this.expressions = (List<Expression>) expressions;
+        this.realArgument = -1;
         this.windowDefinition = windowDefinition;
     }
 
@@ -70,6 +81,10 @@ public class FunctionExpression extends AbstractExpression {
 
     public String getFunctionName() {
         return functionName;
+    }
+
+    public int getRealArgument() {
+        return realArgument;
     }
 
     public List<Expression> getExpressions() {

@@ -292,9 +292,9 @@ public class DefaultDbmsDialect implements DbmsDialect {
                     sqlSb.append(" from (");
                 }
             } else {
-                sqlSb.append("\n");
+                sqlSb.append(' ');
                 sqlSb.append(operator);
-                sqlSb.append("\n");
+                sqlSb.append(' ');
             }
 
             if (emulate) {

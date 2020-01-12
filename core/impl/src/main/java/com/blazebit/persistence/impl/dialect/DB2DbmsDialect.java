@@ -121,7 +121,7 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
 
                 sb.append("select * from ");
                 sb.append(table);
-                sb.append("\nexcept\n");
+                sb.append(" except ");
                 sb.append("select * from ");
                 sb.append(newValuesTableName);
             } else {

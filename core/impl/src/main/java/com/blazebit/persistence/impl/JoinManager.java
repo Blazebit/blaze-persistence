@@ -1311,7 +1311,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 }
 
                 boolean realOnClause = node.getOnPredicate() != null && !node.getOnPredicate().getChildren().isEmpty() || onCondition != null;
-                boolean onClause = !placeholderRequiringNodes.isEmpty() || realOnClause;
+                boolean onClause = !fetch && !placeholderRequiringNodes.isEmpty() || realOnClause;
 
                 if (onClause) {
                     sb.append(joinRestrictionKeyword);
@@ -1322,7 +1322,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
                 // This condition will be removed in the final SQL, so no worries about it
                 // It is just there to have parameters at the right position in the final SQL
-                if (!placeholderRequiringNodes.isEmpty() && !lateralExample) {
+                if (onClause && !placeholderRequiringNodes.isEmpty() && !lateralExample) {
                     if (!externalRepresentation) {
                         renderPlaceholderRequiringPredicate(sb, placeholderRequiringNodes, externalRepresentation);
                         if (realOnClause) {

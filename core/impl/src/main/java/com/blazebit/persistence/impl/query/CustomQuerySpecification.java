@@ -211,11 +211,11 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
             if (firstCte) {
                 firstCte = false;
             } else {
-                sb.append(",\n");
+                sb.append(", ");
             }
 
             sb.append(cteInfo.getHead());
-            sb.append(" AS(\n");
+            sb.append(" AS( ");
 
             final String sql = cteInfo.getNonRecursiveQuerySpecification().getSql();
 
@@ -257,16 +257,16 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
 
             if (cteInfo.isRecursive()) {
                 if (cteInfo.isUnionAll()) {
-                    sb.append("\nUNION ALL\n");
+                    sb.append(" UNION ALL ");
                 } else {
-                    sb.append("\nUNION\n");
+                    sb.append(" UNION ");
                 }
                 sb.append(cteInfo.getRecursiveQuerySpecification().getSql());
             } else if (!dbmsDialect.supportsNonRecursiveWithClause()) {
                 sb.append(cteInfo.getNonRecursiveWithClauseSuffix());
             }
 
-            sb.append("\n)");
+            sb.append(" )");
         }
 
         if (dbmsDialect.supportsModificationQueryInWithClause()) {
@@ -288,7 +288,7 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
             replaceWithCteName(sqlSb, subselect, cteName);
         }
 
-        sb.append("\n");
+        sb.append(" ");
 
         for (Map.Entry<String, String> tableNameRemappingEntry : tableNameRemapping.entrySet()) {
             String sqlAlias = extendedQuerySupport.getSqlAlias(em, baseQuery, tableNameRemappingEntry.getKey());
@@ -322,13 +322,13 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
                     if (firstCte) {
                         firstCte = false;
                     } else {
-                        sb.append(",\n");
+                        sb.append(", ");
                     }
 
                     sb.append(simpleCteEntry.getKey());
-                    sb.append(" AS (\n");
+                    sb.append(" AS ( ");
                     sb.append(simpleCteEntry.getValue());
-                    sb.append("\n)");
+                    sb.append(" )");
                 }
             }
         }
@@ -344,7 +344,7 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
             if (firstCte) {
                 firstCte = false;
             } else {
-                sb.append(",\n");
+                sb.append(", ");
             }
 
             // Since we kind of need the parameters from the base query, it will participate for each cascade
@@ -352,14 +352,14 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
 
             sb.append(cteBaseName);
             sb.append('_').append(cteBaseNameCount++);
-            sb.append(" AS (\n");
+            sb.append(" AS ( ");
 
             cascadingDeleteSqlSb.setLength(0);
             cascadingDeleteSqlSb.append(cascadingDeleteSql);
             dbmsDialect.appendExtendedSql(cascadingDeleteSqlSb, DbmsStatementType.DELETE, false, true, null, null, null, null, null);
             sb.append(cascadingDeleteSqlSb);
 
-            sb.append("\n)");
+            sb.append(" )");
         }
 
         return firstCte;

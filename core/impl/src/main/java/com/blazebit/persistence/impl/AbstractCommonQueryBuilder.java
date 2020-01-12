@@ -2851,7 +2851,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 String nonRecursiveWithClauseSuffix = null;
                 if (!cteInfo.recursive && !mainQuery.dbmsDialect.supportsNonRecursiveWithClause()) {
                     sb.setLength(0);
-                    sb.append("\nUNION ALL\n");
+                    sb.append(" UNION ALL ");
                     sb.append("SELECT ");
 
                     sb.append("NULL");

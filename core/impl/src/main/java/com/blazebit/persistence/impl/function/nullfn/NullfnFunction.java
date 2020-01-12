@@ -41,7 +41,7 @@ public class NullfnFunction implements JpqlFunction {
     @Override
     public Class<?> getReturnType(Class<?> firstArgumentType) {
         if (firstArgumentType == null) {
-            return Object.class;
+            return Integer.class;
         }
         return firstArgumentType;
     }

@@ -148,7 +148,7 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
                 }
 
                 appendSelectColumnsFromTable(sqlSb, returningColumns, includedModificationStates.get(DbmsModificationState.NEW));
-                sqlSb.append("\nunion\n");
+                sqlSb.append(" union ");
                 appendSelectColumnsFromTable(sqlSb, returningColumns, extractSingleTableName(statementType, newStateSb));
 
                 if (addParenthesis) {
@@ -196,9 +196,9 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
             if (first) {
                 first = false;
             } else {
-                sqlSb.append("\n");
+                sqlSb.append(' ');
                 sqlSb.append(operator);
-                sqlSb.append("\n");
+                sqlSb.append(' ');
             }
 
             if (hasOuterClause && !operand.startsWith("(")) {
