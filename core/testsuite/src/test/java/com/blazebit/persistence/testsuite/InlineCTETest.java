@@ -154,6 +154,30 @@ public class InlineCTETest extends AbstractCoreTest {
 
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testInlineCTEInCorrelatedSubquery() {
+        CriteriaBuilder<RecursiveEntity> cb = cbf.create(em, RecursiveEntity.class, "r")
+                .whereExists()
+                    .from(TestCTE.class, "t")
+                    .where("t.id").eqExpression("r.id")
+                .end();
+        cb.with(TestCTE.class, true)
+                .from(RecursiveEntity.class, "e")
+                .bind("id").select("e.id")
+                .bind("name").select("e.name")
+                .bind("level").select("0")
+                .where("e.parent.name").eq("root1")
+                .end();
+        String subquery = "SELECT e.id, e.name, 0 FROM RecursiveEntity e LEFT JOIN e.parent parent_1 WHERE parent_1.name = :param_0";
+        String expected = ""
+                + "SELECT r FROM RecursiveEntity r WHERE EXISTS (SELECT 1 FROM TestCTE(" + subquery + ") t(id, name, level) WHERE t.id = r.id)";
+
+        assertEquals(expected, cb.getQueryString());
+        List<RecursiveEntity> resultList = cb.getResultList();
+        assertEquals(2, resultList.size());
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testInlineEntityWithLimit() {
         CriteriaBuilder<RecursiveEntity> cb = cbf.create(em, RecursiveEntity.class)
                 .fromEntitySubquery(RecursiveEntity.class, "t")

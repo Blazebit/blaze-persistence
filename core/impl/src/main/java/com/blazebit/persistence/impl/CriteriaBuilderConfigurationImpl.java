@@ -230,6 +230,7 @@ import com.blazebit.persistence.impl.function.datetime.yearweek.YearWeekFunction
 import com.blazebit.persistence.impl.function.entity.EntityFunction;
 import com.blazebit.persistence.impl.function.every.EveryFunction;
 import com.blazebit.persistence.impl.function.every.FallbackEveryFunction;
+import com.blazebit.persistence.impl.function.exist.ExistFunction;
 import com.blazebit.persistence.impl.function.oragg.FallbackOrAggFunction;
 import com.blazebit.persistence.impl.function.oragg.OrAggFunction;
 import com.blazebit.persistence.impl.function.nullfn.NullfnFunction;
@@ -538,6 +539,12 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         jpqlFunctionGroup = new JpqlFunctionGroup(NullfnFunction.FUNCTION_NAME, false);
         jpqlFunctionGroup.add(null, new NullfnFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        // exist
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(ExistFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup.add(null, new ExistFunction());
         registerFunction(jpqlFunctionGroup);
         
         // set operations

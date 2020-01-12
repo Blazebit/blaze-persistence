@@ -605,7 +605,7 @@ public class GeneralParserTest extends AbstractParserTest {
     }
 
     @Test
-    public void testInParameterNoParanthesis() {
+    public void testInParameterNoParenthesis() {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x IN :abc THEN 0 ELSE 1 END");
 
         GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new InPredicate(path("a", "x"), new ParameterExpression("abc", null, true)), _int("0"))), _int("1"));

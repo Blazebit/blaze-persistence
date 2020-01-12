@@ -1122,7 +1122,7 @@ public class PaginationTest extends AbstractCoreTest {
                         .orderByAsc("d.id")
                         .createPageIdQuery(0, 10, "d.id")
                 ).end();
-        assertEquals("SELECT doc FROM Document doc WHERE doc.id IN (" + function("LIMIT", "(SELECT d.id FROM Document d WHERE d.name = :param_0 ORDER BY d.id ASC)", "10") + ")", cb.getQueryString());
+        assertEquals("SELECT doc FROM Document doc WHERE doc.id IN (SELECT d.id FROM Document d WHERE d.name = :param_0 ORDER BY d.id ASC LIMIT 10)", cb.getQueryString());
         cb.getResultList();
     }
 }

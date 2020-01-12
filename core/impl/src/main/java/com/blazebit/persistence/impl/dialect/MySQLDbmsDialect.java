@@ -68,6 +68,11 @@ public class MySQLDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
+    public boolean requiresNullCast() {
+        return false;
+    }
+
+    @Override
     public LateralStyle getLateralStyle() {
         return LateralStyle.NONE;
     }

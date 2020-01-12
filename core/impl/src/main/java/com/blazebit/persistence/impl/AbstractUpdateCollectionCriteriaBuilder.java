@@ -152,14 +152,14 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
             sbSelectFrom.append(entityType.getName());
             sbSelectFrom.append('(').append(collectionName).append(") ");
             sbSelectFrom.append(entityAlias);
-            appendSetClause(sbSelectFrom);
+            appendSetClause(sbSelectFrom, externalRepresentation);
             appendWhereClause(sbSelectFrom, externalRepresentation);
         } else if (collectionAttribute.getJoinTable() == null) {
             sbSelectFrom.append("UPDATE ");
             sbSelectFrom.append(((EntityType<?>) elementType).getName());
             sbSelectFrom.append(' ');
             sbSelectFrom.append(CollectionUpdateModificationQuerySpecification.COLLECTION_BASE_QUERY_ALIAS);
-            appendSetClause(sbSelectFrom);
+            appendSetClause(sbSelectFrom, externalRepresentation);
             appendWhereClause(sbSelectFrom, externalRepresentation);
         } else {
             // The internal representation is just a "hull" to hold the parameters at the appropriate positions

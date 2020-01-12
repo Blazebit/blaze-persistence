@@ -72,6 +72,7 @@ public final class JpaUtils {
         ParameterManager parameterManager = queryBuilder.parameterManager;
         JpaProvider jpaProvider = queryBuilder.mainQuery.jpaProvider;
         EntityMetamodel metamodel = queryBuilder.mainQuery.metamodel;
+        boolean requiresNullCast = queryBuilder.mainQuery.dbmsDialect.requiresNullCast();
         JpaMetamodelAccessor jpaMetamodelAccessor = jpaProvider.getJpaMetamodelAccessor();
 
         boolean needsElementCollectionIdCutoff = jpaProvider.needsElementCollectionIdCutoff();
@@ -100,11 +101,11 @@ public final class JpaUtils {
                 }
 
                 SelectInfo selectInfo = selectManager.getSelectInfos().get(tupleIndex);
+                Expression selectExpression = selectInfo.getExpression();
                 if (splitExpression) {
                     // We have to map *-to-one relationships to their id or unique props
                     // NOTE: Since we are talking about *-to-ones, the expression can only be a path to an object
                     // so it is safe to just append the id to the path
-                    Expression selectExpression = selectInfo.getExpression();
 
                     // TODO: Maybe also allow Treat, Case-When, Array?
                     if (selectExpression instanceof NullExpression) {
@@ -217,15 +218,13 @@ public final class JpaUtils {
                     } else {
                         throw new IllegalArgumentException("Illegal expression '" + selectExpression.toString() + "' for binding relation '" + attributeName + "'!");
                     }
-                } else {
+                } else if (requiresNullCast && selectExpression instanceof NullExpression || selectExpression instanceof ParameterExpression && clause != ClauseType.SET) {
                     // We must add a cast for null expressions, otherwise DBMS might assume some text type
-                    Expression selectExpression = selectInfo.getExpression();
-                    if (selectExpression instanceof NullExpression) {
-                        List<Expression> arguments = new ArrayList<>(2);
-                        arguments.add(selectExpression);
-                        arguments.add(new StringLiteral(attributeEntry.getColumnTypes()[0]));
-                        selectInfo.set(new FunctionExpression("CAST_" + attributeEntry.getElementClass().getSimpleName(), arguments, 0));
-                    }
+                    // We also need a cast for parameter expressions except in the SET clause
+                    List<Expression> arguments = new ArrayList<>(2);
+                    arguments.add(selectExpression);
+                    arguments.add(new StringLiteral(attributeEntry.getColumnTypes()[0]));
+                    selectInfo.set(new FunctionExpression("CAST_" + attributeEntry.getElementClass().getSimpleName(), arguments, 0));
                 }
             }
         }

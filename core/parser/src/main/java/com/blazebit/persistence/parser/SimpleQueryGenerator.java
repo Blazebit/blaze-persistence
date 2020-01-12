@@ -361,19 +361,19 @@ public class SimpleQueryGenerator implements Expression.Visitor {
             sb.append(" IN ");
         }
 
-        boolean paranthesisRequired;
+        boolean parenthesisRequired;
         if (predicate.getRight().size() == 1) {
             // NOTE: other cases are handled by ResolvingQueryGenerator
             Expression singleRightExpression = predicate.getRight().get(0);
             if (singleRightExpression instanceof ParameterExpression && ((ParameterExpression) singleRightExpression).isCollectionValued()) {
-                paranthesisRequired = false;
+                parenthesisRequired = false;
             } else {
-                paranthesisRequired = !(singleRightExpression instanceof SubqueryExpression) || !isSimpleSubquery((SubqueryExpression) singleRightExpression);
+                parenthesisRequired = !(singleRightExpression instanceof SubqueryExpression) || !isSimpleSubquery((SubqueryExpression) singleRightExpression);
             }
         } else {
-            paranthesisRequired = true;
+            parenthesisRequired = true;
         }
-        if (paranthesisRequired) {
+        if (parenthesisRequired) {
             sb.append('(');
         }
         if (!predicate.getRight().isEmpty()) {
@@ -383,7 +383,7 @@ public class SimpleQueryGenerator implements Expression.Visitor {
                 predicate.getRight().get(i).accept(this);
             }
         }
-        if (paranthesisRequired) {
+        if (parenthesisRequired) {
             sb.append(')');
         }
         setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
