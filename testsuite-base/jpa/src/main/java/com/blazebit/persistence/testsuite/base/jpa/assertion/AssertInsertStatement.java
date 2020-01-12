@@ -35,7 +35,7 @@ public class AssertInsertStatement extends AbstractAssertStatement {
         query = query.toLowerCase();
         if (!query.startsWith("insert ")) {
             int insertIndex;
-            if (!query.startsWith("with ") || (insertIndex = query.indexOf(")\ninsert ")) == -1) {
+            if (!query.startsWith("with ") || (insertIndex = query.indexOf(") insert ")) == -1) {
                 query = stripReturningClause(query);
                 insertIndex = -2;
                 if (!query.startsWith("insert ")) {

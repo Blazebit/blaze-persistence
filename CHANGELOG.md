@@ -14,6 +14,7 @@ Not yet released
 * Allow to control embedding of count query into pagination object/id query and enable by default if possible
 * Implement option for inlining CTEs/Subquery in from clause and add lateral join support
 * Use `JpqlFunction` for `NULL` literal expressions
+* Use ` ` as query separator instead of `\n` for multi-query statements
 
 ### Bug fixes
 

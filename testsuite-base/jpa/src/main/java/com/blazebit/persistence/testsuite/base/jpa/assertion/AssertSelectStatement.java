@@ -40,7 +40,7 @@ public class AssertSelectStatement extends AbstractAssertStatement {
         query = query.toLowerCase();
         if (!query.startsWith("select ")) {
             int selectIndex;
-            if (!query.startsWith("with ") || (selectIndex = query.indexOf(")\nselect ")) == -1) {
+            if (!query.startsWith("with ") || (selectIndex = query.indexOf(") select ")) == -1) {
                 Assert.fail("Query is not a select statement: " + query);
                 return;
             }

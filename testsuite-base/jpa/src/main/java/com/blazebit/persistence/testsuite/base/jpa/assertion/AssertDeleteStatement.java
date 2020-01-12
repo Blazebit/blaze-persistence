@@ -35,7 +35,7 @@ public class AssertDeleteStatement extends AbstractAssertStatement {
         query = query.toLowerCase();
         if (!query.startsWith("delete ")) {
             int deleteIndex;
-            if (!query.startsWith("with ") || (deleteIndex = query.indexOf(")\ndelete ")) == -1) {
+            if (!query.startsWith("with ") || (deleteIndex = query.indexOf(") delete ")) == -1) {
                 query = stripReturningClause(query);
                 deleteIndex = -2;
                 if (!query.startsWith("delete ")) {
