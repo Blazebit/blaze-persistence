@@ -2531,8 +2531,8 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                     subquery = aliasesSb.toString();
                 }
             }
-            String valuesTableSqlAlias = cbf.getExtendedQuerySupport().getSqlAlias(em, baseQuery, lateInlineNode.getAlias());
-            entityFunctionNodes.add(new EntityFunctionNode(subquery, aliases, cteInfo.name, valuesTableSqlAlias, null, null, null, null, lateInlineNode.isLateral()));
+            String cteTableSqlAlias = baseQuery == null ? "" : cbf.getExtendedQuerySupport().getSqlAlias(em, baseQuery, lateInlineNode.getAlias());
+            entityFunctionNodes.add(new EntityFunctionNode(subquery, aliases, cteInfo.name, cteTableSqlAlias, null, null, null, null, lateInlineNode.isLateral()));
         }
 
         return entityFunctionNodes;
@@ -3126,15 +3126,12 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 return queryString;
             }
         });
+        if (externalRepresentation) {
+            return expression;
+        }
 
         if (queryBuilder.joinManager.hasEntityFunctions()) {
-            Query baseQuery = null;
-            // For inline nodes we need a base query
-            if (!queryBuilder.joinManager.getLateInlineNodes().isEmpty()) {
-                // TODO: need something like a lateral example query but with joins rather than EXISTS to support lateral in subqueries
-                baseQuery = queryBuilder.em.createQuery(queryString);
-            }
-            for (EntityFunctionNode node : queryBuilder.getEntityFunctionNodes(baseQuery)) {
+            for (EntityFunctionNode node : queryBuilder.getEntityFunctionNodes(null)) {
                 List<Expression> arguments = new ArrayList<>(2);
                 arguments.add(new StringLiteral("ENTITY_FUNCTION"));
                 arguments.add(expression);
@@ -3200,10 +3197,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             appendWindowClause(sbSelectFrom, externalRepresentation);
             appendOrderByClause(sbSelectFrom);
             if (externalRepresentation && !isMainQuery) {
-                // Don't render the LIMIT clause for subqueries, but let the parent render it in a LIMIT function
-                if (!(this instanceof SubqueryInternalBuilder<?>)) {
-                    applyJpaLimit(sbSelectFrom);
-                }
+                applyJpaLimit(sbSelectFrom);
             }
         } finally {
             queryGenerator.setExternalRepresentation(originalExternalRepresentation);

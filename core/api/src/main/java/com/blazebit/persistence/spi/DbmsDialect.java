@@ -233,7 +233,7 @@ public interface DbmsDialect {
     /**
      * Returns true if the dbms supports null precedence for ORDER BY clause.
      *
-     * @return whether the dbms supports null precedence for ORDER BY clause.
+     * @return whether the dbms supports null precedence for ORDER BY clause
      * @since 1.4.0
      */
     public boolean supportsNullPrecedence();
@@ -241,7 +241,7 @@ public interface DbmsDialect {
     /**
      * Returns true if the dbms supports null precedence for order clauses in the WINDOW clause.
      *
-     * @return whether the dbms supports null precedence for order clauses in the WINDOW clause.
+     * @return whether the dbms supports null precedence for order clauses in the WINDOW clause
      * @since 1.4.0
      */
     public boolean supportsWindowNullPrecedence();
@@ -251,7 +251,7 @@ public interface DbmsDialect {
      * / BOOL_AND / BOOL_OR.
      *
      * @return whether the dbms supports boolean aggregation through EVERY / SOME / ANY
-     * / BOOL_AND / BOOL_OR.
+     * / BOOL_AND / BOOL_OR
      * @since 1.4.0
      */
     public boolean supportsBooleanAggregation();
@@ -259,10 +259,18 @@ public interface DbmsDialect {
     /**
      * Returns true if the dbms treats null as the smallest value, false is highest.
      *
-     * @return whether the dbms treats null as the smallest value, false if highest.
+     * @return whether the dbms treats null as the smallest value, false if highest
      * @since 1.4.0
      */
     public boolean isNullSmallest();
+
+    /**
+     * Returns true if the dbms requires a null literal to be casted.
+     *
+     * @return whether the dbms requires a null literal to be casted
+     * @since 1.4.1
+     */
+    public boolean requiresNullCast();
 
     /**
      * Returns the lateral style that is supported by the dbms.

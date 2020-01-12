@@ -156,6 +156,11 @@ public class DefaultDbmsDialect implements DbmsDialect {
     }
 
     @Override
+    public boolean requiresNullCast() {
+        return true;
+    }
+
+    @Override
     public LateralStyle getLateralStyle() {
         return LateralStyle.LATERAL;
     }

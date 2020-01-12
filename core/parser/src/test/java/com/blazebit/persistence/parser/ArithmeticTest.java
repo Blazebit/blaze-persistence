@@ -29,32 +29,32 @@ import static org.junit.Assert.assertEquals;
 public class ArithmeticTest extends AbstractParserTest {
 
     @Test
-    public void testParanthesisRendering1() {
+    public void testParenthesisRendering1() {
         assertEquals("1 - (1 - 1)", render(parse("1 - (1 - 1)")));
     }
 
     @Test
-    public void testParanthesisRendering2() {
+    public void testParenthesisRendering2() {
         assertEquals("1 + 1 - 1", render(parse("1 + (1 - 1)")));
     }
 
     @Test
-    public void testParanthesisRendering3() {
+    public void testParenthesisRendering3() {
         assertEquals("1 * 1 * 1", render(parse("1 * (1 * 1)")));
     }
 
     @Test
-    public void testParanthesisRendering4() {
+    public void testParenthesisRendering4() {
         assertEquals("(1 / 1) / 1", render(parse("(1 / 1) / 1")));
     }
 
     @Test
-    public void testParanthesisRendering5() {
+    public void testParenthesisRendering5() {
         assertEquals("1 * (1 - 1)", render(parse("1 * (1 - 1)")));
     }
 
     @Test
-    public void testParanthesisRendering6() {
+    public void testParenthesisRendering6() {
         assertEquals("1 * 1 - 1", render(parse("1 * 1 - 1")));
     }
 

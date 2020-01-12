@@ -200,10 +200,7 @@ public class SetOperationTest extends AbstractCoreTest {
                 + function(
                     "SET_UNION_ALL",
                     "(SELECT d1.id FROM Document d1 WHERE d1.name = :param_0)",
-                    function("LIMIT",
-                            "(SELECT d2.id FROM Document d2 WHERE d2.name <> :param_1 ORDER BY d2.name ASC)",
-                            "1"
-                    ),
+                    "(SELECT d2.id FROM Document d2 WHERE d2.name <> :param_1 ORDER BY d2.name ASC LIMIT 1)",
                     "'ORDER_BY'",
                     "'1 DESC'",
                     "'LIMIT'",

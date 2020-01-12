@@ -17,6 +17,7 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.BaseFinalSetOperationBuilder;
+import com.blazebit.persistence.impl.function.exist.ExistFunction;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.SimpleQueryGenerator;
 import com.blazebit.persistence.parser.expression.AggregateExpression;
@@ -231,7 +232,18 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                 subquery.buildBaseQueryString(sb, externalRepresentation, true, null);
                 sb.append(')');
             } else {
-                subquery.asExpression(externalRepresentation).accept(this);
+                if (!externalRepresentation) {
+                    sb.append('(');
+                }
+                Expression subqueryExpression = subquery.asExpression(externalRepresentation);
+                if (subqueryExpression instanceof SubqueryExpression) {
+                    sb.append(((SubqueryExpression) subqueryExpression).getSubquery().getQueryString());
+                } else {
+                    subqueryExpression.accept(this);
+                }
+                if (!externalRepresentation) {
+                    sb.append(')');
+                }
             }
         } else {
             sb.append('(');
@@ -796,7 +808,29 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
     @Override
     public void visit(ExistsPredicate predicate) {
-        super.visit(predicate);
+        SubqueryExpression subqueryExpression;
+        if (predicate.getExpression() instanceof SubqueryExpression && !isSimpleSubquery(subqueryExpression = (SubqueryExpression) predicate.getExpression())) {
+            if (externalRepresentation) {
+                if (predicate.isNegated()) {
+                    sb.append("NOT EXISTS ");
+                } else {
+                    sb.append("EXISTS ");
+                }
+                sb.append('(');
+                predicate.getExpression().accept(this);
+                sb.append(')');
+            } else {
+                sb.append("1 = ");
+                sb.append(jpaProvider.getCustomFunctionInvocation(ExistFunction.FUNCTION_NAME, 1));
+                subqueryExpression.accept(this);
+                if (predicate.isNegated()) {
+                    sb.append(",1");
+                }
+                sb.append(")");
+            }
+        } else {
+            super.visit(predicate);
+        }
         if (predicate.isNegated()) {
             flipTreatedJoinNodeConstraints();
         }

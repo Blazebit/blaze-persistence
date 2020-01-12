@@ -176,6 +176,11 @@ public class DelegatingDbmsDialect implements DbmsDialect {
     }
 
     @Override
+    public boolean requiresNullCast() {
+        return delegate.requiresNullCast();
+    }
+
+    @Override
     public LateralStyle getLateralStyle() {
         return delegate.getLateralStyle();
     }

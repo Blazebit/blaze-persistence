@@ -199,31 +199,36 @@ public abstract class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCrite
         sbSelectFrom.append("UPDATE ");
         sbSelectFrom.append(entityType.getName()).append(' ');
         sbSelectFrom.append(entityAlias);
-        appendSetClause(sbSelectFrom);
+        appendSetClause(sbSelectFrom, externalRepresentation);
         appendWhereClause(sbSelectFrom, externalRepresentation);
     }
 
-    protected void appendSetClause(StringBuilder sbSelectFrom) {
+    protected void appendSetClause(StringBuilder sbSelectFrom, boolean externalRepresentation) {
         sbSelectFrom.append(" SET ");
 
         queryGenerator.setClauseType(ClauseType.SET);
         queryGenerator.setQueryBuffer(sbSelectFrom);
+        boolean originalExternalRepresentation = queryGenerator.isExternalRepresentation();
+        queryGenerator.setExternalRepresentation(externalRepresentation);
         SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.CASE_WHEN);
 
-        List<SelectInfo> selectInfos = selectManager.getSelectInfos();
-        Iterator<Entry<String, Integer>> setAttributeIter = setAttributeBindingMap.entrySet().iterator();
-        if (setAttributeIter.hasNext()) {
-            Map.Entry<String, Integer> attributeEntry = setAttributeIter.next();
-            appendSetElement(sbSelectFrom, attributeEntry.getKey(), selectInfos.get(attributeEntry.getValue()).getExpression());
-            while (setAttributeIter.hasNext()) {
-                attributeEntry = setAttributeIter.next();
-                sbSelectFrom.append(',');
+        try {
+            List<SelectInfo> selectInfos = selectManager.getSelectInfos();
+            Iterator<Entry<String, Integer>> setAttributeIter = setAttributeBindingMap.entrySet().iterator();
+            if (setAttributeIter.hasNext()) {
+                Map.Entry<String, Integer> attributeEntry = setAttributeIter.next();
                 appendSetElement(sbSelectFrom, attributeEntry.getKey(), selectInfos.get(attributeEntry.getValue()).getExpression());
+                while (setAttributeIter.hasNext()) {
+                    attributeEntry = setAttributeIter.next();
+                    sbSelectFrom.append(',');
+                    appendSetElement(sbSelectFrom, attributeEntry.getKey(), selectInfos.get(attributeEntry.getValue()).getExpression());
+                }
             }
+        } finally {
+            queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
+            queryGenerator.setClauseType(null);
+            queryGenerator.setExternalRepresentation(originalExternalRepresentation);
         }
-
-        queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
-        queryGenerator.setClauseType(null);
     }
 
     protected final void appendSetElement(StringBuilder sbSelectFrom, String attribute, Expression valueExpression) {

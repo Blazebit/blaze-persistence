@@ -40,9 +40,9 @@ public class NotPredicate extends AbstractSimplePredicate {
     @Override
     public void render(RenderContext context) {
         final StringBuilder buffer = context.getBuffer();
-        boolean requiresParanthesis = predicate instanceof CompoundPredicate;
+        boolean requiresParenthesis = predicate instanceof CompoundPredicate;
         buffer.append("NOT ");
-        if (requiresParanthesis) {
+        if (requiresParenthesis) {
             buffer.append("(");
             context.apply(predicate);
             buffer.append(")");

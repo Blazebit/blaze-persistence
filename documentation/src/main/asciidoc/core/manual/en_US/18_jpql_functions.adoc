@@ -479,6 +479,14 @@ Just renders `null`.
 
 WARNING: This is an internal function that is used to implement inlining of CTEs or subqueries in the FROM clause.
 
+==== EXIST function
+
+Syntax: `EXIST ( subquery, (any)? )`
+
+When a second argument is given, renders `case when not exists <subquery> then 1 else 0 end`, otherwise `case when exists <subquery> then 1 else 0 end`.
+
+WARNING: This is an internal function that is used to implement inlining of CTEs or subqueries in the FROM clause for correlated subqueries in an `EXISTS` predicate.
+
 === Custom JPQL functions
 
 Apart from providing many useful functions out of the box, {projectname} also allows to implement custom JPQL functions that can be called just like any other non-standard function,
