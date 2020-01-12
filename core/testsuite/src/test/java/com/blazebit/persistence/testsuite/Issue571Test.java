@@ -98,7 +98,7 @@ public class Issue571Test extends AbstractCoreTest {
                 select.getResultList();
 
                 String sql = ((CustomSQLTypedQuery) select.getQuery()).getQuerySpecification().getSql();
-                String cteBase = sql.substring(sql.indexOf("\nselect") + 1, sql.lastIndexOf("UNION ALL") - 1);
+                String cteBase = sql.substring(sql.indexOf(" select") + 1, sql.lastIndexOf("UNION ALL") - 1);
                 String cteRecursivePart = sql.substring(sql.indexOf("UNION ALL")+10, sql.lastIndexOf("select")-3);
                 String queryPart = sql.substring(sql.lastIndexOf("select"));
 
@@ -140,7 +140,7 @@ public class Issue571Test extends AbstractCoreTest {
                 select.getResultList();
 
                 String sql = ((CustomSQLTypedQuery) select.getQuery()).getQuerySpecification().getSql();
-                String cteBase = sql.substring(sql.indexOf("\nselect") + 1, sql.lastIndexOf("UNION ALL") - 1);
+                String cteBase = sql.substring(sql.indexOf(" select") + 1, sql.lastIndexOf("UNION ALL") - 1);
                 String cteRecursivePart = sql.substring(sql.indexOf("UNION ALL")+10, sql.lastIndexOf("select")-3);
                 String queryPart = sql.substring(sql.lastIndexOf("select"));
 
@@ -181,7 +181,7 @@ public class Issue571Test extends AbstractCoreTest {
                 select.getResultList();
 
                 String sql = ((CustomSQLTypedQuery) select.getQuery()).getQuerySpecification().getSql();
-                String cteBase = sql.substring(sql.indexOf("\nselect") + 1, sql.lastIndexOf("UNION ALL") - 1);
+                String cteBase = sql.substring(sql.indexOf(" select") + 1, sql.lastIndexOf("UNION ALL") - 1);
                 String cteRecursivePart = sql.substring(sql.indexOf("UNION ALL")+10, sql.lastIndexOf("select")-3);
                 String queryPart = sql.substring(sql.lastIndexOf("select"));
 

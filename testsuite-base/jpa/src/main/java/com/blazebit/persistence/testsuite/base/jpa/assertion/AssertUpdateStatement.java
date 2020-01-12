@@ -35,7 +35,7 @@ public class AssertUpdateStatement extends AbstractAssertStatement {
         query = query.toLowerCase();
         if (!query.startsWith("update ")) {
             int updateIndex;
-            if (!query.startsWith("with ") || (updateIndex = query.indexOf(")\nupdate ")) == -1) {
+            if (!query.startsWith("with ") || (updateIndex = query.indexOf(") update ")) == -1) {
                 query = stripReturningClause(query);
                 updateIndex = -2;
                 if (!query.startsWith("update ")) {
