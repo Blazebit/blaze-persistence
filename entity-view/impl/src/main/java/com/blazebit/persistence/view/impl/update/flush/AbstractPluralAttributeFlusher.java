@@ -89,8 +89,6 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
                 fragments[i] = "FUNCTION('TREAT_INTEGER', " + fragments[i] + ")";
             }
             this.ownerIdBindFragments = fragments;
-            sb.setLength(0);
-            ownerIdFlusher.appendUpdateQueryFragment(null, sb, null, null, ",");
         }
         this.flushStrategy = flushStrategy;
         this.entityAttributeMapper = entityAttributeMapper;
