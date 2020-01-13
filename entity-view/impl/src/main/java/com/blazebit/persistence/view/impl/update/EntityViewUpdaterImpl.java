@@ -248,7 +248,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
         }
 
         if (versionFlusher != null && sb != null) {
-            versionFlusher.appendUpdateQueryFragment(null, sb, null, null, ", ");
+            versionFlusher.appendUpdateQueryFragment(null, sb, "e.", "", ", ");
             // If something was appended, we also append a comma
             if (clauseEndIndex != sb.length()) {
                 clauseEndIndex = sb.length();
@@ -288,7 +288,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                 if (flusher != null) {
                     if (sb != null) {
                         int endIndex = sb.length();
-                        flusher.appendUpdateQueryFragment(null, sb, null, null, ", ");
+                        flusher.appendUpdateQueryFragment(null, sb, "e.", "", ", ");
 
                         // If something was appended, we also append a comma
                         if (endIndex != sb.length()) {
@@ -642,11 +642,11 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
             StringBuilder sb = new StringBuilder(updatePrefixString.length() + updatePostfixString.length() + 250);
             sb.append(updatePrefixString);
             int initialLength = sb.length();
-            flusher.appendUpdateQueryFragment(context, sb, null, null, ", ");
+            flusher.appendUpdateQueryFragment(context, sb, "e.", "", ", ");
             if (sb.length() == initialLength) {
                 // If we still need optimistic locking, we just append a flush for the version increment
                 if (needsOptimisticLocking = fullFlusher.hasVersionFlusher() && flusher.isOptimisticLockProtected()) {
-                    versionFlusher.appendUpdateQueryFragment(context, sb, null, null, ", ");
+                    versionFlusher.appendUpdateQueryFragment(context, sb, "e.", "", ", ");
                     sb.append(updatePostfixString);
                     queryString = sb.toString();
                 } else {

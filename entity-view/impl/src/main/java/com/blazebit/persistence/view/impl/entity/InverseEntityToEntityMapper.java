@@ -55,12 +55,12 @@ public class InverseEntityToEntityMapper<E> implements InverseElementToEntityMap
     private String createQueryString(DirtyAttributeFlusher<?, ?, ?> nestedGraphNode, DirtyAttributeFlusher<?, ?, ?> inverseAttributeFlusher) {
         StringBuilder sb = new StringBuilder(updatePrefixString.length() + updatePostfixString.length() + 250);
         sb.append(updatePrefixString);
-        inverseAttributeFlusher.appendUpdateQueryFragment(null, sb, null, null, ", ");
+        inverseAttributeFlusher.appendUpdateQueryFragment(null, sb, "e.", "", ", ");
 
         if (nestedGraphNode != null) {
             sb.append(", ");
             int initialLength = sb.length();
-            nestedGraphNode.appendUpdateQueryFragment(null, sb, null, null, ", ");
+            nestedGraphNode.appendUpdateQueryFragment(null, sb, "e.", "", ", ");
 
             if (sb.length() == initialLength) {
                 sb.setLength(sb.length() - 2);

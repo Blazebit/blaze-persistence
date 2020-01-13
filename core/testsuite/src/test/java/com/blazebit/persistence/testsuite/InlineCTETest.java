@@ -152,8 +152,9 @@ public class InlineCTETest extends AbstractCoreTest {
         assertEquals(2, resultList.size());
     }
 
+    // NOTE: Hibernate 4.2 and 4.3 interprets entity name tokens in string literals...
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class })
     public void testInlineCTEInCorrelatedSubquery() {
         CriteriaBuilder<RecursiveEntity> cb = cbf.create(em, RecursiveEntity.class, "r")
                 .whereExists()
