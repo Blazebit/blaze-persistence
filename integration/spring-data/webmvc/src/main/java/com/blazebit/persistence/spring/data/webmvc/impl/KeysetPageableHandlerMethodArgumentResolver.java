@@ -22,6 +22,7 @@ import com.blazebit.persistence.KeysetPage;
 import com.blazebit.persistence.spring.data.repository.KeysetPageRequest;
 import com.blazebit.persistence.spring.data.repository.KeysetPageable;
 import com.blazebit.persistence.spring.data.webmvc.KeysetConfig;
+import com.blazebit.persistence.spring.data.webmvc.KeysetPageableArgumentResolver;
 import com.blazebit.reflection.ReflectionUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -60,7 +61,7 @@ import java.util.concurrent.ConcurrentMap;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class KeysetPageableHandlerMethodArgumentResolver extends PageableHandlerMethodArgumentResolver {
+public class KeysetPageableHandlerMethodArgumentResolver extends PageableHandlerMethodArgumentResolver implements KeysetPageableArgumentResolver {
 
     private static final String DEFAULT_OFFSET_PARAMETER = "offset";
     private static final String DEFAULT_PREVIOUS_OFFSET_PARAMETER = "prevOffset";
@@ -157,6 +158,7 @@ public class KeysetPageableHandlerMethodArgumentResolver extends PageableHandler
         setFallbackPageable((KeysetPageable) fallbackPageable);
     }
 
+    @Override
     public void setFallbackPageable(KeysetPageable fallbackPageable) {
         this.fallbackPageable = fallbackPageable;
     }
@@ -166,50 +168,56 @@ public class KeysetPageableHandlerMethodArgumentResolver extends PageableHandler
         return fallbackPageable == null ? false : fallbackPageable.equals(pageable);
     }
 
-    public String getOffsetParameterName() {
+    protected String getOffsetParameterName() {
         return offsetParameterName;
     }
 
+    @Override
     public void setOffsetParameterName(String offsetParameterName) {
         this.offsetParameterName = offsetParameterName;
     }
 
-    public String getPreviousOffsetParameterName() {
+    protected String getPreviousOffsetParameterName() {
         return previousOffsetParameterName;
     }
 
+    @Override
     public void setPreviousOffsetParameterName(String previousOffsetParameterName) {
         this.previousOffsetParameterName = previousOffsetParameterName;
     }
 
-    public String getPreviousPageParameterName() {
+    protected String getPreviousPageParameterName() {
         return previousPageParameterName;
     }
 
+    @Override
     public void setPreviousPageParameterName(String previousPageParameterName) {
         this.previousPageParameterName = previousPageParameterName;
     }
 
-    public String getPreviousSizeParameterName() {
+    protected String getPreviousSizeParameterName() {
         return previousSizeParameterName;
     }
 
+    @Override
     public void setPreviousSizeParameterName(String previousSizeParameterName) {
         this.previousSizeParameterName = previousSizeParameterName;
     }
 
-    public String getLowestParameterName() {
+    protected String getLowestParameterName() {
         return lowestParameterName;
     }
 
+    @Override
     public void setLowestParameterName(String lowestParameterName) {
         this.lowestParameterName = lowestParameterName;
     }
 
-    public String getHighestParameterName() {
+    protected String getHighestParameterName() {
         return highestParameterName;
     }
 
+    @Override
     public void setHighestParameterName(String highestParameterName) {
         this.highestParameterName = highestParameterName;
     }
