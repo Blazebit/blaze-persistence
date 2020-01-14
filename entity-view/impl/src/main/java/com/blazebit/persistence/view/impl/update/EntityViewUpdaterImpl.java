@@ -45,6 +45,7 @@ import com.blazebit.persistence.view.impl.entity.EntityIdLoader;
 import com.blazebit.persistence.view.impl.entity.EntityLoader;
 import com.blazebit.persistence.view.impl.entity.EntityTupleizer;
 import com.blazebit.persistence.view.impl.entity.FullEntityLoader;
+import com.blazebit.persistence.view.impl.entity.LoadOnlyViewToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.LoadOrPersistViewToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.MapViewToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.ReferenceEntityLoader;
@@ -1187,6 +1188,12 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                                     shouldFlushPersists,
                                     owner,
                                     ownerMapping
+                            );
+                        } else if (shouldPassThrough(evm, viewType, attribute)) {
+                            viewToEntityMapper = new LoadOnlyViewToEntityMapper(
+                                    ReferenceEntityLoader.forAttribute(evm, subviewType, attribute),
+                                    subviewIdAccessor,
+                                    entityIdAccessor
                             );
                         } else {
                             viewToEntityMapper = new LoadOrPersistViewToEntityMapper(

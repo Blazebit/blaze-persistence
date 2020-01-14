@@ -15,12 +15,14 @@ Not yet released
 * Implement option for inlining CTEs/Subquery in from clause and add lateral join support
 * Use `JpqlFunction` for `NULL` literal expressions
 * Use ` ` as query separator instead of `\n` for multi-query statements
+* Use alias for `SET` clause in updatable entity view generated `UPDATE` statements to workaround the use of keywords as attribute names
 
 ### Bug fixes
 
 * Validate that `VIEW_ROOT` and `EMBEDDING_VIEW` macros can't be used on `SELECT` or `SUBSELECT` fetched correlations when the view type has no `@IdMapping`
 * Fix _null_/_empty_ flat view objects when using SELECT or SUBSELECT fetch strategy for a collection correlation
 * Fix uniqueness analysis for single valued association id where the association is part of id class attributes
+* Indexed element collection action optimization fails with `IndexOutOfBoundsException`
 
 ### Backwards-incompatible changes
 
