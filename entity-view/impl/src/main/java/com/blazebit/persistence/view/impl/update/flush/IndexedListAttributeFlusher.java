@@ -327,6 +327,8 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
                 @SuppressWarnings("unchecked")
                 DirtyAttributeFlusher<?, E, V> flusher = (DirtyAttributeFlusher<?, E, V>) (DirtyAttributeFlusher) mapper.getNestedDirtyFlusher(context, element, (DirtyAttributeFlusher) null);
                 if (flusher != null) {
+                    // If the element is dirty, we have to register a ListSetAction if the element was not added
+                    // If it were added, we would already have an action for that object
                     EntryState state = EntryState.EXISTED;
                     for (CollectionAction<?> action : actions) {
                         Collection<Object> removedObjects = action.getRemovedObjects();
@@ -336,12 +338,7 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
                                 state = state.onAdd();
                             }
                         } else if (identityContains(action.getAddedObjects(), element)) {
-                            if (removedObjects.isEmpty()) {
-                                state = state.onAdd();
-                            } else {
-                                // This is like replacing an existing entry
-                                state = EntryState.ADDED;
-                            }
+                            state = EntryState.ADDED;
                         }
                     }
 

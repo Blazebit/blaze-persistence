@@ -215,7 +215,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                                 state = state.onAdd();
                             }
                         } else if (identityContains(action.getAddedElements(), element)) {
-                            state = state.onAdd();
+                            state = EntryState.ADDED;
                         }
                     }
 
