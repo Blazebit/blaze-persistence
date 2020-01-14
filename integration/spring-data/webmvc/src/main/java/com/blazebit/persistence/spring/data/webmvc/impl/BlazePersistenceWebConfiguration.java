@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.spring.data.webmvc.impl;
 
+import com.blazebit.persistence.spring.data.webmvc.KeysetPageableArgumentResolver;
 import com.blazebit.persistence.spring.data.webmvc.impl.json.EntityViewAwareMappingJackson2HttpMessageConverter;
 import com.blazebit.persistence.view.EntityViewManager;
 import org.springframework.beans.factory.ObjectFactory;
@@ -54,13 +55,14 @@ public class BlazePersistenceWebConfiguration extends WebMvcConfigurerAdapter {
     }
 
     @Bean
-    public KeysetPageableHandlerMethodArgumentResolver keysetPageableResolver() {
+    public KeysetPageableArgumentResolver keysetPageableResolver() {
         return new KeysetPageableHandlerMethodArgumentResolver(sortResolver, conversionService.getObject());
     }
 
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
-        argumentResolvers.add(keysetPageableResolver());
+        // Add it to the beginning so it has precedence over the builtin
+        argumentResolvers.add(0, keysetPageableResolver());
     }
 
     @Override
