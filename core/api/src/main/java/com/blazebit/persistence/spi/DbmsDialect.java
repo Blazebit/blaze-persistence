@@ -95,6 +95,16 @@ public interface DbmsDialect {
     public void appendSet(StringBuilder sqlSb, SetOperationType setType, boolean isSubquery, List<String> operands, List<? extends OrderByElement> orderByElements, String limit, String offset);
 
     /**
+     * Appends the order by element to the SQL builder.
+     *
+     * @param sqlSb The string builder
+     * @param orderByElement The order by element
+     * @param aliases The aliases, may be <code>null</code>
+     * @since 1.4.1
+     */
+    public void appendOrderByElement(StringBuilder sqlSb, OrderByElement orderByElement, String[] aliases);
+
+    /**
      * Creates a new limit handler for an SQL query.
      *
      * @return A new limit handler for a query

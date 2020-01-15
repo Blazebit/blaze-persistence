@@ -371,7 +371,8 @@ public class DefaultDbmsDialect implements DbmsDialect {
         }
     }
 
-    protected void appendOrderByElement(StringBuilder sqlSb, OrderByElement element, String[] aliases) {
+    @Override
+    public void appendOrderByElement(StringBuilder sqlSb, OrderByElement element, String[] aliases) {
         if (aliases != null) {
             sqlSb.append(aliases[element.getPosition() - 1]);
         } else {

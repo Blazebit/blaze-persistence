@@ -227,7 +227,7 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
     }
     
     @Override
-    protected void appendOrderByElement(StringBuilder sqlSb, OrderByElement element, String[] aliases) {
+    public void appendOrderByElement(StringBuilder sqlSb, OrderByElement element, String[] aliases) {
         if (!element.isNullable() || (element.isNullsFirst() && !element.isAscending()) || (!element.isNullsFirst() && element.isAscending())) {
             // The following are ok according to DB2 docs
             // ASC + NULLS LAST
