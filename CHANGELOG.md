@@ -27,6 +27,7 @@ Not yet released
 * Problems with `setFirstResult`/`setMaxResults` in subquery when in `EXISTS` predicate
 * Fix problems with the Spring Data WebMvc integration regarding some auto configuration issues
 * Fix rendering of `VALUES` clause with `ValuesStrategy.SELECT_UNION` necessary for MySQL 8.0.19+
+* Support field access for entities as well for `VALUES` clause usage
 
 ### Backwards-incompatible changes
 
