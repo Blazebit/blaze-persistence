@@ -27,6 +27,7 @@ import java.io.Serializable;
 @Entity
 public class EmbeddedDocumentTupleEntity implements Serializable {
 
+    @EmbeddedId
     private EmbeddedDocumentTupleEntityId id;
 
     public EmbeddedDocumentTupleEntity() {
@@ -38,15 +39,6 @@ public class EmbeddedDocumentTupleEntity implements Serializable {
     }
 
     public EmbeddedDocumentTupleEntity(EmbeddedDocumentTupleEntityId id) {
-        this.id = id;
-    }
-
-    @EmbeddedId
-    public EmbeddedDocumentTupleEntityId getId() {
-        return id;
-    }
-
-    public void setId(EmbeddedDocumentTupleEntityId id) {
         this.id = id;
     }
 }
