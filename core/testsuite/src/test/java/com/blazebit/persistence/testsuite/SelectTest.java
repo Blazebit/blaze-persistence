@@ -25,6 +25,7 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 
+import com.blazebit.persistence.testsuite.entity.DocumentType;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Test;
 
@@ -61,6 +62,15 @@ public class SelectTest extends AbstractCoreTest {
         criteria.select("COUNT(*)");
 
         assertEquals("SELECT " + countStar() + " FROM Document d", criteria.getQueryString());
+        criteria.getResultList();
+    }
+
+    @Test
+    public void testSelectParameter() {
+        CriteriaBuilder<DocumentType> criteria = cbf.create(em, DocumentType.class).from(Document.class, "d");
+        criteria.select(":param").setParameter("param", DocumentType.NOVEL);
+
+        assertEquals("SELECT :param FROM Document d", criteria.getQueryString());
         criteria.getResultList();
     }
     

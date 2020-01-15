@@ -16,6 +16,7 @@ Not yet released
 * Use `JpqlFunction` for `NULL` literal expressions
 * Use ` ` as query separator instead of `\n` for multi-query statements
 * Use alias for `SET` clause in updatable entity view generated `UPDATE` statements to workaround the use of keywords as attribute names
+* Introduce internal JPQL function for rendering of parameters for SELECT statements
 
 ### Bug fixes
 
@@ -23,6 +24,9 @@ Not yet released
 * Fix _null_/_empty_ flat view objects when using SELECT or SUBSELECT fetch strategy for a collection correlation
 * Fix uniqueness analysis for single valued association id where the association is part of id class attributes
 * Indexed element collection action optimization fails with `IndexOutOfBoundsException`
+* Problems with `setFirstResult`/`setMaxResults` in subquery when in `EXISTS` predicate
+* Fix problems with the Spring Data WebMvc integration regarding some auto configuration issues
+* Fix rendering of `VALUES` clause with `ValuesStrategy.SELECT_UNION` necessary for MySQL 8.0.19+
 
 ### Backwards-incompatible changes
 

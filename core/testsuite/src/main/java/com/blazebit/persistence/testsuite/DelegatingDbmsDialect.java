@@ -81,6 +81,11 @@ public class DelegatingDbmsDialect implements DbmsDialect {
     }
 
     @Override
+    public void appendOrderByElement(StringBuilder sqlSb, OrderByElement orderByElement, String[] aliases) {
+        delegate.appendOrderByElement(sqlSb, orderByElement, aliases);
+    }
+
+    @Override
     public DbmsLimitHandler createLimitHandler() {
         return delegate.createLimitHandler();
     }

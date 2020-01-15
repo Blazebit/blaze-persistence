@@ -2389,8 +2389,9 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     protected List<EntityFunctionNode> getEntityFunctionNodes(Query baseQuery) {
         List<EntityFunctionNode> entityFunctionNodes = new ArrayList<>();
 
-        ValuesStrategy strategy = mainQuery.dbmsDialect.getValuesStrategy();
-        String dummyTable = mainQuery.dbmsDialect.getDummyTable();
+        DbmsDialect dbmsDialect = mainQuery.dbmsDialect;
+        ValuesStrategy strategy = dbmsDialect.getValuesStrategy();
+        String dummyTable = dbmsDialect.getDummyTable();
 
         for (JoinNode node : joinManager.getEntityFunctionNodes()) {
             Class<?> clazz = node.getInternalEntityType().getJavaType();
@@ -2415,6 +2416,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             StringBuilder whereClauseSb = new StringBuilder(exampleQuerySql.length());
             String filterNullsTableAlias = "fltr_nulls_tbl_als_";
             String valuesAliases = getValuesAliases(exampleQuerySqlAlias, attributes.length, exampleQuerySql, whereClauseSb, filterNullsTableAlias, strategy, dummyTable);
+            boolean filterNulls = mainQuery.getQueryConfiguration().isValuesClauseFilterNullsEnabled();
 
             if (strategy == ValuesStrategy.SELECT_VALUES) {
                 valuesSb.insert(0, valuesAliases);
@@ -2422,12 +2424,28 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 valuesAliases = null;
             } else if (strategy == ValuesStrategy.SELECT_UNION) {
                 valuesSb.insert(0, valuesAliases);
-                mainQuery.dbmsDialect.appendExtendedSql(valuesSb, DbmsStatementType.SELECT, true, true, null, Integer.toString(valueCount + 1), "1", null, null);
+                if (!filterNulls) {
+                    // We must order by all values and use a limit in such a case
+                    valuesSb.insert(0, "(select * from ");
+                    valuesSb.append(") val_tmp_ order by ");
+                    if (dbmsDialect.isNullSmallest()) {
+                        for (int i = 0; i < attributes.length; i++) {
+                            valuesSb.append(i + 1);
+                            valuesSb.append(',');
+                        }
+                    } else {
+                        for (int i = 0; i < attributes.length; i++) {
+                            dbmsDialect.appendOrderByElement(valuesSb, new DefaultOrderByElement(null, i + 1, true, true, true), null);
+                            valuesSb.append(',');
+                        }
+                    }
+                    valuesSb.setCharAt(valuesSb.length() - 1, ' ');
+                    dbmsDialect.appendExtendedSql(valuesSb, DbmsStatementType.SELECT, false, true, null, Integer.toString(valueCount + 1), "1", null, null);
+                }
                 valuesSb.append(')');
                 valuesAliases = null;
             }
 
-            boolean filterNulls = mainQuery.getQueryConfiguration().isValuesClauseFilterNullsEnabled();
             if (filterNulls) {
                 valuesSb.insert(0, "(select * from ");
                 valuesSb.append(' ');
@@ -2473,7 +2491,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
         // We assume to have to select via a union to apply aliases correctly when the values strategy requires that
         boolean selectUnion = strategy == ValuesStrategy.SELECT_UNION;
-        boolean lateralStyle = mainQuery.dbmsDialect.getLateralStyle() == LateralStyle.LATERAL;
+        boolean lateralStyle = dbmsDialect.getLateralStyle() == LateralStyle.LATERAL;
         for (JoinNode lateInlineNode : joinManager.getLateInlineNodes()) {
             CTEInfo cteInfo = lateInlineNode.getInlineCte();
             String aliases;
@@ -2510,7 +2528,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 }
 
                 String prefix;
-                if (mainQuery.dbmsDialect.getLateralStyle() == LateralStyle.LATERAL) {
+                if (dbmsDialect.getLateralStyle() == LateralStyle.LATERAL) {
                     prefix = "lateral (";
                 } else if (lateInlineNode.getJoinType() == JoinType.INNER) {
                     prefix = "cross apply (";
