@@ -195,6 +195,11 @@ public abstract class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCrite
     }
 
     @Override
+    protected void prepareSelect() {
+        // We have an update statement here which supports parameters in SELECT/SET clause
+    }
+
+    @Override
     protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, boolean embedded, JoinNode lateralJoinNode) {
         sbSelectFrom.append("UPDATE ");
         sbSelectFrom.append(entityType.getName()).append(' ');

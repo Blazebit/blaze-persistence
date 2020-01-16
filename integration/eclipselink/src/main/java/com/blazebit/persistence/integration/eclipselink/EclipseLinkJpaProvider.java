@@ -609,6 +609,11 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean needsUnproxyForFieldAccess() {
+        return false;
+    }
+
+    @Override
     public void setCacheable(Query query) {
         query.setHint("eclipselink.query-results-cache", true);
     }

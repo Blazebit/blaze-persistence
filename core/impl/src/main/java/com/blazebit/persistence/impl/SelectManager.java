@@ -613,36 +613,50 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
     }
 
     public void wrapPlainParameters() {
+        boolean needsCastParameters = queryBuilder.mainQuery.dbmsDialect.needsCastParameters();
         for (int i = 0; i < selectInfos.size(); i++) {
             SelectInfo selectInfo = selectInfos.get(i);
-            Expression expression = selectInfo.getExpression();
+            final Expression expression = selectInfo.getExpression();
             if (expression instanceof ParameterExpression) {
                 String parameterName = ((ParameterExpression) expression).getName();
-                Object parameterValue = parameterManager.getParameterValue(parameterName);
-                if (parameterValue == null) {
-                    throw new IllegalArgumentException("Can't use the parameter with name '" + parameterName + "' as plain SELECT item with a null value!");
+                ParameterManager.ParameterImpl<?> parameter = parameterManager.getParameter(parameterName);
+                Object boundValue = parameter.getValue();
+                Class<?> elementType;
+                if (parameter.getParameterType() == null) {
+                    if (boundValue == null) {
+                        throw new IllegalArgumentException("Can't use the parameter with name '" + parameterName + "' as plain SELECT item with a null value!");
+                    }
+                    ParameterManager.ParameterValue parameterValue = parameter.getParameterValue();
+                    if (parameterValue == null) {
+                        elementType = boundValue.getClass();
+                    } else {
+                        elementType = parameterValue.getValueType();
+                    }
+                } else {
+                    elementType = parameter.getParameterType();
                 }
-                Class<?> elementType = parameterValue.getClass();
-                if (BasicCastTypes.TYPES.contains(elementType)) {
+                if (BasicCastTypes.TYPES.contains(elementType) && needsCastParameters) {
                     // We also need a cast for parameter expressions except in the SET clause
                     List<Expression> arguments = new ArrayList<>(2);
                     arguments.add(expression);
                     arguments.add(new StringLiteral(mainQuery.dbmsDialect.getSqlType(elementType)));
-                    selectInfo.set(new FunctionExpression("CAST_" + elementType.getSimpleName(), arguments, 0));
+                    selectInfo.set(new FunctionExpression("CAST_" + elementType.getSimpleName(), arguments, expression));
                 } else {
                     final EntityMetamodelImpl.AttributeExample attributeExample = mainQuery.metamodel.getBasicTypeExampleAttributes().get(elementType);
                     if (attributeExample == null) {
-                        throw new IllegalArgumentException("Can't use the parameter with name '" + parameterName + "', type '" + elementType.getName() + "' and value '" + parameterValue + "' as plain SELECT item because there is no example attribute with that type in the JPA model providing the SQL type!");
+                        throw new IllegalArgumentException("Can't use the parameter with name '" + parameterName + "', type '" + elementType.getName() + "' and value '" + boundValue + "' as plain SELECT item because there is no example attribute with that type in the JPA model providing the SQL type!");
                     }
                     List<Expression> arguments = new ArrayList<>(2);
                     arguments.add(new SubqueryExpression(new Subquery() {
                         @Override
                         public String getQueryString() {
-                            return attributeExample.getExampleJpql();
+                            return attributeExample.getExampleJpql() + expression;
                         }
                     }));
-                    arguments.add(expression);
-                    selectInfo.set(new FunctionExpression(ParamFunction.FUNCTION_NAME, arguments, 1));
+                    if (needsCastParameters) {
+                        arguments.add(new StringLiteral(attributeExample.getAttribute().getColumnTypes()[0]));
+                    }
+                    selectInfo.set(new FunctionExpression(ParamFunction.FUNCTION_NAME, arguments, expression));
                 }
             }
         }

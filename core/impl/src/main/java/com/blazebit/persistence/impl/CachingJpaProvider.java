@@ -360,6 +360,11 @@ public final class CachingJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean needsUnproxyForFieldAccess() {
+        return jpaProvider.needsUnproxyForFieldAccess();
+    }
+
+    @Override
     public void setCacheable(Query query) {
         jpaProvider.setCacheable(query);
     }

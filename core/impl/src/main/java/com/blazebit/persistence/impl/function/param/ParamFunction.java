@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl.function.param;
 
+import com.blazebit.persistence.impl.util.JpqlFunctionUtil;
 import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.JpqlFunction;
 
@@ -45,7 +46,13 @@ public class ParamFunction implements JpqlFunction {
 
     @Override
     public void render(FunctionRenderContext functionRenderContext) {
-        functionRenderContext.addArgument(1);
+        if (functionRenderContext.getArgumentsSize() == 2) {
+            functionRenderContext.addChunk("cast(? as ");
+            functionRenderContext.addChunk(JpqlFunctionUtil.unquote(functionRenderContext.getArgument(1)));
+            functionRenderContext.addChunk(")");
+        } else {
+            functionRenderContext.addChunk("?");
+        }
     }
 
 }

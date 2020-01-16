@@ -548,8 +548,8 @@ public class SimpleQueryGenerator implements Expression.Visitor {
 
     @Override
     public void visit(FunctionExpression expression) {
-        if (expression.getRealArgument() != -1) {
-            expression.getExpressions().get(expression.getRealArgument()).accept(this);
+        if (expression.getRealArgument() != null) {
+            expression.getRealArgument().accept(this);
             return;
         }
         BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = setBooleanLiteralRenderingContext(BooleanLiteralRenderingContext.PLAIN);

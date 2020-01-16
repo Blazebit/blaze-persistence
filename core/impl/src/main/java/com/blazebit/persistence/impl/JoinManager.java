@@ -27,6 +27,7 @@ import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedList
 import com.blazebit.persistence.impl.function.entity.ValuesEntity;
 import com.blazebit.persistence.impl.function.nullfn.NullfnFunction;
 import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
+import com.blazebit.persistence.impl.util.CompositeAttributeAccessor;
 import com.blazebit.persistence.impl.util.Keywords;
 import com.blazebit.persistence.parser.ListIndexAttribute;
 import com.blazebit.persistence.parser.MapEntryAttribute;
@@ -60,12 +61,12 @@ import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.parser.predicate.PredicateBuilder;
 import com.blazebit.persistence.parser.util.ExpressionUtils;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
+import com.blazebit.persistence.spi.AttributeAccessor;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.spi.JpaMetamodelAccessor;
 import com.blazebit.persistence.spi.JpaProvider;
-import com.blazebit.reflection.PropertyPathExpression;
 
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.BasicType;
@@ -442,20 +443,20 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
         String[][] parameterNames = new String[valueCount][attributePaths.size()];
         String[] attributes = new String[attributePaths.size()];
-        PropertyPathExpression<Object, Object>[] pathExpressions = new PropertyPathExpression[attributePaths.size()];
+        AttributeAccessor<Object, Object>[] pathExpressions = new AttributeAccessor[attributePaths.size()];
 
         for (int i = 0; i < attributePaths.size(); i++) {
             String attributeName = attributePaths.get(i);
             String parameterPart = attributeName.replace('.', '_');
             attributes[i] = attributeName;
             if (simpleValueAttributePrefix.isEmpty()) {
-                pathExpressions[i] = (PropertyPathExpression<Object, Object>) com.blazebit.reflection.ExpressionUtils.getExpression(valueClass, attributeName);
+                pathExpressions[i] = CompositeAttributeAccessor.of(mainQuery.metamodel.getManagedType(ExtendedManagedType.class, valueClass), attributeName);
                 for (int j = 0; j < valueCount; j++) {
                     parameterNames[j][i] = rootAlias + '_' + parameterPart + '_' + j;
                 }
             } else {
                 if (attributeName.startsWith(simpleValueAttributePrefix)) {
-                    pathExpressions[i] = (PropertyPathExpression<Object, Object>) com.blazebit.reflection.ExpressionUtils.getExpression(valueClass, attributeName.substring(simpleValueAttributePrefix.length()));
+                    pathExpressions[i] = CompositeAttributeAccessor.of(mainQuery.metamodel.getManagedType(ExtendedManagedType.class, valueClass), attributeName.substring(simpleValueAttributePrefix.length()));
                     for (int j = 0; j < valueCount; j++) {
                         parameterNames[j][i] = rootAlias + '_' + parameterPart + '_' + j;
                     }
@@ -468,7 +469,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                         parameterNames[j][i] = rootAlias + '_' + parameterPart + '_' + j;
                     }
                 } else {
-                    pathExpressions[i] = (PropertyPathExpression<Object, Object>) com.blazebit.reflection.ExpressionUtils.getExpression(valueClass, attributeName);
+                    pathExpressions[i] = CompositeAttributeAccessor.of(mainQuery.metamodel.getManagedType(ExtendedManagedType.class, valueClass), attributeName);
                     for (int j = 0; j < valueCount; j++) {
                         parameterNames[j][i] = rootAlias + '_' + parameterPart + '_' + j;
                     }

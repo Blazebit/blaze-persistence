@@ -265,6 +265,11 @@ public class HibernateJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean needsUnproxyForFieldAccess() {
+        return true;
+    }
+
+    @Override
     public boolean supportsJpa21() {
         return false;
     }

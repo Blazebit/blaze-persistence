@@ -156,8 +156,8 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
     @Override
     public void visit(FunctionExpression expression) {
-        if (externalRepresentation && expression.getRealArgument() != -1) {
-            expression.getExpressions().get(expression.getRealArgument()).accept(this);
+        if (externalRepresentation && expression.getRealArgument() != null) {
+            expression.getRealArgument().accept(this);
             return;
         }
         // A type constraint of a treat expression from within an aggregate may not "escape" the aggregate

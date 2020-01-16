@@ -42,6 +42,14 @@ public interface ExtendedAttribute<X, Y> {
     public Attribute<X, ?> getAttribute();
 
     /**
+     * The attribute accessor for this attribute.
+     *
+     * @return The attribute accessor
+     * @since 1.4.1
+     */
+    public AttributeAccessor<X, Y> getAccessor();
+
+    /**
      * Returns the path from the owning entity type to this attribute.
      *
      * @return The path to the attribute
