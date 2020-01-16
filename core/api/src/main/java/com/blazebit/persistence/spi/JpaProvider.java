@@ -550,6 +550,14 @@ public interface JpaProvider {
     public boolean needsElementCollectionIdCutoff();
 
     /**
+     * Indicates whether the provider requires an unproxied entity for field access to work.
+     *
+     * @return true if needed, else false
+     * @since 1.4.1
+     */
+    public boolean needsUnproxyForFieldAccess();
+
+    /**
      * Enables query result caching for the given query.
      *
      * @param query Enables query result caching for the query

@@ -18,7 +18,7 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ParameterExpression;
-import com.blazebit.reflection.PropertyPathExpression;
+import com.blazebit.persistence.spi.AttributeAccessor;
 
 import javax.persistence.Parameter;
 import javax.persistence.Query;
@@ -403,7 +403,7 @@ public class ParameterManager {
         }
     }
 
-    public void registerValuesParameter(String parameterName, Class<?> type, String[][] parameterNames, PropertyPathExpression<Object, Object>[] pathExpressions, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {
+    public void registerValuesParameter(String parameterName, Class<?> type, String[][] parameterNames, AttributeAccessor<Object, Object>[] pathExpressions, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {
         if (parameterName == null) {
             throw new NullPointerException("parameterName");
         }
@@ -803,7 +803,7 @@ public class ParameterManager {
         private final ValuesParameterBinder binder;
         private Collection<Object> value;
 
-        public ValuesParameterWrapper(Class<?> type, String[][] parameterNames, PropertyPathExpression<Object, Object>[] pathExpressions) {
+        public ValuesParameterWrapper(Class<?> type, String[][] parameterNames, AttributeAccessor<Object, Object>[] pathExpressions) {
             this.type = type;
             this.binder = new ValuesParameterBinder(parameterNames, pathExpressions);
         }

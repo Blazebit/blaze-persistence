@@ -29,7 +29,7 @@ public class FunctionExpression extends AbstractExpression {
 
     protected final String functionName;
     protected final WindowDefinition windowDefinition;
-    protected final int realArgument;
+    protected final Expression realArgument;
     protected List<Expression> expressions;
     protected WindowDefinition resolvedWindowDefinition;
 
@@ -37,12 +37,12 @@ public class FunctionExpression extends AbstractExpression {
     public FunctionExpression(String functionName, List<? extends Expression> expressions) {
         this.functionName = functionName;
         this.expressions = (List<Expression>) expressions;
-        this.realArgument = -1;
+        this.realArgument = null;
         this.windowDefinition = null;
     }
 
     @SuppressWarnings("unchecked")
-    public FunctionExpression(String functionName, List<? extends Expression> expressions, int realArgument) {
+    public FunctionExpression(String functionName, List<? extends Expression> expressions, Expression realArgument) {
         this.functionName = functionName;
         this.expressions = (List<Expression>) expressions;
         this.realArgument = realArgument;
@@ -53,7 +53,15 @@ public class FunctionExpression extends AbstractExpression {
     public FunctionExpression(String functionName, List<? extends Expression> expressions, WindowDefinition windowDefinition) {
         this.functionName = functionName;
         this.expressions = (List<Expression>) expressions;
-        this.realArgument = -1;
+        this.realArgument = null;
+        this.windowDefinition = windowDefinition;
+    }
+
+    @SuppressWarnings("unchecked")
+    private FunctionExpression(String functionName, List<? extends Expression> expressions, Expression realArgument, WindowDefinition windowDefinition) {
+        this.functionName = functionName;
+        this.expressions = (List<Expression>) expressions;
+        this.realArgument = realArgument;
         this.windowDefinition = windowDefinition;
     }
 
@@ -66,7 +74,7 @@ public class FunctionExpression extends AbstractExpression {
             newExpressions.add(expressions.get(i).clone(resolved));
         }
 
-        return new FunctionExpression(functionName, newExpressions, windowDefinition == null ? null : windowDefinition.clone(resolved));
+        return new FunctionExpression(functionName, newExpressions, realArgument == null ? null : realArgument.clone(resolved), windowDefinition == null ? null : windowDefinition.clone(resolved));
     }
 
     @Override
@@ -83,7 +91,7 @@ public class FunctionExpression extends AbstractExpression {
         return functionName;
     }
 
-    public int getRealArgument() {
+    public Expression getRealArgument() {
         return realArgument;
     }
 

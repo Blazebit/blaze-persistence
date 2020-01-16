@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.impl;
 
-import com.blazebit.reflection.PropertyPathExpression;
+import com.blazebit.persistence.spi.AttributeAccessor;
 
 import javax.persistence.Query;
 import java.util.Collection;
@@ -30,9 +30,9 @@ import java.util.Iterator;
 public class ValuesParameterBinder {
 
     private final String[][] parameterNames;
-    private final PropertyPathExpression<Object, Object>[] pathExpressions;
+    private final AttributeAccessor<Object, Object>[] pathExpressions;
 
-    public ValuesParameterBinder(String[][] parameterNames, PropertyPathExpression<Object, Object>[] pathExpressions) {
+    public ValuesParameterBinder(String[][] parameterNames, AttributeAccessor<Object, Object>[] pathExpressions) {
         this.parameterNames = parameterNames;
         this.pathExpressions = pathExpressions;
     }
@@ -46,7 +46,7 @@ public class ValuesParameterBinder {
                     if (pathExpressions[j] == null) {
                         query.setParameter(parameterNames[i][j], element);
                     } else {
-                        query.setParameter(parameterNames[i][j], pathExpressions[j].getNullSafeValue(element));
+                        query.setParameter(parameterNames[i][j], pathExpressions[j].getNullSafe(element));
                     }
                 }
             } else {
@@ -61,7 +61,7 @@ public class ValuesParameterBinder {
         return parameterNames;
     }
 
-    public PropertyPathExpression<Object, Object>[] getPathExpressions() {
+    public AttributeAccessor<Object, Object>[] getPathExpressions() {
         return pathExpressions;
     }
 

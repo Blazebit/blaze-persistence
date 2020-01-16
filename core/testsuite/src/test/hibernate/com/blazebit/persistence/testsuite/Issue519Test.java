@@ -98,11 +98,11 @@ public class Issue519Test extends AbstractCoreTest {
         private Long b;
 
         @Id
-        public Long getaId() {
+        public Long getAId() {
             return aId;
         }
 
-        public void setaId(Long aId) {
+        public void setAId(Long aId) {
             this.aId = aId;
         }
 

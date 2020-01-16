@@ -369,6 +369,11 @@ public class OpenJPAJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean needsUnproxyForFieldAccess() {
+        return false;
+    }
+
+    @Override
     public void setCacheable(Query query) {
         if (query instanceof OpenJPAQuery) {
             ((OpenJPAQuery) query).getFetchPlan().setQueryResultCacheEnabled(true);

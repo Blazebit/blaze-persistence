@@ -31,6 +31,7 @@ import com.blazebit.persistence.parser.expression.StringLiteral;
 import com.blazebit.persistence.parser.expression.Subquery;
 import com.blazebit.persistence.parser.expression.SubqueryExpression;
 import com.blazebit.persistence.parser.expression.TreatExpression;
+import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.spi.JoinTable;
@@ -78,6 +79,7 @@ public final class JpaUtils {
         JpaProvider jpaProvider = queryBuilder.mainQuery.jpaProvider;
         EntityMetamodelImpl metamodel = queryBuilder.mainQuery.metamodel;
         boolean requiresNullCast = queryBuilder.mainQuery.dbmsDialect.requiresNullCast();
+        boolean needsCastParameters = queryBuilder.mainQuery.dbmsDialect.needsCastParameters();
         JpaMetamodelAccessor jpaMetamodelAccessor = jpaProvider.getJpaMetamodelAccessor();
 
         boolean needsElementCollectionIdCutoff = jpaProvider.needsElementCollectionIdCutoff();
@@ -127,7 +129,7 @@ public final class JpaUtils {
             }
 
             SelectInfo selectInfo = selectManager.getSelectInfos().get(tupleIndex);
-            Expression selectExpression = selectInfo.getExpression();
+            final Expression selectExpression = selectInfo.getExpression();
             if (splitExpression) {
                 // We have to map *-to-one relationships to their id or unique props
                 // NOTE: Since we are talking about *-to-ones, the expression can only be a path to an object
@@ -249,25 +251,27 @@ public final class JpaUtils {
                 List<Expression> arguments = new ArrayList<>(2);
                 arguments.add(selectExpression);
                 arguments.add(new StringLiteral(columnType));
-                selectInfo.set(new FunctionExpression("CAST_" + elementType.getSimpleName(), arguments, 0));
+                selectInfo.set(new FunctionExpression("CAST_" + elementType.getSimpleName(), arguments, selectExpression));
             } else if (selectExpression instanceof ParameterExpression && clause != ClauseType.SET) {
-                if (BasicCastTypes.TYPES.contains(elementType)) {
+                if (BasicCastTypes.TYPES.contains(elementType) && queryBuilder.statementType != DbmsStatementType.INSERT) {
                     // We also need a cast for parameter expressions except in the SET clause
                     List<Expression> arguments = new ArrayList<>(2);
                     arguments.add(selectExpression);
                     arguments.add(new StringLiteral(columnType));
-                    selectInfo.set(new FunctionExpression("CAST_" + elementType.getSimpleName(), arguments, 0));
+                    selectInfo.set(new FunctionExpression("CAST_" + elementType.getSimpleName(), arguments, selectExpression));
                 } else {
                     final EntityMetamodelImpl.AttributeExample attributeExample = metamodel.getBasicTypeExampleAttributes().get(elementType);
                     List<Expression> arguments = new ArrayList<>(2);
                     arguments.add(new SubqueryExpression(new Subquery() {
                         @Override
                         public String getQueryString() {
-                            return attributeExample.getExampleJpql();
+                            return attributeExample.getExampleJpql() + selectExpression;
                         }
                     }));
-                    arguments.add(selectExpression);
-                    selectInfo.set(new FunctionExpression(ParamFunction.FUNCTION_NAME, arguments, 1));
+                    if (queryBuilder.statementType != DbmsStatementType.INSERT && needsCastParameters) {
+                        arguments.add(new StringLiteral(attributeExample.getAttribute().getColumnTypes()[0]));
+                    }
+                    selectInfo.set(new FunctionExpression(ParamFunction.FUNCTION_NAME, arguments, selectExpression));
                 }
             }
         }
