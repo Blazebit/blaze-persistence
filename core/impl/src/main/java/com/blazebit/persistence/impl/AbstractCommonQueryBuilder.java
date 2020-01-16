@@ -3029,6 +3029,10 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         });
     }
 
+    protected void prepareSelect() {
+        selectManager.wrapPlainParameters();
+    }
+
     protected void prepareAndCheck() {
         if (checkSetBuilderEnded) {
             verifySetBuilderEnded();
@@ -3039,6 +3043,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
         verifyBuilderEnded();
         prepareAndCheckCtes();
+        prepareSelect();
         // resolve unresolved aliases, object model etc.
         // we must do implicit joining at the end because we can only do
         // the aliases resolving at the end and alias resolving must happen before

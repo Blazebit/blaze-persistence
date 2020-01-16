@@ -487,6 +487,14 @@ When a second argument is given, renders `case when not exists <subquery> then 1
 
 WARNING: This is an internal function that is used to implement inlining of CTEs or subqueries in the FROM clause for correlated subqueries in an `EXISTS` predicate.
 
+==== PARAM function
+
+Syntax: `PARAM ( subquery, parameter )`
+
+Uses the first argument just to fake the type and renders only the second argument.
+
+WARNING: This is an internal function that is used to implement support for parameters in the `SELECT` clause.
+
 === Custom JPQL functions
 
 Apart from providing many useful functions out of the box, {projectname} also allows to implement custom JPQL functions that can be called just like any other non-standard function,

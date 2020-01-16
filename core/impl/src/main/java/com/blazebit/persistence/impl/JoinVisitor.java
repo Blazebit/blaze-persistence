@@ -289,8 +289,9 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor, Jo
     // Added eager initialization of subqueries
     @Override
     public void visit(SubqueryExpression expression) {
-        // TODO: this is ugly, think of a better way to do this
-        ((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) expression.getSubquery()).applyImplicitJoins(this);
+        if (expression.getSubquery() instanceof AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) {
+            ((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) expression.getSubquery()).applyImplicitJoins(this);
+        }
     }
 
     public boolean isJoinWithObjectLeafAllowed() {

@@ -34,6 +34,7 @@ import com.blazebit.persistence.impl.builder.object.ClassObjectBuilder;
 import com.blazebit.persistence.impl.builder.object.ConstructorObjectBuilder;
 import com.blazebit.persistence.impl.builder.object.SelectObjectBuilderImpl;
 import com.blazebit.persistence.impl.builder.object.TupleObjectBuilder;
+import com.blazebit.persistence.impl.function.param.ParamFunction;
 import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.SimpleQueryGenerator;
@@ -41,11 +42,15 @@ import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.Expression.ResultVisitor;
 import com.blazebit.persistence.parser.expression.Expression.Visitor;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.expression.FunctionExpression;
 import com.blazebit.persistence.parser.expression.MapKeyExpression;
 import com.blazebit.persistence.parser.expression.MapValueExpression;
+import com.blazebit.persistence.parser.expression.ParameterExpression;
 import com.blazebit.persistence.parser.expression.PathElementExpression;
 import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.expression.PropertyExpression;
+import com.blazebit.persistence.parser.expression.StringLiteral;
+import com.blazebit.persistence.parser.expression.Subquery;
 import com.blazebit.persistence.parser.expression.SubqueryExpression;
 import com.blazebit.persistence.spi.JpaProvider;
 
@@ -605,6 +610,42 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         }
 
         return null;
+    }
+
+    public void wrapPlainParameters() {
+        for (int i = 0; i < selectInfos.size(); i++) {
+            SelectInfo selectInfo = selectInfos.get(i);
+            Expression expression = selectInfo.getExpression();
+            if (expression instanceof ParameterExpression) {
+                String parameterName = ((ParameterExpression) expression).getName();
+                Object parameterValue = parameterManager.getParameterValue(parameterName);
+                if (parameterValue == null) {
+                    throw new IllegalArgumentException("Can't use the parameter with name '" + parameterName + "' as plain SELECT item with a null value!");
+                }
+                Class<?> elementType = parameterValue.getClass();
+                if (BasicCastTypes.TYPES.contains(elementType)) {
+                    // We also need a cast for parameter expressions except in the SET clause
+                    List<Expression> arguments = new ArrayList<>(2);
+                    arguments.add(expression);
+                    arguments.add(new StringLiteral(mainQuery.dbmsDialect.getSqlType(elementType)));
+                    selectInfo.set(new FunctionExpression("CAST_" + elementType.getSimpleName(), arguments, 0));
+                } else {
+                    final EntityMetamodelImpl.AttributeExample attributeExample = mainQuery.metamodel.getBasicTypeExampleAttributes().get(elementType);
+                    if (attributeExample == null) {
+                        throw new IllegalArgumentException("Can't use the parameter with name '" + parameterName + "', type '" + elementType.getName() + "' and value '" + parameterValue + "' as plain SELECT item because there is no example attribute with that type in the JPA model providing the SQL type!");
+                    }
+                    List<Expression> arguments = new ArrayList<>(2);
+                    arguments.add(new SubqueryExpression(new Subquery() {
+                        @Override
+                        public String getQueryString() {
+                            return attributeExample.getExampleJpql();
+                        }
+                    }));
+                    arguments.add(expression);
+                    selectInfo.set(new FunctionExpression(ParamFunction.FUNCTION_NAME, arguments, 1));
+                }
+            }
+        }
     }
 
     /**

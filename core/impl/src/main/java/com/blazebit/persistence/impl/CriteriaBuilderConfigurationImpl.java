@@ -234,6 +234,7 @@ import com.blazebit.persistence.impl.function.exist.ExistFunction;
 import com.blazebit.persistence.impl.function.oragg.FallbackOrAggFunction;
 import com.blazebit.persistence.impl.function.oragg.OrAggFunction;
 import com.blazebit.persistence.impl.function.nullfn.NullfnFunction;
+import com.blazebit.persistence.impl.function.param.ParamFunction;
 import com.blazebit.persistence.impl.function.rowvalue.DB2RowValueSubqueryComparisonFunction;
 import com.blazebit.persistence.impl.function.rowvalue.RowValueSubqueryComparisonFunction;
 import com.blazebit.persistence.impl.function.subquery.SubqueryFunction;
@@ -541,6 +542,12 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add(null, new NullfnFunction());
         registerFunction(jpqlFunctionGroup);
 
+        // param
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(ParamFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup.add(null, new ParamFunction());
+        registerFunction(jpqlFunctionGroup);
+
         // exist
 
         jpqlFunctionGroup = new JpqlFunctionGroup(ExistFunction.FUNCTION_NAME, false);
@@ -631,24 +638,9 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         registerFunction(new JpqlFunctionGroup("cast_calendar"));
 
         for (Map.Entry<String, DbmsDialect> dbmsDialectEntry : dbmsDialects.entrySet()) {
-            functions.get("cast_boolean").add(dbmsDialectEntry.getKey(), new CastFunction(Boolean.class, dbmsDialectEntry.getValue()));
-            functions.get("cast_byte").add(dbmsDialectEntry.getKey(), new CastFunction(Byte.class, dbmsDialectEntry.getValue()));
-            functions.get("cast_short").add(dbmsDialectEntry.getKey(), new CastFunction(Short.class, dbmsDialectEntry.getValue()));
-            functions.get("cast_integer").add(dbmsDialectEntry.getKey(), new CastFunction(Integer.class, dbmsDialectEntry.getValue()));
-            functions.get("cast_long").add(dbmsDialectEntry.getKey(), new CastFunction(Long.class, dbmsDialectEntry.getValue()));
-            functions.get("cast_float").add(dbmsDialectEntry.getKey(), new CastFunction(Float.class, dbmsDialectEntry.getValue()));
-            functions.get("cast_double").add(dbmsDialectEntry.getKey(), new CastFunction(Double.class, dbmsDialectEntry.getValue()));
-
-            functions.get("cast_character").add(dbmsDialectEntry.getKey(), new CastFunction(Character.class, dbmsDialectEntry.getValue()));
-            functions.get("cast_string").add(dbmsDialectEntry.getKey(), new CastFunction(String.class, dbmsDialectEntry.getValue()));
-
-            functions.get("cast_biginteger").add(dbmsDialectEntry.getKey(), new CastFunction(BigInteger.class, dbmsDialectEntry.getValue()));
-            functions.get("cast_bigdecimal").add(dbmsDialectEntry.getKey(), new CastFunction(BigDecimal.class, dbmsDialectEntry.getValue()));
-
-            functions.get("cast_time").add(dbmsDialectEntry.getKey(), new CastFunction(Time.class, dbmsDialectEntry.getValue()));
-            functions.get("cast_date").add(dbmsDialectEntry.getKey(), new CastFunction(java.sql.Date.class, dbmsDialectEntry.getValue()));
-            functions.get("cast_timestamp").add(dbmsDialectEntry.getKey(), new CastFunction(Timestamp.class, dbmsDialectEntry.getValue()));
-            functions.get("cast_calendar").add(dbmsDialectEntry.getKey(), new CastFunction(Calendar.class, dbmsDialectEntry.getValue()));
+            for (Class<?> type : BasicCastTypes.TYPES) {
+                functions.get("cast_" + type.getSimpleName().toLowerCase()).add(dbmsDialectEntry.getKey(), new CastFunction(type, dbmsDialectEntry.getValue()));
+            }
         }
 
         // group_concat

@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.impl.function.param.ParamFunction;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.PathTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.parser.expression.ArrayExpression;
@@ -27,6 +28,8 @@ import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.expression.PropertyExpression;
 import com.blazebit.persistence.parser.expression.QualifiedExpression;
 import com.blazebit.persistence.parser.expression.StringLiteral;
+import com.blazebit.persistence.parser.expression.Subquery;
+import com.blazebit.persistence.parser.expression.SubqueryExpression;
 import com.blazebit.persistence.parser.expression.TreatExpression;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
@@ -36,7 +39,9 @@ import com.blazebit.persistence.spi.JpaProvider;
 
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.ListAttribute;
 import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.Type;
 import java.util.ArrayDeque;
@@ -66,12 +71,12 @@ public final class JpaUtils {
         return attribute instanceof PluralAttribute<?, ?, ?> && ((PluralAttribute<?, ?, ?>) attribute).getElementType().getPersistenceType() == Type.PersistenceType.BASIC;
     }
 
-    public static void expandBindings(EntityType<?> bindType, Map<String, Integer> bindingMap, Map<String, String> columnBindingMap, Map<String, ExtendedAttribute<?, ?>> attributeEntries, ClauseType clause, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {
+    public static void expandBindings(Map<String, Integer> bindingMap, Map<String, String> columnBindingMap, Map<String, ExtendedAttribute<?, ?>> attributeEntries, ClauseType clause, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder, String keyFunctionExpression) {
         SelectManager<?> selectManager = queryBuilder.selectManager;
         JoinManager joinManager = queryBuilder.joinManager;
         ParameterManager parameterManager = queryBuilder.parameterManager;
         JpaProvider jpaProvider = queryBuilder.mainQuery.jpaProvider;
-        EntityMetamodel metamodel = queryBuilder.mainQuery.metamodel;
+        EntityMetamodelImpl metamodel = queryBuilder.mainQuery.metamodel;
         boolean requiresNullCast = queryBuilder.mainQuery.dbmsDialect.requiresNullCast();
         JpaMetamodelAccessor jpaMetamodelAccessor = jpaProvider.getJpaMetamodelAccessor();
 
@@ -80,12 +85,32 @@ public final class JpaUtils {
         while (!attributeQueue.isEmpty()) {
             final String attributeName = attributeQueue.remove();
             Integer tupleIndex = bindingMap.get(attributeName);
-
-            final ExtendedAttribute<?, ?> attributeEntry = attributeEntries.get(attributeName);
-            if (attributeEntry != null) {
+            Class<?> elementType;
+            String columnType;
+            boolean splitExpression;
+            ExtendedAttribute<?, ?> attributeEntry = attributeEntries.get(attributeName);
+            if (attributeEntry == null) {
+                if (!attributeName.equalsIgnoreCase(keyFunctionExpression)) {
+                    continue;
+                }
+                String realAttributeName = attributeName.substring(attributeName.indexOf('(') + 1, attributeName.length() - 1);
+                attributeEntry = attributeEntries.get(realAttributeName);
+                if (attributeEntry.getAttribute() instanceof ListAttribute<?, ?>) {
+                    elementType = Integer.class;
+                    columnType = queryBuilder.mainQuery.dbmsDialect.getSqlType(Integer.class);
+                } else {
+                    MapAttribute<?, ?, ?> mapAttribute = (MapAttribute<?, ?, ?>) attributeEntry.getAttribute();
+                    elementType = mapAttribute.getKeyJavaType();
+                    columnType = attributeEntry.getJoinTable() != null && attributeEntry.getJoinTable().getKeyColumnTypes() != null && attributeEntry.getJoinTable().getKeyColumnTypes().size() == 1 ?
+                            attributeEntry.getJoinTable().getKeyColumnTypes().values().iterator().next() : null;
+                }
+                splitExpression = false;
+            } else {
+                elementType = attributeEntry.getElementClass();
+                columnType = attributeEntry.getColumnTypes().length == 0 ? null : attributeEntry.getColumnTypes()[0];
                 final List<Attribute<?, ?>> attributePath = attributeEntry.getAttributePath();
                 final Attribute<?, ?> lastAttribute = attributePath.get(attributePath.size() - 1);
-                boolean splitExpression = lastAttribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED;
+                splitExpression = lastAttribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED;
 
                 if (!splitExpression && jpaMetamodelAccessor.isJoinable(lastAttribute) && !isBasicElementType(lastAttribute)) {
                     splitExpression = true;
@@ -99,132 +124,150 @@ public final class JpaUtils {
                         }
                     }
                 }
+            }
 
-                SelectInfo selectInfo = selectManager.getSelectInfos().get(tupleIndex);
-                Expression selectExpression = selectInfo.getExpression();
-                if (splitExpression) {
-                    // We have to map *-to-one relationships to their id or unique props
-                    // NOTE: Since we are talking about *-to-ones, the expression can only be a path to an object
-                    // so it is safe to just append the id to the path
+            SelectInfo selectInfo = selectManager.getSelectInfos().get(tupleIndex);
+            Expression selectExpression = selectInfo.getExpression();
+            if (splitExpression) {
+                // We have to map *-to-one relationships to their id or unique props
+                // NOTE: Since we are talking about *-to-ones, the expression can only be a path to an object
+                // so it is safe to just append the id to the path
 
-                    // TODO: Maybe also allow Treat, Case-When, Array?
-                    if (selectExpression instanceof NullExpression) {
-                        // When binding null, we don't have to adapt anything
-                    } else if (selectExpression instanceof PathExpression) {
-                        boolean firstBinding = true;
-                        final Collection<String> embeddedPropertyNames = getEmbeddedPropertyPaths(attributeEntries, attributeName, needsElementCollectionIdCutoff, false);
+                // TODO: Maybe also allow Treat, Case-When, Array?
+                if (selectExpression instanceof NullExpression) {
+                    // When binding null, we don't have to adapt anything
+                } else if (selectExpression instanceof PathExpression) {
+                    boolean firstBinding = true;
+                    final Collection<String> embeddedPropertyNames = getEmbeddedPropertyPaths(attributeEntries, attributeName, needsElementCollectionIdCutoff, false);
 
-                        PathExpression baseExpression = embeddedPropertyNames.size() > 1 ?
-                                ((PathExpression) selectExpression).clone(false) : ((PathExpression) selectExpression);
+                    PathExpression baseExpression = embeddedPropertyNames.size() > 1 ?
+                            ((PathExpression) selectExpression).clone(false) : ((PathExpression) selectExpression);
 
-                        joinManager.implicitJoin(baseExpression, true, true, null, ClauseType.SELECT, new HashSet<String>(), false, false, false, false);
+                    joinManager.implicitJoin(baseExpression, true, true, null, ClauseType.SELECT, new HashSet<String>(), false, false, false, false);
 
-                        if (attributeEntry.getElementClass() != baseExpression.getPathReference().getType().getJavaType()) {
-                            throw new IllegalStateException("An association should be bound to its association type and not its identifier type");
-                        }
-
-                        if (embeddedPropertyNames.size() > 0) {
-                            bindingMap.remove(attributeName);
-                            // We are going to insert the expanded attributes as new select items and shift existing ones
-                            int delta = embeddedPropertyNames.size() - 1;
-                            if (delta > 0) {
-                                for (Map.Entry<String, Integer> entry : bindingMap.entrySet()) {
-                                    if (entry.getValue() > tupleIndex) {
-                                        entry.setValue(entry.getValue() + delta);
-                                    }
-                                }
-                            }
-
-                            int offset = 0;
-                            for (String embeddedPropertyName : embeddedPropertyNames) {
-                                PathExpression pathExpression = firstBinding ?
-                                        ((PathExpression) selectExpression) : baseExpression.clone(false);
-
-                                for (String propertyNamePart : embeddedPropertyName.split("\\.")) {
-                                    pathExpression.getExpressions().add(new PropertyExpression(propertyNamePart));
-                                }
-
-                                String nestedAttributePath = attributeName + "." + embeddedPropertyName;
-                                ExtendedAttribute<?, ?> nestedAttributeEntry = attributeEntries.get(nestedAttributePath);
-
-                                // Process the nested attribute path recursively
-                                attributeQueue.add(nestedAttributePath);
-
-                                // Replace this binding in the binding map, additional selects need an updated index
-                                bindingMap.put(nestedAttributePath, firstBinding ? tupleIndex : tupleIndex + offset);
-
-                                if (!firstBinding) {
-                                    selectManager.select(pathExpression, null, tupleIndex + offset);
-                                } else {
-                                    firstBinding = false;
-                                }
-
-                                for (String column : nestedAttributeEntry.getColumnNames()) {
-                                    columnBindingMap.put(column, nestedAttributePath);
-                                }
-                                offset++;
-                            }
-                        }
-                    } else if (selectExpression instanceof ParameterExpression) {
-                        final Collection<String> embeddedPropertyNames = getEmbeddedPropertyPaths(attributeEntries, attributeName, jpaProvider.needsElementCollectionIdCutoff(), false);
-
-                        if (embeddedPropertyNames.size() > 0) {
-                            ParameterExpression parameterExpression = (ParameterExpression) selectExpression;
-                            String parameterName = parameterExpression.getName();
-                            Map<String, List<String>> parameterAccessPaths = new HashMap<>(embeddedPropertyNames.size());
-                            ParameterValueTransformer tranformer = parameterManager.getParameter(parameterName).getTranformer();
-                            if (tranformer instanceof SplittingParameterTransformer) {
-                                for (String name : ((SplittingParameterTransformer) tranformer).getParameterNames()) {
-                                    parameterManager.unregisterParameterName(name, clause, queryBuilder);
-                                }
-                            }
-
-                            selectManager.getSelectInfos().remove(tupleIndex.intValue());
-                            bindingMap.remove(attributeName);
-                            // We are going to insert the expanded attributes as new select items and shift existing ones
-                            int delta = embeddedPropertyNames.size() - 1;
-                            if (delta > 0) {
-                                for (Map.Entry<String, Integer> entry : bindingMap.entrySet()) {
-                                    if (entry.getValue() > tupleIndex) {
-                                        entry.setValue(entry.getValue() + delta);
-                                    }
-                                }
-                            }
-
-                            int offset = 0;
-                            for (String embeddedPropertyName : embeddedPropertyNames) {
-                                String subParamName = "_" + parameterName + "_" + embeddedPropertyName.replace('.', '_');
-                                parameterManager.registerParameterName(subParamName, false, clause, queryBuilder);
-                                parameterAccessPaths.put(subParamName, Arrays.asList(embeddedPropertyName.split("\\.")));
-
-                                String nestedAttributePath = attributeName + "." + embeddedPropertyName;
-                                ExtendedAttribute<?, ?> nestedAttributeEntry = attributeEntries.get(nestedAttributePath);
-
-                                // Process the nested attribute path recursively
-                                attributeQueue.add(nestedAttributePath);
-
-                                // Replace this binding in the binding map, additional selects need an updated index
-                                bindingMap.put(nestedAttributePath, tupleIndex + offset);
-                                selectManager.select(new ParameterExpression(subParamName), null, tupleIndex + offset);
-
-                                for (String column : nestedAttributeEntry.getColumnNames()) {
-                                    columnBindingMap.put(column, nestedAttributePath);
-                                }
-                                offset++;
-                            }
-
-                            parameterManager.getParameter(parameterName).setTranformer(new SplittingParameterTransformer(parameterManager, metamodel, attributeEntry.getElementClass(), parameterAccessPaths));
-                        }
-                    } else {
-                        throw new IllegalArgumentException("Illegal expression '" + selectExpression.toString() + "' for binding relation '" + attributeName + "'!");
+                    if (elementType != baseExpression.getPathReference().getType().getJavaType()) {
+                        throw new IllegalStateException("An association should be bound to its association type and not its identifier type");
                     }
-                } else if (requiresNullCast && selectExpression instanceof NullExpression || selectExpression instanceof ParameterExpression && clause != ClauseType.SET) {
-                    // We must add a cast for null expressions, otherwise DBMS might assume some text type
+
+                    if (embeddedPropertyNames.size() > 0) {
+                        bindingMap.remove(attributeName);
+                        // We are going to insert the expanded attributes as new select items and shift existing ones
+                        int delta = embeddedPropertyNames.size() - 1;
+                        if (delta > 0) {
+                            for (Map.Entry<String, Integer> entry : bindingMap.entrySet()) {
+                                if (entry.getValue() > tupleIndex) {
+                                    entry.setValue(entry.getValue() + delta);
+                                }
+                            }
+                        }
+
+                        int offset = 0;
+                        for (String embeddedPropertyName : embeddedPropertyNames) {
+                            PathExpression pathExpression = firstBinding ?
+                                    ((PathExpression) selectExpression) : baseExpression.clone(false);
+
+                            for (String propertyNamePart : embeddedPropertyName.split("\\.")) {
+                                pathExpression.getExpressions().add(new PropertyExpression(propertyNamePart));
+                            }
+
+                            String nestedAttributePath = attributeName + "." + embeddedPropertyName;
+                            ExtendedAttribute<?, ?> nestedAttributeEntry = attributeEntries.get(nestedAttributePath);
+
+                            // Process the nested attribute path recursively
+                            attributeQueue.add(nestedAttributePath);
+
+                            // Replace this binding in the binding map, additional selects need an updated index
+                            bindingMap.put(nestedAttributePath, firstBinding ? tupleIndex : tupleIndex + offset);
+
+                            if (!firstBinding) {
+                                selectManager.select(pathExpression, null, tupleIndex + offset);
+                            } else {
+                                firstBinding = false;
+                            }
+
+                            for (String column : nestedAttributeEntry.getColumnNames()) {
+                                columnBindingMap.put(column, nestedAttributePath);
+                            }
+                            offset++;
+                        }
+                    }
+                } else if (selectExpression instanceof ParameterExpression) {
+                    final Collection<String> embeddedPropertyNames = getEmbeddedPropertyPaths(attributeEntries, attributeName, jpaProvider.needsElementCollectionIdCutoff(), false);
+
+                    if (embeddedPropertyNames.size() > 0) {
+                        ParameterExpression parameterExpression = (ParameterExpression) selectExpression;
+                        String parameterName = parameterExpression.getName();
+                        Map<String, List<String>> parameterAccessPaths = new HashMap<>(embeddedPropertyNames.size());
+                        ParameterValueTransformer tranformer = parameterManager.getParameter(parameterName).getTranformer();
+                        if (tranformer instanceof SplittingParameterTransformer) {
+                            for (String name : ((SplittingParameterTransformer) tranformer).getParameterNames()) {
+                                parameterManager.unregisterParameterName(name, clause, queryBuilder);
+                            }
+                        }
+
+                        selectManager.getSelectInfos().remove(tupleIndex.intValue());
+                        bindingMap.remove(attributeName);
+                        // We are going to insert the expanded attributes as new select items and shift existing ones
+                        int delta = embeddedPropertyNames.size() - 1;
+                        if (delta > 0) {
+                            for (Map.Entry<String, Integer> entry : bindingMap.entrySet()) {
+                                if (entry.getValue() > tupleIndex) {
+                                    entry.setValue(entry.getValue() + delta);
+                                }
+                            }
+                        }
+
+                        int offset = 0;
+                        for (String embeddedPropertyName : embeddedPropertyNames) {
+                            String subParamName = "_" + parameterName + "_" + embeddedPropertyName.replace('.', '_');
+                            parameterManager.registerParameterName(subParamName, false, clause, queryBuilder);
+                            parameterAccessPaths.put(subParamName, Arrays.asList(embeddedPropertyName.split("\\.")));
+
+                            String nestedAttributePath = attributeName + "." + embeddedPropertyName;
+                            ExtendedAttribute<?, ?> nestedAttributeEntry = attributeEntries.get(nestedAttributePath);
+
+                            // Process the nested attribute path recursively
+                            attributeQueue.add(nestedAttributePath);
+
+                            // Replace this binding in the binding map, additional selects need an updated index
+                            bindingMap.put(nestedAttributePath, tupleIndex + offset);
+                            selectManager.select(new ParameterExpression(subParamName), null, tupleIndex + offset);
+
+                            for (String column : nestedAttributeEntry.getColumnNames()) {
+                                columnBindingMap.put(column, nestedAttributePath);
+                            }
+                            offset++;
+                        }
+
+                        parameterManager.getParameter(parameterName).setTranformer(new SplittingParameterTransformer(parameterManager, metamodel, elementType, parameterAccessPaths));
+                    }
+                } else {
+                    throw new IllegalArgumentException("Illegal expression '" + selectExpression.toString() + "' for binding relation '" + attributeName + "'!");
+                }
+            } else if (requiresNullCast && selectExpression instanceof NullExpression) {
+                // We must add a cast for null expressions, otherwise DBMS might assume some text type
+                List<Expression> arguments = new ArrayList<>(2);
+                arguments.add(selectExpression);
+                arguments.add(new StringLiteral(columnType));
+                selectInfo.set(new FunctionExpression("CAST_" + elementType.getSimpleName(), arguments, 0));
+            } else if (selectExpression instanceof ParameterExpression && clause != ClauseType.SET) {
+                if (BasicCastTypes.TYPES.contains(elementType)) {
                     // We also need a cast for parameter expressions except in the SET clause
                     List<Expression> arguments = new ArrayList<>(2);
                     arguments.add(selectExpression);
-                    arguments.add(new StringLiteral(attributeEntry.getColumnTypes()[0]));
-                    selectInfo.set(new FunctionExpression("CAST_" + attributeEntry.getElementClass().getSimpleName(), arguments, 0));
+                    arguments.add(new StringLiteral(columnType));
+                    selectInfo.set(new FunctionExpression("CAST_" + elementType.getSimpleName(), arguments, 0));
+                } else {
+                    final EntityMetamodelImpl.AttributeExample attributeExample = metamodel.getBasicTypeExampleAttributes().get(elementType);
+                    List<Expression> arguments = new ArrayList<>(2);
+                    arguments.add(new SubqueryExpression(new Subquery() {
+                        @Override
+                        public String getQueryString() {
+                            return attributeExample.getExampleJpql();
+                        }
+                    }));
+                    arguments.add(selectExpression);
+                    selectInfo.set(new FunctionExpression(ParamFunction.FUNCTION_NAME, arguments, 1));
                 }
             }
         }

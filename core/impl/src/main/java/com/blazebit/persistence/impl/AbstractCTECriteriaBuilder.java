@@ -197,7 +197,7 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
     }
 
     protected List<String> prepareAndGetAttributes() {
-        JpaUtils.expandBindings(cteType, bindingMap, columnBindingMap, attributeEntries, ClauseType.SELECT, this);
+        JpaUtils.expandBindings(bindingMap, columnBindingMap, attributeEntries, ClauseType.SELECT, this, null);
         String[] attributes = new String[bindingMap.size()];
         for (Map.Entry<String, Integer> entry : bindingMap.entrySet()) {
             attributes[entry.getValue()] = entry.getKey();

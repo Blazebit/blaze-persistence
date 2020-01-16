@@ -378,4 +378,265 @@ public class CollectionRoleInsertTest extends AbstractCoreTest {
             }
         });
     }
+
+    @Test
+    public void insertIndexedWithParams() {
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                InsertCriteriaBuilder<Root> criteria = cbf.insertCollection(em, Root.class, "indexedNodes");
+                criteria.fromValues(Integer.class, "valuesAlias", Collections.singletonList(0));
+                criteria.bind("id", 1);
+                criteria.bind("INDEX(indexedNodes)", 1);
+                criteria.bind("indexedNodes.id", 4);
+
+                assertEquals("INSERT INTO Root.indexedNodes(INDEX(indexedNodes), id, indexedNodes.id)\n"
+                        + "SELECT :param_1, :param_0, :param_2"
+                        + " FROM Integer(1 VALUES) valuesAlias", criteria.getQueryString());
+                int updated = criteria.executeUpdate();
+                Root r = getRoot(em);
+
+                assertEquals(1, updated);
+                assertEquals(2, r.getIndexedNodes().size());
+                assertEquals(1, r.getIndexedNodesMany().size());
+                assertEquals(1, r.getIndexedNodesManyDuplicate().size());
+                assertEquals(1, r.getIndexedNodesElementCollection().size());
+
+                assertEquals(I2_ID, r.getIndexedNodes().get(1).getId());
+            }
+        });
+    }
+
+    // NOTE: H2 and MySQL only support returning generated keys
+    // NOTE: Oracle doesn't support the RETURNING clause for INSERT .. SELECT statements, only for INSERT .. VALUES
+    // https://stackoverflow.com/questions/5325033/plsql-insert-into-with-subquery-and-returning-clause-oracle
+    @Test
+    @Category({ NoH2.class, NoMySQL.class, NoOracle.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void insertIndexedReturningWithParams() {
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                InsertCriteriaBuilder<Root> criteria = cbf.insertCollection(em, Root.class, "indexedNodes");
+                criteria.fromValues(Integer.class, "valuesAlias", Collections.singletonList(0));
+                criteria.bind("id", 1);
+                criteria.bind("INDEX(indexedNodes)", 1);
+                criteria.bind("indexedNodes.id", 4);
+
+                assertEquals("INSERT INTO Root.indexedNodes(INDEX(indexedNodes), id, indexedNodes.id)\n"
+                        + "SELECT :param_1, :param_0, :param_2"
+                        + " FROM Integer(1 VALUES) valuesAlias", criteria.getQueryString());
+                ReturningResult<Tuple> returningResult = criteria.executeWithReturning("indexedNodes.id");
+                Root r = getRoot(em);
+
+                assertEquals(I2_ID, returningResult.getLastResult().get(0));
+                assertEquals(1, returningResult.getUpdateCount());
+                assertEquals(2, r.getIndexedNodes().size());
+                assertEquals(1, r.getIndexedNodesMany().size());
+                assertEquals(1, r.getIndexedNodesManyDuplicate().size());
+                assertEquals(1, r.getIndexedNodesElementCollection().size());
+
+                assertEquals(I2_ID, r.getIndexedNodes().get(1).getId());
+            }
+        });
+    }
+
+    @Test
+    public void insertIndexedManyWithParams() {
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                InsertCriteriaBuilder<Root> criteria = cbf.insertCollection(em, Root.class, "indexedNodesMany");
+                criteria.fromValues(Integer.class, "valuesAlias", Collections.singletonList(0));
+                criteria.bind("id", 1);
+                criteria.bind("INDEX(indexedNodesMany)", 1);
+                criteria.bind("indexedNodesMany.id", 4);
+
+                assertEquals("INSERT INTO Root.indexedNodesMany(INDEX(indexedNodesMany), id, indexedNodesMany.id)\n"
+                        + "SELECT :param_1, :param_0, :param_2"
+                        + " FROM Integer(1 VALUES) valuesAlias", criteria.getQueryString());
+                int updated = criteria.executeUpdate();
+                Root r = getRoot(em);
+
+                assertEquals(1, updated);
+                assertEquals(1, r.getIndexedNodes().size());
+                assertEquals(2, r.getIndexedNodesMany().size());
+                assertEquals(1, r.getIndexedNodesManyDuplicate().size());
+                assertEquals(1, r.getIndexedNodesElementCollection().size());
+
+                assertEquals(I2_ID, r.getIndexedNodesMany().get(1).getId());
+            }
+        });
+    }
+
+    @Test
+    public void insertIndexedManyDuplicateWithParams() {
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                InsertCriteriaBuilder<Root> criteria = cbf.insertCollection(em, Root.class, "indexedNodesManyDuplicate");
+                criteria.fromValues(Integer.class, "valuesAlias", Collections.singletonList(0));
+                criteria.bind("id", 1);
+                criteria.bind("INDEX(indexedNodesManyDuplicate)", 1);
+                criteria.bind("indexedNodesManyDuplicate.id", 4);
+
+                assertEquals("INSERT INTO Root.indexedNodesManyDuplicate(INDEX(indexedNodesManyDuplicate), id, indexedNodesManyDuplicate.id)\n"
+                        + "SELECT :param_1, :param_0, :param_2"
+                        + " FROM Integer(1 VALUES) valuesAlias", criteria.getQueryString());
+                int updated = criteria.executeUpdate();
+                Root r = getRoot(em);
+
+                assertEquals(1, updated);
+                assertEquals(1, r.getIndexedNodes().size());
+                assertEquals(1, r.getIndexedNodesMany().size());
+                assertEquals(2, r.getIndexedNodesManyDuplicate().size());
+                assertEquals(1, r.getIndexedNodesElementCollection().size());
+
+                assertEquals(I2_ID, r.getIndexedNodesManyDuplicate().get(1).getId());
+            }
+        });
+    }
+
+    @Test
+    public void insertIndexedElementCollectionWithParams() {
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                InsertCriteriaBuilder<Root> criteria = cbf.insertCollection(em, Root.class, "indexedNodesElementCollection");
+                criteria.fromValues(Integer.class, "valuesAlias", Collections.singletonList(0));
+                criteria.bind("id", 1);
+                criteria.bind("INDEX(indexedNodesElementCollection)", 1);
+                criteria.bind("indexedNodesElementCollection.value", "B");
+                criteria.bind("indexedNodesElementCollection.value2", "P");
+
+                assertEquals("INSERT INTO Root.indexedNodesElementCollection(INDEX(indexedNodesElementCollection), id, indexedNodesElementCollection.value, indexedNodesElementCollection.value2)\n"
+                        + "SELECT :param_1, :param_0, :param_2, :param_3"
+                        + " FROM Integer(1 VALUES) valuesAlias", criteria.getQueryString());
+                int updated = criteria.executeUpdate();
+                Root r = getRoot(em);
+
+                assertEquals(1, updated);
+                assertEquals(1, r.getIndexedNodes().size());
+                assertEquals(1, r.getIndexedNodesMany().size());
+                assertEquals(1, r.getIndexedNodesManyDuplicate().size());
+                assertEquals(2, r.getIndexedNodesElementCollection().size());
+
+                assertEquals("B", r.getIndexedNodesElementCollection().get(1).getValue());
+                assertEquals("P", r.getIndexedNodesElementCollection().get(1).getValue2());
+            }
+        });
+    }
+
+    @Test
+    public void insertKeyedWithParams() {
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                InsertCriteriaBuilder<Root> criteria = cbf.insertCollection(em, Root.class, "keyedNodes");
+                criteria.fromValues(Integer.class, "valuesAlias", Collections.singletonList(0));
+                criteria.bind("id", 1);
+                criteria.bind("KEY(keyedNodes)", "b");
+                criteria.bind("keyedNodes.id", 5);
+
+                assertEquals("INSERT INTO Root.keyedNodes(KEY(keyedNodes), id, keyedNodes.id)\n"
+                        + "SELECT :param_1, :param_0, :param_2"
+                        + " FROM Integer(1 VALUES) valuesAlias", criteria.getQueryString());
+                int updated = criteria.executeUpdate();
+                Root r = getRoot(em);
+
+                assertEquals(1, updated);
+                assertEquals(2, r.getKeyedNodes().size());
+                assertEquals(1, r.getKeyedNodesMany().size());
+                assertEquals(1, r.getKeyedNodesManyDuplicate().size());
+                assertEquals(1, r.getKeyedNodesElementCollection().size());
+
+                assertEquals(K2_ID, r.getKeyedNodes().get("b").getId());
+            }
+        });
+    }
+
+    @Test
+    public void insertKeyedManyWithParams() {
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                InsertCriteriaBuilder<Root> criteria = cbf.insertCollection(em, Root.class, "keyedNodesMany");
+                criteria.fromValues(Integer.class, "valuesAlias", Collections.singletonList(0));
+                criteria.bind("id", 1);
+                criteria.bind("KEY(keyedNodesMany)", "b");
+                criteria.bind("keyedNodesMany.id", 5);
+
+                assertEquals("INSERT INTO Root.keyedNodesMany(KEY(keyedNodesMany), id, keyedNodesMany.id)\n"
+                        + "SELECT :param_1, :param_0, :param_2"
+                        + " FROM Integer(1 VALUES) valuesAlias", criteria.getQueryString());
+                int updated = criteria.executeUpdate();
+                Root r = getRoot(em);
+
+                assertEquals(1, updated);
+                assertEquals(1, r.getKeyedNodes().size());
+                assertEquals(2, r.getKeyedNodesMany().size());
+                assertEquals(1, r.getKeyedNodesManyDuplicate().size());
+                assertEquals(1, r.getKeyedNodesElementCollection().size());
+
+                assertEquals(K2_ID, r.getKeyedNodesMany().get("b").getId());
+            }
+        });
+    }
+
+    @Test
+    public void insertKeyedManyDuplicateWithParams() {
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                InsertCriteriaBuilder<Root> criteria = cbf.insertCollection(em, Root.class, "keyedNodesManyDuplicate");
+                criteria.fromValues(Integer.class, "valuesAlias", Collections.singletonList(0));
+                criteria.bind("id", 1);
+                criteria.bind("KEY(keyedNodesManyDuplicate)", "b");
+                criteria.bind("keyedNodesManyDuplicate.id", 5);
+
+                assertEquals("INSERT INTO Root.keyedNodesManyDuplicate(KEY(keyedNodesManyDuplicate), id, keyedNodesManyDuplicate.id)\n"
+                        + "SELECT :param_1, :param_0, :param_2"
+                        + " FROM Integer(1 VALUES) valuesAlias", criteria.getQueryString());
+                int updated = criteria.executeUpdate();
+                Root r = getRoot(em);
+
+                assertEquals(1, updated);
+                assertEquals(1, r.getKeyedNodes().size());
+                assertEquals(1, r.getKeyedNodesMany().size());
+                assertEquals(2, r.getKeyedNodesManyDuplicate().size());
+                assertEquals(1, r.getKeyedNodesElementCollection().size());
+
+                assertEquals(K2_ID, r.getKeyedNodesManyDuplicate().get("b").getId());
+            }
+        });
+    }
+
+    @Test
+    public void insertKeyedElementCollectionWithParams() {
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                InsertCriteriaBuilder<Root> criteria = cbf.insertCollection(em, Root.class, "keyedNodesElementCollection");
+                criteria.fromValues(Integer.class, "valuesAlias", Collections.singletonList(0));
+                criteria.bind("id", 1);
+                criteria.bind("KEY(keyedNodesElementCollection)", "b");
+                criteria.bind("keyedNodesElementCollection.value", "B");
+                criteria.bind("keyedNodesElementCollection.value2", "P");
+
+                assertEquals("INSERT INTO Root.keyedNodesElementCollection(KEY(keyedNodesElementCollection), id, keyedNodesElementCollection.value, keyedNodesElementCollection.value2)\n"
+                        + "SELECT :param_1, :param_0, :param_2, :param_3"
+                        + " FROM Integer(1 VALUES) valuesAlias", criteria.getQueryString());
+                int updated = criteria.executeUpdate();
+                Root r = getRoot(em);
+
+                assertEquals(1, updated);
+                assertEquals(1, r.getKeyedNodes().size());
+                assertEquals(1, r.getKeyedNodesMany().size());
+                assertEquals(1, r.getKeyedNodesManyDuplicate().size());
+                assertEquals(2, r.getKeyedNodesElementCollection().size());
+
+                assertEquals("B", r.getKeyedNodesElementCollection().get("b").getValue());
+                assertEquals("P", r.getKeyedNodesElementCollection().get("b").getValue2());
+            }
+        });
+    }
 }
