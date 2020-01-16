@@ -38,7 +38,9 @@ public class SubqueryRecursiveExpressionVisitor extends VisitorAdapter implement
     public void visit(SubqueryExpression expression) {
         // TODO: this is ugly
         // IMO this should be part of JoinVisitor
-        ((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) expression.getSubquery()).applyExpressionTransformersAndBuildGroupByClauses(false, null);
+        if (expression.getSubquery() instanceof AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) {
+            ((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) expression.getSubquery()).applyExpressionTransformersAndBuildGroupByClauses(false, null);
+        }
     }
 
 }

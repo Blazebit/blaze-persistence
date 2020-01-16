@@ -579,6 +579,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
         verifyBuilderEnded();
         prepareAndCheckCtes();
+        prepareSelect();
         if (!orderByManager.hasOrderBys()) {
             throw new IllegalStateException("Pagination requires at least one order by item!");
         }

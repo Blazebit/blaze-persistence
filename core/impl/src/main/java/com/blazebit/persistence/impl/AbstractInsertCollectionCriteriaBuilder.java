@@ -147,7 +147,7 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
 
     @Override
     protected void expandBindings() {
-        JpaUtils.expandBindings(entityType, bindingMap, collectionColumnBindingMap, collectionAttributeEntries, ClauseType.SELECT, this);
+        JpaUtils.expandBindings(bindingMap, collectionColumnBindingMap, collectionAttributeEntries, ClauseType.SELECT, this, keyFunctionExpression);
     }
 
     @Override

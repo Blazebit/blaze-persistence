@@ -74,6 +74,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
     private final ConcurrentMap<Class<?>, Type<?>> basicTypeMap = new ConcurrentHashMap<>();
     private final Map<Class<?>, ManagedType<?>> cteMap;
     private final Map<Object, ExtendedManagedTypeImpl<?>> extendedManagedTypes;
+    private final Map<Class<?>, AttributeExample> exampleAttributes;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public EntityMetamodelImpl(EntityManagerFactory emf, JpaProviderFactory jpaProviderFactory) {
@@ -178,6 +179,15 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         this.classMap = Collections.unmodifiableMap(classToType);
         this.cteMap = Collections.unmodifiableMap(cteToType);
         this.extendedManagedTypes = Collections.unmodifiableMap(extendedManagedTypes);
+        Map<Class<?>, AttributeExample> exampleAttributes = new HashMap<>();
+        for (ExtendedManagedTypeImpl<?> extendedManagedType : extendedManagedTypes.values()) {
+            for (AttributeEntry<?, ?> attributeEntry : extendedManagedType.attributes.values()) {
+                if (!exampleAttributes.containsKey(attributeEntry.getElementClass()) && classMap.get(attributeEntry.getElementClass()) == null) {
+                    exampleAttributes.put(attributeEntry.getElementClass(), new AttributeExample(attributeEntry, "SELECT e." + attributeEntry.attributePathString + " FROM " + JpaMetamodelUtils.getTypeName(attributeEntry.ownerType) + " e"));
+                }
+            }
+        }
+        this.exampleAttributes = Collections.unmodifiableMap(exampleAttributes);
     }
 
     private TemporaryExtendedManagedType getTemporaryType(ManagedType<?> type, Map<String, TemporaryExtendedManagedType> temporaryExtendedManagedTypes) {
@@ -546,6 +556,10 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         return basicTypeMap.values();
     }
 
+    public Map<Class<?>, AttributeExample> getBasicTypeExampleAttributes() {
+        return exampleAttributes;
+    }
+
     @Override
     @SuppressWarnings({ "unchecked" })
     public <X> Type<X> type(Class<X> cls) {
@@ -787,6 +801,28 @@ public class EntityMetamodelImpl implements EntityMetamodel {
                 throw new IllegalArgumentException("Could not find attribute '" + attributeName + "' on managed type '" + JpaMetamodelUtils.getTypeName(managedType) + "'");
             }
             return (ExtendedAttribute<X, ?>) entry;
+        }
+    }
+
+    /**
+     * @author Christian Beikov
+     * @since 1.4.1
+     */
+    public static final class AttributeExample {
+        private final ExtendedAttribute<?, ?> attribute;
+        private final String exampleJpql;
+
+        public AttributeExample(ExtendedAttribute<?, ?> attribute, String exampleJpql) {
+            this.attribute = attribute;
+            this.exampleJpql = exampleJpql;
+        }
+
+        public ExtendedAttribute<?, ?> getAttribute() {
+            return attribute;
+        }
+
+        public String getExampleJpql() {
+            return exampleJpql;
         }
     }
 

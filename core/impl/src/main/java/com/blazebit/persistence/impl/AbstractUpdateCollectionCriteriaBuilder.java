@@ -233,7 +233,7 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
             return;
         }
 
-        JpaUtils.expandBindings(entityType, setAttributeBindingMap, collectionColumnBindingMap, collectionAttributeEntries, ClauseType.SET, this);
+        JpaUtils.expandBindings(setAttributeBindingMap, collectionColumnBindingMap, collectionAttributeEntries, ClauseType.SET, this, keyFunctionExpression);
         super.prepareAndCheck();
     }
 

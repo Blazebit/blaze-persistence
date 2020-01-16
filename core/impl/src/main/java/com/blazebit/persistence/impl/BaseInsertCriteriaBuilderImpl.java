@@ -118,6 +118,11 @@ public abstract class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCrite
         super.prepareAndCheck();
     }
 
+    @Override
+    protected void prepareSelect() {
+        // We have an insert statement here which supports parameters in queries
+    }
+
     protected void expandBindings() {
     }
 
