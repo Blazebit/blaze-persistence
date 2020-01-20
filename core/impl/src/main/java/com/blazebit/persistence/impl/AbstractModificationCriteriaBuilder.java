@@ -68,7 +68,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
     protected final EntityType<T> entityType;
     protected final String entityAlias;
     protected final EntityType<?> cteType;
-    protected final String cteName;
+    protected final CTEManager.CTEKey cteKey;
     protected final Y result;
     protected final CTEBuilderListener listener;
     protected final boolean isReturningEntityAliasAllowed;
@@ -78,7 +78,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
     protected final Map<String, String> columnBindingMap;
 
     @SuppressWarnings("unchecked")
-    public AbstractModificationCriteriaBuilder(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, DbmsStatementType statementType, Class<T> clazz, String alias, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener) {
+    public AbstractModificationCriteriaBuilder(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, DbmsStatementType statementType, Class<T> clazz, String alias, CTEManager.CTEKey cteKey, Class<?> cteClass, Y result, CTEBuilderListener listener) {
         // NOTE: using tuple here because this class is used for the join manager and tuple is definitively not an entity
         // but in case of the insert criteria, the appropriate return type which is convenient because update and delete don't have a return type
         super(mainQuery, queryContext, isMainQuery, statementType, (Class<T>) Tuple.class, null);
@@ -96,7 +96,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         
         if (cteClass == null) {
             this.cteType = null;
-            this.cteName = null;
+            this.cteKey = null;
             this.isReturningEntityAliasAllowed = false;
             this.returningAttributes = new LinkedHashMap<>(0);
             this.returningAttributeBindingMap = new LinkedHashMap<>(0);
@@ -104,7 +104,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             this.columnBindingMap = null;
         } else {
             this.cteType = mainQuery.metamodel.entity(cteClass);
-            this.cteName = cteName;
+            this.cteKey = cteKey;
             // Returning the "entity" is only allowed in CTEs
             this.isReturningEntityAliasAllowed = true;
             this.returningAttributes = null;
@@ -114,15 +114,15 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         }
     }
 
-    public AbstractModificationCriteriaBuilder(AbstractModificationCriteriaBuilder<T, X, Y> builder, MainQuery mainQuery, QueryContext queryContext) {
-        super(builder, mainQuery, queryContext);
+    public AbstractModificationCriteriaBuilder(AbstractModificationCriteriaBuilder<T, X, Y> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
+        super(builder, mainQuery, queryContext, joinManagerMapping);
         this.entityType = builder.entityType;
         this.entityAlias = builder.entityAlias;
         this.result = null;
         this.listener = null;
 
         this.cteType = builder.cteType;
-        this.cteName = builder.cteName;
+        this.cteKey = builder.cteKey;
         this.isReturningEntityAliasAllowed = builder.isReturningEntityAliasAllowed;
         this.returningAttributes = builder.returningAttributes == null ? null : new LinkedHashMap<>(builder.returningAttributes);
         this.returningAttributeBindingMap = new LinkedHashMap<>(builder.returningAttributeBindingMap);
@@ -258,7 +258,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
                 if (entry.getValue() == DbmsModificationState.NEW) {
                     includedModificationStates.put(DbmsModificationState.NEW, entityType.getName() + "_new");
                     if (getStatementType() == DbmsStatementType.DELETE) {
-                        includedModificationStates.put(DbmsModificationState.OLD, cteName);
+                        includedModificationStates.put(DbmsModificationState.OLD, cteKey.getName());
                     }
                     break;
                 }
@@ -512,7 +512,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
     public CTEInfo createCTEInfo() {
         List<String> attributes = prepareAndGetAttributes();
         List<String> columns = prepareAndGetColumnNames();
-        CTEInfo info = new CTEInfo(cteName, false, cteType, attributes, columns, false, false, this, null);
+        CTEInfo info = new CTEInfo(cteKey.getName(), cteKey.getOwner(), false, cteType, attributes, columns, false, false, this, null);
         return info;
     }
     

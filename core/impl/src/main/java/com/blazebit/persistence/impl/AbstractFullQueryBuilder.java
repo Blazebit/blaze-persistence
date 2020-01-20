@@ -55,6 +55,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -122,7 +123,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
     }
 
     @Override
-    AbstractCommonQueryBuilder<T, X, Z, W, FinalSetReturn> copy(QueryContext queryContext) {
+    AbstractCommonQueryBuilder<T, X, Z, W, FinalSetReturn> copy(QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
         throw new UnsupportedOperationException("This should only be used on CTEs!");
     }
 
@@ -134,7 +135,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         CriteriaBuilderImpl<Y> newBuilder = new CriteriaBuilderImpl<Y>(mainQuery, true, resultClass, null);
         newBuilder.fromClassExplicitlySet = true;
 
-        newBuilder.applyFrom(this, true, true, false, Collections.<ClauseType>emptySet(), Collections.<JoinNode>emptySet());
+        newBuilder.applyFrom(this, true, true, false, Collections.<ClauseType>emptySet(), Collections.<JoinNode>emptySet(), new IdentityHashMap<JoinManager, JoinManager>());
 
         return newBuilder;
     }
@@ -175,7 +176,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         CriteriaBuilderImpl<Object[]> newBuilder = new CriteriaBuilderImpl<>(mainQuery, true, Object[].class, null);
         newBuilder.fromClassExplicitlySet = true;
 
-        newBuilder.applyFrom(this, true, false, false, ID_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, getIdentifierExpressionsToUseNonRootJoinNodes(identifierExpressionsToUse));
+        newBuilder.applyFrom(this, true, false, false, ID_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, getIdentifierExpressionsToUseNonRootJoinNodes(identifierExpressionsToUse), new IdentityHashMap<JoinManager, JoinManager>());
         newBuilder.setFirstResult(firstResult);
         newBuilder.setMaxResults(maxResults);
 

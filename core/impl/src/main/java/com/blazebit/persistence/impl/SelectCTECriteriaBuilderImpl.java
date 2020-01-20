@@ -19,6 +19,7 @@ package com.blazebit.persistence.impl;
 import com.blazebit.persistence.SelectCTECriteriaBuilder;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -28,18 +29,18 @@ import java.util.List;
  */
 public class SelectCTECriteriaBuilderImpl<Y> extends AbstractCTECriteriaBuilder<Y, SelectCTECriteriaBuilder<Y>, Void, Void> implements SelectCTECriteriaBuilder<Y> {
 
-    public SelectCTECriteriaBuilderImpl(MainQuery mainQuery, QueryContext queryContext, String cteName, Class<Object> clazz, Y result, CTEBuilderListener listener, boolean emulateJoins) {
-        super(mainQuery, queryContext, cteName, false, clazz, result, listener, null, null, null);
+    public SelectCTECriteriaBuilderImpl(MainQuery mainQuery, QueryContext queryContext, CTEManager.CTEKey cteKey, Class<Object> clazz, Y result, CTEBuilderListener listener, boolean emulateJoins) {
+        super(mainQuery, queryContext, cteKey, false, clazz, result, listener, null, null, null);
         joinManager.setEmulateJoins(emulateJoins);
     }
 
-    public SelectCTECriteriaBuilderImpl(AbstractCTECriteriaBuilder<Y, SelectCTECriteriaBuilder<Y>, Void, Void> builder, MainQuery mainQuery, QueryContext queryContext) {
-        super(builder, mainQuery, queryContext);
+    public SelectCTECriteriaBuilderImpl(AbstractCTECriteriaBuilder<Y, SelectCTECriteriaBuilder<Y>, Void, Void> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
+        super(builder, mainQuery, queryContext, joinManagerMapping);
     }
 
     @Override
-    SelectCTECriteriaBuilderImpl<Y> copy(QueryContext queryContext) {
-        return new SelectCTECriteriaBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext);
+    SelectCTECriteriaBuilderImpl<Y> copy(QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
+        return new SelectCTECriteriaBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext, joinManagerMapping);
     }
 
     @Override
@@ -51,7 +52,7 @@ public class SelectCTECriteriaBuilderImpl<Y> extends AbstractCTECriteriaBuilder<
     public CTEInfo createCTEInfo() {
         List<String> attributes = prepareAndGetAttributes();
         List<String> columns = prepareAndGetColumnNames();
-        CTEInfo info = new CTEInfo(cteName, inline, cteType, attributes, columns, false, false, this, null);
+        CTEInfo info = new CTEInfo(cteKey.getName(), cteKey.getOwner(), inline, cteType, attributes, columns, false, false, this, null);
         return info;
     }
 

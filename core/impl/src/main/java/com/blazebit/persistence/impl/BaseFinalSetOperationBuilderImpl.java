@@ -43,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -65,9 +66,9 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
         this.orderByElements = new ArrayList<DefaultOrderByElement>(0);
     }
 
-    public BaseFinalSetOperationBuilderImpl(BaseFinalSetOperationBuilderImpl<T, X, Y> builder, MainQuery mainQuery, QueryContext queryContext) {
-        super(builder, mainQuery, queryContext);
-        this.setOperationManager = new SetOperationManager(builder.setOperationManager, queryContext);
+    public BaseFinalSetOperationBuilderImpl(BaseFinalSetOperationBuilderImpl<T, X, Y> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
+        super(builder, mainQuery, queryContext, joinManagerMapping);
+        this.setOperationManager = new SetOperationManager(builder.setOperationManager, queryContext, joinManagerMapping);
         this.orderByElements = new ArrayList<>(builder.orderByElements);
     }
 

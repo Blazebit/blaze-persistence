@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl;
 
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.Tuple;
@@ -50,8 +51,8 @@ public abstract class BaseFinalSetOperationSubqueryBuilderImpl<T, X extends Base
         this.subListener = new SubqueryBuilderListenerImpl<T>();
     }
 
-    public BaseFinalSetOperationSubqueryBuilderImpl(BaseFinalSetOperationBuilderImpl<T, X, BaseFinalSetOperationSubqueryBuilderImpl<T, X>> builder, MainQuery mainQuery, QueryContext queryContext) {
-        super(builder, mainQuery, queryContext);
+    public BaseFinalSetOperationSubqueryBuilderImpl(BaseFinalSetOperationBuilderImpl<T, X, BaseFinalSetOperationSubqueryBuilderImpl<T, X>> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
+        super(builder, mainQuery, queryContext, joinManagerMapping);
         this.result = null;
         this.listener = null;
         this.initiator = null;

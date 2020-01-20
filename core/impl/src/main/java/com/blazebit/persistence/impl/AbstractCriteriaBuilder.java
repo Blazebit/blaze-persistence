@@ -20,6 +20,8 @@ import com.blazebit.persistence.BaseCriteriaBuilder;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.SetOperationType;
 
+import java.util.Map;
+
 /**
  *
  * @param <T> The query result type
@@ -40,8 +42,8 @@ public abstract class AbstractCriteriaBuilder<T, X extends BaseCriteriaBuilder<T
         this.subListener = new BuilderListenerImpl<Object>();
     }
 
-    public AbstractCriteriaBuilder(AbstractCommonQueryBuilder<T, ?, ?, ?, ?> builder, MainQuery mainQuery, QueryContext queryContext) {
-        super(builder, mainQuery, queryContext);
+    public AbstractCriteriaBuilder(AbstractCommonQueryBuilder<T, ?, ?, ?, ?> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
+        super(builder, mainQuery, queryContext, joinManagerMapping);
         this.listener = null;
         this.subListener = null;
     }

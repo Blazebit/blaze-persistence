@@ -16,6 +16,10 @@
 
 package com.blazebit.persistence.impl;
 
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Set;
+
 /**
  *
  * @author Christian Beikov
@@ -23,41 +27,31 @@ package com.blazebit.persistence.impl;
  */
 public class CTEBuilderListenerImpl implements CTEBuilderListener {
 
-    private CTEInfoBuilder currentCteBuilder;
+    private Set<CTEInfoBuilder> currentCteBuilders = Collections.newSetFromMap(new IdentityHashMap<CTEInfoBuilder, Boolean>());
     
     public void onReplaceBuilder(CTEInfoBuilder oldBuilder, CTEInfoBuilder newBuilder) {
-        if (currentCteBuilder == null) {
+        if (!currentCteBuilders.remove(oldBuilder)) {
             throw new BuilderChainingException("There was an attempt to end a builder that was not started or already closed.");
         }
-        if (currentCteBuilder != oldBuilder) {
-            throw new BuilderChainingException("There was an attempt to end a builder that was not started or already closed.");
-        }
-        
-        currentCteBuilder = newBuilder;
+
+        currentCteBuilders.add(newBuilder);
     }
 
     public void verifyBuilderEnded() {
-        if (currentCteBuilder != null) {
-            throw new BuilderChainingException("A builder was not ended properly.");
+        if (!currentCteBuilders.isEmpty()) {
+            throw new BuilderChainingException("Some CTE builders were not ended properly.");
         }
     }
 
     @Override
     public void onBuilderEnded(CTEInfoBuilder builder) {
-        if (currentCteBuilder == null) {
+        if (!currentCteBuilders.remove(builder)) {
             throw new BuilderChainingException("There was an attempt to end a builder that was not started or already closed.");
-        } else if (currentCteBuilder != builder) {
-            throw new BuilderChainingException("There was an attempt to end a builder while another potentially dependent builder is still open!");
         }
-        currentCteBuilder = null;
     }
 
     @Override
     public void onBuilderStarted(CTEInfoBuilder builder) {
-        if (currentCteBuilder != null) {
-            throw new BuilderChainingException("There was an attempt to start a builder but a previous builder was not ended.");
-        }
-
-        currentCteBuilder = builder;
+        currentCteBuilders.add(builder);
     }
 }

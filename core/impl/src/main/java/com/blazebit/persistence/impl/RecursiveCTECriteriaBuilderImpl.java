@@ -17,6 +17,7 @@
 package com.blazebit.persistence.impl;
 
 import java.util.List;
+import java.util.Map;
 
 import com.blazebit.persistence.SelectCTECriteriaBuilder;
 import com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder;
@@ -32,29 +33,29 @@ public class RecursiveCTECriteriaBuilderImpl<Y> extends AbstractCTECriteriaBuild
     protected boolean unionAll;
     protected SelectCTECriteriaBuilderImpl<Y> recursiveCteBuilder;
 
-    public RecursiveCTECriteriaBuilderImpl(MainQuery mainQuery, QueryContext queryContext, String cteName, Class<Object> clazz, Y result, final CTEBuilderListener listener) {
-        super(mainQuery, queryContext, cteName, false, clazz, result, listener, null, null, null);
+    public RecursiveCTECriteriaBuilderImpl(MainQuery mainQuery, QueryContext queryContext, CTEManager.CTEKey cteKey, Class<Object> clazz, Y result, final CTEBuilderListener listener) {
+        super(mainQuery, queryContext, cteKey, false, clazz, result, listener, null, null, null);
         this.clazz = clazz;
     }
 
-    public RecursiveCTECriteriaBuilderImpl(RecursiveCTECriteriaBuilderImpl<Y> builder, MainQuery mainQuery, QueryContext queryContext) {
-        super(builder, mainQuery, queryContext);
+    public RecursiveCTECriteriaBuilderImpl(RecursiveCTECriteriaBuilderImpl<Y> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
+        super(builder, mainQuery, queryContext, joinManagerMapping);
         this.clazz = builder.clazz;
         this.done = builder.done;
         this.unionAll = builder.unionAll;
-        this.recursiveCteBuilder = builder.recursiveCteBuilder.copy(queryContext);
+        this.recursiveCteBuilder = builder.recursiveCteBuilder.copy(queryContext, joinManagerMapping);
     }
 
     @Override
-    AbstractCommonQueryBuilder<Object, SelectRecursiveCTECriteriaBuilder<Y>, SelectCTECriteriaBuilder<Y>, Void, BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?>> copy(QueryContext queryContext) {
-        return new RecursiveCTECriteriaBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext);
+    AbstractCommonQueryBuilder<Object, SelectRecursiveCTECriteriaBuilder<Y>, SelectCTECriteriaBuilder<Y>, Void, BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?>> copy(QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
+        return new RecursiveCTECriteriaBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext, joinManagerMapping);
     }
 
     @Override
     public SelectCTECriteriaBuilderImpl<Y> union() {
         verifyBuilderEnded();
         unionAll = false;
-        recursiveCteBuilder = new SelectCTECriteriaBuilderImpl<Y>(mainQuery, queryContext, cteName, clazz, result, this, !mainQuery.dbmsDialect.supportsJoinsInRecursiveCte());
+        recursiveCteBuilder = new SelectCTECriteriaBuilderImpl<Y>(mainQuery, queryContext, cteKey, clazz, result, this, !mainQuery.dbmsDialect.supportsJoinsInRecursiveCte());
         return recursiveCteBuilder;
     }
 
@@ -62,7 +63,7 @@ public class RecursiveCTECriteriaBuilderImpl<Y> extends AbstractCTECriteriaBuild
     public SelectCTECriteriaBuilderImpl<Y> unionAll() {
         verifyBuilderEnded();
         unionAll = true;
-        recursiveCteBuilder = new SelectCTECriteriaBuilderImpl<Y>(mainQuery, queryContext, cteName, clazz, result, this, !mainQuery.dbmsDialect.supportsJoinsInRecursiveCte());
+        recursiveCteBuilder = new SelectCTECriteriaBuilderImpl<Y>(mainQuery, queryContext, cteKey, clazz, result, this, !mainQuery.dbmsDialect.supportsJoinsInRecursiveCte());
         return recursiveCteBuilder;
     }
 
@@ -96,7 +97,7 @@ public class RecursiveCTECriteriaBuilderImpl<Y> extends AbstractCTECriteriaBuild
         
         // As a side effect, this will reorder selects according to attribute order
         recursiveCteBuilder.createCTEInfo();
-        CTEInfo info = new CTEInfo(cteName, inline, cteType, attributes, columns, true, unionAll, this, recursiveCteBuilder);
+        CTEInfo info = new CTEInfo(cteKey.getName(), cteKey.getOwner(), inline, cteType, attributes, columns, true, unionAll, this, recursiveCteBuilder);
         return info;
     }
 

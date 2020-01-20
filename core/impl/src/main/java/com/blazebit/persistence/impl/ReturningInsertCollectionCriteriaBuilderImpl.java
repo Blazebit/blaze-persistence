@@ -18,6 +18,8 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.ReturningInsertCriteriaBuilder;
 
+import java.util.Map;
+
 /**
  *
  * @param <T> The query result type
@@ -26,17 +28,17 @@ import com.blazebit.persistence.ReturningInsertCriteriaBuilder;
  */
 public class ReturningInsertCollectionCriteriaBuilderImpl<T, Y> extends AbstractInsertCollectionCriteriaBuilder<T, ReturningInsertCriteriaBuilder<T, Y>, Y> implements ReturningInsertCriteriaBuilder<T, Y> {
 
-    public ReturningInsertCollectionCriteriaBuilderImpl(MainQuery mainQuery, QueryContext queryContext, Class<T> clazz, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener, String collectionName) {
-        super(mainQuery, queryContext, false, clazz, cteName, cteClass, result, listener, collectionName);
+    public ReturningInsertCollectionCriteriaBuilderImpl(MainQuery mainQuery, QueryContext queryContext, Class<T> clazz, CTEManager.CTEKey cteKey, Class<?> cteClass, Y result, CTEBuilderListener listener, String collectionName) {
+        super(mainQuery, queryContext, false, clazz, cteKey, cteClass, result, listener, collectionName);
     }
 
-    public ReturningInsertCollectionCriteriaBuilderImpl(AbstractInsertCollectionCriteriaBuilder<T, ReturningInsertCriteriaBuilder<T, Y>, Y> builder, MainQuery mainQuery, QueryContext queryContext) {
-        super(builder, mainQuery, queryContext);
+    public ReturningInsertCollectionCriteriaBuilderImpl(AbstractInsertCollectionCriteriaBuilder<T, ReturningInsertCriteriaBuilder<T, Y>, Y> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
+        super(builder, mainQuery, queryContext, joinManagerMapping);
     }
 
     @Override
-    AbstractCommonQueryBuilder<T, ReturningInsertCriteriaBuilder<T, Y>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, BaseFinalSetOperationBuilderImpl<T, ?, ?>> copy(QueryContext queryContext) {
-        return new ReturningInsertCollectionCriteriaBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext);
+    AbstractCommonQueryBuilder<T, ReturningInsertCriteriaBuilder<T, Y>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, BaseFinalSetOperationBuilderImpl<T, ?, ?>> copy(QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
+        return new ReturningInsertCollectionCriteriaBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext, joinManagerMapping);
     }
 
     @Override

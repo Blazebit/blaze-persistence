@@ -24,6 +24,7 @@ import com.blazebit.persistence.parser.expression.SubqueryExpression;
 import com.blazebit.persistence.parser.predicate.ExistsPredicate;
 
 import java.util.Collections;
+import java.util.IdentityHashMap;
 
 /**
  *
@@ -66,7 +67,7 @@ public class SubqueryInitiatorFactory {
 
     private <T> SubqueryBuilderImpl<T> createSubqueryBuilder(T result, SubqueryBuilderListener<T> listener, boolean inExists, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder, ClauseType clause) {
         SubqueryBuilderImpl<T> subqueryBuilder = new SubqueryBuilderImpl<T>(mainQuery, new QueryContext(queryBuilder, clause), aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
-        subqueryBuilder.applyFrom(builder, builder.isMainQuery, !inExists, false, Collections.<ClauseType>emptySet(), Collections.<JoinNode>emptySet());
+        subqueryBuilder.applyFrom(builder, builder.isMainQuery, !inExists, false, Collections.<ClauseType>emptySet(), Collections.<JoinNode>emptySet(), new IdentityHashMap<JoinManager, JoinManager>());
 
         if (inExists) {
             subqueryBuilder.selectManager.setDefaultSelect(null, Collections.singletonList(new SelectInfo(mainQuery.expressionFactory.createSimpleExpression("1"))));

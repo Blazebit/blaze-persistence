@@ -90,7 +90,7 @@ public class SqlUtils {
             int idx = searchIndex + searchAlias.length();
             if (idx < sb.length() && sb.charAt(idx) == '.') {
                 // This is a dereference of the alias, skip this
-            } else {
+            } else if (isInMainQuery(sb, searchIndex)) {
                 int[] tableNameIndexRange;
                 if (searchAs.equalsIgnoreCase(sb.substring(searchIndex - searchAs.length(), searchIndex))) {
                     // Uses aliasing with the AS keyword
@@ -155,6 +155,24 @@ public class SqlUtils {
 
             searchIndex = searchIndex + 1;
         }
+    }
+
+    private static boolean isInMainQuery(StringBuilder sb, int tableNameIndex) {
+        int parenthesis = 0;
+        QuoteMode mode = QuoteMode.NONE;
+        for (int i = 0; i < tableNameIndex; i++) {
+            final char c = sb.charAt(i);
+            mode = mode.onChar(c);
+
+            if (mode == QuoteMode.NONE) {
+                if (c == '(') {
+                    parenthesis++;
+                } else if (c == ')') {
+                    parenthesis--;
+                }
+            }
+        }
+        return parenthesis == 0;
     }
 
     public static int[] rtrimBackwardsToFirstWhitespace(CharSequence sb, int startIndex) {

@@ -824,7 +824,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             public Boolean visit(JoinNode node) {
                 Class<?> cteType = node.getJavaType();
                 if (cteType != null) {
-                    CTEInfo cte = mainQuery.cteManager.getCte(cteType, node.getAlias());
+                    CTEInfo cte = mainQuery.cteManager.getCte(cteType, node.getAlias(), JoinManager.this);
                     if (cte == null) {
                         cte = mainQuery.cteManager.getCte(cteType);
                     }
@@ -1150,7 +1150,12 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                     queryGenerator.setClauseType(null);
                     queryGenerator.setQueryBuffer(oldBuffer);
                 }
-                sb.append(')').append(')').append(" is null");
+                sb.append(')').append(')').append(" IS NULL");
+                if (queryBuilder.isEmbedded()) {
+                    sb.append(" AND 1=1");
+                    String exampleAttributeName = JpaMetamodelUtils.getSingleIdAttribute(rootNode.getEntityType()).getName();
+                    sb.append(" AND ").append(rootNode.getAlias()).append(".").append(exampleAttributeName).append(" IS NULL");
+                }
             }
         }
     }
@@ -1843,7 +1848,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         joinNode.setJoinType(type);
         joinOnBuilderListener.joinNode = joinNode;
         joinOnBuilderListener.startBuilder(new JoinOnBuilderImpl<X>(result, joinOnBuilderListener, parameterManager, expressionFactory, subqueryInitFactory)).onExpression("1=1").end();
-        FullSelectCTECriteriaBuilder<X> cteCriteriaBuilder = mainQuery.cteManager.with(joinNode.getJavaType(), alias, result, true, aliasManager, this);
+        FullSelectCTECriteriaBuilder<X> cteCriteriaBuilder = mainQuery.cteManager.with(joinNode.getJavaType(), alias, result, true, this, aliasManager, this);
         ((AbstractCTECriteriaBuilder<?, ?, ?, ?>) cteCriteriaBuilder).joinManager.addRoot(correlationPath, subqueryAlias, false);
         return cteCriteriaBuilder;
     }
@@ -1855,7 +1860,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         joinNode.setJoinType(type);
         joinOnBuilderListener.joinNode = joinNode;
         JoinOnBuilder<X> joinBuilder = joinOnBuilderListener.startBuilder(new JoinOnBuilderImpl<X>(result, joinOnBuilderListener, parameterManager, expressionFactory, subqueryInitFactory));
-        FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> cteCriteriaBuilder = mainQuery.cteManager.with(joinNode.getJavaType(), alias, joinBuilder, true, aliasManager, this);
+        FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> cteCriteriaBuilder = mainQuery.cteManager.with(joinNode.getJavaType(), alias, joinBuilder, true, this, aliasManager, this);
         ((AbstractCTECriteriaBuilder<?, ?, ?, ?>) cteCriteriaBuilder).joinManager.addRoot(correlationPath, subqueryAlias, false);
         return cteCriteriaBuilder;
     }

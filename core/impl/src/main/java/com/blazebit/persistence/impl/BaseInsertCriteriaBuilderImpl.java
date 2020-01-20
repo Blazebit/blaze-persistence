@@ -46,16 +46,16 @@ public abstract class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCrite
 
     protected final Map<String, Integer> bindingMap = new TreeMap<>();
 
-    public BaseInsertCriteriaBuilderImpl(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, Class<T> clazz, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener) {
-        super(mainQuery, queryContext, isMainQuery, DbmsStatementType.INSERT, clazz, null, cteName, cteClass, result, listener);
+    public BaseInsertCriteriaBuilderImpl(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, Class<T> clazz, CTEManager.CTEKey cteKey, Class<?> cteClass, Y result, CTEBuilderListener listener) {
+        super(mainQuery, queryContext, isMainQuery, DbmsStatementType.INSERT, clazz, null, cteKey, cteClass, result, listener);
         
         if (!mainQuery.jpaProvider.supportsInsertStatement()) {
             throw new IllegalStateException("JPA provider does not support insert statements!");
         }
     }
 
-    public BaseInsertCriteriaBuilderImpl(BaseInsertCriteriaBuilderImpl<T, X, Y> builder, MainQuery mainQuery, QueryContext queryContext) {
-        super(builder, mainQuery, queryContext);
+    public BaseInsertCriteriaBuilderImpl(BaseInsertCriteriaBuilderImpl<T, X, Y> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
+        super(builder, mainQuery, queryContext, joinManagerMapping);
         bindingMap.putAll(builder.bindingMap);
     }
 
