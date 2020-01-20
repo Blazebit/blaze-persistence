@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl;
 
 import javax.persistence.metamodel.EntityType;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Christian Beikov
@@ -25,6 +26,7 @@ import java.util.List;
  */
 class CTEInfo {
     final String name;
+    final JoinManager owner;
     final boolean inline;
     final EntityType<?> cteType;
     final List<String> attributes;
@@ -34,8 +36,9 @@ class CTEInfo {
     final AbstractCommonQueryBuilder<?, ?, ?, ?, ?> nonRecursiveCriteriaBuilder;
     final SelectCTECriteriaBuilderImpl<?> recursiveCriteriaBuilder;
     
-    CTEInfo(String name, boolean inline, EntityType<?> cteType, List<String> attributes, List<String> columnNames, boolean recursive, boolean unionAll, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> nonRecursiveCriteriaBuilder, SelectCTECriteriaBuilderImpl<?> recursiveCriteriaBuilder) {
+    CTEInfo(String name, JoinManager owner, boolean inline, EntityType<?> cteType, List<String> attributes, List<String> columnNames, boolean recursive, boolean unionAll, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> nonRecursiveCriteriaBuilder, SelectCTECriteriaBuilderImpl<?> recursiveCriteriaBuilder) {
         this.name = name;
+        this.owner = owner;
         this.inline = inline;
         this.cteType = cteType;
         this.attributes = attributes;
@@ -46,17 +49,18 @@ class CTEInfo {
         this.recursiveCriteriaBuilder = recursiveCriteriaBuilder;
     }
 
-    CTEInfo copy(CTEManager cteManager) {
+    CTEInfo copy(CTEManager cteManager, Map<JoinManager, JoinManager> joinManagerMapping) {
         CTEInfo cteInfo = new CTEInfo(
                 name,
+                joinManagerMapping.get(owner),
                 inline,
                 cteType,
                 attributes,
                 columnNames,
                 recursive,
                 unionAll,
-                nonRecursiveCriteriaBuilder.copy(cteManager.getQueryContext()),
-                recursive ? recursiveCriteriaBuilder.copy(cteManager.getQueryContext()) : null
+                nonRecursiveCriteriaBuilder.copy(cteManager.getQueryContext(), joinManagerMapping),
+                recursive ? recursiveCriteriaBuilder.copy(cteManager.getQueryContext(), joinManagerMapping) : null
         );
 
         return cteInfo;

@@ -47,12 +47,12 @@ public abstract class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCrite
     private SubqueryInternalBuilder<X> currentSubqueryBuilder;
     private String currentAttribute;
 
-    public BaseUpdateCriteriaBuilderImpl(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, Class<T> clazz, String alias, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener) {
-        super(mainQuery, queryContext, isMainQuery, DbmsStatementType.UPDATE, clazz, alias, cteName, cteClass, result, listener);
+    public BaseUpdateCriteriaBuilderImpl(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, Class<T> clazz, String alias, CTEManager.CTEKey cteKey, Class<?> cteClass, Y result, CTEBuilderListener listener) {
+        super(mainQuery, queryContext, isMainQuery, DbmsStatementType.UPDATE, clazz, alias, cteKey, cteClass, result, listener);
     }
 
-    public BaseUpdateCriteriaBuilderImpl(BaseUpdateCriteriaBuilderImpl<T, X, Y> builder, MainQuery mainQuery, QueryContext queryContext) {
-        super(builder, mainQuery, queryContext);
+    public BaseUpdateCriteriaBuilderImpl(BaseUpdateCriteriaBuilderImpl<T, X, Y> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
+        super(builder, mainQuery, queryContext, joinManagerMapping);
         builder.verifyBuilderEnded();
         for (Entry<String, Integer> entry : builder.setAttributeBindingMap.entrySet()) {
             this.setAttributeBindingMap.put(entityType.getName(), entry.getValue());

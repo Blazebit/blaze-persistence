@@ -28,6 +28,7 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
@@ -189,6 +190,41 @@ public class InlineCTETest extends AbstractCoreTest {
         String subquery = "SELECT t.name, t.parent.id, t.id FROM RecursiveEntity t LEFT JOIN t.parent parent_1 WHERE parent_1.name = :param_0 ORDER BY t.name ASC LIMIT 1";
         String expected = ""
                 + "SELECT t FROM RecursiveEntity(" + subquery + ") t(name, parent.id, id)";
+
+        assertEquals(expected, cb.getQueryString());
+        List<RecursiveEntity> resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+    }
+
+    // NOTE: Entity joins are only supported on Hibernate 5.1+
+    // NOTE: Hibernate 5.1 renders t.id = tSub.id rather than t = tSub
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class})
+    public void testMultipleInlineEntityWithLimitJoin() {
+        CriteriaBuilder<RecursiveEntity> cb = cbf.create(em, RecursiveEntity.class)
+                .fromEntitySubquery(RecursiveEntity.class, "t")
+                    .leftJoinOnEntitySubquery(RecursiveEntity.class, "subT")
+                        .where("subT.parent.name").eq("root1")
+                        .orderByAsc("name")
+                        .setMaxResults(1)
+                    .end().setOnExpression("t = subT")
+                    .where("t.parent.name").eq("root1")
+                    .orderByAsc("name")
+                    .setMaxResults(1)
+                .end()
+                .leftJoinOnEntitySubquery(RecursiveEntity.class, "subT2")
+                    .where("subT2.parent.name").eq("root1")
+                    .orderByAsc("name")
+                    .setMaxResults(1)
+                .end().setOnExpression("t = subT2");
+        String subquery = "SELECT t.name, t.parent.id, t.id FROM RecursiveEntity t LEFT JOIN t.parent parent_1 " +
+                "LEFT JOIN RecursiveEntity(" +
+                "SELECT subT.name, subT.parent.id, subT.id FROM RecursiveEntity subT LEFT JOIN subT.parent parent_1 WHERE parent_1.name = :param_0 ORDER BY subT.name ASC LIMIT 1" +
+                ") subT(name, parent.id, id) ON (t = subT) WHERE parent_1.name = :param_1 ORDER BY t.name ASC LIMIT 1";
+        String expected = ""
+                + "SELECT t FROM RecursiveEntity(" + subquery + ") t(name, parent.id, id) LEFT JOIN RecursiveEntity(" +
+                "SELECT subT2.name, subT2.parent.id, subT2.id FROM RecursiveEntity subT2 LEFT JOIN subT2.parent parent_1 WHERE parent_1.name = :param_2 ORDER BY subT2.name ASC LIMIT 1" +
+                ") subT2(name, parent.id, id) ON (t = subT2)";
 
         assertEquals(expected, cb.getQueryString());
         List<RecursiveEntity> resultList = cb.getResultList();

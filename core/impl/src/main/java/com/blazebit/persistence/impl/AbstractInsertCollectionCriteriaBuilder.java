@@ -64,8 +64,8 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
     private final Type<?> elementType;
     private final ExtendedAttribute<?, ?> collectionAttribute;
 
-    public AbstractInsertCollectionCriteriaBuilder(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, Class<T> clazz, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener, String collectionName) {
-        super(mainQuery, queryContext, isMainQuery, clazz, cteName, cteClass, result, listener);
+    public AbstractInsertCollectionCriteriaBuilder(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, Class<T> clazz, CTEManager.CTEKey cteKey, Class<?> cteClass, Y result, CTEBuilderListener listener, String collectionName) {
+        super(mainQuery, queryContext, isMainQuery, clazz, cteKey, cteClass, result, listener);
         this.collectionName = collectionName;
         ExtendedManagedType extendedManagedType = mainQuery.metamodel.getManagedType(ExtendedManagedType.class, entityType);
         this.collectionAttribute = extendedManagedType.getAttribute(collectionName);
@@ -88,8 +88,8 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
         this.collectionAttributeEntries = collectionAttributeEntries;
     }
 
-    public AbstractInsertCollectionCriteriaBuilder(AbstractInsertCollectionCriteriaBuilder<T, X, Y> builder, MainQuery mainQuery, QueryContext queryContext) {
-        super(builder, mainQuery, queryContext);
+    public AbstractInsertCollectionCriteriaBuilder(AbstractInsertCollectionCriteriaBuilder<T, X, Y> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
+        super(builder, mainQuery, queryContext, joinManagerMapping);
         this.collectionName = builder.collectionName;
         this.keyFunctionExpression = builder.keyFunctionExpression;
         this.collectionColumnBindingMap = builder.collectionColumnBindingMap;

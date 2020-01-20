@@ -18,6 +18,8 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.DeleteCriteriaBuilder;
 
+import java.util.Map;
+
 /**
  *
  * @param <T> The query result type
@@ -31,7 +33,7 @@ public class DeleteCollectionCriteriaBuilderImpl<T> extends AbstractDeleteCollec
     }
 
     @Override
-    AbstractCommonQueryBuilder<T, DeleteCriteriaBuilder<T>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, BaseFinalSetOperationBuilderImpl<T, ?, ?>> copy(QueryContext queryContext) {
+    AbstractCommonQueryBuilder<T, DeleteCriteriaBuilder<T>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, BaseFinalSetOperationBuilderImpl<T, ?, ?>> copy(QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
         throw new UnsupportedOperationException("This should only be used on CTEs!");
     }
 }

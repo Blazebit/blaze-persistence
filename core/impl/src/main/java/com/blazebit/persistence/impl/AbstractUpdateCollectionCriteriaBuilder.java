@@ -69,7 +69,7 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
 
     private List<String> cachedBaseQueryStrings;
 
-    public AbstractUpdateCollectionCriteriaBuilder(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, Class<T> clazz, String alias, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener, String collectionName) {
+    public AbstractUpdateCollectionCriteriaBuilder(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, Class<T> clazz, String alias, CTEManager.CTEKey cteName, Class<?> cteClass, Y result, CTEBuilderListener listener, String collectionName) {
         super(mainQuery, queryContext, isMainQuery, clazz, alias, cteName, cteClass, result, listener);
         this.collectionName = collectionName;
         ExtendedManagedType extendedManagedType = mainQuery.metamodel.getManagedType(ExtendedManagedType.class, entityType);
@@ -99,8 +99,8 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
         this.collectionAttributeEntries = collectionAttributeEntries;
     }
 
-    public AbstractUpdateCollectionCriteriaBuilder(AbstractUpdateCollectionCriteriaBuilder<T, X, Y> builder, MainQuery mainQuery, QueryContext queryContext) {
-        super(builder, mainQuery, queryContext);
+    public AbstractUpdateCollectionCriteriaBuilder(AbstractUpdateCollectionCriteriaBuilder<T, X, Y> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
+        super(builder, mainQuery, queryContext, joinManagerMapping);
         this.collectionName = builder.collectionName;
         this.keyFunctionExpression = builder.keyFunctionExpression;
         this.collectionColumnBindingMap = builder.collectionColumnBindingMap;

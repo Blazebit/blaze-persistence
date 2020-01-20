@@ -17,6 +17,7 @@
 package com.blazebit.persistence.impl;
 
 import java.util.List;
+import java.util.Map;
 
 import com.blazebit.persistence.BaseFinalSetOperationBuilder;
 import com.blazebit.persistence.BaseOngoingFinalSetOperationBuilder;
@@ -43,8 +44,8 @@ public abstract class BaseFinalSetOperationCTECriteriaBuilderImpl<T, X extends B
         this.subListener = new CTEBuilderListenerImpl();
     }
 
-    public BaseFinalSetOperationCTECriteriaBuilderImpl(BaseFinalSetOperationBuilderImpl<T, X, BaseFinalSetOperationCTECriteriaBuilderImpl<T, X>> builder, MainQuery mainQuery, QueryContext queryContext) {
-        super(builder, mainQuery, queryContext);
+    public BaseFinalSetOperationCTECriteriaBuilderImpl(BaseFinalSetOperationBuilderImpl<T, X, BaseFinalSetOperationCTECriteriaBuilderImpl<T, X>> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
+        super(builder, mainQuery, queryContext, joinManagerMapping);
         this.result = null;
         this.listener = null;
         this.initiator = null;
@@ -81,14 +82,14 @@ public abstract class BaseFinalSetOperationCTECriteriaBuilderImpl<T, X extends B
             } else {
                 List<String> attributes = setOperationBuilder.initiator.prepareAndGetAttributes();
                 List<String> columns = setOperationBuilder.initiator.prepareAndGetColumnNames();
-                CTEInfo info = new CTEInfo(setOperationBuilder.initiator.cteName, setOperationBuilder.initiator.inline, setOperationBuilder.initiator.cteType, attributes, columns, false, false, target, null);
+                CTEInfo info = new CTEInfo(setOperationBuilder.initiator.cteKey.getName(), setOperationBuilder.initiator.cteKey.getOwner(), setOperationBuilder.initiator.inline, setOperationBuilder.initiator.cteType, attributes, columns, false, false, target, null);
                 return info;
             }
         } else if (queryBuilder instanceof AbstractCTECriteriaBuilder<?, ?, ?, ?>) {
             AbstractCTECriteriaBuilder<?, ?, ?, ?> cteBuilder = (AbstractCTECriteriaBuilder<?, ?, ?, ?>) queryBuilder;
             List<String> attributes = cteBuilder.prepareAndGetAttributes();
             List<String> columns = cteBuilder.prepareAndGetColumnNames();
-            CTEInfo info = new CTEInfo(cteBuilder.cteName, cteBuilder.inline, cteBuilder.cteType, attributes, columns, false, false, target, null);
+            CTEInfo info = new CTEInfo(cteBuilder.cteKey.getName(), cteBuilder.cteKey.getOwner(), cteBuilder.inline, cteBuilder.cteType, attributes, columns, false, false, target, null);
             return info;
         }
         

@@ -30,14 +30,14 @@ import com.blazebit.persistence.ReturningUpdateCriteriaBuilder;
 public class ReturningModificationCriteraBuilderFactoryImpl<X> implements ReturningModificationCriteriaBuilderFactory<X> {
 
     private final MainQuery mainQuery;
-    private final String cteName;
+    private final CTEManager.CTEKey cteKey;
     private final Class<?> cteClass;
     private final X result;
     private final CTEBuilderListener listener;
 
-    ReturningModificationCriteraBuilderFactoryImpl(MainQuery mainQuery, String cteName, Class<?> cteClass, X result, final CTEBuilderListener listener) {
+    ReturningModificationCriteraBuilderFactoryImpl(MainQuery mainQuery, CTEManager.CTEKey cteKey, Class<?> cteClass, X result, final CTEBuilderListener listener) {
         this.mainQuery = mainQuery;
-        this.cteName = cteName;
+        this.cteKey = cteKey;
         this.cteClass = cteClass;
         this.result = result;
         this.listener = listener;
@@ -50,7 +50,7 @@ public class ReturningModificationCriteraBuilderFactoryImpl<X> implements Return
 
     @Override
     public <T> ReturningDeleteCriteriaBuilder<T, X> delete(Class<T> deleteClass, String alias) {
-        ReturningDeleteCriteriaBuilderImpl<T, X> cb = new ReturningDeleteCriteriaBuilderImpl<T, X>(mainQuery, mainQuery.cteManager.getQueryContext(), deleteClass, alias, cteName, cteClass, result, listener);
+        ReturningDeleteCriteriaBuilderImpl<T, X> cb = new ReturningDeleteCriteriaBuilderImpl<T, X>(mainQuery, mainQuery.cteManager.getQueryContext(), deleteClass, alias, cteKey, cteClass, result, listener);
         listener.onBuilderStarted(cb);
         return cb;
     }
@@ -62,7 +62,7 @@ public class ReturningModificationCriteraBuilderFactoryImpl<X> implements Return
 
     @Override
     public <T> ReturningDeleteCriteriaBuilder<T, X> deleteCollection(Class<T> deleteOwnerClass, String alias, String collectionName) {
-        ReturningDeleteCollectionCriteriaBuilderImpl<T, X> cb = new ReturningDeleteCollectionCriteriaBuilderImpl<T, X>(mainQuery, mainQuery.cteManager.getQueryContext(), deleteOwnerClass, alias, cteName, cteClass, result, listener, collectionName);
+        ReturningDeleteCollectionCriteriaBuilderImpl<T, X> cb = new ReturningDeleteCollectionCriteriaBuilderImpl<T, X>(mainQuery, mainQuery.cteManager.getQueryContext(), deleteOwnerClass, alias, cteKey, cteClass, result, listener, collectionName);
         listener.onBuilderStarted(cb);
         return cb;
     }
@@ -74,7 +74,7 @@ public class ReturningModificationCriteraBuilderFactoryImpl<X> implements Return
 
     @Override
     public <T> ReturningUpdateCriteriaBuilder<T, X> update(Class<T> updateClass, String alias) {
-        ReturningUpdateCriteriaBuilderImpl<T, X> cb = new ReturningUpdateCriteriaBuilderImpl<T, X>(mainQuery, mainQuery.cteManager.getQueryContext(), updateClass, alias, cteName, cteClass, result, listener);
+        ReturningUpdateCriteriaBuilderImpl<T, X> cb = new ReturningUpdateCriteriaBuilderImpl<T, X>(mainQuery, mainQuery.cteManager.getQueryContext(), updateClass, alias, cteKey, cteClass, result, listener);
         listener.onBuilderStarted(cb);
         return cb;
     }
@@ -86,21 +86,21 @@ public class ReturningModificationCriteraBuilderFactoryImpl<X> implements Return
 
     @Override
     public <T> ReturningUpdateCriteriaBuilder<T, X> updateCollection(Class<T> updateOwnerClass, String alias, String collectionName) {
-        ReturningUpdateCollectionCriteriaBuilderImpl<T, X> cb = new ReturningUpdateCollectionCriteriaBuilderImpl<T, X>(mainQuery, mainQuery.cteManager.getQueryContext(), updateOwnerClass, alias, cteName, cteClass, result, listener, collectionName);
+        ReturningUpdateCollectionCriteriaBuilderImpl<T, X> cb = new ReturningUpdateCollectionCriteriaBuilderImpl<T, X>(mainQuery, mainQuery.cteManager.getQueryContext(), updateOwnerClass, alias, cteKey, cteClass, result, listener, collectionName);
         listener.onBuilderStarted(cb);
         return cb;
     }
 
     @Override
     public <T> ReturningInsertCriteriaBuilder<T, X> insert(Class<T> insertClass) {
-        ReturningInsertCriteriaBuilderImpl<T, X> cb = new ReturningInsertCriteriaBuilderImpl<T, X>(mainQuery, mainQuery.cteManager.getQueryContext(), insertClass, cteName, cteClass, result, listener);
+        ReturningInsertCriteriaBuilderImpl<T, X> cb = new ReturningInsertCriteriaBuilderImpl<T, X>(mainQuery, mainQuery.cteManager.getQueryContext(), insertClass, cteKey, cteClass, result, listener);
         listener.onBuilderStarted(cb);
         return cb;
     }
 
     @Override
     public <T> ReturningInsertCriteriaBuilder<T, X> insertCollection(Class<T> insertOwnerClass, String collectionName) {
-        ReturningInsertCollectionCriteriaBuilderImpl<T, X> cb = new ReturningInsertCollectionCriteriaBuilderImpl<T, X>(mainQuery, mainQuery.cteManager.getQueryContext(), insertOwnerClass, cteName, cteClass, result, listener, collectionName);
+        ReturningInsertCollectionCriteriaBuilderImpl<T, X> cb = new ReturningInsertCollectionCriteriaBuilderImpl<T, X>(mainQuery, mainQuery.cteManager.getQueryContext(), insertOwnerClass, cteKey, cteClass, result, listener, collectionName);
         listener.onBuilderStarted(cb);
         return cb;
     }

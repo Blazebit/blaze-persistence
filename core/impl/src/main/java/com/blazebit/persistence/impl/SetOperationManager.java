@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import com.blazebit.persistence.MiddleOngoingSetOperationCTECriteriaBuilder;
 import com.blazebit.persistence.spi.SetOperationType;
@@ -41,13 +42,13 @@ public class SetOperationManager {
         this.setOperations = new ArrayList<>();
     }
 
-    SetOperationManager(SetOperationManager original, QueryContext queryContext) {
+    SetOperationManager(SetOperationManager original, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
         this.operator = original.operator;
         this.nested = original.nested;
-        this.startQueryBuilder = original.startQueryBuilder.copy(queryContext);
+        this.startQueryBuilder = original.startQueryBuilder.copy(queryContext, joinManagerMapping);
         this.setOperations = new ArrayList<>(original.setOperations.size());
         for (AbstractCommonQueryBuilder<?, ?, ?, ?, ?> setOperation : original.setOperations) {
-            setOperations.add(setOperation.copy(queryContext));
+            setOperations.add(setOperation.copy(queryContext, joinManagerMapping));
         }
     }
 

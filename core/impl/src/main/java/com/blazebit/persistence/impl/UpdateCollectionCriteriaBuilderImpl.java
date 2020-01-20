@@ -18,6 +18,8 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.UpdateCriteriaBuilder;
 
+import java.util.Map;
+
 /**
  *
  * @param <T> The query result type
@@ -30,12 +32,12 @@ public class UpdateCollectionCriteriaBuilderImpl<T> extends AbstractUpdateCollec
         super(mainQuery, null, true, updateOwnerClass, alias, null, null, null, null, collectionName);
     }
 
-    public UpdateCollectionCriteriaBuilderImpl(AbstractUpdateCollectionCriteriaBuilder<T, UpdateCriteriaBuilder<T>, Void> builder, MainQuery mainQuery, QueryContext queryContext) {
-        super(builder, mainQuery, queryContext);
+    public UpdateCollectionCriteriaBuilderImpl(AbstractUpdateCollectionCriteriaBuilder<T, UpdateCriteriaBuilder<T>, Void> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
+        super(builder, mainQuery, queryContext, joinManagerMapping);
     }
 
     @Override
-    AbstractCommonQueryBuilder<T, UpdateCriteriaBuilder<T>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, BaseFinalSetOperationBuilderImpl<T, ?, ?>> copy(QueryContext queryContext) {
-        return new UpdateCollectionCriteriaBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext);
+    AbstractCommonQueryBuilder<T, UpdateCriteriaBuilder<T>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, BaseFinalSetOperationBuilderImpl<T, ?, ?>> copy(QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
+        return new UpdateCollectionCriteriaBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext, joinManagerMapping);
     }
 }

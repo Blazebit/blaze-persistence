@@ -118,6 +118,7 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -226,9 +227,10 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
      * Create fully copy of builder. Intended for CTEs only.
      *
      * @param builder
+     * @param joinManagerMapping
      */
     @SuppressWarnings("unchecked")
-    protected AbstractCommonQueryBuilder(AbstractCommonQueryBuilder<QueryResultType, ?, ?, ?, ?> builder, MainQuery mainQuery, QueryContext queryContext) {
+    protected AbstractCommonQueryBuilder(AbstractCommonQueryBuilder<QueryResultType, ?, ?, ?, ?> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
         this.mainQuery = mainQuery;
         if (builder.isMainQuery) {
             mainQuery.cteManager.init(this);
@@ -268,7 +270,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 new SizeTransformerGroup(sizeTransformationVisitor, orderByManager, selectManager, joinManager, groupByManager));
         this.resultType = builder.resultType;
 
-        applyFrom(builder, isMainQuery, true, true, Collections.<ClauseType>emptySet(), Collections.<JoinNode>emptySet());
+        applyFrom(builder, isMainQuery, true, true, Collections.<ClauseType>emptySet(), Collections.<JoinNode>emptySet(), joinManagerMapping);
     }
     
     protected AbstractCommonQueryBuilder(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, DbmsStatementType statementType, Class<QueryResultType> resultClazz, String alias, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, FinalSetReturn finalSetOperationBuilder, boolean implicitFromClause) {
@@ -354,13 +356,10 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this(mainQuery, queryContext, isMainQuery, statementType, resultClazz, alias, null);
     }
 
-    abstract AbstractCommonQueryBuilder<QueryResultType, BuilderType, SetReturn, SubquerySetReturn, FinalSetReturn> copy(QueryContext queryContext);
+    abstract AbstractCommonQueryBuilder<QueryResultType, BuilderType, SetReturn, SubquerySetReturn, FinalSetReturn> copy(QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping);
 
-    void applyFrom(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder, boolean copyMainQuery, boolean copySelect, boolean fixedSelect, Set<ClauseType> clauseExclusions, Set<JoinNode> alwaysIncludedNodes) {
-        if (copyMainQuery) {
-            parameterManager.copyFrom(builder.parameterManager);
-            mainQuery.cteManager.applyFrom(builder.mainQuery.cteManager);
-        }
+    void applyFrom(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder, boolean copyMainQuery, boolean copySelect, boolean fixedSelect, Set<ClauseType> clauseExclusions, Set<JoinNode> alwaysIncludedNodes, Map<JoinManager, JoinManager> joinManagerMapping) {
+        joinManagerMapping.put(builder.joinManager, joinManager);
         aliasManager.applyFrom(builder.aliasManager);
         Map<JoinNode, JoinNode> nodeMapping = joinManager.applyFrom(builder.joinManager, clauseExclusions, alwaysIncludedNodes);
         windowManager.applyFrom(builder.windowManager);
@@ -368,6 +367,11 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         havingManager.applyFrom(builder.havingManager);
         groupByManager.applyFrom(builder.groupByManager, clauseExclusions);
         orderByManager.applyFrom(builder.orderByManager);
+
+        if (copyMainQuery) {
+            parameterManager.copyFrom(builder.parameterManager);
+            mainQuery.cteManager.applyFrom(builder.mainQuery.cteManager, joinManagerMapping);
+        }
 
         setFirstResult(builder.firstResult);
         setMaxResults(builder.maxResults);
@@ -490,31 +494,31 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     @SuppressWarnings("unchecked")
     public FullSelectCTECriteriaBuilder<BuilderType> with(Class<?> cteClass, boolean inline) {
-        return with(cteClass, (String) null, inline, false, (BuilderType) this);
+        return with(cteClass, (String) null, inline, null, false, (BuilderType) this);
     }
 
     @SuppressWarnings("unchecked")
     public FullSelectCTECriteriaBuilder<BuilderType> with(Class<?> cteClass, CriteriaBuilder<?> criteriaBuilder, boolean inline) {
-        return with(cteClass, criteriaBuilder, inline, false, (BuilderType) this);
+        return with(cteClass, criteriaBuilder, inline, null, false, (BuilderType) this);
     }
 
     @SuppressWarnings("unchecked")
-    public <X> FullSelectCTECriteriaBuilder<X> with(Class<?> cteClass, String name, boolean inline, boolean lateral, X result) {
+    public <X> FullSelectCTECriteriaBuilder<X> with(Class<?> cteClass, String name, boolean inline, JoinManager inlineOwner, boolean lateral, X result) {
         if (!inline && !mainQuery.dbmsDialect.supportsWithClause()) {
             throw new UnsupportedOperationException("The database does not support the with clause, so the CTE must be inlined!");
         }
         prepareForModification(ClauseType.CTE);
-        return mainQuery.cteManager.with(cteClass, name, result, inline, lateral ? aliasManager : null, lateral ? joinManager : null);
+        return mainQuery.cteManager.with(cteClass, name, result, inline, inlineOwner, lateral ? aliasManager : null, lateral ? joinManager : null);
     }
 
     @SuppressWarnings("unchecked")
-    public <X> FullSelectCTECriteriaBuilder<X> with(Class<?> cteClass, CriteriaBuilder<?> criteriaBuilder, boolean inline, boolean lateral, X result) {
+    public <X> FullSelectCTECriteriaBuilder<X> with(Class<?> cteClass, CriteriaBuilder<?> criteriaBuilder, boolean inline, JoinManager inlineOwner, boolean lateral, X result) {
         if (!inline && !mainQuery.dbmsDialect.supportsWithClause()) {
             throw new UnsupportedOperationException("The database does not support the with clause, so the CTE must be inlined!");
         }
 
         prepareForModification(ClauseType.CTE);
-        return mainQuery.cteManager.with(cteClass, result, (AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) criteriaBuilder, inline, lateral ? aliasManager : null, lateral ? joinManager : null);
+        return mainQuery.cteManager.with(cteClass, result, (AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) criteriaBuilder, inline, inlineOwner, lateral ? aliasManager : null, lateral ? joinManager : null);
     }
 
     public BuilderType withCtesFrom(CTEBuilder<?> cteBuilder) {
@@ -529,7 +533,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
             prepareForModification(ClauseType.CTE);
             this.parameterManager.applyToCteFrom(mainQuery.parameterManager);
-            this.mainQuery.cteManager.applyFrom(mainQuery.cteManager);
+            this.mainQuery.cteManager.applyFrom(mainQuery.cteManager, new IdentityHashMap<JoinManager, JoinManager>());
         }
         return (BuilderType) this;
     }
@@ -808,7 +812,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     public FullSelectCTECriteriaBuilder<BuilderType> fromSubquery(Class<?> cteClass, String alias) {
         alias = fromInternal(cteClass, alias);
-        return with(cteClass, true);
+        return with(cteClass, alias, true, joinManager, false, (BuilderType) this);
     }
 
     public FullSelectCTECriteriaBuilder<BuilderType> fromEntitySubquery(Class<?> cteClass) {
@@ -1727,7 +1731,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         if (entityClass == null) {
             throw new NullPointerException("entityClass");
         }
-        return with(entityClass, alias, true, false, joinManager.joinOn((BuilderType) this, base, entityClass, alias, type, false));
+        return with(entityClass, alias, true, joinManager, false, joinManager.joinOn((BuilderType) this, base, entityClass, alias, type, false));
     }
 
     @SuppressWarnings("unchecked")
@@ -1768,7 +1772,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         if (entityClass == null) {
             throw new NullPointerException("entityClass");
         }
-        return with(entityClass, alias, true, true, joinManager.joinOn((BuilderType) this, base, entityClass, alias, type, true));
+        return with(entityClass, alias, true, joinManager, true, joinManager.joinOn((BuilderType) this, base, entityClass, alias, type, true));
     }
 
     @SuppressWarnings("unchecked")
@@ -1817,7 +1821,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         if (entityClass == null) {
             throw new NullPointerException("entityClass");
         }
-        return with(entityClass, alias, true, true, joinManager.joinOn((BuilderType) this, base, entityClass, alias, type, true).onExpression("1=1").end());
+        return with(entityClass, alias, true, joinManager, true, joinManager.joinOn((BuilderType) this, base, entityClass, alias, type, true).onExpression("1=1").end());
     }
 
     @SuppressWarnings("unchecked")
@@ -2550,7 +2554,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 }
             }
             String cteTableSqlAlias = baseQuery == null ? "" : cbf.getExtendedQuerySupport().getSqlAlias(em, baseQuery, lateInlineNode.getAlias());
-            entityFunctionNodes.add(new EntityFunctionNode(subquery, aliases, cteInfo.name, cteTableSqlAlias, null, null, null, null, lateInlineNode.isLateral()));
+            entityFunctionNodes.add(new EntityFunctionNode(subquery, aliases, cteInfo.cteType.getName(), cteTableSqlAlias, null, null, null, null, lateInlineNode.isLateral()));
         }
 
         return entityFunctionNodes;
@@ -2970,10 +2974,14 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             return buildLateralBaseQueryString(lateralSb, lateralJoinNode);
         }
         if (cachedQueryString == null) {
-            cachedQueryString = buildBaseQueryString(false, false);
+            cachedQueryString = buildBaseQueryString(false, isEmbedded());
         }
 
         return cachedQueryString;
+    }
+
+    protected boolean isEmbedded() {
+        return false;
     }
 
     protected String getExternalQueryString() {
@@ -3006,7 +3014,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             public void visit(JoinNode node) {
                 Class<?> cteType = node.getJavaType();
                 if (cteType != null) {
-                    CTEInfo cte = mainQuery.cteManager.getCte(cteType, node.getAlias());
+                    CTEInfo cte = mainQuery.cteManager.getCte(cteType, node.getAlias(), joinManager);
                     if (cte == null) {
                         cte = mainQuery.cteManager.getCte(cteType);
                     }
@@ -3159,16 +3167,16 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 arguments.add(new StringLiteral("ENTITY_FUNCTION"));
                 arguments.add(expression);
 
-                String valuesClause = node.getSubquery();
-                String valuesAliases = node.getAliases();
+                String subquery = node.getSubquery();
+                String aliases = node.getAliases();
                 String syntheticPredicate = node.getSyntheticPredicate();
 
                 // TODO: this is a hibernate specific integration detail
                 // Replace the subview subselect that is generated for this subselect
                 String entityName = node.getEntityName();
                 arguments.add(new StringLiteral(entityName));
-                arguments.add(new StringLiteral(valuesClause));
-                arguments.add(new StringLiteral(valuesAliases == null ? "" : valuesAliases));
+                arguments.add(new StringLiteral(subquery));
+                arguments.add(new StringLiteral(aliases == null ? "" : aliases));
                 arguments.add(new StringLiteral(syntheticPredicate == null ? "" : syntheticPredicate));
 
                 expression = new FunctionExpression("FUNCTION", arguments);

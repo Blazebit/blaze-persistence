@@ -376,7 +376,29 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
                 entityFunctionNodes.size() * 100 +
                 // we put "(select * from )" around
                 keyRestrictedLeftJoinAliases.size() * 20);
-        sb.append(sqlQuery);
+        // See EntityFunction where we do the same
+        // We essentially introduce this synthetic predicate at the end to be able to identify the table alias that we want to replace
+        int subqueryEndIndex = sqlQuery.lastIndexOf(" and 1=1");
+        if (subqueryEndIndex == -1) {
+            sb.append(sqlQuery);
+        } else {
+            sb.append(sqlQuery, 0, subqueryEndIndex);
+            // When inlining e.g. a VALUES clause we need to remove the synthetic predicate
+            int idPredicateIndex = sqlQuery.indexOf(" and ", subqueryEndIndex + " and 1=1".length());
+            if (idPredicateIndex == -1) {
+                sb.append(sqlQuery, subqueryEndIndex + " and 1=1".length(), sqlQuery.length());
+            } else {
+                int newSubqueryPartStart = sqlQuery.indexOf(" and ", idPredicateIndex + 1);
+                if (newSubqueryPartStart == -1) {
+                    // We know that the id predicate is wrapped in parenthesis, so we append the rest of the query after the first found parenthesis
+                    if (sqlQuery.charAt(idPredicateIndex + " and ".length()) == '(') {
+                        sb.append(sqlQuery, sqlQuery.indexOf(')', idPredicateIndex) + 1, sqlQuery.length());
+                    }
+                } else {
+                    sb.append(sqlQuery, newSubqueryPartStart, sqlQuery.length());
+                }
+            }
+        }
 
         for (String sqlAlias : keyRestrictedLeftJoinAliases) {
             applyLeftJoinSubqueryRewrite(sb, sqlAlias);

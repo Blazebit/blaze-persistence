@@ -24,6 +24,7 @@ import com.blazebit.persistence.StartOngoingSetOperationCTECriteriaBuilder;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +38,7 @@ import java.util.Map;
 public class CTEManager extends CTEBuilderListenerImpl {
 
     private final MainQuery mainQuery;
-    private final Map<String, CTEInfo> ctes;
+    private final Map<CTEKey, CTEInfo> ctes;
     private QueryContext queryContext;
     private boolean recursive = false;
 
@@ -52,12 +53,12 @@ public class CTEManager extends CTEBuilderListenerImpl {
         }
     }
 
-    void applyFrom(CTEManager cteManager) {
+    void applyFrom(CTEManager cteManager, Map<JoinManager, JoinManager> joinManagerMapping) {
         if (cteManager.recursive) {
             recursive = true;
         }
-        for (Map.Entry<String, CTEInfo> entry : cteManager.ctes.entrySet()) {
-            CTEInfo cteInfo = entry.getValue().copy(this);
+        for (Map.Entry<CTEKey, CTEInfo> entry : cteManager.ctes.entrySet()) {
+            CTEInfo cteInfo = entry.getValue().copy(this, joinManagerMapping);
             mainQuery.parameterManager.collectParameterRegistrations(cteInfo.nonRecursiveCriteriaBuilder, ClauseType.CTE);
             if (cteInfo.recursive) {
                 mainQuery.parameterManager.collectParameterRegistrations(cteInfo.recursiveCriteriaBuilder, ClauseType.CTE);
@@ -76,27 +77,24 @@ public class CTEManager extends CTEBuilderListenerImpl {
     }
 
     public boolean hasCte(Class<?> cte) {
-        return ctes.containsKey(getCteName(cte, null));
+        return ctes.containsKey(getCteKey(cte, null, null));
     }
 
     public CTEInfo getCte(Class<?> cteType) {
-        return ctes.get(getCteName(cteType, null));
+        return ctes.get(getCteKey(cteType, null, null));
     }
 
-    public CTEInfo getCte(Class<?> cteType, String name) {
-        return ctes.get(getCteName(cteType, name));
+    public CTEInfo getCte(Class<?> cteType, String name, JoinManager joinManager) {
+        return ctes.get(getCteKey(cteType, name, joinManager));
     }
 
-    private String getCteName(Class<?> cteClass, String name) {
-        if (name == null) {
-            return cteClass.getSimpleName();
-        }
-        return cteClass.getSimpleName() + "." + name;
+    private CTEKey getCteKey(Class<?> cteClass, String name, JoinManager owner) {
+        return new CTEKey(cteClass, name, owner);
     }
 
-    private void assertCteNameAvailable(String cteName) {
-        if (ctes.containsKey(cteName)) {
-            throw new IllegalArgumentException("A CTE with the name " + cteName + " already exists! Please choose a different type or name!");
+    private void assertCteNameAvailable(CTEKey cteKey) {
+        if (ctes.containsKey(cteKey)) {
+            throw new IllegalArgumentException("A CTE with the name " + cteKey.getName() + " already exists! Please choose a different type or name!");
         }
     }
 
@@ -164,14 +162,14 @@ public class CTEManager extends CTEBuilderListenerImpl {
     @SuppressWarnings("unchecked")
     <Y> StartOngoingSetOperationCTECriteriaBuilder<Y, LeafOngoingFinalSetOperationCTECriteriaBuilder<Y>> withStartSet(Class<?> cteClass, Y result, boolean inline, AliasManager parentAliasManager, JoinManager parentJoinManager) {
         mainQuery.assertSupportsAdvancedSql("Illegal use of WITH clause!", inline);
-        String cteName = cteClass.getSimpleName();
+        CTEKey cteKey = getCteKey(cteClass, null, null);
         FinalSetOperationCTECriteriaBuilderImpl<Y> parentFinalSetOperationBuilder = new FinalSetOperationCTECriteriaBuilderImpl<Y>(mainQuery, queryContext, (Class<Y>) cteClass, result, null, false, this, null);
         OngoingFinalSetOperationCTECriteriaBuilderImpl<Y> subFinalSetOperationBuilder = new OngoingFinalSetOperationCTECriteriaBuilderImpl<Y>(mainQuery, queryContext, (Class<Y>) cteClass, null, null, true, parentFinalSetOperationBuilder.getSubListener(), null);
         this.onBuilderStarted(parentFinalSetOperationBuilder);
         
-        LeafOngoingSetOperationCTECriteriaBuilderImpl<Y> leafCb = new LeafOngoingSetOperationCTECriteriaBuilderImpl<Y>(mainQuery, queryContext, cteName, inline, (Class<Object>) cteClass, result, parentFinalSetOperationBuilder.getSubListener(), (FinalSetOperationCTECriteriaBuilderImpl<Object>) parentFinalSetOperationBuilder, parentAliasManager, parentJoinManager);
+        LeafOngoingSetOperationCTECriteriaBuilderImpl<Y> leafCb = new LeafOngoingSetOperationCTECriteriaBuilderImpl<Y>(mainQuery, queryContext, cteKey, inline, (Class<Object>) cteClass, result, parentFinalSetOperationBuilder.getSubListener(), (FinalSetOperationCTECriteriaBuilderImpl<Object>) parentFinalSetOperationBuilder, parentAliasManager, parentJoinManager);
         StartOngoingSetOperationCTECriteriaBuilderImpl<Y, LeafOngoingSetOperationCTECriteriaBuilderImpl<Y>> cb = new StartOngoingSetOperationCTECriteriaBuilderImpl<Y, LeafOngoingSetOperationCTECriteriaBuilderImpl<Y>>(
-                mainQuery, queryContext, cteName, inline, (Class<Object>) cteClass, result, subFinalSetOperationBuilder.getSubListener(), (OngoingFinalSetOperationCTECriteriaBuilderImpl<Object>) subFinalSetOperationBuilder, leafCb, parentAliasManager, parentJoinManager
+                mainQuery, queryContext, cteKey, inline, (Class<Object>) cteClass, result, subFinalSetOperationBuilder.getSubListener(), (OngoingFinalSetOperationCTECriteriaBuilderImpl<Object>) subFinalSetOperationBuilder, leafCb, parentAliasManager, parentJoinManager
         );
         
         subFinalSetOperationBuilder.setOperationManager.setStartQueryBuilder(cb);
@@ -185,22 +183,22 @@ public class CTEManager extends CTEBuilderListenerImpl {
     }
 
     @SuppressWarnings("unchecked")
-    <Y> FullSelectCTECriteriaBuilder<Y> with(Class<?> cteClass, String name, Y result, boolean inline, AliasManager parentAliasManager, JoinManager parentJoinManager) {
+    <Y> FullSelectCTECriteriaBuilder<Y> with(Class<?> cteClass, String name, Y result, boolean inline, JoinManager inlineOwner, AliasManager parentAliasManager, JoinManager parentJoinManager) {
         mainQuery.assertSupportsAdvancedSql("Illegal use of WITH clause!", inline);
-        String cteName = getCteName(cteClass, name);
-        assertCteNameAvailable(cteName);
-        FullSelectCTECriteriaBuilderImpl<Y> cteBuilder = new FullSelectCTECriteriaBuilderImpl<Y>(mainQuery, queryContext, cteName, inline, (Class<Object>) cteClass, result, this, parentAliasManager, parentJoinManager);
+        CTEKey cteKey = getCteKey(cteClass, name, inlineOwner);
+        assertCteNameAvailable(cteKey);
+        FullSelectCTECriteriaBuilderImpl<Y> cteBuilder = new FullSelectCTECriteriaBuilderImpl<Y>(mainQuery, queryContext, cteKey, inline, (Class<Object>) cteClass, result, this, parentAliasManager, parentJoinManager);
         this.onBuilderStarted(cteBuilder);
         return cteBuilder;
     }
 
     @SuppressWarnings("unchecked")
-    <Y> FullSelectCTECriteriaBuilder<Y> with(Class<?> cteClass, Y result, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder, boolean inline, AliasManager parentAliasManager, JoinManager parentJoinManager) {
+    <Y> FullSelectCTECriteriaBuilder<Y> with(Class<?> cteClass, Y result, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder, boolean inline, JoinManager inlineOwner, AliasManager parentAliasManager, JoinManager parentJoinManager) {
         mainQuery.assertSupportsAdvancedSql("Illegal use of WITH clause!", inline);
-        String cteName = getCteName(cteClass, null);
-        assertCteNameAvailable(cteName);
-        FullSelectCTECriteriaBuilderImpl<Y> cteBuilder = new FullSelectCTECriteriaBuilderImpl<Y>(mainQuery, queryContext, cteName, inline, (Class<Object>) cteClass, result, this, parentAliasManager, parentJoinManager);
-        cteBuilder.applyFrom(builder, true, false, false, Collections.<ClauseType>emptySet(), Collections.<JoinNode>emptySet());
+        CTEKey cteKey = getCteKey(cteClass, null, inlineOwner);
+        assertCteNameAvailable(cteKey);
+        FullSelectCTECriteriaBuilderImpl<Y> cteBuilder = new FullSelectCTECriteriaBuilderImpl<Y>(mainQuery, queryContext, cteKey, inline, (Class<Object>) cteClass, result, this, parentAliasManager, parentJoinManager);
+        cteBuilder.applyFrom(builder, true, false, false, Collections.<ClauseType>emptySet(), Collections.<JoinNode>emptySet(), new IdentityHashMap<JoinManager, JoinManager>());
         this.onBuilderStarted(cteBuilder);
         return cteBuilder;
     }
@@ -208,19 +206,19 @@ public class CTEManager extends CTEBuilderListenerImpl {
     @SuppressWarnings("unchecked")
     <Y> SelectRecursiveCTECriteriaBuilder<Y> withRecursive(Class<?> cteClass, Y result) {
         mainQuery.assertSupportsAdvancedSql("Illegal use of WITH clause!");
-        String cteName = getCteName(cteClass, null);
-        assertCteNameAvailable(cteName);
+        CTEKey cteKey = getCteKey(cteClass, null, null);
+        assertCteNameAvailable(cteKey);
         recursive = true;
-        RecursiveCTECriteriaBuilderImpl<Y> cteBuilder = new RecursiveCTECriteriaBuilderImpl<Y>(mainQuery, queryContext, cteName, (Class<Object>) cteClass, result, this);
+        RecursiveCTECriteriaBuilderImpl<Y> cteBuilder = new RecursiveCTECriteriaBuilderImpl<Y>(mainQuery, queryContext, cteKey, (Class<Object>) cteClass, result, this);
         this.onBuilderStarted(cteBuilder);
         return cteBuilder;
     }
 
     <Y> ReturningModificationCriteriaBuilderFactory<Y> withReturning(Class<?> cteClass, Y result) {
         mainQuery.assertSupportsAdvancedSql("Illegal use of WITH clause!");
-        String cteName = getCteName(cteClass, null);
-        assertCteNameAvailable(cteName);
-        ReturningModificationCriteraBuilderFactoryImpl<Y> factory = new ReturningModificationCriteraBuilderFactoryImpl<Y>(mainQuery, cteName, cteClass, result, this);
+        CTEKey cteKey = getCteKey(cteClass, null, null);
+        assertCteNameAvailable(cteKey);
+        ReturningModificationCriteraBuilderFactoryImpl<Y> factory = new ReturningModificationCriteraBuilderFactoryImpl<Y>(mainQuery, cteKey, cteClass, result, this);
         return factory;
     }
 
@@ -232,6 +230,58 @@ public class CTEManager extends CTEBuilderListenerImpl {
         if (cteInfo.recursive) {
             mainQuery.parameterManager.collectParameterRegistrations(cteInfo.recursiveCriteriaBuilder, ClauseType.CTE);
         }
-        ctes.put(cteInfo.name, cteInfo);
+        ctes.put(new CTEKey(cteInfo.name, cteInfo.owner), cteInfo);
+    }
+
+    /**
+     * @author Christian Beikov
+     * @since 1.4.1
+     */
+    static final class CTEKey {
+        private final String name;
+        private final JoinManager owner;
+
+        public CTEKey(Class<?> cteType, String name, JoinManager owner) {
+            if (name == null) {
+                this.name = cteType.getSimpleName();
+            } else {
+                this.name = cteType.getSimpleName() + "." + name;
+            }
+            this.owner = owner;
+        }
+
+        public CTEKey(String name, JoinManager owner) {
+            this.name = name;
+            this.owner = owner;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public JoinManager getOwner() {
+            return owner;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (!(o instanceof CTEKey)) {
+                return false;
+            }
+
+            CTEKey cteKey = (CTEKey) o;
+
+            if (name != null ? !name.equals(cteKey.name) : cteKey.name != null) {
+                return false;
+            }
+            return owner != null ? owner.equals(cteKey.owner) : cteKey.owner == null;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = name.hashCode();
+            result = 31 * result + (owner != null ? owner.hashCode() : 0);
+            return result;
+        }
     }
 }

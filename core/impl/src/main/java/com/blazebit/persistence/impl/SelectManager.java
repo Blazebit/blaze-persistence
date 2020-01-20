@@ -653,7 +653,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
                             return attributeExample.getExampleJpql() + expression;
                         }
                     }));
-                    if (needsCastParameters) {
+                    if (needsCastParameters && attributeExample.getAttribute().getColumnTypes().length != 0) {
                         arguments.add(new StringLiteral(attributeExample.getAttribute().getColumnTypes()[0]));
                     }
                     selectInfo.set(new FunctionExpression(ParamFunction.FUNCTION_NAME, arguments, expression));
