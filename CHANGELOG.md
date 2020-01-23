@@ -28,6 +28,10 @@ Not yet released
 * Fix problems with the Spring Data WebMvc integration regarding some auto configuration issues
 * Fix rendering of `VALUES` clause with `ValuesStrategy.SELECT_UNION` necessary for MySQL 8.0.19+
 * Support field access for entities as well for `VALUES` clause usage
+* Fix `FULL` flushing of collections when elements are removed
+* Fix `convertWith` support when using `convertAttribute` on collection view type attributes
+* Support invoking setters of mutable attributes in updatable entity view constructor
+* Cloning query builder that implicit joins with alias that is shadowed in subquery fails
 
 ### Backwards-incompatible changes
 
