@@ -48,7 +48,10 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 
 /**
@@ -108,6 +111,32 @@ public class EntityViewUpdateSubviewInverseEmbeddedComplexTest extends AbstractE
         position.getId().setPositionId(0);
         position.setArticleNumber("123");
         newOrder.getPositions().add(position);
+        update(newOrder);
+
+        // Then
+        restartTransaction();
+        LegacyOrder legacyOrder = em.find(LegacyOrder.class, newOrder.getId());
+        Assert.assertEquals(1, legacyOrder.getPositions().size());
+        Assert.assertEquals(new LegacyOrderPositionId(newOrder.getId(), 0), legacyOrder.getPositions().iterator().next().getId());
+    }
+
+    @Test
+    public void testUpdateRemoveFromInverseSet() {
+        // Given
+        UpdatableLegacyOrderView newOrder = evm.create(UpdatableLegacyOrderView.class);
+        CreatableLegacyOrderPositionView position1 = evm.create(CreatableLegacyOrderPositionView.class);
+        position1.getId().setPositionId(0);
+        position1.setArticleNumber("123");
+        newOrder.getPositions().add(position1);
+        CreatableLegacyOrderPositionView position2 = evm.create(CreatableLegacyOrderPositionView.class);
+        position2.getId().setPositionId(1);
+        position2.setArticleNumber("456");
+        newOrder.getPositions().add(position2);
+        update(newOrder);
+
+        // When
+        newOrder.setPositions(new HashSet<>(newOrder.getPositions()));
+        newOrder.getPositions().remove(position2);
         update(newOrder);
 
         // Then

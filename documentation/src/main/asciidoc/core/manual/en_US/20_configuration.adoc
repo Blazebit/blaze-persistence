@@ -201,7 +201,7 @@ Custom functions that can be invoked via the JPA 2.1 function syntax `FUNCTION('
 A `JpqlFunctionGroup` represents a logical function that can contain multiple implementations for various dbms and can be defined as being an aggregate function.
 
 These functions are registered as native persistence provider functions and can therefore also be used with plain JPA APIs or the native persistence provider APIs.
-For more information refer to the <<JPQL functions>> section.
+For more information refer to the <<jpql-functions,JPQL functions>> section.
 
 [[configuration-dbms-dialects]]
 === Dbms dialects

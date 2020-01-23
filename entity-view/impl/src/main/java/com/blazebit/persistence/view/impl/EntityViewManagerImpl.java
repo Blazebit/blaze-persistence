@@ -81,7 +81,6 @@ import com.blazebit.persistence.view.impl.filter.NullFilterImpl;
 import com.blazebit.persistence.view.impl.filter.StartsWithFilterImpl;
 import com.blazebit.persistence.view.impl.filter.StartsWithIgnoreCaseFilterImpl;
 import com.blazebit.persistence.view.impl.macro.DefaultViewRootJpqlMacro;
-import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.impl.mapper.ConvertOperationBuilderImpl;
 import com.blazebit.persistence.view.impl.mapper.ViewMapper;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
@@ -117,6 +116,7 @@ import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
+import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.spi.TransactionSupport;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 import com.blazebit.reflection.ReflectionUtils;
@@ -537,11 +537,14 @@ public class EntityViewManagerImpl implements EntityViewManager {
     public <T> T getReference(Class<T> entityViewClass, Object id) {
         Constructor<T> constructor = (Constructor<T>) referenceConstructorCache.get(entityViewClass);
         try {
+            ViewTypeImpl<T> managedViewType = metamodel.view(entityViewClass);
             if (constructor == null) {
-                ViewTypeImpl<T> managedViewType = metamodel.view(entityViewClass);
                 Class<? extends T> proxyClass = proxyFactory.getProxy(this, managedViewType, null);
                 constructor = (Constructor<T>) proxyClass.getConstructor(managedViewType.getIdAttribute().getConvertedJavaType());
                 referenceConstructorCache.put(entityViewClass, constructor);
+            }
+            if (!managedViewType.getIdAttribute().getJavaType().isInstance(id)) {
+                id = getUpdater(managedViewType, null, null, null).getFullGraphNode().createViewIdByEntityId(id);
             }
             return constructor.newInstance(id);
         } catch (Exception e) {
@@ -991,7 +994,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         }
     }
     
-    public EntityViewUpdater getUpdater(ManagedViewTypeImplementor<?> viewType, ManagedViewTypeImplementor<?> declaredViewType, EntityViewUpdaterImpl owner, String ownerMapping) {
+    public EntityViewUpdaterImpl getUpdater(ManagedViewTypeImplementor<?> viewType, ManagedViewTypeImplementor<?> declaredViewType, EntityViewUpdaterImpl owner, String ownerMapping) {
         if (declaredViewType != null && declaredViewType != viewType || owner != null) {
             ContextAwareUpdaterKey key = new ContextAwareUpdaterKey(viewType, declaredViewType, owner, ownerMapping);
             EntityViewUpdaterImpl value = contextAwareEntityViewUpdaterCache.get(key);

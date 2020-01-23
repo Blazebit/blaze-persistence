@@ -184,7 +184,7 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
     }
 
     @Override
-    protected void addElements(UpdateContext context, Object ownerView, Object view, Collection<Object> removedAllObjects, boolean flushAtOnce, V value, List<Object> embeddablesToUpdate, FusedCollectionActions fusedCollectionActions) {
+    protected void addElements(UpdateContext context, Object ownerView, Object view, Collection<Object> removedAllObjects, boolean flushAtOnce, boolean removedAllWithoutCollectionActions, V value, List<Object> embeddablesToUpdate, FusedCollectionActions fusedCollectionActions) {
         Collection<Object> appends;
         int appendIndex;
         String mapping = getMapping();

@@ -271,6 +271,10 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
         return features;
     }
 
+    public Class<?> getViewTypeClass() {
+        return viewType;
+    }
+
     public boolean hasVersionFlusher() {
         return versionFlusher != null;
     }
@@ -519,6 +523,14 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
         return determineOldId(context, updatableProxy, EMPTY_RUNNABLE);
     }
 
+    public Object createViewIdByEntityId(Object id) {
+        if (tupleizer == null) {
+            return id;
+        }
+        Object[] tuple = tupleizer.tupleize(id);
+        return idViewBuilder.build(tuple);
+    }
+
     private Object determineOldId(UpdateContext context, EntityViewProxy updatableProxy, Runnable postReplaceListener) {
         if (updatableProxy.$$_getId() != null && postReplaceListener != null) {
             if (updatableProxy.$$_getId() instanceof EntityViewProxy) {
@@ -728,11 +740,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
             if (doPersist) {
                 // If the class of the object is an entity, we persist the object
                 context.getEntityManager().persist(entity);
-                id = entityLoader.getEntityId(context, entity);
-                if (tupleizer != null) {
-                    Object[] tuple = tupleizer.tupleize(id);
-                    id = idViewBuilder.build(tuple);
-                }
+                id = createViewIdByEntityId(entityLoader.getEntityId(context, entity));
                 viewIdAccessor.setValue(updatableProxy, id);
             }
             successful = true;
