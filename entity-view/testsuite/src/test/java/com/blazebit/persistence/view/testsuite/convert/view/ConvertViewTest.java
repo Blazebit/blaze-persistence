@@ -30,6 +30,7 @@ import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.convert.view.model.CreatablePersonView;
+import com.blazebit.persistence.view.testsuite.convert.view.model.CreatablePersonView2;
 import com.blazebit.persistence.view.testsuite.convert.view.model.DocumentCloneUpdateView;
 import com.blazebit.persistence.view.testsuite.convert.view.model.DocumentCloneView;
 import com.blazebit.persistence.view.testsuite.convert.view.model.DocumentCloneView2;
@@ -66,6 +67,7 @@ public class ConvertViewTest extends AbstractEntityViewTest {
         cfg.addEntityView(DocumentCloneUpdateView.class);
         cfg.addEntityView(SimplePersonView.class);
         cfg.addEntityView(CreatablePersonView.class);
+        cfg.addEntityView(CreatablePersonView2.class);
         cfg.addEntityView(PersonView.class);
         evm = cfg.createEntityViewManager(cbf);
     }
@@ -133,6 +135,8 @@ public class ConvertViewTest extends AbstractEntityViewTest {
         DocumentCloneView clone = evm.convertWith(documentView, DocumentCloneView.class)
                 .convertAttribute("owner.friend", CreatablePersonView.class, ConvertOption.CREATE_NEW)
                 .excludeAttribute("people")
+                .convertAttribute("partners", CreatablePersonView2.class, ConvertOption.CREATE_NEW)
+                .excludeAttribute("partners.id")
                 .convert();
 
         assertEquals(documentView.getId(), clone.getId());
@@ -143,9 +147,9 @@ public class ConvertViewTest extends AbstractEntityViewTest {
         assertEquals(documentView.getOwner().getName(), clone.getOwner().getName());
         assertEquals(documentView.getOwner().getFriend(), clone.getOwner().getFriend());
         assertEquals(documentView.getOwner().getFriend().getName(), clone.getOwner().getFriend().getName());
-        assertEquals(documentView.getPartners(), clone.getPartners());
+        assertNull(clone.getPartners().iterator().next().getId());
         assertEquals(documentView.getPartners().iterator().next().getName(), clone.getPartners().iterator().next().getName());
-        assertEquals(documentView.getPartners().iterator().next().getFriend(), clone.getPartners().iterator().next().getFriend());
+        assertNull(clone.getPartners().iterator().next().getFriend().getId());
         assertEquals(documentView.getPartners().iterator().next().getFriend().getName(), clone.getPartners().iterator().next().getFriend().getName());
         assertTrue(documentView == clone.getSource());
 

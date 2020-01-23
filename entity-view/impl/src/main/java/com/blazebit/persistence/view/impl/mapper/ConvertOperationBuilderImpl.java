@@ -21,6 +21,7 @@ import com.blazebit.persistence.view.ConvertOption;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
+import com.blazebit.persistence.view.metamodel.PluralAttribute;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -79,7 +80,14 @@ public class ConvertOperationBuilderImpl<T> implements ConvertOperationBuilder<T
         if (sourceAttribute == null) {
             throw new IllegalArgumentException("Attribute '" + attributePath + "' could not be found on type: " + key.getSourceType().getJavaType().getName());
         }
-        subMappers.put(attributePath, (ViewMapper.Key<Object, Object>) ViewMapper.Key.create(entityViewManager.getMetamodel(), sourceAttribute.getConvertedJavaType(), attributeViewClass, convertOptions));
+        Class<?> elementType = sourceAttribute.getConvertedJavaType();
+        if (sourceAttribute instanceof PluralAttribute<?, ?, ?>) {
+            elementType = ((PluralAttribute<?, ?, ?>) sourceAttribute).getElementType().getJavaType();
+        }
+        if (!elementType.isAssignableFrom(attributeViewClass)) {
+            throw new IllegalArgumentException("The given type '" + attributeViewClass.getName() + "' is not assignable to the declared type of '" + key.getSourceType().getJavaType().getName() + "." + attributePath + "': " + elementType.getName());
+        }
+        subMappers.put(attributePath, (ViewMapper.Key<Object, Object>) ViewMapper.Key.create(entityViewManager.getMetamodel(), elementType, attributeViewClass, convertOptions));
         return this;
     }
 }
