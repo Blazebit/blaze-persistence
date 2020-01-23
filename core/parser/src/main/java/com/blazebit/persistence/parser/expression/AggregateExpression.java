@@ -44,7 +44,7 @@ public class AggregateExpression extends FunctionExpression {
     }
 
     @Override
-    public AggregateExpression clone(boolean resolved) {
+    public AggregateExpression copy() {
         if (!distinct && expressions.isEmpty()) {
             return new AggregateExpression();
         } else {
@@ -52,7 +52,7 @@ public class AggregateExpression extends FunctionExpression {
             List<Expression> newExpressions = new ArrayList<Expression>(size);
 
             for (int i = 0; i < size; i++) {
-                newExpressions.add(expressions.get(i).clone(resolved));
+                newExpressions.add(expressions.get(i).copy());
             }
             return new AggregateExpression(distinct, functionName, newExpressions);
         }

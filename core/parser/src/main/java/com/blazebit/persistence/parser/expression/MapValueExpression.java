@@ -29,8 +29,8 @@ public class MapValueExpression extends AbstractExpression implements PathElemen
     }
 
     @Override
-    public MapValueExpression clone(boolean resolved) {
-        return new MapValueExpression(path.clone(resolved));
+    public MapValueExpression copy() {
+        return new MapValueExpression(path.copy());
     }
 
     @Override

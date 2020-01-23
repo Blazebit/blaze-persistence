@@ -27,5 +27,5 @@ import com.blazebit.persistence.parser.expression.Expression;
 public interface Predicate extends Expression, Negatable {
 
     @Override
-    public Predicate clone(boolean resolved);
+    public Predicate copy();
 }

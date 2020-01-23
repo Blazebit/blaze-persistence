@@ -63,10 +63,10 @@ public class CompoundPredicate extends AbstractPredicate {
     }
 
     @Override
-    public CompoundPredicate clone(boolean resolved) {
+    public CompoundPredicate copy() {
         List<Predicate> clonedChildren = new ArrayList<>(children.size());
         for (Predicate child : children) {
-            clonedChildren.add(child.clone(resolved));
+            clonedChildren.add(child.copy());
         }
         return new CompoundPredicate(operator, clonedChildren, negated);
     }

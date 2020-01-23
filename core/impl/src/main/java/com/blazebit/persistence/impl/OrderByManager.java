@@ -66,7 +66,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
 
     void applyFrom(OrderByManager orderByManager) {
         for (OrderByInfo info : orderByManager.orderByInfos) {
-            orderBy(subqueryInitFactory.reattachSubqueries(info.getExpression().clone(true), ClauseType.ORDER_BY), info.ascending, info.nullFirst);
+            orderBy(subqueryInitFactory.reattachSubqueries(info.getExpression().copy(), ClauseType.ORDER_BY), info.ascending, info.nullFirst);
         }
     }
 

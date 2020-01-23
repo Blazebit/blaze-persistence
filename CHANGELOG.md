@@ -31,7 +31,8 @@ Not yet released
 * Fix `FULL` flushing of collections when elements are removed
 * Fix `convertWith` support when using `convertAttribute` on collection view type attributes
 * Support invoking setters of mutable attributes in updatable entity view constructor
-* Cloning query builder that implicit joins with alias that is shadowed in subquery fails
+* Implicit alias generation generates alias that is shadowed in child subquery which prevents copying
+* Remove PathExpression resolving for expression cloning to avoid referring to later removed joins in copied queries
 
 ### Backwards-incompatible changes
 

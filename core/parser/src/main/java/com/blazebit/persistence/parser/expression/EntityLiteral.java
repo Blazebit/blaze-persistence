@@ -41,7 +41,7 @@ public class EntityLiteral extends AbstractExpression implements LiteralExpressi
     }
 
     @Override
-    public Expression clone(boolean resolved) {
+    public Expression copy() {
         return new EntityLiteral(value, originalExpression);
     }
 

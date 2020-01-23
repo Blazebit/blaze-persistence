@@ -35,8 +35,8 @@ public class IsNullPredicate extends UnaryExpressionPredicate {
     }
 
     @Override
-    public IsNullPredicate clone(boolean resolved) {
-        return new IsNullPredicate(expression.clone(resolved), negated);
+    public IsNullPredicate copy() {
+        return new IsNullPredicate(expression.copy(), negated);
     }
 
     @Override

@@ -35,8 +35,8 @@ public class MemberOfPredicate extends BinaryExpressionPredicate {
     }
 
     @Override
-    public MemberOfPredicate clone(boolean resolved) {
-        return new MemberOfPredicate(left.clone(resolved), right.clone(resolved), negated);
+    public MemberOfPredicate copy() {
+        return new MemberOfPredicate(left.copy(), right.copy(), negated);
     }
 
     @Override

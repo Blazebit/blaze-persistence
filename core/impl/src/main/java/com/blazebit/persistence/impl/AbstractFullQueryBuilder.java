@@ -217,7 +217,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
             }
         }
         for (int i = 0; i < identifierExpressionsToUse.length; i++) {
-            newBuilder.selectManager.select(identifierExpressionsToUse[i].getExpression().clone(false), identifierToUseSelectAliases[i]);
+            newBuilder.selectManager.select(identifierExpressionsToUse[i].getExpression().copy(), identifierToUseSelectAliases[i]);
         }
         newBuilder.selectManager.setDefaultSelect();
 

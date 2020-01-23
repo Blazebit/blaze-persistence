@@ -41,6 +41,20 @@ public class SingleValuedAssociationManyToOneTest extends AbstractCoreTest {
         assertEquals("SELECT d FROM Document d WHERE d.owner IS NULL", criteria.getQueryString());
         criteria.getResultList();
     }
+
+    @Test
+    public void manyToOneSingleValuedAssociationIsNullAndSelectCopyResolved() {
+        CriteriaBuilder<String> criteria = cbf.create(em, String.class)
+                .from(Document.class, "d")
+                .select("d.owner.name");
+        criteria.where("d.owner").isNull();
+
+        assertEquals("SELECT owner_1.name FROM Document d JOIN d.owner owner_1 WHERE owner_1 IS NULL", criteria.getQueryString());
+        criteria.getResultList();
+        criteria = criteria.copy(String.class).select("d.name");
+        assertEquals("SELECT d.name FROM Document d WHERE d.owner IS NULL", criteria.getQueryString());
+        criteria.getResultList();
+    }
     
     @Test
     public void manyToOneSingleValuedAssociationRelativeIdAccess() {

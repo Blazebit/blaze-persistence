@@ -32,8 +32,8 @@ public class WhenClauseExpression extends AbstractExpression {
     }
 
     @Override
-    public WhenClauseExpression clone(boolean resolved) {
-        return new WhenClauseExpression(condition.clone(resolved), result.clone(resolved));
+    public WhenClauseExpression copy() {
+        return new WhenClauseExpression(condition.copy(), result.copy());
     }
 
     public Expression getCondition() {

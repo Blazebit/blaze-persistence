@@ -42,8 +42,8 @@ public class GePredicate extends QuantifiableBinaryExpressionPredicate {
     }
 
     @Override
-    public GePredicate clone(boolean resolved) {
-        return new GePredicate(left.clone(resolved), right.clone(resolved), quantifier, negated);
+    public GePredicate copy() {
+        return new GePredicate(left.copy(), right.copy(), quantifier, negated);
     }
 
     @Override

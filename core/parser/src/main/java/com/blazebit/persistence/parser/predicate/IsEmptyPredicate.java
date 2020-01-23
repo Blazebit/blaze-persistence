@@ -35,8 +35,8 @@ public class IsEmptyPredicate extends UnaryExpressionPredicate {
     }
 
     @Override
-    public IsEmptyPredicate clone(boolean resolved) {
-        return new IsEmptyPredicate(expression.clone(resolved), negated);
+    public IsEmptyPredicate copy() {
+        return new IsEmptyPredicate(expression.copy(), negated);
     }
 
     @Override

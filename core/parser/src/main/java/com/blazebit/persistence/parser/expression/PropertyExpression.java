@@ -31,7 +31,7 @@ public class PropertyExpression extends AbstractExpression implements PathElemen
     }
 
     @Override
-    public PropertyExpression clone(boolean resolved) {
+    public PropertyExpression copy() {
         // We can do this since this is immutable
         return this;
     }

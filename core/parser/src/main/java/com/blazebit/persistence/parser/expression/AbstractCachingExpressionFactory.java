@@ -169,7 +169,7 @@ public abstract class AbstractCachingExpressionFactory extends AbstractExpressio
             }
 
             expressionCache.putIfAbsent(cacheName, new ExpressionCache.Key(expression, allowOuter, allowQuantifiedPredicates, allowObjectExpression), exprEntry);
-            return (E) expr.clone(false);
+            return (E) expr.copy();
         }
 
         // Fast-path if macro-free
@@ -197,7 +197,7 @@ public abstract class AbstractCachingExpressionFactory extends AbstractExpressio
             }
         }
 
-        return (E) expr.clone(false);
+        return (E) expr.copy();
     }
 
     /**

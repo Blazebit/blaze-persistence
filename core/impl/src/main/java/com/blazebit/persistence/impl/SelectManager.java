@@ -284,7 +284,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
                 // Otherwise we won't have the owning column in the group by clause which will lead to an error on some DBMS
                 if (expr instanceof PathExpression && rootNode != ((PathExpression) expr).getBaseNode()) {
                     PathExpression pathExpression = (PathExpression) expr;
-                    PathExpression associationIdAccess = pathExpression.clone(false);
+                    PathExpression associationIdAccess = pathExpression.copy();
                     associationIdAccess.setPathReference(pathExpression.getPathReference());
                     groupByManager.collect(new ResolvedExpression(sb.toString(), associationIdAccess), ClauseType.SELECT, hasGroupBy, joinVisitor);
 
@@ -523,7 +523,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         for (int i = 0; i < selectInfos.size(); i++) {
             SelectInfo selectInfo = selectInfos.get(i);
             String selectAlias = selectInfo.getAlias();
-            Expression expr = subqueryInitFactory.reattachSubqueries(selectInfo.getExpression().clone(false), ClauseType.SELECT);
+            Expression expr = subqueryInitFactory.reattachSubqueries(selectInfo.getExpression().copy(), ClauseType.SELECT);
             if (nodeMapping != null) {
                 selectInfo.getExpression().accept(visitor);
             }

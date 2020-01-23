@@ -31,7 +31,7 @@ public class TypeFunctionExpression extends FunctionExpression {
     }
 
     @Override
-    public TypeFunctionExpression clone(boolean resolved) {
-        return new TypeFunctionExpression(expressions.get(0).clone(resolved));
+    public TypeFunctionExpression copy() {
+        return new TypeFunctionExpression(expressions.get(0).copy());
     }
 }
