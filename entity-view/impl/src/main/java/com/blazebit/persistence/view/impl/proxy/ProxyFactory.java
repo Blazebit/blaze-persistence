@@ -420,6 +420,10 @@ public class ProxyFactory {
                 mutableStateField.setModifiers(getModifiers(false));
                 cc.addField(mutableStateField);
 
+                CtField initializedField = new CtField(CtClass.booleanType, "$$_initialized", cc);
+                initializedField.setModifiers(getModifiers(false));
+                cc.addField(initializedField);
+
                 readOnlyParentsField = new CtField(pool.get(List.class.getName()), "$$_readOnlyParents", cc);
                 readOnlyParentsField.setModifiers(getModifiers(true));
                 readOnlyParentsField.setGenericSignature(Descriptor.of(List.class.getName()) + "<" + Descriptor.of(Object.class.getName()) + ">;");
@@ -1866,7 +1870,7 @@ public class ProxyFactory {
 
                 // Set new objects parent
                 if (attribute.isCollection() || attribute.isSubview()) {
-                    sb.append("\tif ($1 != null && $0.").append(fieldName).append(" != $1) {\n");
+                    sb.append("\tif ($0.$$_initialized && $1 != null && $0.").append(fieldName).append(" != $1) {\n");
                     if (attribute.isCollection()) {
                         if (attribute instanceof MapAttribute<?, ?, ?>) {
                             sb.append("\t\tif ($1 instanceof ").append(RecordingMap.class.getName()).append(") {\n");
@@ -2653,6 +2657,9 @@ public class ProxyFactory {
     }
 
     private void renderDirtyTrackerRegistration(CtField[] attributeFields, CtField mutableStateField, AbstractMethodAttribute<?, ?>[] attributes, ConstructorKind kind, StringBuilder sb) throws NotFoundException, CannotCompileException {
+        if (mutableStateField != null) {
+            sb.append("\t$0.$$_initialized = true;\n");
+        }
         if (kind != ConstructorKind.REFERENCE) {
             for (int i = 0; i < attributeFields.length; i++) {
                 if (attributeFields[i] == null) {
