@@ -370,6 +370,14 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
                     newKeysetPage = keysetPage;
                 }
 
+                if (totalSize == -1) {
+                    if (inlinedCountQuery) {
+                        totalSize = 0L;
+                    } else if (withCount) {
+                        totalSize = getTotalCount();
+                    }
+                }
+
                 return new PagedArrayList<X>(newKeysetPage, totalSize, queryFirstResult, pageSize);
             }
 

@@ -673,6 +673,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             org.hibernate.Query hibernateQuery = participatingQuery.unwrap(org.hibernate.Query.class);
             readOnly = readOnly || hibernateQuery.isReadOnly();
             cacheable = cacheable || hibernateAccess.getQueryParameters(hibernateQuery, namedParams).isCacheable();
+            comment = comment != null ? comment : hibernateAccess.getQueryParameters(hibernateQuery, namedParams).getComment();
         }
 
         for (QueryParamEntry queryParamEntry : getQueryParamEntries(em, participatingQueries, querySpaces)) {

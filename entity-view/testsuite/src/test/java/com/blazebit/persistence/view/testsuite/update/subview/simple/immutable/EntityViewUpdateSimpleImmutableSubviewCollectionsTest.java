@@ -23,6 +23,7 @@ import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
+import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateDocumentTest;
 import com.blazebit.persistence.view.testsuite.update.subview.simple.immutable.model.PersonView;
@@ -174,6 +175,47 @@ public class EntityViewUpdateSimpleImmutableSubviewCollectionsTest extends Abstr
                 .validate();
         assertNoUpdateAndReload(docView);
         assertSubviewEquals(doc1.getPeople(), docView.getPeople());
+    }
+
+    @Test
+    public void testReplaceCollectionOnReference() {
+        // Given
+        UpdatableDocumentWithCollectionsView docView = getDoc1View();
+        PersonView newPerson = getP2View(PersonView.class);
+        docView.setPeople(new ArrayList<>(docView.getPeople()));
+        docView.getPeople().add(newPerson);
+        update(docView);
+        clearQueries();
+
+        // When
+        ArrayList<PersonView> newPeople = new ArrayList<>(docView.getPeople());
+        newPeople.remove(newPerson);
+        UpdatableDocumentWithCollectionsView docViewReference = evm.getReference(UpdatableDocumentWithCollectionsView.class, docView.getId());
+        docViewReference.setName(docView.getName());
+        ((MutableStateTrackable) docViewReference).$$_setVersion(docView.getVersion());
+        docViewReference.setPeople(newPeople);
+        update(docViewReference);
+
+        // Then
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
+
+        if (!isQueryStrategy()) {
+            if (isFullMode()) {
+                fullFetch(builder);
+            } else {
+                builder.select(Document.class);
+            }
+        }
+
+        if (isQueryStrategy() || version) {
+            builder.update(Document.class);
+        }
+        builder.delete(Document.class, "people");
+        if (isQueryStrategy() || !isQueryStrategy() && !isFullMode()) {
+            builder.insert(Document.class, "people");
+        }
+        builder.validate();
+        assertSubviewEquals(doc1.getPeople(), docViewReference.getPeople());
     }
 
     public static void assertSubviewEquals(Collection<Person> persons, Collection<PersonView> personSubviews) {

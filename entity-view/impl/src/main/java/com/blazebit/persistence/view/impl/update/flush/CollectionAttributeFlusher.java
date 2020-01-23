@@ -47,6 +47,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -378,7 +379,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         return entityReferences;
     }
 
-    protected boolean deleteElements(UpdateContext context, Object ownerView, Object view, V value, boolean removeSpecific, FusedCollectionActions fusedCollectionActions) {
+    protected boolean deleteElements(UpdateContext context, Object ownerView, Object view, V initial, V value, boolean removeSpecific, FusedCollectionActions fusedCollectionActions) {
         DeleteCriteriaBuilder<?> deleteCb = null;
         boolean removedAll = true;
         Collection<Object> removedObjects = Collections.emptyList();
@@ -412,10 +413,35 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 removedAll = false;
             }
         } else if (inverseFlusher != null) {
-            for (Object o : value) {
-                inverseFlusher.flushQuerySetElement(context, o, ownerView, null, null, null);
+            if (inverseRemoveStrategy == InverseCollectionElementAttributeFlusher.Strategy.REMOVE) {
+                // Collection recreation in case of inverse mapping would need re-persisting which is not possible with e.g. read-only subviews
+                // So we need to actually create a physical diff to only delete what we really need
+                // We can optimize this based on initial state i.e. avoid loading if the initial state reports it's empty
+                if (initial != null && initial.isEmpty()) {
+                    // But we always have to trigger a delete statement to be sure when doing a FULL flush
+                    inverseFlusher.removeByOwnerIdOnly(context, ((EntityViewProxy) ownerView).$$_getId());
+                    return true;
+                } else {
+                    // Fetch the collection elements so we can create a diff and only remove what is not contained in value
+                    Collection<Object> currentReferences = inverseFlusher.loadByOwnerId(context, ((EntityViewProxy) ownerView).$$_getId());
+                    Iterator<Object> iterator = currentReferences.iterator();
+                    while (iterator.hasNext()) {
+                        Object element = iterator.next();
+                        if (value.contains(element)) {
+                            iterator.remove();
+                        }
+                    }
+                    if (!currentReferences.isEmpty()) {
+                        inverseFlusher.removeElements(context, currentReferences);
+                    }
+                }
+                return false;
+            } else if (inverseRemoveStrategy == InverseCollectionElementAttributeFlusher.Strategy.SET_NULL) {
+                for (Object o : value) {
+                    inverseFlusher.flushQuerySetElement(context, o, ownerView, null, null, null);
+                }
+                return true;
             }
-            return true;
         } else {
             deleteCb = createCollectionDeleter(context);
         }
@@ -439,7 +465,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         return false;
     }
 
-    protected void addElements(UpdateContext context, Object ownerView, Object view, Collection<Object> removedAllObjects, boolean flushAtOnce, V value, List<Object> embeddablesToUpdate, FusedCollectionActions fusedCollectionActions) {
+    protected void addElements(UpdateContext context, Object ownerView, Object view, Collection<Object> removedAllObjects, boolean flushAtOnce, boolean removedAllWithoutCollectionActions, V value, List<Object> embeddablesToUpdate, FusedCollectionActions fusedCollectionActions) {
         Collection<Object> elementsToAdd;
         if (fusedCollectionActions == null || !removedAllObjects.isEmpty()) {
             if (elementDescriptor.getViewToEntityMapper() == null || inverseFlusher != null) {
@@ -516,8 +542,16 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 }
             }
         } else {
-            for (Object o : elementsToAdd) {
-                inverseFlusher.flushQuerySetElement(context, o, null, ownerView, null, null);
+            if (removedAllWithoutCollectionActions) {
+                DirtyAttributeFlusher<?, E, Object> fullFlusher = (DirtyAttributeFlusher<?, E, Object>) elementDescriptor.getViewToEntityMapper().getFullGraphNode();
+                E ownerEntity = (E) context.getEntityManager().getReference(ownerEntityClass, ownerIdFlusher.getViewAttributeAccessor().getValue(ownerView));
+                for (Object o : elementsToAdd) {
+                    inverseFlusher.flushEntitySetElement(context, o, null, ownerEntity, fullFlusher);
+                }
+            } else {
+                for (Object o : elementsToAdd) {
+                    inverseFlusher.flushQuerySetElement(context, o, null, ownerView, null, null);
+                }
             }
         }
     }
@@ -543,7 +577,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         if (canFlushSeparateCollectionOperations()) {
             if (collectionActions.isEmpty()) {
                 if (embeddablesToUpdate != null) {
-                    addElements(context, ownerView, view, Collections.emptyList(), true, value, embeddablesToUpdate, null);
+                    addElements(context, ownerView, view, Collections.emptyList(), true, false, value, embeddablesToUpdate, null);
                 }
                 return;
             } else if (!(collectionActions.get(0) instanceof CollectionClearAction<?, ?>)) {
@@ -557,12 +591,14 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
     protected void flushCollectionOperations(UpdateContext context, Object ownerView, Object view, V initial, V value, List<Object> embeddablesToUpdate, FusedCollectionActions fusedCollectionActions) {
         boolean removeSpecific = fusedCollectionActions != null && fusedCollectionActions.operationCount() < value.size() + 1;
         Collection<Object> removedAllObjects;
-        if (deleteElements(context, ownerView, view, value, removeSpecific, fusedCollectionActions)) {
+        boolean removedAllWithoutCollectionActions = false;
+        if (deleteElements(context, ownerView, view, initial, value, removeSpecific, fusedCollectionActions)) {
             if (fusedCollectionActions == null) {
                 if (initial == null) {
                     removedAllObjects = Collections.emptyList();
                 } else {
                     removedAllObjects = new ArrayList<>(initial);
+                    removedAllWithoutCollectionActions = true;
                 }
             } else {
                 removedAllObjects = new ArrayList<>(fusedCollectionActions.getRemoved());
@@ -570,7 +606,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         } else {
             removedAllObjects = Collections.emptyList();
         }
-        addElements(context, ownerView, view, removedAllObjects, true, value, embeddablesToUpdate, fusedCollectionActions);
+        addElements(context, ownerView, view, removedAllObjects, true, removedAllWithoutCollectionActions, value, embeddablesToUpdate, fusedCollectionActions);
         if (removeListener != null) {
             for (Object removedObject : removedAllObjects) {
                 removeListener.onCollectionRemove(context, removedObject);
@@ -661,6 +697,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                     }
                 }
             } else {
+                V initialValue = (V) viewAttributeAccessor.getInitialValue(view);
                 actions = replaceActions(value);
                 value = replaceWithRecordingCollection(context, view, value, actions);
 
@@ -678,6 +715,11 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                             removed = addedAndRemoved[1];
                         } else {
                             added = removed = Collections.emptyMap();
+                        }
+
+                        if (elementDescriptor.isSubview()) {
+                            // Removed objects are entities and in this case we need entity view types, so we need to convert/references
+                            removed = getViewsFromEntities(context, Collections.emptyList(), removed, elementEqualityChecker);
                         }
 
                         // It could be the case that entity flushing is triggered by a different dirty collection,
@@ -753,6 +795,30 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
             replaceCollection(context, ownerView, view, entity, value, FlushStrategy.ENTITY);
             return true;
         }
+    }
+
+    private Map<Object, Object> getViewsFromEntities(UpdateContext context, Collection<?> initialViews, Map<Object, Object> entityMap, EqualityChecker elementEqualityChecker) {
+        if (entityMap.isEmpty()) {
+            return entityMap;
+        }
+        CompositeAttributeFlusher compositeFlusher = (CompositeAttributeFlusher) elementDescriptor.getViewToEntityMapper().getFullGraphNode();
+        Class<?> viewTypeClass = compositeFlusher.getViewTypeClass();
+        Map<Object, Object> map = new HashMap<>(entityMap.size());
+        OUTER: for (Object entity : entityMap.values()) {
+            if (initialViews != null && !initialViews.isEmpty()) {
+                for (Object initialView : initialViews) {
+                    if (elementEqualityChecker.isEqual(context, entity, initialView)) {
+                        map.put(initialView, initialView);
+                        continue OUTER;
+                    }
+                }
+            }
+
+            Object entityId = context.getEntityViewManager().getEntityIdAccessor().getValue(entity);
+            Object initialView = context.getEntityViewManager().getReference(viewTypeClass, compositeFlusher.createViewIdByEntityId(entityId));
+            map.put(initialView, initialView);
+        }
+        return map;
     }
 
     protected List<CollectionAction<Collection<?>>> replaceActions(V value) {
@@ -985,13 +1051,15 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
     protected void replaceCollection(UpdateContext context, Object ownerView, Object view, E entity, V value, FlushStrategy flushStrategy) {
         if (flushStrategy == FlushStrategy.QUERY) {
             Collection<Object> removedAllObjects;
-            if (deleteElements(context, ownerView, view, value, false, null)) {
+            boolean removedAllWithoutCollectionActions = false;
+            if (deleteElements(context, ownerView, view, null, value, false, null)) {
                 // TODO: We should load the initial value
                 removedAllObjects = Collections.emptyList();
+                removedAllWithoutCollectionActions = true;
             } else {
                 removedAllObjects = Collections.emptyList();
             }
-            addElements(context, ownerView, view, removedAllObjects, true, value, null, null);
+            addElements(context, ownerView, view, removedAllObjects, true, removedAllWithoutCollectionActions, value, null, null);
             if (removeListener != null) {
                 for (Object removedObject : removedAllObjects) {
                     removeListener.onCollectionRemove(context, removedObject);
@@ -1631,8 +1699,12 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
 
         @Override
         public void onUpdatedInverseElement(DirtyAttributeFlusher<?, E, V> flusher, Object element) {
-            new UpdateCollectionElementAttributeFlusher<>(flusher, element, optimisticLockProtected, elementDescriptor.getViewToEntityMapper())
-                    .flushEntity(context, null, null, null, null, null);
+            UpdateCollectionElementAttributeFlusher<E, V> elementFlusher = new UpdateCollectionElementAttributeFlusher<>(flusher, element, optimisticLockProtected, elementDescriptor.getViewToEntityMapper());
+            if (flushStrategy == FlushStrategy.ENTITY) {
+                elementFlusher.flushEntity(context, null, null, null, null, null);
+            } else {
+                elementFlusher.flushQuery(context, null, null, null, null, null, null, null);
+            }
         }
 
         @Override

@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.update.flush;
 
+import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.DeleteCriteriaBuilder;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
@@ -54,6 +55,8 @@ import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 import javax.persistence.Query;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.ManagedType;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -80,7 +83,7 @@ public final class InverseFlusher<E> {
 
     // Maps the parent entity object on to the child view object
     private final Mapper<E, Object> parentEntityOnChildViewMapper;
-    private final InverseElementToEntityMapper childViewToEntityMapper;
+    private final TargetViewClassBasedInverseViewToEntityMapper childViewToEntityMapper;
     // Maps a child view object to an entity via means of em.getReference
     private final ViewToEntityMapper childReferenceViewToEntityMapper;
 
@@ -92,7 +95,7 @@ public final class InverseFlusher<E> {
 
     public InverseFlusher(Class<?> parentEntityClass, String attributeName, String parentIdAttributeName, String childIdAttributeName, UnmappedAttributeCascadeDeleter deleter,
                           ViewToEntityMapper parentReferenceViewToEntityMapper, DirtyAttributeFlusher<?, E, Object> parentReferenceAttributeFlusher,
-                          Mapper<E, Object> parentEntityOnChildViewMapper, InverseElementToEntityMapper childViewToEntityMapper, ViewToEntityMapper childReferenceViewToEntityMapper,
+                          Mapper<E, Object> parentEntityOnChildViewMapper, TargetViewClassBasedInverseViewToEntityMapper childViewToEntityMapper, ViewToEntityMapper childReferenceViewToEntityMapper,
                           Mapper<E, Object> parentEntityOnChildEntityMapper, InverseEntityToEntityMapper childEntityToEntityMapper) {
         this.parentEntityClass = parentEntityClass;
         this.attributeName = attributeName;
@@ -118,7 +121,7 @@ public final class InverseFlusher<E> {
             Mapper<Object, Object> parentEntityOnChildViewMapper = null;
             Mapper<Object, Object> parentEntityOnChildEntityAddMapper = null;
             Mapper<Object, Object> parentEntityOnChildEntityRemoveMapper = null;
-            InverseElementToEntityMapper childViewToEntityMapper = null;
+            TargetViewClassBasedInverseViewToEntityMapper childViewToEntityMapper = null;
             InverseEntityToEntityMapper childEntityToEntityMapper = null;
             ViewToEntityMapper parentReferenceViewToEntityMapper = new LoadOnlyViewToEntityMapper(
                     new ReferenceEntityLoader(evm, viewType, EntityViewUpdaterImpl.createViewIdMapper(evm, viewType)),
@@ -302,8 +305,8 @@ public final class InverseFlusher<E> {
             }
 
             if (childTypeDescriptor.isSubview()) {
-                InverseElementToEntityMapper<?> first = null;
-                Map<Class<?>, InverseElementToEntityMapper<?>> mappers = new HashMap<>();
+                InverseViewToEntityMapper<?> first = null;
+                Map<Class<?>, InverseViewToEntityMapper<?>> mappers = new HashMap<>();
                 for (ManagedViewType<?> type : attribute.getViewTypes()) {
                     InverseViewToEntityMapper inverseViewToEntityMapper = new InverseViewToEntityMapper(
                             evm,
@@ -351,6 +354,30 @@ public final class InverseFlusher<E> {
         return null;
     }
 
+    public Collection<Object> loadByOwnerId(UpdateContext context, Object ownerId) {
+        EntityViewManagerImpl evm = context.getEntityViewManager();
+        CriteriaBuilder<?> cb = evm.getCriteriaBuilderFactory().create(context.getEntityManager(), parentEntityClass, "e");
+        cb.where(parentIdAttributeName).eq(ownerId);
+        cb.select("e." + attributeName + "." + childIdAttributeName);
+        List<?> elementIds = cb.getResultList();
+        if (elementIds.isEmpty()) {
+            return Collections.emptySet();
+        }
+        CompositeAttributeFlusher compositeFlusher = evm.getUpdater(childViewToEntityMapper.getViewType(), null, null, null).getFullGraphNode();
+        List<Object> elements = new ArrayList<>(elementIds.size());
+        for (Object elementId : elementIds) {
+            elements.add(evm.getReference(childViewToEntityMapper.getViewType().getJavaType(), compositeFlusher.createViewIdByEntityId(elementId)));
+        }
+        return elements;
+    }
+
+    public void removeByOwnerIdOnly(UpdateContext context, Object ownerId) {
+        EntityViewManagerImpl evm = context.getEntityViewManager();
+        DeleteCriteriaBuilder<?> cb = evm.getCriteriaBuilderFactory().deleteCollection(context.getEntityManager(), parentEntityClass, "e", attributeName);
+        cb.where(parentIdAttributeName).eq(ownerId);
+        cb.executeUpdate();
+    }
+
     public List<PostFlushDeleter> removeByOwnerId(UpdateContext context, Object ownerId) {
         EntityViewManagerImpl evm = context.getEntityViewManager();
         List<Object> elementIds = (List<Object>) evm.getCriteriaBuilderFactory().create(context.getEntityManager(), parentEntityClass, "e")
@@ -359,9 +386,7 @@ public final class InverseFlusher<E> {
                 .getResultList();
         if (!elementIds.isEmpty()) {
             // We must always delete this, otherwise we might get a constraint violation because of the cascading delete
-            DeleteCriteriaBuilder<?> cb = evm.getCriteriaBuilderFactory().deleteCollection(context.getEntityManager(), parentEntityClass, "e", attributeName);
-            cb.where(parentIdAttributeName).eq(ownerId);
-            cb.executeUpdate();
+            removeByOwnerIdOnly(context, ownerId);
         }
 
         return Collections.<PostFlushDeleter>singletonList(new PostFlushInverseCollectionElementByIdDeleter(deleter, elementIds));

@@ -21,6 +21,7 @@ import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.accessor.Accessors;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.mapper.Mapper;
+import com.blazebit.persistence.view.impl.metamodel.ViewTypeImplementor;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 import com.blazebit.persistence.view.impl.update.EntityViewUpdaterImpl;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
@@ -38,6 +39,7 @@ import javax.persistence.metamodel.EntityType;
 public class InverseViewToEntityMapper<E> implements InverseElementToEntityMapper<E> {
 
     private static final String ID_PARAM_NAME = "_id";
+    private final ViewTypeImplementor<?> viewType;
     private final AttributeAccessor viewIdAccessor;
     private final EntityLoader entityLoader;
     private final boolean persistAllowed;
@@ -54,6 +56,7 @@ public class InverseViewToEntityMapper<E> implements InverseElementToEntityMappe
 
     public InverseViewToEntityMapper(EntityViewManagerImpl evm, ViewType<?> childViewType, Mapper<Object, Object> parentEntityOnChildViewMapper, Mapper<Object, Object> parentEntityOnChildEntityAddMapper, Mapper<Object, Object> parentEntityOnChildEntityRemoveMapper,
                                      ViewToEntityMapper elementViewToEntityMapper, DirtyAttributeFlusher<?, Object, Object> parentReferenceAttributeFlusher, DirtyAttributeFlusher<?, Object, Object> idAttributeFlusher) {
+        this.viewType = (ViewTypeImplementor<?>) childViewType;
         this.elementViewToEntityMapper = elementViewToEntityMapper;
         this.viewIdAccessor = Accessors.forViewId(evm, childViewType, true);
         // TODO: this should be the same loader that the viewToEntityMapper uses
@@ -75,6 +78,10 @@ public class InverseViewToEntityMapper<E> implements InverseElementToEntityMappe
         this.parentReferenceAttributeFlusher = parentReferenceAttributeFlusher;
         this.idAttributeFlusher = idAttributeFlusher;
         this.fullUpdateQueryString = createQueryString(null, parentReferenceAttributeFlusher);
+    }
+
+    public ViewTypeImplementor<?> getViewType() {
+        return viewType;
     }
 
     @Override

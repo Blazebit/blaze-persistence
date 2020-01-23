@@ -628,7 +628,7 @@ As of JPA 2.1 it is possible to invoke non-standard functions via the `FUNCTION 
 By default, all non-standard functions of the JPA provider are imported. This means that you can make use of functions provided by the JPA provider with the `FUNCTION ( function_name (, args)* )` syntax
 as well as with the direct function call syntax `function_name ( args* )` and it will get rendered into the JPA provider specific way of invoking such functions automatically.
 
-A list of functions provided by {projectname} and information on how to implement a custom function can be found in the <<JPQL functions>> chapter.
+A list of functions provided by {projectname} and information on how to implement a custom function can be found in the <<jpql-functions,JPQL functions>> chapter.
 
 === Subquery expressions
 

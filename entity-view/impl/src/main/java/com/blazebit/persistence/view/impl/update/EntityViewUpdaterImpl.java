@@ -67,7 +67,6 @@ import com.blazebit.persistence.view.impl.update.flush.CompositeAttributeFlusher
 import com.blazebit.persistence.view.impl.update.flush.DirtyAttributeFlusher;
 import com.blazebit.persistence.view.impl.update.flush.EmbeddableAttributeFlusher;
 import com.blazebit.persistence.view.impl.update.flush.EntityCollectionRemoveListener;
-import com.blazebit.persistence.view.impl.update.flush.FetchGraphNode;
 import com.blazebit.persistence.view.impl.update.flush.IndexedListAttributeFlusher;
 import com.blazebit.persistence.view.impl.update.flush.InverseFlusher;
 import com.blazebit.persistence.view.impl.update.flush.MapAttributeFlusher;
@@ -585,7 +584,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
     }
 
     @Override
-    public FetchGraphNode<?> getFullGraphNode() {
+    public CompositeAttributeFlusher getFullGraphNode() {
         return fullFlusher;
     }
 

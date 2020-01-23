@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.entity;
 
+import com.blazebit.persistence.view.impl.metamodel.ViewTypeImplementor;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.update.flush.DirtyAttributeFlusher;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
@@ -30,12 +31,16 @@ import java.util.Map;
  */
 public class TargetViewClassBasedInverseViewToEntityMapper<E> implements InverseElementToEntityMapper<E> {
 
-    private final InverseElementToEntityMapper<E> first;
-    private final Map<Class<?>, InverseElementToEntityMapper<E>> mappers;
+    private final InverseViewToEntityMapper<E> first;
+    private final Map<Class<?>, InverseViewToEntityMapper<E>> mappers;
 
-    public TargetViewClassBasedInverseViewToEntityMapper(InverseElementToEntityMapper<E> first, Map<Class<?>, InverseElementToEntityMapper<E>> mappers) {
+    public TargetViewClassBasedInverseViewToEntityMapper(InverseViewToEntityMapper<E> first, Map<Class<?>, InverseViewToEntityMapper<E>> mappers) {
         this.first = first;
         this.mappers = mappers;
+    }
+
+    public ViewTypeImplementor<?> getViewType() {
+        return first.getViewType();
     }
 
     @Override
