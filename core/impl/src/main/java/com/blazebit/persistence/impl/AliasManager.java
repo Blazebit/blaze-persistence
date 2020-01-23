@@ -16,7 +16,9 @@
 
 package com.blazebit.persistence.impl;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -31,6 +33,7 @@ public class AliasManager {
     private final AliasManager parent;
     private final Map<String, AliasInfo> aliasMap = new HashMap<String, AliasInfo>(); // maps alias to absolute path and join manager of the declaring query
     private final Map<String, Integer> aliasCounterMap = new HashMap<String, Integer>(); // maps non postfixed aliases to alias counter
+    private final List<AliasManager> children = new ArrayList<>();
     private String forbiddenAlias;
 
     public AliasManager() {
@@ -39,10 +42,59 @@ public class AliasManager {
 
     public AliasManager(AliasManager parent) {
         this.parent = parent;
+        if (parent != null) {
+            parent.children.add(this);
+        }
     }
 
     public AliasManager getParent() {
         return parent;
+    }
+
+    public boolean isAliasAvailable(String alias) {
+        if (getHierarchical(alias) == null) {
+            return getChildAlias(alias) == null;
+        }
+        return false;
+    }
+
+    private Integer getCounter(String alias) {
+        Integer counter = getCounterHierarchical(alias);
+        return counter == null ? getChildCounter(alias) : counter;
+    }
+
+    private AliasInfo getChildAlias(String alias) {
+        AliasInfo info;
+        for (int i = 0; i < children.size(); i++) {
+            AliasManager child = children.get(i);
+            info = child.getAliasInfoForBottomLevel(alias);
+            if (info != null) {
+                return info;
+            }
+            info = child.getChildAlias(alias);
+            if (info != null) {
+                return info;
+            }
+        }
+
+        return null;
+    }
+
+    private Integer getChildCounter(String alias) {
+        Integer info;
+        for (int i = 0; i < children.size(); i++) {
+            AliasManager child = children.get(i);
+            info = child.aliasCounterMap.get(alias);
+            if (info != null) {
+                return info;
+            }
+            info = child.getChildCounter(alias);
+            if (info != null) {
+                return info;
+            }
+        }
+
+        return null;
     }
 
     public AliasInfo getAliasInfo(String alias) {
@@ -70,7 +122,7 @@ public class AliasManager {
      */
     public String registerAliasInfo(AliasInfo aliasInfo) {
         String alias = aliasInfo.getAlias();
-        if (getHierarchical(alias) != null) {
+        if (!isAliasAvailable(alias)) {
             throw new IllegalArgumentException("Alias '" + alias + "' already exists");
         }
         aliasMap.put(alias, aliasInfo);
@@ -90,7 +142,7 @@ public class AliasManager {
     private String generatePostfixedAlias(String alias, int startIdx) {
         Integer counter;
         String nonPostfixed = alias;
-        if ((counter = getCounterHierarchical(alias)) == null) {
+        if ((counter = getCounter(alias)) == null) {
             // alias does not exist so just register it
             counter = startIdx;
         } else {
@@ -115,7 +167,7 @@ public class AliasManager {
         if (counter == null && parent != null) {
             counter = parent.getCounterHierarchical(alias);
         }
-        return counter;
+        return counter == null ? getChildCounter(alias) : counter;
     }
 
     public void unregisterAliasInfoForBottomLevel(AliasInfo aliasInfo) {

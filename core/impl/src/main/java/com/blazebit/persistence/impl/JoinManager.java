@@ -503,7 +503,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             sb.setCharAt(0, Character.toLowerCase(sb.charAt(0)));
             String alias = sb.toString();
 
-            if (metamodel.getEntity(alias) == null && aliasManager.getAliasInfo(alias) == null && !Keywords.JPQL.contains(alias.toUpperCase())) {
+            if (metamodel.getEntity(alias) == null && aliasManager.isAliasAvailable(alias) && !Keywords.JPQL.contains(alias.toUpperCase())) {
                 rootAlias = alias;
             } else {
                 rootAlias = aliasManager.generateRootAlias(alias);
@@ -614,7 +614,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             sb.setCharAt(0, Character.toLowerCase(sb.charAt(0)));
             String alias = sb.toString();
 
-            if (metamodel.getEntity(alias) == null && aliasManager.getAliasInfo(alias) == null) {
+            if (metamodel.getEntity(alias) == null && aliasManager.isAliasAvailable(alias)) {
                 rootAlias = alias;
             } else {
                 rootAlias = aliasManager.generateRootAlias(alias);
@@ -637,7 +637,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         } else {
             // This is a deep expression that requires implicit joining
             String rootAliasBase = rootAlias + "_base";
-            if (metamodel.getEntity(rootAliasBase) != null || aliasManager.getAliasInfo(rootAliasBase) != null) {
+            if (metamodel.getEntity(rootAliasBase) != null || !aliasManager.isAliasAvailable(rootAliasBase)) {
                 rootAliasBase = aliasManager.generateRootAlias(rootAliasBase);
             }
 
@@ -2951,7 +2951,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             checkAliasIsAvailable(aliasManager, alias, currentJoinPath, errorMessage);
 
             // the alias might have to be postfixed since it might already exist in parent queries
-            if (implicit && aliasManager.getAliasInfo(alias) != null) {
+            if (implicit && !aliasManager.isAliasAvailable(alias)) {
                 alias = aliasManager.generateJoinAlias(alias);
             }
 

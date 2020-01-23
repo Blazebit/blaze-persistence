@@ -17,6 +17,7 @@
 package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Person;
 import org.junit.Test;
 
 /**
@@ -35,5 +36,18 @@ public class QueryBuilderCopyTest extends AbstractCoreTest {
                 .select("COALESCE(id,:param3)")
                 .copy(String.class)
                 .select("name");
+    }
+
+    @Test
+    public void testQueryCopyingCorrelated() {
+        cbf.create(em, String.class)
+                .from(Document.class, "doc")
+                .select("doc.owner.localized")
+                .innerJoinOn(Person.class, "o")
+                    .on("o.friend.localized").eq("pers1")
+                .end()
+                .copy(String.class)
+                .select("name")
+                .getResultList();
     }
 }
