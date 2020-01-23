@@ -35,7 +35,7 @@ public class StringLiteral extends AbstractExpression implements LiteralExpressi
     }
 
     @Override
-    public Expression clone(boolean resolved) {
+    public Expression copy() {
         return new StringLiteral(value);
     }
 

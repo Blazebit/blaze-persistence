@@ -70,7 +70,7 @@ public abstract class PredicateManager<T> extends AbstractManager<ExpressionModi
     }
 
     void applyFrom(PredicateManager predicateManager) {
-        rootPredicate.getPredicate().getChildren().addAll(subqueryInitFactory.reattachSubqueries(predicateManager.rootPredicate.getPredicate().clone(true), getClauseType()).getChildren());
+        rootPredicate.getPredicate().getChildren().addAll(subqueryInitFactory.reattachSubqueries(predicateManager.rootPredicate.getPredicate().copy(), getClauseType()).getChildren());
     }
 
     @SuppressWarnings("unchecked")

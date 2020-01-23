@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -29,7 +30,7 @@ import java.util.ListIterator;
  * @author Christian Beikov
  * @since 1.2.0
  */
-class EmptyPagedList<T> implements PagedList<T> {
+class EmptyPagedList<T> implements PagedList<T>, Serializable {
 
     @Override
     public int getSize() {

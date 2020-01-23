@@ -41,7 +41,7 @@ public class EnumLiteral extends AbstractExpression implements LiteralExpression
     }
 
     @Override
-    public Expression clone(boolean resolved) {
+    public Expression copy() {
         return new EnumLiteral(value, originalExpression);
     }
 

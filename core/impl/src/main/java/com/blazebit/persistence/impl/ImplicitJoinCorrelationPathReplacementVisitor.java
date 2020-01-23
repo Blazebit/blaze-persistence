@@ -89,7 +89,7 @@ public class ImplicitJoinCorrelationPathReplacementVisitor extends InplaceModifi
                 alias = "_synth_subquery_" + pathIdentitiesToCorrelate.size();
             }
 
-            PathExpression transformedExpression = pathExpression.clone(false);
+            PathExpression transformedExpression = pathExpression.copy();
             // For now, we only support 2 levels of treats, but this obviously should be improved
             if (transformedExpression.getExpressions().get(0) instanceof TreatExpression) {
                 // Only the first expression in the list can be a treat expression

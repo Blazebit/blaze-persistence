@@ -226,7 +226,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         nodeMapping.put(oldNode, node);
 
         if (oldNode.getOnPredicate() != null) {
-            node.setOnPredicate(subqueryInitFactory.reattachSubqueries(oldNode.getOnPredicate().clone(true), ClauseType.JOIN));
+            node.setOnPredicate(subqueryInitFactory.reattachSubqueries(oldNode.getOnPredicate().copy(), ClauseType.JOIN));
         }
 
         for (JoinTreeNode oldTreeNode : oldNode.getNodes().values()) {

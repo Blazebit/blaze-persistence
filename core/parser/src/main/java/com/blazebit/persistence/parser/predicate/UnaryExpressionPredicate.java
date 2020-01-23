@@ -39,7 +39,7 @@ public abstract class UnaryExpressionPredicate extends AbstractPredicate {
     }
 
     @Override
-    public abstract UnaryExpressionPredicate clone(boolean resolved);
+    public abstract UnaryExpressionPredicate copy();
 
     public Expression getExpression() {
         return expression;

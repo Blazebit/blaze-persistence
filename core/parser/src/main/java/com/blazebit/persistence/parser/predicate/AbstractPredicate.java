@@ -47,7 +47,7 @@ public abstract class AbstractPredicate extends AbstractExpression implements Pr
     }
 
     @Override
-    public abstract Predicate clone(boolean resolved);
+    public abstract Predicate copy();
 
     @Override
     public boolean equals(Object o) {

@@ -53,19 +53,12 @@ public class PathExpression extends AbstractExpression implements Expression {
     }
 
     @Override
-    public PathExpression clone(boolean resolved) {
-        if (resolved && pathReference != null) {
-            PathExpression expression = (PathExpression) pathReference.getBaseNode().createExpression(pathReference.getField());
-            expression.usedInCollectionFunction = usedInCollectionFunction;
-            expression.collectionQualifiedPath = collectionQualifiedPath;
-            return expression;
-        }
-
+    public PathExpression copy() {
         int size = pathProperties.size();
         List<PathElementExpression> newPathProperties = new ArrayList<PathElementExpression>(size);
 
         for (int i = 0; i < size; i++) {
-            newPathProperties.add(pathProperties.get(i).clone(resolved));
+            newPathProperties.add(pathProperties.get(i).copy());
         }
 
         // NOTE: don't copy the path reference, it has to be set manually on the copy

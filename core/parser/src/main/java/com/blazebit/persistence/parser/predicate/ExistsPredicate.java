@@ -39,8 +39,8 @@ public class ExistsPredicate extends UnaryExpressionPredicate {
     }
 
     @Override
-    public ExistsPredicate clone(boolean resolved) {
-        return new ExistsPredicate(expression.clone(resolved), negated);
+    public ExistsPredicate copy() {
+        return new ExistsPredicate(expression.copy(), negated);
     }
 
     @Override

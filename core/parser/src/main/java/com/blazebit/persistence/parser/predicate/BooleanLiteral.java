@@ -40,7 +40,7 @@ public class BooleanLiteral extends AbstractPredicate {
     }
 
     @Override
-    public Predicate clone(boolean resolved) {
+    public Predicate copy() {
         return new BooleanLiteral(value, negated);
     }
 

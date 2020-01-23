@@ -111,7 +111,7 @@ public class WindowManager<T> extends AbstractManager<ExpressionModifier> {
             List<Expression> expressions = windowDefinition.getPartitionExpressions();
             Expression expr;
             for (int i = 0; i < size; i++) {
-                partitionExpressions.add(expr = expressions.get(i).clone(true));
+                partitionExpressions.add(expr = expressions.get(i).copy());
                 parameterManager.collectParameterRegistrations(expr, ClauseType.WINDOW, subqueryInitFactory.getQueryBuilder());
             }
 
@@ -119,25 +119,25 @@ public class WindowManager<T> extends AbstractManager<ExpressionModifier> {
             List<OrderByItem> orderByExpressions = new ArrayList<>(size);
             OrderByItem orderByItem;
             for (int i = 0; i < size; i++) {
-                orderByExpressions.add(orderByItem = windowDefinition.getOrderByExpressions().get(i).clone(true));
+                orderByExpressions.add(orderByItem = windowDefinition.getOrderByExpressions().get(i).copy());
                 parameterManager.collectParameterRegistrations(orderByItem.getExpression(), ClauseType.WINDOW, subqueryInitFactory.getQueryBuilder());
             }
 
             Predicate filterPredicate = null;
             if (windowDefinition.getFilterPredicate() != null) {
-                filterPredicate = windowDefinition.getFilterPredicate().clone(true);
+                filterPredicate = windowDefinition.getFilterPredicate().copy();
                 parameterManager.collectParameterRegistrations(filterPredicate, ClauseType.WINDOW, subqueryInitFactory.getQueryBuilder());
             }
 
             Expression frameStartExpression = null;
             if (windowDefinition.getFrameStartExpression() != null) {
-                frameStartExpression = windowDefinition.getFrameStartExpression().clone(true);
+                frameStartExpression = windowDefinition.getFrameStartExpression().copy();
                 parameterManager.collectParameterRegistrations(frameStartExpression, ClauseType.WINDOW, subqueryInitFactory.getQueryBuilder());
             }
 
             Expression frameEndExpression = null;
             if (windowDefinition.getFrameEndExpression() != null) {
-                frameEndExpression = windowDefinition.getFrameEndExpression().clone(true);
+                frameEndExpression = windowDefinition.getFrameEndExpression().copy();
                 parameterManager.collectParameterRegistrations(frameEndExpression, ClauseType.WINDOW, subqueryInitFactory.getQueryBuilder());
             }
 

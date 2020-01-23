@@ -224,10 +224,9 @@ public interface Expression {
 
     /**
      *
-     * @param resolved if true, paths are resolved to root relative paths
      * @return
      */
-    public Expression clone(boolean resolved);
+    public Expression copy();
 
     /**
      * The expression tree is traversed in pre-order.
