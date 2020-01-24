@@ -486,6 +486,11 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
     }
 
     @Override
+    public AttributeAccessor getEntityAttributeAccessor() {
+        return entityAttributeAccessor;
+    }
+
+    @Override
     public boolean isOptimisticLockProtected() {
         return optimisticLockProtected;
     }

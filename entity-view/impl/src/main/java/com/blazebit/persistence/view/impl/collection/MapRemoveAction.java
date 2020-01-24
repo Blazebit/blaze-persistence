@@ -39,7 +39,7 @@ public class MapRemoveAction<C extends Map<K, V>, K, V> implements MapAction<C> 
         this.removedElementInView = delegate.get(key);
     }
 
-    private MapRemoveAction(Object key, V removedElementInView) {
+    public MapRemoveAction(Object key, V removedElementInView) {
         this.key = key;
         this.removedElementInView = removedElementInView;
     }

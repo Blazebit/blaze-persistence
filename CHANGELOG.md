@@ -35,6 +35,7 @@ Not yet released
 * Remove PathExpression resolving for expression cloning to avoid referring to later removed joins in copied queries
 * Fix support for type converters for updatable entity views
 * Fix for implicit parameter collision from query that is used for a subquery in another main query
+* Applying entity-fetch computed collection actions fails because JPA collection elements assumed to be view elements
 
 ### Backwards-incompatible changes
 

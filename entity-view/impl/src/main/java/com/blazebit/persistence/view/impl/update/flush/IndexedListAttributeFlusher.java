@@ -380,9 +380,9 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
                 // JPA element was removed, remove all following elements and Keep the same index 'i'
                 if (i < jpaSize) {
                     for (int j = i; j < jpaSize - 1; j++) {
-                        actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(i, false, jpaCollection));
+                        actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(i, false, getViewElement(context, elementDescriptor, jpaCollection.get(i))));
                     }
-                    actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(i, true, jpaCollection));
+                    actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(i, true, getViewElement(context, elementDescriptor, jpaCollection.get(i))));
                 }
 
                 // Break since there are no more elements to check
@@ -393,9 +393,9 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
         // Remove remaining elements in the list that couldn't be matched
         if (lastUnmatchedIndex < jpaSize) {
             for (int i = lastUnmatchedIndex; i < jpaSize - 1; i++) {
-                actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(lastUnmatchedIndex, false, jpaCollection));
+                actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(lastUnmatchedIndex, false, getViewElement(context, elementDescriptor, jpaCollection.get(lastUnmatchedIndex))));
             }
-            actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(lastUnmatchedIndex, true, jpaCollection));
+            actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(lastUnmatchedIndex, true, getViewElement(context, elementDescriptor, jpaCollection.get(lastUnmatchedIndex))));
         }
         // Add new elements that are not matched
         if (lastUnmatchedIndex < value.size()) {

@@ -164,6 +164,49 @@ public class EntityViewUpdateSimpleMutableSubviewCollectionsTest extends Abstrac
     }
 
     @Test
+    public void testRemoveFromNewCollection() {
+        // Given
+        final UpdatableDocumentWithCollectionsView docView = getDoc1View();
+        docView.getPeople().add(getPersonView(p2.getId(), UpdatablePersonView.class));
+        docView.getPeople().add(getPersonView(p3.getId(), UpdatablePersonView.class));
+        update(docView);
+        clearQueries();
+
+        // When
+        docView.setPeople(new ArrayList<>(docView.getPeople().subList(0, 2)));
+        update(docView);
+
+        // Then
+        // Assert that the document and the people are loaded, but only a relation insert is done
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
+
+        if (isQueryStrategy()) {
+            if (isFullMode()) {
+                builder.delete(Document.class, "people")
+                        .insert(Document.class, "people");
+            }
+        } else {
+            fullFetch(builder);
+        }
+
+        if (version || isFullMode() && isQueryStrategy()) {
+            builder.update(Document.class);
+        }
+
+        if (isQueryStrategy() && isFullMode()) {
+            builder.insert(Document.class, "people")
+                    .update(Person.class)
+                    .update(Person.class);
+        } else {
+            builder.delete(Document.class, "people");
+        }
+        builder.validate();
+
+        reload();
+        assertSubviewEquals(doc1.getPeople(), docView.getPeople());
+    }
+
+    @Test
     public void testUpdateAddToNewCollection() {
         // Given
         final UpdatableDocumentWithCollectionsView docView = getDoc1View();

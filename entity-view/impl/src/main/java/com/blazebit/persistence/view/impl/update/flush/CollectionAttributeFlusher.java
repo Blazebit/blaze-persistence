@@ -279,7 +279,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 if (inverseFlusher != null) {
                     Map<Object, Object> added;
                     Map<Object, Object> removed;
-                    if (entityAttributeMapper != null && recordingCollection.hasActions()) {
+                    if (entityAttributeAccessor != null && recordingCollection.hasActions()) {
                         Map<Object, Object>[] addedAndRemoved = getAddedAndRemovedElementsForInverseFlusher(recordingCollection, context, null);
                         added = addedAndRemoved[0];
                         removed = addedAndRemoved[1];
@@ -288,7 +288,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                     }
                     visitInverseElementFlushersForActions(context, recordingCollection, added, removed, new ElementFlusherQueryExecutor(context, null, ownerView));
                 } else {
-                    if (entityAttributeMapper == null) {
+                    if (entityAttributeAccessor == null) {
                         // We have a correlation mapping here
                         recordingCollection.resetActions(context);
                     }
@@ -302,7 +302,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                         }
                     }
 
-                    if (entityAttributeMapper != null && collectionUpdatable) {
+                    if (entityAttributeAccessor != null && collectionUpdatable) {
                         V initial = (V) viewAttributeAccessor.getInitialValue(view);
                         if (initial instanceof RecordingCollection<?, ?>) {
                             initial = (V) ((RecordingCollection) initial).getInitialVersion();
@@ -344,7 +344,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                     }
                 }
 
-                if (entityAttributeMapper != null && collectionUpdatable) {
+                if (entityAttributeAccessor != null && collectionUpdatable) {
                     // If the initial object was null like it happens during full flushing, we can only replace the collection
                     if (initial == null) {
                         replaceCollection(context, ownerView, view, null, current, FlushStrategy.QUERY);
@@ -659,8 +659,8 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                         flushCollectionViewElements(context, value);
                         wasDirty = true;
                     } else {
-                        if (fetch && elementDescriptor.supportsDeepEqualityCheck() && entityAttributeMapper != null) {
-                            Collection<Object> jpaCollection = (Collection<Object>) entityAttributeMapper.getValue(entity);
+                        if (fetch && elementDescriptor.supportsDeepEqualityCheck() && entityAttributeAccessor != null) {
+                            Collection<Object> jpaCollection = (Collection<Object>) entityAttributeAccessor.getValue(entity);
 
                             if (jpaCollection == null || jpaCollection.isEmpty()) {
                                 replace = true;
@@ -683,11 +683,11 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 }
 
                 if (!replace) {
-                    if (entityAttributeMapper == null) {
+                    if (entityAttributeAccessor == null) {
                         // When having a correlated attribute, we consider is being dirty when it changed
                         wasDirty |= !recordingCollection.resetActions(context).isEmpty();
                     } else {
-                        Collection<?> collection = (Collection<?>) entityAttributeMapper.getValue(entity);
+                        Collection<?> collection = (Collection<?>) entityAttributeAccessor.getValue(entity);
                         if (collection == null) {
                             replace = true;
                         } else {
@@ -697,7 +697,6 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                     }
                 }
             } else {
-                V initialValue = (V) viewAttributeAccessor.getInitialValue(view);
                 actions = replaceActions(value);
                 value = replaceWithRecordingCollection(context, view, value, actions);
 
@@ -705,7 +704,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                     if (inverseFlusher != null) {
                         // When we know the collection was fetched, we can try to "merge" the changes into the JPA collection
                         // If either of the collections is empty, we simply do the replace logic
-                        Collection<Object> jpaCollection = (Collection<Object>) entityAttributeMapper.getValue(entity);
+                        Collection<Object> jpaCollection = (Collection<Object>) entityAttributeAccessor.getValue(entity);
                         actions = determineJpaCollectionActions(context, (V) jpaCollection, value, elementEqualityChecker);
                         Map<Object, Object> added;
                         Map<Object, Object> removed;
@@ -715,11 +714,6 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                             removed = addedAndRemoved[1];
                         } else {
                             added = removed = Collections.emptyMap();
-                        }
-
-                        if (elementDescriptor.isSubview()) {
-                            // Removed objects are entities and in this case we need entity view types, so we need to convert/references
-                            removed = getViewsFromEntities(context, Collections.emptyList(), removed, elementEqualityChecker);
                         }
 
                         // It could be the case that entity flushing is triggered by a different dirty collection,
@@ -749,13 +743,13 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                     }
 
                     if (!replace) {
-                        if (entityAttributeMapper == null) {
+                        if (entityAttributeAccessor == null) {
                             // When having a correlated attribute, we consider is being dirty when it changed
                             wasDirty = true;
                         } else {
                             // When we know the collection was fetched, we can try to "merge" the changes into the JPA collection
                             // If either of the collections is empty, we simply do the replace logic
-                            Collection<Object> jpaCollection = (Collection<Object>) entityAttributeMapper.getValue(entity);
+                            Collection<Object> jpaCollection = (Collection<Object>) entityAttributeAccessor.getValue(entity);
                             if (jpaCollection == null || jpaCollection.isEmpty()) {
                                 replace = true;
                             } else {
@@ -936,7 +930,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
 
     @Override
     public void removeFromEntity(UpdateContext context, E entity) {
-        V value = (V) entityAttributeMapper.getValue(entity);
+        V value = (V) entityAttributeAccessor.getValue(entity);
 
         if (value != null) {
             // In any case we clear the collection
@@ -945,7 +939,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                     for (Object element : value) {
                         cascadeDeleteListener.onEntityCollectionRemove(context, element);
                     }
-                    entityAttributeMapper.setValue(entity, null);
+                    entityAttributeAccessor.setValue(entity, null);
                 }
             } else {
                 value.clear();
@@ -1066,7 +1060,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 }
             }
         } else {
-            if (entityAttributeMapper != null) {
+            if (entityAttributeAccessor != null) {
                 if (elementDescriptor.isSubview()) {
                     Collection<Object> newCollection;
                     if (value == null) {
@@ -1084,9 +1078,9 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                             resetRecordingIterator(value);
                         }
                     }
-                    entityAttributeMapper.setValue(entity, newCollection);
+                    entityAttributeAccessor.setValue(entity, newCollection);
                 } else {
-                    entityAttributeMapper.setValue(entity, value);
+                    entityAttributeAccessor.setValue(entity, value);
                 }
                 // TODO: collectionRemoveListener?
             }
@@ -1491,7 +1485,8 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                     }
                 }
             }
-            removeAllAction.add(initialObject);
+            // Removed objects are entities and in this case we need entity view types, so we need to convert/references
+            removeAllAction.add(getViewElement(context, elementDescriptor, initialObject));
         }
 
         if (!removeAllAction.isEmpty()) {
@@ -1714,7 +1709,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
             } else if (inverseRemoveStrategy != InverseCollectionElementAttributeFlusher.Strategy.IGNORE) {
                 // We need to remove the element from the entity backing collection as well, otherwise it might not be removed properly when using cascading
                 // Note that this is only necessary for entity flushing which is handled by this code. JPA DML statements like use for query flushing don't respect cascading configurations
-                Collection<Object> entityCollection = (Collection<Object>) entityAttributeMapper.getValue(entity);
+                Collection<Object> entityCollection = (Collection<Object>) entityAttributeAccessor.getValue(entity);
                 if (entityCollection != null) {
                     if (elementDescriptor.getViewToEntityMapper() == null) {
                         // Element is an entity object so just remove

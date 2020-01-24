@@ -42,7 +42,7 @@ public class ListRemoveAction<C extends List<E>, E> implements ListAction<C> {
         this.removedElementInView = delegate.get(index);
     }
 
-    private ListRemoveAction(int index, boolean last, Object removedElementInView) {
+    public ListRemoveAction(int index, boolean last, Object removedElementInView) {
         this.index = index;
         this.last = last;
         this.removedElementInView = removedElementInView;
