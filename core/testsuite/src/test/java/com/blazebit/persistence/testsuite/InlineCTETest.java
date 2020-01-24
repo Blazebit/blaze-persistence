@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.testsuite;
 
+import com.blazebit.persistence.ConfigurationProperties;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
 import com.blazebit.persistence.LeafOngoingSetOperationCTECriteriaBuilder;
@@ -33,11 +34,15 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
+import com.blazebit.persistence.testsuite.entity.ParameterOrderCte;
+import com.blazebit.persistence.testsuite.entity.ParameterOrderCteB;
+import com.blazebit.persistence.testsuite.entity.ParameterOrderEntity;
 import com.blazebit.persistence.testsuite.entity.RecursiveEntity;
 import com.blazebit.persistence.testsuite.entity.TestAdvancedCTE1;
 import com.blazebit.persistence.testsuite.entity.TestAdvancedCTE2;
 import com.blazebit.persistence.testsuite.entity.TestCTE;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -54,7 +59,8 @@ import static org.junit.Assert.assertTrue;
 /**
  *
  * @author Christian Beikov
- * @since 1.1.0
+ * @author Jan-Willem Gmelig Meyling
+ * @since 1.4.1
  */
 public class InlineCTETest extends AbstractCoreTest {
     
@@ -64,7 +70,10 @@ public class InlineCTETest extends AbstractCoreTest {
             RecursiveEntity.class,
             TestCTE.class,
             TestAdvancedCTE1.class,
-            TestAdvancedCTE2.class
+            TestAdvancedCTE2.class,
+            ParameterOrderCte.class,
+            ParameterOrderCteB.class,
+            ParameterOrderEntity.class
         };
     }
 
@@ -88,8 +97,43 @@ public class InlineCTETest extends AbstractCoreTest {
                 em.persist(child1_2_1);
                 root1.getChildren2().add(child1_1);
                 root1.getChildren2().add(child1_2);
+
+
+                ParameterOrderEntity parameterOrderEntity = new ParameterOrderEntity();
+                parameterOrderEntity.setOne((short) 1);
+                parameterOrderEntity.setTwo(2);
+                parameterOrderEntity.setThree(3L);
+                em.persist(parameterOrderEntity);
             }
         });
+    }
+
+    @Test
+    public void testParameterBindingOrder2() {
+        CriteriaBuilder<ParameterOrderEntity> cteBuilder = cbf.create(em, ParameterOrderEntity.class)
+                .setProperty(ConfigurationProperties.INLINE_CTES, Boolean.FALSE.toString())
+                .with(ParameterOrderCte.class)
+                .from(ParameterOrderEntity.class, "poe")
+                .where("poe.one").eq((short) 1)
+                .where("poe.two").eq(2)
+                .where("poe.three").eq(3L)
+                .bind("four").select("poe.one")
+                .bind("five").select("poe.two")
+                .bind("six").select("poe.three")
+                .end();
+
+        List<ParameterOrderEntity> resultList = cbf.create(em, ParameterOrderEntity.class)
+                .setProperty(ConfigurationProperties.INLINE_CTES, Boolean.FALSE.toString())
+                .withCtesFrom(cteBuilder)
+                .from(ParameterOrderEntity.class, "poe2")
+                .where("poe2.three").eq(3L)
+                .where("poe2.two").eq(2)
+                .where("poe2.one").eq((short) 1)
+                .where("poe2.two").notIn(1, 3, 4)
+                .where("poe2.one").in().from(ParameterOrderCte.class, "poc").select("poc.four").end()
+                .getResultList();
+
+        Assert.assertEquals(1, resultList.size());
     }
 
     @Test
