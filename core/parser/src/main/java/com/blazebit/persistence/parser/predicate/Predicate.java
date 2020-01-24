@@ -17,6 +17,7 @@
 package com.blazebit.persistence.parser.predicate;
 
 import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 
 /**
  *
@@ -27,5 +28,5 @@ import com.blazebit.persistence.parser.expression.Expression;
 public interface Predicate extends Expression, Negatable {
 
     @Override
-    public Predicate copy();
+    public Predicate copy(ExpressionCopyContext copyContext);
 }

@@ -35,6 +35,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 /**
  *
@@ -46,8 +47,8 @@ public class ParameterManager {
 
     private static final String PREFIX = "param_";
     private int counter;
-    private final Map<String, ParameterImpl<?>> parameters = new HashMap<>();
-    private final Map<String, String> valuesParameters = new HashMap<>();
+    private final Map<String, ParameterImpl<?>> parameters = new TreeMap<>();
+    private final Map<String, String> valuesParameters = new TreeMap<>();
     private final ParameterRegistrationVisitor parameterRegistrationVisitor;
     private final ParameterUnregistrationVisitor parameterUnregistrationVisitor;
     private int positionalOffset = -1; // Records the last positional parameter index that was used
@@ -100,11 +101,8 @@ public class ParameterManager {
         }
     }
 
-    void copyFrom(ParameterManager parameterManager) {
-        this.counter = parameterManager.counter;
-        this.valuesParameters.putAll(parameterManager.valuesParameters);
-        this.positionalOffset = parameterManager.positionalOffset;
-
+    Map<String, String> copyFrom(ParameterManager parameterManager) {
+        Map<String, String> parameterMapping = new HashMap<>(parameterManager.parameters.size());
         for (Map.Entry<String, ParameterImpl<?>> entry : parameterManager.parameters.entrySet()) {
             ParameterImpl<Object> param = (ParameterImpl<Object>) entry.getValue();
             Object paramValue = null;
@@ -115,69 +113,44 @@ public class ParameterManager {
                     paramValue = param.getParameterValue().copy();
                 }
             }
-
-            addParameterMapping(entry.getKey(), paramValue);
-        }
-    }
-
-    void applyToCteFrom(ParameterManager parameterManager) {
-        for (Map.Entry<String, ParameterImpl<?>> entry : parameterManager.parameters.entrySet()) {
-            applyParameter(entry.getKey(), (ParameterImpl<Object>) entry.getValue());
-        }
-
-        this.valuesParameters.putAll(parameterManager.valuesParameters);
-    }
-
-    void applyFrom(ParameterManager parameterManager, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {
-        for (Map.Entry<String, ParameterImpl<?>> entry : parameterManager.parameters.entrySet()) {
-            ParameterImpl<Object> param = (ParameterImpl<Object>) entry.getValue();
-            boolean apply = false;
-            for (Set<AbstractCommonQueryBuilder<?, ?, ?, ?, ?>> builders : param.getClauseTypes().values()) {
-                if (builders.contains(queryBuilder)) {
-                    apply = true;
-                    break;
-                }
-            }
-
-            if (apply) {
-                applyParameter(entry.getKey(), param);
-            }
-        }
-
-        this.valuesParameters.putAll(parameterManager.valuesParameters);
-    }
-
-    private void applyParameter(String parameterName, ParameterImpl<Object> param) {
-        ParameterImpl<Object> existingParameter = (ParameterImpl<Object>) parameters.get(parameterName);
-        if (existingParameter == null) {
-            Object paramValue;
-            if (param.getParameterValue() == null) {
-                paramValue = param.getValue();
+            String oldParameterName = entry.getKey();
+            String newParameterName;
+            if (Character.isDigit(oldParameterName.charAt(0))) {
+                this.positionalOffset++;
+                newParameterName = Integer.toString(this.positionalOffset);
+            } else if (param.isImplicit()) {
+                newParameterName = PREFIX + counter++;
             } else {
-                paramValue = param.getParameterValue().copy();
+                ParameterImpl<Object> existingParameter = (ParameterImpl<Object>) parameters.get(oldParameterName);
+                newParameterName = oldParameterName;
+                if (existingParameter != null) {
+                    if (existingParameter.getParameterType() != param.getParameterType()) {
+                        throw new IllegalStateException("Can't apply parameters! Parameter '" + oldParameterName + "' with type '" + param.getParameterType() + "' is incompatible with existing type: " + existingParameter.getParameterType());
+                    }
+                    if (existingParameter.isCollectionValued() != param.isCollectionValued()) {
+                        throw new IllegalStateException("Can't apply parameters! Parameter '" + oldParameterName + "' is collection valued in one query, but not the other!");
+                    }
+                    if (existingParameter.getTranformer() != param.getTranformer()) {
+                        throw new IllegalStateException("Can't apply parameters! Parameter '" + oldParameterName + "' has a tranfsformer in one query, but not the other!");
+                    }
+                    if (param.isValueSet()) {
+                        existingParameter.setValue(paramValue);
+                    }
+                    continue;
+                }
             }
 
-            addParameterMapping(parameterName, paramValue);
-        } else {
-            if (existingParameter.getParameterType() != param.getParameterType()) {
-                throw new IllegalStateException("Can't apply parameters! Parameter '" + parameterName + "' with type '" + param.getParameterType() + "' is incompatible with existing type: " + existingParameter.getParameterType());
-            }
-            if (existingParameter.isCollectionValued() != param.isCollectionValued()) {
-                throw new IllegalStateException("Can't apply parameters! Parameter '" + parameterName + "' is collection valued in one query, but not the other!");
-            }
-            if (existingParameter.getTranformer() != param.getTranformer()) {
-                throw new IllegalStateException("Can't apply parameters! Parameter '" + parameterName + "' has a tranfsformer in one query, but not the other!");
-            }
-            if (param.isValueSet()) {
-                Object paramValue;
-                if (param.getParameterValue() == null) {
-                    paramValue = param.getValue();
-                } else {
-                    paramValue = param.getParameterValue().copy();
-                }
-                existingParameter.setValue(paramValue);
+            parameterMapping.put(oldParameterName, newParameterName);
+            addParameterMapping(newParameterName, paramValue, param.isImplicit());
+        }
+
+        for (Map.Entry<String, String> entry : parameterManager.valuesParameters.entrySet()) {
+            if (this.valuesParameters.put(entry.getKey(), entry.getValue()) != null) {
+                throw new IllegalArgumentException("Can't copy value parameters because of a name clash for value parameter with name: " + entry.getKey());
             }
         }
+
+        return parameterMapping;
     }
 
     Set<String> getParameterListNames(Query q) {
@@ -332,15 +305,15 @@ public class ParameterManager {
         return name;
     }
 
-    public void addParameterMapping(String parameterName, Object o) {
+    public void addParameterMapping(String parameterName, Object o, boolean implicit) {
         if (parameterName == null) {
             throw new NullPointerException("parameterName");
         }
         Integer position = determinePositionalOffset(parameterName);
         if (position == null) {
-            parameters.put(parameterName, new ParameterImpl<>(parameterName, o instanceof Collection, o));
+            parameters.put(parameterName, new ParameterImpl<>(parameterName, o instanceof Collection, implicit, o));
         } else {
-            parameters.put(parameterName, new ParameterImpl<>(position, o instanceof Collection, o));
+            parameters.put(parameterName, new ParameterImpl<>(position, o instanceof Collection, implicit, o));
         }
     }
 
@@ -364,9 +337,9 @@ public class ParameterManager {
         if (parameter == null) {
             Integer position = determinePositionalOffset(parameterName);
             if (position == null) {
-                parameters.put(parameterName, new ParameterImpl<>(parameterName, collectionValued, clause, queryBuilder));
+                parameters.put(parameterName, new ParameterImpl<>(parameterName, collectionValued, false, clause, queryBuilder));
             } else {
-                parameters.put(parameterName, new ParameterImpl<>(position, collectionValued, clause, queryBuilder));
+                parameters.put(parameterName, new ParameterImpl<>(position, collectionValued, false, clause, queryBuilder));
             }
         } else {
             Set<AbstractCommonQueryBuilder<?, ?, ?, ?, ?>> builders = parameter.getClauseTypes().get(clause);
@@ -485,16 +458,18 @@ public class ParameterManager {
         private final String name;
         private final Integer position;
         private final boolean collectionValued;
+        private final boolean implicit;
         private final Map<ClauseType, Set<AbstractCommonQueryBuilder<?, ?, ?, ?, ?>>> clauseTypes;
         private Class<T> parameterType;
         private T value;
         private boolean valueSet;
         private ParameterValueTransformer tranformer;
 
-        public ParameterImpl(String name, boolean collectionValued, ClauseType clause, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {
+        public ParameterImpl(String name, boolean collectionValued, boolean implicit, ClauseType clause, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {
             this.name = name;
             this.position = null;
             this.collectionValued = collectionValued;
+            this.implicit = implicit;
             this.clauseTypes = new EnumMap<>(ClauseType.class);
             if (clause != null) {
                 Set<AbstractCommonQueryBuilder<?, ?, ?, ?, ?>> builders = Collections.newSetFromMap(new IdentityHashMap<AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, Boolean>());
@@ -503,19 +478,21 @@ public class ParameterManager {
             }
         }
 
-        public ParameterImpl(String name, boolean collectionValued, T value) {
-            this(name, collectionValued, null, null, value);
-        }
-
-        public ParameterImpl(String name, boolean collectionValued, ClauseType clause, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder, T value) {
-            this(name, collectionValued, clause, queryBuilder);
+        public ParameterImpl(String name, boolean collectionValued, boolean implicit, T value) {
+            this(name, collectionValued, implicit, null, null);
             setValue(value);
         }
 
-        public ParameterImpl(int position, boolean collectionValued, ClauseType clause, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {
+        public ParameterImpl(String name, boolean collectionValued, ClauseType clause, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder, T value) {
+            this(name, collectionValued, true, clause, queryBuilder);
+            setValue(value);
+        }
+
+        public ParameterImpl(int position, boolean collectionValued, boolean implicit, ClauseType clause, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {
             this.name = null;
             this.position = position;
             this.collectionValued = collectionValued;
+            this.implicit = implicit;
             this.clauseTypes = new EnumMap<>(ClauseType.class);
             if (clause != null) {
                 Set<AbstractCommonQueryBuilder<?, ?, ?, ?, ?>> builders = Collections.newSetFromMap(new IdentityHashMap<AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, Boolean>());
@@ -524,12 +501,13 @@ public class ParameterManager {
             }
         }
 
-        public ParameterImpl(int position, boolean collectionValued, T value) {
-            this(position, collectionValued, null, null, value);
+        public ParameterImpl(int position, boolean collectionValued, boolean implicit, T value) {
+            this(position, collectionValued, implicit, null, null);
+            setValue(value);
         }
 
         public ParameterImpl(int position, boolean collectionValued, ClauseType clause, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder, T value) {
-            this(position, collectionValued, clause, queryBuilder);
+            this(position, collectionValued, true, clause, queryBuilder);
             setValue(value);
         }
 
@@ -566,6 +544,10 @@ public class ParameterManager {
                 return (ParameterValue) value;
             }
             return null;
+        }
+
+        public boolean isImplicit() {
+            return implicit;
         }
 
         public boolean isValueSet() {

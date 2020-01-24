@@ -21,6 +21,7 @@ import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.PathTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.parser.expression.ArrayExpression;
 import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.parser.expression.FunctionExpression;
 import com.blazebit.persistence.parser.expression.NullExpression;
 import com.blazebit.persistence.parser.expression.ParameterExpression;
@@ -143,7 +144,7 @@ public final class JpaUtils {
                     final Collection<String> embeddedPropertyNames = getEmbeddedPropertyPaths(attributeEntries, attributeName, needsElementCollectionIdCutoff, false);
 
                     PathExpression baseExpression = embeddedPropertyNames.size() > 1 ?
-                            ((PathExpression) selectExpression).copy() : ((PathExpression) selectExpression);
+                            ((PathExpression) selectExpression).copy(ExpressionCopyContext.EMPTY) : ((PathExpression) selectExpression);
 
                     joinManager.implicitJoin(baseExpression, true, true, null, ClauseType.SELECT, new HashSet<String>(), false, false, false, false);
 
@@ -166,7 +167,7 @@ public final class JpaUtils {
                         int offset = 0;
                         for (String embeddedPropertyName : embeddedPropertyNames) {
                             PathExpression pathExpression = firstBinding ?
-                                    ((PathExpression) selectExpression) : baseExpression.copy();
+                                    ((PathExpression) selectExpression) : baseExpression.copy(ExpressionCopyContext.EMPTY);
 
                             for (String propertyNamePart : embeddedPropertyName.split("\\.")) {
                                 pathExpression.getExpressions().add(new PropertyExpression(propertyNamePart));

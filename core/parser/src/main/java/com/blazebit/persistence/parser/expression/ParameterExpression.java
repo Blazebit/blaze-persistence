@@ -43,8 +43,8 @@ public class ParameterExpression extends AbstractExpression {
     }
 
     @Override
-    public ParameterExpression copy() {
-        return new ParameterExpression(name, value, collectionValued);
+    public ParameterExpression copy(ExpressionCopyContext copyContext) {
+        return new ParameterExpression(copyContext.getNewParameterName(name), value, collectionValued);
     }
 
     @Override

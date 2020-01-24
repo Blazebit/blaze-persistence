@@ -32,7 +32,7 @@ public class TimeLiteral extends TemporalLiteral {
     }
 
     @Override
-    public Expression copy() {
+    public Expression copy(ExpressionCopyContext copyContext) {
         return new TimeLiteral((Date) value.clone());
     }
 

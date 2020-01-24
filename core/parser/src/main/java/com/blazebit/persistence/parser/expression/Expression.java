@@ -224,9 +224,10 @@ public interface Expression {
 
     /**
      *
+     * @param copyContext
      * @return
      */
-    public Expression copy();
+    public Expression copy(ExpressionCopyContext copyContext);
 
     /**
      * The expression tree is traversed in pre-order.

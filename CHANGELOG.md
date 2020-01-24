@@ -34,6 +34,7 @@ Not yet released
 * Implicit alias generation generates alias that is shadowed in child subquery which prevents copying
 * Remove PathExpression resolving for expression cloning to avoid referring to later removed joins in copied queries
 * Fix support for type converters for updatable entity views
+* Fix for implicit parameter collision from query that is used for a subquery in another main query
 
 ### Backwards-incompatible changes
 

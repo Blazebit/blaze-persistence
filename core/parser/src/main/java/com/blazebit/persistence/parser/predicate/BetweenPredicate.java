@@ -17,6 +17,7 @@
 package com.blazebit.persistence.parser.predicate;
 
 import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 
 /**
  *
@@ -42,8 +43,8 @@ public class BetweenPredicate extends AbstractPredicate {
     }
 
     @Override
-    public BetweenPredicate copy() {
-        return new BetweenPredicate(left.copy(), start.copy(), end.copy(), negated);
+    public BetweenPredicate copy(ExpressionCopyContext copyContext) {
+        return new BetweenPredicate(left.copy(copyContext), start.copy(copyContext), end.copy(copyContext), negated);
     }
 
     public Expression getLeft() {

@@ -16,26 +16,20 @@
 
 package com.blazebit.persistence.parser.expression;
 
-import com.blazebit.persistence.parser.SimpleQueryGenerator;
-
 /**
  *
  * @author Christian Beikov
- * @since 1.0.0
+ * @since 1.4.1
  */
-public abstract class AbstractExpression implements Expression {
+public interface ExpressionCopyContext {
 
-    @Override
-    public abstract Expression copy(ExpressionCopyContext copyContext);
-
-    @Override
-    public String toString() {
-        SimpleQueryGenerator generator = SimpleQueryGenerator.getThreadLocalInstance();
-        try {
-            accept(generator);
-            return generator.getQueryBuffer().toString();
-        } finally {
-            generator.clear();
+    public static final ExpressionCopyContext EMPTY = new ExpressionCopyContext() {
+        @Override
+        public String getNewParameterName(String oldParameterName) {
+            return oldParameterName;
         }
-    }
+    };
+
+    public String getNewParameterName(String oldParameterName);
+
 }

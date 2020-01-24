@@ -37,6 +37,7 @@ import com.blazebit.persistence.impl.builder.predicate.RootPredicate;
 import com.blazebit.persistence.impl.builder.predicate.SuperExpressionLeftHandsideSubqueryPredicateBuilder;
 import com.blazebit.persistence.parser.SimpleQueryGenerator;
 import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.parser.expression.modifier.ExpressionModifier;
 import com.blazebit.persistence.parser.predicate.CompoundPredicate;
@@ -69,8 +70,8 @@ public abstract class PredicateManager<T> extends AbstractManager<ExpressionModi
         this.expressionFactory = expressionFactory;
     }
 
-    void applyFrom(PredicateManager predicateManager) {
-        rootPredicate.getPredicate().getChildren().addAll(subqueryInitFactory.reattachSubqueries(predicateManager.rootPredicate.getPredicate().copy(), getClauseType()).getChildren());
+    void applyFrom(PredicateManager predicateManager, ExpressionCopyContext copyContext) {
+        rootPredicate.getPredicate().getChildren().addAll(subqueryInitFactory.reattachSubqueries(predicateManager.rootPredicate.getPredicate().copy(copyContext), getClauseType()).getChildren());
     }
 
     @SuppressWarnings("unchecked")

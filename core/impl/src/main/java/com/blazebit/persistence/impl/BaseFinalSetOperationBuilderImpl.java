@@ -25,6 +25,7 @@ import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.impl.query.SetOperationQuerySpecification;
 import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.parser.expression.FunctionExpression;
 import com.blazebit.persistence.parser.expression.NumericLiteral;
 import com.blazebit.persistence.parser.expression.NumericType;
@@ -66,9 +67,9 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
         this.orderByElements = new ArrayList<DefaultOrderByElement>(0);
     }
 
-    public BaseFinalSetOperationBuilderImpl(BaseFinalSetOperationBuilderImpl<T, X, Y> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
-        super(builder, mainQuery, queryContext, joinManagerMapping);
-        this.setOperationManager = new SetOperationManager(builder.setOperationManager, queryContext, joinManagerMapping);
+    public BaseFinalSetOperationBuilderImpl(BaseFinalSetOperationBuilderImpl<T, X, Y> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
+        super(builder, mainQuery, queryContext, joinManagerMapping, copyContext);
+        this.setOperationManager = new SetOperationManager(builder.setOperationManager, queryContext, joinManagerMapping, copyContext);
         this.orderByElements = new ArrayList<>(builder.orderByElements);
     }
 

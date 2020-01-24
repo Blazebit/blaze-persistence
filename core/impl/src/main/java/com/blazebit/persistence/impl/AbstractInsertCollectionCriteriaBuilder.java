@@ -29,6 +29,7 @@ import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.impl.query.ReturningCollectionInsertModificationQuerySpecification;
 import com.blazebit.persistence.impl.util.SqlUtils;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
@@ -88,8 +89,8 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
         this.collectionAttributeEntries = collectionAttributeEntries;
     }
 
-    public AbstractInsertCollectionCriteriaBuilder(AbstractInsertCollectionCriteriaBuilder<T, X, Y> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
-        super(builder, mainQuery, queryContext, joinManagerMapping);
+    public AbstractInsertCollectionCriteriaBuilder(AbstractInsertCollectionCriteriaBuilder<T, X, Y> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
+        super(builder, mainQuery, queryContext, joinManagerMapping, copyContext);
         this.collectionName = builder.collectionName;
         this.keyFunctionExpression = builder.keyFunctionExpression;
         this.collectionColumnBindingMap = builder.collectionColumnBindingMap;

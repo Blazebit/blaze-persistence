@@ -66,33 +66,33 @@ public class WindowDefinition {
         this.frameExclusionType = frameExclusionType;
     }
 
-    public WindowDefinition copy() {
+    public WindowDefinition copy(ExpressionCopyContext copyContext) {
         int size = this.partitionExpressions.size();
         List<Expression> partitionExpressions = new ArrayList<>(size);
         List<Expression> expressions = this.partitionExpressions;
         for (int i = 0; i < size; i++) {
-            partitionExpressions.add(expressions.get(i).copy());
+            partitionExpressions.add(expressions.get(i).copy(copyContext));
         }
 
         size = this.orderByExpressions.size();
         List<OrderByItem> orderByExpressions = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
-            orderByExpressions.add(this.orderByExpressions.get(i).copy());
+            orderByExpressions.add(this.orderByExpressions.get(i).copy(copyContext));
         }
 
         Predicate filterPredicate = null;
         if (this.filterPredicate != null) {
-            filterPredicate = this.filterPredicate.copy();
+            filterPredicate = this.filterPredicate.copy(copyContext);
         }
 
         Expression frameStartExpression = null;
         if (this.frameStartExpression != null) {
-            frameStartExpression = this.frameStartExpression.copy();
+            frameStartExpression = this.frameStartExpression.copy(copyContext);
         }
 
         Expression frameEndExpression = null;
         if (this.frameEndExpression != null) {
-            frameEndExpression = this.frameEndExpression.copy();
+            frameEndExpression = this.frameEndExpression.copy(copyContext);
         }
 
         return new WindowDefinition(windowName, partitionExpressions, orderByExpressions, filterPredicate, frameMode, frameStartType, frameStartExpression, frameEndType, frameEndExpression, frameExclusionType);

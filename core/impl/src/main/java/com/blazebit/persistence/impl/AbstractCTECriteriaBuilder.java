@@ -22,6 +22,7 @@ import com.blazebit.persistence.impl.query.CTEQuerySpecification;
 import com.blazebit.persistence.impl.query.CustomSQLQuery;
 import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.QuerySpecification;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
@@ -71,8 +72,8 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
         this.subListener = new CTEBuilderListenerImpl();
     }
 
-    public AbstractCTECriteriaBuilder(AbstractCTECriteriaBuilder<Y, X, Z, W> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
-        super(builder, mainQuery, queryContext, joinManagerMapping);
+    public AbstractCTECriteriaBuilder(AbstractCTECriteriaBuilder<Y, X, Z, W> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
+        super(builder, mainQuery, queryContext, joinManagerMapping, copyContext);
         this.cteKey = new CTEManager.CTEKey(builder.cteKey.getName(), joinManagerMapping.get(builder.cteKey.getOwner()));
         this.result = null;
         this.listener = null;

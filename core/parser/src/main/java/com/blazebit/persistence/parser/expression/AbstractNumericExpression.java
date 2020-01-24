@@ -55,5 +55,5 @@ public abstract class AbstractNumericExpression extends AbstractExpression imple
     }
 
     @Override
-    public abstract Expression copy();
+    public abstract Expression copy(ExpressionCopyContext copyContext);
 }

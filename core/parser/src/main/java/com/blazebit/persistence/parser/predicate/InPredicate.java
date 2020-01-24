@@ -17,6 +17,7 @@
 package com.blazebit.persistence.parser.predicate;
 
 import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,12 +54,12 @@ public class InPredicate extends AbstractPredicate {
     }
 
     @Override
-    public InPredicate copy() {
+    public InPredicate copy(ExpressionCopyContext copyContext) {
         List<Expression> rightCloned = new ArrayList<Expression>(right.size());
         for (Expression expr : right) {
-            rightCloned.add(expr.copy());
+            rightCloned.add(expr.copy(copyContext));
         }
-        return new InPredicate(negated, left.copy(), rightCloned);
+        return new InPredicate(negated, left.copy(copyContext), rightCloned);
     }
 
     public Expression getLeft() {

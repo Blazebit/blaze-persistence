@@ -34,18 +34,18 @@ public class SimpleCaseExpression extends GeneralCaseExpression {
     }
 
     @Override
-    public SimpleCaseExpression copy() {
+    public SimpleCaseExpression copy(ExpressionCopyContext copyContext) {
         int size = whenClauses.size();
         List<WhenClauseExpression> newWhenClauses = new ArrayList<WhenClauseExpression>(size);
 
         for (int i = 0; i < size; i++) {
-            newWhenClauses.add(whenClauses.get(i).copy());
+            newWhenClauses.add(whenClauses.get(i).copy(copyContext));
         }
 
         if (defaultExpr == null) {
-            return new SimpleCaseExpression(caseOperand.copy(), newWhenClauses, null);
+            return new SimpleCaseExpression(caseOperand.copy(copyContext), newWhenClauses, null);
         } else {
-            return new SimpleCaseExpression(caseOperand.copy(), newWhenClauses, defaultExpr.copy());
+            return new SimpleCaseExpression(caseOperand.copy(copyContext), newWhenClauses, defaultExpr.copy(copyContext));
         }
     }
 

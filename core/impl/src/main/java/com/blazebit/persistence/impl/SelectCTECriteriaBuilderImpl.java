@@ -17,6 +17,7 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.SelectCTECriteriaBuilder;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 
 import java.util.List;
 import java.util.Map;
@@ -34,13 +35,13 @@ public class SelectCTECriteriaBuilderImpl<Y> extends AbstractCTECriteriaBuilder<
         joinManager.setEmulateJoins(emulateJoins);
     }
 
-    public SelectCTECriteriaBuilderImpl(AbstractCTECriteriaBuilder<Y, SelectCTECriteriaBuilder<Y>, Void, Void> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
-        super(builder, mainQuery, queryContext, joinManagerMapping);
+    public SelectCTECriteriaBuilderImpl(AbstractCTECriteriaBuilder<Y, SelectCTECriteriaBuilder<Y>, Void, Void> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
+        super(builder, mainQuery, queryContext, joinManagerMapping, copyContext);
     }
 
     @Override
-    SelectCTECriteriaBuilderImpl<Y> copy(QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
-        return new SelectCTECriteriaBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext, joinManagerMapping);
+    SelectCTECriteriaBuilderImpl<Y> copy(QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
+        return new SelectCTECriteriaBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext, joinManagerMapping, copyContext);
     }
 
     @Override

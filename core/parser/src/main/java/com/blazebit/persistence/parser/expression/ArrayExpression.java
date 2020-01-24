@@ -33,8 +33,8 @@ public class ArrayExpression extends AbstractExpression implements PathElementEx
     }
 
     @Override
-    public ArrayExpression copy() {
-        return new ArrayExpression(base.copy(), index.copy());
+    public ArrayExpression copy(ExpressionCopyContext copyContext) {
+        return new ArrayExpression(base.copy(copyContext), index.copy(copyContext));
     }
 
     @Override

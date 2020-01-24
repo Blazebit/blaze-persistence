@@ -17,6 +17,7 @@
 package com.blazebit.persistence.parser.predicate;
 
 import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 
 /**
  *
@@ -39,7 +40,7 @@ public abstract class UnaryExpressionPredicate extends AbstractPredicate {
     }
 
     @Override
-    public abstract UnaryExpressionPredicate copy();
+    public abstract UnaryExpressionPredicate copy(ExpressionCopyContext copyContext);
 
     public Expression getExpression() {
         return expression;

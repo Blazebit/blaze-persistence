@@ -19,6 +19,7 @@ package com.blazebit.persistence.impl;
 import com.blazebit.persistence.WindowBuilder;
 import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
 import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.parser.expression.OrderByItem;
 import com.blazebit.persistence.parser.expression.WindowDefinition;
 import com.blazebit.persistence.parser.expression.WindowFrameExclusionType;
@@ -103,7 +104,7 @@ public class WindowManager<T> extends AbstractManager<ExpressionModifier> {
         }
     }
 
-    void applyFrom(WindowManager<?> windowManager) {
+    void applyFrom(WindowManager<?> windowManager, ExpressionCopyContext copyContext) {
         for (Map.Entry<String, WindowDefinition> entry : windowManager.windows.entrySet()) {
             WindowDefinition windowDefinition = entry.getValue();
             int size = windowDefinition.getPartitionExpressions().size();
@@ -111,7 +112,7 @@ public class WindowManager<T> extends AbstractManager<ExpressionModifier> {
             List<Expression> expressions = windowDefinition.getPartitionExpressions();
             Expression expr;
             for (int i = 0; i < size; i++) {
-                partitionExpressions.add(expr = expressions.get(i).copy());
+                partitionExpressions.add(expr = expressions.get(i).copy(copyContext));
                 parameterManager.collectParameterRegistrations(expr, ClauseType.WINDOW, subqueryInitFactory.getQueryBuilder());
             }
 
@@ -119,25 +120,25 @@ public class WindowManager<T> extends AbstractManager<ExpressionModifier> {
             List<OrderByItem> orderByExpressions = new ArrayList<>(size);
             OrderByItem orderByItem;
             for (int i = 0; i < size; i++) {
-                orderByExpressions.add(orderByItem = windowDefinition.getOrderByExpressions().get(i).copy());
+                orderByExpressions.add(orderByItem = windowDefinition.getOrderByExpressions().get(i).copy(copyContext));
                 parameterManager.collectParameterRegistrations(orderByItem.getExpression(), ClauseType.WINDOW, subqueryInitFactory.getQueryBuilder());
             }
 
             Predicate filterPredicate = null;
             if (windowDefinition.getFilterPredicate() != null) {
-                filterPredicate = windowDefinition.getFilterPredicate().copy();
+                filterPredicate = windowDefinition.getFilterPredicate().copy(copyContext);
                 parameterManager.collectParameterRegistrations(filterPredicate, ClauseType.WINDOW, subqueryInitFactory.getQueryBuilder());
             }
 
             Expression frameStartExpression = null;
             if (windowDefinition.getFrameStartExpression() != null) {
-                frameStartExpression = windowDefinition.getFrameStartExpression().copy();
+                frameStartExpression = windowDefinition.getFrameStartExpression().copy(copyContext);
                 parameterManager.collectParameterRegistrations(frameStartExpression, ClauseType.WINDOW, subqueryInitFactory.getQueryBuilder());
             }
 
             Expression frameEndExpression = null;
             if (windowDefinition.getFrameEndExpression() != null) {
-                frameEndExpression = windowDefinition.getFrameEndExpression().copy();
+                frameEndExpression = windowDefinition.getFrameEndExpression().copy(copyContext);
                 parameterManager.collectParameterRegistrations(frameEndExpression, ClauseType.WINDOW, subqueryInitFactory.getQueryBuilder());
             }
 

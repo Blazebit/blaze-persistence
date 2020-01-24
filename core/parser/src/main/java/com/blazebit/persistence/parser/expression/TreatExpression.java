@@ -33,8 +33,8 @@ public class TreatExpression extends AbstractExpression implements PathElementEx
     }
 
     @Override
-    public TreatExpression copy() {
-        return new TreatExpression(expression.copy(), type);
+    public TreatExpression copy(ExpressionCopyContext copyContext) {
+        return new TreatExpression(expression.copy(copyContext), type);
     }
 
     @Override

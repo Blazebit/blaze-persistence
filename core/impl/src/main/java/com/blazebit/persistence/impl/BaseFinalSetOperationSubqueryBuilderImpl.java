@@ -26,6 +26,7 @@ import javax.persistence.Tuple;
 import com.blazebit.persistence.BaseFinalSetOperationBuilder;
 import com.blazebit.persistence.BaseOngoingFinalSetOperationBuilder;
 import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.spi.SetOperationType;
 
 /**
@@ -51,8 +52,8 @@ public abstract class BaseFinalSetOperationSubqueryBuilderImpl<T, X extends Base
         this.subListener = new SubqueryBuilderListenerImpl<T>();
     }
 
-    public BaseFinalSetOperationSubqueryBuilderImpl(BaseFinalSetOperationBuilderImpl<T, X, BaseFinalSetOperationSubqueryBuilderImpl<T, X>> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
-        super(builder, mainQuery, queryContext, joinManagerMapping);
+    public BaseFinalSetOperationSubqueryBuilderImpl(BaseFinalSetOperationBuilderImpl<T, X, BaseFinalSetOperationSubqueryBuilderImpl<T, X>> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
+        super(builder, mainQuery, queryContext, joinManagerMapping, copyContext);
         this.result = null;
         this.listener = null;
         this.initiator = null;

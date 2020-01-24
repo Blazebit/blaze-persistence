@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.parser.predicate;
 
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
+
 /**
  *
  * @author Moritz Becker
@@ -40,7 +42,7 @@ public class BooleanLiteral extends AbstractPredicate {
     }
 
     @Override
-    public Predicate copy() {
+    public Predicate copy(ExpressionCopyContext copyContext) {
         return new BooleanLiteral(value, negated);
     }
 

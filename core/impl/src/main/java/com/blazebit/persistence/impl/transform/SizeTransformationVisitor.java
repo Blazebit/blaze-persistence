@@ -31,6 +31,7 @@ import com.blazebit.persistence.impl.function.subquery.SubqueryFunction;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.expression.AggregateExpression;
 import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.parser.expression.ExpressionModifierCollectingResultVisitorAdapter;
 import com.blazebit.persistence.parser.expression.FunctionExpression;
 import com.blazebit.persistence.parser.expression.ListIndexExpression;
@@ -262,7 +263,7 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
                 joinManager.implicitJoin(groupByExpr, true, true, null, null, new HashSet<String>(), false, false, false, false);
             }
 
-            PathExpression originalSizeArg = sizeArg.copy();
+            PathExpression originalSizeArg = sizeArg.copy(ExpressionCopyContext.EMPTY);
             originalSizeArg.setPathReference(sizeArg.getPathReference());
 
             sizeArg.setUsedInCollectionFunction(false);

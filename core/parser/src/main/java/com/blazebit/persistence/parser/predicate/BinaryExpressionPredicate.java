@@ -17,6 +17,7 @@
 package com.blazebit.persistence.parser.predicate;
 
 import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 
 /**
  *
@@ -40,7 +41,7 @@ public abstract class BinaryExpressionPredicate extends AbstractPredicate {
     }
 
     @Override
-    public abstract BinaryExpressionPredicate copy();
+    public abstract BinaryExpressionPredicate copy(ExpressionCopyContext copyContext);
 
     public Expression getLeft() {
         return left;

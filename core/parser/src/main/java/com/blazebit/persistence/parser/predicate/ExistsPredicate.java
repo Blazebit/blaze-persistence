@@ -17,6 +17,7 @@
 package com.blazebit.persistence.parser.predicate;
 
 import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 
 /**
  *
@@ -39,8 +40,8 @@ public class ExistsPredicate extends UnaryExpressionPredicate {
     }
 
     @Override
-    public ExistsPredicate copy() {
-        return new ExistsPredicate(expression.copy(), negated);
+    public ExistsPredicate copy(ExpressionCopyContext copyContext) {
+        return new ExistsPredicate(expression.copy(copyContext), negated);
     }
 
     @Override
