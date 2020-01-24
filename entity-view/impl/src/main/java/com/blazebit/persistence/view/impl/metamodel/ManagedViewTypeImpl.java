@@ -16,10 +16,12 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
+import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.view.CTEProvider;
+import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
@@ -44,7 +46,9 @@ import javassist.bytecode.CodeIterator;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.Descriptor;
 
+import javax.persistence.Entity;
 import javax.persistence.EntityManager;
+import javax.persistence.MappedSuperclass;
 import javax.persistence.PrePersist;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.BasicType;
@@ -231,6 +235,14 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
                     requiredUpdatableAttributes.add(entry.getKey());
                 }
             }
+
+            Class<?> elementJavaType = getJavaType();
+            Class<?> mappedEntityClass = elementJavaType.getAnnotation(EntityView.class).value();
+            if ((mappedEntityClass.getModifiers() & Modifier.ABSTRACT) != 0 && (AnnotationUtils.findAnnotation(mappedEntityClass, MappedSuperclass.class) != null || AnnotationUtils.findAnnotation(mappedEntityClass, Entity.class) != null)) {
+                context.addError("Creatable EntityViews may not map abstract Entities. Mapped Entity: '" + elementJavaType.getName() + "'");
+
+            }
+
         } else {
             requiredUpdatableAttributes = Collections.emptySet();
             mappedColumns = Collections.emptySet();
