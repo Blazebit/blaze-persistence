@@ -40,6 +40,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.Blob;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.Date;
 
 import static org.junit.Assert.assertEquals;
@@ -131,17 +132,16 @@ public class EntityViewUpdateBlobTest extends AbstractEntityViewUpdateTest<Updat
         // When 2
         docView.setName("newDoc1");
         // Remove milliseconds because MySQL doesn't use that precision by default
-        Date date = new Date();
-        date.setTime(1000 * (date.getTime() / 1000));
+        Instant date = Instant.ofEpochMilli(1000 * (System.currentTimeMillis() / 1000));
         docView.setLastModified(date);
         update(docView);
 
         // Then 2
         assertNoUpdateAndReload(docView, true);
         assertEquals("newDoc1", docView.getName());
-        assertEquals(date.getTime(), docView.getLastModified().getTime());
+        assertEquals(date.toEpochMilli(), docView.getLastModified().toEpochMilli());
         assertEquals(entity.getName(), docView.getName());
-        assertEquals(entity.getLastModified().getTime(), docView.getLastModified().getTime());
+        assertEquals(entity.getLastModified().getTime(), docView.getLastModified().toEpochMilli());
     }
 
     @Test

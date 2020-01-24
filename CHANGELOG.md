@@ -33,6 +33,7 @@ Not yet released
 * Support invoking setters of mutable attributes in updatable entity view constructor
 * Implicit alias generation generates alias that is shadowed in child subquery which prevents copying
 * Remove PathExpression resolving for expression cloning to avoid referring to later removed joins in copied queries
+* Fix support for type converters for updatable entity views
 
 ### Backwards-incompatible changes
 
