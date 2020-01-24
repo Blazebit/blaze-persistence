@@ -17,6 +17,7 @@
 package com.blazebit.persistence.parser.predicate;
 
 import com.blazebit.persistence.parser.expression.AbstractExpression;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 
 /**
  *
@@ -47,7 +48,7 @@ public abstract class AbstractPredicate extends AbstractExpression implements Pr
     }
 
     @Override
-    public abstract Predicate copy();
+    public abstract Predicate copy(ExpressionCopyContext copyContext);
 
     @Override
     public boolean equals(Object o) {

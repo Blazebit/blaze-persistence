@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
+
 import javax.persistence.metamodel.EntityType;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +51,7 @@ class CTEInfo {
         this.recursiveCriteriaBuilder = recursiveCriteriaBuilder;
     }
 
-    CTEInfo copy(CTEManager cteManager, Map<JoinManager, JoinManager> joinManagerMapping) {
+    CTEInfo copy(CTEManager cteManager, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
         CTEInfo cteInfo = new CTEInfo(
                 name,
                 joinManagerMapping.get(owner),
@@ -59,8 +61,8 @@ class CTEInfo {
                 columnNames,
                 recursive,
                 unionAll,
-                nonRecursiveCriteriaBuilder.copy(cteManager.getQueryContext(), joinManagerMapping),
-                recursive ? recursiveCriteriaBuilder.copy(cteManager.getQueryContext(), joinManagerMapping) : null
+                nonRecursiveCriteriaBuilder.copy(cteManager.getQueryContext(), joinManagerMapping, copyContext),
+                recursive ? recursiveCriteriaBuilder.copy(cteManager.getQueryContext(), joinManagerMapping, copyContext) : null
         );
 
         return cteInfo;

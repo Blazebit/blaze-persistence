@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.BaseOngoingSetOperationBuilder;
 import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.SetOperationType;
@@ -47,8 +48,8 @@ public abstract class BaseSubqueryBuilderImpl<T, X, Y extends BaseOngoingSetOper
         this.subListener = new SubqueryBuilderListenerImpl<T>();
     }
 
-    public BaseSubqueryBuilderImpl(BaseSubqueryBuilderImpl<T, X, Y, Z> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
-        super(builder, mainQuery, queryContext, joinManagerMapping);
+    public BaseSubqueryBuilderImpl(BaseSubqueryBuilderImpl<T, X, Y, Z> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
+        super(builder, mainQuery, queryContext, joinManagerMapping, copyContext);
         this.result = null;
         this.listener = null;
         this.subListener = null;

@@ -49,8 +49,8 @@ public class ArithmeticFactor extends AbstractNumericExpression {
     }
 
     @Override
-    public Expression copy() {
-        return new ArithmeticFactor(expression.copy(), invertSignum);
+    public Expression copy(ExpressionCopyContext copyContext) {
+        return new ArithmeticFactor(expression.copy(copyContext), invertSignum);
     }
 
     @Override

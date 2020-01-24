@@ -21,6 +21,7 @@ import java.util.Map;
 
 import com.blazebit.persistence.SelectCTECriteriaBuilder;
 import com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 
 /**
  * @author Christian Beikov
@@ -38,17 +39,17 @@ public class RecursiveCTECriteriaBuilderImpl<Y> extends AbstractCTECriteriaBuild
         this.clazz = clazz;
     }
 
-    public RecursiveCTECriteriaBuilderImpl(RecursiveCTECriteriaBuilderImpl<Y> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
-        super(builder, mainQuery, queryContext, joinManagerMapping);
+    public RecursiveCTECriteriaBuilderImpl(RecursiveCTECriteriaBuilderImpl<Y> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
+        super(builder, mainQuery, queryContext, joinManagerMapping, copyContext);
         this.clazz = builder.clazz;
         this.done = builder.done;
         this.unionAll = builder.unionAll;
-        this.recursiveCteBuilder = builder.recursiveCteBuilder.copy(queryContext, joinManagerMapping);
+        this.recursiveCteBuilder = builder.recursiveCteBuilder.copy(queryContext, joinManagerMapping, copyContext);
     }
 
     @Override
-    AbstractCommonQueryBuilder<Object, SelectRecursiveCTECriteriaBuilder<Y>, SelectCTECriteriaBuilder<Y>, Void, BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?>> copy(QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
-        return new RecursiveCTECriteriaBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext, joinManagerMapping);
+    AbstractCommonQueryBuilder<Object, SelectRecursiveCTECriteriaBuilder<Y>, SelectCTECriteriaBuilder<Y>, Void, BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?>> copy(QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
+        return new RecursiveCTECriteriaBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext, joinManagerMapping, copyContext);
     }
 
     @Override

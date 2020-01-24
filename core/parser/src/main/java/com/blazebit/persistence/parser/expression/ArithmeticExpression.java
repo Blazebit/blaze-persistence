@@ -72,8 +72,8 @@ public class ArithmeticExpression extends AbstractNumericExpression {
     }
 
     @Override
-    public Expression copy() {
-        return new ArithmeticExpression(left.copy(), right.copy(), op);
+    public Expression copy(ExpressionCopyContext copyContext) {
+        return new ArithmeticExpression(left.copy(copyContext), right.copy(copyContext), op);
     }
 
     @Override

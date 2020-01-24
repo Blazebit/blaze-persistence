@@ -21,6 +21,7 @@ import com.blazebit.persistence.LeafOngoingFinalSetOperationCTECriteriaBuilder;
 import com.blazebit.persistence.ReturningModificationCriteriaBuilderFactory;
 import com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder;
 import com.blazebit.persistence.StartOngoingSetOperationCTECriteriaBuilder;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -53,12 +54,12 @@ public class CTEManager extends CTEBuilderListenerImpl {
         }
     }
 
-    void applyFrom(CTEManager cteManager, Map<JoinManager, JoinManager> joinManagerMapping) {
+    void applyFrom(CTEManager cteManager, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
         if (cteManager.recursive) {
             recursive = true;
         }
         for (Map.Entry<CTEKey, CTEInfo> entry : cteManager.ctes.entrySet()) {
-            CTEInfo cteInfo = entry.getValue().copy(this, joinManagerMapping);
+            CTEInfo cteInfo = entry.getValue().copy(this, joinManagerMapping, copyContext);
             mainQuery.parameterManager.collectParameterRegistrations(cteInfo.nonRecursiveCriteriaBuilder, ClauseType.CTE);
             if (cteInfo.recursive) {
                 mainQuery.parameterManager.collectParameterRegistrations(cteInfo.recursiveCriteriaBuilder, ClauseType.CTE);
@@ -198,7 +199,7 @@ public class CTEManager extends CTEBuilderListenerImpl {
         CTEKey cteKey = getCteKey(cteClass, null, inlineOwner);
         assertCteNameAvailable(cteKey);
         FullSelectCTECriteriaBuilderImpl<Y> cteBuilder = new FullSelectCTECriteriaBuilderImpl<Y>(mainQuery, queryContext, cteKey, inline, (Class<Object>) cteClass, result, this, parentAliasManager, parentJoinManager);
-        cteBuilder.applyFrom(builder, true, false, false, Collections.<ClauseType>emptySet(), Collections.<JoinNode>emptySet(), new IdentityHashMap<JoinManager, JoinManager>());
+        cteBuilder.applyFrom(builder, true, false, false, Collections.<ClauseType>emptySet(), Collections.<JoinNode>emptySet(), new IdentityHashMap<JoinManager, JoinManager>(), ExpressionCopyContext.EMPTY);
         this.onBuilderStarted(cteBuilder);
         return cteBuilder;
     }

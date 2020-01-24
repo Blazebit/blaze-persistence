@@ -17,6 +17,7 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.ReturningDeleteCriteriaBuilder;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 
 import java.util.Map;
 
@@ -32,13 +33,13 @@ public class ReturningDeleteCriteriaBuilderImpl<T, Y> extends BaseDeleteCriteria
         super(mainQuery, queryContext, false, clazz, alias, cteKey, cteClass, result, listener);
     }
 
-    public ReturningDeleteCriteriaBuilderImpl(AbstractModificationCriteriaBuilder<T, ReturningDeleteCriteriaBuilder<T, Y>, Y> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
-        super(builder, mainQuery, queryContext, joinManagerMapping);
+    public ReturningDeleteCriteriaBuilderImpl(AbstractModificationCriteriaBuilder<T, ReturningDeleteCriteriaBuilder<T, Y>, Y> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
+        super(builder, mainQuery, queryContext, joinManagerMapping, copyContext);
     }
 
     @Override
-    AbstractCommonQueryBuilder<T, ReturningDeleteCriteriaBuilder<T, Y>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, BaseFinalSetOperationBuilderImpl<T, ?, ?>> copy(QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
-        return new ReturningDeleteCriteriaBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext, joinManagerMapping);
+    AbstractCommonQueryBuilder<T, ReturningDeleteCriteriaBuilder<T, Y>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, BaseFinalSetOperationBuilderImpl<T, ?, ?>> copy(QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
+        return new ReturningDeleteCriteriaBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext, joinManagerMapping, copyContext);
     }
 
     @Override

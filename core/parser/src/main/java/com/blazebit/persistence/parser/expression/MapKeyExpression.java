@@ -29,8 +29,8 @@ public class MapKeyExpression extends AbstractExpression implements PathElementE
     }
 
     @Override
-    public MapKeyExpression copy() {
-        return new MapKeyExpression((PathExpression) path.copy());
+    public MapKeyExpression copy(ExpressionCopyContext copyContext) {
+        return new MapKeyExpression((PathExpression) path.copy(copyContext));
     }
 
     @Override

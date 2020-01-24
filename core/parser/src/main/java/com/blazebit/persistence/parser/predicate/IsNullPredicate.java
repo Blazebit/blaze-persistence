@@ -17,6 +17,7 @@
 package com.blazebit.persistence.parser.predicate;
 
 import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 
 /**
  *
@@ -35,8 +36,8 @@ public class IsNullPredicate extends UnaryExpressionPredicate {
     }
 
     @Override
-    public IsNullPredicate copy() {
-        return new IsNullPredicate(expression.copy(), negated);
+    public IsNullPredicate copy(ExpressionCopyContext copyContext) {
+        return new IsNullPredicate(expression.copy(copyContext), negated);
     }
 
     @Override

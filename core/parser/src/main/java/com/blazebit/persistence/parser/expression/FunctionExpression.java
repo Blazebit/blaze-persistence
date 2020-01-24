@@ -66,15 +66,15 @@ public class FunctionExpression extends AbstractExpression {
     }
 
     @Override
-    public FunctionExpression copy() {
+    public FunctionExpression copy(ExpressionCopyContext copyContext) {
         int size = expressions.size();
         List<Expression> newExpressions = new ArrayList<Expression>(size);
 
         for (int i = 0; i < size; i++) {
-            newExpressions.add(expressions.get(i).copy());
+            newExpressions.add(expressions.get(i).copy(copyContext));
         }
 
-        return new FunctionExpression(functionName, newExpressions, realArgument == null ? null : realArgument.copy(), windowDefinition == null ? null : windowDefinition.copy());
+        return new FunctionExpression(functionName, newExpressions, realArgument == null ? null : realArgument.copy(copyContext), windowDefinition == null ? null : windowDefinition.copy(copyContext));
     }
 
     @Override

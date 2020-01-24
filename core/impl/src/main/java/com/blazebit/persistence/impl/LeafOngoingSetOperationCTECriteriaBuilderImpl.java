@@ -20,6 +20,7 @@ import com.blazebit.persistence.FinalSetOperationCTECriteriaBuilder;
 import com.blazebit.persistence.LeafOngoingFinalSetOperationCTECriteriaBuilder;
 import com.blazebit.persistence.LeafOngoingSetOperationCTECriteriaBuilder;
 import com.blazebit.persistence.StartOngoingSetOperationCTECriteriaBuilder;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.spi.SetOperationType;
 
 import java.util.Map;
@@ -36,13 +37,15 @@ public class LeafOngoingSetOperationCTECriteriaBuilderImpl<T> extends AbstractCT
         super(mainQuery, queryContext, cteKey, inline, clazz, result, listener, finalSetOperationBuilder, parentAliasManager, parentJoinManager);
     }
 
-    public LeafOngoingSetOperationCTECriteriaBuilderImpl(AbstractCTECriteriaBuilder<T, LeafOngoingSetOperationCTECriteriaBuilder<T>, LeafOngoingSetOperationCTECriteriaBuilder<T>, StartOngoingSetOperationCTECriteriaBuilder<T, LeafOngoingFinalSetOperationCTECriteriaBuilder<T>>> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
-        super(builder, mainQuery, queryContext, joinManagerMapping);
+    public LeafOngoingSetOperationCTECriteriaBuilderImpl(AbstractCTECriteriaBuilder<T, LeafOngoingSetOperationCTECriteriaBuilder<T>, LeafOngoingSetOperationCTECriteriaBuilder<T>, StartOngoingSetOperationCTECriteriaBuilder<T, LeafOngoingFinalSetOperationCTECriteriaBuilder<T>>> builder, MainQuery mainQuery, QueryContext queryContext,
+                                                         Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
+        super(builder, mainQuery, queryContext, joinManagerMapping, copyContext);
     }
 
     @Override
-    AbstractCommonQueryBuilder<Object, LeafOngoingSetOperationCTECriteriaBuilder<T>, LeafOngoingSetOperationCTECriteriaBuilder<T>, StartOngoingSetOperationCTECriteriaBuilder<T, LeafOngoingFinalSetOperationCTECriteriaBuilder<T>>, BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?>> copy(QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
-        return new LeafOngoingSetOperationCTECriteriaBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext, joinManagerMapping);
+    AbstractCommonQueryBuilder<Object, LeafOngoingSetOperationCTECriteriaBuilder<T>, LeafOngoingSetOperationCTECriteriaBuilder<T>, StartOngoingSetOperationCTECriteriaBuilder<T, LeafOngoingFinalSetOperationCTECriteriaBuilder<T>>, BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?>> copy(QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping,
+                                                                                                                                                                                                                                                                                                  ExpressionCopyContext copyContext) {
+        return new LeafOngoingSetOperationCTECriteriaBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext, joinManagerMapping, copyContext);
     }
 
     @Override

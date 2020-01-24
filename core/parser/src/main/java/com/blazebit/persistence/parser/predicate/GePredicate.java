@@ -17,6 +17,7 @@
 package com.blazebit.persistence.parser.predicate;
 
 import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 
 /**
  *
@@ -42,8 +43,8 @@ public class GePredicate extends QuantifiableBinaryExpressionPredicate {
     }
 
     @Override
-    public GePredicate copy() {
-        return new GePredicate(left.copy(), right.copy(), quantifier, negated);
+    public GePredicate copy(ExpressionCopyContext copyContext) {
+        return new GePredicate(left.copy(copyContext), right.copy(copyContext), quantifier, negated);
     }
 
     @Override

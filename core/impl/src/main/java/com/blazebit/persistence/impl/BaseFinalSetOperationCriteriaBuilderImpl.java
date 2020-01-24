@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.BaseFinalSetOperationBuilder;
 import com.blazebit.persistence.BaseOngoingFinalSetOperationBuilder;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.spi.SetOperationType;
 
 import java.util.Map;
@@ -39,8 +40,8 @@ public abstract class BaseFinalSetOperationCriteriaBuilderImpl<T, X extends Base
         this.subListener = new BuilderListenerImpl<Object>();
     }
 
-    public BaseFinalSetOperationCriteriaBuilderImpl(BaseFinalSetOperationBuilderImpl<T, X, BaseFinalSetOperationCriteriaBuilderImpl<T, X>> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
-        super(builder, mainQuery, queryContext, joinManagerMapping);
+    public BaseFinalSetOperationCriteriaBuilderImpl(BaseFinalSetOperationBuilderImpl<T, X, BaseFinalSetOperationCriteriaBuilderImpl<T, X>> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
+        super(builder, mainQuery, queryContext, joinManagerMapping, copyContext);
         this.listener = null;
         this.subListener = null;
     }

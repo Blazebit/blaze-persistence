@@ -20,6 +20,7 @@ import com.blazebit.persistence.MiddleOngoingSetOperationCriteriaBuilder;
 import com.blazebit.persistence.OngoingFinalSetOperationCriteriaBuilder;
 import com.blazebit.persistence.OngoingSetOperationCriteriaBuilder;
 import com.blazebit.persistence.StartOngoingSetOperationCriteriaBuilder;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.spi.SetOperationType;
 
 import java.util.Map;
@@ -39,14 +40,14 @@ public class OngoingSetOperationCriteriaBuilderImpl<T, Z> extends AbstractCriter
         this.endSetResult = endSetResult;
     }
 
-    public OngoingSetOperationCriteriaBuilderImpl(AbstractCommonQueryBuilder<T, ?, ?, ?, ?> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
-        super(builder, mainQuery, queryContext, joinManagerMapping);
+    public OngoingSetOperationCriteriaBuilderImpl(AbstractCommonQueryBuilder<T, ?, ?, ?, ?> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
+        super(builder, mainQuery, queryContext, joinManagerMapping, copyContext);
         this.endSetResult = null;
     }
 
     @Override
-    AbstractCommonQueryBuilder<T, OngoingSetOperationCriteriaBuilder<T, Z>, OngoingSetOperationCriteriaBuilder<T, Z>, StartOngoingSetOperationCriteriaBuilder<T, MiddleOngoingSetOperationCriteriaBuilder<T, Z>>, BaseFinalSetOperationCriteriaBuilderImpl<T, ?>> copy(QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
-        return new OngoingSetOperationCriteriaBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext, joinManagerMapping);
+    AbstractCommonQueryBuilder<T, OngoingSetOperationCriteriaBuilder<T, Z>, OngoingSetOperationCriteriaBuilder<T, Z>, StartOngoingSetOperationCriteriaBuilder<T, MiddleOngoingSetOperationCriteriaBuilder<T, Z>>, BaseFinalSetOperationCriteriaBuilderImpl<T, ?>> copy(QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
+        return new OngoingSetOperationCriteriaBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext, joinManagerMapping, copyContext);
     }
 
     @Override

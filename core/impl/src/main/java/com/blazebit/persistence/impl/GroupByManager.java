@@ -19,6 +19,7 @@ package com.blazebit.persistence.impl;
 import com.blazebit.persistence.parser.SimpleQueryGenerator;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.Expression.Visitor;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.parser.expression.modifier.ExpressionModifier;
 import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
 import com.blazebit.persistence.spi.JpaProvider;
@@ -61,15 +62,15 @@ public class GroupByManager extends AbstractManager<ExpressionModifier> {
         this.groupByClauses = new LinkedHashMap<>();
     }
 
-    void applyFrom(GroupByManager groupByManager, Set<ClauseType> excludedClauses) {
+    void applyFrom(GroupByManager groupByManager, Set<ClauseType> excludedClauses, ExpressionCopyContext copyContext) {
         if (excludedClauses.isEmpty() || groupByClauses.isEmpty()) {
             for (NodeInfo info : groupByManager.groupByInfos) {
-                groupBy(subqueryInitFactory.reattachSubqueries(info.getExpression().copy(), ClauseType.GROUP_BY));
+                groupBy(subqueryInitFactory.reattachSubqueries(info.getExpression().copy(copyContext), ClauseType.GROUP_BY));
             }
         } else {
             for (Map.Entry<ResolvedExpression, Set<ClauseType>> entry : groupByClauses.entrySet()) {
                 if (!excludedClauses.containsAll(entry.getValue())) {
-                    groupBy(subqueryInitFactory.reattachSubqueries(entry.getKey().getExpression().copy(), ClauseType.GROUP_BY));
+                    groupBy(subqueryInitFactory.reattachSubqueries(entry.getKey().getExpression().copy(copyContext), ClauseType.GROUP_BY));
                 }
             }
         }

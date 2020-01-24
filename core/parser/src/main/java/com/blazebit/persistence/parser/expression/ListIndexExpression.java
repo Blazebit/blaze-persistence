@@ -29,8 +29,8 @@ public class ListIndexExpression extends AbstractExpression implements PathEleme
     }
 
     @Override
-    public ListIndexExpression copy() {
-        return new ListIndexExpression((PathExpression) path.copy());
+    public ListIndexExpression copy(ExpressionCopyContext copyContext) {
+        return new ListIndexExpression((PathExpression) path.copy(copyContext));
     }
 
     @Override

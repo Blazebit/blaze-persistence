@@ -69,6 +69,8 @@ import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.parser.AliasReplacementVisitor;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContextMap;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.parser.expression.FunctionExpression;
 import com.blazebit.persistence.parser.expression.NumericLiteral;
@@ -228,9 +230,10 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
      *
      * @param builder
      * @param joinManagerMapping
+     * @param copyContext
      */
     @SuppressWarnings("unchecked")
-    protected AbstractCommonQueryBuilder(AbstractCommonQueryBuilder<QueryResultType, ?, ?, ?, ?> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
+    protected AbstractCommonQueryBuilder(AbstractCommonQueryBuilder<QueryResultType, ?, ?, ?, ?> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
         this.mainQuery = mainQuery;
         if (builder.isMainQuery) {
             mainQuery.cteManager.init(this);
@@ -270,7 +273,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 new SizeTransformerGroup(sizeTransformationVisitor, orderByManager, selectManager, joinManager, groupByManager));
         this.resultType = builder.resultType;
 
-        applyFrom(builder, isMainQuery, true, true, Collections.<ClauseType>emptySet(), Collections.<JoinNode>emptySet(), joinManagerMapping);
+        applyFrom(builder, isMainQuery, true, true, Collections.<ClauseType>emptySet(), Collections.<JoinNode>emptySet(), joinManagerMapping, copyContext);
     }
     
     protected AbstractCommonQueryBuilder(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, DbmsStatementType statementType, Class<QueryResultType> resultClazz, String alias, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, FinalSetReturn finalSetOperationBuilder, boolean implicitFromClause) {
@@ -356,22 +359,22 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this(mainQuery, queryContext, isMainQuery, statementType, resultClazz, alias, null);
     }
 
-    abstract AbstractCommonQueryBuilder<QueryResultType, BuilderType, SetReturn, SubquerySetReturn, FinalSetReturn> copy(QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping);
+    abstract AbstractCommonQueryBuilder<QueryResultType, BuilderType, SetReturn, SubquerySetReturn, FinalSetReturn> copy(QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext);
 
-    void applyFrom(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder, boolean copyMainQuery, boolean copySelect, boolean fixedSelect, Set<ClauseType> clauseExclusions, Set<JoinNode> alwaysIncludedNodes, Map<JoinManager, JoinManager> joinManagerMapping) {
+    ExpressionCopyContext applyFrom(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder, boolean copyMainQuery, boolean copySelect, boolean fixedSelect, Set<ClauseType> clauseExclusions, Set<JoinNode> alwaysIncludedNodes, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
+        if (copyMainQuery) {
+            copyContext = new ExpressionCopyContextMap(parameterManager.copyFrom(builder.parameterManager));
+            mainQuery.cteManager.applyFrom(builder.mainQuery.cteManager, joinManagerMapping, copyContext);
+        }
+
         joinManagerMapping.put(builder.joinManager, joinManager);
         aliasManager.applyFrom(builder.aliasManager);
-        Map<JoinNode, JoinNode> nodeMapping = joinManager.applyFrom(builder.joinManager, clauseExclusions, alwaysIncludedNodes);
-        windowManager.applyFrom(builder.windowManager);
-        whereManager.applyFrom(builder.whereManager);
-        havingManager.applyFrom(builder.havingManager);
-        groupByManager.applyFrom(builder.groupByManager, clauseExclusions);
-        orderByManager.applyFrom(builder.orderByManager);
-
-        if (copyMainQuery) {
-            parameterManager.copyFrom(builder.parameterManager);
-            mainQuery.cteManager.applyFrom(builder.mainQuery.cteManager, joinManagerMapping);
-        }
+        Map<JoinNode, JoinNode> nodeMapping = joinManager.applyFrom(builder.joinManager, clauseExclusions, alwaysIncludedNodes, copyContext);
+        windowManager.applyFrom(builder.windowManager, copyContext);
+        whereManager.applyFrom(builder.whereManager, copyContext);
+        havingManager.applyFrom(builder.havingManager, copyContext);
+        groupByManager.applyFrom(builder.groupByManager, clauseExclusions, copyContext);
+        orderByManager.applyFrom(builder.orderByManager, copyContext);
 
         setFirstResult(builder.firstResult);
         setMaxResults(builder.maxResults);
@@ -380,13 +383,14 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         // TODO: set operations?
 
         if (copySelect) {
-            selectManager.setDefaultSelect(nodeMapping, builder.selectManager.getSelectInfos());
+            selectManager.setDefaultSelect(nodeMapping, builder.selectManager.getSelectInfos(), copyContext);
             if (fixedSelect) {
                 selectManager.unsetDefaultSelect();
             }
         }
         // No need to copy the finalSetOperationBuilder as that is only necessary for further builders which isn't possible after copying
         collectParameters();
+        return copyContext;
     }
 
     public CriteriaBuilderFactory getCriteriaBuilderFactory() {
@@ -532,8 +536,8 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             }
 
             prepareForModification(ClauseType.CTE);
-            this.parameterManager.applyToCteFrom(mainQuery.parameterManager);
-            this.mainQuery.cteManager.applyFrom(mainQuery.cteManager, new IdentityHashMap<JoinManager, JoinManager>());
+            ExpressionCopyContext copyContext = new ExpressionCopyContextMap(this.parameterManager.copyFrom(mainQuery.parameterManager));
+            this.mainQuery.cteManager.applyFrom(mainQuery.cteManager, new IdentityHashMap<JoinManager, JoinManager>(), copyContext);
         }
         return (BuilderType) this;
     }

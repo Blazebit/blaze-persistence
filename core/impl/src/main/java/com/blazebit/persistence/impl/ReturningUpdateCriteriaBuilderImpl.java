@@ -17,6 +17,7 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.ReturningUpdateCriteriaBuilder;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 
 import java.util.Map;
 
@@ -32,13 +33,13 @@ public class ReturningUpdateCriteriaBuilderImpl<T, Y> extends BaseUpdateCriteria
         super(mainQuery, queryContext, false, clazz, alias, cteKey, cteClass, result, listener);
     }
 
-    public ReturningUpdateCriteriaBuilderImpl(BaseUpdateCriteriaBuilderImpl<T, ReturningUpdateCriteriaBuilder<T, Y>, Y> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
-        super(builder, mainQuery, queryContext, joinManagerMapping);
+    public ReturningUpdateCriteriaBuilderImpl(BaseUpdateCriteriaBuilderImpl<T, ReturningUpdateCriteriaBuilder<T, Y>, Y> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
+        super(builder, mainQuery, queryContext, joinManagerMapping, copyContext);
     }
 
     @Override
-    AbstractCommonQueryBuilder<T, ReturningUpdateCriteriaBuilder<T, Y>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, BaseFinalSetOperationBuilderImpl<T, ?, ?>> copy(QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
-        return new ReturningUpdateCriteriaBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext, joinManagerMapping);
+    AbstractCommonQueryBuilder<T, ReturningUpdateCriteriaBuilder<T, Y>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, BaseFinalSetOperationBuilderImpl<T, ?, ?>> copy(QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
+        return new ReturningUpdateCriteriaBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext, joinManagerMapping, copyContext);
     }
 
     @Override

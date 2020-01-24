@@ -33,7 +33,7 @@ public class SubqueryExpression extends AbstractExpression {
     }
 
     @Override
-    public SubqueryExpression copy() {
+    public SubqueryExpression copy(ExpressionCopyContext copyContext) {
         return new SubqueryExpression(subquery);
     }
 

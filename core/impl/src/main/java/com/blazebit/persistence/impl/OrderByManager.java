@@ -21,6 +21,7 @@ import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.SimpleQueryGenerator;
 import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.expression.PropertyExpression;
 import com.blazebit.persistence.parser.expression.modifier.ExpressionModifier;
@@ -64,9 +65,9 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
         this.jpaProvider = jpaProvider;
     }
 
-    void applyFrom(OrderByManager orderByManager) {
+    void applyFrom(OrderByManager orderByManager, ExpressionCopyContext copyContext) {
         for (OrderByInfo info : orderByManager.orderByInfos) {
-            orderBy(subqueryInitFactory.reattachSubqueries(info.getExpression().copy(), ClauseType.ORDER_BY), info.ascending, info.nullFirst);
+            orderBy(subqueryInitFactory.reattachSubqueries(info.getExpression().copy(copyContext), ClauseType.ORDER_BY), info.ascending, info.nullFirst);
         }
     }
 

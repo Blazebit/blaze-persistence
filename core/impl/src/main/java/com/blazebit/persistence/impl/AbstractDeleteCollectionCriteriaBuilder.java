@@ -29,6 +29,7 @@ import com.blazebit.persistence.impl.query.CustomSQLQuery;
 import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.impl.query.ReturningCollectionDeleteModificationQuerySpecification;
 import com.blazebit.persistence.impl.util.SqlUtils;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
@@ -77,8 +78,8 @@ public abstract class AbstractDeleteCollectionCriteriaBuilder<T, X extends BaseD
         }
     }
 
-    public AbstractDeleteCollectionCriteriaBuilder(AbstractDeleteCollectionCriteriaBuilder<T, X, Y> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
-        super(builder, mainQuery, queryContext, joinManagerMapping);
+    public AbstractDeleteCollectionCriteriaBuilder(AbstractDeleteCollectionCriteriaBuilder<T, X, Y> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
+        super(builder, mainQuery, queryContext, joinManagerMapping, copyContext);
         this.collectionName = builder.collectionName;
         this.collectionAttribute = builder.collectionAttribute;
         this.elementType = builder.elementType;

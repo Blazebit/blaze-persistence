@@ -17,6 +17,7 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.UpdateCriteriaBuilder;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 
 import java.util.Map;
 
@@ -33,7 +34,7 @@ public class UpdateCriteriaBuilderImpl<T> extends BaseUpdateCriteriaBuilderImpl<
     }
 
     @Override
-    AbstractCommonQueryBuilder<T, UpdateCriteriaBuilder<T>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, BaseFinalSetOperationBuilderImpl<T, ?, ?>> copy(QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
+    AbstractCommonQueryBuilder<T, UpdateCriteriaBuilder<T>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, BaseFinalSetOperationBuilderImpl<T, ?, ?>> copy(QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
         throw new UnsupportedOperationException("This should only be used on CTEs!");
     }
 }

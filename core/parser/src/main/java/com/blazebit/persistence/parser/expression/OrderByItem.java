@@ -33,8 +33,8 @@ public final class OrderByItem {
         this.expression = expression;
     }
 
-    public OrderByItem copy() {
-        return new OrderByItem(ascending, nullFirst, expression.copy());
+    public OrderByItem copy(ExpressionCopyContext copyContext) {
+        return new OrderByItem(ascending, nullFirst, expression.copy(copyContext));
     }
 
     public boolean isAscending() {

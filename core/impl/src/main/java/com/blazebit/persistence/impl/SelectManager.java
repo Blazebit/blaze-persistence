@@ -41,6 +41,7 @@ import com.blazebit.persistence.parser.SimpleQueryGenerator;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.Expression.ResultVisitor;
 import com.blazebit.persistence.parser.expression.Expression.Visitor;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.parser.expression.FunctionExpression;
 import com.blazebit.persistence.parser.expression.MapKeyExpression;
@@ -284,7 +285,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
                 // Otherwise we won't have the owning column in the group by clause which will lead to an error on some DBMS
                 if (expr instanceof PathExpression && rootNode != ((PathExpression) expr).getBaseNode()) {
                     PathExpression pathExpression = (PathExpression) expr;
-                    PathExpression associationIdAccess = pathExpression.copy();
+                    PathExpression associationIdAccess = pathExpression.copy(ExpressionCopyContext.EMPTY);
                     associationIdAccess.setPathReference(pathExpression.getPathReference());
                     groupByManager.collect(new ResolvedExpression(sb.toString(), associationIdAccess), ClauseType.SELECT, hasGroupBy, joinVisitor);
 
@@ -508,7 +509,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         this.objectBuilder = (ObjectBuilder<T>) objectBuilder;
     }
 
-    void setDefaultSelect(Map<JoinNode, JoinNode> nodeMapping, List<SelectInfo> selectInfos) {
+    void setDefaultSelect(Map<JoinNode, JoinNode> nodeMapping, List<SelectInfo> selectInfos, ExpressionCopyContext copyContext) {
         if (!this.selectInfos.isEmpty()) {
             throw new IllegalStateException("Can't set default select when explicit select items are already set!");
         }
@@ -523,7 +524,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         for (int i = 0; i < selectInfos.size(); i++) {
             SelectInfo selectInfo = selectInfos.get(i);
             String selectAlias = selectInfo.getAlias();
-            Expression expr = subqueryInitFactory.reattachSubqueries(selectInfo.getExpression().copy(), ClauseType.SELECT);
+            Expression expr = subqueryInitFactory.reattachSubqueries(selectInfo.getExpression().copy(copyContext), ClauseType.SELECT);
             if (nodeMapping != null) {
                 selectInfo.getExpression().accept(visitor);
             }

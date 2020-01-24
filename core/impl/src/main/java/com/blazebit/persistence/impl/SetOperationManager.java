@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.blazebit.persistence.MiddleOngoingSetOperationCTECriteriaBuilder;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.spi.SetOperationType;
 
 /**
@@ -42,13 +43,13 @@ public class SetOperationManager {
         this.setOperations = new ArrayList<>();
     }
 
-    SetOperationManager(SetOperationManager original, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
+    SetOperationManager(SetOperationManager original, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
         this.operator = original.operator;
         this.nested = original.nested;
-        this.startQueryBuilder = original.startQueryBuilder.copy(queryContext, joinManagerMapping);
+        this.startQueryBuilder = original.startQueryBuilder.copy(queryContext, joinManagerMapping, copyContext);
         this.setOperations = new ArrayList<>(original.setOperations.size());
         for (AbstractCommonQueryBuilder<?, ?, ?, ?, ?> setOperation : original.setOperations) {
-            setOperations.add(setOperation.copy(queryContext, joinManagerMapping));
+            setOperations.add(setOperation.copy(queryContext, joinManagerMapping, copyContext));
         }
     }
 

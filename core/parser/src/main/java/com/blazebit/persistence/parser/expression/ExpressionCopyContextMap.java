@@ -14,45 +14,30 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.testsuite.entity;
+package com.blazebit.persistence.parser.expression;
 
-import javax.persistence.Entity;
+import java.util.Map;
 
 /**
  *
- * @author Jan-Willem Gmelig Meyling
+ * @author Christian Beikov
  * @since 1.4.1
  */
-@Entity
-public class ParameterOrderEntity extends LongSequenceEntity {
+public class ExpressionCopyContextMap implements ExpressionCopyContext {
 
-    private Short one;
+    private final Map<String, String> parameterMapping;
 
-    private Integer two;
-
-    private Long three;
-
-    public Short getOne() {
-        return one;
+    public ExpressionCopyContextMap(Map<String, String> parameterMapping) {
+        this.parameterMapping = parameterMapping;
     }
 
-    public void setOne(Short one) {
-        this.one = one;
+    @Override
+    public String getNewParameterName(String oldParameterName) {
+        String newParameterName = parameterMapping.get(oldParameterName);
+        if (newParameterName == null) {
+            return oldParameterName;
+        }
+        return newParameterName;
     }
 
-    public Integer getTwo() {
-        return two;
-    }
-
-    public void setTwo(Integer two) {
-        this.two = two;
-    }
-
-    public Long getThree() {
-        return three;
-    }
-
-    public void setThree(Long three) {
-        this.three = three;
-    }
 }

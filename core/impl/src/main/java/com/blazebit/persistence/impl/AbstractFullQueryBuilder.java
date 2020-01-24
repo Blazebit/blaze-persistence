@@ -40,6 +40,7 @@ import com.blazebit.persistence.impl.query.CustomSQLTypedQuery;
 import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.JpaMetamodelAccessor;
@@ -123,7 +124,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
     }
 
     @Override
-    AbstractCommonQueryBuilder<T, X, Z, W, FinalSetReturn> copy(QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
+    AbstractCommonQueryBuilder<T, X, Z, W, FinalSetReturn> copy(QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
         throw new UnsupportedOperationException("This should only be used on CTEs!");
     }
 
@@ -135,7 +136,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         CriteriaBuilderImpl<Y> newBuilder = new CriteriaBuilderImpl<Y>(mainQuery, true, resultClass, null);
         newBuilder.fromClassExplicitlySet = true;
 
-        newBuilder.applyFrom(this, true, true, false, Collections.<ClauseType>emptySet(), Collections.<JoinNode>emptySet(), new IdentityHashMap<JoinManager, JoinManager>());
+        newBuilder.applyFrom(this, true, true, false, Collections.<ClauseType>emptySet(), Collections.<JoinNode>emptySet(), new IdentityHashMap<JoinManager, JoinManager>(), ExpressionCopyContext.EMPTY);
 
         return newBuilder;
     }
@@ -176,7 +177,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         CriteriaBuilderImpl<Object[]> newBuilder = new CriteriaBuilderImpl<>(mainQuery, true, Object[].class, null);
         newBuilder.fromClassExplicitlySet = true;
 
-        newBuilder.applyFrom(this, true, false, false, ID_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, getIdentifierExpressionsToUseNonRootJoinNodes(identifierExpressionsToUse), new IdentityHashMap<JoinManager, JoinManager>());
+        newBuilder.applyFrom(this, true, false, false, ID_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, getIdentifierExpressionsToUseNonRootJoinNodes(identifierExpressionsToUse), new IdentityHashMap<JoinManager, JoinManager>(), ExpressionCopyContext.EMPTY);
         newBuilder.setFirstResult(firstResult);
         newBuilder.setMaxResults(maxResults);
 
@@ -217,7 +218,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
             }
         }
         for (int i = 0; i < identifierExpressionsToUse.length; i++) {
-            newBuilder.selectManager.select(identifierExpressionsToUse[i].getExpression().copy(), identifierToUseSelectAliases[i]);
+            newBuilder.selectManager.select(identifierExpressionsToUse[i].getExpression().copy(ExpressionCopyContext.EMPTY), identifierToUseSelectAliases[i]);
         }
         newBuilder.selectManager.setDefaultSelect();
 

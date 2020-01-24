@@ -17,6 +17,7 @@
 package com.blazebit.persistence.parser.predicate;
 
 import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 
 /**
  *
@@ -42,8 +43,8 @@ public class LikePredicate extends BinaryExpressionPredicate {
     }
 
     @Override
-    public LikePredicate copy() {
-        return new LikePredicate(left.copy(), right.copy(), caseSensitive, escapeCharacter, negated);
+    public LikePredicate copy(ExpressionCopyContext copyContext) {
+        return new LikePredicate(left.copy(copyContext), right.copy(copyContext), caseSensitive, escapeCharacter, negated);
     }
 
     @Override

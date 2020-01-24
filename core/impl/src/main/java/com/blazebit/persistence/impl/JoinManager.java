@@ -37,6 +37,7 @@ import com.blazebit.persistence.parser.QualifiedAttribute;
 import com.blazebit.persistence.parser.SimpleQueryGenerator;
 import com.blazebit.persistence.parser.expression.ArrayExpression;
 import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.parser.expression.FunctionExpression;
 import com.blazebit.persistence.parser.expression.GeneralCaseExpression;
@@ -143,10 +144,10 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         this.queryBuilder = queryBuilder;
     }
 
-    Map<JoinNode, JoinNode> applyFrom(JoinManager joinManager, Set<ClauseType> clauseExclusions, Set<JoinNode> alwaysIncludedNodes) {
+    Map<JoinNode, JoinNode> applyFrom(JoinManager joinManager, Set<ClauseType> clauseExclusions, Set<JoinNode> alwaysIncludedNodes, ExpressionCopyContext copyContext) {
         Map<JoinNode, JoinNode> nodeMapping = new IdentityHashMap<>();
         for (JoinNode node : joinManager.rootNodes) {
-            JoinNode rootNode = applyFrom(nodeMapping, node, clauseExclusions, alwaysIncludedNodes);
+            JoinNode rootNode = applyFrom(nodeMapping, node, clauseExclusions, alwaysIncludedNodes, copyContext);
 
             if (node.getValueCount() > 0) {
                 entityFunctionNodes.add(rootNode);
@@ -162,7 +163,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         return nodeMapping;
     }
 
-    private JoinNode applyFrom(Map<JoinNode, JoinNode> nodeMapping, JoinNode node, Set<ClauseType> clauseExclusions, Set<JoinNode> alwaysIncludedNodes) {
+    private JoinNode applyFrom(Map<JoinNode, JoinNode> nodeMapping, JoinNode node, Set<ClauseType> clauseExclusions, Set<JoinNode> alwaysIncludedNodes, ExpressionCopyContext copyContext) {
         String rootAlias = node.getAlias();
         boolean implicit = node.getAliasInfo().isImplicit();
 
@@ -176,11 +177,11 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         nodeMapping.put(node, rootNode);
 
         for (JoinTreeNode treeNode : node.getNodes().values()) {
-            applyFrom(nodeMapping, rootNode, treeNode, clauseExclusions, alwaysIncludedNodes);
+            applyFrom(nodeMapping, rootNode, treeNode, clauseExclusions, alwaysIncludedNodes, copyContext);
         }
 
         for (JoinNode entityJoinNode : node.getEntityJoinNodes()) {
-            JoinNode joinNode = applyFrom(nodeMapping, rootNode, null, entityJoinNode.getAlias(), entityJoinNode, clauseExclusions, alwaysIncludedNodes);
+            JoinNode joinNode = applyFrom(nodeMapping, rootNode, null, entityJoinNode.getAlias(), entityJoinNode, clauseExclusions, alwaysIncludedNodes, copyContext);
             if (joinNode != null) {
                 rootNode.addEntityJoin(joinNode);
             }
@@ -188,7 +189,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
         for (Map.Entry<String, JoinNode> entry : node.getTreatedJoinNodes().entrySet()) {
             JoinNode treatedNode = entry.getValue();
-            JoinNode joinNode = applyFrom(nodeMapping, rootNode, null, treatedNode.getAlias(), treatedNode, clauseExclusions, alwaysIncludedNodes);
+            JoinNode joinNode = applyFrom(nodeMapping, rootNode, null, treatedNode.getAlias(), treatedNode, clauseExclusions, alwaysIncludedNodes, copyContext);
             if (joinNode != null) {
                 rootNode.getTreatedJoinNodes().put(treatedNode.getTreatType().getName(), joinNode);
             }
@@ -197,17 +198,17 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         return rootNode;
     }
 
-    private void applyFrom(Map<JoinNode, JoinNode> nodeMapping, JoinNode parent, JoinTreeNode treeNode, Set<ClauseType> clauseExclusions, Set<JoinNode> alwaysIncludedNodes) {
+    private void applyFrom(Map<JoinNode, JoinNode> nodeMapping, JoinNode parent, JoinTreeNode treeNode, Set<ClauseType> clauseExclusions, Set<JoinNode> alwaysIncludedNodes, ExpressionCopyContext copyContext) {
         JoinTreeNode newTreeNode = parent.getOrCreateTreeNode(treeNode.getRelationName(), treeNode.getAttribute());
         for (Map.Entry<String, JoinNode> nodeEntry : treeNode.getJoinNodes().entrySet()) {
-            JoinNode newNode = applyFrom(nodeMapping, parent, newTreeNode, nodeEntry.getKey(), nodeEntry.getValue(), clauseExclusions, alwaysIncludedNodes);
+            JoinNode newNode = applyFrom(nodeMapping, parent, newTreeNode, nodeEntry.getKey(), nodeEntry.getValue(), clauseExclusions, alwaysIncludedNodes, copyContext);
             if (newNode != null) {
                 newTreeNode.addJoinNode(newNode, nodeEntry.getValue() == treeNode.getDefaultNode());
             }
         }
     }
 
-    private JoinNode applyFrom(Map<JoinNode, JoinNode> nodeMapping, JoinNode parent, JoinTreeNode treeNode, String alias, JoinNode oldNode, Set<ClauseType> clauseExclusions, Set<JoinNode> alwaysIncludedNodes) {
+    private JoinNode applyFrom(Map<JoinNode, JoinNode> nodeMapping, JoinNode parent, JoinTreeNode treeNode, String alias, JoinNode oldNode, Set<ClauseType> clauseExclusions, Set<JoinNode> alwaysIncludedNodes, ExpressionCopyContext copyContext) {
         if (!clauseExclusions.isEmpty() && clauseExclusions.containsAll(oldNode.getClauseDependencies()) && !alwaysIncludedNodes.contains(oldNode)) {
             return null;
         }
@@ -226,15 +227,15 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         nodeMapping.put(oldNode, node);
 
         if (oldNode.getOnPredicate() != null) {
-            node.setOnPredicate(subqueryInitFactory.reattachSubqueries(oldNode.getOnPredicate().copy(), ClauseType.JOIN));
+            node.setOnPredicate(subqueryInitFactory.reattachSubqueries(oldNode.getOnPredicate().copy(copyContext), ClauseType.JOIN));
         }
 
         for (JoinTreeNode oldTreeNode : oldNode.getNodes().values()) {
-            applyFrom(nodeMapping, node, oldTreeNode, clauseExclusions, alwaysIncludedNodes);
+            applyFrom(nodeMapping, node, oldTreeNode, clauseExclusions, alwaysIncludedNodes, copyContext);
         }
 
         for (JoinNode entityJoinNode : oldNode.getEntityJoinNodes()) {
-            JoinNode joinNode = applyFrom(nodeMapping, node, null, entityJoinNode.getAlias(), entityJoinNode, clauseExclusions, alwaysIncludedNodes);
+            JoinNode joinNode = applyFrom(nodeMapping, node, null, entityJoinNode.getAlias(), entityJoinNode, clauseExclusions, alwaysIncludedNodes, copyContext);
             if (joinNode != null) {
                 node.addEntityJoin(joinNode);
             }
@@ -248,7 +249,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             } else {
                 subTreeNode = node.getOrCreateTreeNode(treatedNode.getParentTreeNode().getRelationName(), treatedNode.getParentTreeNode().getAttribute());
             }
-            JoinNode joinNode = applyFrom(nodeMapping, node, subTreeNode, treatedNode.getAlias(), treatedNode, clauseExclusions, alwaysIncludedNodes);
+            JoinNode joinNode = applyFrom(nodeMapping, node, subTreeNode, treatedNode.getAlias(), treatedNode, clauseExclusions, alwaysIncludedNodes, copyContext);
             if (joinNode != null) {
                 node.getTreatedJoinNodes().put(entry.getKey(), joinNode);
             }

@@ -33,6 +33,7 @@ import com.blazebit.persistence.impl.query.CustomSQLQuery;
 import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.ModificationQuerySpecification;
 import com.blazebit.persistence.impl.query.QuerySpecification;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
 
@@ -54,8 +55,8 @@ public abstract class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCrite
         }
     }
 
-    public BaseInsertCriteriaBuilderImpl(BaseInsertCriteriaBuilderImpl<T, X, Y> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
-        super(builder, mainQuery, queryContext, joinManagerMapping);
+    public BaseInsertCriteriaBuilderImpl(BaseInsertCriteriaBuilderImpl<T, X, Y> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
+        super(builder, mainQuery, queryContext, joinManagerMapping, copyContext);
         bindingMap.putAll(builder.bindingMap);
     }
 

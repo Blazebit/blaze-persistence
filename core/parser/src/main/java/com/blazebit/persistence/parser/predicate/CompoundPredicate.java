@@ -17,6 +17,7 @@
 package com.blazebit.persistence.parser.predicate;
 
 import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -63,10 +64,10 @@ public class CompoundPredicate extends AbstractPredicate {
     }
 
     @Override
-    public CompoundPredicate copy() {
+    public CompoundPredicate copy(ExpressionCopyContext copyContext) {
         List<Predicate> clonedChildren = new ArrayList<>(children.size());
         for (Predicate child : children) {
-            clonedChildren.add(child.copy());
+            clonedChildren.add(child.copy(copyContext));
         }
         return new CompoundPredicate(operator, clonedChildren, negated);
     }

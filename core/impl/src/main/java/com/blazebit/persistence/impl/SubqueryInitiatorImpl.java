@@ -23,6 +23,7 @@ import com.blazebit.persistence.StartOngoingSetOperationSubqueryBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 
 import javax.persistence.metamodel.EntityType;
@@ -72,7 +73,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     public SubqueryBuilder<X> from(Class<?> clazz, String alias) {
         SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
         if (inExists) {
-            subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createSimpleExpression("1"))));
+            subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createSimpleExpression("1"))), ExpressionCopyContext.EMPTY);
         }
         subqueryBuilder.from(clazz, alias);
         listener.onBuilderStarted(subqueryBuilder);
@@ -88,7 +89,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     public SubqueryBuilder<X> from(EntityType<?> entityType, String alias) {
         SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
         if (inExists) {
-            subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createSimpleExpression("1"))));
+            subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createSimpleExpression("1"))), ExpressionCopyContext.EMPTY);
         }
         subqueryBuilder.from(entityType, alias);
         listener.onBuilderStarted(subqueryBuilder);
@@ -104,7 +105,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     public SubqueryBuilder<X> from(String correlationPath, String alias) {
         SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
         if (inExists) {
-            subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createSimpleExpression("1"))));
+            subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createSimpleExpression("1"))), ExpressionCopyContext.EMPTY);
         }
         subqueryBuilder.from(correlationPath, alias);
         listener.onBuilderStarted(subqueryBuilder);
@@ -114,7 +115,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     public SubqueryBuilder<X> from(Expression correlationExpression, String alias) {
         SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
         if (inExists) {
-            subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createSimpleExpression("1"))));
+            subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createSimpleExpression("1"))), ExpressionCopyContext.EMPTY);
         }
         subqueryBuilder.from(correlationExpression, alias);
         listener.onBuilderStarted(subqueryBuilder);
@@ -149,7 +150,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     public SubqueryBuilder<X> fromOld(Class<?> entityClass, String alias) {
         SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
         if (inExists) {
-            subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createSimpleExpression("1"))));
+            subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createSimpleExpression("1"))), ExpressionCopyContext.EMPTY);
         }
         subqueryBuilder.fromOld(entityClass, alias);
         listener.onBuilderStarted(subqueryBuilder);
@@ -165,7 +166,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     public SubqueryBuilder<X> fromNew(Class<?> entityClass, String alias) {
         SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
         if (inExists) {
-            subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createSimpleExpression("1"))));
+            subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createSimpleExpression("1"))), ExpressionCopyContext.EMPTY);
         }
         subqueryBuilder.fromNew(entityClass, alias);
         listener.onBuilderStarted(subqueryBuilder);
@@ -176,7 +177,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     public SubqueryBuilder<X> fromValues(Class<?> valueClass, String alias, int valueCount) {
         SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
         if (inExists) {
-            subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createSimpleExpression("1"))));
+            subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createSimpleExpression("1"))), ExpressionCopyContext.EMPTY);
         }
         subqueryBuilder.fromValues(valueClass, alias, valueCount);
         listener.onBuilderStarted(subqueryBuilder);
@@ -187,7 +188,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     public SubqueryBuilder<X> fromValues(Class<?> entityBaseClass, String attributeName, String alias, int valueCount) {
         SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
         if (inExists) {
-            subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createSimpleExpression("1"))));
+            subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createSimpleExpression("1"))), ExpressionCopyContext.EMPTY);
         }
         subqueryBuilder.fromValues(entityBaseClass, attributeName, alias, valueCount);
         listener.onBuilderStarted(subqueryBuilder);
@@ -198,7 +199,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     public SubqueryBuilder<X> fromIdentifiableValues(Class<?> valueClass, String alias, int valueCount) {
         SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
         if (inExists) {
-            subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createSimpleExpression("1"))));
+            subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createSimpleExpression("1"))), ExpressionCopyContext.EMPTY);
         }
         subqueryBuilder.fromIdentifiableValues(valueClass, alias, valueCount);
         listener.onBuilderStarted(subqueryBuilder);
@@ -209,7 +210,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     public SubqueryBuilder<X> fromIdentifiableValues(Class<?> valueClass, String identifierAttribute, String alias, int valueCount) {
         SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
         if (inExists) {
-            subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createSimpleExpression("1"))));
+            subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createSimpleExpression("1"))), ExpressionCopyContext.EMPTY);
         }
         subqueryBuilder.fromIdentifiableValues(valueClass, identifierAttribute, alias, valueCount);
         listener.onBuilderStarted(subqueryBuilder);

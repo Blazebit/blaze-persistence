@@ -32,8 +32,8 @@ public class WhenClauseExpression extends AbstractExpression {
     }
 
     @Override
-    public WhenClauseExpression copy() {
-        return new WhenClauseExpression(condition.copy(), result.copy());
+    public WhenClauseExpression copy(ExpressionCopyContext copyContext) {
+        return new WhenClauseExpression(condition.copy(copyContext), result.copy(copyContext));
     }
 
     public Expression getCondition() {

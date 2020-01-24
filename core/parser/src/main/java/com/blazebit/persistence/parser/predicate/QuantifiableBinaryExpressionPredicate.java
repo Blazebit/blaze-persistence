@@ -17,6 +17,7 @@
 package com.blazebit.persistence.parser.predicate;
 
 import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 
 /**
  *
@@ -42,7 +43,7 @@ public abstract class QuantifiableBinaryExpressionPredicate extends BinaryExpres
     }
 
     @Override
-    public abstract QuantifiableBinaryExpressionPredicate copy();
+    public abstract QuantifiableBinaryExpressionPredicate copy(ExpressionCopyContext copyContext);
 
     public PredicateQuantifier getQuantifier() {
         return quantifier;

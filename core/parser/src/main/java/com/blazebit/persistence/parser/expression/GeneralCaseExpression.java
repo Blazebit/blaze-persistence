@@ -35,18 +35,18 @@ public class GeneralCaseExpression extends AbstractExpression {
     }
 
     @Override
-    public GeneralCaseExpression copy() {
+    public GeneralCaseExpression copy(ExpressionCopyContext copyContext) {
         int size = whenClauses.size();
         List<WhenClauseExpression> newWhenClauses = new ArrayList<WhenClauseExpression>(size);
 
         for (int i = 0; i < size; i++) {
-            newWhenClauses.add(whenClauses.get(i).copy());
+            newWhenClauses.add(whenClauses.get(i).copy(copyContext));
         }
 
         if (defaultExpr == null) {
             return new GeneralCaseExpression(whenClauses, null);
         } else {
-            return new GeneralCaseExpression(newWhenClauses, defaultExpr.copy());
+            return new GeneralCaseExpression(newWhenClauses, defaultExpr.copy(copyContext));
         }
     }
 

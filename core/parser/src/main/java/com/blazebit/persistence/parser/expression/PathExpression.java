@@ -53,12 +53,12 @@ public class PathExpression extends AbstractExpression implements Expression {
     }
 
     @Override
-    public PathExpression copy() {
+    public PathExpression copy(ExpressionCopyContext copyContext) {
         int size = pathProperties.size();
         List<PathElementExpression> newPathProperties = new ArrayList<PathElementExpression>(size);
 
         for (int i = 0; i < size; i++) {
-            newPathProperties.add(pathProperties.get(i).copy());
+            newPathProperties.add(pathProperties.get(i).copy(copyContext));
         }
 
         // NOTE: don't copy the path reference, it has to be set manually on the copy

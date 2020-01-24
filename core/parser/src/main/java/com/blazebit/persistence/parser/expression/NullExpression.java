@@ -26,7 +26,7 @@ public class NullExpression extends AbstractExpression implements LiteralExpress
     public static final NullExpression INSTANCE = new NullExpression();
 
     @Override
-    public NullExpression copy() {
+    public NullExpression copy(ExpressionCopyContext copyContext) {
         return this;
     }
 

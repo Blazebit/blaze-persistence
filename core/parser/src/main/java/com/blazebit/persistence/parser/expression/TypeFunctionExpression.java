@@ -31,7 +31,7 @@ public class TypeFunctionExpression extends FunctionExpression {
     }
 
     @Override
-    public TypeFunctionExpression copy() {
-        return new TypeFunctionExpression(expressions.get(0).copy());
+    public TypeFunctionExpression copy(ExpressionCopyContext copyContext) {
+        return new TypeFunctionExpression(expressions.get(0).copy(copyContext));
     }
 }

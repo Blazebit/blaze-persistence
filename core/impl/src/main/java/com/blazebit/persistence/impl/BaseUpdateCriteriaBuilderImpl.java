@@ -25,6 +25,7 @@ import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListener;
 import com.blazebit.persistence.parser.SimpleQueryGenerator;
 import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.parser.expression.SubqueryExpression;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.JpaMetamodelAccessor;
@@ -51,8 +52,8 @@ public abstract class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCrite
         super(mainQuery, queryContext, isMainQuery, DbmsStatementType.UPDATE, clazz, alias, cteKey, cteClass, result, listener);
     }
 
-    public BaseUpdateCriteriaBuilderImpl(BaseUpdateCriteriaBuilderImpl<T, X, Y> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping) {
-        super(builder, mainQuery, queryContext, joinManagerMapping);
+    public BaseUpdateCriteriaBuilderImpl(BaseUpdateCriteriaBuilderImpl<T, X, Y> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
+        super(builder, mainQuery, queryContext, joinManagerMapping, copyContext);
         builder.verifyBuilderEnded();
         for (Entry<String, Integer> entry : builder.setAttributeBindingMap.entrySet()) {
             this.setAttributeBindingMap.put(entityType.getName(), entry.getValue());
