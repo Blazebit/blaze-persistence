@@ -564,6 +564,11 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
     }
 
     @Override
+    public AttributeAccessor getEntityAttributeAccessor() {
+        return entityAttributeAccessor;
+    }
+
+    @Override
     public boolean isOptimisticLockProtected() {
         // TODO: the nested graph node could have a different lock owner, we have to handle that
         // If the lock owner isn't INHERIT/AUTO, we should return false

@@ -44,7 +44,7 @@ public class ParentCollectionReferenceAttributeFlusher<E, V extends Collection<?
     @Override
     @SuppressWarnings("unchecked")
     public boolean flushEntity(UpdateContext context, E entity, Object ownerView, Object view, V value, Runnable postReplaceListener) {
-        Collection<Object> collection = (Collection<Object>) entityAttributeMapper.getValue(value);
+        Collection<Object> collection = (Collection<Object>) entityAttributeAccessor.getValue(value);
         collection.add(entity);
         return true;
     }

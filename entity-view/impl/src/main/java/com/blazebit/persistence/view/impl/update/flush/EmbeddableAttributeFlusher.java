@@ -230,6 +230,11 @@ public class EmbeddableAttributeFlusher<E, V> extends EmbeddableAttributeFetchGr
     }
 
     @Override
+    public AttributeAccessor getEntityAttributeAccessor() {
+        return entityAttributeAccessor;
+    }
+
+    @Override
     public boolean isOptimisticLockProtected() {
         return optimisticLockProtected;
     }

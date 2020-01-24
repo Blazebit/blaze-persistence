@@ -1111,6 +1111,11 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
     }
 
     @Override
+    public AttributeAccessor getEntityAttributeAccessor() {
+        return null;
+    }
+
+    @Override
     public boolean isOptimisticLockProtected() {
         return optimisticLockProtected;
     }

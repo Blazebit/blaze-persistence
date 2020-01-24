@@ -131,6 +131,11 @@ public abstract class CollectionElementAttributeFlusher<E, V> extends Collection
     }
 
     @Override
+    public AttributeAccessor getEntityAttributeAccessor() {
+        return null;
+    }
+
+    @Override
     public boolean isOptimisticLockProtected() {
         return optimisticLockProtected;
     }

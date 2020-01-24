@@ -41,7 +41,7 @@ public class MapPutAction<C extends Map<K, V>, K, V> implements MapAction<C> {
         this.removedValueInView = delegate.get(key);
     }
 
-    private MapPutAction(K key, V value, V removedValueInView) {
+    public MapPutAction(K key, V value, V removedValueInView) {
         this.key = key;
         this.value = value;
         this.removedValueInView = removedValueInView;

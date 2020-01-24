@@ -50,7 +50,7 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
     protected final String[] ownerIdBindFragments;
     protected final DirtyAttributeFlusher<?, Object, Object> elementFlusher;
     protected final FlushStrategy flushStrategy;
-    protected final AttributeAccessor entityAttributeMapper;
+    protected final AttributeAccessor entityAttributeAccessor;
     protected final InitialValueAttributeAccessor viewAttributeAccessor;
     protected final boolean optimisticLockProtected;
     protected final boolean collectionUpdatable;
@@ -66,7 +66,7 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
     protected final List<CollectionElementAttributeFlusher<E, V>> elementFlushers;
 
     @SuppressWarnings("unchecked")
-    public AbstractPluralAttributeFlusher(String attributeName, String mapping, boolean fetch, Class<?> ownerEntityClass, String ownerIdAttributeName, String ownerMapping, DirtyAttributeFlusher<?, ?, ?> ownerIdFlusher, DirtyAttributeFlusher<?, ?, ?> elementFlusher, boolean supportsCollectionDml, FlushStrategy flushStrategy, AttributeAccessor entityAttributeMapper,
+    public AbstractPluralAttributeFlusher(String attributeName, String mapping, boolean fetch, Class<?> ownerEntityClass, String ownerIdAttributeName, String ownerMapping, DirtyAttributeFlusher<?, ?, ?> ownerIdFlusher, DirtyAttributeFlusher<?, ?, ?> elementFlusher, boolean supportsCollectionDml, FlushStrategy flushStrategy, AttributeAccessor entityAttributeAccessor,
                                           InitialValueAttributeAccessor viewAttributeAccessor, boolean optimisticLockProtected, boolean collectionUpdatable, boolean viewOnlyDeleteCascaded, boolean jpaProviderDeletesCollection, CollectionRemoveListener cascadeDeleteListener, CollectionRemoveListener removeListener, TypeDescriptor elementDescriptor) {
         super(attributeName, mapping, fetch, null);
         this.ownerEntityClass = ownerEntityClass;
@@ -91,7 +91,7 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
             this.ownerIdBindFragments = fragments;
         }
         this.flushStrategy = flushStrategy;
-        this.entityAttributeMapper = entityAttributeMapper;
+        this.entityAttributeAccessor = entityAttributeAccessor;
         this.viewAttributeAccessor = viewAttributeAccessor;
         this.optimisticLockProtected = optimisticLockProtected;
         this.collectionUpdatable = collectionUpdatable;
@@ -138,7 +138,7 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
         this.ownerIdBindFragments = original.ownerIdBindFragments;
         this.elementFlusher = original.elementFlusher;
         this.flushStrategy = original.flushStrategy;
-        this.entityAttributeMapper = original.entityAttributeMapper;
+        this.entityAttributeAccessor = original.entityAttributeAccessor;
         this.viewAttributeAccessor = original.viewAttributeAccessor;
         this.optimisticLockProtected = original.optimisticLockProtected;
         this.collectionUpdatable = original.collectionUpdatable;
@@ -230,13 +230,13 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
     }
 
     protected final V getEntityAttributeValue(E entity) {
-        if (entityAttributeMapper == null || entity == null) {
+        if (entityAttributeAccessor == null || entity == null) {
             return null;
         }
-        V value = (V) entityAttributeMapper.getValue(entity);
+        V value = (V) entityAttributeAccessor.getValue(entity);
         if (value == null) {
             value = createJpaCollection();
-            entityAttributeMapper.setValue(entity, value);
+            entityAttributeAccessor.setValue(entity, value);
         }
 
         return value;
@@ -314,6 +314,11 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
     }
 
     @Override
+    public AttributeAccessor getEntityAttributeAccessor() {
+        return entityAttributeAccessor;
+    }
+
+    @Override
     public boolean isOptimisticLockProtected() {
         return optimisticLockProtected;
     }
@@ -361,6 +366,15 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
     protected abstract boolean isIndexed();
 
     protected abstract void addFlatViewElementFlushActions(UpdateContext context, TypeDescriptor elementDescriptor, List<A> actions, V current);
+
+    protected static Object getViewElement(UpdateContext context, TypeDescriptor typeDescriptor, Object jpaCollectionObject) {
+        if (jpaCollectionObject != null && typeDescriptor.isSubview() && typeDescriptor.isIdentifiable()) {
+            CompositeAttributeFlusher compositeFlusher = (CompositeAttributeFlusher) typeDescriptor.getViewToEntityMapper().getFullGraphNode();
+            Object entityId = compositeFlusher.getIdFlusher().getEntityAttributeAccessor().getValue(jpaCollectionObject);
+            return context.getEntityViewManager().getReference(compositeFlusher.getViewTypeClass(), compositeFlusher.createViewIdByEntityId(entityId));
+        }
+        return jpaCollectionObject;
+    }
 
     protected static boolean identityContains(Collection<Object> addedElements, MutableStateTrackable element) {
         for (Object addedElement : addedElements) {

@@ -63,6 +63,8 @@ public interface DirtyAttributeFlusher<T extends DirtyAttributeFlusher<T, E, V>,
 
     public AttributeAccessor getViewAttributeAccessor();
 
+    public AttributeAccessor getEntityAttributeAccessor();
+
     public boolean isOptimisticLockProtected();
 
     public boolean requiresFlushAfterPersist(V value);
