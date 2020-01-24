@@ -20,6 +20,8 @@ import com.blazebit.persistence.CTE;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.IdClass;
+import java.io.Serializable;
 
 /**
  *
@@ -28,7 +30,40 @@ import javax.persistence.Id;
  */
 @Entity
 @CTE
+@IdClass(ParameterOrderCteB.ParameterOrderCteBId.class)
 public class ParameterOrderCteB {
+
+    public static class ParameterOrderCteBId implements Serializable {
+        private Short seven;
+
+        private Integer eight;
+
+        private Long nine;
+
+        public Short getSeven() {
+            return seven;
+        }
+
+        public void setSeven(Short seven) {
+            this.seven = seven;
+        }
+
+        public Integer getEight() {
+            return eight;
+        }
+
+        public void setEight(Integer eight) {
+            this.eight = eight;
+        }
+
+        public Long getNine() {
+            return nine;
+        }
+
+        public void setNine(Long nine) {
+            this.nine = nine;
+        }
+    }
 
     private Short seven;
 
@@ -45,6 +80,7 @@ public class ParameterOrderCteB {
         this.seven = seven;
     }
 
+    @Id
     public Integer getEight() {
         return eight;
     }
@@ -53,6 +89,7 @@ public class ParameterOrderCteB {
         this.eight = eight;
     }
 
+    @Id
     public Long getNine() {
         return nine;
     }
