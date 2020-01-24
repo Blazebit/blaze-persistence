@@ -1014,7 +1014,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                         }
                         String exampleAttributeName = "value";
                         if (node.getType() instanceof ManagedType<?> && JpaMetamodelUtils.isIdentifiable((ManagedType<?>) node.getType())) {
-                            exampleAttributeName = JpaMetamodelUtils.getSingleIdAttribute(node.getEntityType()).getName();
+                            exampleAttributeName = JpaMetamodelUtils.getIdAttributes(node.getEntityType()).iterator().next().getName();
                         }
                         syntheticSubqueryValuesWhereClauseConjuncts.add(node.getAlias() + "." + exampleAttributeName + " IS NULL");
                     }
@@ -1025,7 +1025,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                         if (syntheticSubqueryValuesWhereClauseConjuncts.isEmpty()) {
                             syntheticSubqueryValuesWhereClauseConjuncts.add("1=1");
                         }
-                        String exampleAttributeName = JpaMetamodelUtils.getSingleIdAttribute(node.getEntityType()).getName();
+                        String exampleAttributeName = JpaMetamodelUtils.getIdAttributes(node.getEntityType()).iterator().next().getName();
                         syntheticSubqueryValuesWhereClauseConjuncts.add(node.getAlias() + "." + exampleAttributeName + " IS NULL");
                     }
                 }
@@ -1154,7 +1154,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 sb.append(')').append(')').append(" IS NULL");
                 if (queryBuilder.isEmbedded()) {
                     sb.append(" AND 1=1");
-                    String exampleAttributeName = JpaMetamodelUtils.getSingleIdAttribute(rootNode.getEntityType()).getName();
+                    String exampleAttributeName = JpaMetamodelUtils.getIdAttributes(rootNode.getEntityType()).iterator().next().getName();
                     sb.append(" AND ").append(rootNode.getAlias()).append(".").append(exampleAttributeName).append(" IS NULL");
                 }
             }

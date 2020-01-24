@@ -109,6 +109,7 @@ public class InlineCTETest extends AbstractCoreTest {
     }
 
     @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
     public void testParameterBindingOrder2() {
         CriteriaBuilder<ParameterOrderEntity> cteBuilder = cbf.create(em, ParameterOrderEntity.class)
                 .setProperty(ConfigurationProperties.INLINE_CTES, Boolean.FALSE.toString())
