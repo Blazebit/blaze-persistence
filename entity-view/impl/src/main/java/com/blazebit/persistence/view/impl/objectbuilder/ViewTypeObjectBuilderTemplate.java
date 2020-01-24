@@ -281,24 +281,24 @@ public class ViewTypeObjectBuilderTemplate<T> {
                     if (attribute instanceof SingularAttribute<?, ?>) {
                         SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) attribute;
                         Type<?> t = singularAttribute.getType();
-                        BasicUserType<Object> elementType = t instanceof BasicType<?> ? ((BasicType<Object>) t).getUserType() : null;
-                        if (isMutableBasicUserType(elementType)) {
+                        BasicUserType<Object> elementType = getMutableBasicUserType(t);
+                        if (elementType != null) {
                             mutableBasicUserTypes.add(new AbstractReflectionInstantiator.MutableBasicUserTypeEntry(initialStateIndex, ((BasicType) singularAttribute.getType()).getUserType()));
                         }
                     } else {
                         PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) attribute;
                         Type<?> t = pluralAttribute.getElementType();
-                        BasicUserType<Object> elementType = t instanceof BasicType<?> ? ((BasicType<Object>) t).getUserType() : null;
+                        BasicUserType<Object> elementType = getMutableBasicUserType(t);
                         if (pluralAttribute instanceof MapAttribute<?, ?, ?>) {
                             MapAttribute<?, ?, ?> mapAttribute = (MapAttribute<?, ?, ?>) attribute;
                             t = mapAttribute.getKeyType();
-                            BasicUserType<Object> keyType = t instanceof BasicType<?> ? ((BasicType<Object>) t).getUserType() : null;
+                            BasicUserType<Object> keyType = getMutableBasicUserType(t);
 
-                            if (isMutableBasicUserType(keyType) || isMutableBasicUserType(elementType)) {
+                            if (keyType != null || elementType != null) {
                                 mutableBasicUserTypes.add(new AbstractReflectionInstantiator.MutableBasicUserTypeEntry(initialStateIndex, createMapUserTypeWrapper(mapAttribute, keyType, elementType)));
                             }
                         } else {
-                            if (isMutableBasicUserType(elementType)) {
+                            if (elementType != null) {
                                 mutableBasicUserTypes.add(new AbstractReflectionInstantiator.MutableBasicUserTypeEntry(initialStateIndex, createCollectionUserTypeWrapper(pluralAttribute, elementType)));
                             }
                         }
@@ -378,8 +378,15 @@ public class ViewTypeObjectBuilderTemplate<T> {
         this.tupleTransformatorFactory = tupleTransformatorFactory;
     }
 
-    private boolean isMutableBasicUserType(BasicUserType<Object> elementType) {
-        return elementType != null && elementType.isMutable() && (!elementType.supportsDirtyChecking() && elementType.supportsDeepCloning() || elementType.supportsDirtyTracking());
+    private BasicUserType<Object> getMutableBasicUserType(Type<?> type) {
+        if (type instanceof BasicType<?>) {
+            BasicType<?> basicType = (BasicType<?>) type;
+            BasicUserType<Object> elementType = (BasicUserType<Object>) basicType.getUserType();
+            if (elementType != null && elementType.isMutable() && (!elementType.supportsDirtyChecking() && elementType.supportsDeepCloning() || elementType.supportsDirtyTracking())) {
+                return elementType;
+            }
+        }
+        return null;
     }
 
     @SuppressWarnings("unchecked")

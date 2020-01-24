@@ -23,6 +23,7 @@ import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.UpdatableEntityView;
 
 import java.sql.Blob;
+import java.time.Instant;
 import java.util.Date;
 
 /**
@@ -43,9 +44,9 @@ public interface UpdatableBlobEntityView {
 
     public void setName(String name);
 
-    public Date getLastModified();
+    public Instant getLastModified();
 
-    public void setLastModified(Date date);
+    public void setLastModified(Instant date);
 
     public Blob getBlob();
 

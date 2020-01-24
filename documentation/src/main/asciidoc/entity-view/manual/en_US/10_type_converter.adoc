@@ -32,6 +32,20 @@ If found on the classpath, `TypeConverters` for the following types are register
 ** `java.sql.Timestamp`
 ** `java.util.Calendar`
 ** `java.util.GregorianCalendar`
+* `java.time.Instant` for entity types
+** `java.util.Date`
+** `java.sql.Timestamp`
+** `java.util.Calendar`
+** `java.util.GregorianCalendar`
 * `java.time.LocalTime` for `java.sql.Time`
+* `java.util.GregorianCalendar` for entity types
+** `java.util.Date`
+** `java.sql.Timestamp`
+* `java.util.Calendar` for entity types
+** `java.util.Date`
+** `java.sql.Timestamp`
+* `java.util.Date` for entity types
+** `java.util.Calendar`
+** `java.util.GregorianCalendar`
 
 If you miss a `TypeConverter` you can register it via link:{entity_view_jdoc}/persistence/view/spi/EntityViewConfiguration.html#registerTypeConverter(java.lang.Class,%20java.lang.Class,%20com.blazebit.persistence.view.spi.type.TypeConverter)[`EntityViewConfiguration.registerTypeConverter(Class entityModelType, Class viewModelType, TypeConverter typeConverter)`].
