@@ -147,7 +147,7 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
     }
 
     @Override
-    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, boolean embedded, JoinNode lateralJoinNode) {
+    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, boolean embeddedToMainQuery, JoinNode lateralJoinNode) {
         if (externalRepresentation) {
             sbSelectFrom.append("UPDATE ");
             sbSelectFrom.append(entityType.getName());

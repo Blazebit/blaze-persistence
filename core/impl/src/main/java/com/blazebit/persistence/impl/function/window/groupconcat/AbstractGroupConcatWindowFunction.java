@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl.function.window.groupconcat;
 
 import com.blazebit.persistence.impl.function.Order;
 import com.blazebit.persistence.impl.function.window.AbstractWindowFunction;
+import com.blazebit.persistence.parser.util.TypeUtils;
 import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.JpqlFunction;
 
@@ -116,19 +117,7 @@ public abstract class AbstractGroupConcatWindowFunction extends AbstractWindowFu
     
     protected String quoted(String s) {
         StringBuilder sb = new StringBuilder();
-        sb.append('\'');
-        
-        for (int i = 0; i < s.length(); i++) {
-            final char c = s.charAt(i);
-            
-            if (c == '\'') {
-                sb.append('\'');
-            }
-            
-            sb.append(c);
-        }
-        
-        sb.append('\'');
+        TypeUtils.STRING_CONVERTER.appendTo(s, sb);
         return sb.toString();
     }
 

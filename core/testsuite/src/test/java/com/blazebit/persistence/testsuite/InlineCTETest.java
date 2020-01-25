@@ -97,8 +97,9 @@ public class InlineCTETest extends AbstractCoreTest {
         });
     }
 
+    // NOTE: Hibernate 4.2 and 4.3 interprets entity name tokens in string literals...
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class })
     public void testParameterBindingOrder() {
         CriteriaBuilder<ParameterOrderEntity> cteBuilder = cbf.create(em, ParameterOrderEntity.class)
                 .with(ParameterOrderCte.class)
@@ -124,7 +125,9 @@ public class InlineCTETest extends AbstractCoreTest {
         Assert.assertEquals(1, resultList.size());
     }
 
+    // NOTE: Hibernate 4.2 and 4.3 interprets entity name tokens in string literals...
     @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class })
     public void testParameterBindingOrderPaginated() {
         CriteriaBuilder<ParameterOrderEntity> cteBuilder = cbf.create(em, ParameterOrderEntity.class)
                 .with(ParameterOrderCte.class)
@@ -151,10 +154,8 @@ public class InlineCTETest extends AbstractCoreTest {
         Assert.assertEquals(1, resultList.size());
     }
 
-    // Note: something about this doesn't work in H2, I have verified the test passes with inlining disabled under Postgres,
-    // but fails with inlining enabled.
     @Test
-    @Category({NoH2.class})
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testParameterBindingOrderNested() {
         CriteriaBuilder<ParameterOrderEntity> cteBuilder = cbf.create(em, ParameterOrderEntity.class)
                 .with(ParameterOrderCte.class)
@@ -185,10 +186,9 @@ public class InlineCTETest extends AbstractCoreTest {
         Assert.assertEquals(1, resultList.size());
     }
 
-    // Note: something about this doesn't work in H2, I have verified the test passes with inlining disabled under Postgres,
-    // but fails with inlining enabled.
+    // NOTE: Hibernate 4.2 and 4.3 interprets entity name tokens in string literals...
     @Test
-    @Category({NoH2.class})
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class })
     public void testParameterBindingOrderNestedPaginated() {
         CriteriaBuilder<ParameterOrderEntity> cteBuilder = cbf.create(em, ParameterOrderEntity.class)
                 .with(ParameterOrderCte.class)

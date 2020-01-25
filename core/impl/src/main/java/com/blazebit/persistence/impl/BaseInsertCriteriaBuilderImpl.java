@@ -134,7 +134,7 @@ public abstract class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCrite
     }
 
     @Override
-    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, boolean embedded, JoinNode lateralJoinNode) {
+    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, boolean embeddedToMainQuery, JoinNode lateralJoinNode) {
         appendInsertIntoFragment(sbSelectFrom, externalRepresentation);
         sbSelectFrom.append('(');
         
@@ -163,9 +163,9 @@ public abstract class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCrite
     }
 
     @Override
-    public Query getQuery() {
+    public Query getQuery(boolean embeddedToMainQuery) {
         if (mainQuery.jpaProvider.supportsInsertStatement()) {
-            return super.getQuery();
+            return super.getQuery(embeddedToMainQuery);
         } else {
             // TODO: implement
             throw new UnsupportedOperationException("Not yet implemented!");
@@ -177,10 +177,10 @@ public abstract class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCrite
         // We need to change the underlying sql when doing a limit with hibernate since it does not support limiting insert ... select statements
         Query query = em.createQuery(getBaseQueryStringWithCheck(null, null));
         Set<String> parameterListNames = parameterManager.getParameterListNames(query);
-        Set<JoinNode> keyRestrictedLeftJoins = joinManager.getKeyRestrictedLeftJoins();
+        Set<JoinNode> keyRestrictedLeftJoins = getKeyRestrictedLeftJoins();
 
         List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(query, keyRestrictedLeftJoins, Collections.EMPTY_SET);
-        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(query);
+        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(query, isMainQuery);
 
         boolean isEmbedded = this instanceof ReturningBuilder;
         String[] returningColumns = getReturningColumns();

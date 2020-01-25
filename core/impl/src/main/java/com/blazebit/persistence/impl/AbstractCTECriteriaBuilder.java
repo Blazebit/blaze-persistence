@@ -96,15 +96,15 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
     }
 
     @Override
-    protected boolean isEmbedded() {
-        return inline;
+    protected Query getQuery(boolean embeddedToMainQuery) {
+        // NOTE: This must happen first because it generates implicit joins
+        prepareAndCheck();
+        String baseQueryString = buildBaseQueryString(false, embeddedToMainQuery);
+        return getQuery(baseQueryString);
     }
 
-    @Override
-    protected Query getQuery() {
-        // NOTE: This must happen first because it generates implicit joins
-        String baseQueryString = getBaseQueryStringWithCheck(null, null);
-        Set<JoinNode> keyRestrictedLeftJoins = joinManager.getKeyRestrictedLeftJoins();
+    protected Query getQuery(String baseQueryString) {
+        Set<JoinNode> keyRestrictedLeftJoins = getKeyRestrictedLeftJoins();
         Query query;
         
         if (hasLimit() || joinManager.hasEntityFunctions() || !keyRestrictedLeftJoins.isEmpty()) {
@@ -126,7 +126,7 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
             }
 
             List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(query, keyRestrictedLeftJoins, Collections.EMPTY_SET);
-            List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(query);
+            List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(query, isMainQuery);
 
             QuerySpecification querySpecification = new CTEQuerySpecification(
                     this,

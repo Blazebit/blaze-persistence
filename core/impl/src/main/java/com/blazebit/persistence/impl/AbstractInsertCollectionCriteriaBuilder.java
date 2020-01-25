@@ -108,9 +108,9 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
     }
 
     @Override
-    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, boolean embedded, JoinNode lateralJoinNode) {
+    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, boolean embeddedToMainQuery, JoinNode lateralJoinNode) {
         if (externalRepresentation) {
-            super.buildBaseQueryString(sbSelectFrom, externalRepresentation, embedded, lateralJoinNode);
+            super.buildBaseQueryString(sbSelectFrom, externalRepresentation, embeddedToMainQuery, lateralJoinNode);
         } else {
             buildSelectBaseQueryString(sbSelectFrom, externalRepresentation);
         }
@@ -194,10 +194,10 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
 
     private <R> QuerySpecification getQuerySpecification(Query baseQuery, Query exampleQuery, String[] returningColumns, ReturningObjectBuilder<R> objectBuilder, Map<DbmsModificationState, String> includedModificationStates) {
         Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery);
-        Set<JoinNode> keyRestrictedLeftJoins = joinManager.getKeyRestrictedLeftJoins();
+        Set<JoinNode> keyRestrictedLeftJoins = getKeyRestrictedLeftJoins();
 
         List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, Collections.EMPTY_SET);
-        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
+        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery, isMainQuery);
 
         boolean isEmbedded = this instanceof ReturningBuilder;
         boolean shouldRenderCteNodes = renderCteNodes(isEmbedded);

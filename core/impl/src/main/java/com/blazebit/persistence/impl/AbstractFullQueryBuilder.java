@@ -246,10 +246,11 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         if (externalRepresentation && isMainQuery) {
             mainQuery.cteManager.buildClause(sbSelectFrom);
         }
-        return buildPageCountQueryString(sbSelectFrom, externalRepresentation, countAll && !hasGroupBy);
+        buildPageCountQueryString(sbSelectFrom, externalRepresentation, countAll && !hasGroupBy, true);
+        return sbSelectFrom.toString();
     }
 
-    protected final String buildPageCountQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, boolean countAll) {
+    protected final void buildPageCountQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, boolean countAll, boolean embeddedToMainQuery) {
         sbSelectFrom.append("SELECT ");
         int countStartIdx = sbSelectFrom.length();
         int countEndIdx;
@@ -293,13 +294,13 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         Set<JoinNode> countNodesToFetch = Collections.emptySet();
 
         if (countAll) {
-            joinManager.buildClause(sbSelectFrom, NO_CLAUSE_EXCLUSION, null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, null, explicitVersionEntities, countNodesToFetch, Collections.EMPTY_SET);
+            joinManager.buildClause(sbSelectFrom, NO_CLAUSE_EXCLUSION, null, false, externalRepresentation, false, false, embeddedToMainQuery, optionalWhereClauseConjuncts, whereClauseConjuncts, null, explicitVersionEntities, countNodesToFetch, Collections.EMPTY_SET);
             whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, null);
         } else {
             // Collect usage of collection join nodes to optimize away the count distinct
             // Note that we always exclude the nodes with group by dependency. We consider just the ones from the identifiers
             Set<JoinNode> identifierExpressionsToUseNonRootJoinNodes = getIdentifierExpressionsToUseNonRootJoinNodes();
-            Set<JoinNode> collectionJoinNodes = joinManager.buildClause(sbSelectFrom, COUNT_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, null, true, externalRepresentation, true, false, optionalWhereClauseConjuncts, whereClauseConjuncts, null, explicitVersionEntities, countNodesToFetch, identifierExpressionsToUseNonRootJoinNodes);
+            Set<JoinNode> collectionJoinNodes = joinManager.buildClause(sbSelectFrom, COUNT_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, null, true, externalRepresentation, true, false, embeddedToMainQuery, optionalWhereClauseConjuncts, whereClauseConjuncts, null, explicitVersionEntities, countNodesToFetch, identifierExpressionsToUseNonRootJoinNodes);
             boolean hasCollectionJoinUsages = collectionJoinNodes.size() > 0;
 
             whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, null);
@@ -332,8 +333,6 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
                 }
             }
         }
-
-        return sbSelectFrom.toString();
     }
 
     protected void appendPageCountQueryStringExtensions(StringBuilder sbSelectFrom) {
@@ -443,7 +442,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
     protected TypedQuery<Long> getCountQuery(String countQueryString) {
         prepareAndCheck();
         // We can only use the query directly if we have no ctes, entity functions or hibernate bugs
-        Set<JoinNode> keyRestrictedLeftJoins = joinManager.getKeyRestrictedLeftJoins();
+        Set<JoinNode> keyRestrictedLeftJoins = getKeyRestrictedLeftJoins();
         boolean normalQueryMode = !isMainQuery || (!mainQuery.cteManager.hasCtes() && !joinManager.hasEntityFunctions() && keyRestrictedLeftJoins.isEmpty());
 
         if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, COUNT_QUERY_CLAUSE_EXCLUSIONS)) {
@@ -458,7 +457,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         TypedQuery<Long> baseQuery = em.createQuery(countQueryString, Long.class);
         Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery);
         List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, COUNT_QUERY_CLAUSE_EXCLUSIONS);
-        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
+        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery, isMainQuery);
         boolean shouldRenderCteNodes = renderCteNodes(false);
         List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.EMPTY_LIST;
         QuerySpecification querySpecification = new CustomQuerySpecification(

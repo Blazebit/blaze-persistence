@@ -16,10 +16,11 @@
 
 package com.blazebit.persistence.impl.function.groupconcat;
 
-import java.util.List;
-
 import com.blazebit.persistence.impl.function.Order;
+import com.blazebit.persistence.parser.util.TypeUtils;
 import com.blazebit.persistence.spi.FunctionRenderContext;
+
+import java.util.List;
 
 /**
  *
@@ -56,7 +57,7 @@ public class H2GroupConcatFunction extends AbstractGroupConcatFunction {
         }
 
         sb.append(" separator ");
-        appendQuoted(sb, groupConcat.getSeparator());
+        TypeUtils.STRING_CONVERTER.appendTo(groupConcat.getSeparator(), sb);
 
         renderer.start(context).addParameter(sb.toString()).build();
     }

@@ -16,10 +16,11 @@
 
 package com.blazebit.persistence.impl.function.groupconcat;
 
-import java.util.List;
-
 import com.blazebit.persistence.impl.function.Order;
+import com.blazebit.persistence.parser.util.TypeUtils;
 import com.blazebit.persistence.spi.FunctionRenderContext;
+
+import java.util.List;
 
 /**
  *
@@ -43,7 +44,7 @@ public class DB2GroupConcatFunction extends AbstractGroupConcatFunction {
 
         sb.append(groupConcat.getExpression());
         sb.append(", ");
-        appendQuoted(sb, groupConcat.getSeparator());
+        TypeUtils.STRING_CONVERTER.appendTo(groupConcat.getSeparator(), sb);
 
         List<Order> orderBys = groupConcat.getOrderBys();
         if (!orderBys.isEmpty()) {
