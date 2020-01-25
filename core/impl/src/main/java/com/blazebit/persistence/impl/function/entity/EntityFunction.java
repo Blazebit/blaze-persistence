@@ -29,6 +29,8 @@ import com.blazebit.persistence.spi.JpqlFunction;
 public class EntityFunction implements JpqlFunction {
 
     public static final String FUNCTION_NAME = "entity_function";
+    public static final String MARKER_PREDICATE = "999=999";
+    private static final String AND_MARKER = " and " + MARKER_PREDICATE;
 
     @Override
     public boolean hasArguments() {
@@ -55,7 +57,7 @@ public class EntityFunction implements JpqlFunction {
         // We remove the synthetic predicate here and later extract the values clause alias of it so we can insert the proper SQL values clause at the right place
         String subquery = functionRenderContext.getArgument(0);
         StringBuilder sb = new StringBuilder();
-        int subqueryEndIndex = subquery.lastIndexOf(" and 1=1");
+        int subqueryEndIndex = subquery.lastIndexOf(AND_MARKER);
         int aliasEndIndex = subquery.indexOf('.', subqueryEndIndex) ;
         int aliasStartIndex = aliasEndIndex - 1;
         while (aliasStartIndex > subqueryEndIndex) {
@@ -66,12 +68,16 @@ public class EntityFunction implements JpqlFunction {
             aliasStartIndex--;
         }
 
-        sb.append(subquery, 1, subqueryEndIndex);
         String entityName = JpqlFunctionUtil.unquote(functionRenderContext.getArgument(1));
         String valuesClause = JpqlFunctionUtil.unquote(functionRenderContext.getArgument(2));
         String valuesAliases = JpqlFunctionUtil.unquote(functionRenderContext.getArgument(3));
         String syntheticPredicate = JpqlFunctionUtil.unquote(functionRenderContext.getArgument(4));
         String valuesTableSqlAlias = subquery.substring(aliasStartIndex, aliasEndIndex);
+        if (syntheticPredicate.isEmpty()) {
+            appendSubqueryPart(sb, subquery, 1, subqueryEndIndex, subquery.length() - 1);
+        } else {
+            sb.append(subquery, 1, subqueryEndIndex);
+        }
 
         if (!syntheticPredicate.isEmpty()) {
             String exampleQuerySqlAlias = syntheticPredicate.substring(0, syntheticPredicate.indexOf('.'));
@@ -110,6 +116,44 @@ public class EntityFunction implements JpqlFunction {
         functionRenderContext.addChunk("(");
         functionRenderContext.addChunk(sb.toString());
         functionRenderContext.addChunk(")");
+    }
+
+    public static void appendSubqueryPart(StringBuilder sb, String sqlQuery) {
+        int subqueryEndIndex = sqlQuery.lastIndexOf(AND_MARKER);
+        if (subqueryEndIndex == -1) {
+            sb.append(sqlQuery);
+        } else {
+            appendSubqueryPart(sb, sqlQuery, 0, subqueryEndIndex, sqlQuery.length());
+        }
+    }
+
+    private static void appendSubqueryPart(StringBuilder sb, String sqlQuery, int start, int subqueryEndIndex, int end) {
+        sb.append(sqlQuery, start, subqueryEndIndex);
+        int[] range = removeSyntheticPredicate(sqlQuery, subqueryEndIndex, end);
+        sb.append(sqlQuery, range[0], range[1]);
+    }
+
+    public static void removeSyntheticPredicate(StringBuilder sb, String sqlQuery, int end) {
+        int subqueryEndIndex = sb.lastIndexOf(AND_MARKER);
+        int[] range = removeSyntheticPredicate(sqlQuery, subqueryEndIndex, end);
+        sb.replace(subqueryEndIndex, range[0], "");
+    }
+
+    private static int[] removeSyntheticPredicate(String sqlQuery, int subqueryEndIndex, int end) {
+        // When inlining e.g. a VALUES clause we need to remove the synthetic predicate
+        int idPredicateIndex = sqlQuery.indexOf(" and ", subqueryEndIndex + AND_MARKER.length());
+        if (idPredicateIndex == -1) {
+            return new int[]{ subqueryEndIndex + AND_MARKER.length(), end };
+        } else {
+            int isNullPredicateIndex = sqlQuery.indexOf(" is null", idPredicateIndex + 1);
+            int newSubqueryPartStart = isNullPredicateIndex + " is null".length();
+            for (int i = idPredicateIndex + 1; i < isNullPredicateIndex; i++) {
+                if (sqlQuery.charAt(i) == '(') {
+                    newSubqueryPartStart++;
+                }
+            }
+            return new int[]{ newSubqueryPartStart, end };
+        }
     }
 
 }

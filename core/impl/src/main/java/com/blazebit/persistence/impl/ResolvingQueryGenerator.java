@@ -235,7 +235,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                 if (!externalRepresentation) {
                     sb.append('(');
                 }
-                Expression subqueryExpression = subquery.asExpression(externalRepresentation);
+                Expression subqueryExpression = subquery.asExpression(externalRepresentation, false);
                 if (subqueryExpression instanceof SubqueryExpression) {
                     sb.append(((SubqueryExpression) subqueryExpression).getSubquery().getQueryString());
                 } else {

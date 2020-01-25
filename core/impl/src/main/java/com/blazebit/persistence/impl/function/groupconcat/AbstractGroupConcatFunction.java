@@ -16,13 +16,13 @@
 
 package com.blazebit.persistence.impl.function.groupconcat;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.blazebit.persistence.impl.function.Order;
 import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.TemplateRenderer;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -144,22 +144,6 @@ public abstract class AbstractGroupConcatFunction implements JpqlFunction {
         } else {
             sb.append(" NULLS LAST");
         }
-    }
-    
-    protected void appendQuoted(StringBuilder sb, String s) {
-        sb.append('\'');
-        
-        for (int i = 0; i < s.length(); i++) {
-            final char c = s.charAt(i);
-            
-            if (c == '\'') {
-                sb.append('\'');
-            }
-            
-            sb.append(c);
-        }
-        
-        sb.append('\'');
     }
     
     protected void appendEmulatedOrderByElementWithNulls(StringBuilder sb, Order element) {

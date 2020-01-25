@@ -131,7 +131,10 @@
         <class>com.blazebit.persistence.testsuite.entity.OrderPositionHeadId</class>
         <class>com.blazebit.persistence.testsuite.entity.OrderPositionId</class>
         <class>com.blazebit.persistence.testsuite.entity.TestCTEEmbeddable</class>
-        <class>com.blazebit.persistence.testsuite.treat.entity.IntValueEmbeddable</class>
+
+        <class>com.blazebit.persistence.testsuite.entity.ParameterOrderCte</class>
+        <class>com.blazebit.persistence.testsuite.entity.ParameterOrderCteB</class>
+        <class>com.blazebit.persistence.testsuite.entity.ParameterOrderEntity</class>
 
         <!-- Entities with non-primary key join column: https://github.com/Blazebit/blaze-persistence/issues/526 -->
         <class>com.blazebit.persistence.testsuite.entity.BookEntity</class>

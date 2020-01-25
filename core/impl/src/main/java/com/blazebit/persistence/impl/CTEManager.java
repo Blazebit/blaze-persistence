@@ -100,7 +100,14 @@ public class CTEManager extends CTEBuilderListenerImpl {
     }
 
     public boolean hasCtes() {
-        return ctes.size() > 0;
+        if (ctes.size() > 0) {
+            for (CTEInfo cteInfo : ctes.values()) {
+                if (!cteInfo.inline) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     boolean isRecursive() {
