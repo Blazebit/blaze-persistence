@@ -2560,9 +2560,9 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 }
             } else {
                 if (aliasesSb == null) {
-                    subquery = "(" + getQuerySpecification(cteInfo.nonRecursiveCriteriaBuilder.getQuery(embeddedToMainQuery)).getSql() + ")";
+                    subquery = "(" + getQuerySpecification(cteInfo.nonRecursiveCriteriaBuilder.getQuery(embeddedToMainQuery && baseQuery == null)).getSql() + ")";
                 } else {
-                    aliasesSb.insert(0, "(").append('(').append(getQuerySpecification(cteInfo.nonRecursiveCriteriaBuilder.getQuery(embeddedToMainQuery)).getSql()).append(')').append(')');
+                    aliasesSb.insert(0, "(").append('(').append(getQuerySpecification(cteInfo.nonRecursiveCriteriaBuilder.getQuery(embeddedToMainQuery && baseQuery == null)).getSql()).append(')').append(')');
                     subquery = aliasesSb.toString();
                 }
             }
@@ -3174,7 +3174,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             return queryBuilder.asExpression(externalRepresentation, embeddedToMainQuery);
         }
 
-        final String queryString = queryBuilder.buildBaseQueryString(externalRepresentation, !embeddedToMainQuery);
+        final String queryString = queryBuilder.buildBaseQueryString(externalRepresentation, embeddedToMainQuery);
         Expression expression = new SubqueryExpression(new Subquery() {
             @Override
             public String getQueryString() {

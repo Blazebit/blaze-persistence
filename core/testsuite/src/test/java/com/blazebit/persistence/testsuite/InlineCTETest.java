@@ -97,8 +97,9 @@ public class InlineCTETest extends AbstractCoreTest {
         });
     }
 
+    // TODO: Oracle requires a cycle clause #295
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class, NoOracle.class })
     public void testReusedNestedCte() {
         CriteriaBuilder<ParameterOrderEntity> cteBuilder = cbf.create(em, ParameterOrderEntity.class)
                 .withRecursive(TestCTE.class)
@@ -107,7 +108,7 @@ public class InlineCTETest extends AbstractCoreTest {
                     .bind("name").select("re.name")
                     .bind("level").select("1")
                     .where("re.parent").isNull()
-                .union()
+                .unionAll()
                     .from(RecursiveEntity.class, "re")
                     .innerJoinOn(TestCTE.class, "tcte").on("tcte.id").eqExpression("re.parent.id").end()
                     .bind("id").select("re.id")
@@ -146,7 +147,7 @@ public class InlineCTETest extends AbstractCoreTest {
         assertEquals(
                 "WITH RECURSIVE TestCTE(id, name, level) AS(\n" +
                         "SELECT re.id, re.name, 1 FROM RecursiveEntity re WHERE re.parent IS NULL\n" +
-                        "UNION\n" +
+                        "UNION ALL\n" +
                         "SELECT re.id, re.name, tcte.level + 1 FROM RecursiveEntity re JOIN TestCTE tcte ON (tcte.id = re.parent.id)\n" +
                         ")\n" +
                         "SELECT parameterOrderEntity " +

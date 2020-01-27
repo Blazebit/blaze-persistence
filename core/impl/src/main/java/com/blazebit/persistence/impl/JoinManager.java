@@ -1264,7 +1264,11 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 return;
             }
 
-            if (node.isEntityJoinNode() && (emulateJoins || !mainQuery.jpaProvider.supportsEntityJoin())) {
+            if (node.isInlineCte()) {
+                placeholderRequiringNodes.add(node);
+            }
+
+            if (!externalRepresentation && node.isEntityJoinNode() && (emulateJoins || !mainQuery.jpaProvider.supportsEntityJoin())) {
                 if (node.getJoinType() != JoinType.INNER) {
                     throw new IllegalArgumentException("Can't emulate outer join for entity join node: " + node);
                 }
@@ -1287,13 +1291,6 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
                 if (node.getOnPredicate() != null && !node.getOnPredicate().getChildren().isEmpty()) {
                     tempSb.setLength(0);
-
-                    if (!placeholderRequiringNodes.isEmpty()) {
-                        renderPlaceholderRequiringPredicate(tempSb, placeholderRequiringNodes, externalRepresentation, embeddedToMainQuery);
-                        whereConjuncts.add(tempSb.toString());
-                        tempSb.setLength(0);
-                        placeholderRequiringNodes.clear();
-                    }
                     queryGenerator.setClauseType(ClauseType.JOIN);
                     queryGenerator.setQueryBuffer(tempSb);
                     SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.PREDICATE);
@@ -1347,10 +1344,6 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                     renderInlineCteAttributes(sb, node);
                 }
                 renderedJoins.add(node);
-
-                if (node.isInlineCte()) {
-                    placeholderRequiringNodes.add(node);
-                }
 
                 boolean realOnClause = node.getOnPredicate() != null && !node.getOnPredicate().getChildren().isEmpty() || onCondition != null;
                 boolean onClause = !fetch && !placeholderRequiringNodes.isEmpty() && !externalRepresentation || realOnClause;
