@@ -178,6 +178,63 @@ public class InlineCTETest extends AbstractCoreTest {
         cteBuilder.getResultList();
     }
 
+    // TODO: Oracle requires a cycle clause #295
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class, NoOracle.class })
+    public void testReusedNestedCte2() {
+        CriteriaBuilder<ParameterOrderCte> cteBuilder = cbf.create(em, ParameterOrderCte.class)
+                .withRecursive(TestCTE.class)
+                    .from(RecursiveEntity.class, "re")
+                    .bind("id").select("re.id")
+                    .bind("name").select("re.name")
+                    .bind("level").select("1")
+                    .where("re.parent").isNull()
+                .unionAll()
+                    .from(RecursiveEntity.class, "re")
+                    .innerJoinOn(TestCTE.class, "tcte").on("tcte.id").eqExpression("re.parent.id").end()
+                    .bind("id").select("re.id")
+                    .bind("name").select("re.name")
+                    .bind("level").select("tcte.level + 1")
+                .end()
+                .with(TestAdvancedCTE1.class)
+                    .from(TestCTE.class, "testcte")
+                    .groupBy("id", "level", "name")
+                    .bind("id").select("id")
+                    .bind("level").select("level")
+                    .bind("parentId").select("id")
+                    .bind("embeddable.name").select("name")
+                    .bind("embeddable.description").select("name")
+                    .bind("embeddable.recursiveEntity.id").select("id")
+                .end()
+                .with(TestAdvancedCTE2.class)
+                    .from(TestCTE.class, "testcte")
+                    .where("id").in().from(TestAdvancedCTE1.class).select("id").end()
+                    .where("id").in().from(TestCTE.class).select("id").end()
+                    .groupBy("id", "name")
+                    .bind("id").select("id")
+                    .bind("embeddable.name").select("name")
+                    .bind("embeddable.description").select("name")
+                    .bind("embeddable.recursiveEntity.id").select("id")
+                .end()
+                .with(ParameterOrderEntity.class)
+                    .from(TestAdvancedCTE1.class, "a")
+                    .innerJoinOn(TestAdvancedCTE2.class, "b").on("a.id").eqExpression("b.id").end()
+                    .bind("id").select("a.id")
+                    .bind("one").select("1")
+                    .bind("two").select("2")
+                    .bind("three").select("a.id + b.id")
+                .end()
+                .with(ParameterOrderCte.class)
+                    .from(ParameterOrderEntity.class)
+                    .bind("four").select("one")
+                    .bind("five").select("two")
+                    .bind("six").select("three")
+                    .end()
+                ;
+
+        cteBuilder.getResultList();
+    }
+
     // NOTE: Hibernate 4.2 and 4.3 interprets entity name tokens in string literals...
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class })
