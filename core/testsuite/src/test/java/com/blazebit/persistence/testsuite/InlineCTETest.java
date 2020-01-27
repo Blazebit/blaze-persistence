@@ -52,7 +52,7 @@ import static org.junit.Assert.assertEquals;
  * @since 1.4.1
  */
 public class InlineCTETest extends AbstractCoreTest {
-    
+
     @Override
     protected Class<?>[] getEntityClasses() {
         return new Class<?>[] {
@@ -95,6 +95,86 @@ public class InlineCTETest extends AbstractCoreTest {
                 em.persist(parameterOrderEntity);
             }
         });
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testReusedNestedCte() {
+        CriteriaBuilder<ParameterOrderEntity> cteBuilder = cbf.create(em, ParameterOrderEntity.class)
+                .withRecursive(TestCTE.class)
+                    .from(RecursiveEntity.class, "re")
+                    .bind("id").select("re.id")
+                    .bind("name").select("re.name")
+                    .bind("level").select("1")
+                    .where("re.parent").isNull()
+                .union()
+                    .from(RecursiveEntity.class, "re")
+                    .innerJoinOn(TestCTE.class, "tcte").on("tcte.id").eqExpression("re.parent.id").end()
+                    .bind("id").select("re.id")
+                    .bind("name").select("re.name")
+                    .bind("level").select("tcte.level + 1")
+                .end()
+                .with(TestAdvancedCTE1.class)
+                    .from(TestCTE.class, "testcte")
+                    .groupBy("id", "level", "name")
+                    .bind("id").select("id")
+                    .bind("level").select("level")
+                    .bind("parentId").select("id")
+                    .bind("embeddable.name").select("name")
+                    .bind("embeddable.description").select("name")
+                    .bind("embeddable.recursiveEntity.id").select("id")
+                .end()
+                .with(TestAdvancedCTE2.class)
+                    .from(TestCTE.class, "testcte")
+                    .where("id").in().from(TestAdvancedCTE1.class).select("id").end()
+                    .where("id").in().from(TestCTE.class).select("id").end()
+                    .groupBy("id", "name")
+                    .bind("id").select("id")
+                    .bind("embeddable.name").select("name")
+                    .bind("embeddable.description").select("name")
+                    .bind("embeddable.recursiveEntity.id").select("id")
+                .end()
+                .with(ParameterOrderEntity.class)
+                    .from(TestAdvancedCTE1.class, "a")
+                    .innerJoinOn(TestAdvancedCTE2.class, "b").on("a.id").eqExpression("b.id").end()
+                    .bind("id").select("a.id")
+                    .bind("one").select("1")
+                    .bind("two").select("2")
+                    .bind("three").select("a.id + b.id")
+                .end();
+
+        assertEquals(
+                "WITH RECURSIVE TestCTE(id, name, level) AS(\n" +
+                        "SELECT re.id, re.name, 1 FROM RecursiveEntity re WHERE re.parent IS NULL\n" +
+                        "UNION\n" +
+                        "SELECT re.id, re.name, tcte.level + 1 FROM RecursiveEntity re JOIN TestCTE tcte ON (tcte.id = re.parent.id)\n" +
+                        ")\n" +
+                        "SELECT parameterOrderEntity " +
+                        "FROM ParameterOrderEntity(" +
+                            "SELECT a.id, 1, 2, a.id + b.id " +
+                            "FROM TestAdvancedCTE1(" +
+                                "SELECT testcte.id, testcte.level, testcte.id, testcte.name, testcte.name, testcte.id FROM TestCTE testcte GROUP BY testcte.id, testcte.level, testcte.name" +
+                            ") a(id, level, parentId, embeddable.name, embeddable.description, embeddable.recursiveEntity.id) " +
+                            "JOIN TestAdvancedCTE2(" +
+                                "SELECT testcte.id, testcte.name, testcte.name, testcte.id " +
+                                "FROM TestCTE testcte " +
+                                "WHERE testcte.id IN (" +
+                                    "SELECT testAdvancedCTE1.id " +
+                                    "FROM TestAdvancedCTE1(" +
+                                        "SELECT testcte.id, testcte.level, testcte.id, testcte.name, testcte.name, testcte.id " +
+                                        "FROM TestCTE testcte " +
+                                        "GROUP BY testcte.id, testcte.level, testcte.name" +
+                                    ") testAdvancedCTE1(id, level, parentId, embeddable.name, embeddable.description, embeddable.recursiveEntity.id)" +
+                                ") " +
+                                "AND testcte.id IN (" +
+                                    "SELECT testCTE.id FROM TestCTE testCTE" +
+                                ") " +
+                                "GROUP BY testcte.id, testcte.name" +
+                            ") b(id, embeddable.name, embeddable.description, embeddable.recursiveEntity.id) ON (a.id = b.id)" +
+                        ") parameterOrderEntity(id, one, two, three)",
+                cteBuilder.getQueryString()
+        );
+        cteBuilder.getResultList();
     }
 
     // NOTE: Hibernate 4.2 and 4.3 interprets entity name tokens in string literals...
@@ -237,7 +317,7 @@ public class InlineCTETest extends AbstractCoreTest {
         String subquery = "SELECT e.id, e.name, 0 FROM RecursiveEntity e WHERE e.parent IS NULL";
         String expected = ""
                 + "SELECT t FROM TestCTE(" + subquery + ") t(id, name, level) WHERE t.level < 2";
-        
+
         assertEquals(expected, cb.getQueryString());
         List<TestCTE> resultList = cb.getResultList();
         assertEquals(1, resultList.size());
