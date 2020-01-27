@@ -148,13 +148,14 @@ public class InlineCTETest extends AbstractCoreTest {
                 "WITH RECURSIVE TestCTE(id, name, level) AS(\n" +
                         "SELECT re.id, re.name, 1 FROM RecursiveEntity re WHERE re.parent IS NULL\n" +
                         "UNION ALL\n" +
-                        "SELECT re.id, re.name, tcte.level + 1 FROM RecursiveEntity re JOIN TestCTE tcte ON (tcte.id = re.parent.id)\n" +
+                        "SELECT re.id, re.name, tcte.level + 1 FROM RecursiveEntity re JOIN TestCTE tcte" + onClause("tcte.id = re.parent.id") + "\n" +
                         ")\n" +
                         "SELECT parameterOrderEntity " +
                         "FROM ParameterOrderEntity(" +
                             "SELECT a.id, 1, 2, a.id + b.id " +
                             "FROM TestAdvancedCTE1(" +
-                                "SELECT testcte.id, testcte.level, testcte.id, testcte.name, testcte.name, testcte.id FROM TestCTE testcte GROUP BY testcte.id, testcte.level, testcte.name" +
+                                "SELECT testcte.id, testcte.level, testcte.id, testcte.name, testcte.name, testcte.id " +
+                                "FROM TestCTE testcte GROUP BY testcte.id, testcte.level, testcte.name" +
                             ") a(id, level, parentId, embeddable.name, embeddable.description, embeddable.recursiveEntity.id) " +
                             "JOIN TestAdvancedCTE2(" +
                                 "SELECT testcte.id, testcte.name, testcte.name, testcte.id " +
@@ -171,7 +172,7 @@ public class InlineCTETest extends AbstractCoreTest {
                                     "SELECT testCTE.id FROM TestCTE testCTE" +
                                 ") " +
                                 "GROUP BY testcte.id, testcte.name" +
-                            ") b(id, embeddable.name, embeddable.description, embeddable.recursiveEntity.id) ON (a.id = b.id)" +
+                            ") b(id, embeddable.name, embeddable.description, embeddable.recursiveEntity.id)" + onClause("a.id = b.id") +
                         ") parameterOrderEntity(id, one, two, three)",
                 cteBuilder.getQueryString()
         );

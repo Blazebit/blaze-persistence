@@ -30,6 +30,7 @@ import com.blazebit.persistence.LeafOngoingSetOperationCriteriaBuilder;
 import com.blazebit.persistence.OngoingFinalSetOperationCriteriaBuilder;
 import com.blazebit.persistence.StartOngoingSetOperationCriteriaBuilder;
 import com.blazebit.persistence.impl.BuilderChainingException;
+import com.blazebit.persistence.spi.SetOperationType;
 import com.blazebit.persistence.testsuite.entity.*;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.googlecode.catchexception.CatchException;
@@ -197,15 +198,10 @@ public class SetOperationTest extends AbstractCoreTest {
                 .end();
         String expected = ""
                 + "SELECT d FROM Document d WHERE d.id IN ("
-                + function(
-                    "SET_UNION_ALL",
-                    "(SELECT d1.id FROM Document d1 WHERE d1.name = :param_0)",
-                    "(SELECT d2.id FROM Document d2 WHERE d2.name <> :param_1 ORDER BY d2.name ASC LIMIT 1)",
-                    "'ORDER_BY'",
-                    "'1 DESC'",
-                    "'LIMIT'",
-                    "1"
-                )
+                + setOperation(SetOperationType.UNION_ALL,
+                    "SELECT d1.id FROM Document d1 WHERE d1.name = :param_0",
+                    "SELECT d2.id FROM Document d2 WHERE d2.name <> :param_1 ORDER BY d2.name ASC LIMIT 1"
+                ) + "\nORDER BY id DESC LIMIT 1"
                 + ")";
 
         assertEquals(expected, cb.getQueryString());
@@ -899,25 +895,20 @@ public class SetOperationTest extends AbstractCoreTest {
                 .end();
         String expected = ""
                 + "SELECT d FROM Document d WHERE d.id IN (" +
-                      function(
-                          "SET_UNION",
-                          function(
-                               "SET_EXCEPT", 
-                               "(SELECT d1.id FROM Document d1 WHERE d1.name = :param_0)",
-                               "(SELECT d2.id FROM Document d2 WHERE d2.name = :param_1)",
-                               function(
-                                    "SET_INTERSECT",
-                                    function(
-                                        "SET_UNION",
-                                        "(SELECT d3.id FROM Document d3 WHERE d3.name = :param_2)",
-                                        "(SELECT d4.id FROM Document d4 WHERE d4.name = :param_3)"
-                                    ),
-                                    "(SELECT d5.id FROM Document d5 WHERE d5.name = :param_4)"
-                               )
-                          ),
-                          "(SELECT d6.id FROM Document d6 WHERE d6.name = :param_5)"
-                      )
-                + ")";
+                setOperation(SetOperationType.UNION,
+                        setOperation(SetOperationType.EXCEPT,
+                                "SELECT d1.id FROM Document d1 WHERE d1.name = :param_0",
+                                "SELECT d2.id FROM Document d2 WHERE d2.name = :param_1",
+                                "(" + setOperation(SetOperationType.INTERSECT,
+                                        setOperation(SetOperationType.UNION,
+                                                "SELECT d3.id FROM Document d3 WHERE d3.name = :param_2",
+                                                "SELECT d4.id FROM Document d4 WHERE d4.name = :param_3"
+                                        ),
+                                        "SELECT d5.id FROM Document d5 WHERE d5.name = :param_4"
+                                ) + ")"
+                        ),
+                        "SELECT d6.id FROM Document d6 WHERE d6.name = :param_5"
+                ) + ")";
         assertEquals(expected, cb.getQueryString());
         List<Document> resultList = cb.getResultList();
         assertEquals(1, resultList.size());
@@ -966,26 +957,21 @@ public class SetOperationTest extends AbstractCoreTest {
                 .end();
         String expected = ""
                 + "SELECT d FROM Document d WHERE d.id IN (" +
-                    function(
-                         "SET_EXCEPT",
-                        function(
-                             "SET_EXCEPT",
-                            function(
-                                 "SET_EXCEPT",
-                                 "(SELECT d1.id FROM Document d1 WHERE d1.name = :param_0)",
-                                 "(SELECT d2.id FROM Document d2 WHERE d2.name = :param_1)"
-                            ),
-                            function(
-                                 "SET_UNION",
-                                 "(SELECT d3.id FROM Document d3 WHERE d3.name = :param_2)",
-                                 "(SELECT d4.id FROM Document d4 WHERE d4.name = :param_3)"
-                            )
-                        ),
-                        function(
-                             "SET_UNION",
-                             "(SELECT d5.id FROM Document d5 WHERE d5.name = :param_4)",
-                             "(SELECT d6.id FROM Document d6 WHERE d6.name = :param_5)"
-                        )
+                    setOperation(SetOperationType.EXCEPT,
+                            "(" + setOperation(SetOperationType.EXCEPT,
+                                    "(" + setOperation(SetOperationType.EXCEPT,
+                                    "SELECT d1.id FROM Document d1 WHERE d1.name = :param_0",
+                                        "SELECT d2.id FROM Document d2 WHERE d2.name = :param_1"
+                                ) + ")",
+                                "(" + setOperation(SetOperationType.UNION,
+                                        "SELECT d3.id FROM Document d3 WHERE d3.name = :param_2",
+                                        "SELECT d4.id FROM Document d4 WHERE d4.name = :param_3"
+                                ) + ")"
+                            ) + ")",
+                            "((" + setOperation(SetOperationType.UNION,
+                                    "SELECT d5.id FROM Document d5 WHERE d5.name = :param_4",
+                                    "SELECT d6.id FROM Document d6 WHERE d6.name = :param_5"
+                            ) + "))"
                     )
                 + ")";
         assertEquals(expected, cb.getQueryString());
@@ -1027,27 +1013,16 @@ public class SetOperationTest extends AbstractCoreTest {
                 .end();
         String expected = ""
                 + "SELECT doc.name FROM Document doc WHERE doc.name IN ("
-                + function(
-                           "SET_EXCEPT",
-                          function(
-                               "SET_UNION",
-                               "(SELECT d1.name AS docName FROM Document d1 WHERE d1.name = :param_0)",
-                               "(SELECT d2.name AS docName FROM Document d2 WHERE d2.name = :param_1)"
-                          ),
-                          function(
-                               "SET_UNION",
-                               "(SELECT d3.name AS docName FROM Document d3 WHERE d3.name = :param_2)",
-                               "(SELECT d4.name AS docName FROM Document d4 WHERE d4.name = :param_3)",
-                               "'ORDER_BY'",
-                               "'1 DESC'",
-                               "'LIMIT'",
-                               "1"
-                          ),
-                          "'ORDER_BY'",
-                          "'1 DESC'",
-                          "'LIMIT'",
-                          "1"
-                      )
+                + setOperation(SetOperationType.EXCEPT,
+                    setOperation(SetOperationType.UNION,
+                            "SELECT d1.name AS docName FROM Document d1 WHERE d1.name = :param_0",
+                            "SELECT d2.name AS docName FROM Document d2 WHERE d2.name = :param_1"
+                    ),
+                    "(" + setOperation(SetOperationType.UNION,
+                            "SELECT d3.name AS docName FROM Document d3 WHERE d3.name = :param_2",
+                            "SELECT d4.name AS docName FROM Document d4 WHERE d4.name = :param_3"
+                    ) + "\nORDER BY docName DESC LIMIT 1)"
+                ) + "\nORDER BY docName DESC LIMIT 1"
                 + ")";
         
         assertEquals(expected, cb.getQueryString());
@@ -1101,15 +1076,21 @@ public class SetOperationTest extends AbstractCoreTest {
                 .end();
 
         String expected = "SELECT d1 FROM Document d1 WHERE d1.id IN (" +
-                function(
-                        "SET_UNION_ALL",
-                        "(SELECT dSub.id FROM Document dSub)",
-                        "(SELECT dSub.id FROM Document dSub)"
-                ) + ")";
+                setOperation(SetOperationType.UNION_ALL, "SELECT dSub.id FROM Document dSub", "SELECT dSub.id FROM Document dSub") + ")";
 
         assertEquals(expected, cb.getQueryString());
         List<Document> resultList = cb.getResultList();
         assertEquals(3, resultList.size());
+    }
+
+    protected String setOperation(SetOperationType type, String... queries) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(queries[0]);
+        for (int i = 1; i < queries.length; i++) {
+            sb.append('\n').append(type.name().replace('_', ' ')).append('\n');
+            sb.append(queries[i]);
+        }
+        return sb.toString();
     }
 
     @Test

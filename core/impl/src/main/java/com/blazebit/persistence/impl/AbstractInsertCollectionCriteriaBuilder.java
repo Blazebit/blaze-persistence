@@ -108,9 +108,9 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
     }
 
     @Override
-    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, boolean embeddedToMainQuery, JoinNode lateralJoinNode) {
+    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, JoinNode lateralJoinNode) {
         if (externalRepresentation) {
-            super.buildBaseQueryString(sbSelectFrom, externalRepresentation, embeddedToMainQuery, lateralJoinNode);
+            super.buildBaseQueryString(sbSelectFrom, externalRepresentation, lateralJoinNode);
         } else {
             buildSelectBaseQueryString(sbSelectFrom, externalRepresentation);
         }
@@ -197,7 +197,7 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
         Set<JoinNode> keyRestrictedLeftJoins = getKeyRestrictedLeftJoins();
 
         List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, Collections.EMPTY_SET);
-        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery, isMainQuery);
+        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
 
         boolean isEmbedded = this instanceof ReturningBuilder;
         boolean shouldRenderCteNodes = renderCteNodes(isEmbedded);

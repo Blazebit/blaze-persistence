@@ -255,24 +255,24 @@ public abstract class PredicateManager<T> extends AbstractManager<ExpressionModi
     }
 
     void buildClause(StringBuilder sb) {
-        buildClause(sb, Collections.<String>emptyList(), Collections.<String>emptyList(), null);
+        buildClause(sb, Collections.<String>emptyList(), Collections.<String>emptyList());
     }
 
-    void buildClause(StringBuilder sb, List<String> additionalConjuncts, List<String> optionalConjuncts, List<String> endConjuncts) {
-        if (!hasPredicates() && additionalConjuncts.isEmpty() && (endConjuncts == null || endConjuncts.isEmpty())) {
+    void buildClause(StringBuilder sb, List<String> additionalConjuncts, List<String> optionalConjuncts) {
+        if (!hasPredicates() && additionalConjuncts.isEmpty()) {
             return;
         }
 
         int initialLength = sb.length();
         sb.append(' ').append(getClauseName()).append(' ');
         int oldLength = sb.length();
-        buildClausePredicate(sb, additionalConjuncts, optionalConjuncts, endConjuncts);
+        buildClausePredicate(sb, additionalConjuncts, optionalConjuncts);
         if (sb.length() == oldLength) {
             sb.setLength(initialLength);
         }
     }
 
-    void buildClausePredicate(StringBuilder sb, List<String> additionalConjuncts, List<String> optionalConjuncts, List<String> endConjuncts) {
+    void buildClausePredicate(StringBuilder sb, List<String> additionalConjuncts, List<String> optionalConjuncts) {
         int size = additionalConjuncts.size();
         boolean hasPredicates = size > 0;
         for (int i = 0; i < size; i++) {
@@ -293,24 +293,7 @@ public abstract class PredicateManager<T> extends AbstractManager<ExpressionModi
             hasPredicates = true;
         }
 
-        if (endConjuncts != null && !endConjuncts.isEmpty()) {
-            if (hasPredicates) {
-                sb.append(" AND ");
-            } else if (optionalConjuncts.isEmpty()) {
-                // This is required for the EntityFunction when a subquery has no WHERE clause...
-                // We should clean this stuff up as we now have better abstractions...
-                sb.append("1=1 AND ");
-            }
-            for (int i = 0; i < optionalConjuncts.size(); i++) {
-                sb.append(optionalConjuncts.get(i));
-                sb.append(" AND ");
-            }
-            for (int i = 0; i < endConjuncts.size(); i++) {
-                sb.append(endConjuncts.get(i));
-                sb.append(" AND ");
-            }
-            sb.setLength(sb.length() - " AND ".length());
-        } else if (hasPredicates) {
+        if (hasPredicates) {
             for (int i = 0; i < optionalConjuncts.size(); i++) {
                 sb.append(" AND ");
                 sb.append(optionalConjuncts.get(i));

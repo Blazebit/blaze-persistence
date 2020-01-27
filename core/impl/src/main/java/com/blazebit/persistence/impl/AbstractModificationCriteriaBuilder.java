@@ -183,7 +183,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
     }
 
     @Override
-    public Query getQuery(boolean embeddedToMainQuery) {
+    public Query getQuery() {
         return getQuery(null);
     }
 
@@ -239,7 +239,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
     }
 
     public int executeUpdate() {
-        return getQuery(false).executeUpdate();
+        return getQuery().executeUpdate();
     }
     
     @Override

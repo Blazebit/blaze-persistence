@@ -53,18 +53,13 @@ public abstract class AbstractQueryBuilder<T, X extends Queryable<T, X>, Z, W, F
     }
 
     @Override
-    public TypedQuery<T> getQuery(boolean embeddedToMainQuery) {
-        return getTypedQuery(null, null);
-    }
-
-    @Override
     public List<T> getResultList() {
-        return getQuery(false).getResultList();
+        return getQuery().getResultList();
     }
 
     @Override
     public T getSingleResult() {
-        return getQuery(false).getSingleResult();
+        return getQuery().getSingleResult();
     }
 
 }

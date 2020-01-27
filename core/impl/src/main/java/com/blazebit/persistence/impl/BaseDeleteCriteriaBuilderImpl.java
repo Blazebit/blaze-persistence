@@ -39,7 +39,7 @@ public abstract class BaseDeleteCriteriaBuilderImpl<T, X extends BaseDeleteCrite
     }
 
     @Override
-    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, boolean embeddedToMainQuery, JoinNode lateralJoinNode) {
+    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, JoinNode lateralJoinNode) {
         sbSelectFrom.append("DELETE FROM ");
         sbSelectFrom.append(entityType.getName()).append(' ');
         sbSelectFrom.append(entityAlias);

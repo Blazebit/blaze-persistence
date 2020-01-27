@@ -118,7 +118,7 @@ public class ParameterManager {
             if (Character.isDigit(oldParameterName.charAt(0))) {
                 this.positionalOffset++;
                 newParameterName = Integer.toString(this.positionalOffset);
-            } else if (param.isImplicit()) {
+            } else if (param.isImplicit() && !(paramValue instanceof ValuesParameterWrapper)) {
                 newParameterName = PREFIX + counter++;
             } else {
                 ParameterImpl<Object> existingParameter = (ParameterImpl<Object>) parameters.get(oldParameterName);

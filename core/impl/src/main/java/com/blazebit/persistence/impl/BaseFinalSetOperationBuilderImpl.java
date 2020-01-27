@@ -212,22 +212,22 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
         }
     }
 
-    public Expression asExpression(boolean externalRepresentation, boolean embeddedToMainQuery) {
+    public Expression asExpression(boolean externalRepresentation) {
         SetOperationManager operationManager = setOperationManager;
 
         if (operationManager.getOperator() == null || !operationManager.hasSetOperations()) {
-            return asExpression(operationManager.getStartQueryBuilder(), externalRepresentation, embeddedToMainQuery);
+            return asExpression(operationManager.getStartQueryBuilder(), externalRepresentation);
         }
 
         List<Expression> setOperationArgs = new ArrayList<Expression>(operationManager.getSetOperations().size() + 2);
         // Use prefix because hibernate uses UNION as keyword
         setOperationArgs.add(new StringLiteral("SET_" + operationManager.getOperator().name()));
-        setOperationArgs.add(asExpression(operationManager.getStartQueryBuilder(), externalRepresentation, embeddedToMainQuery));
+        setOperationArgs.add(asExpression(operationManager.getStartQueryBuilder(), externalRepresentation));
 
         List<AbstractCommonQueryBuilder<?, ?, ?, ?, ?>> setOperands = operationManager.getSetOperations();
         int operandsSize = setOperands.size();
         for (int i = 0; i < operandsSize; i++) {
-            setOperationArgs.add(asExpression(setOperands.get(i), externalRepresentation, embeddedToMainQuery));
+            setOperationArgs.add(asExpression(setOperands.get(i), externalRepresentation));
         }
 
         List<? extends OrderByElement> orderByElements = getOrderByElements();
@@ -255,13 +255,13 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
     }
 
     @Override
-    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, boolean embeddedToMainQuery, JoinNode lateralJoinNode) {
+    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, JoinNode lateralJoinNode) {
         boolean nested = isNestedAndComplex(setOperationManager.getStartQueryBuilder());
         if (nested) {
             sbSelectFrom.append('(');
         }
         
-        setOperationManager.getStartQueryBuilder().buildBaseQueryString(sbSelectFrom, externalRepresentation, embeddedToMainQuery, lateralJoinNode);
+        setOperationManager.getStartQueryBuilder().buildBaseQueryString(sbSelectFrom, externalRepresentation, lateralJoinNode);
         
         if (nested) {
             sbSelectFrom.append(')');
@@ -279,7 +279,7 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
                     sbSelectFrom.append('(');
                 }
                 
-                setOperand.buildBaseQueryString(sbSelectFrom, externalRepresentation, embeddedToMainQuery, lateralJoinNode);
+                setOperand.buildBaseQueryString(sbSelectFrom, externalRepresentation, lateralJoinNode);
                 
                 if (nested) {
                     sbSelectFrom.append(')');
@@ -349,7 +349,7 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
         List<Query> setOperands = new ArrayList<Query>();
 
         for (AbstractCommonQueryBuilder<?, ?, ?, ?, ?> setOperand : setOperationManager.getSetOperations()) {
-            Query q = setOperand.getQuery(false);
+            Query q = setOperand.getQuery();
             setOperands.add(q);
             parameterManager.collectParameterListNames(q, parameterListNames);
         }
@@ -369,7 +369,7 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
 
         // Since this builder has no query of it's own, there can be no joins
         List<String> keyRestrictedLeftJoinAliases = Collections.emptyList();
-        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery, isMainQuery);
+        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
         boolean shouldRenderCteNodes = renderCteNodes(false);
         List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.EMPTY_LIST;
         QuerySpecification querySpecification = new SetOperationQuerySpecification(
@@ -426,11 +426,6 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
             case EXCEPT_ALL: return "EXCEPT ALL";
             default: throw new IllegalArgumentException("Unknown type: " + type);
         }
-    }
-
-    @Override
-    public TypedQuery<T> getQuery(boolean embeddedToMainQuery) {
-        return getTypedQuery(null, null);
     }
 
     @Override
