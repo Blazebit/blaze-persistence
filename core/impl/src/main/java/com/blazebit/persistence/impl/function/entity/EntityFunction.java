@@ -53,7 +53,7 @@ public class EntityFunction implements JpqlFunction {
             throw new RuntimeException("The ENTITY_FUNCTION function needs at least one argument <sub_query>! args=" + functionRenderContext);
         }
 
-        // com.blazebit.persistence.impl.JoinManager.buildClause adds synthetic where clause conjuncts and starts with 1=1 so we can determine it properly
+        // com.blazebit.persistence.impl.JoinManager.buildClause adds synthetic where clause conjuncts and starts with MARKER_PREDICATE so we can determine it properly
         // We remove the synthetic predicate here and later extract the values clause alias of it so we can insert the proper SQL values clause at the right place
         String subquery = functionRenderContext.getArgument(0);
         StringBuilder sb = new StringBuilder();
@@ -73,11 +73,7 @@ public class EntityFunction implements JpqlFunction {
         String valuesAliases = JpqlFunctionUtil.unquote(functionRenderContext.getArgument(3));
         String syntheticPredicate = JpqlFunctionUtil.unquote(functionRenderContext.getArgument(4));
         String valuesTableSqlAlias = subquery.substring(aliasStartIndex, aliasEndIndex);
-        if (syntheticPredicate.isEmpty()) {
-            appendSubqueryPart(sb, subquery, 1, subqueryEndIndex, subquery.length() - 1);
-        } else {
-            sb.append(subquery, 1, subqueryEndIndex);
-        }
+        appendSubqueryPart(sb, subquery, 1, subqueryEndIndex, subquery.length() - 1);
 
         if (!syntheticPredicate.isEmpty()) {
             String exampleQuerySqlAlias = syntheticPredicate.substring(0, syntheticPredicate.indexOf('.'));

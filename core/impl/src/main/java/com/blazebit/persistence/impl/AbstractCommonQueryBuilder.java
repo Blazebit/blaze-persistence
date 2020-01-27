@@ -2354,10 +2354,10 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 limit = Integer.toString(maxResults);
             }
         }
-        List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, Collections.EMPTY_SET);
-        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery, isMainQuery);
+        List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, Collections.<ClauseType>emptySet());
+        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
         boolean shouldRenderCteNodes = lateralSb == null && renderCteNodes(false);
-        List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.EMPTY_LIST;
+        List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.<CTENode>emptyList();
         QuerySpecification querySpecification = new CustomQuerySpecification(
                 this, baseQuery, parameterManager.getParameters(), parameterListNames, limit, offset, keyRestrictedLeftJoinAliases, entityFunctionNodes, mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes
         );
@@ -2399,11 +2399,11 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return keyRestrictedLeftJoinAliases;
     }
 
-    protected List<EntityFunctionNode> getEntityFunctionNodes(Query baseQuery, boolean embeddedToMainQuery) {
-        return getEntityFunctionNodes(baseQuery, embeddedToMainQuery, joinManager.getEntityFunctionNodes(), joinManager.getLateInlineNodes());
+    protected List<EntityFunctionNode> getEntityFunctionNodes(Query baseQuery) {
+        return getEntityFunctionNodes(baseQuery, joinManager.getEntityFunctionNodes(), joinManager.getLateInlineNodes());
     }
 
-    protected List<EntityFunctionNode> getEntityFunctionNodes(Query baseQuery, boolean embeddedToMainQuery, List<JoinNode> valuesNodes, List<JoinNode> lateInlineNodes) {
+    protected List<EntityFunctionNode> getEntityFunctionNodes(Query baseQuery, List<JoinNode> valuesNodes, List<JoinNode> lateInlineNodes) {
         List<EntityFunctionNode> entityFunctionNodes = new ArrayList<>();
 
         DbmsDialect dbmsDialect = mainQuery.dbmsDialect;
@@ -2560,9 +2560,9 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 }
             } else {
                 if (aliasesSb == null) {
-                    subquery = "(" + getQuerySpecification(cteInfo.nonRecursiveCriteriaBuilder.getQuery(embeddedToMainQuery && baseQuery == null)).getSql() + ")";
+                    subquery = "(" + getQuerySpecification(cteInfo.nonRecursiveCriteriaBuilder.getQuery()).getSql() + ")";
                 } else {
-                    aliasesSb.insert(0, "(").append('(').append(getQuerySpecification(cteInfo.nonRecursiveCriteriaBuilder.getQuery(embeddedToMainQuery && baseQuery == null)).getSql()).append(')').append(')');
+                    aliasesSb.insert(0, "(").append('(').append(getQuerySpecification(cteInfo.nonRecursiveCriteriaBuilder.getQuery()).getSql()).append(')').append(')');
                     subquery = aliasesSb.toString();
                 }
             }
@@ -2740,7 +2740,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             }
         }
         sb.append(" WHERE ");
-        joinManager.renderPlaceholderRequiringPredicate(sb, valuesNode, "e", false, true);
+        joinManager.renderPlaceholderRequiringPredicate(sb, valuesNode, "e", false, false);
 
         if (strategy == ValuesStrategy.SELECT_VALUES || strategy == ValuesStrategy.VALUES) {
             valuesSb.append("(VALUES ");
@@ -2922,16 +2922,12 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return getTypedQuery(lateralSb, lateralJoinNode);
     }
 
-    protected Query getQuery(boolean embeddedToMainQuery) {
+    protected Query getQuery() {
         return getTypedQuery(null, null);
     }
 
-    public Query getQuery() {
-        return getQuery(false);
-    }
-    
     protected Query getQuery(Map<DbmsModificationState, String> includedModificationStates) {
-        return getQuery(false);
+        return getQuery();
     }
     
     @SuppressWarnings("unchecked")
@@ -2991,7 +2987,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             return buildLateralBaseQueryString(lateralSb, lateralJoinNode);
         }
         if (cachedQueryString == null) {
-            cachedQueryString = buildBaseQueryString(false, false);
+            cachedQueryString = buildBaseQueryString(false);
         }
 
         return cachedQueryString;
@@ -3132,7 +3128,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             sb.append("SELECT 1");
             List<String> whereClauseConjuncts = new ArrayList<>();
             List<String> optionalWhereClauseConjuncts = new ArrayList<>();
-            joinManager.buildClause(sb, EnumSet.noneOf(ClauseType.class), null, false, false, false, true, false, optionalWhereClauseConjuncts, whereClauseConjuncts, null, explicitVersionEntities, nodesToFetch, Collections.EMPTY_SET);
+            joinManager.buildClause(sb, EnumSet.noneOf(ClauseType.class), null, false, false, false, true, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, nodesToFetch, Collections.EMPTY_SET);
         } finally {
             queryGenerator.setExternalRepresentation(originalExternalRepresentation);
         }
@@ -3146,7 +3142,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         } else {
             sbSelectFrom.append("EXISTS(");
         }
-        buildBaseQueryString(sbSelectFrom, false, false, lateralJoinNode);
+        buildBaseQueryString(sbSelectFrom, false, lateralJoinNode);
         if (hasLimit()) {
             final boolean hasFirstResult = firstResult != 0;
             final boolean hasMaxResults = maxResults != Integer.MAX_VALUE;
@@ -3165,16 +3161,16 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return sbSelectFrom.toString();
     }
 
-    public Expression asExpression(boolean externalRepresentation, boolean embeddedToMainQuery) {
-        return asExpression(this, externalRepresentation, embeddedToMainQuery);
+    public Expression asExpression(boolean externalRepresentation) {
+        return asExpression(this, externalRepresentation);
     }
 
-    protected Expression asExpression(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder, boolean externalRepresentation, boolean embeddedToMainQuery) {
+    protected Expression asExpression(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder, boolean externalRepresentation) {
         if (queryBuilder instanceof BaseFinalSetOperationBuilderImpl<?, ?, ?>) {
-            return queryBuilder.asExpression(externalRepresentation, embeddedToMainQuery);
+            return queryBuilder.asExpression(externalRepresentation);
         }
 
-        final String queryString = queryBuilder.buildBaseQueryString(externalRepresentation, embeddedToMainQuery);
+        final String queryString = queryBuilder.buildBaseQueryString(externalRepresentation);
         Expression expression = new SubqueryExpression(new Subquery() {
             @Override
             public String getQueryString() {
@@ -3186,7 +3182,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         }
 
         if (queryBuilder.joinManager.hasEntityFunctions()) {
-            for (EntityFunctionNode node : queryBuilder.getEntityFunctionNodes(null, isMainQuery)) {
+            for (EntityFunctionNode node : queryBuilder.getEntityFunctionNodes(null)) {
                 List<Expression> arguments = new ArrayList<>(6);
                 arguments.add(new StringLiteral("ENTITY_FUNCTION"));
                 arguments.add(expression);
@@ -3230,24 +3226,23 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return expression;
     }
 
-    protected String buildBaseQueryString(boolean externalRepresentation, boolean embeddedToMainQuery) {
+    protected String buildBaseQueryString(boolean externalRepresentation) {
         StringBuilder sbSelectFrom = new StringBuilder();
-        buildBaseQueryString(sbSelectFrom, externalRepresentation, embeddedToMainQuery, null);
+        buildBaseQueryString(sbSelectFrom, externalRepresentation, null);
         return sbSelectFrom.toString();
     }
 
-    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, boolean embeddedToMainQuery, JoinNode lateralJoinNode) {
+    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, JoinNode lateralJoinNode) {
         boolean originalExternalRepresentation = queryGenerator.isExternalRepresentation();
         queryGenerator.setExternalRepresentation(externalRepresentation);
         try {
             appendSelectClause(sbSelectFrom, externalRepresentation);
-            List<String> whereClauseEndConjuncts = this instanceof Subquery ? new ArrayList<String>() : null;
 
             List<String> whereClauseConjuncts = new ArrayList<>();
             List<String> optionalWhereClauseConjuncts = new ArrayList<>();
-            joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, externalRepresentation, false, false, embeddedToMainQuery, optionalWhereClauseConjuncts, whereClauseConjuncts, whereClauseEndConjuncts, explicitVersionEntities, nodesToFetch, Collections.EMPTY_SET);
+            joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, nodesToFetch, Collections.<JoinNode>emptySet());
 
-            appendWhereClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, whereClauseEndConjuncts, lateralJoinNode);
+            appendWhereClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, lateralJoinNode);
             appendGroupByClause(sbSelectFrom);
             appendWindowClause(sbSelectFrom, externalRepresentation);
             appendOrderByClause(sbSelectFrom);
@@ -3269,7 +3264,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         if (isMainQuery) {
             mainQuery.cteManager.buildClause(sbSelectFrom);
         }
-        buildBaseQueryString(sbSelectFrom, true, false, null);
+        buildBaseQueryString(sbSelectFrom, true, null);
     }
 
     protected void appendSelectClause(StringBuilder sbSelectFrom, boolean externalRepresentation) {
@@ -3280,17 +3275,17 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         boolean originalExternalRepresentation = queryGenerator.isExternalRepresentation();
         queryGenerator.setExternalRepresentation(externalRepresentation);
         try {
-            appendWhereClause(sbSelectFrom, Collections.<String>emptyList(), Collections.<String>emptyList(), Collections.<String>emptyList(), null);
+            appendWhereClause(sbSelectFrom, Collections.<String>emptyList(), Collections.<String>emptyList(), null);
         } finally {
             queryGenerator.setExternalRepresentation(originalExternalRepresentation);
         }
     }
 
-    protected void appendWhereClause(StringBuilder sbSelectFrom, List<String> whereClauseConjuncts, List<String> optionalWhereClauseConjuncts, List<String> whereClauseEndConjuncts, JoinNode lateralJoinNode) {
+    protected void appendWhereClause(StringBuilder sbSelectFrom, List<String> whereClauseConjuncts, List<String> optionalWhereClauseConjuncts, JoinNode lateralJoinNode) {
         KeysetLink keysetLink = keysetManager.getKeysetLink();
         if (keysetLink == null || keysetLink.getKeysetMode() == KeysetMode.NONE || keysetLink.getKeyset().getTuple() == null) {
             int initialLength = sbSelectFrom.length();
-            whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, whereClauseEndConjuncts);
+            whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts);
             if (sbSelectFrom.length() == initialLength && lateralJoinNode != null) {
                 sbSelectFrom.append(" WHERE ");
                 boolean originalExternalRepresentation = queryGenerator.isExternalRepresentation();
@@ -3305,7 +3300,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             sbSelectFrom.append(" WHERE ");
 
             if (whereManager.hasPredicates()) {
-                whereManager.buildClausePredicate(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, whereClauseEndConjuncts);
+                whereManager.buildClausePredicate(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts);
                 sbSelectFrom.append(" AND ");
             }
 

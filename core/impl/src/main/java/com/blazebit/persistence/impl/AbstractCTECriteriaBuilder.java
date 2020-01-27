@@ -92,14 +92,14 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
 
     @Override
     protected void buildExternalQueryString(StringBuilder sbSelectFrom) {
-        buildBaseQueryString(sbSelectFrom, true, inline, null);
+        buildBaseQueryString(sbSelectFrom, true, null);
     }
 
     @Override
-    protected Query getQuery(boolean embeddedToMainQuery) {
+    protected Query getQuery() {
         // NOTE: This must happen first because it generates implicit joins
         prepareAndCheck();
-        String baseQueryString = buildBaseQueryString(false, embeddedToMainQuery);
+        String baseQueryString = buildBaseQueryString(false);
         return getQuery(baseQueryString);
     }
 
@@ -125,8 +125,8 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
                 }
             }
 
-            List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(query, keyRestrictedLeftJoins, Collections.EMPTY_SET);
-            List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(query, isMainQuery);
+            List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(query, keyRestrictedLeftJoins, Collections.<ClauseType>emptySet());
+            List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(query);
 
             QuerySpecification querySpecification = new CTEQuerySpecification(
                     this,

@@ -246,11 +246,11 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         if (externalRepresentation && isMainQuery) {
             mainQuery.cteManager.buildClause(sbSelectFrom);
         }
-        buildPageCountQueryString(sbSelectFrom, externalRepresentation, countAll && !hasGroupBy, true);
+        buildPageCountQueryString(sbSelectFrom, externalRepresentation, countAll && !hasGroupBy);
         return sbSelectFrom.toString();
     }
 
-    protected final void buildPageCountQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, boolean countAll, boolean embeddedToMainQuery) {
+    protected final void buildPageCountQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, boolean countAll) {
         sbSelectFrom.append("SELECT ");
         int countStartIdx = sbSelectFrom.length();
         int countEndIdx;
@@ -294,16 +294,16 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         Set<JoinNode> countNodesToFetch = Collections.emptySet();
 
         if (countAll) {
-            joinManager.buildClause(sbSelectFrom, NO_CLAUSE_EXCLUSION, null, false, externalRepresentation, false, false, embeddedToMainQuery, optionalWhereClauseConjuncts, whereClauseConjuncts, null, explicitVersionEntities, countNodesToFetch, Collections.EMPTY_SET);
-            whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, null);
+            joinManager.buildClause(sbSelectFrom, NO_CLAUSE_EXCLUSION, null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, countNodesToFetch, Collections.<JoinNode>emptySet());
+            whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts);
         } else {
             // Collect usage of collection join nodes to optimize away the count distinct
             // Note that we always exclude the nodes with group by dependency. We consider just the ones from the identifiers
             Set<JoinNode> identifierExpressionsToUseNonRootJoinNodes = getIdentifierExpressionsToUseNonRootJoinNodes();
-            Set<JoinNode> collectionJoinNodes = joinManager.buildClause(sbSelectFrom, COUNT_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, null, true, externalRepresentation, true, false, embeddedToMainQuery, optionalWhereClauseConjuncts, whereClauseConjuncts, null, explicitVersionEntities, countNodesToFetch, identifierExpressionsToUseNonRootJoinNodes);
+            Set<JoinNode> collectionJoinNodes = joinManager.buildClause(sbSelectFrom, COUNT_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, null, true, externalRepresentation, true, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, countNodesToFetch, identifierExpressionsToUseNonRootJoinNodes);
             boolean hasCollectionJoinUsages = collectionJoinNodes.size() > 0;
 
-            whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, null);
+            whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts);
 
             // Instead of a count distinct, we render a count(*) if we have no collection joins and the identifier expression is result unique
             // It is result unique when it contains the query root primary key or a unique key that of a uniqueness preserving association of that
@@ -457,7 +457,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         TypedQuery<Long> baseQuery = em.createQuery(countQueryString, Long.class);
         Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery);
         List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, COUNT_QUERY_CLAUSE_EXCLUSIONS);
-        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery, isMainQuery);
+        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
         boolean shouldRenderCteNodes = renderCteNodes(false);
         List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.EMPTY_LIST;
         QuerySpecification querySpecification = new CustomQuerySpecification(

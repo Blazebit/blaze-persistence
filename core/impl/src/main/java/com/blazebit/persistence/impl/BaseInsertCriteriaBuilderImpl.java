@@ -134,7 +134,7 @@ public abstract class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCrite
     }
 
     @Override
-    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, boolean embeddedToMainQuery, JoinNode lateralJoinNode) {
+    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, JoinNode lateralJoinNode) {
         appendInsertIntoFragment(sbSelectFrom, externalRepresentation);
         sbSelectFrom.append('(');
         
@@ -154,7 +154,7 @@ public abstract class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCrite
     }
 
     protected void buildSelectBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
-        super.buildBaseQueryString(sbSelectFrom, externalRepresentation, false, null);
+        super.buildBaseQueryString(sbSelectFrom, externalRepresentation, null);
     }
 
     protected void appendInsertIntoFragment(StringBuilder sbSelectFrom, boolean externalRepresentation) {
@@ -163,9 +163,9 @@ public abstract class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCrite
     }
 
     @Override
-    public Query getQuery(boolean embeddedToMainQuery) {
+    public Query getQuery() {
         if (mainQuery.jpaProvider.supportsInsertStatement()) {
-            return super.getQuery(embeddedToMainQuery);
+            return super.getQuery();
         } else {
             // TODO: implement
             throw new UnsupportedOperationException("Not yet implemented!");
@@ -180,7 +180,7 @@ public abstract class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCrite
         Set<JoinNode> keyRestrictedLeftJoins = getKeyRestrictedLeftJoins();
 
         List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(query, keyRestrictedLeftJoins, Collections.EMPTY_SET);
-        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(query, isMainQuery);
+        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(query);
 
         boolean isEmbedded = this instanceof ReturningBuilder;
         String[] returningColumns = getReturningColumns();

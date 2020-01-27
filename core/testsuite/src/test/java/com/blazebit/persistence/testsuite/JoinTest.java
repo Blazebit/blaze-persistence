@@ -540,17 +540,14 @@ public class JoinTest extends AbstractCoreTest {
     // Only hibernate supports single valued association id expressions without needing to join
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testEntityJoinEmulationReverseJoinDependencyBug() {
-        // this test is only relevant if entity join emulation is performed
-        org.junit.Assume.assumeTrue(!jpaProvider.supportsEntityJoin());
         CriteriaBuilder<Long> crit = cbf.create(em, Long.class)
                 .from(Document.class, "d")
                 .innerJoinOn(Person.class, "p").on("p.partnerDocument.id").eqExpression("d.id").end()
                 .innerJoinOn("p.favoriteDocuments", "favoriteDocument").on("favoriteDocument.idx").eqExpression("p.id").end()
                 .select("p.name");
 
-        final String expected = "SELECT p.name FROM Document d, Person p JOIN p.favoriteDocuments favoriteDocument"
-                + onClause("favoriteDocument.idx = p.id")
-                + " WHERE p.partnerDocument.id = d.id";
+        final String expected = "SELECT p.name FROM Document d JOIN Person p" + onClause("p.partnerDocument.id = d.id") + " JOIN p.favoriteDocuments favoriteDocument"
+                + onClause("favoriteDocument.idx = p.id");
         assertEquals(expected, crit.getQueryString());
     }
 

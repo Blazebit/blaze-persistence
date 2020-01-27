@@ -217,7 +217,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
     @Override
     public void visit(SubqueryExpression expression) {
-        if (expression.getSubquery() instanceof SubqueryInternalBuilder) {
+        if (!externalRepresentation && expression.getSubquery() instanceof SubqueryInternalBuilder) {
             final AbstractCommonQueryBuilder<?, ?, ?, ?, ?> subquery = (AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) expression.getSubquery();
             subquery.prepareAndCheck();
             final boolean hasFirstResult = subquery.getFirstResult() != 0;
@@ -229,14 +229,14 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
             if (isSimple) {
                 sb.append('(');
-                subquery.buildBaseQueryString(sb, externalRepresentation, true, null);
+                subquery.buildBaseQueryString(sb, externalRepresentation, null);
                 sb.append(')');
             } else {
                 if (!externalRepresentation) {
                     sb.append('(');
                 }
-                Expression subqueryExpression = subquery.asExpression(externalRepresentation, false);
-                if (subqueryExpression instanceof SubqueryExpression) {
+                Expression subqueryExpression = subquery.asExpression(externalRepresentation);
+                if (!externalRepresentation && subqueryExpression instanceof SubqueryExpression) {
                     sb.append(((SubqueryExpression) subqueryExpression).getSubquery().getQueryString());
                 } else {
                     subqueryExpression.accept(this);
@@ -254,7 +254,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
     @Override
     protected boolean isSimpleSubquery(SubqueryExpression expression) {
-        if (expression.getSubquery() instanceof SubqueryInternalBuilder) {
+        if (!externalRepresentation && expression.getSubquery() instanceof SubqueryInternalBuilder) {
             final AbstractCommonQueryBuilder<?, ?, ?, ?, ?> subquery = (AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) expression.getSubquery();
             final boolean hasFirstResult = subquery.getFirstResult() != 0;
             final boolean hasMaxResults = subquery.getMaxResults() != Integer.MAX_VALUE;

@@ -86,7 +86,7 @@ public abstract class AbstractDeleteCollectionCriteriaBuilder<T, X extends BaseD
     }
 
     @Override
-    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, boolean embeddedToMainQuery, JoinNode lateralJoinNode) {
+    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, JoinNode lateralJoinNode) {
         if (externalRepresentation) {
             sbSelectFrom.append("DELETE FROM ");
             sbSelectFrom.append(entityType.getName());
