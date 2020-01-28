@@ -21,7 +21,7 @@
     <parent>
         <groupId>com.blazebit</groupId>
         <artifactId>blaze-persistence-parent</artifactId>
-        <version>1.4.2-SNAPSHOT</version>
+        <version>1.5.0-SNAPSHOT</version>
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
@@ -32,9 +32,9 @@
     <properties>
         <!-- The current stable version -->
         <stable.version>1.4.1</stable.version>
-        <series.version>1.4</series.version>
+        <series.version>1.5</series.version>
         <!-- The current snapshot version -->
-        <snapshot.version>1.4.2-SNAPSHOT</snapshot.version>
+        <snapshot.version>1.5.0-SNAPSHOT</snapshot.version>
 
         <!-- This is used for the htaccess file for filename based caching -->
         <maven.build.timestamp.format>yyyyMMddHHmmssSSSS</maven.build.timestamp.format>

@@ -21,7 +21,7 @@
     <parent>
         <groupId>com.blazebit</groupId>
         <artifactId>blaze-persistence</artifactId>
-        <version>1.4.2-SNAPSHOT</version>
+        <version>1.5.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -33,7 +33,7 @@
     <description>Blaze-Persistence Parent</description>
 
     <properties>
-        <blaze-persistence.codename>Coulson</blaze-persistence.codename>
+        <blaze-persistence.codename>Zemo</blaze-persistence.codename>
 
         <version.jaxb>2.2.11</version.jaxb>
         <version.jta>1.2</version.jta>
