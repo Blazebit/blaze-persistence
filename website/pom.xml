@@ -31,10 +31,10 @@
 
     <properties>
         <!-- The current stable version -->
-        <stable.version>1.4.0</stable.version>
+        <stable.version>1.4.1</stable.version>
         <series.version>1.4.x</series.version>
         <!-- The current snapshot version -->
-        <snapshot.version>1.4.1-SNAPSHOT</snapshot.version>
+        <snapshot.version>1.4.2-SNAPSHOT</snapshot.version>
 
         <!-- This is used for the htaccess file for filename based caching -->
         <maven.build.timestamp.format>yyyyMMddHHmmssSSSS</maven.build.timestamp.format>

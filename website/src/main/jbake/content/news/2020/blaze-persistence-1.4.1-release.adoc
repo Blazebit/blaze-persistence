@@ -1,0 +1,19 @@
+= Blaze-Persistence 1.4.1 Release
+Christian Beikov
+2020-01-28 0
+:description: Blaze-Persistence version 1.4.1 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+Here comes the first fix release for 1.4 containing quite a few new features but also a pretty important packaging fix.
+Due to build system updates, the `META-INF/versions/9` directory in the entity view implementation JAR got lost.
+The directory in the JAR is vital for running on Java 11+ as it contains an alternative implementation for defining classes that was introduced in Java 9.
+The highlight of the release is the support for subqueries in the `FROM` clause and the+++<!-- PREVIEW-SUFFIX --><!-- </p></div> --><!-- PREVIEW-END -->+++ inlining of count and id queries in the paginated queries to reduce the amount of queries even further.
+
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#141[changelog, window="_blank"] for a full list of changes and improvements.
+
+We are switching the master branch to 1.5.0-SNAPSHOT now and will focus on Hibernate 6 support. We are looking forward to hear your feedback!

@@ -4,7 +4,7 @@ Changes that happened in releases
 
 ## 1.4.1
 
-Not yet released
+28/01/2020 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.4.1) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue+milestone%3A1.4.1+is%3Aclosed+closed%3A%3C2020-01-29+sort%3Aupdated-desc)
 
 ### New features
 
@@ -28,14 +28,6 @@ Not yet released
 * Fix problems with the Spring Data WebMvc integration regarding some auto configuration issues
 * Fix rendering of `VALUES` clause with `ValuesStrategy.SELECT_UNION` necessary for MySQL 8.0.19+
 * Support field access for entities as well for `VALUES` clause usage
-* Fix `FULL` flushing of collections when elements are removed
-* Fix `convertWith` support when using `convertAttribute` on collection view type attributes
-* Support invoking setters of mutable attributes in updatable entity view constructor
-* Implicit alias generation generates alias that is shadowed in child subquery which prevents copying
-* Remove PathExpression resolving for expression cloning to avoid referring to later removed joins in copied queries
-* Fix support for type converters for updatable entity views
-* Fix for implicit parameter collision from query that is used for a subquery in another main query
-* Applying entity-fetch computed collection actions fails because JPA collection elements assumed to be view elements
 
 ### Backwards-incompatible changes
 

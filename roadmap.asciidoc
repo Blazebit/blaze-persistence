@@ -43,12 +43,10 @@ As a side note, we are naming releases after http://marvel.com/comics/characters
 ** Support for mapping List index and Map key through separate expression in Entity Views
 ** Support fetching Entity View attributes through JSON/XML functions
 ** Entity View builder API
-
-= 1.4 Coulson
-
-_Scheduled for end of February 2020_
-
 ** Returning clause emulation
+
+= 1.4 Coulson *[RELEASED]*
+
 ** Option for CTE inlining
 ** `LATERAL` join support
 ** Window function support

@@ -57,7 +57,7 @@ Blaze-Persistence is split up into different modules. We recommend that you defi
 
 ```xml
 <properties>
-    <blaze-persistence.version>1.4.0</blaze-persistence.version>
+    <blaze-persistence.version>1.4.1</blaze-persistence.version>
 </properties>
 ```
 
@@ -84,37 +84,37 @@ If you want a sample application with everything setup where you can poke around
 Core-only archetype:
 
 ```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-core-sample" "-DarchetypeVersion=1.4.0"
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-core-sample" "-DarchetypeVersion=1.4.1"
 ```
 
 Entity view archetype:
 
 ```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-entity-view-sample" "-DarchetypeVersion=1.4.0"
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-entity-view-sample" "-DarchetypeVersion=1.4.1"
 ```
 
 Spring-Data archetype:
 
 ```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-spring-data-sample" "-DarchetypeVersion=1.4.0"
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-spring-data-sample" "-DarchetypeVersion=1.4.1"
 ```
 
 Spring-Boot archetype:
 
 ```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-spring-boot-sample" "-DarchetypeVersion=1.4.0"
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-spring-boot-sample" "-DarchetypeVersion=1.4.1"
 ```
 
 DeltaSpike Data archetype:
 
 ```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-deltaspike-data-sample" "-DarchetypeVersion=1.4.0"
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-deltaspike-data-sample" "-DarchetypeVersion=1.4.1"
 ```
 
 Java EE archetype:
 
 ```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-java-ee-sample" "-DarchetypeVersion=1.4.0"
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-java-ee-sample" "-DarchetypeVersion=1.4.1"
 ```
 
 ## Supported Java runtimes
@@ -177,17 +177,18 @@ Generally, we support the usage in Java EE 6+ or Spring 4+ applications.
 
 See the following table for an overview of supported versions.
 
-Module                         | Minimum version                   | Supported versions
--------------------------------|-----------------------------------|--------------------
-Hibernate integration          | Hibernate 4.2                     | 4.2, 4.3, 5.0, 5.1, 5.2, 5.3 (not all features are available in older versions)
-EclipseLink integration        | EclipseLink 2.6                   | 2.6 (Probably 2.4 and 2.5 work as well, but only tested against 2.6)
-DataNucleus integration        | DataNucleus 4.1                   | 4.1, 5.0
-OpenJPA integration            | N/A                               | (Currently not usable. OpenJPA doesn't seem to be actively developed anymore and no users asked for support yet)
-Entity View CDI integration    | CDI 1.0                           | 1.0, 1.1, 1.2
-Entity View Spring integration | Spring 4.3                        | 4.3, 5.0
-DeltaSpike Data integration    | DeltaSpike 1.7                    | 1.7, 1.8
-Spring Data integration        | Spring Data 1.11                  | 1.11, 2.0
-Spring Data Rest integration   | Spring Data 1.11, Spring MVC 4.3  | Spring Data 1.11 + Spring MVC 4.3, Spring Data 2.0 + Spring MVC 5.0
+Module                         | Minimum version                      | Supported versions
+-------------------------------|--------------------------------------|--------------------
+Hibernate integration          | Hibernate 4.2                        | 4.2, 4.3, 5.0, 5.1, 5.2, 5.3, 5.4 (not all features are available in older versions)
+EclipseLink integration        | EclipseLink 2.6                      | 2.6 (Probably 2.4 and 2.5 work as well, but only tested against 2.6)
+DataNucleus integration        | DataNucleus 4.1                      | 4.1, 5.0
+OpenJPA integration            | N/A                                  | (Currently not usable. OpenJPA doesn't seem to be actively developed anymore and no users asked for support yet)
+Entity View CDI integration    | CDI 1.0                              | 1.0, 1.1, 1.2
+Entity View Spring integration | Spring 4.3                           | 4.3, 5.0, 5.1, 5.2
+DeltaSpike Data integration    | DeltaSpike 1.7                       | 1.7, 1.8, 1.9
+Spring Data integration        | Spring Data 1.11                     | 1.11, 2.0, 2.1, 2.2
+Spring Data WebMvc integration | Spring Data 1.11, Spring WebMvc 4.3  | Spring Data 1.11 - 2.2, Spring WebMvc 4.3 - 5.2
+Spring Data WebFlux integration| Spring Data 2.0, Spring WebFlux 5.0  | Spring Data 2.0 - 2.2, Spring WebFlux 5.0 - 5.2
 
 ## Manual setup
 

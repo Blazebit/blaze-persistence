@@ -17,8 +17,8 @@ A release involves various steps which are outlined here and should be kept up-t
 . Open `website/src/main/jbake/jbake.properties` and update `stable.version` to the latest released version
 . Open `website/pom.xml` and update the property `stable.version` to the latest released version, `snapshot.version` to the latest snapshot version and `series.version` to the current version series
 . Open `documentation/pom.xml` and update the property `stable.version` to the latest released version and `series.version` to the current version series
-. Prepare a local Maven release via `mvn "-Pblazebit-release" release:clean release:prepare` and skip the tests with `"-Darguments=-DskipTests"` if you know they work
-. Actually deploy the release with `mvn "-Pblazebit-release" release:perform "-Darguments=-DskipTests"`
+. Prepare a local Maven release via `mvn "-Pblazebit-release" release:clean release:prepare "-Darguments=-DskipTests '-Djdk8.home=C:\Program Files\Java\jdk1.8.0_181'"`
+. Actually deploy the release with `mvn "-Pblazebit-release" release:perform "-Darguments=-DskipTests '-Djdk8.home=C:\Program Files\Java\jdk1.8.0_181'"`
 . Goto https://oss.sonatype.org and login. In *Build Promotion* click on *Staging Repositories* then scroll down and find a repository named *comblazebit-...*
 . Click on the repository, then click *Close* and *Confirm*. Wait a few seconds, click *Refresh* and finally click *Release* and *Confirm*
 . Commit the changes and push the branch `git push origin`, as well as the created tag `git push origin TAG`
