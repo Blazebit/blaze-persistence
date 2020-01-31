@@ -87,6 +87,22 @@ public class CTETest extends AbstractCoreTest {
 
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
+    public void testBindingNull() {
+        CriteriaBuilder<TestAdvancedCTE1> cb = cbf.create(em, TestAdvancedCTE1.class, "t").where("t.level").ltExpression("2");
+        cb.with(TestAdvancedCTE1.class, false)
+                .from(RecursiveEntity.class, "e")
+                .bind("id").select("e.id")
+                .bind("embeddable").select("NULL")
+                .bind("level").select("0")
+                .bind("parent").select("e.parent")
+                .where("e.parent").isNull()
+                .end();
+
+        List<TestAdvancedCTE1> resultList = cb.getResultList();
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
     public void testNotFullyBoundCTE() {
         CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class, "t");
         FullSelectCTECriteriaBuilder<CriteriaBuilder<TestCTE>> fullSelectCTECriteriaBuilder = cb.with(TestCTE.class, false)
@@ -670,7 +686,7 @@ public class CTETest extends AbstractCoreTest {
         .end()
         .orderByAsc("id");
         String expected = ""
-                + "WITH " + TestAdvancedCTE1.class.getSimpleName() + "(id, embeddable.name, embeddable.description, embeddable.recursiveEntity, level, parent) AS(\n"
+                + "WITH " + TestAdvancedCTE1.class.getSimpleName() + "(id, embeddable.name, embeddable.description, embeddable.recursiveEntity.id, level, parent.id) AS(\n"
                 + "SELECT e.id, e.name, 'desc', NULL, 0, NULL FROM RecursiveEntity e\n"
                 + ")\n"
                 + "SELECT testAdvancedCTE1 FROM TestAdvancedCTE1 testAdvancedCTE1 ORDER BY testAdvancedCTE1.id ASC";
@@ -706,7 +722,7 @@ public class CTETest extends AbstractCoreTest {
         .end();
 
         String expected = ""
-                + "WITH " + TestAdvancedCTE1.class.getSimpleName() + "(id, embeddable.name, embeddable.description, embeddable.recursiveEntity, level, parent) AS(\n"
+                + "WITH " + TestAdvancedCTE1.class.getSimpleName() + "(id, embeddable.name, embeddable.description, embeddable.recursiveEntity.id, level, parent.id) AS(\n"
                 + "SELECT e.id, e.name, 'desc', NULL, 0, NULL FROM RecursiveEntity e\n"
                 + ")\n"
                 + "SELECT testAdvancedCTE1 FROM TestAdvancedCTE1 testAdvancedCTE1";
@@ -732,7 +748,7 @@ public class CTETest extends AbstractCoreTest {
         .end();
 
         String expected = ""
-                + "WITH " + TestAdvancedCTE1.class.getSimpleName() + "(id, embeddable.name, embeddable.description, embeddable.recursiveEntity, level, parent) AS(\n"
+                + "WITH " + TestAdvancedCTE1.class.getSimpleName() + "(id, embeddable.name, embeddable.description, embeddable.recursiveEntity.id, level, parent.id) AS(\n"
                 + "SELECT e.id, e.name, '', NULL, 0, NULL FROM RecursiveEntity e\n"
                 + ")\n"
                 + "SELECT testAdvancedCTE1 FROM TestAdvancedCTE1 testAdvancedCTE1";
