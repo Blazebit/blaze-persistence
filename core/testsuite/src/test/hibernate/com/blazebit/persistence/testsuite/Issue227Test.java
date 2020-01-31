@@ -117,6 +117,38 @@ public class Issue227Test extends AbstractCoreTest {
         Assert.assertEquals(1, firstParent.getManyToManyChildren().size());
     }
 
+    @Test
+    // NOTE: MySQL has no CTE support
+    // TODO: Oracle requires a cycle clause #295
+    @Category({ NoMySQL.class, NoOracle.class })
+    public void testFetchModeSubselectOnPaginatedCteQueryResult() throws Exception {
+        CriteriaBuilder<RecursiveEntityCte> cb = cbf.create(em, RecursiveEntityCte.class)
+            .withRecursive(RecursiveEntityCte.class)
+                .from(RecursiveEntity.class, "recEntity")
+                .bind("id").select("recEntity.id")
+                .bind("name").select("recEntity.name")
+                .bind("parent").select("recEntity.parent")
+                .where("recEntity.name").notEq("root1")
+                .where("recEntity.parent").isNotNull()
+            .unionAll()
+                .from(RecursiveEntity.class, "recEntity")
+                .from(RecursiveEntityCte.class, "parentRecEntity")
+                .bind("id").select("recEntity.id")
+                .bind("name").select("recEntity.name")
+                .bind("parent").select("recEntity.parent")
+                .where("recEntity.id").eqExpression("parentRecEntity.parent.id")
+            .end()
+            .fetch("parent")
+            .where("id").le(1000L)
+            .orderByAsc("name")
+            .orderByAsc("id");
+
+        List<RecursiveEntityCte> result = cb.page(0, 10).getResultList();
+        RecursiveEntity firstParent = result.get(0).getParent();
+        Assert.assertEquals(2, firstParent.getChildren().size());
+        Assert.assertEquals(1, firstParent.getManyToManyChildren().size());
+    }
+
     /**
      * Altered version of {@link RecursiveEntity} that has
      * a {@link FetchMode#SUBSELECT} on the {@link RecursiveEntity#children} relationship.
