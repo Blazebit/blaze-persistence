@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.impl.function.nullfn.NullfnFunction;
 import com.blazebit.persistence.impl.function.param.ParamFunction;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.PathTargetResolvingExpressionVisitor;
@@ -248,11 +249,26 @@ public final class JpaUtils {
                     throw new IllegalArgumentException("Illegal expression '" + selectExpression.toString() + "' for binding relation '" + attributeName + "'!");
                 }
             } else if (requiresNullCast && selectExpression instanceof NullExpression) {
-                // We must add a cast for null expressions, otherwise DBMS might assume some text type
-                List<Expression> arguments = new ArrayList<>(2);
-                arguments.add(selectExpression);
-                arguments.add(new StringLiteral(columnType));
-                selectInfo.set(new FunctionExpression("CAST_" + elementType.getSimpleName(), arguments, selectExpression));
+                if (BasicCastTypes.TYPES.contains(elementType) && queryBuilder.statementType != DbmsStatementType.INSERT) {
+                    // We also need a cast for parameter expressions except in the SET clause
+                    List<Expression> arguments = new ArrayList<>(2);
+                    arguments.add(selectExpression);
+                    arguments.add(new StringLiteral(columnType));
+                    selectInfo.set(new FunctionExpression("CAST_" + elementType.getSimpleName(), arguments, selectExpression));
+                } else {
+                    final EntityMetamodelImpl.AttributeExample attributeExample = metamodel.getBasicTypeExampleAttributes().get(elementType);
+                    List<Expression> arguments = new ArrayList<>(2);
+                    arguments.add(new SubqueryExpression(new Subquery() {
+                        @Override
+                        public String getQueryString() {
+                            return attributeExample.getExampleJpql() + selectExpression;
+                        }
+                    }));
+                    if (queryBuilder.statementType != DbmsStatementType.INSERT && needsCastParameters) {
+                        arguments.add(new StringLiteral(attributeExample.getAttribute().getColumnTypes()[0]));
+                    }
+                    selectInfo.set(new FunctionExpression(NullfnFunction.FUNCTION_NAME, arguments, selectExpression));
+                }
             } else if (selectExpression instanceof ParameterExpression && clause != ClauseType.SET) {
                 if (BasicCastTypes.TYPES.contains(elementType) && queryBuilder.statementType != DbmsStatementType.INSERT) {
                     // We also need a cast for parameter expressions except in the SET clause

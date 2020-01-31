@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl.function.nullfn;
 
+import com.blazebit.persistence.impl.util.JpqlFunctionUtil;
 import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.JpqlFunction;
 
@@ -48,7 +49,15 @@ public class NullfnFunction implements JpqlFunction {
 
     @Override
     public void render(FunctionRenderContext functionRenderContext) {
+        if (functionRenderContext.getArgumentsSize() > 1) {
+            functionRenderContext.addChunk("cast(");
+        }
         functionRenderContext.addChunk("null");
+        if (functionRenderContext.getArgumentsSize() > 1) {
+            functionRenderContext.addChunk(" as ");
+            functionRenderContext.addChunk(JpqlFunctionUtil.unquote(functionRenderContext.getArgument(1)));
+            functionRenderContext.addChunk(")");
+        }
     }
 
 }
