@@ -139,7 +139,39 @@ public final class JpaUtils {
 
                 // TODO: Maybe also allow Treat, Case-When, Array?
                 if (selectExpression instanceof NullExpression) {
-                    // When binding null, we don't have to adapt anything
+                    final Collection<String> embeddedPropertyNames = getEmbeddedPropertyPaths(attributeEntries, attributeName, needsElementCollectionIdCutoff, false);
+
+                    if (embeddedPropertyNames.size() > 0) {
+                        selectManager.getSelectInfos().remove(tupleIndex.intValue());
+                        bindingMap.remove(attributeName);
+                        // We are going to insert the expanded attributes as new select items and shift existing ones
+                        int delta = embeddedPropertyNames.size() - 1;
+                        if (delta > 0) {
+                            for (Map.Entry<String, Integer> entry : bindingMap.entrySet()) {
+                                if (entry.getValue() > tupleIndex) {
+                                    entry.setValue(entry.getValue() + delta);
+                                }
+                            }
+                        }
+
+                        int offset = 0;
+                        for (String embeddedPropertyName : embeddedPropertyNames) {
+                            String nestedAttributePath = attributeName + "." + embeddedPropertyName;
+                            ExtendedAttribute<?, ?> nestedAttributeEntry = attributeEntries.get(nestedAttributePath);
+
+                            // Process the nested attribute path recursively
+                            attributeQueue.add(nestedAttributePath);
+
+                            // Replace this binding in the binding map, additional selects need an updated index
+                            bindingMap.put(nestedAttributePath, tupleIndex + offset);
+                            selectManager.select(offset == 0 ? selectExpression : selectExpression.copy(ExpressionCopyContext.EMPTY), null, tupleIndex + offset);
+
+                            for (String column : nestedAttributeEntry.getColumnNames()) {
+                                columnBindingMap.put(column, nestedAttributePath);
+                            }
+                            offset++;
+                        }
+                    }
                 } else if (selectExpression instanceof PathExpression) {
                     boolean firstBinding = true;
                     final Collection<String> embeddedPropertyNames = getEmbeddedPropertyPaths(attributeEntries, attributeName, needsElementCollectionIdCutoff, false);
