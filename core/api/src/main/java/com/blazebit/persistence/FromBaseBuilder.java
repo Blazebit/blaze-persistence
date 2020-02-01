@@ -248,33 +248,33 @@ public interface FromBaseBuilder<X extends FromBaseBuilder<X>> {
      * Like {@link FromBaseBuilder#fromEntitySubquery(Class, String)} with the
      * alias equivalent to the camel cased result of what {@link Class#getSimpleName()} of the entity class returns.
      *
-     * @param cteClass The entity type for the subquery in the FROM clause
+     * @param entityClass The entity type for the subquery in the FROM clause
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<X> fromEntitySubquery(Class<?> cteClass);
+    public FullSelectCTECriteriaBuilder<X> fromEntitySubquery(Class<?> entityClass);
 
     /**
      * Like calling {@link FromBaseBuilder#from(Class, String)} followed by {@link CTEBuilder#with(Class, boolean)} with <code>inline = true</code>.
      * Registers the given entity type as FROM clause node under the given alias and returns a CTE builder that will be inlined with all attributes bound.
      *
-     * @param cteClass The entity type for the subquery in the FROM clause
+     * @param entityClass The entity type for the subquery in the FROM clause
      * @param alias The alias for the FROM clause item
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<X> fromEntitySubquery(Class<?> cteClass, String alias);
+    public FullSelectCTECriteriaBuilder<X> fromEntitySubquery(Class<?> entityClass, String alias);
 
     /**
      * Like calling {@link FromBaseBuilder#from(Class, String)} followed by {@link CTEBuilder#with(Class, boolean)} with <code>inline = true</code>.
      * Registers the given entity type as FROM clause node under the given alias and returns a CTE builder that will be inlined with all attributes bound.
      *
-     * @param cteClass The entity type for the subquery in the FROM clause
+     * @param entityClass The entity type for the subquery in the FROM clause
      * @param alias The alias for the FROM clause item
      * @param subqueryAlias The alias for the FROM clause item in the subquery
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<X> fromEntitySubquery(Class<?> cteClass, String alias, String subqueryAlias);
+    public FullSelectCTECriteriaBuilder<X> fromEntitySubquery(Class<?> entityClass, String alias, String subqueryAlias);
 
 }
