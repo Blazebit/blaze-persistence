@@ -37,11 +37,13 @@ public class SubselectPreparedStatementProxyHandler implements InvocationHandler
     private final PreparedStatement delegate;
     private final QueryParameters queryParameters;
     private final int cteParameterCount;
+    private final int selectParameterCount;
 
-    public SubselectPreparedStatementProxyHandler(PreparedStatement delegate, QueryParameters queryParameters, int cteParameterCount) {
+    public SubselectPreparedStatementProxyHandler(PreparedStatement delegate, QueryParameters queryParameters, int cteParameterCount, int selectParameterCount) {
         this.delegate = delegate;
         this.queryParameters = queryParameters;
         this.cteParameterCount = cteParameterCount;
+        this.selectParameterCount = selectParameterCount;
     }
 
     @Override
@@ -53,11 +55,17 @@ public class SubselectPreparedStatementProxyHandler implements InvocationHandler
             int cteNamedParameterStartIndex = ctePositionedParameterStartIndex + positionalParameterCount;
             int regularNamedParameterStartIndex = cteNamedParameterStartIndex + cteParameterCount;
 
-
             boolean isPositionedParamRegular = index < cteNamedParameterStartIndex;
             boolean isNamedParamCte = index < regularNamedParameterStartIndex;
             index += isPositionedParamRegular ? cteParameterCount : isNamedParamCte ? -positionalParameterCount : 0;
 
+            if (index > cteParameterCount) {
+                // We skip the select parameters
+                index -= selectParameterCount;
+                if (index <= cteParameterCount) {
+                    return null;
+                }
+            }
             args[0] = index;
         }
         return method.invoke(delegate, args);
