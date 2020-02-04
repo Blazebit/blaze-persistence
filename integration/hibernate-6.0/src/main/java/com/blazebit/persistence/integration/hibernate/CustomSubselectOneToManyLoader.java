@@ -56,7 +56,7 @@ public class CustomSubselectOneToManyLoader extends SubselectOneToManyLoader {
     @Override
     protected int bindParameterValues(PreparedStatement statement, QueryParameters queryParameters, int startIndex, SharedSessionContractImplementor session) throws SQLException {
         if (cteParameterCount > 0) {
-            statement = getPreparedStatementProxy(statement, queryParameters, cteParameterCount);
+            statement = getPreparedStatementProxy(statement, queryParameters, cteParameterCount, 0);
         }
         return super.bindParameterValues(statement, queryParameters, startIndex, session);
     }

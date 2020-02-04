@@ -39,6 +39,7 @@ import static com.blazebit.persistence.integration.hibernate.base.SubselectLoade
 public class CustomSubselectCollectionLoader extends SubselectCollectionLoader {
 
     private final int cteParameterCount;
+    private final int selectParameterCount;
 
     public CustomSubselectCollectionLoader(QueryableCollection persister, String subquery, Collection entityKeys, QueryParameters queryParameters, Map<String, int[]> namedParameterLocMap, SessionFactoryImplementor factory, LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
         super(persister, subquery, entityKeys, queryParameters, namedParameterLocMap, factory, loadQueryInfluencers);
@@ -46,17 +47,19 @@ public class CustomSubselectCollectionLoader extends SubselectCollectionLoader {
         if (originalSql.startsWith("with ")) {
             StringBuilder sb = new StringBuilder(sql.length() + originalSql.length());
             cteParameterCount = SubselectLoaderUtils.applyCteAndCountParameters(originalSql, sb);
+            selectParameterCount = SubselectLoaderUtils.countSelectParameters(originalSql, sb.length());
             sb.append(sql);
             this.sql = sb.toString();
         } else {
             cteParameterCount = 0;
+            selectParameterCount = 0;
         }
     }
 
     @Override
     protected int bindParameterValues(PreparedStatement statement, QueryParameters queryParameters, int startIndex, SessionImplementor session) throws SQLException {
         if (cteParameterCount > 0) {
-            statement = getPreparedStatementProxy(statement, queryParameters, cteParameterCount);
+            statement = getPreparedStatementProxy(statement, queryParameters, cteParameterCount, selectParameterCount);
         }
         return super.bindParameterValues(statement, queryParameters, startIndex, session);
     }
