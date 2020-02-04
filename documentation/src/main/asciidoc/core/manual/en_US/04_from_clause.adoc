@@ -639,7 +639,7 @@ Databases are pretty good at eliminating unnecessary/unused projections in such 
 [source,java]
 ----
 CriteriaBuilder<Long> cb = cbf.create(em, Long.class)
-    .fromSubquery(Cat.class, "r")
+    .fromEntitySubquery(Cat.class, "r")
         .orderByDesc("age")
         .orderByDesc("id")
         .setMaxResults(5)
@@ -647,7 +647,7 @@ CriteriaBuilder<Long> cb = cbf.create(em, Long.class)
     .select("r.id");
 ----
 
-will result in something like the following
+will result in something like the following:
 
 [source,sql]
 ----
@@ -684,6 +684,8 @@ CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
         .orderByDesc("id")
         .setMaxResults(5)
     .end()
+        .on("1").eqExpression("1")
+    .end()
     .select("c.name")
     .select("COUNT(topKitten.id)");
 ----
@@ -691,7 +693,7 @@ CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
 The example query shows a special feature of lateral joins, which is the possibility to correlate a collection for a lateral join.
 This could also have been written by correlating an entity type and defining the correlation for the collection in the `WHERE` clause manually.
 
-The resulting JPQL might look like the following
+The resulting JPQL might look like the following:
 
 [source,sql]
 ----
@@ -702,7 +704,7 @@ LEFT JOIN LATERAL Cat(
     FROM Cat kitten
     ORDER BY kitten.age DESC, kitten.id DESC
     LIMIT 5
-) topKitten(age, father.id, id, mother.id, name)
+) topKitten(age, father.id, id, mother.id, name) ON 1=1
 GROUP BY c.name
 ----
 
