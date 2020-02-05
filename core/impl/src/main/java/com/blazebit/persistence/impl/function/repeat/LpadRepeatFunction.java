@@ -24,7 +24,7 @@ package com.blazebit.persistence.impl.function.repeat;
 public class LpadRepeatFunction extends AbstractRepeatFunction {
 
     public LpadRepeatFunction() {
-        super("lpda('',?1,?2)");
+        super("lpad('',?1,?2)");
     }
 
 }

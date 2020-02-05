@@ -291,6 +291,14 @@ public interface DbmsDialect {
     public LateralStyle getLateralStyle();
 
     /**
+     * Returns true if the multiset implementation for the dbms supports exists and supports arbitrary length.
+     *
+     * @return whether the multiset implementation for the dbms supports exists and supports arbitrary length
+     * @since 1.5.0
+     */
+    public boolean supportsArbitraryLengthMultiset();
+
+    /**
      * Returns the sql type for the java class type for usage in cast expressions.
      *
      * @param castType The java class type

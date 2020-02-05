@@ -21,7 +21,9 @@ import java.util.Map;
 import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.view.SubqueryProviderFactory;
+import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
+import com.blazebit.persistence.view.spi.type.BasicUserTypeStringSupport;
 
 /**
  *
@@ -30,13 +32,15 @@ import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
  */
 public class ParameterizedExpressionSubqueryTupleElementMapper implements SubqueryTupleElementMapper {
 
+    protected final BasicUserTypeStringSupport<Object> basicTypeStringSupport;
     protected final SubqueryProviderFactory providerFactory;
     protected final String subqueryExpression;
     protected final String subqueryAlias;
     protected final String attributePath;
     protected final String embeddingViewPath;
 
-    public ParameterizedExpressionSubqueryTupleElementMapper(SubqueryProviderFactory providerFactory, String subqueryExpression, String subqueryAlias, String attributePath, String embeddingViewPath) {
+    public ParameterizedExpressionSubqueryTupleElementMapper(Type<?> type, SubqueryProviderFactory providerFactory, String subqueryExpression, String subqueryAlias, String attributePath, String embeddingViewPath) {
+        this.basicTypeStringSupport = TypeUtils.forType(type);
         this.providerFactory = providerFactory;
         this.subqueryExpression = subqueryExpression;
         this.subqueryAlias = subqueryAlias;
@@ -45,10 +49,14 @@ public class ParameterizedExpressionSubqueryTupleElementMapper implements Subque
     }
 
     @Override
-    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
+    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean asString) {
         String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
         embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
-        providerFactory.create(parameterHolder, optionalParameters).createSubquery(queryBuilder.selectSubquery(subqueryAlias, subqueryExpression));
+        if (asString && basicTypeStringSupport != null) {
+            providerFactory.create(parameterHolder, optionalParameters).createSubquery(queryBuilder.selectSubquery(subqueryAlias, basicTypeStringSupport.toStringExpression(subqueryExpression)));
+        } else {
+            providerFactory.create(parameterHolder, optionalParameters).createSubquery(queryBuilder.selectSubquery(subqueryAlias, subqueryExpression));
+        }
         embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
     }
 
@@ -70,5 +78,10 @@ public class ParameterizedExpressionSubqueryTupleElementMapper implements Subque
     @Override
     public String getSubqueryExpression() {
         return subqueryExpression;
+    }
+
+    @Override
+    public BasicUserTypeStringSupport<Object> getBasicTypeStringSupport() {
+        return basicTypeStringSupport;
     }
 }

@@ -166,6 +166,11 @@ public class DefaultDbmsDialect implements DbmsDialect {
     }
 
     @Override
+    public boolean supportsArbitraryLengthMultiset() {
+        return false;
+    }
+
+    @Override
     public String getSqlType(Class<?> castType) {
         return sqlTypes.get(castType);
     }

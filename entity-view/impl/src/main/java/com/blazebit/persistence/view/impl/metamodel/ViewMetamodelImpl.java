@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl.metamodel;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.view.ConfigurationProperties;
+import com.blazebit.persistence.view.impl.type.BasicUserTypeRegistry;
 import com.blazebit.persistence.view.metamodel.FlatViewType;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
@@ -27,6 +28,7 @@ import com.blazebit.persistence.view.metamodel.ParameterAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.metamodel.ViewType;
+import com.blazebit.persistence.view.spi.type.BasicUserType;
 import com.blazebit.reflection.ReflectionUtils;
 
 import javax.persistence.metamodel.IdentifiableType;
@@ -56,12 +58,14 @@ import java.util.Set;
 public class ViewMetamodelImpl implements ViewMetamodel {
 
     private final EntityMetamodel metamodel;
+    private final BasicUserTypeRegistry basicUserTypeRegistry;
     private final Map<Class<?>, ViewTypeImpl<?>> views;
     private final Map<Class<?>, FlatViewTypeImpl<?>> flatViews;
     private final Map<Class<?>, ManagedViewTypeImplementor<?>> managedViews;
 
     public ViewMetamodelImpl(EntityMetamodel entityMetamodel, MetamodelBuildingContext context, Map<Class<?>, Object> typeTestValues, boolean validateManagedTypes, boolean validateExpressions) {
         this.metamodel = entityMetamodel;
+        this.basicUserTypeRegistry = context.getBasicUserTypeRegistry();
 
         Collection<ViewMapping> viewMappings = context.getViewMappings();
         Map<Class<?>, ViewTypeImpl<?>> views = new HashMap<>(viewMappings.size());
@@ -252,6 +256,10 @@ public class ViewMetamodelImpl implements ViewMetamodel {
 
     public EntityMetamodel getEntityMetamodel() {
         return metamodel;
+    }
+
+    public <X> BasicUserType<X> getBasicUserType(Class<X> clazz) {
+        return basicUserTypeRegistry.getBasicUserType(clazz);
     }
 
     @Override

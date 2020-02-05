@@ -34,4 +34,10 @@ public class TimestampBasicUserType extends DateBasicUserType {
     public Date nextValue(Date current) {
         return new Timestamp(System.currentTimeMillis());
     }
+
+    @Override
+    public Date fromString(CharSequence sequence) {
+        return java.sql.Timestamp.valueOf(sequence.toString());
+    }
+
 }

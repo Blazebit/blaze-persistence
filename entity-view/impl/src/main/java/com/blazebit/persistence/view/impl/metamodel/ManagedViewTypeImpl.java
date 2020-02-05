@@ -121,6 +121,8 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
     private final InheritanceSubtypeConfiguration<X> overallInheritanceSubtypeConfiguration;
     private final Map<Map<ManagedViewTypeImplementor<? extends X>, String>, InheritanceSubtypeConfiguration<X>> inheritanceSubtypeConfigurations;
     private final boolean hasJoinFetchedCollections;
+    private final boolean hasSelectOrSubselectFetchedAttributes;
+    private final boolean hasJpaManagedAttributes;
     private final Set<CTEProvider> cteProviders = new LinkedHashSet<>();
 
     @SuppressWarnings("unchecked")
@@ -198,6 +200,8 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
         Set<AbstractMethodAttribute<? super X, ?>> updateMappableAttributes = new LinkedHashSet<>(attributes.size());
         List<AbstractMethodAttribute<? super X, ?>> mutableAttributes = new ArrayList<>(attributes.size());
         boolean hasJoinFetchedCollections = false;
+        boolean hasSelectOrSubselectFetchedAttributes = false;
+        boolean hasJpaManagedAttributes = false;
 
         // Initialize attribute type and the dirty state index of attributes
         int index = viewMapping.getIdAttribute() == null ? 0 : 1;
@@ -268,6 +272,8 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
             }
 
             hasJoinFetchedCollections = hasJoinFetchedCollections || attribute.hasJoinFetchedCollections();
+            hasSelectOrSubselectFetchedAttributes = hasSelectOrSubselectFetchedAttributes || attribute.hasSelectOrSubselectFetchedAttributes();
+            hasJpaManagedAttributes = hasJpaManagedAttributes || attribute.hasJpaManagedAttributes();
             attributes.put(mapping.getName(), attribute);
             index++;
         }
@@ -337,6 +343,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
                 constructorName += constructorIndex.size();
             }
             MappingConstructorImpl<X> mappingConstructor = new MappingConstructorImpl<X>(this, constructorName, constructor, context, embeddableMapping);
+            hasJpaManagedAttributes = hasJpaManagedAttributes || mappingConstructor.hasEntityAttributes();
             constructors.put(entry.getKey(), mappingConstructor);
             constructorIndex.put(constructorName, mappingConstructor);
         }
@@ -345,6 +352,8 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
         this.constructorIndex = Collections.unmodifiableMap(constructorIndex);
         this.inheritanceMapping = viewMapping.determineInheritanceMapping(context);
         this.hasJoinFetchedCollections = hasJoinFetchedCollections;
+        this.hasSelectOrSubselectFetchedAttributes = hasSelectOrSubselectFetchedAttributes;
+        this.hasJpaManagedAttributes = hasJpaManagedAttributes;
 
         if (viewMapping.getInheritanceSupertypes().isEmpty()) {
             if (inheritanceMapping != null) {
@@ -1124,6 +1133,16 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
     @Override
     public boolean hasJoinFetchedCollections() {
         return hasJoinFetchedCollections;
+    }
+
+    @Override
+    public boolean hasSelectOrSubselectFetchedAttributes() {
+        return hasSelectOrSubselectFetchedAttributes;
+    }
+
+    @Override
+    public boolean hasJpaManagedAttributes() {
+        return hasJpaManagedAttributes;
     }
 
     @Override

@@ -191,6 +191,11 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
     }
 
     @Override
+    public BasicUserTypeRegistry getBasicUserTypeRegistry() {
+        return basicUserTypeRegistry;
+    }
+
+    @Override
     public Collection<ViewMapping> getViewMappings() {
         return viewMappings.values();
     }

@@ -16,12 +16,13 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.mapper;
 
-import java.util.Map;
-
 import com.blazebit.persistence.FetchBuilder;
 import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
+import com.blazebit.persistence.view.spi.type.BasicUserTypeStringSupport;
+
+import java.util.Map;
 
 /**
  *
@@ -32,30 +33,37 @@ public class ExpressionTupleElementMapper implements TupleElementMapper {
 
     private static final String[] EMPTY = new String[0];
 
+    protected final BasicUserTypeStringSupport<Object> basicTypeStringSupport;
     protected final String expression;
     protected final String attributePath;
     protected final String embeddingViewPath;
     protected final String[] fetches;
 
-    public ExpressionTupleElementMapper(String expression, String attributePath, String embeddingViewPath) {
-        this.expression = expression.intern();
+    public ExpressionTupleElementMapper(BasicUserTypeStringSupport<Object> basicTypeStringSupport, String expression, String attributePath, String embeddingViewPath) {
+        this.basicTypeStringSupport = basicTypeStringSupport;
+        this.expression = expression;
         this.attributePath = attributePath;
         this.embeddingViewPath = embeddingViewPath;
         this.fetches = EMPTY;
     }
 
-    public ExpressionTupleElementMapper(String expression, String attributePath, String embeddingViewPath, String[] fetches) {
-        this.expression = expression.intern();
+    public ExpressionTupleElementMapper(BasicUserTypeStringSupport<Object> basicTypeStringSupport, String expression, String attributePath, String embeddingViewPath, String[] fetches) {
+        this.basicTypeStringSupport = basicTypeStringSupport;
+        this.expression = expression;
         this.attributePath = attributePath;
         this.embeddingViewPath = embeddingViewPath;
         this.fetches = fetches;
     }
 
     @Override
-    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
+    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean asString) {
         String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
         embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
-        queryBuilder.select(expression);
+        if (asString && basicTypeStringSupport != null) {
+            queryBuilder.select(basicTypeStringSupport.toStringExpression(expression));
+        } else {
+            queryBuilder.select(expression);
+        }
         if (fetches.length != 0) {
             final FetchBuilder<?> fetchBuilder = (FetchBuilder<?>) queryBuilder;
             for (int i = 0; i < fetches.length; i++) {
@@ -68,6 +76,11 @@ public class ExpressionTupleElementMapper implements TupleElementMapper {
     @Override
     public String getAttributePath() {
         return attributePath;
+    }
+
+    @Override
+    public BasicUserTypeStringSupport<Object> getBasicTypeStringSupport() {
+        return basicTypeStringSupport;
     }
 
 }

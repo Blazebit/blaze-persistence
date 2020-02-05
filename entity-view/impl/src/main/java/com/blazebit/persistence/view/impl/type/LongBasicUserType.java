@@ -37,4 +37,14 @@ public class LongBasicUserType extends ImmutableBasicUserType<Long> implements V
         }
         return current + 1L;
     }
+
+    @Override
+    public Long fromString(CharSequence sequence) {
+        return Long.valueOf(sequence.toString());
+    }
+
+    @Override
+    public String toStringExpression(String expression) {
+        return expression;
+    }
 }

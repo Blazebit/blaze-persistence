@@ -54,6 +54,10 @@ public interface ManagedViewTypeImplementor<X> extends ManagedViewType<X> {
 
     boolean hasJoinFetchedCollections();
 
+    boolean hasSelectOrSubselectFetchedAttributes();
+
+    boolean hasJpaManagedAttributes();
+
     boolean hasSubtypes();
 
     boolean supportsInterfaceEquals();

@@ -88,4 +88,14 @@ public class EntityBasicUserType implements BasicUserType<Object> {
     public Object deepClone(Object object) {
         return object;
     }
+
+    @Override
+    public Object fromString(CharSequence sequence) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String toStringExpression(String expression) {
+        throw new UnsupportedOperationException();
+    }
 }

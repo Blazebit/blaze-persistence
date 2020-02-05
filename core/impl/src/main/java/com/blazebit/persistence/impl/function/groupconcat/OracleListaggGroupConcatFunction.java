@@ -34,8 +34,7 @@ public class OracleListaggGroupConcatFunction extends AbstractGroupConcatFunctio
     }
 
     @Override
-    public void render(FunctionRenderContext context) {
-        GroupConcat groupConcat = getGroupConcat(context);
+    public void render(FunctionRenderContext context, GroupConcat groupConcat) {
         StringBuilder sb = new StringBuilder();
 
         if (groupConcat.isDistinct()) {
@@ -47,9 +46,10 @@ public class OracleListaggGroupConcatFunction extends AbstractGroupConcatFunctio
         TypeUtils.STRING_CONVERTER.appendTo(groupConcat.getSeparator(), sb);
 
         List<Order> orderBys = groupConcat.getOrderBys();
-        if (!orderBys.isEmpty()) {
-            sb.append(") within group (order by ");
-            
+        sb.append(") within group (order by ");
+        if (orderBys.size() == 0) {
+            sb.append("1");
+        } else {
             render(sb, orderBys.get(0));
             
             for (int i = 1; i < orderBys.size(); i++) {

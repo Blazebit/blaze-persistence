@@ -44,6 +44,7 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
     private final InheritanceSubtypeConstructorConfiguration<X> overallInheritanceParametersAttributesClosureConfiguration;
     private final Map<Map<ManagedViewTypeImplementor<? extends X>, String>, InheritanceSubtypeConstructorConfiguration<X>> inheritanceSubtypeParameterAttributesClosureConfigurations;
     private final boolean hasJoinFetchedCollections;
+    private final boolean hasEntityAttributes;
 
     @SuppressWarnings("unchecked")
     public MappingConstructorImpl(ManagedViewTypeImplementor<X> viewType, String name, ConstructorMapping mapping, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
@@ -56,10 +57,12 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
         List<AbstractParameterAttribute<? super X, ?>> parameters = new ArrayList<AbstractParameterAttribute<? super X, ?>>(parameterCount);
         List<AbstractParameterAttribute<? super X, ?>> overallParameters = new ArrayList<AbstractParameterAttribute<? super X, ?>>(parameterCount + 10);
         boolean hasJoinFetchedCollections = false;
+        boolean hasEntityAttributes = false;
 
         for (int i = 0; i < parameterCount; i++) {
             AbstractParameterAttribute<? super X, ?> parameter = parameterMappings.get(i).getParameterAttribute(this, context, embeddableMapping);
             hasJoinFetchedCollections = hasJoinFetchedCollections || parameter.hasJoinFetchedCollections();
+            hasEntityAttributes = hasEntityAttributes || parameter.hasJpaManagedAttributes();
             parameters.add(parameter);
             overallParameters.add(parameter);
         }
@@ -97,6 +100,7 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
 
         this.inheritanceSubtypeParameterAttributesClosureConfigurations = Collections.unmodifiableMap(inheritanceSubtypeParameterAttributesClosureConfigurations);
         this.hasJoinFetchedCollections = hasJoinFetchedCollections;
+        this.hasEntityAttributes = hasEntityAttributes;
     }
 
     @SuppressWarnings("unchecked")
@@ -254,5 +258,9 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
 
     public boolean hasJoinFetchedCollections() {
         return hasJoinFetchedCollections;
+    }
+
+    public boolean hasEntityAttributes() {
+        return hasEntityAttributes;
     }
 }

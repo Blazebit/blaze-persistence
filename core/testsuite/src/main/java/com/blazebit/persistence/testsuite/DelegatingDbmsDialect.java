@@ -191,6 +191,11 @@ public class DelegatingDbmsDialect implements DbmsDialect {
     }
 
     @Override
+    public boolean supportsArbitraryLengthMultiset() {
+        return delegate.supportsArbitraryLengthMultiset();
+    }
+
+    @Override
     public boolean supportsFullRowValueComparison() {
         return delegate.supportsFullRowValueComparison();
     }

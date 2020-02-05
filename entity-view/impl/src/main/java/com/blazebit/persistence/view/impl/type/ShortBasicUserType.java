@@ -37,4 +37,14 @@ public class ShortBasicUserType extends ImmutableBasicUserType<Short> implements
         }
         return (short) (current + ((short) 1));
     }
+
+    @Override
+    public Short fromString(CharSequence sequence) {
+        return Short.valueOf(sequence.toString());
+    }
+
+    @Override
+    public String toStringExpression(String expression) {
+        return expression;
+    }
 }

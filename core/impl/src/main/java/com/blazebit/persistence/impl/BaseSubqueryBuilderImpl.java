@@ -21,6 +21,7 @@ import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.spi.JpqlFunctionProcessor;
 import com.blazebit.persistence.spi.SetOperationType;
 
 import javax.persistence.Tuple;
@@ -57,6 +58,11 @@ public abstract class BaseSubqueryBuilderImpl<T, X, Y extends BaseOngoingSetOper
 
     public SubqueryBuilderListenerImpl<T> getSubListener() {
         return subListener;
+    }
+
+    @Override
+    public Map<Integer, JpqlFunctionProcessor<?>> getJpqlFunctionProcessors() {
+        return selectManager.getJpqlFunctionProcessors();
     }
 
     @Override

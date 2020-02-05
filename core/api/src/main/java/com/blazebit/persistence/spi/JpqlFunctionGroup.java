@@ -71,7 +71,7 @@ public final class JpqlFunctionGroup {
     public JpqlFunctionGroup(String name, boolean aggregate, Map<String, JpqlFunction> rdbmsFunctions) {
         this.name = name;
         this.aggregate = aggregate;
-        this.rdbmsFunctions = new HashMap<String, JpqlFunction>(rdbmsFunctions);
+        this.rdbmsFunctions = new HashMap<>(rdbmsFunctions);
     }
 
     /**
@@ -100,6 +100,21 @@ public final class JpqlFunctionGroup {
      */
     public JpqlFunction get(String rdbms) {
         return rdbmsFunctions.get(rdbms);
+    }
+
+    /**
+     * Returns the {@link JpqlFunctionProcessor} for the given RDBMS name for this function.
+     *
+     * @param rdbms The RDBMS name
+     * @return The {@link JpqlFunctionProcessor} or null
+     * @since 1.5.0
+     */
+    public JpqlFunctionProcessor<?> getProcessor(String rdbms) {
+        JpqlFunction jpqlFunction = rdbmsFunctions.get(rdbms);
+        if (jpqlFunction instanceof JpqlFunctionProcessor<?>) {
+            return (JpqlFunctionProcessor<?>) jpqlFunction;
+        }
+        return null;
     }
 
     /**

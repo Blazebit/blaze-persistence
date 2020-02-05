@@ -38,7 +38,7 @@ public class ChainingObjectBuilder<T> implements ObjectBuilder<T> {
     private final ObjectBuilder<T> objectBuilder;
 
     public ChainingObjectBuilder(TupleTransformatorFactory transformatorFactory, ObjectBuilder<T> objectBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration, int startIndex) {
-        this.transformator = transformatorFactory.create(parameterHolder, optionalParameters, entityViewConfiguration);
+        this.transformator = transformatorFactory.create(parameterHolder, optionalParameters, entityViewConfiguration, -1);
         this.objectBuilder = objectBuilder;
     }
 

@@ -244,3 +244,60 @@ WHERE correlated_SameAgedPersons.age = cat.age
 
 The correlation query looks very similar since it's based on the main query, but has a custom select clause.
 It selects the correlation key as well as the attributes for the target representation in the main entity view.
+
+=== Multiset fetch strategy
+
+The `MULTISET` strategy will use the `TO_MULTISET` function which aggregates tuples to a e.g. JSON/XML which is very efficient for big collections and wide rows.
+Note that using this strategy puts some restrictions on the attributes contained in the view types of the `MULTISET` fetched attribute:
+
+* The types of the attributes all must have a `BasicUserTypeStringSupport` implementation which is the case for most basic types
+* Entity types are not allowed because a `BasicUserTypeStringSupport` implementation is not possible for such types
+
+Let's look at an example that shows what happens
+
+[source,java]
+----
+@EntityView(Cat.class)
+public interface CatNameView {
+
+    @IdMapping
+    Long getId();
+
+    String getName();
+}
+
+@EntityView(Cat.class)
+public interface CatView extends CatNameView {
+
+    @Mapping(fetch = FetchStrategy.MULTISET)
+    Set<CatNameView> getKittens();
+
+}
+----
+
+When using this entity view, only one query is generated.
+
+[source,sql]
+----
+SELECT
+    cat.id,
+    cat.name,
+    TO_MULTISET((
+        SELECT kittens_1.id, kittens_1.name
+        FROM cat.kittens kittens_1
+    ))
+FROM Cat cat
+----
+
+Behind the scenes, depending on the DBMS support, this will use JSON/XML functions to aggregate the subquery rows to a CLOB-like value.
+This aggregation comes with a certain cost, so this strategy is not perfect.
+
+This strategy outperforms the `JOIN` strategy only when the rows are very wide(i.e. take a lot of space) or there are nested collections.
+Wide rows are a problem for `JOIN` because these rows have to be duplicated for every collection element which is a problem from the network bandwidth and Java memory consumption perspective.
+
+Using `JOIN` fetching when selecting a list of 10 elements, each having a collection of 10 sub-elements will result in 100 rows being produced in a JDBC result.
+When each of the sub-elements have one or more collection again with overall 20 elements, 2000 rows are being produced in a JDBC result.
+Fetching 2000 rows is not a big deal for most DBMS and is usually pretty fast, but if the rows are very wide e.g. row size > 1kB network bandwidth and memory usage might slowly become a problem.
+With `MULTISET` fetching of the collection of the sub-elements, the JDBC result size will go down to 100 rows again and save a lot of bandwidth and memory because tuples don't have to be duplicated.
+Unfortunately, the aggregation is not as efficient as fetching the collection separately.
+Overall, the `MULTISET` strategy will still mostly outperforms the `SELECT` and `SUBSELECT` fetch strategy due to the reduced latency and fewer query executions.

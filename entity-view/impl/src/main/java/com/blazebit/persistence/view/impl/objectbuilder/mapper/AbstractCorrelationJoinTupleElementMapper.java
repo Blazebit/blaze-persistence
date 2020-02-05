@@ -22,6 +22,7 @@ import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
 import com.blazebit.persistence.view.impl.PrefixingQueryGenerator;
 import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
+import com.blazebit.persistence.view.spi.type.BasicUserTypeStringSupport;
 
 import java.util.Collections;
 
@@ -74,5 +75,10 @@ public abstract class AbstractCorrelationJoinTupleElementMapper implements Alias
     @Override
     public String getAlias() {
         return alias;
+    }
+
+    @Override
+    public BasicUserTypeStringSupport<Object> getBasicTypeStringSupport() {
+        throw new UnsupportedOperationException();
     }
 }

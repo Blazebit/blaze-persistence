@@ -459,6 +459,7 @@ public abstract class AbstractJpaPersistenceTest {
                 em.getTransaction().rollback();
             }
             em.close();
+            em = null;
         } else {
             factory = emf;
         }

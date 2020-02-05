@@ -75,4 +75,13 @@ public abstract class AbstractMutableBasicUserType<X> implements BasicUserType<X
         return DIRTY_MARKER;
     }
 
+    @Override
+    public X fromString(CharSequence sequence) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String toStringExpression(String expression) {
+        throw new UnsupportedOperationException();
+    }
 }

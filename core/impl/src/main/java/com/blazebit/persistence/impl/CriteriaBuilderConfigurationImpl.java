@@ -27,7 +27,19 @@ import com.blazebit.persistence.impl.dialect.MySQLDbmsDialect;
 import com.blazebit.persistence.impl.dialect.OracleDbmsDialect;
 import com.blazebit.persistence.impl.dialect.PostgreSQLDbmsDialect;
 import com.blazebit.persistence.impl.function.alias.AliasFunction;
+import com.blazebit.persistence.impl.function.base64.Base64Function;
+import com.blazebit.persistence.impl.function.base64.PostgreSQLBase64Function;
+import com.blazebit.persistence.impl.function.cast.CastFunction;
+import com.blazebit.persistence.impl.function.chr.CharChrFunction;
+import com.blazebit.persistence.impl.function.chr.ChrFunction;
 import com.blazebit.persistence.impl.function.coltrunc.ColumnTruncFunction;
+import com.blazebit.persistence.impl.function.concat.ConcatFunction;
+import com.blazebit.persistence.impl.function.concat.PipeBasedConcatFunction;
+import com.blazebit.persistence.impl.function.concat.PlusBasedConcatFunction;
+import com.blazebit.persistence.impl.function.count.AbstractCountFunction;
+import com.blazebit.persistence.impl.function.count.CountTupleEmulationFunction;
+import com.blazebit.persistence.impl.function.count.CountTupleFunction;
+import com.blazebit.persistence.impl.function.count.MySQLCountTupleFunction;
 import com.blazebit.persistence.impl.function.dateadd.day.DB2DayAddFunction;
 import com.blazebit.persistence.impl.function.dateadd.day.DayAddFunction;
 import com.blazebit.persistence.impl.function.dateadd.day.H2DayAddFunction;
@@ -98,6 +110,18 @@ import com.blazebit.persistence.impl.function.dateadd.year.MySQLYearAddFunction;
 import com.blazebit.persistence.impl.function.dateadd.year.OracleYearAddFunction;
 import com.blazebit.persistence.impl.function.dateadd.year.PostgreSQLYearAddFunction;
 import com.blazebit.persistence.impl.function.dateadd.year.YearAddFunction;
+import com.blazebit.persistence.impl.function.datediff.day.AccessDayDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.day.DB2DayDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.day.DefaultDayDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.day.MySQLDayDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.day.OracleDayDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.day.PostgreSQLDayDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.hour.AccessHourDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.hour.DB2HourDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.hour.DefaultHourDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.hour.MySQLHourDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.hour.OracleHourDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.hour.PostgreSQLHourDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.microsecond.AccessMicrosecondDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.microsecond.DB2MicrosecondDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.microsecond.DefaultMicrosecondDiffFunction;
@@ -105,6 +129,25 @@ import com.blazebit.persistence.impl.function.datediff.microsecond.MSSQLMicrosec
 import com.blazebit.persistence.impl.function.datediff.microsecond.MySQLMicrosecondDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.microsecond.OracleMicrosecondDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.microsecond.PostgreSQLMicrosecondDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.millisecond.AccessMillisecondDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.millisecond.DB2MillisecondDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.millisecond.DefaultMillisecondDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.millisecond.MSSQLMillisecondDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.millisecond.MySQLMillisecondDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.millisecond.OracleMillisecondDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.millisecond.PostgreSQLMillisecondDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.minute.AccessMinuteDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.minute.DB2MinuteDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.minute.DefaultMinuteDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.minute.MySQLMinuteDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.minute.OracleMinuteDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.minute.PostgreSQLMinuteDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.month.AccessMonthDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.month.DB2MonthDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.month.DefaultMonthDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.month.MySQLMonthDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.month.OracleMonthDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.month.PostgreSQLMonthDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.quarter.AccessQuarterDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.quarter.DB2QuarterDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.quarter.DefaultQuarterDiffFunction;
@@ -113,6 +156,13 @@ import com.blazebit.persistence.impl.function.datediff.quarter.MSSQLQuarterDiffF
 import com.blazebit.persistence.impl.function.datediff.quarter.MySQLQuarterDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.quarter.OracleQuarterDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.quarter.PostgreSQLQuarterDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.second.AccessSecondDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.second.DB2SecondDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.second.DefaultSecondDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.second.MSSQLSecondDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.second.MySQLSecondDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.second.OracleSecondDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.second.PostgreSQLSecondDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.week.DB2WeekDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.week.DefaultWeekDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.week.H2WeekDiffFunction;
@@ -120,26 +170,43 @@ import com.blazebit.persistence.impl.function.datediff.week.MSSQLWeekDiffFunctio
 import com.blazebit.persistence.impl.function.datediff.week.MySQLWeekDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.week.OracleWeekDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.week.PostgreSQLWeekDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.year.AccessYearDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.year.DB2YearDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.year.DefaultYearDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.year.MySQLYearDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.year.OracleYearDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.year.PostgreSQLYearDiffFunction;
+import com.blazebit.persistence.impl.function.datetime.day.AccessDayFunction;
+import com.blazebit.persistence.impl.function.datetime.day.DB2DayFunction;
+import com.blazebit.persistence.impl.function.datetime.day.DayFunction;
+import com.blazebit.persistence.impl.function.datetime.day.DerbyDayFunction;
+import com.blazebit.persistence.impl.function.datetime.day.MSSQLDayFunction;
 import com.blazebit.persistence.impl.function.datetime.day.PostgreSQLDayFunction;
 import com.blazebit.persistence.impl.function.datetime.day.SqliteDayFunction;
+import com.blazebit.persistence.impl.function.datetime.day.SybaseDayFunction;
 import com.blazebit.persistence.impl.function.datetime.dayofweek.AccessDayOfWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.dayofweek.DB2DayOfWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.dayofweek.DayOfWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.dayofweek.MSSQLDayOfWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.dayofweek.MySQLDayOfWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.dayofweek.OracleDayOfWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.dayofweek.PostgreSQLDayOfWeekFunction;
-import com.blazebit.persistence.impl.function.datetime.dayofweek.MSSQLDayOfWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.dayofweek.SqliteDayOfWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.dayofweek.SybaseDayOfWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.dayofyear.AccessDayOfYearFunction;
 import com.blazebit.persistence.impl.function.datetime.dayofyear.DB2DayOfYearFunction;
 import com.blazebit.persistence.impl.function.datetime.dayofyear.DayOfYearFunction;
+import com.blazebit.persistence.impl.function.datetime.dayofyear.MSSQLDayOfYearFunction;
 import com.blazebit.persistence.impl.function.datetime.dayofyear.MySQLDayOfYearFunction;
 import com.blazebit.persistence.impl.function.datetime.dayofyear.OracleDayOfYearFunction;
-import com.blazebit.persistence.impl.function.datetime.dayofyear.MSSQLDayOfYearFunction;
 import com.blazebit.persistence.impl.function.datetime.dayofyear.PostgreSQLDayOfYearFunction;
 import com.blazebit.persistence.impl.function.datetime.dayofyear.SqliteDayOfYearFunction;
 import com.blazebit.persistence.impl.function.datetime.dayofyear.SybaseDayOfYearFunction;
+import com.blazebit.persistence.impl.function.datetime.epoch.DB2EpochFunction;
+import com.blazebit.persistence.impl.function.datetime.epoch.DefaultEpochFunction;
+import com.blazebit.persistence.impl.function.datetime.epoch.MySQLEpochFunction;
+import com.blazebit.persistence.impl.function.datetime.epoch.OracleEpochFunction;
+import com.blazebit.persistence.impl.function.datetime.epoch.PostgreSQLEpochFunction;
 import com.blazebit.persistence.impl.function.datetime.epochday.DB2EpochDayFunction;
 import com.blazebit.persistence.impl.function.datetime.epochday.DefaultEpochDayFunction;
 import com.blazebit.persistence.impl.function.datetime.epochday.MySQLEpochDayFunction;
@@ -157,8 +224,15 @@ import com.blazebit.persistence.impl.function.datetime.epochmilli.MSSQLEpochMill
 import com.blazebit.persistence.impl.function.datetime.epochmilli.MySQLEpochMillisecondFunction;
 import com.blazebit.persistence.impl.function.datetime.epochmilli.OracleEpochMillisecondFunction;
 import com.blazebit.persistence.impl.function.datetime.epochmilli.PostgreSQLEpochMillisecondFunction;
+import com.blazebit.persistence.impl.function.datetime.hour.AccessHourFunction;
+import com.blazebit.persistence.impl.function.datetime.hour.DB2HourFunction;
+import com.blazebit.persistence.impl.function.datetime.hour.DerbyHourFunction;
+import com.blazebit.persistence.impl.function.datetime.hour.HourFunction;
+import com.blazebit.persistence.impl.function.datetime.hour.MSSQLHourFunction;
+import com.blazebit.persistence.impl.function.datetime.hour.OracleHourFunction;
 import com.blazebit.persistence.impl.function.datetime.hour.PostgreSQLHourFunction;
 import com.blazebit.persistence.impl.function.datetime.hour.SqliteHourFunction;
+import com.blazebit.persistence.impl.function.datetime.hour.SybaseHourFunction;
 import com.blazebit.persistence.impl.function.datetime.isodayofweek.AccessIsoDayOfWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.isodayofweek.DB2IsoDayOfWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.isodayofweek.IsoDayOfWeekFunction;
@@ -168,52 +242,78 @@ import com.blazebit.persistence.impl.function.datetime.isodayofweek.OracleIsoDay
 import com.blazebit.persistence.impl.function.datetime.isodayofweek.PostgreSQLIsoDayOfWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.isodayofweek.SqliteIsoDayOfWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.isodayofweek.SybaseIsoDayOfWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.isoweek.AccessIsoWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.isoweek.DB2IsoWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.isoweek.H2IsoWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.isoweek.IsoWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.isoweek.MSSQLIsoWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.isoweek.MySQLIsoWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.isoweek.OracleIsoWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.isoweek.PostgreSQLIsoWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.isoweek.SqliteIsoWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.isoweek.SybaseIsoWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.microsecond.DB2MicrosecondFunction;
+import com.blazebit.persistence.impl.function.datetime.microsecond.MSSQLMicrosecondFunction;
 import com.blazebit.persistence.impl.function.datetime.microsecond.MicrosecondFunction;
 import com.blazebit.persistence.impl.function.datetime.microsecond.MySQLMicrosecondFunction;
 import com.blazebit.persistence.impl.function.datetime.microsecond.OracleMicrosecondFunction;
 import com.blazebit.persistence.impl.function.datetime.microsecond.PostgreSQLMicrosecondFunction;
-import com.blazebit.persistence.impl.function.datetime.microsecond.MSSQLMicrosecondFunction;
 import com.blazebit.persistence.impl.function.datetime.microsecond.SybaseMicrosecondFunction;
 import com.blazebit.persistence.impl.function.datetime.millisecond.DB2MillisecondFunction;
+import com.blazebit.persistence.impl.function.datetime.millisecond.MSSQLMillisecondFunction;
 import com.blazebit.persistence.impl.function.datetime.millisecond.MillisecondFunction;
 import com.blazebit.persistence.impl.function.datetime.millisecond.MySQLMillisecondFunction;
 import com.blazebit.persistence.impl.function.datetime.millisecond.OracleMillisecondFunction;
 import com.blazebit.persistence.impl.function.datetime.millisecond.PostgreSQLMillisecondFunction;
-import com.blazebit.persistence.impl.function.datetime.millisecond.MSSQLMillisecondFunction;
 import com.blazebit.persistence.impl.function.datetime.millisecond.SybaseMillisecondFunction;
+import com.blazebit.persistence.impl.function.datetime.minute.AccessMinuteFunction;
+import com.blazebit.persistence.impl.function.datetime.minute.DB2MinuteFunction;
+import com.blazebit.persistence.impl.function.datetime.minute.DerbyMinuteFunction;
+import com.blazebit.persistence.impl.function.datetime.minute.MSSQLMinuteFunction;
+import com.blazebit.persistence.impl.function.datetime.minute.MinuteFunction;
+import com.blazebit.persistence.impl.function.datetime.minute.OracleMinuteFunction;
 import com.blazebit.persistence.impl.function.datetime.minute.PostgreSQLMinuteFunction;
 import com.blazebit.persistence.impl.function.datetime.minute.SqliteMinuteFunction;
+import com.blazebit.persistence.impl.function.datetime.minute.SybaseMinuteFunction;
+import com.blazebit.persistence.impl.function.datetime.month.AccessMonthFunction;
+import com.blazebit.persistence.impl.function.datetime.month.DB2MonthFunction;
+import com.blazebit.persistence.impl.function.datetime.month.DerbyMonthFunction;
+import com.blazebit.persistence.impl.function.datetime.month.MSSQLMonthFunction;
+import com.blazebit.persistence.impl.function.datetime.month.MonthFunction;
 import com.blazebit.persistence.impl.function.datetime.month.PostgreSQLMonthFunction;
 import com.blazebit.persistence.impl.function.datetime.month.SqliteMonthFunction;
+import com.blazebit.persistence.impl.function.datetime.month.SybaseMonthFunction;
 import com.blazebit.persistence.impl.function.datetime.quarter.AccessQuarterFunction;
 import com.blazebit.persistence.impl.function.datetime.quarter.DB2QuarterFunction;
+import com.blazebit.persistence.impl.function.datetime.quarter.MSSQLQuarterFunction;
 import com.blazebit.persistence.impl.function.datetime.quarter.OracleQuarterFunction;
 import com.blazebit.persistence.impl.function.datetime.quarter.PostgreSQLQuarterFunction;
 import com.blazebit.persistence.impl.function.datetime.quarter.QuarterFunction;
-import com.blazebit.persistence.impl.function.datetime.quarter.MSSQLQuarterFunction;
 import com.blazebit.persistence.impl.function.datetime.quarter.SqliteQuarterFunction;
 import com.blazebit.persistence.impl.function.datetime.quarter.SybaseQuarterFunction;
-import com.blazebit.persistence.impl.function.datetime.isoweek.AccessIsoWeekFunction;
-import com.blazebit.persistence.impl.function.datetime.isoweek.DB2IsoWeekFunction;
-import com.blazebit.persistence.impl.function.datetime.isoweek.H2IsoWeekFunction;
-import com.blazebit.persistence.impl.function.datetime.isoweek.MySQLIsoWeekFunction;
-import com.blazebit.persistence.impl.function.datetime.isoweek.OracleIsoWeekFunction;
-import com.blazebit.persistence.impl.function.datetime.isoweek.MSSQLIsoWeekFunction;
-import com.blazebit.persistence.impl.function.datetime.isoweek.SqliteIsoWeekFunction;
-import com.blazebit.persistence.impl.function.datetime.isoweek.SybaseIsoWeekFunction;
-import com.blazebit.persistence.impl.function.datetime.isoweek.IsoWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.second.AccessSecondFunction;
+import com.blazebit.persistence.impl.function.datetime.second.DB2SecondFunction;
+import com.blazebit.persistence.impl.function.datetime.second.DerbySecondFunction;
+import com.blazebit.persistence.impl.function.datetime.second.MSSQLSecondFunction;
+import com.blazebit.persistence.impl.function.datetime.second.OracleSecondFunction;
 import com.blazebit.persistence.impl.function.datetime.second.PostgreSQLSecondFunction;
+import com.blazebit.persistence.impl.function.datetime.second.SecondFunction;
 import com.blazebit.persistence.impl.function.datetime.second.SqliteSecondFunction;
+import com.blazebit.persistence.impl.function.datetime.second.SybaseSecondFunction;
 import com.blazebit.persistence.impl.function.datetime.week.DB2WeekInYearFunction;
+import com.blazebit.persistence.impl.function.datetime.week.MSSQLWeekInYearFunction;
 import com.blazebit.persistence.impl.function.datetime.week.MySQLWeekInYearFunction;
 import com.blazebit.persistence.impl.function.datetime.week.OracleWeekInYearFunction;
-import com.blazebit.persistence.impl.function.datetime.week.MSSQLWeekInYearFunction;
 import com.blazebit.persistence.impl.function.datetime.week.PostgreSQLWeekInYearFunction;
 import com.blazebit.persistence.impl.function.datetime.week.WeekInYearFunction;
+import com.blazebit.persistence.impl.function.datetime.year.AccessYearFunction;
+import com.blazebit.persistence.impl.function.datetime.year.DB2YearFunction;
+import com.blazebit.persistence.impl.function.datetime.year.DerbyYearFunction;
+import com.blazebit.persistence.impl.function.datetime.year.MSSQLYearFunction;
 import com.blazebit.persistence.impl.function.datetime.year.PostgreSQLYearFunction;
 import com.blazebit.persistence.impl.function.datetime.year.SqliteYearFunction;
+import com.blazebit.persistence.impl.function.datetime.year.SybaseYearFunction;
+import com.blazebit.persistence.impl.function.datetime.year.YearFunction;
 import com.blazebit.persistence.impl.function.datetime.yearofweek.DB2YearOfWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.yearofweek.MSSQLYearOfWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.yearofweek.MySQLYearOfWeekFunction;
@@ -222,31 +322,138 @@ import com.blazebit.persistence.impl.function.datetime.yearofweek.PostgreSQLYear
 import com.blazebit.persistence.impl.function.datetime.yearofweek.YearOfWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.yearweek.DB2YearWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.yearweek.H2YearWeekFunction;
+import com.blazebit.persistence.impl.function.datetime.yearweek.MSSQLYearWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.yearweek.MySQLYearWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.yearweek.OracleYearWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.yearweek.PostgreSQLYearWeekFunction;
-import com.blazebit.persistence.impl.function.datetime.yearweek.MSSQLYearWeekFunction;
 import com.blazebit.persistence.impl.function.datetime.yearweek.YearWeekFunction;
 import com.blazebit.persistence.impl.function.entity.EntityFunction;
 import com.blazebit.persistence.impl.function.every.EveryFunction;
 import com.blazebit.persistence.impl.function.every.FallbackEveryFunction;
 import com.blazebit.persistence.impl.function.exist.ExistFunction;
+import com.blazebit.persistence.impl.function.greatest.AbstractGreatestFunction;
+import com.blazebit.persistence.impl.function.greatest.DefaultGreatestFunction;
+import com.blazebit.persistence.impl.function.greatest.MaxGreatestFunction;
+import com.blazebit.persistence.impl.function.greatest.SelectMaxUnionGreatestFunction;
+import com.blazebit.persistence.impl.function.groupconcat.AbstractGroupConcatFunction;
+import com.blazebit.persistence.impl.function.groupconcat.DB2GroupConcatFunction;
+import com.blazebit.persistence.impl.function.groupconcat.H2GroupConcatFunction;
+import com.blazebit.persistence.impl.function.groupconcat.MSSQLGroupConcatFunction;
+import com.blazebit.persistence.impl.function.groupconcat.MySQLGroupConcatFunction;
+import com.blazebit.persistence.impl.function.groupconcat.OracleListaggGroupConcatFunction;
+import com.blazebit.persistence.impl.function.groupconcat.PostgreSQLGroupConcatFunction;
+import com.blazebit.persistence.impl.function.least.AbstractLeastFunction;
+import com.blazebit.persistence.impl.function.least.DefaultLeastFunction;
+import com.blazebit.persistence.impl.function.least.MinLeastFunction;
+import com.blazebit.persistence.impl.function.least.SelectMinUnionLeastFunction;
+import com.blazebit.persistence.impl.function.limit.LimitFunction;
+import com.blazebit.persistence.impl.function.nullfn.NullfnFunction;
 import com.blazebit.persistence.impl.function.oragg.FallbackOrAggFunction;
 import com.blazebit.persistence.impl.function.oragg.OrAggFunction;
-import com.blazebit.persistence.impl.function.nullfn.NullfnFunction;
+import com.blazebit.persistence.impl.function.pageposition.MySQLPagePositionFunction;
+import com.blazebit.persistence.impl.function.pageposition.OraclePagePositionFunction;
+import com.blazebit.persistence.impl.function.pageposition.PagePositionFunction;
+import com.blazebit.persistence.impl.function.pageposition.TransactSQLPagePositionFunction;
 import com.blazebit.persistence.impl.function.param.ParamFunction;
+import com.blazebit.persistence.impl.function.repeat.AbstractRepeatFunction;
+import com.blazebit.persistence.impl.function.repeat.DefaultRepeatFunction;
+import com.blazebit.persistence.impl.function.repeat.LpadRepeatFunction;
+import com.blazebit.persistence.impl.function.repeat.ReplicateRepeatFunction;
+import com.blazebit.persistence.impl.function.replace.ReplaceFunction;
+import com.blazebit.persistence.impl.function.rowvalue.DB2RowValueComparisonFunction;
 import com.blazebit.persistence.impl.function.rowvalue.DB2RowValueSubqueryComparisonFunction;
+import com.blazebit.persistence.impl.function.rowvalue.RowValueComparisonFunction;
 import com.blazebit.persistence.impl.function.rowvalue.RowValueSubqueryComparisonFunction;
+import com.blazebit.persistence.impl.function.set.SetFunction;
+import com.blazebit.persistence.impl.function.stringjsonagg.AbstractStringJsonAggFunction;
+import com.blazebit.persistence.impl.function.stringjsonagg.GroupConcatBasedStringJsonAggFunction;
+import com.blazebit.persistence.impl.function.stringjsonagg.OracleStringJsonAggFunction;
+import com.blazebit.persistence.impl.function.stringjsonagg.PostgreSQLStringJsonAggFunction;
+import com.blazebit.persistence.impl.function.stringjsonagg.MySQLStringJsonAggFunction;
+import com.blazebit.persistence.impl.function.stringxmlagg.AbstractStringXmlAggFunction;
+import com.blazebit.persistence.impl.function.stringxmlagg.GroupConcatBasedStringXmlAggFunction;
+import com.blazebit.persistence.impl.function.stringxmlagg.OracleGroupConcatBasedStringXmlAggFunction;
+import com.blazebit.persistence.impl.function.stringxmlagg.PostgreSQLStringXmlAggFunction;
 import com.blazebit.persistence.impl.function.subquery.SubqueryFunction;
+import com.blazebit.persistence.impl.function.tomultiset.ToMultisetFunction;
+import com.blazebit.persistence.impl.function.tostringjson.AbstractToStringJsonFunction;
+import com.blazebit.persistence.impl.function.tostringjson.ForJsonPathToStringJsonFunction;
+import com.blazebit.persistence.impl.function.tostringjson.GroupConcatBasedToStringJsonFunction;
+import com.blazebit.persistence.impl.function.tostringjson.OracleToStringJsonFunction;
+import com.blazebit.persistence.impl.function.tostringjson.PostgreSQLToStringJsonFunction;
+import com.blazebit.persistence.impl.function.tostringjson.MySQLToStringJsonFunction;
+import com.blazebit.persistence.impl.function.tostringxml.AbstractToStringXmlFunction;
+import com.blazebit.persistence.impl.function.tostringxml.ForXmlPathToStringXmlFunction;
+import com.blazebit.persistence.impl.function.tostringxml.GroupConcatBasedToStringXmlFunction;
+import com.blazebit.persistence.impl.function.tostringxml.OracleGroupConcatBasedToStringXmlFunction;
+import com.blazebit.persistence.impl.function.tostringxml.PostgreSQLToStringXmlFunction;
+import com.blazebit.persistence.impl.function.treat.TreatFunction;
+import com.blazebit.persistence.impl.function.trunc.day.DB2TruncDayFunction;
+import com.blazebit.persistence.impl.function.trunc.day.H2TruncDayFunction;
+import com.blazebit.persistence.impl.function.trunc.day.MSSQLTruncDayFunction;
+import com.blazebit.persistence.impl.function.trunc.day.MySQLTruncDayFunction;
+import com.blazebit.persistence.impl.function.trunc.day.OracleTruncDayFunction;
+import com.blazebit.persistence.impl.function.trunc.day.PostgreSQLTruncDayFunction;
 import com.blazebit.persistence.impl.function.trunc.day.TruncDayFunction;
+import com.blazebit.persistence.impl.function.trunc.hour.DB2TruncHourFunction;
+import com.blazebit.persistence.impl.function.trunc.hour.H2TruncHourFunction;
+import com.blazebit.persistence.impl.function.trunc.hour.MSSQLTruncHourFunction;
+import com.blazebit.persistence.impl.function.trunc.hour.MySQLTruncHourFunction;
+import com.blazebit.persistence.impl.function.trunc.hour.OracleTruncHourFunction;
+import com.blazebit.persistence.impl.function.trunc.hour.PostgreSQLTruncHourFunction;
 import com.blazebit.persistence.impl.function.trunc.hour.TruncHourFunction;
+import com.blazebit.persistence.impl.function.trunc.microseconds.DB2TruncMicrosecondsFunction;
+import com.blazebit.persistence.impl.function.trunc.microseconds.H2TruncMicrosecondsFunction;
+import com.blazebit.persistence.impl.function.trunc.microseconds.MSSQLTruncMicrosecondsFunction;
+import com.blazebit.persistence.impl.function.trunc.microseconds.MySQLTruncMicrosecondsFunction;
+import com.blazebit.persistence.impl.function.trunc.microseconds.OracleTruncMicrosecondsFunction;
+import com.blazebit.persistence.impl.function.trunc.microseconds.PostgreSQLTruncMicrosecondsFunction;
 import com.blazebit.persistence.impl.function.trunc.microseconds.TruncMicrosecondsFunction;
+import com.blazebit.persistence.impl.function.trunc.milliseconds.DB2TruncMillisecondsFunction;
+import com.blazebit.persistence.impl.function.trunc.milliseconds.H2TruncMillisecondsFunction;
+import com.blazebit.persistence.impl.function.trunc.milliseconds.MSSQLTruncMillisecondsFunction;
+import com.blazebit.persistence.impl.function.trunc.milliseconds.MySQLTruncMillisecondsFunction;
+import com.blazebit.persistence.impl.function.trunc.milliseconds.OracleTruncMillisecondsFunction;
+import com.blazebit.persistence.impl.function.trunc.milliseconds.PostgreSQLTruncMillisecondsFunction;
 import com.blazebit.persistence.impl.function.trunc.milliseconds.TruncMillisecondsFunction;
+import com.blazebit.persistence.impl.function.trunc.minute.DB2TruncMinuteFunction;
+import com.blazebit.persistence.impl.function.trunc.minute.H2TruncMinuteFunction;
+import com.blazebit.persistence.impl.function.trunc.minute.MSSQLTruncMinuteFunction;
+import com.blazebit.persistence.impl.function.trunc.minute.MySQLTruncMinuteFunction;
+import com.blazebit.persistence.impl.function.trunc.minute.OracleTruncMinuteFunction;
+import com.blazebit.persistence.impl.function.trunc.minute.PostgreSQLTruncMinuteFunction;
 import com.blazebit.persistence.impl.function.trunc.minute.TruncMinuteFunction;
+import com.blazebit.persistence.impl.function.trunc.month.DB2TruncMonthFunction;
+import com.blazebit.persistence.impl.function.trunc.month.H2TruncMonthFunction;
+import com.blazebit.persistence.impl.function.trunc.month.MSSQLTruncMonthFunction;
+import com.blazebit.persistence.impl.function.trunc.month.MySQLTruncMonthFunction;
+import com.blazebit.persistence.impl.function.trunc.month.OracleTruncMonthFunction;
+import com.blazebit.persistence.impl.function.trunc.month.PostgreSQLTruncMonthFunction;
 import com.blazebit.persistence.impl.function.trunc.month.TruncMonthFunction;
+import com.blazebit.persistence.impl.function.trunc.quarter.DB2TruncQuarterFunction;
+import com.blazebit.persistence.impl.function.trunc.quarter.H2TruncQuarterFunction;
+import com.blazebit.persistence.impl.function.trunc.quarter.MSSQLTruncQuarterFunction;
+import com.blazebit.persistence.impl.function.trunc.quarter.MySQLTruncQuarterFunction;
+import com.blazebit.persistence.impl.function.trunc.quarter.OracleTruncQuarterFunction;
+import com.blazebit.persistence.impl.function.trunc.quarter.PostgreSQLTruncQuarterFunction;
 import com.blazebit.persistence.impl.function.trunc.quarter.TruncQuarterFunction;
+import com.blazebit.persistence.impl.function.trunc.second.DB2TruncSecondFunction;
+import com.blazebit.persistence.impl.function.trunc.second.H2TruncSecondFunction;
+import com.blazebit.persistence.impl.function.trunc.second.MSSQLTruncSecondFunction;
+import com.blazebit.persistence.impl.function.trunc.second.MySQLTruncSecondFunction;
+import com.blazebit.persistence.impl.function.trunc.second.OracleTruncSecondFunction;
+import com.blazebit.persistence.impl.function.trunc.second.PostgreSQLTruncSecondFunction;
 import com.blazebit.persistence.impl.function.trunc.second.TruncSecondFunction;
+import com.blazebit.persistence.impl.function.trunc.week.MSSQLTruncWeekFunction;
+import com.blazebit.persistence.impl.function.trunc.week.MySQLTruncWeekFunction;
+import com.blazebit.persistence.impl.function.trunc.week.OracleTruncWeekFunction;
 import com.blazebit.persistence.impl.function.trunc.week.TruncWeekFunction;
+import com.blazebit.persistence.impl.function.trunc.year.DB2TruncYearFunction;
+import com.blazebit.persistence.impl.function.trunc.year.H2TruncYearFunction;
+import com.blazebit.persistence.impl.function.trunc.year.MSSQLTruncYearFunction;
+import com.blazebit.persistence.impl.function.trunc.year.MySQLTruncYearFunction;
+import com.blazebit.persistence.impl.function.trunc.year.OracleTruncYearFunction;
+import com.blazebit.persistence.impl.function.trunc.year.PostgreSQLTruncYearFunction;
 import com.blazebit.persistence.impl.function.trunc.year.TruncYearFunction;
 import com.blazebit.persistence.impl.function.window.avg.AvgFunction;
 import com.blazebit.persistence.impl.function.window.count.CountFunction;
@@ -273,187 +480,12 @@ import com.blazebit.persistence.impl.function.window.percentrank.PercentRankFunc
 import com.blazebit.persistence.impl.function.window.rank.RankFunction;
 import com.blazebit.persistence.impl.function.window.row.RowNumberFunction;
 import com.blazebit.persistence.impl.function.window.sum.SumFunction;
-import com.blazebit.persistence.impl.function.trunc.day.DB2TruncDayFunction;
-import com.blazebit.persistence.impl.function.trunc.day.H2TruncDayFunction;
-import com.blazebit.persistence.impl.function.trunc.day.MSSQLTruncDayFunction;
-import com.blazebit.persistence.impl.function.trunc.day.MySQLTruncDayFunction;
-import com.blazebit.persistence.impl.function.trunc.day.OracleTruncDayFunction;
-import com.blazebit.persistence.impl.function.trunc.day.PostgreSQLTruncDayFunction;
-import com.blazebit.persistence.impl.function.trunc.hour.DB2TruncHourFunction;
-import com.blazebit.persistence.impl.function.trunc.hour.H2TruncHourFunction;
-import com.blazebit.persistence.impl.function.trunc.hour.MSSQLTruncHourFunction;
-import com.blazebit.persistence.impl.function.trunc.hour.MySQLTruncHourFunction;
-import com.blazebit.persistence.impl.function.trunc.hour.OracleTruncHourFunction;
-import com.blazebit.persistence.impl.function.trunc.hour.PostgreSQLTruncHourFunction;
-import com.blazebit.persistence.impl.function.trunc.microseconds.DB2TruncMicrosecondsFunction;
-import com.blazebit.persistence.impl.function.trunc.microseconds.H2TruncMicrosecondsFunction;
-import com.blazebit.persistence.impl.function.trunc.microseconds.MSSQLTruncMicrosecondsFunction;
-import com.blazebit.persistence.impl.function.trunc.microseconds.MySQLTruncMicrosecondsFunction;
-import com.blazebit.persistence.impl.function.trunc.microseconds.OracleTruncMicrosecondsFunction;
-import com.blazebit.persistence.impl.function.trunc.microseconds.PostgreSQLTruncMicrosecondsFunction;
-import com.blazebit.persistence.impl.function.trunc.milliseconds.DB2TruncMillisecondsFunction;
-import com.blazebit.persistence.impl.function.trunc.milliseconds.H2TruncMillisecondsFunction;
-import com.blazebit.persistence.impl.function.trunc.milliseconds.MSSQLTruncMillisecondsFunction;
-import com.blazebit.persistence.impl.function.trunc.milliseconds.MySQLTruncMillisecondsFunction;
-import com.blazebit.persistence.impl.function.trunc.milliseconds.OracleTruncMillisecondsFunction;
-import com.blazebit.persistence.impl.function.trunc.milliseconds.PostgreSQLTruncMillisecondsFunction;
-import com.blazebit.persistence.impl.function.trunc.minute.DB2TruncMinuteFunction;
-import com.blazebit.persistence.impl.function.trunc.minute.H2TruncMinuteFunction;
-import com.blazebit.persistence.impl.function.trunc.minute.MSSQLTruncMinuteFunction;
-import com.blazebit.persistence.impl.function.trunc.minute.MySQLTruncMinuteFunction;
-import com.blazebit.persistence.impl.function.trunc.minute.OracleTruncMinuteFunction;
-import com.blazebit.persistence.impl.function.trunc.minute.PostgreSQLTruncMinuteFunction;
-import com.blazebit.persistence.impl.function.trunc.month.DB2TruncMonthFunction;
-import com.blazebit.persistence.impl.function.trunc.month.H2TruncMonthFunction;
-import com.blazebit.persistence.impl.function.trunc.month.MSSQLTruncMonthFunction;
-import com.blazebit.persistence.impl.function.trunc.month.MySQLTruncMonthFunction;
-import com.blazebit.persistence.impl.function.trunc.month.OracleTruncMonthFunction;
-import com.blazebit.persistence.impl.function.trunc.month.PostgreSQLTruncMonthFunction;
-import com.blazebit.persistence.impl.function.trunc.quarter.DB2TruncQuarterFunction;
-import com.blazebit.persistence.impl.function.trunc.quarter.H2TruncQuarterFunction;
-import com.blazebit.persistence.impl.function.trunc.quarter.MSSQLTruncQuarterFunction;
-import com.blazebit.persistence.impl.function.trunc.quarter.MySQLTruncQuarterFunction;
-import com.blazebit.persistence.impl.function.trunc.quarter.OracleTruncQuarterFunction;
-import com.blazebit.persistence.impl.function.trunc.quarter.PostgreSQLTruncQuarterFunction;
-import com.blazebit.persistence.impl.function.trunc.second.DB2TruncSecondFunction;
-import com.blazebit.persistence.impl.function.trunc.second.H2TruncSecondFunction;
-import com.blazebit.persistence.impl.function.trunc.second.MSSQLTruncSecondFunction;
-import com.blazebit.persistence.impl.function.trunc.second.MySQLTruncSecondFunction;
-import com.blazebit.persistence.impl.function.trunc.second.OracleTruncSecondFunction;
-import com.blazebit.persistence.impl.function.trunc.second.PostgreSQLTruncSecondFunction;
-import com.blazebit.persistence.impl.function.trunc.week.MSSQLTruncWeekFunction;
-import com.blazebit.persistence.impl.function.trunc.week.MySQLTruncWeekFunction;
-import com.blazebit.persistence.impl.function.trunc.week.OracleTruncWeekFunction;
-import com.blazebit.persistence.impl.function.trunc.year.DB2TruncYearFunction;
-import com.blazebit.persistence.impl.function.trunc.year.H2TruncYearFunction;
-import com.blazebit.persistence.impl.function.trunc.year.MSSQLTruncYearFunction;
-import com.blazebit.persistence.impl.function.trunc.year.MySQLTruncYearFunction;
-import com.blazebit.persistence.impl.function.trunc.year.OracleTruncYearFunction;
-import com.blazebit.persistence.impl.function.trunc.year.PostgreSQLTruncYearFunction;
 import com.blazebit.persistence.parser.expression.ConcurrentHashMapExpressionCache;
-import com.blazebit.persistence.impl.function.cast.CastFunction;
-import com.blazebit.persistence.impl.function.count.AbstractCountFunction;
-import com.blazebit.persistence.impl.function.count.CountTupleEmulationFunction;
-import com.blazebit.persistence.impl.function.count.CountTupleFunction;
-import com.blazebit.persistence.impl.function.count.MySQLCountTupleFunction;
-import com.blazebit.persistence.impl.function.datediff.day.AccessDayDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.day.DB2DayDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.day.DefaultDayDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.day.MySQLDayDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.day.OracleDayDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.day.PostgreSQLDayDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.hour.AccessHourDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.hour.DB2HourDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.hour.DefaultHourDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.hour.MySQLHourDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.hour.OracleHourDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.hour.PostgreSQLHourDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.millisecond.AccessMillisecondDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.millisecond.DB2MillisecondDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.millisecond.DefaultMillisecondDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.millisecond.MySQLMillisecondDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.millisecond.OracleMillisecondDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.millisecond.PostgreSQLMillisecondDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.millisecond.MSSQLMillisecondDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.minute.AccessMinuteDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.minute.DB2MinuteDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.minute.DefaultMinuteDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.minute.MySQLMinuteDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.minute.OracleMinuteDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.minute.PostgreSQLMinuteDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.month.AccessMonthDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.month.DB2MonthDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.month.DefaultMonthDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.month.MySQLMonthDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.month.OracleMonthDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.month.PostgreSQLMonthDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.second.AccessSecondDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.second.DB2SecondDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.second.DefaultSecondDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.second.MySQLSecondDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.second.OracleSecondDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.second.PostgreSQLSecondDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.second.MSSQLSecondDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.year.AccessYearDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.year.DB2YearDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.year.DefaultYearDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.year.MySQLYearDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.year.OracleYearDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.year.PostgreSQLYearDiffFunction;
-import com.blazebit.persistence.impl.function.datetime.day.AccessDayFunction;
-import com.blazebit.persistence.impl.function.datetime.day.DB2DayFunction;
-import com.blazebit.persistence.impl.function.datetime.day.DayFunction;
-import com.blazebit.persistence.impl.function.datetime.day.DerbyDayFunction;
-import com.blazebit.persistence.impl.function.datetime.day.MSSQLDayFunction;
-import com.blazebit.persistence.impl.function.datetime.day.SybaseDayFunction;
-import com.blazebit.persistence.impl.function.datetime.epoch.DB2EpochFunction;
-import com.blazebit.persistence.impl.function.datetime.epoch.DefaultEpochFunction;
-import com.blazebit.persistence.impl.function.datetime.epoch.MySQLEpochFunction;
-import com.blazebit.persistence.impl.function.datetime.epoch.OracleEpochFunction;
-import com.blazebit.persistence.impl.function.datetime.epoch.PostgreSQLEpochFunction;
-import com.blazebit.persistence.impl.function.datetime.hour.AccessHourFunction;
-import com.blazebit.persistence.impl.function.datetime.hour.DB2HourFunction;
-import com.blazebit.persistence.impl.function.datetime.hour.DerbyHourFunction;
-import com.blazebit.persistence.impl.function.datetime.hour.HourFunction;
-import com.blazebit.persistence.impl.function.datetime.hour.OracleHourFunction;
-import com.blazebit.persistence.impl.function.datetime.hour.MSSQLHourFunction;
-import com.blazebit.persistence.impl.function.datetime.hour.SybaseHourFunction;
-import com.blazebit.persistence.impl.function.datetime.minute.AccessMinuteFunction;
-import com.blazebit.persistence.impl.function.datetime.minute.DB2MinuteFunction;
-import com.blazebit.persistence.impl.function.datetime.minute.DerbyMinuteFunction;
-import com.blazebit.persistence.impl.function.datetime.minute.MinuteFunction;
-import com.blazebit.persistence.impl.function.datetime.minute.OracleMinuteFunction;
-import com.blazebit.persistence.impl.function.datetime.minute.MSSQLMinuteFunction;
-import com.blazebit.persistence.impl.function.datetime.minute.SybaseMinuteFunction;
-import com.blazebit.persistence.impl.function.datetime.month.AccessMonthFunction;
-import com.blazebit.persistence.impl.function.datetime.month.DB2MonthFunction;
-import com.blazebit.persistence.impl.function.datetime.month.DerbyMonthFunction;
-import com.blazebit.persistence.impl.function.datetime.month.MonthFunction;
-import com.blazebit.persistence.impl.function.datetime.month.MSSQLMonthFunction;
-import com.blazebit.persistence.impl.function.datetime.month.SybaseMonthFunction;
-import com.blazebit.persistence.impl.function.datetime.second.AccessSecondFunction;
-import com.blazebit.persistence.impl.function.datetime.second.DB2SecondFunction;
-import com.blazebit.persistence.impl.function.datetime.second.DerbySecondFunction;
-import com.blazebit.persistence.impl.function.datetime.second.OracleSecondFunction;
-import com.blazebit.persistence.impl.function.datetime.second.MSSQLSecondFunction;
-import com.blazebit.persistence.impl.function.datetime.second.SecondFunction;
-import com.blazebit.persistence.impl.function.datetime.second.SybaseSecondFunction;
-import com.blazebit.persistence.impl.function.datetime.year.AccessYearFunction;
-import com.blazebit.persistence.impl.function.datetime.year.DB2YearFunction;
-import com.blazebit.persistence.impl.function.datetime.year.DerbyYearFunction;
-import com.blazebit.persistence.impl.function.datetime.year.MSSQLYearFunction;
-import com.blazebit.persistence.impl.function.datetime.year.SybaseYearFunction;
-import com.blazebit.persistence.impl.function.datetime.year.YearFunction;
-import com.blazebit.persistence.impl.function.greatest.AbstractGreatestFunction;
-import com.blazebit.persistence.impl.function.greatest.DefaultGreatestFunction;
-import com.blazebit.persistence.impl.function.greatest.MaxGreatestFunction;
-import com.blazebit.persistence.impl.function.greatest.SelectMaxUnionGreatestFunction;
-import com.blazebit.persistence.impl.function.groupconcat.DB2GroupConcatFunction;
-import com.blazebit.persistence.impl.function.groupconcat.H2GroupConcatFunction;
-import com.blazebit.persistence.impl.function.groupconcat.MySQLGroupConcatFunction;
-import com.blazebit.persistence.impl.function.groupconcat.OracleListaggGroupConcatFunction;
-import com.blazebit.persistence.impl.function.groupconcat.PostgreSQLGroupConcatFunction;
-import com.blazebit.persistence.impl.function.least.AbstractLeastFunction;
-import com.blazebit.persistence.impl.function.least.DefaultLeastFunction;
-import com.blazebit.persistence.impl.function.least.MinLeastFunction;
-import com.blazebit.persistence.impl.function.least.SelectMinUnionLeastFunction;
-import com.blazebit.persistence.impl.function.limit.LimitFunction;
-import com.blazebit.persistence.impl.function.pageposition.MySQLPagePositionFunction;
-import com.blazebit.persistence.impl.function.pageposition.OraclePagePositionFunction;
-import com.blazebit.persistence.impl.function.pageposition.PagePositionFunction;
-import com.blazebit.persistence.impl.function.pageposition.TransactSQLPagePositionFunction;
-import com.blazebit.persistence.impl.function.repeat.AbstractRepeatFunction;
-import com.blazebit.persistence.impl.function.repeat.DefaultRepeatFunction;
-import com.blazebit.persistence.impl.function.repeat.LpadRepeatFunction;
-import com.blazebit.persistence.impl.function.repeat.ReplicateRepeatFunction;
-import com.blazebit.persistence.impl.function.rowvalue.DB2RowValueComparisonFunction;
-import com.blazebit.persistence.impl.function.rowvalue.RowValueComparisonFunction;
-import com.blazebit.persistence.impl.function.set.SetFunction;
-import com.blazebit.persistence.impl.function.treat.TreatFunction;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
+import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
 import com.blazebit.persistence.spi.JpqlMacro;
 import com.blazebit.persistence.spi.PackageOpener;
@@ -553,6 +585,29 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup = new JpqlFunctionGroup(ExistFunction.FUNCTION_NAME, false);
         jpqlFunctionGroup.add(null, new ExistFunction());
         registerFunction(jpqlFunctionGroup);
+
+        // replace
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(ReplaceFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup.add(null, new ReplaceFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        // chr
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(ChrFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup.add(null, new ChrFunction());
+        jpqlFunctionGroup.add("mysql", new CharChrFunction());
+        jpqlFunctionGroup.add("mysql8", new CharChrFunction());
+        jpqlFunctionGroup.add("microsoft", new CharChrFunction());
+        jpqlFunctionGroup.add("sybase", new CharChrFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        // base64
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(Base64Function.FUNCTION_NAME, false);
+        jpqlFunctionGroup.add(null, new Base64Function());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLBase64Function());
+        registerFunction(jpqlFunctionGroup);
         
         // set operations
 
@@ -643,14 +698,25 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
             }
         }
 
+        // concat
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(ConcatFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup.add(null, PipeBasedConcatFunction.INSTANCE);
+        jpqlFunctionGroup.add("mysql", ConcatFunction.INSTANCE);
+        jpqlFunctionGroup.add("mysql8", ConcatFunction.INSTANCE);
+        jpqlFunctionGroup.add("microsoft", PlusBasedConcatFunction.INSTANCE);
+        jpqlFunctionGroup.add("sybase", PlusBasedConcatFunction.INSTANCE);
+        registerFunction(jpqlFunctionGroup);
+
         // group_concat
         
-        jpqlFunctionGroup = new JpqlFunctionGroup("group_concat", true);
+        jpqlFunctionGroup = new JpqlFunctionGroup(AbstractGroupConcatFunction.FUNCTION_NAME, true);
         jpqlFunctionGroup.add("db2", new DB2GroupConcatFunction());
         jpqlFunctionGroup.add("oracle", new OracleListaggGroupConcatFunction());
         jpqlFunctionGroup.add("h2", new H2GroupConcatFunction());
         jpqlFunctionGroup.add("mysql", new MySQLGroupConcatFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLGroupConcatFunction());
+        jpqlFunctionGroup.add("microsoft", new MSSQLGroupConcatFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLGroupConcatFunction());
         registerFunction(jpqlFunctionGroup);
 
@@ -1377,6 +1443,128 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         }
         registerFunction(jpqlFunctionGroup);
 
+        // string_json_agg
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(AbstractStringJsonAggFunction.FUNCTION_NAME, true);
+        {
+            JpqlFunctionGroup chrFunctionGroup = functions.get(ChrFunction.FUNCTION_NAME);
+            JpqlFunctionGroup replaceFunctionGroup = functions.get(ReplaceFunction.FUNCTION_NAME);
+            JpqlFunctionGroup concatFunctionGroup = functions.get(ConcatFunction.FUNCTION_NAME);
+            JpqlFunctionGroup groupConcatFunctionGroup = functions.get(AbstractGroupConcatFunction.FUNCTION_NAME);
+            for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
+                ChrFunction chrFunction = (ChrFunction) chrFunctionGroup.get(dialectEntry.getKey());
+                if (chrFunction == null) {
+                    chrFunction = (ChrFunction) chrFunctionGroup.get(null);
+                }
+                ReplaceFunction replaceFunction = (ReplaceFunction) replaceFunctionGroup.get(dialectEntry.getKey());
+                if (replaceFunction == null) {
+                    replaceFunction = (ReplaceFunction) replaceFunctionGroup.get(null);
+                }
+                ConcatFunction concatFunction = (ConcatFunction) concatFunctionGroup.get(dialectEntry.getKey());
+                if (concatFunction == null) {
+                    concatFunction = (ConcatFunction) concatFunctionGroup.get(null);
+                }
+                jpqlFunctionGroup.add(dialectEntry.getKey(), new GroupConcatBasedStringJsonAggFunction((AbstractGroupConcatFunction) groupConcatFunctionGroup.get(dialectEntry.getKey()), chrFunction, replaceFunction, concatFunction));
+            }
+        }
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLStringJsonAggFunction());
+        jpqlFunctionGroup.add("oracle", new OracleStringJsonAggFunction((AbstractGroupConcatFunction) findFunction(AbstractGroupConcatFunction.FUNCTION_NAME, "oracle"), (ChrFunction) findFunction(ChrFunction.FUNCTION_NAME, "oracle"), (ReplaceFunction) findFunction(ReplaceFunction.FUNCTION_NAME, "oracle"), (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME, "oracle")));
+        jpqlFunctionGroup.add("mysql", new MySQLStringJsonAggFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLStringJsonAggFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        // string_xml_agg
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(AbstractStringXmlAggFunction.FUNCTION_NAME, true);
+        {
+            JpqlFunctionGroup replaceFunctionGroup = functions.get(ReplaceFunction.FUNCTION_NAME);
+            JpqlFunctionGroup concatFunctionGroup = functions.get(ConcatFunction.FUNCTION_NAME);
+            JpqlFunctionGroup groupConcatFunctionGroup = functions.get(AbstractGroupConcatFunction.FUNCTION_NAME);
+            for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
+                ReplaceFunction replaceFunction = (ReplaceFunction) replaceFunctionGroup.get(dialectEntry.getKey());
+                if (replaceFunction == null) {
+                    replaceFunction = (ReplaceFunction) replaceFunctionGroup.get(null);
+                }
+                ConcatFunction concatFunction = (ConcatFunction) concatFunctionGroup.get(dialectEntry.getKey());
+                if (concatFunction == null) {
+                    concatFunction = (ConcatFunction) concatFunctionGroup.get(null);
+                }
+                jpqlFunctionGroup.add(dialectEntry.getKey(), new GroupConcatBasedStringXmlAggFunction((AbstractGroupConcatFunction) groupConcatFunctionGroup.get(dialectEntry.getKey()), replaceFunction, concatFunction));
+            }
+        }
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLStringXmlAggFunction());
+        jpqlFunctionGroup.add("oracle", new OracleGroupConcatBasedStringXmlAggFunction((AbstractGroupConcatFunction) findFunction(AbstractGroupConcatFunction.FUNCTION_NAME, "oracle"), (ReplaceFunction) findFunction(ReplaceFunction.FUNCTION_NAME, "oracle"), (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME, "oracle")));
+        registerFunction(jpqlFunctionGroup);
+
+        // to_string_json
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(AbstractToStringJsonFunction.FUNCTION_NAME, false);
+        {
+            JpqlFunctionGroup chrFunctionGroup = functions.get(ChrFunction.FUNCTION_NAME);
+            JpqlFunctionGroup replaceFunctionGroup = functions.get(ReplaceFunction.FUNCTION_NAME);
+            JpqlFunctionGroup concatFunctionGroup = functions.get(ConcatFunction.FUNCTION_NAME);
+            JpqlFunctionGroup groupConcatFunctionGroup = functions.get(AbstractGroupConcatFunction.FUNCTION_NAME);
+            for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
+                ChrFunction chrFunction = (ChrFunction) chrFunctionGroup.get(dialectEntry.getKey());
+                if (chrFunction == null) {
+                    chrFunction = (ChrFunction) chrFunctionGroup.get(null);
+                }
+                ReplaceFunction replaceFunction = (ReplaceFunction) replaceFunctionGroup.get(dialectEntry.getKey());
+                if (replaceFunction == null) {
+                    replaceFunction = (ReplaceFunction) replaceFunctionGroup.get(null);
+                }
+                ConcatFunction concatFunction = (ConcatFunction) concatFunctionGroup.get(dialectEntry.getKey());
+                if (concatFunction == null) {
+                    concatFunction = (ConcatFunction) concatFunctionGroup.get(null);
+                }
+                jpqlFunctionGroup.add(dialectEntry.getKey(), new GroupConcatBasedToStringJsonFunction((AbstractGroupConcatFunction) groupConcatFunctionGroup.get(dialectEntry.getKey()), chrFunction, replaceFunction, concatFunction));
+            }
+        }
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLToStringJsonFunction());
+        jpqlFunctionGroup.add("microsoft", new ForJsonPathToStringJsonFunction((CastFunction) findFunction("cast_string", "microsoft")));
+        jpqlFunctionGroup.add("oracle", new OracleToStringJsonFunction((AbstractGroupConcatFunction) findFunction(AbstractGroupConcatFunction.FUNCTION_NAME, "oracle"), (ChrFunction) findFunction(ChrFunction.FUNCTION_NAME, "oracle"), (ReplaceFunction) findFunction(ReplaceFunction.FUNCTION_NAME, "oracle"), (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME, "oracle")));
+        jpqlFunctionGroup.add("mysql", new MySQLToStringJsonFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLToStringJsonFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        // to_string_xml
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(AbstractToStringXmlFunction.FUNCTION_NAME, false);
+        {
+            JpqlFunctionGroup replaceFunctionGroup = functions.get(ReplaceFunction.FUNCTION_NAME);
+            JpqlFunctionGroup concatFunctionGroup = functions.get(ConcatFunction.FUNCTION_NAME);
+            JpqlFunctionGroup groupConcatFunctionGroup = functions.get(AbstractGroupConcatFunction.FUNCTION_NAME);
+            for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
+                ReplaceFunction replaceFunction = (ReplaceFunction) replaceFunctionGroup.get(dialectEntry.getKey());
+                if (replaceFunction == null) {
+                    replaceFunction = (ReplaceFunction) replaceFunctionGroup.get(null);
+                }
+                ConcatFunction concatFunction = (ConcatFunction) concatFunctionGroup.get(dialectEntry.getKey());
+                if (concatFunction == null) {
+                    concatFunction = (ConcatFunction) concatFunctionGroup.get(null);
+                }
+                jpqlFunctionGroup.add(dialectEntry.getKey(), new GroupConcatBasedToStringXmlFunction((AbstractGroupConcatFunction) groupConcatFunctionGroup.get(dialectEntry.getKey()), replaceFunction, concatFunction));
+            }
+        }
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLToStringXmlFunction());
+        jpqlFunctionGroup.add("microsoft", new ForXmlPathToStringXmlFunction((CastFunction) findFunction("cast_string", "microsoft")));
+        jpqlFunctionGroup.add("oracle", new OracleGroupConcatBasedToStringXmlFunction((AbstractGroupConcatFunction) findFunction(AbstractGroupConcatFunction.FUNCTION_NAME, "oracle"), (ReplaceFunction) findFunction(ReplaceFunction.FUNCTION_NAME, "oracle"), (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME, "oracle")));
+        registerFunction(jpqlFunctionGroup);
+
+        // to_multiset
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(ToMultisetFunction.FUNCTION_NAME, false);
+        {
+            JpqlFunctionGroup jsonFunctionGroup = functions.get(AbstractToStringJsonFunction.FUNCTION_NAME);
+            JpqlFunctionGroup xmlFunctionGroup = functions.get(AbstractToStringXmlFunction.FUNCTION_NAME);
+            for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
+                AbstractToStringJsonFunction jsonFunction = (AbstractToStringJsonFunction) jsonFunctionGroup.get(dialectEntry.getKey());
+                AbstractToStringXmlFunction xmlFunction = (AbstractToStringXmlFunction) xmlFunctionGroup.get(dialectEntry.getKey());
+                jpqlFunctionGroup.add(dialectEntry.getKey(), new ToMultisetFunction(jsonFunction, xmlFunction));
+            }
+        }
+        registerFunction(jpqlFunctionGroup);
+
 
         // window every
 
@@ -1538,6 +1726,15 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
             jpqlFunctionGroup.add(dialectEntry.getKey(), new NthValueFunction(dialectEntry.getValue()));
         }
         registerFunction(jpqlFunctionGroup);
+    }
+
+    private <T extends JpqlFunction> T findFunction(String name, String dbms) {
+        JpqlFunctionGroup jpqlFunctionGroup = functions.get(name);
+        JpqlFunction jpqlFunction = jpqlFunctionGroup.get(dbms);
+        if (jpqlFunction == null) {
+            jpqlFunction = jpqlFunctionGroup.get(null);
+        }
+        return (T) jpqlFunction;
     }
 
     private void loadDbmsDialects() {

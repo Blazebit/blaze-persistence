@@ -20,6 +20,7 @@ import com.blazebit.persistence.view.spi.type.AbstractMutableBasicUserType;
 import com.blazebit.persistence.view.spi.type.BasicUserType;
 
 import java.util.Arrays;
+import java.util.Base64;
 
 /**
  *
@@ -43,5 +44,15 @@ public class PrimitiveByteArrayBasicUserType extends AbstractMutableBasicUserTyp
     @Override
     public byte[] deepClone(byte[] object) {
         return Arrays.copyOf(object, object.length);
+    }
+
+    @Override
+    public byte[] fromString(CharSequence sequence) {
+        return Base64.getDecoder().decode(sequence.toString());
+    }
+
+    @Override
+    public String toStringExpression(String expression) {
+        return "BASE64(" + expression + ")";
     }
 }

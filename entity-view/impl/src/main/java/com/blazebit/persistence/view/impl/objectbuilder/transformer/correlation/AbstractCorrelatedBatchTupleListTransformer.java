@@ -200,7 +200,6 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
             transformViewMacroAware(tuples, correlationParams, tupleOffset, correlationRoot, viewRootJpqlMacro, BatchCorrelationMode.VIEW_ROOTS, viewRootType, viewRootIndex);
         } else {
             EntityManager em = criteriaBuilder.getEntityManager();
-            // Implementation detail: the tuple list is a LinkedList
             Iterator<Object[]> tupleListIter = tuples.iterator();
             if (batchSize > 1) {
                 // If the expectation was wrong, we have to create a new criteria builder
@@ -275,7 +274,6 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
 
     private void transformViewMacroAware(List<Object[]> tuples, FixedArrayList correlationParams, int tupleOffset, String correlationRoot, CorrelatedSubqueryViewRootJpqlMacro macro, BatchCorrelationMode correlationMode, ManagedViewType<?> viewType, int viewIndex) {
         EntityManager em = criteriaBuilder.getEntityManager();
-        // Implementation detail: the tuple list is a LinkedList
         Iterator<Object[]> tupleListIter = tuples.iterator();
         int totalSize = tuples.size();
         Map<Object, Map<Object, TuplePromise>> viewRoots = new HashMap<>(totalSize);

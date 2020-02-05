@@ -93,13 +93,13 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
         }
         if (fetches.isEmpty()) {
             for (int i = 0; i < mappers.length; i++) {
-                mappers[i].applyMapping(queryBuilder, parameterHolder, optionalParameters, embeddingViewJpqlMacro);
+                mappers[i].applyMapping(queryBuilder, parameterHolder, optionalParameters, embeddingViewJpqlMacro, false);
             }
         } else {
             for (int i = 0; i < mappers.length; i++) {
                 TupleElementMapper mapper = mappers[i];
                 if (fetches.contains(mapper.getAttributePath())) {
-                    mapper.applyMapping(queryBuilder, parameterHolder, optionalParameters, embeddingViewJpqlMacro);
+                    mapper.applyMapping(queryBuilder, parameterHolder, optionalParameters, embeddingViewJpqlMacro, false);
                 } else {
                     queryBuilder.select("NULL");
                 }

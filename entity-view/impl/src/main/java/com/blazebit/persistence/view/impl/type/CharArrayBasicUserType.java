@@ -44,4 +44,18 @@ public class CharArrayBasicUserType extends AbstractMutableBasicUserType<Charact
     public Character[] deepClone(Character[] object) {
         return Arrays.copyOf(object, object.length);
     }
+
+    @Override
+    public Character[] fromString(CharSequence sequence) {
+        Character[] characters = new Character[sequence.length()];
+        for (int i = 0; i < characters.length; i++) {
+            characters[i] = sequence.charAt(i);
+        }
+        return characters;
+    }
+
+    @Override
+    public String toStringExpression(String expression) {
+        return expression;
+    }
 }
