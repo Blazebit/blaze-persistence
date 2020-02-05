@@ -382,7 +382,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         return createPageIdQuery(keysetPage, firstResult, maxResults, getIdentifierExpressionsToUse());
     }
 
-    private <X> TypedQuery<X> getCountQuery(String countQueryString, Class<X> resultType, boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins) {
+    private <X> TypedQuery<X> getCountQuery(String countQueryString, Class<X> resultType, boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins, List<JoinNode> entityFunctions) {
         if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, COUNT_QUERY_CLAUSE_EXCLUSIONS)) {
             TypedQuery<X> countQuery = em.createQuery(countQueryString, resultType);
             if (isCacheable()) {
@@ -395,7 +395,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         TypedQuery<X> baseQuery = em.createQuery(countQueryString, resultType);
         Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery);
         List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, COUNT_QUERY_CLAUSE_EXCLUSIONS);
-        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
+        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery, entityFunctions);
         boolean shouldRenderCteNodes = renderCteNodes(false);
         List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.EMPTY_LIST;
         QuerySpecification querySpecification = new CustomQuerySpecification(
@@ -422,12 +422,18 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         boolean normalQueryMode = !isMainQuery || (!mainQuery.cteManager.hasCtes() && !joinManager.hasEntityFunctions() && keyRestrictedLeftJoins.isEmpty());
         TypedQuery<?> countQuery;
         String countQueryString = getPageCountQueryStringWithoutCheck();
+        List<JoinNode> entityFunctions = null;
+        Set<JoinNode> alwaysIncludedNodes = null;
+        if (!normalQueryMode) {
+            alwaysIncludedNodes = getIdentifierExpressionsToUseNonRootJoinNodes();
+            entityFunctions = joinManager.getEntityFunctions(COUNT_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, true, alwaysIncludedNodes);
+        }
 
         if (entityId == null) {
             // No reference entity id, so just do a simple count query
-            countQuery = getCountQuery(countQueryString, Long.class, normalQueryMode, keyRestrictedLeftJoins);
+            countQuery = getCountQuery(countQueryString, Long.class, normalQueryMode, keyRestrictedLeftJoins, entityFunctions);
         } else {
-            countQuery = getCountQuery(countQueryString, Object[].class, normalQueryMode, keyRestrictedLeftJoins);
+            countQuery = getCountQuery(countQueryString, Object[].class, normalQueryMode, keyRestrictedLeftJoins, entityFunctions);
         }
 
         TypedQuery<?> idQuery = null;
@@ -437,12 +443,27 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         boolean inlinedCountQuery = withCountQuery && withInlineCountQuery;
         if (!isWithInlineIdQuery() && (hasCollections || withForceIdQuery)) {
             String idQueryString = getPageIdQueryStringWithoutCheck();
-            idQuery = getIdQuery(idQueryString, normalQueryMode, keyRestrictedLeftJoins);
-            objectQuery = getObjectQueryById(normalQueryMode, keyRestrictedLeftJoins);
+            if (normalQueryMode) {
+                entityFunctions = Collections.emptyList();
+            } else {
+                entityFunctions = joinManager.getEntityFunctions(ID_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, true, alwaysIncludedNodes);
+            }
+            idQuery = getIdQuery(idQueryString, normalQueryMode, keyRestrictedLeftJoins, entityFunctions);
+            if (normalQueryMode) {
+                entityFunctions = Collections.emptyList();
+            } else {
+                entityFunctions = joinManager.getEntityFunctions(OBJECT_QUERY_CLAUSE_EXCLUSIONS, false, alwaysIncludedNodes);
+            }
+            objectQuery = getObjectQueryById(normalQueryMode, keyRestrictedLeftJoins, entityFunctions);
             objectBuilder = null;
             inlinedIdQuery = false;
         } else {
-            Map.Entry<TypedQuery<T>, ObjectBuilder<T>> entry = getObjectQuery(normalQueryMode, keyRestrictedLeftJoins);
+            if (normalQueryMode) {
+                entityFunctions = Collections.emptyList();
+            } else {
+                entityFunctions = joinManager.getEntityFunctions(hasGroupBy ? NO_CLAUSE_EXCLUSION : OBJECT_QUERY_WITHOUT_GROUP_BY_EXCLUSIONS, false, alwaysIncludedNodes);
+            }
+            Map.Entry<TypedQuery<T>, ObjectBuilder<T>> entry = getObjectQuery(normalQueryMode, keyRestrictedLeftJoins, entityFunctions);
             objectQuery = entry.getKey();
             objectBuilder = entry.getValue();
             inlinedIdQuery = isWithInlineIdQuery() && (hasCollections || withForceIdQuery);
@@ -486,9 +507,11 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         prepareAndCheck();
         // We can only use the query directly if we have no ctes, entity functions or hibernate bugs
         Set<JoinNode> keyRestrictedLeftJoins = getKeyRestrictedLeftJoins();
+        Set<JoinNode> alwaysIncludedNodes = getIdentifierExpressionsToUseNonRootJoinNodes();
         boolean normalQueryMode = !isMainQuery || (!mainQuery.cteManager.hasCtes() && !joinManager.hasEntityFunctions() && keyRestrictedLeftJoins.isEmpty());
         String countQueryString = getPageCountQueryStringWithoutCheck();
-        return getCountQuery(countQueryString, Long.class, normalQueryMode, keyRestrictedLeftJoins);
+        List<JoinNode> entityFunctions = joinManager.getEntityFunctions(COUNT_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, true, alwaysIncludedNodes);
+        return getCountQuery(countQueryString, Long.class, normalQueryMode, keyRestrictedLeftJoins, entityFunctions);
     }
 
     @Override
@@ -747,7 +770,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     }
 
     @SuppressWarnings("unchecked")
-    private Map.Entry<TypedQuery<T>, ObjectBuilder<T>> getObjectQuery(boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins) {
+    private Map.Entry<TypedQuery<T>, ObjectBuilder<T>> getObjectQuery(boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins, List<JoinNode> entityFunctions) {
         String queryString = getBaseQueryString(null, null);
         Class<?> expectedResultType;
 
@@ -779,7 +802,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery);
 
             List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, clauseExclusions);
-            List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
+            List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery, entityFunctions);
             boolean shouldRenderCteNodes = renderCteNodes(false);
             List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.EMPTY_LIST;
             QuerySpecification querySpecification = new CustomQuerySpecification(
@@ -819,7 +842,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         return new AbstractMap.SimpleEntry<TypedQuery<T>, ObjectBuilder<T>>(query, objectBuilder);
     }
 
-    private TypedQuery<Object[]> getIdQuery(String idQueryString, boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins) {
+    private TypedQuery<Object[]> getIdQuery(String idQueryString, boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins, List<JoinNode> entityFunctions) {
         if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, ID_QUERY_CLAUSE_EXCLUSIONS)) {
             TypedQuery<Object[]> idQuery = em.createQuery(idQueryString, Object[].class);
             if (isCacheable()) {
@@ -833,7 +856,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery);
 
         List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, ID_QUERY_CLAUSE_EXCLUSIONS);
-        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
+        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery, entityFunctions);
         boolean shouldRenderCteNodes = renderCteNodes(false);
         List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.EMPTY_LIST;
         QuerySpecification querySpecification = new CustomQuerySpecification(
@@ -852,7 +875,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     }
 
     @SuppressWarnings("unchecked")
-    private TypedQuery<T> getObjectQueryById(boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins) {
+    private TypedQuery<T> getObjectQueryById(boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins, List<JoinNode> entityFunctions) {
         ResolvedExpression[] identifierExpressionsToUse = getIdentifierExpressionsToUse();
         String skippedParameterPrefix = identifierExpressionsToUse.length == 1 ? ID_PARAM_NAME : ID_PARAM_NAME + "_";
         if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, OBJECT_QUERY_CLAUSE_EXCLUSIONS)) {
@@ -872,7 +895,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
 
         List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, OBJECT_QUERY_CLAUSE_EXCLUSIONS);
-        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
+        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery, entityFunctions);
         boolean shouldRenderCteNodes = renderCteNodes(false);
         List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.EMPTY_LIST;
         Set<Parameter<?>> parameters = new HashSet<>(parameterManager.getParameters());
@@ -1152,17 +1175,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
                 }
                 sbSelectFrom.append(')');
             } else {
-                List<JoinNode> valuesNodes = new ArrayList<>(entityFunctions.size());
-                List<JoinNode> lateInlineNodes = new ArrayList<>(entityFunctions.size());
-                for (JoinNode entityFunction : entityFunctions) {
-                    if (entityFunction.isInlineCte()) {
-                        lateInlineNodes.add(entityFunction);
-                    } else {
-                        valuesNodes.add(entityFunction);
-                    }
-                }
-
-                List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(null, valuesNodes, lateInlineNodes);
+                List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(null, entityFunctions);
                 for (int i = 0; i < entityFunctionNodes.size(); i++) {
                     sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(EntityFunction.FUNCTION_NAME, 1));
                 }

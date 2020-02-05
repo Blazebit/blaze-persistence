@@ -2403,6 +2403,19 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return getEntityFunctionNodes(baseQuery, joinManager.getEntityFunctionNodes(), joinManager.getLateInlineNodes());
     }
 
+    protected List<EntityFunctionNode> getEntityFunctionNodes(Query baseQuery, List<JoinNode> entityFunctions) {
+        List<JoinNode> valuesNodes = new ArrayList<>(entityFunctions.size());
+        List<JoinNode> lateInlineNodes = new ArrayList<>(entityFunctions.size());
+        for (JoinNode entityFunction : entityFunctions) {
+            if (entityFunction.isInlineCte()) {
+                lateInlineNodes.add(entityFunction);
+            } else {
+                valuesNodes.add(entityFunction);
+            }
+        }
+        return getEntityFunctionNodes(baseQuery, valuesNodes, lateInlineNodes);
+    }
+
     protected List<EntityFunctionNode> getEntityFunctionNodes(Query baseQuery, List<JoinNode> valuesNodes, List<JoinNode> lateInlineNodes) {
         List<EntityFunctionNode> entityFunctionNodes = new ArrayList<>();
 
