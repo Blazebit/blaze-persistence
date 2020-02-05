@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl.type;
 import com.blazebit.persistence.view.spi.type.BasicUserType;
 import com.blazebit.persistence.view.spi.type.VersionBasicUserType;
 
+import java.sql.Timestamp;
 import java.util.Calendar;
 
 /**
@@ -88,5 +89,17 @@ public class CalendarBasicUserType implements BasicUserType<Calendar>, VersionBa
     @Override
     public Calendar nextValue(Calendar current) {
         return Calendar.getInstance();
+    }
+
+    @Override
+    public Calendar fromString(CharSequence sequence) {
+        Calendar instance = Calendar.getInstance();
+        instance.setTime(Timestamp.valueOf(sequence.toString()));
+        return instance;
+    }
+
+    @Override
+    public String toStringExpression(String expression) {
+        return "TO_CHAR(" + expression + ", 'YYYY-MM-DD HH24:MI:SS.US')";
     }
 }

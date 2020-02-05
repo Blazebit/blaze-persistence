@@ -736,11 +736,14 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
     }
 
     JoinNode getRootNodeOrFail(String prefix, Object middle, String suffix) {
-        if (rootNodes.size() > 1) {
-            throw new IllegalArgumentException(prefix + middle + suffix);
+        switch (rootNodes.size()) {
+            case 0:
+                throw new IllegalArgumentException("No FROM clause root node available!");
+            case 1:
+                return rootNodes.get(0);
+            default:
+                throw new IllegalArgumentException(prefix + middle + suffix);
         }
-
-        return rootNodes.get(0);
     }
 
     JoinNode getRootNode(Expression expression) {

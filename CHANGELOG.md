@@ -8,11 +8,14 @@ Not yet released
 
 ### New features
 
-None
+* Introduce `REPLACE`, `CHR`, `CONCAT`, `BASE64`, `STRING_JSON_AGG`, `TO_STRING_JSON`, `STRING_XML_AGG`, `TO_STRING_XML` and `TO_MULTISET` functions
+* Introduce `MULTISET` fetch strategy for entity views
 
 ### Bug fixes
 
-None
+* Fix null expressions for custom types
+* Fix expanding null binding for embeddable
+* Fix problems with parameters in the select clause when using Hibernate subselect fetching for associations
 
 ### Backwards-incompatible changes
 

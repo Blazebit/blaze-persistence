@@ -56,7 +56,6 @@ public abstract class AbstractIndexedTupleListTransformer<C, K> extends TupleLis
     @Override
     public List<Object[]> transform(List<Object[]> tuples) {
         Map<TupleId, TupleIndexValue> tupleIndex = new HashMap<TupleId, TupleIndexValue>(tuples.size());
-        // Implementation detail: the tuple list is a LinkedList
         Iterator<Object[]> tupleListIter = tuples.iterator();
 
         while (tupleListIter.hasNext()) {

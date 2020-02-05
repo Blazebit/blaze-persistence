@@ -31,6 +31,8 @@ import java.util.List;
  */
 public abstract class AbstractGroupConcatFunction implements JpqlFunction {
 
+    public static final String FUNCTION_NAME = "group_concat";
+
     protected final TemplateRenderer renderer;
 
     public AbstractGroupConcatFunction(String template) {
@@ -51,6 +53,13 @@ public abstract class AbstractGroupConcatFunction implements JpqlFunction {
     public Class<?> getReturnType(Class<?> firstArgumentType) {
         return String.class;
     }
+
+    @Override
+    public void render(FunctionRenderContext context) {
+        render(context, getGroupConcat(context));
+    }
+
+    public abstract void render(FunctionRenderContext context, GroupConcat groupConcat);
 
     protected GroupConcat getGroupConcat(FunctionRenderContext context) {
         if (context.getArgumentsSize() == 0) {
@@ -186,7 +195,7 @@ public abstract class AbstractGroupConcatFunction implements JpqlFunction {
      * @author Christian Beikov
      * @since 1.2.0
      */
-    protected static final class GroupConcat {
+    public static final class GroupConcat {
 
         private final boolean distinct;
         private final String expression;

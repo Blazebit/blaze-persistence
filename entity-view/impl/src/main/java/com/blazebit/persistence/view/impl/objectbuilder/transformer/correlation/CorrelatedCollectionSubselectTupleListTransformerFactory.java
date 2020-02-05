@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
 
+import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.view.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
@@ -45,7 +46,7 @@ public class CorrelatedCollectionSubselectTupleListTransformerFactory extends Ab
     }
 
     @Override
-    public TupleListTransformer create(Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
+    public TupleListTransformer create(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
         return new CorrelatedCollectionSubselectTupleListTransformer(entityViewConfiguration.getExpressionFactory(), correlator, evm, viewRootType, viewRootAlias, embeddingViewType, embeddingViewPath, correlationResult, correlationBasisExpression, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, viewRootIndex, embeddingViewIndex,
                 correlationBasisIndex, correlationBasisType, correlationBasisEntity, entityViewConfiguration, collectionInstantiator, filterNulls, recording);
     }

@@ -37,4 +37,14 @@ public class IntegerBasicUserType extends ImmutableBasicUserType<Integer> implem
         }
         return current + 1;
     }
+
+    @Override
+    public Integer fromString(CharSequence sequence) {
+        return Integer.parseInt(sequence.toString());
+    }
+
+    @Override
+    public String toStringExpression(String expression) {
+        return expression;
+    }
 }

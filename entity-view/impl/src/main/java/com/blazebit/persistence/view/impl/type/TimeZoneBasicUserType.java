@@ -34,4 +34,14 @@ public class TimeZoneBasicUserType extends AbstractMutableBasicUserType<TimeZone
     public TimeZone deepClone(TimeZone object) {
         return (TimeZone) object.clone();
     }
+
+    @Override
+    public TimeZone fromString(CharSequence sequence) {
+        return TimeZone.getTimeZone(sequence.toString());
+    }
+
+    @Override
+    public String toStringExpression(String expression) {
+        return "TO_CHAR(" + expression + ", 'TZ')";
+    }
 }

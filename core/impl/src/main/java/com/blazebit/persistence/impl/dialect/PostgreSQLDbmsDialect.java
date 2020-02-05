@@ -265,4 +265,9 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
     public boolean supportsBooleanAggregation() {
         return true;
     }
+
+    @Override
+    public boolean supportsArbitraryLengthMultiset() {
+        return true;
+    }
 }

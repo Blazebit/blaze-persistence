@@ -32,6 +32,9 @@ import com.blazebit.persistence.impl.builder.expression.SimpleCaseWhenBuilderImp
 import com.blazebit.persistence.impl.builder.expression.SuperExpressionSubqueryBuilderListener;
 import com.blazebit.persistence.impl.builder.object.ClassObjectBuilder;
 import com.blazebit.persistence.impl.builder.object.ConstructorObjectBuilder;
+import com.blazebit.persistence.impl.builder.object.DelegatingTupleObjectBuilder;
+import com.blazebit.persistence.impl.builder.object.MultisetTransformingObjectBuilder;
+import com.blazebit.persistence.impl.builder.object.PreProcessingObjectBuilder;
 import com.blazebit.persistence.impl.builder.object.SelectObjectBuilderImpl;
 import com.blazebit.persistence.impl.builder.object.TupleObjectBuilder;
 import com.blazebit.persistence.impl.function.param.ParamFunction;
@@ -54,6 +57,8 @@ import com.blazebit.persistence.parser.expression.StringLiteral;
 import com.blazebit.persistence.parser.expression.Subquery;
 import com.blazebit.persistence.parser.expression.SubqueryExpression;
 import com.blazebit.persistence.spi.JpaProvider;
+import com.blazebit.persistence.spi.JpqlFunction;
+import com.blazebit.persistence.spi.JpqlFunctionProcessor;
 
 import javax.persistence.Tuple;
 import java.lang.reflect.Constructor;
@@ -74,7 +79,8 @@ import java.util.Set;
  */
 public class SelectManager<T> extends AbstractManager<SelectInfo> {
 
-    private final List<SelectInfo> selectInfos = new ArrayList<SelectInfo>();
+    private final List<SelectInfo> selectInfos = new ArrayList<>();
+    private final Map<Integer, JpqlFunctionProcessor<?>> jpqlFunctionProcessors = new HashMap<>();
     private boolean distinct = false;
     private boolean hasDefaultSelect;
     private Set<JoinNode> defaultSelectNodes;
@@ -125,16 +131,29 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
     }
 
     ObjectBuilder<T> getSelectObjectBuilder() {
-        if (objectBuilder == null && resultClazz.equals(Tuple.class)) {
-            return (ObjectBuilder<T>) new TupleObjectBuilder(selectInfos, selectAliasToPositionMap);
+        ObjectBuilder<T> builder = objectBuilder;
+        if (builder == null) {
+            if (resultClazz.equals(Tuple.class)) {
+                if (jpqlFunctionProcessors.isEmpty()) {
+                    return (ObjectBuilder<T>) new TupleObjectBuilder(selectInfos, selectAliasToPositionMap);
+                } else {
+                    return (ObjectBuilder<T>) new DelegatingTupleObjectBuilder(new MultisetTransformingObjectBuilder(jpqlFunctionProcessors, selectInfos), selectInfos, selectAliasToPositionMap);
+                }
+            }
+        } else if (!jpqlFunctionProcessors.isEmpty()) {
+            builder = new PreProcessingObjectBuilder<>(new MultisetTransformingObjectBuilder(jpqlFunctionProcessors, selectInfos), builder);
         }
-        return objectBuilder;
+        return builder;
     }
 
     public List<SelectInfo> getSelectInfos() {
         return selectInfos;
     }
-    
+
+    public Map<Integer, JpqlFunctionProcessor<?>> getJpqlFunctionProcessors() {
+        return jpqlFunctionProcessors;
+    }
+
     public boolean containsSizeSelect() {
         return hasSizeSelect;
     }
@@ -459,13 +478,67 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
             selectAliasToPositionMap.put(selectAlias, selectAliasToPositionMap.size());
         }
         if (index == -1) {
+            addJpqlFunctionProcessor(expr, selectInfos.size());
             selectInfos.add(selectInfo);
         } else {
+            addJpqlFunctionProcessor(expr, index);
             selectInfos.add(index, selectInfo);
         }
         hasSizeSelect = hasSizeSelect || ExpressionUtils.containsSizeExpression(selectInfo.getExpression());
 
         registerParameterExpressions(expr);
+    }
+
+    private void addJpqlFunctionProcessor(Expression expr, int index) {
+        if (expr instanceof FunctionExpression) {
+            String functionName = ((FunctionExpression) expr).getFunctionName().toLowerCase();
+            JpqlFunction jpqlFunction = mainQuery.cbf.getRegisteredFunctions().get(functionName);
+            if (jpqlFunction instanceof JpqlFunctionProcessor<?>) {
+                jpqlFunctionProcessors.put(index, (JpqlFunctionProcessor<?>) jpqlFunction);
+                if ("to_multiset".equals(functionName)) {
+                    Subquery subquery = ((SubqueryExpression) ((FunctionExpression) expr).getExpressions().get(0)).getSubquery();
+                    if (subquery instanceof SubqueryInternalBuilder<?>) {
+                        SubqueryInternalBuilder<?> subqueryInternalBuilder = (SubqueryInternalBuilder<?>) subquery;
+                        jpqlFunctionProcessors.put(index, new NestedToMultisetJpqlFunctionProcessor((JpqlFunctionProcessor<?>) jpqlFunction, subqueryInternalBuilder.getJpqlFunctionProcessors(), subqueryInternalBuilder.getSelectExpressions()));
+                    }
+                }
+            }
+        } else if (expr instanceof SubqueryExpression) {
+            Subquery subquery = ((SubqueryExpression) expr).getSubquery();
+            if (subquery instanceof SubqueryInternalBuilder<?>) {
+                SubqueryInternalBuilder<?> subqueryInternalBuilder = (SubqueryInternalBuilder<?>) subquery;
+                if (!subqueryInternalBuilder.getJpqlFunctionProcessors().isEmpty()) {
+                    jpqlFunctionProcessors.put(index, subqueryInternalBuilder.getJpqlFunctionProcessors().get(0));
+                }
+            }
+        }
+    }
+
+    /**
+     *
+     * @author Christian Beikov
+     * @since 1.5.0
+     */
+    private static class NestedToMultisetJpqlFunctionProcessor implements JpqlFunctionProcessor<Object> {
+
+        private final MultisetTransformingObjectBuilder objectBuilder;
+        private final JpqlFunctionProcessor<Object> preProcessor;
+
+        public NestedToMultisetJpqlFunctionProcessor(JpqlFunctionProcessor<?> preProcessor, Map<Integer, JpqlFunctionProcessor<?>> jpqlFunctionProcessorMap, List<Expression> expressions) {
+            this.objectBuilder = new MultisetTransformingObjectBuilder(expressions, jpqlFunctionProcessorMap);
+            this.preProcessor = (JpqlFunctionProcessor<Object>) preProcessor;
+        }
+
+        @Override
+        public Object process(Object result, List<Object> arguments) {
+            List<Object[]> newResult = (List<Object[]>) preProcessor.process(result, arguments);
+            if (newResult != null) {
+                for (int i = 0; i < newResult.size(); i++) {
+                    objectBuilder.build(newResult.get(i));
+                }
+            }
+            return newResult;
+        }
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -571,6 +644,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
 
         selectAliasToPositionMap.clear();
         selectInfos.clear();
+        jpqlFunctionProcessors.clear();
         hasDefaultSelect = false;
         hasSizeSelect = false;
         if (defaultSelectNodes != null) {

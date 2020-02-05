@@ -490,6 +490,16 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                 isCollection() || getElementType() instanceof ManagedViewTypeImpl<?> && ((ManagedViewTypeImplementor<?>) getElementType()).hasJoinFetchedCollections());
     }
 
+    public boolean hasSelectOrSubselectFetchedAttributes() {
+        return getFetchStrategy() == FetchStrategy.SELECT || getFetchStrategy() == FetchStrategy.SUBSELECT || (
+                getElementType() instanceof ManagedViewTypeImpl<?> && ((ManagedViewTypeImplementor<?>) getElementType()).hasSelectOrSubselectFetchedAttributes());
+    }
+
+    public boolean hasJpaManagedAttributes() {
+        return getElementType() instanceof BasicTypeImpl<?> && ((BasicTypeImpl<?>) getElementType()).isJpaManaged() ||
+                getElementType() instanceof ManagedViewTypeImpl<?> && ((ManagedViewTypeImplementor<?>) getElementType()).hasJpaManagedAttributes();
+    }
+
     protected boolean determineForcedUnique(MetamodelBuildingContext context) {
         if (isCollection() && getMapping() != null && getMapping().indexOf('.') == -1) {
             ExtendedManagedType<?> managedType = context.getEntityMetamodel().getManagedType(ExtendedManagedType.class, getDeclaringType().getJpaManagedType());
@@ -783,6 +793,14 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                         context.addError("An error occurred while trying to resolve the " + errorLocation + " '" + fetch + "' of the " + getLocation() + ": " + ex.getMessage());
                     }
                 }
+            }
+        }
+
+        if (fetchStrategy == FetchStrategy.MULTISET) {
+            if (getElementType() instanceof ManagedViewTypeImplementor<?> && ((ManagedViewTypeImplementor<?>) getElementType()).hasJpaManagedAttributes()) {
+                context.addError("Using the MULTISET fetch strategy is not allowed when the subview contains attributes with entity types. MULTISET at the " + getLocation() + " is not allowed!");
+            } else if (getElementType() instanceof BasicTypeImpl<?> && ((BasicTypeImpl<?>) getElementType()).isJpaManaged()) {
+                context.addError("Using the MULTISET fetch strategy is not allowed with entity types. MULTISET at the " + getLocation() + " is not allowed!");
             }
         }
 

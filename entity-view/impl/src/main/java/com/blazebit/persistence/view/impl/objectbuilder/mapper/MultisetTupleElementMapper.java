@@ -1,0 +1,70 @@
+/*
+ * Copyright 2014 - 2020 Blazebit.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.blazebit.persistence.view.impl.objectbuilder.mapper;
+
+import com.blazebit.persistence.ParameterHolder;
+import com.blazebit.persistence.SelectBuilder;
+import com.blazebit.persistence.SubqueryBuilder;
+import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
+import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
+import com.blazebit.persistence.view.spi.type.BasicUserTypeStringSupport;
+
+import java.util.Map;
+
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.5.0
+ */
+public class MultisetTupleElementMapper implements TupleElementMapper {
+
+    protected final ViewTypeObjectBuilderTemplate<Object[]> subviewTemplate;
+    protected final String correlationExpression;
+    protected final String attributePath;
+    protected final String embeddingViewPath;
+
+    public MultisetTupleElementMapper(ViewTypeObjectBuilderTemplate<Object[]> subviewTemplate, String correlationExpression, String attributePath, String embeddingViewPath) {
+        this.subviewTemplate = subviewTemplate;
+        this.correlationExpression = correlationExpression.intern();
+        this.attributePath = attributePath;
+        this.embeddingViewPath = embeddingViewPath;
+    }
+
+    @Override
+    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean asString) {
+        String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
+        embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
+        SubqueryBuilder<?> subqueryBuilder = queryBuilder.selectSubquery("subquery", "TO_MULTISET(subquery)")
+                .from(correlationExpression, "multiset_" + attributePath.replace('.', '_'));
+        for (TupleElementMapper mapper : subviewTemplate.getMappers()) {
+            mapper.applyMapping(subqueryBuilder, parameterHolder, optionalParameters, embeddingViewJpqlMacro, true);
+        }
+
+        subqueryBuilder.end();
+        embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
+    }
+
+    @Override
+    public String getAttributePath() {
+        return attributePath;
+    }
+
+    @Override
+    public BasicUserTypeStringSupport<Object> getBasicTypeStringSupport() {
+        return null;
+    }
+}

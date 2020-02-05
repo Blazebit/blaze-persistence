@@ -19,7 +19,9 @@ package com.blazebit.persistence.view.impl.objectbuilder.mapper;
 import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.view.SubqueryProviderFactory;
+import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
+import com.blazebit.persistence.view.spi.type.BasicUserTypeStringSupport;
 
 import java.util.Map;
 
@@ -30,21 +32,27 @@ import java.util.Map;
  */
 public class ParameterizedSubqueryTupleElementMapper implements SubqueryTupleElementMapper {
 
+    protected final BasicUserTypeStringSupport<Object> basicTypeStringSupport;
     protected final SubqueryProviderFactory providerFactory;
     protected final String attributePath;
     protected final String embeddingViewPath;
 
-    public ParameterizedSubqueryTupleElementMapper(SubqueryProviderFactory providerFactory, String attributePath, String embeddingViewPath) {
+    public ParameterizedSubqueryTupleElementMapper(Type<?> type, SubqueryProviderFactory providerFactory, String attributePath, String embeddingViewPath) {
+        this.basicTypeStringSupport = TypeUtils.forType(type);
         this.providerFactory = providerFactory;
         this.attributePath = attributePath;
         this.embeddingViewPath = embeddingViewPath;
     }
 
     @Override
-    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
+    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean asString) {
         String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
         embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
-        providerFactory.create(parameterHolder, optionalParameters).createSubquery(queryBuilder.selectSubquery());
+        if (asString && basicTypeStringSupport != null) {
+            providerFactory.create(parameterHolder, optionalParameters).createSubquery(queryBuilder.selectSubquery("alias", basicTypeStringSupport.toStringExpression("alias")));
+        } else {
+            providerFactory.create(parameterHolder, optionalParameters).createSubquery(queryBuilder.selectSubquery());
+        }
         embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
     }
 
@@ -66,5 +74,10 @@ public class ParameterizedSubqueryTupleElementMapper implements SubqueryTupleEle
     @Override
     public String getSubqueryExpression() {
         return null;
+    }
+
+    @Override
+    public BasicUserTypeStringSupport<Object> getBasicTypeStringSupport() {
+        return basicTypeStringSupport;
     }
 }

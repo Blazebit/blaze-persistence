@@ -228,7 +228,7 @@ public class SqlUtils {
 
     public static String[] getSelectItems(CharSequence sql, int start, SelectItemExtractor extractor) {
         int selectIndex = SELECT_FINDER.indexIn(sql, start);
-        int fromIndex = FROM_FINDER.indexIn(sql, selectIndex);
+        int fromIndex = indexOfFrom(sql, selectIndex);
         // from-less query
         if (fromIndex == -1) {
             fromIndex = sql.length();
@@ -243,11 +243,10 @@ public class SqlUtils {
     }
 
     public static List<String> getExpressionItems(CharSequence sql, int i, int end, SelectItemExtractor extractor) {
-        List<String> selectItems = new ArrayList<String>();
+        List<String> selectItems = new ArrayList<>();
         StringBuilder sb = new StringBuilder();
         int parenthesis = 0;
         QuoteMode mode = QuoteMode.NONE;
-        int fromIndex = end;
 
         while (i < end) {
             final char c = sql.charAt(i);
@@ -261,28 +260,17 @@ public class SqlUtils {
                     continue;
                 } else if (c == '(') {
                     // While we are in a subcontext, consider the whole query
-                    end = sql.length();
-
                     parenthesis++;
                 } else if (c == ')') {
-                    // When we leave the context, reset the end to the from index
-                    if (i < fromIndex && parenthesis == 1) {
-                        end = fromIndex;
-                    } else {
-                        // If the found from was in the subcontext, find the next from
-                        // When we are in a subcontext i.e. parenthesis != 1, we have to start searching at i + 2 to avoid running into the subcontext from clause
-                        end = fromIndex = FROM_FINDER.indexIn(sql, parenthesis == 1 ? i : i + 2);
-                        // from-less query
-                        if (fromIndex == -1) {
-                            end = fromIndex = sql.length();
-                        }
-                    }
-
                     parenthesis--;
                 }
+                if (sb.length() != 0 || !Character.isWhitespace(c)) {
+                    sb.append(c);
+                }
+            } else {
+                sb.append(c);
             }
 
-            sb.append(c);
             i++;
         }
 
@@ -322,43 +310,15 @@ public class SqlUtils {
             return selectIndex;
         }
 
-        int brackets = 0;
-        QuoteMode mode = QuoteMode.NONE;
-        int i = withIndex + WITH.length();
-        int end = selectIndex;
-        while (i < end) {
-            final char c = sql.charAt(i);
-            mode = mode.onChar(c);
-
-            if (mode == QuoteMode.NONE) {
-                if (c == '(') {
-                    // While we are in a subcontext, consider the whole query
-                    end = sql.length();
-
-                    brackets++;
-                } else if (c == ')') {
-                    brackets--;
-
-                    if (brackets == 0) {
-                        // When we leave the context, reset the end to the select index
-                        if (i < selectIndex) {
-                            end = selectIndex;
-                        } else {
-                            // If the found select was in the subcontext, find the next select
-                            end = selectIndex = SELECT_FINDER.indexIn(sql, i);
-                        }
-                    }
-                }
-            }
-
-            i++;
-        }
-
-        return selectIndex;
+        return indexOf(SELECT_FINDER, sql, 0, withIndex);
     }
 
     public static int indexOfFrom(CharSequence sql) {
-        return FROM_FINDER.indexIn(sql, 0);
+        return indexOf(FROM_FINDER, sql, 0, 0);
+    }
+
+    public static int indexOfFrom(CharSequence sql, int start) {
+        return indexOf(FROM_FINDER, sql, start, start);
     }
 
     /**
@@ -372,40 +332,7 @@ public class SqlUtils {
     }
 
     public static int indexOfWhere(CharSequence sql, int start) {
-        int whereIndex = WHERE_FINDER.indexIn(sql, start);
-        int brackets = 0;
-        QuoteMode mode = QuoteMode.NONE;
-        int i = 0;
-        int end = whereIndex;
-        while (i < end) {
-            final char c = sql.charAt(i);
-            mode = mode.onChar(c);
-
-            if (mode == QuoteMode.NONE) {
-                if (c == '(') {
-                    // While we are in a subcontext, consider the whole query
-                    end = sql.length();
-
-                    brackets++;
-                } else if (c == ')') {
-                    brackets--;
-
-                    if (brackets == 0) {
-                        // When we leave the context, reset the end to the select index
-                        if (i < whereIndex) {
-                            end = whereIndex;
-                        } else {
-                            // If the found select was in the subcontext, find the next select
-                            end = whereIndex = WHERE_FINDER.indexIn(sql, i);
-                        }
-                    }
-                }
-            }
-
-            i++;
-        }
-
-        return whereIndex;
+        return indexOf(WHERE_FINDER, sql, start, 0);
     }
 
     /**
@@ -415,11 +342,15 @@ public class SqlUtils {
      * @return The index of the SELECT keyword if found, or -1
      */
     public static int indexOfOrderBy(CharSequence sql) {
-        int orderByIndex = ORDER_BY_FINDER.indexIn(sql);
+        return indexOf(ORDER_BY_FINDER, sql, 0, 0);
+    }
+
+    private static int indexOf(PatternFinder patternFinder, CharSequence sql, int start, int checkStart) {
+        int patternIndex = patternFinder.indexIn(sql, start);
         int brackets = 0;
         QuoteMode mode = QuoteMode.NONE;
-        int i = 0;
-        int end = orderByIndex;
+        int i = checkStart;
+        int end = patternIndex;
         while (i < end) {
             final char c = sql.charAt(i);
             mode = mode.onChar(c);
@@ -435,11 +366,11 @@ public class SqlUtils {
 
                     if (brackets == 0) {
                         // When we leave the context, reset the end to the select index
-                        if (i < orderByIndex) {
-                            end = orderByIndex;
+                        if (i < patternIndex) {
+                            end = patternIndex;
                         } else {
                             // If the found select was in the subcontext, find the next select
-                            end = orderByIndex = ORDER_BY_FINDER.indexIn(sql, i);
+                            end = patternIndex = patternFinder.indexIn(sql, i);
                         }
                     }
                 }
@@ -448,7 +379,7 @@ public class SqlUtils {
             i++;
         }
 
-        return orderByIndex;
+        return patternIndex;
     }
 
     /**
@@ -749,6 +680,20 @@ public class SqlUtils {
         int asIndex = AS_FINDER.indexIn(sb);
         if (asIndex == -1) {
             return sb.toString();
+        }
+        int lastNonWhitespaceIndex = sb.length();
+        for (int i = sb.length() - 1; i > 0; i--) {
+            if (!Character.isWhitespace(sb.charAt(i))) {
+                lastNonWhitespaceIndex = i + 1;
+                break;
+            }
+        }
+        // If the supposed alias contains a whitespace, we are in a subquery
+        for (int i = asIndex + 4; i < lastNonWhitespaceIndex; i++) {
+            final char c = sb.charAt(i);
+            if (Character.isWhitespace(c)) {
+                return sb.toString();
+            }
         }
 
         return sb.substring(0, asIndex);

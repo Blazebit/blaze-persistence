@@ -34,8 +34,7 @@ public class PostgreSQLGroupConcatFunction extends AbstractGroupConcatFunction {
     }
 
     @Override
-    public void render(FunctionRenderContext context) {
-        GroupConcat groupConcat = getGroupConcat(context);
+    public void render(FunctionRenderContext context, GroupConcat groupConcat) {
         StringBuilder sb = new StringBuilder();
 
         if (groupConcat.isDistinct()) {

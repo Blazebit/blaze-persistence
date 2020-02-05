@@ -69,4 +69,8 @@ public class CastFunction implements JpqlFunction {
         context.addChunk(")");
     }
 
+    public String getCastExpression(String argument) {
+        return "cast(" + argument + " as " + defaultSqlCastType + ")";
+    }
+
 }

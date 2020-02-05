@@ -26,6 +26,7 @@ import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.impl.MacroConfigurationExpressionFactory;
 import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
+import com.blazebit.persistence.view.impl.type.BasicUserTypeRegistry;
 import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 
@@ -41,6 +42,8 @@ import java.util.Set;
  * @since 1.2.0
  */
 public interface MetamodelBuildingContext {
+
+    public BasicUserTypeRegistry getBasicUserTypeRegistry();
 
     public Collection<ViewMapping> getViewMappings();
 

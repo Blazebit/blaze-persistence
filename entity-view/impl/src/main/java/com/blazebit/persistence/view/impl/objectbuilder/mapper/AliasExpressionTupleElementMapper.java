@@ -16,12 +16,13 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.mapper;
 
-import java.util.Map;
-
 import com.blazebit.persistence.FetchBuilder;
 import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
+import com.blazebit.persistence.view.spi.type.BasicUserTypeStringSupport;
+
+import java.util.Map;
 
 /**
  *
@@ -32,13 +33,13 @@ public class AliasExpressionTupleElementMapper extends ExpressionTupleElementMap
 
     private final String alias;
 
-    public AliasExpressionTupleElementMapper(String expression, String alias, String attributePath, String embeddingViewPath, String[] fetches) {
-        super(expression, attributePath, embeddingViewPath, fetches);
+    public AliasExpressionTupleElementMapper(BasicUserTypeStringSupport<Object> basicTypeStringSupport, String expression, String alias, String attributePath, String embeddingViewPath, String[] fetches) {
+        super(basicTypeStringSupport, expression, attributePath, embeddingViewPath, fetches);
         this.alias = alias.intern();
     }
 
     @Override
-    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
+    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean asString) {
         String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
         embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
         queryBuilder.select(expression, alias);

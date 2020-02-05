@@ -245,6 +245,11 @@ public class OracleDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
+    public boolean supportsArbitraryLengthMultiset() {
+        return true;
+    }
+
+    @Override
     public PreparedStatement prepare(PreparedStatement ps, int[] returningSqlTypes) throws SQLException {
         if (REGISTER_RETURN_PARAMETER == null) {
             throw new IllegalStateException("Could not apply query returning because the class oracle.jdbc.OraclePreparedStatement could not be loaded!");

@@ -31,6 +31,9 @@
     <name>Blazebit Persistence Core Testsuite</name>
 
     <properties>
+        <!-- We use Java 8 for a few tests -->
+        <test.java.version>1.8</test.java.version>
+        <java.version>${test.java.version}</java.version>
         <module.name>com.blazebit.persistence.core.testsuite</module.name>
     </properties>
 

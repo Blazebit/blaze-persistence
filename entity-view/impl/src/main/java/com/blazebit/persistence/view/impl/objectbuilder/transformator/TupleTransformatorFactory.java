@@ -224,8 +224,8 @@ public class TupleTransformatorFactory {
         }
 
         @Override
-        public TupleListTransformer create(Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
-            return new ConstrainedTupleListTransformer(classMappingIndex, subtypeIndexes, delegate.create(optionalParameters, entityViewConfiguration));
+        public TupleListTransformer create(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
+            return new ConstrainedTupleListTransformer(classMappingIndex, subtypeIndexes, delegate.create(parameterHolder, optionalParameters, entityViewConfiguration));
         }
     }
 
@@ -248,7 +248,7 @@ public class TupleTransformatorFactory {
         transformatorLevels.get(currentLevel).tupleTransformerFactories.add(tupleTransformerFactory);
     }
 
-    public TupleTransformator create(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
+    public TupleTransformator create(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration, int subIndex) {
         List<TupleTransformatorLevel> newTransformatorLevels = new ArrayList<TupleTransformatorLevel>(transformatorLevels.size());
         for (TupleTransformatorFactoryLevel thisLevel : transformatorLevels) {
             List<TupleTransformerFactory> tupleTransformerFactories = thisLevel.tupleTransformerFactories;
@@ -257,7 +257,7 @@ public class TupleTransformatorFactory {
             final TupleListTransformer tupleListTransformer;
 
             if (thisLevel.tupleListTransformerFactory != null) {
-                tupleListTransformer = thisLevel.tupleListTransformerFactory.create(optionalParameters, entityViewConfiguration);
+                tupleListTransformer = thisLevel.tupleListTransformerFactory.create(parameterHolder, optionalParameters, entityViewConfiguration);
             } else {
                 tupleListTransformer = thisLevel.tupleListTransformer;
             }
@@ -271,6 +271,6 @@ public class TupleTransformatorFactory {
             newTransformatorLevels.add(new TupleTransformatorLevel(tupleTransformers, tupleListTransformer));
         }
         
-        return new TupleTransformator(newTransformatorLevels);
+        return new TupleTransformator(newTransformatorLevels, subIndex);
     }
 }

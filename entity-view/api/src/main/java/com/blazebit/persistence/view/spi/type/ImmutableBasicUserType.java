@@ -81,4 +81,14 @@ public class ImmutableBasicUserType<X> implements BasicUserType<X> {
     public X deepClone(X object) {
         return object;
     }
+
+    @Override
+    public X fromString(CharSequence sequence) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String toStringExpression(String expression) {
+        throw new UnsupportedOperationException();
+    }
 }

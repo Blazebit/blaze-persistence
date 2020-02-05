@@ -77,4 +77,14 @@ public abstract class AbstractPluralUserTypeWrapper<C, V> implements BasicUserTy
     public String[] getDirtyProperties(C object) {
         throw new UnsupportedOperationException("plural attribute");
     }
+
+    @Override
+    public C fromString(CharSequence sequence) {
+        throw new UnsupportedOperationException("plural attribute");
+    }
+
+    @Override
+    public String toStringExpression(String expression) {
+        throw new UnsupportedOperationException();
+    }
 }

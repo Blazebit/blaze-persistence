@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl.objectbuilder.mapper;
 import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
+import com.blazebit.persistence.view.spi.type.BasicUserTypeStringSupport;
 
 import java.util.Map;
 
@@ -31,5 +32,7 @@ public interface TupleElementMapper {
 
     public String getAttributePath();
 
-    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EmbeddingViewJpqlMacro embeddingViewJpqlMacro);
+    public BasicUserTypeStringSupport<Object> getBasicTypeStringSupport();
+
+    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean asString);
 }

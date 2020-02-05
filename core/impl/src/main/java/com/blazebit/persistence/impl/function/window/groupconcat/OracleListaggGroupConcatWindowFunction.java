@@ -42,8 +42,10 @@ public class OracleListaggGroupConcatWindowFunction extends AbstractGroupConcatW
         context.addChunk(", ");
         context.addChunk(quoted(groupConcat.getSeparator()));
         List<Order> orderBys = windowFunction.getOrderBys();
-        if (orderBys.size() != 0) {
-            context.addChunk(") within group (");
+        context.addChunk(") within group (");
+        if (orderBys.size() == 0) {
+            context.addChunk("1");
+        } else {
             super.renderOrderBy(context, orderBys);
         }
     }

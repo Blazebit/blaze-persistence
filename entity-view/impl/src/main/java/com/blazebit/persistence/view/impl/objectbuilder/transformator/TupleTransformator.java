@@ -16,11 +16,15 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.transformator;
 
-import java.util.*;
-
 import com.blazebit.persistence.view.impl.objectbuilder.TupleRest;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformer;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleTransformer;
+
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Set;
 
 /**
  * @author Christian Beikov
@@ -29,41 +33,33 @@ import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleTransfo
 public class TupleTransformator {
 
     private final List<TupleTransformatorLevel> transformatorLevels;
+    private final int subIndex;
 
-    public TupleTransformator(List<TupleTransformatorLevel> transformatorLevels) {
+    public TupleTransformator(List<TupleTransformatorLevel> transformatorLevels, int subIndex) {
         this.transformatorLevels = transformatorLevels;
+        this.subIndex = subIndex;
     }
 
     public List<Object[]> transformAll(List<Object[]> tupleList) {
-        List<Object[]> newTupleList;
         UpdatableViewMap updatableViewMap = new UpdatableViewMap();
-
-        // Performance optimization
-        // LinkedList can remove elements from the list very fast
-        // This is important because transformers avoid copying of tuples and instead remove elements from the tupleList
-        if (tupleList instanceof LinkedList<?>) {
-            newTupleList = tupleList;
-        } else {
-            newTupleList = new LinkedList<Object[]>(tupleList);
-        }
 
         for (int i = 0; i < transformatorLevels.size(); i++) {
             if (transformatorLevels.get(i).tupleTransformers.length != 0) {
-                ListIterator<Object[]> newTupleListIter = newTupleList.listIterator();
+                ListIterator<Object[]> newTupleListIter = tupleList.listIterator();
 
                 while (newTupleListIter.hasNext()) {
                     Object[] tuple = newTupleListIter.next();
                     newTupleListIter.set(transform(i, tuple, updatableViewMap));
                 }
             }
-            newTupleList = transform(i, newTupleList);
+            tupleList = transform(i, tupleList);
         }
 
         // if we have multiple levels, we must filter duplicates afterwards
         if (transformatorLevels.size() > 1) {
-            Set<TupleRest> tupleSet = new HashSet<>(newTupleList.size());
+            Set<TupleRest> tupleSet = new HashSet<>(tupleList.size());
 
-            Iterator<Object[]> tupleListIter = newTupleList.iterator();
+            Iterator<Object[]> tupleListIter = tupleList.iterator();
 
             while (tupleListIter.hasNext()) {
                 if (!tupleSet.add(new TupleRest(tupleListIter.next(), 0, 0))) {
@@ -72,7 +68,7 @@ public class TupleTransformator {
             }
         }
 
-        return newTupleList;
+        return tupleList;
     }
 
     private Object[] transform(int level, Object[] tuple, UpdatableViewMap updatableViewMap) {

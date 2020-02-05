@@ -495,6 +495,99 @@ Uses the first argument just to fake the type and renders only the second argume
 
 WARNING: This is an internal function that is used to implement support for parameters in the `SELECT` clause.
 
+==== REPLACE function
+
+Syntax: `REPLACE ( string, search, replacement )`
+
+Returns a string with all occurrences of `search` within `string` replaced with `replacement`.
+
+==== BASE64 function
+
+Syntax: `BASE64 ( bytes )`
+
+Returns a Base64 encoded string that represents the passed bytes.
+
+==== STRING_JSON_AGG function
+
+Syntax: `STRING_JSON_AGG ( key1, value1, ..., keyN, valueN )`
+
+An aggregate function that aggregates to a JSON string containing *only* string values or `null`.
+
+[source]
+----
+[
+    {
+        "key1": "value1",
+        ...
+        "keyN": "valueN"
+    },...
+]
+----
+
+==== STRING_XML_AGG function
+
+Syntax: `STRING_XML_AGG ( key1, value1, ..., keyN, valueN )`
+
+An aggregate function that aggregates to a XML string. A `null` value is omitted.
+
+[source]
+----
+<e>
+    <key1>value1</key1>
+    ...
+    <keyN>valueN</keyN>
+</e>
+<e>
+    ...
+</e>
+...
+----
+
+==== TO_STRING_JSON function
+
+Syntax: `TO_STRING_JSON ( subquery, key1, ..., keyN )`
+
+Transforms the subquery into an expression that returns the results of the subquery as JSON string containing *only* string values or `null`.
+The select items of the subquery are matched positionally against the `key` arguments i.e. the first select item of the subquery will be mapped to `key1` and so on.
+
+[source]
+----
+[
+    {
+        "key1": "value1",
+        ...
+        "keyN": "valueN"
+    },...
+]
+----
+
+==== TO_STRING_XML function
+
+Syntax: `TO_STRING_XML ( subquery, key1, ..., keyN )`
+
+Transforms the subquery into an expression that returns the results of the subquery as XML string. A `null` value is omitted.
+The select items of the subquery are matched positionally against the `key` arguments i.e. the first select item of the subquery will be mapped to `key1` and so on.
+
+[source]
+----
+<e>
+    <key1>value1</key1>
+    ...
+    <keyN>valueN</keyN>
+</e>
+<e>
+    ...
+</e>
+...
+----
+
+==== TO_MULTISET function
+
+Syntax: `TO_MULTISET ( subquery )`
+
+Transforms the subquery into an expression that returns the results of the subquery as JSON or XML string under the hood.
+The result of this expression is a `List<Object[]>` as if the subquery was executed separately.
+
 === Custom JPQL functions
 
 Apart from providing many useful functions out of the box, {projectname} also allows to implement custom JPQL functions that can be called just like any other non-standard function,

@@ -113,4 +113,9 @@ public class H2DbmsDialect extends DefaultDbmsDialect {
     public LateralStyle getLateralStyle() {
         return LateralStyle.NONE;
     }
+
+    @Override
+    public boolean supportsArbitraryLengthMultiset() {
+        return true;
+    }
 }

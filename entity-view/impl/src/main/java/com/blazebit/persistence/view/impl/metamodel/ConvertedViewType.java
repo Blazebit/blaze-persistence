@@ -114,6 +114,16 @@ public class ConvertedViewType<X> implements ViewTypeImplementor<X> {
     }
 
     @Override
+    public boolean hasSelectOrSubselectFetchedAttributes() {
+        return delegate.hasSelectOrSubselectFetchedAttributes();
+    }
+
+    @Override
+    public boolean hasJpaManagedAttributes() {
+        return delegate.hasJpaManagedAttributes();
+    }
+
+    @Override
     public boolean hasSubtypes() {
         return delegate.hasSubtypes();
     }

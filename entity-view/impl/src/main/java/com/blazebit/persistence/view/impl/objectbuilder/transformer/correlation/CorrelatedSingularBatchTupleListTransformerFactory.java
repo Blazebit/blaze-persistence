@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
 
+import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.view.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformer;
@@ -36,7 +37,7 @@ public class CorrelatedSingularBatchTupleListTransformerFactory extends Abstract
     }
 
     @Override
-    public TupleListTransformer create(Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
+    public TupleListTransformer create(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
         return new CorrelatedSingularBatchTupleListTransformer(entityViewConfiguration.getExpressionFactory(), correlator, viewRootType, embeddingViewType, correlationResult, correlationProviderFactory, attributePath, fetches, correlatesThis, viewRootIndex, embeddingViewIndex, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
     }
 

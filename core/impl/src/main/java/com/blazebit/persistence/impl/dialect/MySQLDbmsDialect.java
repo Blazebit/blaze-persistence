@@ -78,6 +78,11 @@ public class MySQLDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
+    public boolean supportsArbitraryLengthMultiset() {
+        return true;
+    }
+
+    @Override
     public String getDummyTable() {
         return "dual";
     }

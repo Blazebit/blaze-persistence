@@ -89,4 +89,14 @@ public class DateBasicUserType implements BasicUserType<Date>, VersionBasicUserT
     public Date nextValue(Date current) {
         return new Date();
     }
+
+    @Override
+    public Date fromString(CharSequence sequence) {
+        return java.sql.Timestamp.valueOf(sequence.toString());
+    }
+
+    @Override
+    public String toStringExpression(String expression) {
+        return "TO_CHAR(" + expression + ", 'YYYY-MM-DD HH24:MI:SS.US')";
+    }
 }

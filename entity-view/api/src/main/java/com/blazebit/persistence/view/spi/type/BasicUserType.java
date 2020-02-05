@@ -23,7 +23,7 @@ package com.blazebit.persistence.view.spi.type;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public interface BasicUserType<X> {
+public interface BasicUserType<X> extends BasicUserTypeStringSupport<X> {
 
     /**
      * The object to return from {@link #getDirtyProperties(Object)} when unsure what properties are dirty.

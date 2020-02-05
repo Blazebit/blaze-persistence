@@ -12,14 +12,14 @@ install:
 # Skip the first maven execution for downloading dependencies by using this command
   - /bin/true
 before_script:
-  - bash -c "if [ '$RDBMS' = 'mysql' ]; then bash travis/before_script_mysql.sh; fi"
+  - bash -c "if [ '$RDBMS' = 'mysql' ]; then MYSQL_VERSION=5.7 bash travis/before_script_mysql.sh; fi"
   - bash -c "if [ '$RDBMS' = 'mysql8' ]; then MYSQL_VERSION=8.0 bash travis/before_script_mysql.sh; fi"
   - bash -c "if [ '$RDBMS' = 'postgresql' ]; then psql -c 'create database test;' -U postgres; fi"
   - bash -c "if [ '$RDBMS' = 'db2' ]; then bash travis/before_script_db2.sh; fi"
   - bash -c "if [ '$RDBMS' = 'firebird' ]; then bash travis/before_script_firebird.sh; fi"
   - bash -c "if [ '$RDBMS' = 'oracle' ]; then bash travis/before_script_oracle.sh; fi"
   - bash -c "if [ '$RDBMS' = 'mssql' ]; then bash travis/before_script_mssql.sh; fi"
-after_failure: 
+after_failure:
   - bash travis/print_surefire_reports.sh
 script:
   - ./build.sh
@@ -53,7 +53,7 @@ matrix:
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=postgresql
       jdk: oraclejdk8
       addons:
-        postgresql: "9.3"
+        postgresql: "9.4"
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=mssql
       jdk: oraclejdk8
       sudo: true
@@ -92,7 +92,7 @@ matrix:
     - env: JPAPROVIDER=datanucleus-5 RDBMS=postgresql
       jdk: oraclejdk8
       addons:
-        postgresql: "9.3"
+        postgresql: "9.4"
 #    - env: JPAPROVIDER=datanucleus-5 RDBMS=mssql
 #      jdk: oraclejdk8
 #      sudo: true
@@ -123,7 +123,7 @@ matrix:
 #      sudo: required
 #    - env: JPAPROVIDER=eclipselink RDBMS=postgresql
 #      addons:
-#        postgresql: "9.3"
+#        postgresql: "9.4"
 #    - env: JPAPROVIDER=eclipselink RDBMS=mssql
 #      jdk: oraclejdk8
 #      sudo: true
@@ -151,7 +151,7 @@ matrix:
 #      sudo: required
 #    - env: JPAPROVIDER=openjpa RDBMS=postgresql
 #      addons:
-#        postgresql: "9.3"
+#        postgresql: "9.4"
 #    - env: JPAPROVIDER=openjpa RDBMS=mssql
 #      jdk: oraclejdk8
 #      sudo: true
@@ -182,7 +182,7 @@ matrix:
     - env: JPAPROVIDER=hibernate-5.3 RDBMS=postgresql
       jdk: oraclejdk8
       addons:
-        postgresql: "9.3"
+        postgresql: "9.4"
     - env: JPAPROVIDER=hibernate-5.3 RDBMS=mssql
       jdk: oraclejdk8
       sudo: true
@@ -214,7 +214,7 @@ matrix:
     - env: JPAPROVIDER=hibernate-5.4 RDBMS=postgresql
       jdk: oraclejdk8
       addons:
-        postgresql: "9.3"
+        postgresql: "9.4"
     - env: JPAPROVIDER=hibernate-5.4 RDBMS=mssql
       jdk: oraclejdk8
       sudo: true
@@ -247,7 +247,7 @@ matrix:
 #    - env: JPAPROVIDER=datanucleus-5.1 RDBMS=postgresql
 #      jdk: oraclejdk8
 #      addons:
-#        postgresql: "9.3"
+#        postgresql: "9.4"
 #    - env: JPAPROVIDER=datanucleus-5.1 RDBMS=mssql
 #      jdk: oraclejdk8
 #      sudo: true
@@ -280,7 +280,7 @@ matrix:
     - env: JPAPROVIDER=hibernate-5.1 RDBMS=postgresql
       jdk: oraclejdk8
       addons:
-        postgresql: "9.3"
+        postgresql: "9.4"
 #    - env: JPAPROVIDER=hibernate-5.1 RDBMS=mssql
 #      jdk: oraclejdk8
 #      sudo: true
@@ -313,7 +313,7 @@ matrix:
     - env: JPAPROVIDER=hibernate-5.0 RDBMS=postgresql
       jdk: oraclejdk8
       addons:
-        postgresql: "9.3"
+        postgresql: "9.4"
 #    - env: JPAPROVIDER=hibernate-5.0 RDBMS=mssql
 #      jdk: oraclejdk8
 #      sudo: true
@@ -346,7 +346,7 @@ matrix:
     - env: JPAPROVIDER=hibernate-4.3 RDBMS=postgresql
       jdk: oraclejdk8
       addons:
-        postgresql: "9.3"
+        postgresql: "9.4"
 #    - env: JPAPROVIDER=hibernate-4.3 RDBMS=mssql
 #      jdk: oraclejdk8
 #      sudo: true
@@ -378,7 +378,7 @@ matrix:
     - env: JPAPROVIDER=hibernate RDBMS=postgresql
       jdk: oraclejdk8
       addons:
-        postgresql: "9.3"
+        postgresql: "9.4"
 #    - env: JPAPROVIDER=hibernate RDBMS=mssql
 #      jdk: oraclejdk8
 #      sudo: true
@@ -409,7 +409,7 @@ matrix:
 #      sudo: required
 #    - env: JPAPROVIDER=datanucleus-4 RDBMS=postgresql
 #      addons:
-#        postgresql: "9.3"
+#        postgresql: "9.4"
 #      jdk: oraclejdk8
 #    - env: JPAPROVIDER=datanucleus-4 RDBMS=mssql
 #      jdk: oraclejdk8
@@ -455,8 +455,8 @@ matrix:
         - . ./install-jdk.sh -F 11 -L BCL
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=12
       before_install:
-      - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
-      - . ./install-jdk.sh -F 12 -L GPL
+        - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
+        - . ./install-jdk.sh -F 12 -L GPL
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=13
       before_install:
         - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
@@ -471,8 +471,8 @@ matrix:
         - . ./install-jdk.sh -F 15 -L GPL
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=9 BUILD_JDK=9 DELTASPIKE=deltaspike-1.9
       before_install:
-      - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
-      - . ./install-jdk.sh -F 9 -L GPL
+        - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
+        - . ./install-jdk.sh -F 9 -L GPL
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=10 BUILD_JDK=10 DELTASPIKE=deltaspike-1.9
       before_install:
         - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
@@ -485,8 +485,8 @@ matrix:
         - . ./install-jdk.sh -F 11 -L BCL
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=12 BUILD_JDK=12 DELTASPIKE=deltaspike-1.9
       before_install:
-      - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
-      - . ./install-jdk.sh -F 12 -L GPL
+        - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
+        - . ./install-jdk.sh -F 12 -L GPL
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=13 BUILD_JDK=13 DELTASPIKE=deltaspike-1.9
       before_install:
         - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh

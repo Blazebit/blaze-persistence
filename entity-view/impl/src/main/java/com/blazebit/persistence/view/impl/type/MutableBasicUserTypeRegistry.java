@@ -47,25 +47,25 @@ public class MutableBasicUserTypeRegistry implements BasicUserTypeRegistry {
 
     public MutableBasicUserTypeRegistry() {
         // Immutable types
-        basicUserTypes.put(boolean.class, ImmutableBasicUserType.INSTANCE);
-        basicUserTypes.put(Boolean.class, ImmutableBasicUserType.INSTANCE);
-        basicUserTypes.put(char.class, ImmutableBasicUserType.INSTANCE);
-        basicUserTypes.put(Character.class, ImmutableBasicUserType.INSTANCE);
-        basicUserTypes.put(byte.class, ImmutableBasicUserType.INSTANCE);
-        basicUserTypes.put(Byte.class, ImmutableBasicUserType.INSTANCE);
+        basicUserTypes.put(boolean.class, BooleanBasicUserType.INSTANCE);
+        basicUserTypes.put(Boolean.class, BooleanBasicUserType.INSTANCE);
+        basicUserTypes.put(char.class, CharacterBasicUserType.INSTANCE);
+        basicUserTypes.put(Character.class, CharacterBasicUserType.INSTANCE);
+        basicUserTypes.put(byte.class, ByteBasicUserType.INSTANCE);
+        basicUserTypes.put(Byte.class, ByteBasicUserType.INSTANCE);
         basicUserTypes.put(short.class, ShortBasicUserType.INSTANCE);
         basicUserTypes.put(Short.class, ShortBasicUserType.INSTANCE);
         basicUserTypes.put(int.class, IntegerBasicUserType.INSTANCE);
         basicUserTypes.put(Integer.class, IntegerBasicUserType.INSTANCE);
         basicUserTypes.put(long.class, LongBasicUserType.INSTANCE);
         basicUserTypes.put(Long.class, LongBasicUserType.INSTANCE);
-        basicUserTypes.put(float.class, ImmutableBasicUserType.INSTANCE);
-        basicUserTypes.put(Float.class, ImmutableBasicUserType.INSTANCE);
-        basicUserTypes.put(double.class, ImmutableBasicUserType.INSTANCE);
-        basicUserTypes.put(Double.class, ImmutableBasicUserType.INSTANCE);
-        basicUserTypes.put(BigInteger.class, ImmutableBasicUserType.INSTANCE);
-        basicUserTypes.put(BigDecimal.class, ImmutableBasicUserType.INSTANCE);
-        basicUserTypes.put(String.class, ImmutableBasicUserType.INSTANCE);
+        basicUserTypes.put(float.class, FloatBasicUserType.INSTANCE);
+        basicUserTypes.put(Float.class, FloatBasicUserType.INSTANCE);
+        basicUserTypes.put(double.class, DoubleBasicUserType.INSTANCE);
+        basicUserTypes.put(Double.class, DoubleBasicUserType.INSTANCE);
+        basicUserTypes.put(BigInteger.class, BigIntegerBasicUserType.INSTANCE);
+        basicUserTypes.put(BigDecimal.class, BigDecimalBasicUserType.INSTANCE);
+        basicUserTypes.put(String.class, StringBasicUserType.INSTANCE);
 
         // Input stream is immutable
         basicUserTypes.put(InputStream.class, ImmutableBasicUserType.INSTANCE);
@@ -97,20 +97,20 @@ public class MutableBasicUserTypeRegistry implements BasicUserTypeRegistry {
 
         // Java 8 time types
         try {
-            basicUserTypes.put(Class.forName("java.time.LocalDate"), ImmutableBasicUserType.INSTANCE);
+            basicUserTypes.put(Class.forName("java.time.LocalDate"), LocalDateBasicUserType.INSTANCE);
             basicUserTypes.put(Class.forName("java.time.LocalTime"), ImmutableBasicUserType.INSTANCE);
-            basicUserTypes.put(Class.forName("java.time.LocalDateTime"), ImmutableBasicUserType.INSTANCE);
+            basicUserTypes.put(Class.forName("java.time.LocalDateTime"), LocalDateTimeBasicUserType.INSTANCE);
             basicUserTypes.put(Class.forName("java.time.OffsetTime"), ImmutableBasicUserType.INSTANCE);
-            basicUserTypes.put(Class.forName("java.time.OffsetDateTime"), ImmutableBasicUserType.INSTANCE);
-            basicUserTypes.put(Class.forName("java.time.ZonedDateTime"), ImmutableBasicUserType.INSTANCE);
+            basicUserTypes.put(Class.forName("java.time.OffsetDateTime"), OffsetDateTimeBasicUserType.INSTANCE);
+            basicUserTypes.put(Class.forName("java.time.ZonedDateTime"), ZoneDateTimeBasicUserType.INSTANCE);
             basicUserTypes.put(Class.forName("java.time.Duration"), ImmutableBasicUserType.INSTANCE);
-            basicUserTypes.put(Class.forName("java.time.Instant"), ImmutableBasicUserType.INSTANCE);
+            basicUserTypes.put(Class.forName("java.time.Instant"), InstantBasicUserType.INSTANCE);
             basicUserTypes.put(Class.forName("java.time.MonthDay"), ImmutableBasicUserType.INSTANCE);
             basicUserTypes.put(Class.forName("java.time.Year"), ImmutableBasicUserType.INSTANCE);
             basicUserTypes.put(Class.forName("java.time.YearMonth"), ImmutableBasicUserType.INSTANCE);
             basicUserTypes.put(Class.forName("java.time.Period"), ImmutableBasicUserType.INSTANCE);
-            basicUserTypes.put(Class.forName("java.time.ZoneId"), ImmutableBasicUserType.INSTANCE);
-            basicUserTypes.put(Class.forName("java.time.ZoneOffset"), ImmutableBasicUserType.INSTANCE);
+            basicUserTypes.put(Class.forName("java.time.ZoneId"), ZoneIdBasicUserType.INSTANCE);
+            basicUserTypes.put(Class.forName("java.time.ZoneOffset"), ZoneOffsetBasicUserType.INSTANCE);
         } catch (ClassNotFoundException ex) {
             // If they aren't found, we ignore them
         }

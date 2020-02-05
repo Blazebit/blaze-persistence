@@ -27,6 +27,7 @@ import com.blazebit.persistence.BaseFinalSetOperationBuilder;
 import com.blazebit.persistence.BaseOngoingFinalSetOperationBuilder;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
+import com.blazebit.persistence.spi.JpqlFunctionProcessor;
 import com.blazebit.persistence.spi.SetOperationType;
 
 /**
@@ -78,6 +79,11 @@ public abstract class BaseFinalSetOperationSubqueryBuilderImpl<T, X extends Base
     }
 
     @Override
+    public Map<Integer, JpqlFunctionProcessor<?>> getJpqlFunctionProcessors() {
+        return getJpqlFunctionProcessors(this);
+    }
+
+    @Override
     public List<Expression> getSelectExpressions() {
         return getSelectExpressions(this);
     }
@@ -108,6 +114,23 @@ public abstract class BaseFinalSetOperationSubqueryBuilderImpl<T, X extends Base
             return subqueryBuilder.getSelectExpressions();
         }
         
+        throw new IllegalArgumentException("Unsupported query builder type for creating select expressions: " + queryBuilder);
+    }
+
+    private static Map<Integer, JpqlFunctionProcessor<?>> getJpqlFunctionProcessors(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {
+        if (queryBuilder instanceof BaseFinalSetOperationSubqueryBuilderImpl<?, ?>) {
+            BaseFinalSetOperationSubqueryBuilderImpl<?, ?> setOperationBuilder = (BaseFinalSetOperationSubqueryBuilderImpl<?, ?>) queryBuilder;
+
+            if (setOperationBuilder.initiator == null) {
+                return getJpqlFunctionProcessors(setOperationBuilder.setOperationManager.getStartQueryBuilder());
+            } else {
+                return setOperationBuilder.initiator.getJpqlFunctionProcessors();
+            }
+        } else if (queryBuilder instanceof BaseSubqueryBuilderImpl<?, ?, ?, ?>) {
+            BaseSubqueryBuilderImpl<?, ?, ?, ?> subqueryBuilder = (BaseSubqueryBuilderImpl<?, ?, ?, ?>) queryBuilder;
+            return subqueryBuilder.getJpqlFunctionProcessors();
+        }
+
         throw new IllegalArgumentException("Unsupported query builder type for creating select expressions: " + queryBuilder);
     }
     
