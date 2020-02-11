@@ -38,7 +38,7 @@
         <repository>
             <id>JBoss Snapshots</id>
             <name>JBoss Snapshots</name>
-            <url>http://repository.jboss.org/nexus/content/groups/public/</url>
+            <url>https://repository.jboss.org/nexus/content/groups/public/</url>
         </repository>
     </repositories>
 
