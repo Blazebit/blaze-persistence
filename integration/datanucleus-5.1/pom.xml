@@ -38,7 +38,7 @@
         <repository>
             <id>DataNucleus Nightly</id>
             <name>DataNucleus Repository Nightly</name>
-            <url>http://www.datanucleus.org/downloads/maven2-nightly</url>
+            <url>https://www.datanucleus.org/downloads/maven2-nightly</url>
         </repository>
     </repositories>
 
