@@ -36,6 +36,15 @@ public interface BaseUpdateCriteriaBuilder<T, X extends BaseUpdateCriteriaBuilde
     public X set(String attribute, Object value);
 
     /**
+     * Binds <code>NULL</code> to the attribute.
+     *
+     * @param attribute The attribute for which <code>NULL</code> should be bound
+     * @return The query builder for chaining calls
+     * @since 1.5.0
+     */
+    public X setNull(String attribute);
+
+    /**
      * Binds the given expression to the attribute.
      *
      * @param attribute The attribute for which the expression should be bound

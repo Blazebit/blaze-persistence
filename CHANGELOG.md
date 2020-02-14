@@ -10,6 +10,7 @@ Not yet released
 
 * Introduce `REPLACE`, `CHR`, `CONCAT`, `BASE64`, `STRING_JSON_AGG`, `TO_STRING_JSON`, `STRING_XML_AGG`, `TO_STRING_XML` and `TO_MULTISET` functions
 * Introduce `MULTISET` fetch strategy for entity views
+* Introduce `com.blazebit.persistence.BaseUpdateCriteriaBuilder.setNull(String attributeName)` to avoid ambiguity for `set(String, null)`
 
 ### Bug fixes
 
