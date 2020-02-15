@@ -17,6 +17,7 @@
 package com.blazebit.persistence.parser;
 
 import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.parser.expression.InplaceModificationResultVisitorAdapter;
 import com.blazebit.persistence.parser.expression.PathElementExpression;
 import com.blazebit.persistence.parser.expression.PathExpression;
@@ -50,7 +51,13 @@ public class AliasReplacementVisitor extends InplaceModificationResultVisitorAda
             PathElementExpression elementExpression = expressions.get(0);
             if (elementExpression instanceof PropertyExpression) {
                 if (alias.equals(((PropertyExpression) elementExpression).getProperty())) {
-                    return substitute;
+                    Expression newExpression = substitute.copy(ExpressionCopyContext.EMPTY);
+                    if (newExpression instanceof PathExpression) {
+                        PathExpression newPathExpression = (PathExpression) newExpression;
+                        newPathExpression.setUsedInCollectionFunction(expression.isUsedInCollectionFunction());
+                        newPathExpression.setCollectionQualifiedPath(expression.isCollectionQualifiedPath());
+                    }
+                    return newExpression;
                 }
             }
         } else {

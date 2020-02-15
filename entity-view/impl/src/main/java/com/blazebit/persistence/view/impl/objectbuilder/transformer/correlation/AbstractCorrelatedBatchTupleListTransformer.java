@@ -26,6 +26,7 @@ import com.blazebit.persistence.view.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.macro.CorrelatedSubqueryEmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.impl.macro.CorrelatedSubqueryViewRootJpqlMacro;
+import com.blazebit.persistence.view.impl.macro.MutableViewJpqlMacro;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.ViewType;
 
@@ -122,6 +123,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
         }
         this.viewRootJpqlMacro = new CorrelatedSubqueryViewRootJpqlMacro(criteriaBuilder, optionalParameters, viewRootExpression != null, viewRootEntityClass, viewRootIdAttributePath, viewRootExpression);
         this.embeddingViewJpqlMacro = new CorrelatedSubqueryEmbeddingViewJpqlMacro(criteriaBuilder, optionalParameters, embeddingViewExpression != null, embeddingViewEntityClass, embeddingViewIdAttributePath, embeddingViewExpression, batchedIdValues, viewRootJpqlMacro);
+        this.criteriaBuilder.registerMacro("view", new MutableViewJpqlMacro(correlationResult));
         this.criteriaBuilder.registerMacro("view_root", viewRootJpqlMacro);
         this.criteriaBuilder.registerMacro("embedding_view", embeddingViewJpqlMacro);
 

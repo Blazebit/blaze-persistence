@@ -29,6 +29,7 @@ import com.blazebit.persistence.view.CTEProvider;
 import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleElementMapper;
 import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
+import com.blazebit.persistence.view.spi.ViewJpqlMacro;
 
 /**
  *
@@ -43,16 +44,18 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
     private final TupleElementMapper[] mappers;
     private final ParameterHolder<?> parameterHolder;
     private final Map<String, Object> optionalParameters;
+    private final ViewJpqlMacro viewJpqlMacro;
     private final EmbeddingViewJpqlMacro embeddingViewJpqlMacro;
     private final Set<String> fetches;
     private final Set<CTEProvider> cteProviders;
 
-    public ViewTypeObjectBuilder(ViewTypeObjectBuilderTemplate<T> template, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, Set<String> fetches, boolean nullIfEmpty) {
+    public ViewTypeObjectBuilder(ViewTypeObjectBuilderTemplate<T> template, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, ViewJpqlMacro viewJpqlMacro, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, Set<String> fetches, boolean nullIfEmpty) {
         this.hasId = template.hasId();
         this.objectInstantiator = template.getObjectInstantiator();
         this.mappers = template.getMappers();
         this.parameterHolder = parameterHolder;
         this.optionalParameters = optionalParameters == null ? Collections.<String, Object>emptyMap() : Collections.unmodifiableMap(optionalParameters);
+        this.viewJpqlMacro = viewJpqlMacro;
         this.embeddingViewJpqlMacro = embeddingViewJpqlMacro;
         this.fetches = fetches;
         this.nullIfEmpty = nullIfEmpty;
@@ -93,13 +96,13 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
         }
         if (fetches.isEmpty()) {
             for (int i = 0; i < mappers.length; i++) {
-                mappers[i].applyMapping(queryBuilder, parameterHolder, optionalParameters, embeddingViewJpqlMacro, false);
+                mappers[i].applyMapping(queryBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro, false);
             }
         } else {
             for (int i = 0; i < mappers.length; i++) {
                 TupleElementMapper mapper = mappers[i];
                 if (fetches.contains(mapper.getAttributePath())) {
-                    mapper.applyMapping(queryBuilder, parameterHolder, optionalParameters, embeddingViewJpqlMacro, false);
+                    mapper.applyMapping(queryBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro, false);
                 } else {
                     queryBuilder.select("NULL");
                 }

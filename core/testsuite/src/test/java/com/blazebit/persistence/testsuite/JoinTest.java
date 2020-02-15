@@ -493,7 +493,7 @@ public class JoinTest extends AbstractCoreTest {
             .leftJoinOn("d.partners", "p").on("SIZE(d.versions)").gtExpression("2").end();
         
         final String expected = "SELECT d FROM Document d LEFT JOIN d.partners p"
-                + onClause("(SELECT " + countStar() + " FROM " + correlationPath("d.versions", Version.class,"version", "document.id = d.id") + ") > 2");
+                + onClause("(SELECT " + countStar() + " FROM " + correlationPath("d.versions", Version.class,"versions", "document.id = d.id") + ") > 2");
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
     }

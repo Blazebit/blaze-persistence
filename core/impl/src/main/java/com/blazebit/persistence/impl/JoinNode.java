@@ -899,6 +899,12 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         return aliasInfo.getAlias();
     }
 
+    public String getAliasExpression() {
+        StringBuilder sb = new StringBuilder();
+        appendAlias(sb, true, false);
+        return sb.toString();
+    }
+
     @Override
     public Type<?> getType() {
         return getNodeType();

@@ -25,6 +25,7 @@ import com.blazebit.persistence.view.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.macro.CorrelatedSubqueryViewRootJpqlMacro;
+import com.blazebit.persistence.view.impl.macro.MutableViewJpqlMacro;
 import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.impl.macro.MutableEmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
@@ -33,6 +34,7 @@ import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
+import com.blazebit.persistence.view.spi.ViewJpqlMacro;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -128,6 +130,7 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
         String viewRootExpression = viewRootAlias;
 
         EmbeddingViewJpqlMacro embeddingViewJpqlMacro = entityViewConfiguration.getEmbeddingViewJpqlMacro();
+        ViewJpqlMacro viewJpqlMacro = entityViewConfiguration.getViewJpqlMacro();
         this.criteriaBuilder = queryBuilder.copy(Object[].class);
         int originalFirstResult = -1;
         int originalMaxResults = -1;
@@ -138,10 +141,13 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
             limitBuilder.setMaxResults(originalMaxResults = Integer.MAX_VALUE);
         }
         this.viewRootJpqlMacro = new CorrelatedSubqueryViewRootJpqlMacro(criteriaBuilder, optionalParameters, false, viewRootEntityClass, idAttributePath, viewRootExpression);
+        this.criteriaBuilder.registerMacro("view", viewJpqlMacro);
         this.criteriaBuilder.registerMacro("view_root", viewRootJpqlMacro);
         this.criteriaBuilder.registerMacro("embedding_view", embeddingViewJpqlMacro);
 
+        String oldViewPath = viewJpqlMacro.getViewPath();
         String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
+        viewJpqlMacro.setViewPath(correlationResult);
         embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
 
         String joinBase = embeddingViewPath;
@@ -199,7 +205,7 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
 
         if (usesEmbeddingView) {
             ExpressionFactory ef = criteriaBuilder.getService(ExpressionFactory.class);
-            EntityViewConfiguration configuration = new EntityViewConfiguration(criteriaBuilder, ef, new MutableEmbeddingViewJpqlMacro(), Collections.<String, Object>emptyMap(), Collections.<String, Object>emptyMap(), entityViewConfiguration.getFetches(), attributePath);
+            EntityViewConfiguration configuration = new EntityViewConfiguration(criteriaBuilder, ef, new MutableViewJpqlMacro(), new MutableEmbeddingViewJpqlMacro(), Collections.<String, Object>emptyMap(), Collections.<String, Object>emptyMap(), entityViewConfiguration.getFetches(), attributePath);
             ObjectBuilder<Object[]> embeddingViewObjectBuilder = createViewAwareObjectBuilder(embeddingViewType, configuration, embeddingViewIdExpression);
             if (embeddingViewObjectBuilder == null) {
                 criteriaBuilder.select(embeddingViewIdExpression);
@@ -227,7 +233,7 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
             }
         } else if (usesViewRoot) {
             ExpressionFactory ef = criteriaBuilder.getService(ExpressionFactory.class);
-            EntityViewConfiguration configuration = new EntityViewConfiguration(criteriaBuilder, ef, new MutableEmbeddingViewJpqlMacro(), Collections.<String, Object>emptyMap(), Collections.<String, Object>emptyMap(), entityViewConfiguration.getFetches(), attributePath);
+            EntityViewConfiguration configuration = new EntityViewConfiguration(criteriaBuilder, ef, new MutableViewJpqlMacro(), new MutableEmbeddingViewJpqlMacro(), Collections.<String, Object>emptyMap(), Collections.<String, Object>emptyMap(), entityViewConfiguration.getFetches(), attributePath);
             ObjectBuilder<Object[]> viewRootObjectBuilder = createViewAwareObjectBuilder(viewRootType, configuration, viewRootIdExpression);
             if (viewRootObjectBuilder == null) {
                 criteriaBuilder.select(viewRootIdExpression);
@@ -274,6 +280,7 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
         criteriaBuilder.select(correlationKeyExpression);
 
         populateParameters(criteriaBuilder);
+        viewJpqlMacro.setViewPath(oldViewPath);
         embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
 
         List<Object[]> resultList = (List<Object[]>) criteriaBuilder.getResultList();

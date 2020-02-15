@@ -730,6 +730,7 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
         }
 
         do {
+            boolean processPathElements = true;
             // handle entity and enum literals
             if (literalPossible) {
                 if (size >= minEnumSegmentCount) {
@@ -742,17 +743,24 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
                     String literalStr = ctx.simpleSubpath().getText();
                     Expression literalExpression = createEntityTypeLiteral(literalStr);
                     if (literalExpression != null) {
-                        return literalExpression;
+                        if (expression == null) {
+                            return literalExpression;
+                        } else {
+                            pathElementExpressions.add(new ArrayExpression(literalExpression, expression.accept(this)));
+                            processPathElements = false;
+                        }
                     }
                 }
             }
 
-            for (int i = 0; i < size; i++) {
-                pathElementExpressions.add(new PropertyExpression(identifierContexts.get(i).getText()));
-            }
-            if (expression != null) {
-                int index = initialSize - 1;
-                pathElementExpressions.set(index, new ArrayExpression((PropertyExpression) pathElementExpressions.get(index), expression.accept(this)));
+            if (processPathElements) {
+                for (int i = 0; i < size; i++) {
+                    pathElementExpressions.add(new PropertyExpression(identifierContexts.get(i).getText()));
+                }
+                if (expression != null) {
+                    int index = initialSize - 1;
+                    pathElementExpressions.set(index, new ArrayExpression(pathElementExpressions.get(index), expression.accept(this)));
+                }
             }
             ctx = ctx.generalSubpath();
             if (ctx == null) {

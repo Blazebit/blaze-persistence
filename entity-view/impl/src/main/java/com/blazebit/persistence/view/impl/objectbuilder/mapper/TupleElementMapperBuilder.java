@@ -50,7 +50,7 @@ import java.util.Set;
  */
 public class TupleElementMapperBuilder {
 
-    private static final ExpressionTupleElementMapper NULL_MAPPER = new ExpressionTupleElementMapper(null, "NULL", null, null, new String[0]);
+    private static final ExpressionTupleElementMapper NULL_MAPPER = new ExpressionTupleElementMapper(null, "NULL", null, null, null, new String[0]);
     private final int mapperIndex;
     private final String aliasPrefix;
     private final String mappingPrefix;

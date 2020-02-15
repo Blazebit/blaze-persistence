@@ -26,6 +26,7 @@ import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.metamodel.ViewType;
+import com.blazebit.persistence.view.spi.ViewJpqlMacro;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -42,21 +43,22 @@ public final class EntityViewConfiguration {
 
     private final FullQueryBuilder<?, ?> criteriaBuilder;
     private final ExpressionFactory expressionFactory;
+    private final ViewJpqlMacro viewJpqlMacro;
     private final EmbeddingViewJpqlMacro embeddingViewJpqlMacro;
     private final Map<String, Object> optionalParameters;
     private final Set<String> fetches;
     private final Map<String, Integer> batchSizeConfiguration;
     private final Map<String, BatchCorrelationMode> expectBatchCorrelationValuesConfiguration;
 
-    public EntityViewConfiguration(FullQueryBuilder<?, ?> criteriaBuilder, ExpressionFactory expressionFactory, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, Map<String, Object> optionalParameters, Map<String, Object> properties, Collection<String> fetches, String attributePath) {
-        this(criteriaBuilder, expressionFactory, embeddingViewJpqlMacro, optionalParameters, properties, getFetches(fetches, attributePath));
+    public EntityViewConfiguration(FullQueryBuilder<?, ?> criteriaBuilder, ExpressionFactory expressionFactory, ViewJpqlMacro viewJpqlMacro, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, Map<String, Object> optionalParameters, Map<String, Object> properties, Collection<String> fetches, String attributePath) {
+        this(criteriaBuilder, expressionFactory, viewJpqlMacro, embeddingViewJpqlMacro, optionalParameters, properties, getFetches(fetches, attributePath));
     }
 
-    public EntityViewConfiguration(FullQueryBuilder<?, ?> criteriaBuilder, ExpressionFactory expressionFactory, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, Map<String, Object> optionalParameters, Map<String, Object> properties, Collection<String> fetches, ManagedViewTypeImplementor<?> managedViewType) {
-        this(criteriaBuilder, expressionFactory, embeddingViewJpqlMacro, optionalParameters, properties, getFetches(fetches, managedViewType));
+    public EntityViewConfiguration(FullQueryBuilder<?, ?> criteriaBuilder, ExpressionFactory expressionFactory, ViewJpqlMacro viewJpqlMacro, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, Map<String, Object> optionalParameters, Map<String, Object> properties, Collection<String> fetches, ManagedViewTypeImplementor<?> managedViewType) {
+        this(criteriaBuilder, expressionFactory, viewJpqlMacro, embeddingViewJpqlMacro, optionalParameters, properties, getFetches(fetches, managedViewType));
     }
 
-    private EntityViewConfiguration(FullQueryBuilder<?, ?> criteriaBuilder, ExpressionFactory expressionFactory, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, Map<String, Object> optionalParameters, Map<String, Object> properties, Set<String> fetches) {
+    private EntityViewConfiguration(FullQueryBuilder<?, ?> criteriaBuilder, ExpressionFactory expressionFactory, ViewJpqlMacro viewJpqlMacro, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, Map<String, Object> optionalParameters, Map<String, Object> properties, Set<String> fetches) {
         Map<String, Integer> batchSizeConfiguration = new HashMap<String, Integer>(properties.size());
         Map<String, BatchCorrelationMode> expectBatchCorrelationValuesConfiguration = new HashMap<>(properties.size());
 
@@ -97,17 +99,20 @@ public final class EntityViewConfiguration {
 
         this.criteriaBuilder = criteriaBuilder;
         this.expressionFactory = expressionFactory;
+        this.viewJpqlMacro = viewJpqlMacro;
         this.embeddingViewJpqlMacro = embeddingViewJpqlMacro;
         this.optionalParameters = new HashMap<>(optionalParameters);
         this.fetches = fetches;
         this.batchSizeConfiguration = Collections.unmodifiableMap(batchSizeConfiguration);
         this.expectBatchCorrelationValuesConfiguration = Collections.unmodifiableMap(expectBatchCorrelationValuesConfiguration);
+        this.criteriaBuilder.registerMacro("view", viewJpqlMacro);
         this.criteriaBuilder.registerMacro("embedding_view", embeddingViewJpqlMacro);
     }
 
     private EntityViewConfiguration(EntityViewConfiguration original, FullQueryBuilder<?, ?> criteriaBuilder, String attributePath, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
         this.criteriaBuilder = criteriaBuilder;
         this.expressionFactory = original.expressionFactory;
+        this.viewJpqlMacro = original.viewJpqlMacro;
         this.embeddingViewJpqlMacro = embeddingViewJpqlMacro;
         this.optionalParameters = original.optionalParameters;
         this.fetches = original.fetches;
@@ -217,6 +222,10 @@ public final class EntityViewConfiguration {
 
     public Set<String> getFetches() {
         return fetches;
+    }
+
+    public ViewJpqlMacro getViewJpqlMacro() {
+        return viewJpqlMacro;
     }
 
     public EmbeddingViewJpqlMacro getEmbeddingViewJpqlMacro() {

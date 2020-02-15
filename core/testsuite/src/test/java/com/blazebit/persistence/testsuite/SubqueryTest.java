@@ -27,6 +27,7 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.JpqlMacro;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Test;
@@ -249,7 +250,7 @@ public class SubqueryTest extends AbstractCoreTest {
                 .from("d.people")
                 .where("partnerDocument").eqExpression("d")
                 .end();
-        String expectedQuery = "SELECT d FROM Document d WHERE d.owner IN (SELECT person FROM " + correlationPath(Document.class, "d.people", "person", "id = d.id AND", " WHERE") + " person.partnerDocument = d)";
+        String expectedQuery = "SELECT d FROM Document d WHERE d.owner IN (SELECT people FROM " + correlationPath(Document.class, "d.people", "people", "id = d.id AND", " WHERE") + " people.partnerDocument = d)";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }
@@ -262,7 +263,7 @@ public class SubqueryTest extends AbstractCoreTest {
                 .from("OUTER(people)")
                 .where("partnerDocument").eqExpression("d")
                 .end();
-        String peopleCorrelation = correlationPath(Document.class, "d.people", "person", "id = d.id");
+        String peopleCorrelation = correlationPath(Document.class, "d.people", "people", "id = d.id");
         String where = " WHERE ";
         String peopleCorrelationWhere = "";
         int idx;
@@ -270,11 +271,11 @@ public class SubqueryTest extends AbstractCoreTest {
             peopleCorrelationWhere = peopleCorrelation.substring(idx + where.length());
             peopleCorrelation = peopleCorrelation.substring(0, idx);
         }
-        String expectedQuery = "SELECT d FROM Document d WHERE d.owner IN (SELECT person FROM " + peopleCorrelation + " WHERE ";
+        String expectedQuery = "SELECT d FROM Document d WHERE d.owner IN (SELECT people FROM " + peopleCorrelation + " WHERE ";
         if (!peopleCorrelationWhere.isEmpty()) {
             expectedQuery += peopleCorrelationWhere + " AND ";
         }
-        expectedQuery += "person.partnerDocument = d)";
+        expectedQuery += "people.partnerDocument = d)";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }
@@ -294,7 +295,7 @@ public class SubqueryTest extends AbstractCoreTest {
                 .from("TEST(people)")
                 .where("partnerDocument").eqExpression("d")
                 .end();
-        String peopleCorrelation = correlationPath(Document.class, "d.people", "person", "id = d.id");
+        String peopleCorrelation = correlationPath(Document.class, "d.people", "people", "id = d.id");
         String where = " WHERE ";
         String peopleCorrelationWhere = "";
         int idx;
@@ -302,11 +303,11 @@ public class SubqueryTest extends AbstractCoreTest {
             peopleCorrelationWhere = peopleCorrelation.substring(idx + where.length());
             peopleCorrelation = peopleCorrelation.substring(0, idx);
         }
-        String expectedQuery = "SELECT d FROM Document d WHERE d.owner IN (SELECT person FROM " + peopleCorrelation + " WHERE ";
+        String expectedQuery = "SELECT d FROM Document d WHERE d.owner IN (SELECT people FROM " + peopleCorrelation + " WHERE ";
         if (!peopleCorrelationWhere.isEmpty()) {
             expectedQuery += peopleCorrelationWhere + " AND ";
         }
-        expectedQuery += "person.partnerDocument = d)";
+        expectedQuery += "people.partnerDocument = d)";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }
@@ -319,6 +320,34 @@ public class SubqueryTest extends AbstractCoreTest {
                     .where("dSub").notEqExpression("d")
                 .end();
         String expectedQuery = "SELECT d FROM Document d WHERE EXISTS (SELECT 1 FROM d.owner dSub_base JOIN dSub_base.ownedDocuments dSub WHERE dSub <> d)";
+        assertEquals(expectedQuery, crit.getQueryString());
+        crit.getResultList();
+    }
+
+    // This test compares ids
+    @Test
+    @Category({ NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
+    public void testSubqueryCorrelatesArrayExpression() {
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d")
+                .whereExists()
+                    .from("Document[_ MEMBER OF d.owner.ownedDocuments AND LENGTH(d.owner.name) > 0]", "dSub")
+                    .where("dSub").notEqExpression("d")
+                .end();
+        String expectedQuery = "SELECT d FROM Document d WHERE EXISTS (SELECT 1 FROM Document dSub, Document owner_base JOIN owner_base.owner owner_1 WHERE dSub MEMBER OF owner_1.ownedDocuments AND LENGTH(owner_base.name) > 0 AND d.id = owner_base.id AND dSub <> d)";
+        assertEquals(expectedQuery, crit.getQueryString());
+        crit.getResultList();
+    }
+
+    // This test compares entities directly
+    @Test
+    @Category({ NoHibernate.class })
+    public void testSubqueryCorrelatesArrayExpressionEntityEqual() {
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d")
+                .whereExists()
+                .from("Document[_ MEMBER OF d.owner.ownedDocuments AND LENGTH(d.owner.name) > 0]", "dSub")
+                .where("dSub").notEqExpression("d")
+                .end();
+        String expectedQuery = "SELECT d FROM Document d WHERE EXISTS (SELECT 1 FROM Document dSub, Document owner_base JOIN owner_base.owner owner_1 WHERE dSub MEMBER OF owner_1.ownedDocuments AND LENGTH(owner_base.name) > 0 AND d = owner_base AND dSub <> d)";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }
@@ -404,24 +433,30 @@ public class SubqueryTest extends AbstractCoreTest {
     public void testSubqueryCollectionAccessAddsJoin() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.whereSubquery()
-                .from(Person.class, "p").select("name").where("LENGTH(d.partners.localized[1])").gt(1).end()
-                .like().value("%dld").noEscape();
-        String expectedQuery = "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN partners_1.localized localized_1_1"
-                + onClause("KEY(localized_1_1) = 1")
-                + " WHERE (SELECT p.name FROM Person p WHERE LENGTH(" + joinAliasValue("localized_1_1") + ") > :param_0) LIKE :param_1";
+                .from(Person.class, "p")
+                .select("name")
+                .where("LENGTH(d.partners.localized[1])").gt(1)
+                .end()
+            .like().value("%dld").noEscape();
+        String expectedQuery = "SELECT d FROM Document d"
+                + " WHERE (SELECT p.name FROM Person p, Document partners_base " +
+                "LEFT JOIN partners_base.partners partners_1 " +
+                "LEFT JOIN partners_1.localized localized_1_1" + onClause("KEY(localized_1_1) = 1") +
+                " WHERE d.id = partners_base.id AND LENGTH("+ joinAliasValue("localized_1_1") + ") > :param_0) LIKE :param_1";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }
 
     @Test
     public void testSubqueryUsesOuterJoin() {
-        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
+                .from(Document.class, "d")
                 .leftJoin("d.contacts", "c")
                 .select("id")
                 .selectSubquery("alias", "ABS(alias)", "localizedCount")
-                .from(Person.class, "p")
-                .select("COUNT(p.localized)")
-                .where("p.id").eqExpression("c.id")
+                    .from(Person.class, "p")
+                    .select("COUNT(p.localized)")
+                    .where("p.id").eqExpression("c.id")
                 .end()
                 .groupBy("id")
                 .orderByAsc("localizedCount");
@@ -438,16 +473,16 @@ public class SubqueryTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("id")
                 .selectSubquery("alias", "ABS(alias)", "localizedCount")
-                .from(Person.class, "p")
-                .select("COUNT(p.localized)")
-                .where("p.id").eqExpression("d.contacts.id")
+                    .from(Person.class, "p")
+                    .select("COUNT(p.localized)")
+                    .where("p.id").eqExpression("d.contacts.id")
                 .end()
                 .groupBy("id")
                 .orderByAsc("localizedCount");
 
-        String expectedSubQuery = "ABS((SELECT COUNT(" + joinAliasValue("localized_1") + ") FROM Person p LEFT JOIN p.localized localized_1 WHERE p.id = " + joinAliasValue("contacts_1", "id") + "))";
+        String expectedSubQuery = "ABS((SELECT COUNT(" + joinAliasValue("localized_1") + ") FROM Person p LEFT JOIN p.localized localized_1, Document contacts_base LEFT JOIN contacts_base.contacts contacts_1 WHERE d.id = contacts_base.id AND p.id = " + joinAliasValue("contacts_1", "id") + "))";
         String expectedQuery = "SELECT d.id, " + expectedSubQuery + " AS localizedCount "
-                + "FROM Document d LEFT JOIN d.contacts contacts_1 GROUP BY d.id, " + joinAliasValue("contacts_1", "id") + " ORDER BY localizedCount ASC";
+                + "FROM Document d GROUP BY d.id ORDER BY localizedCount ASC";
         assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
     }
@@ -456,12 +491,17 @@ public class SubqueryTest extends AbstractCoreTest {
     public void testSubqueryCollectionAccess() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.whereSubquery()
-                .from(Person.class, "p").select("name").where("LENGTH(d.partners.localized[1])").gt(1).end()
-                .like().value("%dld").noEscape();
+                .from(Person.class, "p")
+                .select("name")
+                .where("LENGTH(d.partners.localized[1])").gt(1)
+                .end()
+            .like().value("%dld").noEscape();
 
-        String expectedQuery = "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN partners_1.localized localized_1_1"
-                + onClause("KEY(localized_1_1) = 1")
-                + " WHERE (SELECT p.name FROM Person p WHERE LENGTH(" + joinAliasValue("localized_1_1") + ") > :param_0) LIKE :param_1";
+        String expectedQuery = "SELECT d FROM Document d"
+                + " WHERE (SELECT p.name FROM Person p, Document partners_base " +
+                "LEFT JOIN partners_base.partners partners_1 " +
+                "LEFT JOIN partners_1.localized localized_1_1" + onClause("KEY(localized_1_1) = 1") +
+                " WHERE d.id = partners_base.id AND LENGTH("+ joinAliasValue("localized_1_1") + ") > :param_0) LIKE :param_1";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }
@@ -469,17 +509,20 @@ public class SubqueryTest extends AbstractCoreTest {
     @Test
     public void testMultipleJoinPathSubqueryCollectionAccess() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
-        crit.leftJoin("d.partners.localized", "l").whereSubquery()
-                .from(Person.class, "p").select("name").where("LENGTH(d.partners.localized[1])").gt(1).end()
+        crit.leftJoin("d.partners.localized", "l")
+                .whereSubquery()
+                    .from(Person.class, "p")
+                    .select("name")
+                    .where("LENGTH(d.partners.localized[1])").gt(1)
+                .end()
                 .like().value("%dld").noEscape();
 
         String expectedQuery = "SELECT d FROM Document d "
                 + "LEFT JOIN d.partners partners_1 "
-                + "LEFT JOIN partners_1.localized localized_1_1"
+                + "LEFT JOIN partners_1.localized l "
+                + "WHERE (SELECT p.name FROM Person p, Person localized_base LEFT JOIN localized_base.localized localized_1_1"
                 + onClause("KEY(localized_1_1) = 1")
-                + " LEFT JOIN partners_1.localized l "
-                + "WHERE (SELECT p.name FROM Person p "
-                + "WHERE LENGTH(" + joinAliasValue("localized_1_1") + ") > :param_0) LIKE :param_1";
+                + " WHERE partners_1.id = localized_base.id AND LENGTH("+ joinAliasValue("localized_1_1") + ") > :param_0) LIKE :param_1";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }
@@ -514,12 +557,13 @@ public class SubqueryTest extends AbstractCoreTest {
 
     @Test
     public void testInvalidSubqueryOrderByCollectionAccess() {
-        PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
+        PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
+                .from(Document.class, "d")
                 .leftJoin("d.contacts", "c")
                 .selectSubquery("localizedCount")
-                .from(Person.class, "p")
-                .select("COUNT(p.localized)")
-                .where("p.id").eqExpression("c.id")
+                    .from(Person.class, "p")
+                    .select("COUNT(p.localized)")
+                    .where("p.id").eqExpression("c.id")
                 .end()
                 .orderByAsc("localizedCount")
                 .orderByAsc("id")
@@ -531,18 +575,23 @@ public class SubqueryTest extends AbstractCoreTest {
 
     @Test
     public void testInvalidSubqueryOrderByCollectionAccessNewJoin() {
-        PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
+        PaginatedCriteriaBuilder<Tuple> pcb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .selectSubquery("localizedCount")
-                .from(Person.class, "p")
-                .select("COUNT(p.localized)")
-                .where("p.id").eqExpression("d.contacts.id")
+                    .from(Person.class, "p")
+                    .select("COUNT(p.localized)")
+                    .where("p.id").eqExpression("d.contacts.id")
                 .end()
                 .orderByAsc("localizedCount")
                 .orderByAsc("id")
                 .page(0, 1)
                 .withInlineIdQuery(false);
-        // In a paginated query access to outer collections is disallowed in the order by clause
-        verifyException(cb, IllegalStateException.class).getPageIdQueryString();
+
+        String expectedCountQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d";
+        String subquery = "SELECT COUNT(" + joinAliasValue("localized_1") + ") FROM Person p LEFT JOIN p.localized localized_1, Document contacts_base LEFT JOIN contacts_base.contacts contacts_1 WHERE d.id = contacts_base.id AND p.id = " + joinAliasValue("contacts_1","id");
+        String expectedObjectQuery = "SELECT (" + subquery + ") AS localizedCount FROM Document d ORDER BY localizedCount ASC, d.id ASC";
+        pcb.getResultList();
+        assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
+        assertEquals(expectedObjectQuery, pcb.withInlineCountQuery(false).getQueryString());
     }
 
     @Test

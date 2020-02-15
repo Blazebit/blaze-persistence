@@ -23,6 +23,7 @@ import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.view.SubqueryProvider;
 import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
+import com.blazebit.persistence.view.spi.ViewJpqlMacro;
 
 /**
  *
@@ -33,15 +34,15 @@ public class AliasSubqueryTupleElementMapper extends SimpleSubqueryTupleElementM
 
     private final String alias;
 
-    public AliasSubqueryTupleElementMapper(Type<?> type, SubqueryProvider provider, String attributePath, String embeddingViewPath, String alias) {
-        super(type, provider, attributePath, embeddingViewPath);
+    public AliasSubqueryTupleElementMapper(Type<?> type, SubqueryProvider provider, String attributePath, String viewPath, String embeddingViewPath, String alias) {
+        super(type, provider, attributePath, viewPath, embeddingViewPath);
         this.alias = alias;
     }
 
     @Override
-    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean asString) {
+    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, ViewJpqlMacro viewJpqlMacro, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean asString) {
         String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
-        embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
+        embeddingViewJpqlMacro.setEmbeddingViewPath(viewPath);
         provider.createSubquery(queryBuilder.selectSubquery(alias));
         embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
     }

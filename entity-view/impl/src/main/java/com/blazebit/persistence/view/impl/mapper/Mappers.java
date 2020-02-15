@@ -25,6 +25,7 @@ import com.blazebit.persistence.view.impl.accessor.Accessors;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.entity.EntityTupleizer;
 import com.blazebit.persistence.view.impl.macro.MutableEmbeddingViewJpqlMacro;
+import com.blazebit.persistence.view.impl.macro.MutableViewJpqlMacro;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.update.DefaultEntityTupleizer;
 import com.blazebit.persistence.view.metamodel.BasicType;
@@ -160,6 +161,7 @@ public final class Mappers {
                                 (ManagedViewTypeImplementor<?>) attributeViewIdType,
                                 null,
                                 null,
+                                new MutableViewJpqlMacro(),
                                 null,
                                 new MutableEmbeddingViewJpqlMacro(),
                                 0
@@ -215,6 +217,7 @@ public final class Mappers {
                                         (ManagedViewTypeImplementor<?>) attributeViewIdType,
                                         null,
                                         null,
+                                        new MutableViewJpqlMacro(),
                                         null,
                                         new MutableEmbeddingViewJpqlMacro(),
                                         0

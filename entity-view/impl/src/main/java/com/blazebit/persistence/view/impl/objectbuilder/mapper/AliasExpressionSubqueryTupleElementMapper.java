@@ -16,13 +16,12 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.mapper;
 
-import java.util.Map;
-
-import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.SelectBuilder;
+import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.view.SubqueryProvider;
 import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
+import com.blazebit.persistence.view.spi.ViewJpqlMacro;
 
 /**
  *
@@ -33,17 +32,26 @@ public class AliasExpressionSubqueryTupleElementMapper extends ExpressionSubquer
 
     private final String alias;
 
-    public AliasExpressionSubqueryTupleElementMapper(Type<?> type, SubqueryProvider provider, String subqueryExpression, String subqueryAlias, String attributePath, String embeddingViewPath, String alias) {
-        super(type, provider, subqueryExpression, subqueryAlias, attributePath, embeddingViewPath);
+    public AliasExpressionSubqueryTupleElementMapper(Type<?> type, SubqueryProvider provider, String subqueryExpression, String subqueryAlias, String attributePath, String viewPath, String embeddingViewPath, String alias) {
+        super(type, provider, subqueryExpression, subqueryAlias, attributePath, viewPath, embeddingViewPath);
         this.alias = alias;
     }
 
     @Override
-    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean asString) {
+    protected SubqueryInitiator<?> subqueryInitiator(SelectBuilder<?> queryBuilder, ViewJpqlMacro viewJpqlMacro, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean asString) {
+        String oldViewPath = viewJpqlMacro.getViewPath();
         String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
+        viewJpqlMacro.setViewPath(viewPath);
         embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
-        provider.createSubquery(queryBuilder.selectSubquery(subqueryAlias, subqueryExpression, alias));
+        SubqueryInitiator<?> subqueryInitiator;
+        if (asString && basicTypeStringSupport != null) {
+            subqueryInitiator = queryBuilder.selectSubquery(subqueryAlias, basicTypeStringSupport.toStringExpression(subqueryExpression), alias);
+        } else {
+            subqueryInitiator = queryBuilder.selectSubquery(subqueryAlias, subqueryExpression, alias);
+        }
         embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
+        viewJpqlMacro.setViewPath(oldViewPath);
+        return subqueryInitiator;
     }
 
     @Override

@@ -166,7 +166,7 @@ public class SizeTransformationTest extends AbstractCoreTest {
     public void testSizeToCountTransformationWithCollectionBag() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("SIZE(d.peopleCollectionBag)");
-        String expectedQuery = "SELECT (SELECT " + countStar() + " FROM d.peopleCollectionBag person) FROM Document d";
+        String expectedQuery = "SELECT (SELECT " + countStar() + " FROM d.peopleCollectionBag peopleCollectionBag) FROM Document d";
         Assert.assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
     }
@@ -178,7 +178,7 @@ public class SizeTransformationTest extends AbstractCoreTest {
     public void testSizeToCountTransformationWithListBag() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("SIZE(d.peopleListBag)");
-        String expectedQuery = "SELECT (SELECT " + countStar() + " FROM d.peopleListBag person) FROM Document d";
+        String expectedQuery = "SELECT (SELECT " + countStar() + " FROM d.peopleListBag peopleListBag) FROM Document d";
         Assert.assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
     }
@@ -266,7 +266,7 @@ public class SizeTransformationTest extends AbstractCoreTest {
                 .orderByAsc("p.id")
                 .orderByAsc("ownedDocument.id");
 
-        String expectedQuery = "SELECT p.id, ownedDocument.id, " + function("COUNT_TUPLE", "'DISTINCT'", "versions_1.id") + ", (SELECT " + countStar() + " FROM " + correlationPath("p.ownedDocuments", Document.class,"document", "owner.id = p.id") + ") FROM Person p LEFT JOIN p.ownedDocuments ownedDocument LEFT JOIN ownedDocument.versions versions_1 GROUP BY " + groupBy("ownedDocument.id", "p.id", renderNullPrecedenceGroupBy("p.id"), renderNullPrecedenceGroupBy("ownedDocument.id")) +
+        String expectedQuery = "SELECT p.id, ownedDocument.id, " + function("COUNT_TUPLE", "'DISTINCT'", "versions_1.id") + ", (SELECT " + countStar() + " FROM " + correlationPath("p.ownedDocuments", Document.class,"ownedDocuments", "owner.id = p.id") + ") FROM Person p LEFT JOIN p.ownedDocuments ownedDocument LEFT JOIN ownedDocument.versions versions_1 GROUP BY " + groupBy("ownedDocument.id", "p.id", renderNullPrecedenceGroupBy("p.id"), renderNullPrecedenceGroupBy("ownedDocument.id")) +
                 " ORDER BY p.id ASC, " + renderNullPrecedence("ownedDocument.id", "ASC", "LAST");
         Assert.assertEquals(expectedQuery, cb.getQueryString());
         List<Tuple> result = cb.getResultList();
@@ -286,7 +286,7 @@ public class SizeTransformationTest extends AbstractCoreTest {
                 .select("SIZE(p.ownedDocuments)")
                 .orderByAsc("p.id");
 
-        String expectedQuery = "SELECT p.id, " + function("COUNT_TUPLE", "'DISTINCT'", "versions_1.id") + ", (SELECT " + countStar() + " FROM " + correlationPath("p.ownedDocuments", Document.class,"document", "owner.id = p.id") + ") FROM Person p LEFT JOIN p.ownedDocuments ownedDocument LEFT JOIN ownedDocument.versions versions_1 GROUP BY " + groupBy("ownedDocument.id", "p.id", renderNullPrecedenceGroupBy("p.id")) +
+        String expectedQuery = "SELECT p.id, " + function("COUNT_TUPLE", "'DISTINCT'", "versions_1.id") + ", (SELECT " + countStar() + " FROM " + correlationPath("p.ownedDocuments", Document.class,"ownedDocuments", "owner.id = p.id") + ") FROM Person p LEFT JOIN p.ownedDocuments ownedDocument LEFT JOIN ownedDocument.versions versions_1 GROUP BY " + groupBy("ownedDocument.id", "p.id", renderNullPrecedenceGroupBy("p.id")) +
                 " ORDER BY p.id ASC";
 
         Assert.assertEquals(expectedQuery, cb.getQueryString());
@@ -303,7 +303,7 @@ public class SizeTransformationTest extends AbstractCoreTest {
                 .select("SIZE(partner.favoriteDocuments)")
                 .orderByAsc("p.id");
 
-        String expectedQuery = "SELECT p.id, (SELECT " + countStar() + " FROM " + correlationPath("ownedDocument.partners", Person.class,"person", "partnerDocument.id = ownedDocument.id") + "), " + function("COUNT_TUPLE", "'DISTINCT'", "favoriteDocuments_1.id") + " FROM Person p " +
+        String expectedQuery = "SELECT p.id, (SELECT " + countStar() + " FROM " + correlationPath("ownedDocument.partners", Person.class,"partners", "partnerDocument.id = ownedDocument.id") + "), " + function("COUNT_TUPLE", "'DISTINCT'", "favoriteDocuments_1.id") + " FROM Person p " +
                 "LEFT JOIN p.ownedDocuments ownedDocument " +
                 "LEFT JOIN ownedDocument.partners partner " +
                 "LEFT JOIN partner.favoriteDocuments favoriteDocuments_1 " +
@@ -330,9 +330,9 @@ public class SizeTransformationTest extends AbstractCoreTest {
                 .orderByAsc("favoriteDocument.id");
 
         String expectedQuery = "SELECT p.id, ownedDocument.id, favoriteDocument.id, " +
-                "(SELECT " + countStar() + " FROM " + correlationPath("ownedDocument.versions", Version.class,"version", "document.id = ownedDocument.id") + "), " +
-                "(SELECT " + countStar() + " FROM " + correlationPath("favoriteDocument.versions", Version.class,"version", "document.id = favoriteDocument.id") + "), " +
-                "(SELECT " + countStar() + " FROM " + correlationPath("p.ownedDocuments", Document.class,"document", "owner.id = p.id") + ") " +
+                "(SELECT " + countStar() + " FROM " + correlationPath("ownedDocument.versions", Version.class,"versions", "document.id = ownedDocument.id") + "), " +
+                "(SELECT " + countStar() + " FROM " + correlationPath("favoriteDocument.versions", Version.class,"versions", "document.id = favoriteDocument.id") + "), " +
+                "(SELECT " + countStar() + " FROM " + correlationPath("p.ownedDocuments", Document.class,"ownedDocuments", "owner.id = p.id") + ") " +
                 "FROM Person p " +
                 "LEFT JOIN p.ownedDocuments ownedDocument " +
                 "LEFT JOIN p.favoriteDocuments favoriteDocument " +
@@ -357,7 +357,7 @@ public class SizeTransformationTest extends AbstractCoreTest {
                 .select("SIZE(p.ownedDocuments)")
                 .orderByAsc("ownedDocumentId");
 
-        String expectedQuery = "SELECT ownedDocuments_1.id AS ownedDocumentId, (SELECT " + countStar() + " FROM " + correlationPath("p.ownedDocuments", Document.class,"document", "owner.id = p.id") + ") FROM Person p LEFT JOIN p.ownedDocuments ownedDocuments_1 ORDER BY " + renderNullPrecedence("ownedDocumentId", "ownedDocuments_1.id", "ASC", "LAST");
+        String expectedQuery = "SELECT ownedDocuments_1.id AS ownedDocumentId, (SELECT " + countStar() + " FROM " + correlationPath("p.ownedDocuments", Document.class,"ownedDocuments", "owner.id = p.id") + ") FROM Person p LEFT JOIN p.ownedDocuments ownedDocuments_1 ORDER BY " + renderNullPrecedence("ownedDocumentId", "ownedDocuments_1.id", "ASC", "LAST");
         Assert.assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
     }
@@ -369,7 +369,7 @@ public class SizeTransformationTest extends AbstractCoreTest {
                         .from(Person.class, "p")
                         .select("SIZE(p.ownedDocuments.partners.favoriteDocuments)");
 
-        String expectedQuery = "SELECT (SELECT " + countStar() + " FROM partners_1.favoriteDocuments document) FROM Person p " +
+        String expectedQuery = "SELECT (SELECT " + countStar() + " FROM partners_1.favoriteDocuments favoriteDocuments) FROM Person p " +
                 "LEFT JOIN p.ownedDocuments ownedDocuments_1 " +
                 "LEFT JOIN ownedDocuments_1.partners partners_1";
             Assert.assertEquals(expectedQuery, cb.getQueryString());
@@ -409,11 +409,10 @@ public class SizeTransformationTest extends AbstractCoreTest {
                 .from(Document.class, "d")
                 .select("SUM(SIZE(d.people))");
 
-        String expected = "SELECT SUM(" + function(SubqueryFunction.FUNCTION_NAME, "(SELECT " + countStar() + " FROM " + correlationPath(Document.class, "d.people", "person", "id = d.id") + ")") + ") FROM Document d";
+        String expected = "SELECT SUM(" + function(SubqueryFunction.FUNCTION_NAME, "(SELECT " + countStar() + " FROM " + correlationPath(Document.class, "d.people", "people", "id = d.id") + ")") + ") FROM Document d";
         assertEquals(expected, cb.getQueryString());
         assertEquals(4L, cb.getResultList().get(0).longValue());
     }
-
 
     @Test
     public void testSizeToCountTransformationWithTreat() {

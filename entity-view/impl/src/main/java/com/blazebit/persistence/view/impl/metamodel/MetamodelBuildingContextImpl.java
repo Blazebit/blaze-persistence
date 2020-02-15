@@ -40,6 +40,7 @@ import com.blazebit.persistence.view.impl.MacroConfigurationExpressionFactory;
 import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.view.impl.macro.DefaultViewRootJpqlMacro;
 import com.blazebit.persistence.view.impl.macro.MutableEmbeddingViewJpqlMacro;
+import com.blazebit.persistence.view.impl.macro.MutableViewJpqlMacro;
 import com.blazebit.persistence.view.impl.macro.TypeValidationEmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.impl.macro.TypeValidationViewRootJpqlMacro;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
@@ -452,6 +453,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
         MacroConfiguration originalMacroConfiguration = expressionFactory.getDefaultMacroConfiguration();
         ExpressionFactory cachingExpressionFactory = expressionFactory.unwrap(AbstractCachingExpressionFactory.class);
         Map<String, MacroFunction> macros = new HashMap<>();
+        macros.put("view", new JpqlMacroAdapter(new MutableViewJpqlMacro(viewRoot), cachingExpressionFactory));
         macros.put("view_root", new JpqlMacroAdapter(new DefaultViewRootJpqlMacro(viewRoot), cachingExpressionFactory));
         macros.put("embedding_view", new JpqlMacroAdapter(new MutableEmbeddingViewJpqlMacro(), cachingExpressionFactory));
         MacroConfiguration macroConfiguration = originalMacroConfiguration.with(macros);
@@ -462,6 +464,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
         MacroConfiguration originalMacroConfiguration = expressionFactory.getDefaultMacroConfiguration();
         ExpressionFactory cachingExpressionFactory = expressionFactory.unwrap(AbstractCachingExpressionFactory.class);
         Map<String, MacroFunction> macros = new HashMap<>();
+        macros.put("view", new JpqlMacroAdapter(new TypeValidationViewRootJpqlMacro(), cachingExpressionFactory));
         macros.put("view_root", new JpqlMacroAdapter(new TypeValidationViewRootJpqlMacro(), cachingExpressionFactory));
         macros.put("embedding_view", new JpqlMacroAdapter(new TypeValidationEmbeddingViewJpqlMacro(), cachingExpressionFactory));
         MacroConfiguration macroConfiguration = originalMacroConfiguration.with(macros);

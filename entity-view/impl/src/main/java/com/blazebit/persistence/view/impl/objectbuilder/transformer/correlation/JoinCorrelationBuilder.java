@@ -20,7 +20,6 @@ import com.blazebit.persistence.CorrelationQueryBuilder;
 import com.blazebit.persistence.FromProvider;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.JoinOnBuilder;
-import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.view.CorrelationBuilder;
 
 import javax.persistence.metamodel.EntityType;
@@ -32,21 +31,15 @@ import javax.persistence.metamodel.EntityType;
  */
 public class JoinCorrelationBuilder implements CorrelationBuilder {
 
-    private final SelectBuilder<?> selectBuilder;
     private final FullQueryBuilder<?, ?> criteriaBuilder;
     private final String joinBase;
-    private final String selectAlias;
     private final String correlationAlias;
-    private final String correlationResult;
     private boolean correlated;
 
-    public JoinCorrelationBuilder(SelectBuilder<?> selectBuilder, FullQueryBuilder<?, ?> criteriaBuilder, String joinBase, String correlationAlias, String correlationResult, String selectAlias) {
-        this.selectBuilder = selectBuilder;
+    public JoinCorrelationBuilder(FullQueryBuilder<?, ?> criteriaBuilder, String joinBase, String correlationAlias) {
         this.criteriaBuilder = criteriaBuilder;
         this.joinBase = joinBase;
         this.correlationAlias = correlationAlias;
-        this.correlationResult = correlationResult;
-        this.selectAlias = selectAlias;
     }
 
     @Override
@@ -70,11 +63,6 @@ public class JoinCorrelationBuilder implements CorrelationBuilder {
             throw new IllegalArgumentException("Can not correlate with multiple entity classes!");
         }
 
-        // Basic element has an alias, subviews don't
-        if (selectAlias != null) {
-            selectBuilder.select(correlationResult, selectAlias);
-        }
-
         correlated = true;
         return (JoinOnBuilder<CorrelationQueryBuilder>) (JoinOnBuilder<?>) criteriaBuilder.leftJoinOn(joinBase, entityClass, correlationAlias);
     }
@@ -83,11 +71,6 @@ public class JoinCorrelationBuilder implements CorrelationBuilder {
     public JoinOnBuilder<CorrelationQueryBuilder> correlate(EntityType<?> entityType) {
         if (correlated) {
             throw new IllegalArgumentException("Can not correlate with multiple entity classes!");
-        }
-
-        // Basic element has an alias, subviews don't
-        if (selectAlias != null) {
-            selectBuilder.select(correlationResult, selectAlias);
         }
 
         correlated = true;

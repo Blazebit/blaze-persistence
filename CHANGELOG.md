@@ -12,6 +12,7 @@ Not yet released
 * Introduce `MULTISET` fetch strategy for entity views
 * Introduce `com.blazebit.persistence.BaseUpdateCriteriaBuilder.setNull(String attributeName)` to avoid ambiguity for `set(String, null)`
 * Extend array expression to support a predicate
+* Extend array expression to allow entity type as base expression
 
 ### Bug fixes
 

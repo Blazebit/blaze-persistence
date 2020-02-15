@@ -231,8 +231,8 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor, Jo
             } finally {
                 currentlyResolvingAliases.remove(alias);
             }
-        } else if ("this".equals(alias)) {
-            // We will not resolve the "this" alias, this must be done in the join manager and is only allowed within an ArrayExpression
+        } else if (ArrayExpression.ELEMENT_NAME.equals(alias)) {
+            // We will not resolve the ArrayExpression.ELEMENT_NAME alias, this must be done in the join manager and is only allowed within an ArrayExpression
         } else {
             if (relativeExpressionPrefix != null) {
                 PathExpression leftMost = ExpressionUtils.getLeftMostPathExpression(expression);
@@ -243,12 +243,12 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor, Jo
                     leftMostAlias = ((PropertyExpression) leftMost.getExpressions().get(0)).getProperty();
                 }
 
-                if ("this".equals(leftMostAlias)) {
+                if (ArrayExpression.ELEMENT_NAME.equals(leftMostAlias)) {
                     return;
                 }
                 JoinAliasInfo aliasInfo = (JoinAliasInfo) joinManager.getAliasManager().getAliasInfo(leftMostAlias);
                 if (aliasInfo == null) {
-                    leftMost.getExpressions().add(0, new PropertyExpression("this"));
+                    leftMost.getExpressions().add(0, new PropertyExpression(ArrayExpression.ELEMENT_NAME));
                     return;
                 }
             }

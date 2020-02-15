@@ -20,6 +20,7 @@ import com.blazebit.persistence.FetchBuilder;
 import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
+import com.blazebit.persistence.view.spi.ViewJpqlMacro;
 import com.blazebit.persistence.view.spi.type.BasicUserTypeStringSupport;
 
 import java.util.Map;
@@ -33,15 +34,16 @@ public class AliasExpressionTupleElementMapper extends ExpressionTupleElementMap
 
     private final String alias;
 
-    public AliasExpressionTupleElementMapper(BasicUserTypeStringSupport<Object> basicTypeStringSupport, String expression, String alias, String attributePath, String embeddingViewPath, String[] fetches) {
-        super(basicTypeStringSupport, expression, attributePath, embeddingViewPath, fetches);
+    public AliasExpressionTupleElementMapper(BasicUserTypeStringSupport<Object> basicTypeStringSupport, String expression, String alias, String attributePath, String viewPath, String embeddingViewPath, String[] fetches) {
+        super(basicTypeStringSupport, expression, attributePath, viewPath, embeddingViewPath, fetches);
         this.alias = alias.intern();
     }
 
     @Override
-    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean asString) {
+    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, ViewJpqlMacro viewJpqlMacro, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean asString) {
+        String oldViewPath = viewJpqlMacro.getViewPath();
         String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
-        embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
+        viewJpqlMacro.setViewPath(viewPath);
         queryBuilder.select(expression, alias);
         if (fetches.length != 0) {
             final FetchBuilder<?> fetchBuilder = (FetchBuilder<?>) queryBuilder;
@@ -50,6 +52,7 @@ public class AliasExpressionTupleElementMapper extends ExpressionTupleElementMap
             }
         }
         embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
+        viewJpqlMacro.setViewPath(oldViewPath);
     }
 
     @Override
