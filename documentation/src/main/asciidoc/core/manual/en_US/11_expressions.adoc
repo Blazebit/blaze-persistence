@@ -29,7 +29,7 @@ In some cases the join will be omitted
 
 === Array expressions
 
-The array expression syntax is an extension to the JPQL grammar that allows to filter an association by a predicate.
+The array expression syntax is an extension to the JPQL grammar that allows to filter an association or dedicated entity join by a predicate.
 Associations that are mapped as `java.util.Map` and indexed `java.util.List` i.e. lists that use `@OrderColumn`, also allow to use a simple expression.
 
 A normal path expression like `identificationVariable.collection.name` will create an unconditional join for the attribute `collection` i.e. it refers to all collection elements.
@@ -40,8 +40,10 @@ Since array expressions by default use the join type `LEFT`, the expression resu
 The array expression syntax can be used anywhere within a path expression. Even multiple uses like this are ok `identificationVariable.collection1[:param1].association.collection2[:param2].attribute`.
 
 The use of a predicate like in `identificationVariable.collection[LENGTH(name) <> 0].name` will cause a join like `LEFT JOIN identificationVariable.collection alias ON LENGTH(alias.name) <> 0`.
-Within an array expression, the keyword `this` can be used to refer to the join alias of the array expression which is useful for using the `KEY` and `INDEX` functions
-like in `identificationVariable.collection[KEY(this) = :someParam].name`.
+Within an array expression, the identifier `_` can be used to refer to the join alias of the array expression which is useful for using the `KEY` and `INDEX` functions
+like in `identificationVariable.collection[KEY(_) = :someParam].name`.
+
+Using an entity name as base expression like in `Cat[age > 18]` will cause a join like `LEFT JOIN Cat alias ON alias.age > 18`.
 
 === Treat expressions
 

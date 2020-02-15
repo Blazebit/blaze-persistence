@@ -16,13 +16,12 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.mapper;
 
-import java.util.Map;
-
-import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.SelectBuilder;
+import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.view.SubqueryProviderFactory;
 import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
+import com.blazebit.persistence.view.spi.ViewJpqlMacro;
 
 /**
  *
@@ -33,17 +32,26 @@ public class ParameterizedAliasExpressionSubqueryTupleElementMapper extends Para
 
     private final String alias;
 
-    public ParameterizedAliasExpressionSubqueryTupleElementMapper(Type<?> type, SubqueryProviderFactory providerFactory, String subqueryExpression, String subqueryAlias, String attributePath, String embeddingViewPath, String alias) {
-        super(type, providerFactory, subqueryExpression, subqueryAlias, attributePath, embeddingViewPath);
+    public ParameterizedAliasExpressionSubqueryTupleElementMapper(Type<?> type, SubqueryProviderFactory providerFactory, String subqueryExpression, String subqueryAlias, String attributePath, String viewPath, String embeddingViewPath, String alias) {
+        super(type, providerFactory, subqueryExpression, subqueryAlias, attributePath, viewPath, embeddingViewPath);
         this.alias = alias;
     }
 
     @Override
-    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean asString) {
+    protected SubqueryInitiator<?> subqueryInitiator(SelectBuilder<?> queryBuilder, ViewJpqlMacro viewJpqlMacro, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean asString) {
+        String oldViewPath = viewJpqlMacro.getViewPath();
         String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
+        viewJpqlMacro.setViewPath(viewPath);
         embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
-        providerFactory.create(parameterHolder, optionalParameters).createSubquery(queryBuilder.selectSubquery(subqueryAlias, subqueryExpression, alias));
+        SubqueryInitiator<?> subqueryInitiator;
+        if (asString && basicTypeStringSupport != null) {
+            subqueryInitiator = queryBuilder.selectSubquery(subqueryAlias, basicTypeStringSupport.toStringExpression(subqueryExpression), alias);
+        } else {
+            subqueryInitiator = queryBuilder.selectSubquery(subqueryAlias, subqueryExpression, alias);
+        }
         embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
+        viewJpqlMacro.setViewPath(oldViewPath);
+        return subqueryInitiator;
     }
 
     @Override

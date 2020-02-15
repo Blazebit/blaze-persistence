@@ -23,7 +23,7 @@
     <!-- Checks for Size Violations.                    -->
     <!-- See http://checkstyle.sf.net/config_sizes.html -->
     <module name="FileLength">
-        <property name="max" value="3600"/>
+        <property name="max" value="3700"/>
         <property name="fileExtensions" value="java"/>
     </module>
 
@@ -112,7 +112,7 @@
             <property name="ignorePattern" value="@version|@see"/>
         </module>
         <module name="MethodLength">
-            <property name="max" value="290"/>
+            <property name="max" value="300"/>
         </module>
         <module name="ParameterNumber">
             <property name="max" value="25"/>

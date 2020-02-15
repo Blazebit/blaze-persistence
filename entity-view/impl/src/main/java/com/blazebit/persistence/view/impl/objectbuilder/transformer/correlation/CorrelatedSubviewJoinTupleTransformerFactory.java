@@ -28,6 +28,7 @@ import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleTransformer;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleTransformerFactory;
+import com.blazebit.persistence.view.spi.ViewJpqlMacro;
 
 import java.util.Map;
 
@@ -77,7 +78,7 @@ public class CorrelatedSubviewJoinTupleTransformerFactory implements TupleTransf
         if (parameterHolder instanceof FullQueryBuilder<?, ?>) {
             FullQueryBuilder<?, ?> queryBuilder = (FullQueryBuilder<?, ?>) parameterHolder;
             CorrelationProvider provider = correlationProviderFactory.create(parameterHolder, optionalParameters);
-            JoinCorrelationBuilder correlationBuilder = new JoinCorrelationBuilder(queryBuilder, queryBuilder, joinBase, correlationAlias, correlationResult, null);
+            JoinCorrelationBuilder correlationBuilder = new JoinCorrelationBuilder(queryBuilder, joinBase, correlationAlias);
             int originalFirstResult = -1;
             int originalMaxResults = -1;
             if (queryBuilder instanceof LimitBuilder<?>) {
@@ -85,10 +86,16 @@ public class CorrelatedSubviewJoinTupleTransformerFactory implements TupleTransf
                 originalMaxResults = ((LimitBuilder<?>) queryBuilder).getMaxResults();
             }
 
+            ViewJpqlMacro viewJpqlMacro = entityViewConfiguration.getViewJpqlMacro();
             EmbeddingViewJpqlMacro embeddingViewJpqlMacro = entityViewConfiguration.getEmbeddingViewJpqlMacro();
+            String oldViewPath = viewJpqlMacro.getViewPath();
             String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
+            viewJpqlMacro.setViewPath(correlationBuilder.getCorrelationAlias());
             embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
+
             provider.applyCorrelation(correlationBuilder, correlationBasis);
+
+            viewJpqlMacro.setViewPath(oldViewPath);
             embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
 
             if (queryBuilder instanceof LimitBuilder<?>) {

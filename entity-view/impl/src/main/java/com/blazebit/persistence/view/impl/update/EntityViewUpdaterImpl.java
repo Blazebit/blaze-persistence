@@ -52,6 +52,7 @@ import com.blazebit.persistence.view.impl.entity.ReferenceEntityLoader;
 import com.blazebit.persistence.view.impl.entity.UpdaterBasedViewToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.macro.MutableEmbeddingViewJpqlMacro;
+import com.blazebit.persistence.view.impl.macro.MutableViewJpqlMacro;
 import com.blazebit.persistence.view.impl.mapper.Mapper;
 import com.blazebit.persistence.view.impl.mapper.Mappers;
 import com.blazebit.persistence.view.impl.mapper.ViewMapper;
@@ -166,6 +167,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                             viewIdType,
                             null,
                             null,
+                            new MutableViewJpqlMacro(),
                             null,
                             new MutableEmbeddingViewJpqlMacro(),
                             0

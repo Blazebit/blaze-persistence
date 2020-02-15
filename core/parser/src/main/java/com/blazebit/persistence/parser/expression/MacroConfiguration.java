@@ -50,7 +50,11 @@ public final class MacroConfiguration {
         Map<String, MacroFunction> map = new HashMap<>(this.macros.size() + newMacros.size());
         map.putAll(this.macros);
         for (Map.Entry<String, MacroFunction> entry : newMacros.entrySet()) {
-            map.put(entry.getKey().toUpperCase(), entry.getValue());
+            if (entry.getValue() == null) {
+                map.remove(entry.getKey().toUpperCase());
+            } else {
+                map.put(entry.getKey().toUpperCase(), entry.getValue());
+            }
         }
         return new MacroConfiguration(map);
     }

@@ -353,7 +353,12 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
     @Override
     public void visit(ArrayExpression expression) {
         // Only need the base to navigate down the path
-        expression.getBase().accept(this);
+        if (expression.getBase() instanceof EntityLiteral) {
+            EntityType<?> type = metamodel.getEntity(((EntityLiteral) expression.getBase()).getValue());
+            currentPosition.setCurrentType(type);
+        } else {
+            expression.getBase().accept(this);
+        }
     }
 
     @Override

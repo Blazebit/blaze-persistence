@@ -375,7 +375,7 @@ public class SelectTest extends AbstractCoreTest {
                 .select("SIZE(d.contacts)")
                 .setProperty(ConfigurationProperties.SIZE_TO_COUNT_TRANSFORMATION, "false");
         
-        final String expected = "SELECT (SELECT " + countStar() + " FROM d.contacts person) FROM Document d";
+        final String expected = "SELECT (SELECT " + countStar() + " FROM d.contacts contacts) FROM Document d";
         assertEquals(expected, cb.getQueryString());
         cb.getResultList();
     }

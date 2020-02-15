@@ -26,6 +26,7 @@ import com.blazebit.persistence.view.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.MultisetCorrelationBuilder;
 import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
+import com.blazebit.persistence.view.spi.ViewJpqlMacro;
 import com.blazebit.persistence.view.spi.type.BasicUserTypeStringSupport;
 
 import java.util.Map;
@@ -54,7 +55,7 @@ public class CorrelationMultisetTupleElementMapper implements TupleElementMapper
     }
 
     @Override
-    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean asString) {
+    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, ViewJpqlMacro viewJpqlMacro, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean asString) {
         String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
         embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
         SubqueryInitiator<?> subqueryInitiator = queryBuilder.selectSubquery("subquery", "TO_MULTISET(subquery)");
@@ -63,7 +64,7 @@ public class CorrelationMultisetTupleElementMapper implements TupleElementMapper
         correlationProvider.applyCorrelation(correlationBuilder, correlationBasis);
         SubqueryBuilder<?> subqueryBuilder = correlationBuilder.getSubqueryBuilder();
         for (TupleElementMapper mapper : subviewTemplate.getMappers()) {
-            mapper.applyMapping(subqueryBuilder, parameterHolder, optionalParameters, embeddingViewJpqlMacro, true);
+            mapper.applyMapping(subqueryBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro, true);
         }
 
         subqueryBuilder.end();

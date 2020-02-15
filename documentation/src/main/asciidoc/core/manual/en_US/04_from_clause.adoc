@@ -286,6 +286,26 @@ LEFT JOIN cat.kittens kittens_age___18
        ON kittens_age___18.age > 18
 ----
 
+Note that it is also possible to use an entity name as base expression for an array expression.
+
+[source,java]
+----
+CriteriaBuilder<String> cb = cbf.create(em, String.class)
+    .from(Cat.class)
+    .select("Cat[age > 18].id")
+    .select("Cat[age > 18].name");
+----
+
+Such a query will result in the following JPQL
+
+[source,sql]
+----
+SELECT kittens_age___18.id, kittens_age___18.name
+FROM Cat cat
+LEFT JOIN Cat Cat___age___18
+       ON kittens_age___18.age > 18
+----
+
 NOTE: In case of array expressions, the generated implicit/default join node is identified not only by the absolute path, but also by the index expression.
 
 ==== Correlated joins

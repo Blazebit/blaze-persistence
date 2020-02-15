@@ -14,23 +14,31 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.parser.expression;
+package com.blazebit.persistence.view.spi;
 
-import java.util.List;
+import com.blazebit.persistence.spi.JpqlMacro;
 
 /**
+ * Interface implemented by the entity view provider.
+ *
+ * Represents the current view that.
  *
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.5.0
  */
-public interface MacroFunction {
+public interface ViewJpqlMacro extends JpqlMacro {
 
-    Object[] EMPTY = {};
+    /**
+     * Returns the current view path.
+     *
+     * @return the current view path
+     */
+    public String getViewPath();
 
-    public Expression apply(List<Expression> expressions);
-
-    // Equals and hashCode must be based on this state
-    public Object[] getState();
-
-    public boolean supportsCaching();
+    /**
+     * Sets the current view path.
+     *
+     * @param viewPath The new view path
+     */
+    public void setViewPath(String viewPath);
 }

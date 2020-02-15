@@ -81,7 +81,7 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
         if (correlationResult.isEmpty()) {
             this.correlationResult = correlationAlias;
         } else {
-            this.correlationResult = PrefixingQueryGenerator.prefix(ef, correlationResult, correlationAlias);
+            this.correlationResult = PrefixingQueryGenerator.prefix(ef, correlationResult, correlationAlias, true);
         }
     }
 

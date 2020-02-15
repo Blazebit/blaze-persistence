@@ -63,6 +63,7 @@ import com.blazebit.persistence.parser.predicate.LikePredicate;
 import com.blazebit.persistence.parser.predicate.LtPredicate;
 import com.blazebit.persistence.parser.predicate.MemberOfPredicate;
 import com.blazebit.persistence.parser.predicate.Predicate;
+import com.blazebit.persistence.parser.util.ExpressionUtils;
 
 import java.util.List;
 import java.util.Objects;
@@ -94,16 +95,22 @@ public class EqualityCheckingVisitor implements Expression.ResultVisitor<Boolean
         PathExpression reference = (PathExpression) referenceExpression;
         List<PathElementExpression> referenceExpressions = reference.getExpressions();
         List<PathElementExpression> expressions = expression.getExpressions();
+        PathExpression leftMostPathExpression = ExpressionUtils.getLeftMostPathExpression(expression);
         int size = expressions.size();
-        if (size == 1) {
-            PathElementExpression referenceElementExpression = referenceExpressions.get(0);
-            PathElementExpression elementExpression = expressions.get(0);
-            if (elementExpression instanceof PropertyExpression) {
-                String property = ((PropertyExpression) elementExpression).getProperty();
-                if ("this".equals(property) && referenceElementExpression instanceof PropertyExpression) {
-                    if (((PropertyExpression) referenceElementExpression).getProperty().equals(alias)) {
-                        return Boolean.FALSE;
+        if (leftMostPathExpression.getExpressions().get(0) instanceof PropertyExpression) {
+            PropertyExpression propertyExpression = (PropertyExpression) leftMostPathExpression.getExpressions().get(0);
+            if (ArrayExpression.ELEMENT_NAME.equals(propertyExpression.getProperty())) {
+                try {
+                    leftMostPathExpression.getExpressions().set(0, new PropertyExpression(alias));
+                    for (int i = 0; i < size; i++) {
+                        referenceExpression = referenceExpressions.get(i);
+                        if (expressions.get(i).accept(this)) {
+                            return Boolean.TRUE;
+                        }
                     }
+                    return Boolean.FALSE;
+                } finally {
+                    leftMostPathExpression.getExpressions().set(0, propertyExpression);
                 }
             }
         }

@@ -24,6 +24,8 @@ import com.blazebit.persistence.parser.expression.ArithmeticExpression;
 import com.blazebit.persistence.parser.expression.ArithmeticFactor;
 import com.blazebit.persistence.parser.expression.ArrayExpression;
 import com.blazebit.persistence.parser.expression.DateLiteral;
+import com.blazebit.persistence.parser.expression.EntityLiteral;
+import com.blazebit.persistence.parser.expression.EnumLiteral;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.FunctionExpression;
 import com.blazebit.persistence.parser.expression.GeneralCaseExpression;
@@ -34,6 +36,8 @@ import com.blazebit.persistence.parser.expression.MapValueExpression;
 import com.blazebit.persistence.parser.expression.NullExpression;
 import com.blazebit.persistence.parser.expression.NumericLiteral;
 import com.blazebit.persistence.parser.expression.ParameterExpression;
+import com.blazebit.persistence.parser.expression.PathExpression;
+import com.blazebit.persistence.parser.expression.PropertyExpression;
 import com.blazebit.persistence.parser.expression.SimpleCaseExpression;
 import com.blazebit.persistence.parser.expression.StringLiteral;
 import com.blazebit.persistence.parser.expression.SubqueryExpression;
@@ -41,8 +45,24 @@ import com.blazebit.persistence.parser.expression.TimeLiteral;
 import com.blazebit.persistence.parser.expression.TimestampLiteral;
 import com.blazebit.persistence.parser.expression.TreatExpression;
 import com.blazebit.persistence.parser.expression.TrimExpression;
+import com.blazebit.persistence.parser.expression.TypeFunctionExpression;
 import com.blazebit.persistence.parser.expression.WhenClauseExpression;
+import com.blazebit.persistence.parser.predicate.BetweenPredicate;
+import com.blazebit.persistence.parser.predicate.BinaryExpressionPredicate;
 import com.blazebit.persistence.parser.predicate.BooleanLiteral;
+import com.blazebit.persistence.parser.predicate.CompoundPredicate;
+import com.blazebit.persistence.parser.predicate.EqPredicate;
+import com.blazebit.persistence.parser.predicate.ExistsPredicate;
+import com.blazebit.persistence.parser.predicate.GePredicate;
+import com.blazebit.persistence.parser.predicate.GtPredicate;
+import com.blazebit.persistence.parser.predicate.InPredicate;
+import com.blazebit.persistence.parser.predicate.IsEmptyPredicate;
+import com.blazebit.persistence.parser.predicate.IsNullPredicate;
+import com.blazebit.persistence.parser.predicate.LePredicate;
+import com.blazebit.persistence.parser.predicate.LikePredicate;
+import com.blazebit.persistence.parser.predicate.LtPredicate;
+import com.blazebit.persistence.parser.predicate.MemberOfPredicate;
+import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.parser.util.ExpressionUtils;
 import com.blazebit.persistence.spi.JpqlFunction;
 
@@ -51,6 +71,7 @@ import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ListAttribute;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.MapAttribute;
+import javax.persistence.metamodel.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -242,7 +263,11 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
 
         parametersAllowed = true;
         pathPositions = new ArrayList<>();
-        pathPositions.add(currentPosition = new PathPosition(managedType, null));
+        if (expression.getIndex() instanceof Predicate) {
+            pathPositions.add(currentPosition = currentPosition.copy());
+        } else {
+            pathPositions.add(currentPosition = new PathPosition(managedType, null));
+        }
         
         // Validate index against metamodel
         expression.getIndex().accept(this);
@@ -252,8 +277,12 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
         pathPositions = currentPositions;
     
         // Only need the base to navigate down the path
-        expression.getBase().accept(this);
-        currentPosition.setCurrentType(currentPosition.getCurrentType());
+        if (expression.getBase() instanceof EntityLiteral) {
+            currentPosition.setCurrentType(metamodel.entity(((EntityLiteral) expression.getBase()).getValue()));
+        } else {
+            expression.getBase().accept(this);
+            currentPosition.setCurrentType(currentPosition.getCurrentType());
+        }
     }
 
     @Override
@@ -471,4 +500,153 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
         expression.getResult().accept(this);
     }
 
+    @Override
+    public void visit(PropertyExpression expression) {
+        super.visit(expression);
+    }
+
+    @Override
+    public void visit(PathExpression expression) {
+        super.visit(expression);
+    }
+
+    @Override
+    public void visit(EnumLiteral expression) {
+        currentPosition.setAttribute(null);
+        currentPosition.setCurrentType(metamodel.type(expression.getValue().getDeclaringClass()));
+    }
+
+    @Override
+    public void visit(EntityLiteral expression) {
+        currentPosition.setAttribute(null);
+        currentPosition.setCurrentType(metamodel.type(EntityType.class));
+    }
+
+    @Override
+    public void visit(TypeFunctionExpression expression) {
+        currentPosition.setAttribute(null);
+        currentPosition.setCurrentType(metamodel.type(EntityType.class));
+    }
+
+    @Override
+    public void visit(CompoundPredicate predicate) {
+        List<Predicate> children = predicate.getChildren();
+        for (int i = 0; i < children.size(); i++) {
+            children.get(i).accept(this);
+        }
+    }
+
+    @Override
+    public void visit(EqPredicate predicate) {
+        visit((BinaryExpressionPredicate) predicate);
+    }
+
+    @Override
+    public void visit(GtPredicate predicate) {
+        visit((BinaryExpressionPredicate) predicate);
+    }
+
+    @Override
+    public void visit(GePredicate predicate) {
+        visit((BinaryExpressionPredicate) predicate);
+    }
+
+    @Override
+    public void visit(LtPredicate predicate) {
+        visit((BinaryExpressionPredicate) predicate);
+    }
+
+    @Override
+    public void visit(LePredicate predicate) {
+        visit((BinaryExpressionPredicate) predicate);
+    }
+
+    @Override
+    public void visit(MemberOfPredicate predicate) {
+        visit((BinaryExpressionPredicate) predicate);
+    }
+
+    @Override
+    public void visit(LikePredicate predicate) {
+        visit((BinaryExpressionPredicate) predicate);
+    }
+
+    public void visit(BinaryExpressionPredicate predicate) {
+        PathPosition left = resolve(predicate.getLeft());
+        PathPosition right = resolve(predicate.getRight());
+        if (left != null && left.getCurrentType() != null && right != null && right.getCurrentType() != null && left.getCurrentType() != right.getCurrentType()) {
+            invalid(predicate, "The binary predicate compares different types!");
+            invalid(predicate, "The binary predicate compares different types: [" + left.getCurrentType() + ", " + right.getCurrentType() + "]");
+        }
+    }
+
+    private PathPosition resolve(Expression expression) {
+        boolean wasParamsAllowed = parametersAllowed;
+        List<PathPosition> currentPositions = pathPositions;
+        PathPosition position = currentPosition;
+
+        parametersAllowed = true;
+        pathPositions = new ArrayList<>();
+        pathPositions.add(currentPosition = currentPosition.copy());
+
+        // Validate index against metamodel
+        expression.accept(this);
+        PathPosition expressionPathPosition = currentPosition;
+
+        parametersAllowed = wasParamsAllowed;
+        currentPosition = position;
+        pathPositions = currentPositions;
+        return expressionPathPosition;
+    }
+
+    @Override
+    public void visit(IsNullPredicate predicate) {
+        predicate.getExpression().accept(this);
+    }
+
+    @Override
+    public void visit(IsEmptyPredicate predicate) {
+        predicate.getExpression().accept(this);
+    }
+
+    @Override
+    public void visit(BetweenPredicate predicate) {
+        PathPosition left = resolve(predicate.getLeft());
+        PathPosition start = resolve(predicate.getStart());
+        PathPosition end = resolve(predicate.getEnd());
+        if (left != null && left.getCurrentType() != null && start != null && start.getCurrentType() != null && end != null && end.getCurrentType() != null
+                && (left.getCurrentType() != start.getCurrentType() || left.getCurrentType() != end.getCurrentType())) {
+            invalid(predicate, "The between predicate compares different types: [" + left.getCurrentType() + ", " + start.getCurrentType() + ", " + end.getCurrentType() + "]");
+        }
+    }
+
+    @Override
+    public void visit(InPredicate predicate) {
+        PathPosition left = resolve(predicate.getLeft());
+        List<Expression> expressions = predicate.getRight();
+        List<Type<?>> expressionTypes = new ArrayList<>(expressions.size());
+
+        if (left != null && left.getCurrentType() != null) {
+            boolean invalid = false;
+
+            for (int i = 0; i < expressions.size(); i++) {
+                PathPosition pathPosition = resolve(expressions.get(i));
+                if (pathPosition != null) {
+                    if (left.getCurrentType() != pathPosition.getCurrentType()) {
+                        invalid = true;
+                    }
+                    expressionTypes.add(pathPosition.getCurrentType());
+                }
+            }
+
+            if (invalid) {
+                invalid(predicate, "The in predicate compares the left type '" + left.getCurrentType() + "' with different item types: " + expressionTypes);
+            }
+        }
+    }
+
+    @Override
+    public void visit(ExistsPredicate predicate) {
+        // No-op
+    }
 }

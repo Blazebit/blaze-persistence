@@ -18,7 +18,6 @@ package com.blazebit.persistence.parser.expression.modifier;
 
 import com.blazebit.persistence.parser.expression.ArrayExpression;
 import com.blazebit.persistence.parser.expression.Expression;
-import com.blazebit.persistence.parser.expression.PropertyExpression;
 
 /**
  *
@@ -33,7 +32,7 @@ public class ArrayExpressionBaseModifier extends AbstractExpressionModifier<Arra
 
     @Override
     public void set(Expression expression) {
-        target.setBase((PropertyExpression) expression);
+        target.setBase(expression);
     }
 
     @Override

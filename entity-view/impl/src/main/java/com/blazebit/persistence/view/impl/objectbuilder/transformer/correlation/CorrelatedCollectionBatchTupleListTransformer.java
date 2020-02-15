@@ -47,7 +47,6 @@ public class CorrelatedCollectionBatchTupleListTransformer extends AbstractCorre
         this.recording = recording;
     }
 
-
     @Override
     protected void populateResult(Map<Object, TuplePromise> correlationValues, Object defaultKey, List<Object> list) {
         if (batchSize == 1) {

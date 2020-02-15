@@ -26,6 +26,7 @@ import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.CorrelationProviderFactory;
 import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.JoinCorrelationBuilder;
+import com.blazebit.persistence.view.spi.ViewJpqlMacro;
 
 import java.util.Map;
 
@@ -44,8 +45,10 @@ public class ParameterizedExpressionCorrelationJoinTupleElementMapper extends Ab
     }
 
     @Override
-    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean asString) {
+    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, ViewJpqlMacro viewJpqlMacro, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean asString) {
+        String oldViewPath = viewJpqlMacro.getViewPath();
         String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
+        viewJpqlMacro.setViewPath(embeddingViewPath);
         embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
         FullQueryBuilder<?, ?> fullQueryBuilder;
         if (queryBuilder instanceof ConstrainedSelectBuilder) {
@@ -60,9 +63,18 @@ public class ParameterizedExpressionCorrelationJoinTupleElementMapper extends Ab
             originalMaxResults = ((LimitBuilder<?>) queryBuilder).getMaxResults();
         }
 
-        CorrelationBuilder correlationBuilder = new JoinCorrelationBuilder(queryBuilder, fullQueryBuilder, joinBase, correlationAlias, correlationResult, alias);
+        CorrelationBuilder correlationBuilder = new JoinCorrelationBuilder(fullQueryBuilder, joinBase, correlationAlias);
         CorrelationProvider provider = providerFactory.create(parameterHolder, optionalParameters);
         provider.applyCorrelation(correlationBuilder, correlationBasis);
+
+        // Basic element has an alias, subviews don't
+        if (alias != null) {
+            viewJpqlMacro.setViewPath(null);
+            queryBuilder.select(correlationResult, alias);
+        }
+        viewJpqlMacro.setViewPath(oldViewPath);
+        embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
+
         if (queryBuilder instanceof LimitBuilder<?>) {
             if (originalFirstResult != ((LimitBuilder<?>) queryBuilder).getFirstResult()
                     || originalMaxResults != ((LimitBuilder<?>) queryBuilder).getMaxResults()) {
@@ -74,7 +86,6 @@ public class ParameterizedExpressionCorrelationJoinTupleElementMapper extends Ab
                 fullQueryBuilder.fetch(correlationBuilder.getCorrelationAlias() + "." + fetches[i]);
             }
         }
-        embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
     }
 
 }

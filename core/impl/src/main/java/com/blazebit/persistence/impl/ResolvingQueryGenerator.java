@@ -638,6 +638,10 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         this.renderedJoinNodes = renderedJoinNodes;
     }
 
+    public ClauseType getClauseType() {
+        return clauseType;
+    }
+
     public void setClauseType(ClauseType clauseType) {
         this.clauseType = clauseType;
     }

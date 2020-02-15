@@ -17,11 +17,21 @@
 package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.parser.expression.ArrayExpression;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus4;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
+import javax.persistence.Tuple;
 
 import static org.junit.Assert.assertEquals;
 
@@ -108,7 +118,7 @@ public class ArrayExpressionTest extends AbstractCoreTest {
         if (jpaProvider.supportsSingleValuedAssociationIdExpressions()) {
             contactsJoinAlias = "contacts_intIdEntity_id_1";
         } else {
-            contactsJoinAlias = "contacts_intIdEntity_1_id_1";
+            contactsJoinAlias = "contacts_intIdEntity_id_1";
         }
 
         assertEquals("SELECT " + joinAliasValue(contactsJoinAlias) + " FROM Document d"
@@ -204,48 +214,77 @@ public class ArrayExpressionTest extends AbstractCoreTest {
     @Test
     public void testPredicateIndex() {
         CriteriaBuilder<Person> criteria = cbf.create(em, Person.class).from(Document.class, "d");
-        criteria.select("d.contacts[KEY(this) = d.idx]");
+        criteria.select("d.contacts[KEY(_) = d.idx]");
 
-        assertEquals("SELECT " + joinAliasValue("contacts_KEY_this____d_idx_1") + " FROM Document d" +
-                " LEFT JOIN d.contacts contacts_KEY_this____d_idx_1"
-                + onClause("KEY(contacts_KEY_this____d_idx_1) = d.idx"), criteria.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("contacts_KEY_" + ArrayExpression.ELEMENT_NAME + "____d_idx_1") + " FROM Document d" +
+                " LEFT JOIN d.contacts contacts_KEY_" + ArrayExpression.ELEMENT_NAME + "____d_idx_1"
+                + onClause("KEY(contacts_KEY_" + ArrayExpression.ELEMENT_NAME +"____d_idx_1) = d.idx"), criteria.getQueryString());
         criteria.getResultList();
     }
 
     @Test
     public void testPredicateIndexReuse() {
         CriteriaBuilder<Person> criteria = cbf.create(em, Person.class).from(Document.class, "d");
-        criteria.select("d.contacts[KEY(this) = d.idx]")
-                .where("d.contacts[KEY(this) = d.idx].name").eq("pers1");
+        criteria.select("d.contacts[KEY(_) = d.idx]")
+                .where("d.contacts[KEY(_) = d.idx].name").eq("pers1");
 
-        assertEquals("SELECT " + joinAliasValue("contacts_KEY_this____d_idx_1") + " FROM Document d" +
-                " LEFT JOIN d.contacts contacts_KEY_this____d_idx_1"
-                + onClause("KEY(contacts_KEY_this____d_idx_1) = d.idx")
-                + " WHERE contacts_KEY_this____d_idx_1.name = :param_0", criteria.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("contacts_KEY_" + ArrayExpression.ELEMENT_NAME + "____d_idx_1") + " FROM Document d" +
+                " LEFT JOIN d.contacts contacts_KEY_" + ArrayExpression.ELEMENT_NAME + "____d_idx_1"
+                + onClause("KEY(contacts_KEY_" + ArrayExpression.ELEMENT_NAME + "____d_idx_1) = d.idx")
+                + " WHERE " + joinAliasValue("contacts_KEY_" + ArrayExpression.ELEMENT_NAME + "____d_idx_1", "name") + " = :param_0", criteria.getQueryString());
         criteria.getResultList();
     }
 
     @Test
     public void testPredicateIndexReuseBase() {
         CriteriaBuilder<String> criteria = cbf.create(em, String.class).from(Document.class, "d");
-        criteria.select("d.contacts[KEY(this) = d.idx].name")
-                .where("d.contacts[KEY(this) = d.idx].name").eq("pers1");
+        criteria.select("d.contacts[KEY(_) = d.idx].name")
+                .where("d.contacts[KEY(_) = d.idx].name").eq("pers1");
 
-        assertEquals("SELECT contacts_KEY_this____d_idx_1.name FROM Document d" +
-                " LEFT JOIN d.contacts contacts_KEY_this____d_idx_1"
-                + onClause("KEY(contacts_KEY_this____d_idx_1) = d.idx")
-                + " WHERE contacts_KEY_this____d_idx_1.name = :param_0", criteria.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("contacts_KEY_" + ArrayExpression.ELEMENT_NAME + "____d_idx_1", "name") + " FROM Document d" +
+                " LEFT JOIN d.contacts contacts_KEY_" + ArrayExpression.ELEMENT_NAME + "____d_idx_1"
+                + onClause("KEY(contacts_KEY_" + ArrayExpression.ELEMENT_NAME + "____d_idx_1) = d.idx")
+                + " WHERE " + joinAliasValue("contacts_KEY_" + ArrayExpression.ELEMENT_NAME + "____d_idx_1", "name") + " = :param_0", criteria.getQueryString());
         criteria.getResultList();
     }
 
+    // NOTE: Older Hibernate versions don't like the IS NULL predicate when applied to an association in the ON clause
     @Test
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoDatanucleus4.class })
     public void testNewImplicitRoot() {
         CriteriaBuilder<Person> criteria = cbf.create(em, Person.class).from(Document.class, "d");
         criteria.select("d.contacts[friend IS NULL]");
 
-        assertEquals("SELECT " + joinAliasValue("contacts_this_friend_IS_NULL_1") + " FROM Document d" +
-                " LEFT JOIN d.contacts contacts_this_friend_IS_NULL_1"
-                + onClause("contacts_this_friend_IS_NULL_1.friend IS NULL"), criteria.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("contacts_" + ArrayExpression.ELEMENT_NAME + "_friend_IS_NULL_1") + " FROM Document d" +
+                " LEFT JOIN d.contacts contacts_" + ArrayExpression.ELEMENT_NAME + "_friend_IS_NULL_1"
+                + onClause(joinAliasValue("contacts_" + ArrayExpression.ELEMENT_NAME + "_friend_IS_NULL_1", "friend") + " IS NULL"), criteria.getQueryString());
+        criteria.getResultList();
+    }
+
+    @Test
+    // NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class })
+    public void testEntityArray() {
+        CriteriaBuilder<Person> criteria = cbf.create(em, Person.class).from(Document.class, "d");
+        criteria.select("Person[name = d.name]");
+
+        assertEquals("SELECT Person_" + ArrayExpression.ELEMENT_NAME + "_name___d_name_1 FROM Document d" +
+                " LEFT JOIN Person Person_" + ArrayExpression.ELEMENT_NAME + "_name___d_name_1"
+                + onClause("Person_" + ArrayExpression.ELEMENT_NAME + "_name___d_name_1.name = d.name"), criteria.getQueryString());
+        criteria.getResultList();
+    }
+
+    @Test
+    // NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class })
+    public void testEntityArrayReuse() {
+        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class).from(Document.class, "d");
+        criteria.select("Person[name = d.name].id");
+        criteria.select("Person[name = d.name].name");
+
+        assertEquals("SELECT Person_" + ArrayExpression.ELEMENT_NAME + "_name___d_name_1.id, Person_" + ArrayExpression.ELEMENT_NAME + "_name___d_name_1.name FROM Document d" +
+                " LEFT JOIN Person Person_" + ArrayExpression.ELEMENT_NAME + "_name___d_name_1"
+                + onClause("Person_" + ArrayExpression.ELEMENT_NAME + "_name___d_name_1.name = d.name"), criteria.getQueryString());
         criteria.getResultList();
     }
 }

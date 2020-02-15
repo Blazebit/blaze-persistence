@@ -118,6 +118,7 @@ import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.spi.TransactionSupport;
+import com.blazebit.persistence.view.spi.ViewJpqlMacro;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 import com.blazebit.reflection.ReflectionUtils;
 
@@ -349,11 +350,12 @@ public class EntityViewManagerImpl implements EntityViewManager {
                 // TODO: Might be a good idea to let the view root be overridden or specified via the annotation
                 String probableViewRoot = StringUtils.firstToLower(view.getEntityClass().getSimpleName());
                 MacroConfigurationExpressionFactory macroAwareExpressionFactory = context.createMacroAwareExpressionFactory(probableViewRoot);
+                ViewJpqlMacro viewJpqlMacro = (ViewJpqlMacro) macroAwareExpressionFactory.getDefaultMacroConfiguration().get("VIEW").getState()[0];
                 EmbeddingViewJpqlMacro embeddingViewJpqlMacro = (EmbeddingViewJpqlMacro) macroAwareExpressionFactory.getDefaultMacroConfiguration().get("EMBEDDING_VIEW").getState()[0];
-                getTemplate(macroAwareExpressionFactory, view, null, null, null, embeddingViewJpqlMacro);
+                getTemplate(macroAwareExpressionFactory, view, null, null, viewJpqlMacro, null, embeddingViewJpqlMacro);
 
                 for (MappingConstructor<?> constructor : view.getConstructors()) {
-                    getTemplate(macroAwareExpressionFactory, view, (MappingConstructorImpl) constructor, null, null, embeddingViewJpqlMacro);
+                    getTemplate(macroAwareExpressionFactory, view, (MappingConstructorImpl) constructor, null, viewJpqlMacro, null, embeddingViewJpqlMacro);
                 }
             }
         } else if (Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.PROXY_EAGER_LOADING)))) {
@@ -945,15 +947,18 @@ public class EntityViewManagerImpl implements EntityViewManager {
         MacroConfiguration originalMacroConfiguration = ef.getDefaultMacroConfiguration();
         ExpressionFactory cachingExpressionFactory = ef.unwrap(AbstractCachingExpressionFactory.class);
         JpqlMacro viewRootJpqlMacro = new DefaultViewRootJpqlMacro(entityViewRoot);
+        ViewJpqlMacro viewJpqlMacro = configuration.getViewJpqlMacro();
         EmbeddingViewJpqlMacro embeddingViewJpqlMacro = configuration.getEmbeddingViewJpqlMacro();
+        viewJpqlMacro.setViewPath(entityViewRoot);
         Map<String, MacroFunction> macros = new HashMap<>();
+        macros.put("view", new JpqlMacroAdapter(viewJpqlMacro, cachingExpressionFactory));
         macros.put("view_root", new JpqlMacroAdapter(viewRootJpqlMacro, cachingExpressionFactory));
         macros.put("embedding_view", new JpqlMacroAdapter(embeddingViewJpqlMacro, cachingExpressionFactory));
         MacroConfiguration macroConfiguration = originalMacroConfiguration.with(macros);
         MacroConfigurationExpressionFactory macroEf = new MacroConfigurationExpressionFactory(cachingExpressionFactory, macroConfiguration);
         criteriaBuilder.registerMacro("view_root", viewRootJpqlMacro);
 
-        return getTemplate(macroEf, viewType, mappingConstructor, entityViewRoot, embeddingViewPath, embeddingViewJpqlMacro, offset)
+        return getTemplate(macroEf, viewType, mappingConstructor, entityViewRoot, viewJpqlMacro, embeddingViewPath, embeddingViewJpqlMacro, offset)
             .createObjectBuilder(criteriaBuilder, configuration.getOptionalParameters(), configuration, suffix, false, nullFlatViewIfEmpty);
     }
 
@@ -962,19 +967,19 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
 
     @SuppressWarnings("unchecked")
-    public ViewTypeObjectBuilderTemplate<?> getTemplate(MacroConfigurationExpressionFactory ef, ViewTypeImpl<?> viewType, MappingConstructorImpl<?> mappingConstructor, String entityViewRoot, String embeddingViewPath, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
-        return getTemplate(ef, viewType, mappingConstructor, entityViewRoot, embeddingViewPath, embeddingViewJpqlMacro, 0);
+    public ViewTypeObjectBuilderTemplate<?> getTemplate(MacroConfigurationExpressionFactory ef, ViewTypeImpl<?> viewType, MappingConstructorImpl<?> mappingConstructor, String entityViewRoot, ViewJpqlMacro viewJpqlMacro, String embeddingViewPath, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
+        return getTemplate(ef, viewType, mappingConstructor, entityViewRoot, viewJpqlMacro, embeddingViewPath, embeddingViewJpqlMacro, 0);
     }
 
-    public ViewTypeObjectBuilderTemplate<?> getTemplate(MacroConfigurationExpressionFactory ef, ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> mappingConstructor, String entityViewRoot, String embeddingViewPath, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, int offset) {
+    public ViewTypeObjectBuilderTemplate<?> getTemplate(MacroConfigurationExpressionFactory ef, ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> mappingConstructor, String entityViewRoot, ViewJpqlMacro viewJpqlMacro, String embeddingViewPath, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, int offset) {
         ViewTypeObjectBuilderTemplate.Key key = new ViewTypeObjectBuilderTemplate.Key(ef, viewType, mappingConstructor, entityViewRoot, embeddingViewPath, offset);
         if (!key.isCacheable()) {
-            return key.createValue(this, proxyFactory, embeddingViewJpqlMacro, ef);
+            return key.createValue(this, proxyFactory, viewJpqlMacro, embeddingViewJpqlMacro, ef);
         }
         ViewTypeObjectBuilderTemplate<?> value = objectBuilderCache.get(key);
 
         if (value == null) {
-            value = key.createValue(this, proxyFactory, embeddingViewJpqlMacro, ef);
+            value = key.createValue(this, proxyFactory, viewJpqlMacro, embeddingViewJpqlMacro, ef);
             ViewTypeObjectBuilderTemplate<?> oldValue = objectBuilderCache.putIfAbsent(key, value);
 
             if (oldValue != null) {

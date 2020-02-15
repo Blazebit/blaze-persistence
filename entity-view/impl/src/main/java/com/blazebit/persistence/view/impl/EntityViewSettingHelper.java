@@ -27,6 +27,7 @@ import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.Sorter;
 import com.blazebit.persistence.view.ViewFilterProvider;
 import com.blazebit.persistence.view.impl.macro.MutableEmbeddingViewJpqlMacro;
+import com.blazebit.persistence.view.impl.macro.MutableViewJpqlMacro;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.MappingConstructorImpl;
@@ -88,7 +89,7 @@ public final class EntityViewSettingHelper {
         }
 
         ExpressionFactory ef = criteriaBuilder.getService(ExpressionFactory.class);
-        EntityViewConfiguration configuration = new EntityViewConfiguration(criteriaBuilder, ef, new MutableEmbeddingViewJpqlMacro(), setting.getOptionalParameters(), setting.getProperties(), setting.getFetches(), managedView);
+        EntityViewConfiguration configuration = new EntityViewConfiguration(criteriaBuilder, ef, new MutableViewJpqlMacro(), new MutableEmbeddingViewJpqlMacro(), setting.getOptionalParameters(), setting.getProperties(), setting.getFetches(), managedView);
         entityViewRoot = evm.applyObjectBuilder(managedView, mappingConstructor, entityViewRoot, configuration.getCriteriaBuilder(), configuration, 0);
         applyAttributeFilters(setting, evm, criteriaBuilder, ef, managedView);
         applyAttributeSorters(setting, evm, criteriaBuilder, ef, managedView);

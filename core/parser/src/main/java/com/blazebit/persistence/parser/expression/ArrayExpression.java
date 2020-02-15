@@ -24,10 +24,13 @@ package com.blazebit.persistence.parser.expression;
  */
 public class ArrayExpression extends AbstractExpression implements PathElementExpression {
 
-    private PropertyExpression base;
+    public static final String ELEMENT_NAME = "_";
+
+    // Can be either a PropertyExpression or a EntityLiteral
+    private Expression base;
     private Expression index;
 
-    public ArrayExpression(PropertyExpression base, Expression index) {
+    public ArrayExpression(Expression base, Expression index) {
         this.base = base;
         this.index = index;
     }
@@ -47,11 +50,11 @@ public class ArrayExpression extends AbstractExpression implements PathElementEx
         return visitor.visit(this);
     }
 
-    public PropertyExpression getBase() {
+    public Expression getBase() {
         return base;
     }
 
-    public void setBase(PropertyExpression base) {
+    public void setBase(Expression base) {
         this.base = base;
     }
 

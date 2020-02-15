@@ -48,7 +48,7 @@ public abstract class InplaceModificationResultVisitorAdapter implements Express
 
     @Override
     public Expression visit(ArrayExpression expression) {
-        expression.setBase((PropertyExpression) expression.getBase().accept(this));
+        expression.setBase(expression.getBase().accept(this));
         expression.setIndex(expression.getIndex().accept(this));
         return expression;
     }

@@ -26,6 +26,7 @@ import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.view.impl.objectbuilder.transformator.TupleTransformatorFactory;
 import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
+import com.blazebit.persistence.view.spi.ViewJpqlMacro;
 import com.blazebit.persistence.view.spi.type.BasicUserTypeStringSupport;
 
 import java.util.AbstractMap;
@@ -71,7 +72,7 @@ public class ConstrainedTupleElementMapper implements AliasedTupleElementMapper 
     }
 
     @Override
-    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean asString) {
+    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, ViewJpqlMacro viewJpqlMacro, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean asString) {
         StringBuilder sb = new StringBuilder();
         FullQueryBuilder<?, ?> fullQueryBuilder;
         if (queryBuilder instanceof ConstrainedSelectBuilder) {
@@ -90,7 +91,7 @@ public class ConstrainedTupleElementMapper implements AliasedTupleElementMapper 
             } else {
                 sb.append(" ELSE ");
             }
-            entry.getValue().applyMapping(selectBuilder, parameterHolder, optionalParameters, embeddingViewJpqlMacro, false);
+            entry.getValue().applyMapping(selectBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro, false);
         }
         sb.append(" END");
 
@@ -110,7 +111,7 @@ public class ConstrainedTupleElementMapper implements AliasedTupleElementMapper 
 
             for (Map.Entry<String, TupleElementMapper> entry : subqueryMappers) {
                 selectBuilder.setInitiator(initiator.with(entry.getKey()));
-                entry.getValue().applyMapping(selectBuilder, parameterHolder, optionalParameters, embeddingViewJpqlMacro, false);
+                entry.getValue().applyMapping(selectBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro, false);
             }
 
             initiator.end();
@@ -171,7 +172,7 @@ public class ConstrainedTupleElementMapper implements AliasedTupleElementMapper 
                         subqueryExpression = subqueryMapper.getSubqueryExpression().replaceAll(subqueryMapper.getSubqueryAlias(), subqueryAlias);
                     }
 
-                    entry = new AbstractMap.SimpleEntry<String, TupleElementMapper>(constraint, new ExpressionTupleElementMapper(mapper.getBasicTypeStringSupport(), subqueryExpression, mapper.getAttributePath(), subqueryMapper.getEmbeddingViewPath()));
+                    entry = new AbstractMap.SimpleEntry<String, TupleElementMapper>(constraint, new ExpressionTupleElementMapper(mapper.getBasicTypeStringSupport(), subqueryExpression, mapper.getAttributePath(), subqueryMapper.getViewPath(), subqueryMapper.getEmbeddingViewPath()));
                     subqueryMappers.add(new AbstractMap.SimpleEntry<>(subqueryAlias, mapper));
                 } else {
                     entry = new AbstractMap.SimpleEntry<>(constraint, mapper);
