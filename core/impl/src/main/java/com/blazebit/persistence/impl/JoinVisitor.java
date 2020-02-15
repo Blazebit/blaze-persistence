@@ -18,11 +18,13 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListener;
+import com.blazebit.persistence.parser.expression.ArrayExpression;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.FunctionExpression;
 import com.blazebit.persistence.parser.expression.ListIndexExpression;
 import com.blazebit.persistence.parser.expression.MapKeyExpression;
 import com.blazebit.persistence.parser.expression.ParameterExpression;
+import com.blazebit.persistence.parser.expression.PathElementExpression;
 import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.expression.PathReference;
 import com.blazebit.persistence.parser.expression.PropertyExpression;
@@ -72,6 +74,8 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor, Jo
     private boolean reuseExisting;
     private boolean joinRequired;
     private boolean joinWithObjectLeafAllowed = true;
+    private boolean joinAllowed;
+    private PathElementExpression relativeExpressionPrefix;
     private ClauseType fromClause;
     private ConjunctionPathExpressionFindingVisitor conjunctionPathExpressionFindingVisitor;
 
@@ -90,12 +94,31 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor, Jo
         this.joinRequired = true;
     }
 
+    public void reset() {
+        this.currentJoinNode = null;
+        this.reuseExisting = false;
+        this.joinRequired = true;
+        this.joinWithObjectLeafAllowed = true;
+        this.joinAllowed = false;
+        this.relativeExpressionPrefix = null;
+        this.fromClause = null;
+    }
+
+    public PathElementExpression getRelativeExpressionPrefix() {
+        return relativeExpressionPrefix;
+    }
+
+    public void setRelativeExpressionPrefix(PathElementExpression relativeExpressionPrefix) {
+        this.relativeExpressionPrefix = relativeExpressionPrefix;
+    }
+
     public ClauseType getFromClause() {
         return fromClause;
     }
 
     public void setFromClause(ClauseType fromClause) {
         this.fromClause = fromClause;
+        this.joinAllowed = fromClause != ClauseType.JOIN;
     }
 
     public boolean setReuseExisting(boolean reuseExisting) {
@@ -190,8 +213,8 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor, Jo
 
     private void visit(PathExpression expression, boolean idRemovable) {
         Expression aliasedExpression;
-        String alias;
-        if (expression.getExpressions().size() == 1 && !currentlyResolvingAliases.contains(alias = expression.toString()) && (aliasedExpression = joinManager.getJoinableSelectAlias(expression, fromClause == ClauseType.SELECT, false)) != null) {
+        String alias = expression.getExpressions().size() == 1 ? expression.toString() : null;
+        if (alias != null && !currentlyResolvingAliases.contains(alias) && (aliasedExpression = joinManager.getJoinableSelectAlias(expression, fromClause == ClauseType.SELECT, false)) != null) {
             try {
                 currentlyResolvingAliases.add(alias);
                 aliasedExpression.accept(this);
@@ -208,10 +231,28 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor, Jo
             } finally {
                 currentlyResolvingAliases.remove(alias);
             }
+        } else if ("this".equals(alias)) {
+            // We will not resolve the "this" alias, this must be done in the join manager and is only allowed within an ArrayExpression
         } else {
+            if (relativeExpressionPrefix != null) {
+                PathExpression leftMost = ExpressionUtils.getLeftMostPathExpression(expression);
+                String leftMostAlias;
+                if (leftMost.getExpressions().get(0) instanceof ArrayExpression) {
+                    leftMostAlias = ((ArrayExpression) leftMost.getExpressions().get(0)).getBase().toString();
+                } else {
+                    leftMostAlias = ((PropertyExpression) leftMost.getExpressions().get(0)).getProperty();
+                }
+
+                if ("this".equals(leftMostAlias)) {
+                    return;
+                }
+                JoinAliasInfo aliasInfo = (JoinAliasInfo) joinManager.getAliasManager().getAliasInfo(leftMostAlias);
+                if (aliasInfo == null) {
+                    leftMost.getExpressions().add(0, new PropertyExpression("this"));
+                    return;
+                }
+            }
             try {
-                // Don't allow joins in the ON clause
-                boolean joinAllowed = fromClause != ClauseType.JOIN;
                 // But allow joins if this expression was joined before already to avoid possible side-effects of implicit joining multiple times
                 if (expression.getBaseNode() != null) {
 
@@ -221,7 +262,7 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor, Jo
                     JoinNode baseNode = (JoinNode) expression.getBaseNode();
                     AliasManager aliasOwner = baseNode.getAliasInfo().getAliasOwner();
                     if (aliasOwner != joinManager.getAliasManager()) {
-                        parentVisitor.addClauseDependencies(baseNode, aliasOwner);
+                        addParentClauseDependencies(baseNode, aliasOwner);
                     }
                 }
             } catch (ImplicitJoinNotAllowedException ex) {
@@ -233,12 +274,30 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor, Jo
         }
     }
 
+    private void addParentClauseDependencies(JoinNode node, AliasManager aliasOwner) {
+        if (parentVisitor.getFromClause() == null) {
+            try {
+                ClauseType parentClause = joinManager.getQueryBuilder().queryContext.getParentClause();
+                // Inlined lateral CTEs act in the JOIN clause of the parent query
+                if (parentClause == ClauseType.CTE) {
+                    parentClause = ClauseType.JOIN;
+                }
+                parentVisitor.setFromClause(parentClause);
+                parentVisitor.addClauseDependencies(node, aliasOwner);
+            } finally {
+                parentVisitor.setFromClause(null);
+            }
+        } else {
+            parentVisitor.addClauseDependencies(node, aliasOwner);
+        }
+    }
+
     private void addClauseDependencies(JoinNode node, AliasManager aliasOwner) {
         if (aliasOwner != joinManager.getAliasManager()) {
             if (parentVisitor == null) {
                 throw new IllegalStateException("Couldn't update clause dependencies because implicit joined node does not seem to belong to the query: " + node);
             }
-            parentVisitor.addClauseDependencies(node, aliasOwner);
+            addParentClauseDependencies(node, aliasOwner);
         } else {
             node.getClauseDependencies().add(fromClause);
         }

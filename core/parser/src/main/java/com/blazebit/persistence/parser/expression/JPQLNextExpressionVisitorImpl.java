@@ -718,7 +718,7 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
 
     public Expression visitGeneralSubpath(JPQLNextParser.GeneralSubpathContext ctx, PathElementExpression initialPathElement) {
         List<JPQLNextParser.IdentifierContext> identifierContexts = ctx.simpleSubpath().identifier();
-        JPQLNextParser.ExpressionContext expression = ctx.expression();
+        JPQLNextParser.PredicateOrExpressionContext expression = ctx.predicateOrExpression();
 
         boolean literalPossible = true;
         int size = identifierContexts.size();
@@ -761,7 +761,7 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
 
             literalPossible = false;
             identifierContexts = ctx.simpleSubpath().identifier();
-            expression = ctx.expression();
+            expression = ctx.predicateOrExpression();
 
             size = identifierContexts.size();
             initialSize += size;

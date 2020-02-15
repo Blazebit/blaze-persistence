@@ -240,10 +240,10 @@ LEFT JOIN FETCH father_1.kittens kittens_1
 ==== Array joins
 
 Array joins are an extension to the JPQL grammar which offer a convenient way to create joins with an `ON` clause condition.
-An array join expression is a path expression followed by an opening bracket, the index expression and then the closing bracket e.g. `arrayBase[indexExpression]`.
+An array join expression is a path expression followed by an opening bracket, the index expression and then the closing bracket e.g. `arrayBase[indexPredicateOrExpression]`.
 
-The type of the `arrayBase` expression must be either an indexed `List` e.g. use an `@OrderColumn` or a `Map`.
-In case of an indexed list, the type of the `indexExpression` must be numeric. For maps, the type must match the map key type as defined in the entity.
+The type of the `arrayBase` expression must be an association. If it is an indexed `List` e.g. uses a `@OrderColumn` or a `Map` it is possible to use an expression.
+In case of an indexed list, the type of the `indexPredicateOrExpression` must be numeric. For maps, the type must match the map key type as defined in the entity.
 
 [source,java]
 ----
@@ -265,6 +265,26 @@ WHERE localizedName_language IS NOT NULL
 ----
 
 The relation `localizedName` is assumed to be a map of type `Map<String, String>` which maps a language code to a localized name.
+
+The more general approach is to use a predicate expression that allows to filter an association.
+
+[source,java]
+----
+CriteriaBuilder<String> cb = cbf.create(em, String.class)
+    .from(Cat.class)
+    .select("kittens[age > 18].id")
+    .select("kittens[age > 18].name");
+----
+
+Such a query will result in the following JPQL
+
+[source,sql]
+----
+SELECT kittens_age___18.id, kittens_age___18.name
+FROM Cat cat
+LEFT JOIN cat.kittens kittens_age___18
+       ON kittens_age___18.age > 18
+----
 
 NOTE: In case of array expressions, the generated implicit/default join node is identified not only by the absolute path, but also by the index expression.
 

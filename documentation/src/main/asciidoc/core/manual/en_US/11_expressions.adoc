@@ -29,15 +29,19 @@ In some cases the join will be omitted
 
 === Array expressions
 
-The array expression syntax is an extension to the JPQL grammar that allows to refer to a specific element of a collection.
-Currently this is limited to associations mapped as `java.util.Map` and indexed `java.util.List` i.e. lists that use `@OrderColumn`.
+The array expression syntax is an extension to the JPQL grammar that allows to filter an association by a predicate.
+Associations that are mapped as `java.util.Map` and indexed `java.util.List` i.e. lists that use `@OrderColumn`, also allow to use a simple expression.
 
 A normal path expression like `identificationVariable.collection.name` will create an unconditional join for the attribute `collection` i.e. it refers to all collection elements.
 An array expression like `identificationVariable.collection[:someParam].name` on the other hand joins the attribute `collection` with a `ON` clause condition `KEY(collection) = :someParam`
 if the collection is a `java.util.Map` and `INDEX(collection) = :someParam` if it is a `java.util.List`. So an array expression refers to a single collection element.
 
 Since array expressions by default use the join type `LEFT`, the expression result is either the value for the specific element or `NULL` if no collection element for the key or index exists.
-The array expression syntax can be used anywhere within a path expression. Even multiple uses like this are ok `identificationVariable.collection1[:param1].association.collection2[:param2].attribute`
+The array expression syntax can be used anywhere within a path expression. Even multiple uses like this are ok `identificationVariable.collection1[:param1].association.collection2[:param2].attribute`.
+
+The use of a predicate like in `identificationVariable.collection[LENGTH(name) <> 0].name` will cause a join like `LEFT JOIN identificationVariable.collection alias ON LENGTH(alias.name) <> 0`.
+Within an array expression, the keyword `this` can be used to refer to the join alias of the array expression which is useful for using the `KEY` and `INDEX` functions
+like in `identificationVariable.collection[KEY(this) = :someParam].name`.
 
 === Treat expressions
 

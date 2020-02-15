@@ -21,6 +21,7 @@ import com.blazebit.persistence.parser.expression.InplaceModificationResultVisit
 import com.blazebit.persistence.parser.expression.PathElementExpression;
 import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.expression.PropertyExpression;
+import com.blazebit.persistence.parser.util.ExpressionUtils;
 
 import java.util.List;
 
@@ -50,6 +51,16 @@ public class AliasReplacementVisitor extends InplaceModificationResultVisitorAda
             if (elementExpression instanceof PropertyExpression) {
                 if (alias.equals(((PropertyExpression) elementExpression).getProperty())) {
                     return substitute;
+                }
+            }
+        } else {
+            PathExpression leftMost = ExpressionUtils.getLeftMostPathExpression(expression);
+            if (leftMost.getExpressions().get(0) instanceof PropertyExpression && alias.equals(((PropertyExpression) leftMost.getExpressions().get(0)).getProperty())) {
+                if (substitute instanceof PathExpression) {
+                    leftMost.getExpressions().remove(0);
+                    leftMost.getExpressions().addAll(0, ((PathExpression) substitute).getExpressions());
+                } else {
+                    leftMost.getExpressions().set(0, (PathElementExpression) substitute);
                 }
             }
         }

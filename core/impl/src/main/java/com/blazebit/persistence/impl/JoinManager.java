@@ -30,6 +30,8 @@ import com.blazebit.persistence.impl.function.nullfn.NullfnFunction;
 import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
 import com.blazebit.persistence.impl.util.CompositeAttributeAccessor;
 import com.blazebit.persistence.impl.util.Keywords;
+import com.blazebit.persistence.parser.AliasReplacementVisitor;
+import com.blazebit.persistence.parser.EqualityCheckingVisitor;
 import com.blazebit.persistence.parser.ListIndexAttribute;
 import com.blazebit.persistence.parser.MapEntryAttribute;
 import com.blazebit.persistence.parser.MapKeyAttribute;
@@ -120,6 +122,8 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final ExpressionFactory expressionFactory;
     private final AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder;
+    private final WindowManager<?> windowManager;
+    private final JoinVisitor joinVisitor;
 
     // helper collections for join rendering
     private final Set<JoinNode> collectionJoinNodes = Collections.newSetFromMap(new IdentityHashMap<JoinNode, Boolean>());
@@ -131,6 +135,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
     private boolean emulateJoins;
 
     private boolean hasFullJoin;
+    private JoinNode rootNode;
 
     JoinManager(MainQuery mainQuery, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder, ResolvingQueryGenerator queryGenerator, AliasManager aliasManager, JoinManager parent, ExpressionFactory expressionFactory) {
         super(queryGenerator, mainQuery.parameterManager, null);
@@ -143,6 +148,8 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         this.subqueryInitFactory = new SubqueryInitiatorFactory(mainQuery, queryBuilder, aliasManager, this);
         this.expressionFactory = expressionFactory;
         this.queryBuilder = queryBuilder;
+        this.windowManager = new WindowManager<>(queryGenerator, parameterManager, subqueryInitFactory);
+        this.joinVisitor = new JoinVisitor(mainQuery, windowManager, parent == null ? null : parent.joinVisitor, this, parameterManager, !mainQuery.jpaProvider.supportsSingleValuedAssociationIdExpressions());
     }
 
     Map<JoinNode, JoinNode> applyFrom(JoinManager joinManager, Set<ClauseType> clauseExclusions, Set<JoinNode> alwaysIncludedNodes, ExpressionCopyContext copyContext) {
@@ -262,6 +269,18 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
     @Override
     public ClauseType getClauseType() {
         return ClauseType.JOIN;
+    }
+
+    AbstractCommonQueryBuilder<?, ?, ?, ?, ?> getQueryBuilder() {
+        return queryBuilder;
+    }
+
+    JoinVisitor getJoinVisitor() {
+        return joinVisitor;
+    }
+
+    WindowManager<?> getWindowManager() {
+        return windowManager;
     }
 
     Set<JoinNode> getKeyRestrictedLeftJoins() {
@@ -736,6 +755,9 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
     }
 
     JoinNode getRootNodeOrFail(String prefix, Object middle, String suffix) {
+        if (rootNode != null) {
+            return rootNode;
+        }
         switch (rootNodes.size()) {
             case 0:
                 throw new IllegalArgumentException("No FROM clause root node available!");
@@ -1989,12 +2011,6 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             // First try to implicit join indices of array expressions since we will need their base nodes
             List<PathElementExpression> pathElements = pathExpression.getExpressions();
             int pathElementSize = pathElements.size();
-            for (int i = 0; i < pathElementSize; i++) {
-                PathElementExpression pathElem = pathElements.get(i);
-                if (pathElem instanceof ArrayExpression) {
-                    implicitJoin(((ArrayExpression) pathElem).getIndex(), joinAllowed, false, null, fromClause, currentlyResolvingAliases, fromSubquery, fromSelectAlias, joinRequired, false);
-                }
-            }
 
             PathElementExpression elementExpr = pathElements.get(pathElements.size() - 1);
             int singleValuedAssociationNameStartIndex = -1;
@@ -2219,6 +2235,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                     ArrayExpression arrayExpr = (ArrayExpression) elementExpr;
                     String joinRelationName = arrayExpr.getBase().toString();
 
+                    implicitJoinIndex(arrayExpr);
                     // Find a node by a predicate match
                     JoinNode matchingNode;
 
@@ -2477,7 +2494,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         if (element == null || element instanceof TreatExpression) {
             return null;
         } else if (element instanceof ArrayExpression) {
-            return ((ArrayExpression) element).getBase().getProperty();
+            return ((ArrayExpression) element).getBase().toString();
         } else {
             return element.toString();
         }
@@ -2491,15 +2508,6 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             ParameterExpression indexParamExpr = (ParameterExpression) indexExpr;
             sb.append('_');
             sb.append(indexParamExpr.getName());
-        } else if (indexExpr instanceof PathExpression) {
-            PathExpression indexPathExpr = (PathExpression) indexExpr;
-            sb.append('_');
-            sb.append(((JoinNode) indexPathExpr.getBaseNode()).getAliasInfo().getAlias());
-
-            if (indexPathExpr.getField() != null) {
-                sb.append('_');
-                sb.append(indexPathExpr.getField().replaceAll("\\.", "_"));
-            }
         } else if (indexExpr instanceof NumericLiteral) {
             sb.append('_');
             sb.append(((NumericLiteral) indexExpr).getValue());
@@ -2507,41 +2515,84 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             sb.append('_');
             sb.append(((StringLiteral) indexExpr).getValue());
         } else {
-            throw new IllegalStateException("Invalid array index expression " + indexExpr.toString());
+            sb.append('_');
+            String indexStringExpr = indexExpr.toString();
+            for (int i = 0; i < indexStringExpr.length(); i++) {
+                final char c = indexStringExpr.charAt(i);
+                if (Character.isJavaIdentifierPart(c)) {
+                    sb.append(c);
+                } else {
+                    sb.append('_');
+                }
+            }
         }
 
         return sb.toString();
     }
 
-    private EqPredicate getArrayExpressionPredicate(JoinNode joinNode, ArrayExpression arrayExpr) {
-        PathExpression keyPath = new PathExpression(new ArrayList<PathElementExpression>(), true);
-        keyPath.getExpressions().add(new PropertyExpression(joinNode.getAliasInfo().getAlias()));
-        keyPath.setPathReference(new SimplePathReference(joinNode, null, joinNode.getNodeType()));
-        Attribute<?, ?> arrayBaseAttribute = joinNode.getParentTreeNode().getAttribute();
-        Expression keyExpression;
-        if (arrayBaseAttribute instanceof ListAttribute<?, ?>) {
-            keyExpression = new ListIndexExpression(keyPath);
+    private Predicate getArrayExpressionPredicate(JoinNode joinNode, ArrayExpression arrayExpr) {
+        if (arrayExpr.getIndex() instanceof Predicate) {
+            return (Predicate) arrayExpr.getIndex();
         } else {
-            keyExpression = new MapKeyExpression(keyPath);
+            PathExpression keyPath = new PathExpression(new ArrayList<PathElementExpression>(), true);
+            keyPath.getExpressions().add(new PropertyExpression(joinNode.getAliasInfo().getAlias()));
+            keyPath.setPathReference(new SimplePathReference(joinNode, null, joinNode.getNodeType()));
+            Attribute<?, ?> arrayBaseAttribute = joinNode.getParentTreeNode().getAttribute();
+            Expression keyExpression;
+            if (arrayBaseAttribute instanceof ListAttribute<?, ?>) {
+                keyExpression = new ListIndexExpression(keyPath);
+            } else {
+                keyExpression = new MapKeyExpression(keyPath);
+            }
+            return new EqPredicate(keyExpression, arrayExpr.getIndex());
         }
-        return new EqPredicate(keyExpression, arrayExpr.getIndex());
+    }
+
+    private void implicitJoinIndex(ArrayExpression arrayExpr) {
+        // Array expression predicates get a different root, normal expressions not
+        if (arrayExpr.getIndex() instanceof Predicate) {
+            // So we have to prefix relative expressions with "this"
+            PathElementExpression old = joinVisitor.getRelativeExpressionPrefix();
+            try {
+                joinVisitor.setRelativeExpressionPrefix(new PropertyExpression("this"));
+                arrayExpr.getIndex().accept(joinVisitor);
+            } finally {
+                joinVisitor.setRelativeExpressionPrefix(old);
+            }
+        } else {
+            arrayExpr.getIndex().accept(joinVisitor);
+        }
     }
 
     private void generateAndApplyOnPredicate(JoinNode joinNode, ArrayExpression arrayExpr) {
-        EqPredicate valueKeyFilterPredicate = getArrayExpressionPredicate(joinNode, arrayExpr);
+        PathExpression joinAliasPathExpression = new PathExpression(new PropertyExpression(joinNode.getAlias()));
+        arrayExpr.getIndex().accept(new AliasReplacementVisitor(joinAliasPathExpression, "this"));
+        // Array expression predicates get a different root, normal expressions not
+        if (arrayExpr.getIndex() instanceof Predicate) {
+            JoinNode oldRootNode = rootNode;
+            try {
+                rootNode = joinNode;
+                arrayExpr.getIndex().accept(joinVisitor);
+            } finally {
+                rootNode = oldRootNode;
+            }
+        } else {
+            arrayExpr.getIndex().accept(joinVisitor);
+        }
+        Predicate filterPredicate = getArrayExpressionPredicate(joinNode, arrayExpr);
 
         if (joinNode.getOnPredicate() != null) {
             CompoundPredicate currentPred = joinNode.getOnPredicate();
 
             // Only add the predicate if it isn't contained yet
-            if (!findPredicate(currentPred, valueKeyFilterPredicate)) {
-                currentPred.getChildren().add(valueKeyFilterPredicate);
+            if (!findPredicate(currentPred, filterPredicate, joinNode.getAlias())) {
+                currentPred.getChildren().add(filterPredicate);
                 joinNode.registerDependencies();
                 joinNode.updateClauseDependencies(ClauseType.JOIN, new LinkedHashSet<JoinNode>());
             }
         } else {
             CompoundPredicate onAndPredicate = new CompoundPredicate(CompoundPredicate.BooleanOperator.AND);
-            onAndPredicate.getChildren().add(valueKeyFilterPredicate);
+            onAndPredicate.getChildren().add(filterPredicate);
             joinNode.setOnPredicate(onAndPredicate);
             joinNode.registerDependencies();
             joinNode.updateClauseDependencies(ClauseType.JOIN, new LinkedHashSet<JoinNode>());
@@ -2578,6 +2629,8 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 }
 
                 current = current == null ? getRootNodeOrFail("Ambiguous join path [", joinRelationName, "] because of multiple root nodes!") : current;
+
+                implicitJoinIndex(arrayExpr);
                 // Find a node by a predicate match
                 JoinNode matchingNode = findNode(current, joinRelationName, arrayExpr);
 
@@ -3021,7 +3074,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             Predicate pred = getArrayExpressionPredicate(node, arrayExpression);
             CompoundPredicate compoundPredicate = node.getOnPredicate();
 
-            if (findPredicate(compoundPredicate, pred)) {
+            if (findPredicate(compoundPredicate, pred, node.getAlias())) {
                 return node;
             }
         }
@@ -3029,12 +3082,12 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         return null;
     }
 
-    private boolean findPredicate(CompoundPredicate compoundPredicate, Predicate pred) {
+    private boolean findPredicate(CompoundPredicate compoundPredicate, Predicate pred, String thisAlias) {
         if (compoundPredicate != null) {
             List<Predicate> children = compoundPredicate.getChildren();
             int size = children.size();
             for (int i = 0; i < size; i++) {
-                if (pred.equals(children.get(i))) {
+                if (EqualityCheckingVisitor.INSTANCE.isEqual(children.get(i), pred, thisAlias)) {
                     return true;
                 }
             }

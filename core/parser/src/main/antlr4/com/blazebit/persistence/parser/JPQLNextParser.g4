@@ -277,7 +277,7 @@ simpleSubpath
     ;
 
 generalSubpath
-    : simpleSubpath (LB expression RB (DOT generalSubpath)?)?
+    : simpleSubpath (LB predicateOrExpression RB (DOT generalSubpath)?)?
     ;
 
 // ############################################################################
@@ -466,6 +466,11 @@ predicate
     | lhs=expression NOT? BETWEEN start=expression AND end=expression                           # BetweenPredicate
     | lhs=expression NOT? LIKE like=expression (ESCAPE escape=expression)?                      # LikePredicate
     | expression NOT? MEMBER OF path                                                            # MemberOfPredicate
+    ;
+
+predicateOrExpression
+    : predicate
+    | expression
     ;
 
 inList
