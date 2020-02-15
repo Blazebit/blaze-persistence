@@ -36,6 +36,10 @@ public class PathExpression extends AbstractExpression implements Expression {
         this(new ArrayList<PathElementExpression>(), false);
     }
 
+    public PathExpression(PathElementExpression pathElementExpression) {
+        this(list(pathElementExpression), false);
+    }
+
     public PathExpression(List<PathElementExpression> pathProperties) {
         this(pathProperties, false);
     }
@@ -50,6 +54,12 @@ public class PathExpression extends AbstractExpression implements Expression {
         this.pathReference = pathReference;
         this.usedInCollectionFunction = usedInCollectionFunction;
         this.collectionQualifiedPath = collectionQualifiedPath;
+    }
+
+    private static List<PathElementExpression> list(PathElementExpression elementExpression) {
+        List<PathElementExpression> list = new ArrayList<>(1);
+        list.add(elementExpression);
+        return list;
     }
 
     @Override

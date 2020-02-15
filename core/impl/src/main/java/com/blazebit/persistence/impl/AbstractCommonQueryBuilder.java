@@ -258,7 +258,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor = new GroupByExpressionGatheringVisitor(false, this.aliasManager, mainQuery.dbmsDialect);
         this.functionalDependencyAnalyzerVisitor = new FunctionalDependencyAnalyzerVisitor(mainQuery.metamodel, splittingVisitor, mainQuery.jpaProvider, this.aliasManager);
 
-        this.windowManager = new WindowManager<>(queryGenerator, parameterManager, subqueryInitFactory);
+        this.windowManager = (WindowManager<BuilderType>) joinManager.getWindowManager();
         this.whereManager = new WhereManager<>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
         this.groupByManager = new GroupByManager(queryGenerator, parameterManager, subqueryInitFactory, mainQuery.jpaProvider, this.aliasManager, embeddableSplittingVisitor, groupByExpressionGatheringVisitor);
         this.havingManager = new HavingManager<>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory, groupByExpressionGatheringVisitor);
@@ -329,7 +329,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor = new GroupByExpressionGatheringVisitor(false, this.aliasManager, mainQuery.dbmsDialect);
         this.functionalDependencyAnalyzerVisitor = new FunctionalDependencyAnalyzerVisitor(mainQuery.metamodel, splittingVisitor, mainQuery.jpaProvider, this.aliasManager);
 
-        this.windowManager = new WindowManager<>(queryGenerator, parameterManager, subqueryInitFactory);
+        this.windowManager = (WindowManager<BuilderType>) joinManager.getWindowManager();
         this.whereManager = new WhereManager<>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
         this.groupByManager = new GroupByManager(queryGenerator, parameterManager, subqueryInitFactory, mainQuery.jpaProvider, this.aliasManager, embeddableSplittingVisitor, groupByExpressionGatheringVisitor);
         this.havingManager = new HavingManager<>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory, groupByExpressionGatheringVisitor);
@@ -2135,7 +2135,8 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         // NOTE: If it turns out to be problematic, I can imagine introducing a synthetic SELECT item that is removed in the end for this purpose
         joinManager.reorderSimpleValuesClauses();
 
-        final JoinVisitor joinVisitor = new JoinVisitor(mainQuery, windowManager, parentVisitor, joinManager, parameterManager, !mainQuery.jpaProvider.supportsSingleValuedAssociationIdExpressions());
+        final JoinVisitor joinVisitor = joinManager.getJoinVisitor();
+        joinVisitor.reset();
         joinVisitor.setFromClause(ClauseType.JOIN);
         joinManager.acceptVisitor(joinVisitor);
         // carry out implicit joins
@@ -2220,7 +2221,8 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     protected void implicitJoinWhereClause() {
-        final JoinVisitor joinVisitor = new JoinVisitor(mainQuery, windowManager, null, joinManager, parameterManager, !mainQuery.jpaProvider.supportsSingleValuedAssociationIdExpressions());
+        final JoinVisitor joinVisitor = joinManager.getJoinVisitor();
+        joinVisitor.reset();
         joinVisitor.setJoinRequired(true);
         joinVisitor.setFromClause(ClauseType.WHERE);
         whereManager.acceptVisitor(joinVisitor);

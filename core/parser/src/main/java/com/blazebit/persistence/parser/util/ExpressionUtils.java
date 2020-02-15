@@ -16,8 +16,14 @@
 
 package com.blazebit.persistence.parser.util;
 
+import com.blazebit.persistence.parser.expression.ArrayExpression;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.FunctionExpression;
+import com.blazebit.persistence.parser.expression.PathElementExpression;
+import com.blazebit.persistence.parser.expression.PathExpression;
+import com.blazebit.persistence.parser.expression.PropertyExpression;
+import com.blazebit.persistence.parser.expression.QualifiedExpression;
+import com.blazebit.persistence.parser.expression.TreatExpression;
 
 /**
  * @author Moritz Becker
@@ -56,5 +62,26 @@ public class ExpressionUtils {
 
     public static boolean isCountFunction(FunctionExpression expr) {
         return "COUNT".equalsIgnoreCase(expr.getFunctionName());
+    }
+
+    public static PathExpression getLeftMostPathExpression(PathExpression leftMost) {
+        PathElementExpression pathElementExpression;
+        while (!((pathElementExpression = leftMost.getExpressions().get(0)) instanceof PropertyExpression)) {
+            if (pathElementExpression instanceof TreatExpression) {
+                Expression treatPath = ((TreatExpression) pathElementExpression).getExpression();
+                if (treatPath instanceof QualifiedExpression) {
+                    leftMost = ((QualifiedExpression) treatPath).getPath();
+                } else {
+                    leftMost = (PathExpression) treatPath;
+                }
+            } else if (pathElementExpression instanceof QualifiedExpression) {
+                leftMost = ((QualifiedExpression) pathElementExpression).getPath();
+            } else if (pathElementExpression instanceof ArrayExpression) {
+                break;
+            } else {
+                throw new IllegalArgumentException("Unsupported expression: " + pathElementExpression);
+            }
+        }
+        return leftMost;
     }
 }
