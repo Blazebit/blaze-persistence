@@ -29,4 +29,13 @@ import javax.persistence.Entity;
 public class Sub1 extends Parent {
     private static final long serialVersionUID = 1L;
 
+    private Integer sub1Value;
+
+    public Integer getSub1Value() {
+        return sub1Value;
+    }
+
+    public void setSub1Value(Integer sub1Value) {
+        this.sub1Value = sub1Value;
+    }
 }
