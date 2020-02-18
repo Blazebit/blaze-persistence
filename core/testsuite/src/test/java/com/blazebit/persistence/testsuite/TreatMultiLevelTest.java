@@ -28,7 +28,9 @@ import com.blazebit.persistence.testsuite.entity.Sub2Sub2;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import static org.junit.Assert.assertEquals;
+import java.util.List;
+
+import static org.junit.Assert.*;
 
 /**
  *
@@ -61,4 +63,25 @@ public class TreatMultiLevelTest extends AbstractCoreTest {
         criteria.getResultList();
     }
 
+
+    @Test
+    public void multiTreatWithDiscriminatorColumn() {
+        // Given
+        Sub1 sub1 = new Sub1();
+        sub1.setSub1Value(11);
+        Sub2 sub2 = new Sub2();
+        sub2.setSub2Value(9);
+        em.persist(sub1);
+        em.persist(sub2);
+
+        // When
+        CriteriaBuilder<Parent> criteria = cbf.create(em, Parent.class);
+        List<Parent> result = criteria.from(Parent.class, "p")
+                .where("COALESCE(TREAT(p AS Sub1).sub1Value, TREAT(p AS Sub2).sub2Value)").gtExpression("10")
+                .getResultList();
+
+        // Then
+        assertEquals(1, result.size());
+        assertTrue(result.contains(sub1));
+    }
 }
