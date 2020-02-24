@@ -868,7 +868,7 @@ public class ProxyFactory {
         sb.append(cc.getName()).append("(\n");
         for (int i = 0; i < passThroughCount; i++) {
             sb.append("\t\t");
-            sb.append('$').append(positionAssignments[i] + 1);
+            sb.append('$').append(i + 1);
             sb.append(",\n");
         }
         for (int i = 0; i < positionAssignments.length; i++) {

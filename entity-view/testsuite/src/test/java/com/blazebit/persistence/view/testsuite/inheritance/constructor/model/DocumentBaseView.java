@@ -44,6 +44,10 @@ public abstract class DocumentBaseView {
 
     public abstract String getName();
 
+    public abstract long getAge();
+
+    public abstract int getIdx();
+
     public Collection<SimplePersonSubView> getPeople() {
         return people;
     }
