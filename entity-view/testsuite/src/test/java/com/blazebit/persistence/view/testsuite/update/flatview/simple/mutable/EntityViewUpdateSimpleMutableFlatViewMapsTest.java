@@ -33,6 +33,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.*;
@@ -71,10 +72,51 @@ public class EntityViewUpdateSimpleMutableFlatViewMapsTest extends AbstractEntit
         // Given
         final UpdatableDocumentWithMapsView docView = getDoc1View();
         clearQueries();
-        
+
         // When
 
         docView.getNameMap().get("doc1").setPrimaryName("newPers");
+        update(docView);
+
+        // Then
+        // Assert that the document and the people are loaded i.e. a full fetch
+        // Finally the person is updated because the primary name changed
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
+
+        if (isQueryStrategy()) {
+        } else {
+            fullFetch(builder);
+        }
+        if (version || isQueryStrategy() && isFullMode()) {
+            builder.update(Document.class);
+        }
+        if (supportsIndexedInplaceUpdate() && !isQueryStrategy() || isQueryStrategy() && !isFullMode()) {
+            builder.assertUpdate()
+                    .forRelation(Document.class, "nameMap")
+                    .and();
+        } else {
+            builder.delete(Document.class, "nameMap")
+                    .insert(Document.class, "nameMap");
+
+        }
+        builder.validate();
+
+        assertNoUpdateAndReload(docView);
+        assertEquals("newPers", doc1.getNameMap().get("doc1").getPrimaryName());
+        assertSubviewEquals(doc1.getNameMap(), docView.getNameMap());
+    }
+
+    @Test
+    public void testUpdateCollectionElementClearAndReAdd() {
+        // Given
+        final UpdatableDocumentWithMapsView docView = getDoc1View();
+        clearQueries();
+
+        // When
+        Map<String, UpdatableNameObjectView> map = new HashMap<>(docView.getNameMap());
+        docView.getNameMap().get("doc1").setPrimaryName("newPers");
+        docView.getNameMap().clear();
+        docView.getNameMap().putAll(map);
         update(docView);
 
         // Then

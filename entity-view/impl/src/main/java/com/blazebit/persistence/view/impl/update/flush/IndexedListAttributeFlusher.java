@@ -320,6 +320,7 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
     @Override
     protected void addFlatViewElementFlushActions(UpdateContext context, TypeDescriptor typeDescriptor, List<CollectionAction<?>> actions, V current) {
         final ViewToEntityMapper mapper = typeDescriptor.getViewToEntityMapper();
+        int initialSize = -1;
         for (int i = 0; i < current.size(); i++) {
             Object o = current.get(i);
             if (o instanceof MutableStateTrackable) {
@@ -338,7 +339,12 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
                                 state = state.onAdd();
                             }
                         } else if (identityContains(action.getAddedObjects(), element)) {
-                            state = EntryState.ADDED;
+                            if (removedObjects.isEmpty()) {
+                                state = state.onAdd();
+                            } else {
+                                // This is like replacing an existing entry
+                                state = EntryState.ADDED;
+                            }
                         }
                     }
 
@@ -350,6 +356,15 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
                 }
             }
         }
+    }
+
+    private int getInitialSize(int size, List<CollectionAction<?>> actions) {
+        int end = actions.size() - 1;
+        for (; end >= 0; end--) {
+            CollectionAction<?> collectionAction = actions.get(end);
+            size += collectionAction.getAddedObjects().size() - collectionAction.getRemovedObjects().size();
+        }
+        return size;
     }
 
     @Override

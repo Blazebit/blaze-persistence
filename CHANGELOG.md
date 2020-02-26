@@ -19,6 +19,8 @@ Not yet released
 * Fix null expressions for custom types
 * Fix expanding null binding for embeddable
 * Fix problems with parameters in the select clause when using Hibernate subselect fetching for associations
+* Fix using constructor in polymorphic entity view inheritance structure
+* Fix missing updates of indexed collection elements when clearing and re-adding dirty elements
 
 ### Backwards-incompatible changes
 

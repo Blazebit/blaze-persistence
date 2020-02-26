@@ -48,7 +48,7 @@ public class FusedCollectionIndexActions implements FusedCollectionActions {
         List<IndexTranslateOperation> translateOperations = new ArrayList<>();
         List<ReplaceOperation> replaceOperations = new ArrayList<>();
         List<Object> appendedObjects = new ArrayList<>();
-        int appendIndex = Integer.MAX_VALUE;
+        int appendIndex = Integer.MAX_VALUE; // The index after which only appends happen
         for (ListAction<?> collectionAction : collectionActions) {
             List<Map.Entry<Object, Integer>> insertedObjectMap = collectionAction.getInsertedObjectEntries();
             List<Map.Entry<Object, Integer>> appendedObjectMap = collectionAction.getAppendedObjectEntries();
@@ -56,7 +56,7 @@ public class FusedCollectionIndexActions implements FusedCollectionActions {
             List<Map.Entry<Object, Integer>> trimmedObjectMap = collectionAction.getTrimmedObjectEntries();
 
             for (Map.Entry<Object, Integer> entry : removedObjectMap) {
-                if (appendIndex <= entry.getValue()) {
+                if (appendIndex < entry.getValue()) {
                     int indexToRemove = entry.getValue() - appendIndex;
                     appendedObjects.remove(indexToRemove);
                     if (appendedObjects.isEmpty()) {
@@ -76,9 +76,16 @@ public class FusedCollectionIndexActions implements FusedCollectionActions {
             }
             for (Map.Entry<Object, Integer> entry : insertedObjectMap) {
                 int index = entry.getValue();
-                ReplaceOperation replaceOperation = new ReplaceOperation(index, entry.getKey());
-                replaceOperations.add(replaceOperation);
-                addTranslateOperation(translateOperations, index, Integer.MAX_VALUE, 1, null, replaceOperation);
+                if (appendIndex < index && appendIndex + appendedObjects.size() == index) {
+                    // Inserting into the last index is like appending
+                    appendedObjectMap = new ArrayList<>(appendedObjectMap);
+                    appendedObjectMap.add(entry);
+                } else {
+                    ReplaceOperation replaceOperation = new ReplaceOperation(index, entry.getKey());
+                    if (!addTranslateOperation(translateOperations, index, Integer.MAX_VALUE, 1, null, replaceOperation)) {
+                        replaceOperations.add(replaceOperation);
+                    }
+                }
             }
             OUTER: for (Map.Entry<Object, Integer> entry : appendedObjectMap) {
                 int index = entry.getValue();
@@ -174,7 +181,7 @@ public class FusedCollectionIndexActions implements FusedCollectionActions {
         this.updateCount = updateCount;
     }
 
-    private static void addTranslateOperation(List<IndexTranslateOperation> translateOperations, int startIndex, int endIndex, int offset, RemoveOperation removeOperation, ReplaceOperation replaceOperation) {
+    private static boolean addTranslateOperation(List<IndexTranslateOperation> translateOperations, int startIndex, int endIndex, int offset, RemoveOperation removeOperation, ReplaceOperation replaceOperation) {
         if (translateOperations.isEmpty()) {
             translateOperations.add(new IndexTranslateOperation(startIndex, endIndex, offset, removeOperation == null ? new ArrayList<RemoveOperation>() : new ArrayList<>(Collections.singletonList(removeOperation))));
         } else {
@@ -187,7 +194,7 @@ public class FusedCollectionIndexActions implements FusedCollectionActions {
                         // A remove followed an insert or the other way round allow to remove the translation operation
                         translateOperations.remove(i);
                         replaceOperation.oldObject = indexTranslateOperation.removeOperations.get(0).removedObject;
-                        return;
+                        return replaceOperation.oldObject == replaceOperation.newObject;
                     } else if (indexDiff == 1 && indexTranslateOperation.endIndex == endIndex) {
                         // Neighbouring index translations with the same endIndex are merged
                         List<RemoveOperation> newList;
@@ -199,17 +206,18 @@ public class FusedCollectionIndexActions implements FusedCollectionActions {
                             newList.add(removeOperation);
                         }
                         translateOperations.set(i, new IndexTranslateOperation(Math.min(indexTranslateOperation.startIndex, startIndex), endIndex, indexTranslateOperation.offset + offset, newList));
-                        return;
+                        return false;
                     } else {
                         translateOperations.set(i, new IndexTranslateOperation(indexTranslateOperation.startIndex, startIndex, indexTranslateOperation.offset, indexTranslateOperation.removeOperations));
                         translateOperations.add(i + 1, new IndexTranslateOperation(startIndex, endIndex, offset, removeOperation == null ? new ArrayList<RemoveOperation>() : new ArrayList<>(Collections.singletonList(removeOperation))));
-                        return;
+                        return false;
                     }
                 }
             }
 
             translateOperations.add(new IndexTranslateOperation(startIndex, endIndex, offset, removeOperation == null ? new ArrayList<RemoveOperation>() : new ArrayList<>(Collections.singletonList(removeOperation))));
         }
+        return false;
     }
 
     private static int applyIndexTranslations(List<IndexTranslateOperation> indexTranslateOperations, int index) {

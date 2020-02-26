@@ -504,7 +504,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
         parameterManager.registerValuesParameter(rootAlias, valueClass, parameterNames, pathExpressions, queryBuilder);
 
-        JoinAliasInfo rootAliasInfo = new JoinAliasInfo(rootAlias, rootAlias, true, true, aliasManager);
+        JoinAliasInfo rootAliasInfo = new JoinAliasInfo(rootAlias, rootAlias, false, true, aliasManager);
         JoinNode rootNode = JoinNode.createValuesRootNode(type, entityType, typeName, valueCount, idAttributeNames, valueLikeClause, qualificationExpression, valueClazzAttributeSingular, simpleValue, valuesClassAttributeName, castedParameter, attributes, rootAliasInfo);
         rootAliasInfo.setJoinNode(rootNode);
         rootNodes.add(rootNode);
@@ -534,7 +534,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 rootAlias = aliasManager.generateRootAlias(alias);
             }
         }
-        JoinAliasInfo rootAliasInfo = new JoinAliasInfo(rootAlias, rootAlias, true, true, aliasManager);
+        JoinAliasInfo rootAliasInfo = new JoinAliasInfo(rootAlias, rootAlias, false, true, aliasManager);
         JoinNode rootNode = JoinNode.createRootNode(entityType, rootAliasInfo);
         rootAliasInfo.setJoinNode(rootNode);
         rootNodes.add(rootNode);
@@ -693,7 +693,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 }
             }
             if (matchingNode == null) {
-                rootNode = correlate(new JoinResult(correlationParent), rootAlias, correlatedAttributeExpr, metamodel.getEntity(treatEntityType), true, lateral).baseNode;
+                rootNode = correlate(new JoinResult(correlationParent), rootAlias, correlatedAttributeExpr, metamodel.getEntity(treatEntityType), true, lateral, implicitCorrelation).baseNode;
                 rootAlias = rootNode.getAliasExpression();
             } else {
                 // Try reusing an existing join
@@ -703,11 +703,24 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         } else {
             JoinNode matchingNode = null;
             if (implicitCorrelation) {
+                String path;
+                if (correlationParent.getAliasInfo() instanceof TreatedJoinAliasInfo) {
+                    path = ((TreatedJoinAliasInfo) correlationParent.getAliasInfo()).getTreatedJoinNode().getAliasInfo().getAbsolutePath();
+                } else {
+                    path = correlationParent.getAliasInfo().getAbsolutePath();
+                }
+                String correlationBaseAlias = (path + "_" + correlatedAttribute).replace('.', '_') + "_base";
                 for (int i = 0; i < rootNodes.size(); i++) {
                     JoinNode node = rootNodes.get(i);
-                    if (node.getAliasInfo().isImplicit() && (node.getCorrelationParent() == correlationParent && correlatedAttribute.equals(node.getCorrelationPath()) || node.getOnPredicate() != null && node.getAlias().startsWith(correlatedAttribute + "_base"))) {
-                        matchingNode = node;
-                        break;
+                    if (node.getAliasInfo().isImplicit()) {
+                        if (node.getCorrelationParent() == correlationParent && correlatedAttribute.equals(node.getCorrelationPath())) {
+                            matchingNode = node;
+                            break;
+                        } else if (node.getOnPredicate() != null && correlationBaseAlias.equals(node.getAlias())) {
+                            matchingNode = node;
+                            start--;
+                            break;
+                        }
                     }
                 }
             }
@@ -718,7 +731,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                     if (isSingleValuedAssociationId(correlationParent, currentPathExpression, start)) {
                         return correlationParent.getAliasExpression() + "." + new PathExpression(pathElements.subList(start, pathElements.size()));
                     }
-                    rootNode = correlate(new JoinResult(correlationParent), rootAlias, correlatedAttributeExpr, null, false, lateral).baseNode;
+                    rootNode = correlate(new JoinResult(correlationParent), rootAlias, correlatedAttributeExpr, null, false, lateral, implicitCorrelation).baseNode;
                 } else {
                     // Try reusing an existing join
                     rootNode = existingNode.getDefaultNode();
@@ -726,6 +739,8 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             } else {
                 rootNode = matchingNode;
             }
+            // We correlate or reuse a join for the current position, so increment
+            start++;
 
             JoinResult result = new JoinResult(rootNode);
             if (pathExpressionStack.size() > 1) {
@@ -755,7 +770,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                     }
 
                     if (result.baseNode.getAliasInfo().getAliasOwner() != aliasManager && start + 1 < pathElements.size() - 1) {
-                        result = correlate(result, rootAlias, pathElements.get(start + 1), null, false, lateral);
+                        result = correlate(result, rootAlias, pathElements.get(start + 1), null, false, lateral, implicitCorrelation);
                         start++;
                     }
                     result = implicitJoin(result.baseNode, currentPathExpression, null, implicitCorrelation ? JoinType.LEFT : JoinType.INNER, null, new HashSet<String>(), start + 1, pathElements.size(), true, true, false);
@@ -763,6 +778,8 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                     // Reset start
                     start = 0;
                 }
+                // At the end of treat processing, we are at index 1
+                start = 1;
             }
 
             if (pathExpressionStack.size() > 0) {
@@ -776,18 +793,18 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 treatedCorrelationNodes.add(treatedNode);
                 result = new JoinResult(treatedNode, null, treatType, -1, -1);
                 // Reset start
-                start = 0;
+                start = 1;
             }
             pathElements = currentPathExpression.getExpressions();
             Expression elementExpr = pathElements.get(pathElements.size() - 1);
-            if (result.baseNode.getAliasInfo().getAliasOwner() != aliasManager && start + 1 < pathElements.size() - 1) {
-                if (isSingleValuedAssociationId(result.baseNode, currentPathExpression, start + 1)) {
-                    return result.baseNode.getAliasExpression() + "." + new PathExpression(pathElements.subList(start + 1, pathElements.size()));
+            if (result.baseNode.getAliasInfo().getAliasOwner() != aliasManager && start < pathElements.size() - 1) {
+                if (isSingleValuedAssociationId(result.baseNode, currentPathExpression, start)) {
+                    return result.baseNode.getAliasExpression() + "." + new PathExpression(pathElements.subList(start, pathElements.size()));
                 }
-                result = correlate(result, rootAlias, pathElements.get(start + 1), null, false, lateral);
+                result = correlate(result, rootAlias, pathElements.get(start), null, false, lateral, implicitCorrelation);
                 start++;
             }
-            result = implicitJoin(result.baseNode, currentPathExpression, null, implicitCorrelation ? JoinType.LEFT : JoinType.INNER, null, new HashSet<String>(), start + 1, pathElements.size() - 1, true, true, false);
+            result = implicitJoin(result.baseNode, currentPathExpression, null, implicitCorrelation ? JoinType.LEFT : JoinType.INNER, null, new HashSet<String>(), start, pathElements.size() - 1, true, true, false);
             JoinResult finalNode;
             if (pathExpression.isUsedInCollectionFunction()) {
                 JoinNode current = result.baseNode;
@@ -815,7 +832,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                         finalExpression = pathElements.get(start);
                     }
                     if (isJoinable(result, finalExpression)) {
-                        finalNode = correlate(result, rootAlias, finalExpression, null, true, lateral);
+                        finalNode = correlate(result, rootAlias, finalExpression, null, true, lateral, implicitCorrelation);
                     } else {
                         finalNode = result.withField(((PropertyExpression) finalExpression).getProperty());
                     }
@@ -833,11 +850,15 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             if (treatEntityType != null) {
                 treatedCorrelationNodes.add(finalNode.baseNode);
             }
-            if (implicitCorrelation && finalNode.hasField()) {
-                rootAlias = finalNode.baseNode.getAliasExpression() + "." + finalNode.joinFields();
+            if (implicitCorrelation) {
+                if (finalNode.hasField()) {
+                    rootAlias = finalNode.baseNode.getAliasExpression() + "." + finalNode.joinFields();
+                }
+            } else {
+                finalNode.baseNode.getAliasInfo().setImplicit(false);
+                explicitJoinNodes.add(finalNode.baseNode);
             }
         }
-
         if (!treatedCorrelationNodes.isEmpty()) {
             rootNode.setJoinNodesNeedingTreatConjunct(treatedCorrelationNodes);
         }
@@ -910,7 +931,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         return true;
     }
 
-    private JoinResult correlate(JoinResult result, String rootAlias, Expression correlatedAttributeExpr, EntityType<?> treatType, boolean finalOperation, boolean lateral) {
+    private JoinResult correlate(JoinResult result, String rootAlias, Expression correlatedAttributeExpr, EntityType<?> treatType, boolean finalOperation, boolean lateral, boolean implicitCorrelation) {
         AttributeHolder joinResult = JpaUtils.getAttributeForJoining(metamodel, result.baseNode.getNodeType(), correlatedAttributeExpr, null);
         Type<?> type = joinResult.getAttributeType();
         String correlatedAttribute;
@@ -920,6 +941,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             correlatedAttribute = correlatedAttributeExpr.toString();
         }
 
+        boolean implicit = implicitCorrelation || !finalOperation;
         JoinNode correlationRootNode;
         // We can't correlate array expressions as that would alter the subquery cardinality when applying the predicate as WHERE condition
         if (!(correlatedAttributeExpr instanceof ArrayExpression) && (rootNodes.isEmpty() || finalOperation)) {
@@ -945,7 +967,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 rootAlias = aliasManager.generateRootAlias(rootAlias);
             }
 
-            JoinAliasInfo rootAliasInfo = new JoinAliasInfo(rootAlias, rootAlias, true, true, aliasManager);
+            JoinAliasInfo rootAliasInfo = new JoinAliasInfo(rootAlias, rootAlias, implicit, true, aliasManager);
             correlationRootNode = JoinNode.createCorrelationRootNode(result.baseNode, correlatedAttribute, joinResult.getAttribute(), type, treatType, rootAliasInfo, lateral);
             rootAliasInfo.setJoinNode(correlationRootNode);
             rootNodes.add(correlationRootNode);
@@ -954,11 +976,19 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             aliasManager.registerAliasInfo(rootAliasInfo);
         } else {
             // If there is a root node already, we have to correlate the base entity and join instead
-            String alias = correlatedAttribute.replace('.', '_') + "_base";
+            String path;
+            if (result.baseNode.getAliasInfo() instanceof TreatedJoinAliasInfo) {
+                path = ((TreatedJoinAliasInfo) result.baseNode.getAliasInfo()).getTreatedJoinNode().getAliasInfo().getAbsolutePath();
+            } else {
+                path = result.baseNode.getAliasInfo().getAbsolutePath();
+            }
+            String alias = (path + "_" + correlatedAttribute).replace('.', '_') + "_base";
             String baseAlias = addRoot(result.baseNode.getEntityType(), alias);
+            JoinNode joinNode = ((JoinAliasInfo) aliasManager.getAliasInfo(baseAlias)).getJoinNode();
+            joinNode.getAliasInfo().setImplicit(true);
             Predicate correlationPredicate = expressionFactory.createBooleanExpression(createCorrelationPredicate(result.baseNode.getEntityType(), result.baseNode.getAliasExpression(), baseAlias), false);
             correlationPredicate.accept(joinVisitor);
-            ((JoinAliasInfo) aliasManager.getAliasInfo(baseAlias)).getJoinNode().setOnPredicate(new CompoundPredicate(CompoundPredicate.BooleanOperator.AND, correlationPredicate));
+            joinNode.setOnPredicate(new CompoundPredicate(CompoundPredicate.BooleanOperator.AND, correlationPredicate));
             PathExpression pathExpression = new PathExpression();
             pathExpression.getExpressions().add(new PropertyExpression(baseAlias));
             if (correlatedAttributeExpr instanceof PathExpression) {
@@ -1032,7 +1062,25 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             case 1:
                 return rootNodes.get(0);
             default:
-                throw new IllegalArgumentException(prefix + middle + suffix);
+                // Since we introduce implicit root nodes now that we allow all kinds of correlations, we need to exclude the implicit roots introduced for the correlation
+                JoinNode root = null;
+                for (int i = 0; i < rootNodes.size(); i++) {
+                    JoinNode node = rootNodes.get(i);
+                    if (!node.getAliasInfo().isImplicit()) {
+                        if (root == null) {
+                            root = node;
+                        } else {
+                            root = null;
+                            break;
+                        }
+                    }
+                }
+
+                if (root == null) {
+                    throw new IllegalArgumentException(prefix + middle + suffix);
+                } else {
+                    return root;
+                }
         }
     }
 
@@ -1229,8 +1277,8 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                     sb.append(", ");
                 }
 
-                // Implicit root nodes can have an ON predicate
-                if (node.getAliasInfo().isImplicit() && node.getOnPredicate() != null) {
+                // Entity array expression based and correlation root nodes can have an ON predicate
+                if (node.getOnPredicate() != null) {
                     if (tempSb == null) {
                         tempSb = new StringBuilder();
                     } else {
