@@ -44,7 +44,7 @@ public class ListSetAction<C extends List<E>, E> implements ListAction<C> {
         this.removedElementInView = delegate == null ? null : (E) delegate.get(index);
     }
 
-    private ListSetAction(int index, boolean last, E element, E removedElementInView) {
+    public ListSetAction(int index, boolean last, E element, E removedElementInView) {
         this.index = index;
         this.last = last;
         this.element = element;

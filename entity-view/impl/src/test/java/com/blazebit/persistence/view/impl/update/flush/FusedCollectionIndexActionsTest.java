@@ -20,6 +20,7 @@ import com.blazebit.persistence.view.impl.collection.ListAction;
 import com.blazebit.persistence.view.impl.collection.ListAddAction;
 import com.blazebit.persistence.view.impl.collection.ListAddAllAction;
 import com.blazebit.persistence.view.impl.collection.ListRemoveAction;
+import com.blazebit.persistence.view.impl.collection.ListSetAction;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -62,8 +63,8 @@ public class FusedCollectionIndexActionsTest {
     public void testFuseRemovesAndTranslates() {
         List<String> objects = Arrays.asList("o1", "o2", "o3", "o4");
         FusedCollectionIndexActions indexActions = new FusedCollectionIndexActions(Arrays.<ListAction<?>>asList(
-                new ListRemoveAction<>(1, false, objects),
-                new ListRemoveAction<>(1, false, objects)
+                new ListRemoveAction<>(1, false, objects.get(1)),
+                new ListRemoveAction<>(1, false, objects.get(2))
         ));
         Assert.assertEquals(1, indexActions.getRemoveCount());
         Assert.assertEquals(0, indexActions.getAddCount());
@@ -74,10 +75,10 @@ public class FusedCollectionIndexActionsTest {
     public void testMultipleRemoveRangesWithLast() {
         List<String> objects = Arrays.asList("o1", "o2", "o3", "o4", "o5", "o6");
         FusedCollectionIndexActions indexActions = new FusedCollectionIndexActions(Arrays.<ListAction<?>>asList(
-                new ListRemoveAction<>(1, false, objects),
-                new ListRemoveAction<>(1, false, objects),
-                new ListRemoveAction<>(2, false, objects),
-                new ListRemoveAction<>(2, true, objects)
+                new ListRemoveAction<>(1, false, objects.get(1)),
+                new ListRemoveAction<>(1, false, objects.get(2)),
+                new ListRemoveAction<>(2, false, objects.get(4)),
+                new ListRemoveAction<>(2, true, objects.get(5))
         ));
         Assert.assertEquals(2, indexActions.getRemoveCount());
         Assert.assertEquals(0, indexActions.getAddCount());
@@ -88,10 +89,10 @@ public class FusedCollectionIndexActionsTest {
     public void testMultipleRemoveRanges() {
         List<String> objects = Arrays.asList("o1", "o2", "o3", "o4", "o5", "o6", "o7");
         FusedCollectionIndexActions indexActions = new FusedCollectionIndexActions(Arrays.<ListAction<?>>asList(
-                new ListRemoveAction<>(1, false, objects),
-                new ListRemoveAction<>(1, false, objects),
-                new ListRemoveAction<>(2, false, objects),
-                new ListRemoveAction<>(2, false, objects)
+                new ListRemoveAction<>(1, false, objects.get(1)),
+                new ListRemoveAction<>(1, false, objects.get(2)),
+                new ListRemoveAction<>(2, false, objects.get(3)),
+                new ListRemoveAction<>(2, false, objects.get(4))
         ));
         Assert.assertEquals(2, indexActions.getRemoveCount());
         Assert.assertEquals(0, indexActions.getAddCount());
@@ -99,7 +100,7 @@ public class FusedCollectionIndexActionsTest {
     }
 
     @Test
-    public void testAddClearAndReadd() {
+    public void testAddClearAndReAdd() {
         List<String> objects = new ArrayList<>(Arrays.asList("o1", "o2"));
         FusedCollectionIndexActions indexActions = new FusedCollectionIndexActions(Arrays.<ListAction<?>>asList(
                 new ListAddAction<>(1, true, objects.get(1)),
@@ -113,7 +114,7 @@ public class FusedCollectionIndexActionsTest {
     }
 
     @Test
-    public void testAddClearAndReadd2() {
+    public void testAddClearAndReAdd2() {
         List<String> objects = new ArrayList<>(Arrays.asList("o1", "o2", "o3", "o4"));
         FusedCollectionIndexActions indexActions = new FusedCollectionIndexActions(Arrays.<ListAction<?>>asList(
                 new ListAddAction<>(3, true, objects.get(3)),
@@ -125,6 +126,20 @@ public class FusedCollectionIndexActionsTest {
         ));
         Assert.assertEquals(0, indexActions.getRemoveCount());
         Assert.assertEquals(1, indexActions.getAddCount());
+        Assert.assertEquals(0, indexActions.getUpdateCount());
+    }
+
+    @Test
+    public void testAddAndReplace() {
+        List<String> objects = new ArrayList<>(Arrays.asList("o1", "o2"));
+        FusedCollectionIndexActions indexActions = new FusedCollectionIndexActions(Arrays.<ListAction<?>>asList(
+                new ListAddAction<>(0, true, objects.get(0)),
+                new ListAddAction<>(1, true, objects.get(1)),
+                new ListSetAction<>(0, false, objects.get(0), objects.get(0)),
+                new ListSetAction<>(1, false, objects.get(1), objects.get(1))
+        ));
+        Assert.assertEquals(0, indexActions.getRemoveCount());
+        Assert.assertEquals(2, indexActions.getAddCount());
         Assert.assertEquals(0, indexActions.getUpdateCount());
     }
 }

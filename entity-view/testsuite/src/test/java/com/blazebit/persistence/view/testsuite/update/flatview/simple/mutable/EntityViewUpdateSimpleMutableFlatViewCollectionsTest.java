@@ -33,7 +33,9 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -75,6 +77,44 @@ public class EntityViewUpdateSimpleMutableFlatViewCollectionsTest extends Abstra
         // When
 
         docView.getNames().get(0).setPrimaryName("newPers");
+        update(docView);
+
+        // Then
+        // Assert that the document and the people are loaded i.e. a full fetch
+        // Finally the person is updated because the primary name changed
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
+
+        if (!isQueryStrategy()) {
+            fullFetch(builder);
+        }
+
+        if (version || isFullMode() && isQueryStrategy()) {
+            builder.update(Document.class);
+        }
+        if (isFullMode() || !isQueryStrategy() && !supportsIndexedInplaceUpdate()) {
+            builder.delete(Document.class, "names")
+                    .insert(Document.class, "names");
+        } else {
+            builder.update(Document.class, "names");
+        }
+        builder.validate();
+
+        assertNoUpdateAndReload(docView);
+        assertEquals("newPers", doc1.getNames().get(0).getPrimaryName());
+        assertSubviewEquals(doc1.getNames(), docView.getNames());
+    }
+
+    @Test
+    public void testUpdateCollectionElementClearAndReAdd() {
+        // Given
+        final UpdatableDocumentWithCollectionsView docView = getDoc1View();
+        clearQueries();
+
+        // When
+        List<UpdatableNameObjectView> list = new ArrayList<>(docView.getNames());
+        docView.getNames().get(0).setPrimaryName("newPers");
+        docView.getNames().clear();
+        docView.getNames().addAll(list);
         update(docView);
 
         // Then
