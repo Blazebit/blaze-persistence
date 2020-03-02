@@ -411,7 +411,7 @@ public class PaginationTest extends AbstractCoreTest {
                 + " GROUP BY " + groupBy("d.id", "strings_1")
                 + " ORDER BY d.id ASC";
         String expectedInlineObjectQuery = "SELECT d.id, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + "), (" + expectedCountQuery + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
-                + " WHERE " + function("compare_row_value_subquery", "'IN'", "d.id", "strings_1", function("LIMIT", "(" + expectedIdQuery + ")", "1")) + " = true"
+                + " WHERE " + function("compare_row_value_subquery", "'IN'", "d.id", "strings_1", function("LIMIT", "(" + expectedIdQuery + ")", "1")) + " = 0"
                 + " GROUP BY " + groupBy("d.id", "strings_1")
                 + " ORDER BY d.id ASC";
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
@@ -437,7 +437,7 @@ public class PaginationTest extends AbstractCoreTest {
                 + " GROUP BY " + groupBy("d.id", "strings_1")
                 + " ORDER BY d.id ASC";
         String expectedInlineObjectQuery = "SELECT d.id, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + "), (" + expectedCountQuery + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
-                + " WHERE " + function("compare_row_value_subquery", "'IN'", "d.id", "strings_1", function("LIMIT", "(" + expectedIdQuery + ")", "1")) + " = true"
+                + " WHERE " + function("compare_row_value_subquery", "'IN'", "d.id", "strings_1", function("LIMIT", "(" + expectedIdQuery + ")", "1")) + " = 0"
                 + " GROUP BY " + groupBy("d.id", "strings_1")
                 + " ORDER BY d.id ASC";
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
@@ -466,7 +466,7 @@ public class PaginationTest extends AbstractCoreTest {
                 + " GROUP BY " + groupBy("d.id", "strings_1")
                 + " ORDER BY d.id ASC";
         String expectedInlineObjectQuery = "SELECT d.id, " + "strings_1" +", COUNT(" + joinAliasValue("contacts_1", "id") + "), (" + expectedCountQuery + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
-                + " WHERE " + function("compare_row_value_subquery", "'IN'", "d.id", "strings_1", function("LIMIT", "(" + expectedIdQuery + ")", "1")) + " = true"
+                + " WHERE " + function("compare_row_value_subquery", "'IN'", "d.id", "strings_1", function("LIMIT", "(" + expectedIdQuery + ")", "1")) + " = 0"
                 + " GROUP BY " + groupBy("d.id", "strings_1")
                 + " ORDER BY d.id ASC";
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
@@ -495,7 +495,7 @@ public class PaginationTest extends AbstractCoreTest {
                 + " GROUP BY " + groupBy("d.id", "strings_1")
                 + " ORDER BY d.id ASC";
         String expectedInlineObjectQuery = "SELECT d.id, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + "), (" + expectedCountQuery + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
-                + " WHERE " + function("compare_row_value_subquery", "'IN'", "d.id", "strings_1", function("LIMIT", "(" + expectedIdQuery + ")", "1")) + " = true"
+                + " WHERE " + function("compare_row_value_subquery", "'IN'", "d.id", "strings_1", function("LIMIT", "(" + expectedIdQuery + ")", "1")) + " = 0"
                 + " GROUP BY " + groupBy("d.id", "strings_1")
                 + " ORDER BY d.id ASC";
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
@@ -524,7 +524,7 @@ public class PaginationTest extends AbstractCoreTest {
                 + " GROUP BY " + groupBy("d.id", "strings_1", "d.name")
                 + " ORDER BY d.name ASC, d.id ASC";
         String expectedInlineObjectQuery = "SELECT d.id, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + "), (" + expectedCountQuery + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
-                + " WHERE " + function("compare_row_value_subquery", "'IN'", "d.id", "strings_1", function("LIMIT", "(" + expectedIdQuery + ")", "1")) + " = true"
+                + " WHERE " + function("compare_row_value_subquery", "'IN'", "d.id", "strings_1", function("LIMIT", "(" + expectedIdQuery + ")", "1")) + " = 0"
                 + " GROUP BY " + groupBy("d.id", "strings_1", "d.name")
                 + " ORDER BY d.name ASC, d.id ASC";
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
@@ -554,7 +554,7 @@ public class PaginationTest extends AbstractCoreTest {
                 + " GROUP BY " + groupBy("d.name", "strings_1")
                 + " ORDER BY d.name ASC, " + renderNullPrecedence("strings_1", "ASC", "LAST");
         String expectedInlineObjectQuery = "SELECT d.name, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + "), (" + expectedCountQuery + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
-                + " WHERE " + function("compare_row_value_subquery", "'IN'", "d.name", "strings_1", function("LIMIT", "(" + expectedIdQuery + ")", "1")) + " = true"
+                + " WHERE " + function("compare_row_value_subquery", "'IN'", "d.name", "strings_1", function("LIMIT", "(" + expectedIdQuery + ")", "1")) + " = 0"
                 + " GROUP BY " + groupBy("d.name", "strings_1")
                 + " ORDER BY d.name ASC, " + renderNullPrecedence("strings_1", "ASC", "LAST");
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
@@ -584,7 +584,7 @@ public class PaginationTest extends AbstractCoreTest {
                 + " GROUP BY " + groupBy("d.name", "strings_1", "d.age")
                 + " ORDER BY d.name ASC, d.age ASC, " + renderNullPrecedence("strings_1", "ASC", "LAST");
         String expectedInlineObjectQuery = "SELECT d.name, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + "), (" + expectedCountQuery + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
-                + " WHERE " + function("compare_row_value_subquery", "'IN'", "d.name", "d.age", "strings_1", function("LIMIT", "(" + expectedIdQuery + ")", "1")) + " = true"
+                + " WHERE " + function("compare_row_value_subquery", "'IN'", "d.name", "d.age", "strings_1", function("LIMIT", "(" + expectedIdQuery + ")", "1")) + " = 0"
                 + " GROUP BY " + groupBy("d.name", "strings_1", "d.age")
                 + " ORDER BY d.name ASC, d.age ASC, " + renderNullPrecedence("strings_1", "ASC", "LAST");
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
@@ -878,7 +878,7 @@ public class PaginationTest extends AbstractCoreTest {
                 + "GROUP BY " + groupBy("d.id", "strings_1")
                 + " ORDER BY contactCount ASC, d.id ASC";
         String expectedInlineObjectQuery = "SELECT " + function("COUNT_TUPLE", "'DISTINCT',KEY(contacts_1)") + " AS contactCount, strings_1, (" + expectedCountQuery + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1 " +
-                "WHERE " + function("compare_row_value_subquery", "'IN'", "d.id", "strings_1", function("LIMIT", "(" + expectedIdQuery + ")", "1")) + " = true "
+                "WHERE " + function("compare_row_value_subquery", "'IN'", "d.id", "strings_1", function("LIMIT", "(" + expectedIdQuery + ")", "1")) + " = 0 "
                 + "GROUP BY " + groupBy("d.id", "strings_1")
                 + " ORDER BY contactCount ASC, d.id ASC";
 

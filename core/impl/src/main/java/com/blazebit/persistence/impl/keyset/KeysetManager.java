@@ -145,7 +145,7 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
                     }
                 }
 
-                sb.append(") = true");
+                sb.append(") = 0");
             }
         }
     }

@@ -49,6 +49,7 @@ import com.blazebit.persistence.impl.query.CustomSQLTypedQuery;
 import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.ObjectBuilderTypedQuery;
 import com.blazebit.persistence.impl.query.QuerySpecification;
+import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.util.TypeUtils;
 
 import javax.persistence.Parameter;
@@ -723,8 +724,12 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
         Integer index;
         for (int i = 0; i < orderByExpressions.size(); i++) {
-            String potentialSelectAlias = orderByExpressions.get(i).getExpression().toString();
-            AliasInfo aliasInfo = aliasManager.getAliasInfo(potentialSelectAlias);
+            String potentialSelectAlias = null;
+            AliasInfo aliasInfo = null;
+            if (orderByExpressions.get(i).getExpression() instanceof PathExpression) {
+                potentialSelectAlias = orderByExpressions.get(i).getExpression().toString();
+                aliasInfo = aliasManager.getAliasInfo(potentialSelectAlias);
+            }
             if (aliasInfo instanceof SelectInfo) {
                 index = identifierExpressionStringMap.get(((SelectInfo) aliasInfo).getExpression().toString());
                 if (index == null) {
@@ -1289,7 +1294,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
                 if (needsNewIdList && !externalRepresentation) {
                     sbSelectFrom.append(",").append(identifierExpressions.length).append(')');
                 }
-                sbSelectFrom.append(") = true");
+                sbSelectFrom.append(") = 0");
             }
 
             if (!whereClauseConjuncts.isEmpty()) {

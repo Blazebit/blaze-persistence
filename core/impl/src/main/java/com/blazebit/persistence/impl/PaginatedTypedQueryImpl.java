@@ -136,6 +136,9 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
         }
 
         int suffix = 0;
+        if (inlinedCountQuery) {
+            suffix++;
+        }
         if (keysetToSelectIndexMapping != null) {
             for (int i = 0; i < keysetToSelectIndexMapping.length; i++) {
                 if (keysetToSelectIndexMapping[i] == -1) {
