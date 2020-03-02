@@ -257,7 +257,7 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor, Jo
                 if (expression.getBaseNode() != null) {
 
                 }
-                joinManager.implicitJoin(expression, joinAllowed, joinWithObjectLeafAllowed, null, fromClause, null, currentJoinNode, currentlyResolvingAliases, false, false, joinRequired, idRemovable, false, reuseExisting);
+                joinManager.implicitJoin(expression, joinAllowed, true, joinWithObjectLeafAllowed, null, fromClause, null, currentJoinNode, currentlyResolvingAliases, false, false, joinRequired, idRemovable, false, reuseExisting);
                 if (parentVisitor != null) {
                     JoinNode baseNode = (JoinNode) expression.getBaseNode();
                     AliasManager aliasOwner = baseNode.getAliasInfo().getAliasOwner();

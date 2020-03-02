@@ -81,7 +81,7 @@ public class SizeTransformerGroup implements ExpressionTransformerGroup<Expressi
         for (SizeTransformationVisitor.LateJoinEntry lateJoinEntry : sizeTransformationVisitor.getLateJoins().values()) {
             for (Expression requiredJoinExpression : lateJoinEntry.getExpressionsToJoin()) {
                 for (ClauseType clauseType : lateJoinEntry.getClauseDependencies()) {
-                    joinManager.implicitJoin(requiredJoinExpression, true, true, null, clauseType, new HashSet<String>(), false, false, true, false);
+                    joinManager.implicitJoin(requiredJoinExpression, true, true, true, null, clauseType, new HashSet<String>(), false, false, true, false);
                 }
             }
         }

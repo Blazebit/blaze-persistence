@@ -21,8 +21,11 @@ import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
@@ -40,6 +43,7 @@ public class Order implements Serializable {
     private Long id;
     private Integer number;
     private Integer number2;
+    private Order parentOrder;
     private Set<OrderPosition> orderPositions = new HashSet<OrderPosition>(0);
     
     @Id
@@ -68,6 +72,16 @@ public class Order implements Serializable {
 
     public void setNumber2(Integer number2) {
         this.number2 = number2;
+    }
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_order_id")
+    public Order getParentOrder() {
+        return parentOrder;
+    }
+
+    public void setParentOrder(Order parentOrder) {
+        this.parentOrder = parentOrder;
     }
 
     @OneToMany(mappedBy = "order")

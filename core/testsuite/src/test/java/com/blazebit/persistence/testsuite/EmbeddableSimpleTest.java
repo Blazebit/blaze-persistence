@@ -18,11 +18,13 @@ package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus4;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
 import com.blazebit.persistence.testsuite.entity.Order;
 import com.blazebit.persistence.testsuite.entity.OrderPosition;
 import com.blazebit.persistence.testsuite.entity.OrderPositionElement;
@@ -161,7 +163,7 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
         assertEquals(
                 "SELECT o FROM Order o " +
                         "LEFT JOIN o.orderPositions p " +
-                        "LEFT JOIN Order o2 ON (o2.id = p.id.orderId)",
+                        "LEFT JOIN Order o2" + onClause("o2.id = p.id.orderId"),
                 criteria.getQueryString()
         );
         criteria.getResultList();
@@ -179,10 +181,8 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
         assertEquals(
                 "SELECT o FROM Order o " +
                         "LEFT JOIN o.orderPositions p " +
-                        "LEFT JOIN Order o2 ON (EXISTS (" +
-                        "SELECT 1 FROM p.order _synth_subquery_0 " +
-                        "WHERE o2.number = _synth_subquery_0.number" +
-                        "))",
+                        "LEFT JOIN p.order order_1 " +
+                        "LEFT JOIN Order o2" + onClause("o2.number = order_1.number"),
                 criteria.getQueryString()
         );
         criteria.getResultList();
@@ -202,7 +202,7 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
                 "SELECT o FROM Order o " +
                         "LEFT JOIN o.orderPositions p " +
                         "LEFT JOIN p.order o1 " +
-                        "LEFT JOIN Order o2 ON (o2.number = o1.number)",
+                        "LEFT JOIN Order o2" + onClause("o2.number = o1.number"),
                 criteria.getQueryString()
         );
         criteria.getResultList();
@@ -219,23 +219,11 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
                 .leftJoinOn("p", Order.class, "o2")
                     .on("o2.number").eqExpression("o.orderPositions.order.number")
                 .end();
-        String subquery;
-        if (jpaProvider.needsCorrelationPredicateWhenCorrelatingWithWhereClause()) {
-            subquery = "SELECT 1 FROM OrderPosition _synth_subquery_0 " +
-                            "JOIN _synth_subquery_0.order order_1 " +
-                            "WHERE _synth_subquery_0.order.id = o.id " +
-                            "AND o2.number = order_1.number";
-        } else {
-            subquery = "SELECT 1 FROM o.orderPositions _synth_subquery_0 " +
-                    "JOIN _synth_subquery_0.order order_1 " +
-                    "WHERE o2.number = order_1.number";
-        }
         assertEquals(
                 "SELECT o FROM Order o " +
                         "LEFT JOIN o.orderPositions p ON (p.id.position > :param_0) " +
-                        "LEFT JOIN Order o2 ON (EXISTS (" +
-                        subquery +
-                        "))",
+                        "LEFT JOIN p.order order_1 " +
+                        "LEFT JOIN Order o2" + onClause("o2.number = order_1.number"),
                 criteria.getQueryString()
         );
         criteria.getResultList();
@@ -253,23 +241,11 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
                     .on("o2.number").eqExpression("o.orderPositions.order.number")
                     .on("o2.number").eqExpression("o.orderPositions.order.number2")
                 .end();
-        String subquery;
-        if (jpaProvider.needsCorrelationPredicateWhenCorrelatingWithWhereClause()) {
-            subquery = "SELECT 1 FROM OrderPosition _synth_subquery_0 " +
-                    "JOIN _synth_subquery_0.order order_1 " +
-                    "WHERE _synth_subquery_0.order.id = o.id " +
-                    "AND o2.number = order_1.number AND o2.number = order_1.number2";
-        } else {
-            subquery = "SELECT 1 FROM o.orderPositions _synth_subquery_0 " +
-                    "JOIN _synth_subquery_0.order order_1 " +
-                    "WHERE o2.number = order_1.number AND o2.number = order_1.number2";
-        }
         assertEquals(
                 "SELECT o FROM Order o " +
                         "LEFT JOIN o.orderPositions p ON (p.id.position > :param_0) " +
-                        "LEFT JOIN Order o2 ON (EXISTS (" +
-                        subquery +
-                        "))",
+                        "LEFT JOIN p.order order_1 " +
+                        "LEFT JOIN Order o2" + onClause("o2.number = order_1.number AND o2.number = order_1.number2"),
                 criteria.getQueryString()
         );
         criteria.getResultList();
@@ -292,14 +268,121 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
         assertEquals(
                 "SELECT o FROM Order o " +
                         "LEFT JOIN o.orderPositions p ON (p.id.position > :param_0) " +
+                        "LEFT JOIN p.order order_1 " +
+                        "LEFT JOIN Order o2" + onClause("o2.number = order_1.number OR o2.number IS NULL"),
+                criteria.getQueryString()
+        );
+        criteria.getResultList();
+    }
+
+    @Test
+    // Prior to Hibernate 5.1 it wasn't possible reference other from clause elements in the ON clause which is required to support implicit joins in ON clauses
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoEclipselink.class })
+    public void testCyclicDependencyInOnClauseImplicitJoinInDisjunction2() {
+        CriteriaBuilder<Order> criteria = cbf.create(em, Order.class, "o");
+        criteria.leftJoinDefaultOn("o.orderPositions", "p")
+                .on("p.id.position").gt(1)
+                .end()
+                .leftJoinOn("p", Order.class, "o2")
+                    .onOr()
+                        .on("o2.number").eqExpression("o.orderPositions.order.orderPositions.order.number")
+                        .on("o2.number").isNull()
+                    .endOr()
+                .end();
+        assertEquals(
+                "SELECT o FROM Order o " +
+                        "LEFT JOIN o.orderPositions p ON (p.id.position > :param_0) " +
+                        "LEFT JOIN p.order order_1 " +
                         "LEFT JOIN Order o2 ON (EXISTS (" +
-                        "SELECT 1 FROM Order _synthetic_o LEFT JOIN _synthetic_o.orderPositions _synth_subquery_0 " +
-                        "LEFT JOIN _synth_subquery_0.order order_1 " +
-                        "WHERE (o2.number = order_1.number " +
-                        "OR o2.number IS NULL) AND _synthetic_o = o" +
+                        "SELECT 1 " +
+                        "FROM Order _synthetic_order_1 " +
+                        "LEFT JOIN _synthetic_order_1.orderPositions _synth_subquery_0 " +
+                        "LEFT JOIN _synth_subquery_0.order order_3 " +
+                        "LEFT JOIN order_3.orderPositions orderPositions_3 " +
+                        "LEFT JOIN orderPositions_3.order order_4 " +
+                        "WHERE (o2.number = order_4.number " +
+                        "OR o2.number IS NULL) AND _synthetic_order_1 = order_1" +
                         "))",
                 criteria.getQueryString()
         );
         criteria.getResultList();
     }
+
+    @Test
+    // Prior to Hibernate 5.1 it wasn't possible reference other from clause elements in the ON clause which is required to support implicit joins in ON clauses
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoEclipselink.class })
+    public void testImplicitJoinSingularAttributeInOnClause() {
+        CriteriaBuilder<Order> criteria = cbf.create(em, Order.class, "o");
+        criteria.leftJoinDefault("o.orderPositions", "p")
+                .leftJoinOn("p", Order.class, "o2")
+                    .on("o2.parentOrder.id").eqExpression("o.orderPositions.order.parentOrder.id")
+                .end();
+        assertEquals(
+                "SELECT o FROM Order o " +
+                        "LEFT JOIN o.orderPositions p " +
+                        "LEFT JOIN p.order order_1 " +
+                        "LEFT JOIN Order o2" + onClause("o2.parentOrder.id = order_1.parentOrder.id"),
+                criteria.getQueryString()
+        );
+        criteria.getResultList();
+    }
+
+//    @Test
+//    // Prior to Hibernate 5.1 it wasn't possible reference other from clause elements in the ON clause which is required to support implicit joins in ON clauses
+//    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoDatanucleus4.class })
+//    public void testImplicitJoinSingularAttributeInOnClause2() {
+//        CriteriaBuilder<Order> criteria = cbf.create(em, Order.class, "o");
+//        criteria.leftJoinDefault("o.orderPositions", "p")
+//                .leftJoinOn("p", Order.class, "o2")
+//                    .on("o2.parentOrder").eqExpression("o.orderPositions.order.parentOrder")
+//                .end();
+//        assertEquals(
+//                "SELECT o FROM Order o " +
+//                        "LEFT JOIN o.orderPositions p " +
+//                        "LEFT JOIN p.order order_1 " +
+//                        "LEFT JOIN Order o2" + onClause("o2.parentOrder = order_1.parentOrder"),
+//                criteria.getQueryString()
+//        );
+//        criteria.getResultList();
+//    }
+
+    @Test
+    // Prior to Hibernate 5.1 it wasn't possible reference other from clause elements in the ON clause which is required to support implicit joins in ON clauses
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoEclipselink.class })
+    public void testSingleValueAssociationIdAccessInOnClause() {
+        CriteriaBuilder<Order> criteria = cbf.create(em, Order.class, "o");
+        criteria.leftJoinDefault("o.orderPositions", "p")
+                .innerJoinDefault("p.order", "ord")
+                .leftJoinOn("p", Order.class, "o2")
+                    .on("o2.parentOrder.id").eqExpression("o.orderPositions.order.parentOrder.id")
+                .end();
+        assertEquals(
+                "SELECT o FROM Order o " +
+                        "LEFT JOIN o.orderPositions p " +
+                        "JOIN p.order ord " +
+                        "LEFT JOIN Order o2" + onClause("o2.parentOrder.id = ord.parentOrder.id"),
+                criteria.getQueryString()
+        );
+        criteria.getResultList();
+    }
+
+//    @Test
+//    // Prior to Hibernate 5.1 it wasn't possible reference other from clause elements in the ON clause which is required to support implicit joins in ON clauses
+//    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoDatanucleus4.class })
+//    public void testSingleValueAssociationAccessInOnClause() {
+//        CriteriaBuilder<Order> criteria = cbf.create(em, Order.class, "o");
+//        criteria.leftJoinDefault("o.orderPositions", "p")
+//                .innerJoinDefault("p.order", "ord")
+//                .leftJoinOn("p", Order.class, "o2")
+//                    .on("o2.parentOrder").eqExpression("o.orderPositions.order.parentOrder")
+//                .end();
+//        assertEquals(
+//                "SELECT o FROM Order o " +
+//                        "LEFT JOIN o.orderPositions p " +
+//                        "JOIN p.order ord " +
+//                        "LEFT JOIN Order o2" + onClause("o2.parentOrder = ord.parentOrder"),
+//                criteria.getQueryString()
+//        );
+//        criteria.getResultList();
+//    }
 }

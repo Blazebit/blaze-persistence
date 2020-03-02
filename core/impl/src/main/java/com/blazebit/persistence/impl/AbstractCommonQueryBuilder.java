@@ -1035,7 +1035,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             return node;
         }
         PathExpression pathExpression = expressionFactory.createPathExpression(path);
-        joinManager.implicitJoin(pathExpression, true, true, null, null, new HashSet<String>(), false, false, true, false);
+        joinManager.implicitJoin(pathExpression, true, true, true, null, null, new HashSet<String>(), false, false, true, false);
         return (JoinNode) pathExpression.getBaseNode();
     }
 
@@ -1045,7 +1045,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             return new SimplePathReference(node, null, node.getType());
         }
         PathExpression pathExpression = expressionFactory.createPathExpression(path);
-        joinManager.implicitJoin(pathExpression, true, true, null, null, new HashSet<String>(), false, false, true, false);
+        joinManager.implicitJoin(pathExpression, true, true, true, null, null, new HashSet<String>(), false, false, true, false);
         return (Path) pathExpression.getPathReference();
     }
 

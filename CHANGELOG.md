@@ -21,6 +21,8 @@ Not yet released
 * Fix problems with parameters in the select clause when using Hibernate subselect fetching for associations
 * Fix using constructor in polymorphic entity view inheritance structure
 * Fix missing updates of indexed collection elements when clearing and re-adding dirty elements
+* Fix rendering strategy for row value constructor for performance
+* Avoid rendering implicit joins in `ON` clause to `EXISTS` subquery if possible
 
 ### Backwards-incompatible changes
 
