@@ -360,8 +360,6 @@ import com.blazebit.persistence.impl.function.repeat.DefaultRepeatFunction;
 import com.blazebit.persistence.impl.function.repeat.LpadRepeatFunction;
 import com.blazebit.persistence.impl.function.repeat.ReplicateRepeatFunction;
 import com.blazebit.persistence.impl.function.replace.ReplaceFunction;
-import com.blazebit.persistence.impl.function.rowvalue.DB2RowValueComparisonFunction;
-import com.blazebit.persistence.impl.function.rowvalue.DB2RowValueSubqueryComparisonFunction;
 import com.blazebit.persistence.impl.function.rowvalue.RowValueComparisonFunction;
 import com.blazebit.persistence.impl.function.rowvalue.RowValueSubqueryComparisonFunction;
 import com.blazebit.persistence.impl.function.set.SetFunction;
@@ -1348,13 +1346,11 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         // row values
         jpqlFunctionGroup = new JpqlFunctionGroup(RowValueComparisonFunction.FUNCTION_NAME, false);
         jpqlFunctionGroup.add(null, new RowValueComparisonFunction());
-        jpqlFunctionGroup.add("db2", new DB2RowValueComparisonFunction());
         registerFunction(jpqlFunctionGroup);
 
         // row values subquery
         jpqlFunctionGroup = new JpqlFunctionGroup(RowValueSubqueryComparisonFunction.FUNCTION_NAME, false);
         jpqlFunctionGroup.add(null, new RowValueSubqueryComparisonFunction());
-        jpqlFunctionGroup.add("db2", new DB2RowValueSubqueryComparisonFunction());
         registerFunction(jpqlFunctionGroup);
 
         // alias function

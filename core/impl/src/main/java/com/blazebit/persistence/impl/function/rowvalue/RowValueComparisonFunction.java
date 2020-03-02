@@ -55,7 +55,7 @@ public class RowValueComparisonFunction implements JpqlFunction {
 
     @Override
     public Class<?> getReturnType(Class<?> firstArgumentType) {
-        return boolean.class;
+        return int.class;
     }
 
     @Override
@@ -63,7 +63,6 @@ public class RowValueComparisonFunction implements JpqlFunction {
         String operator = context.getArgument(0);
         // need to unquote operator
         operator = operator.substring(1, operator.length() - 1);
-        context.addChunk(getLeftmostChunk());
         List<String> elements = new ArrayList<>(context.getArgumentsSize() - 1);
         for (int argIdx = 1; argIdx < context.getArgumentsSize(); argIdx++) {
             String caseWhenExpression = context.getArgument(argIdx);
@@ -125,6 +124,7 @@ public class RowValueComparisonFunction implements JpqlFunction {
         int rowValueArity = (lastNullIndex + 1) / 2;
         int end = rowValueArity * 2;
 
+        context.addChunk("(");
         context.addChunk(parts[0]);
         for (int i = 2; i < end; i += 2) {
             context.addChunk(", ");
@@ -139,15 +139,7 @@ public class RowValueComparisonFunction implements JpqlFunction {
             context.addChunk(parts[i]);
         }
 
-        context.addChunk(getRightmostChunk());
-    }
-
-    protected String getLeftmostChunk() {
-        return "((";
-    }
-
-    protected String getRightmostChunk() {
-        return "))";
+        context.addChunk(") and 0");
     }
 
 }

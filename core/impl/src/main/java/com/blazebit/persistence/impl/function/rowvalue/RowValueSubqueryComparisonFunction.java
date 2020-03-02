@@ -38,7 +38,7 @@ public class RowValueSubqueryComparisonFunction implements JpqlFunction {
 
     @Override
     public Class<?> getReturnType(Class<?> firstArgumentType) {
-        return boolean.class;
+        return int.class;
     }
 
     @Override
@@ -46,7 +46,7 @@ public class RowValueSubqueryComparisonFunction implements JpqlFunction {
         String operator = context.getArgument(0);
         // need to unquote operator
         operator = operator.substring(1, operator.length() - 1);
-        context.addChunk(getLeftmostChunk());
+        context.addChunk("(");
         context.addArgument(1);
         for (int argIdx = 2; argIdx < context.getArgumentsSize() - 1; argIdx++) {
             context.addChunk(", ");
@@ -56,15 +56,7 @@ public class RowValueSubqueryComparisonFunction implements JpqlFunction {
         context.addChunk(") " + operator + " (");
 
         context.addArgument(context.getArgumentsSize() - 1);
-        context.addChunk(getRightmostChunk());
-    }
-
-    protected String getLeftmostChunk() {
-        return "((";
-    }
-
-    protected String getRightmostChunk() {
-        return "))";
+        context.addChunk(") and 0");
     }
 
 }
