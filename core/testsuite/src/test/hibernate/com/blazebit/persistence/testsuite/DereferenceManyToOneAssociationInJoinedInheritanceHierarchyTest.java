@@ -149,8 +149,11 @@ public class DereferenceManyToOneAssociationInJoinedInheritanceHierarchyTest ext
         String queryString = criteriaBuilder
                 .getQueryString();
 
-        assertTrue("Query misses expected EXIST clause: " + queryString,
-                queryString.toUpperCase().contains("EXIST"));
+        assertEquals("SELECT subB_0, subA_0.id " +
+                "FROM SubB subB_0 " +
+                "LEFT JOIN subB_0.parent parent_1 " +
+                "LEFT JOIN Super subA_0 ON (subA_0.id = parent_1.id) " +
+                "ORDER BY subB_0.id ASC, subA_0.id ASC", queryString);
 
         List<Tuple> resultList = criteriaBuilder.getResultList();
 
@@ -235,8 +238,11 @@ public class DereferenceManyToOneAssociationInJoinedInheritanceHierarchyTest ext
         String queryString = criteriaBuilder
                 .getQueryString();
 
-        assertTrue("Query misses expected EXIST clause: " + queryString,
-                queryString.toUpperCase().contains("EXIST"));
+        assertEquals("SELECT subB_0, subA_0.id " +
+                "FROM SubB subB_0 " +
+                "LEFT JOIN subB_0.parent parent_1 " +
+                "LEFT JOIN SubA subA_0 ON (subA_0.id = parent_1.id) " +
+                "ORDER BY subB_0.id ASC, subA_0.id ASC", queryString);
 
         List<Tuple> resultList = criteriaBuilder.getResultList();
 

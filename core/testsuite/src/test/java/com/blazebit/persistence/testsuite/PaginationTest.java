@@ -930,13 +930,14 @@ public class PaginationTest extends AbstractCoreTest {
         PaginatedCriteriaBuilder<Tuple> pcb = cb
                 .select("c")
                 .leftJoinOn("d.contacts", "c")
-                .on("KEY(c)").eqExpression("d.owner.age")
+                    .on("KEY(c)").eqExpression("d.owner.age")
                 .end()
                 .where("c").isNull().orderByAsc("id").page(0, 1);
 
-        String expectedCountQuery = "SELECT " + countPaginated("d.id", true) + " FROM Document d " +
+        String expectedCountQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d " +
+                "JOIN d.owner owner_1 " +
                 "LEFT JOIN d.contacts c"
-                + onClause("EXISTS (SELECT 1 FROM d.owner _synth_subquery_0 WHERE KEY(c) = _synth_subquery_0.age)") +
+                + onClause("KEY(c) = owner_1.age") +
                 " WHERE " + joinAliasValue("c") + " IS NULL";
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         pcb.getResultList();

@@ -155,7 +155,7 @@ public class SingleValuedAssociationOneToOneJoinTableTest extends AbstractCoreTe
     }
 
     @Test
-    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class})
+    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class})
     public void leftJoinDereferenedForeignJoinTableWithTableGroupJoins() {
         Assume.assumeTrue(supportsTableGroupJoins());
 
@@ -168,7 +168,7 @@ public class SingleValuedAssociationOneToOneJoinTableTest extends AbstractCoreTe
     }
 
     @Test
-    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class})
+    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class})
     public void leftJoinDereferenedForeignJoinTableInverseWithTableGroupJoins() {
         Assume.assumeTrue(supportsTableGroupJoins());
 
@@ -181,7 +181,7 @@ public class SingleValuedAssociationOneToOneJoinTableTest extends AbstractCoreTe
     }
 
     @Test
-    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate52.class, NoHibernate53.class})
+    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate51.class, NoHibernate52.class, NoHibernate53.class})
     public void leftJoinDereferenedForeignJoinTable() {
         Assume.assumeFalse(supportsTableGroupJoins());
         Assume.assumeTrue(jpaProvider.supportsEntityJoin());

@@ -579,6 +579,21 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         return node;
     }
 
+    public JoinNode getDefaultJoin(List<PathElementExpression> pathElements, int start, int end) {
+        PathElementExpression pathElementExpression = pathElements.get(start);
+        JoinTreeNode node = nodes.get(pathElementExpression.toString());
+        if (node != null) {
+            return node.getDefaultNode();
+        }
+
+        return null;
+    }
+
+    public boolean hasDefaultJoin(String joinRelationName) {
+        JoinTreeNode node = nodes.get(joinRelationName);
+        return node != null && node.getDefaultNode() != null;
+    }
+
     public Set<JoinNode> getEntityJoinNodes() {
         return entityJoinNodes;
     }
