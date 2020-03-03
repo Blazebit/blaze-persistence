@@ -23,6 +23,7 @@ Not yet released
 * Fix missing updates of indexed collection elements when clearing and re-adding dirty elements
 * Fix rendering strategy for row value constructor for performance
 * Avoid rendering implicit joins in `ON` clause to `EXISTS` subquery if possible
+* Fix contradictory `WHERE` condition when a node appears in multiple `TREAT` expressions with different types
 
 ### Backwards-incompatible changes
 

@@ -96,7 +96,7 @@ public class TreatTest extends AbstractCoreTest {
         criteria.from(PolymorphicBase.class, "p");
         criteria.select("CASE WHEN TREAT(p AS PolymorphicSub1).sub1Value > 0 THEN 1 ELSE 0 END");
         assertEquals(
-                "SELECT CASE WHEN (TYPE(p) = " + PolymorphicSub1.class.getSimpleName() + " AND " + treatRoot("p", PolymorphicSub1.class, "sub1Value") + " > 0) THEN 1 ELSE 0 END" +
+                "SELECT CASE WHEN (TYPE(p) IN (" + PolymorphicSub1.class.getSimpleName() + ") AND " + treatRoot("p", PolymorphicSub1.class, "sub1Value") + " > 0) THEN 1 ELSE 0 END" +
                         " FROM PolymorphicBase p", criteria.getQueryString());
         criteria.getResultList();
     }

@@ -21,6 +21,7 @@ import java.util.*;
 import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.ConfigurationProperties;
 import com.blazebit.persistence.JoinType;
+import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
@@ -30,6 +31,7 @@ import com.blazebit.persistence.testsuite.base.AbstractPersistenceTest;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.testsuite.entity.PolymorphicBase;
 import com.blazebit.persistence.testsuite.entity.Version;
 import com.blazebit.persistence.testsuite.entity.Workflow;
 import com.blazebit.persistence.testsuite.function.ConcatenateFunction;
@@ -258,36 +260,50 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
         throw new IllegalArgumentException("Treat should not be used as the JPA provider does not support subtype property access!");
     }
 
-    protected String treatRootWhereFragment(String alias, Class<?> treatType, String after, boolean negatedContext) {
+    protected String treatRootWhereFragment(String alias, Class<?> rootType, Class<?> treatType, String after, boolean negatedContext) {
         String operator;
         String logicalOperator;
         String predicate;
+        StringBuilder sb = new StringBuilder();
+        sb.append("(TYPE(").append(alias).append(") IN (");
 
         if (negatedContext) {
-            operator = " = ";
-            logicalOperator = " AND ";
+            EntityMetamodel metamodel = cbf.getService(EntityMetamodel.class);
+            for (EntityType<?> entitySubtype : metamodel.getEntitySubtypes(metamodel.entity(treatType))) {
+                sb.append(entitySubtype.getName()).append(", ");
+            }
+
+            sb.setLength(sb.length() - 2);
+            sb.append(") AND ");
         } else {
-            operator = " <> ";
-            logicalOperator = " OR ";
+            EntityMetamodel metamodel = cbf.getService(EntityMetamodel.class);
+            Set<EntityType<?>> types = new HashSet<>(metamodel.getEntitySubtypes(metamodel.entity(rootType)));
+            types.removeAll(metamodel.getEntitySubtypes(metamodel.entity(treatType)));
+            for (EntityType<?> entitySubtype : types) {
+                sb.append(entitySubtype.getName()).append(", ");
+            }
+
+            sb.setLength(sb.length() - 2);
+            sb.append(") OR ");
         }
 
         if (jpaProvider.supportsRootTreat()) {
             predicate = "TREAT(" + alias + " AS " + treatType.getSimpleName() + ")" + after;
         } else if (jpaProvider.supportsSubtypePropertyResolving()) {
             predicate = alias + after;
-
         } else {
             throw new IllegalArgumentException("Treat should not be used as the JPA provider does not support subtype property access!");
         }
 
-        return "(TYPE(" + alias + ")" + operator + treatType.getSimpleName() + logicalOperator + predicate + ")";
+        sb.append(predicate).append(')');
+        return sb.toString();
     }
 
     protected String treatJoinedConstraintFragment(String alias, Class<?> treatType, String after, boolean negatedContext) {
         if (jpaProvider.supportsTreatJoin()) {
             return alias + after;
         }
-        return treatRootWhereFragment(alias, treatType, after, negatedContext);
+        return treatRootWhereFragment(alias, PolymorphicBase.class, treatType, after, negatedContext);
     }
 
     protected String treatJoinWhereFragment(Class<?> sourceType, String attribute, String alias, Class<?> type, JoinType joinType, String whereFragment) {

@@ -120,7 +120,8 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
 
     @Test
     // Prior to Hibernate 5.1 it wasn't possible reference other from clause elements in the ON clause which is required to support implicit joins in ON clauses
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoEclipselink.class  })
+    // NOTE: DataNucleus 4 does not seem to support TYPE(x) IN (..)
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoEclipselink.class, NoDatanucleus4.class })
     public void testCyclicDependencyInOnClauseImplicitJoin4() {
         CriteriaBuilder<OrderPosition> criteria = cbf.create(em, OrderPosition.class, "p");
         criteria.leftJoinDefaultOn("p.order", "o")
