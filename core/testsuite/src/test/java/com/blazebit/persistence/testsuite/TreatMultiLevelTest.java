@@ -18,6 +18,7 @@ package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Parent;
 import com.blazebit.persistence.testsuite.entity.Sub1;
 import com.blazebit.persistence.testsuite.entity.Sub1Sub1;
@@ -63,8 +64,10 @@ public class TreatMultiLevelTest extends AbstractCoreTest {
         criteria.getResultList();
     }
 
-
     @Test
+    // NOTE: Datanucleus does not seem to support this kind of model? TODO: report the error
+    // NOTE: EclipseLink is just fundamentally broken in this regard...
+    @Category({ NoDatanucleus.class, NoEclipselink.class })
     public void multiTreatWithDiscriminatorColumn() {
         // Given
         Sub1 sub1 = new Sub1();

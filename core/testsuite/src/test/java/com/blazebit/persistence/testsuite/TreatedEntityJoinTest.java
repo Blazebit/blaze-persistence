@@ -96,7 +96,7 @@ public class TreatedEntityJoinTest extends AbstractCoreTest {
 
         String expectedQuery = "SELECT root FROM PolymorphicSub1 root " +
                 "LEFT JOIN root.parent parent_1 " +
-                "JOIN PolymorphicBase parentAlias" + onClause("(TYPE(parent_1) = " + PolymorphicSub2.class.getSimpleName() + " AND parentAlias.id = " + treatRoot("parent_1", PolymorphicSub2.class, "id") + ")");
+                "JOIN PolymorphicBase parentAlias" + onClause("(TYPE(parent_1) IN (" + PolymorphicSub2.class.getSimpleName() + ") AND parentAlias.id = " + treatRoot("parent_1", PolymorphicSub2.class, "id") + ")");
         assertEquals(expectedQuery, cb.getQueryString());
         List<PolymorphicSub1> result = cb.getResultList();
         assertEquals(1, result.size());
@@ -112,7 +112,7 @@ public class TreatedEntityJoinTest extends AbstractCoreTest {
 
         String expectedQuery = "SELECT root FROM PolymorphicSub1 root " +
                 "LEFT JOIN root.parent parent_1 " +
-                "JOIN PolymorphicBase parent" + onClause("(TYPE(parent_1) = " + PolymorphicSub2.class.getSimpleName() + " AND parent.id = " + treatRoot("parent_1", PolymorphicSub2.class, "id") + ")");
+                "JOIN PolymorphicBase parent" + onClause("(TYPE(parent_1) IN (" + PolymorphicSub2.class.getSimpleName() + ") AND parent.id = " + treatRoot("parent_1", PolymorphicSub2.class, "id") + ")");
         assertEquals(expectedQuery, cb.getQueryString());
         List<PolymorphicSub1> result = cb.getResultList();
         assertEquals(1, result.size());
@@ -128,7 +128,7 @@ public class TreatedEntityJoinTest extends AbstractCoreTest {
         criteria.innerJoinOn("TREAT(p AS PolymorphicSub1).relation1", PolymorphicSub1.class, "r")
                     .on("r").eqExpression("TREAT(p AS PolymorphicSub1).relation1")
                 .end();
-        assertEquals("SELECT p FROM PolymorphicBase p JOIN PolymorphicSub1 r" + onClause("(TYPE(p) = PolymorphicSub1 AND r = " + treatRoot("p", PolymorphicSub1.class, "relation1") + ")"), criteria.getQueryString());
+        assertEquals("SELECT p FROM PolymorphicBase p JOIN PolymorphicSub1 r" + onClause("(TYPE(p) IN (PolymorphicSub1) AND r = " + treatRoot("p", PolymorphicSub1.class, "relation1") + ")"), criteria.getQueryString());
         criteria.getResultList();
     }
 }

@@ -70,8 +70,8 @@ public class TreatTest extends AbstractCoreTest {
 
         CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         String whereFragment = "";
-        whereFragment += treatRootWhereFragment("base", PolymorphicSub1.class, ".sub1Value IS NOT NULL", false);
-        whereFragment += " OR " + treatRootWhereFragment("base", PolymorphicSub2.class, ".sub2Value IS NOT NULL", false);
+        whereFragment += treatRootWhereFragment("base", PolymorphicBase.class, PolymorphicSub1.class, ".sub1Value IS NOT NULL", false);
+        whereFragment += " OR " + treatRootWhereFragment("base", PolymorphicBase.class, PolymorphicSub2.class, ".sub2Value IS NOT NULL", false);
         assertEquals("SELECT base FROM PolymorphicBase base" +
                 " WHERE " + whereFragment, criteriaBuilder.getQueryString());
     }
@@ -85,7 +85,7 @@ public class TreatTest extends AbstractCoreTest {
         cq.where(cb.treat(root, PolymorphicSub1.class).get("sub1Value").isNotNull());
 
         CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
-        String whereFragment = treatRootWhereFragment("base", PolymorphicSub1.class, ".sub1Value IS NOT NULL", false);
+        String whereFragment = treatRootWhereFragment("base", PolymorphicBase.class, PolymorphicSub1.class, ".sub1Value IS NOT NULL", false);
         assertEquals("SELECT " + treatRoot("base", PolymorphicSub1.class, "sub1Value") + " FROM PolymorphicBase base WHERE " + whereFragment, criteriaBuilder.getQueryString());
     }
 
@@ -219,7 +219,7 @@ public class TreatTest extends AbstractCoreTest {
         cq.where(cb.treat(root.get(PolymorphicBase_.parent), PolymorphicSub1.class).get(PolymorphicSub1_.sub1Value).isNotNull());
 
         CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
-        String whereFragment = treatRootWhereFragment("parent_1", PolymorphicSub1.class, ".sub1Value IS NOT NULL", false);
+        String whereFragment = treatRootWhereFragment("parent_1", PolymorphicBase.class, PolymorphicSub1.class, ".sub1Value IS NOT NULL", false);
         assertEquals("SELECT " + treatRoot("parent_1", PolymorphicSub1.class, "sub1Value") +
                 " FROM PolymorphicBase base" +
                 " LEFT JOIN base.parent parent_1" +

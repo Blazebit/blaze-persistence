@@ -974,8 +974,8 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
     private boolean insertTreatJoinConstraint(int startPosition, int endPosition) {
         if (!treatedJoinNodesForConstraints.isEmpty()) {
-            StringBuilder treatConditionBuilder = new StringBuilder(treatedJoinNodesForConstraints.size() * 40);
-            treatConditionBuilder.append('(');
+            // Compute the set of entity type positive conjunct and negative disjunct restrictions per treated join node
+            Map<JoinNode, Set<EntityType<?>>[]> typeRestrictions = new LinkedHashMap<>(treatedJoinNodesForConstraints.size());
             for (Map.Entry<JoinNode, Boolean> entry : treatedJoinNodesForConstraints.entrySet()) {
                 JoinNode node = entry.getKey();
                 // When the JPA provider supports rendering treat joins and we have a treat join node
@@ -983,25 +983,70 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                 if (jpaProvider.supportsTreatJoin() && node.isTreatJoinNode()) {
                     continue;
                 }
+                Boolean negatedContext = entry.getValue();
+                JoinAliasInfo joinAliasInfo = entry.getKey().getAliasInfo();
+                JoinNode treatedJoinNode = entry.getKey();
+                if (joinAliasInfo instanceof TreatedJoinAliasInfo) {
+                    treatedJoinNode = ((TreatedJoinAliasInfo) joinAliasInfo).getTreatedJoinNode();
+                }
+                Set<EntityType<?>>[] entityTypes = typeRestrictions.get(treatedJoinNode);
+                if (entityTypes == null) {
+                    entityTypes = new Set[2];
+                    typeRestrictions.put(treatedJoinNode, entityTypes);
+                }
 
-                treatConditionBuilder.append("TYPE(");
-                treatConditionBuilder.append(node.getAlias());
-                if (entry.getValue() == Boolean.TRUE) {
-                    treatConditionBuilder.append(") <> ");
-                    treatConditionBuilder.append(node.getTreatType().getName());
-                    treatConditionBuilder.append(" OR ");
+                if (negatedContext == Boolean.TRUE) {
+                    // Negated context
+                    if (entityTypes[1] == null) {
+                        entityTypes[1] = new HashSet<>(entityMetamodel.getEntitySubtypes((EntityType<?>) treatedJoinNode.getBaseType()));
+                    }
+                    entityTypes[1].removeAll(entityMetamodel.getEntitySubtypes(node.getTreatType()));
                 } else {
-                    treatConditionBuilder.append(") = ");
-                    treatConditionBuilder.append(node.getTreatType().getName());
-                    treatConditionBuilder.append(" AND ");
+                    if (entityTypes[0] == null) {
+                        entityTypes[0] = new HashSet<>();
+                    }
+                    entityTypes[0].addAll(entityMetamodel.getEntitySubtypes(node.getTreatType()));
                 }
             }
+            if (!typeRestrictions.isEmpty()) {
+                StringBuilder treatConditionBuilder = new StringBuilder(typeRestrictions.size() * 40);
+                treatConditionBuilder.append('(');
+                for (Map.Entry<JoinNode, Set<EntityType<?>>[]> entry : typeRestrictions.entrySet()) {
+                    JoinNode node = entry.getKey();
 
-            // Because we always have the open parenthesis as first char
-            if (treatConditionBuilder.length() > 1) {
-                sb.insert(endPosition, ')');
-                sb.insert(startPosition, treatConditionBuilder);
-                return true;
+                    if (entry.getValue()[1] != null && !entry.getValue()[1].isEmpty()) {
+                        treatConditionBuilder.append("TYPE(");
+                        treatConditionBuilder.append(node.getAlias());
+                        treatConditionBuilder.append(") IN (");
+                        for (EntityType<?> entityType : entry.getValue()[1]) {
+                            treatConditionBuilder.append(entityType.getName());
+                            treatConditionBuilder.append(", ");
+                        }
+                        treatConditionBuilder.setLength(treatConditionBuilder.length() - 2);
+                        treatConditionBuilder.append(")");
+                        treatConditionBuilder.append(" OR ");
+                    }
+
+                    if (entry.getValue()[0] != null) {
+                        treatConditionBuilder.append("TYPE(");
+                        treatConditionBuilder.append(node.getAlias());
+                        treatConditionBuilder.append(") IN (");
+                        for (EntityType<?> entityType : entry.getValue()[0]) {
+                            treatConditionBuilder.append(entityType.getName());
+                            treatConditionBuilder.append(", ");
+                        }
+                        treatConditionBuilder.setLength(treatConditionBuilder.length() - 2);
+                        treatConditionBuilder.append(")");
+                        treatConditionBuilder.append(" AND ");
+                    }
+                }
+
+                // Because we always have the open parenthesis as first char
+                if (treatConditionBuilder.length() > 1) {
+                    sb.insert(endPosition, ')');
+                    sb.insert(startPosition, treatConditionBuilder);
+                    return true;
+                }
             }
         }
 
