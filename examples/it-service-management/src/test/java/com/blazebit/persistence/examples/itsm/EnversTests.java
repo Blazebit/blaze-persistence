@@ -26,6 +26,7 @@ import com.blazebit.persistence.examples.itsm.model.ticket.repository.TicketDeta
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.annotation.Propagation;
@@ -54,6 +55,9 @@ import com.blazebit.persistence.examples.itsm.model.ticket.view.TicketSummary;
 @ContextConfiguration(classes = BlazeConfiguration.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class EnversTests {
+
+    @Autowired
+    private TestEntityManager em;
 
     @Autowired
     private EntityViewManager evm;
@@ -95,7 +99,7 @@ public class EnversTests {
             @Autowired TicketDetailRepository ticketDetailRepository,
             @Autowired TicketSummaryRepository ticketSummaryRepository,
             @Autowired UserRepository userRepository) {
-        User user = userRepository.save(new User());
+        User user = em.persist(new User());
         TicketDetailUpdatable ticket = this.evm.create(TicketDetailUpdatable.class);
         Long number = ticketDetailRepository.saveAndFlush(ticket).getNumber();
 

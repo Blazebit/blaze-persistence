@@ -38,7 +38,7 @@ import javax.persistence.criteria.Subquery;
  * @since 1.4.0
  */
 public interface UserRepository
-        extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
+        extends JpaRepository<UserDetail, Long>, JpaSpecificationExecutor<User> {
 
     default Optional<User> findByEmailAddress(String... emailAddresses) {
         return this.findOne((root, query, builder) -> {

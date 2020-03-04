@@ -20,6 +20,7 @@ import java.time.Instant;
 import java.util.Optional;
 
 import com.blazebit.persistence.examples.itsm.model.common.entity.User;
+import com.blazebit.persistence.view.CreatableEntityView;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.Mapping;
 
@@ -28,6 +29,7 @@ import com.blazebit.persistence.view.Mapping;
  * @since 1.4.0
  */
 @EntityView(User.class)
+@CreatableEntityView
 public interface UserDetail extends UserBase {
 
     @Mapping("sum(case when (sessions.destroyed = false) then 1 else 0 end)")

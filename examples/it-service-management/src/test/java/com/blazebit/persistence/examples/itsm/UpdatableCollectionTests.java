@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Set;
 
 import com.blazebit.persistence.examples.itsm.model.common.entity.User;
 import com.blazebit.persistence.examples.itsm.model.common.repository.GroupRepository;
@@ -179,6 +180,25 @@ public class UpdatableCollectionTests {
 
         size = roleRepository.findById(role.getId()).get().getUsers().size();
         assertEquals(0, size);
+    }
+
+    @Test
+    public void testInverseAddAll(@Autowired EntityViewManager evm,
+            @Autowired UserRepository userRepository,
+            @Autowired RoleRepository roleRepository) {
+        RoleDetail role = evm.create(RoleDetail.class);
+        long id = roleRepository.saveAndFlush(role).getId();
+
+        Set<UserDetail> users = roleRepository.getOne(id).getUsers();
+
+        UserDetail user = evm.create(UserDetail.class);
+        userRepository.saveAndFlush(user);
+
+        users.addAll(Set.of(user));
+        roleRepository.saveAndFlush(role);
+
+        long size = roleRepository.getOne(id).getUsers().size();
+        assertEquals(1, size);
     }
 
 }

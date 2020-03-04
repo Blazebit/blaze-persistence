@@ -21,6 +21,7 @@ import java.util.Set;
 import com.blazebit.persistence.examples.itsm.model.common.entity.Group;
 import com.blazebit.persistence.view.CreatableEntityView;
 import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.UpdatableEntityView;
 import com.blazebit.persistence.view.UpdatableMapping;
@@ -31,7 +32,7 @@ import com.blazebit.persistence.view.UpdatableMapping;
  */
 @EntityView(Group.class)
 @CreatableEntityView
-@UpdatableEntityView
+@UpdatableEntityView(strategy = FlushStrategy.ENTITY)
 public interface GroupDetail {
 
     @IdMapping

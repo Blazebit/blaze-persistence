@@ -19,11 +19,12 @@ package com.blazebit.persistence.examples.itsm.model.common.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.blazebit.persistence.examples.itsm.model.common.entity.Role;
+import com.blazebit.persistence.examples.itsm.model.common.view.RoleDetail;
 
 /**
  * @author Giovanni Lovato
  * @since 1.4.0
  */
-public interface RoleRepository extends JpaRepository<Role, Long> {
+public interface RoleRepository extends JpaRepository<RoleDetail, Long> {
 
 }
