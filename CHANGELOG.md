@@ -24,6 +24,7 @@ Not yet released
 * Fix rendering strategy for row value constructor for performance
 * Avoid rendering implicit joins in `ON` clause to `EXISTS` subquery if possible
 * Fix contradictory `WHERE` condition when a node appears in multiple `TREAT` expressions with different types
+* Fix `SELECT` correlation when using `VIEW_ROOT`/`EMBEDDING_VIEW` in view with custom id view
 
 ### Backwards-incompatible changes
 

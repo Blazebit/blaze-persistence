@@ -23,26 +23,27 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
-import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntity;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityContainer;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityEmbeddable;
+import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityId;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityNestedEmbeddable;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntitySub;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.NameObject;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.correlation.embedded.model.EmbeddableTestEntityCorrelationView;
-import com.blazebit.persistence.view.testsuite.correlation.model.SimplePersonCorrelatedSubView;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import javax.persistence.EntityManager;
+
 /**
- *
  * @author Christian Beikov
  * @since 1.2.1
  */
@@ -59,6 +60,20 @@ public class EmbeddedCorrelationTest extends AbstractEntityViewTest {
                 NameObject.class,
                 EmbeddableTestEntityNestedEmbeddable.class
         };
+    }
+
+    @Override
+    protected void setUpOnce() {
+        cleanDatabase();
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                EmbeddableTestEntityId embeddable1Id = new EmbeddableTestEntityId("1", "oldKey");
+                EmbeddableTestEntity embeddable1 = new EmbeddableTestEntity();
+                embeddable1.setId(embeddable1Id);
+                em.persist(embeddable1);
+            }
+        });
     }
 
     @Test // For #556
