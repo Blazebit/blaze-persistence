@@ -27,6 +27,7 @@ import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.macro.CorrelatedSubqueryEmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.impl.macro.CorrelatedSubqueryViewRootJpqlMacro;
 import com.blazebit.persistence.view.impl.macro.MutableViewJpqlMacro;
+import com.blazebit.persistence.view.impl.objectbuilder.TupleReuse;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.ViewType;
 
@@ -256,6 +257,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
             fillDefaultValues(Collections.singletonMap(null, correlationValues));
         }
 
+        consumeTupleMacroViewValues(tuples);
         return tuples;
     }
 
@@ -274,16 +276,36 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
         }
     }
 
+    private void consumeTupleMacroViewValues(List<Object[]> tuples) {
+        int totalSize = tuples.size();
+        if (embeddingViewIndex > startIndex && viewRootIndex > startIndex) {
+            for (int i = 0; i < totalSize; i++) {
+                Object[] tuple = tuples.get(i);
+                tuple[viewRootIndex] = TupleReuse.CONSUMED;
+                tuple[embeddingViewIndex] = TupleReuse.CONSUMED;
+            }
+        } else if (embeddingViewIndex > startIndex) {
+            for (int i = 0; i < totalSize; i++) {
+                Object[] tuple = tuples.get(i);
+                tuple[embeddingViewIndex] = TupleReuse.CONSUMED;
+            }
+        } else if (viewRootIndex > startIndex) {
+            for (int i = 0; i < totalSize; i++) {
+                Object[] tuple = tuples.get(i);
+                tuple[viewRootIndex] = TupleReuse.CONSUMED;
+            }
+        }
+    }
+
     private void transformViewMacroAware(List<Object[]> tuples, FixedArrayList correlationParams, int tupleOffset, String correlationRoot, CorrelatedSubqueryViewRootJpqlMacro macro, BatchCorrelationMode correlationMode, ManagedViewType<?> viewType, int viewIndex) {
         EntityManager em = criteriaBuilder.getEntityManager();
-        Iterator<Object[]> tupleListIter = tuples.iterator();
         int totalSize = tuples.size();
         Map<Object, Map<Object, TuplePromise>> viewRoots = new HashMap<>(totalSize);
         Map<Object, Map<Object, TuplePromise>> correlationValues = new HashMap<>(totalSize);
 
         // Group tuples by view roots and correlation values and create tuple promises
-        while (tupleListIter.hasNext()) {
-            Object[] tuple = tupleListIter.next();
+        for (int i = 0; i < totalSize; i++) {
+            Object[] tuple = tuples.get(i);
             Object viewRootKey = tuple[viewIndex];
             Object correlationValueKey = tuple[startIndex];
 
