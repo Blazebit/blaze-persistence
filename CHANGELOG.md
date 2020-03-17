@@ -25,6 +25,7 @@ Not yet released
 * Avoid rendering implicit joins in `ON` clause to `EXISTS` subquery if possible
 * Fix contradictory `WHERE` condition when a node appears in multiple `TREAT` expressions with different types
 * Fix `SELECT` correlation when using `VIEW_ROOT`/`EMBEDDING_VIEW` in view with custom id view
+* Fix issues with state flushing when using pre-update entity view listeners
 
 ### Backwards-incompatible changes
 

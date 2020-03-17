@@ -456,9 +456,9 @@ public final class InverseFlusher<E> {
             int orphanRemovalStartIndex = context.getOrphanRemovalDeleters().size();
             Query q = elementToEntityMapper.createInverseUpdateQuery(context, element, nestedGraphNode, parentReferenceAttributeFlusher);
             if (nestedGraphNode != null) {
-                nestedGraphNode.flushQuery(context, parameterPrefix, null, q, element, null, element, null);
+                nestedGraphNode.flushQuery(context, parameterPrefix, null, q, element, null, element, null, nestedGraphNode);
             }
-            parentReferenceAttributeFlusher.flushQuery(context, parameterPrefix, null, q, null, null, newValue, null);
+            parentReferenceAttributeFlusher.flushQuery(context, parameterPrefix, null, q, null, null, newValue, null, null);
             if (q != null) {
                 int updated = q.executeUpdate();
 

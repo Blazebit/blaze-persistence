@@ -122,12 +122,14 @@ public class ResetInitialStateSynchronization implements Synchronization, Initia
     }
 
     @Override
-    public void addUpdatedView(MutableStateTrackable updatedView) {
+    public long[] addUpdatedView(MutableStateTrackable updatedView) {
         if (updatedViews == null) {
             updatedViews = new ArrayList<>();
         }
+        long[] dirtyMask = updatedView.$$_resetDirty();
         updatedViews.add(updatedView);
-        updatedViews.add(updatedView.$$_resetDirty());
+        updatedViews.add(dirtyMask);
+        return dirtyMask;
     }
 
     @Override

@@ -62,7 +62,7 @@ public interface UpdateContext {
 
     public void invokePostPersist(MutableStateTrackable updatableProxy, Object entity);
 
-    public void invokePreUpdate(MutableStateTrackable updatableProxy);
+    public boolean invokePreUpdate(MutableStateTrackable updatableProxy);
 
     public void invokePostUpdate(MutableStateTrackable updatableProxy);
 

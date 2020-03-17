@@ -72,8 +72,8 @@ public abstract class CollectionElementAttributeFlusher<E, V> extends Collection
     }
 
     @Override
-    public Query flushQuery(UpdateContext context, String parameterPrefix, UpdateQueryFactory queryFactory, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
-        nestedGraphNode.flushQuery(context, parameterPrefix, null, null, element, null, (V) element, ownerAwareDeleter);
+    public Query flushQuery(UpdateContext context, String parameterPrefix, UpdateQueryFactory queryFactory, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter, DirtyAttributeFlusher<?, ?, ?> ownerFlusher) {
+        nestedGraphNode.flushQuery(context, parameterPrefix, null, null, element, null, (V) element, ownerAwareDeleter, nestedGraphNode);
         return query;
     }
 
@@ -161,7 +161,7 @@ public abstract class CollectionElementAttributeFlusher<E, V> extends Collection
     }
 
     @Override
-    public DirtyAttributeFlusher<CollectionElementAttributeFlusher<E, V>, E, V> getDirtyFlusher(UpdateContext context, Object view, Object initial, Object current, List<Runnable> preFlushListeners) {
+    public DirtyAttributeFlusher<CollectionElementAttributeFlusher<E, V>, E, V> getDirtyFlusher(UpdateContext context, Object view, Object initial, Object current) {
         // Actually this should never be called, but let's return this to be safe
         return this;
     }

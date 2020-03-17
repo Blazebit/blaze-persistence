@@ -666,7 +666,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
         if (queryString != null) {
             query = context.getEntityManager().createQuery(queryString);
             if (idFlusher != null) {
-                idFlusher.flushQuery(context, WHERE_CLAUSE_PREFIX, null, query, updatableProxy, updatableProxy, updatableProxy.$$_getId(), null);
+                idFlusher.flushQuery(context, WHERE_CLAUSE_PREFIX, null, query, updatableProxy, updatableProxy, updatableProxy.$$_getId(), null, null);
             }
             if (needsOptimisticLocking) {
                 versionFlusher.flushQueryInitialVersion(context, WHERE_CLAUSE_PREFIX, query, updatableProxy, updatableProxy.$$_getVersion());
@@ -689,24 +689,20 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
             return false;
         }
 
-        try {
-            if (flushStrategy == FlushStrategy.ENTITY || context.isForceEntity() || !flusher.supportsQueryFlush()) {
-                return flusher.flushEntity(context, entity, updatableProxy, updatableProxy, updatableProxy, null);
-            } else {
-                int orphanRemovalStartIndex = context.getOrphanRemovalDeleters().size();
-                Query query = flusher.flushQuery(context, null, this, null, updatableProxy, updatableProxy, updatableProxy, null);
-                if (query != null) {
-                    int updated = query.executeUpdate();
+        if (flushStrategy == FlushStrategy.ENTITY || context.isForceEntity() || !flusher.supportsQueryFlush()) {
+            return flusher.flushEntity(context, entity, updatableProxy, updatableProxy, updatableProxy, null);
+        } else {
+            int orphanRemovalStartIndex = context.getOrphanRemovalDeleters().size();
+            Query query = flusher.flushQuery(context, null, this, null, updatableProxy, updatableProxy, updatableProxy, null, flusher);
+            if (query != null) {
+                int updated = query.executeUpdate();
 
-                    if (updated != 1) {
-                        throw new OptimisticLockException(entity, updatableProxy);
-                    }
+                if (updated != 1) {
+                    throw new OptimisticLockException(entity, updatableProxy);
                 }
-                context.removeOrphans(orphanRemovalStartIndex);
-                return true;
             }
-        } finally {
-            context.getInitialStateResetter().addUpdatedView(updatableProxy);
+            context.removeOrphans(orphanRemovalStartIndex);
+            return true;
         }
     }
 

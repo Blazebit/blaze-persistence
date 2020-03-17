@@ -248,20 +248,22 @@ public class ListenerManager {
         }
     }
 
-    public void invokePreUpdate(UpdateContext context, MutableStateTrackable updatableProxy) {
+    public boolean invokePreUpdate(UpdateContext context, MutableStateTrackable updatableProxy) {
         ManagedViewTypeImplementor<?> managedView = evm.getMetamodel().managedView(updatableProxy.$$_getEntityViewClass());
         Listeners listeners = this.listeners.get(managedView.getJavaType());
+        boolean ranAny = false;
         if (listeners != null) {
-            listeners.invokePreUpdate(context, updatableProxy);
+            ranAny |= listeners.invokePreUpdate(context, updatableProxy);
         }
         listeners = this.listeners.get(managedView.getEntityClass());
         if (listeners != null) {
-            listeners.invokePreUpdate(context, updatableProxy);
+            ranAny |= listeners.invokePreUpdate(context, updatableProxy);
         }
         listeners = this.customListeners.get(managedView.getEntityClass());
         if (listeners != null) {
-            listeners.invokePreUpdate(context, updatableProxy);
+            ranAny |= listeners.invokePreUpdate(context, updatableProxy);
         }
+        return ranAny;
     }
 
     public void invokePostUpdate(UpdateContext context, MutableStateTrackable updatableProxy) {

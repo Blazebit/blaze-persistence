@@ -114,7 +114,7 @@ public class Listeners {
         }
     }
 
-    public void invokePreUpdate(UpdateContext context, Object updatableProxy) {
+    public boolean invokePreUpdate(UpdateContext context, Object updatableProxy) {
         for (int i = 0; i < preUpdateListeners.size(); i++) {
             ListenerEntry<PreUpdateListener<Object>> entry = preUpdateListeners.get(i);
             if (entry.entityViewClass.isInstance(updatableProxy)) {
@@ -124,6 +124,7 @@ public class Listeners {
                 entry.listener.preUpdate(context.getEntityViewManager(), context.getEntityManager(), view);
             }
         }
+        return !preUpdateListeners.isEmpty();
     }
 
     public void invokePostUpdate(UpdateContext context, Object updatableProxy) {
