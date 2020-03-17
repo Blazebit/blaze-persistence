@@ -84,6 +84,10 @@ public class EntityViewAwareObjectMapper {
         this.objectMapper = objectMapper;
     }
 
+    public EntityViewManager getEntityViewManager() {
+        return entityViewManager;
+    }
+
     public ObjectMapper getObjectMapper() {
         return objectMapper;
     }

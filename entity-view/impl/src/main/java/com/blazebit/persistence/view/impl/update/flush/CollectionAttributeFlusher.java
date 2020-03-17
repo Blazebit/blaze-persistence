@@ -257,13 +257,15 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
     }
 
     @Override
-    public Query flushQuery(UpdateContext context, String parameterPrefix, UpdateQueryFactory queryFactory, Query query, Object ownerView, Object view, V current, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
+    public Query flushQuery(UpdateContext context, String parameterPrefix, UpdateQueryFactory queryFactory, Query query, Object ownerView, Object view, V current, UnmappedOwnerAwareDeleter ownerAwareDeleter, DirtyAttributeFlusher<?, ?, ?> ownerFlusher) {
         if (!supportsQueryFlush()) {
             throw new UnsupportedOperationException("Query flush not supported for configuration!");
         }
 
         if (flushOperation != null) {
-            if (!(current instanceof RecordingCollection<?, ?>)) {
+            if (current instanceof RecordingCollection<?, ?>) {
+                ((RecordingCollection<?, ?>) current).resetActions(context);
+            } else {
                 List<CollectionAction<Collection<?>>> actions = new ArrayList<>();
                 actions.add(new CollectionClearAction());
                 if (current != null && !current.isEmpty()) {
@@ -280,7 +282,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                     Map<Object, Object> added;
                     Map<Object, Object> removed;
                     if (entityAttributeAccessor != null && recordingCollection.hasActions()) {
-                        Map<Object, Object>[] addedAndRemoved = getAddedAndRemovedElementsForInverseFlusher(recordingCollection, context, null);
+                        Map<Object, Object>[] addedAndRemoved = getAddedAndRemovedElementsForInverseFlusher(recordingCollection.resetActions(context));
                         added = addedAndRemoved[0];
                         removed = addedAndRemoved[1];
                     } else {
@@ -448,7 +450,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
 
         if (deleteCb != null) {
             Query deleteQuery = deleteCb.getQuery();
-            ownerIdFlusher.flushQuery(context, null, null, deleteQuery, ownerView, view, ownerIdFlusher.getViewAttributeAccessor().getValue(ownerView), null);
+            ownerIdFlusher.flushQuery(context, null, null, deleteQuery, ownerView, view, ownerIdFlusher.getViewAttributeAccessor().getValue(ownerView), null, null);
             deleteQuery.executeUpdate();
             if (removedAll) {
                 return true;
@@ -514,7 +516,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
             }
             insertCb.bind(mapping).select("val");
             Query insertQuery = insertCb.getQuery();
-            ownerIdFlusher.flushQuery(context, null, null, insertQuery, ownerView, view, ownerIdFlusher.getViewAttributeAccessor().getValue(ownerView), null);
+            ownerIdFlusher.flushQuery(context, null, null, insertQuery, ownerView, view, ownerIdFlusher.getViewAttributeAccessor().getValue(ownerView), null, null);
 
             boolean checkTransient = elementDescriptor.isJpaEntity() && !elementDescriptor.shouldJpaPersist();
             if (flushAtOnce) {
@@ -618,7 +620,9 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
     @SuppressWarnings("unchecked")
     public boolean flushEntity(UpdateContext context, E entity, Object ownerView, Object view, V value, Runnable postReplaceListener) {
         if (flushOperation != null) {
-            if (!(value instanceof RecordingCollection<?, ?>)) {
+            if (value instanceof RecordingCollection<?, ?>) {
+                ((RecordingCollection<?, ?>) value).resetActions(context);
+            } else {
                 value = replaceWithRecordingCollection(context, view, value, collectionActions);
             }
             invokeFlushOperation(context, ownerView, view, entity, value);
@@ -636,7 +640,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                     Map<Object, Object> added;
                     Map<Object, Object> removed;
                     if (recordingCollection.hasActions()) {
-                        Map<Object, Object>[] addedAndRemoved = getAddedAndRemovedElementsForInverseFlusher(recordingCollection, context, null);
+                        Map<Object, Object>[] addedAndRemoved = getAddedAndRemovedElementsForInverseFlusher(recordingCollection.resetActions(context));
                         added = addedAndRemoved[0];
                         removed = addedAndRemoved[1];
                     } else {
@@ -966,7 +970,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 }
             } else {
                 for (CollectionElementAttributeFlusher<E, V> elementFlusher : elementFlushers) {
-                    elementFlusher.flushQuery(context, null, null, null, ownerView, view, value, null);
+                    elementFlusher.flushQuery(context, null, null, null, ownerView, view, value, null, null);
                 }
             }
             return !elementFlushers.isEmpty();
@@ -1229,7 +1233,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
 
     @Override
     @SuppressWarnings("unchecked")
-    public DirtyAttributeFlusher<CollectionAttributeFlusher<E, V>, E, V> getDirtyFlusher(UpdateContext context, Object view, Object initial, Object current, List<Runnable> preFlushListeners) {
+    public DirtyAttributeFlusher<CollectionAttributeFlusher<E, V>, E, V> getDirtyFlusher(UpdateContext context, Object view, Object initial, Object current) {
         if (collectionUpdatable) {
             if (initial != current) {
                 // If the new collection is empty, we don't need to load the old one
@@ -1241,10 +1245,8 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                         // TODO: should "replace" mean that the initial values we know right now are "removed" or the actual current values?
                         Map<Object, Object> added = Collections.emptyMap();
                         Map<Object, Object> removed = new IdentityHashMap<>();
-                        if (initial != null) {
-                            for (Object o : (Collection<?>) initial) {
-                                removed.put(o, (Object) o);
-                            }
+                        for (Object o : (Collection<?>) initial) {
+                            removed.put(o, o);
                         }
 
                         List<CollectionElementAttributeFlusher<E, V>> elementFlushers = getInverseElementFlushersForActions(context, (Collection<?>) current, added, removed);
@@ -1255,13 +1257,12 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 // If the initial collection is empty, we also don't need to load the old one
                 if (initial == null || ((Collection<?>) initial).isEmpty()) {
                     // Always reset the actions as that indicates changes
-                    RecordingCollectionResetter.add(context, preFlushListeners, current);
                     if (inverseFlusher != null) {
                         // TODO: Should "replace" mean that we also remove values that were added in the meantime?
                         Map<Object, Object> added = new IdentityHashMap<>();
                         Map<Object, Object> removed = Collections.emptyMap();
                         for (Object o : (Collection<?>) current) {
-                            added.put(o, (Object) o);
+                            added.put(o, o);
                         }
 
                         List<CollectionElementAttributeFlusher<E, V>> elementFlushers = getInverseElementFlushersForActions(context, (Collection<?>) current, added, removed);
@@ -1278,7 +1279,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 if (elementDescriptor.shouldFlushMutations()) {
                     if (elementDescriptor.supportsDirtyCheck()) {
                         // Check elements for dirtyness
-                        return determineDirtyFlusherForNewCollection(context, (V) initial, (V) current, preFlushListeners);
+                        return determineDirtyFlusherForNewCollection(context, (V) initial, (V) current);
                     } else if (elementDescriptor.supportsDeepEqualityCheck()) {
                         if (canFlushSeparateCollectionOperations() && elementDescriptor.getBasicUserType() != null && elementDescriptor.getBasicUserType().supportsDeepCloning()) {
                             // If we can determine equality, we fetch and merge or replace the elements
@@ -1317,13 +1318,11 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                         }
                         return partialFlusher(true, PluralFlushOperation.COLLECTION_REPLAY_AND_ELEMENT, actions, getElementFlushers(context, (V) current, actions));
                     } else {
-                        // Always reset the actions as that indicates changes
-                        RecordingCollectionResetter.add(context, preFlushListeners, current);
                         // Other types are mutable basic types that aren't known to us like e.g. java.util.Date would be if we hadn't registered it
                         return partialFlusher(false, PluralFlushOperation.COLLECTION_REPLACE_ONLY, Collections.EMPTY_LIST, Collections.<CollectionElementAttributeFlusher<E, V>>emptyList());
                     }
                 } else {
-                    return determineDirtyFlusherForNewCollection(context, (V) initial, (V) current, preFlushListeners);
+                    return determineDirtyFlusherForNewCollection(context, (V) initial, (V) current);
                 }
             } else {
                 // If the initial and current reference are null or empty, no need to do anything further
@@ -1337,7 +1336,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 if (elementDescriptor.shouldFlushMutations()) {
                     if (elementDescriptor.supportsDirtyCheck()) {
                         if (current instanceof RecordingCollection<?, ?>) {
-                            return getDirtyFlusherForRecordingCollection(context, (V) initial, (RecordingCollection<?, ?>) current, preFlushListeners);
+                            return getDirtyFlusherForRecordingCollection(context, (V) initial, (RecordingCollection<?, ?>) current);
                         } else {
                             // Since we don't know what changed in the collection, we do a full fetch and merge
                             return this;
@@ -1346,23 +1345,24 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                         // If we can determine equality, we fetch and merge the elements
                         // We also fetch if we have entities since we assume collection rarely change drastically
                         if (current instanceof RecordingCollection<?, ?>) {
-                            List<? extends CollectionAction<?>> actions = RecordingCollectionResetter.add(context, preFlushListeners, current);
                             if (elementDescriptor.isIdentifiable()) {
+                                List<? extends CollectionAction<?>> actions = ((RecordingCollection<?, ?>) current).getActions();
+                                if (actions == null) {
+                                    actions = Collections.emptyList();
+                                }
                                 return partialFlusher(true, PluralFlushOperation.COLLECTION_REPLAY_AND_ELEMENT, actions, getElementFlushers(context, (V) current, actions));
                             }
                         }
 
                         return this;
                     } else {
-                        // Always reset the actions as that indicates changes
-                        RecordingCollectionResetter.add(context, preFlushListeners, current);
                         // Other types are mutable basic types that aren't known to us like e.g. java.util.Date would be if we hadn't registered it
                         return partialFlusher(false, PluralFlushOperation.COLLECTION_REPLACE_ONLY, Collections.EMPTY_LIST, Collections.<CollectionElementAttributeFlusher<E, V>>emptyList());
                     }
                 } else {
                     // Immutable elements in an updatable collection
                     if (current instanceof RecordingCollection<?, ?>) {
-                        return getDirtyFlusherForRecordingCollection(context, (V) initial, (RecordingCollection<?, ?>) current, preFlushListeners);
+                        return getDirtyFlusherForRecordingCollection(context, (V) initial, (RecordingCollection<?, ?>) current);
                     } else {
                         // Since we don't know what changed in the collection, we do a full fetch and merge
                         return this;
@@ -1399,7 +1399,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         return new MergeCollectionElementAttributeFlusher<E, V>(element, optimisticLockProtected);
     }
 
-    protected DirtyAttributeFlusher<CollectionAttributeFlusher<E, V>, E, V> determineDirtyFlusherForNewCollection(UpdateContext context, V initial, V current, List<Runnable> preFlushListeners) {
+    protected DirtyAttributeFlusher<CollectionAttributeFlusher<E, V>, E, V> determineDirtyFlusherForNewCollection(UpdateContext context, V initial, V current) {
         EqualityChecker equalityChecker;
         if (elementDescriptor.isSubview()) {
             equalityChecker = EqualsEqualityChecker.INSTANCE;
@@ -1411,8 +1411,6 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         // If nothing changed in the collection and no changes should be flushed, we are done
         if (collectionActions.size() == 0) {
             List<CollectionElementAttributeFlusher<E, V>> elementFlushers = getElementFlushers(context, current, collectionActions);
-            // Always reset the actions as that indicates changes
-            RecordingCollectionResetter.add(context, preFlushListeners, current);
             // A "null" element flusher list is given when a fetch and compare is more appropriate
             if (elementFlushers == null) {
                 return this;
@@ -1424,7 +1422,11 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
             Map<Object, Object>[] addedAndRemoved;
             // Always reset the actions as that indicates changes
             if (current instanceof RecordingCollection<?, ?>) {
-                addedAndRemoved = getAddedAndRemovedElementsForInverseFlusher((RecordingCollection<?, ?>) current, context, preFlushListeners);
+                List<? extends CollectionAction<?>> actions = ((RecordingCollection<?, ?>) current).getActions();
+                if (actions == null) {
+                    actions = Collections.emptyList();
+                }
+                addedAndRemoved = getAddedAndRemovedElementsForInverseFlusher(actions);
             } else {
                 addedAndRemoved = getAddedAndRemovedElementsForInverseFlusher(current, collectionActions);
             }
@@ -1436,8 +1438,6 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         }
 
         if (collectionActions.size() > current.size()) {
-            // Always reset the actions as that indicates changes
-            RecordingCollectionResetter.add(context, preFlushListeners, current);
             // More collection actions means more statements are issued
             // We'd rather replace in such a case
             if (elementDescriptor.shouldFlushMutations()) {
@@ -1458,10 +1458,8 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 if (elementFlushers == null) {
                     return this;
                 }
-                RecordingCollectionResetter.add(context, preFlushListeners, current);
                 return getReplayAndElementFlusher(context, initial, current, collectionActions, elementFlushers);
             } else {
-                RecordingCollectionResetter.add(context, preFlushListeners, current);
                 return getReplayOnlyFlusher(context, initial, current, collectionActions);
             }
         }
@@ -1698,7 +1696,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
             if (flushStrategy == FlushStrategy.ENTITY) {
                 elementFlusher.flushEntity(context, null, null, null, null, null);
             } else {
-                elementFlusher.flushQuery(context, null, null, null, null, null, null, null);
+                elementFlusher.flushQuery(context, null, null, null, null, null, null, null, null);
             }
         }
 
@@ -1771,7 +1769,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         @Override
         public void onUpdatedInverseElement(DirtyAttributeFlusher<?, E, V> flusher, Object element) {
             new UpdateCollectionElementAttributeFlusher<>(flusher, element, optimisticLockProtected, elementDescriptor.getViewToEntityMapper())
-                .flushQuery(context, null, null, null, null, null, null, null);
+                .flushQuery(context, null, null, null, null, null, null, null, null);
         }
 
         @Override
@@ -1859,9 +1857,9 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
     }
 
     @Override
-    protected DirtyAttributeFlusher<CollectionAttributeFlusher<E, V>, E, V> getDirtyFlusherForRecordingCollection(UpdateContext context, V initial, RecordingCollection<?, ?> collection, List<Runnable> preFlushListeners) {
+    protected DirtyAttributeFlusher<CollectionAttributeFlusher<E, V>, E, V> getDirtyFlusherForRecordingCollection(UpdateContext context, V initial, RecordingCollection<?, ?> collection) {
         if (collection.hasActions()) {
-            List<? extends CollectionAction<?>> actions = RecordingCollectionResetter.add(context, preFlushListeners, collection);
+            List<? extends CollectionAction<?>> actions = ((RecordingCollection<?, ?>) collection).getActions();
             boolean queueable = areActionsQueueable(collection);
 
             if (queueable) {
@@ -1964,12 +1962,6 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
             }
         }
         return new FusedCollectionElementActions(elementDescriptor.getViewToEntityMapper() == null ? null : elementDescriptor.getLoadOnlyViewToEntityMapper(), removed, added);
-    }
-
-    @SuppressWarnings("unchecked")
-    private Map<Object, Object>[] getAddedAndRemovedElementsForInverseFlusher(RecordingCollection<?, ?> collection, UpdateContext context, List<Runnable> preFlushListeners) {
-        List<? extends CollectionAction<?>> collectionActions = RecordingCollectionResetter.add(context, preFlushListeners, collection);
-        return getAddedAndRemovedElementsForInverseFlusher(collectionActions);
     }
 
     @SuppressWarnings("unchecked")

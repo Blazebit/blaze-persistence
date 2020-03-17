@@ -111,7 +111,8 @@ public class SimpleUpdateContext implements UpdateContext {
     }
 
     @Override
-    public void invokePreUpdate(MutableStateTrackable updatableProxy) {
+    public boolean invokePreUpdate(MutableStateTrackable updatableProxy) {
+        return false;
     }
 
     @Override

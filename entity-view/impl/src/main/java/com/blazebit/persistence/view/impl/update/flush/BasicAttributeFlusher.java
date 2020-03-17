@@ -226,7 +226,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
     }
 
     @Override
-    public Query flushQuery(UpdateContext context, String parameterPrefix, UpdateQueryFactory queryFactory, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
+    public Query flushQuery(UpdateContext context, String parameterPrefix, UpdateQueryFactory queryFactory, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter, DirtyAttributeFlusher<?, ?, ?> ownerFlusher) {
         V finalValue;
         if (flushOperation == null) {
             finalValue = value;
@@ -268,7 +268,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
             } else {
                 for (int i = 0; i < componentFlushers.length; i++) {
                     Object val = componentFlushers[i].getKey().getValue(finalValue);
-                    componentFlushers[i].getValue().flushQuery(context, parameterPrefix, queryFactory, query, ownerView, view, val, ownerAwareDeleter);
+                    componentFlushers[i].getValue().flushQuery(context, parameterPrefix, queryFactory, query, ownerView, view, val, ownerAwareDeleter, ownerFlusher);
                 }
             }
         }
@@ -509,7 +509,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
     }
 
     @Override
-    public DirtyAttributeFlusher<BasicAttributeFlusher<E, V>, E, V> getDirtyFlusher(UpdateContext context, Object view, Object initial, Object current, List<Runnable> preFlushListeners) {
+    public DirtyAttributeFlusher<BasicAttributeFlusher<E, V>, E, V> getDirtyFlusher(UpdateContext context, Object view, Object initial, Object current) {
         if (updatable) {
             if (initial != current) {
                 if (initial == null) {

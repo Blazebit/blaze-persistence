@@ -31,7 +31,7 @@ import java.util.List;
  */
 public interface DirtyAttributeFlusher<T extends DirtyAttributeFlusher<T, E, V>, E, V> extends FetchGraphNode<T>, DirtyChecker<V> {
 
-    public DirtyAttributeFlusher<T, E, V> getDirtyFlusher(UpdateContext context, Object view, Object initial, Object current, List<Runnable> preFlushListeners);
+    public DirtyAttributeFlusher<T, E, V> getDirtyFlusher(UpdateContext context, Object view, Object initial, Object current);
 
     public boolean appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix, String separator);
 
@@ -43,7 +43,7 @@ public interface DirtyAttributeFlusher<T extends DirtyAttributeFlusher<T, E, V>,
 
     public Object getNewInitialValue(UpdateContext context, V clonedValue, V currentValue);
     
-    public Query flushQuery(UpdateContext context, String parameterPrefix, UpdateQueryFactory queryFactory, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter);
+    public Query flushQuery(UpdateContext context, String parameterPrefix, UpdateQueryFactory queryFactory, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter, DirtyAttributeFlusher<?, ?, ?> ownerFlusher);
 
     public boolean flushEntity(UpdateContext context, E entity, Object ownerView, Object view, V value, Runnable postReplaceListener);
 

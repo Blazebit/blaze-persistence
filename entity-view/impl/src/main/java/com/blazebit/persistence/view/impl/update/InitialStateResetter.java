@@ -43,7 +43,7 @@ public interface InitialStateResetter {
 
     public void addPersistedViewNewObject(int newObjectIndex, Object newObject);
 
-    public void addUpdatedView(MutableStateTrackable updatedView);
+    public long[] addUpdatedView(MutableStateTrackable updatedView);
 
     public void addRemovedView(EntityViewProxy view);
 

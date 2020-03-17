@@ -257,8 +257,8 @@ public class DefaultUpdateContext implements UpdateContext, FlushOperationBuilde
     }
 
     @Override
-    public void invokePreUpdate(MutableStateTrackable updatableProxy) {
-        listenerManager.invokePreUpdate(this, updatableProxy);
+    public boolean invokePreUpdate(MutableStateTrackable updatableProxy) {
+        return listenerManager.invokePreUpdate(this, updatableProxy);
     }
 
     @Override

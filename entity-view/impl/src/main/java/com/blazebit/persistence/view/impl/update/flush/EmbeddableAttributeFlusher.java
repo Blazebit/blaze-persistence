@@ -120,7 +120,7 @@ public class EmbeddableAttributeFlusher<E, V> extends EmbeddableAttributeFetchGr
     }
 
     @Override
-    public Query flushQuery(UpdateContext context, String parameterPrefix, UpdateQueryFactory queryFactory, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
+    public Query flushQuery(UpdateContext context, String parameterPrefix, UpdateQueryFactory queryFactory, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter, DirtyAttributeFlusher<?, ?, ?> ownerFlusher) {
         try {
             String parameter;
             if (parameterPrefix == null) {
@@ -132,10 +132,10 @@ public class EmbeddableAttributeFlusher<E, V> extends EmbeddableAttributeFetchGr
                 query.setParameter(parameter, viewToEntityMapper.applyToEntity(context, null, value));
             } else if (value == null || nestedGraphNode != viewToEntityMapper.getFullGraphNode()) {
                 // When the nested graph node does not equal the full graph node, this is a state based dirty flusher
-                nestedGraphNode.flushQuery(context, parameter, queryFactory, query, ownerView, view, value, ownerAwareDeleter);
+                query = nestedGraphNode.flushQuery(context, parameter, queryFactory, query, ownerView, view, value, ownerAwareDeleter, ownerFlusher);
             } else {
                 // In here, we might be in the executePersist path so we have to consider the runtime type of the value and can't simply invoke the full graph node of the declared type
-                ((DirtyAttributeFlusher<?, E, V>) viewToEntityMapper.getUpdater(value).getFullGraphNode()).flushQuery(context, parameter, queryFactory, query, ownerView, view, value, ownerAwareDeleter);
+                query = ((DirtyAttributeFlusher<?, E, V>) viewToEntityMapper.getUpdater(value).getFullGraphNode()).flushQuery(context, parameter, queryFactory, query, ownerView, view, value, ownerAwareDeleter, ownerFlusher);
             }
             return query;
         } finally {
@@ -269,7 +269,7 @@ public class EmbeddableAttributeFlusher<E, V> extends EmbeddableAttributeFetchGr
     }
 
     @Override
-    public DirtyAttributeFlusher<EmbeddableAttributeFlusher<E, V>, E, V> getDirtyFlusher(UpdateContext context, Object view, Object initial, Object current, List<Runnable> preFlushListeners) {
+    public DirtyAttributeFlusher<EmbeddableAttributeFlusher<E, V>, E, V> getDirtyFlusher(UpdateContext context, Object view, Object initial, Object current) {
         if (isPassThrough()) {
             return null;
         }

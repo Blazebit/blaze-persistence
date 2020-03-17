@@ -35,7 +35,7 @@ public class MergeMapKeyAttributeFlusher<E, V> extends MergeCollectionElementAtt
     }
 
     @Override
-    public Query flushQuery(UpdateContext context, String parameterPrefix, UpdateQueryFactory queryFactory, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
+    public Query flushQuery(UpdateContext context, String parameterPrefix, UpdateQueryFactory queryFactory, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter, DirtyAttributeFlusher<?, ?, ?> ownerFlusher) {
         RecordingEntrySetReplacingIterator<Object, Object> recordingIterator = (RecordingEntrySetReplacingIterator<Object, Object>) ((RecordingMap<?, ?, ?>) value).recordingIterator();
         try {
             while (recordingIterator.hasNext()) {

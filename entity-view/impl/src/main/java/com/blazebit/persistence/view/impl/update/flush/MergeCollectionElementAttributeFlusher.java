@@ -50,7 +50,7 @@ public class MergeCollectionElementAttributeFlusher<E, V> extends CollectionElem
     }
 
     @Override
-    public Query flushQuery(UpdateContext context, String parameterPrefix, UpdateQueryFactory queryFactory, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
+    public Query flushQuery(UpdateContext context, String parameterPrefix, UpdateQueryFactory queryFactory, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter, DirtyAttributeFlusher<?, ?, ?> ownerFlusher) {
         RecordingReplacingIterator<Object> recordingIterator = (RecordingReplacingIterator<Object>) ((RecordingCollection<?, ?>) value).recordingIterator();
         try {
             while (recordingIterator.hasNext()) {
@@ -74,12 +74,12 @@ public class MergeCollectionElementAttributeFlusher<E, V> extends CollectionElem
     @Override
     @SuppressWarnings("unchecked")
     public boolean flushEntity(UpdateContext context, E entity, Object ownerView, Object view, V value, Runnable postReplaceListener) {
-        flushQuery(context, null, null, null, null, view, value, null);
+        flushQuery(context, null, null, null, null, view, value, null, null);
         return true;
     }
 
     @Override
-    public DirtyAttributeFlusher<CollectionElementAttributeFlusher<E, V>, E, V> getDirtyFlusher(UpdateContext context, Object view, Object initial, Object current, List<Runnable> preFlushListeners) {
+    public DirtyAttributeFlusher<CollectionElementAttributeFlusher<E, V>, E, V> getDirtyFlusher(UpdateContext context, Object view, Object initial, Object current) {
         // Actually this should never be called, but let's return this to be safe
         return this;
     }

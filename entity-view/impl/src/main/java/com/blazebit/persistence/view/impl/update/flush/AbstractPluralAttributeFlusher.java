@@ -218,13 +218,13 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
     }
 
     @Override
-    public Query flushQuery(UpdateContext context, String parameterPrefix, UpdateQueryFactory queryFactory, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
+    public Query flushQuery(UpdateContext context, String parameterPrefix, UpdateQueryFactory queryFactory, Query query, Object ownerView, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter, DirtyAttributeFlusher<?, ?, ?> ownerFlusher) {
         if (!supportsQueryFlush()) {
             throw new UnsupportedOperationException("Query flush not supported for configuration!");
         }
 
         for (CollectionElementAttributeFlusher<E, V> elementFlusher : elementFlushers) {
-            elementFlusher.flushQuery(context, null, queryFactory, null, ownerView, view, value, ownerAwareDeleter);
+            elementFlusher.flushQuery(context, null, queryFactory, null, ownerView, view, value, ownerAwareDeleter, ownerFlusher);
         }
         return query;
     }
@@ -263,7 +263,7 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
                     }
                 } else {
                     for (CollectionElementAttributeFlusher<E, V> elementFlusher : elementFlushers) {
-                        elementFlusher.flushQuery(context, null, null, null, ownerView, view, value, null);
+                        elementFlusher.flushQuery(context, null, null, null, ownerView, view, value, null, null);
                     }
                 }
                 invokeCollectionAction(context, ownerView, view, getEntityAttributeValue(entity), value, collectionActions);
@@ -278,7 +278,7 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
                     }
                 } else {
                     for (CollectionElementAttributeFlusher<E, V> elementFlusher : elementFlushers) {
-                        elementFlusher.flushQuery(context, null, null, null, ownerView, view, value, null);
+                        elementFlusher.flushQuery(context, null, null, null, ownerView, view, value, null, null);
                     }
                 }
                 replaceCollection(context, ownerView, view, entity, value, flushStrategy);
@@ -608,7 +608,7 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
 
     protected abstract boolean collectionEquals(V initial, V current);
 
-    protected abstract DirtyAttributeFlusher<X, E, V> getDirtyFlusherForRecordingCollection(UpdateContext context, V initial, R collection, List<Runnable> preFlushListeners);
+    protected abstract DirtyAttributeFlusher<X, E, V> getDirtyFlusherForRecordingCollection(UpdateContext context, V initial, R collection);
 
     /**
      * @author Christian Beikov
