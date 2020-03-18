@@ -20,6 +20,6 @@ you update as soon as possible to avoid running into the mentioned or other issu
 If you want to know more about the new features, take a look into the updated https://persistence.blazebit.com/documentation/1.5/core/manual/en_US/[core, window="_blank"]
 and https://persistence.blazebit.com/documentation/1.5/entity-view/manual/en_US/[entity view, window="_blank"] documentation.
 
-Take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#141[changelog, window="_blank"] for a full list of changes and improvements.
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#150-alpha1[changelog, window="_blank"] for a full list of changes and improvements.
 
 I wish you all the best, stay safe and healthy in this hard times! Enjoy the release and stay tuned for the next one!
