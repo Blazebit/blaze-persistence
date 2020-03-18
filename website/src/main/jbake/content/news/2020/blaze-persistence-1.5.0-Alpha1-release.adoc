@@ -1,0 +1,25 @@
+= Blaze-Persistence 1.5.0-Alpha1 Release
+Christian Beikov
+2020-03-18 0
+:description: Blaze-Persistence version 1.5.0-Alpha1 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+We are happy to announce the first alpha release of the 1.5 series. We introduced a few very interesting features
+like `MULTISET` fetching for entity views, support for predicates in array expressions and array expression with entity literals as basis.
+Apart from the new features, we also fixed quite a few bugs and improved performance. Most notable are bug fixes in updatable entity views.
+There were problems in the dirty tracking of indexed collections(`List`, `Map`) when clearing and re-adding elements.
+Using `@PreUpdate` entity view lifecycle listeners could also lead to various issues like missed updates.
+Version 1.5.0-Alpha1 should be a drop-in replacement for earlier versions and we highly recommend+++<!-- PREVIEW-SUFFIX --><!-- </p></div> --><!-- PREVIEW-END -->+++ that
+you update as soon as possible to avoid running into the mentioned or other issues.
+
+If you want to know more about the new features, take a look into the updated https://persistence.blazebit.com/documentation/1.5/core/manual/en_US/[core, window="_blank"]
+and https://persistence.blazebit.com/documentation/1.5/entity-view/manual/en_US/[entity view, window="_blank"] documentation.
+
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#141[changelog, window="_blank"] for a full list of changes and improvements.
+
+I wish you all the best, stay safe and healthy in this hard times! Enjoy the release and stay tuned for the next one!
