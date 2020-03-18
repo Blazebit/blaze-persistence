@@ -112,6 +112,7 @@ public class EntityViewUpdateListenerTest extends AbstractEntityViewUpdateDocume
         restartTransactionAndReload();
         assertEquals("doc1Updated", docView.getName());
         assertEquals(POST_UPDATE_DATE, docView.getLastModified());
+        assertEquals(doc1.getName(), docView.getName());
         assertEquals(p2.getId(), doc1.getOwner().getId());
     }
 
@@ -151,6 +152,7 @@ public class EntityViewUpdateListenerTest extends AbstractEntityViewUpdateDocume
         restartTransactionAndReload();
         assertEquals("doc1Updated", docView.getName());
         assertEquals(POST_UPDATE_DATE, docView.getLastModified());
+        assertEquals(doc1.getName(), docView.getName());
         assertEquals("newPerson", doc1.getOwner().getName());
     }
 
@@ -173,6 +175,7 @@ public class EntityViewUpdateListenerTest extends AbstractEntityViewUpdateDocume
         restartTransactionAndReload();
         assertEquals("doc1Updated", docView.getName());
         assertEquals(POST_UPDATE_DATE, docView.getLastModified());
+        assertEquals(doc1.getName(), docView.getName());
         assertEquals(newOwner.getId(), doc1.getOwner().getId());
         assertEquals("newPerson", doc1.getOwner().getName());
         assertEquals(10L, doc1.getOwner().getAge());

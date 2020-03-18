@@ -12,7 +12,7 @@ None
 
 ### Bug fixes
 
-None
+* Missing flushes for attributes that were changed in pre-update entity view listeners
 
 ### Backwards-incompatible changes
 
