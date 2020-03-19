@@ -132,7 +132,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         if (start == null) {
             throw new NullPointerException("start");
         }
-        String literal = TypeUtils.asLiteral(start);
+        String literal = TypeUtils.asLiteral(start, subqueryInitFactory.getQueryBuilder().getMetamodel().getEnumTypes().keySet());
         if (literal == null) {
             return between(start);
         }
@@ -213,7 +213,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         if (start == null) {
             throw new NullPointerException("start");
         }
-        String literal = TypeUtils.asLiteral(start);
+        String literal = TypeUtils.asLiteral(start, subqueryInitFactory.getQueryBuilder().getMetamodel().getEnumTypes().keySet());
         if (literal == null) {
             return notBetween(start);
         }
@@ -278,7 +278,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         if (value == null) {
             throw new NullPointerException("value");
         }
-        String literal = TypeUtils.asLiteral(value);
+        String literal = TypeUtils.asLiteral(value, subqueryInitFactory.getQueryBuilder().getMetamodel().getEnumTypes().keySet());
         if (literal == null) {
             return eq(value);
         }
@@ -333,7 +333,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         if (value == null) {
             throw new NullPointerException("value");
         }
-        String literal = TypeUtils.asLiteral(value);
+        String literal = TypeUtils.asLiteral(value, subqueryInitFactory.getQueryBuilder().getMetamodel().getEnumTypes().keySet());
         if (literal == null) {
             return notEq(value);
         }
@@ -388,7 +388,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         if (value == null) {
             throw new NullPointerException("value");
         }
-        String literal = TypeUtils.asLiteral(value);
+        String literal = TypeUtils.asLiteral(value, subqueryInitFactory.getQueryBuilder().getMetamodel().getEnumTypes().keySet());
         if (literal == null) {
             return gt(value);
         }
@@ -443,7 +443,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         if (value == null) {
             throw new NullPointerException("value");
         }
-        String literal = TypeUtils.asLiteral(value);
+        String literal = TypeUtils.asLiteral(value, subqueryInitFactory.getQueryBuilder().getMetamodel().getEnumTypes().keySet());
         if (literal == null) {
             return ge(value);
         }
@@ -498,7 +498,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         if (value == null) {
             throw new NullPointerException("value");
         }
-        String literal = TypeUtils.asLiteral(value);
+        String literal = TypeUtils.asLiteral(value, subqueryInitFactory.getQueryBuilder().getMetamodel().getEnumTypes().keySet());
         if (literal == null) {
             return lt(value);
         }
@@ -553,7 +553,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         if (value == null) {
             throw new NullPointerException("value");
         }
-        String literal = TypeUtils.asLiteral(value);
+        String literal = TypeUtils.asLiteral(value, subqueryInitFactory.getQueryBuilder().getMetamodel().getEnumTypes().keySet());
         if (literal == null) {
             return le(value);
         }
@@ -634,7 +634,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         Expression[] literalValues = new Expression[values.size()];
         int i = 0;
         for (Object value : values) {
-            String literal = TypeUtils.asLiteral(value);
+            String literal = TypeUtils.asLiteral(value, subqueryInitFactory.getQueryBuilder().getMetamodel().getEnumTypes().keySet());
             if (literal == null) {
                 return in(values);
             } else {
@@ -695,7 +695,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         Expression[] literalValues = new Expression[values.size()];
         int i = 0;
         for (Object value : values) {
-            String literal = TypeUtils.asLiteral(value);
+            String literal = TypeUtils.asLiteral(value, subqueryInitFactory.getQueryBuilder().getMetamodel().getEnumTypes().keySet());
             if (literal == null) {
                 return notIn(values);
             } else {

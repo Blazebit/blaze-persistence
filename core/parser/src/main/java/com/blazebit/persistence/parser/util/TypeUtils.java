@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -758,8 +759,8 @@ public class TypeUtils {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public static String asLiteral(Object value) {
-        TypeConverter<Object> converter = (TypeConverter<Object>) getConverter(value.getClass());
+    public static String asLiteral(Object value, Set<String> supportedEnumTypes) {
+        TypeConverter<Object> converter = (TypeConverter<Object>) getConverter(value.getClass(), supportedEnumTypes);
         if (converter == null) {
             return null;
         }
@@ -767,12 +768,14 @@ public class TypeUtils {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public static <T> TypeConverter<T> getConverter(Class<T> targetType) {
+    public static <T> TypeConverter<T> getConverter(Class<T> targetType, Set<String> supportedEnumTypes) {
         TypeConverter t = CONVERTERS.get(targetType);
         
         if (t == null) {
             if (targetType.isEnum()) {
-                t = TypeUtils.ENUM_CONVERTER;
+                if (supportedEnumTypes == null || supportedEnumTypes.contains(targetType.getName())) {
+                    t = TypeUtils.ENUM_CONVERTER;
+                }
             } else if (java.sql.Time.class.isAssignableFrom(targetType)) {
                 t = TypeUtils.TIME_CONVERTER;
             } else if (java.sql.Date.class.isAssignableFrom(targetType)) {
@@ -807,7 +810,7 @@ public class TypeUtils {
     }
 
     @SuppressWarnings({ "unchecked" })
-    public static <T> T convert(Object value, Class<T> targetType) {
+    public static <T> T convert(Object value, Class<T> targetType, Set<String> supportedEnumTypes) {
         if (value == null) {
             return null;
         }
@@ -815,7 +818,7 @@ public class TypeUtils {
             return (T) value;
         }
 
-        TypeConverter<T> valueHandler = getConverter(targetType);
+        TypeConverter<T> valueHandler = getConverter(targetType, supportedEnumTypes);
         if (valueHandler == null) {
             throw unknownConversion(value, targetType);
         }

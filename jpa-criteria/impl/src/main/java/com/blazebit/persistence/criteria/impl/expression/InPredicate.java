@@ -64,7 +64,7 @@ public class InPredicate<T> extends AbstractSimplePredicate implements BlazeCrit
                 this.values.add(new LiteralExpression<T>(criteriaBuilder, value));
             }
         } else {
-            TypeConverter<? extends T> converter = TypeUtils.getConverter((Class<? extends T>) javaType);
+            TypeConverter<? extends T> converter = TypeUtils.getConverter((Class<? extends T>) javaType, criteriaBuilder.getEntityMetamodel().getEnumTypes().keySet());
             for (T value : values) {
                 this.values.add(new LiteralExpression<T>(criteriaBuilder, converter.convert(value)));
             }

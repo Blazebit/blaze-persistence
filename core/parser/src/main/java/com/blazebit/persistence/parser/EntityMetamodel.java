@@ -21,6 +21,7 @@ import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.Type;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -44,6 +45,10 @@ public interface EntityMetamodel extends Metamodel {
     public <X> ManagedType<X> getManagedType(Class<X> cls);
 
     public Collection<Type<?>> getBasicTypes();
+
+    public Map<String, Class<Enum<?>>> getEnumTypes();
+
+    public Map<String, Class<Enum<?>>> getEnumTypesForLiterals();
 
     public <X> Type<X> type(Class<X> cls);
 

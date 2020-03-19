@@ -35,7 +35,7 @@ public abstract class AbstractTestExpressionFactory extends AbstractExpressionFa
     }
     
     public AbstractTestExpressionFactory(Map<String, Boolean> functions, Map<String, Class<?>> entityTypes, Map<String, Class<Enum<?>>> enumTypes, boolean optimize) {
-        super(functions, entityTypes, enumTypes, optimize);
+        super(functions, entityTypes, enumTypes, enumTypes, optimize);
     }
 
     @Override

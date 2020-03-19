@@ -679,6 +679,11 @@
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-jpa-criteria-jpa-2-compatibility</artifactId>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-testsuite-base-hibernate</artifactId>
                     <scope>compile</scope>
                 </dependency>

@@ -331,7 +331,7 @@ public class InternalQuery<T> implements Serializable {
                 }
             } else if (Tuple.class.isAssignableFrom(selectionType)) {
                 if (cb instanceof CriteriaBuilder) {
-                    ((CriteriaBuilder) cb).selectNew(new JpaTupleObjectBuilder(selection.getCompoundSelectionItems()) {
+                    ((CriteriaBuilder) cb).selectNew(new JpaTupleObjectBuilder(criteriaBuilder, selection.getCompoundSelectionItems()) {
                         @Override
                         protected void renderSelection(SelectBuilder<?> cb, Selection<?> s) {
                             InternalQuery.this.renderSelection(cb, context, s, treatedSelections);

@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Christian Beikov
@@ -34,11 +35,13 @@ import java.util.Map;
  */
 public abstract class JpaTupleObjectBuilder implements ObjectBuilder<Tuple> {
 
+    private final Set<String> supportedEnumTypes;
     private final List<Selection<?>> selectionItems;
     private Map<String, Integer> selectAliasToPositionMap;
     private Map<Selection<?>, Integer> selectionToPositionMap;
 
-    public JpaTupleObjectBuilder(List<Selection<?>> selectionItems) {
+    public JpaTupleObjectBuilder(BlazeCriteriaBuilderImpl criteriaBuilder, List<Selection<?>> selectionItems) {
+        this.supportedEnumTypes = criteriaBuilder.getEntityMetamodel().getEnumTypes().keySet();
         this.selectionItems = selectionItems;
     }
 
@@ -125,7 +128,7 @@ public abstract class JpaTupleObjectBuilder implements ObjectBuilder<Tuple> {
         @Override
         public <X> X get(String alias, Class<X> type) {
             Object tupleElement = get(alias);
-            return TypeUtils.convert(tupleElement, type);
+            return TypeUtils.convert(tupleElement, type, supportedEnumTypes);
         }
 
         @Override
@@ -139,7 +142,7 @@ public abstract class JpaTupleObjectBuilder implements ObjectBuilder<Tuple> {
         @Override
         public <X> X get(int i, Class<X> type) {
             Object tupleElement = get(i);
-            return TypeUtils.convert(tupleElement, type);
+            return TypeUtils.convert(tupleElement, type, supportedEnumTypes);
         }
 
         @Override

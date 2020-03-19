@@ -117,7 +117,7 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAn
 
     @Override
     public T literal(Object value) {
-        String literal = TypeUtils.asLiteral(value);
+        String literal = TypeUtils.asLiteral(value, subqueryInitFactory.getQueryBuilder().getMetamodel().getEnumTypes().keySet());
         if (literal == null) {
             return value(value);
         }

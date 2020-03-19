@@ -21,13 +21,24 @@ import com.blazebit.persistence.testsuite.base.jpa.AbstractJpaPersistenceTest;
 import com.blazebit.persistence.testsuite.base.jpa.MutablePersistenceUnitInfo;
 import com.blazebit.persistence.testsuite.base.jpa.RelationalModelAccessor;
 import com.blazebit.persistence.testsuite.base.jpa.cleaner.DatabaseCleaner;
+import org.hibernate.Version;
 import org.hibernate.dialect.SQLServer2012Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.Status;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 
 import javax.persistence.EntityManager;
 import javax.sql.DataSource;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.lang.invoke.MethodHandles;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.security.ProtectionDomain;
 import java.sql.Connection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -38,6 +49,59 @@ import java.util.Properties;
  * @since 1.0.0
  */
 public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest {
+
+    static {
+        String version = org.hibernate.Version.getVersionString();
+        String[] versionParts = version.split("[\\.-]");
+        int major = Integer.parseInt(versionParts[0]);
+        int minor = Integer.parseInt(versionParts[1]);
+        // This is pretty hackish but necessary to be able to execute tests with Hibernate before 5.2 as well
+        // We have an empty stub interface class org.hibernate.engine.spi.SharedSessionContractImplementor to be able to
+        // define user types that are compatible with all Hibernate versions but must ensure that on 5.2+ we load the correct class
+        // So we find the class file and load that class file into the class loader
+        if (major > 5 || minor > 1) {
+            try {
+                URL correctClass = null;
+                ClassLoader classLoader = Version.class.getClassLoader();
+                List<URL> list = Collections.list(classLoader.getResources("org/hibernate/engine/spi/SharedSessionContractImplementor.class"));
+                if (list.size() > 1) {
+                    for (URL url : list) {
+                        if (url.toString().contains(".jar")) {
+                            correctClass = url;
+                        }
+                    }
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    byte[] buffer = new byte[4096];
+                    try (InputStream inputStream = correctClass.openStream()) {
+                        int r;
+                        while ((r = inputStream.read(buffer)) != -1) {
+                            baos.write(buffer, 0, r);
+                        }
+                    }
+                    byte[] bytes = baos.toByteArray();
+                    try {
+                        Method m = MethodHandles.class.getMethod("privateLookupIn", Class.class, MethodHandles.Lookup.class);
+                        // We need a class from the same package
+                        MethodHandles.Lookup lookup = (MethodHandles.Lookup) m.invoke(null, Status.class, MethodHandles.lookup());
+                        MethodHandles.Lookup.class.getMethod("defineClass", byte[].class).invoke(lookup, (Object) bytes);
+                    } catch (NoSuchMethodException ex) {
+                        Field f;
+                        try {
+                            f = Class.forName("sun.misc.Unsafe").getDeclaredField("theUnsafe");
+                            f.setAccessible(true);
+                            Object unsafe = f.get(null);
+                            Method defineClass = Class.forName("sun.misc.Unsafe").getMethod("defineClass", String.class, byte[].class, int.class, int.class, ClassLoader.class, ProtectionDomain.class);
+                            defineClass.invoke(unsafe, "org.hibernate.engine.spi.SharedSessionContractImplementor", bytes, 0, bytes.length, classLoader, null);
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                }
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+    }
 
     @Override
     protected Connection getConnection(EntityManager em) {

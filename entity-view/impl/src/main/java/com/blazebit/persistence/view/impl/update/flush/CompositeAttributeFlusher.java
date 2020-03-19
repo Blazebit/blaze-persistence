@@ -1202,7 +1202,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
         Object[] initialState = ((DirtyStateTrackable) updatableProxy).$$_getInitialState();
         Object[] originalDirtyState = updatableProxy.$$_getMutableState();
         // Copy flushers to the target candidate flushers
-        if (!updatableProxy.$$_copyDirty(this.flushers, flushers)) {
+        if (!updatableProxy.$$_copyDirty(this.fullFlushers, flushers)) {
             // If the dirty detection says nothing is dirty, we don't need to do anything
             return null;
         }

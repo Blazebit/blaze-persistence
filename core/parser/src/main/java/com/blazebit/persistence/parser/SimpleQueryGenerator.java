@@ -74,6 +74,7 @@ import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -315,8 +316,9 @@ public class SimpleQueryGenerator implements Expression.Visitor {
     @Override
     public void visit(final InPredicate predicate) {
         // we have to render false if the parameter list for IN is empty
-        if (predicate.getRight().size() == 1) {
-            Expression right = predicate.getRight().get(0);
+        List<Expression> rightList = predicate.getRight();
+        if (rightList.size() == 1) {
+            Expression right = rightList.get(0);
             if (right instanceof ParameterExpression) {
                 ParameterExpression parameterExpr = (ParameterExpression) right;
 
@@ -362,9 +364,9 @@ public class SimpleQueryGenerator implements Expression.Visitor {
         }
 
         boolean parenthesisRequired;
-        if (predicate.getRight().size() == 1) {
+        if (rightList.size() == 1) {
             // NOTE: other cases are handled by ResolvingQueryGenerator
-            Expression singleRightExpression = predicate.getRight().get(0);
+            Expression singleRightExpression = rightList.get(0);
             if (singleRightExpression instanceof ParameterExpression && ((ParameterExpression) singleRightExpression).isCollectionValued()) {
                 parenthesisRequired = false;
             } else {
@@ -376,11 +378,11 @@ public class SimpleQueryGenerator implements Expression.Visitor {
         if (parenthesisRequired) {
             sb.append('(');
         }
-        if (!predicate.getRight().isEmpty()) {
-            predicate.getRight().get(0).accept(this);
-            for (int i = 1; i < predicate.getRight().size(); i++) {
+        if (!rightList.isEmpty()) {
+            rightList.get(0).accept(this);
+            for (int i = 1; i < rightList.size(); i++) {
                 sb.append(", ");
-                predicate.getRight().get(i).accept(this);
+                rightList.get(i).accept(this);
             }
         }
         if (parenthesisRequired) {
@@ -472,10 +474,14 @@ public class SimpleQueryGenerator implements Expression.Visitor {
         }
     }
 
+    protected Set<String> getSupportedEnumTypes() {
+        return null;
+    }
+
     protected String getLiteralParameterValue(ParameterExpression expression) {
         Object value = expression.getValue();
         if (value != null) {
-            final TypeConverter<Object> converter = (TypeConverter<Object>) TypeUtils.getConverter(value.getClass());
+            final TypeConverter<Object> converter = (TypeConverter<Object>) TypeUtils.getConverter(value.getClass(), getSupportedEnumTypes());
             return converter.toString(value);
         }
 

@@ -85,7 +85,7 @@ public class BetweenBuilderImpl<T> extends SubqueryBuilderListenerImpl<T> implem
         if (end == null) {
             throw new NullPointerException("end");
         }
-        String literal = TypeUtils.asLiteral(end);
+        String literal = TypeUtils.asLiteral(end, subqueryInitFactory.getQueryBuilder().getMetamodel().getEnumTypes().keySet());
         if (literal == null) {
             return and(end);
         }

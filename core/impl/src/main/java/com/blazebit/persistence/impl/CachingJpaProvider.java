@@ -388,6 +388,11 @@ public final class CachingJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsEnumLiteral(ManagedType<?> ownerType, String attributeName, boolean key) {
+        return jpaProvider.supportsEnumLiteral(ownerType, attributeName, key);
+    }
+
+    @Override
     public Object getIdentifier(Object entity) {
         return jpaProvider.getIdentifier(entity);
     }

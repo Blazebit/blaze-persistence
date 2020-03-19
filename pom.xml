@@ -335,6 +335,7 @@
                         <exclude>**/src/main/java/com/blazebit/persistence/deltaspike/data/impl/meta/RepositoryDefinitionException.java</exclude>
                         <exclude>**/src/main/java/com/blazebit/persistence/deltaspike/data/impl/meta/RepositoryComponents.java</exclude>
                         <exclude>**/src/main/java/com/blazebit/persistence/deltaspike/data/impl/meta/RepositoryComponentsFactory.java</exclude>
+                        <exclude>**/src/main/java/javax/persistence/**</exclude>
                     </excludes>
                     <properties>
                         <inceptionYear>${project.inceptionYear}</inceptionYear>

@@ -47,11 +47,13 @@ import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
+import org.hibernate.type.CustomType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.OneToOneType;
 import org.hibernate.type.Type;
+import org.hibernate.usertype.EnhancedUserType;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceUnitUtil;
@@ -1626,6 +1628,28 @@ public class HibernateJpaProvider implements JpaProvider {
         } else if (!(propertyType instanceof CollectionType) && prefix != null) {
             propertyNames.add(prefix);
         }
+    }
+
+    @Override
+    public boolean supportsEnumLiteral(ManagedType<?> ownerType, String attributeName, boolean key) {
+        if (ownerType instanceof EntityType<?>) {
+            AbstractEntityPersister entityPersister = getEntityPersister(ownerType);
+            Type propertyType;
+            propertyType = entityPersister.getPropertyType(attributeName);
+            if (propertyType instanceof CollectionType) {
+                CollectionPersister collectionPersister = entityPersister.getFactory().getCollectionPersister(((CollectionType) propertyType).getRole());
+                if (key) {
+                    propertyType = collectionPersister.getIndexType();
+                } else {
+                    propertyType = collectionPersister.getElementType();
+                }
+            }
+            if (propertyType instanceof CustomType) {
+                return ((CustomType) propertyType).getUserType() instanceof EnhancedUserType;
+            }
+            return false;
+        }
+        return true;
     }
 
     @Override

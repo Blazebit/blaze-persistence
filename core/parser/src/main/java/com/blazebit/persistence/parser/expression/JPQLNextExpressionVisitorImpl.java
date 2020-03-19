@@ -59,6 +59,7 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
 
     private final Map<String, Boolean> functions;
     private final Map<String, Class<Enum<?>>> enums;
+    private final Map<String, Class<Enum<?>>> enumsForLiterals;
     private final Map<String, Class<?>> entities;
     private final int minEnumSegmentCount;
     private final int minEntitySegmentCount;
@@ -69,9 +70,11 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
     private final boolean allowObjectExpression;
     private final CharStream input;
 
-    public JPQLNextExpressionVisitorImpl(Map<String, Boolean> functions, Map<String, Class<Enum<?>>> enums, Map<String, Class<?>> entities, int minEnumSegmentCount, int minEntitySegmentCount, Map<String, MacroFunction> macros, Set<String> usedMacros, boolean allowOuter, boolean allowQuantifiedPredicates, boolean allowObjectExpression, CharStream input) {
+    public JPQLNextExpressionVisitorImpl(Map<String, Boolean> functions, Map<String, Class<Enum<?>>> enums, Map<String, Class<Enum<?>>> enumsForLiterals, Map<String, Class<?>> entities,
+                                         int minEnumSegmentCount, int minEntitySegmentCount, Map<String, MacroFunction> macros, Set<String> usedMacros, boolean allowOuter, boolean allowQuantifiedPredicates, boolean allowObjectExpression, CharStream input) {
         this.functions = functions;
         this.enums = enums;
+        this.enumsForLiterals = enumsForLiterals;
         this.entities = entities;
         this.minEnumSegmentCount = minEnumSegmentCount;
         this.minEntitySegmentCount = minEntitySegmentCount;
@@ -1028,7 +1031,12 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
         if (enumType == null) {
             return null;
         }
-        return new EnumLiteral(Enum.valueOf((Class) enumType, enumValueStr), enumStr);
+        Enum enumValue = Enum.valueOf((Class) enumType, enumValueStr);
+        if (enumsForLiterals.containsKey(enumTypeStr)) {
+            return new EnumLiteral(enumValue, enumStr);
+        } else {
+            return new ParameterExpression(enumStr.replace('.', '_'), enumValue);
+        }
     }
 
     private Expression createEntityTypeLiteral(String entityLiteralStr) {

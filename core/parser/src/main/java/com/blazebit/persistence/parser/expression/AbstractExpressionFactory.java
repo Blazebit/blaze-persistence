@@ -106,14 +106,16 @@ public abstract class AbstractExpressionFactory extends AbstractExpressionFactor
     private final Map<String, Boolean> functions;
     private final Map<String, Class<?>> entityTypes;
     private final Map<String, Class<Enum<?>>> enumTypes;
+    private final Map<String, Class<Enum<?>>> enumTypesForLiterals;
     private final int minEnumSegmentCount;
     private final int minEntitySegmentCount;
     private final ExpressionOptimizer optimizer = new ExpressionOptimizer();
 
-    protected AbstractExpressionFactory(Map<String, Boolean> functions, Map<String, Class<?>> entityTypes, Map<String, Class<Enum<?>>> enumTypes, boolean optimize) {
+    protected AbstractExpressionFactory(Map<String, Boolean> functions, Map<String, Class<?>> entityTypes, Map<String, Class<Enum<?>>> enumTypes, Map<String, Class<Enum<?>>> enumTypesForLiterals, boolean optimize) {
         this.functions = functions;
         this.entityTypes = entityTypes;
         this.enumTypes = enumTypes;
+        this.enumTypesForLiterals = enumTypesForLiterals;
         this.optimize = optimize;
 
         int minSegmentCount = Integer.MAX_VALUE;
@@ -184,7 +186,7 @@ public abstract class AbstractExpressionFactory extends AbstractExpressionFactor
             LOG.finest(ctx.toStringTree());
         }
 
-        JPQLNextExpressionVisitorImpl visitor = new JPQLNextExpressionVisitorImpl(functions, enumTypes, entityTypes, minEnumSegmentCount, minEntitySegmentCount, macroConfiguration == null ? Collections.EMPTY_MAP : macroConfiguration.macros, usedMacros, allowOuter, allowQuantifiedPredicates, allowObjectExpression, inputCharStream);
+        JPQLNextExpressionVisitorImpl visitor = new JPQLNextExpressionVisitorImpl(functions, enumTypes, enumTypesForLiterals, entityTypes, minEnumSegmentCount, minEntitySegmentCount, macroConfiguration == null ? Collections.EMPTY_MAP : macroConfiguration.macros, usedMacros, allowOuter, allowQuantifiedPredicates, allowObjectExpression, inputCharStream);
         Expression parsedExpression = visitor.visit(ctx);
         if (optimize) {
             parsedExpression = parsedExpression.accept(optimizer);

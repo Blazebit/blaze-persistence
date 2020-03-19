@@ -75,6 +75,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
     private final Map<EntityType<?>, Set<EntityType<?>>> entitySubtypes;
     private final Map<String, Class<?>> entityTypes;
     private final Map<String, Class<Enum<?>>> enumTypes;
+    private final Map<String, Class<Enum<?>>> enumTypesForLiterals;
     private final Map<Class<?>, Type<?>> classMap;
     private final ConcurrentMap<Class<?>, Type<?>> basicTypeMap = new ConcurrentHashMap<>();
     private final Map<Class<?>, ManagedType<?>> cteMap;
@@ -89,6 +90,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         Map<String, EntityType<?>> nameToType = new HashMap<>(managedTypes.size());
         Map<String, Class<?>> entityTypes = new HashMap<>(managedTypes.size());
         Map<String, Class<Enum<?>>> enumTypes = new HashMap<>(managedTypes.size());
+        Map<String, Class<Enum<?>>> enumTypesForLiterals = new HashMap<>(managedTypes.size());
         Map<Class<?>, Type<?>> classToType = new HashMap<>(managedTypes.size());
         Map<Class<?>, ManagedType<?>> cteToType = new HashMap<>(managedTypes.size());
         EntityManager em = emf.createEntityManager();
@@ -122,13 +124,13 @@ public class EntityMetamodelImpl implements EntityMetamodel {
             }
 
             TemporaryExtendedManagedType extendedManagedType = getTemporaryType(e, temporaryExtendedManagedTypes);
-            collectColumnNames(e, extendedManagedType.attributes, null, null, null, e, temporaryExtendedManagedTypes, seenTypesForEnumResolving, enumTypes, accessorCache);
+            collectColumnNames(e, extendedManagedType.attributes, null, null, null, e, temporaryExtendedManagedTypes, seenTypesForEnumResolving, enumTypes, enumTypesForLiterals, accessorCache);
         }
 
         for (ManagedType<?> t : managedTypes) {
             // we already checked all entity types, so skip these
             if (!(t instanceof EntityType<?>)) {
-                collectColumnNames(null, null, null, null, null, t, temporaryExtendedManagedTypes, seenTypesForEnumResolving, enumTypes, accessorCache);
+                collectColumnNames(null, null, null, null, null, t, temporaryExtendedManagedTypes, seenTypesForEnumResolving, enumTypes, enumTypesForLiterals, accessorCache);
                 if (t.getJavaType() != null) {
                     classToType.put(t.getJavaType(), t);
                 }
@@ -182,6 +184,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         this.entityTypes = Collections.unmodifiableMap(entityTypes);
         this.entitySubtypes = Collections.unmodifiableMap(entitySubtypes);
         this.enumTypes = Collections.unmodifiableMap(enumTypes);
+        this.enumTypesForLiterals = Collections.unmodifiableMap(enumTypesForLiterals);
         this.classMap = Collections.unmodifiableMap(classToType);
         this.cteMap = Collections.unmodifiableMap(cteToType);
         this.extendedManagedTypes = Collections.unmodifiableMap(extendedManagedTypes);
@@ -253,7 +256,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private void discoverEnumTypes(Set<Class<?>> seenTypesForEnumResolving, Map<String, Class<Enum<?>>> enumTypes, ManagedType<?> t) {
+    private void discoverEnumTypes(Set<Class<?>> seenTypesForEnumResolving, Map<String, Class<Enum<?>>> enumTypes, Map<String, Class<Enum<?>>> enumTypesForLiterals, ManagedType<?> t, String parent) {
         if (!(t instanceof EntityType<?>)) {
             // Only discover entity types
             return;
@@ -262,45 +265,51 @@ public class EntityMetamodelImpl implements EntityMetamodel {
             return;
         }
         for (Attribute<?, ?> attribute : (Set<Attribute<?, ?>>) (Set) t.getAttributes()) {
-            discoverEnumTypes(seenTypesForEnumResolving, enumTypes, t.getJavaType(), attribute);
+            discoverEnumTypes(seenTypesForEnumResolving, enumTypes, enumTypesForLiterals, t, parent, attribute);
         }
     }
 
     @SuppressWarnings("unchecked")
-    private void discoverEnumTypes(Set<Class<?>> seenTypesForEnumResolving, Map<String, Class<Enum<?>>> enumTypes, Type<?> type) {
+    private void discoverEnumTypes(Set<Class<?>> seenTypesForEnumResolving, Map<String, Class<Enum<?>>> enumTypes, Map<String, Class<Enum<?>>> enumTypesForLiterals, Type<?> type, ManagedType<?> baseType, String parent, Attribute<?, ?> attribute, boolean key) {
         if (type.getPersistenceType() == Type.PersistenceType.BASIC) {
             Class<?> elementType = type.getJavaType();
             if (elementType.isEnum()) {
                 enumTypes.put(elementType.getName(), (Class<Enum<?>>) elementType);
+                if (jpaProvider.supportsEnumLiteral(baseType, parent == null ? attribute.getName() : (parent + "." + attribute.getName()), key)) {
+                    enumTypesForLiterals.put(elementType.getName(), (Class<Enum<?>>) elementType);
+                }
             }
         } else {
-            discoverEnumTypes(seenTypesForEnumResolving, enumTypes, (ManagedType<?>) type);
+            discoverEnumTypes(seenTypesForEnumResolving, enumTypes, enumTypesForLiterals, (ManagedType<?>) type, parent);
         }
     }
 
     @SuppressWarnings("unchecked")
-    private void discoverEnumTypes(Set<Class<?>> seenTypesForEnumResolving, Map<String, Class<Enum<?>>> enumTypes, Class<?> baseType, Attribute<?, ?> attribute) {
-        Class<?> fieldType = JpaMetamodelUtils.resolveFieldClass(baseType, attribute);
+    private void discoverEnumTypes(Set<Class<?>> seenTypesForEnumResolving, Map<String, Class<Enum<?>>> enumTypes, Map<String, Class<Enum<?>>> enumTypesForLiterals, ManagedType<?> baseType, String parent, Attribute<?, ?> attribute) {
+        Class<?> fieldType = JpaMetamodelUtils.resolveFieldClass(baseType.getJavaType(), attribute);
         if (attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.BASIC) {
             if (fieldType.isEnum()) {
                 enumTypes.put(fieldType.getName(), (Class<Enum<?>>) fieldType);
+                if (jpaProvider.supportsEnumLiteral(baseType, parent == null ? attribute.getName() : (parent + "." + attribute.getName()), false)) {
+                    enumTypesForLiterals.put(fieldType.getName(), (Class<Enum<?>>) fieldType);
+                }
             }
         } else if (attribute.isCollection()) {
             PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) attribute;
             if (pluralAttribute.getCollectionType() == PluralAttribute.CollectionType.MAP) {
                 MapAttribute<?, ?, ?> mapAttribute = (MapAttribute<?, ?, ?>) pluralAttribute;
-                discoverEnumTypes(seenTypesForEnumResolving, enumTypes, mapAttribute.getKeyType());
+                discoverEnumTypes(seenTypesForEnumResolving, enumTypes, enumTypesForLiterals, mapAttribute.getKeyType(), baseType, parent, mapAttribute, true);
             }
 
-            discoverEnumTypes(seenTypesForEnumResolving, enumTypes, pluralAttribute.getElementType());
+            discoverEnumTypes(seenTypesForEnumResolving, enumTypes, enumTypesForLiterals, pluralAttribute.getElementType(), baseType, parent, pluralAttribute, false);
         } else if (!seenTypesForEnumResolving.contains(fieldType)) {
-            discoverEnumTypes(seenTypesForEnumResolving, enumTypes, delegate.managedType(fieldType));
+            discoverEnumTypes(seenTypesForEnumResolving, enumTypes, enumTypesForLiterals, delegate.managedType(fieldType), parent);
         }
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private TemporaryExtendedManagedType collectColumnNames(EntityType<?> e, Map<String, AttributeEntry<?, ?>> attributeMap, String parent, List<Attribute<?, ?>> parents, String elementCollectionPath, ManagedType<?> type,
-                                                            Map<String, TemporaryExtendedManagedType> temporaryExtendedManagedTypes, Set<Class<?>> seenTypesForEnumResolving, Map<String, Class<Enum<?>>> enumTypes, Map<AttributeAccessorCacheKey, AttributeAccessor<?, ?>> accessorCache) {
+                                                            Map<String, TemporaryExtendedManagedType> temporaryExtendedManagedTypes, Set<Class<?>> seenTypesForEnumResolving, Map<String, Class<Enum<?>>> enumTypes, Map<String, Class<Enum<?>>> enumTypesForLiterals, Map<AttributeAccessorCacheKey, AttributeAccessor<?, ?>> accessorCache) {
         Set<Attribute<?, ?>> attributes = (Set<Attribute<?, ?>>) (Set) type.getAttributes();
         TemporaryExtendedManagedType extendedManagedType = getTemporaryType(type, temporaryExtendedManagedTypes);
 
@@ -342,7 +351,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
                     } else {
                         embeddableType = delegate.embeddable(fieldType);
                     }
-                    TemporaryExtendedManagedType extendedEmbeddableType = collectColumnNames(e, attributeMap, attributeName, newParents, elementCollectionPath, embeddableType, temporaryExtendedManagedTypes, seenTypesForEnumResolving, enumTypes, accessorCache);
+                    TemporaryExtendedManagedType extendedEmbeddableType = collectColumnNames(e, attributeMap, attributeName, newParents, elementCollectionPath, embeddableType, temporaryExtendedManagedTypes, seenTypesForEnumResolving, enumTypes, enumTypesForLiterals, accessorCache);
                     if (elementCollectionPath == null && (extendedEmbeddableType.singularOwnerType == null || shouldReplaceOwner(attributeName, extendedEmbeddableType.singularOwnerType.getValue()))) {
                         extendedEmbeddableType.singularOwnerType = new AbstractMap.SimpleEntry(e, attributeName);
                     }
@@ -363,7 +372,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
                         } else {
                             embeddableType = delegate.embeddable(fieldType);
                         }
-                        TemporaryExtendedManagedType extendedEmbeddableType = collectColumnNames(e, attributeMap, attributeName, newParents, attributeName, embeddableType, temporaryExtendedManagedTypes, seenTypesForEnumResolving, enumTypes, accessorCache);
+                        TemporaryExtendedManagedType extendedEmbeddableType = collectColumnNames(e, attributeMap, attributeName, newParents, attributeName, embeddableType, temporaryExtendedManagedTypes, seenTypesForEnumResolving, enumTypes, enumTypesForLiterals, accessorCache);
                         if (extendedEmbeddableType.pluralOwnerType == null) {
                             extendedEmbeddableType.pluralOwnerType = new AbstractMap.SimpleEntry(e, attributeName);
                         }
@@ -379,7 +388,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
                     // If this attribute is part of an element collection, we assume there are no inverse one-to-ones
                 } else if (isAssociation(attribute) && (elementCollectionPath != null || !jpaProvider.isForeignJoinColumn(e, attributeName))) {
                     // We create an attribute entry for the id attribute of *ToOne relations if the columns reside on the Many side
-                    collectIdColumns(e, attributeMap, attributeName, newParents, elementCollectionPath, fieldType, temporaryExtendedManagedTypes, seenTypesForEnumResolving, enumTypes, accessorCache);
+                    collectIdColumns(e, attributeMap, attributeName, newParents, elementCollectionPath, fieldType, temporaryExtendedManagedTypes, seenTypesForEnumResolving, enumTypes, enumTypesForLiterals, accessorCache);
                     if (e != type) {
                         String prefix = attributeName + ".";
                         for (AttributeEntry<?, ?> value : attributeMap.values()) {
@@ -394,7 +403,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
                 }
             }
 
-            discoverEnumTypes(seenTypesForEnumResolving, enumTypes, type.getJavaType(), attribute);
+            discoverEnumTypes(seenTypesForEnumResolving, enumTypes, enumTypesForLiterals, type, parent, attribute);
             AttributeEntry attributeEntry = null;
             if (e == null) {
                 // Never overwrite an existing attribute with one that has no owner
@@ -445,7 +454,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
     }
 
     private void collectIdColumns(EntityType<?> e, Map<String, AttributeEntry<?, ?>> attributeMap, String attributeName, List<Attribute<?, ?>> newParents, String elementCollectionPath, Class<?> fieldType,
-                                  Map<String, TemporaryExtendedManagedType> temporaryExtendedManagedTypes, Set<Class<?>> seenTypesForEnumResolving, Map<String, Class<Enum<?>>> enumTypes, Map<AttributeAccessorCacheKey, AttributeAccessor<?, ?>> accessorCache) {
+                                  Map<String, TemporaryExtendedManagedType> temporaryExtendedManagedTypes, Set<Class<?>> seenTypesForEnumResolving, Map<String, Class<Enum<?>>> enumTypes, Map<String, Class<Enum<?>>> enumTypesForLiterals, Map<AttributeAccessorCacheKey, AttributeAccessor<?, ?>> accessorCache) {
         Collection<String> identifierOrUniqueKeyEmbeddedPropertyNames;
         if (elementCollectionPath == null) {
             identifierOrUniqueKeyEmbeddedPropertyNames = jpaProvider.getJoinMappingPropertyNames(e, elementCollectionPath, attributeName).keySet();
@@ -472,7 +481,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
             AttributeEntry attributeEntry = new AttributeEntry(jpaProvider, e, fieldEntityType, idAttribute, idPath, idType, idParents, elementCollectionPath, accessorCache);
             attributeMap.put(idPath, attributeEntry);
             if (isAssociation(idAttribute)) {
-                collectIdColumns(e, attributeMap, idPath, newParents, elementCollectionPath, idType, temporaryExtendedManagedTypes, seenTypesForEnumResolving, enumTypes, accessorCache);
+                collectIdColumns(e, attributeMap, idPath, newParents, elementCollectionPath, idType, temporaryExtendedManagedTypes, seenTypesForEnumResolving, enumTypes, enumTypesForLiterals, accessorCache);
             } else if (idAttribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED) {
                 ArrayList<Attribute<?, ?>> embeddableParents = new ArrayList<>(newParents.size() + 1);
                 embeddableParents.addAll(newParents);
@@ -485,7 +494,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
                 } else {
                     embeddableType = delegate.embeddable(idType);
                 }
-                collectColumnNames(e, attributeMap, idPath, embeddableParents, elementCollectionPath, embeddableType, temporaryExtendedManagedTypes, seenTypesForEnumResolving, enumTypes, accessorCache);
+                collectColumnNames(e, attributeMap, idPath, embeddableParents, elementCollectionPath, embeddableType, temporaryExtendedManagedTypes, seenTypesForEnumResolving, enumTypes, enumTypesForLiterals, accessorCache);
             }
         }
     }
@@ -550,8 +559,14 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         return entityTypes;
     }
 
+    @Override
     public Map<String, Class<Enum<?>>> getEnumTypes() {
         return enumTypes;
+    }
+
+    @Override
+    public Map<String, Class<Enum<?>>> getEnumTypesForLiterals() {
+        return enumTypesForLiterals;
     }
 
     @Override
