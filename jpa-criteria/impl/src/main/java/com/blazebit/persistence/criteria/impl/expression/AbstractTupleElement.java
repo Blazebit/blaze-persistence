@@ -49,7 +49,7 @@ public class AbstractTupleElement<X> implements TupleElement<X>, Serializable {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     protected void setJavaType(Class targetType) {
         this.javaType = targetType;
-        this.converter = TypeUtils.getConverter(javaType);
+        this.converter = TypeUtils.getConverter(javaType, criteriaBuilder.getEntityMetamodel().getEnumTypes().keySet());
     }
 
     protected void setConverter(TypeConverter<X> converter) {

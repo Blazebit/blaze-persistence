@@ -99,7 +99,7 @@ public class LikeBuilderImpl<T> extends SubqueryAndExpressionBuilderListener<T> 
         if (value == null) {
             throw new NullPointerException("value");
         }
-        String literal = TypeUtils.asLiteral(value);
+        String literal = TypeUtils.asLiteral(value, subqueryInitFactory.getQueryBuilder().getMetamodel().getEnumTypes().keySet());
         if (literal == null) {
             return value(value);
         }

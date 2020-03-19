@@ -21,6 +21,7 @@
     <!-- Generated files don't have to fit our checkstyle requirements -->
     <suppress checks="." files="[\\/]target[\\/].*\.java$"/>
     <!-- The compatibility stuff for the JPA criteria API does not have to comply either -->
+    <suppress checks="." files="[\\/]javax[\\/]persistence[\\/].*\.java$"/>
     <suppress checks="." files="[\\/]javax[\\/]persistence[\\/]criteria[\\/].*\.java$"/>
     <!-- The copied Spring Data classes don't have to comply either -->
     <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]base[\\/]SharedEntityManagerCreator\.java$"/>

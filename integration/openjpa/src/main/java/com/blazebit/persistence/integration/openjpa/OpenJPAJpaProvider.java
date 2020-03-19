@@ -441,6 +441,11 @@ public class OpenJPAJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsEnumLiteral(ManagedType<?> ownerType, String attributeName, boolean key) {
+        return true;
+    }
+
+    @Override
     public Object getIdentifier(Object entity) {
         return persistenceUnitUtil.getIdentifier(entity);
     }

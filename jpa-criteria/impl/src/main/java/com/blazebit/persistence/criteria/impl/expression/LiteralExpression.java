@@ -63,7 +63,7 @@ public class LiteralExpression<T> extends AbstractExpression<T> {
         final StringBuilder buffer = context.getBuffer();
         if (context.getClauseType() == ClauseType.SELECT) {
             // some drivers/dbms do not like parameters in the select clause
-            final TypeConverter converter = TypeUtils.getConverter(literal.getClass());
+            final TypeConverter converter = TypeUtils.getConverter(literal.getClass(), criteriaBuilder.getEntityMetamodel().getEnumTypes().keySet());
 
             if (converter != null) {
                 converter.appendTo(literal, buffer);
@@ -73,7 +73,7 @@ public class LiteralExpression<T> extends AbstractExpression<T> {
             }
         } else {
             if (TypeUtils.isNumeric(literal) || TypeUtils.isBoolean(literal)) {
-                ((TypeConverter) TypeUtils.getConverter(literal.getClass())).appendTo(literal, buffer);
+                ((TypeConverter) TypeUtils.getConverter(literal.getClass(), criteriaBuilder.getEntityMetamodel().getEnumTypes().keySet())).appendTo(literal, buffer);
             } else {
                 final String paramName = context.registerLiteralParameterBinding(getLiteral(), getJavaType());
                 buffer.append(':').append(paramName);
@@ -87,7 +87,7 @@ public class LiteralExpression<T> extends AbstractExpression<T> {
         super.setJavaType(targetType);
         TypeConverter<T> converter = getConverter();
         if (converter == null) {
-            converter = TypeUtils.getConverter(targetType);
+            converter = TypeUtils.getConverter(targetType, criteriaBuilder.getEntityMetamodel().getEnumTypes().keySet());
             setConverter(converter);
         }
 

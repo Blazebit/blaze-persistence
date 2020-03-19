@@ -112,10 +112,10 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         this.functions = resolveFunctions(config.getFunctions(), configuredRegisteredFunctions);
         this.namedTypes = resolveNamedTypes(config.getNamedTypes());
 
-        ExpressionFactory originalExpressionFactory = new ExpressionFactoryImpl(functions, metamodel.getEntityTypes(), metamodel.getEnumTypes(), !compatibleMode, optimize);
+        ExpressionFactory originalExpressionFactory = new ExpressionFactoryImpl(functions, metamodel.getEntityTypes(), metamodel.getEnumTypes(), metamodel.getEnumTypesForLiterals(), !compatibleMode, optimize);
         this.expressionCache = createCache(queryConfiguration.getExpressionCacheClass());
         ExpressionFactory cachingExpressionFactory = new SimpleCachingExpressionFactory(originalExpressionFactory, expressionCache);
-        ExpressionFactory cachingSubqueryExpressionFactory = new SimpleCachingExpressionFactory(new SubqueryExpressionFactory(functions, metamodel.getEntityTypes(), metamodel.getEnumTypes(), !compatibleMode, optimize, originalExpressionFactory));
+        ExpressionFactory cachingSubqueryExpressionFactory = new SimpleCachingExpressionFactory(new SubqueryExpressionFactory(functions, metamodel.getEntityTypes(), metamodel.getEnumTypes(), metamodel.getEnumTypesForLiterals(), !compatibleMode, optimize, originalExpressionFactory));
         this.macroConfiguration = MacroConfiguration.of(JpqlMacroAdapter.createMacros(config.getMacros(), cachingExpressionFactory));
         JpqlMacroStorage macroStorage = new JpqlMacroStorage(null, macroConfiguration);
         this.expressionFactory = new JpqlMacroAwareExpressionFactory(cachingExpressionFactory, macroStorage);

@@ -48,7 +48,7 @@ public class ComparisonPredicate extends AbstractSimplePredicate {
         this.comparisonOperator = comparisonOperator;
         this.leftHandSide = leftHandSide;
         if (TypeUtils.isNumeric(leftHandSide.getJavaType())) {
-            this.rightHandSide = new LiteralExpression(criteriaBuilder, TypeUtils.convert(rightHandSide, (Class<Number>) leftHandSide.getJavaType()));
+            this.rightHandSide = new LiteralExpression(criteriaBuilder, TypeUtils.convert(rightHandSide, (Class<Number>) leftHandSide.getJavaType(), criteriaBuilder.getEntityMetamodel().getEnumTypes().keySet()));
         } else {
             this.rightHandSide = new LiteralExpression(criteriaBuilder, rightHandSide);
         }
@@ -63,7 +63,7 @@ public class ComparisonPredicate extends AbstractSimplePredicate {
         if (Number.class.equals(type)) {
             this.rightHandSide = new LiteralExpression(criteriaBuilder, rightHandSide);
         } else {
-            N converted = (N) TypeUtils.convert(rightHandSide, type);
+            N converted = (N) TypeUtils.convert(rightHandSide, type, criteriaBuilder.getEntityMetamodel().getEnumTypes().keySet());
             this.rightHandSide = new LiteralExpression<N>(criteriaBuilder, converted);
         }
     }

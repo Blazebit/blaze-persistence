@@ -600,6 +600,16 @@ public interface JpaProvider {
     public Map<String, String> getJoinMappingPropertyNames(EntityType<?> owner, String elementCollectionPath, String attributeName);
 
     /**
+     * Whether the enum type of the given attribute supports being used as literal by it's FQN.
+     *
+     * @param ownerType The declaring type of the attribute to check
+     * @param attributeName The name of the attribute to check
+     * @param key Whether the key part of a map attribute should be checked or the attribute element type
+     * @return <code>true</code> if supported, <code>false</code> otherwise
+     */
+    public boolean supportsEnumLiteral(ManagedType<?> ownerType, String attributeName, boolean key);
+
+    /**
      * Returns the identifier of the entity object.
      *
      * @param entity The entity

@@ -46,6 +46,9 @@ public class ParameterRegistrationVisitor extends VisitorAdapter {
             if (secondClauseType != null) {
                 parameterManager.registerParameterName(expression.getName(), expression.isCollectionValued(), secondClauseType, queryBuilder);
             }
+            if (expression.getValue() != null) {
+                parameterManager.satisfyParameter(expression.getName(), expression.getValue());
+            }
         }
     }
 

@@ -14,24 +14,14 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.parser;
-
-import com.blazebit.persistence.parser.util.TypeUtils;
-import org.junit.Test;
-
-import java.lang.annotation.RetentionPolicy;
-
-import static org.junit.Assert.assertEquals;
+package org.hibernate.engine.spi;
 
 /**
+ * See com.blazebit.persistence.testsuite.base.AbstractPersistenceTest why this is necessary.
+ * The short version, we need this stub for custom user type tests for Hibernate before 5.1.
  *
  * @author Christian Beikov
+ * @since 1.5.0
  */
-public class TypeUtilsTest {
-
-    @Test
-    public void testEnumAsLiteral() {
-        assertEquals(RetentionPolicy.class.getName() + "." + RetentionPolicy.RUNTIME.name(), TypeUtils.asLiteral(RetentionPolicy.RUNTIME, null));
-    }
-
+public interface SharedSessionContractImplementor {
 }
