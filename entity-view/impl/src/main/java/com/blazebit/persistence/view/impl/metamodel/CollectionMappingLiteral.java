@@ -22,7 +22,6 @@ import java.lang.annotation.Annotation;
 import java.util.Comparator;
 
 /**
- *
  * @author Christian Beikov
  * @since 1.0.0
  */
@@ -66,5 +65,37 @@ public class CollectionMappingLiteral implements CollectionMapping {
     @Override
     public Class<? extends Annotation> annotationType() {
         return CollectionMapping.class;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof CollectionMapping)) {
+            return false;
+        }
+
+        CollectionMapping that = (CollectionMapping) o;
+
+        if (ordered != that.ordered()) {
+            return false;
+        }
+        if (ignoreIndex != that.ignoreIndex()) {
+            return false;
+        }
+        if (forceUnique != that.forceUnique()) {
+            return false;
+        }
+        return comparator != null ? comparator.equals(that.comparator()) : that.comparator() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = comparator != null ? comparator.hashCode() : 0;
+        result = 31 * result + (ordered ? 1 : 0);
+        result = 31 * result + (ignoreIndex ? 1 : 0);
+        result = 31 * result + (forceUnique ? 1 : 0);
+        return result;
     }
 }

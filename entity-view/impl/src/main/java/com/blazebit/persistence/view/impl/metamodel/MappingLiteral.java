@@ -20,6 +20,7 @@ import com.blazebit.persistence.view.FetchStrategy;
 import com.blazebit.persistence.view.Mapping;
 
 import java.lang.annotation.Annotation;
+import java.util.Arrays;
 
 /**
  *
@@ -64,5 +65,33 @@ public class MappingLiteral implements Mapping {
     @Override
     public Class<? extends Annotation> annotationType() {
         return Mapping.class;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof Mapping)) {
+            return false;
+        }
+
+        Mapping that = (Mapping) o;
+
+        if (value != null ? !value.equals(that.value()) : that.value() != null) {
+            return false;
+        }
+        if (!Arrays.equals(fetches, that.fetches())) {
+            return false;
+        }
+        return fetch == that.fetch();
+    }
+
+    @Override
+    public int hashCode() {
+        int result = value != null ? value.hashCode() : 0;
+        result = 31 * result + Arrays.hashCode(fetches);
+        result = 31 * result + (fetch != null ? fetch.hashCode() : 0);
+        return result;
     }
 }

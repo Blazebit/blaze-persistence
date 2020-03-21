@@ -749,15 +749,15 @@ public class ProxyFactory {
             }
 
             for (MappingConstructorImpl<T> constructor : constructors) {
-                // Skip the default constructor that is handled before
-                if (constructor.getParameterAttributes().isEmpty()) {
-                    continue;
-                }
                 MappingConstructorImpl<T> baseConstructor = (MappingConstructorImpl<T>) inheritanceBase.getConstructor(constructor.getName());
                 MappingConstructorImpl.InheritanceSubtypeConstructorConfiguration<T> overallParameterAttributesClosureConfig = baseConstructor.getOverallInheritanceParametersAttributesClosureConfiguration();
 
                 @SuppressWarnings("unchecked")
                 List<AbstractParameterAttribute<? super T, ?>> parameterAttributes = overallParameterAttributesClosureConfig.getParameterAttributesClosure();
+                // Skip the default constructor that is handled before
+                if (addedDefaultConstructor && parameterAttributes.isEmpty()) {
+                    continue;
+                }
                 // Copy default constructor parameters
                 int constructorParameterCount = fields.length + parameterAttributes.size();
                 CtClass[] constructorAttributeTypes = new CtClass[constructorParameterCount];
@@ -831,10 +831,6 @@ public class ProxyFactory {
             }
 
             for (MappingConstructorImpl<T> constructor : constructors) {
-                // Skip the default constructor that is handled before
-                if (constructor.getParameterAttributes().isEmpty()) {
-                    continue;
-                }
                 MappingConstructorImpl<T> baseConstructor = (MappingConstructorImpl<T>) inheritanceBase.getConstructor(constructor.getName());
                 MappingConstructorImpl.InheritanceSubtypeConstructorConfiguration<T> subtypeConstructorConfiguration = baseConstructor.getSubtypeConstructorConfiguration((Map<ManagedViewTypeImplementor<? extends T>, String>) (Map<?, ?>) configurationEntry.getKey());
                 @SuppressWarnings("unchecked")
