@@ -97,7 +97,8 @@ public class HibernateJpa21Provider extends HibernateJpaProvider {
         }
 
         try {
-            return (boolean) HAS_ORPHAN_DELETE_METHOD.invoke(componentType.getCascadeStyle(propertyIndex));
+            int leafPropertyIndex = componentType.getPropertyIndex(propertyParts[propertyIndex]);
+            return (boolean) HAS_ORPHAN_DELETE_METHOD.invoke(componentType.getCascadeStyle(leafPropertyIndex));
         } catch (Exception ex) {
             throw new RuntimeException("Could not access orphan removal information. Please report your version of hibernate so we can provide support for it!", ex);
         }
@@ -145,7 +146,8 @@ public class HibernateJpa21Provider extends HibernateJpaProvider {
             }
         }
         try {
-            return (boolean) DO_CASCADE_METHOD.invoke(componentType.getCascadeStyle(propertyIndex), DELETE_CASCADE);
+            int leafPropertyIndex = componentType.getPropertyIndex(propertyParts[propertyIndex]);
+            return (boolean) DO_CASCADE_METHOD.invoke(componentType.getCascadeStyle(leafPropertyIndex), DELETE_CASCADE);
         } catch (Exception ex) {
             throw new RuntimeException("Could not access orphan removal information. Please report your version of hibernate so we can provide support for it!", ex);
         }

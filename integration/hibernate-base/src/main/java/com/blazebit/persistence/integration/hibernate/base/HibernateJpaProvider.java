@@ -1312,7 +1312,8 @@ public class HibernateJpaProvider implements JpaProvider {
                 break;
             }
         }
-        return componentType.getCascadeStyle(propertyIndex).hasOrphanDelete();
+        int leafPropertyIndex = componentType.getPropertyIndex(propertyParts[propertyIndex]);
+        return componentType.getCascadeStyle(leafPropertyIndex).hasOrphanDelete();
     }
 
     @Override
@@ -1352,7 +1353,8 @@ public class HibernateJpaProvider implements JpaProvider {
                 break;
             }
         }
-        return componentType.getCascadeStyle(propertyIndex).doCascade(CascadingAction.DELETE);
+        int leafPropertyIndex = componentType.getPropertyIndex(propertyParts[propertyIndex]);
+        return componentType.getCascadeStyle(leafPropertyIndex).doCascade(CascadingAction.DELETE);
     }
 
     @Override
