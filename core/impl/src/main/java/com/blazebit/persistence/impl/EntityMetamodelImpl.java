@@ -275,22 +275,23 @@ public class EntityMetamodelImpl implements EntityMetamodel {
             Class<?> elementType = type.getJavaType();
             if (elementType.isEnum()) {
                 enumTypes.put(elementType.getName(), (Class<Enum<?>>) elementType);
-                if (jpaProvider.supportsEnumLiteral(baseType, parent == null ? attribute.getName() : (parent + "." + attribute.getName()), key)) {
+                if (jpaProvider.supportsEnumLiteral(baseType, parent, key)) {
                     enumTypesForLiterals.put(elementType.getName(), (Class<Enum<?>>) elementType);
                 }
             }
         } else {
-            discoverEnumTypes(seenTypesForEnumResolving, enumTypes, enumTypesForLiterals, (ManagedType<?>) type, parent);
+            discoverEnumTypes(seenTypesForEnumResolving, enumTypes, enumTypesForLiterals, (ManagedType<?>) type, null);
         }
     }
 
     @SuppressWarnings("unchecked")
     private void discoverEnumTypes(Set<Class<?>> seenTypesForEnumResolving, Map<String, Class<Enum<?>>> enumTypes, Map<String, Class<Enum<?>>> enumTypesForLiterals, ManagedType<?> baseType, String parent, Attribute<?, ?> attribute) {
+        String newParent = parent == null || attribute.getPersistentAttributeType() != Attribute.PersistentAttributeType.EMBEDDED ? attribute.getName() : (parent + "." + attribute.getName());
         Class<?> fieldType = JpaMetamodelUtils.resolveFieldClass(baseType.getJavaType(), attribute);
         if (attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.BASIC) {
             if (fieldType.isEnum()) {
                 enumTypes.put(fieldType.getName(), (Class<Enum<?>>) fieldType);
-                if (jpaProvider.supportsEnumLiteral(baseType, parent == null ? attribute.getName() : (parent + "." + attribute.getName()), false)) {
+                if (jpaProvider.supportsEnumLiteral(baseType, newParent, false)) {
                     enumTypesForLiterals.put(fieldType.getName(), (Class<Enum<?>>) fieldType);
                 }
             }
@@ -298,12 +299,12 @@ public class EntityMetamodelImpl implements EntityMetamodel {
             PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) attribute;
             if (pluralAttribute.getCollectionType() == PluralAttribute.CollectionType.MAP) {
                 MapAttribute<?, ?, ?> mapAttribute = (MapAttribute<?, ?, ?>) pluralAttribute;
-                discoverEnumTypes(seenTypesForEnumResolving, enumTypes, enumTypesForLiterals, mapAttribute.getKeyType(), baseType, parent, mapAttribute, true);
+                discoverEnumTypes(seenTypesForEnumResolving, enumTypes, enumTypesForLiterals, mapAttribute.getKeyType(), baseType, newParent, mapAttribute, true);
             }
 
-            discoverEnumTypes(seenTypesForEnumResolving, enumTypes, enumTypesForLiterals, pluralAttribute.getElementType(), baseType, parent, pluralAttribute, false);
+            discoverEnumTypes(seenTypesForEnumResolving, enumTypes, enumTypesForLiterals, pluralAttribute.getElementType(), baseType, newParent, pluralAttribute, false);
         } else if (!seenTypesForEnumResolving.contains(fieldType)) {
-            discoverEnumTypes(seenTypesForEnumResolving, enumTypes, enumTypesForLiterals, delegate.managedType(fieldType), parent);
+            discoverEnumTypes(seenTypesForEnumResolving, enumTypes, enumTypesForLiterals, delegate.managedType(fieldType), attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED ? newParent : null);
         }
     }
 
