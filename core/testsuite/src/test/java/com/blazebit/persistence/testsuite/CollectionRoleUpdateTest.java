@@ -28,6 +28,7 @@ import com.blazebit.persistence.testsuite.entity.IndexedNode;
 import com.blazebit.persistence.testsuite.entity.KeyedEmbeddable;
 import com.blazebit.persistence.testsuite.entity.KeyedNode;
 import com.blazebit.persistence.testsuite.entity.Root;
+import com.blazebit.persistence.testsuite.entity.StringIdCTE;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
@@ -92,7 +93,8 @@ public class CollectionRoleUpdateTest extends AbstractCoreTest {
             IndexedNode.class,
             KeyedNode.class,
             KeyedEmbeddable.class,
-            IndexedEmbeddable.class
+            IndexedEmbeddable.class,
+            StringIdCTE.class
         };
     }
 
@@ -369,6 +371,49 @@ public class CollectionRoleUpdateTest extends AbstractCoreTest {
                 assertEquals("UPDATE Root(keyedNodesElementCollection) r"
                         + " SET KEY(keyedNodesElementCollection) = :param_0,r.keyedNodesElementCollection.value = :param_1,r.keyedNodesElementCollection.value2 = :param_2"
                         + " WHERE KEY(_collection) = :param_3 AND r.id = :param_4 AND _collection.value = :param_5 AND _collection.value2 = :param_6", criteria.getQueryString());
+                int updated = criteria.executeUpdate();
+                Root r = getRoot(em);
+
+                assertEquals(1, updated);
+                assertEquals(1, r.getKeyedNodes().size());
+                assertEquals(1, r.getKeyedNodesMany().size());
+                assertEquals(1, r.getKeyedNodesManyDuplicate().size());
+                assertEquals(1, r.getKeyedNodesElementCollection().size());
+
+                assertEquals("B", r.getKeyedNodesElementCollection().get("b").getValue());
+                assertEquals("P", r.getKeyedNodesElementCollection().get("b").getValue2());
+            }
+        });
+    }
+
+    @Test
+    public void updateKeyedWithInlineCte() {
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                UpdateCriteriaBuilder<Root> criteria = cbf.updateCollection(em, Root.class, "r", "keyedNodesElementCollection")
+                        .with(StringIdCTE.class)
+                            .from(Root.class, "r")
+                            .bind("id").select("KEY(r.keyedNodesElementCollection)")
+                        .end();
+                criteria.set("keyedNodesElementCollection.value").from(StringIdCTE.class)
+                        .select("'B'")
+                        .where("id").eqExpression("KEY(r.keyedNodesElementCollection)")
+                        .end();
+                criteria.set("keyedNodesElementCollection.value2", "P");
+                criteria.whereExists().from(StringIdCTE.class)
+                        .select("1")
+                        .where("id").eqExpression("KEY(r.keyedNodesElementCollection)")
+                        .end();
+                criteria.where("KEY(keyedNodesElementCollection)").eq("a");
+                criteria.where("r.id").eq(1);
+                criteria.where("r.keyedNodesElementCollection.value").eq("a");
+                criteria.where("r.keyedNodesElementCollection.value2").eq("b");
+
+                // TODO: adapt expected query string
+//                assertEquals("UPDATE Root(keyedNodesElementCollection) r"
+//                        + " SET KEY(keyedNodesElementCollection) = :param_0,r.keyedNodesElementCollection.value = :param_1,r.keyedNodesElementCollection.value2 = :param_2"
+//                        + " WHERE KEY(_collection) = :param_3 AND r.id = :param_4 AND _collection.value = :param_5 AND _collection.value2 = :param_6", criteria.getQueryString());
                 int updated = criteria.executeUpdate();
                 Root r = getRoot(em);
 
