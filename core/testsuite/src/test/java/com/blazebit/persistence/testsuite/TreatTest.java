@@ -43,7 +43,8 @@ public class TreatTest extends AbstractCoreTest {
                 IntIdEntity.class,
                 PolymorphicBase.class,
                 PolymorphicSub1.class,
-                PolymorphicSub2.class
+                PolymorphicSub2.class,
+                PolymorphicBaseContainer.class
         };
     }
 
@@ -241,5 +242,26 @@ public class TreatTest extends AbstractCoreTest {
         assertEquals("SELECT polymorphicSub1.sub1Value FROM PolymorphicBase p "
                 + treatRootTreatJoin(JoinType.INNER, "p", PolymorphicSub1.class, "parent1", PolymorphicSub1.class, "polymorphicSub1") + treatJoinWhereFragment, criteria.getQueryString());
         criteria.getResultList();
+    }
+
+
+    @Test
+    @Category({ NoEclipselink.class })
+    public void implicitJoinTreatedImplicitCorrelation() {
+        CriteriaBuilder<PolymorphicBase> crit = cbf.create(em, PolymorphicBase.class, "p")
+                .whereExists().from(PolymorphicSub1.class, "sub1")
+                    .select("1")
+                    .where("TREAT(p.children.container.child AS PolymorphicSub1).id").eqExpression("sub1.id")
+                .end();
+        // TODO: complete expected query string
+//        assertEquals(
+//                "SELECT p FROM PolymorphicBase p " +
+//                "WHERE EXISTS (" +
+//                "SELECT 1 FROM PolymorphicSub1 sub1 " +
+//                "WHERE joinAlias.id = sub1.id" +
+//                ")",
+//                crit.getQueryString()
+//        );
+        crit.getResultList();
     }
 }

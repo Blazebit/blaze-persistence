@@ -28,6 +28,7 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.OrderColumn;
 
 /**
@@ -46,6 +47,7 @@ public abstract class PolymorphicBase implements Serializable {
     private List<PolymorphicBase> list = new ArrayList<PolymorphicBase>();
     private Set<PolymorphicBase> children = new HashSet<PolymorphicBase>();
     private Map<String, PolymorphicBase> map = new HashMap<String, PolymorphicBase>();
+    private PolymorphicBaseContainer container;
 
     public PolymorphicBase() {
     }
@@ -106,5 +108,14 @@ public abstract class PolymorphicBase implements Serializable {
 
     public void setMap(Map<String, PolymorphicBase> map) {
         this.map = map;
+    }
+
+    @OneToOne(mappedBy = "owner")
+    public PolymorphicBaseContainer getContainer() {
+        return container;
+    }
+
+    public void setContainer(PolymorphicBaseContainer container) {
+        this.container = container;
     }
 }
