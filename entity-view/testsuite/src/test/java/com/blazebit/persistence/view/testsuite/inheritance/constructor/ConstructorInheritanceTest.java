@@ -28,7 +28,10 @@ import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.inheritance.constructor.model.DocumentBaseView;
 import com.blazebit.persistence.view.testsuite.inheritance.constructor.model.NewDocumentView;
 import com.blazebit.persistence.view.testsuite.inheritance.constructor.model.OldDocumentView;
+import com.blazebit.persistence.view.testsuite.inheritance.constructor.model.ParameterNewDocumentView;
+import com.blazebit.persistence.view.testsuite.inheritance.constructor.model.ParameterOldDocumentView;
 import com.blazebit.persistence.view.testsuite.inheritance.constructor.model.SimplePersonSubView;
+import com.blazebit.persistence.view.testsuite.inheritance.constructor.model.SuperTypeParameterDocumentBaseView;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -92,8 +95,8 @@ public class ConstructorInheritanceTest extends AbstractEntityViewTest {
         });
     }
 
-    @Before
-    public void setUp() {
+    @Test
+    public void inheritanceQuery() {
         doc1 = cbf.create(em, Document.class).where("name").eq("doc1").getSingleResult();
         doc2 = cbf.create(em, Document.class).where("name").eq("doc2").getSingleResult();
         doc3 = cbf.create(em, Document.class).where("name").eq("doc3").getSingleResult();
@@ -104,10 +107,6 @@ public class ConstructorInheritanceTest extends AbstractEntityViewTest {
         cfg.addEntityView(NewDocumentView.class);
         cfg.addEntityView(OldDocumentView.class);
         this.evm = cfg.createEntityViewManager(cbf);
-    }
-
-    @Test
-    public void inheritanceQuery() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d")
             .orderByAsc("name");
         CriteriaBuilder<DocumentBaseView> cb = evm.applySetting(EntityViewSetting.create(DocumentBaseView.class), criteria);
@@ -126,6 +125,33 @@ public class ConstructorInheritanceTest extends AbstractEntityViewTest {
         assertSubviewEquals(doc1.getContacts().values(), docView1.getPeople());
         assertSubviewEquals(Collections.singleton(doc2.getOwner()), docView2.getPeople());
         assertSubviewEquals(doc3.getPartners(), docView3.getPeople());
+    }
+
+    @Test
+    public void inheritanceQuerySuperTypeParameter() {
+        doc1 = cbf.create(em, Document.class).where("name").eq("doc1").getSingleResult();
+        doc2 = cbf.create(em, Document.class).where("name").eq("doc2").getSingleResult();
+        doc3 = cbf.create(em, Document.class).where("name").eq("doc3").getSingleResult();
+
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        cfg.addEntityView(SuperTypeParameterDocumentBaseView.class);
+        cfg.addEntityView(ParameterNewDocumentView.class);
+        cfg.addEntityView(ParameterOldDocumentView.class);
+        this.evm = cfg.createEntityViewManager(cbf);
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d")
+                .orderByAsc("name");
+        CriteriaBuilder<SuperTypeParameterDocumentBaseView> cb = evm.applySetting(EntityViewSetting.create(SuperTypeParameterDocumentBaseView.class), criteria);
+        List<SuperTypeParameterDocumentBaseView> results = cb.getResultList();
+
+        assertEquals(3, results.size());
+
+        ParameterNewDocumentView docView1 = (ParameterNewDocumentView) results.get(0);
+        SuperTypeParameterDocumentBaseView docView2 = (SuperTypeParameterDocumentBaseView) results.get(1);
+        ParameterOldDocumentView docView3 = (ParameterOldDocumentView) results.get(2);
+
+        assertEquals("New", docView1.getName());
+        assertEquals("doc2", docView2.getName());
+        assertEquals("Old", docView3.getName());
     }
 
     public static void assertDocumentEquals(Document doc, DocumentBaseView view) {

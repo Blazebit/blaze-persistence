@@ -14,6 +14,7 @@ None
 
 * Missing flushes for attributes that were changed in pre-update entity view listeners
 * Render enum literal as parameter if compared with attribute having Hibernate non-`EnhancedUserType`
+* Fix `NoSuchMethodException` issue with entity view inheritance where superclass has parameters but subclass has none
 
 ### Backwards-incompatible changes
 

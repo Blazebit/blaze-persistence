@@ -16,13 +16,11 @@
 
 package com.blazebit.persistence.view.testsuite.inheritance.constructor.model;
 
+import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.EntityViewInheritance;
 import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.Mapping;
-import com.blazebit.persistence.testsuite.entity.Document;
-
-import java.util.Collection;
 
 /**
  *
@@ -31,24 +29,18 @@ import java.util.Collection;
  */
 @EntityView(Document.class)
 @EntityViewInheritance
-public abstract class DocumentBaseView {
+public abstract class SuperTypeParameterDocumentBaseView {
 
-    private final Collection<SimplePersonSubView> people;
+    private final String name;
 
-    public DocumentBaseView(@Mapping("owner") Collection<SimplePersonSubView> owners) {
-        this.people = owners;
+    public SuperTypeParameterDocumentBaseView(@Mapping("name") String name) {
+        this.name = name;
     }
 
     @IdMapping
     public abstract Long getId();
 
-    public abstract String getName();
-
-    public abstract long getAge();
-
-    public abstract int getIdx();
-
-    public Collection<SimplePersonSubView> getPeople() {
-        return people;
+    public String getName() {
+        return name;
     }
 }

@@ -494,6 +494,8 @@ public class EntityViewManagerImpl implements EntityViewManager {
             return (T) metamodel.getEntityMetamodel();
         } else if (TransactionSupport.class.isAssignableFrom(serviceClass)) {
             return (T) transactionSupport;
+        } else if (CriteriaBuilderFactory.class.isAssignableFrom(serviceClass)) {
+            return (T) cbf;
         }
         return null;
     }
