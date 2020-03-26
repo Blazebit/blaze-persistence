@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2019 Blazebit.
+ * Copyright 2014 - 2020 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import java.util.Objects;
 
 /**
  * @author Moritz Becker
- * @since 1.4.0
+ * @since 1.5.0
  */
 @Entity
 public class PolymorphicBaseContainer {
@@ -66,8 +66,12 @@ public class PolymorphicBaseContainer {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         PolymorphicBaseContainer that = (PolymorphicBaseContainer) o;
         return Objects.equals(id, that.id);
     }

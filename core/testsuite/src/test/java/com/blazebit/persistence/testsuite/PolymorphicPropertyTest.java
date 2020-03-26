@@ -19,6 +19,7 @@ package com.blazebit.persistence.testsuite;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.PolymorphicBase;
+import com.blazebit.persistence.testsuite.entity.PolymorphicBaseContainer;
 import com.blazebit.persistence.testsuite.entity.PolymorphicPropertyBase;
 import com.blazebit.persistence.testsuite.entity.PolymorphicPropertySub1;
 import com.blazebit.persistence.testsuite.entity.PolymorphicPropertySub2;
@@ -46,7 +47,8 @@ public class PolymorphicPropertyTest extends AbstractCoreTest {
             PolymorphicPropertySub2.class,
             PolymorphicBase.class,
             PolymorphicSub1.class,
-            PolymorphicSub2.class
+            PolymorphicSub2.class,
+            PolymorphicBaseContainer.class
         };
     }
     

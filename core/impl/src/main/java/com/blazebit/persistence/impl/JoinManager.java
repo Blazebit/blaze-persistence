@@ -759,7 +759,9 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
                             JoinNode treatedNode = result.baseNode.getTreatedJoinNode(treatType);
                             treatedCorrelationNodes.add(treatedNode);
+                            // We just implicit join the rest of the expression
                             result = implicitJoin(treatedNode, currentPathExpression, null, implicitCorrelation ? JoinType.LEFT : JoinType.INNER, null, new HashSet<String>(), start + 1, pathElements.size(), true, true, true, false);
+                            start = pathElements.size();
                         } else {
                             JoinTreeNode existingNode = correlationParent.getNodes().get(((PropertyExpression) pathElementExpression).getProperty());
                             if (existingNode == null || existingNode.getDefaultNode() == null) {
@@ -770,10 +772,10 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                     }
 
                     if (result.baseNode.getAliasInfo().getAliasOwner() != aliasManager && start + 1 < pathElements.size() - 1) {
-                        result = correlate(result, rootAlias, pathElements.get(start + 1), null, false, lateral, implicitCorrelation);
+                        result = correlate(result, rootAlias, pathElements.get(start), null, false, lateral, implicitCorrelation);
                         start++;
                     }
-                    result = implicitJoin(result.baseNode, currentPathExpression, null, implicitCorrelation ? JoinType.LEFT : JoinType.INNER, null, new HashSet<String>(), start + 1, pathElements.size(), true, true, true, false);
+                    result = implicitJoin(result.baseNode, currentPathExpression, null, implicitCorrelation ? JoinType.LEFT : JoinType.INNER, null, new HashSet<String>(), start, pathElements.size(), true, true, true, false);
 
                     // Reset start
                     start = 0;

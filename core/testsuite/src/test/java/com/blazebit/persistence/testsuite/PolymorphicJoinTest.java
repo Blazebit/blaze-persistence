@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 import javax.persistence.Tuple;
 
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.entity.PolymorphicBaseContainer;
 import com.googlecode.catchexception.CatchException;
 import org.junit.Test;
 
@@ -45,7 +46,8 @@ public class PolymorphicJoinTest extends AbstractCoreTest {
             IntIdEntity.class,
             PolymorphicBase.class,
             PolymorphicSub1.class,
-            PolymorphicSub2.class
+            PolymorphicSub2.class,
+            PolymorphicBaseContainer.class
         };
     }
     

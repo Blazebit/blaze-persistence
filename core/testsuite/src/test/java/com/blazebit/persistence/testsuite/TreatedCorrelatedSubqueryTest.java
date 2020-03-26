@@ -21,6 +21,7 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.PolymorphicBase;
+import com.blazebit.persistence.testsuite.entity.PolymorphicBaseContainer;
 import com.blazebit.persistence.testsuite.entity.PolymorphicSub1;
 import com.blazebit.persistence.testsuite.entity.PolymorphicSub2;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
@@ -50,7 +51,8 @@ public class TreatedCorrelatedSubqueryTest extends AbstractCoreTest {
                 IntIdEntity.class,
                 PolymorphicBase.class,
                 PolymorphicSub1.class,
-                PolymorphicSub2.class
+                PolymorphicSub2.class,
+                PolymorphicBaseContainer.class
         };
     }
 
@@ -123,7 +125,13 @@ public class TreatedCorrelatedSubqueryTest extends AbstractCoreTest {
                 .end();
 
         String expectedQuery = "SELECT root FROM PolymorphicBase root " +
-                "WHERE EXISTS (SELECT 1 FROM root.parent parentAlias_base JOIN parentAlias_base.parent parent_1 JOIN parent_1.parent2 parentAlias WHERE TYPE(parentAlias_base) = " + PolymorphicSub1.class.getSimpleName() + " AND TYPE(parent_1) = " + PolymorphicSub2.class.getSimpleName() + ")";
+                "WHERE EXISTS (" +
+                    "SELECT 1 " +
+                    "FROM root.parent parentAlias_base " +
+                    "JOIN parentAlias_base.parent parent_1 " +
+                    "JOIN parent_1.parent2 parentAlias " +
+                    "WHERE TYPE(parentAlias_base) = " + PolymorphicSub1.class.getSimpleName() + " AND TYPE(parent_1) = " + PolymorphicSub2.class.getSimpleName() +
+                ")";
         assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
     }

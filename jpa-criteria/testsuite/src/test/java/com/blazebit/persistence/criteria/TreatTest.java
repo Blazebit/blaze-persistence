@@ -43,7 +43,8 @@ public class TreatTest extends AbstractCoreTest {
                 IntIdEntity.class,
                 PolymorphicBase.class,
                 PolymorphicSub1.class,
-                PolymorphicSub2.class
+                PolymorphicSub2.class,
+                PolymorphicBaseContainer.class
         };
     }
 
