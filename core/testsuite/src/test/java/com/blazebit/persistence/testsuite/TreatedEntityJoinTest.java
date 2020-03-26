@@ -25,6 +25,7 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.PolymorphicBase;
+import com.blazebit.persistence.testsuite.entity.PolymorphicBaseContainer;
 import com.blazebit.persistence.testsuite.entity.PolymorphicSub1;
 import com.blazebit.persistence.testsuite.entity.PolymorphicSub2;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
@@ -54,7 +55,8 @@ public class TreatedEntityJoinTest extends AbstractCoreTest {
                 IntIdEntity.class,
                 PolymorphicBase.class,
                 PolymorphicSub1.class,
-                PolymorphicSub2.class
+                PolymorphicSub2.class,
+                PolymorphicBaseContainer.class
         };
     }
 

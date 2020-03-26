@@ -16,6 +16,7 @@ None
 * Render enum literal as parameter if compared with attribute having Hibernate non-`EnhancedUserType`
 * Fix `NoSuchMethodException` issue with entity view inheritance where superclass has parameters but subclass has none
 * Fix erroneous component type handling in `HibernateJpaProvider`
+* Fix implicit joining issue with deep paths in `TREAT` expression
 
 ### Backwards-incompatible changes
 
