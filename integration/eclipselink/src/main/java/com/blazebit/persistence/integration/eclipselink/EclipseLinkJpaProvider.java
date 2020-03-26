@@ -48,7 +48,7 @@ import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -333,10 +333,10 @@ public class EclipseLinkJpaProvider implements JpaProvider {
         if (mapping instanceof OneToOneMapping) {
             OneToOneMapping oneToOneMapping = (OneToOneMapping) mapping;
             if (oneToOneMapping.hasRelationTable()) {
-                Map<String, String> idColumnMapping = new HashMap<>();
+                Map<String, String> idColumnMapping = new LinkedHashMap<>();
                 Map<String, String> keyMapping = null;
                 Map<String, String> keyColumnTypes = null;
-                Map<String, String> targetIdColumnMapping = new HashMap<>();
+                Map<String, String> targetIdColumnMapping = new LinkedHashMap<>();
                 return new JoinTable(
                         oneToOneMapping.getRelationTable().getName(),
                         null,
@@ -357,8 +357,8 @@ public class EclipseLinkJpaProvider implements JpaProvider {
                 Vector<DatabaseField> targetKeyFields = manyToManyMapping.getTargetKeyFields();
                 Vector<DatabaseField> targetRelationKeyFields = manyToManyMapping.getTargetRelationKeyFields();
 
-                Map<String, String> idColumnMapping = new HashMap<>(sourceKeyFields.size());
-                Map<String, String> targetIdColumnMapping = new HashMap<>(targetKeyFields.size());
+                Map<String, String> idColumnMapping = new LinkedHashMap<>(sourceKeyFields.size());
+                Map<String, String> targetIdColumnMapping = new LinkedHashMap<>(targetKeyFields.size());
 
                 for (int i = 0; i < sourceKeyFields.size(); i++) {
                     idColumnMapping.put(sourceKeyFields.get(i).getName(), sourceRelationKeyFields.get(i).getName());
@@ -381,7 +381,7 @@ public class EclipseLinkJpaProvider implements JpaProvider {
                 Vector<DatabaseField> sourceKeyFields = directCollectionMapping.getSourceKeyFields();
                 Vector<DatabaseField> referenceKeyFields = directCollectionMapping.getReferenceKeyFields();
 
-                Map<String, String> idColumnMapping = new HashMap<>(sourceKeyFields.size());
+                Map<String, String> idColumnMapping = new LinkedHashMap<>(sourceKeyFields.size());
                 Map<String, String> targetIdColumnMapping = Collections.emptyMap();
 
                 for (int i = 0; i < sourceKeyFields.size(); i++) {
@@ -401,7 +401,7 @@ public class EclipseLinkJpaProvider implements JpaProvider {
                 Vector<DatabaseField> sourceKeyFields = directMapMapping.getSourceKeyFields();
                 Vector<DatabaseField> referenceKeyFields = directMapMapping.getReferenceKeyFields();
 
-                Map<String, String> idColumnMapping = new HashMap<>(sourceKeyFields.size());
+                Map<String, String> idColumnMapping = new LinkedHashMap<>(sourceKeyFields.size());
                 Map<String, String> targetIdColumnMapping = Collections.emptyMap();
 
                 for (int i = 0; i < sourceKeyFields.size(); i++) {
@@ -421,7 +421,7 @@ public class EclipseLinkJpaProvider implements JpaProvider {
                 Vector<DatabaseField> sourceKeyFields = aggregateCollectionMapping.getSourceKeyFields();
                 Vector<DatabaseField> targetForeignKeyFields = aggregateCollectionMapping.getTargetForeignKeyFields();
 
-                Map<String, String> idColumnMapping = new HashMap<>(sourceKeyFields.size());
+                Map<String, String> idColumnMapping = new LinkedHashMap<>(sourceKeyFields.size());
                 Map<String, String> targetIdColumnMapping = Collections.emptyMap();
                 String tableName = null;
 
@@ -447,7 +447,7 @@ public class EclipseLinkJpaProvider implements JpaProvider {
         if (identityFieldsForMapKey == null || identityFieldsForMapKey.isEmpty()) {
             return null;
         } else {
-            Map<String, String> keyMapping = new HashMap<>(identityFieldsForMapKey.size());
+            Map<String, String> keyMapping = new LinkedHashMap<>(identityFieldsForMapKey.size());
             for (DatabaseField databaseField : identityFieldsForMapKey) {
                 keyMapping.put(databaseField.getName(), databaseField.getName());
             }
@@ -691,7 +691,7 @@ public class EclipseLinkJpaProvider implements JpaProvider {
         } else {
             keys = getIdentifierOrUniqueKeyEmbeddedPropertyNames(owner, elementCollectionPath, attributeName);
         }
-        Map<String, String> map = new HashMap<>(keys.size());
+        Map<String, String> map = new LinkedHashMap<>(keys.size());
         for (String key : keys) {
             map.put(key, null);
         }

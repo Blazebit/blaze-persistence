@@ -208,6 +208,14 @@ public interface DbmsDialect {
     public boolean supportsJoinsInRecursiveCte();
 
     /**
+     * Returns true if the dbms supports the ANSI row value constructor syntax, false otherwise.
+     *
+     * @return Whether ANSI row value constructor syntax is supported by the dbms
+     * @since 1.5.0
+     */
+    public boolean supportsAnsiRowValueConstructor();
+
+    /**
      * Returns true if the dbms supports row value constructor syntax, false otherwise.
      *
      * @return Whether row value constructor syntax is supported by the dbms

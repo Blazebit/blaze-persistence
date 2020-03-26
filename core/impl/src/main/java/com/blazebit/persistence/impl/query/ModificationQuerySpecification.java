@@ -120,7 +120,7 @@ public class ModificationQuerySpecification<T> extends CustomQuerySpecification<
         remapColumnExpressions(sqlSb, columnExpressionRemappings, 0, sqlSb.length());
     }
 
-    protected final void remapColumnExpressions(StringBuilder sqlSb, Map<String, String> columnExpressionRemappings, int startIndex, int endIndex) {
+    protected final int remapColumnExpressions(StringBuilder sqlSb, Map<String, String> columnExpressionRemappings, int startIndex, int endIndex) {
         // Replace usages of the owner entities id columns by the corresponding join table id columns
         for (Map.Entry<String, String> entry : columnExpressionRemappings.entrySet()) {
             String sourceExpression = entry.getKey();
@@ -136,5 +136,6 @@ public class ModificationQuerySpecification<T> extends CustomQuerySpecification<
                 endIndex += delta;
             }
         }
+        return endIndex;
     }
 }

@@ -831,7 +831,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         }
 
         verifyBuilderEnded();
-        joinManager.join(path, alias, type, fetch, defaultJoin);
+        joinManager.join(path, alias, type, fetch, defaultJoin, null);
         return (X) this;
     }
 

@@ -151,6 +151,11 @@ public class DelegatingDbmsDialect implements DbmsDialect {
     }
 
     @Override
+    public boolean supportsAnsiRowValueConstructor() {
+        return delegate.supportsAnsiRowValueConstructor();
+    }
+
+    @Override
     public boolean supportsRowValueConstructor() {
         return delegate.supportsRowValueConstructor();
     }

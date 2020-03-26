@@ -25,11 +25,15 @@ import com.blazebit.persistence.parser.expression.ArithmeticExpression;
 import com.blazebit.persistence.parser.expression.ArrayExpression;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.FunctionExpression;
+import com.blazebit.persistence.parser.expression.ListIndexExpression;
+import com.blazebit.persistence.parser.expression.MapKeyExpression;
 import com.blazebit.persistence.parser.expression.MapValueExpression;
 import com.blazebit.persistence.parser.expression.NullExpression;
 import com.blazebit.persistence.parser.expression.OrderByItem;
 import com.blazebit.persistence.parser.expression.ParameterExpression;
 import com.blazebit.persistence.parser.expression.PathExpression;
+import com.blazebit.persistence.parser.expression.PathReference;
+import com.blazebit.persistence.parser.expression.QualifiedExpression;
 import com.blazebit.persistence.parser.expression.SubqueryExpression;
 import com.blazebit.persistence.parser.expression.TreatExpression;
 import com.blazebit.persistence.parser.expression.WindowDefinition;
@@ -51,13 +55,18 @@ import com.blazebit.persistence.parser.predicate.PredicateQuantifier;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.parser.util.TypeConverter;
 import com.blazebit.persistence.parser.util.TypeUtils;
+import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpqlFunction;
 
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.Type;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -88,6 +97,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     private final ParameterManager parameterManager;
     private final AssociationParameterTransformerFactory parameterTransformerFactory;
     private final JpaProvider jpaProvider;
+    private final DbmsDialect dbmsDialect;
     private final Map<String, JpqlFunction> registeredFunctions;
     private final Map<String, String> registeredFunctionsNames;
 
@@ -117,12 +127,13 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         BUILT_IN_FUNCTIONS = functions;
     }
 
-    public ResolvingQueryGenerator(EntityMetamodel entityMetamodel, AliasManager aliasManager, ParameterManager parameterManager, AssociationParameterTransformerFactory parameterTransformerFactory, JpaProvider jpaProvider, Map<String, JpqlFunction> registeredFunctions) {
+    public ResolvingQueryGenerator(EntityMetamodel entityMetamodel, AliasManager aliasManager, ParameterManager parameterManager, AssociationParameterTransformerFactory parameterTransformerFactory, JpaProvider jpaProvider, DbmsDialect dbmsDialect, Map<String, JpqlFunction> registeredFunctions) {
         this.entityMetamodel = entityMetamodel;
         this.aliasManager = aliasManager;
         this.parameterManager = parameterManager;
         this.parameterTransformerFactory = parameterTransformerFactory;
         this.jpaProvider = jpaProvider;
+        this.dbmsDialect = dbmsDialect;
         this.registeredFunctions = registeredFunctions;
         this.currentlyResolvingAliases = new HashSet<>();
         this.registeredFunctionsNames = new HashMap<>(registeredFunctions.size());
@@ -146,6 +157,36 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             }
         }
         expression.accept(this);
+    }
+
+    @Override
+    public void visit(ListIndexExpression expression) {
+        PathExpression path = expression.getPath();
+        String deReferenceFunction = null;
+        if (!externalRepresentation && path.getPathReference() != null && (deReferenceFunction = ((JoinNode) path.getPathReference().getBaseNode()).getDeReferenceFunction()) != null)  {
+            sb.append(deReferenceFunction);
+        }
+        sb.append("INDEX(");
+        path.accept(this);
+        sb.append(')');
+        if (deReferenceFunction != null) {
+            sb.append(')');
+        }
+    }
+
+    @Override
+    public void visit(MapKeyExpression expression) {
+        PathExpression path = expression.getPath();
+        String deReferenceFunction = null;
+        if (!externalRepresentation && path.getPathReference() != null && (deReferenceFunction = ((JoinNode) path.getPathReference().getBaseNode()).getDeReferenceFunction()) != null)  {
+            sb.append(deReferenceFunction);
+        }
+        sb.append("KEY(");
+        path.accept(this);
+        sb.append(')');
+        if (deReferenceFunction != null) {
+            sb.append(')');
+        }
     }
 
     @Override
@@ -715,6 +756,8 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         // TODO: Currently we assume that types can be inferred, and render parameters through but e.g. ":param1 = :param2" will fail
         ParameterRenderingMode oldParameterRenderingMode = setParameterRenderingMode(ParameterRenderingMode.PLACEHOLDER);
 
+        Expression expressionToSplit = needsEmbeddableSplitting(left, right);
+
         if (jpaProvider.needsAssociationToIdRewriteInOnClause() && clauseType == ClauseType.JOIN) {
             boolean rewritten = renderAssociationIdIfPossible(left);
             sb.append(operator);
@@ -727,15 +770,82 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                 rewriteToIdParam(right);
             }
         } else {
-            left.accept(this);
-            sb.append(operator);
-            if (quantifier != PredicateQuantifier.ONE) {
-                sb.append(quantifier.toString());
+            if (expressionToSplit == null || dbmsDialect.supportsAnsiRowValueConstructor() || !(left instanceof ParameterExpression) && !(right instanceof ParameterExpression)) {
+                left.accept(this);
+                sb.append(operator);
+                if (quantifier != PredicateQuantifier.ONE) {
+                    sb.append(quantifier.toString());
+                }
+                right.accept(this);
+            } else {
+                // We split the path and the parameter expression accordingly
+                // TODO: Try to handle map key expressions, although no JPA provider supports de-referencing map keys
+                PathExpression pathExpression = (PathExpression) expressionToSplit;
+                ParameterExpression parameterExpression;
+                if (left instanceof ParameterExpression) {
+                    parameterExpression = (ParameterExpression) left;
+                } else {
+                    parameterExpression = (ParameterExpression) right;
+                }
+                PathReference pathReference = pathExpression.getPathReference();
+                EmbeddableType<?> embeddableType = (EmbeddableType<?>) pathReference.getType();
+                String parameterName = parameterExpression.getName();
+                Map<String, List<String>> parameterAccessPaths = new HashMap<>();
+                ParameterManager.ParameterImpl<?> parameter = parameterManager.getParameter(parameterName);
+                sb.append('(');
+                for (Attribute<?, ?> attribute : embeddableType.getAttributes()) {
+                    ((JoinNode) pathReference.getBaseNode()).appendDeReference(sb, pathReference.getField() + "." + attribute.getName(), externalRepresentation);
+                    String embeddedPropertyName = attribute.getName();
+                    String subParamName = "_" + parameterName + "_" + embeddedPropertyName.replace('.', '_');
+                    sb.append(operator);
+                    sb.append(":").append(subParamName);
+                    if (parameter.getTranformer() == null) {
+                        parameterManager.registerParameterName(subParamName, false, null, null);
+                    }
+                    parameterAccessPaths.put(subParamName, Arrays.asList(embeddedPropertyName.split("\\.")));
+
+                    sb.append(" AND ");
+                }
+                sb.setLength(sb.length() - " AND ".length());
+                sb.append(')');
+
+                if (parameter.getTranformer() == null) {
+                    parameter.setTranformer(new SplittingParameterTransformer(parameterManager, entityMetamodel, embeddableType.getJavaType(), parameterAccessPaths));
+                }
             }
-            right.accept(this);
         }
         setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
         setParameterRenderingMode(oldParameterRenderingMode);
+    }
+
+    private Expression needsEmbeddableSplitting(Expression left, Expression right) {
+        Expression l = needsEmbeddableSplitting(left);
+        if (l != null) {
+            return l;
+        }
+        return needsEmbeddableSplitting(right);
+    }
+
+    private Expression needsEmbeddableSplitting(Expression expr) {
+        if (expr instanceof MapKeyExpression) {
+            PathReference pathReference = ((QualifiedExpression) expr).getPath().getPathReference();
+            if (pathReference != null) {
+                JoinNode joinNode = (JoinNode) pathReference.getBaseNode();
+                if (joinNode.getDeReferenceFunction() != null && ((MapAttribute<?, ?, ?>) joinNode.getParentTreeNode().getAttribute()).getKeyType() instanceof EmbeddableType<?>) {
+                    return expr;
+                }
+            }
+        } else if (expr instanceof PathExpression) {
+            PathReference pathReference = ((PathExpression) expr).getPathReference();
+            if (pathReference != null) {
+                JoinNode joinNode = (JoinNode) pathReference.getBaseNode();
+                if (joinNode.getDeReferenceFunction() != null && pathReference.getType() instanceof EmbeddableType<?>) {
+                    // We need to split this embeddable
+                    return expr;
+                }
+            }
+        }
+        return null;
     }
 
     private boolean renderAssociationIdIfPossible(Expression expression) {

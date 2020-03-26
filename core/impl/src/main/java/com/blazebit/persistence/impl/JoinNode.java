@@ -99,6 +99,7 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
     private CTEInfo inlineCte;
     private CompoundPredicate onPredicate;
     private List<JoinNode> joinNodesNeedingTreatConjunct;
+    private String deReferenceFunction;
     
     // Cache
     private boolean dirty = true;
@@ -829,6 +830,11 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
     }
 
     public void appendDeReference(StringBuilder sb, String property, boolean renderTreat, boolean externalRepresentation, boolean requiresElementCollectionIdCutoff) {
+        boolean wrapperFunction = false;
+        if (!externalRepresentation && deReferenceFunction != null) {
+            wrapperFunction = true;
+            sb.append(deReferenceFunction);
+        }
         appendAlias(sb, renderTreat, externalRepresentation);
         // If we have a valuesTypeName, the property can only be "value" which is already handled in appendAlias
         if (property != null && valuesTypeName == null) {
@@ -839,6 +845,9 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
             } else {
                 sb.append('.').append(property);
             }
+        }
+        if (wrapperFunction) {
+            sb.append(')');
         }
     }
 
@@ -907,6 +916,13 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         }
     }
 
+    public String getDeReferenceFunction() {
+        return deReferenceFunction;
+    }
+
+    public void setDeReferenceFunction(String deReferenceFunction) {
+        this.deReferenceFunction = deReferenceFunction;
+    }
     /* Implementation of Root interface */
 
     @Override

@@ -37,6 +37,12 @@ public class H2DbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
+    public boolean supportsAnsiRowValueConstructor() {
+        // At least Hibernate thinks so. We need this to get embeddable splitting working
+        return false;
+    }
+
+    @Override
     public boolean supportsReturningAllGeneratedKeys() {
         return false;
     }

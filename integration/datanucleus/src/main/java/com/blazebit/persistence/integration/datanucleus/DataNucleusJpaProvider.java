@@ -40,7 +40,7 @@ import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -319,7 +319,7 @@ public class DataNucleusJpaProvider implements JpaProvider {
             Map<String, String> keyColumnTypes = null;
             KeyMetaData keyMetaData = metaData.getKeyMetaData();
             if (keyMetaData != null && keyMetaData.getColumnMetaData() != null) {
-                keyMapping = new HashMap<>();
+                keyMapping = new LinkedHashMap<>();
                 ColumnMetaData[] keyColumnMetaData = keyMetaData.getColumnMetaData();
                 ColumnMetaData[] keyTargetPrimaryKeyColumnMetaData = keyMetaData.getForeignKeyMetaData() == null ? null : keyMetaData.getForeignKeyMetaData().getColumnMetaData();
                 if (keyTargetPrimaryKeyColumnMetaData == null) {
@@ -347,7 +347,7 @@ public class DataNucleusJpaProvider implements JpaProvider {
                 if (metaData.getJoinMetaData() == null || (joinMetaData = metaData.getJoinMetaData().getColumnMetaData()) == null) {
                     idColumnMapping = Collections.emptyMap();
                 } else {
-                    idColumnMapping = new HashMap<>(joinMetaData.length);
+                    idColumnMapping = new LinkedHashMap<>(joinMetaData.length);
                     for (int i = 0; i < joinMetaData.length; i++) {
                         idColumnMapping.put(joinMetaData[i].getName(), joinMetaData[i].getTarget());
                     }
@@ -355,7 +355,7 @@ public class DataNucleusJpaProvider implements JpaProvider {
                 if (metaData.getElementMetaData() == null || (elementMetaData = metaData.getElementMetaData().getColumnMetaData()) == null) {
                     targetIdColumnMapping = Collections.emptyMap();
                 } else {
-                    targetIdColumnMapping = new HashMap<>(elementMetaData.length);
+                    targetIdColumnMapping = new LinkedHashMap<>(elementMetaData.length);
                     for (int i = 0; i < elementMetaData.length; i++) {
                         targetIdColumnMapping.put(elementMetaData[i].getName(), elementMetaData[i].getTarget());
                     }
@@ -364,14 +364,14 @@ public class DataNucleusJpaProvider implements JpaProvider {
                 tableName = metaData.getJoinMetaData().getTable();
                 ColumnMetaData[] primaryKeyColumnMetaData = metaData.getJoinMetaData().getPrimaryKeyMetaData().getColumnMetaData();
                 ColumnMetaData[] foreignKeyColumnMetaData = metaData.getJoinMetaData().getForeignKeyMetaData().getColumnMetaData();
-                idColumnMapping = new HashMap<>(primaryKeyColumnMetaData.length);
+                idColumnMapping = new LinkedHashMap<>(primaryKeyColumnMetaData.length);
                 for (int i = 0; i < foreignKeyColumnMetaData.length; i++) {
                     idColumnMapping.put(foreignKeyColumnMetaData[i].getName(), primaryKeyColumnMetaData[i].getName());
                 }
 
                 ColumnMetaData[] targetColumnMetaData = metaData.getJoinMetaData().getColumnMetaData();
                 ColumnMetaData[] targetPrimaryKeyColumnMetaData = metaData.getElementMetaData().getForeignKeyMetaData().getColumnMetaData();
-                targetIdColumnMapping = new HashMap<>(targetPrimaryKeyColumnMetaData.length);
+                targetIdColumnMapping = new LinkedHashMap<>(targetPrimaryKeyColumnMetaData.length);
 
                 for (int i = 0; i < targetColumnMetaData.length; i++) {
                     targetIdColumnMapping.put(targetColumnMetaData[i].getName(), targetPrimaryKeyColumnMetaData[i].getName());
@@ -584,7 +584,7 @@ public class DataNucleusJpaProvider implements JpaProvider {
         } else {
             keys = getIdentifierOrUniqueKeyEmbeddedPropertyNames(owner, elementCollectionPath, attributeName);
         }
-        Map<String, String> map = new HashMap<>(keys.size());
+        Map<String, String> map = new LinkedHashMap<>(keys.size());
         for (String key : keys) {
             map.put(key, null);
         }

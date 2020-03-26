@@ -410,10 +410,29 @@ public class CollectionRoleUpdateTest extends AbstractCoreTest {
                 criteria.where("r.keyedNodesElementCollection.value").eq("a");
                 criteria.where("r.keyedNodesElementCollection.value2").eq("b");
 
-                // TODO: adapt expected query string
-//                assertEquals("UPDATE Root(keyedNodesElementCollection) r"
-//                        + " SET KEY(keyedNodesElementCollection) = :param_0,r.keyedNodesElementCollection.value = :param_1,r.keyedNodesElementCollection.value2 = :param_2"
-//                        + " WHERE KEY(_collection) = :param_3 AND r.id = :param_4 AND _collection.value = :param_5 AND _collection.value2 = :param_6", criteria.getQueryString());
+                assertEquals("UPDATE Root(keyedNodesElementCollection) r" +
+                        " SET r.keyedNodesElementCollection.value = (" +
+                            "SELECT 'B' " +
+                            "FROM StringIdCTE(" +
+                                "SELECT KEY(keyedNodesElementCollection_1) " +
+                                "FROM Root r LEFT JOIN r.keyedNodesElementCollection keyedNodesElementCollection_1" +
+                            ") stringIdCTE(id) " +
+                            "WHERE stringIdCTE.id = KEY(_collection)" +
+                        ")," +
+                        "r.keyedNodesElementCollection.value2 = :param_0 " +
+                        "WHERE EXISTS (" +
+                            "SELECT 1 " +
+                            "FROM StringIdCTE(" +
+                                "SELECT KEY(keyedNodesElementCollection_1) " +
+                                "FROM Root r " +
+                                "LEFT JOIN r.keyedNodesElementCollection keyedNodesElementCollection_1" +
+                            ") stringIdCTE(id) " +
+                            "WHERE stringIdCTE.id = KEY(_collection)" +
+                        ") " +
+                        "AND KEY(_collection) = :param_1 " +
+                        "AND r.id = :param_2 " +
+                        "AND _collection.value = :param_3 " +
+                        "AND _collection.value2 = :param_4", criteria.getQueryString());
                 int updated = criteria.executeUpdate();
                 Root r = getRoot(em);
 
@@ -423,8 +442,8 @@ public class CollectionRoleUpdateTest extends AbstractCoreTest {
                 assertEquals(1, r.getKeyedNodesManyDuplicate().size());
                 assertEquals(1, r.getKeyedNodesElementCollection().size());
 
-                assertEquals("B", r.getKeyedNodesElementCollection().get("b").getValue());
-                assertEquals("P", r.getKeyedNodesElementCollection().get("b").getValue2());
+                assertEquals("B", r.getKeyedNodesElementCollection().get("a").getValue());
+                assertEquals("P", r.getKeyedNodesElementCollection().get("a").getValue2());
             }
         });
     }

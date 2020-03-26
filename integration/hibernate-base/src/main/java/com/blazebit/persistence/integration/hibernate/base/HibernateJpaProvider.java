@@ -70,9 +70,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -680,7 +679,7 @@ public class HibernateJpaProvider implements JpaProvider {
                 Set<String> elementAttributes = getColumnMatchingAttributeNames(entityPersister, Arrays.asList((entityPersister.toColumns(attributeName))));
                 Set<String> keyAttributes = removeIdentifierAccess(ownerType, elementAttributes, inverseType, getColumnMatchingAttributeNames(inversePersister, Arrays.asList(persister.getKeyColumnNames())));
 
-                Map<String, String> mapping = new HashMap<>();
+                Map<String, String> mapping = new LinkedHashMap<>();
                 Iterator<String> elemAttrIter = elementAttributes.iterator();
                 Iterator<String> keyAttrIter = keyAttributes.iterator();
 
@@ -726,7 +725,7 @@ public class HibernateJpaProvider implements JpaProvider {
             String targetPropertyPrefix = entityPersister.getIdentifierPropertyName() == null ? "" : entityPersister.getIdentifierPropertyName() + ".";
             String[] identifierColumnNames = entityPersister.getIdentifierColumnNames();
             String[] targetIdentifierTypePropertyNames = targetIdentifierType.getPropertyNames();
-            Map<String, String> mapping = new HashMap<>();
+            Map<String, String> mapping = new LinkedHashMap<>();
             for (int i = 0; i < targetColumnNames.length; i++) {
                 for (int j = 0; j < identifierColumnNames.length; j++) {
                     if (targetColumnNames[i].equals(identifierColumnNames[j])) {
@@ -744,7 +743,7 @@ public class HibernateJpaProvider implements JpaProvider {
             if (!targetIdColumnName.equals(targetColumnNames[0])) {
                 throw new IllegalArgumentException("Mapped by property '" + inverseType.getName() + "#" + attributeName + "' must be writable or the column must be part of the id!");
             }
-            Map<String, String> mapping = new HashMap<>();
+            Map<String, String> mapping = new LinkedHashMap<>();
             mapping.put(sourcePropertyPrefix + sourcePropertyNames[0], entityPersister.getIdentifierPropertyName());
             return mapping;
         }
@@ -1127,7 +1126,7 @@ public class HibernateJpaProvider implements JpaProvider {
 
             if (!queryableCollection.getElementType().isEntityType()) {
                 String[] targetColumnMetaData = queryableCollection.getElementColumnNames();
-                Map<String, String> targetColumnMapping = new HashMap<>();
+                Map<String, String> targetColumnMapping = new LinkedHashMap<>();
 
                 for (int i = 0; i < targetColumnMetaData.length; i++) {
                     targetColumnMapping.put(targetColumnMetaData[i], targetColumnMetaData[i]);
@@ -1143,7 +1142,7 @@ public class HibernateJpaProvider implements JpaProvider {
                             elementPersister.getKeyColumnNames() : // IdClass returns null for getIdentifierOrUniqueKeyPropertyName
                             elementPersister.getPropertyColumnNames(identifierOrUniqueKeyPropertyName);
 
-                    Map<String, String> targetIdColumnMapping = new HashMap<>();
+                    Map<String, String> targetIdColumnMapping = new LinkedHashMap<>();
 
                     for (int i = 0; i < targetColumnMetaData.length; i++) {
                         targetIdColumnMapping.put(targetColumnMetaData[i], targetPrimaryKeyColumnMetaData[i]);
@@ -1161,8 +1160,8 @@ public class HibernateJpaProvider implements JpaProvider {
         Map<String, String> keyColumnMapping = null;
         Map<String, String> keyColumnTypes = null;
         if (indexColumnNames != null) {
-            keyColumnMapping = new HashMap<>(indexColumnNames.length);
-            keyColumnTypes = new HashMap<>(indexColumnNames.length);
+            keyColumnMapping = new LinkedHashMap<>(indexColumnNames.length);
+            keyColumnTypes = new LinkedHashMap<>(indexColumnNames.length);
             if (queryableCollection.getKeyType().isEntityType()) {
                 throw new IllegalArgumentException("Determining the join table key foreign key mappings is not yet supported!");
             } else {
@@ -1186,7 +1185,7 @@ public class HibernateJpaProvider implements JpaProvider {
             primaryKeyColumnMetaData = ownerEntityPersister.getKeyColumnNames();
         }
         String[] foreignKeyColumnMetaData = queryableCollection.getKeyColumnNames();
-        Map<String, String> idColumnMapping = new HashMap<>(primaryKeyColumnMetaData.length);
+        Map<String, String> idColumnMapping = new LinkedHashMap<>(primaryKeyColumnMetaData.length);
         for (int i = 0; i < foreignKeyColumnMetaData.length; i++) {
             idColumnMapping.put(foreignKeyColumnMetaData[i], primaryKeyColumnMetaData[i]);
         }
@@ -1194,7 +1193,7 @@ public class HibernateJpaProvider implements JpaProvider {
         if (targetIdAttributeNames == null) {
             Type elementType = queryableCollection.getElementType();
             if (elementType instanceof ComponentType) {
-                targetIdAttributeNames = new HashSet<>();
+                targetIdAttributeNames = new LinkedHashSet<>();
                 collectPropertyNames(targetIdAttributeNames, null, elementType, queryableCollection.getFactory());
             }
         }
@@ -1595,7 +1594,7 @@ public class HibernateJpaProvider implements JpaProvider {
             }
         }
 
-        Map<String, String> joinMapping = new HashMap<>(identifierOrUniqueKeyPropertyNames.size());
+        Map<String, String> joinMapping = new LinkedHashMap<>(identifierOrUniqueKeyPropertyNames.size());
         for (int i = 0; i < identifierOrUniqueKeyPropertyNames.size(); i++) {
             if (sourceIdentifierOrUniqueKeyPropertyNames.size() > i) {
                 joinMapping.put(identifierOrUniqueKeyPropertyNames.get(i), sourceIdentifierOrUniqueKeyPropertyNames.get(i));

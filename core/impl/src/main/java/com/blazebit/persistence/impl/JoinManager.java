@@ -2220,12 +2220,12 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
     }
 
     <X> JoinOnBuilder<X> joinOn(X result, String path, String alias, JoinType type, boolean defaultJoin) {
-        joinOnBuilderListener.joinNode = join(path, alias, type, false, defaultJoin);
+        joinOnBuilderListener.joinNode = join(path, alias, type, false, defaultJoin, null);
         explicitJoinNodes.add(joinOnBuilderListener.joinNode);
         return joinOnBuilderListener.startBuilder(new JoinOnBuilderImpl<X>(result, joinOnBuilderListener, parameterManager, expressionFactory, subqueryInitFactory));
     }
 
-    JoinNode join(String path, String alias, JoinType type, boolean fetch, boolean defaultJoin) {
+    JoinNode join(String path, String alias, JoinType type, boolean fetch, boolean defaultJoin, String deReferenceFunction) {
         Expression expr = expressionFactory.createJoinPathExpression(path);
         PathElementExpression elementExpr;
         String treatType = null;
@@ -2290,6 +2290,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             result = createOrUpdateNode(current, joinRelationAttributes, treatType, alias, type, null, false, defaultJoin, true, true);
         }
 
+        result.baseNode.setDeReferenceFunction(deReferenceFunction);
         if (fetch) {
             fetchPath(result.baseNode);
         }
