@@ -260,7 +260,7 @@ public class TreatTest extends AbstractCoreTest {
                     "LEFT JOIN children_1.container container_1 " +
                     "LEFT JOIN container_1.child child_1 " +
                     "WHERE p.id = p_children_base.id " +
-                    "AND (TYPE(child_1) IN (" + PolymorphicSub1.class.getSimpleName() + ") AND child_1.id = sub1.id))",
+                    "AND (TYPE(child_1) IN (" + PolymorphicSub1.class.getSimpleName() + ") AND " + treatRoot("child_1", PolymorphicSub1.class, "id") + " = sub1.id))",
                 crit.getQueryString()
         );
         crit.getResultList();

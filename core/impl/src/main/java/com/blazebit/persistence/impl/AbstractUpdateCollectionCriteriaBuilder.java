@@ -21,6 +21,7 @@ import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.ReturningBuilder;
 import com.blazebit.persistence.ReturningObjectBuilder;
 import com.blazebit.persistence.ReturningResult;
+import com.blazebit.persistence.impl.function.colldml.CollectionDmlSupportFunction;
 import com.blazebit.persistence.parser.SimpleQueryGenerator;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.impl.function.entity.ValuesEntity;
@@ -32,6 +33,7 @@ import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.impl.query.ReturningCollectionUpdateModificationQuerySpecification;
 import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
@@ -42,7 +44,9 @@ import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ListAttribute;
+import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.MapAttribute;
+import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -77,7 +81,9 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
         this.collectionAttribute = extendedManagedType.getAttribute(collectionName);
         // Add the join here so that references in the where clause go the the expected join node
         // Also, this validates the collection actually exists
-        JoinNode join = joinManager.join(entityAlias + "." + collectionName, CollectionUpdateModificationQuerySpecification.COLLECTION_BASE_QUERY_ALIAS, JoinType.LEFT, false, true);
+        JoinNode join = joinManager.join(entityAlias + "." + collectionName, CollectionUpdateModificationQuerySpecification.COLLECTION_BASE_QUERY_ALIAS, JoinType.LEFT, false, true, null);
+        join.setDeReferenceFunction(mainQuery.jpaProvider.getCustomFunctionInvocation(CollectionDmlSupportFunction.FUNCTION_NAME, 1));
+        join.getParent().setDeReferenceFunction(mainQuery.jpaProvider.getCustomFunctionInvocation(CollectionDmlSupportFunction.FUNCTION_NAME, 1));
         this.elementType = join.getType();
         if (collectionAttribute.getJoinTable() == null && "".equals(collectionAttribute.getMappedBy())) {
             throw new IllegalArgumentException("Unsupported collection attribute that doesn't have a join table or a mapped by attribute!");
@@ -312,16 +318,32 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
         if (joinTable.getKeyColumnMappings() != null) {
             for (Map.Entry<String, String> entry : joinTable.getKeyColumnMappings().entrySet()) {
                 columnOnlyRemappings.put(collectionAlias + "." + entry.getValue(), entry.getKey());
-                columnExpressionRemappings.put(collectionAlias + "." + entry.getValue(), joinTable.getTableName() + "." + entry.getKey());
+                columnExpressionRemappings.put(CollectionDmlSupportFunction.FUNCTION_NAME + "(" + collectionAlias + "." + entry.getValue() + ")", joinTable.getTableName() + "." + entry.getKey());
             }
         }
         for (Map.Entry<String, String> entry : joinTable.getIdColumnMappings().entrySet()) {
             columnOnlyRemappings.put(ownerAlias + "." + entry.getValue(), entry.getKey());
-            columnExpressionRemappings.put(ownerAlias + "." + entry.getValue(), joinTable.getTableName() + "." + entry.getKey());
+            columnExpressionRemappings.put(CollectionDmlSupportFunction.FUNCTION_NAME + "(" + ownerAlias + "." + entry.getValue() + ")", joinTable.getTableName() + "." + entry.getKey());
         }
         for (Map.Entry<String, String> entry : joinTable.getTargetColumnMappings().entrySet()) {
             columnOnlyRemappings.put(targetAlias + "." + entry.getValue(), entry.getKey());
-            columnExpressionRemappings.put(targetAlias + "." + entry.getValue(), joinTable.getTableName() + "." + entry.getKey());
+            columnExpressionRemappings.put(CollectionDmlSupportFunction.FUNCTION_NAME + "(" + targetAlias + "." + entry.getValue() + ")", joinTable.getTableName() + "." + entry.getKey());
+        }
+        // If the id attribute is an embedded type, there is the possibility that row value expressions are used which we need to handle as well
+        Set<SingularAttribute<?, ?>> idAttributes = JpaMetamodelUtils.getIdAttributes(entityType);
+        if (idAttributes.size() == 1 && idAttributes.iterator().next().getType() instanceof ManagedType<?>) {
+            StringBuilder leftSb = new StringBuilder();
+            StringBuilder rightSb = new StringBuilder();
+            leftSb.append(CollectionDmlSupportFunction.FUNCTION_NAME).append("((");
+            rightSb.append("(");
+            for (Map.Entry<String, String> entry : joinTable.getIdColumnMappings().entrySet()) {
+                leftSb.append(ownerAlias).append('.').append(entry.getValue()).append(", ");
+                rightSb.append(joinTable.getTableName()).append('.').append(entry.getKey()).append(',');
+            }
+            leftSb.setLength(leftSb.length() - 2);
+            leftSb.append("))");
+            rightSb.setCharAt(rightSb.length() - 1, ')');
+            columnExpressionRemappings.put(leftSb.toString(), rightSb.toString());
         }
 
         List<Query> setExpressionContainingUpdateQueries = new ArrayList<>();

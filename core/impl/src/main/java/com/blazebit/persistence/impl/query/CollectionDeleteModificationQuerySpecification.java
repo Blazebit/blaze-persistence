@@ -51,7 +51,7 @@ public class CollectionDeleteModificationQuerySpecification<T> extends Modificat
 
     @Override
     protected void initialize() {
-        List<Query> participatingQueries = new ArrayList<Query>();
+        List<Query> participatingQueries = new ArrayList<>();
 
         for (Map.Entry<String, Collection<?>> entry : listParameters.entrySet()) {
             baseQuery.setParameter(entry.getKey(), entry.getValue());

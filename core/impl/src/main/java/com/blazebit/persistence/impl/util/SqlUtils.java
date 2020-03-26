@@ -636,9 +636,12 @@ public class SqlUtils {
     public static String extractAlias(CharSequence sb, int index) {
         int aliasBeginCharIndex = skipWhitespaces(sb, index);
 
-        int asIndex = AS_FINDER.indexIn(sb, aliasBeginCharIndex - 1);
-        if (asIndex != -1) {
-            aliasBeginCharIndex = skipWhitespaces(sb, asIndex + AS.length());
+        if (sb.length() > aliasBeginCharIndex + 3
+                && Character.toLowerCase(sb.charAt(aliasBeginCharIndex)) == 'a'
+                && Character.toLowerCase(sb.charAt(aliasBeginCharIndex + 1)) == 's'
+                && Character.isWhitespace(sb.charAt(aliasBeginCharIndex + 2))
+        ) {
+            aliasBeginCharIndex = skipWhitespaces(sb, aliasBeginCharIndex + 2);
         }
 
         QuoteMode mode = QuoteMode.NONE;

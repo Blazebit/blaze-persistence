@@ -55,7 +55,7 @@ public class CollectionUpdateModificationQuerySpecification<T> extends Modificat
 
     @Override
     protected void initialize() {
-        List<Query> participatingQueries = new ArrayList<Query>();
+        List<Query> participatingQueries = new ArrayList<>();
 
         for (Map.Entry<String, Collection<?>> entry : listParameters.entrySet()) {
             baseQuery.setParameter(entry.getKey(), entry.getValue());
@@ -74,7 +74,7 @@ public class CollectionUpdateModificationQuerySpecification<T> extends Modificat
             int columnOnlyRemappingEndIndex = columnOnlyRemappingStartIndex + (setExpressionSql.indexOf('=', assignIndex) - assignIndex);
             setClauseSqlSb.append(setExpressionSql, assignIndex, setExpressionSql.length());
             setClauseSqlSb.append(',');
-            remapColumnExpressions(setClauseSqlSb, columnOnlyRemappings, columnOnlyRemappingStartIndex, columnOnlyRemappingEndIndex);
+            columnOnlyRemappingEndIndex = remapColumnExpressions(setClauseSqlSb, columnOnlyRemappings, columnOnlyRemappingStartIndex, columnOnlyRemappingEndIndex);
             remapColumnExpressions(setClauseSqlSb, columnExpressionRemappings, columnOnlyRemappingEndIndex, setClauseSqlSb.length());
         }
         setClauseSqlSb.setLength(setClauseSqlSb.length() - 1);

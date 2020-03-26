@@ -49,6 +49,12 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
+    public boolean supportsAnsiRowValueConstructor() {
+        // At least Hibernate thinks so. We need this to get embeddable splitting working
+        return false;
+    }
+
+    @Override
     public String getWithClause(boolean recursive) {
         return "with";
     }

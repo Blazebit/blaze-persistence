@@ -32,6 +32,7 @@ import com.blazebit.persistence.impl.function.base64.PostgreSQLBase64Function;
 import com.blazebit.persistence.impl.function.cast.CastFunction;
 import com.blazebit.persistence.impl.function.chr.CharChrFunction;
 import com.blazebit.persistence.impl.function.chr.ChrFunction;
+import com.blazebit.persistence.impl.function.colldml.CollectionDmlSupportFunction;
 import com.blazebit.persistence.impl.function.coltrunc.ColumnTruncFunction;
 import com.blazebit.persistence.impl.function.concat.ConcatFunction;
 import com.blazebit.persistence.impl.function.concat.PipeBasedConcatFunction;
@@ -570,6 +571,12 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         jpqlFunctionGroup = new JpqlFunctionGroup(NullfnFunction.FUNCTION_NAME, false);
         jpqlFunctionGroup.add(null, new NullfnFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        // collection_dml_support
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(CollectionDmlSupportFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup.add(null, new CollectionDmlSupportFunction());
         registerFunction(jpqlFunctionGroup);
 
         // param

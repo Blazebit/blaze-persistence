@@ -17,6 +17,7 @@ None
 * Fix `NoSuchMethodException` issue with entity view inheritance where superclass has parameters but subclass has none
 * Fix erroneous component type handling in `HibernateJpaProvider`
 * Fix implicit joining issue with deep paths in `TREAT` expression
+* Fix issues with CTE inlining when using collection DML API
 
 ### Backwards-incompatible changes
 

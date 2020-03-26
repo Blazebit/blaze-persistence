@@ -116,6 +116,11 @@ public class DefaultDbmsDialect implements DbmsDialect {
     }
 
     @Override
+    public boolean supportsAnsiRowValueConstructor() {
+        return supportsRowValueConstructor();
+    }
+
+    @Override
     public boolean supportsRowValueConstructor() {
         return true;
     }
