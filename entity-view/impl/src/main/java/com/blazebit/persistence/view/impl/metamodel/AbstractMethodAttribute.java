@@ -75,12 +75,16 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
         this.name = mapping.getName();
         this.javaMethod = mapping.getMethod();
 
-        Map<String, AttributeFilterMapping> filterMappings = new HashMap<String, AttributeFilterMapping>();
-        for (Map.Entry<String, Class<? extends AttributeFilterProvider>> entry : mapping.getAttributeFilterProviders().entrySet()) {
-            filterMappings.put(entry.getKey(), new AttributeFilterMappingImpl(this, entry.getKey(), entry.getValue()));
-        }
+        if (mapping.getAttributeFilterProviders() == null) {
+            this.filterMappings = Collections.emptyMap();
+        } else {
+            Map<String, AttributeFilterMapping> filterMappings = new HashMap<String, AttributeFilterMapping>();
+            for (Map.Entry<String, Class<? extends AttributeFilterProvider>> entry : mapping.getAttributeFilterProviders().entrySet()) {
+                filterMappings.put(entry.getKey(), new AttributeFilterMappingImpl(this, entry.getKey(), entry.getValue()));
+            }
 
-        this.filterMappings = Collections.unmodifiableMap(filterMappings);
+            this.filterMappings = Collections.unmodifiableMap(filterMappings);
+        }
     }
 
     public Set<ManagedViewType<?>> getViewTypes() {

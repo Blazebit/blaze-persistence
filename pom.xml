@@ -67,7 +67,7 @@
 
     <ciManagement>
         <system>travisci</system>
-        <url>https://travis-ci.org/Blazebit/blaze-persistence</url>
+        <url>https://travis-ci.com/Blazebit/blaze-persistence</url>
     </ciManagement>
 
     <licenses>

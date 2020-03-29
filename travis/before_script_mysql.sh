@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Sets up environment for Blaze-Persistence backend MySQL8 at travis-ci.org
+# Sets up environment for Blaze-Persistence backend MySQL8 at travis-ci.com
 #
 
 sudo service mysql stop
