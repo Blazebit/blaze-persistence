@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Sets up environment for Blaze-Persistence backend MSSQL at travis-ci.org
+# Sets up environment for Blaze-Persistence backend MSSQL at travis-ci.com
 #
 
 git clone https://github.com/wnameless/docker-oracle-xe-11g.git

@@ -49,11 +49,15 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewTypeI
     public ViewTypeImpl(ViewMapping viewMapping, ManagedType<?> managedType, MetamodelBuildingContext context) {
         super(viewMapping, managedType, context, null);
 
-        Map<String, ViewFilterMapping> viewFilters = new HashMap<String, ViewFilterMapping>();
-        for (Map.Entry<String, Class<? extends ViewFilterProvider>> entry : viewMapping.getViewFilterProviders().entrySet()) {
-            viewFilters.put(entry.getKey(), new ViewFilterMappingImpl(this, entry.getKey(), entry.getValue()));
+        if (viewMapping.getViewFilterProviders() == null) {
+            this.viewFilters = Collections.emptyMap();
+        } else {
+            Map<String, ViewFilterMapping> viewFilters = new HashMap<String, ViewFilterMapping>();
+            for (Map.Entry<String, Class<? extends ViewFilterProvider>> entry : viewMapping.getViewFilterProviders().entrySet()) {
+                viewFilters.put(entry.getKey(), new ViewFilterMappingImpl(this, entry.getKey(), entry.getValue()));
+            }
+            this.viewFilters = Collections.unmodifiableMap(viewFilters);
         }
-        this.viewFilters = Collections.unmodifiableMap(viewFilters);
         this.idAttribute = viewMapping.getIdAttribute().getMethodAttribute(this, -1, -1, context, null);
 
         if (getLockMode() != LockMode.NONE) {

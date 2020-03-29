@@ -1,6 +1,6 @@
 <img src="https://persistence.blazebit.com/images/blaze_persistence_logo_colors_render.png" width="200" />
 
-[![Build Status](https://travis-ci.org/Blazebit/blaze-persistence.svg?branch=master)](https://travis-ci.org/Blazebit/blaze-persistence)
+[![Build Status](https://travis-ci.com/Blazebit/blaze-persistence.svg?branch=master)](https://travis-ci.com/Blazebit/blaze-persistence)
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.blazebit/blaze-persistence-core-impl/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.blazebit/blaze-persistence-core-impl)
 [![Slack Status](https://blazebit.herokuapp.com/badge.svg)](https://blazebit.herokuapp.com)

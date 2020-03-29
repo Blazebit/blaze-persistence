@@ -21,6 +21,8 @@ import com.blazebit.persistence.UpdateCriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.IndexedEmbeddable;
@@ -386,7 +388,9 @@ public class CollectionRoleUpdateTest extends AbstractCoreTest {
         });
     }
 
+    // NOTE: Hibernate 4.2 and 4.3 interprets entity name tokens in string literals...
     @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class })
     public void updateKeyedWithInlineCte() {
         transactional(new TxVoidWork() {
             @Override
