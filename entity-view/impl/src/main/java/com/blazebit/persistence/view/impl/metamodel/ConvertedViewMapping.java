@@ -20,6 +20,7 @@ import com.blazebit.persistence.view.CTEProvider;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.LockMode;
+import com.blazebit.persistence.view.ViewFilterProvider;
 import com.blazebit.persistence.view.ViewTransition;
 import com.blazebit.persistence.view.metamodel.FlatViewType;
 import com.blazebit.persistence.view.spi.EntityViewAttributeMapping;
@@ -189,6 +190,16 @@ public class ConvertedViewMapping implements ViewMapping {
     @Override
     public void setCteProviders(Set<Class<? extends CTEProvider>> cteProviders) {
         delegate.setCteProviders(cteProviders);
+    }
+
+    @Override
+    public Map<String, Class<? extends ViewFilterProvider>> getViewFilterProviders() {
+        return delegate.getViewFilterProviders();
+    }
+
+    @Override
+    public void setViewFilterProviders(Map<String, Class<? extends ViewFilterProvider>> viewFilterProviders) {
+        delegate.setViewFilterProviders(viewFilterProviders);
     }
 
     @Override

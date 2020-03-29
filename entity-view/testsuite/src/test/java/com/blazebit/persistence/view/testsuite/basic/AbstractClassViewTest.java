@@ -24,6 +24,7 @@ import javax.persistence.EntityManager;
 
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -103,7 +104,7 @@ public class AbstractClassViewTest extends AbstractEntityViewTest {
     @Test
     @Category({ NoEclipselink.class })
     // Eclipselink has a result set mapping bug in case of map keys
-    public void testAbstractClass() {
+    public void testAbstractClass() throws Exception {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d")
             .orderByAsc("id");
         EntityViewSetting<DocumentViewAbstractClass, CriteriaBuilder<DocumentViewAbstractClass>> setting;
@@ -124,7 +125,7 @@ public class AbstractClassViewTest extends AbstractEntityViewTest {
         assertEquals(Integer.valueOf(2), results.get(0).getContactPersonNumber2());
         assertEquals(Long.valueOf(1), results.get(0).getContactCount());
         assertEquals("Test", results.get(0).getOptionalParameter());
-        assertEquals(evm, results.get(0).getEntityViewManager());
+        assertEquals(results.get(0).getClass().getField(ProxyFactory.SERIALIZABLE_EVM_FIELD_NAME).get(null), results.get(0).getEntityViewManager());
         // Doc2
         assertEquals(doc2.getId(), results.get(1).getId());
         assertEquals(doc2.getName(), results.get(1).getName());
@@ -135,6 +136,6 @@ public class AbstractClassViewTest extends AbstractEntityViewTest {
         assertEquals(Integer.valueOf(2), results.get(1).getContactPersonNumber2());
         assertEquals(Long.valueOf(1), results.get(1).getContactCount());
         assertEquals("Test", results.get(1).getOptionalParameter());
-        assertEquals(evm, results.get(1).getEntityViewManager());
+        assertEquals(results.get(1).getClass().getField(ProxyFactory.SERIALIZABLE_EVM_FIELD_NAME).get(null), results.get(1).getEntityViewManager());
     }
 }

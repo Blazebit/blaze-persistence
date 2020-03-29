@@ -16,10 +16,8 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.view.LockMode;
-import com.blazebit.persistence.view.ViewFilter;
-import com.blazebit.persistence.view.ViewFilters;
+import com.blazebit.persistence.view.ViewFilterProvider;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.ViewFilterMapping;
 
@@ -52,22 +50,9 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewTypeI
         super(viewMapping, managedType, context, null);
 
         Map<String, ViewFilterMapping> viewFilters = new HashMap<String, ViewFilterMapping>();
-        
-        ViewFilter filterMapping = AnnotationUtils.findAnnotation(getJavaType(), ViewFilter.class);
-        ViewFilters filtersMapping = AnnotationUtils.findAnnotation(getJavaType(), ViewFilters.class);
-        
-        if (filterMapping != null) {
-            if (filtersMapping != null) {
-                context.addError("Illegal occurrences of @ViewFilter and @ViewFilters on the class '" + getJavaType().getName() + "'!");
-            } else {
-                addFilterMapping(filterMapping, viewFilters, context);
-            }
-        } else if (filtersMapping != null) {
-            for (ViewFilter f : filtersMapping.value()) {
-                addFilterMapping(f, viewFilters, context);
-            }
+        for (Map.Entry<String, Class<? extends ViewFilterProvider>> entry : viewMapping.getViewFilterProviders().entrySet()) {
+            viewFilters.put(entry.getKey(), new ViewFilterMappingImpl(this, entry.getKey(), entry.getValue()));
         }
-
         this.viewFilters = Collections.unmodifiableMap(viewFilters);
         this.idAttribute = viewMapping.getIdAttribute().getMethodAttribute(this, -1, -1, context, null);
 
@@ -117,25 +102,6 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewTypeI
     @Override
     protected boolean hasId() {
         return true;
-    }
-
-    private void addFilterMapping(ViewFilter filterMapping, Map<String, ViewFilterMapping> viewFilters, MetamodelBuildingContext context) {
-        String filterName = filterMapping.name();
-        boolean errorOccurred = false;
-
-        if (filterName != null && filterName.isEmpty()) {
-            errorOccurred = true;
-            context.addError("Illegal empty name for the filter mapping at the class '" + this.getJavaType().getName() + "' with filter class '"
-                    + filterMapping.value().getName() + "'!");
-        } else if (viewFilters.containsKey(filterName)) {
-            errorOccurred = true;
-            context.addError("Illegal duplicate filter name mapping '" + filterName + "' at the class '" + getJavaType().getName() + "'!");
-        }
-
-        if (!errorOccurred) {
-            ViewFilterMapping viewFilterMapping = new ViewFilterMappingImpl(this, filterName, filterMapping.value());
-            viewFilters.put(viewFilterMapping.getName(), viewFilterMapping);
-        }
     }
 
     @Override

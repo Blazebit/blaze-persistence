@@ -18,6 +18,9 @@ package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.view.AllowUpdatableEntityViews;
+import com.blazebit.persistence.view.AttributeFilter;
+import com.blazebit.persistence.view.AttributeFilterProvider;
+import com.blazebit.persistence.view.AttributeFilters;
 import com.blazebit.persistence.view.BatchFetch;
 import com.blazebit.persistence.view.CollectionMapping;
 import com.blazebit.persistence.view.IdMapping;
@@ -84,6 +87,25 @@ public class AnnotationMethodAttributeMappingReader extends AbstractAnnotationAt
         if (AnnotationUtils.findAnnotation(method, IdMapping.class) != null) {
             viewMapping.setIdAttributeMapping(attributeMapping);
         }
+
+        Map<String, Class<? extends AttributeFilterProvider>> attributeFilterProviders = new HashMap<>();
+        AttributeFilter filterMapping = AnnotationUtils.findAnnotation(method, AttributeFilter.class);
+        AttributeFilters filtersMapping = AnnotationUtils.findAnnotation(method, AttributeFilters.class);
+
+        if (filterMapping != null) {
+            attributeFilterProviders.put(filterMapping.name(), filterMapping.value());
+        }
+        if (filtersMapping != null) {
+            for (AttributeFilter f : filtersMapping.value()) {
+                String filterName = f.name();
+                if (attributeFilterProviders.containsKey(filterName)) {
+                    context.addError("Illegal duplicate filter name mapping '" + filterName + "' at " + attributeMapping.getErrorLocation());
+                }
+                attributeFilterProviders.put(filterName, f.value());
+            }
+        }
+        attributeMapping.setAttributeFilterProviders(attributeFilterProviders);
+
         OptimisticLock optimisticLock = AnnotationUtils.findAnnotation(method, OptimisticLock.class);
         if (optimisticLock != null) {
             attributeMapping.setOptimisticLockProtected(!optimisticLock.exclude());

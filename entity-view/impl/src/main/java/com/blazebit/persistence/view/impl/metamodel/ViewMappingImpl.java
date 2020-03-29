@@ -22,6 +22,7 @@ import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.LockMode;
 import com.blazebit.persistence.view.Mapping;
+import com.blazebit.persistence.view.ViewFilterProvider;
 import com.blazebit.persistence.view.ViewTransition;
 import com.blazebit.persistence.view.spi.EntityViewAttributeMapping;
 import com.blazebit.persistence.view.spi.EntityViewConstructorMapping;
@@ -110,6 +111,7 @@ public class ViewMappingImpl implements ViewMapping {
     private Map<EmbeddableOwner, ManagedViewTypeImplementor<?>> embeddableViewTypeMap;
 
     private Set<Class<? extends CTEProvider>> cteProviders;
+    private Map<String, Class<? extends ViewFilterProvider>> viewFilterProviders;
 
     public ViewMappingImpl(Class<?> entityViewClass, Class<?> entityClass, MetamodelBootContext context) {
         this.entityViewClass = entityViewClass;
@@ -328,6 +330,16 @@ public class ViewMappingImpl implements ViewMapping {
     @Override
     public void setCteProviders(Set<Class<? extends CTEProvider>> cteProviders) {
         this.cteProviders = cteProviders;
+    }
+
+    @Override
+    public Map<String, Class<? extends ViewFilterProvider>> getViewFilterProviders() {
+        return viewFilterProviders;
+    }
+
+    @Override
+    public void setViewFilterProviders(Map<String, Class<? extends ViewFilterProvider>> viewFilterProviders) {
+        this.viewFilterProviders = viewFilterProviders;
     }
 
     @Override
