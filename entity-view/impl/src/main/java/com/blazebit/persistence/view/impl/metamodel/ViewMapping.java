@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.persistence.view.CTEProvider;
 import com.blazebit.persistence.view.LockMode;
+import com.blazebit.persistence.view.ViewFilterProvider;
 import com.blazebit.persistence.view.spi.EntityViewMapping;
 
 import javax.persistence.metamodel.ManagedType;
@@ -91,4 +92,8 @@ public interface ViewMapping extends Comparable<ViewMapping>, EntityViewMapping 
     Set<Class<? extends CTEProvider>> getCteProviders();
 
     void setCteProviders(Set<Class<? extends CTEProvider>> cteProviders);
+
+    Map<String, Class<? extends ViewFilterProvider>> getViewFilterProviders();
+
+    void setViewFilterProviders(Map<String, Class<? extends ViewFilterProvider>> viewFilterProviders);
 }

@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.persistence.spi.AttributePath;
+import com.blazebit.persistence.view.AttributeFilterProvider;
 import com.blazebit.persistence.view.CascadeType;
 import com.blazebit.persistence.view.InverseRemoveStrategy;
 import com.blazebit.persistence.view.Mapping;
@@ -69,6 +70,8 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
     private final String attributeName;
     private final Method method;
 
+    private Map<String, Class<? extends AttributeFilterProvider>> attributeFilterProviders;
+
     // Updatable configs
     private Boolean isUpdatable;
     private Boolean isOrphanRemoval;
@@ -93,8 +96,6 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
     private Map<EmbeddableOwner, Set<ManagedViewTypeImplementor<?>>> embeddableCascadeSubtypesMap;
     private Map<EmbeddableOwner, Set<ManagedViewTypeImplementor<?>>> embeddableCascadePersistSubtypesMap;
     private Map<EmbeddableOwner, Set<ManagedViewTypeImplementor<?>>> embeddableCascadeUpdateSubtypesMap;
-
-    // TODO: attribute filter config
 
     public MethodAttributeMapping(ViewMapping viewMapping, Annotation mapping, MetamodelBootContext context, String attributeName, Method method, boolean isCollection, Class<?> declaredTypeClass, Class<?> declaredKeyTypeClass, Class declaredElementTypeClass,
                                   java.lang.reflect.Type type, java.lang.reflect.Type keyType, java.lang.reflect.Type elementType, Map<Class<?>, String> inheritanceSubtypeClassMappings, Map<Class<?>, String> keyInheritanceSubtypeClassMappings, Map<Class<?>, String> elementInheritanceSubtypeClassMappings) {
@@ -182,6 +183,16 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
             throw new IllegalArgumentException("Invalid null remove strategy!");
         }
         this.inverseRemoveStrategy = inverseRemoveStrategy;
+    }
+
+    @Override
+    public Map<String, Class<? extends AttributeFilterProvider>> getAttributeFilterProviders() {
+        return attributeFilterProviders;
+    }
+
+    @Override
+    public void setAttributeFilterProviders(Map<String, Class<? extends AttributeFilterProvider>> attributeFilterProviders) {
+        this.attributeFilterProviders = attributeFilterProviders;
     }
 
     public Set<ManagedViewTypeImplementor<?>> getReadOnlySubtypes(MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {

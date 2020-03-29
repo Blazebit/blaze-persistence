@@ -17,10 +17,12 @@
 package com.blazebit.persistence.view.spi;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.view.AttributeFilterProvider;
 import com.blazebit.persistence.view.CascadeType;
 import com.blazebit.persistence.view.InverseRemoveStrategy;
 
 import java.lang.reflect.Method;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -109,4 +111,20 @@ public interface EntityViewMethodAttributeMapping extends EntityViewAttributeMap
      * @param inverseRemoveStrategy The strategy
      */
     public void setInverseRemoveStrategy(InverseRemoveStrategy inverseRemoveStrategy);
+
+    /**
+     * Returns the attribute filter providers.
+     *
+     * @return The attribute filter providers
+     * @since 1.5.0
+     */
+    Map<String, Class<? extends AttributeFilterProvider>> getAttributeFilterProviders();
+
+    /**
+     * Sets the attribute filter providers.
+     *
+     * @param attributeFilterProviders The attribute filter providers
+     * @since 1.5.0
+     */
+    void setAttributeFilterProviders(Map<String, Class<? extends AttributeFilterProvider>> attributeFilterProviders);
 }

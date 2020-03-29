@@ -19,8 +19,7 @@ package com.blazebit.persistence.view.impl.metamodel;
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.parser.PathTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.parser.expression.SyntaxErrorException;
-import com.blazebit.persistence.view.AttributeFilter;
-import com.blazebit.persistence.view.AttributeFilters;
+import com.blazebit.persistence.view.AttributeFilterProvider;
 import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.InverseRemoveStrategy;
 import com.blazebit.persistence.view.LockMode;
@@ -77,20 +76,8 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
         this.javaMethod = mapping.getMethod();
 
         Map<String, AttributeFilterMapping> filterMappings = new HashMap<String, AttributeFilterMapping>();
-        
-        AttributeFilter filterMapping = AnnotationUtils.findAnnotation(javaMethod, AttributeFilter.class);
-        AttributeFilters filtersMapping = AnnotationUtils.findAnnotation(javaMethod, AttributeFilters.class);
-        
-        if (filterMapping != null) {
-            if (filtersMapping != null) {
-                context.addError("Illegal occurrences of @Filter and @Filters on the " + mapping.getErrorLocation() + "!");
-            } else {
-                addFilterMapping(filterMapping, filterMappings, context);
-            }
-        } else if (filtersMapping != null) {
-            for (AttributeFilter f : filtersMapping.value()) {
-                addFilterMapping(f, filterMappings, context);
-            }
+        for (Map.Entry<String, Class<? extends AttributeFilterProvider>> entry : mapping.getAttributeFilterProviders().entrySet()) {
+            filterMappings.put(entry.getKey(), new AttributeFilterMappingImpl(this, entry.getKey(), entry.getValue()));
         }
 
         this.filterMappings = Collections.unmodifiableMap(filterMappings);
@@ -359,21 +346,6 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
         return sb.append(Character.toLowerCase(firstAttributeNameChar))
                 .append(name, index + 1, name.length())
                 .toString();
-    }
-
-    private void addFilterMapping(AttributeFilter filterMapping, Map<String, AttributeFilterMapping> filterMappings, MetamodelBuildingContext context) {
-        String filterName = filterMapping.name();
-        boolean errorOccurred = false;
-        
-        if (filterMappings.containsKey(filterName)) {
-            errorOccurred = true;
-            context.addError("Illegal duplicate filter name mapping '" + filterName + "' at " + getLocation());
-        }
-
-        if (!errorOccurred) {
-            AttributeFilterMapping attributeFilterMapping = new AttributeFilterMappingImpl(this, filterName, filterMapping.value());
-            filterMappings.put(attributeFilterMapping.getName(), attributeFilterMapping);
-        }
     }
 
     @Override

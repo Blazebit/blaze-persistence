@@ -40,6 +40,9 @@ import com.blazebit.persistence.view.PreRemove;
 import com.blazebit.persistence.view.PreUpdate;
 import com.blazebit.persistence.view.UpdatableEntityView;
 import com.blazebit.persistence.view.ViewConstructor;
+import com.blazebit.persistence.view.ViewFilter;
+import com.blazebit.persistence.view.ViewFilterProvider;
+import com.blazebit.persistence.view.ViewFilters;
 import com.blazebit.persistence.view.With;
 import com.blazebit.persistence.view.impl.EntityViewListenerFactory;
 import com.blazebit.reflection.ReflectionUtils;
@@ -153,12 +156,22 @@ public class AnnotationMappingReader implements MappingReader {
         }
 
         Set<Class<? extends CTEProvider>> cteProviders = new LinkedHashSet<>();
+        Map<String, Class<? extends ViewFilterProvider>> viewFilterProviders = new HashMap<>();
         for (Annotation a : AnnotationUtils.getAllAnnotations(entityViewClass)) {
             if (a instanceof With) {
                 cteProviders.addAll(Arrays.asList(((With) a).value()));
+            } else if (a instanceof ViewFilter) {
+                ViewFilter viewFilter = (ViewFilter) a;
+                addFilterMapping(viewFilter.name(), viewFilter.value(), viewFilterProviders, entityViewClass, context);
+            } else if (a instanceof ViewFilters) {
+                ViewFilters viewFilters = (ViewFilters) a;
+                for (ViewFilter viewFilter : viewFilters.value()) {
+                    viewFilterProviders.put(viewFilter.name(), viewFilter.value());
+                }
             }
         }
         viewMapping.setCteProviders(cteProviders);
+        viewMapping.setViewFilterProviders(viewFilterProviders);
 
         UpdatableEntityView updatableEntityView = AnnotationUtils.findAnnotation(entityViewClass, UpdatableEntityView.class);
 
@@ -336,6 +349,23 @@ public class AnnotationMappingReader implements MappingReader {
         }
 
         return viewMapping;
+    }
+
+    private void addFilterMapping(String filterName, Class<? extends ViewFilterProvider> viewFilterProvider, Map<String, Class<? extends ViewFilterProvider>> viewFilters, Class<?> entityViewClass, MetamodelBootContext context) {
+        boolean errorOccurred = false;
+
+        if (filterName != null && filterName.isEmpty()) {
+            errorOccurred = true;
+            context.addError("Illegal empty name for the filter mapping at the class '" + entityViewClass.getName() + "' with filter class '"
+                    + viewFilterProvider.getName() + "'!");
+        } else if (viewFilters.containsKey(filterName)) {
+            errorOccurred = true;
+            context.addError("Illegal duplicate filter name mapping '" + filterName + "' at the class '" + entityViewClass.getName() + "'!");
+        }
+
+        if (!errorOccurred) {
+            viewFilters.put(filterName, viewFilterProvider);
+        }
     }
 
     private Method[] visitAndCollectLifecycleMethods(Class<?> entityViewClass, Method[] methods, Set<String> handledMethods, Set<String> concreteMethods) {
