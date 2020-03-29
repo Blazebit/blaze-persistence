@@ -41,7 +41,7 @@ import java.util.Set;
 public abstract class UpdatableEmbeddableTestEntityView extends EmbeddableTestEntityView {
 
     @PostCreate
-    void postCreate(EntityViewManager evm) {
+    private void postCreate(EntityViewManager evm) {
         getEmbeddable().getElementCollection().put("test", evm.create(UpdatableNameObjectView.class));
     }
 

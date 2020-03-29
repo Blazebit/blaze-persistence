@@ -135,8 +135,12 @@ public class ViewMapper<S, T> {
             throw new IllegalArgumentException("Defined to convert to new object but target view type isn't annotated with @CreatableEntityView: " + targetType.getJavaType().getName());
         }
         this.markNew = markNew;
-        this.postConvert = targetType.getPostConvertMethod();
-        this.postConvertUsesSource = targetType.getPostConvertMethod() != null && targetType.getPostConvertMethod().getParameterTypes().length != 0;
+        Method postConvertMethod = targetType.getPostConvertMethod();
+        if (postConvertMethod != null) {
+            postConvertMethod.setAccessible(true);
+        }
+        this.postConvert = postConvertMethod;
+        this.postConvertUsesSource = postConvertMethod != null && postConvertMethod.getParameterTypes().length != 0;
     }
 
     private AttributeAccessor createAccessor(ManagedViewType<S> sourceType, ManagedViewType<T> targetType, boolean ignoreMissing, boolean markNew, EntityViewManager entityViewManager, ProxyFactory proxyFactory, MethodAttribute<? super T, ?> targetAttribute, String prefix, Map<String, Key<Object, Object>> subMappers) {
