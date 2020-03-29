@@ -18,6 +18,7 @@ None
 * Fix erroneous component type handling in `HibernateJpaProvider`
 * Fix implicit joining issue with deep paths in `TREAT` expression
 * Fix issues with CTE inlining when using collection DML API
+* Only expose `Serializable` `EntityViewManager` wrapper in special methods or callbacks
 
 ### Backwards-incompatible changes
 
