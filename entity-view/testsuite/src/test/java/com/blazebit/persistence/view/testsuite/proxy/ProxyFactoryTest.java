@@ -238,8 +238,8 @@ public class ProxyFactoryTest extends AbstractEntityViewTest {
         assertNotNull(proxyClass.getDeclaredConstructor(Long.class));
         assertNotNull(proxyClass.getDeclaredConstructor());
 
-        // 5 Fields, 1 static field for EntityViewManager
-        assertEquals(6, proxyClass.getDeclaredFields().length);
+        // 5 Fields, 2 static field for EntityViewManager
+        assertEquals(7, proxyClass.getDeclaredFields().length);
         // 5 Getters, 2 Setter, 1 Bridge-Getter, 1 Bridge-Setter, 1 Equals, 1 HashCode, 1 ToString, 7 EntityViewProxy methods
         assertEquals(19, proxyClass.getDeclaredMethods().length);
         assertAttribute(proxyClass, "contacts", Modifier.PRIVATE, Map.class, Integer.class, Person.class);
@@ -258,8 +258,8 @@ public class ProxyFactoryTest extends AbstractEntityViewTest {
         assertNotNull(proxyClass.getDeclaredConstructor(Long.class, Map.class, Person.class, Person.class,
                                                         String.class, Long.class, Integer.class));
 
-        // 5 Fields, 1 static field for EntityViewManager
-        assertEquals(6, proxyClass.getDeclaredFields().length);
+        // 5 Fields, 2 static field for EntityViewManager
+        assertEquals(7, proxyClass.getDeclaredFields().length);
         // 5 Getters, 2 Setter, 1 Bridge-Getter, 1 Bridge-Setter, 1 Equals, 1 HashCode, 1 ToString, 7 EntityViewProxy methods
         assertEquals(19, proxyClass.getDeclaredMethods().length);
         assertAttribute(proxyClass, "contacts", Modifier.PRIVATE, Map.class, Integer.class, Person.class);

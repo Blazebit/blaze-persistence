@@ -2283,10 +2283,35 @@ public class ProxyFactory {
             // Skip invocation of postCreate method if the type is an interface
             // Note that if you change the invocation here, the invocation below has to be changed as well
             if (!managedViewType.getJavaType().isInterface()) {
-                if (postCreateMethod.getParameterTypes().length == 1) {
-                    sb.append("\t$0.").append(postCreateMethod.getName()).append("(").append(cc.getName()).append("#").append(SERIALIZABLE_EVM_FIELD_NAME).append(");\n");
+                if (Modifier.isPublic(postCreateMethod.getModifiers()) || Modifier.isProtected(postCreateMethod.getModifiers()) || !Modifier.isPrivate(postCreateMethod.getModifiers()) && postCreateMethod.getDeclaringClass().getPackage().getName().equals(cc.getPackageName())) {
+                    if (postCreateMethod.getParameterTypes().length == 1) {
+                        sb.append("\t$0.").append(postCreateMethod.getName()).append("(").append(cc.getName()).append("#").append(SERIALIZABLE_EVM_FIELD_NAME).append(");\n");
+                    } else {
+                        sb.append("\t$0.").append(postCreateMethod.getName()).append("();\n");
+                    }
                 } else {
-                    sb.append("\t$0.").append(postCreateMethod.getName()).append("();\n");
+                    String args;
+                    if (postCreateMethod.getParameterTypes().length == 1) {
+                        args = "new Class[]{ " + EntityViewManager.class.getName() + ".class }";
+                    } else {
+                        args = "new Class[0]";
+                    }
+                    final String postCreateField = "POST_CREATE";
+                    try {
+                        cc.getField(postCreateField);
+                    } catch (NotFoundException ex) {
+                        cc.addMethod(CtMethod.make("private static java.lang.reflect.Method $$_getPostConstruct() { java.lang.reflect.Method m = " + postCreateMethod.getDeclaringClass().getName() + ".class.getDeclaredMethod(\"" + postCreateMethod.getName() + "\", " + args + "); m.setAccessible(true); return m; }", cc));
+                        CtField postCreate = new CtField(pool.get(Method.class.getName()), postCreateField, cc);
+                        postCreate.setModifiers(Modifier.PRIVATE | Modifier.STATIC | Modifier.FINAL);
+                        cc.addField(postCreate, CtField.Initializer.byCall(cc, "$$_getPostConstruct"));
+                    }
+                    sb.append("\t").append(cc.getName()).append("#").append(postCreateField).append(".invoke($0");
+                    if (postCreateMethod.getParameterTypes().length == 1) {
+                        sb.append(", new Object[]{ ").append(cc.getName()).append("#").append(SERIALIZABLE_EVM_FIELD_NAME).append(" }");
+                    } else {
+                        sb.append(", new Object[0]");
+                    }
+                    sb.append(");");
                 }
                 postCreateMethod = null;
             }
