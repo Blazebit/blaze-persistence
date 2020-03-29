@@ -166,6 +166,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     private final ConcurrentMap<Class<?>, Constructor<?>> createConstructorCache;
     private final ConcurrentMap<Class<?>, Constructor<?>> referenceConstructorCache;
     private final ConcurrentMap<Class<?>, ListenerTypeInfo> listenerClassTypeInfo;
+    private final ClassValue<EntityViewManager> serializableDelegates;
     private final Map<String, Class<? extends AttributeFilterProvider>> filterMappings;
     private final Map<Class<?>, Set<Class<?>>> javaTypeToManagedTypeJavaTypes;
     private final Map<Class<?>, Listeners> listeners; // A mapping from JPA managed type java type and entity view java type to listeners
@@ -185,6 +186,16 @@ public class EntityViewManagerImpl implements EntityViewManager {
         this.strictCascadingCheck = Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.UPDATER_STRICT_CASCADING_CHECK)));
         this.proxyFactory = new ProxyFactory(unsafeDisabled, strictCascadingCheck, packageOpener);
         this.transactionSupport = config.getTransactionSupport();
+        this.serializableDelegates = new ClassValue<EntityViewManager>() {
+            @Override
+            protected EntityViewManager computeValue(Class<?> type) {
+                try {
+                    return (EntityViewManager) type.getField(ProxyFactory.SERIALIZABLE_EVM_FIELD_NAME).get(null);
+                } catch (Exception e) {
+                    throw new IllegalArgumentException(e);
+                }
+            }
+        };
 
         boolean validateManagedTypes = !Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.MANAGED_TYPE_VALIDATION_DISABLED)));
         boolean validateExpressions = !Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.EXPRESSION_VALIDATION_DISABLED)));
@@ -1037,6 +1048,10 @@ public class EntityViewManagerImpl implements EntityViewManager {
         filterMappings.put(GreaterOrEqualFilter.class.getName(), GreaterOrEqualFilterImpl.class);
         filterMappings.put(LessThanFilter.class.getName(), LessThanFilterImpl.class);
         filterMappings.put(LessOrEqualFilter.class.getName(), LessOrEqualFilterImpl.class);
+    }
+
+    public EntityViewManager getSerializableDelegate(Class<?> entityViewClass) {
+        return serializableDelegates.get(proxyFactory.getProxy(this, metamodel.managedView(entityViewClass), null));
     }
 
     /**

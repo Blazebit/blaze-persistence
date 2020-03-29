@@ -23,6 +23,7 @@ import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.impl.CorrelationProviderProxyBase;
+import com.blazebit.persistence.view.impl.SerializableEntityViewManager;
 import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.impl.collection.RecordingList;
 import com.blazebit.persistence.view.impl.collection.RecordingMap;
@@ -116,6 +117,8 @@ import java.util.logging.Logger;
  */
 public class ProxyFactory {
 
+    public static final String EVM_FIELD_NAME = "$$_evm";
+    public static final String SERIALIZABLE_EVM_FIELD_NAME = "$$_serializable_evm";
     private static final Logger LOG = Logger.getLogger(ProxyFactory.class.getName());
     // This has to be static since runtime generated correlation providers can't be matched in a later run, so we always create a new one with a unique name
     private static final ConcurrentMap<Class<?>, AtomicInteger> CORRELATION_PROVIDER_CLASS_COUNT = new ConcurrentHashMap<>();
@@ -400,9 +403,11 @@ public class ProxyFactory {
             addGetEntityViewClass(cc, clazz);
             addIsNewMembers(managedViewType, cc, clazz);
 
-            CtField evmField = new CtField(pool.get(EntityViewManager.class.getName()), "$$_evm", cc);
+            CtField evmField = new CtField(pool.get(EntityViewManager.class.getName()), EVM_FIELD_NAME, cc);
             evmField.setModifiers(Modifier.PUBLIC | Modifier.STATIC | Modifier.VOLATILE);
             cc.addField(evmField);
+
+            cc.addField(CtField.make("public static final " + EntityViewManager.class.getName() + " " + SERIALIZABLE_EVM_FIELD_NAME + " = new " + SerializableEntityViewManager.class.getName() + "(" + cc.getName() + ".class, " + cc.getName() + "#" + EVM_FIELD_NAME + ");", cc));
 
             if (managedViewType.isUpdatable() || managedViewType.isCreatable()) {
                 if (true || managedViewType.getFlushMode() == FlushMode.LAZY || managedViewType.getFlushMode() == FlushMode.PARTIAL) {
@@ -637,7 +642,7 @@ public class ProxyFactory {
             }
 
             if (entityViewManager != null) {
-                c.getField("$$_evm").set(null, entityViewManager);
+                c.getField(EVM_FIELD_NAME).set(null, entityViewManager);
             }
 
             return c;
@@ -926,7 +931,7 @@ public class ProxyFactory {
         minfo.setAccessFlags(AccessFlag.PUBLIC);
 
         Bytecode code = new Bytecode(cp, 1, 1);
-        code.addGetstatic(cc, "$$_evm", desc);
+        code.addGetstatic(cc, SERIALIZABLE_EVM_FIELD_NAME, desc);
         code.addOpcode(Bytecode.ARETURN);
 
         minfo.setCodeAttribute(code.toCodeAttribute());
@@ -2279,7 +2284,7 @@ public class ProxyFactory {
             // Note that if you change the invocation here, the invocation below has to be changed as well
             if (!managedViewType.getJavaType().isInterface()) {
                 if (postCreateMethod.getParameterTypes().length == 1) {
-                    sb.append("\t$0.").append(postCreateMethod.getName()).append("(").append(cc.getName()).append("#$$_evm);\n");
+                    sb.append("\t$0.").append(postCreateMethod.getName()).append("(").append(cc.getName()).append("#").append(SERIALIZABLE_EVM_FIELD_NAME).append(");\n");
                 } else {
                     sb.append("\t$0.").append(postCreateMethod.getName()).append("();\n");
                 }
@@ -2311,7 +2316,7 @@ public class ProxyFactory {
             String postCreateMethodDescriptor;
             bc.addAload(0);
             if (postCreateMethod.getParameterTypes().length == 1) {
-                bc.addGetstatic(cc, "$$_evm", Descriptor.of(EntityViewManager.class.getName()));
+                bc.addGetstatic(cc, SERIALIZABLE_EVM_FIELD_NAME, Descriptor.of(EntityViewManager.class.getName()));
                 postCreateMethodDescriptor = "(L" + Descriptor.toJvmName(EntityViewManager.class.getName()) + ";)V";
             } else {
                 postCreateMethodDescriptor = "()V";
