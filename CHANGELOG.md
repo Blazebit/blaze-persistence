@@ -8,7 +8,7 @@ Not yet released
 
 ### New features
 
-None
+* Introduce a way to do global mapping parameter registration
 
 ### Bug fixes
 

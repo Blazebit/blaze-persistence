@@ -366,6 +366,9 @@ FROM Cat cat
 
 Parameter mappings are probably most useful in <<anchor-constructor-mapping,constructor mappings>> where they can be used for some transformation logic.
 
+Optional parameters can be configured globally through link:{entity_view_jdoc}/persistence/view/spi/EntityViewConfiguration.html#setOptionalParameter(java.lang.String,%20java.lang.Object)[`setOptionalParameter()`] or
+for a specific use case through link:{entity_view_jdoc}/persistence/view/EntityViewSetting.html#addOptionalParameter(java.lang.String,%20java.lang.Object)[`addOptionalParameter()`].
+
 === Entity mappings
 
 Apart from having custom projections for entity or embeddable types through subviews, you can also map the JPA managed types directly.

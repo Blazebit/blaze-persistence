@@ -157,6 +157,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     private final ViewMetamodelImpl metamodel;
     private final ProxyFactory proxyFactory;
     private final TransactionSupport transactionSupport;
+    private final Map<String, Object> optionalParameters;
     private final boolean supportsTransientReference;
     private final ConcurrentMap<ViewTypeObjectBuilderTemplate.Key, ViewTypeObjectBuilderTemplate<?>> objectBuilderCache;
     private final ConcurrentMap<ManagedViewType<?>, EntityViewUpdaterImpl> entityViewUpdaterCache;
@@ -186,6 +187,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         this.strictCascadingCheck = Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.UPDATER_STRICT_CASCADING_CHECK)));
         this.proxyFactory = new ProxyFactory(unsafeDisabled, strictCascadingCheck, packageOpener);
         this.transactionSupport = config.getTransactionSupport();
+        this.optionalParameters = Collections.unmodifiableMap(new HashMap<>(config.getOptionalParameters()));
         this.serializableDelegates = new ClassValue<EntityViewManager>() {
             @Override
             protected EntityViewManager computeValue(Class<?> type) {
@@ -516,6 +518,11 @@ public class EntityViewManagerImpl implements EntityViewManager {
         return metamodel;
     }
 
+    @Override
+    public Map<String, Object> getOptionalParameters() {
+        return optionalParameters;
+    }
+
     public JpaProvider getJpaProvider() {
         return jpaProvider;
     }
@@ -586,6 +593,17 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
     @Override
     public <T> T create(Class<T> entityViewClass) {
+        return create0(entityViewClass, optionalParameters);
+    }
+
+    @Override
+    public <T> T create(Class<T> entityViewClass, Map<String, Object> optionalParameters) {
+        Map<String, Object> map = new HashMap<>(this.optionalParameters);
+        map.putAll(optionalParameters);
+        return create0(entityViewClass, Collections.unmodifiableMap(map));
+    }
+
+    public <T> T create0(Class<T> entityViewClass, Map<String, Object> optionalParameters) {
         Constructor<T> constructor = (Constructor<T>) createConstructorCache.get(entityViewClass);
         CREATION: try {
             if (constructor == null) {
@@ -594,10 +612,10 @@ public class EntityViewManagerImpl implements EntityViewManager {
                     break CREATION;
                 }
                 Class<? extends T> proxyClass = proxyFactory.getProxy(this, managedViewType, null);
-                constructor = (Constructor<T>) proxyClass.getConstructor();
+                constructor = (Constructor<T>) proxyClass.getConstructor(proxyClass, Map.class);
                 createConstructorCache.put(entityViewClass, constructor);
             }
-            return constructor.newInstance();
+            return constructor.newInstance(null, optionalParameters);
         } catch (Exception e) {
             throw new IllegalArgumentException("Couldn't instantiate entity view object for type: " + entityViewClass.getName() + "\nDid you forget to add a no-args constructor to the view? Consider adding a no-args constructor annotated with @ViewConstructor(\"create\").", e);
         }
@@ -607,16 +625,26 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
     @Override
     public <T> T convert(Object source, Class<T> entityViewClass, ConvertOption... convertOptions) {
-        return convert(source, ViewMapper.Key.create(metamodel, source, entityViewClass, convertOptions));
+        return getViewMapper(ViewMapper.Key.create(metamodel, source, entityViewClass, convertOptions)).map(source, optionalParameters);
+    }
+
+    @Override
+    public <T> T convert(Object source, Class<T> entityViewClass, Map<String, Object> optionalParameters, ConvertOption... convertOptions) {
+        Map<String, Object> map = new HashMap<>(this.optionalParameters);
+        map.putAll(optionalParameters);
+        return getViewMapper(ViewMapper.Key.create(metamodel, source, entityViewClass, convertOptions)).map(source, Collections.unmodifiableMap(map));
     }
 
     @Override
     public <T> ConvertOperationBuilder<T> convertWith(Object source, Class<T> entityViewClass, ConvertOption... convertOptions) {
-        return new ConvertOperationBuilderImpl<>(this, ViewMapper.Key.create(metamodel, source, entityViewClass, convertOptions), source);
+        return new ConvertOperationBuilderImpl<>(this, ViewMapper.Key.create(metamodel, source, entityViewClass, convertOptions), source, optionalParameters);
     }
 
-    private <T> T convert(Object source, ViewMapper.Key<Object, T> key) {
-        return getViewMapper(key).map(source);
+    @Override
+    public <T> ConvertOperationBuilder<T> convertWith(Object source, Class<T> entityViewClass, Map<String, Object> optionalParameters, ConvertOption... convertOptions) {
+        Map<String, Object> map = new HashMap<>(this.optionalParameters);
+        map.putAll(optionalParameters);
+        return new ConvertOperationBuilderImpl<>(this, ViewMapper.Key.create(metamodel, source, entityViewClass, convertOptions), source, Collections.unmodifiableMap(map));
     }
 
     @SuppressWarnings("unchecked")

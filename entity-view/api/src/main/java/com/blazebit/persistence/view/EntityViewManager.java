@@ -24,6 +24,7 @@ import com.blazebit.persistence.view.change.SingularChangeModel;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 
 import javax.persistence.EntityManager;
+import java.util.Map;
 
 /**
  * An interface that gives access to the metamodel and object builders.
@@ -39,6 +40,14 @@ public interface EntityViewManager extends ServiceProvider {
      * @return The metamodel for this entity view manager
      */
     public ViewMetamodel getMetamodel();
+
+    /**
+     * Returns the globally configured optional parameters.
+     *
+     * @return The optional parameters
+     * @since 1.5.0
+     */
+    public Map<String, Object> getOptionalParameters();
 
     /**
      * Loads and returns an entity view of the given type having the given entity id.
@@ -107,6 +116,17 @@ public interface EntityViewManager extends ServiceProvider {
     public <T> T create(Class<T> entityViewClass);
 
     /**
+     * Creates a new instance of the entity view class and returns it.
+     *
+     * @param entityViewClass The entity view class to construct
+     * @param optionalParameters The optional parameters to consider
+     * @param <T> The type of the entity view class
+     * @return A new instance of the given entity view class
+     * @since 1.5.0
+     */
+    public <T> T create(Class<T> entityViewClass, Map<String, Object> optionalParameters);
+
+    /**
      * Creates a new instance of the entity view class, copies the values
      * of matching attributes of the source object and returns the instance.
      *
@@ -126,11 +146,39 @@ public interface EntityViewManager extends ServiceProvider {
      * @param <T> The type of the entity view class
      * @param source The source object from which to copy values
      * @param entityViewClass The entity view class to construct
+     * @param optionalParameters The optional parameters to consider
+     * @param convertOptions The options to use for converting
+     * @return A new instance of the given entity view class
+     * @since 1.5.0
+     */
+    public <T> T convert(Object source, Class<T> entityViewClass, Map<String, Object> optionalParameters, ConvertOption... convertOptions);
+
+    /**
+     * Creates a new instance of the entity view class, copies the values
+     * of matching attributes of the source object and returns the instance.
+     *
+     * @param <T> The type of the entity view class
+     * @param source The source object from which to copy values
+     * @param entityViewClass The entity view class to construct
      * @param convertOptions The options to use for converting
      * @return A builder to specify attribute entity view types and conversion options
      * @since 1.4.0
      */
     public <T> ConvertOperationBuilder<T> convertWith(Object source, Class<T> entityViewClass, ConvertOption... convertOptions);
+
+    /**
+     * Creates a new instance of the entity view class, copies the values
+     * of matching attributes of the source object and returns the instance.
+     *
+     * @param <T> The type of the entity view class
+     * @param source The source object from which to copy values
+     * @param entityViewClass The entity view class to construct
+     * @param optionalParameters The optional parameters to consider
+     * @param convertOptions The options to use for converting
+     * @return A builder to specify attribute entity view types and conversion options
+     * @since 1.4.0
+     */
+    public <T> ConvertOperationBuilder<T> convertWith(Object source, Class<T> entityViewClass, Map<String, Object> optionalParameters, ConvertOption... convertOptions);
 
     /**
      * Saves the entity which the given entity view maps to.

@@ -22,6 +22,7 @@ import com.blazebit.persistence.view.CreatableEntityView;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.Mapping;
+import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.PostCreate;
 import com.blazebit.persistence.view.UpdatableEntityView;
 import com.blazebit.persistence.view.testsuite.basic.model.IntIdEntityView;
@@ -45,6 +46,8 @@ public abstract class UpdatableEmbeddableTestEntityView extends EmbeddableTestEn
         getEmbeddable().getElementCollection().put("test", evm.create(UpdatableNameObjectView.class));
     }
 
+    @MappingParameter("test")
+    public abstract Object getTest();
     public abstract EmbeddableTestEntityEmbeddableView getEmbeddable();
     public abstract void setEmbeddable(EmbeddableTestEntityEmbeddableView embeddable);
 

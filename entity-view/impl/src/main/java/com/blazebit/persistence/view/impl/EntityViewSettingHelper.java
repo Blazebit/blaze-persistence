@@ -44,6 +44,8 @@ import com.blazebit.persistence.view.metamodel.ViewType;
 
 import javax.persistence.metamodel.Metamodel;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -89,11 +91,19 @@ public final class EntityViewSettingHelper {
         }
 
         ExpressionFactory ef = criteriaBuilder.getService(ExpressionFactory.class);
-        EntityViewConfiguration configuration = new EntityViewConfiguration(criteriaBuilder, ef, new MutableViewJpqlMacro(), new MutableEmbeddingViewJpqlMacro(), setting.getOptionalParameters(), setting.getProperties(), setting.getFetches(), managedView);
+        Map<String, Object> optionalParameters;
+        if (setting.getOptionalParameters().isEmpty()) {
+            optionalParameters = evm.getOptionalParameters();
+        } else {
+            optionalParameters = new HashMap<>(evm.getOptionalParameters());
+            optionalParameters.putAll(setting.getOptionalParameters());
+            optionalParameters = Collections.unmodifiableMap(optionalParameters);
+        }
+        EntityViewConfiguration configuration = new EntityViewConfiguration(criteriaBuilder, ef, new MutableViewJpqlMacro(), new MutableEmbeddingViewJpqlMacro(), optionalParameters, setting.getProperties(), setting.getFetches(), managedView);
         entityViewRoot = evm.applyObjectBuilder(managedView, mappingConstructor, entityViewRoot, configuration.getCriteriaBuilder(), configuration, 0);
         applyAttributeFilters(setting, evm, criteriaBuilder, ef, managedView);
         applyAttributeSorters(setting, evm, criteriaBuilder, ef, managedView);
-        applyOptionalParameters(setting, criteriaBuilder);
+        applyOptionalParameters(optionalParameters, criteriaBuilder);
         Map<String, Object> properties = setting.getProperties();
 
         if (setting.isPaginated()) {
@@ -202,10 +212,10 @@ public final class EntityViewSettingHelper {
         return expressions.toArray(new String[expressions.size()]);
     }
 
-    private static void applyOptionalParameters(EntityViewSetting<?, ?> setting, CriteriaBuilder<?> normalCb) {
+    private static void applyOptionalParameters(Map<String, Object> optionalParameters, CriteriaBuilder<?> normalCb) {
         // Add optional parameters
-        if (setting.hasOptionalParameters()) {
-            for (Map.Entry<String, Object> paramEntry : setting.getOptionalParameters().entrySet()) {
+        if (!optionalParameters.isEmpty()) {
+            for (Map.Entry<String, Object> paramEntry : optionalParameters.entrySet()) {
                 if (normalCb.containsParameter(paramEntry.getKey()) && !normalCb.isParameterSet(paramEntry.getKey())) {
                     normalCb.setParameter(paramEntry.getKey(), paramEntry.getValue());
                 }

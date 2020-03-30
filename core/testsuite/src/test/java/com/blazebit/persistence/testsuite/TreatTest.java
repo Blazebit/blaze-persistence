@@ -245,7 +245,8 @@ public class TreatTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoEclipselink.class })
+    // NOTE: Datanucleus fails with a NPE
+    @Category({ NoEclipselink.class, NoDatanucleus4.class })
     public void implicitJoinTreatedImplicitCorrelation() {
         CriteriaBuilder<PolymorphicBase> crit = cbf.create(em, PolymorphicBase.class, "p")
                 .whereExists().from(PolymorphicSub1.class, "sub1")

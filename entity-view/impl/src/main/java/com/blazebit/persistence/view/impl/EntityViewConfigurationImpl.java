@@ -59,6 +59,7 @@ public class EntityViewConfigurationImpl implements EntityViewConfiguration {
     private final Map<Class<?>, Object> typeTestValues = new HashMap<>();
     private Properties properties = new Properties();
     private TransactionSupport transactionSupport;
+    private Map<String, Object> optionalParameters = new HashMap<>();
 
     public EntityViewConfigurationImpl() {
         loadDefaultProperties();
@@ -264,6 +265,34 @@ public class EntityViewConfigurationImpl implements EntityViewConfiguration {
     @Override
     public EntityViewConfiguration setTransactionSupport(TransactionSupport transactionSupport) {
         this.transactionSupport = transactionSupport;
+        return this;
+    }
+
+    @Override
+    public Map<String, Object> getOptionalParameters() {
+        return optionalParameters;
+    }
+
+    @Override
+    public Object getOptionalParameter(String name) {
+        return optionalParameters.get(name);
+    }
+
+    @Override
+    public EntityViewConfiguration setOptionalParameter(String name, Object value) {
+        optionalParameters.put(name, value);
+        return this;
+    }
+
+    @Override
+    public EntityViewConfiguration setOptionalParameters(Map<String, Object> optionalParameters) {
+        this.optionalParameters = optionalParameters;
+        return this;
+    }
+
+    @Override
+    public EntityViewConfiguration addOptionalParameters(Map<String, Object> optionalParameters) {
+        this.optionalParameters.putAll(optionalParameters);
         return this;
     }
 }
