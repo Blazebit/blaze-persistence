@@ -99,7 +99,7 @@ public class ConvertedViewType<X> implements ViewTypeImplementor<X> {
     }
 
     @Override
-    public Map<ManagedViewTypeImplementor<? extends X>, String> getInheritanceSubtypeConfiguration() {
+    public Map<ManagedViewType<? extends X>, String> getInheritanceSubtypeConfiguration() {
         return delegate.getInheritanceSubtypeConfiguration();
     }
 
@@ -139,7 +139,7 @@ public class ConvertedViewType<X> implements ViewTypeImplementor<X> {
     }
 
     @Override
-    public ManagedViewTypeImpl.InheritanceSubtypeConfiguration<X> getInheritanceSubtypeConfiguration(Map<ManagedViewTypeImplementor<? extends X>, String> inheritanceSubtypeMapping) {
+    public ManagedViewTypeImpl.InheritanceSubtypeConfiguration<X> getInheritanceSubtypeConfiguration(Map<ManagedViewType<? extends X>, String> inheritanceSubtypeMapping) {
         return delegate.getInheritanceSubtypeConfiguration(inheritanceSubtypeMapping);
     }
 
@@ -154,7 +154,7 @@ public class ConvertedViewType<X> implements ViewTypeImplementor<X> {
     }
 
     @Override
-    public Map<Map<ManagedViewTypeImplementor<? extends X>, String>, ManagedViewTypeImpl.InheritanceSubtypeConfiguration<X>> getInheritanceSubtypeConfigurations() {
+    public Map<Map<ManagedViewType<? extends X>, String>, ManagedViewTypeImpl.InheritanceSubtypeConfiguration<X>> getInheritanceSubtypeConfigurations() {
         return delegate.getInheritanceSubtypeConfigurations();
     }
 
@@ -221,6 +221,11 @@ public class ConvertedViewType<X> implements ViewTypeImplementor<X> {
     @Override
     public MethodAttribute<? super X, ?> getAttribute(String name) {
         return delegate.getAttribute(name);
+    }
+
+    @Override
+    public MappingConstructorImpl<X> getDefaultConstructor() {
+        return delegate.getDefaultConstructor();
     }
 
     @Override

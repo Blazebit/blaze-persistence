@@ -16,16 +16,24 @@
 
 package com.blazebit.persistence.view.impl;
 
+import java.util.Map;
+
 /**
  * @author Christian Beikov
- * @since 1.4.0
+ * @since 1.5.0
  */
-public interface EntityViewListenerFactory<T> {
+public class MapEntityViewBuilderListener implements EntityViewBuilderListener {
 
-    Class<? super T> getListenerKind();
+    private final Map<Object, Object> map;
+    private final Object key;
 
-    Class<T> getListenerClass();
+    public MapEntityViewBuilderListener(Map<Object, Object> map, Object key) {
+        this.map = map;
+        this.key = key;
+    }
 
-    T createListener();
-
+    @Override
+    public void onBuildComplete(Object object) {
+        map.put(key, object);
+    }
 }

@@ -42,7 +42,7 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
     private final List<AbstractParameterAttribute<? super X, ?>> parameters;
     private final InheritanceSubtypeConstructorConfiguration<X> defaultInheritanceParametersAttributesClosureConfiguration;
     private final InheritanceSubtypeConstructorConfiguration<X> overallInheritanceParametersAttributesClosureConfiguration;
-    private final Map<Map<ManagedViewTypeImplementor<? extends X>, String>, InheritanceSubtypeConstructorConfiguration<X>> inheritanceSubtypeParameterAttributesClosureConfigurations;
+    private final Map<Map<ManagedViewType<? extends X>, String>, InheritanceSubtypeConstructorConfiguration<X>> inheritanceSubtypeParameterAttributesClosureConfigurations;
     private final boolean hasJoinFetchedCollections;
     private final boolean hasEntityAttributes;
 
@@ -87,9 +87,9 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
         this.overallInheritanceParametersAttributesClosureConfiguration = new InheritanceSubtypeConstructorConfiguration<>(overallParameters);
         this.defaultInheritanceParametersAttributesClosureConfiguration = new InheritanceSubtypeConstructorConfiguration<>(createParameterAttributesClosure(viewType.getDefaultInheritanceSubtypeConfiguration().getInheritanceSubtypeConfiguration(), context), overallInheritanceParametersAttributesClosureConfiguration);
 
-        Map<Map<ManagedViewTypeImplementor<? extends X>, String>, InheritanceSubtypeConstructorConfiguration<X>> inheritanceSubtypeParameterAttributesClosureConfigurations = new HashMap<>();
+        Map<Map<ManagedViewType<? extends X>, String>, InheritanceSubtypeConstructorConfiguration<X>> inheritanceSubtypeParameterAttributesClosureConfigurations = new HashMap<>();
 
-        for (Map<ManagedViewTypeImplementor<? extends X>, String> subtypes : viewType.getInheritanceSubtypeConfigurations().keySet()) {
+        for (Map<ManagedViewType<? extends X>, String> subtypes : viewType.getInheritanceSubtypeConfigurations().keySet()) {
             // Reuse the default closure already built
             if (subtypes == viewType.getDefaultInheritanceSubtypeConfiguration()) {
                 inheritanceSubtypeParameterAttributesClosureConfigurations.put(subtypes, defaultInheritanceParametersAttributesClosureConfiguration);
@@ -104,7 +104,7 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
     }
 
     @SuppressWarnings("unchecked")
-    private List<AbstractParameterAttribute<? super X, ?>> createParameterAttributesClosure(Map<ManagedViewTypeImplementor<? extends X>, String> subtypes, MetamodelBuildingContext context) {
+    private List<AbstractParameterAttribute<? super X, ?>> createParameterAttributesClosure(Map<ManagedViewType<? extends X>, String> subtypes, MetamodelBuildingContext context) {
         List<AbstractParameterAttribute<? super X, ?>> parametersAttributeClosure = new ArrayList<AbstractParameterAttribute<? super X, ?>>(parameters.size());
         parametersAttributeClosure.addAll(parameters);
 
@@ -127,7 +127,7 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
         return parametersAttributeClosure;
     }
 
-    public InheritanceSubtypeConstructorConfiguration<X> getSubtypeConstructorConfiguration(Map<ManagedViewTypeImplementor<? extends X>, String> inheritanceSubtypeMappings) {
+    public InheritanceSubtypeConstructorConfiguration<X> getSubtypeConstructorConfiguration(Map<ManagedViewType<? extends X>, String> inheritanceSubtypeMappings) {
         if (inheritanceSubtypeMappings == null || inheritanceSubtypeMappings.isEmpty() || declaringType.getDefaultInheritanceSubtypeConfiguration().getInheritanceSubtypeConfiguration() == inheritanceSubtypeMappings) {
             return defaultInheritanceParametersAttributesClosureConfiguration;
         }
@@ -143,7 +143,7 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
         return overallInheritanceParametersAttributesClosureConfiguration;
     }
 
-    public Map<Map<ManagedViewTypeImplementor<? extends X>, String>, InheritanceSubtypeConstructorConfiguration<X>> getInheritanceSubtypeParameterAttributesClosureConfigurations() {
+    public Map<Map<ManagedViewType<? extends X>, String>, InheritanceSubtypeConstructorConfiguration<X>> getInheritanceSubtypeParameterAttributesClosureConfigurations() {
         return inheritanceSubtypeParameterAttributesClosureConfigurations;
     }
 

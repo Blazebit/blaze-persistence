@@ -27,9 +27,22 @@ import com.blazebit.persistence.view.LockMode;
 import com.blazebit.persistence.view.ViewTransition;
 import com.blazebit.persistence.view.impl.PrefixingQueryGenerator;
 import com.blazebit.persistence.view.impl.SimpleCTEProviderFactory;
+import com.blazebit.persistence.view.impl.proxy.AbstractReflectionInstantiator;
+import com.blazebit.persistence.view.impl.type.NormalMapUserTypeWrapper;
+import com.blazebit.persistence.view.impl.type.NormalSetUserTypeWrapper;
+import com.blazebit.persistence.view.impl.type.OrderedCollectionUserTypeWrapper;
+import com.blazebit.persistence.view.impl.type.OrderedMapUserTypeWrapper;
+import com.blazebit.persistence.view.impl.type.OrderedSetUserTypeWrapper;
+import com.blazebit.persistence.view.impl.type.SortedMapUserTypeWrapper;
+import com.blazebit.persistence.view.impl.type.SortedSetUserTypeWrapper;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
+import com.blazebit.persistence.view.metamodel.MapAttribute;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
+import com.blazebit.persistence.view.metamodel.PluralAttribute;
+import com.blazebit.persistence.view.metamodel.SetAttribute;
+import com.blazebit.persistence.view.metamodel.ViewType;
+import com.blazebit.persistence.view.spi.type.BasicUserType;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 import com.blazebit.reflection.ReflectionUtils;
 import javassist.ClassPool;
@@ -114,12 +127,13 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
     private final NavigableMap<String, AbstractMethodAttribute<? super X, ?>> recursiveSubviewAttributes;
     private final Set<AbstractMethodAttribute<? super X, ?>> updateMappableAttributes;
     private final AbstractMethodAttribute<? super X, ?>[] mutableAttributes;
+    private final MappingConstructorImpl<X> defaultConstructor;
     private final Map<ParametersKey, MappingConstructorImpl<X>> constructors;
     private final Map<String, MappingConstructorImpl<X>> constructorIndex;
     private final String inheritanceMapping;
     private final InheritanceSubtypeConfiguration<X> defaultInheritanceSubtypeConfiguration;
     private final InheritanceSubtypeConfiguration<X> overallInheritanceSubtypeConfiguration;
-    private final Map<Map<ManagedViewTypeImplementor<? extends X>, String>, InheritanceSubtypeConfiguration<X>> inheritanceSubtypeConfigurations;
+    private final Map<Map<ManagedViewType<? extends X>, String>, InheritanceSubtypeConfiguration<X>> inheritanceSubtypeConfigurations;
     private final boolean hasJoinFetchedCollections;
     private final boolean hasSelectOrSubselectFetchedAttributes;
     private final boolean hasJpaManagedAttributes;
@@ -288,7 +302,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
 
         this.mutableAttributes = mutableAttributes.toArray(new AbstractMethodAttribute[mutableAttributes.size()]);
         this.updateMappableAttributes = Collections.unmodifiableSet(updateMappableAttributes);
-        Map<Map<ManagedViewTypeImplementor<? extends X>, String>, InheritanceSubtypeConfiguration<X>> inheritanceSubtypeConfigurations = new HashMap<>();
+        Map<Map<ManagedViewType<? extends X>, String>, InheritanceSubtypeConfiguration<X>> inheritanceSubtypeConfigurations = new HashMap<>();
         Map<ViewMapping, String> overallInheritanceSubtypeMappings = new HashMap<>();
 
         for (InheritanceViewMapping inheritanceViewMapping : viewMapping.getInheritanceViewMappings()) {
@@ -347,7 +361,13 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
             constructors.put(entry.getKey(), mappingConstructor);
             constructorIndex.put(constructorName, mappingConstructor);
         }
-
+        MappingConstructorImpl<X> mappingConstructor = null;
+        if (constructors.size() > 1) {
+            mappingConstructor = constructorIndex.get("init");
+        } else if (constructors.size() == 1) {
+            mappingConstructor = constructors.values().iterator().next();
+        }
+        this.defaultConstructor = mappingConstructor;
         this.constructors = Collections.unmodifiableMap(constructors);
         this.constructorIndex = Collections.unmodifiableMap(constructorIndex);
         this.inheritanceMapping = viewMapping.determineInheritanceMapping(context);
@@ -1069,6 +1089,11 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
     }
 
     @Override
+    public MappingConstructorImpl<X> getDefaultConstructor() {
+        return defaultConstructor;
+    }
+
+    @Override
     public Set<MappingConstructor<X>> getConstructors() {
         return new SetView<MappingConstructor<X>>(constructorIndex.values());
     }
@@ -1113,7 +1138,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
     }
 
     @Override
-    public Map<ManagedViewTypeImplementor<? extends X>, String> getInheritanceSubtypeConfiguration() {
+    public Map<ManagedViewType<? extends X>, String> getInheritanceSubtypeConfiguration() {
         return defaultInheritanceSubtypeConfiguration.inheritanceSubtypeConfiguration;
     }
 
@@ -1163,7 +1188,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
     }
 
     @Override
-    public InheritanceSubtypeConfiguration<X> getInheritanceSubtypeConfiguration(Map<ManagedViewTypeImplementor<? extends X>, String> inheritanceSubtypeMapping) {
+    public InheritanceSubtypeConfiguration<X> getInheritanceSubtypeConfiguration(Map<ManagedViewType<? extends X>, String> inheritanceSubtypeMapping) {
         if (inheritanceSubtypeMapping == null || inheritanceSubtypeMapping.isEmpty() || defaultInheritanceSubtypeConfiguration.getInheritanceSubtypeConfiguration() == inheritanceSubtypeMapping) {
             return defaultInheritanceSubtypeConfiguration;
         }
@@ -1181,7 +1206,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
     }
 
     @Override
-    public Map<Map<ManagedViewTypeImplementor<? extends X>, String>, InheritanceSubtypeConfiguration<X>> getInheritanceSubtypeConfigurations() {
+    public Map<Map<ManagedViewType<? extends X>, String>, InheritanceSubtypeConfiguration<X>> getInheritanceSubtypeConfigurations() {
         return inheritanceSubtypeConfigurations;
     }
 
@@ -1375,11 +1400,14 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
     public static class InheritanceSubtypeConfiguration<X> {
         private final ManagedViewTypeImpl<X> baseType;
         private final int configurationIndex;
-        private final Map<ManagedViewTypeImplementor<? extends X>, String> inheritanceSubtypeConfiguration;
-        private final Set<ManagedViewTypeImplementor<? extends X>> inheritanceSubtypes;
+        private final Map<ManagedViewType<? extends X>, String> inheritanceSubtypeConfiguration;
+        private final Set<ManagedViewType<? extends X>> inheritanceSubtypes;
         private final String inheritanceDiscriminatorMapping;
         private final Map<AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<? super X, ?>>> attributesClosure;
         private final Map<ManagedViewTypeImplementor<? extends X>, int[]> overallPositionAssignments;
+        private final List<AbstractReflectionInstantiator.MutableBasicUserTypeEntry> mutableBasicUserTypes;
+        private final List<AbstractReflectionInstantiator.TypeConverterEntry> typeConverterEntries;
+        private final List<Class<?>> parameterTypes;
 
         public InheritanceSubtypeConfiguration(ManagedViewTypeImpl<X> baseType, ViewMapping baseTypeViewMapping, int configurationIndex, InheritanceViewMapping inheritanceViewMapping, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
             this(baseType, baseTypeViewMapping, configurationIndex, inheritanceViewMapping, context, embeddableMapping, null);
@@ -1403,19 +1431,84 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
                 overallAttributesClosure = overallConfiguration.attributesClosure;
             }
 
+            List<AbstractReflectionInstantiator.MutableBasicUserTypeEntry> mutableBasicUserTypes = new ArrayList<>();
+            List<AbstractReflectionInstantiator.TypeConverterEntry> typeConverterEntries = new ArrayList<>();
+            List<Class<?>> parameterTypes = new ArrayList<>(overallAttributesClosure.size());
+            int initialStateIndex = 0;
+
+            String idName = null;
+            boolean collectMutableBasicTypes = false;
+            if (baseType instanceof ViewType<?>) {
+                idName = baseTypeViewMapping.getIdAttribute().getName();
+                collectMutableBasicTypes = (baseType.isUpdatable() || baseType.isCreatable()) && baseType.getFlushMode() != FlushMode.FULL;
+                parameterTypes.add(baseType.getAttribute(baseTypeViewMapping.getIdAttribute().getName()).getConvertedJavaType());
+            }
+            for (Map.Entry<AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<? super X, ?>>> attributeEntry : attributesClosure.entrySet()) {
+                if (attributeEntry.getKey().attributeName.equals(idName)) {
+                    continue;
+                }
+                ConstrainedAttribute<AbstractMethodAttribute<? super X, ?>> constrainedAttribute = attributeEntry.getValue();
+                parameterTypes.add(constrainedAttribute.getAttribute().getConvertedJavaType());
+
+                if (!constrainedAttribute.requiresCaseWhen()) {
+                    AbstractMethodAttribute<? super X, ?> attribute = constrainedAttribute.getSubAttribute(baseType);
+
+                    if (attribute instanceof com.blazebit.persistence.view.metamodel.SingularAttribute<?, ?>) {
+                        com.blazebit.persistence.view.metamodel.SingularAttribute<?, ?> singularAttribute = (com.blazebit.persistence.view.metamodel.SingularAttribute<?, ?>) attribute;
+                        TypeConverter<Object, Object> converter = (TypeConverter<Object, Object>) singularAttribute.getType().getConverter();
+                        if (converter != null) {
+                            typeConverterEntries.add(new AbstractReflectionInstantiator.TypeConverterEntry(attribute.getAttributeIndex(), converter));
+                        }
+                    }
+
+                    if (collectMutableBasicTypes && attribute.isMutable()) {
+                        if (attribute instanceof com.blazebit.persistence.view.metamodel.SingularAttribute<?, ?>) {
+                            com.blazebit.persistence.view.metamodel.SingularAttribute<?, ?> singularAttribute = (com.blazebit.persistence.view.metamodel.SingularAttribute<?, ?>) attribute;
+                            com.blazebit.persistence.view.metamodel.Type<?> t = singularAttribute.getType();
+                            BasicUserType<Object> elementType = getMutableBasicUserType(t);
+                            if (elementType != null) {
+                                mutableBasicUserTypes.add(new AbstractReflectionInstantiator.MutableBasicUserTypeEntry(initialStateIndex, ((com.blazebit.persistence.view.metamodel.BasicType) singularAttribute.getType()).getUserType()));
+                            }
+                        } else {
+                            PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) attribute;
+                            com.blazebit.persistence.view.metamodel.Type<?> t = pluralAttribute.getElementType();
+                            BasicUserType<Object> elementType = getMutableBasicUserType(t);
+                            if (pluralAttribute instanceof MapAttribute<?, ?, ?>) {
+                                MapAttribute<?, ?, ?> mapAttribute = (MapAttribute<?, ?, ?>) attribute;
+                                t = mapAttribute.getKeyType();
+                                BasicUserType<Object> keyType = getMutableBasicUserType(t);
+
+                                if (keyType != null || elementType != null) {
+                                    mutableBasicUserTypes.add(new AbstractReflectionInstantiator.MutableBasicUserTypeEntry(initialStateIndex, createMapUserTypeWrapper(mapAttribute, keyType, elementType)));
+                                }
+                            } else {
+                                if (elementType != null) {
+                                    mutableBasicUserTypes.add(new AbstractReflectionInstantiator.MutableBasicUserTypeEntry(initialStateIndex, createCollectionUserTypeWrapper(pluralAttribute, elementType)));
+                                }
+                            }
+                        }
+
+                        initialStateIndex++;
+                    }
+                }
+            }
+
+            this.mutableBasicUserTypes = Collections.unmodifiableList(mutableBasicUserTypes);
+            this.typeConverterEntries = Collections.unmodifiableList(typeConverterEntries);
+            this.parameterTypes = Collections.unmodifiableList(parameterTypes);
+
             Map<String, Integer> overallPositionMap = new HashMap<>(overallAttributesClosure.size());
             int index = 0;
-            String idName = null;
-            if (baseType instanceof ViewTypeImpl<?>) {
-                idName = baseTypeViewMapping.getIdAttribute().getName();
+            if (idName != null) {
                 overallPositionMap.put(idName, index);
                 index++;
             }
             for (AttributeKey attributeKey : overallAttributesClosure.keySet()) {
-                if (!attributeKey.attributeName.equals(idName)) {
-                    overallPositionMap.put(attributeKey.attributeName, index);
-                    index++;
+                if (attributeKey.attributeName.equals(idName)) {
+                    continue;
                 }
+                overallPositionMap.put(attributeKey.attributeName, index);
+                index++;
             }
 
             // Then create position assignments for all subtypes
@@ -1448,6 +1541,44 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
             this.overallPositionAssignments = Collections.unmodifiableMap(positionAssignments);
         }
 
+        @SuppressWarnings("unchecked")
+        private static BasicUserType<Object> getMutableBasicUserType(com.blazebit.persistence.view.metamodel.Type<?> type) {
+            if (type instanceof com.blazebit.persistence.view.metamodel.BasicType<?>) {
+                com.blazebit.persistence.view.metamodel.BasicType<?> basicType = (com.blazebit.persistence.view.metamodel.BasicType<?>) type;
+                BasicUserType<Object> elementType = (BasicUserType<Object>) basicType.getUserType();
+                if (elementType != null && elementType.isMutable() && (!elementType.supportsDirtyChecking() && elementType.supportsDeepCloning() || elementType.supportsDirtyTracking())) {
+                    return elementType;
+                }
+            }
+            return null;
+        }
+
+        @SuppressWarnings("unchecked")
+        private static BasicUserType<Object> createCollectionUserTypeWrapper(PluralAttribute<?, ?, ?> pluralAttribute, BasicUserType<Object> elementType) {
+            if (pluralAttribute instanceof SetAttribute<?, ?>) {
+                if (pluralAttribute.isSorted()) {
+                    return (BasicUserType<Object>) (BasicUserType<?>) new SortedSetUserTypeWrapper<>(elementType, (Comparator<Object>) pluralAttribute.getComparator());
+                } else if (pluralAttribute.isOrdered()) {
+                    return (BasicUserType<Object>) (BasicUserType<?>) new OrderedSetUserTypeWrapper<>(elementType);
+                } else {
+                    return (BasicUserType<Object>) (BasicUserType<?>) new NormalSetUserTypeWrapper<>(elementType);
+                }
+            } else {
+                return (BasicUserType<Object>) (BasicUserType<?>) new OrderedCollectionUserTypeWrapper<>(elementType);
+            }
+        }
+
+        @SuppressWarnings("unchecked")
+        private static BasicUserType<Object> createMapUserTypeWrapper(MapAttribute<?, ?, ?> mapAttribute, BasicUserType<Object> keyType, BasicUserType<Object> elementType) {
+            if (mapAttribute.isSorted()) {
+                return (BasicUserType<Object>) (BasicUserType<?>) new SortedMapUserTypeWrapper(keyType, elementType, (Comparator<Object>) mapAttribute.getComparator());
+            } else if (mapAttribute.isOrdered()) {
+                return (BasicUserType<Object>) (BasicUserType<?>) new OrderedMapUserTypeWrapper<>(keyType, elementType);
+            } else {
+                return (BasicUserType<Object>) (BasicUserType<?>) new NormalMapUserTypeWrapper<>(keyType, elementType);
+            }
+        }
+
         public ManagedViewTypeImplementor<X> getBaseType() {
             return baseType;
         }
@@ -1456,11 +1587,11 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
             return configurationIndex;
         }
 
-        public Set<ManagedViewTypeImplementor<? extends X>> getInheritanceSubtypes() {
+        public Set<ManagedViewType<? extends X>> getInheritanceSubtypes() {
             return inheritanceSubtypes;
         }
 
-        public Map<ManagedViewTypeImplementor<? extends X>, String> getInheritanceSubtypeConfiguration() {
+        public Map<ManagedViewType<? extends X>, String> getInheritanceSubtypeConfiguration() {
             return inheritanceSubtypeConfiguration;
         }
 
@@ -1474,6 +1605,18 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
 
         public int[] getOverallPositionAssignment(ManagedViewTypeImplementor<? extends X> subtype) {
             return overallPositionAssignments.get(subtype);
+        }
+
+        public List<AbstractReflectionInstantiator.MutableBasicUserTypeEntry> getMutableBasicUserTypes() {
+            return mutableBasicUserTypes;
+        }
+
+        public List<AbstractReflectionInstantiator.TypeConverterEntry> getTypeConverterEntries() {
+            return typeConverterEntries;
+        }
+
+        public List<Class<?>> getParameterTypes() {
+            return parameterTypes;
         }
 
         @SuppressWarnings("unchecked")
@@ -1492,8 +1635,8 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
         }
 
         @SuppressWarnings("unchecked")
-        private Map<ManagedViewTypeImplementor<? extends X>, String> createInheritanceSubtypeConfiguration(InheritanceViewMapping inheritanceViewMapping, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
-            Map<ManagedViewTypeImplementor<? extends X>, String> configuration = new LinkedHashMap<>(inheritanceViewMapping.getInheritanceSubtypeMappings().size());
+        private Map<ManagedViewType<? extends X>, String> createInheritanceSubtypeConfiguration(InheritanceViewMapping inheritanceViewMapping, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
+            Map<ManagedViewType<? extends X>, String> configuration = new LinkedHashMap<>(inheritanceViewMapping.getInheritanceSubtypeMappings().size());
 
             for (Map.Entry<ViewMapping, String> mappingEntry : inheritanceViewMapping.getInheritanceSubtypeMappings().entrySet()) {
                 String mapping = mappingEntry.getValue();

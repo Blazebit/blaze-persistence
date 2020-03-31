@@ -20,6 +20,7 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.view.ConvertOperationBuilder;
 import com.blazebit.persistence.view.ConvertOption;
+import com.blazebit.persistence.view.EntityViewBuilder;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.FlushOperationBuilder;
@@ -102,6 +103,46 @@ public class SerializableEntityViewManager implements EntityViewManager, Seriali
     @Override
     public <T> T create(Class<T> entityViewClass, Map<String, Object> optionalParameters) {
         return getEvm().create(entityViewClass, optionalParameters);
+    }
+
+    @Override
+    public <X> EntityViewBuilder<X> createBuilder(Class<X> clazz) {
+        return getEvm().createBuilder(clazz);
+    }
+
+    @Override
+    public <X> EntityViewBuilder<X> createBuilder(Class<X> clazz, String constructorName) {
+        return getEvm().createBuilder(clazz, constructorName);
+    }
+
+    @Override
+    public <X> EntityViewBuilder<X> createBuilder(X view) {
+        return getEvm().createBuilder(view);
+    }
+
+    @Override
+    public <X> EntityViewBuilder<X> createBuilder(X view, String constructorName) {
+        return getEvm().createBuilder(view, constructorName);
+    }
+
+    @Override
+    public <X> EntityViewBuilder<X> createBuilder(Class<X> clazz, Map<String, Object> optionalParameters) {
+        return getEvm().createBuilder(clazz, optionalParameters);
+    }
+
+    @Override
+    public <X> EntityViewBuilder<X> createBuilder(Class<X> clazz, Map<String, Object> optionalParameters, String constructorName) {
+        return getEvm().createBuilder(clazz, optionalParameters, constructorName);
+    }
+
+    @Override
+    public <X> EntityViewBuilder<X> createBuilder(X view, Map<String, Object> optionalParameters) {
+        return getEvm().createBuilder(view, optionalParameters);
+    }
+
+    @Override
+    public <X> EntityViewBuilder<X> createBuilder(X view, Map<String, Object> optionalParameters, String constructorName) {
+        return getEvm().createBuilder(view, optionalParameters, constructorName);
     }
 
     @Override

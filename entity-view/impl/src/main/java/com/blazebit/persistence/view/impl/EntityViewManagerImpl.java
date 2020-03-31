@@ -37,6 +37,7 @@ import com.blazebit.persistence.view.AttributeFilterProvider;
 import com.blazebit.persistence.view.ConfigurationProperties;
 import com.blazebit.persistence.view.ConvertOperationBuilder;
 import com.blazebit.persistence.view.ConvertOption;
+import com.blazebit.persistence.view.EntityViewBuilder;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.FlushOperationBuilder;
@@ -68,6 +69,8 @@ import com.blazebit.persistence.view.filter.StartsWithIgnoreCaseFilter;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.accessor.EntityIdAttributeAccessor;
 import com.blazebit.persistence.view.impl.change.ViewChangeModel;
+import com.blazebit.persistence.view.impl.collection.RecordingCollection;
+import com.blazebit.persistence.view.impl.collection.RecordingMap;
 import com.blazebit.persistence.view.impl.filter.ContainsFilterImpl;
 import com.blazebit.persistence.view.impl.filter.ContainsIgnoreCaseFilterImpl;
 import com.blazebit.persistence.view.impl.filter.EndsWithFilterImpl;
@@ -83,6 +86,9 @@ import com.blazebit.persistence.view.impl.filter.StartsWithIgnoreCaseFilterImpl;
 import com.blazebit.persistence.view.impl.macro.DefaultViewRootJpqlMacro;
 import com.blazebit.persistence.view.impl.mapper.ConvertOperationBuilderImpl;
 import com.blazebit.persistence.view.impl.mapper.ViewMapper;
+import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
+import com.blazebit.persistence.view.impl.metamodel.ConstrainedAttribute;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.MappingConstructorImpl;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
@@ -109,6 +115,7 @@ import com.blazebit.persistence.view.impl.update.listener.ViewInstancePostUpdate
 import com.blazebit.persistence.view.impl.update.listener.ViewInstancePrePersistEntityListener;
 import com.blazebit.persistence.view.impl.update.listener.ViewInstancePreRemoveListener;
 import com.blazebit.persistence.view.impl.update.listener.ViewInstancePreUpdateListener;
+import com.blazebit.persistence.view.metamodel.Attribute;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
@@ -129,6 +136,7 @@ import javax.persistence.metamodel.Metamodel;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.TypeVariable;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -621,6 +629,92 @@ public class EntityViewManagerImpl implements EntityViewManager {
         }
 
         throw new IllegalArgumentException("Can't create instance of non-creatable view type: " + entityViewClass.getName() + "\nDid you forget to annotate it with @CreatableEntityView?");
+    }
+
+    @Override
+    public <X> EntityViewBuilder<X> createBuilder(Class<X> clazz) {
+        return createBuilder(clazz, null, null);
+    }
+
+    @Override
+    public <X> EntityViewBuilder<X> createBuilder(Class<X> clazz, String constructorName) {
+        return createBuilder(clazz, null, constructorName);
+    }
+
+    @Override
+    public <X> EntityViewBuilder<X> createBuilder(Class<X> clazz, Map<String, Object> optionalParameters) {
+        return createBuilder(clazz, optionalParameters, null);
+    }
+
+    @Override
+    public <X> EntityViewBuilderImpl<X> createBuilder(Class<X> clazz, Map<String, Object> optionalParameters, String constructorName) {
+        ManagedViewTypeImplementor<X> managedViewTypeImplementor = metamodel.managedView(clazz);
+        MappingConstructorImpl<X> mappingConstructor = null;
+        if (constructorName != null) {
+            mappingConstructor = (MappingConstructorImpl<X>) managedViewTypeImplementor.getConstructor(constructorName);
+        }
+        if (optionalParameters == null || optionalParameters.isEmpty()) {
+            optionalParameters = this.optionalParameters;
+        } else {
+            Map<String, Object> tempOptionalParameters = optionalParameters;
+            optionalParameters = new HashMap<>(optionalParameters.size() + this.optionalParameters.size());
+            optionalParameters.putAll(this.optionalParameters);
+            optionalParameters.putAll(tempOptionalParameters);
+        }
+        return new EntityViewBuilderImpl<>(this, managedViewTypeImplementor, mappingConstructor, optionalParameters);
+    }
+
+    @Override
+    public <X> EntityViewBuilder<X> createBuilder(X view) {
+        return createBuilder(view, null, null);
+    }
+
+    @Override
+    public <X> EntityViewBuilder<X> createBuilder(X view, String constructorName) {
+        return createBuilder(view, null, constructorName);
+    }
+
+    @Override
+    public <X> EntityViewBuilder<X> createBuilder(X view, Map<String, Object> optionalParameters) {
+        return createBuilder(view, optionalParameters, null);
+    }
+
+    @Override
+    public <X> EntityViewBuilder<X> createBuilder(X view, Map<String, Object> optionalParameters, String constructorName) {
+        EntityViewBuilderImpl<X> builder = (EntityViewBuilderImpl<X>) createBuilder(((EntityViewProxy) view).$$_getEntityViewClass(), optionalParameters, constructorName);
+        ManagedViewTypeImpl.InheritanceSubtypeConfiguration<X> inheritanceSubtypeConfiguration = builder.getManagedViewType().getInheritanceSubtypeConfiguration(null);
+        Object[] tuple = builder.getTuple();
+        for (ConstrainedAttribute<AbstractMethodAttribute<? super X, ?>> value : inheritanceSubtypeConfiguration.getAttributesClosure().values()) {
+            Object newValue;
+            if (value.getAttribute() instanceof MapAttribute<?, ?, ?>) {
+                if (value.getAttribute().needsDirtyTracker()) {
+                    RecordingMap<?, Object, Object> recordingMap = (RecordingMap<?, Object, Object>) value.getAttribute().getMapInstantiator().createRecordingCollection(0);
+                    recordingMap.getDelegate().putAll((Map<Object, Object>) value.getAttribute().getValue(view));
+                    newValue = recordingMap;
+                } else {
+                    Map<Object, Object> map = (Map<Object, Object>) value.getAttribute().getMapInstantiator().createCollection(0);
+                    map.putAll((Map<Object, Object>) value.getAttribute().getValue(view));
+                    newValue = map;
+                }
+            } else if (value.getAttribute() instanceof PluralAttribute<?, ?, ?>) {
+                if (value.getAttribute().needsDirtyTracker()) {
+                    RecordingCollection<?, Object> recordingCollection = (RecordingCollection<?, Object>) value.getAttribute().getCollectionInstantiator().createRecordingCollection(0);
+                    recordingCollection.getDelegate().addAll((Collection<Object>) value.getAttribute().getValue(view));
+                    newValue = recordingCollection;
+                } else {
+                    Collection<Object> collection = (Collection<Object>) value.getAttribute().getCollectionInstantiator().createCollection(0);
+                    collection.addAll((Collection<Object>) value.getAttribute().getValue(view));
+                    newValue = collection;
+                }
+            } else {
+                newValue = value.getAttribute().getValue(view);
+                if (newValue == null && value.getAttribute().getMappingType() == Attribute.MappingType.PARAMETER) {
+                    newValue = optionalParameters.get(value.getAttribute().getMapping());
+                }
+            }
+            tuple[value.getAttribute().getAttributeIndex()] = newValue;
+        }
+        return builder;
     }
 
     @Override

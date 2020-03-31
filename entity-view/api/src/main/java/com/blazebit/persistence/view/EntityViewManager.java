@@ -127,6 +127,94 @@ public interface EntityViewManager extends ServiceProvider {
     public <T> T create(Class<T> entityViewClass, Map<String, Object> optionalParameters);
 
     /**
+     * Creates a builder for the entity view of the given class type.
+     *
+     * @param clazz The entity view type to build
+     * @param <X> The entity view type
+     * @return The builder
+     * @since 1.5.0
+     */
+    public <X> EntityViewBuilder<X> createBuilder(Class<X> clazz);
+
+    /**
+     * Creates a builder for the entity view of the given class type.
+     *
+     * @param clazz The entity view type to build
+     * @param constructorName The entity view constructor to use
+     * @param <X> The entity view type
+     * @return The builder
+     * @since 1.5.0
+     */
+    public <X> EntityViewBuilder<X> createBuilder(Class<X> clazz, String constructorName);
+
+    /**
+     * Copies the state from the given view into a builder for the same entity view type.
+     *
+     * @param view The entity view to copy into a builder
+     * @param <X> The entity view type
+     * @return The builder
+     * @since 1.5.0
+     */
+    public <X> EntityViewBuilder<X> createBuilder(X view);
+
+    /**
+     * Copies the state from the given view into a builder for the same entity view type.
+     *
+     * @param view The entity view to copy into a builder
+     * @param constructorName The entity view constructor to use
+     * @param <X> The entity view type
+     * @return The builder
+     * @since 1.5.0
+     */
+    public <X> EntityViewBuilder<X> createBuilder(X view, String constructorName);
+
+    /**
+     * Creates a builder for the entity view of the given class type.
+     *
+     * @param clazz The entity view type to build
+     * @param optionalParameters The optional parameters to consider
+     * @param <X> The entity view type
+     * @return The builder
+     * @since 1.5.0
+     */
+    public <X> EntityViewBuilder<X> createBuilder(Class<X> clazz, Map<String, Object> optionalParameters);
+
+    /**
+     * Creates a builder for the entity view of the given class type.
+     *
+     * @param clazz The entity view type to build
+     * @param optionalParameters The optional parameters to consider
+     * @param constructorName The entity view constructor to use
+     * @param <X> The entity view type
+     * @return The builder
+     * @since 1.5.0
+     */
+    public <X> EntityViewBuilder<X> createBuilder(Class<X> clazz, Map<String, Object> optionalParameters, String constructorName);
+
+    /**
+     * Copies the state from the given view into a builder for the same entity view type.
+     *
+     * @param view The entity view to copy into a builder
+     * @param optionalParameters The optional parameters to consider
+     * @param <X> The entity view type
+     * @return The builder
+     * @since 1.5.0
+     */
+    public <X> EntityViewBuilder<X> createBuilder(X view, Map<String, Object> optionalParameters);
+
+    /**
+     * Copies the state from the given view into a builder for the same entity view type.
+     *
+     * @param view The entity view to copy into a builder
+     * @param optionalParameters The optional parameters to consider
+     * @param constructorName The entity view constructor to use
+     * @param <X> The entity view type
+     * @return The builder
+     * @since 1.5.0
+     */
+    public <X> EntityViewBuilder<X> createBuilder(X view, Map<String, Object> optionalParameters, String constructorName);
+
+    /**
      * Creates a new instance of the entity view class, copies the values
      * of matching attributes of the source object and returns the instance.
      *

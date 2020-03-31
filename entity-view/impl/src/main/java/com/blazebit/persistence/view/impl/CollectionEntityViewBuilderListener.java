@@ -16,16 +16,22 @@
 
 package com.blazebit.persistence.view.impl;
 
+import java.util.Collection;
+
 /**
  * @author Christian Beikov
- * @since 1.4.0
+ * @since 1.5.0
  */
-public interface EntityViewListenerFactory<T> {
+public class CollectionEntityViewBuilderListener implements EntityViewBuilderListener {
 
-    Class<? super T> getListenerKind();
+    private final Collection<Object> collection;
 
-    Class<T> getListenerClass();
+    public CollectionEntityViewBuilderListener(Collection<Object> collection) {
+        this.collection = collection;
+    }
 
-    T createListener();
-
+    @Override
+    public void onBuildComplete(Object object) {
+        collection.add(object);
+    }
 }
