@@ -30,6 +30,7 @@ import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import javax.persistence.EntityManager;
 import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.util.Map;
 
 /**
  * @author Christian Beikov
@@ -64,6 +65,11 @@ public class SerializableEntityViewManager implements EntityViewManager, Seriali
     }
 
     @Override
+    public Map<String, Object> getOptionalParameters() {
+        return getEvm().getOptionalParameters();
+    }
+
+    @Override
     public <T> T find(EntityManager entityManager, Class<T> entityViewClass, Object entityId) {
         return getEvm().find(entityManager, entityViewClass, entityId);
     }
@@ -94,13 +100,28 @@ public class SerializableEntityViewManager implements EntityViewManager, Seriali
     }
 
     @Override
+    public <T> T create(Class<T> entityViewClass, Map<String, Object> optionalParameters) {
+        return getEvm().create(entityViewClass, optionalParameters);
+    }
+
+    @Override
     public <T> T convert(Object source, Class<T> entityViewClass, ConvertOption... convertOptions) {
         return getEvm().convert(source, entityViewClass, convertOptions);
     }
 
     @Override
+    public <T> T convert(Object source, Class<T> entityViewClass, Map<String, Object> optionalParameters, ConvertOption... convertOptions) {
+        return getEvm().convert(source, entityViewClass, optionalParameters, convertOptions);
+    }
+
+    @Override
     public <T> ConvertOperationBuilder<T> convertWith(Object source, Class<T> entityViewClass, ConvertOption... convertOptions) {
         return getEvm().convertWith(source, entityViewClass, convertOptions);
+    }
+
+    @Override
+    public <T> ConvertOperationBuilder<T> convertWith(Object source, Class<T> entityViewClass, Map<String, Object> optionalParameters, ConvertOption... convertOptions) {
+        return getEvm().convertWith(source, entityViewClass, optionalParameters, convertOptions);
     }
 
     @Override

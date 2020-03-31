@@ -41,9 +41,9 @@ import com.blazebit.persistence.view.testsuite.proxy.model.UpdatableNameObjectVi
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import java.util.Collections;
+
+import static org.junit.Assert.*;
 
 /**
  *
@@ -80,17 +80,20 @@ public class ProxyFactoryEmeddableTest extends AbstractEntityViewTest {
         cfg.addEntityView(NameObjectView.class);
         cfg.addEntityView(UpdatableNameObjectView.class);
         cfg.addEntityView(IntIdEntityView.class);
+        cfg.setOptionalParameter("test", "String");
         return cfg.createEntityViewManager(cbf);
     }
 
     @Test
     public void testProxyCreateInitialization() {
+        Object obj = new Object();
         EntityViewManager evm = getEntityViewManager();
-        UpdatableEmbeddableTestEntityView instance = evm.create(UpdatableEmbeddableTestEntityView.class);
+        UpdatableEmbeddableTestEntityView instance = evm.create(UpdatableEmbeddableTestEntityView.class, Collections.singletonMap("test", obj));
 
         assertNotNull(instance.getId());
         assertNull(instance.getId().getKey());
         assertNull(instance.getId().getValue());
+        assertEquals(obj, instance.getTest());
         assertNotNull(instance.getEmbeddable());
         assertNotNull(instance.getEmbeddable().getElementCollection());
         assertNotNull(instance.getEmbeddable().getManyToMany());

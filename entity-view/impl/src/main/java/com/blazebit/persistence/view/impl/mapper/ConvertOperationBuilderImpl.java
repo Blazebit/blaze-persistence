@@ -38,16 +38,18 @@ public class ConvertOperationBuilderImpl<T> implements ConvertOperationBuilder<T
     private final ViewMapper.Key<Object, T> key;
     private final Map<String, ViewMapper.Key<Object, Object>> subMappers = new HashMap<>();
     private final Object source;
+    private final Map<String, Object> optionalParameters;
 
-    public ConvertOperationBuilderImpl(EntityViewManagerImpl entityViewManager, ViewMapper.Key<Object, T> key, Object source) {
+    public ConvertOperationBuilderImpl(EntityViewManagerImpl entityViewManager, ViewMapper.Key<Object, T> key, Object source, Map<String, Object> optionalParameters) {
         this.entityViewManager = entityViewManager;
         this.key = key;
         this.source = source;
+        this.optionalParameters = optionalParameters;
     }
 
     @Override
     public T convert() {
-        return entityViewManager.getViewMapper(key, subMappers).map(source);
+        return entityViewManager.getViewMapper(key, subMappers).map(source, optionalParameters);
     }
 
     @Override

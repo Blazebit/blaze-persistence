@@ -25,6 +25,9 @@ import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.proxy.model.DocumentJava8View;
 import org.junit.Test;
 
+import java.util.Collections;
+import java.util.Map;
+
 import static org.junit.Assert.*;
 
 /**
@@ -47,7 +50,7 @@ public class ProxyFactoryJava8Test extends AbstractEntityViewTest {
         ViewType<DocumentJava8View> viewType = getViewMetamodel().view(DocumentJava8View.class);
         Class<? extends DocumentJava8View> proxyClass = proxyFactory.getProxy(evm, (ManagedViewTypeImplementor<DocumentJava8View>) viewType, null);
 
-        DocumentJava8View instance = proxyClass.getConstructor().newInstance();
+        DocumentJava8View instance = proxyClass.getConstructor(proxyClass, Map.class).newInstance(null, Collections.emptyMap());
 
         assertEquals("INIT", instance.getName());
     }

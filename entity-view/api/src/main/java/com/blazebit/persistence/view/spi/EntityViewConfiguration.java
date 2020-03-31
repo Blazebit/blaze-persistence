@@ -280,4 +280,50 @@ public interface EntityViewConfiguration {
      */
     public EntityViewConfiguration setTransactionSupport(TransactionSupport transactionSupport);
 
+    /**
+     * Returns all globally configured optional parameters.
+     *
+     * @return All globally configured optional parameters
+     * @since 1.5.0
+     */
+    public Map<String, Object> getOptionalParameters();
+
+    /**
+     * Returns the optional parameter value by name.
+     *
+     * @param name The name of the parameter
+     * @return The value currently associated with that optional parameter name; may be null.
+     * @since 1.5.0
+     */
+    public Object getOptionalParameter(String name);
+
+    /**
+     * Set the optional parameter with the given name to the given value.
+     *
+     * @param name The name of the parameter
+     * @param value The value of the parameter
+     * @return this for method chaining
+     * @since 1.5.0
+     *
+     */
+    public EntityViewConfiguration setOptionalParameter(String name, Object value);
+
+    /**
+     * Replace the optional parameters of the configuration with the given optional parameters.
+     *
+     * @param optionalParameters The new optional parameters
+     * @return this for method chaining
+     * @since 1.5.0
+     */
+    public EntityViewConfiguration setOptionalParameters(Map<String, Object> optionalParameters);
+
+    /**
+     * Add the given optional parameters to the optional parameters of the configuration.
+     *
+     * @param optionalParameters The optional parameters to add.
+     * @return this for method chaining
+     * @since 1.5.0
+     */
+    public EntityViewConfiguration addOptionalParameters(Map<String, Object> optionalParameters);
+
 }

@@ -44,6 +44,7 @@ import com.blazebit.persistence.view.metamodel.BasicType;
 import com.blazebit.persistence.view.metamodel.FlatViewType;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
+import com.blazebit.persistence.view.metamodel.MappingAttribute;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.ParameterAttribute;
@@ -2258,7 +2259,7 @@ public class ProxyFactory {
                                             AbstractMethodAttribute<?, ?>[] attributes, int mutableAttributeCount, ConstructorKind kind, CtField idField, boolean unsafe) throws CannotCompileException, NotFoundException, BadBytecode {
         CtClass[] parameterTypes;
         if (kind == ConstructorKind.CREATE) {
-            parameterTypes = new CtClass[]{ };
+            parameterTypes = new CtClass[]{ cc, pool.get(Map.class.getName()) };
         } else {
             parameterTypes = attributeTypes;
         }
@@ -2506,14 +2507,17 @@ public class ProxyFactory {
                             SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) methodAttribute;
                             if (singularAttribute.getType().getMappingType() == Type.MappingType.FLAT_VIEW) {
                                 ManagedViewTypeImplementor<Object> attributeManagedViewType = (ManagedViewTypeImplementor<Object>) singularAttribute.getType();
+                                String proxyClassName = getProxy(entityViewManager, attributeManagedViewType, null).getName();
                                 sb.append("new ");
-                                sb.append(getProxy(entityViewManager, attributeManagedViewType, null).getName());
-                                sb.append("();\n");
+                                sb.append(proxyClassName);
+                                sb.append("((").append(proxyClassName).append(") null, $2);\n");
+                            } else if (methodAttribute.getMappingType() == Attribute.MappingType.PARAMETER) {
+                                sb.append("(").append(methodAttribute.getJavaType().getName());
+                                sb.append(") $2.get(\"").append(((MappingAttribute<?, ?>) methodAttribute).getMapping()).append("\");\n");
                             } else {
                                 sb.append("null;\n");
                             }
                         }
-
                     } else {
                         // Attributes for reference constructors don't initialize objects
                         sb.append("null;\n");
@@ -2569,9 +2573,13 @@ public class ProxyFactory {
                             }
                             if (singularAttribute != null && singularAttribute.getType().getMappingType() == Type.MappingType.FLAT_VIEW) {
                                 ManagedViewTypeImplementor<Object> attributeManagedViewType = (ManagedViewTypeImplementor<Object>) singularAttribute.getType();
+                                String proxyClassName = getProxy(entityViewManager, attributeManagedViewType, null).getName();
                                 sb.append("new ");
-                                sb.append(getProxy(entityViewManager, attributeManagedViewType, null).getName());
-                                sb.append("();\n");
+                                sb.append(proxyClassName);
+                                sb.append("((").append(proxyClassName).append(") null, $2);\n");
+                            } else if (methodAttribute != null && methodAttribute.getMappingType() == Attribute.MappingType.PARAMETER) {
+                                sb.append("(").append(methodAttribute.getJavaType().getName());
+                                sb.append(") $2.get(\"").append(((MappingAttribute<?, ?>) methodAttribute).getMapping()).append("\");\n");
                             } else {
                                 sb.append("null;\n");
                             }

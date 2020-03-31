@@ -236,7 +236,7 @@ public class ProxyFactoryTest extends AbstractEntityViewTest {
         assertNotNull(proxyClass.getDeclaredConstructor(Long.class, Map.class, Person.class, Person.class,
                                                         String.class));
         assertNotNull(proxyClass.getDeclaredConstructor(Long.class));
-        assertNotNull(proxyClass.getDeclaredConstructor());
+        assertNotNull(proxyClass.getDeclaredConstructor(proxyClass, Map.class));
 
         // 5 Fields, 2 static field for EntityViewManager
         assertEquals(7, proxyClass.getDeclaredFields().length);
@@ -274,7 +274,7 @@ public class ProxyFactoryTest extends AbstractEntityViewTest {
         ViewType<DocumentCreateView> viewType = getViewMetamodel().view(DocumentCreateView.class);
         Class<? extends DocumentCreateView> proxyClass = proxyFactory.getProxy(evm, (ManagedViewTypeImplementor<DocumentCreateView>) viewType, null);
 
-        DocumentCreateView instance = proxyClass.getConstructor().newInstance();
+        DocumentCreateView instance = proxyClass.getConstructor(proxyClass, Map.class).newInstance(null, Collections.emptyMap());
 
         assertTrue(instance.isPostCreated());
         assertNotNull(instance.getContacts());
@@ -285,7 +285,7 @@ public class ProxyFactoryTest extends AbstractEntityViewTest {
         ViewType<DocumentCreateView> viewType = getViewMetamodel().view(DocumentCreateView.class);
         Class<? extends DocumentCreateView> proxyClass = proxyFactory.getProxy(evm, (ManagedViewTypeImplementor<DocumentCreateView>) viewType, null);
 
-        DocumentCreateView instance = proxyClass.getConstructor().newInstance();
+        DocumentCreateView instance = proxyClass.getConstructor(proxyClass, Map.class).newInstance(null, Collections.emptyMap());
 
         assertEquals(DocumentCreateView.class.getSimpleName() + "(id = null)", instance.toString());
     }
@@ -305,7 +305,7 @@ public class ProxyFactoryTest extends AbstractEntityViewTest {
         FlatViewType<NameObjectView> viewType = getViewMetamodel().flatView(NameObjectView.class);
         Class<? extends NameObjectView> proxyClass = proxyFactory.getProxy(evm, (ManagedViewTypeImplementor<NameObjectView>) viewType, null);
 
-        NameObjectView instance = proxyClass.getConstructor().newInstance();
+        NameObjectView instance = proxyClass.getConstructor(proxyClass, Map.class).newInstance(null, Collections.emptyMap());
 
         assertEquals(NameObjectView.class.getSimpleName() + "(primaryName = null)", instance.toString());
     }

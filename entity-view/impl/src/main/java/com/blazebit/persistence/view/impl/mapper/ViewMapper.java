@@ -33,8 +33,10 @@ import com.blazebit.persistence.view.impl.proxy.DirtyTracker;
 import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
+import com.blazebit.persistence.view.metamodel.Attribute;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
+import com.blazebit.persistence.view.metamodel.MappingAttribute;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
@@ -62,7 +64,7 @@ public class ViewMapper<S, T> {
 
     private final int[] dirtyMapping;
     private final boolean copyInitialState;
-    private final AttributeAccessor[] sourceAccessors;
+    private final ObjectMapper[] objectMappers;
     private final ObjectInstantiator<T> objectInstantiator;
     private final boolean markNew;
     private final Method postConvert;
@@ -76,7 +78,7 @@ public class ViewMapper<S, T> {
         boolean markNew = maybeMarkNew != null ? maybeMarkNew : targetType.isCreatable();
         Set<MethodAttribute<? super T, ?>> attributes = targetType.getAttributes();
         Class<?>[] parameterTypes = new Class[attributes.size()];
-        AttributeAccessor[] sourceAccessors = new AttributeAccessor[attributes.size()];
+        ObjectMapper[] objectMappers = new ObjectMapper[attributes.size()];
         Iterator<MethodAttribute<? super T, ?>> iterator = attributes.iterator();
         MethodAttribute<? super T, ?> idAttribute = null;
         List<Integer> dirtyMapping = new ArrayList<>();
@@ -86,7 +88,7 @@ public class ViewMapper<S, T> {
         if (targetType instanceof ViewType<?>) {
             idAttribute = ((ViewType<T>) targetType).getIdAttribute();
             parameterTypes[i] = idAttribute.getConvertedJavaType();
-            sourceAccessors[i] = createAccessor(sourceType, targetType, ignoreMissing, markNew, entityViewManager, proxyFactory, idAttribute, prefix, subMappers);
+            objectMappers[i] = createAccessor(sourceType, targetType, ignoreMissing, markNew, entityViewManager, proxyFactory, idAttribute, prefix, subMappers);
             i++;
         }
 
@@ -95,7 +97,7 @@ public class ViewMapper<S, T> {
             MethodAttribute<? super T, ?> targetAttribute = iterator.next();
             if (targetAttribute != idAttribute) {
                 parameterTypes[i] = targetAttribute.getConvertedJavaType();
-                sourceAccessors[i] = createAccessor(sourceType, targetType, ignoreMissing, markNew, entityViewManager, proxyFactory, targetAttribute, prefix, subMappers);
+                objectMappers[i] = createAccessor(sourceType, targetType, ignoreMissing, markNew, entityViewManager, proxyFactory, targetAttribute, prefix, subMappers);
                 // Extract a mapping from target dirty state index to the source
                 int dirtyStateIndex = ((AbstractMethodAttribute<?, ?>) targetAttribute).getDirtyStateIndex();
                 if (dirtyStateIndex != -1) {
@@ -125,7 +127,7 @@ public class ViewMapper<S, T> {
         }
 
         this.copyInitialState = !markNew;
-        this.sourceAccessors = sourceAccessors;
+        this.objectMappers = objectMappers;
         try {
             this.objectInstantiator = new ConvertReflectionInstantiator<>(proxyFactory, targetType, parameterTypes, markNew, entityViewManager);
         } catch (IllegalArgumentException ex) {
@@ -143,7 +145,7 @@ public class ViewMapper<S, T> {
         this.postConvertUsesSource = postConvertMethod != null && postConvertMethod.getParameterTypes().length != 0;
     }
 
-    private AttributeAccessor createAccessor(ManagedViewType<S> sourceType, ManagedViewType<T> targetType, boolean ignoreMissing, boolean markNew, EntityViewManager entityViewManager, ProxyFactory proxyFactory, MethodAttribute<? super T, ?> targetAttribute, String prefix, Map<String, Key<Object, Object>> subMappers) {
+    private ObjectMapper createAccessor(ManagedViewType<S> sourceType, ManagedViewType<T> targetType, boolean ignoreMissing, boolean markNew, EntityViewManager entityViewManager, ProxyFactory proxyFactory, MethodAttribute<? super T, ?> targetAttribute, String prefix, Map<String, Key<Object, Object>> subMappers) {
         String newPrefix;
         if (prefix.isEmpty()) {
             newPrefix = targetAttribute.getName();
@@ -165,6 +167,9 @@ public class ViewMapper<S, T> {
         MethodAttribute<? super S, ?> sourceAttribute = sourceType.getAttribute(targetAttribute.getName());
 
         if (sourceAttribute == null) {
+            if (targetAttribute.getMappingType() == Attribute.MappingType.PARAMETER) {
+                return new ParameterObjectMapper(((MappingAttribute<?, ?>) targetAttribute).getMapping());
+            }
             // Optionally ignore missing attributes
             if (ignoreMissing) {
                 return null;
@@ -219,10 +224,10 @@ public class ViewMapper<S, T> {
                 }
 
                 MapInstantiator<?, ?> mapInstantiator = ((AbstractAttribute<?, ?>) targetAttribute).getMapInstantiator();
-                return new MapMappingAccessor(Accessors.forViewAttribute(null, sourceAttribute, true), needsDirtyTracker, !markNew, mapInstantiator, keyMapper, valueMapper);
+                return new MapObjectMapper(Accessors.forViewAttribute(null, sourceAttribute, true), needsDirtyTracker, !markNew, mapInstantiator, keyMapper, valueMapper);
             } else {
                 CollectionInstantiator collectionInstantiator = ((AbstractAttribute<?, ?>) targetAttribute).getCollectionInstantiator();
-                return new CollectionMappingAccessor(Accessors.forViewAttribute(null, sourceAttribute, true), needsDirtyTracker, !markNew, collectionInstantiator, valueMapper);
+                return new CollectionObjectMapper(Accessors.forViewAttribute(null, sourceAttribute, true), needsDirtyTracker, !markNew, collectionInstantiator, valueMapper);
             }
         } else if (targetAttribute.isSubview()) {
             attributeType = ((SingularAttribute<?, ?>) targetAttribute).getType();
@@ -230,11 +235,11 @@ public class ViewMapper<S, T> {
                 attributeType = subMapperKey.targetType;
             }
             ViewMapper<Object, Object> mapper = createViewMapper(((SingularAttribute<?, ?>) sourceAttribute).getType(), attributeType, ignoreMissing, maybeMarkNew, entityViewManager, proxyFactory, newPrefix, subMappers);
-            return new AttributeMappingAccessor(Accessors.forViewAttribute(null, sourceAttribute, true), mapper);
+            return new AttributeObjectMapper(Accessors.forViewAttribute(null, sourceAttribute, true), mapper);
         } else if (targetAttribute.getConvertedJavaType() != sourceAttribute.getConvertedJavaType()) {
             throw inconvertible("Attribute '" + targetAttribute.getName() + "' from target type has a different type than in source type!", sourceType, targetType);
         } else {
-            return Accessors.forViewAttribute(null, sourceAttribute, true);
+            return new PassthroughObjectMapper(Accessors.forViewAttribute(null, sourceAttribute, true));
         }
     }
 
@@ -248,11 +253,11 @@ public class ViewMapper<S, T> {
         return new IllegalArgumentException("Can't convert from '" + sourceType.getJavaType().getName() + "' to '" + targetType.getJavaType().getName() + "'! " + reason);
     }
 
-    public T map(S source) {
-        Object[] tuple = new Object[sourceAccessors.length];
-        for (int i = 0; i < sourceAccessors.length; i++) {
-            if (sourceAccessors[i] != null) {
-                tuple[i] = sourceAccessors[i].getValue(source);
+    public T map(S source, Map<String, Object> optionalParameters) {
+        Object[] tuple = new Object[objectMappers.length];
+        for (int i = 0; i < objectMappers.length; i++) {
+            if (objectMappers[i] != null) {
+                tuple[i] = objectMappers[i].getValue(source, optionalParameters);
             }
         }
         T result = objectInstantiator.newInstance(tuple);
@@ -427,7 +432,7 @@ public class ViewMapper<S, T> {
      * @author Christian Beikov
      * @since 1.2.0
      */
-    private static class MapMappingAccessor extends ReadOnlyAccessor {
+    private static class MapObjectMapper implements ObjectMapper {
         private final AttributeAccessor accessor;
         private final boolean recording;
         private final boolean copyDirtyState;
@@ -435,7 +440,7 @@ public class ViewMapper<S, T> {
         private final ViewMapper<Object, Object> keyMapper;
         private final ViewMapper<Object, Object> valueMapper;
 
-        public MapMappingAccessor(AttributeAccessor accessor, boolean recording, boolean copyDirtyState, MapInstantiator<?, ?> mapInstantiator, ViewMapper<Object, Object> keyMapper, ViewMapper<Object, Object> valueMapper) {
+        public MapObjectMapper(AttributeAccessor accessor, boolean recording, boolean copyDirtyState, MapInstantiator<?, ?> mapInstantiator, ViewMapper<Object, Object> keyMapper, ViewMapper<Object, Object> valueMapper) {
             this.accessor = accessor;
             this.recording = recording;
             this.copyDirtyState = copyDirtyState;
@@ -445,7 +450,7 @@ public class ViewMapper<S, T> {
         }
 
         @Override
-        public Object getValue(Object object) {
+        public Object getValue(Object object, Map<String, Object> optionalParameters) {
             Map<Object, Object> map = (Map<Object, Object>) accessor.getValue(object);
             Map<Object, Object> newMap = null;
             Map<Object, Object> backingMap;
@@ -461,12 +466,12 @@ public class ViewMapper<S, T> {
                             objectMapping = new IdentityHashMap<>(map.size() * 2);
                             if (keyMapper != null) {
                                 for (Object e : ((RecordingMap<?, ?, ?>) map).getRemovedKeys()) {
-                                    objectMapping.put(e, keyMapper.map(e));
+                                    objectMapping.put(e, keyMapper.map(e, optionalParameters));
                                 }
                             }
                             if (valueMapper != null) {
                                 for (Object e : ((RecordingMap<?, ?, ?>) map).getRemovedElements()) {
-                                    objectMapping.put(e, valueMapper.map(e));
+                                    objectMapping.put(e, valueMapper.map(e, optionalParameters));
                                 }
                             }
                         }
@@ -480,12 +485,12 @@ public class ViewMapper<S, T> {
                 if (keyMapper != null && valueMapper != null) {
                     if (objectMapping == null) {
                         for (Map.Entry<Object, Object> entry : map.entrySet()) {
-                            backingMap.put(keyMapper.map(entry.getKey()), valueMapper.map(entry.getValue()));
+                            backingMap.put(keyMapper.map(entry.getKey(), optionalParameters), valueMapper.map(entry.getValue(), optionalParameters));
                         }
                     } else {
                         for (Map.Entry<Object, Object> entry : map.entrySet()) {
-                            Object newKey = keyMapper.map(entry.getKey());
-                            Object newValue = valueMapper.map(entry.getValue());
+                            Object newKey = keyMapper.map(entry.getKey(), optionalParameters);
+                            Object newValue = valueMapper.map(entry.getValue(), optionalParameters);
                             objectMapping.put(entry.getKey(), newKey);
                             objectMapping.put(entry.getValue(), newValue);
                             backingMap.put(newKey, newValue);
@@ -494,11 +499,11 @@ public class ViewMapper<S, T> {
                 } else if (keyMapper != null) {
                     if (objectMapping == null) {
                         for (Map.Entry<Object, Object> entry : map.entrySet()) {
-                            backingMap.put(keyMapper.map(entry.getKey()), entry.getValue());
+                            backingMap.put(keyMapper.map(entry.getKey(), optionalParameters), entry.getValue());
                         }
                     } else {
                         for (Map.Entry<Object, Object> entry : map.entrySet()) {
-                            Object newKey = keyMapper.map(entry.getKey());
+                            Object newKey = keyMapper.map(entry.getKey(), optionalParameters);
                             objectMapping.put(entry.getKey(), newKey);
                             backingMap.put(newKey, entry.getValue());
                         }
@@ -506,11 +511,11 @@ public class ViewMapper<S, T> {
                 } else if (valueMapper != null) {
                     if (objectMapping == null) {
                         for (Map.Entry<Object, Object> entry : map.entrySet()) {
-                            backingMap.put(entry.getKey(), valueMapper.map(entry.getValue()));
+                            backingMap.put(entry.getKey(), valueMapper.map(entry.getValue(), optionalParameters));
                         }
                     } else {
                         for (Map.Entry<Object, Object> entry : map.entrySet()) {
-                            Object newValue = valueMapper.map(entry.getValue());
+                            Object newValue = valueMapper.map(entry.getValue(), optionalParameters);
                             objectMapping.put(entry.getValue(), newValue);
                             backingMap.put(entry.getKey(), newValue);
                         }
@@ -531,14 +536,14 @@ public class ViewMapper<S, T> {
      * @author Christian Beikov
      * @since 1.2.0
      */
-    private static class CollectionMappingAccessor extends ReadOnlyAccessor {
+    private static class CollectionObjectMapper implements ObjectMapper {
         private final AttributeAccessor accessor;
         private final boolean recording;
         private final boolean copyDirtyState;
         private final CollectionInstantiator collectionInstantiator;
         private final ViewMapper<Object, Object> valueMapper;
 
-        public CollectionMappingAccessor(AttributeAccessor accessor, boolean recording, boolean copyDirtyState, CollectionInstantiator collectionInstantiator, ViewMapper<Object, Object> valueMapper) {
+        public CollectionObjectMapper(AttributeAccessor accessor, boolean recording, boolean copyDirtyState, CollectionInstantiator collectionInstantiator, ViewMapper<Object, Object> valueMapper) {
             this.accessor = accessor;
             this.recording = recording;
             this.copyDirtyState = copyDirtyState;
@@ -547,7 +552,7 @@ public class ViewMapper<S, T> {
         }
 
         @Override
-        public Object getValue(Object object) {
+        public Object getValue(Object object, Map<String, Object> optionalParameters) {
             Collection<Object> collection = (Collection<Object>) accessor.getValue(object);
             Collection<Object> newCollection = null;
             Collection<Object> backingCollection;
@@ -561,7 +566,7 @@ public class ViewMapper<S, T> {
                         if (collection instanceof RecordingCollection<?, ?> && valueMapper != null) {
                             objectMapping = new IdentityHashMap<>(collection.size());
                             for (Object e : ((RecordingCollection<?, ?>) collection).getRemovedElements()) {
-                                objectMapping.put(e, valueMapper.map(e));
+                                objectMapping.put(e, valueMapper.map(e, optionalParameters));
                             }
                         }
                     } else {
@@ -574,11 +579,11 @@ public class ViewMapper<S, T> {
                 if (valueMapper != null) {
                     if (objectMapping == null) {
                         for (Object o : collection) {
-                            backingCollection.add(valueMapper.map(o));
+                            backingCollection.add(valueMapper.map(o, optionalParameters));
                         }
                     } else {
                         for (Object o : collection) {
-                            Object newObject = valueMapper.map(o);
+                            Object newObject = valueMapper.map(o, optionalParameters);
                             objectMapping.put(o, newObject);
                             backingCollection.add(newObject);
                         }
@@ -599,20 +604,20 @@ public class ViewMapper<S, T> {
      * @author Christian Beikov
      * @since 1.2.0
      */
-    private static class AttributeMappingAccessor extends ReadOnlyAccessor {
+    private static class AttributeObjectMapper implements ObjectMapper {
         private final AttributeAccessor accessor;
         private final ViewMapper<Object, Object> mapper;
 
-        public AttributeMappingAccessor(AttributeAccessor accessor, ViewMapper<Object, Object> mapper) {
+        public AttributeObjectMapper(AttributeAccessor accessor, ViewMapper<Object, Object> mapper) {
             this.accessor = accessor;
             this.mapper = mapper;
         }
 
         @Override
-        public Object getValue(Object object) {
+        public Object getValue(Object object, Map<String, Object> optionalParameters) {
             Object value = accessor.getValue(object);
             if (value != null) {
-                return mapper.map(value);
+                return mapper.map(value, optionalParameters);
             }
             return null;
         }
@@ -620,18 +625,44 @@ public class ViewMapper<S, T> {
 
     /**
      * @author Christian Beikov
-     * @since 1.2.0
+     * @since 1.5.0
      */
-    private abstract static class ReadOnlyAccessor implements AttributeAccessor {
-        @Override
-        public void setValue(Object object, Object value) {
-            throw new UnsupportedOperationException();
+    private static class PassthroughObjectMapper implements ObjectMapper {
+        private final AttributeAccessor accessor;
+
+        public PassthroughObjectMapper(AttributeAccessor accessor) {
+            this.accessor = accessor;
         }
 
         @Override
-        public Object getOrCreateValue(Object object) {
-            throw new UnsupportedOperationException();
+        public Object getValue(Object object, Map<String, Object> optionalParameters) {
+            return accessor.getValue(object);
+        }
+    }
+
+    /**
+     * @author Christian Beikov
+     * @since 1.5.0
+     */
+    private static class ParameterObjectMapper implements ObjectMapper {
+
+        private final String parameterName;
+
+        public ParameterObjectMapper(String parameterName) {
+            this.parameterName = parameterName;
         }
 
+        @Override
+        public Object getValue(Object object, Map<String, Object> optionalParameters) {
+            return optionalParameters.get(parameterName);
+        }
+    }
+
+    /**
+     * @author Christian Beikov
+     * @since 1.5.0
+     */
+    private static interface ObjectMapper {
+        public Object getValue(Object object, Map<String, Object> optionalParameters);
     }
 }
