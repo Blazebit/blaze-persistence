@@ -1010,7 +1010,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     protected abstract PluralAttribute.CollectionType getCollectionType();
 
-    protected abstract Type<?> getElementType();
+    public abstract Type<?> getElementType();
 
     protected abstract Map<ManagedViewTypeImplementor<?>, String> elementInheritanceSubtypeMappings();
 

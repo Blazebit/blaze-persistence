@@ -14,18 +14,21 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl;
+package com.blazebit.persistence.view;
 
 /**
+ * A builder for creating nested entity views.
+ *
+ * @param <T> The entity view type that is built
+ * @param <X> The entity view builder type to return
  * @author Christian Beikov
- * @since 1.4.0
+ * @since 1.5.0
  */
-public interface EntityViewListenerFactory<T> {
-
-    Class<? super T> getListenerKind();
-
-    Class<T> getListenerClass();
-
-    T createListener();
-
+public interface EntityViewNestedBuilder<T, X> extends EntityViewBuilderBase<T, EntityViewNestedBuilder<T, X>> {
+    /**
+     * Finishes this builder, associates the built object with the parent object and returns the next builder.
+     *
+     * @return The next builder
+     */
+    X build();
 }

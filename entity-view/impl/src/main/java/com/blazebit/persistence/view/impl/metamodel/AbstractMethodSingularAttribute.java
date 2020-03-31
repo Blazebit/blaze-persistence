@@ -379,7 +379,7 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
     }
 
     @Override
-    protected Type<?> getElementType() {
+    public Type<?> getElementType() {
         return type;
     }
 

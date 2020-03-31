@@ -18,14 +18,10 @@ package com.blazebit.persistence.view.impl;
 
 /**
  * @author Christian Beikov
- * @since 1.4.0
+ * @since 1.5.0
  */
-public interface EntityViewListenerFactory<T> {
+public interface EntityViewBuilderListener {
 
-    Class<? super T> getListenerKind();
-
-    Class<T> getListenerClass();
-
-    T createListener();
+    public void onBuildComplete(Object object);
 
 }

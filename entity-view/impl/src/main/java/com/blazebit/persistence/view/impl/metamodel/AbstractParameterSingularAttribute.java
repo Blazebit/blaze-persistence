@@ -83,7 +83,7 @@ public abstract class AbstractParameterSingularAttribute<X, Y> extends AbstractP
     }
 
     @Override
-    protected Type<?> getElementType() {
+    public Type<?> getElementType() {
         return type;
     }
 

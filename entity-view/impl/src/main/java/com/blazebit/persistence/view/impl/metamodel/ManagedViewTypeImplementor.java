@@ -46,9 +46,11 @@ public interface ManagedViewTypeImplementor<X> extends ManagedViewType<X> {
 
     ManagedType<?> getJpaManagedType();
 
+    MappingConstructorImpl<X> getDefaultConstructor();
+
     Set<AbstractMethodAttribute<? super X, ?>> getUpdateMappableAttributes();
 
-    Map<ManagedViewTypeImplementor<? extends X>, String> getInheritanceSubtypeConfiguration();
+    Map<ManagedViewType<? extends X>, String> getInheritanceSubtypeConfiguration();
 
     boolean hasEmptyConstructor();
 
@@ -64,11 +66,11 @@ public interface ManagedViewTypeImplementor<X> extends ManagedViewType<X> {
 
     ManagedViewTypeImpl.InheritanceSubtypeConfiguration<X> getOverallInheritanceSubtypeConfiguration();
 
-    ManagedViewTypeImpl.InheritanceSubtypeConfiguration<X> getInheritanceSubtypeConfiguration(Map<ManagedViewTypeImplementor<? extends X>, String> inheritanceSubtypeMapping);
+    ManagedViewTypeImpl.InheritanceSubtypeConfiguration<X> getInheritanceSubtypeConfiguration(Map<ManagedViewType<? extends X>, String> inheritanceSubtypeMapping);
 
     ManagedViewTypeImpl.InheritanceSubtypeConfiguration<X> getDefaultInheritanceSubtypeConfiguration();
 
-    Map<Map<ManagedViewTypeImplementor<? extends X>, String>, ManagedViewTypeImpl.InheritanceSubtypeConfiguration<X>> getInheritanceSubtypeConfigurations();
+    Map<Map<ManagedViewType<? extends X>, String>, ManagedViewTypeImpl.InheritanceSubtypeConfiguration<X>> getInheritanceSubtypeConfigurations();
 
     AbstractMethodAttribute<?, ?> getMutableAttribute(int i);
 

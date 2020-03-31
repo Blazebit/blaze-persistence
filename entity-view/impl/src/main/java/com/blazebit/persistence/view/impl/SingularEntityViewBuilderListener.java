@@ -18,14 +18,20 @@ package com.blazebit.persistence.view.impl;
 
 /**
  * @author Christian Beikov
- * @since 1.4.0
+ * @since 1.5.0
  */
-public interface EntityViewListenerFactory<T> {
+public class SingularEntityViewBuilderListener implements EntityViewBuilderListener {
 
-    Class<? super T> getListenerKind();
+    private final Object[] tuple;
+    private final int index;
 
-    Class<T> getListenerClass();
+    public SingularEntityViewBuilderListener(Object[] tuple, int index) {
+        this.tuple = tuple;
+        this.index = index;
+    }
 
-    T createListener();
-
+    @Override
+    public void onBuildComplete(Object object) {
+        tuple[index] = object;
+    }
 }

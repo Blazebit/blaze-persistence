@@ -37,18 +37,20 @@ include::10_type_converter.adoc[]
 
 include::11_change_model.adoc[]
 
-include::12_spring_data.adoc[]
+include::12_builder_api.adoc[]
 
-include::13_deltaspike_data.adoc[]
+include::13_spring_data.adoc[]
 
-include::14_jaxrs.adoc[]
+include::14_deltaspike_data.adoc[]
 
-include::15_graphql.adoc[]
+include::15_jaxrs.adoc[]
 
-include::16_serialization_support.adoc[]
+include::16_graphql.adoc[]
 
-include::17_metamodel.adoc[]
+include::17_serialization_support.adoc[]
 
-include::18_configuration.adoc[]
+include::18_metamodel.adoc[]
 
-include::19_faq.adoc[]
+include::19_configuration.adoc[]
+
+include::20_faq.adoc[]

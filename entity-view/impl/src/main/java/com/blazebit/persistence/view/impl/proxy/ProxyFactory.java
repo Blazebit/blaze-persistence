@@ -794,8 +794,8 @@ public class ProxyFactory {
         }
 
         // Go through all configurations that contain this entity view and create a static inheritance factory for it
-        Map<Map<ManagedViewTypeImplementor<?>, String>, ManagedViewTypeImpl.InheritanceSubtypeConfiguration<? super T>> inheritanceSubtypeConfigurationMap = (Map<Map<ManagedViewTypeImplementor<?>, String>, ManagedViewTypeImpl.InheritanceSubtypeConfiguration<? super T>>) (Map<?, ?>) inheritanceBase.getInheritanceSubtypeConfigurations();
-        for (Map.Entry<Map<ManagedViewTypeImplementor<?>, String>, ManagedViewTypeImpl.InheritanceSubtypeConfiguration<? super T>> configurationEntry : inheritanceSubtypeConfigurationMap.entrySet()) {
+        Map<Map<ManagedViewType<?>, String>, ManagedViewTypeImpl.InheritanceSubtypeConfiguration<? super T>> inheritanceSubtypeConfigurationMap = (Map<Map<ManagedViewType<?>, String>, ManagedViewTypeImpl.InheritanceSubtypeConfiguration<? super T>>) (Map<?, ?>) inheritanceBase.getInheritanceSubtypeConfigurations();
+        for (Map.Entry<Map<ManagedViewType<?>, String>, ManagedViewTypeImpl.InheritanceSubtypeConfiguration<? super T>> configurationEntry : inheritanceSubtypeConfigurationMap.entrySet()) {
             if (!configurationEntry.getKey().containsKey(managedView)) {
                 continue;
             }
@@ -838,7 +838,7 @@ public class ProxyFactory {
 
             for (MappingConstructorImpl<T> constructor : constructors) {
                 MappingConstructorImpl<T> baseConstructor = (MappingConstructorImpl<T>) inheritanceBase.getConstructor(constructor.getName());
-                MappingConstructorImpl.InheritanceSubtypeConstructorConfiguration<T> subtypeConstructorConfiguration = baseConstructor.getSubtypeConstructorConfiguration((Map<ManagedViewTypeImplementor<? extends T>, String>) (Map<?, ?>) configurationEntry.getKey());
+                MappingConstructorImpl.InheritanceSubtypeConstructorConfiguration<T> subtypeConstructorConfiguration = baseConstructor.getSubtypeConstructorConfiguration((Map<ManagedViewType<? extends T>, String>) (Map<?, ?>) configurationEntry.getKey());
                 @SuppressWarnings("unchecked")
                 List<AbstractParameterAttribute<?, ?>> parameterAttributes = (List<AbstractParameterAttribute<?, ?>>) (List<?>) subtypeConstructorConfiguration.getParameterAttributesClosure();
                 // Copy default constructor parameters
@@ -2531,7 +2531,7 @@ public class ProxyFactory {
                             switch (pluralAttribute.getCollectionType()) {
                                 case MAP:
                                     if (pluralAttribute.isSorted()) {
-                                        sb.append("new java.util.TreeMap()");
+                                        sb.append("new java.util.TreeMap(");
                                         if (pluralAttribute.getComparatorClass() != null) {
                                             sb.append("new ").append(pluralAttribute.getComparatorClass().getName()).append("()");
                                         }

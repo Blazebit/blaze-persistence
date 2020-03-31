@@ -9,6 +9,7 @@ Not yet released
 ### New features
 
 * Introduce a way to do global mapping parameter registration
+* Introduce entity view builders
 
 ### Bug fixes
 

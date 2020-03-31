@@ -14,18 +14,21 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl;
+package com.blazebit.persistence.view;
 
 /**
+ * A builder for defining flush related configuration.
+ *
+ * @param <T> The entity view type that is built
  * @author Christian Beikov
- * @since 1.4.0
+ * @since 1.5.0
  */
-public interface EntityViewListenerFactory<T> {
+public interface EntityViewBuilder<T> extends EntityViewBuilderBase<T, EntityViewBuilder<T>> {
 
-    Class<? super T> getListenerKind();
-
-    Class<T> getListenerClass();
-
-    T createListener();
-
+    /**
+     * Builds the entity view and returns it.
+     *
+     * @return The built entity view
+     */
+    T build();
 }
