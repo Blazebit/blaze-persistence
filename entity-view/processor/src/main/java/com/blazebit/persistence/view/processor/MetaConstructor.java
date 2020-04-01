@@ -16,13 +16,17 @@
 
 package com.blazebit.persistence.view.processor;
 
+import java.util.List;
+
 /**
  * @author Christian Beikov
  * @since 1.5.0
  */
-public interface ImportContext {
+public interface MetaConstructor {
 
-    String importType(String fqcn);
+    MetaEntityView getHostingEntity();
 
-    String generateImports();
+    String getName();
+
+    List<MetaAttribute> getParameters();
 }

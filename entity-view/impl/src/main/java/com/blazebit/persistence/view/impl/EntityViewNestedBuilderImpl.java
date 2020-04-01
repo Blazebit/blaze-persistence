@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl;
 
+import com.blazebit.persistence.view.EntityViewBuilderListener;
 import com.blazebit.persistence.view.EntityViewNestedBuilder;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;

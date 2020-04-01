@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2019 Blazebit.
+ * Copyright 2014 - 2020 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,11 +27,14 @@ import java.util.List;
 
 /**
  * @author Christian Beikov
- * @since 1.4.0
+ * @since 1.5.0
  */
 public final class ImplementationClassWriter {
 
-    private static final String IMPL_CLASS_NAME_SUFFIX = "Impl";
+    public static final String IMPL_CLASS_NAME_SUFFIX = "Impl";
+    // The following two must be aligned with com.blazebit.persistence.view.impl.proxy.ProxyFactory
+    public static final String EVM_FIELD_NAME = "$$_evm";
+    public static final String SERIALIZABLE_EVM_FIELD_NAME = "$$_serializable_evm";
     private static final String NEW_LINE = System.lineSeparator();
 
     private ImplementationClassWriter() {
@@ -58,7 +61,9 @@ public final class ImplementationClassWriter {
         sb.append(NEW_LINE);
 
         if (entity.needsEntityViewManager()) {
-            sb.append("    public static volatile ").append(entity.implementationImportType(Constants.ENTITY_VIEW_MANAGER)).append(" evm;");
+            sb.append("    public static volatile ").append(entity.implementationImportType(Constants.ENTITY_VIEW_MANAGER)).append(" ").append(EVM_FIELD_NAME).append(";");
+            sb.append(NEW_LINE);
+            sb.append("    public static volatile ").append(entity.implementationImportType(Constants.ENTITY_VIEW_MANAGER)).append(" ").append(SERIALIZABLE_EVM_FIELD_NAME).append(";");
             sb.append(NEW_LINE);
             sb.append(NEW_LINE);
         }
@@ -86,7 +91,7 @@ public final class ImplementationClassWriter {
             if (Constants.ENTITY_VIEW_MANAGER.equals(specialMember.getReturnType().toString())) {
                 sb.append("    @Override");
                 sb.append(NEW_LINE);
-                sb.append("    public ").append(entity.implementationImportType(specialMember.getReturnType().toString())).append(" ").append(specialMember.getSimpleName().toString()).append("() { return evm; }");
+                sb.append("    public ").append(entity.implementationImportType(specialMember.getReturnType().toString())).append(" ").append(specialMember.getSimpleName().toString()).append("() { return ").append(SERIALIZABLE_EVM_FIELD_NAME).append("; }");
                 sb.append(NEW_LINE);
             } else {
                 context.logMessage(Diagnostic.Kind.ERROR, "Unsupported special member: " + specialMember);
@@ -98,7 +103,7 @@ public final class ImplementationClassWriter {
     }
 
     private static void printClassDeclaration(StringBuilder sb, MetaEntityView entity, Context context) {
-        sb.append("public class " + entity.getSimpleName() + IMPL_CLASS_NAME_SUFFIX);
+        sb.append("public class ").append(entity.getSimpleName()).append(IMPL_CLASS_NAME_SUFFIX);
 
         List<TypeVariable> typeArguments = (List<TypeVariable>) ((DeclaredType) entity.getTypeElement().asType()).getTypeArguments();
         if (!typeArguments.isEmpty()) {
@@ -142,14 +147,87 @@ public final class ImplementationClassWriter {
     }
 
     private static void printConstructors(StringBuilder sb, MetaEntityView entity, Context context) {
-        printEmptyConstructor(sb, entity, context);
-        sb.append(NEW_LINE);
-        if (entity.getIdMember() != null && entity.getMembers().size() > 1) {
-            printIdConstructor(sb, entity, context);
+        if (entity.hasEmptyConstructor()) {
+            if (entity.getMembers().size() > 0) {
+                printEmptyConstructor(sb, entity, context);
+                sb.append(NEW_LINE);
+            }
+
+            if (entity.getIdMember() != null && entity.getMembers().size() > 1) {
+                printIdConstructor(sb, entity, context);
+                sb.append(NEW_LINE);
+            }
+        }
+        for (MetaConstructor constructor : entity.getConstructors()) {
+            printConstructor(sb, constructor, context);
+            sb.append(NEW_LINE);
+        }
+    }
+
+    private static void printConstructor(StringBuilder sb, MetaConstructor constructor, Context context) {
+        MetaEntityView entity = constructor.getHostingEntity();
+        sb.append("    public ").append(entity.getSimpleName()).append(IMPL_CLASS_NAME_SUFFIX).append("(");
+        boolean first = true;
+        for (MetaAttribute member : entity.getMembers()) {
+            if (first) {
+                first = false;
+                sb.append(NEW_LINE);
+                member.appendImplementationAttributeConstructorParameterString(sb);
+            } else {
+                sb.append(",");
+                sb.append(NEW_LINE);
+                member.appendImplementationAttributeConstructorParameterString(sb);
+            }
+        }
+        for (MetaAttribute member : constructor.getParameters()) {
+            if (first) {
+                first = false;
+                sb.append(NEW_LINE);
+                member.appendImplementationAttributeConstructorParameterString(sb);
+            } else {
+                sb.append(",");
+                sb.append(NEW_LINE);
+                member.appendImplementationAttributeConstructorParameterString(sb);
+            }
+        }
+        if (first) {
+            sb.append(") {");
+            sb.append(NEW_LINE);
+        } else {
+            sb.append(NEW_LINE);
+            sb.append("    ) {");
             sb.append(NEW_LINE);
         }
 
-        printFullConstructor(sb, entity, context);
+        sb.append("        super(");
+        first = true;
+        for (MetaAttribute member : constructor.getParameters()) {
+            if (first) {
+                first = false;
+                sb.append(NEW_LINE);
+            } else {
+                sb.append(",");
+                sb.append(NEW_LINE);
+            }
+            sb.append(member.getPropertyName());
+        }
+
+        if (first) {
+            sb.append(");");
+            sb.append(NEW_LINE);
+        } else {
+            sb.append(NEW_LINE);
+            sb.append("        );");
+            sb.append(NEW_LINE);
+        }
+
+        for (MetaAttribute member : entity.getMembers()) {
+            member.appendImplementationAttributeConstructorAssignmentString(sb);
+            sb.append(NEW_LINE);
+        }
+
+        sb.append("    }");
+        sb.append(NEW_LINE);
     }
 
     private static void printEmptyConstructor(StringBuilder sb, MetaEntityView entity, Context context) {
@@ -180,38 +258,6 @@ public final class ImplementationClassWriter {
                 member.appendImplementationAttributeConstructorAssignmentDefaultString(sb);
                 sb.append(NEW_LINE);
             }
-        }
-
-        sb.append("    }");
-        sb.append(NEW_LINE);
-    }
-
-    private static void printFullConstructor(StringBuilder sb, MetaEntityView entity, Context context) {
-        sb.append("    public ").append(entity.getSimpleName()).append(IMPL_CLASS_NAME_SUFFIX).append("(");
-        boolean first = true;
-        for (MetaAttribute member : entity.getMembers()) {
-            if (first) {
-                first = false;
-                sb.append(NEW_LINE);
-                member.appendImplementationAttributeConstructorParameterString(sb);
-            } else {
-                sb.append(",");
-                sb.append(NEW_LINE);
-                member.appendImplementationAttributeConstructorParameterString(sb);
-            }
-        }
-        if (first) {
-            sb.append(") {");
-            sb.append(NEW_LINE);
-        } else {
-            sb.append(NEW_LINE);
-            sb.append("    ) {");
-            sb.append(NEW_LINE);
-        }
-
-        for (MetaAttribute member : entity.getMembers()) {
-            member.appendImplementationAttributeConstructorAssignmentString(sb);
-            sb.append(NEW_LINE);
         }
 
         sb.append("    }");

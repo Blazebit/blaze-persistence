@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.collection;
 
+import com.blazebit.persistence.view.RecordingContainer;
 import com.blazebit.persistence.view.impl.entity.MapViewToEntityMapper;
 import com.blazebit.persistence.view.impl.proxy.DirtyTracker;
 import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
@@ -43,7 +44,7 @@ import java.util.TreeMap;
  * @since 1.2.0
  */
 @SuppressWarnings("checkstyle:methodname")
-public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, DirtyTracker, Serializable {
+public class RecordingMap<C extends Map<K, V>, K, V> implements RecordingContainer<C>, Map<K, V>, DirtyTracker, Serializable {
 
     private static final long[] DIRTY_MARKER = new long[0];
 
@@ -270,6 +271,7 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
         currentIterator = null;
     }
 
+    @Override
     public C getDelegate() {
         return delegate;
     }

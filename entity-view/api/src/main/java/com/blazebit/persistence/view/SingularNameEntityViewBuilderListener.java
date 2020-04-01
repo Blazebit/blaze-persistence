@@ -14,29 +14,32 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl;
-
-import java.util.Map;
+package com.blazebit.persistence.view;
 
 /**
+ * A listener that sets the built entity view on the given builder for the given attribute name.
+ *
  * @author Christian Beikov
  * @since 1.5.0
  */
-public class MapKeyEntityViewBuilderListener implements EntityViewBuilderListener {
+public class SingularNameEntityViewBuilderListener implements EntityViewBuilderListener {
 
-    private final Map<Object, Object> map;
-    private Object key;
+    private final EntityViewBuilderBase<?, ?> builder;
+    private final String attributeName;
 
-    public MapKeyEntityViewBuilderListener(Map<Object, Object> map) {
-        this.map = map;
+    /**
+     * Creates a new listener.
+     *
+     * @param builder The builder to set the built entity view on
+     * @param attributeName The attribute name to set
+     */
+    public SingularNameEntityViewBuilderListener(EntityViewBuilderBase<?, ?> builder, String attributeName) {
+        this.builder = builder;
+        this.attributeName = attributeName;
     }
 
     @Override
     public void onBuildComplete(Object object) {
-        if (key == null) {
-            key = object;
-        } else {
-            map.put(key, object);
-        }
+        builder.with(attributeName, object);
     }
 }

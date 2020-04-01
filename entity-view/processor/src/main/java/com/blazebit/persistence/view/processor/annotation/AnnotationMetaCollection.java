@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2019 Blazebit.
+ * Copyright 2014 - 2020 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.processor.annotation;
 
 import com.blazebit.persistence.view.processor.Constants;
+import com.blazebit.persistence.view.processor.Context;
 import com.blazebit.persistence.view.processor.TypeUtils;
 
 import javax.lang.model.element.AnnotationMirror;
@@ -28,7 +29,7 @@ import java.util.Map;
 
 /**
  * @author Christian Beikov
- * @since 1.4.0
+ * @since 1.5.0
  */
 public class AnnotationMetaCollection extends AnnotationMetaAttribute {
 
@@ -37,9 +38,11 @@ public class AnnotationMetaCollection extends AnnotationMetaAttribute {
     protected final String comparator;
     protected final String collectionJavaType;
     private final String collectionType;
+    private final String implementationTypeString;
+    private final String defaultValue;
 
-    public AnnotationMetaCollection(AnnotationMetaEntityView parent, Element element, String collectionType, String collectionJavaType, String elementType, String realElementType) {
-        super(parent, element, elementType, realElementType);
+    public AnnotationMetaCollection(AnnotationMetaEntityView parent, Element element, String collectionType, String collectionJavaType, String elementType, String realElementType, Context context) {
+        super(parent, element, elementType, realElementType, context);
         boolean ordered = Constants.LIST.equals(collectionJavaType);
         boolean sorted = collectionJavaType.startsWith(Constants.SORTED) || collectionJavaType.startsWith(Constants.NAVIGABLE);
         String comparator = null;
@@ -62,15 +65,12 @@ public class AnnotationMetaCollection extends AnnotationMetaAttribute {
         this.comparator = comparator;
         this.collectionJavaType = collectionJavaType;
         this.collectionType = collectionType;
+        this.implementationTypeString = getHostingEntity().importType(collectionJavaType) + "<" + getHostingEntity().importType(getRealType()) + ">";
+        this.defaultValue = computeDefaultValue();
     }
 
-    @Override
-    protected String getImplementationTypeString() {
-        return getHostingEntity().importType(collectionJavaType) + "<" + getHostingEntity().importType(getRealType()) + ">";
-    }
-
-    @Override
-    protected String getDefaultValue() {
+    private String computeDefaultValue() {
+        // TODO: recording?
         switch (collectionJavaType) {
             case Constants.SET:
                 if (ordered) {
@@ -90,7 +90,21 @@ public class AnnotationMetaCollection extends AnnotationMetaAttribute {
     }
 
     @Override
+    public String getImplementationTypeString() {
+        return implementationTypeString;
+    }
+
+    @Override
+    public String getDefaultValue() {
+        return defaultValue;
+    }
+
+    @Override
     public String getMetaType() {
         return collectionType;
+    }
+
+    public boolean isIndexedList() {
+        return Constants.LIST.equals(collectionJavaType);
     }
 }

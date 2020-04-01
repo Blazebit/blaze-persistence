@@ -14,14 +14,31 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl;
+package com.blazebit.persistence.view;
+
+import java.util.Collection;
 
 /**
+ * A listener that adds the built entity view to a collection.
+ *
  * @author Christian Beikov
  * @since 1.5.0
  */
-public interface EntityViewBuilderListener {
+public class CollectionEntityViewBuilderListener implements EntityViewBuilderListener {
 
-    public void onBuildComplete(Object object);
+    private final Collection<Object> collection;
 
+    /**
+     * Creates a listener.
+     *
+     * @param collection The collection to add the built entity view to
+     */
+    public CollectionEntityViewBuilderListener(Collection<Object> collection) {
+        this.collection = collection;
+    }
+
+    @Override
+    public void onBuildComplete(Object object) {
+        collection.add(object);
+    }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2019 Blazebit.
+ * Copyright 2014 - 2020 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,11 +23,20 @@ import java.util.Set;
 
 /**
  * @author Christian Beikov
- * @since 1.4.0
+ * @since 1.5.0
  */
 public final class Constants {
     public static final String ENTITY_VIEW_MANAGER = "com.blazebit.persistence.view.EntityViewManager";
     public static final String STATIC_METAMODEL = "com.blazebit.persistence.view.StaticMetamodel";
+    public static final String ENTITY_VIEW_BUILDER_BASE = "com.blazebit.persistence.view.EntityViewBuilderBase";
+    public static final String ENTITY_VIEW_BUILDER = "com.blazebit.persistence.view.EntityViewBuilder";
+    public static final String ENTITY_VIEW_NESTED_BUILDER = "com.blazebit.persistence.view.EntityViewNestedBuilder";
+    public static final String ENTITY_VIEW_BUILDER_LISTENER = "com.blazebit.persistence.view.EntityViewBuilderListener";
+    public static final String ENTITY_VIEW_BUILDER_SINGULAR_NAME_LISTENER = "com.blazebit.persistence.view.SingularNameEntityViewBuilderListener";
+    public static final String ENTITY_VIEW_BUILDER_COLLECTION_LISTENER = "com.blazebit.persistence.view.CollectionEntityViewBuilderListener";
+    public static final String ENTITY_VIEW_BUILDER_LIST_LISTENER = "com.blazebit.persistence.view.ListEntityViewBuilderListener";
+    public static final String ENTITY_VIEW_BUILDER_MAP_LISTENER = "com.blazebit.persistence.view.MapEntityViewBuilderListener";
+    public static final String ENTITY_VIEW_BUILDER_MAP_KEY_LISTENER = "com.blazebit.persistence.view.MapKeyEntityViewBuilderListener";
 
     public static final String ENTITY_VIEW = "com.blazebit.persistence.view.EntityView";
     public static final String ID_MAPPING = "com.blazebit.persistence.view.IdMapping";
@@ -36,7 +45,13 @@ public final class Constants {
     public static final String PARAMETER = "com.blazebit.persistence.view.MappingParameter";
     public static final String SINGULAR = "com.blazebit.persistence.view.MappingSingular";
 
+    public static final String VIEW_CONSTRUCTOR = "com.blazebit.persistence.view.ViewConstructor";
+
+    public static final String ATTRIBUTE = "com.blazebit.persistence.view.metamodel.Attribute";
+    public static final String METHOD_ATTRIBUTE = "com.blazebit.persistence.view.metamodel.MethodAttribute";
+    public static final String PARAMETER_ATTRIBUTE = "com.blazebit.persistence.view.metamodel.ParameterAttribute";
     public static final String SINGULAR_ATTRIBUTE = "com.blazebit.persistence.view.metamodel.SingularAttribute";
+    public static final String PLURAL_ATTRIBUTE = "com.blazebit.persistence.view.metamodel.PluralAttribute";
     public static final String LIST_ATTRIBUTE = "com.blazebit.persistence.view.metamodel.ListAttribute";
     public static final String SET_ATTRIBUTE = "com.blazebit.persistence.view.metamodel.SetAttribute";
     public static final String COLLECTION_ATTRIBUTE = "com.blazebit.persistence.view.metamodel.CollectionAttribute";
@@ -50,6 +65,8 @@ public final class Constants {
     public static final String NAVIGABLE_SET = "java.util.NavigableSet";
     public static final String SORTED_MAP = "java.util.SortedMap";
     public static final String NAVIGABLE_MAP = "java.util.NavigableMap";
+
+    public static final String RECORDING_CONTAINER = "com.blazebit.persistence.view.RecordingContainer";
 
     public static final String SORTED = "java.util.Sorted";
     public static final String NAVIGABLE = "java.util.Navigable";

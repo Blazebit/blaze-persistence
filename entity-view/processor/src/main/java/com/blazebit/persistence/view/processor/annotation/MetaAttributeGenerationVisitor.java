@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2019 Blazebit.
+ * Copyright 2014 - 2020 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ import java.util.List;
 
 /**
  * @author Christian Beikov
- * @since 1.4.0
+ * @since 1.5.0
  */
 public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<AnnotationMetaAttribute, Element> {
 
@@ -53,14 +53,14 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
     @Override
     public AnnotationMetaAttribute visitPrimitive(PrimitiveType t, Element element) {
         String type = TypeUtils.toWrapperTypeString(t);
-        return new AnnotationMetaSingleAttribute(entity, element, type, t.toString());
+        return new AnnotationMetaSingleAttribute(entity, element, type, t.toString(), context);
     }
 
     @Override
     public AnnotationMetaAttribute visitArray(ArrayType t, Element element) {
         String type = TypeUtils.toWrapperTypeString(t);
         String realType = TypeUtils.toTypeString((DeclaredType) entity.getTypeElement().asType(), t.getComponentType(), entity.getContext()) + "[]";
-        return new AnnotationMetaSingleAttribute(entity, element, type, realType);
+        return new AnnotationMetaSingleAttribute(entity, element, type, realType, context);
     }
 
     @Override
@@ -93,9 +93,9 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
                 TypeMirror keyTypeMirror = typeArguments.get(0);
                 String keyType = TypeUtils.extractClosestRealTypeAsString(keyTypeMirror, context);
                 String realKeyType = TypeUtils.toTypeString(entityDeclaredType, keyTypeMirror, context);
-                return new AnnotationMetaMap(entity, element, collection, context.getTypeUtils().asElement(declaredType).toString(), keyType, realKeyType, elementType, realElementType);
+                return new AnnotationMetaMap(entity, element, collection, context.getTypeUtils().asElement(declaredType).toString(), keyType, realKeyType, elementType, realElementType, context);
             } else {
-                return new AnnotationMetaCollection(entity, element, collection, context.getTypeUtils().asElement(declaredType).toString(), elementType, realElementType);
+                return new AnnotationMetaCollection(entity, element, collection, context.getTypeUtils().asElement(declaredType).toString(), elementType, realElementType, context);
             }
         } else if (!Constants.SPECIAL.contains(fqNameOfReturnType)) {
             String type = returnedElement.getQualifiedName().toString();
@@ -105,7 +105,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
             } else {
                 realType = TypeUtils.toTypeString(entityDeclaredType, element.asType(), context);
             }
-            return new AnnotationMetaSingleAttribute(entity, element, type, realType);
+            return new AnnotationMetaSingleAttribute(entity, element, type, realType, context);
         }
         return null;
     }

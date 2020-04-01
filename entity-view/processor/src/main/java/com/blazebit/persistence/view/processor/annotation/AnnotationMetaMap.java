@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2019 Blazebit.
+ * Copyright 2014 - 2020 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,32 +17,63 @@
 package com.blazebit.persistence.view.processor.annotation;
 
 import com.blazebit.persistence.view.processor.Constants;
+import com.blazebit.persistence.view.processor.Context;
+import com.blazebit.persistence.view.processor.TypeUtils;
 
 import javax.lang.model.element.Element;
 
 /**
  * @author Christian Beikov
- * @since 1.4.0
+ * @since 1.5.0
  */
 public class AnnotationMetaMap extends AnnotationMetaCollection {
 
     private final String keyType;
     private final String realKeyType;
+    private final boolean isKeySubview;
+    private final String generatedKeyTypePrefix;
+    private final String implementationTypeString;
+    private final String defaultValue;
 
     public AnnotationMetaMap(AnnotationMetaEntityView parent, Element element, String collectionType,
-                             String collectionJavaType, String keyType, String realKeyType, String elementType, String realElementType) {
-        super(parent, element, collectionType, collectionJavaType, elementType, realElementType);
+                             String collectionJavaType, String keyType, String realKeyType, String elementType, String realElementType, Context context) {
+        super(parent, element, collectionType, collectionJavaType, elementType, realElementType, context);
         this.keyType = keyType;
         this.realKeyType = realKeyType;
+        this.isKeySubview = isSubview(realKeyType, context);
+        if (isKeySubview) {
+            this.generatedKeyTypePrefix = TypeUtils.getDerivedTypeName(context.getElementUtils().getTypeElement(keyType));
+        } else {
+            this.generatedKeyTypePrefix = keyType;
+        }
+        this.implementationTypeString = getHostingEntity().importType(collectionJavaType) + "<" + getHostingEntity().importType(realKeyType) + ", " + getHostingEntity().importType(getRealType()) + ">";
+        this.defaultValue = computeDefaultValue();
+    }
+
+    public String getKeyType() {
+        return keyType;
+    }
+
+    public String getGeneratedKeyTypePrefix() {
+        return generatedKeyTypePrefix;
+    }
+
+    public boolean isKeySubview() {
+        return isKeySubview;
     }
 
     @Override
-    protected String getImplementationTypeString() {
-        return getHostingEntity().importType(collectionJavaType) + "<" + getHostingEntity().importType(realKeyType) + ", " + getHostingEntity().importType(getRealType()) + ">";
+    public String getImplementationTypeString() {
+        return implementationTypeString;
     }
 
     @Override
-    protected String getDefaultValue() {
+    public String getDefaultValue() {
+        return defaultValue;
+    }
+
+    private String computeDefaultValue() {
+        // TODO: recording?
         switch (collectionJavaType) {
             case Constants.MAP:
                 if (ordered) {

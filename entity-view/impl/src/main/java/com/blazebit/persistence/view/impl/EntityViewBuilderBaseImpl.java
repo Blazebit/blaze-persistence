@@ -16,8 +16,12 @@
 
 package com.blazebit.persistence.view.impl;
 
+import com.blazebit.persistence.view.CollectionEntityViewBuilderListener;
 import com.blazebit.persistence.view.EntityViewBuilderBase;
 import com.blazebit.persistence.view.EntityViewNestedBuilder;
+import com.blazebit.persistence.view.ListEntityViewBuilderListener;
+import com.blazebit.persistence.view.MapEntityViewBuilderListener;
+import com.blazebit.persistence.view.MapKeyEntityViewBuilderListener;
 import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.impl.collection.RecordingMap;
 import com.blazebit.persistence.view.impl.metamodel.AbstractAttribute;
