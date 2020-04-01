@@ -42,9 +42,11 @@ public class EntityViewAwareObjectMapper {
 
     private final EntityViewManager entityViewManager;
     private final ObjectMapper objectMapper;
+    private final EntityViewIdValueAccessor entityViewIdValueAccessor;
 
-    public EntityViewAwareObjectMapper(final EntityViewManager entityViewManager, ObjectMapper objectMapper) {
+    public EntityViewAwareObjectMapper(final EntityViewManager entityViewManager, final ObjectMapper objectMapper, EntityViewIdValueAccessor entityViewIdValueAccessor) {
         this.entityViewManager = entityViewManager;
+        this.entityViewIdValueAccessor = entityViewIdValueAccessor;
         final ViewMetamodel metamodel = entityViewManager.getMetamodel();
         SimpleModule module = new SimpleModule();
 
@@ -53,7 +55,7 @@ public class EntityViewAwareObjectMapper {
             public JsonDeserializer<?> modifyDeserializer(DeserializationConfig config, BeanDescription beanDesc, JsonDeserializer<?> deserializer) {
                 ManagedViewType<?> view = metamodel.managedView(beanDesc.getBeanClass());
                 if (view != null) {
-                    return new EntityViewReferenceDeserializer(entityViewManager, view, (JsonDeserializer<Object>) deserializer);
+                    return new EntityViewReferenceDeserializer(entityViewManager, view, objectMapper, EntityViewAwareObjectMapper.this.entityViewIdValueAccessor);
                 }
                 return deserializer;
             }

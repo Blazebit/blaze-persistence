@@ -261,6 +261,11 @@ public class CriteriaBuilderFactoryProducer {
     private volatile CriteriaBuilderFactory criteriaBuilderFactory;
 
     public void init(@Observes @Initialized(ApplicationScoped.class) Object init) {
+        // no-op to force eager initialization
+    }
+
+    @PostConstruct
+    public void createCriteriaBuilderFactory() {
         CriteriaBuilderConfiguration config = Criteria.getDefault();
         // do some configuration
         this.criteriaBuilderFactory = config.createCriteriaBuilderFactory(entityManagerFactory);

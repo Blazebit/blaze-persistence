@@ -30,6 +30,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.web.reactive.config.EnableWebFlux;
 
 /**
  * @author Christian Beikov
@@ -52,6 +53,7 @@ public class SampleTest extends AbstractSampleTest {
     @ComponentScan("com.blazebit.persistence.examples.spring.data.webflux")
     @ImportResource({"/META-INF/application-config.xml", "/META-INF/test-config.xml"})
     @EnableEntityViews(basePackages = { "com.blazebit.persistence.examples.spring.data.webflux.view"})
+    @EnableWebFlux
     @EnableJpaRepositories(
             basePackages = "com.blazebit.persistence.examples.spring.data.webflux.repository",
             entityManagerFactoryRef = "myEmf",

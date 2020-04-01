@@ -64,3 +64,28 @@ public class MyCatController {
     }
 }
 ----
+
+In the example above, the entity view id will be sourced from the request body. Alternatively, it is also possible to
+retrieve the id from a path variable like this:
+
+[source,java]
+----
+@Path("")
+public class MyCatController {
+
+    @Inject
+    private EntityManager em;
+    @Inject
+    private EntityViewManager evm;
+
+    @PUT
+    @Path("/cats/{id}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Transactional
+    public Response updateCat(@EntityViewId("id") CatUpdateView catUpdateView) {
+        evm.save(em, catUpdateView);
+
+        return Response.ok(catUpdateView.getId().toString()).build();
+    }
+}
+----

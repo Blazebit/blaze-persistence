@@ -17,6 +17,7 @@
 package com.blazebit.persistence.spring.data.webmvc.impl.json;
 
 import com.blazebit.persistence.integration.jackson.EntityViewAwareObjectMapper;
+import com.blazebit.persistence.integration.jackson.EntityViewIdValueAccessor;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.fasterxml.jackson.databind.JavaType;
 import org.springframework.http.HttpInputMessage;
@@ -36,8 +37,8 @@ public class EntityViewAwareMappingJackson2HttpMessageConverter extends MappingJ
 
     private final EntityViewAwareObjectMapper entityViewAwareObjectMapper;
 
-    public EntityViewAwareMappingJackson2HttpMessageConverter(final EntityViewManager entityViewManager) {
-        this.entityViewAwareObjectMapper = new EntityViewAwareObjectMapper(entityViewManager, objectMapper);
+    public EntityViewAwareMappingJackson2HttpMessageConverter(final EntityViewManager entityViewManager, EntityViewIdValueAccessor entityViewIdValueAccessor) {
+        this.entityViewAwareObjectMapper = new EntityViewAwareObjectMapper(entityViewManager, objectMapper, entityViewIdValueAccessor);
     }
 
     @Override

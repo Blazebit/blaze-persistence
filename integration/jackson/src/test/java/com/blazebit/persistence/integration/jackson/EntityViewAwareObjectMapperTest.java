@@ -59,7 +59,7 @@ public class EntityViewAwareObjectMapperTest {
         }
 
         ObjectMapper objectMapper = new ObjectMapper();
-        return new EntityViewAwareObjectMapper(configuration.createEntityViewManager(cbf), objectMapper);
+        return new EntityViewAwareObjectMapper(configuration.createEntityViewManager(cbf), objectMapper, null);
     }
 
     @Test

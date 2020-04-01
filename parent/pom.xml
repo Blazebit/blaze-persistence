@@ -35,6 +35,7 @@
     <properties>
         <blaze-persistence.codename>Zemo</blaze-persistence.codename>
 
+        <version.servlet>4.0.1</version.servlet>
         <version.jaxb>2.2.11</version.jaxb>
         <version.jta>1.2</version.jta>
         <version.activation>1.1.1</version.activation>

@@ -316,7 +316,7 @@ A controller can then use this repository like the following:
 
 [source,java]
 ----
-@Controller
+@RestController
 public class MyCatController {
 
     @Autowired
@@ -408,7 +408,7 @@ A controller can then deserialize entity views of request bodies by simply using
 
 [source,java]
 ----
-@Controller
+@RestController
 public class MyCatController {
 
     @Autowired
@@ -416,6 +416,25 @@ public class MyCatController {
 
     @RequestMapping(path = "/cats", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> updateCat(@RequestBody CatUpdateView catView) {
+        catViewRepository.save(catView);
+        return ResponseEntity.ok(catView.getId().toString());
+    }
+}
+----
+
+In the example above, the entity view id will be sourced from the request body. Alternatively, it is also possible to
+retrieve the id from a path variable like this:
+
+[source,java]
+----
+@RestController
+public class MyCatController {
+
+    @Autowired
+    private CatViewRepository catViewRepository;
+
+    @RequestMapping(path = "/cats/{id}", method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> updateCat(@EntityViewId("id") @RequestBody CatUpdateView catView) {
         catViewRepository.save(catView);
         return ResponseEntity.ok(catView.getId().toString());
     }
@@ -447,7 +466,7 @@ A controller can be written like for Spring Data WebMvc:
 
 [source,java]
 ----
-@Controller
+@RestController
 public class MyCatController {
 
     @Autowired
