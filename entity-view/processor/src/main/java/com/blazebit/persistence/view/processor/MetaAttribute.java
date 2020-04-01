@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2019 Blazebit.
+ * Copyright 2014 - 2020 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,11 @@
 
 package com.blazebit.persistence.view.processor;
 
+import javax.lang.model.element.Element;
+
 /**
  * @author Christian Beikov
- * @since 1.4.0
+ * @since 1.5.0
  */
 public interface MetaAttribute {
 
@@ -36,11 +38,29 @@ public interface MetaAttribute {
 
     void appendImplementationAttributeConstructorAssignmentDefaultString(StringBuilder sb);
 
+    void appendBuilderAttributeDeclarationString(StringBuilder sb);
+
+    void appendBuilderAttributeGetterAndSetterString(StringBuilder sb);
+
+    boolean isPrimitive();
+
+    Element getElement();
+
+    String getDefaultValue();
+
     String getMetaType();
 
     String getPropertyName();
 
     String getType();
 
+    String getRealType();
+
+    String getGeneratedTypePrefix();
+
+    String getImplementationTypeString();
+
     MetaEntityView getHostingEntity();
+
+    boolean isSubview();
 }

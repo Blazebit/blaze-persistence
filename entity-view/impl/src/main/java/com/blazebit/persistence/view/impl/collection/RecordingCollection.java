@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.collection;
 
+import com.blazebit.persistence.view.RecordingContainer;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.proxy.DirtyTracker;
 import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
@@ -42,7 +43,7 @@ import java.util.Set;
  * @since 1.2.0
  */
 @SuppressWarnings("checkstyle:methodname")
-public class RecordingCollection<C extends Collection<E>, E> implements Collection<E>, DirtyTracker, Serializable {
+public class RecordingCollection<C extends Collection<E>, E> implements RecordingContainer<C>, Collection<E>, DirtyTracker, Serializable {
 
     private static final long[] DIRTY_MARKER = new long[0];
 
@@ -247,6 +248,7 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
         currentIterator = null;
     }
 
+    @Override
     public C getDelegate() {
         return delegate;
     }

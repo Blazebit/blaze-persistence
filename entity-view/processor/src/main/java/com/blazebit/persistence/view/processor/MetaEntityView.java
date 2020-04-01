@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2019 Blazebit.
+ * Copyright 2014 - 2020 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,9 +23,11 @@ import java.util.Map;
 
 /**
  * @author Christian Beikov
- * @since 1.4.0
+ * @since 1.5.0
  */
 public interface MetaEntityView {
+
+    boolean hasEmptyConstructor();
 
     boolean isValid();
 
@@ -43,6 +45,10 @@ public interface MetaEntityView {
 
     MetaAttribute getIdMember();
 
+    MetaConstructor getConstructor(String name);
+
+    Collection<MetaConstructor> getConstructors();
+
     Collection<MetaAttribute> getMembers();
 
     Collection<ExecutableElement> getSpecialMembers();
@@ -51,11 +57,15 @@ public interface MetaEntityView {
 
     ImportContext getImplementationImportContext();
 
+    ImportContext getBuilderImportContext();
+
     String importType(String fqcn);
 
     String metamodelImportType(String fqcn);
 
     String implementationImportType(String fqcn);
+
+    String builderImportType(String fqcn);
 
     TypeElement getTypeElement();
 }

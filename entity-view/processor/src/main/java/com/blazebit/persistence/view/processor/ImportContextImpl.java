@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2019 Blazebit.
+ * Copyright 2014 - 2020 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import java.util.TreeSet;
 
 /**
  * @author Christian Beikov
- * @since 1.4.0
+ * @since 1.5.0
  */
 public class ImportContextImpl implements ImportContext {
 
@@ -54,6 +54,15 @@ public class ImportContextImpl implements ImportContext {
 
     public String importType(String fqcn) {
         String result = fqcn;
+
+        String prefix = "";
+        if (fqcn.startsWith("? extends ")) {
+            prefix = "? extends ";
+            fqcn = fqcn.substring(prefix.length());
+        } else if (fqcn.startsWith("? super ")) {
+            prefix = "? super ";
+            fqcn = fqcn.substring(prefix.length());
+        }
 
         String additionalTypePart = null;
         int ltIdx = fqcn.indexOf('<');
@@ -97,6 +106,9 @@ public class ImportContextImpl implements ImportContext {
         }
 
         result = result.replace('$', '.');
+        if (!prefix.isEmpty()) {
+            result = prefix + result;
+        }
         return result;
     }
 

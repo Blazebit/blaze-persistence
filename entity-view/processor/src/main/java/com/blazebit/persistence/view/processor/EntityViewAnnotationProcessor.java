@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2019 Blazebit.
+ * Copyright 2014 - 2020 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,11 +29,12 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
+import java.util.Collection;
 import java.util.Set;
 
 /**
  * @author Christian Beikov
- * @since 1.4.0
+ * @since 1.5.0
  */
 @SupportedAnnotationTypes({
         "com.blazebit.persistence.view.EntityView"
@@ -91,38 +92,43 @@ public class EntityViewAnnotationProcessor extends AbstractProcessor {
     }
 
     private void execute(Set<? extends TypeElement> annotations, RoundEnvironment roundEnvironment) {
-        Set<? extends Element> elements = roundEnvironment.getRootElements();
+        discoverEntityViews(roundEnvironment.getRootElements());
+        createMetaModelClasses();
+    }
+
+    private void discoverEntityViews(Collection<? extends Element> elements) {
         for (Element element : elements) {
             if (isEntityView(element)) {
                 context.logMessage(Diagnostic.Kind.OTHER, "Processing annotated class " + element.toString());
                 handleRootElementAnnotationMirrors(element);
             }
+            discoverEntityViews(element.getEnclosedElements());
         }
-
-        createMetaModelClasses();
     }
 
     private void createMetaModelClasses() {
         StringBuilder sb = new StringBuilder(16 * 1024);
-        for (MetaEntityView entity : context.getMetaEntityViews()) {
-            if (context.isAlreadyGenerated(entity.getQualifiedName()) || !entity.isValid()) {
+        for (MetaEntityView entityView : context.getMetaEntityViews()) {
+            if (context.isAlreadyGenerated(entityView.getQualifiedName()) || !entityView.isValid()) {
                 continue;
             }
-            context.logMessage(Diagnostic.Kind.OTHER, "Writing meta model for entity " + entity);
-            MetamodelClassWriter.writeFile(sb, entity, context);
-            ForeignPackageAdapterClassWriter.writeFiles(sb, entity, context);
-            ImplementationClassWriter.writeFile(sb, entity, context);
-            context.markGenerated(entity.getQualifiedName());
+            context.logMessage(Diagnostic.Kind.OTHER, "Writing meta model for entity view " + entityView);
+            MetamodelClassWriter.writeFile(sb, entityView, context);
+            ForeignPackageAdapterClassWriter.writeFiles(sb, entityView, context);
+            ImplementationClassWriter.writeFile(sb, entityView, context);
+            BuilderClassWriter.writeFile(sb, entityView, context);
+            context.markGenerated(entityView.getQualifiedName());
         }
     }
 
     private boolean isEntityView(Element element) {
-        for (AnnotationMirror annotationMirror : element.getAnnotationMirrors()) {
-            if (Constants.ENTITY_VIEW.equals(annotationMirror.getAnnotationType().toString())) {
-                return true;
+        if (element.getKind() == ElementKind.CLASS || element.getKind() == ElementKind.INTERFACE) {
+            for (AnnotationMirror annotationMirror : element.getAnnotationMirrors()) {
+                if (Constants.ENTITY_VIEW.equals(annotationMirror.getAnnotationType().toString())) {
+                    return true;
+                }
             }
         }
-
         return false;
     }
 

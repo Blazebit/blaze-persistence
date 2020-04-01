@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2019 Blazebit.
+ * Copyright 2014 - 2020 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,9 @@ import com.blazebit.persistence.view.processor.Context;
 import com.blazebit.persistence.view.processor.ImportContext;
 import com.blazebit.persistence.view.processor.ImportContextImpl;
 import com.blazebit.persistence.view.processor.MetaAttribute;
+import com.blazebit.persistence.view.processor.MetaConstructor;
 import com.blazebit.persistence.view.processor.MetaEntityView;
+import com.blazebit.persistence.view.processor.TypeUtils;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -33,7 +35,6 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.ElementFilter;
 import javax.tools.Diagnostic;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -45,17 +46,20 @@ import java.util.TreeMap;
 
 /**
  * @author Christian Beikov
- * @since 1.4.0
+ * @since 1.5.0
  */
 public class AnnotationMetaEntityView implements MetaEntityView {
 
     private final ImportContext metamodelImportContext;
     private final ImportContext implementationImportContext;
+    private final ImportContext builderImportContext;
     private final TypeElement element;
     private final MetaAttribute idMember;
     private final Map<String, MetaAttribute> members;
+    private final Map<String, MetaConstructor> constructors;
     private final Map<String, ExecutableElement> specialMembers;
     private final Map<String, TypeElement> foreignPackageSuperTypes;
+    private final boolean hasEmptyConstructor;
     private final boolean valid;
     private final boolean needsEntityViewManager;
     private final Context context;
@@ -65,6 +69,7 @@ public class AnnotationMetaEntityView implements MetaEntityView {
         this.context = context;
         this.metamodelImportContext = new ImportContextImpl(getPackageName());
         this.implementationImportContext = new ImportContextImpl(getPackageName());
+        this.builderImportContext = new ImportContextImpl(getPackageName());
         getContext().logMessage(Diagnostic.Kind.OTHER, "Initializing type " + getQualifiedName() + ".");
 
         Collection<Element> allMembers = getAllMembers(element, context);
@@ -72,7 +77,10 @@ public class AnnotationMetaEntityView implements MetaEntityView {
         MetaAttribute idMember = null;
         Map<String, MetaAttribute> members = new TreeMap<>();
         Map<String, ExecutableElement> specialMembers = new TreeMap<>();
+        Map<String, MetaConstructor> constructors = new TreeMap<>();
         MetaAttributeGenerationVisitor visitor = new MetaAttributeGenerationVisitor(this, context);
+        boolean valid = true;
+        boolean hasEmptyConstructor = false;
         for (Element memberOfClass : allMembers) {
             if (memberOfClass instanceof ExecutableElement) {
                 ExecutableElement executableElement = (ExecutableElement) memberOfClass;
@@ -94,22 +102,20 @@ public class AnnotationMetaEntityView implements MetaEntityView {
                         }
                         members.put(result.getPropertyName(), result);
                     }
+                } else if (memberOfClass.getKind() == ElementKind.CONSTRUCTOR) {
+                    AnnotationMetaConstructor constructor = new AnnotationMetaConstructor(this, executableElement, visitor);
+                    hasEmptyConstructor = constructor.getParameters().isEmpty();
+                    constructors.put(constructor.getName(), constructor);
                 }
             }
         }
-        if (element.getKind() == ElementKind.INTERFACE) {
-            this.valid = true;
-        } else {
-            boolean valid = false;
-            for (ExecutableElement executableElement : ElementFilter.constructorsIn(element.getEnclosedElements())) {
-                if (executableElement.getParameters().isEmpty()) {
-                    valid = true;
-                    break;
-                }
-            }
-            this.valid = valid;
-        }
+        this.hasEmptyConstructor = hasEmptyConstructor || constructors.isEmpty();
+        this.valid = valid;
         this.needsEntityViewManager = needsEntityViewManager;
+
+        if (constructors.isEmpty()) {
+            constructors.put("init", new AnnotationMetaConstructor(this));
+        }
 
         Map<String, TypeElement> foreignPackageSuperTypes = new LinkedHashMap<>();
         TypeMirror superClass = element.getSuperclass();
@@ -128,6 +134,7 @@ public class AnnotationMetaEntityView implements MetaEntityView {
 
         this.idMember = idMember;
         this.members = members;
+        this.constructors = constructors;
         this.specialMembers = specialMembers;
         this.foreignPackageSuperTypes = foreignPackageSuperTypes;
     }
@@ -139,6 +146,11 @@ public class AnnotationMetaEntityView implements MetaEntityView {
     @Override
     public Map<String, TypeElement> getForeignPackageSuperTypes() {
         return foreignPackageSuperTypes;
+    }
+
+    @Override
+    public boolean hasEmptyConstructor() {
+        return hasEmptyConstructor;
     }
 
     @Override
@@ -162,7 +174,7 @@ public class AnnotationMetaEntityView implements MetaEntityView {
 
     @Override
     public final String getSimpleName() {
-        return element.getSimpleName().toString();
+        return TypeUtils.getSimpleTypeName(element);
     }
 
     @Override
@@ -179,6 +191,16 @@ public class AnnotationMetaEntityView implements MetaEntityView {
     @Override
     public MetaAttribute getIdMember() {
         return idMember;
+    }
+
+    @Override
+    public MetaConstructor getConstructor(String name) {
+        return constructors.get(name);
+    }
+
+    @Override
+    public Collection<MetaConstructor> getConstructors() {
+        return constructors.values();
     }
 
     @Override
@@ -202,9 +224,15 @@ public class AnnotationMetaEntityView implements MetaEntityView {
     }
 
     @Override
+    public ImportContext getBuilderImportContext() {
+        return builderImportContext;
+    }
+
+    @Override
     public final String importType(String fqcn) {
         implementationImportContext.importType(fqcn);
-        return metamodelImportContext.importType(fqcn);
+        metamodelImportContext.importType(fqcn);
+        return builderImportContext.importType(fqcn);
     }
 
     @Override
@@ -215,6 +243,11 @@ public class AnnotationMetaEntityView implements MetaEntityView {
     @Override
     public String implementationImportType(String fqcn) {
         return implementationImportContext.importType(fqcn);
+    }
+
+    @Override
+    public String builderImportType(String fqcn) {
+        return builderImportContext.importType(fqcn);
     }
 
     @Override

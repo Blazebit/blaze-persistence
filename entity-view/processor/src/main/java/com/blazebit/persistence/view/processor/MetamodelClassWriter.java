@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2019 Blazebit.
+ * Copyright 2014 - 2020 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,11 +20,11 @@ import java.util.Collection;
 
 /**
  * @author Christian Beikov
- * @since 1.4.0
+ * @since 1.5.0
  */
 public final class MetamodelClassWriter {
 
-    private static final String META_MODEL_CLASS_NAME_SUFFIX = "_";
+    public static final String META_MODEL_CLASS_NAME_SUFFIX = "_";
     private static final String NEW_LINE = System.lineSeparator();
 
     private MetamodelClassWriter() {
@@ -46,7 +46,7 @@ public final class MetamodelClassWriter {
             sb.append(NEW_LINE);
         }
 
-        sb.append("@").append(entity.metamodelImportType(Constants.STATIC_METAMODEL)).append("(").append(entity.getSimpleName()).append(".class)");
+        sb.append("@").append(entity.metamodelImportType(Constants.STATIC_METAMODEL)).append("(").append(entity.metamodelImportType(entity.getQualifiedName())).append(".class)");
         sb.append(NEW_LINE);
         sb.append("public abstract class ").append(entity.getSimpleName()).append(META_MODEL_CLASS_NAME_SUFFIX).append(" {");
 

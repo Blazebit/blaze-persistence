@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2019 Blazebit.
+ * Copyright 2014 - 2020 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,12 @@
 package com.blazebit.persistence.view.processor.annotation;
 
 import com.blazebit.persistence.view.processor.Constants;
+import com.blazebit.persistence.view.processor.Context;
 import com.blazebit.persistence.view.processor.MetaAttribute;
 import com.blazebit.persistence.view.processor.MetaEntityView;
 import com.blazebit.persistence.view.processor.TypeUtils;
 
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -35,7 +37,7 @@ import java.util.List;
 
 /**
  * @author Christian Beikov
- * @since 1.4.0
+ * @since 1.5.0
  */
 public abstract class AnnotationMetaAttribute implements MetaAttribute {
 
@@ -47,14 +49,23 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
     private final String realType;
     private final String attributeName;
     private final String defaultValue;
+    private final boolean isSubview;
+    private final String generatedTypePrefix;
+    private final boolean primitive;
     private final Element setter;
     private final boolean idMember;
 
-    public AnnotationMetaAttribute(AnnotationMetaEntityView parent, Element element, String type, String realType) {
+    public AnnotationMetaAttribute(AnnotationMetaEntityView parent, Element element, String type, String realType, Context context) {
         this.element = element;
         this.parent = parent;
         this.type = type;
         this.realType = realType;
+        this.isSubview = isSubview(realType, context);
+        if (isSubview) {
+            this.generatedTypePrefix = TypeUtils.getDerivedTypeName(context.getElementUtils().getTypeElement(type));
+        } else {
+            this.generatedTypePrefix = type;
+        }
         this.idMember = TypeUtils.containsAnnotation(element, Constants.ID_MAPPING);
         if (element.getKind() == ElementKind.FIELD) {
             attributeName = element.getSimpleName().toString();
@@ -64,6 +75,12 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
                 setter = element;
             }
             defaultValue = TypeUtils.getDefaultValue(element.asType().getKind());
+            primitive = element.asType().getKind().isPrimitive();
+        } else if (element.getKind() == ElementKind.PARAMETER) {
+            attributeName = element.getSimpleName().toString();
+            setter = null;
+            defaultValue = TypeUtils.getDefaultValue(element.asType().getKind());
+            primitive = element.asType().getKind().isPrimitive();
         } else if (element.getKind() == ElementKind.METHOD) {
             String name = element.getSimpleName().toString();
             String setterName;
@@ -107,12 +124,42 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
             }
             this.setter = setter;
             defaultValue = TypeUtils.getDefaultValue(((ExecutableElement) element).getReturnType().getKind());
+            primitive = ((ExecutableElement) element).getReturnType().getKind().isPrimitive();
         } else {
             attributeName = null;
             setter = null;
             defaultValue = "null";
+            primitive = false;
             parent.getContext().logMessage(Diagnostic.Kind.WARNING, "Invalid unknown attribute element kind " + element.getKind() + " for attribute: " + element);
         }
+    }
+
+    protected static boolean isSubview(String realType, Context context) {
+        //CHECKSTYLE:OFF: FallThrough
+        //CHECKSTYLE:OFF: MissingSwitchDefault
+        switch (realType) {
+            case "int":
+            case "boolean":
+            case "byte":
+            case "char":
+            case "double":
+            case "float":
+            case "long":
+            case "short":
+                return false;
+        }
+        //CHECKSTYLE:ON: FallThrough
+        //CHECKSTYLE:ON: MissingSwitchDefault
+        TypeElement typeElement = context.getElementUtils().getTypeElement(realType);
+        if (typeElement == null) {
+            return false;
+        }
+        for (AnnotationMirror annotationMirror : typeElement.getAnnotationMirrors()) {
+            if (Constants.ENTITY_VIEW.equals(annotationMirror.getAnnotationType().toString())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static String firstToLower(int skip, CharSequence s) {
@@ -220,11 +267,74 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
         sb.append("        this.").append(getPropertyName()).append(" = ").append(getDefaultValue()).append(";");
     }
 
-    protected String getImplementationTypeString() {
+    @Override
+    public void appendBuilderAttributeDeclarationString(StringBuilder sb) {
+        sb.append("    protected ");
+        sb.append(getImplementationTypeString());
+        sb.append(' ').append(getPropertyName()).append(";");
+    }
+
+    @Override
+    public void appendBuilderAttributeGetterAndSetterString(StringBuilder sb) {
+        if (element.getKind() == ElementKind.METHOD) {
+            sb.append("    @Override")
+                    .append(NEW_LINE);
+        }
+        sb.append("    public ").append(getImplementationTypeString()).append(' ');
+
+        if (element.getKind() == ElementKind.METHOD) {
+            sb.append(element.getSimpleName().toString());
+        } else {
+            if ("boolean".equals(type)) {
+                sb.append("is");
+            } else {
+                sb.append("get");
+            }
+            if (element.getKind() == ElementKind.PARAMETER) {
+                sb.append("Param");
+            }
+            sb.append(Character.toUpperCase(getPropertyName().charAt(0)));
+            sb.append(getPropertyName(), 1, getPropertyName().length());
+        }
+        sb.append("() { return ")
+                .append(getPropertyName())
+                .append("; }");
+
+        sb.append(NEW_LINE);
+        if (setter != null) {
+            sb.append("    @Override");
+        }
+        sb.append("    public void set");
+        if (element.getKind() == ElementKind.PARAMETER) {
+            sb.append("Param");
+        }
+        sb.append(Character.toUpperCase(getPropertyName().charAt(0)));
+        sb.append(getPropertyName(), 1, getPropertyName().length());
+        sb.append('(');
+
+        sb.append(getImplementationTypeString());
+
+        sb.append(' ')
+                .append(getPropertyName())
+                .append(") { this.")
+                .append(getPropertyName())
+                .append(" = ")
+                .append(getPropertyName())
+                .append("; }");
+    }
+
+    @Override
+    public String getImplementationTypeString() {
         return parent.implementationImportType(getRealType());
     }
 
-    protected String getDefaultValue() {
+    @Override
+    public Element getElement() {
+        return element;
+    }
+
+    @Override
+    public String getDefaultValue() {
         return defaultValue;
     }
 
@@ -238,6 +348,16 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
     }
 
     @Override
+    public boolean isSubview() {
+        return isSubview;
+    }
+
+    @Override
+    public boolean isPrimitive() {
+        return primitive;
+    }
+
+    @Override
     public abstract String getMetaType();
 
     @Override
@@ -245,6 +365,12 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
         return type;
     }
 
+    @Override
+    public String getGeneratedTypePrefix() {
+        return generatedTypePrefix;
+    }
+
+    @Override
     public String getRealType() {
         return realType;
     }

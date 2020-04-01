@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2019 Blazebit.
+ * Copyright 2014 - 2020 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.processor;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
@@ -31,7 +32,7 @@ import java.util.Map;
 
 /**
  * @author Christian Beikov
- * @since 1.4.0
+ * @since 1.5.0
  */
 public final class TypeUtils {
 
@@ -128,5 +129,35 @@ public final class TypeUtils {
             default:
                 return "null";
         }
+    }
+
+    public static String getSimpleTypeName(TypeElement element) {
+        Element parent = element.getEnclosingElement();
+        if (parent.getKind() == ElementKind.PACKAGE) {
+            return element.getSimpleName().toString();
+        }
+        StringBuilder sb = new StringBuilder();
+        while (parent.getKind() != ElementKind.PACKAGE) {
+            sb.append(parent.getSimpleName().toString());
+            parent = parent.getEnclosingElement();
+        }
+        sb.append(element.getSimpleName().toString());
+        return sb.toString();
+    }
+
+    public static String getDerivedTypeName(TypeElement element) {
+        Element parent = element.getEnclosingElement();
+        if (parent.getKind() == ElementKind.PACKAGE) {
+            return element.getQualifiedName().toString();
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append('.');
+        while (parent.getKind() != ElementKind.PACKAGE) {
+            sb.append(parent.getSimpleName().toString());
+            parent = parent.getEnclosingElement();
+        }
+        sb.insert(0, parent.toString());
+        sb.append(element.getSimpleName().toString());
+        return sb.toString();
     }
 }

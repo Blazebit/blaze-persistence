@@ -14,24 +14,36 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl;
+package com.blazebit.persistence.view;
 
-import java.util.Collection;
+import java.util.Map;
 
 /**
+ * A listener that adds the built entity view to a map.
+ *
  * @author Christian Beikov
  * @since 1.5.0
  */
-public class CollectionEntityViewBuilderListener implements EntityViewBuilderListener {
+public class MapKeyEntityViewBuilderListener implements EntityViewBuilderListener {
 
-    private final Collection<Object> collection;
+    private final Map<Object, Object> map;
+    private Object key;
 
-    public CollectionEntityViewBuilderListener(Collection<Object> collection) {
-        this.collection = collection;
+    /**
+     * Creates the listener.
+     *
+     * @param map The map to add a built entity view to
+     */
+    public MapKeyEntityViewBuilderListener(Map<Object, Object> map) {
+        this.map = map;
     }
 
     @Override
     public void onBuildComplete(Object object) {
-        collection.add(object);
+        if (key == null) {
+            key = object;
+        } else {
+            map.put(key, object);
+        }
     }
 }
