@@ -23,7 +23,7 @@ import com.blazebit.persistence.view.change.SingularChangeModel;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
 import com.blazebit.persistence.view.impl.metamodel.BasicTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
-import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
+import com.blazebit.persistence.view.spi.type.DirtyStateTrackable;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;

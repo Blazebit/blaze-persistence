@@ -32,12 +32,14 @@ import java.util.Map;
 public class ConstrainedAttribute<T extends AbstractAttribute<?, ?>> {
 
     private final T attribute;
+    private final int index;
     private final List<Entry<T>> selectionConstrainedAttributes;
     private final Map<ManagedViewType<?>, T> subAttributes;
 
     @SuppressWarnings("unchecked")
-    public ConstrainedAttribute(String constraint, int[] subtypeIndexes, T attribute) {
+    public ConstrainedAttribute(String constraint, int[] subtypeIndexes, T attribute, int index) {
         this.attribute = attribute;
+        this.index = index;
         this.selectionConstrainedAttributes = new ArrayList<>();
         this.subAttributes = new HashMap<>();
         addSelectionConstraint(constraint, subtypeIndexes, attribute);
@@ -45,6 +47,10 @@ public class ConstrainedAttribute<T extends AbstractAttribute<?, ?>> {
 
     public T getAttribute() {
         return attribute;
+    }
+
+    public int getIndex() {
+        return index;
     }
 
     public boolean requiresCaseWhen() {

@@ -32,18 +32,18 @@ As a side note, we are naming releases after http://marvel.com/comics/characters
 
 = 1.6 Lockjaw
 
+** Specification(like JpaSpecification in Spring) for Spring Data and DeltaSpike Data
 ** CDI/Spring integration for listeners and services
 ** DataNucleus 5.1 integration
+** Returning clause emulation
 
 = 1.5 Zemo
 
-** Specification(like JpaSpecification in Spring) for Spring Data and DeltaSpike Data
 ** Allow predicates as array index expression
 ** Allow arbitrary expression as array index expression
 ** Support for mapping List index and Map key through separate expression in Entity Views
 ** Support fetching Entity View attributes through JSON/XML functions
 ** Entity View builder API
-** Returning clause emulation
 
 = 1.4 Coulson *[RELEASED]*
 

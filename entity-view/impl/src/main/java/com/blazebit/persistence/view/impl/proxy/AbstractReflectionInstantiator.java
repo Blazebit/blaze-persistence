@@ -16,8 +16,6 @@
 
 package com.blazebit.persistence.view.impl.proxy;
 
-import com.blazebit.persistence.view.EntityViewManager;
-import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.type.PrimitiveBooleanTypeConverter;
 import com.blazebit.persistence.view.impl.type.PrimitiveByteTypeConverter;
 import com.blazebit.persistence.view.impl.type.PrimitiveCharTypeConverter;
@@ -28,6 +26,7 @@ import com.blazebit.persistence.view.impl.type.PrimitiveLongTypeConverter;
 import com.blazebit.persistence.view.impl.type.PrimitiveShortTypeConverter;
 import com.blazebit.persistence.view.spi.type.BasicDirtyTracker;
 import com.blazebit.persistence.view.spi.type.BasicUserType;
+import com.blazebit.persistence.view.spi.type.DirtyStateTrackable;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 
 import java.util.ArrayList;
@@ -119,11 +118,6 @@ public abstract class AbstractReflectionInstantiator<T> implements ObjectInstant
                 }
             }
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    protected Class<T> getProxyClass(EntityViewManager entityViewManager, ProxyFactory proxyFactory, ManagedViewTypeImplementor<T> viewType, ManagedViewTypeImplementor<T> viewTypeBase) {
-        return (Class<T>) proxyFactory.getProxy(entityViewManager, viewType, viewTypeBase);
     }
 
     static TypeConverterEntry[] withPrimitiveConverters(List<TypeConverterEntry> typeConverterEntries, Class<?>[] parameterTypes) {

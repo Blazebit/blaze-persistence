@@ -18,9 +18,13 @@ package com.blazebit.persistence.view.processor.annotation;
 
 import com.blazebit.persistence.view.processor.Constants;
 import com.blazebit.persistence.view.processor.Context;
+import com.blazebit.persistence.view.processor.ImportContext;
+import com.blazebit.persistence.view.processor.MetamodelClassWriter;
 import com.blazebit.persistence.view.processor.TypeUtils;
 
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.TypeElement;
 
 /**
  * @author Christian Beikov
@@ -30,24 +34,22 @@ public class AnnotationMetaMap extends AnnotationMetaCollection {
 
     private final String keyType;
     private final String realKeyType;
-    private final boolean isKeySubview;
+    private final TypeElement keySubviewElement;
     private final String generatedKeyTypePrefix;
     private final String implementationTypeString;
-    private final String defaultValue;
 
     public AnnotationMetaMap(AnnotationMetaEntityView parent, Element element, String collectionType,
                              String collectionJavaType, String keyType, String realKeyType, String elementType, String realElementType, Context context) {
         super(parent, element, collectionType, collectionJavaType, elementType, realElementType, context);
         this.keyType = keyType;
         this.realKeyType = realKeyType;
-        this.isKeySubview = isSubview(realKeyType, context);
-        if (isKeySubview) {
+        this.keySubviewElement = getSubview(realKeyType, context);
+        if (keySubviewElement != null) {
             this.generatedKeyTypePrefix = TypeUtils.getDerivedTypeName(context.getElementUtils().getTypeElement(keyType));
         } else {
             this.generatedKeyTypePrefix = keyType;
         }
-        this.implementationTypeString = getHostingEntity().importType(collectionJavaType) + "<" + getHostingEntity().importType(realKeyType) + ", " + getHostingEntity().importType(getRealType()) + ">";
-        this.defaultValue = computeDefaultValue();
+        this.implementationTypeString = getHostingEntity().importTypeExceptMetamodel(collectionJavaType) + "<" + getHostingEntity().importType(realKeyType) + ", " + getHostingEntity().importType(getRealType()) + ">";
     }
 
     public String getKeyType() {
@@ -59,7 +61,7 @@ public class AnnotationMetaMap extends AnnotationMetaCollection {
     }
 
     public boolean isKeySubview() {
-        return isKeySubview;
+        return keySubviewElement != null;
     }
 
     @Override
@@ -68,27 +70,41 @@ public class AnnotationMetaMap extends AnnotationMetaCollection {
     }
 
     @Override
-    public String getDefaultValue() {
-        return defaultValue;
+    public void appendDefaultValue(StringBuilder sb, boolean createEmpty, ImportContext importContext) {
+        if (createEmpty) {
+            if (getElement().getKind() == ElementKind.PARAMETER) {
+                sb.append("new ").append(importCollectionType(importContext)).append("<>()");
+            } else {
+                sb.append("(").append(getImplementationTypeString()).append(") (").append(collectionJavaType).append("<?, ?>) ");
+                sb.append(importContext.importType(TypeUtils.getDerivedTypeName(getHostingEntity().getTypeElement()) + MetamodelClassWriter.META_MODEL_CLASS_NAME_SUFFIX)).append('.')
+                        .append(getPropertyName()).append(".getMapInstantiator().");
+                if (getDirtyStateIndex() == -1) {
+                    sb.append("createMap(0)");
+                } else {
+                    sb.append("createRecordingMap(0)");
+                }
+            }
+        } else {
+            super.appendDefaultValue(sb, createEmpty, importContext);
+        }
     }
 
-    private String computeDefaultValue() {
-        // TODO: recording?
+    private String importCollectionType(ImportContext importContext) {
         switch (collectionJavaType) {
             case Constants.MAP:
                 if (ordered) {
-                    return "new " + getHostingEntity().importType(Constants.LINKED_HASH_MAP) + "<>()";
+                    return importContext.importType(Constants.LINKED_HASH_MAP);
                 } else if (sorted) {
-                    return "new " + getHostingEntity().importType(Constants.TREE_MAP) + "<>()";
+                    return importContext.importType(Constants.TREE_MAP);
                 } else {
-                    return "new " + getHostingEntity().importType(Constants.HASH_MAP) + "<>()";
+                    return importContext.importType(Constants.HASH_MAP);
                 }
             case Constants.SORTED_MAP:
-                return "new " + getHostingEntity().importType(Constants.TREE_MAP) + "<>()";
+                return importContext.importType(Constants.TREE_MAP);
             case Constants.NAVIGABLE_MAP:
-                return "new " + getHostingEntity().importType(Constants.TREE_MAP) + "<>()";
+                return importContext.importType(Constants.TREE_MAP);
             default:
-                return "new " + getHostingEntity().importType(Constants.HASH_MAP) + "<>()";
+                return importContext.importType(Constants.HASH_MAP);
         }
     }
 

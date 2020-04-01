@@ -20,7 +20,7 @@ import com.blazebit.persistence.view.InverseRemoveStrategy;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.accessor.InitialValueAttributeAccessor;
 import com.blazebit.persistence.view.impl.entity.EntityLoaderFetchGraphNode;
-import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
+import com.blazebit.persistence.view.spi.type.DirtyStateTrackable;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.update.UpdateQueryFactory;
 import com.blazebit.persistence.view.spi.type.BasicUserType;

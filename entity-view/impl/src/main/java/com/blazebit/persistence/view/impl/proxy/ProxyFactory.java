@@ -22,8 +22,9 @@ import com.blazebit.persistence.spi.PackageOpener;
 import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.FlushMode;
+import com.blazebit.persistence.view.SerializableEntityViewManager;
+import com.blazebit.persistence.view.StaticImplementation;
 import com.blazebit.persistence.view.impl.CorrelationProviderProxyBase;
-import com.blazebit.persistence.view.impl.SerializableEntityViewManager;
 import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.impl.collection.RecordingList;
 import com.blazebit.persistence.view.impl.collection.RecordingMap;
@@ -32,10 +33,7 @@ import com.blazebit.persistence.view.impl.collection.RecordingNavigableSet;
 import com.blazebit.persistence.view.impl.collection.RecordingSet;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodPluralAttribute;
-import com.blazebit.persistence.view.impl.metamodel.AbstractParameterAttribute;
 import com.blazebit.persistence.view.impl.metamodel.BasicTypeImpl;
-import com.blazebit.persistence.view.impl.metamodel.ConstrainedAttribute;
-import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.MappingConstructorImpl;
 import com.blazebit.persistence.view.impl.metamodel.ViewTypeImplementor;
@@ -53,7 +51,10 @@ import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.persistence.view.spi.type.BasicDirtyTracker;
+import com.blazebit.persistence.view.spi.type.DirtyStateTrackable;
+import com.blazebit.persistence.view.spi.type.DirtyTracker;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
+import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 import com.blazebit.reflection.ReflectionUtils;
 import javassist.CannotCompileException;
 import javassist.ClassClassPath;
@@ -90,6 +91,8 @@ import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -103,9 +106,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedSet;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -118,15 +119,14 @@ import java.util.logging.Logger;
  */
 public class ProxyFactory {
 
-    public static final String EVM_FIELD_NAME = "$$_evm";
-    public static final String SERIALIZABLE_EVM_FIELD_NAME = "$$_serializable_evm";
+    private static final String IMPL_CLASS_NAME_SUFFIX = "Impl";
     private static final Logger LOG = Logger.getLogger(ProxyFactory.class.getName());
     // This has to be static since runtime generated correlation providers can't be matched in a later run, so we always create a new one with a unique name
     private static final ConcurrentMap<Class<?>, AtomicInteger> CORRELATION_PROVIDER_CLASS_COUNT = new ConcurrentHashMap<>();
     private static final Path DEBUG_DUMP_DIRECTORY;
     private final ConcurrentMap<Class<?>, Class<?>> baseClasses = new ConcurrentHashMap<>();
-    private final ConcurrentMap<ProxyClassKey, Class<?>> proxyClasses = new ConcurrentHashMap<>();
-    private final ConcurrentMap<ProxyClassKey, Class<?>> unsafeProxyClasses = new ConcurrentHashMap<>();
+    private final ConcurrentMap<Class<?>, Class<?>> proxyClasses = new ConcurrentHashMap<>();
+    private final ConcurrentMap<Class<?>, Class<?>> unsafeProxyClasses = new ConcurrentHashMap<>();
     private final Object proxyLock = new Object();
     private final ClassPool pool;
     private final boolean unsafeDisabled;
@@ -148,37 +148,6 @@ public class ProxyFactory {
         }
     }
 
-    /**
-     * @author Christian Beikov
-     * @since 1.0.0
-     */
-    private static final class ProxyClassKey {
-        private final Class<?> viewTypeClass;
-        private final Class<?> inheritanceBaseClass;
-
-        public ProxyClassKey(Class<?> viewTypeClass, Class<?> inheritanceBaseClass) {
-            this.viewTypeClass = viewTypeClass;
-            this.inheritanceBaseClass = inheritanceBaseClass;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            ProxyClassKey that = (ProxyClassKey) o;
-
-            if (!viewTypeClass.equals(that.viewTypeClass)) {
-                return false;
-            }
-            return inheritanceBaseClass != null ? inheritanceBaseClass.equals(that.inheritanceBaseClass) : that.inheritanceBaseClass == null;
-        }
-
-        @Override
-        public int hashCode() {
-            int result = viewTypeClass.hashCode();
-            result = 31 * result + (inheritanceBaseClass != null ? inheritanceBaseClass.hashCode() : 0);
-            return result;
-        }
-    }
-
     public ProxyFactory(boolean unsafeDisabled, boolean strictCascadingCheck, PackageOpener packageOpener) {
         this.pool = new ClassPool(ClassPool.getDefault());
         this.unsafeDisabled = unsafeDisabled;
@@ -186,11 +155,60 @@ public class ProxyFactory {
         this.packageOpener = packageOpener;
     }
 
-    public <T> Class<? extends T> getProxy(EntityViewManager entityViewManager, ManagedViewTypeImplementor<T> viewType, ManagedViewTypeImplementor<? super T> inheritanceBase) {
+    public <T> Class<? extends T> getProxy(EntityViewManager entityViewManager, ManagedViewTypeImplementor<T> viewType) {
         if (viewType.getConstructors().isEmpty() || unsafeDisabled) {
-            return getProxy(entityViewManager, viewType, inheritanceBase, false);
+            return getProxy(entityViewManager, viewType, false);
         } else {
-            return getProxy(entityViewManager, viewType, inheritanceBase, true);
+            return getProxy(entityViewManager, viewType, true);
+        }
+    }
+
+    private static String getImplementationClassName(Class<?> javaType, Class<?> baseJavaType) {
+        String packageName = javaType.getPackage().getName();
+        String fqcn = javaType.getName();
+        StringBuilder sb = new StringBuilder(fqcn.length() + IMPL_CLASS_NAME_SUFFIX.length() + baseJavaType.getSimpleName().length());
+        sb.append(packageName).append('.');
+        for (int i = packageName.length() + 1; i < fqcn.length(); i++) {
+            final char c = fqcn.charAt(i);
+            if (c != '$') {
+                sb.append(c);
+            }
+        }
+        sb.append(IMPL_CLASS_NAME_SUFFIX);
+        if (baseJavaType != javaType) {
+            sb.append("_").append(baseJavaType.getSimpleName());
+        }
+        return sb.toString();
+    }
+
+    public void loadImplementation(Set<String> errors, ManagedViewType<?> managedView, EntityViewManager entityViewManager) {
+        Class<?> javaType = managedView.getJavaType();
+        Class<?> entityViewImplementationClass;
+        try {
+            entityViewImplementationClass = javaType.getClassLoader().loadClass(getImplementationClassName(javaType, managedView.getJavaType()));
+            StaticImplementation annotation = entityViewImplementationClass.getAnnotation(StaticImplementation.class);
+            if (annotation != null) {
+                if (annotation.value() != javaType) {
+                    errors.add("The static implementation class '" + entityViewImplementationClass.getName() + "' was expected to be defined for the entity view type '" + javaType.getName() + "' but was defined for: " + annotation.value().getName());
+                    return;
+                }
+            }
+        } catch (ClassNotFoundException e) {
+            // Ignore
+            return;
+        }
+        try {
+            entityViewImplementationClass.getDeclaredField(SerializableEntityViewManager.EVM_FIELD_NAME).set(null, entityViewManager);
+            // Sanity check
+            for (MethodAttribute<?, ?> attribute : managedView.getAttributes()) {
+                entityViewImplementationClass.getDeclaredField(attribute.getName());
+            }
+            proxyClasses.put(javaType, entityViewImplementationClass);
+            unsafeProxyClasses.put(javaType, entityViewImplementationClass);
+        } catch (Exception e) {
+            StringWriter sw = new StringWriter();
+            e.printStackTrace(new PrintWriter(sw));
+            errors.add("The initialization of the static metamodel class '" + entityViewImplementationClass.getName() + "' failed: " + sw.toString());
         }
     }
 
@@ -251,27 +269,18 @@ public class ProxyFactory {
     }
     
     @SuppressWarnings("unchecked")
-    private <T> Class<? extends T> getProxy(EntityViewManager entityViewManager, ManagedViewTypeImplementor<T> viewType, ManagedViewTypeImplementor<? super T> inheritanceBase, boolean unsafe) {
+    private <T> Class<? extends T> getProxy(EntityViewManager entityViewManager, ManagedViewTypeImplementor<T> viewType, boolean unsafe) {
         Class<T> clazz = viewType.getJavaType();
-        Class<? super T> baseClazz;
-
-        if (inheritanceBase == null) {
-            baseClazz = null;
-        } else {
-            baseClazz = inheritanceBase.getJavaType();
-        }
-
-        final ConcurrentMap<ProxyClassKey, Class<?>> classes = unsafe ? unsafeProxyClasses : proxyClasses;
-        final ProxyClassKey key = new ProxyClassKey(clazz, baseClazz);
-        Class<? extends T> proxyClass = (Class<? extends T>) classes.get(key);
+        final ConcurrentMap<Class<?>, Class<?>> classes = unsafe ? unsafeProxyClasses : proxyClasses;
+        Class<? extends T> proxyClass = (Class<? extends T>) classes.get(clazz);
 
         // Double checked locking since we can only define the class once
         if (proxyClass == null) {
             synchronized (proxyLock) {
-                proxyClass = (Class<? extends T>) classes.get(key);
+                proxyClass = (Class<? extends T>) classes.get(clazz);
                 if (proxyClass == null) {
-                    proxyClass = createProxyClass(entityViewManager, viewType, inheritanceBase, unsafe);
-                    classes.put(key, proxyClass);
+                    proxyClass = createProxyClass(entityViewManager, viewType, unsafe);
+                    classes.put(clazz, proxyClass);
                 }
             }
         }
@@ -359,21 +368,11 @@ public class ProxyFactory {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> Class<? extends T> createProxyClass(EntityViewManager entityViewManager, ManagedViewTypeImplementor<T> managedViewType, ManagedViewTypeImplementor<? super T> inheritanceBase, boolean unsafe) {
+    private <T> Class<? extends T> createProxyClass(EntityViewManager entityViewManager, ManagedViewTypeImplementor<T> managedViewType, boolean unsafe) {
         ViewType<T> viewType = managedViewType instanceof ViewType<?> ? (ViewType<T>) managedViewType : null;
         Class<?> clazz = managedViewType.getJavaType();
         String suffix = unsafe ? "unsafe_" : "";
-        String baseName;
-        int subtypeIndex = 0;
-
-        if (inheritanceBase == null) {
-            baseName = clazz.getName();
-        } else {
-            subtypeIndex = managedViewType.getSubtypeIndex(inheritanceBase);
-            baseName = inheritanceBase.getJavaType().getName();
-            baseName += "_" + managedViewType.getJavaType().getSimpleName();
-        }
-
+        String baseName = clazz.getName();
         String proxyClassName = baseName + "_$$_javassist_entityview_" + suffix;
         CtClass cc = pool.makeClass(proxyClassName);
         CtClass superCc;
@@ -404,11 +403,11 @@ public class ProxyFactory {
             addGetEntityViewClass(cc, clazz);
             addIsNewMembers(managedViewType, cc, clazz);
 
-            CtField evmField = new CtField(pool.get(EntityViewManager.class.getName()), EVM_FIELD_NAME, cc);
+            CtField evmField = new CtField(pool.get(EntityViewManager.class.getName()), SerializableEntityViewManager.EVM_FIELD_NAME, cc);
             evmField.setModifiers(Modifier.PUBLIC | Modifier.STATIC | Modifier.VOLATILE);
             cc.addField(evmField);
 
-            cc.addField(CtField.make("public static final " + EntityViewManager.class.getName() + " " + SERIALIZABLE_EVM_FIELD_NAME + " = new " + SerializableEntityViewManager.class.getName() + "(" + cc.getName() + ".class, " + cc.getName() + "#" + EVM_FIELD_NAME + ");", cc));
+            cc.addField(CtField.make("public static final " + EntityViewManager.class.getName() + " " + SerializableEntityViewManager.SERIALIZABLE_EVM_FIELD_NAME + " = new " + SerializableEntityViewManager.class.getName() + "(" + cc.getName() + ".class, " + cc.getName() + "#" + SerializableEntityViewManager.EVM_FIELD_NAME + ");", cc));
 
             if (managedViewType.isUpdatable() || managedViewType.isCreatable()) {
                 if (true || managedViewType.getFlushMode() == FlushMode.LAZY || managedViewType.getFlushMode() == FlushMode.PARTIAL) {
@@ -465,6 +464,7 @@ public class ProxyFactory {
             AbstractMethodAttribute<? super T, ?> idAttribute = null;
             CtField idField = null;
             AbstractMethodAttribute<? super T, ?> versionAttribute = null;
+            final AbstractMethodAttribute<?, ?>[] methodAttributes = new AbstractMethodAttribute[attributeFields.length];
             
             if (viewType != null) {
                 idAttribute = (AbstractMethodAttribute<? super T, ?>) viewType.getIdAttribute();
@@ -473,6 +473,7 @@ public class ProxyFactory {
                 fieldMap.put(idAttribute.getName(), idField);
                 attributeFields[0] = idField;
                 attributeTypes[0] = idField.getType();
+                methodAttributes[0] = idAttribute;
                 attributes.remove(idAttribute);
                 i = 1;
 
@@ -484,8 +485,7 @@ public class ProxyFactory {
             }
 
             addGetter(cc, idField, "$$_getId", Object.class);
-            
-            final AbstractMethodAttribute<?, ?>[] methodAttributes = new AbstractMethodAttribute[attributeFields.length];
+
             int mutableAttributeCount = 0;
             for (MethodAttribute<?, ?> attribute : attributes) {
                 AbstractMethodAttribute<?, ?> methodAttribute = (AbstractMethodAttribute<?, ?>) attribute;
@@ -571,28 +571,28 @@ public class ProxyFactory {
                 addedReferenceConstructor = true;
             }
 
-            if (inheritanceBase == null) {
-                if (shouldAddDefaultConstructor(hasEmptyConstructor, addedReferenceConstructor, attributeFields)) {
-                    cc.addConstructor(createNormalConstructor(entityViewManager, managedViewType, cc, attributeFields, attributeTypes, initialStateField, mutableStateField, methodAttributes, mutableAttributeCount, unsafe));
+            if (shouldAddDefaultConstructor(hasEmptyConstructor, addedReferenceConstructor, attributeFields)) {
+                cc.addConstructor(createNormalConstructor(entityViewManager, managedViewType, cc, attributeFields, attributeTypes, initialStateField, mutableStateField, methodAttributes, mutableAttributeCount, unsafe));
+                cc.addConstructor(createTupleConstructor(cc, attributeFields.length, attributeFields.length, attributeFields, attributeTypes, initialStateField, mutableStateField, methodAttributes, mutableAttributeCount, false, unsafe));
+                cc.addConstructor(createTupleConstructor(cc, attributeFields.length, attributeFields.length, attributeFields, attributeTypes, initialStateField, mutableStateField, methodAttributes, mutableAttributeCount, true, unsafe));
+            }
+
+            for (MappingConstructorImpl<?> constructor : constructors) {
+                int constructorParameterCount = attributeFields.length + constructor.getParameterAttributes().size();
+                // Skip the empty constructor which was handled before
+                if (constructor.getParameterAttributes().size() == 0) {
+                    continue;
                 }
+                CtClass[] constructorAttributeTypes = new CtClass[constructorParameterCount];
+                System.arraycopy(attributeTypes, 0, constructorAttributeTypes, 0, attributeFields.length);
 
-                for (MappingConstructorImpl<?> constructor : constructors) {
-                    int constructorParameterCount = attributeFields.length + constructor.getParameterAttributes().size();
-                    // Skip the empty constructor which was handled before
-                    if (constructor.getParameterAttributes().size() == 0) {
-                        continue;
-                    }
-                    CtClass[] constructorAttributeTypes = new CtClass[constructorParameterCount];
-                    System.arraycopy(attributeTypes, 0, constructorAttributeTypes, 0, attributeFields.length);
+                // Append super constructor parameters to default constructor parameters
+                CtConstructor superConstructor = findConstructor(superCc, constructor);
+                System.arraycopy(superConstructor.getParameterTypes(), 0, constructorAttributeTypes, attributeFields.length, superConstructor.getParameterTypes().length);
 
-                    // Append super constructor parameters to default constructor parameters
-                    CtConstructor superConstructor = findConstructor(superCc, constructor);
-                    System.arraycopy(superConstructor.getParameterTypes(), 0, constructorAttributeTypes, attributeFields.length, superConstructor.getParameterTypes().length);
-
-                    cc.addConstructor(createNormalConstructor(entityViewManager, managedViewType, cc, attributeFields, constructorAttributeTypes, initialStateField, mutableStateField, methodAttributes, mutableAttributeCount, unsafe));
-                }
-            } else {
-                createInheritanceConstructors(entityViewManager, constructors, inheritanceBase, managedViewType, subtypeIndex, addedReferenceConstructor, unsafe, cc, initialStateField, mutableStateField, fieldMap);
+                cc.addConstructor(createNormalConstructor(entityViewManager, managedViewType, cc, attributeFields, constructorAttributeTypes, initialStateField, mutableStateField, methodAttributes, mutableAttributeCount, unsafe));
+                cc.addConstructor(createTupleConstructor(cc, attributeFields.length, constructorAttributeTypes.length, attributeFields, constructorAttributeTypes, initialStateField, mutableStateField, methodAttributes, mutableAttributeCount, false, unsafe));
+                cc.addConstructor(createTupleConstructor(cc, attributeFields.length, constructorAttributeTypes.length, attributeFields, constructorAttributeTypes, initialStateField, mutableStateField, methodAttributes, mutableAttributeCount, true, unsafe));
             }
 
             return defineOrGetClass(entityViewManager, unsafe, clazz, cc);
@@ -643,7 +643,7 @@ public class ProxyFactory {
             }
 
             if (entityViewManager != null) {
-                c.getField(EVM_FIELD_NAME).set(null, entityViewManager);
+                c.getField(SerializableEntityViewManager.EVM_FIELD_NAME).set(null, entityViewManager);
             }
 
             return c;
@@ -680,214 +680,6 @@ public class ProxyFactory {
         // Add the default constructor only for interfaces since abstract classes may omit it
         // Only add the "normal" constructor if there are attributes other than the id attribute available, otherwise we get a duplicate member exception
         return hasEmptyConstructor && (!addedReferenceConstructor && attributeFields.length > 0 || addedReferenceConstructor && attributeFields.length > 1);
-    }
-
-    @SuppressWarnings("unchecked")
-    private <T> void createInheritanceConstructors(EntityViewManager entityViewManager, Set<MappingConstructorImpl<T>> constructors, ManagedViewTypeImplementor<? super T> inheritanceBase, ManagedViewTypeImplementor<T> managedView, int subtypeIndex, boolean addedReferenceConstructor,
-                                                   boolean unsafe, CtClass cc, CtField initialStateField, CtField mutableStateField, Map<String, CtField> fieldMap) throws NotFoundException, CannotCompileException, BadBytecode {
-        Map<ManagedViewTypeImpl.AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<?, ?>>> overallAttributesClosure = (Map<ManagedViewTypeImpl.AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<?, ?>>>) (Map<?, ?>) inheritanceBase.getOverallInheritanceSubtypeConfiguration().getAttributesClosure();
-        CtClass[] overallParameterTypes = new CtClass[overallAttributesClosure.size()];
-        Map<String, CtClass[]> overallConstructorParameterTypes = new HashMap<>();
-        boolean addedDefaultConstructor;
-        {
-            CtField[] fields = new CtField[overallAttributesClosure.size()];
-            AbstractMethodAttribute<?, ?>[] subtypeAttributes = new AbstractMethodAttribute<?, ?>[overallAttributesClosure.size()];
-            int subtypeMutableAttributeCount = 0;
-
-            // The id attribute always comes first
-            String idName = null;
-            int j = 0;
-            if (inheritanceBase instanceof ViewType<?>) {
-                idName = ((ViewType<?>) inheritanceBase).getIdAttribute().getName();
-                CtField field = fieldMap.get(idName);
-                fields[j] = field;
-                overallParameterTypes[j] = field.getType();
-                j++;
-            }
-
-            for (Map.Entry<ManagedViewTypeImpl.AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<?, ?>>> entry : overallAttributesClosure.entrySet()) {
-                String attributeName = entry.getKey().getAttributeName();
-                // Skip the id attribute that we handled before
-                if (attributeName.equals(idName)) {
-                    continue;
-                }
-                AbstractMethodAttribute<?, ?> attribute = entry.getValue().getSubAttribute(managedView);
-                if (entry.getValue().getSelectionConstrainedAttributes().isEmpty()) {
-                    subtypeAttributes[j] = attribute;
-                    if (attribute.hasDirtyStateIndex()) {
-                        subtypeMutableAttributeCount++;
-                    }
-                } else {
-                    // Collect the subtype indexes where this attribute is mutable
-                    SortedSet<Integer> indexes = new TreeSet<>();
-                    // If the attributes are different, we are working on a "subAttribute"
-                    if (entry.getValue().getAttribute() != attribute) {
-                        indexes.add(subtypeIndex);
-                    }
-                    for (ConstrainedAttribute.Entry<AbstractMethodAttribute<?, ?>> selectionConstrainedAttribute : entry.getValue().getSelectionConstrainedAttributes()) {
-                        for (int index : selectionConstrainedAttribute.getSubtypeIndexes()) {
-                            indexes.add(index);
-                        }
-                    }
-                    if (indexes.contains(subtypeIndex)) {
-                        subtypeAttributes[j] = attribute;
-                        if (attribute.hasDirtyStateIndex()) {
-                            subtypeMutableAttributeCount++;
-                        }
-                    }
-                }
-
-                CtField field = fieldMap.get(attributeName);
-                CtClass type;
-                if (field == null) {
-                    type = getType(attribute);
-                } else {
-                    type = field.getType();
-                }
-                fields[j] = field;
-                overallParameterTypes[j] = type;
-                j++;
-            }
-
-            boolean hasEmptyConstructor = managedView.hasEmptyConstructor();
-            if (addedDefaultConstructor = shouldAddDefaultConstructor(hasEmptyConstructor, addedReferenceConstructor, fields)) {
-                cc.addConstructor(createNormalConstructor(entityViewManager, managedView, cc, fields, overallParameterTypes, initialStateField, mutableStateField, subtypeAttributes, subtypeMutableAttributeCount, unsafe));
-            }
-
-            for (MappingConstructorImpl<T> constructor : constructors) {
-                MappingConstructorImpl<T> baseConstructor = (MappingConstructorImpl<T>) inheritanceBase.getConstructor(constructor.getName());
-                MappingConstructorImpl.InheritanceSubtypeConstructorConfiguration<T> overallParameterAttributesClosureConfig = baseConstructor.getOverallInheritanceParametersAttributesClosureConfiguration();
-
-                @SuppressWarnings("unchecked")
-                List<AbstractParameterAttribute<? super T, ?>> parameterAttributes = overallParameterAttributesClosureConfig.getParameterAttributesClosure();
-                // Skip the default constructor that is handled before
-                if (addedDefaultConstructor && parameterAttributes.isEmpty()) {
-                    continue;
-                }
-                // Copy default constructor parameters
-                int constructorParameterCount = fields.length + parameterAttributes.size();
-                CtClass[] constructorAttributeTypes = new CtClass[constructorParameterCount];
-                System.arraycopy(overallParameterTypes, 0, constructorAttributeTypes, 0, overallParameterTypes.length);
-
-                // Find the start position in the parameters for passing through to this constructor
-                int constructorParameterStartPosition = fields.length;
-                int i = 0;
-                for (ManagedViewType<?> subtype : inheritanceBase.getOverallInheritanceSubtypeConfiguration().getInheritanceSubtypes()) {
-                    if (i == subtypeIndex) {
-                        break;
-                    }
-
-                    constructorParameterStartPosition += subtype.getConstructor(constructor.getName()).getParameterAttributes().size();
-                    i++;
-                }
-
-                // Copy constructor parameter types
-                i = fields.length;
-                for (AbstractParameterAttribute<?, ?> paramAttr : parameterAttributes) {
-                    constructorAttributeTypes[i++] = getType(paramAttr);
-                }
-
-                overallConstructorParameterTypes.put(constructor.getName(), constructorAttributeTypes);
-                int superConstructorParameterEndPosition = constructorParameterStartPosition + constructor.getParameterAttributes().size();
-                cc.addConstructor(createConstructor(entityViewManager, managedView, cc, constructorParameterStartPosition, superConstructorParameterEndPosition, fields, constructorAttributeTypes, initialStateField, mutableStateField, subtypeAttributes, subtypeMutableAttributeCount, ConstructorKind.NORMAL, null, unsafe));
-            }
-        }
-
-        // Go through all configurations that contain this entity view and create a static inheritance factory for it
-        Map<Map<ManagedViewType<?>, String>, ManagedViewTypeImpl.InheritanceSubtypeConfiguration<? super T>> inheritanceSubtypeConfigurationMap = (Map<Map<ManagedViewType<?>, String>, ManagedViewTypeImpl.InheritanceSubtypeConfiguration<? super T>>) (Map<?, ?>) inheritanceBase.getInheritanceSubtypeConfigurations();
-        for (Map.Entry<Map<ManagedViewType<?>, String>, ManagedViewTypeImpl.InheritanceSubtypeConfiguration<? super T>> configurationEntry : inheritanceSubtypeConfigurationMap.entrySet()) {
-            if (!configurationEntry.getKey().containsKey(managedView)) {
-                continue;
-            }
-
-            ManagedViewTypeImpl.InheritanceSubtypeConfiguration<? super T> inheritanceSubtypeConfiguration = configurationEntry.getValue();
-            Map<ManagedViewTypeImpl.AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<?, ?>>> subtypeAttributesClosure = (Map<ManagedViewTypeImpl.AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<?, ?>>>) (Map<?, ?>) inheritanceSubtypeConfiguration.getAttributesClosure();
-            CtClass[] parameterTypes = new CtClass[subtypeAttributesClosure.size()];
-
-            // The id attribute always comes first
-            String idName = null;
-            int j = 0;
-            if (inheritanceBase instanceof ViewType<?>) {
-                idName = ((ViewType<?>) inheritanceBase).getIdAttribute().getName();
-                CtField field = fieldMap.get(idName);
-                parameterTypes[j] = field.getType();
-                j++;
-            }
-
-            for (Map.Entry<ManagedViewTypeImpl.AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<?, ?>>> entry : subtypeAttributesClosure.entrySet()) {
-                String attributeName = entry.getKey().getAttributeName();
-                // Skip the id attribute that we handled before
-                if (attributeName.equals(idName)) {
-                    continue;
-                }
-                CtField field = fieldMap.get(attributeName);
-                CtClass type;
-                if (field != null) {
-                    type = field.getType();
-                } else {
-                    AbstractMethodAttribute<?, ?> attribute = entry.getValue().getSubAttribute(managedView);
-                    type = getType(attribute);
-                }
-                parameterTypes[j] = type;
-                j++;
-            }
-
-            if (addedDefaultConstructor) {
-                cc.addMethod(createStaticFactory(cc, inheritanceSubtypeConfiguration.getConfigurationIndex(), "", 0, inheritanceSubtypeConfiguration.getOverallPositionAssignment(managedView), parameterTypes, overallParameterTypes));
-            }
-
-            for (MappingConstructorImpl<T> constructor : constructors) {
-                MappingConstructorImpl<T> baseConstructor = (MappingConstructorImpl<T>) inheritanceBase.getConstructor(constructor.getName());
-                MappingConstructorImpl.InheritanceSubtypeConstructorConfiguration<T> subtypeConstructorConfiguration = baseConstructor.getSubtypeConstructorConfiguration((Map<ManagedViewType<? extends T>, String>) (Map<?, ?>) configurationEntry.getKey());
-                @SuppressWarnings("unchecked")
-                List<AbstractParameterAttribute<?, ?>> parameterAttributes = (List<AbstractParameterAttribute<?, ?>>) (List<?>) subtypeConstructorConfiguration.getParameterAttributesClosure();
-                // Copy default constructor parameters
-                int constructorParameterCount = parameterTypes.length + parameterAttributes.size();
-                CtClass[] constructorAttributeTypes = new CtClass[constructorParameterCount];
-                System.arraycopy(parameterTypes, 0, constructorAttributeTypes, 0, parameterTypes.length);
-
-                // Copy constructor parameter types
-                int i = parameterTypes.length;
-                for (AbstractParameterAttribute<?, ?> paramAttr : parameterAttributes) {
-                    constructorAttributeTypes[i++] = getType(paramAttr);
-                }
-
-                cc.addMethod(createStaticFactory(cc, inheritanceSubtypeConfiguration.getConfigurationIndex(), "_" + constructor.getName(), parameterTypes.length, subtypeConstructorConfiguration.getOverallPositionAssignment(), constructorAttributeTypes, overallConstructorParameterTypes.get(constructor.getName())));
-            }
-        }
-    }
-
-    private CtMethod createStaticFactory(CtClass cc, int inheritanceConfigurationIndex, String suffix, int passThroughCount, int[] positionAssignments, CtClass[] parameterTypes, CtClass[] overallParameterTypes) throws CannotCompileException {
-        String descriptor = Descriptor.ofMethod(cc, parameterTypes);
-        ConstPool cp = cc.getClassFile2().getConstPool();
-        MethodInfo minfo = new MethodInfo(cp, "create" + inheritanceConfigurationIndex + suffix, descriptor);
-        minfo.setAccessFlags(AccessFlag.PUBLIC | AccessFlag.STATIC);
-        CtMethod method = CtMethod.make(minfo, cc);
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("{\n");
-        sb.append("\treturn new ");
-        sb.append(cc.getName()).append("(\n");
-        for (int i = 0; i < passThroughCount; i++) {
-            sb.append("\t\t");
-            sb.append('$').append(i + 1);
-            sb.append(",\n");
-        }
-        for (int i = 0; i < positionAssignments.length; i++) {
-            sb.append("\t\t");
-            if (positionAssignments[i] == -1) {
-                sb.append(getDefaultValue(overallParameterTypes[i]));
-            } else {
-                sb.append('$').append(passThroughCount + positionAssignments[i] + 1);
-            }
-            sb.append(",\n");
-        }
-        sb.setLength(sb.length() - 2);
-        sb.append("\n\t);\n");
-        sb.append("}");
-        method.setBody(sb.toString());
-
-        return method;
     }
 
     private <T> void createEqualsHashCodeMethods(ViewType<T> viewType, ManagedViewTypeImplementor<T> managedViewType, CtClass cc, CtClass superCc, CtField[] attributeFields, CtField idField) throws NotFoundException, CannotCompileException {
@@ -932,7 +724,7 @@ public class ProxyFactory {
         minfo.setAccessFlags(AccessFlag.PUBLIC);
 
         Bytecode code = new Bytecode(cp, 1, 1);
-        code.addGetstatic(cc, SERIALIZABLE_EVM_FIELD_NAME, desc);
+        code.addGetstatic(cc, SerializableEntityViewManager.SERIALIZABLE_EVM_FIELD_NAME, desc);
         code.addOpcode(Bytecode.ARETURN);
 
         minfo.setCodeAttribute(code.toCodeAttribute());
@@ -1548,7 +1340,7 @@ public class ProxyFactory {
 
         sb.append("{\n");
         sb.append("\tif ($0.").append(parentFieldName).append(" != null) {\n");
-        sb.append("\t\tthrow new IllegalStateException(\"Parent object for \" + $0.toString() + \" is already set to \" + $0.").append(parentFieldName).append(".toString() + \" and can't be set to:\" + $1.toString());\n");
+        sb.append("\t\tthrow new IllegalStateException(\"Parent object for \" + $0.toString() + \" is already set to \" + $0.").append(parentFieldName).append(".toString() + \" and can't be set to: \" + $1.toString());\n");
         sb.append("\t}\n");
         sb.append("\t$0.").append(parentFieldName).append(" = $1;\n");
         sb.append("\t$0.").append(parentIndexFieldName).append(" = $2;\n");
@@ -2110,13 +1902,14 @@ public class ProxyFactory {
         StringBuilder sb = new StringBuilder();
 
         sb.append('{');
+        sb.append("\tlong bits;\n");
         sb.append("\tint hash = 3;\n");
 
         for (CtField field : fields) {
             if (field.getType().isPrimitive()) {
                 CtClass type = field.getType();
                 if (CtClass.doubleType == type) {
-                    sb.append("long bits = java.lang.Double.doubleToLongBits($0.").append(field.getName()).append(");");
+                    sb.append("bits = java.lang.Double.doubleToLongBits($0.").append(field.getName()).append(");");
                 }
                 sb.append("\thash = 83 * hash + ");
                 if (CtClass.booleanType == type) {
@@ -2286,7 +2079,7 @@ public class ProxyFactory {
             if (!managedViewType.getJavaType().isInterface()) {
                 if (Modifier.isPublic(postCreateMethod.getModifiers()) || Modifier.isProtected(postCreateMethod.getModifiers()) || !Modifier.isPrivate(postCreateMethod.getModifiers()) && postCreateMethod.getDeclaringClass().getPackage().getName().equals(cc.getPackageName())) {
                     if (postCreateMethod.getParameterTypes().length == 1) {
-                        sb.append("\t$0.").append(postCreateMethod.getName()).append("(").append(cc.getName()).append("#").append(SERIALIZABLE_EVM_FIELD_NAME).append(");\n");
+                        sb.append("\t$0.").append(postCreateMethod.getName()).append("(").append(cc.getName()).append("#").append(SerializableEntityViewManager.SERIALIZABLE_EVM_FIELD_NAME).append(");\n");
                     } else {
                         sb.append("\t$0.").append(postCreateMethod.getName()).append("();\n");
                     }
@@ -2308,7 +2101,7 @@ public class ProxyFactory {
                     }
                     sb.append("\t").append(cc.getName()).append("#").append(postCreateField).append(".invoke($0");
                     if (postCreateMethod.getParameterTypes().length == 1) {
-                        sb.append(", new Object[]{ ").append(cc.getName()).append("#").append(SERIALIZABLE_EVM_FIELD_NAME).append(" }");
+                        sb.append(", new Object[]{ ").append(cc.getName()).append("#").append(SerializableEntityViewManager.SERIALIZABLE_EVM_FIELD_NAME).append(" }");
                     } else {
                         sb.append(", new Object[0]");
                     }
@@ -2342,7 +2135,7 @@ public class ProxyFactory {
             String postCreateMethodDescriptor;
             bc.addAload(0);
             if (postCreateMethod.getParameterTypes().length == 1) {
-                bc.addGetstatic(cc, SERIALIZABLE_EVM_FIELD_NAME, Descriptor.of(EntityViewManager.class.getName()));
+                bc.addGetstatic(cc, SerializableEntityViewManager.SERIALIZABLE_EVM_FIELD_NAME, Descriptor.of(EntityViewManager.class.getName()));
                 postCreateMethodDescriptor = "(L" + Descriptor.toJvmName(EntityViewManager.class.getName()) + ";)V";
             } else {
                 postCreateMethodDescriptor = "()V";
@@ -2360,6 +2153,48 @@ public class ProxyFactory {
             if (stackMap == null) {
                 ctConstructor.getMethodInfo().rebuildStackMap(cc.getClassPool());
             }
+        }
+
+        return ctConstructor;
+    }
+
+    private CtConstructor createTupleConstructor(CtClass cc, int superConstructorStart, int superConstructorEnd, CtField[] attributeFields, CtClass[] attributeTypes, CtField initialStateField, CtField mutableStateField,
+                                            AbstractMethodAttribute<?, ?>[] attributes, int mutableAttributeCount, boolean assignment, boolean unsafe) throws CannotCompileException, NotFoundException {
+        CtClass[] parameterTypes;
+        if (assignment) {
+            parameterTypes = new CtClass[(superConstructorEnd - superConstructorStart) + 4];
+            parameterTypes[0] = cc;
+            parameterTypes[1] = CtClass.intType;
+            parameterTypes[2] = pool.get("int[]");
+            parameterTypes[3] = pool.get("java.lang.Object[]");
+            System.arraycopy(attributeTypes, superConstructorStart, parameterTypes, 4, superConstructorEnd - superConstructorStart);
+        } else {
+            parameterTypes = new CtClass[(superConstructorEnd - superConstructorStart) + 3];
+            parameterTypes[0] = cc;
+            parameterTypes[1] = CtClass.intType;
+            parameterTypes[2] = pool.get("java.lang.Object[]");
+            System.arraycopy(attributeTypes, superConstructorStart, parameterTypes, 3, superConstructorEnd - superConstructorStart);
+        }
+        CtConstructor ctConstructor = new CtConstructor(parameterTypes, cc);
+        ctConstructor.setModifiers(Modifier.PUBLIC);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("{\n");
+        if (unsafe) {
+            renderFieldInitialization(attributeFields, initialStateField, mutableStateField, attributes, mutableAttributeCount, assignment, sb);
+            renderTupleSuperCall(cc, superConstructorStart, superConstructorEnd, assignment, attributeTypes, sb);
+        } else {
+            renderTupleSuperCall(cc, superConstructorStart, superConstructorEnd, assignment, attributeTypes, sb);
+            renderFieldInitialization(attributeFields, initialStateField, mutableStateField, attributes, mutableAttributeCount, assignment, sb);
+        }
+
+        // Always register dirty tracker after super call
+        renderDirtyTrackerRegistration(attributeFields, mutableStateField, attributes, ConstructorKind.NORMAL, sb);
+        sb.append("}");
+        if (unsafe) {
+            compileUnsafe(ctConstructor, sb.toString());
+        } else {
+            ctConstructor.setBody(sb.toString());
         }
 
         return ctConstructor;
@@ -2507,7 +2342,7 @@ public class ProxyFactory {
                             SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) methodAttribute;
                             if (singularAttribute.getType().getMappingType() == Type.MappingType.FLAT_VIEW) {
                                 ManagedViewTypeImplementor<Object> attributeManagedViewType = (ManagedViewTypeImplementor<Object>) singularAttribute.getType();
-                                String proxyClassName = getProxy(entityViewManager, attributeManagedViewType, null).getName();
+                                String proxyClassName = getProxy(entityViewManager, attributeManagedViewType).getName();
                                 sb.append("new ");
                                 sb.append(proxyClassName);
                                 sb.append("((").append(proxyClassName).append(") null, $2);\n");
@@ -2573,7 +2408,7 @@ public class ProxyFactory {
                             }
                             if (singularAttribute != null && singularAttribute.getType().getMappingType() == Type.MappingType.FLAT_VIEW) {
                                 ManagedViewTypeImplementor<Object> attributeManagedViewType = (ManagedViewTypeImplementor<Object>) singularAttribute.getType();
-                                String proxyClassName = getProxy(entityViewManager, attributeManagedViewType, null).getName();
+                                String proxyClassName = getProxy(entityViewManager, attributeManagedViewType).getName();
                                 sb.append("new ");
                                 sb.append(proxyClassName);
                                 sb.append("((").append(proxyClassName).append(") null, $2);\n");
@@ -2610,6 +2445,61 @@ public class ProxyFactory {
                     } else {
                         sb.append(getDefaultValueForObject(type)).append(";\n");
                     }
+                }
+            }
+        }
+
+        if (initialStateField != null) {
+            sb.append("\t$0.").append(initialStateField.getName()).append(" = initialStateArr;\n");
+        }
+        if (mutableStateField != null) {
+            sb.append("\t$0.").append(mutableStateField.getName()).append(" = mutableStateArr;\n");
+        }
+    }
+
+    private void renderFieldInitialization(CtField[] attributeFields, CtField initialStateField, CtField mutableStateField, AbstractMethodAttribute<?, ?>[] methodAttributes, int mutableAttributeCount, boolean assignment, StringBuilder sb) throws NotFoundException {
+        if (initialStateField != null) {
+            sb.append("\tObject[] initialStateArr = new Object[").append(mutableAttributeCount).append("];\n");
+        }
+
+        if (mutableStateField != null) {
+            sb.append("\tObject[] mutableStateArr = new Object[").append(mutableAttributeCount).append("];\n");
+        }
+
+        for (int i = 0; i < attributeFields.length; i++) {
+            if (attributeFields[i] == null) {
+                continue;
+            }
+
+            AbstractMethodAttribute<?, ?> methodAttribute = methodAttributes[i];
+
+            if (methodAttribute != null) {
+                sb.append("\t$0.").append(attributeFields[i].getName()).append(" = (").append(attributeFields[i].getType().getName());
+                if (assignment) {
+                    sb.append(") $4[$2 + $3[").append(methodAttribute.getAttributeIndex()).append("]");
+                } else {
+                    sb.append(") $3[$2 + ").append(methodAttribute.getAttributeIndex());
+                }
+                sb.append("];\n");
+
+                if (methodAttribute.hasDirtyStateIndex()) {
+                    CtClass type = attributeFields[i].getType();
+                    if (mutableStateField != null) {
+                        // locvar2[j] = $(i + 1)
+                        sb.append("\tmutableStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
+                    }
+
+                    if (initialStateField != null) {
+                        // locvar1[j] = $(i + 1)
+                        sb.append("initialStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
+                    }
+
+                    if (assignment) {
+                        sb.append("$4[$2 + $3[").append(methodAttribute.getAttributeIndex()).append("]");
+                    } else {
+                        sb.append("$3[$2 + ").append(methodAttribute.getAttributeIndex());
+                    }
+                    sb.append("];\n");
                 }
             }
         }
@@ -2985,6 +2875,25 @@ public class ProxyFactory {
         if (superStart < superEnd) {
             for (int i = superStart; i < superEnd; i++) {
                 sb.append('$').append(i + 1).append(',');
+            }
+            sb.setCharAt(sb.length() - 1, ')');
+        } else {
+            sb.append(')');
+        }
+        sb.append(";\n");
+    }
+
+    private void renderTupleSuperCall(CtClass cc, int superStart, int superEnd, boolean assignment, CtClass[] attributeTypes, StringBuilder sb) throws NotFoundException {
+        sb.append("\tsuper(");
+        if (superStart < superEnd) {
+            for (int i = superStart; i < superEnd; i++) {
+                sb.append("(").append(attributeTypes[i].getName());
+                if (assignment) {
+                    sb.append(") $4[$2 + $3[").append(i).append("]");
+                } else {
+                    sb.append(") $3[$2 + ").append(i);
+                }
+                sb.append("],");
             }
             sb.setCharAt(sb.length() - 1, ')');
         } else {

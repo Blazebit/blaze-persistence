@@ -29,7 +29,7 @@ import com.blazebit.persistence.view.PreUpdateListener;
 import com.blazebit.persistence.view.ViewTransition;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
-import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
+import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
 import javax.persistence.EntityManager;

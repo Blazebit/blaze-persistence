@@ -22,11 +22,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * The {@linkplain StaticMetamodel} annotation specifies that the class is a metamodel class
- * that represents the entity view class designated by the value element.
+ * The {@linkplain StaticMetamodel} annotation specifies that the class is the metamodel class
+ * for the entity view class designated by the value element.
  *
  * @author Christian Beikov
- * @since 1.4.0
+ * @since 1.5.0
  */
 @Target({ ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)

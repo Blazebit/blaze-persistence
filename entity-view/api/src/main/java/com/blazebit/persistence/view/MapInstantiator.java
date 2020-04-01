@@ -14,25 +14,33 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.processor.annotation;
+package com.blazebit.persistence.view;
 
-import com.blazebit.persistence.view.processor.Constants;
-import com.blazebit.persistence.view.processor.Context;
-
-import javax.lang.model.element.Element;
+import java.util.Map;
 
 /**
+ * An instantiator for normal, recording and JPA maps for an entity view attribute.
+ *
+ * @param <C> The map type
+ * @param <R> The recording container type
  * @author Christian Beikov
  * @since 1.5.0
  */
-public class AnnotationMetaSingleAttribute extends AnnotationMetaAttribute {
+public interface MapInstantiator<C extends Map<?, ?>, R extends Map<?, ?> & RecordingContainer<? extends C>> {
 
-    public AnnotationMetaSingleAttribute(AnnotationMetaEntityView parent, Element element, String type, String realType, Context context) {
-        super(parent, element, type, realType, context);
-    }
+    /**
+     * Creates a plain map.
+     *
+     * @param size The size estimate
+     * @return the map
+     */
+    public C createMap(int size);
 
-    @Override
-    public final String getMetaType() {
-        return Constants.SINGULAR_ATTRIBUTE;
-    }
+    /**
+     * Creates a recording map.
+     *
+     * @param size The size estimate
+     * @return the recording map
+     */
+    public R createRecordingMap(int size);
 }

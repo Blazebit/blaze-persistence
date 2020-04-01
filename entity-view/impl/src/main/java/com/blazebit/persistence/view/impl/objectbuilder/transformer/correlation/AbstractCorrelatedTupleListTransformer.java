@@ -24,7 +24,7 @@ import com.blazebit.persistence.view.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.PrefixingQueryGenerator;
-import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
+import com.blazebit.persistence.view.impl.collection.CollectionInstantiatorImplementor;
 import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformer;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
@@ -118,7 +118,7 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
         return false;
     }
 
-    protected CollectionInstantiator getCollectionInstantiator() {
+    protected CollectionInstantiatorImplementor<?, ?> getCollectionInstantiator() {
         return null;
     }
 
@@ -139,7 +139,7 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
         Collection<Object> result;
         Collection<Object> collection;
         if (isRecording()) {
-            RecordingCollection<?, ?> recordingCollection = getCollectionInstantiator().createRecordingCollection(list.size());
+            RecordingCollection<?, ?> recordingCollection = (RecordingCollection<?, ?>) getCollectionInstantiator().createRecordingCollection(list.size());
             collection = (Collection<Object>) recordingCollection.getDelegate();
             result = (Collection<Object>) recordingCollection;
         } else {

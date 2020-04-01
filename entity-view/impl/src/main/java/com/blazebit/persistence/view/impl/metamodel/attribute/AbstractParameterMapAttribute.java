@@ -16,8 +16,8 @@
 
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
-import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
-import com.blazebit.persistence.view.impl.collection.MapInstantiator;
+import com.blazebit.persistence.view.impl.collection.CollectionInstantiatorImplementor;
+import com.blazebit.persistence.view.impl.collection.MapInstantiatorImplementor;
 import com.blazebit.persistence.view.impl.metamodel.AbstractParameterPluralAttribute;
 import com.blazebit.persistence.view.impl.metamodel.EmbeddableOwner;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
@@ -39,7 +39,7 @@ public abstract class AbstractParameterMapAttribute<X, K, V> extends AbstractPar
 
     private final Type<K> keyType;
     private final Map<ManagedViewType<? extends K>, String> keyInheritanceSubtypes;
-    private final MapInstantiator mapInstantiator;
+    private final MapInstantiatorImplementor<?, ?> mapInstantiator;
 
     @SuppressWarnings("unchecked")
     public AbstractParameterMapAttribute(MappingConstructorImpl<X> mappingConstructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
@@ -75,12 +75,12 @@ public abstract class AbstractParameterMapAttribute<X, K, V> extends AbstractPar
     }
 
     @Override
-    public CollectionInstantiator getCollectionInstantiator() {
+    public CollectionInstantiatorImplementor<?, ?> getCollectionInstantiator() {
         throw new UnsupportedOperationException("Map attribute");
     }
 
     @Override
-    public MapInstantiator getMapInstantiator() {
+    public MapInstantiatorImplementor<?, ?> getMapInstantiator() {
         return mapInstantiator;
     }
 

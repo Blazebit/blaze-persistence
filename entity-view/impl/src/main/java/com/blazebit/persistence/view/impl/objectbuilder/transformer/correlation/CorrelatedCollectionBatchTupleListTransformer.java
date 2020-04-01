@@ -19,7 +19,7 @@ package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.view.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
-import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
+import com.blazebit.persistence.view.impl.collection.CollectionInstantiatorImplementor;
 import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
@@ -35,12 +35,12 @@ import java.util.Map;
  */
 public class CorrelatedCollectionBatchTupleListTransformer extends AbstractCorrelatedBatchTupleListTransformer {
 
-    private final CollectionInstantiator collectionInstantiator;
+    private final CollectionInstantiatorImplementor<?, ?> collectionInstantiator;
     private final boolean filterNulls;
     private final boolean recording;
 
     public CorrelatedCollectionBatchTupleListTransformer(ExpressionFactory ef, Correlator correlator, ManagedViewType<?> viewRootType, ManagedViewType<?> embeddingViewType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches, boolean correlatesThis,
-                                                         int viewRootIndex, int embeddingViewIndex, int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration, CollectionInstantiator collectionInstantiator, boolean filterNulls, boolean recording) {
+                                                         int viewRootIndex, int embeddingViewIndex, int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration, CollectionInstantiatorImplementor<?, ?> collectionInstantiator, boolean filterNulls, boolean recording) {
         super(ef, correlator, viewRootType, embeddingViewType, correlationResult, correlationProviderFactory, attributePath, fetches, correlatesThis, viewRootIndex, embeddingViewIndex, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
         this.collectionInstantiator = collectionInstantiator;
         this.filterNulls = filterNulls;
@@ -96,7 +96,7 @@ public class CorrelatedCollectionBatchTupleListTransformer extends AbstractCorre
     }
 
     @Override
-    protected CollectionInstantiator getCollectionInstantiator() {
+    protected CollectionInstantiatorImplementor<?, ?> getCollectionInstantiator() {
         return collectionInstantiator;
     }
 }

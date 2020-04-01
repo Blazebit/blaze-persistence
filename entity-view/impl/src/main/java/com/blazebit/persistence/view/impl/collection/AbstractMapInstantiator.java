@@ -23,7 +23,7 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public abstract class AbstractMapInstantiator<C extends Map<?, ?>, R extends RecordingMap<C, ?, ?>> implements MapInstantiator<C, R> {
+public abstract class AbstractMapInstantiator<C extends Map<?, ?>, R extends RecordingMap<C, ?, ?>> implements MapInstantiatorImplementor<C, R> {
 
     private final PluralObjectFactory<Map<?, ?>> collectionFactory;
 
@@ -32,7 +32,7 @@ public abstract class AbstractMapInstantiator<C extends Map<?, ?>, R extends Rec
     }
 
     @Override
-    public final Map<?, ?> createJpaCollection(int size) {
+    public final Map<?, ?> createJpaMap(int size) {
         return collectionFactory.createCollection(size);
     }
 }

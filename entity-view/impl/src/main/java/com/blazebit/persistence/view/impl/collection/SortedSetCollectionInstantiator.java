@@ -27,7 +27,7 @@ import java.util.TreeSet;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class SortedSetCollectionInstantiator  extends AbstractCollectionInstantiator {
+public class SortedSetCollectionInstantiator  extends AbstractCollectionInstantiator<NavigableSet<?>, RecordingNavigableSet<?>> {
 
     private final Set<Class<?>> allowedSubtypes;
     private final Set<Class<?>> parentRequiringUpdateSubtypes;
@@ -59,7 +59,7 @@ public class SortedSetCollectionInstantiator  extends AbstractCollectionInstanti
     }
 
     @Override
-    public RecordingSortedSet<NavigableSet<?>, ?> createRecordingCollection(int size) {
+    public RecordingNavigableSet<?> createRecordingCollection(int size) {
         return new RecordingNavigableSet(createCollection(size), allowedSubtypes, parentRequiringUpdateSubtypes, parentRequiringCreateSubtypes, updatable, optimize, strictCascadingCheck);
     }
 }

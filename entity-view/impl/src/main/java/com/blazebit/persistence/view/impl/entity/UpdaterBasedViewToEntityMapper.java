@@ -20,7 +20,7 @@ import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.update.EntityViewUpdaterImpl;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
-import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
+import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.update.EntityViewUpdater;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.update.flush.DirtyAttributeFlusher;

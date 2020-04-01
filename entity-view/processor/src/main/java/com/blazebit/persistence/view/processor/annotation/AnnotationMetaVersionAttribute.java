@@ -14,27 +14,23 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl.collection;
+package com.blazebit.persistence.view.processor.annotation;
 
-import java.util.Collection;
+import com.blazebit.persistence.view.processor.Constants;
+import com.blazebit.persistence.view.processor.Context;
 
 /**
- *
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.5.0
  */
-public interface CollectionInstantiator {
+public class AnnotationMetaVersionAttribute extends AnnotationMetaAttribute {
 
-    public boolean allowsDuplicates();
+    public AnnotationMetaVersionAttribute(AnnotationMetaEntityView parent, Context context) {
+        super(parent, context);
+    }
 
-    public boolean requiresPostConstruct();
-
-    public void postConstruct(Collection<?> collection);
-
-    public Collection<?> createCollection(int size);
-
-    public Collection<?> createJpaCollection(int size);
-
-    public RecordingCollection<?, ?> createRecordingCollection(int size);
-
+    @Override
+    public final String getMetaType() {
+        return Constants.SINGULAR_ATTRIBUTE;
+    }
 }

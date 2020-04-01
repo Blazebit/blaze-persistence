@@ -21,6 +21,7 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
@@ -76,8 +77,27 @@ public final class ForeignPackageAdapterClassWriter {
                 .append(entity.getQualifiedName().replace('.', '_'));
 
         List<TypeVariable> typeArguments = (List<TypeVariable>) ((DeclaredType) entity.getTypeElement().asType()).getTypeArguments();
-        if (!typeArguments.isEmpty()) {
+        List<TypeVariable> typeParameters = (List<TypeVariable>) ((DeclaredType) typeElement.asType()).getTypeArguments();
+        if (typeArguments.isEmpty()) {
+            if (!typeParameters.isEmpty()) {
+                sb.append('<');
+                printTypeVariable(sb, typeParameters.get(0));
+                for (int i = 1; i < typeParameters.size(); i++) {
+                    sb.append(", ");
+                    printTypeVariable(sb, typeParameters.get(i));
+                }
+                sb.append('>');
+            }
+        } else {
             sb.append('<');
+            if (!typeParameters.isEmpty()) {
+                printTypeVariable(sb, typeParameters.get(0));
+                for (int i = 1; i < typeParameters.size(); i++) {
+                    sb.append(", ");
+                    printTypeVariable(sb, typeParameters.get(i));
+                }
+                sb.append(", ");
+            }
             printTypeVariable(sb, typeArguments.get(0));
             for (int i = 1; i < typeArguments.size(); i++) {
                 sb.append(", ");
@@ -111,6 +131,8 @@ public final class ForeignPackageAdapterClassWriter {
         for (Element element : typeElement.getEnclosedElements()) {
             if (element instanceof ExecutableElement && element.getModifiers().contains(Modifier.ABSTRACT) && !element.getModifiers().contains(Modifier.PUBLIC) && !element.getModifiers().contains(Modifier.PRIVATE)) {
                 ExecutableElement executableElement = (ExecutableElement) element;
+                boolean packagePrivate = !element.getModifiers().contains(Modifier.PROTECTED);
+                boolean isGeneric = false;
                 sb.append("    public abstract ");
                 sb.append(TypeUtils.toTypeString((DeclaredType) entity.getTypeElement().asType(), executableElement.getReturnType(), context))
                         .append(" ")
@@ -118,8 +140,10 @@ public final class ForeignPackageAdapterClassWriter {
                         .append("(");
                 List<? extends VariableElement> parameters = executableElement.getParameters();
                 if (!parameters.isEmpty()) {
+                    isGeneric = parameters.get(0).asType().getKind() == TypeKind.TYPEVAR;
                     printParameter(sb, entity, parameters.get(0), context);
                     for (int i = 1; i < parameters.size(); i++) {
+                        isGeneric = isGeneric || parameters.get(i).asType().getKind() == TypeKind.TYPEVAR;
                         sb.append(", ");
                         printParameter(sb, entity, parameters.get(i), context);
                     }
@@ -127,6 +151,27 @@ public final class ForeignPackageAdapterClassWriter {
 
                 sb.append(");");
                 sb.append(NEW_LINE);
+                if (packagePrivate && isGeneric) {
+                    sb.append("    public abstract ");
+                    sb.append(executableElement.getReturnType())
+                            .append(" ")
+                            .append(executableElement.getSimpleName())
+                            .append("(");
+                    if (!parameters.isEmpty()) {
+                        sb.append(parameters.get(0).asType())
+                                .append(" ")
+                                .append(parameters.get(0));
+                        for (int i = 1; i < parameters.size(); i++) {
+                            sb.append(", ");
+                            sb.append(parameters.get(i).asType())
+                                    .append(" ")
+                                    .append(parameters.get(i));
+                        }
+                    }
+
+                    sb.append(");");
+                    sb.append(NEW_LINE);
+                }
             }
         }
 

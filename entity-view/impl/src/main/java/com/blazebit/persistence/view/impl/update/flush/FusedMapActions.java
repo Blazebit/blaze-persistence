@@ -18,7 +18,7 @@ package com.blazebit.persistence.view.impl.update.flush;
 
 import com.blazebit.persistence.view.impl.collection.MapAction;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
-import com.blazebit.persistence.view.impl.proxy.DirtyTracker;
+import com.blazebit.persistence.view.spi.type.DirtyTracker;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 
 import java.util.ArrayList;

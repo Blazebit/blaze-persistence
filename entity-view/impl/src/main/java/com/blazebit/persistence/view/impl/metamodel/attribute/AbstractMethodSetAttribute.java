@@ -16,8 +16,8 @@
 
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
-import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
-import com.blazebit.persistence.view.impl.collection.MapInstantiator;
+import com.blazebit.persistence.view.impl.collection.CollectionInstantiatorImplementor;
+import com.blazebit.persistence.view.impl.collection.MapInstantiatorImplementor;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodPluralAttribute;
 import com.blazebit.persistence.view.impl.metamodel.EmbeddableOwner;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
@@ -36,7 +36,7 @@ import java.util.Set;
  */
 public abstract class AbstractMethodSetAttribute<X, Y> extends AbstractMethodPluralAttribute<X, Set<Y>, Y> implements SetAttribute<X, Y> {
 
-    private final CollectionInstantiator collectionInstantiator;
+    private final CollectionInstantiatorImplementor<?, ?> collectionInstantiator;
 
     public AbstractMethodSetAttribute(ManagedViewTypeImplementor<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int attributeIndex, int dirtyStateIndex, EmbeddableOwner embeddableMapping) {
         super(viewType, mapping, context, attributeIndex, dirtyStateIndex, embeddableMapping);
@@ -49,12 +49,12 @@ public abstract class AbstractMethodSetAttribute<X, Y> extends AbstractMethodPlu
     }
 
     @Override
-    public CollectionInstantiator getCollectionInstantiator() {
+    public CollectionInstantiatorImplementor<?, ?> getCollectionInstantiator() {
         return collectionInstantiator;
     }
 
     @Override
-    public MapInstantiator getMapInstantiator() {
+    public MapInstantiatorImplementor<?, ?> getMapInstantiator() {
         throw new UnsupportedOperationException("Collection attribute");
     }
 

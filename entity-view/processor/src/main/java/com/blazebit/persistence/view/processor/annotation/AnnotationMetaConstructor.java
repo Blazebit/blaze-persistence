@@ -65,8 +65,11 @@ public class AnnotationMetaConstructor implements MetaConstructor {
         }
         this.name = name;
         List<MetaAttribute> parameters = new ArrayList<>(element.getParameters().size());
-        for (VariableElement parameter : element.getParameters()) {
+        List<? extends VariableElement> elementParameters = element.getParameters();
+        for (int i = 0; i < elementParameters.size(); i++) {
+            VariableElement parameter = elementParameters.get(i);
             AnnotationMetaAttribute result = parameter.asType().accept(visitor, parameter);
+            result.setAttributeIndex(i);
             parameters.add(result);
         }
         this.parameters = parameters;

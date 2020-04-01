@@ -16,9 +16,12 @@
 
 package com.blazebit.persistence.view.processor;
 
+import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -31,7 +34,13 @@ public interface MetaEntityView {
 
     boolean isValid();
 
-    boolean needsEntityViewManager();
+    boolean isUpdatable();
+
+    boolean isCreatable();
+
+    boolean isAllSupportDirtyTracking();
+
+    int getMutableAttributeCount();
 
     String getSimpleName();
 
@@ -41,9 +50,19 @@ public interface MetaEntityView {
 
     String getBaseSuperclass();
 
+    String getEntityClass();
+
+    Element getEntityVersionAttribute();
+
+    ExecutableElement getPostCreate();
+
     Map<String, TypeElement> getForeignPackageSuperTypes();
 
+    List<TypeMirror> getForeignPackageSuperTypeVariables();
+
     MetaAttribute getIdMember();
+
+    MetaAttribute getVersionMember();
 
     MetaConstructor getConstructor(String name);
 
@@ -61,6 +80,8 @@ public interface MetaEntityView {
 
     String importType(String fqcn);
 
+    String importTypeExceptMetamodel(String fqcn);
+
     String metamodelImportType(String fqcn);
 
     String implementationImportType(String fqcn);
@@ -68,4 +89,6 @@ public interface MetaEntityView {
     String builderImportType(String fqcn);
 
     TypeElement getTypeElement();
+
+    int getDefaultDirtyMask();
 }

@@ -56,7 +56,7 @@ import java.util.logging.LogManager;
  */
 public abstract class AbstractJaxrsTest {
 
-    private static final int SERVER_START_PORT = 8080;
+    private static final int SERVER_START_PORT = 18080;
     private static final String SERVER_HOST = "localhost";
     private static Server SERVER;
 

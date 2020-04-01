@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
-import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
+import com.blazebit.persistence.view.impl.collection.CollectionInstantiatorImplementor;
 import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 
@@ -31,10 +31,10 @@ import java.util.List;
  */
 public class CollectionTupleListTransformer extends AbstractNonIndexedTupleListTransformer<Collection<Object>> {
 
-    private final CollectionInstantiator collectionInstantiator;
+    private final CollectionInstantiatorImplementor<?, ?> collectionInstantiator;
     private final boolean dirtyTracking;
 
-    public CollectionTupleListTransformer(int[] parentIdPositions, int startIndex, CollectionInstantiator collectionInstantiator, boolean dirtyTracking, TypeConverter<Object, Object> elementConverter) {
+    public CollectionTupleListTransformer(int[] parentIdPositions, int startIndex, CollectionInstantiatorImplementor<?, ?> collectionInstantiator, boolean dirtyTracking, TypeConverter<Object, Object> elementConverter) {
         super(parentIdPositions, startIndex, elementConverter);
         this.collectionInstantiator = collectionInstantiator;
         this.dirtyTracking = dirtyTracking;

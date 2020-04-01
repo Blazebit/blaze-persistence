@@ -1512,30 +1512,12 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
             }
 
             // Then create position assignments for all subtypes
-            for (ManagedViewTypeImpl<? extends X> subtype : orderedInheritanceSubtypes) {
-                // positionAssignment is a Map<TargetOverallConstructorPosition, StaticCreateFactoryParameterPosition>
-                int[] positionAssignment = new int[overallPositionMap.size()];
-                Arrays.fill(positionAssignment, -1);
-
-                index = 0;
-                if (idName != null) {
-                    positionAssignment[index] = index;
-                    index++;
+            for (int i = 0; i < orderedInheritanceSubtypes.length; i++) {
+                ManagedViewTypeImpl<? extends X> subtype = orderedInheritanceSubtypes[i];
+                int[] positionAssignment = new int[subtype.getAttributes().size()];
+                for (AbstractMethodAttribute<?, ?> attribute : (Set<AbstractMethodAttribute<?, ?>>) (Set<?>) subtype.getAttributes()) {
+                    positionAssignment[attribute.getAttributeIndex()] = attributesClosure.get(new AttributeKey(-1, attribute.getName())).getIndex();
                 }
-                // The attribute closure is in the order that we define the static create factory methods
-                for (AttributeKey attributeKey : attributesClosure.keySet()) {
-                    if (!attributeKey.attributeName.equals(idName)) {
-                        // Only consider passing through attributes that exist in a subtype
-                        if (subtype.getAttribute(attributeKey.getAttributeName()) != null) {
-                            Integer position = overallPositionMap.get(attributeKey.attributeName);
-                            if (position != null) {
-                                positionAssignment[position] = index;
-                            }
-                        }
-                        index++;
-                    }
-                }
-
                 positionAssignments.put(subtype, positionAssignment);
             }
             this.overallPositionAssignments = Collections.unmodifiableMap(positionAssignments);
@@ -1753,9 +1735,10 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
             }
 
             for (AbstractMethodAttribute<? super X, ?> attribute : baseType.attributes.values()) {
-                subtypesAttributesClosure.put(new AttributeKey(0, attribute.getName()), new ConstrainedAttribute<AbstractMethodAttribute<? super X, ?>>(null, subtypeIndexArray, attribute));
+                subtypesAttributesClosure.put(new AttributeKey(0, attribute.getName()), new ConstrainedAttribute<AbstractMethodAttribute<? super X, ?>>(null, subtypeIndexArray, attribute, attribute.getAttributeIndex()));
             }
 
+            int attributeIndex = subtypesAttributesClosure.size();
             if (subtypes.length > 0) {
                 // Go through the subtype attributes and put them in the attribute closure maps
                 for (int i = 0; i < subtypes.length; i++) {
@@ -1785,7 +1768,8 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
                                 superTypeAttribute.addSelectionConstraint(inheritanceSubtypeConfiguration.get(subtype), subtypeIndexArray, attribute);
                             }
                         } else {
-                            subtypesAttributesClosure.put(new AttributeKey(subtypeIndex, attribute.getName()), new ConstrainedAttribute<AbstractMethodAttribute<? super X, ?>>(inheritanceSubtypeConfiguration.get(subtype), subtypeIndexArray, attribute));
+                            subtypesAttributesClosure.put(new AttributeKey(subtypeIndex, attribute.getName()), new ConstrainedAttribute<AbstractMethodAttribute<? super X, ?>>(inheritanceSubtypeConfiguration.get(subtype), subtypeIndexArray, attribute, attributeIndex));
+                            attributeIndex++;
                         }
                     }
                     subtypeIndex++;

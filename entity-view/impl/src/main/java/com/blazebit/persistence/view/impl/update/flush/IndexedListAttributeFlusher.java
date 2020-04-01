@@ -25,7 +25,7 @@ import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.accessor.InitialValueAttributeAccessor;
 import com.blazebit.persistence.view.impl.collection.CollectionAction;
 import com.blazebit.persistence.view.impl.collection.CollectionClearAction;
-import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
+import com.blazebit.persistence.view.impl.collection.CollectionInstantiatorImplementor;
 import com.blazebit.persistence.view.impl.collection.ListAction;
 import com.blazebit.persistence.view.impl.collection.ListAddAction;
 import com.blazebit.persistence.view.impl.collection.ListAddAllAction;
@@ -35,8 +35,8 @@ import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.impl.collection.RecordingList;
 import com.blazebit.persistence.view.impl.collection.CollectionRemoveListener;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
-import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
-import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
+import com.blazebit.persistence.view.spi.type.DirtyStateTrackable;
+import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.spi.type.BasicUserType;
 
@@ -57,7 +57,7 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
 
     @SuppressWarnings("unchecked")
     public IndexedListAttributeFlusher(String attributeName, String mapping, Class<?> ownerEntityClass, String ownerIdAttributeName, String ownerMapping, DirtyAttributeFlusher<?, ?, ?> ownerIdFlusher, DirtyAttributeFlusher<?, ?, ?> elementFlusher, boolean supportsCollectionDml, FlushStrategy flushStrategy, AttributeAccessor attributeMapper, InitialValueAttributeAccessor viewAttributeAccessor,
-                                       boolean optimisticLockProtected, boolean collectionUpdatable, boolean viewOnlyDeleteCascaded, boolean jpaProviderDeletesCollection, CollectionRemoveListener cascadeDeleteListener, CollectionRemoveListener removeListener, CollectionInstantiator collectionInstantiator, TypeDescriptor elementDescriptor, InverseFlusher<E> inverseFlusher,
+                                       boolean optimisticLockProtected, boolean collectionUpdatable, boolean viewOnlyDeleteCascaded, boolean jpaProviderDeletesCollection, CollectionRemoveListener cascadeDeleteListener, CollectionRemoveListener removeListener, CollectionInstantiatorImplementor<?, ?> collectionInstantiator, TypeDescriptor elementDescriptor, InverseFlusher<E> inverseFlusher,
                                        InverseRemoveStrategy inverseRemoveStrategy) {
         super(attributeName, mapping, ownerEntityClass, ownerIdAttributeName, ownerMapping, ownerIdFlusher, elementFlusher, supportsCollectionDml, flushStrategy, attributeMapper, viewAttributeAccessor, optimisticLockProtected, collectionUpdatable, viewOnlyDeleteCascaded, jpaProviderDeletesCollection, cascadeDeleteListener, removeListener, collectionInstantiator, elementDescriptor,
                 inverseFlusher, inverseRemoveStrategy);

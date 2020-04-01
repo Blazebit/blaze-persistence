@@ -17,8 +17,8 @@
 package com.blazebit.persistence.view.impl.update;
 
 import com.blazebit.persistence.view.impl.change.DirtyChecker;
-import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
-import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
+import com.blazebit.persistence.view.spi.type.DirtyStateTrackable;
+import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.update.flush.DirtyAttributeFlusher;
 import com.blazebit.persistence.view.impl.update.flush.FetchGraphNode;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;

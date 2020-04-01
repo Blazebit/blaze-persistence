@@ -62,6 +62,7 @@ public class EntityViewUpdateSubviewMultiParentJoinTableTest extends AbstractEnt
 
     @Override
     protected void registerViewTypes(EntityViewConfiguration cfg) {
+        cfg.setProperty(ConfigurationProperties.STATIC_IMPLEMENTATION_SCANNING_DISABLED, "true");
         cfg.setProperty(ConfigurationProperties.UPDATER_DISALLOW_OWNED_UPDATABLE_SUBVIEW, "true");
         cfg.setProperty(ConfigurationProperties.UPDATER_STRICT_CASCADING_CHECK, "true");
         cfg.addEntityView(DocumentIdView.class);

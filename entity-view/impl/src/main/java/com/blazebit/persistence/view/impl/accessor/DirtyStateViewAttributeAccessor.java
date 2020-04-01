@@ -17,10 +17,10 @@
 package com.blazebit.persistence.view.impl.accessor;
 
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
-import com.blazebit.persistence.view.impl.proxy.DirtyTracker;
+import com.blazebit.persistence.view.spi.type.DirtyTracker;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
-import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
-import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
+import com.blazebit.persistence.view.spi.type.DirtyStateTrackable;
+import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 import com.blazebit.persistence.view.metamodel.BasicType;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;

@@ -45,12 +45,12 @@ public class OrderedMapInstantiator extends AbstractMapInstantiator<Map<?, ?>, R
     }
 
     @Override
-    public Map<?, ?> createCollection(int size) {
+    public Map<?, ?> createMap(int size) {
         return new LinkedHashMap<>(size);
     }
 
     @Override
-    public RecordingMap<Map<?, ?>, ?, ?> createRecordingCollection(int size) {
-        return new RecordingMap(createCollection(size), true, allowedSubtypes, parentRequiringUpdateSubtypes, parentRequiringCreateSubtypes, updatable, optimize, strictCascadingCheck);
+    public RecordingMap<Map<?, ?>, ?, ?> createRecordingMap(int size) {
+        return new RecordingMap(createMap(size), true, allowedSubtypes, parentRequiringUpdateSubtypes, parentRequiringCreateSubtypes, updatable, optimize, strictCascadingCheck);
     }
 }

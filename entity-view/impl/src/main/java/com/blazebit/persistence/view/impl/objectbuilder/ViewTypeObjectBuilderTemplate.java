@@ -75,11 +75,10 @@ import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.CorrelatedSingularSubselectTupleListTransformerFactory;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.CorrelatedSubviewJoinTupleTransformerFactory;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.SubviewCorrelator;
-import com.blazebit.persistence.view.impl.proxy.AbstractReflectionInstantiator;
 import com.blazebit.persistence.view.impl.proxy.ConstructorReflectionInstantiator;
 import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
-import com.blazebit.persistence.view.impl.proxy.StaticFactoryReflectionInstantiator;
+import com.blazebit.persistence.view.impl.proxy.AssignmentConstructorReflectionInstantiator;
 import com.blazebit.persistence.view.impl.type.IntegerBasicUserType;
 import com.blazebit.persistence.view.metamodel.Attribute;
 import com.blazebit.persistence.view.metamodel.ListAttribute;
@@ -188,13 +187,16 @@ public class ViewTypeObjectBuilderTemplate<T> {
         if (viewType != null) {
             attributeMap.remove(new ManagedViewTypeImpl.AttributeKey(0, viewType.getIdAttribute().getName()));
         }
-        
+
+        MappingConstructorImpl.InheritanceSubtypeConstructorConfiguration<T> subtypeConstructorConfiguration;
         List<AbstractParameterAttribute<? super T, ?>> parameterAttributeList;
 
         if (mappingConstructor == null) {
+            subtypeConstructorConfiguration = null;
             parameterAttributeList = Collections.emptyList();
         } else {
-            parameterAttributeList = mappingConstructor.getSubtypeConstructorConfiguration(inheritanceSubtypeMappings).getParameterAttributesClosure();
+            subtypeConstructorConfiguration = mappingConstructor.getSubtypeConstructorConfiguration(inheritanceSubtypeMappings);
+            parameterAttributeList = subtypeConstructorConfiguration.getParameterAttributesClosure();
         }
 
         attributeCount += parameterAttributeList.size();
@@ -273,13 +275,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
             lastConstructor = mappingConstructor;
         }
 
-        List<Class<?>> parameterTypes;
 
-        if (parameterAttributeList.isEmpty()) {
-            parameterTypes = inheritanceSubtypeConfiguration.getParameterTypes();
-        } else {
-            parameterTypes = new ArrayList<>(attributeCount + parameterAttributeList.size());
-            parameterTypes.addAll(inheritanceSubtypeConfiguration.getParameterTypes());
+        if (!parameterAttributeList.isEmpty()) {
             // Add tuple element mappers for constructor parameters
             for (ParameterAttribute<? super T, ?> parameterAttribute : parameterAttributeList) {
                 String paramAliasPrefix;
@@ -289,7 +286,6 @@ public class ViewTypeObjectBuilderTemplate<T> {
                     lastConstructor = parameterAttribute.getDeclaringConstructor();
                     paramAliasPrefix = aliasPrefix + "_" + (++subtypeIndex) + "_" + lastConstructor.getDeclaringType().getJavaType().getSimpleName();
                 }
-                parameterTypes.add(parameterAttribute.getConvertedJavaType());
                 EntityType<?> treatType = getTreatType(metamodel, managedViewType, parameterAttribute.getDeclaringType());
                 TupleElementMapperBuilder mapperBuilder = new TupleElementMapperBuilder(0, null, null, paramAliasPrefix, mappingPrefix, idPrefix, treatType, metamodel, ef, mappingList, parameterMappingList, tupleTransformatorFactory);
                 applyMapping((AbstractAttribute<?, ?>) parameterAttribute, attributePath, mapperBuilder, featuresFound, tupleIdDescriptor, viewJpqlMacro, embeddingViewJpqlMacro, ef);
@@ -300,12 +296,22 @@ public class ViewTypeObjectBuilderTemplate<T> {
         if (this.hasSubtypes = inheritanceSubtypeConfiguration.hasSubtypes()) {
             viewTypeBase = managedViewType;
         }
-        Class<?>[] constructorParameterTypes = parameterTypes.toArray(new Class[parameterTypes.size()]);
         // This can only happen for subview mappings
         if (!inheritanceSubtypeConfiguration.getInheritanceSubtypes().contains(managedViewType.getRealType())) {
             this.objectInstantiator = null;
         } else {
-            this.objectInstantiator = createInstantiator(managedViewType, viewTypeBase, inheritanceSubtypeConfiguration.getConfigurationIndex(), mappingConstructor, constructorParameterTypes, evm, inheritanceSubtypeConfiguration.getMutableBasicUserTypes(), inheritanceSubtypeConfiguration.getTypeConverterEntries());
+            Class<?>[] constructorParameterTypes;
+            if (mappingConstructor == null) {
+                constructorParameterTypes = inheritanceSubtypeConfiguration.getParameterTypes().toArray(new Class[inheritanceSubtypeConfiguration.getParameterTypes().size()]);
+            } else {
+                List<Class<?>> parameterTypes = new ArrayList<>(inheritanceSubtypeConfiguration.getParameterTypes().size() +  mappingConstructor.getParameterAttributes().size());
+                parameterTypes.addAll(inheritanceSubtypeConfiguration.getParameterTypes());
+                for (ParameterAttribute<? super T, ?> parameterAttribute :  mappingConstructor.getParameterAttributes()) {
+                    parameterTypes.add(parameterAttribute.getConvertedJavaType());
+                }
+                constructorParameterTypes = parameterTypes.toArray(new Class[parameterTypes.size()]);
+            }
+            this.objectInstantiator = createInstantiator(managedViewType, viewTypeBase, mappingConstructor, constructorParameterTypes, evm, inheritanceSubtypeConfiguration, subtypeConstructorConfiguration);
         }
 
         List<ObjectInstantiator<T>> subtypeInstantiators = new ArrayList<>(inheritanceSubtypeConfiguration.getInheritanceSubtypes().size());
@@ -314,7 +320,18 @@ public class ViewTypeObjectBuilderTemplate<T> {
             if (subtype == managedViewType) {
                 subtypeInstantiators.add(0, objectInstantiator);
             } else {
-                ObjectInstantiator<T> instantiator = createInstantiator((ManagedViewType<? extends T>) subtype, managedViewType, inheritanceSubtypeConfiguration.getConfigurationIndex(), mappingConstructor, constructorParameterTypes, evm, inheritanceSubtypeConfiguration.getMutableBasicUserTypes(), inheritanceSubtypeConfiguration.getTypeConverterEntries());
+                Class<?>[] subtypeConstructorParameterTypes;
+                if (mappingConstructor == null) {
+                    subtypeConstructorParameterTypes = inheritanceSubtypeConfiguration.getParameterTypes().toArray(new Class[inheritanceSubtypeConfiguration.getParameterTypes().size()]);
+                } else {
+                    List<Class<?>> subtypeParameterTypes = new ArrayList<>(inheritanceSubtypeConfiguration.getParameterTypes().size() + subtypeConstructorConfiguration.getParameterAttributesClosure().size());
+                    subtypeParameterTypes.addAll(inheritanceSubtypeConfiguration.getParameterTypes());
+                    for (AbstractParameterAttribute<? super T, ?> parameterAttribute : subtypeConstructorConfiguration.getParameterAttributesClosure()) {
+                        subtypeParameterTypes.add(parameterAttribute.getConvertedJavaType());
+                    }
+                    subtypeConstructorParameterTypes = subtypeParameterTypes.toArray(new Class[subtypeParameterTypes.size()]);
+                }
+                ObjectInstantiator<T> instantiator = createInstantiator((ManagedViewType<? extends T>) subtype, managedViewType, mappingConstructor, subtypeConstructorParameterTypes, evm, inheritanceSubtypeConfiguration, subtypeConstructorConfiguration);
                 subtypeInstantiators.add(instantiator);
             }
         }
@@ -355,12 +372,12 @@ public class ViewTypeObjectBuilderTemplate<T> {
     }
 
     @SuppressWarnings("unchecked")
-    private ObjectInstantiator<T> createInstantiator(ManagedViewType<? extends T> managedViewType, ManagedViewTypeImplementor<T> viewTypeBase, int inheritanceConfigurationIndex, MappingConstructorImpl<? extends T> mappingConstructor, Class<?>[] constructorParameterTypes,
-                                                     EntityViewManagerImpl entityViewManager, List<AbstractReflectionInstantiator.MutableBasicUserTypeEntry> mutableBasicUserTypes, List<AbstractReflectionInstantiator.TypeConverterEntry> typeConverterEntries) {
+    private ObjectInstantiator<T> createInstantiator(ManagedViewType<? extends T> managedViewType, ManagedViewTypeImplementor<T> viewTypeBase, MappingConstructorImpl<? extends T> mappingConstructor, Class<?>[] constructorParameterTypes,
+                                                     EntityViewManagerImpl entityViewManager, ManagedViewTypeImpl.InheritanceSubtypeConfiguration<T> configuration, MappingConstructorImpl.InheritanceSubtypeConstructorConfiguration<T> constructorConfiguration) {
         if (viewTypeBase == null) {
-            return new ConstructorReflectionInstantiator<>((MappingConstructorImpl<T>) mappingConstructor, proxyFactory, (ManagedViewTypeImplementor<T>) managedViewType, viewTypeBase, constructorParameterTypes, entityViewManager, mutableBasicUserTypes, typeConverterEntries);
+            return new ConstructorReflectionInstantiator<>((MappingConstructorImpl<T>) mappingConstructor, proxyFactory, (ManagedViewTypeImplementor<T>) managedViewType, constructorParameterTypes, entityViewManager, configuration);
         } else {
-            return new StaticFactoryReflectionInstantiator<>((MappingConstructorImpl<T>) mappingConstructor, proxyFactory, (ManagedViewTypeImplementor<T>) managedViewType, viewTypeBase, inheritanceConfigurationIndex, constructorParameterTypes, entityViewManager, mutableBasicUserTypes, typeConverterEntries);
+            return new AssignmentConstructorReflectionInstantiator<>((MappingConstructorImpl<T>) mappingConstructor, proxyFactory, (ManagedViewTypeImplementor<T>) managedViewType, constructorParameterTypes, entityViewManager, configuration, constructorConfiguration);
         }
     }
 

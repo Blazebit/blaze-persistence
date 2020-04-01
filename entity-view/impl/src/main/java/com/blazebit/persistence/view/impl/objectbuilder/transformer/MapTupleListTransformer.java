@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
-import com.blazebit.persistence.view.impl.collection.MapInstantiator;
+import com.blazebit.persistence.view.impl.collection.MapInstantiatorImplementor;
 import com.blazebit.persistence.view.impl.collection.RecordingMap;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 
@@ -29,10 +29,10 @@ import java.util.Map;
  */
 public class MapTupleListTransformer extends AbstractIndexedTupleListTransformer<Map<Object, Object>, Object> {
 
-    private final MapInstantiator mapInstantiator;
+    private final MapInstantiatorImplementor<?, ?> mapInstantiator;
     private final boolean dirtyTracking;
 
-    public MapTupleListTransformer(int[] parentIdPositions, int startIndex, int valueStartIndex, MapInstantiator mapInstantiator, boolean dirtyTracking, TypeConverter<Object, Object> keyConverter, TypeConverter<Object, Object> valueConverter) {
+    public MapTupleListTransformer(int[] parentIdPositions, int startIndex, int valueStartIndex, MapInstantiatorImplementor<?, ?> mapInstantiator, boolean dirtyTracking, TypeConverter<Object, Object> keyConverter, TypeConverter<Object, Object> valueConverter) {
         super(parentIdPositions, startIndex, valueStartIndex, keyConverter, valueConverter);
         this.mapInstantiator = mapInstantiator;
         this.dirtyTracking = dirtyTracking;
@@ -41,9 +41,9 @@ public class MapTupleListTransformer extends AbstractIndexedTupleListTransformer
     @Override
     protected Object createCollection() {
         if (dirtyTracking) {
-            return mapInstantiator.createRecordingCollection(0);
+            return mapInstantiator.createRecordingMap(0);
         } else {
-            return mapInstantiator.createCollection(0);
+            return mapInstantiator.createMap(0);
         }
     }
 

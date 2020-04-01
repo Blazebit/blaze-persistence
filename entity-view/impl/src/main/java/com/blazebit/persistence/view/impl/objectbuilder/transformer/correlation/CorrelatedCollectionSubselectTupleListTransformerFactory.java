@@ -20,7 +20,7 @@ import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.view.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
-import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
+import com.blazebit.persistence.view.impl.collection.CollectionInstantiatorImplementor;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformer;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
@@ -33,12 +33,12 @@ import java.util.Map;
  */
 public class CorrelatedCollectionSubselectTupleListTransformerFactory extends AbstractCorrelatedSubselectTupleListTransformerFactory {
 
-    private final CollectionInstantiator collectionInstantiator;
+    private final CollectionInstantiatorImplementor<?, ?> collectionInstantiator;
     private final boolean filterNulls;
     private final boolean recording;
 
     public CorrelatedCollectionSubselectTupleListTransformerFactory(Correlator correlator, EntityViewManagerImpl evm, ManagedViewType<?> viewRootType, String viewRootAlias, ManagedViewType<?> embeddingViewType, String embeddingViewPath, String correlationResult, String correlationBasisExpression, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory,
-                                                                    String attributePath, String[] fetches, int viewRootIndex, int embeddingViewIndex, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, CollectionInstantiator collectionInstantiator, boolean filterNulls, boolean recording) {
+                                                                    String attributePath, String[] fetches, int viewRootIndex, int embeddingViewIndex, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, CollectionInstantiatorImplementor<?, ?> collectionInstantiator, boolean filterNulls, boolean recording) {
         super(correlator, evm, viewRootType, viewRootAlias, embeddingViewType, embeddingViewPath, correlationResult, correlationBasisExpression, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, viewRootIndex, embeddingViewIndex, tupleIndex, correlationBasisType, correlationBasisEntity);
         this.collectionInstantiator = collectionInstantiator;
         this.filterNulls = filterNulls;
