@@ -49,12 +49,12 @@ public class SortedMapInstantiator extends AbstractMapInstantiator<NavigableMap<
     }
 
     @Override
-    public NavigableMap<?, ?> createCollection(int size) {
+    public NavigableMap<?, ?> createMap(int size) {
         return new TreeMap(comparator);
     }
 
     @Override
-    public RecordingNavigableMap<NavigableMap<?, ?>, ?, ?> createRecordingCollection(int size) {
-        return new RecordingNavigableMap(createCollection(size), allowedSubtypes, parentRequiringUpdateSubtypes, parentRequiringCreateSubtypes, updatable, optimize, strictCascadingCheck);
+    public RecordingNavigableMap<NavigableMap<?, ?>, ?, ?> createRecordingMap(int size) {
+        return new RecordingNavigableMap(createMap(size), allowedSubtypes, parentRequiringUpdateSubtypes, parentRequiringCreateSubtypes, updatable, optimize, strictCascadingCheck);
     }
 }

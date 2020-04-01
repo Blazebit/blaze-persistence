@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
-import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
+import com.blazebit.persistence.view.impl.collection.CollectionInstantiatorImplementor;
 import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.impl.objectbuilder.transformator.TupleTransformator;
 import com.blazebit.persistence.view.spi.type.BasicUserTypeStringSupport;
@@ -33,10 +33,10 @@ import java.util.List;
  */
 public class CollectionMultisetTupleListTransformer extends AbstractMultisetTupleListTransformer<Collection<Object>> {
 
-    private final CollectionInstantiator collectionInstantiator;
+    private final CollectionInstantiatorImplementor<?, ?> collectionInstantiator;
     private final boolean dirtyTracking;
 
-    public CollectionMultisetTupleListTransformer(int startIndex, boolean hasSelectOrSubselectFetchedAttributes, TupleTransformator tupleTransformator, TupleTransformer subviewTupleTransformer, BasicUserTypeStringSupport<Object>[] fieldConverters, CollectionInstantiator collectionInstantiator, boolean dirtyTracking, TypeConverter<Object, Object> elementConverter) {
+    public CollectionMultisetTupleListTransformer(int startIndex, boolean hasSelectOrSubselectFetchedAttributes, TupleTransformator tupleTransformator, TupleTransformer subviewTupleTransformer, BasicUserTypeStringSupport<Object>[] fieldConverters, CollectionInstantiatorImplementor<?, ?> collectionInstantiator, boolean dirtyTracking, TypeConverter<Object, Object> elementConverter) {
         super(startIndex, hasSelectOrSubselectFetchedAttributes, tupleTransformator, subviewTupleTransformer, fieldConverters, elementConverter);
         this.collectionInstantiator = collectionInstantiator;
         this.dirtyTracking = dirtyTracking;

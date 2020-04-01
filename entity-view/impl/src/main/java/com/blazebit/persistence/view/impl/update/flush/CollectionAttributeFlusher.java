@@ -27,13 +27,13 @@ import com.blazebit.persistence.view.impl.change.DirtyChecker;
 import com.blazebit.persistence.view.impl.collection.CollectionAction;
 import com.blazebit.persistence.view.impl.collection.CollectionAddAllAction;
 import com.blazebit.persistence.view.impl.collection.CollectionClearAction;
-import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
+import com.blazebit.persistence.view.impl.collection.CollectionInstantiatorImplementor;
 import com.blazebit.persistence.view.impl.collection.CollectionRemoveAllAction;
 import com.blazebit.persistence.view.impl.collection.CollectionRemoveListener;
 import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
-import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
-import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
+import com.blazebit.persistence.view.spi.type.DirtyStateTrackable;
+import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.update.EntityViewUpdater;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.update.UpdateQueryFactory;
@@ -63,13 +63,13 @@ import java.util.Set;
 public class CollectionAttributeFlusher<E, V extends Collection<?>> extends AbstractPluralAttributeFlusher<CollectionAttributeFlusher<E, V>, CollectionAction<?>, RecordingCollection<?, ?>, E, V> implements DirtyAttributeFlusher<CollectionAttributeFlusher<E, V>, E, V> {
 
     private static final Object REMOVED_MARKER = new Object();
-    private final CollectionInstantiator collectionInstantiator;
+    private final CollectionInstantiatorImplementor<?, ?> collectionInstantiator;
     private final InverseFlusher<E> inverseFlusher;
     private final InverseCollectionElementAttributeFlusher.Strategy inverseRemoveStrategy;
 
     @SuppressWarnings("unchecked")
     public CollectionAttributeFlusher(String attributeName, String mapping, Class<?> ownerEntityClass, String ownerIdAttributeName, String ownerMapping, DirtyAttributeFlusher<?, ?, ?> ownerIdFlusher, DirtyAttributeFlusher<?, ?, ?> elementFlusher, boolean supportsCollectionDml, FlushStrategy flushStrategy, AttributeAccessor entityAttributeAccessor,
-                                      InitialValueAttributeAccessor viewAttributeAccessor, boolean optimisticLockProtected, boolean collectionUpdatable, boolean viewOnlyDeleteCascaded, boolean jpaProviderDeletesCollection, CollectionRemoveListener cascadeDeleteListener, CollectionRemoveListener removeListener, CollectionInstantiator collectionInstantiator,
+                                      InitialValueAttributeAccessor viewAttributeAccessor, boolean optimisticLockProtected, boolean collectionUpdatable, boolean viewOnlyDeleteCascaded, boolean jpaProviderDeletesCollection, CollectionRemoveListener cascadeDeleteListener, CollectionRemoveListener removeListener, CollectionInstantiatorImplementor<?, ?> collectionInstantiator,
                                       TypeDescriptor elementDescriptor, InverseFlusher<E> inverseFlusher, InverseRemoveStrategy inverseRemoveStrategy) {
         super(attributeName, mapping, collectionUpdatable || elementDescriptor.shouldFlushMutations(), ownerEntityClass, ownerIdAttributeName, ownerMapping, ownerIdFlusher, elementFlusher, supportsCollectionDml, flushStrategy, entityAttributeAccessor, viewAttributeAccessor, optimisticLockProtected, collectionUpdatable, viewOnlyDeleteCascaded, jpaProviderDeletesCollection,
                 cascadeDeleteListener, removeListener, elementDescriptor);

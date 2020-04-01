@@ -44,9 +44,9 @@ import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor
 import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor.TargetType;
 import com.blazebit.persistence.view.impl.SubqueryProviderHelper;
 import com.blazebit.persistence.view.impl.UpdatableExpressionVisitor;
-import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
+import com.blazebit.persistence.view.impl.collection.CollectionInstantiatorImplementor;
 import com.blazebit.persistence.view.impl.collection.ListCollectionInstantiator;
-import com.blazebit.persistence.view.impl.collection.MapInstantiator;
+import com.blazebit.persistence.view.impl.collection.MapInstantiatorImplementor;
 import com.blazebit.persistence.view.impl.collection.OrderedCollectionInstantiator;
 import com.blazebit.persistence.view.impl.collection.OrderedMapInstantiator;
 import com.blazebit.persistence.view.impl.collection.OrderedSetCollectionInstantiator;
@@ -1028,12 +1028,12 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     public abstract boolean isOptimizeCollectionActionsEnabled();
 
-    public abstract CollectionInstantiator getCollectionInstantiator();
+    public abstract CollectionInstantiatorImplementor<?, ?> getCollectionInstantiator();
 
-    public abstract MapInstantiator getMapInstantiator();
+    public abstract MapInstantiatorImplementor<?, ?> getMapInstantiator();
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    protected final CollectionInstantiator createCollectionInstantiator(MetamodelBuildingContext context, PluralObjectFactory<? extends Collection<?>> collectionFactory, boolean indexed, boolean sorted, boolean ordered, Comparator comparator) {
+    protected final CollectionInstantiatorImplementor<?, ?> createCollectionInstantiator(MetamodelBuildingContext context, PluralObjectFactory<? extends Collection<?>> collectionFactory, boolean indexed, boolean sorted, boolean ordered, Comparator comparator) {
         if (indexed) {
             if (isForcedUnique()) {
                 context.addError("Forcing uniqueness for indexed attribute is invalid at the " + getLocation());
@@ -1065,7 +1065,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    protected final MapInstantiator createMapInstantiator(MetamodelBuildingContext context, PluralObjectFactory<? extends Map<?, ?>> mapFactory, boolean sorted, boolean ordered, Comparator comparator) {
+    protected final MapInstantiatorImplementor<?, ?> createMapInstantiator(MetamodelBuildingContext context, PluralObjectFactory<? extends Map<?, ?>> mapFactory, boolean sorted, boolean ordered, Comparator comparator) {
         if (sorted) {
             return new SortedMapInstantiator((PluralObjectFactory<Map<?, ?>>) mapFactory, getAllowedSubtypes(), getParentRequiringUpdateSubtypes(), getParentRequiringCreateSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled(), context.isStrictCascadingCheck(), comparator);
         } else if (ordered) {

@@ -51,6 +51,8 @@ import com.blazebit.persistence.view.PrePersistEntityListener;
 import com.blazebit.persistence.view.PrePersistListener;
 import com.blazebit.persistence.view.PreRemoveListener;
 import com.blazebit.persistence.view.PreUpdateListener;
+import com.blazebit.persistence.view.SerializableEntityViewManager;
+import com.blazebit.persistence.view.StaticMetamodel;
 import com.blazebit.persistence.view.ViewFilterProvider;
 import com.blazebit.persistence.view.ViewTransition;
 import com.blazebit.persistence.view.change.SingularChangeModel;
@@ -96,8 +98,8 @@ import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContextImpl
 import com.blazebit.persistence.view.impl.metamodel.ViewMetamodelImpl;
 import com.blazebit.persistence.view.impl.metamodel.ViewTypeImpl;
 import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
-import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
-import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
+import com.blazebit.persistence.view.spi.type.DirtyStateTrackable;
+import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
 import com.blazebit.persistence.view.impl.type.DefaultBasicUserTypeRegistry;
 import com.blazebit.persistence.view.impl.update.DefaultUpdateContext;
@@ -133,6 +135,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.TypeVariable;
 import java.util.Arrays;
@@ -154,6 +158,7 @@ import java.util.concurrent.ConcurrentMap;
  */
 public class EntityViewManagerImpl implements EntityViewManager {
 
+    private static final String META_MODEL_CLASS_NAME_SUFFIX = "_";
     private static final Set<ViewTransition> VIEW_TRANSITIONS = EnumSet.allOf(ViewTransition.class);
 
     private final CriteriaBuilderFactory cbf;
@@ -200,7 +205,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
             @Override
             protected EntityViewManager computeValue(Class<?> type) {
                 try {
-                    return (EntityViewManager) type.getField(ProxyFactory.SERIALIZABLE_EVM_FIELD_NAME).get(null);
+                    return (EntityViewManager) type.getField(SerializableEntityViewManager.SERIALIZABLE_EVM_FIELD_NAME).get(null);
                 } catch (Exception e) {
                     throw new IllegalArgumentException(e);
                 }
@@ -209,6 +214,9 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
         boolean validateManagedTypes = !Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.MANAGED_TYPE_VALIDATION_DISABLED)));
         boolean validateExpressions = !Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.EXPRESSION_VALIDATION_DISABLED)));
+        boolean scanStaticBuilder = !Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.STATIC_BUILDER_SCANNING_DISABLED)));
+        boolean scanStaticImplementations = !Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.STATIC_IMPLEMENTATION_SCANNING_DISABLED)));
+        boolean scanStaticMetamodels = !Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.STATIC_METAMODEL_SCANNING_DISABLED)));
 
         Set<String> errors = config.getBootContext().getErrors();
 
@@ -311,6 +319,13 @@ public class EntityViewManagerImpl implements EntityViewManager {
                 l.addPostRollbackListener(javaType, new ViewInstancePostRollbackListener(managedView.getPostRollbackMethod()), managedView.getPostCommitTransitions());
             }
 
+            if (scanStaticImplementations) {
+                proxyFactory.loadImplementation(errors, managedView, this);
+            }
+            if (scanStaticMetamodels) {
+                initializeStaticMetamodel(errors, managedView);
+            }
+
             HashSet<Class<?>> classes = new HashSet<>();
             convertibleManagedViewTypes.put(javaType, classes);
 
@@ -319,6 +334,18 @@ public class EntityViewManagerImpl implements EntityViewManager {
                     classes.add(targetType.getJavaType());
                 }
             }
+        }
+
+        if (!errors.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("There are error(s) in entity views!");
+
+            for (String error : errors) {
+                sb.append('\n');
+                sb.append(error);
+            }
+
+            throw new IllegalArgumentException(sb.toString(), exception);
         }
 
         this.convertibleManagedViewTypes = convertibleManagedViewTypes;
@@ -382,7 +409,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         } else if (Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.PROXY_EAGER_LOADING)))) {
             // Loading template will always involve also loading the proxies, so we use else if
             for (ViewType<?> view : metamodel.getViews()) {
-                proxyFactory.getProxy(this, (ManagedViewTypeImplementor<Object>) view, null);
+                proxyFactory.getProxy(this, (ManagedViewTypeImplementor<Object>) view);
             }
         }
 
@@ -390,6 +417,48 @@ public class EntityViewManagerImpl implements EntityViewManager {
             for (ManagedViewType<?> view : metamodel.getViews()) {
                 getUpdater((ManagedViewTypeImplementor<?>) view, null, null, null);
             }
+        }
+    }
+
+    private static String getMetamodelClassName(Class<?> javaType) {
+        String packageName = javaType.getPackage().getName();
+        String fqcn = javaType.getName();
+        StringBuilder sb = new StringBuilder(fqcn.length() + META_MODEL_CLASS_NAME_SUFFIX.length());
+        sb.append(packageName).append('.');
+        for (int i = packageName.length() + 1; i < fqcn.length(); i++) {
+            final char c = fqcn.charAt(i);
+            if (c != '$') {
+                sb.append(c);
+            }
+        }
+        sb.append(META_MODEL_CLASS_NAME_SUFFIX);
+        return sb.toString();
+    }
+
+    private void initializeStaticMetamodel(Set<String> errors, ManagedViewType<?> managedView) {
+        Class<?> javaType = managedView.getJavaType();
+        Class<?> metamodelClass;
+        try {
+            metamodelClass = javaType.getClassLoader().loadClass(getMetamodelClassName(javaType));
+            StaticMetamodel annotation = metamodelClass.getAnnotation(StaticMetamodel.class);
+            if (annotation != null) {
+                if (annotation.value() != javaType) {
+                    errors.add("The static metamodel class '" + metamodelClass.getName() + "' was expected to be defined for the entity view type '" + javaType.getName() + "' but was defined for: " + annotation.value().getName());
+                    return;
+                }
+            }
+        } catch (ClassNotFoundException e) {
+            // Ignore
+            return;
+        }
+        try {
+            for (MethodAttribute<?, ?> attribute : managedView.getAttributes()) {
+                metamodelClass.getDeclaredField(attribute.getName()).set(null, attribute);
+            }
+        } catch (Exception e) {
+            StringWriter sw = new StringWriter();
+            e.printStackTrace(new PrintWriter(sw));
+            errors.add("The initialization of the static metamodel class '" + metamodelClass.getName() + "' failed: " + sw.toString());
         }
     }
 
@@ -569,7 +638,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         try {
             ViewTypeImpl<T> managedViewType = metamodel.view(entityViewClass);
             if (constructor == null) {
-                Class<? extends T> proxyClass = proxyFactory.getProxy(this, managedViewType, null);
+                Class<? extends T> proxyClass = proxyFactory.getProxy(this, managedViewType);
                 constructor = (Constructor<T>) proxyClass.getConstructor(managedViewType.getIdAttribute().getConvertedJavaType());
                 referenceConstructorCache.put(entityViewClass, constructor);
             }
@@ -619,7 +688,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
                 if (!managedViewType.isCreatable()) {
                     break CREATION;
                 }
-                Class<? extends T> proxyClass = proxyFactory.getProxy(this, managedViewType, null);
+                Class<? extends T> proxyClass = proxyFactory.getProxy(this, managedViewType);
                 constructor = (Constructor<T>) proxyClass.getConstructor(proxyClass, Map.class);
                 createConstructorCache.put(entityViewClass, constructor);
             }
@@ -688,11 +757,11 @@ public class EntityViewManagerImpl implements EntityViewManager {
             Object newValue;
             if (value.getAttribute() instanceof MapAttribute<?, ?, ?>) {
                 if (value.getAttribute().needsDirtyTracker()) {
-                    RecordingMap<?, Object, Object> recordingMap = (RecordingMap<?, Object, Object>) value.getAttribute().getMapInstantiator().createRecordingCollection(0);
+                    RecordingMap<?, Object, Object> recordingMap = (RecordingMap<?, Object, Object>) value.getAttribute().getMapInstantiator().createRecordingMap(0);
                     recordingMap.getDelegate().putAll((Map<Object, Object>) value.getAttribute().getValue(view));
                     newValue = recordingMap;
                 } else {
-                    Map<Object, Object> map = (Map<Object, Object>) value.getAttribute().getMapInstantiator().createCollection(0);
+                    Map<Object, Object> map = (Map<Object, Object>) value.getAttribute().getMapInstantiator().createMap(0);
                     map.putAll((Map<Object, Object>) value.getAttribute().getValue(view));
                     newValue = map;
                 }
@@ -1173,7 +1242,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
 
     public EntityViewManager getSerializableDelegate(Class<?> entityViewClass) {
-        return serializableDelegates.get(proxyFactory.getProxy(this, metamodel.managedView(entityViewClass), null));
+        return serializableDelegates.get(proxyFactory.getProxy(this, metamodel.managedView(entityViewClass)));
     }
 
     /**

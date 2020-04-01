@@ -23,7 +23,7 @@ import java.util.Collection;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public abstract class AbstractCollectionInstantiator implements CollectionInstantiator {
+public abstract class AbstractCollectionInstantiator<C extends Collection<?>, R extends RecordingCollection<? extends C, ?>> implements CollectionInstantiatorImplementor<C, R> {
 
     private final PluralObjectFactory<Collection<?>> collectionFactory;
 

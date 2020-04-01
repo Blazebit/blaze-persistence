@@ -17,18 +17,23 @@
 package com.blazebit.persistence.view.processor;
 
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * @author Christian Beikov
@@ -87,7 +92,7 @@ public final class TypeUtils {
         assert element != null;
         assert annotations != null;
 
-        List<String> annotationClassNames = new ArrayList<>();
+        Collection<String> annotationClassNames = new HashSet<>();
         Collections.addAll(annotationClassNames, annotations);
 
         List<? extends AnnotationMirror> annotationMirrors = element.getAnnotationMirrors();
@@ -97,6 +102,23 @@ public final class TypeUtils {
             }
         }
         return false;
+    }
+
+    public static List<AnnotationMirror> getAnnotationMirrors(Element element, String... annotations) {
+        assert element != null;
+        assert annotations != null;
+
+        Collection<String> annotationClassNames = new HashSet<>();
+        Collections.addAll(annotationClassNames, annotations);
+
+        List<AnnotationMirror> found = new ArrayList<>(annotations.length);
+        List<? extends AnnotationMirror> annotationMirrors = element.getAnnotationMirrors();
+        for (AnnotationMirror mirror : annotationMirrors) {
+            if (annotationClassNames.contains(mirror.getAnnotationType().toString())) {
+                found.add(mirror);
+            }
+        }
+        return found;
     }
 
     public static AnnotationMirror getAnnotationMirror(Element element, String fqcn) {
@@ -159,5 +181,84 @@ public final class TypeUtils {
         sb.insert(0, parent.toString());
         sb.append(element.getSimpleName().toString());
         return sb.toString();
+    }
+
+    public static Collection<Element> getAllMembers(TypeElement element, Context context) {
+        List<TypeMirror> superClasses = new ArrayList<>();
+        superClasses.add(element.asType());
+        Map<String, Element> members = new TreeMap<>();
+        for (int i = 0; i < superClasses.size(); i++) {
+            TypeMirror superClass = superClasses.get(i);
+            final Element superClassElement = ((DeclaredType) superClass).asElement();
+            for (Element enclosedElement : superClassElement.getEnclosedElements()) {
+                String name = enclosedElement.getSimpleName().toString();
+                if ("<init>".equals(name)) {
+                    if (element == superClassElement) {
+                        name = enclosedElement.toString();
+                    } else {
+                        continue;
+                    }
+                }
+                Element old = members.put(name, enclosedElement);
+                if (old != null && context.getTypeUtils().isAssignable(old.getEnclosingElement().asType(), superClass)) {
+                    members.put(name, old);
+                }
+            }
+
+            superClass = ((TypeElement) superClassElement).getSuperclass();
+            if (superClass.getKind() == TypeKind.DECLARED) {
+                superClasses.add(superClass);
+            }
+            superClasses.addAll(((TypeElement) superClassElement).getInterfaces());
+        }
+        return members.values();
+    }
+
+    public static <T> T getAnnotationValue(AnnotationMirror mirror, String name) {
+        for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : mirror.getElementValues().entrySet()) {
+            if (name.equals(entry.getKey().getSimpleName().toString())) {
+                return (T) entry.getValue().getValue();
+            }
+        }
+        return null;
+    }
+
+    public static String getType(Element element, Context context) {
+        DeclaredType entityDeclaredType = (DeclaredType) element.asType();
+        TypeElement returnedElement = (TypeElement) context.getTypeUtils().asElement(entityDeclaredType);
+        return returnedElement.getQualifiedName().toString();
+    }
+
+    public static String getRealType(Element element, Context context) {
+        DeclaredType entityDeclaredType = (DeclaredType) element.asType();
+        if (element instanceof ExecutableElement) {
+            return toTypeString(entityDeclaredType, ((ExecutableElement) element).getReturnType(), context);
+        } else {
+            return toTypeString(entityDeclaredType,element.asType(), context);
+        }
+    }
+
+    public static void forEachSuperType(TypeElement element, TypeVisitor visitor) {
+        visitor.visit(element);
+        for (TypeMirror interfaceMirror : element.getInterfaces()) {
+            forEachSuperType((TypeElement) ((DeclaredType) interfaceMirror).asElement(), visitor);
+        }
+        forEachSuperType((TypeElement) ((DeclaredType) element.getSuperclass()).asElement(), visitor);
+    }
+
+    public static String getPackageName(Element element) {
+        Element parent = element.getEnclosingElement();
+        while (parent.getKind() != ElementKind.PACKAGE) {
+            parent = parent.getEnclosingElement();
+        }
+        return parent.toString();
+    }
+
+    /**
+     * @author Christian Beikov
+     * @since 1.5.0
+     */
+    public static interface TypeVisitor {
+        void visit(TypeElement element);
     }
 }

@@ -25,7 +25,7 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class OrderedSetCollectionInstantiator  extends AbstractCollectionInstantiator {
+public class OrderedSetCollectionInstantiator  extends AbstractCollectionInstantiator<Set<?>, RecordingSet<?, ?>> {
 
     private final Set<Class<?>> allowedSubtypes;
     private final Set<Class<?>> parentRequiringUpdateSubtypes;

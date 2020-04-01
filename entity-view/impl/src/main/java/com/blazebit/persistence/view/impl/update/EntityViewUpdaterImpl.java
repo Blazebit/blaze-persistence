@@ -34,9 +34,9 @@ import com.blazebit.persistence.view.impl.accessor.Accessors;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.accessor.InitialValueAttributeAccessor;
 import com.blazebit.persistence.view.impl.change.DirtyChecker;
-import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
+import com.blazebit.persistence.view.impl.collection.CollectionInstantiatorImplementor;
 import com.blazebit.persistence.view.impl.collection.CollectionRemoveListener;
-import com.blazebit.persistence.view.impl.collection.MapInstantiator;
+import com.blazebit.persistence.view.impl.collection.MapInstantiatorImplementor;
 import com.blazebit.persistence.view.impl.collection.RecordingList;
 import com.blazebit.persistence.view.impl.collection.RecordingMap;
 import com.blazebit.persistence.view.impl.entity.CreateOnlyViewToEntityMapper;
@@ -60,8 +60,8 @@ import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
 import com.blazebit.persistence.view.impl.metamodel.BasicTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.ViewTypeImplementor;
-import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
-import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
+import com.blazebit.persistence.view.spi.type.DirtyStateTrackable;
+import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.update.flush.BasicAttributeFlusher;
 import com.blazebit.persistence.view.impl.update.flush.CollectionAttributeFlusher;
 import com.blazebit.persistence.view.impl.update.flush.CompositeAttributeFlusher;
@@ -820,7 +820,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                 MapViewToEntityMapper mapper = new SimpleMapViewToEntityMapper(keyDescriptor.getViewToEntityMapper(), elementDescriptor.getViewToEntityMapper());
                 MapViewToEntityMapper loadOnlyMapper = new SimpleMapViewToEntityMapper(keyDescriptor.getLoadOnlyViewToEntityMapper(), elementDescriptor.getLoadOnlyViewToEntityMapper());
 
-                MapInstantiator<?, ?> mapInstantiator = attribute.getMapInstantiator();
+                MapInstantiatorImplementor<?, ?> mapInstantiator = attribute.getMapInstantiator();
                 return new MapAttributeFlusher<Object, RecordingMap<Map<?, ?>, ?, ?>>(
                         attributeName,
                         attributeMapping,
@@ -855,7 +855,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                 InverseFlusher<Object> inverseFlusher = InverseFlusher.forAttribute(evm, viewType, attribute, elementDescriptor, owner, ownerMapping);
                 InverseRemoveStrategy inverseRemoveStrategy = attribute.getInverseRemoveStrategy();
 
-                CollectionInstantiator collectionInstantiator = attribute.getCollectionInstantiator();
+                CollectionInstantiatorImplementor<?, ?> collectionInstantiator = attribute.getCollectionInstantiator();
                 if (pluralAttribute.isIndexed()) {
                     return new IndexedListAttributeFlusher<Object, RecordingList<List<?>>>(
                             attributeName,

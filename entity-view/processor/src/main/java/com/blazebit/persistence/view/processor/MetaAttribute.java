@@ -30,13 +30,7 @@ public interface MetaAttribute {
 
     void appendImplementationAttributeDeclarationString(StringBuilder sb);
 
-    void appendImplementationAttributeGetterAndSetterString(StringBuilder sb);
-
-    void appendImplementationAttributeConstructorParameterString(StringBuilder sb);
-
-    void appendImplementationAttributeConstructorAssignmentString(StringBuilder sb);
-
-    void appendImplementationAttributeConstructorAssignmentDefaultString(StringBuilder sb);
+    void appendImplementationAttributeGetterAndSetterString(StringBuilder sb, Context context);
 
     void appendBuilderAttributeDeclarationString(StringBuilder sb);
 
@@ -46,7 +40,23 @@ public interface MetaAttribute {
 
     Element getElement();
 
-    String getDefaultValue();
+    MappingKind getKind();
+
+    String getMapping();
+
+    int getAttributeIndex();
+
+    void setAttributeIndex(int attributeIndex);
+
+    int getDirtyStateIndex();
+
+    void setDirtyStateIndex(int attributeIndex);
+
+    Element getSetter();
+
+    boolean supportsDirtyTracking();
+
+    void appendDefaultValue(StringBuilder sb, boolean forCreateConstructor, ImportContext importContext);
 
     String getMetaType();
 
@@ -63,4 +73,8 @@ public interface MetaAttribute {
     MetaEntityView getHostingEntity();
 
     boolean isSubview();
+
+    boolean isFlatSubview();
+
+    boolean isMutable();
 }

@@ -72,6 +72,9 @@ public class EntityViewConfigurationImpl implements EntityViewConfiguration {
         properties.put(ConfigurationProperties.UPDATER_DISALLOW_OWNED_UPDATABLE_SUBVIEW, "true");
         properties.put(ConfigurationProperties.UPDATER_STRICT_CASCADING_CHECK, "true");
         properties.put(ConfigurationProperties.UPDATER_ERROR_ON_INVALID_PLURAL_SETTER, "false");
+        properties.put(ConfigurationProperties.STATIC_BUILDER_SCANNING_DISABLED, "false");
+        properties.put(ConfigurationProperties.STATIC_IMPLEMENTATION_SCANNING_DISABLED, "false");
+        properties.put(ConfigurationProperties.STATIC_METAMODEL_SCANNING_DISABLED, "false");
 
         typeTestValues.put(boolean.class, true);
         typeTestValues.put(byte.class, Byte.MAX_VALUE);

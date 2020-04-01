@@ -32,7 +32,7 @@ import com.blazebit.persistence.view.ViewListener;
 import com.blazebit.persistence.view.ViewTransition;
 import com.blazebit.persistence.view.ViewTransitionListener;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
-import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
+import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.tx.TransactionHelper;
 import com.blazebit.persistence.view.impl.update.listener.ViewAndEntityPostPersistListenerImpl;
 import com.blazebit.persistence.view.impl.update.listener.ViewAndEntityPrePersistListenerImpl;

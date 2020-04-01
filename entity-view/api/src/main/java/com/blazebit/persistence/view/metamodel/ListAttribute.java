@@ -16,6 +16,9 @@
 
 package com.blazebit.persistence.view.metamodel;
 
+import com.blazebit.persistence.view.CollectionInstantiator;
+import com.blazebit.persistence.view.RecordingContainer;
+
 import java.util.List;
 
 /**
@@ -28,4 +31,12 @@ import java.util.List;
  */
 public interface ListAttribute<X, E> extends PluralAttribute<X, List<E>, E> {
 
+    /**
+     * Returns the collection instantiator for this attribute.
+     *
+     * @param <R> The recording collection type
+     * @return The collection instantiator
+     * @since 1.5.0
+     */
+    public <R extends List<E> & RecordingContainer<? extends List<E>>> CollectionInstantiator<List<E>, R> getCollectionInstantiator();
 }

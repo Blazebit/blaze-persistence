@@ -198,6 +198,33 @@ public final class ConfigurationProperties {
      */
     public static final String PAGINATION_FORCE_USE_KEYSET = "com.blazebit.persistence.view.pagination.force_use_keyset";
 
+    /**
+     * A boolean flag to make it possible to disable the scanning for static builders annotated with {@link StaticBuilder}.
+     * By default the scanning is enabled i.e. the default value is <code>false</code>.
+     * Valid values for this property are <code>true</code> or <code>false</code>.
+     *
+     * @since 1.5.0
+     */
+    public static final String STATIC_BUILDER_SCANNING_DISABLED = "com.blazebit.persistence.view.static_builder_scanning_disabled";
+
+    /**
+     * A boolean flag to make it possible to disable the scanning for static implementations annotated with {@link StaticImplementation}.
+     * By default the scanning is enabled i.e. the default value is <code>false</code>.
+     * Valid values for this property are <code>true</code> or <code>false</code>.
+     *
+     * @since 1.5.0
+     */
+    public static final String STATIC_IMPLEMENTATION_SCANNING_DISABLED = "com.blazebit.persistence.view.static_implementation_scanning_disabled";
+
+    /**
+     * A boolean flag to make it possible to disable the scanning for static metmodels annotated with {@link StaticMetamodel}.
+     * By default the scanning is enabled i.e. the default value is <code>false</code>.
+     * Valid values for this property are <code>true</code> or <code>false</code>.
+     *
+     * @since 1.5.0
+     */
+    public static final String STATIC_METAMODEL_SCANNING_DISABLED = "com.blazebit.persistence.view.static_metamodel_scanning_disabled";
+
     private ConfigurationProperties() {
     }
 }

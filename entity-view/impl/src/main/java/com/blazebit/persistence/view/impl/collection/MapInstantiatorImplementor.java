@@ -14,34 +14,25 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl.proxy;
+package com.blazebit.persistence.view.impl.collection;
 
-import com.blazebit.persistence.view.spi.type.BasicDirtyTracker;
+import com.blazebit.persistence.view.MapInstantiator;
+
+import java.util.Map;
 
 /**
+ *
  * @author Christian Beikov
  * @since 1.2.0
  */
-@SuppressWarnings("checkstyle:methodname")
-public interface DirtyTracker extends BasicDirtyTracker {
-
-    public boolean $$_isDirty(int attributeIndex);
-
-    public <T> boolean $$_copyDirty(T[] source, T[] target);
+public interface MapInstantiatorImplementor<C extends Map<?, ?>, R extends RecordingMap<C, ?, ?>> extends MapInstantiator<C, R> {
 
     /**
-     * Sets the dirty state of the object.
+     * Creates a map for the JPA model.
      *
-     * @param dirty true for dirty, false otherwise
+     * @param size The size estimate
+     * @return the map
      */
-    public void $$_setDirty(long[] dirty);
-
-    public long[] $$_resetDirty();
-
-    public long[] $$_getDirty();
-
-    public long $$_getSimpleDirty();
-
-    public void $$_replaceAttribute(Object oldObject, int attributeIndex, Object newObject);
+    public Map<?, ?> createJpaMap(int size);
 
 }

@@ -23,6 +23,7 @@ import com.blazebit.persistence.view.metamodel.ParameterAttribute;
 import javax.persistence.metamodel.ManagedType;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -84,8 +85,9 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
             overallParameters.addAll((List<AbstractParameterAttribute<? super X, ?>>) (List<?>) constructor.getParameterAttributes());
         }
 
-        this.overallInheritanceParametersAttributesClosureConfiguration = new InheritanceSubtypeConstructorConfiguration<>(overallParameters);
-        this.defaultInheritanceParametersAttributesClosureConfiguration = new InheritanceSubtypeConstructorConfiguration<>(createParameterAttributesClosure(viewType.getDefaultInheritanceSubtypeConfiguration().getInheritanceSubtypeConfiguration(), context), overallInheritanceParametersAttributesClosureConfiguration);
+        Map<ManagedViewType<? extends X>, String> defaultInheritanceSubtypeConfiguration = viewType.getDefaultInheritanceSubtypeConfiguration().getInheritanceSubtypeConfiguration();
+        this.overallInheritanceParametersAttributesClosureConfiguration = new InheritanceSubtypeConstructorConfiguration<>(this, viewType.getOverallInheritanceSubtypeConfiguration().getInheritanceSubtypeConfiguration().keySet(), overallParameters);
+        this.defaultInheritanceParametersAttributesClosureConfiguration = new InheritanceSubtypeConstructorConfiguration<>(this, defaultInheritanceSubtypeConfiguration.keySet(), createParameterAttributesClosure(defaultInheritanceSubtypeConfiguration, context), overallInheritanceParametersAttributesClosureConfiguration);
 
         Map<Map<ManagedViewType<? extends X>, String>, InheritanceSubtypeConstructorConfiguration<X>> inheritanceSubtypeParameterAttributesClosureConfigurations = new HashMap<>();
 
@@ -94,7 +96,7 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
             if (subtypes == viewType.getDefaultInheritanceSubtypeConfiguration()) {
                 inheritanceSubtypeParameterAttributesClosureConfigurations.put(subtypes, defaultInheritanceParametersAttributesClosureConfiguration);
             } else {
-                inheritanceSubtypeParameterAttributesClosureConfigurations.put(subtypes, new InheritanceSubtypeConstructorConfiguration<>(createParameterAttributesClosure(subtypes, context), overallInheritanceParametersAttributesClosureConfiguration));
+                inheritanceSubtypeParameterAttributesClosureConfigurations.put(subtypes, new InheritanceSubtypeConstructorConfiguration<>(this, subtypes.keySet(), createParameterAttributesClosure(subtypes, context), overallInheritanceParametersAttributesClosureConfiguration));
             }
         }
 
@@ -153,48 +155,56 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
      */
     public static class InheritanceSubtypeConstructorConfiguration<X> {
         private final List<AbstractParameterAttribute<? super X, ?>> parameterAttributesClosure;
-        private final int[] overallPositionAssignment;
+        private final Map<ManagedViewTypeImplementor<? extends X>, int[]> positionAssignments;
 
-        public InheritanceSubtypeConstructorConfiguration(List<AbstractParameterAttribute<? super X, ?>> parameterAttributesClosure) {
-            this(parameterAttributesClosure, null);
+        public InheritanceSubtypeConstructorConfiguration(MappingConstructorImpl<X> constructor, Collection<ManagedViewType<? extends X>> managedViewTypes, List<AbstractParameterAttribute<? super X, ?>> parameterAttributesClosure) {
+            this(constructor, managedViewTypes, parameterAttributesClosure, null);
         }
 
-        public InheritanceSubtypeConstructorConfiguration(List<AbstractParameterAttribute<? super X, ?>> parameterAttributesClosure, InheritanceSubtypeConstructorConfiguration<X> overallConfiguration) {
+        public InheritanceSubtypeConstructorConfiguration(MappingConstructorImpl<X> constructor, Collection<ManagedViewType<? extends X>> managedViewTypes, List<AbstractParameterAttribute<? super X, ?>> parameterAttributesClosure, InheritanceSubtypeConstructorConfiguration<X> overallConfiguration) {
             this.parameterAttributesClosure = Collections.unmodifiableList(parameterAttributesClosure);
-            int[] positionAssignment;
+            List<AbstractParameterAttribute<? super X, ?>> parameterAttributesClosureToUse;
             if (overallConfiguration == null) {
-                positionAssignment = new int[parameterAttributesClosure.size()];
-                int index = 0;
-                for (AbstractParameterAttribute<? super X, ?> parameter : parameterAttributesClosure) {
-                    positionAssignment[index] = index;
-                    index++;
-                }
+                parameterAttributesClosureToUse = parameterAttributesClosure;
             } else {
-                Map<AbstractParameterAttribute<? super X, ?>, Integer> positionMap = new IdentityHashMap<>(parameterAttributesClosure.size());
-                int index = 0;
-                for (AbstractParameterAttribute<? super X, ?> parameter : parameterAttributesClosure) {
-                    positionMap.put(parameter, index);
-                    index++;
-                }
-
-                positionAssignment = new int[overallConfiguration.parameterAttributesClosure.size()];
-                index = 0;
-                for (AbstractParameterAttribute<? super X, ?> parameter : overallConfiguration.parameterAttributesClosure) {
-                    Integer position = positionMap.get(parameter);
-                    positionAssignment[index] = position == null ? -1 : position;
-                    index++;
-                }
-
+                parameterAttributesClosureToUse = overallConfiguration.parameterAttributesClosure;
             }
-            this.overallPositionAssignment = positionAssignment;
+            Map<AbstractParameterAttribute<? super X, ?>, Integer> overallPositionMap = new IdentityHashMap<>(parameterAttributesClosureToUse.size());
+            int index = 0;
+            for (AbstractParameterAttribute<? super X, ?> parameter : parameterAttributesClosureToUse) {
+                overallPositionMap.put(parameter, index);
+                index++;
+            }
+
+            Map<ManagedViewTypeImplementor<? extends X>, int[]> positionAssignments = new HashMap<>();
+
+            // Then create position assignments for all subtypes
+            for (ManagedViewType<? extends X> subtype : managedViewTypes) {
+                MappingConstructor<? extends X> subtypeConstructor;
+                if (constructor.getDeclaringType() == subtype) {
+                    subtypeConstructor = constructor;
+                } else {
+                    subtypeConstructor = subtype.getConstructor(constructor.getName());
+                }
+                int[] positionAssignment = new int[subtypeConstructor.getParameterAttributes().size()];
+
+                index = 0;
+                for (ParameterAttribute<?, ?> parameter : subtypeConstructor.getParameterAttributes()) {
+                    positionAssignment[index] = overallPositionMap.get(parameter);
+                    index++;
+                }
+                positionAssignments.put((ManagedViewTypeImplementor<? extends X>) subtype, positionAssignment);
+            }
+
+            this.positionAssignments = Collections.unmodifiableMap(positionAssignments);
         }
 
         public List<AbstractParameterAttribute<? super X, ?>> getParameterAttributesClosure() {
             return parameterAttributesClosure;
         }
 
-        public int[] getOverallPositionAssignment() {
-            return overallPositionAssignment;
+        public int[] getOverallPositionAssignment(ManagedViewTypeImplementor<? extends X> subtype) {
+            return positionAssignments.get(subtype);
         }
     }
 

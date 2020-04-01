@@ -45,12 +45,12 @@ public class UnorderedMapInstantiator extends AbstractMapInstantiator<Map<?, ?>,
     }
 
     @Override
-    public Map<?, ?> createCollection(int size) {
+    public Map<?, ?> createMap(int size) {
         return new HashMap<>(size);
     }
 
     @Override
-    public RecordingMap<Map<?, ?>, ?, ?> createRecordingCollection(int size) {
-        return new RecordingMap(createCollection(size), false, allowedSubtypes, parentRequiringUpdateSubtypes, parentRequiringCreateSubtypes, updatable, optimize, strictCascadingCheck);
+    public RecordingMap<Map<?, ?>, ?, ?> createRecordingMap(int size) {
+        return new RecordingMap(createMap(size), false, allowedSubtypes, parentRequiringUpdateSubtypes, parentRequiringCreateSubtypes, updatable, optimize, strictCascadingCheck);
     }
 }

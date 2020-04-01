@@ -14,21 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl.proxy;
+package com.blazebit.persistence.view.processor;
 
 /**
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.5.0
  */
-@SuppressWarnings("checkstyle:methodname")
-public interface DirtyStateTrackable extends MutableStateTrackable {
+public enum MappingKind {
 
-    /**
-     * Null if not partially updatable.
-     * The order is the same as the metamodel attribute order of updatable attributes.
-     * 
-     * @return
-     */
-    public Object[] $$_getInitialState();
-
+    MAPPING,
+    CORRELATED,
+    PARAMETER,
+    SUBQUERY;
 }

@@ -20,17 +20,17 @@ import com.blazebit.persistence.view.ConvertOption;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.impl.accessor.Accessors;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
-import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
-import com.blazebit.persistence.view.impl.collection.MapInstantiator;
+import com.blazebit.persistence.view.impl.collection.CollectionInstantiatorImplementor;
+import com.blazebit.persistence.view.impl.collection.MapInstantiatorImplementor;
 import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.impl.collection.RecordingMap;
 import com.blazebit.persistence.view.impl.metamodel.AbstractAttribute;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.proxy.ConvertReflectionInstantiator;
-import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
-import com.blazebit.persistence.view.impl.proxy.DirtyTracker;
-import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
+import com.blazebit.persistence.view.spi.type.DirtyStateTrackable;
+import com.blazebit.persistence.view.spi.type.DirtyTracker;
+import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
 import com.blazebit.persistence.view.metamodel.Attribute;
@@ -223,10 +223,10 @@ public class ViewMapper<S, T> {
                     throw inconvertible("Attribute '" + targetAttribute.getName() + "' from target type has a different key type than in source type!", sourceType, targetType);
                 }
 
-                MapInstantiator<?, ?> mapInstantiator = ((AbstractAttribute<?, ?>) targetAttribute).getMapInstantiator();
+                MapInstantiatorImplementor<?, ?> mapInstantiator = ((AbstractAttribute<?, ?>) targetAttribute).getMapInstantiator();
                 return new MapObjectMapper(Accessors.forViewAttribute(null, sourceAttribute, true), needsDirtyTracker, !markNew, mapInstantiator, keyMapper, valueMapper);
             } else {
-                CollectionInstantiator collectionInstantiator = ((AbstractAttribute<?, ?>) targetAttribute).getCollectionInstantiator();
+                CollectionInstantiatorImplementor<?, ?> collectionInstantiator = ((AbstractAttribute<?, ?>) targetAttribute).getCollectionInstantiator();
                 return new CollectionObjectMapper(Accessors.forViewAttribute(null, sourceAttribute, true), needsDirtyTracker, !markNew, collectionInstantiator, valueMapper);
             }
         } else if (targetAttribute.isSubview()) {
@@ -436,11 +436,11 @@ public class ViewMapper<S, T> {
         private final AttributeAccessor accessor;
         private final boolean recording;
         private final boolean copyDirtyState;
-        private final MapInstantiator<?, ?> mapInstantiator;
+        private final MapInstantiatorImplementor<?, ?> mapInstantiator;
         private final ViewMapper<Object, Object> keyMapper;
         private final ViewMapper<Object, Object> valueMapper;
 
-        public MapObjectMapper(AttributeAccessor accessor, boolean recording, boolean copyDirtyState, MapInstantiator<?, ?> mapInstantiator, ViewMapper<Object, Object> keyMapper, ViewMapper<Object, Object> valueMapper) {
+        public MapObjectMapper(AttributeAccessor accessor, boolean recording, boolean copyDirtyState, MapInstantiatorImplementor<?, ?> mapInstantiator, ViewMapper<Object, Object> keyMapper, ViewMapper<Object, Object> valueMapper) {
             this.accessor = accessor;
             this.recording = recording;
             this.copyDirtyState = copyDirtyState;
@@ -457,7 +457,7 @@ public class ViewMapper<S, T> {
             if (map != null) {
                 Map<Object, Object> objectMapping = null;
                 if (recording) {
-                    RecordingMap<?, ?, ?> recordingMap = mapInstantiator.createRecordingCollection(map.size());
+                    RecordingMap<?, ?, ?> recordingMap = mapInstantiator.createRecordingMap(map.size());
                     newMap = (Map<Object, Object>) recordingMap;
                     if (copyDirtyState) {
                         backingMap = (Map<Object, Object>) recordingMap.getDelegate();
@@ -479,7 +479,7 @@ public class ViewMapper<S, T> {
                         backingMap = newMap;
                     }
                 } else {
-                    newMap = backingMap = (Map<Object, Object>) mapInstantiator.createCollection(map.size());
+                    newMap = backingMap = (Map<Object, Object>) mapInstantiator.createMap(map.size());
                 }
 
                 if (keyMapper != null && valueMapper != null) {
@@ -540,10 +540,10 @@ public class ViewMapper<S, T> {
         private final AttributeAccessor accessor;
         private final boolean recording;
         private final boolean copyDirtyState;
-        private final CollectionInstantiator collectionInstantiator;
+        private final CollectionInstantiatorImplementor<?, ?> collectionInstantiator;
         private final ViewMapper<Object, Object> valueMapper;
 
-        public CollectionObjectMapper(AttributeAccessor accessor, boolean recording, boolean copyDirtyState, CollectionInstantiator collectionInstantiator, ViewMapper<Object, Object> valueMapper) {
+        public CollectionObjectMapper(AttributeAccessor accessor, boolean recording, boolean copyDirtyState, CollectionInstantiatorImplementor<?, ?> collectionInstantiator, ViewMapper<Object, Object> valueMapper) {
             this.accessor = accessor;
             this.recording = recording;
             this.copyDirtyState = copyDirtyState;

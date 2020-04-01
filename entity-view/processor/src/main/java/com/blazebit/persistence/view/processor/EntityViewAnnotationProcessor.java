@@ -24,7 +24,6 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedOptions;
 import javax.lang.model.SourceVersion;
-import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
@@ -37,13 +36,16 @@ import java.util.Set;
  * @since 1.5.0
  */
 @SupportedAnnotationTypes({
-        "com.blazebit.persistence.view.EntityView"
+        Constants.ENTITY_VIEW
 })
 @SupportedOptions({
         EntityViewAnnotationProcessor.DEBUG_OPTION,
         EntityViewAnnotationProcessor.ADD_GENERATION_DATE,
         EntityViewAnnotationProcessor.ADD_GENERATED_ANNOTATION,
         EntityViewAnnotationProcessor.ADD_SUPPRESS_WARNINGS_ANNOTATION,
+        EntityViewAnnotationProcessor.STRICT_CASCADING_CHECK,
+        EntityViewAnnotationProcessor.DEFAULT_VERSION_ATTRIBUTE_NAME,
+        EntityViewAnnotationProcessor.DEFAULT_VERSION_ATTRIBUTE_TYPE,
 })
 public class EntityViewAnnotationProcessor extends AbstractProcessor {
 
@@ -51,6 +53,9 @@ public class EntityViewAnnotationProcessor extends AbstractProcessor {
     public static final String ADD_GENERATION_DATE = "addGenerationDate";
     public static final String ADD_GENERATED_ANNOTATION = "addGeneratedAnnotation";
     public static final String ADD_SUPPRESS_WARNINGS_ANNOTATION = "addSuppressWarningsAnnotation";
+    public static final String STRICT_CASCADING_CHECK = "strictCascadingCheck";
+    public static final String DEFAULT_VERSION_ATTRIBUTE_NAME = "defaultVersionAttributeName";
+    public static final String DEFAULT_VERSION_ATTRIBUTE_TYPE = "defaultVersionAttributeType";
 
     private Context context;
 
@@ -66,19 +71,21 @@ public class EntityViewAnnotationProcessor extends AbstractProcessor {
         context = new Context(processingEnvironment);
         context.logMessage(Diagnostic.Kind.NOTE, "Blaze-Persistence Entity-View Annotation Processor");
 
-        String tmp = processingEnvironment.getOptions().get(ADD_GENERATED_ANNOTATION);
-        if (tmp != null) {
-            boolean addGeneratedAnnotation = Boolean.parseBoolean(tmp);
-            context.setAddGeneratedAnnotation(addGeneratedAnnotation);
+        context.setAddGeneratedAnnotation(getOption(processingEnvironment, ADD_GENERATED_ANNOTATION, true));
+        context.setAddGenerationDate(getOption(processingEnvironment, ADD_GENERATION_DATE, false));
+        context.setAddSuppressWarningsAnnotation(getOption(processingEnvironment, ADD_SUPPRESS_WARNINGS_ANNOTATION, false));
+        context.setStrictCascadingCheck(getOption(processingEnvironment, STRICT_CASCADING_CHECK, true));
+
+        context.setDefaultVersionAttributeName(processingEnvironment.getOptions().get(DEFAULT_VERSION_ATTRIBUTE_NAME));
+        context.setDefaultVersionAttributeType(processingEnvironment.getOptions().get(DEFAULT_VERSION_ATTRIBUTE_TYPE));
+    }
+
+    private static Boolean getOption(ProcessingEnvironment processingEnvironment, String option, boolean defaultValue) {
+        String tmp = processingEnvironment.getOptions().get(option);
+        if (tmp == null) {
+            return defaultValue;
         }
-
-        tmp = processingEnvironment.getOptions().get(ADD_GENERATION_DATE);
-        boolean addGenerationDate = Boolean.parseBoolean(tmp);
-        context.setAddGenerationDate(addGenerationDate);
-
-        tmp = processingEnvironment.getOptions().get(ADD_SUPPRESS_WARNINGS_ANNOTATION);
-        boolean addSuppressWarningsAnnotation = Boolean.parseBoolean(tmp);
-        context.setAddSuppressWarningsAnnotation(addSuppressWarningsAnnotation);
+        return Boolean.parseBoolean(tmp);
     }
 
     @Override
@@ -107,7 +114,7 @@ public class EntityViewAnnotationProcessor extends AbstractProcessor {
     }
 
     private void createMetaModelClasses() {
-        StringBuilder sb = new StringBuilder(16 * 1024);
+        StringBuilder sb = new StringBuilder(64 * 1024);
         for (MetaEntityView entityView : context.getMetaEntityViews()) {
             if (context.isAlreadyGenerated(entityView.getQualifiedName()) || !entityView.isValid()) {
                 continue;
@@ -123,15 +130,10 @@ public class EntityViewAnnotationProcessor extends AbstractProcessor {
 
     private boolean isEntityView(Element element) {
         if (element.getKind() == ElementKind.CLASS || element.getKind() == ElementKind.INTERFACE) {
-            for (AnnotationMirror annotationMirror : element.getAnnotationMirrors()) {
-                if (Constants.ENTITY_VIEW.equals(annotationMirror.getAnnotationType().toString())) {
-                    return true;
-                }
-            }
+            return TypeUtils.containsAnnotation(element, Constants.ENTITY_VIEW);
         }
         return false;
     }
-
 
     private void handleRootElementAnnotationMirrors(final Element element) {
         if (!ElementKind.CLASS.equals(element.getKind()) && !ElementKind.INTERFACE.equals(element.getKind())) {

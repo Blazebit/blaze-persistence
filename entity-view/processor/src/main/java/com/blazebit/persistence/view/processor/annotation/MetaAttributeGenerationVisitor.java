@@ -53,14 +53,14 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
     @Override
     public AnnotationMetaAttribute visitPrimitive(PrimitiveType t, Element element) {
         String type = TypeUtils.toWrapperTypeString(t);
-        return new AnnotationMetaSingleAttribute(entity, element, type, t.toString(), context);
+        return new AnnotationMetaSingularAttribute(entity, element, type, t.toString(), context);
     }
 
     @Override
     public AnnotationMetaAttribute visitArray(ArrayType t, Element element) {
         String type = TypeUtils.toWrapperTypeString(t);
         String realType = TypeUtils.toTypeString((DeclaredType) entity.getTypeElement().asType(), t.getComponentType(), entity.getContext()) + "[]";
-        return new AnnotationMetaSingleAttribute(entity, element, type, realType, context);
+        return new AnnotationMetaSingularAttribute(entity, element, type, realType, context);
     }
 
     @Override
@@ -81,7 +81,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
         TypeElement returnedElement = (TypeElement) context.getTypeUtils().asElement(declaredType);
         String fqNameOfReturnType = returnedElement.getQualifiedName().toString();
         String collection = Constants.COLLECTIONS.get(fqNameOfReturnType);
-        if (collection != null && TypeUtils.getAnnotationMirror(element, Constants.SINGULAR) == null) {
+        if (collection != null && TypeUtils.getAnnotationMirror(element, Constants.MAPPING_SINGULAR) == null) {
             List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
             if (typeArguments.size() == 0) {
                 context.logMessage(Diagnostic.Kind.ERROR, "Unable to determine type arguments for " + declaredType);
@@ -105,7 +105,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
             } else {
                 realType = TypeUtils.toTypeString(entityDeclaredType, element.asType(), context);
             }
-            return new AnnotationMetaSingleAttribute(entity, element, type, realType, context);
+            return new AnnotationMetaSingularAttribute(entity, element, type, realType, context);
         }
         return null;
     }

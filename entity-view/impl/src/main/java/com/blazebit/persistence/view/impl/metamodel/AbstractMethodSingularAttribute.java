@@ -18,8 +18,8 @@ package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.persistence.view.CascadeType;
 import com.blazebit.persistence.view.InverseRemoveStrategy;
-import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
-import com.blazebit.persistence.view.impl.collection.MapInstantiator;
+import com.blazebit.persistence.view.impl.collection.CollectionInstantiatorImplementor;
+import com.blazebit.persistence.view.impl.collection.MapInstantiatorImplementor;
 import com.blazebit.persistence.view.metamodel.BasicType;
 import com.blazebit.persistence.view.metamodel.FlatViewType;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
@@ -294,12 +294,12 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
     }
 
     @Override
-    public CollectionInstantiator getCollectionInstantiator() {
+    public CollectionInstantiatorImplementor<?, ?> getCollectionInstantiator() {
         throw new UnsupportedOperationException("Singular attribute");
     }
 
     @Override
-    public MapInstantiator getMapInstantiator() {
+    public MapInstantiatorImplementor<?, ?> getMapInstantiator() {
         throw new UnsupportedOperationException("Singular attribute");
     }
 

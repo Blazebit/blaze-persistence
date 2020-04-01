@@ -25,12 +25,15 @@ import com.blazebit.persistence.view.processor.MetaConstructor;
 import com.blazebit.persistence.view.processor.MetaEntityView;
 import com.blazebit.persistence.view.processor.TypeUtils;
 
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeKind;
@@ -38,10 +41,12 @@ import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 /**
@@ -54,15 +59,25 @@ public class AnnotationMetaEntityView implements MetaEntityView {
     private final ImportContext implementationImportContext;
     private final ImportContext builderImportContext;
     private final TypeElement element;
+    private final String entityClass;
+    private final Element entityVersionAttribute;
+    private final ExecutableElement postCreate;
     private final MetaAttribute idMember;
+    private final MetaAttribute versionMember;
     private final Map<String, MetaAttribute> members;
     private final Map<String, MetaConstructor> constructors;
     private final Map<String, ExecutableElement> specialMembers;
     private final Map<String, TypeElement> foreignPackageSuperTypes;
+    private final List<TypeMirror> foreignPackageSuperTypeVariables;
+    private final boolean updatable;
+    private final boolean creatable;
+    private final boolean allSupportDirtyTracking;
+    private final int mutableAttributeCount;
+    private final int defaultDirtyMask;
     private final boolean hasEmptyConstructor;
     private final boolean valid;
-    private final boolean needsEntityViewManager;
     private final Context context;
+    private final Set<String> addedAccessors = new HashSet<>();
 
     public AnnotationMetaEntityView(TypeElement element, Context context) {
         this.element = element;
@@ -72,71 +87,144 @@ public class AnnotationMetaEntityView implements MetaEntityView {
         this.builderImportContext = new ImportContextImpl(getPackageName());
         getContext().logMessage(Diagnostic.Kind.OTHER, "Initializing type " + getQualifiedName() + ".");
 
-        Collection<Element> allMembers = getAllMembers(element, context);
-        boolean needsEntityViewManager = false;
+        String entityClass = null;
+        boolean updatable = false;
+        boolean creatable = false;
+        boolean allSupportDirtyTracking = true;
+        for (AnnotationMirror annotationMirror : element.getAnnotationMirrors()) {
+            String annotationFqcn = annotationMirror.getAnnotationType().toString();
+            if (annotationFqcn.equals(Constants.ENTITY_VIEW)) {
+                for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : annotationMirror.getElementValues().entrySet()) {
+                    if ("value".equals(entry.getKey().getSimpleName().toString())) {
+                        entityClass = entry.getValue().getValue().toString();
+                        break;
+                    }
+                }
+            } else if (annotationFqcn.equals(Constants.UPDATABLE_ENTITY_VIEW)) {
+                updatable = true;
+            } else if (annotationFqcn.equals(Constants.CREATABLE_ENTITY_VIEW)) {
+                creatable = true;
+            }
+        }
+
+        Element entityVersionAttribute = null;
+        for (Element member : TypeUtils.getAllMembers(context.getElementUtils().getTypeElement(entityClass), context)) {
+            if (TypeUtils.containsAnnotation(member, Constants.VERSION)) {
+                entityVersionAttribute = member;
+                break;
+            }
+        }
+        this.entityVersionAttribute = entityVersionAttribute;
+        this.entityClass = entityClass;
+        this.updatable = updatable;
+        this.creatable = creatable;
+
+        Collection<Element> allMembers = TypeUtils.getAllMembers(element, context);
         MetaAttribute idMember = null;
+        MetaAttribute versionMember = null;
         Map<String, MetaAttribute> members = new TreeMap<>();
         Map<String, ExecutableElement> specialMembers = new TreeMap<>();
         Map<String, MetaConstructor> constructors = new TreeMap<>();
         MetaAttributeGenerationVisitor visitor = new MetaAttributeGenerationVisitor(this, context);
         boolean valid = true;
         boolean hasEmptyConstructor = false;
+        ExecutableElement postCreate = null;
         for (Element memberOfClass : allMembers) {
             if (memberOfClass instanceof ExecutableElement) {
                 ExecutableElement executableElement = (ExecutableElement) memberOfClass;
-                if (Constants.SPECIAL.contains(executableElement.getReturnType().toString())) {
-                    specialMembers.put(memberOfClass.getSimpleName().toString(), executableElement);
-                    if (Constants.ENTITY_VIEW_MANAGER.equals(executableElement.getReturnType().toString())) {
-                        needsEntityViewManager = true;
-                    }
-                } else if (isGetterOrSetter(memberOfClass)) {
-                    // Entity view attributes are always abstract methods
-                    if (!memberOfClass.getModifiers().contains(Modifier.ABSTRACT)) {
-                        continue;
-                    }
-
-                    AnnotationMetaAttribute result = memberOfClass.asType().accept(visitor, memberOfClass);
-                    if (result != null) {
-                        if (result.isIdMember()) {
-                            idMember = result;
+                Set<Modifier> modifiers = memberOfClass.getModifiers();
+                if (!modifiers.contains(Modifier.STATIC)) {
+                    if (Constants.SPECIAL.contains(executableElement.getReturnType().toString())) {
+                        specialMembers.put(memberOfClass.getSimpleName().toString(), executableElement);
+                    } else if (modifiers.contains(Modifier.ABSTRACT) && isGetterOrSetter(memberOfClass)) {
+                        AnnotationMetaAttribute result = memberOfClass.asType().accept(visitor, memberOfClass);
+                        if (result != null) {
+                            if (result.isIdMember()) {
+                                idMember = result;
+                            } else if (result.isVersion()) {
+                                versionMember = result;
+                            }
+                            members.put(result.getPropertyName(), result);
                         }
-                        members.put(result.getPropertyName(), result);
+                    } else if (!modifiers.contains(Modifier.PRIVATE) && memberOfClass.getKind() == ElementKind.CONSTRUCTOR) {
+                        AnnotationMetaConstructor constructor = new AnnotationMetaConstructor(this, executableElement, visitor);
+                        hasEmptyConstructor = constructor.getParameters().isEmpty();
+                        constructors.put(constructor.getName(), constructor);
+                    } else if (TypeUtils.containsAnnotation(executableElement, Constants.POST_CREATE)) {
+                        if (postCreate == null) {
+                            postCreate = executableElement;
+                        } else {
+                            if (context.getTypeUtils().isAssignable(executableElement.getEnclosingElement().asType(), postCreate.getEnclosingElement().asType())) {
+                                postCreate = executableElement;
+                            }
+                        }
                     }
-                } else if (memberOfClass.getKind() == ElementKind.CONSTRUCTOR) {
-                    AnnotationMetaConstructor constructor = new AnnotationMetaConstructor(this, executableElement, visitor);
-                    hasEmptyConstructor = constructor.getParameters().isEmpty();
-                    constructors.put(constructor.getName(), constructor);
                 }
             }
         }
+
+        int dirtyStateIndex = 0;
+        int defaultDirtyMask = 0;
+        int index = 0;
+        if (idMember != null) {
+            idMember.setAttributeIndex(index);
+            index++;
+        }
+        if (versionMember == null && updatable && entityVersionAttribute != null) {
+            versionMember = new AnnotationMetaVersionAttribute(this, context);
+            members.put(versionMember.getPropertyName(), versionMember);
+        }
+        for (MetaAttribute value : members.values()) {
+            if (value.getAttributeIndex() == -1) {
+                value.setAttributeIndex(index);
+                if ((creatable || updatable) && value.isMutable() && value != versionMember) {
+                    value.setDirtyStateIndex(dirtyStateIndex);
+                    if (!value.supportsDirtyTracking()) {
+                        allSupportDirtyTracking = false;
+                    }
+                    dirtyStateIndex++;
+                }
+                index++;
+            }
+        }
+
         this.hasEmptyConstructor = hasEmptyConstructor || constructors.isEmpty();
         this.valid = valid;
-        this.needsEntityViewManager = needsEntityViewManager;
+        this.allSupportDirtyTracking = allSupportDirtyTracking;
+        this.mutableAttributeCount = dirtyStateIndex;
+        this.defaultDirtyMask = defaultDirtyMask;
 
         if (constructors.isEmpty()) {
             constructors.put("init", new AnnotationMetaConstructor(this));
         }
 
         Map<String, TypeElement> foreignPackageSuperTypes = new LinkedHashMap<>();
+        List<TypeMirror> foreignPackageSuperTypeVariables = new ArrayList<>();
         TypeMirror superClass = element.getSuperclass();
         PackageElement elementPackage = context.getElementUtils().getPackageOf(element);
         while (superClass.getKind() == TypeKind.DECLARED) {
-            final Element superClassElement = ((DeclaredType) superClass).asElement();
+            final TypeElement superClassElement = (TypeElement) ((DeclaredType) superClass).asElement();
             PackageElement superClassPackage;
             if (superClassElement.getModifiers().contains(Modifier.ABSTRACT) && !elementPackage.equals(superClassPackage = context.getElementUtils().getPackageOf(superClassElement))) {
                 String packageName = superClassPackage.getQualifiedName().toString();
                 if (!foreignPackageSuperTypes.containsKey(packageName)) {
-                    foreignPackageSuperTypes.put(packageName, (TypeElement) superClassElement);
+                    foreignPackageSuperTypes.put(packageName, superClassElement);
+                    for (TypeParameterElement typeParameter : superClassElement.getTypeParameters()) {
+                        foreignPackageSuperTypeVariables.add(context.getTypeUtils().asMemberOf((DeclaredType) element.asType(), typeParameter));
+                    }
                 }
             }
-            superClass = ((TypeElement) superClassElement).getSuperclass();
+            superClass = superClassElement.getSuperclass();
         }
 
         this.idMember = idMember;
+        this.versionMember = versionMember;
         this.members = members;
         this.constructors = constructors;
         this.specialMembers = specialMembers;
         this.foreignPackageSuperTypes = foreignPackageSuperTypes;
+        this.foreignPackageSuperTypeVariables = foreignPackageSuperTypeVariables;
+        this.postCreate = postCreate;
     }
 
     public final Context getContext() {
@@ -149,6 +237,31 @@ public class AnnotationMetaEntityView implements MetaEntityView {
     }
 
     @Override
+    public List<TypeMirror> getForeignPackageSuperTypeVariables() {
+        return foreignPackageSuperTypeVariables;
+    }
+
+    @Override
+    public boolean isUpdatable() {
+        return updatable;
+    }
+
+    @Override
+    public boolean isCreatable() {
+        return creatable;
+    }
+
+    @Override
+    public boolean isAllSupportDirtyTracking() {
+        return allSupportDirtyTracking;
+    }
+
+    @Override
+    public int getMutableAttributeCount() {
+        return mutableAttributeCount;
+    }
+
+    @Override
     public boolean hasEmptyConstructor() {
         return hasEmptyConstructor;
     }
@@ -156,11 +269,6 @@ public class AnnotationMetaEntityView implements MetaEntityView {
     @Override
     public boolean isValid() {
         return valid;
-    }
-
-    @Override
-    public boolean needsEntityViewManager() {
-        return needsEntityViewManager;
     }
 
     @Override
@@ -183,6 +291,21 @@ public class AnnotationMetaEntityView implements MetaEntityView {
     }
 
     @Override
+    public String getEntityClass() {
+        return entityClass;
+    }
+
+    @Override
+    public Element getEntityVersionAttribute() {
+        return entityVersionAttribute;
+    }
+
+    @Override
+    public ExecutableElement getPostCreate() {
+        return postCreate;
+    }
+
+    @Override
     public final String getPackageName() {
         PackageElement packageOf = context.getElementUtils().getPackageOf(element);
         return context.getElementUtils().getName(packageOf.getQualifiedName()).toString();
@@ -191,6 +314,16 @@ public class AnnotationMetaEntityView implements MetaEntityView {
     @Override
     public MetaAttribute getIdMember() {
         return idMember;
+    }
+
+    @Override
+    public MetaAttribute getVersionMember() {
+        return versionMember;
+    }
+
+    @Override
+    public int getDefaultDirtyMask() {
+        return defaultDirtyMask;
     }
 
     @Override
@@ -236,6 +369,12 @@ public class AnnotationMetaEntityView implements MetaEntityView {
     }
 
     @Override
+    public String importTypeExceptMetamodel(String fqcn) {
+        implementationImportContext.importType(fqcn);
+        return builderImportContext.importType(fqcn);
+    }
+
+    @Override
     public String metamodelImportType(String fqcn) {
         return metamodelImportContext.importType(fqcn);
     }
@@ -255,30 +394,6 @@ public class AnnotationMetaEntityView implements MetaEntityView {
         return element;
     }
 
-    private static Collection<Element> getAllMembers(TypeElement element, Context context) {
-        List<TypeMirror> superClasses = new ArrayList<>();
-        superClasses.add(element.asType());
-        Map<String, Element> members = new TreeMap<>();
-        for (int i = 0; i < superClasses.size(); i++) {
-            TypeMirror superClass = superClasses.get(i);
-            final Element superClassElement = ((DeclaredType) superClass).asElement();
-            for (Element enclosedElement : superClassElement.getEnclosedElements()) {
-                String name = enclosedElement.getSimpleName().toString();
-                Element old = members.put(name, enclosedElement);
-                if (old != null) {
-                    members.put(name, old);
-                }
-            }
-
-            superClass = ((TypeElement) superClassElement).getSuperclass();
-            if (superClass.getKind() == TypeKind.DECLARED) {
-                superClasses.add(superClass);
-            }
-            superClasses.addAll(((TypeElement) superClassElement).getInterfaces());
-        }
-        return members.values();
-    }
-
     private boolean isGetterOrSetter(Element methodOfClass) {
         if (methodOfClass instanceof ExecutableElement) {
             ExecutableType methodType = (ExecutableType) methodOfClass.asType();
@@ -293,5 +408,9 @@ public class AnnotationMetaEntityView implements MetaEntityView {
             }
         }
         return false;
+    }
+
+    public boolean addAccessorForType(String realType) {
+        return addedAccessors.add(realType);
     }
 }

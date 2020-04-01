@@ -14,18 +14,11 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl;
+package com.blazebit.persistence.view;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
-import com.blazebit.persistence.view.ConvertOperationBuilder;
-import com.blazebit.persistence.view.ConvertOption;
-import com.blazebit.persistence.view.EntityViewBuilder;
-import com.blazebit.persistence.view.EntityViewManager;
-import com.blazebit.persistence.view.EntityViewSetting;
-import com.blazebit.persistence.view.FlushOperationBuilder;
 import com.blazebit.persistence.view.change.SingularChangeModel;
-import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 
 import javax.persistence.EntityManager;
@@ -34,24 +27,35 @@ import java.lang.reflect.Field;
 import java.util.Map;
 
 /**
+ * A serializable entity view manager implementation that accesses the actual entity view manager through a static field in the entity view implementation class.
+ *
  * @author Christian Beikov
  * @since 1.5.0
  */
 public class SerializableEntityViewManager implements EntityViewManager, Serializable {
 
+    public static final String EVM_FIELD_NAME = "ENTITY_VIEW_MANAGER";
+    public static final String SERIALIZABLE_EVM_FIELD_NAME = "SERIALIZABLE_ENTITY_VIEW_MANAGER";
+
     private final Class<?> entityViewClass;
     private transient volatile EntityViewManager evm;
 
+    /**
+     * Creates a new serializable entity view manager.
+     *
+     * @param entityViewClass The entity view class from which to access the entity view manager from
+     * @param evm The transient entity view manager
+     */
     public SerializableEntityViewManager(Class<?> entityViewClass, EntityViewManager evm) {
         this.entityViewClass = entityViewClass;
         this.evm = evm;
     }
 
-    public EntityViewManager getEvm() {
+    private EntityViewManager getEvm() {
         EntityViewManager evm = this.evm;
         if (evm == null) {
             try {
-                Field field = entityViewClass.getDeclaredField(ProxyFactory.EVM_FIELD_NAME);
+                Field field = entityViewClass.getDeclaredField(EVM_FIELD_NAME);
                 this.evm = evm = (EntityViewManager) field.get(null);
             } catch (Exception ex) {
                 throw new IllegalStateException("Could not access entity view manager of entity view class: " + entityViewClass.getName(), ex);

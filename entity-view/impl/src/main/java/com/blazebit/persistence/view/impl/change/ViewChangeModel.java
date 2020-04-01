@@ -19,7 +19,7 @@ package com.blazebit.persistence.view.impl.change;
 import com.blazebit.persistence.view.change.ChangeModel;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
-import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
+import com.blazebit.persistence.view.spi.type.DirtyStateTrackable;
 
 import java.util.List;
 

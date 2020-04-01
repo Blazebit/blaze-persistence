@@ -19,7 +19,7 @@ package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
-import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
+import com.blazebit.persistence.view.impl.collection.CollectionInstantiatorImplementor;
 import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleElementMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.transformator.TupleTransformator;
@@ -42,13 +42,13 @@ public class CollectionMultisetTupleListTransformerFactory implements TupleListT
     private final String attributePath;
     private final BasicUserTypeStringSupport<Object>[] fieldConverters;
     private final TypeConverter<Object, Object> elementConverter;
-    private final CollectionInstantiator collectionInstantiator;
+    private final CollectionInstantiatorImplementor<?, ?> collectionInstantiator;
     private final boolean dirtyTracking;
     private final ViewTypeObjectBuilderTemplate<Object[]> template;
     private final TupleTransformerFactory subviewTupleTransformerFactory;
     private final boolean hasSelectOrSubselectFetchedAttributes;
 
-    public CollectionMultisetTupleListTransformerFactory(int startIndex, String mapping, String attributePath, TypeConverter<Object, Object> elementConverter, CollectionInstantiator collectionInstantiator, boolean dirtyTracking, ViewTypeObjectBuilderTemplate<Object[]> template, boolean hasSelectOrSubselectFetchedAttributes, TupleTransformerFactory subviewTupleTransformerFactory) {
+    public CollectionMultisetTupleListTransformerFactory(int startIndex, String mapping, String attributePath, TypeConverter<Object, Object> elementConverter, CollectionInstantiatorImplementor<?, ?> collectionInstantiator, boolean dirtyTracking, ViewTypeObjectBuilderTemplate<Object[]> template, boolean hasSelectOrSubselectFetchedAttributes, TupleTransformerFactory subviewTupleTransformerFactory) {
         this.startIndex = startIndex;
         this.mapping = mapping;
         this.attributePath = attributePath;

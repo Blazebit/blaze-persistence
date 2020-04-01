@@ -18,11 +18,14 @@ package com.blazebit.persistence.view.processor.annotation;
 
 import com.blazebit.persistence.view.processor.Constants;
 import com.blazebit.persistence.view.processor.Context;
+import com.blazebit.persistence.view.processor.ImportContext;
+import com.blazebit.persistence.view.processor.MetamodelClassWriter;
 import com.blazebit.persistence.view.processor.TypeUtils;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import java.util.Comparator;
 import java.util.Map;
@@ -39,7 +42,6 @@ public class AnnotationMetaCollection extends AnnotationMetaAttribute {
     protected final String collectionJavaType;
     private final String collectionType;
     private final String implementationTypeString;
-    private final String defaultValue;
 
     public AnnotationMetaCollection(AnnotationMetaEntityView parent, Element element, String collectionType, String collectionJavaType, String elementType, String realElementType, Context context) {
         super(parent, element, elementType, realElementType, context);
@@ -49,9 +51,10 @@ public class AnnotationMetaCollection extends AnnotationMetaAttribute {
         AnnotationMirror annotationMirror = TypeUtils.getAnnotationMirror(element, Constants.COLLECTION_MAPPING);
         if (annotationMirror != null) {
             for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : annotationMirror.getElementValues().entrySet()) {
-                if ("ordered".equals(entry.getKey().getSimpleName())) {
-                    ordered = Boolean.valueOf(entry.getValue().toString());
-                } else if ("comparator".equals(entry.getKey().getSimpleName())) {
+                String name = entry.getKey().getSimpleName().toString();
+                if ("ordered".equals(name)) {
+                    ordered = Boolean.parseBoolean(entry.getValue().toString());
+                } else if ("comparator".equals(name)) {
                     String s = entry.getValue().toString();
                     if (!Comparator.class.getName().equals(s)) {
                         comparator = s;
@@ -65,38 +68,51 @@ public class AnnotationMetaCollection extends AnnotationMetaAttribute {
         this.comparator = comparator;
         this.collectionJavaType = collectionJavaType;
         this.collectionType = collectionType;
-        this.implementationTypeString = getHostingEntity().importType(collectionJavaType) + "<" + getHostingEntity().importType(getRealType()) + ">";
-        this.defaultValue = computeDefaultValue();
+        this.implementationTypeString = getHostingEntity().importTypeExceptMetamodel(collectionJavaType) + "<" + getHostingEntity().importType(getRealType()) + ">";
     }
 
-    private String computeDefaultValue() {
-        // TODO: recording?
+    @Override
+    public void appendDefaultValue(StringBuilder sb, boolean createEmpty, ImportContext importContext) {
+        if (createEmpty) {
+            if (getElement().getKind() == ElementKind.PARAMETER) {
+                sb.append("new ").append(importCollectionType(importContext)).append("<>()");
+            } else {
+                sb.append("(").append(getImplementationTypeString()).append(") (").append(collectionJavaType).append("<?>) ");
+                sb.append(importContext.importType(TypeUtils.getDerivedTypeName(getHostingEntity().getTypeElement()) + MetamodelClassWriter.META_MODEL_CLASS_NAME_SUFFIX)).append('.')
+                        .append(getPropertyName()).append(".getCollectionInstantiator().");
+                if (getDirtyStateIndex() == -1) {
+                    sb.append("createCollection(0)");
+                } else {
+                    sb.append("createRecordingCollection(0)");
+                }
+            }
+        } else {
+            super.appendDefaultValue(sb, createEmpty, importContext);
+        }
+    }
+
+    private String importCollectionType(ImportContext importContext) {
         switch (collectionJavaType) {
             case Constants.SET:
                 if (ordered) {
-                    return "new " + getHostingEntity().importType(Constants.LINKED_HASH_SET) + "<>()";
+                    return importContext.importType(Constants.LINKED_HASH_SET);
                 } else if (sorted) {
-                    return "new " + getHostingEntity().importType(Constants.TREE_SET) + "<>()";
+                    return importContext.importType(Constants.TREE_SET);
                 } else {
-                    return "new " + getHostingEntity().importType(Constants.HASH_SET) + "<>()";
+                    return importContext.importType(Constants.HASH_SET);
                 }
             case Constants.SORTED_SET:
-                return "new " + getHostingEntity().importType(Constants.TREE_SET) + "<>()";
+                return importContext.importType(Constants.TREE_SET);
             case Constants.NAVIGABLE_SET:
-                return "new " + getHostingEntity().importType(Constants.TREE_SET) + "<>()";
+                return importContext.importType(Constants.TREE_SET);
             default:
-                return "new " + getHostingEntity().importType(Constants.ARRAY_LIST) + "<>()";
+                return importContext.importType(Constants.ARRAY_LIST);
         }
     }
 
     @Override
     public String getImplementationTypeString() {
         return implementationTypeString;
-    }
-
-    @Override
-    public String getDefaultValue() {
-        return defaultValue;
     }
 
     @Override

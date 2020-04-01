@@ -540,6 +540,11 @@
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
                                         <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
+                                    <optionMap>
+                                        <strictCascadingCheck>false</strictCascadingCheck>
+                                        <defaultVersionAttributeName>version</defaultVersionAttributeName>
+                                        <defaultVersionAttributeType>java.lang.Long</defaultVersionAttributeType>
+                                    </optionMap>
                                 </configuration>
                             </execution>
                         </executions>
@@ -657,6 +662,11 @@
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
                                         <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
+                                    <optionMap>
+                                        <strictCascadingCheck>false</strictCascadingCheck>
+                                        <defaultVersionAttributeName>version</defaultVersionAttributeName>
+                                        <defaultVersionAttributeType>java.lang.Long</defaultVersionAttributeType>
+                                    </optionMap>
                                 </configuration>
                             </execution>
                         </executions>
@@ -774,6 +784,11 @@
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
                                         <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
+                                    <optionMap>
+                                        <strictCascadingCheck>false</strictCascadingCheck>
+                                        <defaultVersionAttributeName>version</defaultVersionAttributeName>
+                                        <defaultVersionAttributeType>java.lang.Long</defaultVersionAttributeType>
+                                    </optionMap>
                                 </configuration>
                             </execution>
                         </executions>
@@ -891,6 +906,11 @@
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
                                         <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
+                                    <optionMap>
+                                        <strictCascadingCheck>false</strictCascadingCheck>
+                                        <defaultVersionAttributeName>version</defaultVersionAttributeName>
+                                        <defaultVersionAttributeType>java.lang.Long</defaultVersionAttributeType>
+                                    </optionMap>
                                 </configuration>
                             </execution>
                         </executions>
@@ -1011,6 +1031,11 @@
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
                                         <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
+                                    <optionMap>
+                                        <strictCascadingCheck>false</strictCascadingCheck>
+                                        <defaultVersionAttributeName>version</defaultVersionAttributeName>
+                                        <defaultVersionAttributeType>java.lang.Long</defaultVersionAttributeType>
+                                    </optionMap>
                                 </configuration>
                             </execution>
                         </executions>
@@ -1128,6 +1153,11 @@
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
                                         <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
+                                    <optionMap>
+                                        <strictCascadingCheck>false</strictCascadingCheck>
+                                        <defaultVersionAttributeName>version</defaultVersionAttributeName>
+                                        <defaultVersionAttributeType>java.lang.Long</defaultVersionAttributeType>
+                                    </optionMap>
                                 </configuration>
                             </execution>
                         </executions>
@@ -1255,6 +1285,11 @@
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
                                         <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
+                                    <optionMap>
+                                        <strictCascadingCheck>false</strictCascadingCheck>
+                                        <defaultVersionAttributeName>version</defaultVersionAttributeName>
+                                        <defaultVersionAttributeType>java.lang.Long</defaultVersionAttributeType>
+                                    </optionMap>
                                 </configuration>
                             </execution>
                         </executions>
@@ -1379,6 +1414,11 @@
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
                                         <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
+                                    <optionMap>
+                                        <strictCascadingCheck>false</strictCascadingCheck>
+                                        <defaultVersionAttributeName>version</defaultVersionAttributeName>
+                                        <defaultVersionAttributeType>java.lang.Long</defaultVersionAttributeType>
+                                    </optionMap>
                                 </configuration>
                             </execution>
                         </executions>
@@ -1499,6 +1539,9 @@
                                         <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
                                     <optionMap>
+                                        <strictCascadingCheck>false</strictCascadingCheck>
+                                        <defaultVersionAttributeName>version</defaultVersionAttributeName>
+                                        <defaultVersionAttributeType>java.lang.Long</defaultVersionAttributeType>
                                         <eclipselink.persistencexml>${basedir}/src/test/resources/META-INF/persistence.xml</eclipselink.persistencexml>
                                     </optionMap>
                                 </configuration>
@@ -1669,6 +1712,11 @@
                                         <processor>org.datanucleus.jpa.query.JPACriteriaProcessor</processor>
                                         <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
+                                    <optionMap>
+                                        <strictCascadingCheck>false</strictCascadingCheck>
+                                        <defaultVersionAttributeName>version</defaultVersionAttributeName>
+                                        <defaultVersionAttributeType>java.lang.Long</defaultVersionAttributeType>
+                                    </optionMap>
                                 </configuration>
                             </execution>
                         </executions>
@@ -1834,6 +1882,11 @@
                                         <processor>org.datanucleus.jpa.query.JPACriteriaProcessor</processor>
                                         <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
+                                    <optionMap>
+                                        <strictCascadingCheck>false</strictCascadingCheck>
+                                        <defaultVersionAttributeName>version</defaultVersionAttributeName>
+                                        <defaultVersionAttributeType>java.lang.Long</defaultVersionAttributeType>
+                                    </optionMap>
                                 </configuration>
                             </execution>
                         </executions>
@@ -2012,6 +2065,11 @@
                                         <processor>org.datanucleus.jpa.query.JPACriteriaProcessor</processor>
                                         <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
+                                    <optionMap>
+                                        <strictCascadingCheck>false</strictCascadingCheck>
+                                        <defaultVersionAttributeName>version</defaultVersionAttributeName>
+                                        <defaultVersionAttributeType>java.lang.Long</defaultVersionAttributeType>
+                                    </optionMap>
                                 </configuration>
                             </execution>
                         </executions>
@@ -2094,6 +2152,9 @@
                                         <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
                                     <optionMap>
+                                        <strictCascadingCheck>false</strictCascadingCheck>
+                                        <defaultVersionAttributeName>version</defaultVersionAttributeName>
+                                        <defaultVersionAttributeType>java.lang.Long</defaultVersionAttributeType>
                                         <openjpa.metamodel>true</openjpa.metamodel>
                                     </optionMap>
                                 </configuration>

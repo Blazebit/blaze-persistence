@@ -16,30 +16,28 @@
 
 package com.blazebit.persistence.view.testsuite.basic;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.List;
-
-import javax.persistence.EntityManager;
-
-import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
-import org.junit.Before;
-import org.junit.Test;
-
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.EntityViews;
+import com.blazebit.persistence.view.SerializableEntityViewManager;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.basic.model.DocumentViewAbstractClass;
 import com.blazebit.persistence.view.testsuite.basic.model.DocumentViewInterface;
 import com.blazebit.persistence.view.testsuite.basic.model.PersonView;
-import com.blazebit.persistence.testsuite.entity.Document;
-import com.blazebit.persistence.testsuite.entity.Person;
+import org.junit.Before;
+import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
+import javax.persistence.EntityManager;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -125,7 +123,7 @@ public class AbstractClassViewTest extends AbstractEntityViewTest {
         assertEquals(Integer.valueOf(2), results.get(0).getContactPersonNumber2());
         assertEquals(Long.valueOf(1), results.get(0).getContactCount());
         assertEquals("Test", results.get(0).getOptionalParameter());
-        assertEquals(results.get(0).getClass().getField(ProxyFactory.SERIALIZABLE_EVM_FIELD_NAME).get(null), results.get(0).getEntityViewManager());
+        assertEquals(results.get(0).getClass().getField(SerializableEntityViewManager.SERIALIZABLE_EVM_FIELD_NAME).get(null), results.get(0).getEntityViewManager());
         // Doc2
         assertEquals(doc2.getId(), results.get(1).getId());
         assertEquals(doc2.getName(), results.get(1).getName());
@@ -136,6 +134,6 @@ public class AbstractClassViewTest extends AbstractEntityViewTest {
         assertEquals(Integer.valueOf(2), results.get(1).getContactPersonNumber2());
         assertEquals(Long.valueOf(1), results.get(1).getContactCount());
         assertEquals("Test", results.get(1).getOptionalParameter());
-        assertEquals(results.get(1).getClass().getField(ProxyFactory.SERIALIZABLE_EVM_FIELD_NAME).get(null), results.get(1).getEntityViewManager());
+        assertEquals(results.get(1).getClass().getField(SerializableEntityViewManager.SERIALIZABLE_EVM_FIELD_NAME).get(null), results.get(1).getEntityViewManager());
     }
 }

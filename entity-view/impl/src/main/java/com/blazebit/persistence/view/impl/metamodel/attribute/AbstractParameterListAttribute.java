@@ -16,8 +16,8 @@
 
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
-import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
-import com.blazebit.persistence.view.impl.collection.MapInstantiator;
+import com.blazebit.persistence.view.impl.collection.CollectionInstantiatorImplementor;
+import com.blazebit.persistence.view.impl.collection.MapInstantiatorImplementor;
 import com.blazebit.persistence.view.impl.metamodel.AbstractParameterPluralAttribute;
 import com.blazebit.persistence.view.impl.metamodel.EmbeddableOwner;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
@@ -38,7 +38,7 @@ import java.util.Map;
 public abstract class AbstractParameterListAttribute<X, Y> extends AbstractParameterPluralAttribute<X, List<Y>, Y> implements ListAttribute<X, Y> {
 
     private final boolean isIndexed;
-    private final CollectionInstantiator collectionInstantiator;
+    private final CollectionInstantiatorImplementor<?, ?> collectionInstantiator;
     
     public AbstractParameterListAttribute(MappingConstructorImpl<X> mappingConstructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
         super(mappingConstructor, mapping, context, embeddableMapping);
@@ -52,12 +52,12 @@ public abstract class AbstractParameterListAttribute<X, Y> extends AbstractParam
     }
 
     @Override
-    public CollectionInstantiator getCollectionInstantiator() {
+    public CollectionInstantiatorImplementor<?, ?> getCollectionInstantiator() {
         return collectionInstantiator;
     }
 
     @Override
-    public MapInstantiator getMapInstantiator() {
+    public MapInstantiatorImplementor<?, ?> getMapInstantiator() {
         throw new UnsupportedOperationException("Collection attribute");
     }
 

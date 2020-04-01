@@ -101,7 +101,7 @@ public class EntityViewBuilderBaseImpl<T, X extends EntityViewBuilderBase<T, X>>
         }
 
         Class<?>[] constructorParameterTypes = parameterTypes.toArray(new Class[parameterTypes.size()]);
-        this.objectInstantiator = new ConstructorReflectionInstantiator<>(mappingConstructor, evm.getProxyFactory(), managedViewType, null, constructorParameterTypes, evm, inheritanceSubtypeConfiguration.getMutableBasicUserTypes(), Collections.<AbstractReflectionInstantiator.TypeConverterEntry>emptyList());
+        this.objectInstantiator = new ConstructorReflectionInstantiator<>(mappingConstructor, evm.getProxyFactory(), managedViewType, constructorParameterTypes, evm, inheritanceSubtypeConfiguration.getMutableBasicUserTypes(), Collections.<AbstractReflectionInstantiator.TypeConverterEntry>emptyList());
         this.tuple = new Object[constructorParameterTypes.length];
         for (Map.Entry<ManagedViewTypeImpl.AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<? super T, ?>>> attributeEntry : inheritanceSubtypeConfiguration.getAttributesClosure().entrySet()) {
             if (attributeEntry.getValue().getAttribute().getMappingType() == Attribute.MappingType.PARAMETER) {
@@ -172,9 +172,9 @@ public class EntityViewBuilderBaseImpl<T, X extends EntityViewBuilderBase<T, X>>
         if (value == null) {
             if (attr instanceof MapAttribute<?, ?, ?>) {
                 if (attr.needsDirtyTracker()) {
-                    value = attr.getMapInstantiator().createRecordingCollection(0);
+                    value = attr.getMapInstantiator().createRecordingMap(0);
                 } else {
-                    value = attr.getMapInstantiator().createCollection(0);
+                    value = attr.getMapInstantiator().createMap(0);
                 }
             } else if (attr instanceof PluralAttribute<?, ?, ?>) {
                 if (attr.needsDirtyTracker()) {
@@ -202,7 +202,7 @@ public class EntityViewBuilderBaseImpl<T, X extends EntityViewBuilderBase<T, X>>
                         value = 0;
                     }
                 } else {
-                    // TODO: Handle flat views?
+                    // TODO: Handle flat views based on nullness setting
                 }
             }
         } else {

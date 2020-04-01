@@ -136,6 +136,30 @@ public interface MethodAttribute<X, Y> extends Attribute<X, Y> {
     public Set<Type<?>> getUpdateCascadeAllowedSubtypes();
 
     /**
+     * Returns the subtypes that are allowed to be assigned to this attribute.
+     *
+     * @return The allowed subtypes for assigning
+     * @since 1.5.0
+     */
+    public Set<Class<?>> getAllowedSubtypes();
+
+    /**
+     * Returns the updatable subtypes that need a parent to be assignable.
+     *
+     * @return The updatable subtypes that need a parent to be assignable
+     * @since 1.5.0
+     */
+    public Set<Class<?>> getParentRequiringUpdateSubtypes();
+
+    /**
+     * Returns the creatable subtypes that need a parent to be assignable.
+     *
+     * @return The creatable subtypes that need a parent to be assignable
+     * @since 1.5.0
+     */
+    public Set<Class<?>> getParentRequiringCreateSubtypes();
+
+    /**
      * Returns the getter java method of this attribute.
      *
      * @return The getter java method of this attribute

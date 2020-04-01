@@ -27,7 +27,15 @@ import java.util.Set;
  */
 public final class Constants {
     public static final String ENTITY_VIEW_MANAGER = "com.blazebit.persistence.view.EntityViewManager";
+    public static final String SERIALIZABLE_ENTITY_VIEW_MANAGER = "com.blazebit.persistence.view.SerializableEntityViewManager";
+    public static final String ENTITY_VIEW_PROXY = "com.blazebit.persistence.view.spi.type.EntityViewProxy";
+    public static final String BASIC_DIRTY_TRACKER = "com.blazebit.persistence.view.spi.type.BasicDirtyTracker";
+    public static final String MUTABLE_STATE_TRACKABLE = "com.blazebit.persistence.view.spi.type.MutableStateTrackable";
+    public static final String DIRTY_TRACKER = "com.blazebit.persistence.view.spi.type.DirtyTracker";
+    public static final String DIRTY_STATE_TRACKABLE = "com.blazebit.persistence.view.spi.type.DirtyStateTrackable";
     public static final String STATIC_METAMODEL = "com.blazebit.persistence.view.StaticMetamodel";
+    public static final String STATIC_IMPLEMENTATION = "com.blazebit.persistence.view.StaticImplementation";
+    public static final String STATIC_BUILDER = "com.blazebit.persistence.view.StaticBuilder";
     public static final String ENTITY_VIEW_BUILDER_BASE = "com.blazebit.persistence.view.EntityViewBuilderBase";
     public static final String ENTITY_VIEW_BUILDER = "com.blazebit.persistence.view.EntityViewBuilder";
     public static final String ENTITY_VIEW_NESTED_BUILDER = "com.blazebit.persistence.view.EntityViewNestedBuilder";
@@ -39,11 +47,19 @@ public final class Constants {
     public static final String ENTITY_VIEW_BUILDER_MAP_KEY_LISTENER = "com.blazebit.persistence.view.MapKeyEntityViewBuilderListener";
 
     public static final String ENTITY_VIEW = "com.blazebit.persistence.view.EntityView";
+    public static final String ENTITY_VIEW_INHERITANCE = "com.blazebit.persistence.view.EntityViewInheritance";
+    public static final String UPDATABLE_ENTITY_VIEW = "com.blazebit.persistence.view.UpdatableEntityView";
+    public static final String CREATABLE_ENTITY_VIEW = "com.blazebit.persistence.view.CreatableEntityView";
+    public static final String POST_CREATE = "com.blazebit.persistence.view.PostCreate";
     public static final String ID_MAPPING = "com.blazebit.persistence.view.IdMapping";
+    public static final String MAPPING = "com.blazebit.persistence.view.Mapping";
+    public static final String MAPPING_CORRELATED = "com.blazebit.persistence.view.MappingCorrelated";
+    public static final String MAPPING_CORRELATED_SIMPLE = "com.blazebit.persistence.view.MappingCorrelatedSimple";
     public static final String COLLECTION_MAPPING = "com.blazebit.persistence.view.CollectionMapping";
-    public static final String SUBQUERY = "com.blazebit.persistence.view.MappingSubquery";
-    public static final String PARAMETER = "com.blazebit.persistence.view.MappingParameter";
-    public static final String SINGULAR = "com.blazebit.persistence.view.MappingSingular";
+    public static final String MAPPING_SUBQUERY = "com.blazebit.persistence.view.MappingSubquery";
+    public static final String MAPPING_PARAMETER = "com.blazebit.persistence.view.MappingParameter";
+    public static final String MAPPING_SINGULAR = "com.blazebit.persistence.view.MappingSingular";
+    public static final String UPDATABLE_MAPPING = "com.blazebit.persistence.view.UpdatableMapping";
 
     public static final String VIEW_CONSTRUCTOR = "com.blazebit.persistence.view.ViewConstructor";
 
@@ -56,6 +72,11 @@ public final class Constants {
     public static final String SET_ATTRIBUTE = "com.blazebit.persistence.view.metamodel.SetAttribute";
     public static final String COLLECTION_ATTRIBUTE = "com.blazebit.persistence.view.metamodel.CollectionAttribute";
     public static final String MAP_ATTRIBUTE = "com.blazebit.persistence.view.metamodel.MapAttribute";
+
+    public static final String ENTITY = "javax.persistence.Entity";
+    public static final String ID = "javax.persistence.Id";
+    public static final String EMBEDDED_ID = "javax.persistence.EmbeddedId";
+    public static final String VERSION = "javax.persistence.Version";
 
     public static final String LIST = "java.util.List";
     public static final String SET = "java.util.Set";

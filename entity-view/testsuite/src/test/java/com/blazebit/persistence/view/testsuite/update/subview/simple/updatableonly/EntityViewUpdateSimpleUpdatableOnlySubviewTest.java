@@ -58,6 +58,7 @@ public class EntityViewUpdateSimpleUpdatableOnlySubviewTest extends AbstractEnti
 
     @Override
     protected void registerViewTypes(EntityViewConfiguration cfg) {
+        cfg.setProperty(ConfigurationProperties.STATIC_IMPLEMENTATION_SCANNING_DISABLED, "true");
         cfg.setProperty(ConfigurationProperties.UPDATER_STRICT_CASCADING_CHECK, "true");
         cfg.addEntityView(PersonView.class);
     }

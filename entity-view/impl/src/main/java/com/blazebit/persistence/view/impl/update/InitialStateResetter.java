@@ -20,7 +20,7 @@ import com.blazebit.persistence.view.impl.collection.CollectionAction;
 import com.blazebit.persistence.view.impl.collection.MapAction;
 import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.impl.collection.RecordingMap;
-import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
+import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
 import java.util.List;

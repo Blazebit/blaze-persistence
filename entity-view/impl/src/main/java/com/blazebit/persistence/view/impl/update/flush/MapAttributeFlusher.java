@@ -28,7 +28,7 @@ import com.blazebit.persistence.view.impl.change.MapDirtyChecker;
 import com.blazebit.persistence.view.impl.collection.CollectionRemoveListener;
 import com.blazebit.persistence.view.impl.collection.MapAction;
 import com.blazebit.persistence.view.impl.collection.MapClearAction;
-import com.blazebit.persistence.view.impl.collection.MapInstantiator;
+import com.blazebit.persistence.view.impl.collection.MapInstantiatorImplementor;
 import com.blazebit.persistence.view.impl.collection.MapPutAction;
 import com.blazebit.persistence.view.impl.collection.MapPutAllAction;
 import com.blazebit.persistence.view.impl.collection.MapRemoveAction;
@@ -36,8 +36,8 @@ import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.impl.collection.RecordingMap;
 import com.blazebit.persistence.view.impl.entity.MapViewToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
-import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
-import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
+import com.blazebit.persistence.view.spi.type.DirtyStateTrackable;
+import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.update.EntityViewUpdater;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.update.UpdateQueryFactory;
@@ -69,7 +69,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
 
     private static final Map.Entry<Object, Object> REMOVED_MARKER = new AbstractMap.SimpleEntry<>(null, null);
 
-    private final MapInstantiator<?, ?> mapInstantiator;
+    private final MapInstantiatorImplementor<?, ?> mapInstantiator;
     private final MapViewToEntityMapper mapper;
     private final MapViewToEntityMapper loadOnlyMapper;
     private final CollectionRemoveListener keyCascadeDeleteListener;
@@ -80,7 +80,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
     @SuppressWarnings("unchecked")
     public MapAttributeFlusher(String attributeName, String mapping, Class<?> ownerEntityClass, String ownerIdAttributeName, String ownerMapping, DirtyAttributeFlusher<?, ?, ?> ownerIdFlusher, DirtyAttributeFlusher<?, ?, ?> elementFlusher, boolean supportsCollectionDml, FlushStrategy flushStrategy, AttributeAccessor attributeMapper, InitialValueAttributeAccessor viewAttributeAccessor,
                                boolean optimisticLockProtected, boolean collectionUpdatable, CollectionRemoveListener keyCascadeDeleteListener, CollectionRemoveListener elementCascadeDeleteListener, CollectionRemoveListener keyRemoveListener, CollectionRemoveListener elementRemoveListener,
-                               boolean viewOnlyDeleteCascaded, boolean jpaProviderDeletesCollection, TypeDescriptor keyDescriptor, TypeDescriptor elementDescriptor, MapViewToEntityMapper mapper, MapViewToEntityMapper loadOnlyMapper, MapInstantiator<?, ?> mapInstantiator) {
+                               boolean viewOnlyDeleteCascaded, boolean jpaProviderDeletesCollection, TypeDescriptor keyDescriptor, TypeDescriptor elementDescriptor, MapViewToEntityMapper mapper, MapViewToEntityMapper loadOnlyMapper, MapInstantiatorImplementor<?, ?> mapInstantiator) {
         super(attributeName, mapping, collectionUpdatable || elementDescriptor.isMutable(), ownerEntityClass, ownerIdAttributeName, ownerMapping, ownerIdFlusher, elementFlusher, supportsCollectionDml, flushStrategy, attributeMapper, viewAttributeAccessor, optimisticLockProtected, collectionUpdatable, viewOnlyDeleteCascaded, jpaProviderDeletesCollection, elementCascadeDeleteListener,
                 elementRemoveListener, elementDescriptor);
         this.mapInstantiator = mapInstantiator;
@@ -113,22 +113,22 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
 
     @SuppressWarnings("unchecked")
     protected V createMap(int size) {
-        return (V) mapInstantiator.createCollection(size);
+        return (V) mapInstantiator.createMap(size);
     }
 
     @SuppressWarnings("unchecked")
     protected V createJpaMap(int size) {
-        return (V) mapInstantiator.createJpaCollection(size);
+        return (V) mapInstantiator.createJpaMap(size);
     }
 
     @Override
     protected V createJpaCollection() {
-        return (V) mapInstantiator.createJpaCollection(0);
+        return (V) mapInstantiator.createJpaMap(0);
     }
 
     @SuppressWarnings("unchecked")
     protected RecordingMap<?, ?, ?> createRecordingMap(int size) {
-        return mapInstantiator.createRecordingCollection(size);
+        return mapInstantiator.createRecordingMap(size);
     }
 
     @Override

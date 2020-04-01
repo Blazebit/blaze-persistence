@@ -16,6 +16,9 @@
 
 package com.blazebit.persistence.view.metamodel;
 
+import com.blazebit.persistence.view.MapInstantiator;
+import com.blazebit.persistence.view.RecordingContainer;
+
 import java.util.Map;
 
 /**
@@ -52,4 +55,13 @@ public interface MapAttribute<X, K, V> extends PluralAttribute<X, Map<K, V>, V> 
      * @since 1.2.0
      */
     public boolean isKeySubview();
+
+    /**
+     * Returns the map instantiator for this attribute.
+     *
+     * @param <R> The recording map type
+     * @return The map instantiator
+     * @since 1.5.0
+     */
+    public <R extends Map<K, V> & RecordingContainer<? extends Map<K, V>>> MapInstantiator<Map<K, V>, R> getMapInstantiator();
 }

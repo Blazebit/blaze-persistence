@@ -328,7 +328,7 @@ public class SubviewInheritanceTest extends AbstractEntityViewTest {
     }
 
     public static <T> void assertTypeMatches(T o, EntityViewManager evm, Class<T> baseType, Class<? extends T> subtype) {
-        assertEquals(baseType.getName() + "_" + subtype.getSimpleName() + "_$$_javassist_entityview_", o.getClass().getName());
+        assertEquals(subtype.getName() + "Impl", o.getClass().getName());
     }
 
     public static void assertDocumentEquals(Document doc, SimpleDocumentView view) {

@@ -19,7 +19,11 @@ package com.blazebit.persistence.view.processor;
 import com.blazebit.persistence.view.processor.annotation.AnnotationMetaEntityView;
 
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.ExecutableType;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
@@ -41,9 +45,12 @@ public class Context {
     private final Map<String, MetaEntityView> metaEntityViews = new HashMap<>();
     private final Collection<String> generatedModelClasses = new HashSet<>();
 
-    private boolean addGeneratedAnnotation = true;
+    private boolean addGeneratedAnnotation;
     private boolean addGenerationDate;
     private boolean addSuppressWarningsAnnotation;
+    private boolean strictCascadingCheck;
+    private String defaultVersionAttributeName;
+    private String defaultVersionAttributeType;
 
     public Context(ProcessingEnvironment pe) {
         this.pe = pe;
@@ -75,6 +82,16 @@ public class Context {
             return;
         }
         pe.getMessager().printMessage(type, message);
+    }
+
+    public boolean matchesDefaultVersionAttribute(Element member) {
+        if (getDefaultVersionAttributeName() == null || !getDefaultVersionAttributeName().equals(EntityViewTypeUtils.getAttributeName(member))) {
+            return false;
+        }
+        if (member.getKind() == ElementKind.METHOD) {
+            return getDefaultVersionAttributeType() == null || getDefaultVersionAttributeType().equals(((TypeElement) ((DeclaredType) ((ExecutableType) member.asType()).getReturnType()).asElement()).getQualifiedName().toString());
+        }
+        return getDefaultVersionAttributeType() == null || getDefaultVersionAttributeType().equals(((TypeElement) ((DeclaredType) member.asType()).asElement()).getQualifiedName().toString());
     }
 
     public boolean containsMetaEntityView(String qualifiedName) {
@@ -123,5 +140,29 @@ public class Context {
 
     public void setAddSuppressWarningsAnnotation(boolean addSuppressWarningsAnnotation) {
         this.addSuppressWarningsAnnotation = addSuppressWarningsAnnotation;
+    }
+
+    public boolean isStrictCascadingCheck() {
+        return strictCascadingCheck;
+    }
+
+    public void setStrictCascadingCheck(boolean strictCascadingCheck) {
+        this.strictCascadingCheck = strictCascadingCheck;
+    }
+
+    public String getDefaultVersionAttributeName() {
+        return defaultVersionAttributeName;
+    }
+
+    public void setDefaultVersionAttributeName(String defaultVersionAttributeName) {
+        this.defaultVersionAttributeName = defaultVersionAttributeName;
+    }
+
+    public String getDefaultVersionAttributeType() {
+        return defaultVersionAttributeType;
+    }
+
+    public void setDefaultVersionAttributeType(String defaultVersionAttributeType) {
+        this.defaultVersionAttributeType = defaultVersionAttributeType;
     }
 }

@@ -17,8 +17,9 @@
 package com.blazebit.persistence.view.impl.proxy;
 
 import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
-import com.blazebit.persistence.view.metamodel.MappingConstructor;
+import com.blazebit.persistence.view.impl.metamodel.MappingConstructorImpl;
 
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
@@ -31,16 +32,41 @@ import java.util.List;
  */
 public class ConstructorReflectionInstantiator<T> extends AbstractReflectionInstantiator<T> {
 
+    private static final boolean TUPLE_STYLE = true;
     private final Constructor<T> constructor;
+    private final int size;
 
-    public ConstructorReflectionInstantiator(MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory, ManagedViewTypeImplementor<T> viewType, ManagedViewTypeImplementor<T> viewTypeBase, Class<?>[] parameterTypes,
+    public ConstructorReflectionInstantiator(MappingConstructorImpl<T> mappingConstructor, ProxyFactory proxyFactory, ManagedViewTypeImplementor<T> viewType, Class<?>[] parameterTypes,
+                                             EntityViewManager entityViewManager, ManagedViewTypeImpl.InheritanceSubtypeConfiguration<T> configuration) {
+        this(mappingConstructor, proxyFactory, viewType, parameterTypes, entityViewManager, configuration.getMutableBasicUserTypes(), configuration.getTypeConverterEntries());
+    }
+
+    public ConstructorReflectionInstantiator(MappingConstructorImpl<T> mappingConstructor, ProxyFactory proxyFactory, ManagedViewTypeImplementor<T> viewType, Class<?>[] parameterTypes,
                                              EntityViewManager entityViewManager, List<MutableBasicUserTypeEntry> mutableBasicUserTypes, List<TypeConverterEntry> typeConverterEntries) {
         super(mutableBasicUserTypes, typeConverterEntries, parameterTypes);
-        Class<T> proxyClazz = getProxyClass(entityViewManager, proxyFactory, viewType, viewTypeBase);
+        Class<T> proxyClazz = (Class<T>) proxyFactory.getProxy(entityViewManager, viewType);
         Constructor<T> javaConstructor;
+        int size;
 
         try {
-            javaConstructor = proxyClazz.getDeclaredConstructor(parameterTypes);
+            if (TUPLE_STYLE) {
+                if (mappingConstructor == null) {
+                    size = 3;
+                    javaConstructor = proxyClazz.getDeclaredConstructor(proxyClazz, int.class, Object[].class);
+                } else {
+                    int parameterSize = mappingConstructor.getParameterAttributes().size();
+                    size = parameterSize + 3;
+                    Class[] types = new Class[size];
+                    types[0] = proxyClazz;
+                    types[1] = int.class;
+                    types[2] = Object[].class;
+                    System.arraycopy(parameterTypes, parameterTypes.length - parameterSize, types, 3, parameterSize);
+                    javaConstructor = proxyClazz.getDeclaredConstructor(types);
+                }
+            } else {
+                javaConstructor = proxyClazz.getDeclaredConstructor(parameterTypes);
+
+            }
         } catch (NoSuchMethodException | SecurityException ex) {
             throw new IllegalArgumentException("The given mapping constructor '" + mappingConstructor + "' does not map to a constructor of the proxy class: " + proxyClazz
                     .getName(), ex);
@@ -52,13 +78,22 @@ public class ConstructorReflectionInstantiator<T> extends AbstractReflectionInst
         }
 
         this.constructor = javaConstructor;
+        this.size = size;
     }
 
     @Override
     public T newInstance(Object[] tuple) {
         try {
             prepareTuple(tuple);
-            T instance = constructor.newInstance(tuple);
+            T instance;
+            if (TUPLE_STYLE) {
+                Object[] array = new Object[size];
+                array[1] = 0;
+                array[2] = tuple;
+                instance = constructor.newInstance(array);
+            } else {
+                instance = constructor.newInstance(tuple);
+            }
             finalizeInstance(instance);
             return instance;
         } catch (Exception ex) {
@@ -75,10 +110,4 @@ public class ConstructorReflectionInstantiator<T> extends AbstractReflectionInst
         }
     }
 
-    @Override
-    @SuppressWarnings("unchecked")
-    protected Class<T> getProxyClass(EntityViewManager entityViewManager, ProxyFactory proxyFactory, ManagedViewTypeImplementor<T> viewType, ManagedViewTypeImplementor<T> viewTypeBase) {
-        return (Class<T>) proxyFactory.getProxy(entityViewManager, viewType, viewTypeBase);
-    }
-    
 }
