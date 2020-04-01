@@ -232,6 +232,11 @@ public class EntityViewManagerProducer {
     private volatile EntityViewManager evm;
 
     public void init(@Observes @Initialized(ApplicationScoped.class) Object init) {
+        // no-op to force eager initialization
+    }
+
+    @PostConstruct
+    public void init() {
         // do some configuration
         evm = config.createEntityViewManager(criteriaBuilderFactory);
     }

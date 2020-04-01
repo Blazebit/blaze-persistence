@@ -16,8 +16,11 @@
 
 package com.blazebit.persistence.spring.data.webmvc.impl;
 
+import com.blazebit.persistence.integration.jackson.EntityViewIdValueAccessor;
 import com.blazebit.persistence.spring.data.webmvc.KeysetPageableArgumentResolver;
 import com.blazebit.persistence.spring.data.webmvc.impl.json.EntityViewAwareMappingJackson2HttpMessageConverter;
+import com.blazebit.persistence.spring.data.webmvc.impl.json.EntityViewIdHandlerInterceptor;
+import com.blazebit.persistence.spring.data.webmvc.impl.json.EntityViewIdValueHolder;
 import com.blazebit.persistence.view.EntityViewManager;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +31,7 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.data.web.SortHandlerMethodArgumentResolver;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
 import java.util.List;
@@ -68,6 +72,16 @@ public class BlazePersistenceWebConfiguration extends WebMvcConfigurerAdapter {
     @Override
     public void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
         // Add it to the beginning so it has precedence over the builtin
-        converters.add(0, new EntityViewAwareMappingJackson2HttpMessageConverter(entityViewManager));
+        converters.add(0, new EntityViewAwareMappingJackson2HttpMessageConverter(entityViewManager, idAttributeAccessor()));
+    }
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(new EntityViewIdHandlerInterceptor(entityViewManager, (EntityViewIdValueHolder) idAttributeAccessor()));
+    }
+
+    @Bean
+    public EntityViewIdValueAccessor idAttributeAccessor() {
+        return new EntityViewIdValueHolder(conversionService.getObject());
     }
 }

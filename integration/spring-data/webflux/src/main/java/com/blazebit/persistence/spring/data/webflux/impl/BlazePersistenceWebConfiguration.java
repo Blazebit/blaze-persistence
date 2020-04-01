@@ -16,14 +16,22 @@
 
 package com.blazebit.persistence.spring.data.webflux.impl;
 
+import com.blazebit.persistence.integration.jackson.EntityViewIdValueAccessor;
 import com.blazebit.persistence.spring.data.webflux.impl.json.EntityViewAwareJackson2JsonDecoder;
+import com.blazebit.persistence.spring.data.webflux.impl.json.EntityViewIdAwareWebFilter;
+import com.blazebit.persistence.spring.data.webflux.impl.json.EntityViewIdValueAccessorImpl;
+import com.blazebit.persistence.spring.data.webflux.impl.json.EntityViewTypedDecoderHttpMessageReader;
 import com.blazebit.persistence.view.EntityViewManager;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.http.codec.ServerCodecConfigurer;
 import org.springframework.web.reactive.config.WebFluxConfigurer;
 import org.springframework.web.reactive.result.method.annotation.ArgumentResolverConfigurer;
+import org.springframework.web.reactive.result.method.annotation.RequestMappingHandlerMapping;
+import org.springframework.web.server.WebFilter;
 
 /**
  * @author Christian Beikov
@@ -33,10 +41,12 @@ import org.springframework.web.reactive.result.method.annotation.ArgumentResolve
 public class BlazePersistenceWebConfiguration implements WebFluxConfigurer {
 
     private final EntityViewManager entityViewManager;
+    private final ObjectProvider<ConversionService> conversionServiceFactory;
 
     @Autowired
-    public BlazePersistenceWebConfiguration(EntityViewManager entityViewManager) {
+    public BlazePersistenceWebConfiguration(EntityViewManager entityViewManager, ObjectProvider<ConversionService> conversionServiceFactory) {
         this.entityViewManager = entityViewManager;
+        this.conversionServiceFactory = conversionServiceFactory;
     }
 
     @Bean
@@ -49,6 +59,11 @@ public class BlazePersistenceWebConfiguration implements WebFluxConfigurer {
         return new KeysetPageableHandlerMethodArgumentResolver(sortResolver());
     }
 
+    @Bean
+    public WebFilter entityViewIdAwareWebFilter(RequestMappingHandlerMapping requestMappingHandlerMapping) {
+        return new EntityViewIdAwareWebFilter(requestMappingHandlerMapping, entityViewManager);
+    }
+
     @Override
     public void configureArgumentResolvers(ArgumentResolverConfigurer configurer) {
         configurer.addCustomResolver(sortResolver());
@@ -57,7 +72,11 @@ public class BlazePersistenceWebConfiguration implements WebFluxConfigurer {
 
     @Override
     public void configureHttpMessageCodecs(ServerCodecConfigurer configurer) {
-        configurer.defaultCodecs().jackson2JsonDecoder(new EntityViewAwareJackson2JsonDecoder(entityViewManager));
+        configurer.customCodecs().reader(new EntityViewTypedDecoderHttpMessageReader<>(new EntityViewAwareJackson2JsonDecoder(entityViewManager, (EntityViewIdValueAccessorImpl) idAttributeAccessor())));
     }
 
+    @Bean
+    public EntityViewIdValueAccessor idAttributeAccessor() {
+        return new EntityViewIdValueAccessorImpl(conversionServiceFactory.getObject());
+    }
 }
