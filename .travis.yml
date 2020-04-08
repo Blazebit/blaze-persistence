@@ -75,6 +75,10 @@ matrix:
       jdk: oraclejdk8
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 SPRING_DATA=spring-data-2.2.x DELTASPIKE=deltaspike-1.9
       jdk: oraclejdk8
+    - env: JPAPROVIDER=hibernate-apt RDBMS=postgresql SPRING_DATA=spring-data-2.2.x DELTASPIKE=deltaspike-1.9
+      jdk: oraclejdk8
+      addons:
+        postgresql: "9.4"
 #    - env: JPAPROVIDER=hibernate-5.2 RDBMS=sqlite
 #      jdk: oraclejdk8
 #    - env: JPAPROVIDER=hibernate-5.2 RDBMS=firebird
@@ -443,24 +447,24 @@ matrix:
 ################################################
 # JDK 9+
 ################################################
-    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=10
-      before_install:
-        - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
-        - . ./install-jdk.sh -F 10 -L GPL
-        - rm "${JAVA_HOME}/lib/security/cacerts"
-        - ln -s /etc/ssl/certs/java/cacerts "${JAVA_HOME}/lib/security/cacerts"
+#    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=10
+#      before_install:
+#        - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
+#        - . ./install-jdk.sh -F 10 -L GPL
+#        - rm "${JAVA_HOME}/lib/security/cacerts"
+#        - ln -s /etc/ssl/certs/java/cacerts "${JAVA_HOME}/lib/security/cacerts"
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=11
       before_install:
         - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
         - . ./install-jdk.sh -F 11 -L BCL
-    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=12
-      before_install:
-        - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
-        - . ./install-jdk.sh -F 12 -L GPL
-    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=13
-      before_install:
-        - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
-        - . ./install-jdk.sh -F 13 -L GPL
+#    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=12
+#      before_install:
+#        - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
+#        - . ./install-jdk.sh -F 12 -L GPL
+#    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=13
+#      before_install:
+#        - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
+#        - . ./install-jdk.sh -F 13 -L GPL
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=14
       before_install:
         - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
@@ -473,24 +477,24 @@ matrix:
       before_install:
         - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
         - . ./install-jdk.sh -F 9 -L GPL
-    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=10 BUILD_JDK=10 DELTASPIKE=deltaspike-1.9
-      before_install:
-        - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
-        - . ./install-jdk.sh -F 10 -L GPL
-        - rm "${JAVA_HOME}/lib/security/cacerts"
-        - ln -s /etc/ssl/certs/java/cacerts "${JAVA_HOME}/lib/security/cacerts"
+#    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=10 BUILD_JDK=10 DELTASPIKE=deltaspike-1.9
+#      before_install:
+#        - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
+#        - . ./install-jdk.sh -F 10 -L GPL
+#        - rm "${JAVA_HOME}/lib/security/cacerts"
+#        - ln -s /etc/ssl/certs/java/cacerts "${JAVA_HOME}/lib/security/cacerts"
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=11 BUILD_JDK=11 DELTASPIKE=deltaspike-1.9
       before_install:
         - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
         - . ./install-jdk.sh -F 11 -L BCL
-    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=12 BUILD_JDK=12 DELTASPIKE=deltaspike-1.9
-      before_install:
-        - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
-        - . ./install-jdk.sh -F 12 -L GPL
-    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=13 BUILD_JDK=13 DELTASPIKE=deltaspike-1.9
-      before_install:
-        - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
-        - . ./install-jdk.sh -F 13 -L GPL
+#    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=12 BUILD_JDK=12 DELTASPIKE=deltaspike-1.9
+#      before_install:
+#        - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
+#        - . ./install-jdk.sh -F 12 -L GPL
+#    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=13 BUILD_JDK=13 DELTASPIKE=deltaspike-1.9
+#      before_install:
+#        - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
+#        - . ./install-jdk.sh -F 13 -L GPL
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=14 BUILD_JDK=14 DELTASPIKE=deltaspike-1.9
       before_install:
         - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
@@ -510,10 +514,6 @@ matrix:
         - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
         - . ./install-jdk.sh -F 9 -L GPL
     - env: JPAPROVIDER=eclipselink RDBMS=h2 JDK=9
-      before_install:
-        - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
-        - . ./install-jdk.sh -F 9 -L GPL
-    - env: JPAPROVIDER=hibernate-5.3 RDBMS=h2 JDK=9
       before_install:
         - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
         - . ./install-jdk.sh -F 9 -L GPL

@@ -284,6 +284,11 @@ public class ConvertedViewType<X> implements ViewTypeImplementor<X> {
     }
 
     @Override
+    public Method getPostLoadMethod() {
+        return delegate.getPostLoadMethod();
+    }
+
+    @Override
     public Method getPrePersistMethod() {
         return delegate.getPrePersistMethod();
     }

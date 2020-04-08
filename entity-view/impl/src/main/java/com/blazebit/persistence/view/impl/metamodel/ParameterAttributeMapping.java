@@ -21,6 +21,7 @@ import com.blazebit.persistence.view.MappingCorrelated;
 import com.blazebit.persistence.view.MappingCorrelatedSimple;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSubquery;
+import com.blazebit.persistence.view.Self;
 import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedParameterCollectionAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedParameterListAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedParameterSingularAttribute;
@@ -130,6 +131,9 @@ public class ParameterAttributeMapping extends AttributeMapping implements Entit
     public <X> AbstractParameterAttribute<? super X, ?> getParameterAttribute(MappingConstructorImpl<X> constructor, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
         if (attribute == null) {
             if (mapping instanceof MappingParameter) {
+                attribute = new MappingParameterSingularAttribute<X, Object>(constructor, this, context, embeddableMapping);
+                return (AbstractParameterAttribute<? super X, ?>) attribute;
+            } else if (mapping instanceof Self) {
                 attribute = new MappingParameterSingularAttribute<X, Object>(constructor, this, context, embeddableMapping);
                 return (AbstractParameterAttribute<? super X, ?>) attribute;
             }

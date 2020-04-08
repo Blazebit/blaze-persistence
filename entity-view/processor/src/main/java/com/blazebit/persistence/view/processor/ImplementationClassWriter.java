@@ -26,13 +26,25 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.tools.Diagnostic;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.ObjectStreamConstants;
+import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -48,6 +60,8 @@ public final class ImplementationClassWriter {
     // The following two must be aligned with com.blazebit.persistence.view.SerializableEntityViewManager
     public static final String EVM_FIELD_NAME = "ENTITY_VIEW_MANAGER";
     public static final String SERIALIZABLE_EVM_FIELD_NAME = "SERIALIZABLE_ENTITY_VIEW_MANAGER";
+    private static final String SERIALIZATION_CLASS_NAME_SUFFIX = "Ser";
+    private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
     private static final String NEW_LINE = System.lineSeparator();
 
     private ImplementationClassWriter() {
@@ -129,7 +143,7 @@ public final class ImplementationClassWriter {
             sb.append("    private ").append(entity.implementationImportType(Constants.LIST)).append("<Object> $$_readOnlyParents;").append(NEW_LINE);
             sb.append("    private ").append(entity.implementationImportType(Constants.DIRTY_TRACKER)).append(" $$_parent;").append(NEW_LINE);
             sb.append("    private int $$_parentIndex;").append(NEW_LINE);
-            sb.append("    private long $$_dirty = ").append(entity.getDefaultDirtyMask()).append("L;").append(NEW_LINE);
+            sb.append("    private long $$_dirty;").append(NEW_LINE);
         }
         if (version != null && version.getPropertyName().equals("$$_version")) {
             sb.append("    private ").append(version.getImplementationTypeString()).append(" ").append(version.getPropertyName()).append(";").append(NEW_LINE);
@@ -376,8 +390,759 @@ public final class ImplementationClassWriter {
 
         appendEqualsHashCodeAndToString(sb, entity, context, members, entityViewClassName);
 
+        if (entity.hasSelfConstructor()) {
+            appendSerializationClass(sb, entity, context);
+        }
+
         sb.append("}");
         sb.append(NEW_LINE);
+    }
+
+    private static void appendSerializationClass(StringBuilder sb, MetaEntityView entity, Context context) {
+        String serializableClassSimpleName = entity.getSimpleName() + SERIALIZATION_CLASS_NAME_SUFFIX;
+        for (MetaConstructor constructor : entity.getConstructors()) {
+            if (constructor.hasSelfParameter()) {
+                sb.append("    public static ").append(entity.getSimpleName()).append(" createSelf(");
+                for (MetaAttribute member : entity.getMembers()) {
+                    sb.append(member.getImplementationTypeString()).append(" ").append(member.getPropertyName()).append(", ");
+                }
+                sb.setCharAt(sb.length() - 2, ')');
+                sb.append('{').append(NEW_LINE);
+                sb.append("        try {").append(NEW_LINE);
+                sb.append("            ").append(serializableClassSimpleName).append(" $ = (").append(serializableClassSimpleName).append(")new java.io.ObjectInputStream(new java.io.ByteArrayInputStream(")
+                        .append(serializableClassSimpleName).append(".EMPTY_INSTANCE_BYTES)).readObject();").append(NEW_LINE);
+                for (MetaAttribute member : entity.getMembers()) {
+                    sb.append("            $.").append(member.getPropertyName()).append(" = ").append(member.getPropertyName()).append(";").append(NEW_LINE);
+                }
+                sb.append("            return $;").append(NEW_LINE);
+                sb.append("        } catch (Exception ex) {").append(NEW_LINE);
+                sb.append("            throw new RuntimeException(ex);").append(NEW_LINE);
+                sb.append("        }").append(NEW_LINE);
+                sb.append("    }").append(NEW_LINE);
+            }
+        }
+
+        sb.append("    private static class ").append(serializableClassSimpleName);
+
+        List<TypeVariable> typeArguments = (List<TypeVariable>) ((DeclaredType) entity.getTypeElement().asType()).getTypeArguments();
+        if (!typeArguments.isEmpty()) {
+            sb.append("<");
+            printTypeVariable(sb, entity, typeArguments.get(0));
+            for (int i = 1; i < typeArguments.size(); i++) {
+                sb.append(", ");
+                printTypeVariable(sb, entity, typeArguments.get(i));
+            }
+            sb.append(">");
+        }
+        if (entity.getTypeElement().getKind() == ElementKind.CLASS) {
+            sb.append(" extends ").append(entity.implementationImportType(entity.getBaseSuperclass()));
+        } else {
+            sb.append(" implements ").append(entity.implementationImportType(entity.getTypeElement().getQualifiedName().toString()));
+        }
+
+        if (typeArguments.isEmpty()) {
+            if (!entity.getForeignPackageSuperTypeVariables().isEmpty()) {
+                sb.append("<");
+                sb.append(entity.getForeignPackageSuperTypeVariables().get(0));
+                for (int i = 1; i < entity.getForeignPackageSuperTypeVariables().size(); i++) {
+                    sb.append(", ");
+                    sb.append(entity.getForeignPackageSuperTypeVariables().get(i));
+                }
+                sb.append(">");
+            }
+        } else {
+            sb.append("<");
+            if (!entity.getForeignPackageSuperTypeVariables().isEmpty()) {
+                sb.append(entity.getForeignPackageSuperTypeVariables().get(0));
+                for (int i = 1; i < entity.getForeignPackageSuperTypeVariables().size(); i++) {
+                    sb.append(", ");
+                    sb.append(entity.getForeignPackageSuperTypeVariables().get(i));
+                }
+                sb.append(", ");
+            }
+            sb.append(typeArguments.get(0));
+            for (int i = 1; i < typeArguments.size(); i++) {
+                sb.append(", ");
+                sb.append(typeArguments.get(i));
+            }
+            sb.append(">");
+        }
+        if (entity.getTypeElement().getKind() == ElementKind.CLASS) {
+            sb.append(" implements ");
+        } else {
+            sb.append(", ");
+        }
+        sb.append(entity.implementationImportType(Serializable.class.getName())).append(" {").append(NEW_LINE);
+        sb.append("        private static final long serialVersionUID = 1L;").append(NEW_LINE);
+        sb.append("        private static final byte[] EMPTY_INSTANCE_BYTES = new byte[]{");
+        appendBytesAsHex(sb, generateEmptyInstanceBytes(entity.getPackageName() + "." + entity.getSimpleName() + IMPL_CLASS_NAME_SUFFIX + "$" + serializableClassSimpleName, entity, context));
+        sb.setCharAt(sb.length() - 1, '}');
+        sb.append(';').append(NEW_LINE);
+        for (MetaAttribute member : entity.getMembers()) {
+            sb.append("        public ").append(member.getImplementationTypeString()).append(" ").append(member.getPropertyName()).append(";").append(NEW_LINE);
+        }
+        for (MetaConstructor constructor : entity.getConstructors()) {
+            sb.append("        private ").append(serializableClassSimpleName).append("(");
+            if (constructor.getParameters().isEmpty()) {
+                sb.append(") {").append(NEW_LINE);
+                sb.append("            super();").append(NEW_LINE);
+                sb.append("        }").append(NEW_LINE);
+            } else {
+                for (MetaAttribute parameter : constructor.getParameters()) {
+                    sb.append(parameter.getImplementationTypeString()).append(" ").append(parameter.getPropertyName()).append(", ");
+                }
+                sb.setCharAt(sb.length() - 2, ')');
+                sb.append("{").append(NEW_LINE);
+                sb.append("            super(");
+                for (MetaAttribute parameter : constructor.getParameters()) {
+                    sb.append(parameter.getPropertyName()).append(", ");
+                }
+                sb.setCharAt(sb.length() - 2, ')');
+                sb.setCharAt(sb.length() - 1, ';');
+                sb.append(NEW_LINE);
+                sb.append("        }").append(NEW_LINE);
+            }
+        }
+        for (MetaAttribute member : entity.getMembers()) {
+            sb.append("        @Override")
+                    .append(NEW_LINE)
+                    .append("        public ");
+
+            sb.append(member.getImplementationTypeString());
+
+            sb.append(' ')
+                    .append(member.getElement().getSimpleName().toString())
+                    .append("() {")
+                    .append(NEW_LINE)
+                    .append("            return ")
+                    .append(member.getPropertyName())
+                    .append(";")
+                    .append(NEW_LINE)
+                    .append("        }")
+                    .append(NEW_LINE);
+
+            if (member.getSetter() != null) {
+                sb.append("        @Override")
+                        .append(NEW_LINE)
+                        .append("        public void ")
+                        .append(member.getSetter().getSimpleName().toString())
+                        .append('(');
+
+                sb.append(member.getImplementationTypeString());
+
+                sb.append(' ')
+                        .append(member.getPropertyName())
+                        .append(") {")
+                        .append(NEW_LINE);
+
+                sb.append("            this.")
+                        .append(member.getPropertyName())
+                        .append(" = ")
+                        .append(member.getPropertyName())
+                        .append(";")
+                        .append(NEW_LINE);
+                sb.append("        }").append(NEW_LINE);
+            }
+        }
+
+        for (ExecutableElement specialMember : entity.getSpecialMembers()) {
+            if (Constants.ENTITY_VIEW_MANAGER.equals(specialMember.getReturnType().toString())) {
+                sb.append("        @Override").append(NEW_LINE);
+                sb.append("        public ").append(entity.implementationImportType(specialMember.getReturnType().toString())).append(" ").append(specialMember.getSimpleName().toString()).append("() {").append(NEW_LINE);
+                sb.append("            return ").append(SERIALIZABLE_EVM_FIELD_NAME).append(";").append(NEW_LINE);
+                sb.append("        }").append(NEW_LINE);
+                sb.append(NEW_LINE);
+            } else {
+                context.logMessage(Diagnostic.Kind.ERROR, "Unsupported special member: " + specialMember);
+            }
+        }
+
+        sb.append("    }").append(NEW_LINE);
+    }
+
+    private static void appendBytesAsHex(StringBuilder sb, byte[] bytes) {
+        for ( int j = 0; j < bytes.length; j++ ) {
+            int v = bytes[j] & 0xFF;
+            sb.append(" (byte) 0x");
+            sb.append(HEX_ARRAY[v >>> 4]);
+            sb.append(HEX_ARRAY[v & 0x0F]);
+            sb.append(',');
+        }
+    }
+
+    private static byte[] generateEmptyInstanceBytes(String serializableClassName, MetaEntityView entity, Context context) {
+        // Generate empty object serialization bytes according to https://www.javaworld.com/article/2072752/the-java-serialization-algorithm-revealed.html
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try {
+            DataOutputStream oos = new DataOutputStream(baos);
+            oos.writeShort(ObjectStreamConstants.STREAM_MAGIC);
+            oos.writeShort(ObjectStreamConstants.STREAM_VERSION);
+
+            // Start object
+            oos.writeByte(ObjectStreamConstants.TC_OBJECT);
+            // Class descriptor
+            oos.writeByte(ObjectStreamConstants.TC_CLASSDESC);
+            // Class name
+            oos.writeUTF(serializableClassName);
+            // Serial version UID of the class
+            oos.writeLong(1L);
+            // Supported flags
+            oos.writeByte(ObjectStreamConstants.SC_SERIALIZABLE);
+
+            List<List<SerializationField>> serializationFieldHierarchy = new ArrayList<>();
+            List<SerializationField> serializationFields = new ArrayList<>();
+            for (MetaAttribute member : entity.getMembers()) {
+                serializationFields.add(new MetaSerializationField(member));
+            }
+            serializationFieldHierarchy.add(serializationFields);
+            writeFields(serializationFields, oos);
+            oos.writeByte(ObjectStreamConstants.TC_ENDBLOCKDATA);
+
+            // TODO: foreign package supertypes?
+            TypeElement superclass = entity.getTypeElement();
+            TypeMirror serializableTypeMirror = context.getElementUtils().getTypeElement(Serializable.class.getName()).asType();
+            while (superclass.getKind() == ElementKind.CLASS && !superclass.getQualifiedName().toString().equals("java.lang.Object")) {
+                // Class descriptor
+                oos.writeByte(ObjectStreamConstants.TC_CLASSDESC);
+                // Class name
+                oos.writeUTF(superclass.getQualifiedName().toString());
+                List<SerializationField> fields = new ArrayList<>();
+                Long serialVersionUID = null;
+                for (Element enclosedElement : superclass.getEnclosedElements()) {
+                    if (enclosedElement.getKind() == ElementKind.FIELD) {
+                        VariableElement variableElement = (VariableElement) enclosedElement;
+                        Set<Modifier> modifiers = variableElement.getModifiers();
+                        if (modifiers.contains(Modifier.STATIC)) {
+                            if (modifiers.contains(Modifier.PRIVATE) && modifiers.contains(Modifier.FINAL) && variableElement.asType().getKind() == TypeKind.LONG) {
+                                serialVersionUID = (Long) variableElement.getConstantValue();
+                            }
+                        } else if (!modifiers.contains(Modifier.TRANSIENT)) {
+                            fields.add(new FieldSerializationField(variableElement));
+                        }
+                    }
+                }
+                if (context.getTypeUtils().isAssignable(superclass.asType(), serializableTypeMirror)) {
+                    // Serial version UID of the class
+                    if (serialVersionUID == null) {
+                        oos.writeLong(computeDefaultSUID(superclass, fields));
+                    } else {
+                        oos.writeLong(serialVersionUID);
+                    }
+                    // Supported flags
+                    oos.writeByte(ObjectStreamConstants.SC_SERIALIZABLE);
+                } else {
+                    // Serial version UID of the class
+                    oos.writeLong(0L);
+                    // Supported flags
+                    oos.writeByte(0);
+                }
+
+                serializationFieldHierarchy.add(fields);
+                writeFields(fields, oos);
+                oos.writeByte(ObjectStreamConstants.TC_ENDBLOCKDATA);
+
+                superclass = (TypeElement) ((DeclaredType) superclass.getSuperclass()).asElement();
+            }
+            oos.writeByte(ObjectStreamConstants.TC_NULL);
+            for (List<SerializationField> fields : serializationFieldHierarchy) {
+                for (SerializationField serializationField : fields) {
+                    if (serializationField.isPrimitive()) {
+                        switch (serializationField.getTypeMirror().getKind()) {
+                            case INT:
+                                oos.writeInt(0);
+                                break;
+                            case BYTE:
+                                oos.writeByte(0);
+                                break;
+                            case LONG:
+                                oos.writeLong(0);
+                                break;
+                            case FLOAT:
+                                oos.writeFloat(0);
+                                break;
+                            case DOUBLE:
+                                oos.writeDouble(0);
+                                break;
+                            case SHORT:
+                                oos.writeShort(0);
+                                break;
+                            case CHAR:
+                                oos.writeChar(0);
+                                break;
+                            case BOOLEAN:
+                                oos.writeBoolean(false);
+                                break;
+                            case VOID:
+                                oos.writeByte(ObjectStreamConstants.TC_NULL);
+                                break;
+                            default:
+                                throw new UnsupportedOperationException("Unsupported primitive type: " + serializationField.getTypeMirror().toString());
+                        }
+                    } else {
+                        oos.writeByte(ObjectStreamConstants.TC_NULL);
+                    }
+                }
+            }
+            oos.flush();
+            return baos.toByteArray();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    private static void writeFields(List<SerializationField> serializationFields, DataOutputStream oos) throws Exception {
+        Collections.sort(serializationFields);
+        oos.writeShort(serializationFields.size());
+        for (SerializationField serializationField : serializationFields) {
+            oos.writeByte(serializationField.getTypeCode());
+            oos.writeUTF(serializationField.getName());
+            if (!serializationField.isPrimitive()) {
+                oos.writeByte(ObjectStreamConstants.TC_STRING);
+                oos.writeUTF(serializationField.getTypeString());
+//                oos.writeTypeString(serializationField.getTypeString());
+            }
+        }
+    }
+
+
+    private static long computeDefaultSUID(TypeElement clazz, List<SerializationField> fields) {
+        try {
+            ByteArrayOutputStream bout = new ByteArrayOutputStream();
+            DataOutputStream dout = new DataOutputStream(bout);
+
+            dout.writeUTF(clazz.getQualifiedName().toString());
+            Set<Modifier> modifiers = clazz.getModifiers();
+
+            int classMods = 0;
+            if (modifiers.contains(Modifier.PUBLIC)) {
+                classMods = classMods | java.lang.reflect.Modifier.PUBLIC;
+            }
+            if (modifiers.contains(Modifier.FINAL)) {
+                classMods = classMods | java.lang.reflect.Modifier.FINAL;
+            }
+            if (clazz.getKind() == ElementKind.INTERFACE) {
+                classMods = classMods | java.lang.reflect.Modifier.INTERFACE;
+            }
+            if (modifiers.contains(Modifier.ABSTRACT)) {
+                classMods = classMods | java.lang.reflect.Modifier.ABSTRACT;
+            }
+
+            List<ExecutableElement> methods = new ArrayList<>();
+            List<ExecutableElement> cons = new ArrayList<>();
+            boolean hasStaticInitializer = false;
+            for (Element enclosedElement : clazz.getEnclosedElements()) {
+                if (enclosedElement.getKind() == ElementKind.CONSTRUCTOR) {
+                    cons.add((ExecutableElement) enclosedElement);
+                } else if (enclosedElement.getKind() == ElementKind.METHOD) {
+                    methods.add((ExecutableElement) enclosedElement);
+                } else if (enclosedElement.getKind() == ElementKind.STATIC_INIT) {
+                    hasStaticInitializer = true;
+                }
+            }
+
+
+            /*
+             * compensate for javac bug in which ABSTRACT bit was set for an
+             * interface only if the interface declared methods
+             */
+            if ((classMods & java.lang.reflect.Modifier.INTERFACE) != 0) {
+                classMods = (methods.size() > 0) ?
+                        (classMods | java.lang.reflect.Modifier.ABSTRACT) :
+                        (classMods & ~java.lang.reflect.Modifier.ABSTRACT);
+            }
+            dout.writeInt(classMods);
+
+            /*
+             * compensate for change in 1.2FCS in which
+             * Class.getInterfaces() was modified to return Cloneable and
+             * Serializable for array classes.
+             */
+            List<? extends TypeMirror> interfaces = clazz.getInterfaces();
+            String[] ifaceNames = new String[interfaces.size()];
+            for (int i = 0; i < interfaces.size(); i++) {
+                ifaceNames[i] = ((TypeElement) ((DeclaredType) interfaces.get(i)).asElement()).getQualifiedName().toString();
+            }
+            Arrays.sort(ifaceNames);
+            for (int i = 0; i < ifaceNames.length; i++) {
+                dout.writeUTF(ifaceNames[i]);
+            }
+
+            MemberSignature[] fieldSigs = new MemberSignature[fields.size()];
+            for (int i = 0; i < fields.size(); i++) {
+                fieldSigs[i] = new MemberSignature((VariableElement) fields.get(i).getElement());
+            }
+            Arrays.sort(fieldSigs, new Comparator<MemberSignature>() {
+                public int compare(MemberSignature ms1, MemberSignature ms2) {
+                    return ms1.name.compareTo(ms2.name);
+                }
+            });
+            for (int i = 0; i < fieldSigs.length; i++) {
+                MemberSignature sig = fieldSigs[i];
+                Set<Modifier> fieldModifiers = sig.member.getModifiers();
+                int mods = 0;
+                if (fieldModifiers.contains(Modifier.PUBLIC)) {
+                    mods = mods | java.lang.reflect.Modifier.PUBLIC;
+                }
+                if (fieldModifiers.contains(Modifier.PRIVATE)) {
+                    mods = mods | java.lang.reflect.Modifier.PRIVATE;
+                }
+                if (fieldModifiers.contains(Modifier.PROTECTED)) {
+                    mods = mods | java.lang.reflect.Modifier.PROTECTED;
+                }
+                if (fieldModifiers.contains(Modifier.STATIC)) {
+                    mods = mods | java.lang.reflect.Modifier.STATIC;
+                }
+                if (fieldModifiers.contains(Modifier.FINAL)) {
+                    mods = mods | java.lang.reflect.Modifier.FINAL;
+                }
+                if (fieldModifiers.contains(Modifier.VOLATILE)) {
+                    mods = mods | java.lang.reflect.Modifier.VOLATILE;
+                }
+                if (fieldModifiers.contains(Modifier.TRANSIENT)) {
+                    mods = mods | java.lang.reflect.Modifier.TRANSIENT;
+                }
+                if (((mods & java.lang.reflect.Modifier.PRIVATE) == 0) ||
+                        ((mods & (java.lang.reflect.Modifier.STATIC | java.lang.reflect.Modifier.TRANSIENT)) == 0)) {
+                    dout.writeUTF(sig.name);
+                    dout.writeInt(mods);
+                    dout.writeUTF(sig.signature);
+                }
+            }
+
+            if (hasStaticInitializer) {
+                dout.writeUTF("<clinit>");
+                dout.writeInt(java.lang.reflect.Modifier.STATIC);
+                dout.writeUTF("()V");
+            }
+
+            MemberSignature[] consSigs = new MemberSignature[cons.size()];
+            for (int i = 0; i < cons.size(); i++) {
+                consSigs[i] = new MemberSignature(cons.get(i));
+            }
+            Arrays.sort(consSigs, new Comparator<MemberSignature>() {
+                public int compare(MemberSignature ms1, MemberSignature ms2) {
+                    return ms1.signature.compareTo(ms2.signature);
+                }
+            });
+            for (int i = 0; i < consSigs.length; i++) {
+                MemberSignature sig = consSigs[i];
+                Set<Modifier> constructorModifiers = sig.member.getModifiers();
+                int mods = 0;
+                if (constructorModifiers.contains(Modifier.PUBLIC)) {
+                    mods = mods | java.lang.reflect.Modifier.PUBLIC;
+                }
+                if (constructorModifiers.contains(Modifier.PRIVATE)) {
+                    mods = mods | java.lang.reflect.Modifier.PRIVATE;
+                }
+                if (constructorModifiers.contains(Modifier.PROTECTED)) {
+                    mods = mods | java.lang.reflect.Modifier.PROTECTED;
+                }
+                if (constructorModifiers.contains(Modifier.STATIC)) {
+                    mods = mods | java.lang.reflect.Modifier.STATIC;
+                }
+                if (constructorModifiers.contains(Modifier.FINAL)) {
+                    mods = mods | java.lang.reflect.Modifier.FINAL;
+                }
+                if (constructorModifiers.contains(Modifier.SYNCHRONIZED)) {
+                    mods = mods | java.lang.reflect.Modifier.SYNCHRONIZED;
+                }
+                if (constructorModifiers.contains(Modifier.NATIVE)) {
+                    mods = mods | java.lang.reflect.Modifier.NATIVE;
+                }
+                if (constructorModifiers.contains(Modifier.ABSTRACT)) {
+                    mods = mods | java.lang.reflect.Modifier.ABSTRACT;
+                }
+                if (constructorModifiers.contains(Modifier.STRICTFP)) {
+                    mods = mods | java.lang.reflect.Modifier.STRICT;
+                }
+                if ((mods & java.lang.reflect.Modifier.PRIVATE) == 0) {
+                    dout.writeUTF("<init>");
+                    dout.writeInt(mods);
+                    dout.writeUTF(sig.signature.replace('/', '.'));
+                }
+            }
+
+            MemberSignature[] methSigs = new MemberSignature[methods.size()];
+            for (int i = 0; i < methods.size(); i++) {
+                methSigs[i] = new MemberSignature(methods.get(i));
+            }
+            Arrays.sort(methSigs, new Comparator<MemberSignature>() {
+                public int compare(MemberSignature ms1, MemberSignature ms2) {
+                    int comp = ms1.name.compareTo(ms2.name);
+                    if (comp == 0) {
+                        comp = ms1.signature.compareTo(ms2.signature);
+                    }
+                    return comp;
+                }
+            });
+            for (int i = 0; i < methSigs.length; i++) {
+                MemberSignature sig = methSigs[i];
+                Set<Modifier> methodModifiers = sig.member.getModifiers();
+                int mods = 0;
+                if (methodModifiers.contains(Modifier.PUBLIC)) {
+                    mods = mods | java.lang.reflect.Modifier.PUBLIC;
+                }
+                if (methodModifiers.contains(Modifier.PRIVATE)) {
+                    mods = mods | java.lang.reflect.Modifier.PRIVATE;
+                }
+                if (methodModifiers.contains(Modifier.PROTECTED)) {
+                    mods = mods | java.lang.reflect.Modifier.PROTECTED;
+                }
+                if (methodModifiers.contains(Modifier.STATIC)) {
+                    mods = mods | java.lang.reflect.Modifier.STATIC;
+                }
+                if (methodModifiers.contains(Modifier.FINAL)) {
+                    mods = mods | java.lang.reflect.Modifier.FINAL;
+                }
+                if (methodModifiers.contains(Modifier.SYNCHRONIZED)) {
+                    mods = mods | java.lang.reflect.Modifier.SYNCHRONIZED;
+                }
+                if (methodModifiers.contains(Modifier.NATIVE)) {
+                    mods = mods | java.lang.reflect.Modifier.NATIVE;
+                }
+                if (methodModifiers.contains(Modifier.ABSTRACT)) {
+                    mods = mods | java.lang.reflect.Modifier.ABSTRACT;
+                }
+                if (methodModifiers.contains(Modifier.STRICTFP)) {
+                    mods = mods | java.lang.reflect.Modifier.STRICT;
+                }
+                if ((mods & java.lang.reflect.Modifier.PRIVATE) == 0) {
+                    dout.writeUTF(sig.name);
+                    dout.writeInt(mods);
+                    dout.writeUTF(sig.signature.replace('/', '.'));
+                }
+            }
+
+            dout.flush();
+
+            MessageDigest md = MessageDigest.getInstance("SHA");
+            byte[] hashBytes = md.digest(bout.toByteArray());
+            long hash = 0;
+            for (int i = Math.min(hashBytes.length, 8) - 1; i >= 0; i--) {
+                hash = (hash << 8) | (hashBytes[i] & 0xFF);
+            }
+            return hash;
+        } catch (IOException ex) {
+            throw new InternalError(ex);
+        } catch (NoSuchAlgorithmException ex) {
+            throw new SecurityException(ex.getMessage());
+        }
+    }
+
+    /**
+     * @author Christian Beikov
+     * @since 1.5.0
+     */
+    private static class MemberSignature {
+
+        public final Element member;
+        public final String name;
+        public final String signature;
+
+        public MemberSignature(VariableElement field) {
+            member = field;
+            name = field.getSimpleName().toString();
+            signature = getClassSignature(field.asType());
+        }
+
+        public MemberSignature(ExecutableElement meth) {
+            member = meth;
+            name = meth.getSimpleName().toString();
+            signature = getMethodSignature(meth);
+        }
+    }
+
+    /**
+     * @author Christian Beikov
+     * @since 1.5.0
+     */
+    private abstract static class SerializationField implements Comparable<SerializationField> {
+
+        public abstract Element getElement();
+
+        public abstract String getName();
+
+        public abstract TypeMirror getTypeMirror();
+
+        public abstract char getTypeCode();
+
+        public abstract String getTypeString();
+
+        public abstract boolean isPrimitive();
+
+        @Override
+        public int compareTo(SerializationField other) {
+            boolean isPrim = isPrimitive();
+            if (isPrim != other.isPrimitive()) {
+                return isPrim ? -1 : 1;
+            }
+            return getName().compareTo(other.getName());
+        }
+    }
+
+    /**
+     * @author Christian Beikov
+     * @since 1.5.0
+     */
+    private static class MetaSerializationField extends SerializationField {
+
+        private final MetaAttribute attribute;
+        private final String signature;
+
+        public MetaSerializationField(MetaAttribute attribute) {
+            this.attribute = attribute;
+            this.signature = getClassSignature(attribute.getTypeMirror());
+        }
+
+        @Override
+        public String getName() {
+            return attribute.getPropertyName();
+        }
+
+        @Override
+        public Element getElement() {
+            return attribute.getElement();
+        }
+
+        @Override
+        public TypeMirror getTypeMirror() {
+            return attribute.getTypeMirror();
+        }
+
+        @Override
+        public char getTypeCode() {
+            return signature.charAt(0);
+        }
+
+        @Override
+        public String getTypeString() {
+            return isPrimitive() ? null : signature;
+        }
+
+        @Override
+        public boolean isPrimitive() {
+            return attribute.isPrimitive();
+        }
+    }
+
+    /**
+     * @author Christian Beikov
+     * @since 1.5.0
+     */
+    private static class FieldSerializationField extends SerializationField {
+
+        private final VariableElement field;
+        private final String signature;
+
+        public FieldSerializationField(VariableElement field) {
+            this.field = field;
+            this.signature = getClassSignature(field.asType());
+        }
+
+        @Override
+        public String getName() {
+            return field.getSimpleName().toString();
+        }
+
+        @Override
+        public Element getElement() {
+            return field;
+        }
+
+        @Override
+        public TypeMirror getTypeMirror() {
+            return field.asType();
+        }
+
+        @Override
+        public char getTypeCode() {
+            return signature.charAt(0);
+        }
+
+        @Override
+        public String getTypeString() {
+            return isPrimitive() ? null : signature;
+        }
+
+        @Override
+        public boolean isPrimitive() {
+            return field.asType().getKind().isPrimitive();
+        }
+    }
+
+    private static String getMethodSignature(ExecutableElement meth) {
+        StringBuilder sb = new StringBuilder();
+        sb.append('(');
+        for (VariableElement parameter : meth.getParameters()) {
+            sb.append(getClassSignature(parameter.asType()));
+        }
+        sb.append(')');
+        sb.append(getClassSignature(meth.getReturnType()));
+        return sb.toString();
+    }
+
+    private static String getClassSignature(TypeMirror typeMirror) {
+        StringBuilder sb = new StringBuilder();
+        while (typeMirror.getKind() == TypeKind.ARRAY) {
+            sb.append('[');
+            typeMirror = ((ArrayType) typeMirror).getComponentType();
+        }
+        if (typeMirror.getKind().isPrimitive()) {
+            switch (typeMirror.getKind()) {
+                case INT:
+                    sb.append('I');
+                    break;
+                case BYTE:
+                    sb.append('B');
+                    break;
+                case LONG:
+                    sb.append('J');
+                    break;
+                case FLOAT:
+                    sb.append('F');
+                    break;
+                case DOUBLE:
+                    sb.append('D');
+                    break;
+                case SHORT:
+                    sb.append('S');
+                    break;
+                case CHAR:
+                    sb.append('C');
+                    break;
+                case BOOLEAN:
+                    sb.append('Z');
+                    break;
+                default:
+                    throw new UnsupportedOperationException("Unsupported primitive type: " + typeMirror.toString());
+            }
+        } else {
+            if (typeMirror.getKind() == TypeKind.TYPEVAR) {
+                TypeVariable typeVariable = (TypeVariable) typeMirror;
+                if (typeVariable.getLowerBound().getKind() == TypeKind.NULL) {
+                    typeMirror = typeVariable.getUpperBound();
+                } else {
+                    typeMirror = typeVariable.getLowerBound();
+                }
+            }
+            if (typeMirror.getKind() == TypeKind.VOID) {
+                sb.append('V');
+            } else {
+                String className = typeMirror.toString();
+                sb.ensureCapacity(sb.length() + className.length() + 2);
+                sb.append('L');
+                for (int i = 0; i < className.length(); i++) {
+                    final char c = className.charAt(i);
+                    if (c == '.') {
+                        sb.append('/');
+                    } else {
+                        sb.append(c);
+                    }
+                }
+                sb.append(';');
+            }
+        }
+        return sb.toString();
     }
 
     private static void appendUnwrap(StringBuilder sb, String type, String field) {
@@ -666,9 +1431,10 @@ public final class ImplementationClassWriter {
     }
 
     private static void printConstructors(StringBuilder sb, MetaEntityView entity, Context context) {
+        boolean postLoadReflection = preparePostLoad(sb, entity, context);
         if (entity.hasEmptyConstructor()) {
             if (entity.getMembers().size() > 0) {
-                printEmptyConstructor(sb, entity, context);
+                printCreateConstructor(sb, entity, context);
                 sb.append(NEW_LINE);
             }
 
@@ -678,16 +1444,16 @@ public final class ImplementationClassWriter {
             }
         }
         for (MetaConstructor constructor : entity.getConstructors()) {
-            printConstructor(sb, constructor, context);
+            printConstructor(sb, constructor, postLoadReflection, context);
             sb.append(NEW_LINE);
-            printTupleConstructor(sb, constructor, context);
+            printTupleConstructor(sb, constructor, postLoadReflection, context);
             sb.append(NEW_LINE);
-            printTupleAssignmentConstructor(sb, constructor, context);
+            printTupleAssignmentConstructor(sb, constructor, postLoadReflection, context);
             sb.append(NEW_LINE);
         }
     }
 
-    private static void printConstructor(StringBuilder sb, MetaConstructor constructor, Context context) {
+    private static void printConstructor(StringBuilder sb, MetaConstructor constructor, boolean postLoadReflection, Context context) {
         MetaEntityView entity = constructor.getHostingEntity();
         sb.append("    public ").append(entity.getSimpleName()).append(IMPL_CLASS_NAME_SUFFIX).append("(");
         boolean first = true;
@@ -746,25 +1512,50 @@ public final class ImplementationClassWriter {
         sb.append(NEW_LINE);
 
         if (entity.isCreatable() || entity.isUpdatable()) {
+            if (entity.getDefaultDirtyMask() != 0) {
+                sb.append("        this.$$_dirty |= ").append(entity.getDefaultDirtyMask()).append("L;").append(NEW_LINE);
+            }
             sb.append("        Object[] initialStateArr = new Object[").append(entity.getMutableAttributeCount()).append("];").append(NEW_LINE);
             sb.append("        Object[] mutableStateArr = new Object[").append(entity.getMutableAttributeCount()).append("];").append(NEW_LINE);
         }
 
         for (MetaAttribute member : entity.getMembers()) {
+            boolean possiblyInitialized = appendPossiblyInitializedFragment(sb, constructor, member);
             sb.append("        this.").append(member.getPropertyName()).append(" = ").append(member.getPropertyName()).append(";").append(NEW_LINE);
             if (member.getDirtyStateIndex() != -1) {
-                sb.append("        mutableStateArr[").append(member.getDirtyStateIndex()).append("] = ");
-                sb.append("initialStateArr[").append(member.getDirtyStateIndex()).append("] = ");
-                sb.append(member.getPropertyName()).append(";").append(NEW_LINE);
+                if (possiblyInitialized) {
+                    sb.append("            if (this.").append(member.getPropertyName()).append(" == ");
+                    if (member.isPrimitive()) {
+                        member.appendDefaultValue(sb, false, entity.getImplementationImportContext());
+                    } else {
+                        sb.append("null");
+                    }
+                    sb.append(") {").append(NEW_LINE);
+                    sb.append("                mutableStateArr[").append(member.getDirtyStateIndex()).append("] = ").append(member.getPropertyName()).append(";").append(NEW_LINE);
+                    sb.append("            } else {").append(NEW_LINE);
+                    sb.append("                mutableStateArr[").append(member.getDirtyStateIndex()).append("] = this.").append(member.getPropertyName()).append(";").append(NEW_LINE);
+                    sb.append("            }").append(NEW_LINE);
+                    sb.append("            initialStateArr[").append(member.getDirtyStateIndex()).append("] = ");
+                    sb.append(member.getPropertyName()).append(";").append(NEW_LINE);
+                } else {
+                    sb.append("        mutableStateArr[").append(member.getDirtyStateIndex()).append("] = ");
+                    sb.append("initialStateArr[").append(member.getDirtyStateIndex()).append("] = ");
+                    sb.append(member.getPropertyName()).append(";").append(NEW_LINE);
+                }
+            }
+
+            if (possiblyInitialized) {
+                sb.append("        }").append(NEW_LINE);
             }
         }
 
         printDirtyTrackerRegistration(sb, entity);
+        printPostLoad(sb, entity, postLoadReflection, context);
         sb.append("    }");
         sb.append(NEW_LINE);
     }
 
-    private static void printTupleConstructor(StringBuilder sb, MetaConstructor constructor, Context context) {
+    private static void printTupleConstructor(StringBuilder sb, MetaConstructor constructor, boolean postLoadReflection, Context context) {
         MetaEntityView entity = constructor.getHostingEntity();
         if (constructor.getParameters().isEmpty()) {
             sb.append("    public ").append(entity.getSimpleName()).append(IMPL_CLASS_NAME_SUFFIX).append("(").append(entity.getSimpleName()).append(IMPL_CLASS_NAME_SUFFIX).append(" noop, int offset, Object[] tuple) {").append(NEW_LINE);
@@ -790,7 +1581,18 @@ public final class ImplementationClassWriter {
                     sb.append(",");
                 }
                 sb.append(NEW_LINE);
-                sb.append("            (").append(member.getImplementationTypeString()).append(") tuple[offset + ").append(attributeCount + member.getAttributeIndex()).append("]");
+                sb.append("            ");
+                if (member.isSelf()) {
+                    sb.append("createSelf(");
+                    for (MetaAttribute attribute : entity.getMembers()) {
+                        sb.append(NEW_LINE).append("                (").append(attribute.getImplementationTypeString()).append(") tuple[offset + ").append(attribute.getAttributeIndex()).append("],");
+                    }
+                    sb.setLength(sb.length() - 1);
+                    sb.append(NEW_LINE);
+                    sb.append("            )");
+                } else {
+                    sb.append("(").append(member.getImplementationTypeString()).append(") tuple[offset + ").append(attributeCount + member.getAttributeIndex()).append("]");
+                }
             }
 
             if (first) {
@@ -803,25 +1605,71 @@ public final class ImplementationClassWriter {
         }
 
         if (entity.isCreatable() || entity.isUpdatable()) {
+            if (entity.getDefaultDirtyMask() != 0) {
+                sb.append("        this.$$_dirty |= ").append(entity.getDefaultDirtyMask()).append("L;").append(NEW_LINE);
+            }
             sb.append("        Object[] initialStateArr = new Object[").append(entity.getMutableAttributeCount()).append("];").append(NEW_LINE);
             sb.append("        Object[] mutableStateArr = new Object[").append(entity.getMutableAttributeCount()).append("];").append(NEW_LINE);
         }
 
         for (MetaAttribute member : entity.getMembers()) {
+            boolean possiblyInitialized = appendPossiblyInitializedFragment(sb, constructor, member);
             sb.append("        this.").append(member.getPropertyName()).append(" = (").append(member.getImplementationTypeString()).append(") tuple[offset + ").append(member.getAttributeIndex()).append("];").append(NEW_LINE);
             if (member.getDirtyStateIndex() != -1) {
-                sb.append("        mutableStateArr[").append(member.getDirtyStateIndex()).append("] = ");
-                sb.append("initialStateArr[").append(member.getDirtyStateIndex()).append("] = (").append(member.getImplementationTypeString());
-                sb.append(") tuple[offset + ").append(member.getAttributeIndex()).append("];").append(NEW_LINE);
+                if (possiblyInitialized) {
+                    sb.append("            if (this.").append(member.getPropertyName()).append(" == ");
+                    if (member.isPrimitive()) {
+                        member.appendDefaultValue(sb, false, entity.getImplementationImportContext());
+                    } else {
+                        sb.append("null");
+                    }
+                    sb.append(") {").append(NEW_LINE);
+                    sb.append("                mutableStateArr[").append(member.getDirtyStateIndex()).append("] = tuple[offset + ").append(member.getAttributeIndex()).append("];").append(NEW_LINE);
+                    sb.append("            } else {").append(NEW_LINE);
+                    sb.append("                mutableStateArr[").append(member.getDirtyStateIndex()).append("] = this.").append(member.getPropertyName()).append(";").append(NEW_LINE);
+                    sb.append("            }").append(NEW_LINE);
+                    sb.append("            initialStateArr[").append(member.getDirtyStateIndex()).append("] = tuple[offset + ").append(member.getAttributeIndex()).append("];").append(NEW_LINE);
+                } else {
+                    sb.append("        mutableStateArr[").append(member.getDirtyStateIndex()).append("] = initialStateArr[").append(member.getDirtyStateIndex()).append("] = tuple[offset + ").append(member.getAttributeIndex()).append("];").append(NEW_LINE);
+                }
+            }
+            
+            if (possiblyInitialized) {
+                sb.append("        }").append(NEW_LINE);
             }
         }
 
         printDirtyTrackerRegistration(sb, entity);
+        printPostLoad(sb, entity, postLoadReflection, context);
         sb.append("    }");
         sb.append(NEW_LINE);
     }
 
-    private static void printTupleAssignmentConstructor(StringBuilder sb, MetaConstructor constructor, Context context) {
+    private static boolean appendPossiblyInitializedFragment(StringBuilder sb, MetaConstructor constructor, MetaAttribute member) {
+        if (constructor == null) {
+            for (MetaConstructor metaConstructor : member.getHostingEntity().getConstructors()) {
+                if (metaConstructor.getParameters().isEmpty()) {
+                    constructor = metaConstructor;
+                    break;
+                }
+            }
+        }
+        boolean possiblyInitialized = constructor.isReal() && member.getSetter() != null;
+        if (possiblyInitialized) {
+            MetaEntityView entity = member.getHostingEntity();
+            sb.append("        if (this.").append(member.getPropertyName()).append(" == ");
+            if (member.isPrimitive()) {
+                member.appendDefaultValue(sb, false, entity.getImplementationImportContext());
+            } else {
+                sb.append("null");
+            }
+            sb.append(") {").append(NEW_LINE);
+            sb.append("    ");
+        }
+        return possiblyInitialized;
+    }
+
+    private static void printTupleAssignmentConstructor(StringBuilder sb, MetaConstructor constructor, boolean postLoadReflection, Context context) {
         MetaEntityView entity = constructor.getHostingEntity();
         if (constructor.getParameters().isEmpty()) {
             sb.append("    public ").append(entity.getSimpleName()).append(IMPL_CLASS_NAME_SUFFIX).append("(").append(entity.getSimpleName()).append(IMPL_CLASS_NAME_SUFFIX).append(" noop, int offset, int[] assignment, Object[] tuple) {").append(NEW_LINE);
@@ -848,7 +1696,18 @@ public final class ImplementationClassWriter {
                     sb.append(",");
                 }
                 sb.append(NEW_LINE);
-                sb.append("            (").append(member.getImplementationTypeString()).append(") tuple[offset + assignment[").append(attributeCount + member.getAttributeIndex()).append("]]");
+                sb.append("            ");
+                if (member.isSelf()) {
+                    sb.append("createSelf(");
+                    for (MetaAttribute attribute : entity.getMembers()) {
+                        sb.append(NEW_LINE).append("                (").append(attribute.getImplementationTypeString()).append(") tuple[offset + assignment[").append(attribute.getAttributeIndex()).append("]],");
+                    }
+                    sb.setLength(sb.length() - 1);
+                    sb.append(NEW_LINE);
+                    sb.append("            )");
+                } else {
+                    sb.append("(").append(member.getImplementationTypeString()).append(") tuple[offset + assignment[").append(attributeCount + member.getAttributeIndex()).append("]]");
+                }
             }
 
             if (first) {
@@ -861,25 +1720,47 @@ public final class ImplementationClassWriter {
         }
 
         if (entity.isCreatable() || entity.isUpdatable()) {
+            if (entity.getDefaultDirtyMask() != 0) {
+                sb.append("        this.$$_dirty |= ").append(entity.getDefaultDirtyMask()).append("L;").append(NEW_LINE);
+            }
             sb.append("        Object[] initialStateArr = new Object[").append(entity.getMutableAttributeCount()).append("];").append(NEW_LINE);
             sb.append("        Object[] mutableStateArr = new Object[").append(entity.getMutableAttributeCount()).append("];").append(NEW_LINE);
         }
 
         for (MetaAttribute member : entity.getMembers()) {
+            boolean possiblyInitialized = appendPossiblyInitializedFragment(sb, constructor, member);
             sb.append("        this.").append(member.getPropertyName()).append(" = (").append(member.getImplementationTypeString()).append(") tuple[offset + assignment[").append(member.getAttributeIndex()).append("]];").append(NEW_LINE);
             if (member.getDirtyStateIndex() != -1) {
-                sb.append("        mutableStateArr[").append(member.getDirtyStateIndex()).append("] = ");
-                sb.append("initialStateArr[").append(member.getDirtyStateIndex()).append("] = (").append(member.getImplementationTypeString());
-                sb.append(") tuple[offset + assignment[").append(member.getAttributeIndex()).append("]];").append(NEW_LINE);
+                if (possiblyInitialized) {
+                    sb.append("            if (this.").append(member.getPropertyName()).append(" == ");
+                    if (member.isPrimitive()) {
+                        member.appendDefaultValue(sb, false, entity.getImplementationImportContext());
+                    } else {
+                        sb.append("null");
+                    }
+                    sb.append(") {").append(NEW_LINE);
+                    sb.append("                mutableStateArr[").append(member.getDirtyStateIndex()).append("] = tuple[offset + assignment[").append(member.getAttributeIndex()).append("]];").append(NEW_LINE);
+                    sb.append("            } else {").append(NEW_LINE);
+                    sb.append("                mutableStateArr[").append(member.getDirtyStateIndex()).append("] = this.").append(member.getPropertyName()).append(";").append(NEW_LINE);
+                    sb.append("            }").append(NEW_LINE);
+                    sb.append("            initialStateArr[").append(member.getDirtyStateIndex()).append("] = tuple[offset + assignment[").append(member.getAttributeIndex()).append("]];").append(NEW_LINE);
+                } else {
+                    sb.append("        mutableStateArr[").append(member.getDirtyStateIndex()).append("] = initialStateArr[").append(member.getDirtyStateIndex()).append("] = tuple[offset + assignment[").append(member.getAttributeIndex()).append("]];").append(NEW_LINE);
+                }
+            }
+
+            if (possiblyInitialized) {
+                sb.append("        }").append(NEW_LINE);
             }
         }
 
         printDirtyTrackerRegistration(sb, entity);
+        printPostLoad(sb, entity, postLoadReflection, context);
         sb.append("    }");
         sb.append(NEW_LINE);
     }
 
-    private static void printEmptyConstructor(StringBuilder sb, MetaEntityView entity, Context context) {
+    private static void printCreateConstructor(StringBuilder sb, MetaEntityView entity, Context context) {
         boolean postCreateReflection = false;
         if (entity.getPostCreate() != null) {
             TypeElement declaringType = (TypeElement) entity.getPostCreate().getEnclosingElement();
@@ -908,6 +1789,9 @@ public final class ImplementationClassWriter {
         sb.append(NEW_LINE);
 
         if (entity.isCreatable() || entity.isUpdatable()) {
+            if (entity.getDefaultDirtyMask() != 0) {
+                sb.append("        this.$$_dirty |= ").append(entity.getDefaultDirtyMask()).append("L;").append(NEW_LINE);
+            }
             sb.append("        Object[] initialStateArr = new Object[").append(entity.getMutableAttributeCount()).append("];").append(NEW_LINE);
             sb.append("        Object[] mutableStateArr = new Object[").append(entity.getMutableAttributeCount()).append("];").append(NEW_LINE);
             if (entity.isCreatable()) {
@@ -916,12 +1800,18 @@ public final class ImplementationClassWriter {
         }
 
         for (MetaAttribute member : entity.getMembers()) {
+            boolean possiblyInitialized = appendPossiblyInitializedFragment(sb, null, member);
             sb.append("        this.").append(member.getPropertyName()).append(" = ");
             if (member.getDirtyStateIndex() != -1) {
                 sb.append("(").append(member.getImplementationTypeString()).append(") (mutableStateArr[").append(member.getDirtyStateIndex()).append("] = ");
                 sb.append("initialStateArr[").append(member.getDirtyStateIndex()).append("] = ");
             }
             if (member.getKind() == MappingKind.PARAMETER) {
+                if (member.isPrimitive()) {
+                    sb.append("!optionalParameters.containsKey(\"").append(member.getMapping()).append("\") ? ");
+                    member.appendDefaultValue(sb, false, entity.getBuilderImportContext());
+                    sb.append(" : ");
+                }
                 sb.append("(").append(member.getImplementationTypeString()).append(") optionalParameters.get(\"").append(member.getMapping()).append("\")");
             } else {
                 member.appendDefaultValue(sb, true, entity.getImplementationImportContext());
@@ -931,6 +1821,10 @@ public final class ImplementationClassWriter {
                 sb.append(")");
             }
             sb.append(";").append(NEW_LINE);
+
+            if (possiblyInitialized) {
+                sb.append("        }").append(NEW_LINE);
+            }
         }
 
         printDirtyTrackerRegistration(sb, entity);
@@ -985,6 +1879,69 @@ public final class ImplementationClassWriter {
         }
     }
 
+    private static boolean preparePostLoad(StringBuilder sb, MetaEntityView entity, Context context) {
+        boolean postLoadReflection = false;
+        if (entity.getPostLoad() != null) {
+            TypeElement declaringType = (TypeElement) entity.getPostLoad().getEnclosingElement();
+            Set<Modifier> modifiers = entity.getPostLoad().getModifiers();
+            if (!modifiers.contains(Modifier.PUBLIC) && !modifiers.contains(Modifier.PROTECTED)) {
+                postLoadReflection = true;
+                sb.append("    private static final ").append(entity.implementationImportType(Method.class.getName())).append(" $$_post_load;").append(NEW_LINE);
+                sb.append("    static {").append(NEW_LINE);
+                sb.append("        try {").append(NEW_LINE);
+                sb.append("            Method m = ").append(entity.implementationImportType(declaringType.getQualifiedName().toString())).append(".class.getDeclaredMethod(\"").append(entity.getPostCreate().getSimpleName()).append("\"");
+                if (!entity.getPostLoad().getParameters().isEmpty()) {
+                    for (VariableElement parameter : entity.getPostLoad().getParameters()) {
+                        sb.append(", ").append(entity.implementationImportType(parameter.asType().toString())).append(".class");
+                    }
+                }
+                sb.append(");").append(NEW_LINE);
+                sb.append("            m.setAccessible(true);").append(NEW_LINE);
+                sb.append("            $$_post_create = m;").append(NEW_LINE);
+                sb.append("        } catch (Exception ex) {").append(NEW_LINE);
+                sb.append("            throw new RuntimeException(\"Could not initialize post construct accessor!\", ex);").append(NEW_LINE);
+                sb.append("        }").append(NEW_LINE);
+                sb.append("    }").append(NEW_LINE);
+            }
+        }
+        return postLoadReflection;
+    }
+
+    private static void printPostLoad(StringBuilder sb, MetaEntityView entity, boolean postLoadReflection, Context context) {
+        if (entity.getPostLoad() != null) {
+            if (postLoadReflection) {
+                sb.append("        try {").append(NEW_LINE);
+                sb.append("            $$_post_load.invoke(this");
+            } else {
+                sb.append("        ").append(entity.getPostLoad().getSimpleName().toString()).append("(");
+            }
+            if (!entity.getPostLoad().getParameters().isEmpty()) {
+                if (postLoadReflection) {
+                    sb.append(", ");
+                }
+                for (VariableElement parameter : entity.getPostLoad().getParameters()) {
+                    String type = parameter.asType().toString();
+                    switch (type) {
+                        case Constants.ENTITY_VIEW_MANAGER:
+                            sb.append(SERIALIZABLE_EVM_FIELD_NAME);
+                            break;
+                        default:
+                            sb.append("(").append(type).append(") null");
+                            break;
+                    }
+                    sb.append(", ");
+                }
+                sb.setLength(sb.length() - 2);
+            }
+            sb.append(");").append(NEW_LINE);
+            if (postLoadReflection) {
+                sb.append("        } catch (Exception ex) {").append(NEW_LINE);
+                sb.append("            throw new RuntimeException(\"Could not invoke post load method\", ex);").append(NEW_LINE);
+                sb.append("        }").append(NEW_LINE);
+            }
+        }
+    }
+
     private static void printIdConstructor(StringBuilder sb, MetaEntityView entity, Context context) {
         MetaAttribute idMember = entity.getIdMember();
         sb.append("    public ").append(entity.getSimpleName()).append(IMPL_CLASS_NAME_SUFFIX).append("(");
@@ -993,11 +1950,15 @@ public final class ImplementationClassWriter {
         sb.append(NEW_LINE);
 
         if (entity.isCreatable() || entity.isUpdatable()) {
+            if (entity.getDefaultDirtyMask() != 0) {
+                sb.append("        this.$$_dirty |= ").append(entity.getDefaultDirtyMask()).append("L;").append(NEW_LINE);
+            }
             sb.append("        Object[] initialStateArr = new Object[").append(entity.getMutableAttributeCount()).append("];").append(NEW_LINE);
             sb.append("        Object[] mutableStateArr = new Object[").append(entity.getMutableAttributeCount()).append("];").append(NEW_LINE);
         }
 
         for (MetaAttribute member : entity.getMembers()) {
+            boolean possiblyInitialized = appendPossiblyInitializedFragment(sb, null, member);
             if (member == idMember) {
                 sb.append("        this.").append(member.getPropertyName()).append(" = ").append(member.getPropertyName()).append(";");
                 sb.append(NEW_LINE);
@@ -1013,6 +1974,10 @@ public final class ImplementationClassWriter {
                     sb.append(")");
                 }
                 sb.append(";").append(NEW_LINE);
+            }
+
+            if (possiblyInitialized) {
+                sb.append("        }").append(NEW_LINE);
             }
         }
 

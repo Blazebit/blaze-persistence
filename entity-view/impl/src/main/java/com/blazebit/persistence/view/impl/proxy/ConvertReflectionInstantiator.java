@@ -32,23 +32,38 @@ import java.util.Collections;
  */
 public class ConvertReflectionInstantiator<T> implements ObjectInstantiator<T> {
 
+    private static final boolean TUPLE_STYLE = true;
     private final boolean resetInitialState;
     private final Constructor<T> constructor;
+    private final int size;
     private final AbstractReflectionInstantiator.TypeConverterEntry[] typeConverterEntries;
 
-    public ConvertReflectionInstantiator(ProxyFactory proxyFactory, ManagedViewType<T> viewType, Class<?>[] parameterTypes, boolean resetInitialState, EntityViewManager entityViewManager) {
+    public ConvertReflectionInstantiator(ProxyFactory proxyFactory, ManagedViewType<T> viewType, Class<?>[] parameterTypes, int constructorParameterCount, boolean resetInitialState, EntityViewManager entityViewManager) {
         @SuppressWarnings("unchecked")
         Class<T> proxyClazz = (Class<T>) proxyFactory.getProxy(entityViewManager, (ManagedViewTypeImplementor<Object>) viewType);
         Constructor<T> javaConstructor;
+        int size;
 
         try {
-            javaConstructor = proxyClazz.getDeclaredConstructor(parameterTypes);
+            if (TUPLE_STYLE) {
+                size = constructorParameterCount + 3;
+                Class[] types = new Class[constructorParameterCount + 3];
+                types[0] = proxyClazz;
+                types[1] = int.class;
+                types[2] = Object[].class;
+                System.arraycopy(parameterTypes, parameterTypes.length - constructorParameterCount, types, 3, constructorParameterCount);
+                javaConstructor = proxyClazz.getDeclaredConstructor(types);
+            } else {
+                size = parameterTypes.length;
+                javaConstructor = proxyClazz.getDeclaredConstructor(parameterTypes);
+            }
         } catch (NoSuchMethodException | SecurityException ex) {
             throw new IllegalArgumentException("Couldn't find expected constructor of the proxy class: " + proxyClazz.getName(), ex);
         }
 
         this.resetInitialState = resetInitialState && DirtyStateTrackable.class.isAssignableFrom(proxyClazz);
         this.constructor = javaConstructor;
+        this.size = size;
         this.typeConverterEntries = AbstractReflectionInstantiator.withPrimitiveConverters(Collections.<AbstractReflectionInstantiator.TypeConverterEntry>emptyList(), parameterTypes);
     }
 
@@ -61,7 +76,15 @@ public class ConvertReflectionInstantiator<T> implements ObjectInstantiator<T> {
                 AbstractReflectionInstantiator.TypeConverterEntry entry = typeConverterEntries[i];
                 tuple[entry.index] = entry.typeConverter.convertToViewType(tuple[entry.index]);
             }
-            T t = constructor.newInstance(tuple);
+            T t;
+            if (TUPLE_STYLE) {
+                Object[] array = new Object[size];
+                array[1] = 0;
+                array[2] = tuple;
+                t = constructor.newInstance(array);
+            } else {
+                t = constructor.newInstance(tuple);
+            }
             if (resetInitialState) {
                 Object[] initialState = ((DirtyStateTrackable) t).$$_getInitialState();
                 for (int i = 0; i < initialState.length; i++) {

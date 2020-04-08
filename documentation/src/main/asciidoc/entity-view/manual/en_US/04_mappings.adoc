@@ -1453,6 +1453,35 @@ public abstract class CatView {
 ----
 <1> If the unsafe proxy is used, `getAge()` will return the actual value, otherwise it will return `null`
 
+Note that instead of using this unsafe approach which can't be used when generating entity view implementations through the annotation processor,
+you can make use of the `@Self` annotation to inject a view of the state to a constructor. The previous example defined in a safe way would look like this:
+
+[source,java]
+----
+@EntityView(Cat.class)
+public abstract class CatView {
+
+    private final String text;
+
+    public CatView(@Self CatView self, @MappingParameter("ageMapper") AgeToTextMapper mapper) {
+        this.text = ageMapper.map(self.getAge());
+    }
+
+    @IdMapping
+    public abstract Long getId();
+
+    public abstract Long getAge();
+
+    public String getText() {
+        return text;
+    }
+}
+----
+
+Instead of calling the getter on the `this` instance which is not yet initialized, one uses the `@Self` annotated instance to access the state.
+The type of the instance is a serializable subclass of the entity view with the only purpose to serve as "self" instance.
+The construction of the "self" instance will not invoke any user code as it is constructed via deserialization to bypass constructor calls.
+
 === Inheritance mapping
 
 Entity views can have an inheritance relationship to subtypes via an inheritance mapping. This relationship allows instances of an entity view subtype to be materialized when a selection predicate

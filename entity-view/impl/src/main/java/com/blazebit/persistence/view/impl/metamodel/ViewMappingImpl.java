@@ -68,6 +68,7 @@ public class ViewMappingImpl implements ViewMapping {
     // Creatable entity view configs
     private Method postCreateMethod;
     private Method postConvertMethod;
+    private Method postLoadMethod;
     private Method prePersistMethod;
     private Method postPersistMethod;
     private Method preUpdateMethod;
@@ -210,6 +211,16 @@ public class ViewMappingImpl implements ViewMapping {
     @Override
     public void setPostConvertMethod(Method postConvertMethod) {
         this.postConvertMethod = postConvertMethod;
+    }
+
+    @Override
+    public Method getPostLoadMethod() {
+        return postLoadMethod;
+    }
+
+    @Override
+    public void setPostLoadMethod(Method postLoadMethod) {
+        this.postLoadMethod = postLoadMethod;
     }
 
     @Override

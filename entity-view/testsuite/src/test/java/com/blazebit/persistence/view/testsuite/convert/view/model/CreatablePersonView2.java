@@ -22,6 +22,7 @@ import com.blazebit.persistence.view.ConvertOption;
 import com.blazebit.persistence.view.CreatableEntityView;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.PostConvert;
 import com.blazebit.persistence.view.UpdatableMapping;
 
 /**
@@ -33,7 +34,8 @@ import com.blazebit.persistence.view.UpdatableMapping;
 @CreatableEntityView
 public abstract class CreatablePersonView2 implements PersonView {
 
-    public CreatablePersonView2() {
+    @PostConvert
+    void postConvert() {
         setFriend(getFriend() == null ? null : evm().convertWith(getFriend(), CreatablePersonView.class, ConvertOption.CREATE_NEW).excludeAttribute("id").convert());
     }
 

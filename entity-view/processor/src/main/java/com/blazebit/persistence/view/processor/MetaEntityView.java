@@ -32,6 +32,8 @@ public interface MetaEntityView {
 
     boolean hasEmptyConstructor();
 
+    boolean hasSelfConstructor();
+
     boolean isValid();
 
     boolean isUpdatable();
@@ -56,6 +58,8 @@ public interface MetaEntityView {
 
     ExecutableElement getPostCreate();
 
+    ExecutableElement getPostLoad();
+
     Map<String, TypeElement> getForeignPackageSuperTypes();
 
     List<TypeMirror> getForeignPackageSuperTypeVariables();
@@ -63,8 +67,6 @@ public interface MetaEntityView {
     MetaAttribute getIdMember();
 
     MetaAttribute getVersionMember();
-
-    MetaConstructor getConstructor(String name);
 
     Collection<MetaConstructor> getConstructors();
 

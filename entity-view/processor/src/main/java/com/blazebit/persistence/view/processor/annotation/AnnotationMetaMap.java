@@ -64,6 +64,10 @@ public class AnnotationMetaMap extends AnnotationMetaCollection {
         return keySubviewElement != null;
     }
 
+    public TypeElement getKeySubviewElement() {
+        return keySubviewElement;
+    }
+
     @Override
     public String getImplementationTypeString() {
         return implementationTypeString;

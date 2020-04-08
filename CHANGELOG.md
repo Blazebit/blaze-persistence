@@ -11,7 +11,9 @@ Not yet released
 * Introduce a way to do global mapping parameter registration
 * Introduce entity view builders
 * Support Spring `PathVariable` and JAX-RS `PathParam` in the integrations for updatable entity views
-* Introduce experimental annotation processor for entity view implementation, static metamodel and builders
+* Introduce experimental annotation processor for entity view implementations, static entity view metamodels and entity view builders
+* Add support for `@Self` injection into entity view constructors to allow safe access to entity view state
+* Add support for `@PostLoad` entity view lifecycle listeners
 
 ### Bug fixes
 

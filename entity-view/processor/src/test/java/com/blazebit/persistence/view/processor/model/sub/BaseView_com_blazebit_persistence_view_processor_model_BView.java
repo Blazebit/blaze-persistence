@@ -7,6 +7,10 @@ public abstract class BaseView_com_blazebit_persistence_view_processor_model_BVi
         super();
     }
 
+    public BaseView_com_blazebit_persistence_view_processor_model_BView(com.blazebit.persistence.view.processor.model.BView self) {
+        super(self);
+    }
+
     public abstract java.lang.Integer getParent();
 
     public abstract void setParent(java.lang.Integer arg0);

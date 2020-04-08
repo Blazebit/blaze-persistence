@@ -57,4 +57,16 @@ public interface ConvertOperationBuilder<T> {
      * @return this for chaining
      */
     public ConvertOperationBuilder<T> convertAttribute(String attributePath, Class<?> attributeViewClass, ConvertOption... convertOptions);
+
+    /**
+     * Specifies that the attribute object should use the given view type class and convert options.
+     *
+     * @param attributePath The attribute path for which to override the view class and convert options
+     * @param attributeViewClass The entity view class to convert the attribute object to
+     * @param constructorName The name of the entity view constructor to use
+     * @param convertOptions The convert options to use
+     * @return this for chaining
+     * @since 1.5.0
+     */
+    public ConvertOperationBuilder<T> convertAttribute(String attributePath, Class<?> attributeViewClass, String constructorName, ConvertOption... convertOptions);
 }

@@ -62,10 +62,11 @@ public class AnnotationMetaEntityView implements MetaEntityView {
     private final String entityClass;
     private final Element entityVersionAttribute;
     private final ExecutableElement postCreate;
+    private final ExecutableElement postLoad;
     private final MetaAttribute idMember;
     private final MetaAttribute versionMember;
     private final Map<String, MetaAttribute> members;
-    private final Map<String, MetaConstructor> constructors;
+    private final List<MetaConstructor> constructors;
     private final Map<String, ExecutableElement> specialMembers;
     private final Map<String, TypeElement> foreignPackageSuperTypes;
     private final List<TypeMirror> foreignPackageSuperTypeVariables;
@@ -75,6 +76,7 @@ public class AnnotationMetaEntityView implements MetaEntityView {
     private final int mutableAttributeCount;
     private final int defaultDirtyMask;
     private final boolean hasEmptyConstructor;
+    private final boolean hasSelfConstructor;
     private final boolean valid;
     private final Context context;
     private final Set<String> addedAccessors = new HashSet<>();
@@ -124,11 +126,13 @@ public class AnnotationMetaEntityView implements MetaEntityView {
         MetaAttribute versionMember = null;
         Map<String, MetaAttribute> members = new TreeMap<>();
         Map<String, ExecutableElement> specialMembers = new TreeMap<>();
-        Map<String, MetaConstructor> constructors = new TreeMap<>();
+        List<MetaConstructor> constructors = new ArrayList<>();
         MetaAttributeGenerationVisitor visitor = new MetaAttributeGenerationVisitor(this, context);
         boolean valid = true;
         boolean hasEmptyConstructor = false;
+        boolean hasSelfConstructor = false;
         ExecutableElement postCreate = null;
+        ExecutableElement postLoad = null;
         for (Element memberOfClass : allMembers) {
             if (memberOfClass instanceof ExecutableElement) {
                 ExecutableElement executableElement = (ExecutableElement) memberOfClass;
@@ -148,14 +152,26 @@ public class AnnotationMetaEntityView implements MetaEntityView {
                         }
                     } else if (!modifiers.contains(Modifier.PRIVATE) && memberOfClass.getKind() == ElementKind.CONSTRUCTOR) {
                         AnnotationMetaConstructor constructor = new AnnotationMetaConstructor(this, executableElement, visitor);
-                        hasEmptyConstructor = constructor.getParameters().isEmpty();
-                        constructors.put(constructor.getName(), constructor);
-                    } else if (TypeUtils.containsAnnotation(executableElement, Constants.POST_CREATE)) {
-                        if (postCreate == null) {
-                            postCreate = executableElement;
-                        } else {
-                            if (context.getTypeUtils().isAssignable(executableElement.getEnclosingElement().asType(), postCreate.getEnclosingElement().asType())) {
+                        hasEmptyConstructor = hasEmptyConstructor || constructor.getParameters().isEmpty();
+                        hasSelfConstructor = hasSelfConstructor || constructor.hasSelfParameter();
+                        constructors.add(constructor);
+                    } else if (TypeUtils.containsAnnotation(executableElement, Constants.POST_CREATE, Constants.POST_LOAD)) {
+                        if (TypeUtils.containsAnnotation(executableElement, Constants.POST_CREATE)) {
+                            if (postCreate == null) {
                                 postCreate = executableElement;
+                            } else {
+                                if (context.getTypeUtils().isAssignable(executableElement.getEnclosingElement().asType(), postCreate.getEnclosingElement().asType())) {
+                                    postCreate = executableElement;
+                                }
+                            }
+                        }
+                        if (TypeUtils.containsAnnotation(executableElement, Constants.POST_LOAD)) {
+                            if (postLoad == null) {
+                                postLoad = executableElement;
+                            } else {
+                                if (context.getTypeUtils().isAssignable(executableElement.getEnclosingElement().asType(), postLoad.getEnclosingElement().asType())) {
+                                    postLoad = executableElement;
+                                }
                             }
                         }
                     }
@@ -189,13 +205,14 @@ public class AnnotationMetaEntityView implements MetaEntityView {
         }
 
         this.hasEmptyConstructor = hasEmptyConstructor || constructors.isEmpty();
+        this.hasSelfConstructor = hasSelfConstructor;
         this.valid = valid;
         this.allSupportDirtyTracking = allSupportDirtyTracking;
         this.mutableAttributeCount = dirtyStateIndex;
         this.defaultDirtyMask = defaultDirtyMask;
 
         if (constructors.isEmpty()) {
-            constructors.put("init", new AnnotationMetaConstructor(this));
+            constructors.add(new AnnotationMetaConstructor(this));
         }
 
         Map<String, TypeElement> foreignPackageSuperTypes = new LinkedHashMap<>();
@@ -225,6 +242,7 @@ public class AnnotationMetaEntityView implements MetaEntityView {
         this.foreignPackageSuperTypes = foreignPackageSuperTypes;
         this.foreignPackageSuperTypeVariables = foreignPackageSuperTypeVariables;
         this.postCreate = postCreate;
+        this.postLoad = postLoad;
     }
 
     public final Context getContext() {
@@ -267,6 +285,11 @@ public class AnnotationMetaEntityView implements MetaEntityView {
     }
 
     @Override
+    public boolean hasSelfConstructor() {
+        return hasSelfConstructor;
+    }
+
+    @Override
     public boolean isValid() {
         return valid;
     }
@@ -306,6 +329,11 @@ public class AnnotationMetaEntityView implements MetaEntityView {
     }
 
     @Override
+    public ExecutableElement getPostLoad() {
+        return postLoad;
+    }
+
+    @Override
     public final String getPackageName() {
         PackageElement packageOf = context.getElementUtils().getPackageOf(element);
         return context.getElementUtils().getName(packageOf.getQualifiedName()).toString();
@@ -327,13 +355,8 @@ public class AnnotationMetaEntityView implements MetaEntityView {
     }
 
     @Override
-    public MetaConstructor getConstructor(String name) {
-        return constructors.get(name);
-    }
-
-    @Override
     public Collection<MetaConstructor> getConstructors() {
-        return constructors.values();
+        return constructors;
     }
 
     @Override

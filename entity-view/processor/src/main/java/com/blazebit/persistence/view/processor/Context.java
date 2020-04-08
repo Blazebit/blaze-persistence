@@ -49,6 +49,8 @@ public class Context {
     private boolean addGenerationDate;
     private boolean addSuppressWarningsAnnotation;
     private boolean strictCascadingCheck;
+    private boolean generateImplementations;
+    private boolean generateBuilders;
     private String defaultVersionAttributeName;
     private String defaultVersionAttributeType;
 
@@ -148,6 +150,22 @@ public class Context {
 
     public void setStrictCascadingCheck(boolean strictCascadingCheck) {
         this.strictCascadingCheck = strictCascadingCheck;
+    }
+
+    public boolean isGenerateImplementations() {
+        return generateImplementations;
+    }
+
+    public void setGenerateImplementations(boolean generateImplementations) {
+        this.generateImplementations = generateImplementations;
+    }
+
+    public boolean isGenerateBuilders() {
+        return generateBuilders;
+    }
+
+    public void setGenerateBuilders(boolean generateBuilders) {
+        this.generateBuilders = generateBuilders;
     }
 
     public String getDefaultVersionAttributeName() {

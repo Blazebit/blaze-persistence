@@ -39,4 +39,12 @@ public interface ParameterAttribute<X, Y> extends Attribute<X, Y> {
      * @return The declaring constructor
      */
     public MappingConstructor<X> getDeclaringConstructor();
+
+    /**
+     * Returns whether the parameter is a "self" parameter i.e. annotated with {@link com.blazebit.persistence.view.Self}.
+     *
+     * @return Whether the parameter is a self parameter
+     * @since 1.5.0
+     */
+    public boolean isSelfParameter();
 }

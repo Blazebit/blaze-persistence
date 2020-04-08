@@ -32,7 +32,6 @@ import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
@@ -57,6 +56,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
     private final Element element;
     private final String type;
     private final String realType;
+    private final TypeMirror typeMirror;
     private final String attributeName;
     private final MappingKind kind;
     private final String mapping;
@@ -65,10 +65,10 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
     private final boolean mutable;
     private final boolean updatable;
     private final String generatedTypePrefix;
-    private final TypeKind typeKind;
     private final Element setter;
     private final boolean idMember;
     private final boolean versionMember;
+    private final boolean self;
     private final boolean supportsDirtyTracking;
     private int attributeIndex = -1;
     private int dirtyStateIndex = -1;
@@ -91,6 +91,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
         MappingKind kind = null;
         Boolean updatable = null;
         Boolean mutable = null;
+        boolean self = false;
         if (version) {
             mapping = parent.getEntityVersionAttribute().getSimpleName().toString();
             if (parent.getEntityVersionAttribute().getKind() == ElementKind.METHOD) {
@@ -100,7 +101,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
             updatable = false;
             mutable = false;
         } else {
-            for (AnnotationMirror mirror : TypeUtils.getAnnotationMirrors(element, Constants.ID_MAPPING, Constants.MAPPING, Constants.MAPPING_CORRELATED, Constants.MAPPING_CORRELATED_SIMPLE, Constants.MAPPING_PARAMETER, Constants.MAPPING_SUBQUERY, Constants.UPDATABLE_MAPPING)) {
+            for (AnnotationMirror mirror : TypeUtils.getAnnotationMirrors(element, Constants.ID_MAPPING, Constants.MAPPING, Constants.MAPPING_CORRELATED, Constants.MAPPING_CORRELATED_SIMPLE, Constants.MAPPING_PARAMETER, Constants.MAPPING_SUBQUERY, Constants.UPDATABLE_MAPPING, Constants.SELF)) {
                 switch (mirror.getAnnotationType().toString()) {
                     case Constants.ID_MAPPING:
                         mapping = TypeUtils.getAnnotationValue(mirror, "value");
@@ -148,6 +149,9 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
                         }
 
                         break;
+                    case Constants.SELF:
+                        self = true;
+                        break;
                     default:
                         break;
                 }
@@ -164,28 +168,29 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
         if (version) {
             attributeName = "$$_version";
             setter = null;
-            typeKind = parent.getEntityVersionAttribute().asType().getKind();
+            typeMirror = parent.getEntityVersionAttribute().asType();
             supportsDirtyTracking = true;
             idMember = false;
             versionMember = true;
-        } else if (element.getKind() == ElementKind.FIELD) {
-            attributeName = element.getSimpleName().toString();
-            if (element.getModifiers().contains(Modifier.FINAL)) {
-                setter = null;
-            } else {
-                setter = element;
-                if (updatable == null) {
-                    updatable = true;
-                }
-            }
-            typeKind = element.asType().getKind();
-            supportsDirtyTracking = subviewElement != null || EntityViewTypeUtils.getMutability(type) != EntityViewTypeUtils.Mutability.MUTABLE;
-            idMember = TypeUtils.containsAnnotation(element, Constants.ID_MAPPING);
-            versionMember = mapping != null && (parent.getEntityVersionAttribute() != null && mapping.equals(parent.getEntityVersionAttribute().getSimpleName().toString()) || context.matchesDefaultVersionAttribute(element));
+//        } else if (element.getKind() == ElementKind.FIELD) {
+//            attributeName = element.getSimpleName().toString();
+//            if (element.getModifiers().contains(Modifier.FINAL)) {
+//                setter = null;
+//            } else {
+//                setter = element;
+//                if (updatable == null) {
+//                    updatable = true;
+//                }
+//            }
+//            typeKind = element.asType().getKind();
+//            supportsDirtyTracking = subviewElement != null || EntityViewTypeUtils.getMutability(type) != EntityViewTypeUtils.Mutability.MUTABLE;
+//            idMember = TypeUtils.containsAnnotation(element, Constants.ID_MAPPING);
+//            versionMember = mapping != null && (parent.getEntityVersionAttribute() != null && mapping.equals(parent.getEntityVersionAttribute().getSimpleName().toString()) || context.matchesDefaultVersionAttribute(element));
+//            self = false;
         } else if (element.getKind() == ElementKind.PARAMETER) {
             attributeName = element.getSimpleName().toString();
             setter = null;
-            typeKind = element.asType().getKind();
+            typeMirror = element.asType();
             supportsDirtyTracking = false;
             idMember = false;
             versionMember = false;
@@ -234,17 +239,19 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
             if (setter != null && updatable == null) {
                 updatable = true;
             }
-            typeKind = ((ExecutableElement) element).getReturnType().getKind();
+            typeMirror = ((ExecutableElement) element).getReturnType();
             supportsDirtyTracking = subviewElement != null || EntityViewTypeUtils.getMutability(type) != EntityViewTypeUtils.Mutability.MUTABLE;
             idMember = TypeUtils.containsAnnotation(element, Constants.ID_MAPPING);
             versionMember = mapping != null && (parent.getEntityVersionAttribute() != null && mapping.equals(parent.getEntityVersionAttribute().getSimpleName().toString()) || context.matchesDefaultVersionAttribute(element));
+            self = false;
         } else {
             attributeName = null;
             setter = null;
-            typeKind = TypeKind.NULL;
+            typeMirror = null;
             supportsDirtyTracking = false;
             idMember = false;
             versionMember = false;
+            self = false;
             parent.getContext().logMessage(Diagnostic.Kind.WARNING, "Invalid unknown attribute element kind " + element.getKind() + " for attribute: " + element);
         }
         if (updatable == null) {
@@ -253,6 +260,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
         if (mutable == null) {
             mutable = updatable || subviewElement != null && EntityViewTypeUtils.isMutable(subviewElement, context);
         }
+        this.self = self;
         this.updatable = updatable;
         this.mutable = updatable || mutable;
     }
@@ -296,7 +304,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
             sb.append("new ").append(attributeImplementationType).append("((")
                     .append(attributeImplementationType).append(") null, optionalParameters)");
         } else {
-            sb.append(TypeUtils.getDefaultValue(typeKind));
+            sb.append(TypeUtils.getDefaultValue(typeMirror.getKind()));
         }
     }
 
@@ -512,14 +520,16 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
                         sb.append("        }").append(NEW_LINE);
                     }
 
-                    sb.append("        this.$$_mutableState[").append(dirtyStateIndex).append("] = ").append(getPropertyName()).append(";").append(NEW_LINE);
+                    sb.append("        if (this.$$_mutableState != null) {").append(NEW_LINE);
+                    sb.append("            this.$$_mutableState[").append(dirtyStateIndex).append("] = ").append(getPropertyName()).append(";").append(NEW_LINE);
+                    sb.append("        }").append(NEW_LINE);
                     sb.append("        this.$$_markDirty(").append(dirtyStateIndex).append(");").append(NEW_LINE);
 
                     if (this instanceof AnnotationMetaCollection || subviewElement != null) {
                         sb.append("        if (").append(getPropertyName()).append(" != null && this.").append(getPropertyName()).append(" != ").append(getPropertyName()).append(") {").append(NEW_LINE);
                         if (this instanceof AnnotationMetaCollection) {
                             sb.append("            ");
-                        } else if (subviewElement != null) {
+                        } else {
                             if (kind != MappingKind.CORRELATED) {
                                 sb.append("            if (!m.isPersistCascaded() && !m.isUpdateCascaded() && ").append(getPropertyName()).append(" instanceof ").append(parent.implementationImportType(Constants.MUTABLE_STATE_TRACKABLE)).append(") {").append(NEW_LINE);
                                 sb.append("                ((").append(parent.implementationImportType(Constants.MUTABLE_STATE_TRACKABLE)).append(") ").append(getPropertyName()).append(").$$_addReadOnlyParent(this, ").append(dirtyStateIndex).append(");").append(NEW_LINE);
@@ -608,6 +618,9 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 
     @Override
     public void appendBuilderAttributeDeclarationString(StringBuilder sb) {
+        if (element != null && element.getKind() == ElementKind.PARAMETER) {
+            sb.append("    ");
+        }
         sb.append("    protected ");
         sb.append(getImplementationTypeString());
         sb.append(' ').append(getPropertyName()).append(";");
@@ -616,10 +629,6 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
     @Override
     public void appendBuilderAttributeGetterAndSetterString(StringBuilder sb) {
         ElementKind kind = element == null ? null : element.getKind();
-        if (kind == ElementKind.METHOD) {
-            sb.append("    @Override")
-                    .append(NEW_LINE);
-        }
         sb.append("    public ").append(getImplementationTypeString()).append(' ');
 
         if (kind == ElementKind.METHOD) {
@@ -640,12 +649,11 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
                 .append(NEW_LINE)
                 .append("        return ")
                 .append(getPropertyName())
-                .append("; }");
+                .append(";")
+                .append(NEW_LINE)
+                .append("    }");
 
         sb.append(NEW_LINE);
-        if (setter != null) {
-            sb.append("    @Override").append(NEW_LINE);
-        }
         sb.append("    public void set");
         if (kind == ElementKind.PARAMETER) {
             sb.append("Param");
@@ -671,7 +679,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 
     @Override
     public String getImplementationTypeString() {
-        return parent.implementationImportType(getRealType());
+        return parent.importType(getRealType());
     }
 
     @Override
@@ -734,6 +742,11 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
     }
 
     @Override
+    public TypeElement getSubviewElement() {
+        return subviewElement;
+    }
+
+    @Override
     public boolean isFlatSubview() {
         return subviewElement != null && subviewInfo.getEntityViewIdElement() == null;
     }
@@ -744,8 +757,13 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
     }
 
     @Override
+    public boolean isSelf() {
+        return self;
+    }
+
+    @Override
     public boolean isPrimitive() {
-        return typeKind.isPrimitive();
+        return typeMirror.getKind().isPrimitive();
     }
 
     @Override
@@ -764,5 +782,10 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
     @Override
     public String getRealType() {
         return realType;
+    }
+
+    @Override
+    public TypeMirror getTypeMirror() {
+        return typeMirror;
     }
 }

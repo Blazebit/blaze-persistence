@@ -32,6 +32,9 @@
     <name>Blazebit Persistence Entity-View Annotation Processor</name>
 
     <properties>
+        <!-- We use Java 8 for tests -->
+        <test.java.version>1.8</test.java.version>
+        <java.version>${test.java.version}</java.version>
         <module.name>com.blazebit.persistence.view.processor</module.name>
         <com.jolira.hickory.version>1.0.0</com.jolira.hickory.version>
         <org.eclipse.tycho.compiler-jdt.version>0.26.0</org.eclipse.tycho.compiler-jdt.version>
@@ -48,6 +51,7 @@
             <groupId>com.google.testing.compile</groupId>
             <artifactId>compile-testing</artifactId>
             <version>0.18</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -80,9 +84,9 @@
                             <module>
                                 <moduleInfoSource>
                                     module ${module.name} {
-                                    requires transitive com.blazebit.persistence.core;
-                                    requires transitive com.blazebit.persistence.view;
-                                    provides javax.annotation.processing.Processor with com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor;
+                                        requires transitive com.blazebit.persistence.core;
+                                        requires transitive com.blazebit.persistence.view;
+                                        provides javax.annotation.processing.Processor with com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor;
                                     }
                                 </moduleInfoSource>
                             </module>

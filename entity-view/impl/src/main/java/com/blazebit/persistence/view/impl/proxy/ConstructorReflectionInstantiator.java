@@ -64,8 +64,8 @@ public class ConstructorReflectionInstantiator<T> extends AbstractReflectionInst
                     javaConstructor = proxyClazz.getDeclaredConstructor(types);
                 }
             } else {
+                size = parameterTypes.length;
                 javaConstructor = proxyClazz.getDeclaredConstructor(parameterTypes);
-
             }
         } catch (NoSuchMethodException | SecurityException ex) {
             throw new IllegalArgumentException("The given mapping constructor '" + mappingConstructor + "' does not map to a constructor of the proxy class: " + proxyClazz

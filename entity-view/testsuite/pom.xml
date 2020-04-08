@@ -514,12 +514,6 @@
                     <version>1.3.0.Final</version>
                     <scope>provided</scope>
                 </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
-                    <version>${project.version}</version>
-                    <scope>provided</scope>
-                </dependency>
             </dependencies>
             <build>
                 <plugins>
@@ -538,13 +532,7 @@
                                     <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
-                                        <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
-                                    <optionMap>
-                                        <strictCascadingCheck>false</strictCascadingCheck>
-                                        <defaultVersionAttributeName>version</defaultVersionAttributeName>
-                                        <defaultVersionAttributeType>java.lang.Long</defaultVersionAttributeType>
-                                    </optionMap>
                                 </configuration>
                             </execution>
                         </executions>
@@ -554,11 +542,6 @@
                                 <groupId>org.hibernate</groupId>
                                 <artifactId>hibernate-jpamodelgen</artifactId>
                                 <version>1.3.0.Final</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>${project.groupId}</groupId>
-                                <artifactId>blaze-persistence-entity-view-processor</artifactId>
-                                <version>${project.version}</version>
                             </dependency>
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
@@ -636,12 +619,6 @@
                     <version>${version.hibernate-4.3}</version>
                     <scope>provided</scope>
                 </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
-                    <version>${project.version}</version>
-                    <scope>provided</scope>
-                </dependency>
             </dependencies>
             <build>
                 <plugins>
@@ -660,13 +637,7 @@
                                     <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
-                                        <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
-                                    <optionMap>
-                                        <strictCascadingCheck>false</strictCascadingCheck>
-                                        <defaultVersionAttributeName>version</defaultVersionAttributeName>
-                                        <defaultVersionAttributeType>java.lang.Long</defaultVersionAttributeType>
-                                    </optionMap>
                                 </configuration>
                             </execution>
                         </executions>
@@ -676,11 +647,6 @@
                                 <groupId>org.hibernate</groupId>
                                 <artifactId>hibernate-jpamodelgen</artifactId>
                                 <version>${version.hibernate-4.3}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>${project.groupId}</groupId>
-                                <artifactId>blaze-persistence-entity-view-processor</artifactId>
-                                <version>${project.version}</version>
                             </dependency>
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
@@ -758,12 +724,6 @@
                     <version>${version.hibernate-5}</version>
                     <scope>provided</scope>
                 </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
-                    <version>${project.version}</version>
-                    <scope>provided</scope>
-                </dependency>
             </dependencies>
             <build>
                 <plugins>
@@ -782,13 +742,7 @@
                                     <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
-                                        <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
-                                    <optionMap>
-                                        <strictCascadingCheck>false</strictCascadingCheck>
-                                        <defaultVersionAttributeName>version</defaultVersionAttributeName>
-                                        <defaultVersionAttributeType>java.lang.Long</defaultVersionAttributeType>
-                                    </optionMap>
                                 </configuration>
                             </execution>
                         </executions>
@@ -798,11 +752,6 @@
                                 <groupId>org.hibernate</groupId>
                                 <artifactId>hibernate-jpamodelgen</artifactId>
                                 <version>${version.hibernate-5}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>${project.groupId}</groupId>
-                                <artifactId>blaze-persistence-entity-view-processor</artifactId>
-                                <version>${project.version}</version>
                             </dependency>
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
@@ -880,12 +829,6 @@
                     <version>${version.hibernate-5.1}</version>
                     <scope>provided</scope>
                 </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
-                    <version>${project.version}</version>
-                    <scope>provided</scope>
-                </dependency>
             </dependencies>
             <build>
                 <plugins>
@@ -904,13 +847,7 @@
                                     <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
-                                        <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
-                                    <optionMap>
-                                        <strictCascadingCheck>false</strictCascadingCheck>
-                                        <defaultVersionAttributeName>version</defaultVersionAttributeName>
-                                        <defaultVersionAttributeType>java.lang.Long</defaultVersionAttributeType>
-                                    </optionMap>
                                 </configuration>
                             </execution>
                         </executions>
@@ -920,11 +857,6 @@
                                 <groupId>org.hibernate</groupId>
                                 <artifactId>hibernate-jpamodelgen</artifactId>
                                 <version>${version.hibernate-5.1}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>${project.groupId}</groupId>
-                                <artifactId>blaze-persistence-entity-view-processor</artifactId>
-                                <version>${project.version}</version>
                             </dependency>
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
@@ -1005,12 +937,6 @@
                     <version>${version.hibernate-5.2}</version>
                     <scope>provided</scope>
                 </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
-                    <version>${project.version}</version>
-                    <scope>provided</scope>
-                </dependency>
             </dependencies>
             <build>
                 <plugins>
@@ -1029,13 +955,7 @@
                                     <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
-                                        <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
-                                    <optionMap>
-                                        <strictCascadingCheck>false</strictCascadingCheck>
-                                        <defaultVersionAttributeName>version</defaultVersionAttributeName>
-                                        <defaultVersionAttributeType>java.lang.Long</defaultVersionAttributeType>
-                                    </optionMap>
                                 </configuration>
                             </execution>
                         </executions>
@@ -1045,11 +965,6 @@
                                 <groupId>org.hibernate</groupId>
                                 <artifactId>hibernate-jpamodelgen</artifactId>
                                 <version>${version.hibernate-5.2}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>${project.groupId}</groupId>
-                                <artifactId>blaze-persistence-entity-view-processor</artifactId>
-                                <version>${project.version}</version>
                             </dependency>
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
@@ -1127,12 +1042,6 @@
                     <version>${version.hibernate-5.3}</version>
                     <scope>provided</scope>
                 </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
-                    <version>${project.version}</version>
-                    <scope>provided</scope>
-                </dependency>
             </dependencies>
             <build>
                 <plugins>
@@ -1151,13 +1060,7 @@
                                     <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
-                                        <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
-                                    <optionMap>
-                                        <strictCascadingCheck>false</strictCascadingCheck>
-                                        <defaultVersionAttributeName>version</defaultVersionAttributeName>
-                                        <defaultVersionAttributeType>java.lang.Long</defaultVersionAttributeType>
-                                    </optionMap>
                                 </configuration>
                             </execution>
                         </executions>
@@ -1167,11 +1070,6 @@
                                 <groupId>org.hibernate</groupId>
                                 <artifactId>hibernate-jpamodelgen</artifactId>
                                 <version>${version.hibernate-5.3}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>${project.groupId}</groupId>
-                                <artifactId>blaze-persistence-entity-view-processor</artifactId>
-                                <version>${project.version}</version>
                             </dependency>
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
@@ -1259,12 +1157,6 @@
                     <version>${version.hibernate-5.4}</version>
                     <scope>provided</scope>
                 </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
-                    <version>${project.version}</version>
-                    <scope>provided</scope>
-                </dependency>
             </dependencies>
             <build>
                 <plugins>
@@ -1283,13 +1175,7 @@
                                     <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
-                                        <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
-                                    <optionMap>
-                                        <strictCascadingCheck>false</strictCascadingCheck>
-                                        <defaultVersionAttributeName>version</defaultVersionAttributeName>
-                                        <defaultVersionAttributeType>java.lang.Long</defaultVersionAttributeType>
-                                    </optionMap>
                                 </configuration>
                             </execution>
                         </executions>
@@ -1299,11 +1185,6 @@
                                 <groupId>org.hibernate</groupId>
                                 <artifactId>hibernate-jpamodelgen</artifactId>
                                 <version>${version.hibernate-5.4}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>${project.groupId}</groupId>
-                                <artifactId>blaze-persistence-entity-view-processor</artifactId>
-                                <version>${project.version}</version>
                             </dependency>
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
@@ -1388,12 +1269,6 @@
                     <version>${version.hibernate-6.0}</version>
                     <scope>provided</scope>
                 </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
-                    <version>${project.version}</version>
-                    <scope>provided</scope>
-                </dependency>
             </dependencies>
             <build>
                 <plugins>
@@ -1412,13 +1287,7 @@
                                     <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
-                                        <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
-                                    <optionMap>
-                                        <strictCascadingCheck>false</strictCascadingCheck>
-                                        <defaultVersionAttributeName>version</defaultVersionAttributeName>
-                                        <defaultVersionAttributeType>java.lang.Long</defaultVersionAttributeType>
-                                    </optionMap>
                                 </configuration>
                             </execution>
                         </executions>
@@ -1428,11 +1297,6 @@
                                 <groupId>org.hibernate</groupId>
                                 <artifactId>hibernate-jpamodelgen</artifactId>
                                 <version>${version.hibernate-6.0}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>${project.groupId}</groupId>
-                                <artifactId>blaze-persistence-entity-view-processor</artifactId>
-                                <version>${project.version}</version>
                             </dependency>
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
@@ -1505,12 +1369,6 @@
                     <version>${version.eclipselink}</version>
                     <scope>provided</scope>
                 </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
-                    <version>${project.version}</version>
-                    <scope>provided</scope>
-                </dependency>
                 <!-- We need the JTA API for updatable views -->
                 <dependency>
                     <groupId>javax.transaction</groupId>
@@ -1536,12 +1394,8 @@
                                     <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.eclipse.persistence.internal.jpa.modelgen.CanonicalModelProcessor</processor>
-                                        <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
                                     <optionMap>
-                                        <strictCascadingCheck>false</strictCascadingCheck>
-                                        <defaultVersionAttributeName>version</defaultVersionAttributeName>
-                                        <defaultVersionAttributeType>java.lang.Long</defaultVersionAttributeType>
                                         <eclipselink.persistencexml>${basedir}/src/test/resources/META-INF/persistence.xml</eclipselink.persistencexml>
                                     </optionMap>
                                 </configuration>
@@ -1553,11 +1407,6 @@
                                 <groupId>org.eclipse.persistence</groupId>
                                 <artifactId>org.eclipse.persistence.jpa.modelgen.processor</artifactId>
                                 <version>${version.eclipselink}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>${project.groupId}</groupId>
-                                <artifactId>blaze-persistence-entity-view-processor</artifactId>
-                                <version>${project.version}</version>
                             </dependency>
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
@@ -1657,12 +1506,6 @@
                     <version>${version.datanucleus.jpa-5}</version>
                     <scope>provided</scope>
                 </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
-                    <version>${project.version}</version>
-                    <scope>provided</scope>
-                </dependency>
             </dependencies>
             <build>
                 <plugins>
@@ -1710,13 +1553,7 @@
                                     <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.datanucleus.jpa.query.JPACriteriaProcessor</processor>
-                                        <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
-                                    <optionMap>
-                                        <strictCascadingCheck>false</strictCascadingCheck>
-                                        <defaultVersionAttributeName>version</defaultVersionAttributeName>
-                                        <defaultVersionAttributeType>java.lang.Long</defaultVersionAttributeType>
-                                    </optionMap>
                                 </configuration>
                             </execution>
                         </executions>
@@ -1726,11 +1563,6 @@
                                 <groupId>org.datanucleus</groupId>
                                 <artifactId>datanucleus-jpa-query</artifactId>
                                 <version>${version.datanucleus.jpa-5}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>${project.groupId}</groupId>
-                                <artifactId>blaze-persistence-entity-view-processor</artifactId>
-                                <version>${project.version}</version>
                             </dependency>
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
@@ -1827,12 +1659,6 @@
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-integration-datanucleus</artifactId>
                 </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
-                    <version>${project.version}</version>
-                    <scope>provided</scope>
-                </dependency>
             </dependencies>
             <build>
                 <plugins>
@@ -1880,22 +1706,11 @@
                                     <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.datanucleus.jpa.query.JPACriteriaProcessor</processor>
-                                        <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
-                                    <optionMap>
-                                        <strictCascadingCheck>false</strictCascadingCheck>
-                                        <defaultVersionAttributeName>version</defaultVersionAttributeName>
-                                        <defaultVersionAttributeType>java.lang.Long</defaultVersionAttributeType>
-                                    </optionMap>
                                 </configuration>
                             </execution>
                         </executions>
                         <dependencies>
-                            <dependency>
-                                <groupId>${project.groupId}</groupId>
-                                <artifactId>blaze-persistence-entity-view-processor</artifactId>
-                                <version>${project.version}</version>
-                            </dependency>
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
                                 <artifactId>jaxb-api</artifactId>
@@ -1992,12 +1807,6 @@
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-integration-datanucleus-5.1</artifactId>
                 </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
-                    <version>${project.version}</version>
-                    <scope>provided</scope>
-                </dependency>
             </dependencies>
             <build>
                 <plugins>
@@ -2063,22 +1872,11 @@
                                     <outputDirectory>${project.build.directory}/generated-test-sources/metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.datanucleus.jpa.query.JPACriteriaProcessor</processor>
-                                        <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
-                                    <optionMap>
-                                        <strictCascadingCheck>false</strictCascadingCheck>
-                                        <defaultVersionAttributeName>version</defaultVersionAttributeName>
-                                        <defaultVersionAttributeType>java.lang.Long</defaultVersionAttributeType>
-                                    </optionMap>
                                 </configuration>
                             </execution>
                         </executions>
                         <dependencies>
-                            <dependency>
-                                <groupId>${project.groupId}</groupId>
-                                <artifactId>blaze-persistence-entity-view-processor</artifactId>
-                                <version>${project.version}</version>
-                            </dependency>
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
                                 <artifactId>jaxb-api</artifactId>
@@ -2125,6 +1923,123 @@
                     <artifactId>blaze-persistence-testsuite-base-openjpa</artifactId>
                     <scope>test</scope>
                 </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.bsc.maven</groupId>
+                        <artifactId>maven-processor-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>process-test</id>
+                                <goals>
+                                    <goal>process-test</goal>
+                                </goals>
+                                <phase>generate-test-sources</phase>
+                                <configuration>
+                                    <!-- source output directory -->
+                                    <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
+                                    <processors>
+                                        <processor>org.apache.openjpa.persistence.meta.AnnotationProcessor6</processor>
+                                    </processors>
+                                    <optionMap>
+                                        <openjpa.metamodel>true</openjpa.metamodel>
+                                    </optionMap>
+                                </configuration>
+                            </execution>
+                        </executions>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.apache.openjpa</groupId>
+                                <artifactId>openjpa-all</artifactId>
+                                <version>${version.openjpa}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>javax.xml.bind</groupId>
+                                <artifactId>jaxb-api</artifactId>
+                                <version>${version.jaxb}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>com.sun.xml.bind</groupId>
+                                <artifactId>jaxb-core</artifactId>
+                                <version>${version.jaxb}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>com.sun.xml.bind</groupId>
+                                <artifactId>jaxb-impl</artifactId>
+                                <version>${version.jaxb}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>javax.transaction</groupId>
+                                <artifactId>javax.transaction-api</artifactId>
+                                <version>${version.jta}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>javax.activation</groupId>
+                                <artifactId>activation</artifactId>
+                                <version>${version.activation}</version>
+                            </dependency>
+                        </dependencies>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>add-test-source-metamodel</id>
+                                <phase>generate-test-sources</phase>
+                                <goals>
+                                    <goal>add-test-source</goal>
+                                </goals>
+                                <configuration>
+                                    <sources>
+                                        <source>${project.build.directory}/test-metamodel</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>hibernate-apt</id>
+            <properties>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate52</jpa.excludedGroups>
+            </properties>
+            <repositories>
+                <repository>
+                    <id>JBoss Snapshots</id>
+                    <name>JBoss Snapshots</name>
+                    <url>https://repository.jboss.org/nexus/content/groups/public/</url>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </repository>
+            </repositories>
+            <dependencies>
+                <dependency>
+                    <groupId>org.hibernate</groupId>
+                    <artifactId>hibernate-entitymanager</artifactId>
+                    <version>${version.hibernate-5.4}</version>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-testsuite-base-hibernate</artifactId>
+                    <scope>test</scope>
+                </dependency>
+                <!-- IntelliJ apparently needs the annotation processor here -->
+                <dependency>
+                    <groupId>org.hibernate</groupId>
+                    <artifactId>hibernate-jpamodelgen</artifactId>
+                    <version>${version.hibernate-5.4}</version>
+                    <scope>provided</scope>
+                </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-entity-view-processor</artifactId>
@@ -2148,23 +2063,23 @@
                                     <!-- source output directory -->
                                     <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
                                     <processors>
-                                        <processor>org.apache.openjpa.persistence.meta.AnnotationProcessor6</processor>
+                                        <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
                                         <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                                     </processors>
                                     <optionMap>
                                         <strictCascadingCheck>false</strictCascadingCheck>
                                         <defaultVersionAttributeName>version</defaultVersionAttributeName>
                                         <defaultVersionAttributeType>java.lang.Long</defaultVersionAttributeType>
-                                        <openjpa.metamodel>true</openjpa.metamodel>
                                     </optionMap>
                                 </configuration>
                             </execution>
                         </executions>
                         <dependencies>
+                            <!-- Metamodel -->
                             <dependency>
-                                <groupId>org.apache.openjpa</groupId>
-                                <artifactId>openjpa-all</artifactId>
-                                <version>${version.openjpa}</version>
+                                <groupId>org.hibernate</groupId>
+                                <artifactId>hibernate-jpamodelgen</artifactId>
+                                <version>${version.hibernate-5.4}</version>
                             </dependency>
                             <dependency>
                                 <groupId>${project.groupId}</groupId>

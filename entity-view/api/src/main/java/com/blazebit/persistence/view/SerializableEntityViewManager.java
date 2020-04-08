@@ -155,8 +155,18 @@ public class SerializableEntityViewManager implements EntityViewManager, Seriali
     }
 
     @Override
+    public <T> T convert(Object source, Class<T> entityViewClass, String constructorName, ConvertOption... convertOptions) {
+        return getEvm().convert(source, entityViewClass, constructorName, convertOptions);
+    }
+
+    @Override
     public <T> T convert(Object source, Class<T> entityViewClass, Map<String, Object> optionalParameters, ConvertOption... convertOptions) {
         return getEvm().convert(source, entityViewClass, optionalParameters, convertOptions);
+    }
+
+    @Override
+    public <T> T convert(Object source, Class<T> entityViewClass, String constructorName, Map<String, Object> optionalParameters, ConvertOption... convertOptions) {
+        return getEvm().convert(source, entityViewClass, constructorName, optionalParameters, convertOptions);
     }
 
     @Override
@@ -165,8 +175,18 @@ public class SerializableEntityViewManager implements EntityViewManager, Seriali
     }
 
     @Override
+    public <T> ConvertOperationBuilder<T> convertWith(Object source, Class<T> entityViewClass, String constructorName, ConvertOption... convertOptions) {
+        return getEvm().convertWith(source, entityViewClass, constructorName, convertOptions);
+    }
+
+    @Override
     public <T> ConvertOperationBuilder<T> convertWith(Object source, Class<T> entityViewClass, Map<String, Object> optionalParameters, ConvertOption... convertOptions) {
         return getEvm().convertWith(source, entityViewClass, optionalParameters, convertOptions);
+    }
+
+    @Override
+    public <T> ConvertOperationBuilder<T> convertWith(Object source, Class<T> entityViewClass, String constructorName, Map<String, Object> optionalParameters, ConvertOption... convertOptions) {
+        return getEvm().convertWith(source, entityViewClass, constructorName, optionalParameters, convertOptions);
     }
 
     @Override

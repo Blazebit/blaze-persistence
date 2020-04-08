@@ -36,7 +36,7 @@ fi
 
 if [ "$TRAVIS_REPO_SLUG" == "Blazebit/blaze-persistence" ] && 
     [ "$TRAVIS_BRANCH" == "master" ] &&
-    [ "$JPAPROVIDER" == "hibernate-5.2" ] &&
+    [ "$JPAPROVIDER" == "hibernate-5.2" || "$JPAPROVIDER" == "hibernate-apt" ] &&
     [ "$RDBMS" == "h2" ]; then
   exec mvn -B -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-1.11.x},${DELTASPIKE:-deltaspike-1.7} clean install -V $PROPERTIES
 else

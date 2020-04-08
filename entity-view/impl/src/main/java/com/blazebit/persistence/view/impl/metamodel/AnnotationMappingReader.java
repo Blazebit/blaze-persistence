@@ -31,6 +31,7 @@ import com.blazebit.persistence.view.LockOwner;
 import com.blazebit.persistence.view.PostCommit;
 import com.blazebit.persistence.view.PostConvert;
 import com.blazebit.persistence.view.PostCreate;
+import com.blazebit.persistence.view.PostLoad;
 import com.blazebit.persistence.view.PostPersist;
 import com.blazebit.persistence.view.PostRemove;
 import com.blazebit.persistence.view.PostRollback;
@@ -71,7 +72,7 @@ public class AnnotationMappingReader implements MappingReader {
     private static final LifecycleEntry[] LIFECYCLE_ENTRIES;
 
     static {
-        LifecycleEntry[] lifecycleEntries = new LifecycleEntry[10];
+        LifecycleEntry[] lifecycleEntries = new LifecycleEntry[11];
         lifecycleEntries[0] = new LifecycleEntry(0, "post create", PostCreate.class);
         lifecycleEntries[1] = new LifecycleEntry(1, "pre persist", PrePersist.class);
         lifecycleEntries[2] = new LifecycleEntry(2, "post persist", PostPersist.class);
@@ -82,6 +83,7 @@ public class AnnotationMappingReader implements MappingReader {
         lifecycleEntries[7] = new LifecycleEntry(7, "post rollback", PostRollback.class);
         lifecycleEntries[8] = new LifecycleEntry(8, "post commit", PostCommit.class);
         lifecycleEntries[9] = new LifecycleEntry(9, "post create", PostConvert.class);
+        lifecycleEntries[10] = new LifecycleEntry(10, "post load", PostLoad.class);
         LIFECYCLE_ENTRIES = lifecycleEntries;
 
         Map<Class<?>, LifecycleEntry> lifecycleEntryMap = new HashMap<>(lifecycleEntries.length);
@@ -310,6 +312,7 @@ public class AnnotationMappingReader implements MappingReader {
 
         viewMapping.setPostCreateMethod(lifecycleMethods[LIFECYCLE_ENTRY_MAP.get(PostCreate.class).index]);
         viewMapping.setPostConvertMethod(lifecycleMethods[LIFECYCLE_ENTRY_MAP.get(PostConvert.class).index]);
+        viewMapping.setPostLoadMethod(lifecycleMethods[LIFECYCLE_ENTRY_MAP.get(PostLoad.class).index]);
         viewMapping.setPrePersistMethod(lifecycleMethods[LIFECYCLE_ENTRY_MAP.get(PrePersist.class).index]);
         viewMapping.setPostPersistMethod(lifecycleMethods[LIFECYCLE_ENTRY_MAP.get(PostPersist.class).index]);
         viewMapping.setPreUpdateMethod(lifecycleMethods[LIFECYCLE_ENTRY_MAP.get(PreUpdate.class).index]);

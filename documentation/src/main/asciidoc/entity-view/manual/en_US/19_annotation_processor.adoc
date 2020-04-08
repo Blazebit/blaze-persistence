@@ -1,0 +1,224 @@
+== Annotation processor
+
+{projectname} provides an annotation processor that can be used to generate static metamodels, implementations and builders for entity views.
+The setup is described in <<maven-setup-apt,getting started chapter>>.
+
+The annotation processor supports the following annotation processor options:
+
+* `debug` to print debug information. Default `false`
+* `addGenerationDate` to add the generation date to the generated java files. Default `false`
+* `addGeneratedAnnotation` to add the `@Generated` annotation to the generated java files. Default `true`
+* `addSuppressWarningsAnnotation` to add the `@SuppressWarnings` annotation to the generated java files. Default `false`
+* `strictCascadingCheck` whether to generate strict cascading checks for entity view implementations. Default `true`
+* `defaultVersionAttributeName` the name of an entity view attribute that should be considered the optimistic lock version. No default
+* `defaultVersionAttributeType` the type the entity view version attribute should have to be considered the version attribute. No default
+* `generateImplementations` whether to generate entity view implementations. If `false`, the `generateBuilders` option is meaningless. Default `true`
+* `generateBuilders` whether to generate entity view builders. Default `true`
+
+=== Static metamodel
+
+Static metamodel classes will reflect the structure of the entity view and provide access to the typed metamodel elements for an entity view.
+The static metamodels for entity views like the following:
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface SimpleCatView {
+    @IdMapping
+    Long getId();
+    String getName();
+}
+@EntityView(Cat.class)
+interface CatView extends SimpleCatView {
+    Set<SimpleCatView> getKittens();
+}
+----
+
+look like this:
+
+[source,java]
+----
+@StaticMetamodel(SimpleCatView.class)
+public class SimpleCatView_ {
+    public static volatile SingularAttribute<SimpleCatView, Long> id;
+    public static volatile SingularAttribute<SimpleCatView, String> name;
+
+    public static final String ID = "id";
+    public static final String NAME = "name";
+}
+@StaticMetamodel(CatView.class)
+public class CatView_ {
+    public static volatile SingularAttribute<CatView, Long> id;
+    public static volatile SingularAttribute<CatView, String> name;
+    public static volatile SetAttribute<CatView, SimpleCatView> kittens;
+
+    public static final String ID = "id";
+    public static final String NAME = "name";
+    public static final String KITTENS = "kittens";
+}
+----
+
+The attributes can be used for doing type safe operations like e.g. setting attributes through entity view builders in a type safe yet generic manner.
+
+Generated metamodels are annotated with `@StaticMetamodel` and are scanned for during boot which can be turned off via the configuration property <<STATIC_METAMODEL_SCANNING_DISABLED>>.
+
+=== Static implementation
+
+The static implementation of an entity view is a class that implements the entity view contract as well as some entity view SPI contracts like e.g. `com.blazebit.persistence.view.spi.type.MutableStateTrackable`,
+`com.blazebit.persistence.view.spi.type.DirtyStateTrackable`, `com.blazebit.persistence.view.spi.type.EntityViewProxy`.
+The implementations for the state tracking contracts contain code for efficient dirty tracking.
+
+The static implementations for entity views like the following:
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface SimpleCatView {
+    @IdMapping
+    Long getId();
+    String getName();
+}
+@EntityView(Cat.class)
+interface CatView extends SimpleCatView {
+    Set<SimpleCatView> getKittens();
+}
+----
+
+look like this:
+
+[source,java]
+----
+@StaticImplementation(SimpleCatView.class)
+public class SimpleCatViewImpl implements SimpleCatView, EntityViewProxy {
+    private final Long id;
+    private final String name;
+
+    public SimpleCatViewImpl(SimpleCatViewImpl noop, Map<String, Object> optionalParameters) {
+        this.id = null;
+        this.name = null;
+    }
+
+    public SimpleCatViewImpl(Long id) {
+        this.id = id;
+        this.name = null;
+    }
+
+    public SimpleCatViewImpl(Long id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    public SimpleCatViewImpl(SimpleCatViewImpl noop, int offset, Object[] tuple) {
+        this.id = (Long) tuple[offset + 0];
+        this.name = (String) tuple[offset + 1];
+    }
+
+    public SimpleCatViewImpl(SimpleCatViewImpl noop, int offset, int[] assignment, Object[] tuple) {
+        this.id = (Long) tuple[offset + assignment[0]];
+        this.name = (String) tuple[offset + assignment[1]];
+    }
+
+    @Override
+    public Long getId() {
+        return id;
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public Class<?> $$_getJpaManagedClass() {
+        return Cat.class;
+    }
+
+    @Override
+    public Class<?> $$_getJpaManagedBaseClass() {
+        return Cat.class;
+    }
+
+    @Override
+    public Class<?> $$_getEntityViewClass() {
+        return SimpleCatView.class;
+    }
+
+    @Override
+    public boolean $$_isNew() {
+        return false;
+    }
+
+    @Override
+    public Object $$_getId() {
+        return id;
+    }
+
+    @Override
+    public Object $$_getVersion() {
+        return null;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || this.$$_getId() == null) {
+            return false;
+        }
+        if (obj instanceof EntityViewProxy) {
+            EntityViewProxy other = (EntityViewProxy) obj;
+            if (this.$$_getJpaManagedBaseClass() == other.$$_getJpaManagedBaseClass() && this.$$_getId().equals(other.$$_getId())) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+        if (obj instanceof SimpleCatView) {
+            SimpleCatView other = (SimpleCatView) obj;
+            if (!Objects.equals(this.getId(), other.getId())) {
+                return false;
+            }
+            return true;
+        }
+        return false;
+    }
+}
+
+@StaticImplementation(CatView.class)
+public class CatViewImpl implements CatView, EntityViewProxy {
+    // Similar to SimpleCatViewImpl with some additions for kittens
+
+    private final Set<SimpleCatView> kittens;
+
+    @Override
+    public Set<SimpleCatView> getKittens() {
+        return kittens;
+    }
+}
+----
+
+The first constructor `public SimpleCatViewImpl(SimpleCatViewImpl noop, Map<String, Object> optionalParameters)` is the so called "create"-constructor i.e. the one used for `EntityViewManager.create()`.
+The next constructor `public SimpleCatViewImpl(Long id)` is the id-reference constructor i.e. the one used for `EntityViewManager.getReference()`.
+The third constructor `public SimpleCatViewImpl(Long id, String name)` is the full state constructor which can be used by end-users.
+The other two constructors `public SimpleCatViewImpl(SimpleCatViewImpl noop, int offset, Object[] tuple)` and `public SimpleCatViewImpl(SimpleCatViewImpl noop, int offset, int[] assignment, Object[] tuple)`
+are used internally by the runtime to construct entity view objects. The variant with `int[] assignment` is usually only relevant when entity view inheritance is enabled.
+
+Generated implementations are annotated with `@StaticImplementation` and are scanned for during boot which can be turned off via the configuration property <<STATIC_IMPLEMENTATION_SCANNING_DISABLED>>.
+
+The generation of static implementations can be turned off by setting the `generateImplementations` option to `false` in the annotation processor option map.
+
+=== Static builder
+
+The static builder of an entity view is a class that implements the `com.blazebit.persistence.view.EntityViewBuilder` contract to build a static implementation instance.
+The generated class is a straightforward implementation of the builder interface tailored for the entity view state i.e. every attribute is a separate field in the builder.
+A call to `EntityViewManager.createBuilder()` will return an instance of a registered static builder type, or if none is registered, a generic builder.
+
+Generated builders are annotated with `@StaticBuilder` and are scanned for during boot which can be turned off via the configuration property <<STATIC_BUILDER_SCANNING_DISABLED>>.
+
+The generation of static builders can be turned off by setting the `generateBuilders` option to `false` in the annotation processor option map.

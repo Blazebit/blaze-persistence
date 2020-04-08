@@ -195,6 +195,89 @@ By default the use is disabled i.e. the default value is `false`.
 |====================
 | Key | com.blazebit.persistence.view.updater.error_on_invalid_plural_setter
 | Type | boolean
-| Default | true
+| Default | false
+| Applicable | Configuration only
+|====================
+
+==== PAGINATION_DISABLE_COUNT_QUERY
+
+Defines whether the pagination count query should be disabled when applying a `EntityViewSetting` to a `CriteriaBuilder`.
+When `true`, the pagination count query is disabled via `PaginatedCriteriaBuilder.withCountQuery(false)`.
+By default the pagination count query is enabled i.e. the default value is `false`.
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.view.pagination.disable_count_query
+| Type | boolean
+| Default | false
+| Applicable | EntityViewSetting only
+|====================
+
+==== PAGINATION_EXTRACT_ALL_KEYSETS
+
+Defines whether the pagination query should extract all keysets rather than just the first and last ones.
+When `true`, the keyset extraction is enabled via `PaginatedCriteriaBuilder.withExtractAllKeysets(true)`.
+By default only the first and last keysets are extracted i.e. the default value is `false`.
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.view.pagination.extract_all_keysets
+| Type | boolean
+| Default | false
+| Applicable | EntityViewSetting only
+|====================
+
+==== PAGINATION_FORCE_USE_KEYSET
+
+Defines whether the pagination query should force the usage of a keyset when available even if page or page size changes.
+By default only the first and last keysets are extracted i.e. the default value is `false`.
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.view.pagination.force_use_keyset
+| Type | boolean
+| Default | false
+| Applicable | EntityViewSetting only
+|====================
+
+==== STATIC_BUILDER_SCANNING_DISABLED
+
+Defines whether the scanning for `@StaticBuilder` classes for the registered entity views should be disabled.
+When `true`, the scanning is disabled which improves startup performance but causes that entity view builders returned via `EntityViewManager.createBuilder()` will use a generic implementation.
+By default the scanning is enabled i.e. the default value is `false`.
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.view.static_builder_scanning_disabled
+| Type | boolean
+| Default | false
+| Applicable | Configuration only
+|====================
+
+==== STATIC_IMPLEMENTATION_SCANNING_DISABLED
+
+Defines whether the scanning for `@StaticImplementation` classes for the registered entity views should be disabled.
+When `true`, the scanning is disabled which improves startup performance but causes that entity view implementations will be generated at runtime.
+By default the scanning is enabled i.e. the default value is `false`.
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.view.static_implementation_scanning_disabled
+| Type | boolean
+| Default | false
+| Applicable | Configuration only
+|====================
+
+==== STATIC_METAMODEL_SCANNING_DISABLED
+
+Defines whether the scanning for `@StaticMetamodel` classes for the registered entity views should be disabled.
+When `true`, the scanning is disabled which improves startup performance but causes that the static metamodels are not initialized.
+By default the scanning is enabled i.e. the default value is `false`.
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.view.static_metamodel_scanning_disabled
+| Type | boolean
+| Default | false
 | Applicable | Configuration only
 |====================

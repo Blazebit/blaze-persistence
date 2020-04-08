@@ -47,10 +47,11 @@ public final class Constants {
     public static final String ENTITY_VIEW_BUILDER_MAP_KEY_LISTENER = "com.blazebit.persistence.view.MapKeyEntityViewBuilderListener";
 
     public static final String ENTITY_VIEW = "com.blazebit.persistence.view.EntityView";
-    public static final String ENTITY_VIEW_INHERITANCE = "com.blazebit.persistence.view.EntityViewInheritance";
     public static final String UPDATABLE_ENTITY_VIEW = "com.blazebit.persistence.view.UpdatableEntityView";
     public static final String CREATABLE_ENTITY_VIEW = "com.blazebit.persistence.view.CreatableEntityView";
     public static final String POST_CREATE = "com.blazebit.persistence.view.PostCreate";
+    public static final String POST_LOAD = "com.blazebit.persistence.view.PostLoad";
+    public static final String SELF = "com.blazebit.persistence.view.Self";
     public static final String ID_MAPPING = "com.blazebit.persistence.view.IdMapping";
     public static final String MAPPING = "com.blazebit.persistence.view.Mapping";
     public static final String MAPPING_CORRELATED = "com.blazebit.persistence.view.MappingCorrelated";

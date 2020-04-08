@@ -23,8 +23,13 @@ import com.blazebit.persistence.view.processor.MetaEntityView;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -38,6 +43,8 @@ public class AnnotationMetaConstructor implements MetaConstructor {
 
     private final AnnotationMetaEntityView parent;
     private final ExecutableElement element;
+    private final boolean isReal;
+    private final boolean hasSelfParameter;
     private final String name;
     private final List<MetaAttribute> parameters;
 
@@ -46,11 +53,33 @@ public class AnnotationMetaConstructor implements MetaConstructor {
         this.element = null;
         this.name = "init";
         this.parameters = Collections.emptyList();
+        this.hasSelfParameter = false;
+        boolean isReal = false;
+        TypeMirror superclassMirror = parent.getTypeElement().getSuperclass();
+        while (superclassMirror.getKind() != TypeKind.NONE) {
+            TypeElement superclass = (TypeElement) ((DeclaredType) superclassMirror).asElement();
+            if ("java.lang.Object".equals(superclass.getQualifiedName().toString())) {
+                break;
+            }
+            for (Element enclosedElement : superclass.getEnclosedElements()) {
+                String name = enclosedElement.getSimpleName().toString();
+                if ("<init>".equals(name)) {
+                    isReal = true;
+                    break;
+                }
+            }
+            if (isReal) {
+                break;
+            }
+            superclassMirror = superclass.getSuperclass();
+        }
+        this.isReal = isReal;
     }
 
     public AnnotationMetaConstructor(AnnotationMetaEntityView parent, ExecutableElement element, MetaAttributeGenerationVisitor visitor) {
         this.parent = parent;
         this.element = element;
+        this.isReal = true;
         String name = "init";
         for (AnnotationMirror annotationMirror : element.getAnnotationMirrors()) {
             if (annotationMirror.getAnnotationType().toString().equals(Constants.VIEW_CONSTRUCTOR)) {
@@ -66,13 +95,16 @@ public class AnnotationMetaConstructor implements MetaConstructor {
         this.name = name;
         List<MetaAttribute> parameters = new ArrayList<>(element.getParameters().size());
         List<? extends VariableElement> elementParameters = element.getParameters();
+        boolean hasSelfParameter = false;
         for (int i = 0; i < elementParameters.size(); i++) {
             VariableElement parameter = elementParameters.get(i);
             AnnotationMetaAttribute result = parameter.asType().accept(visitor, parameter);
             result.setAttributeIndex(i);
             parameters.add(result);
+            hasSelfParameter = hasSelfParameter || result.isSelf();
         }
         this.parameters = parameters;
+        this.hasSelfParameter = hasSelfParameter;
     }
 
     @Override
@@ -83,6 +115,16 @@ public class AnnotationMetaConstructor implements MetaConstructor {
     @Override
     public String getName() {
         return name;
+    }
+
+    @Override
+    public boolean isReal() {
+        return isReal;
+    }
+
+    @Override
+    public boolean hasSelfParameter() {
+        return hasSelfParameter;
     }
 
     @Override

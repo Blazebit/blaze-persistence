@@ -35,6 +35,7 @@ import com.blazebit.persistence.view.MappingCorrelated;
 import com.blazebit.persistence.view.MappingCorrelatedSimple;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSubquery;
+import com.blazebit.persistence.view.Self;
 import com.blazebit.persistence.view.SubqueryProvider;
 import com.blazebit.persistence.view.SubqueryProviderFactory;
 import com.blazebit.persistence.view.impl.CollectionJoinMappingGathererExpressionVisitor;
@@ -226,6 +227,25 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.subqueryProvider = null;
             this.id = false;
             // Parameters are never update mappable
+            this.updateMappableAttribute = null;
+            this.mappingType = MappingType.PARAMETER;
+            this.subqueryExpression = null;
+            this.subqueryAlias = null;
+            this.correlationBasis = null;
+            this.correlationResult = null;
+            this.correlationProvider = null;
+            this.correlationProviderFactory = null;
+            this.correlated = null;
+            this.correlationKeyAlias = null;
+            this.correlationExpression = null;
+        } else if (mappingAnnotation instanceof Self) {
+            this.mapping = "NULL";
+            this.fetches = EMPTY;
+            this.fetchStrategy = FetchStrategy.JOIN;
+            this.batchSize = -1;
+            this.subqueryProviderFactory = null;
+            this.subqueryProvider = null;
+            this.id = false;
             this.updateMappableAttribute = null;
             this.mappingType = MappingType.PARAMETER;
             this.subqueryExpression = null;

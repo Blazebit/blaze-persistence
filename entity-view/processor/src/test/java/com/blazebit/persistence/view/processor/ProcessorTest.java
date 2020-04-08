@@ -18,11 +18,13 @@ package com.blazebit.persistence.view.processor;
 
 import com.blazebit.persistence.view.processor.model.AView;
 import com.blazebit.persistence.view.processor.model.BView;
+import com.blazebit.persistence.view.processor.model.BViewImpl;
 import com.blazebit.persistence.view.processor.model.sub.BaseView_com_blazebit_persistence_view_processor_model_BView;
 import com.google.testing.compile.Compilation;
 import com.google.testing.compile.CompilationSubject;
 import com.google.testing.compile.Compiler;
 import com.google.testing.compile.JavaFileObjects;
+import org.junit.Assert;
 import org.junit.Test;
 
 import javax.tools.JavaFileObject;
@@ -39,11 +41,15 @@ public class ProcessorTest {
     }
 
     @Test
-    public void testAbstractClass() {
+    public void testAbstractClass() throws Exception {
         Compilation compilation = test(BView.class);
         CompilationSubject.assertThat(compilation)
                 .generatedSourceFile(BaseView_com_blazebit_persistence_view_processor_model_BView.class.getName())
                 .hasSourceEquivalentTo(JavaFileObjects.forResource(BaseView_com_blazebit_persistence_view_processor_model_BView.class.getName().replace('.', '/') + ".java"));
+        BView obj = BViewImpl.class.getConstructor(BViewImpl.class, int.class, Object[].class, BView.class).newInstance(null, 0, new Object[]{ 1, "Test", 1}, null);
+        Assert.assertEquals(1, obj.getId());
+        Assert.assertEquals("Test", obj.getName());
+        Assert.assertEquals("Test", obj.getCapturedName());
     }
 
     private Compilation test(Class<?>... views) {
