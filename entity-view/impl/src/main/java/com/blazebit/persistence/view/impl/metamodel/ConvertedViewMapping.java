@@ -113,6 +113,11 @@ public class ConvertedViewMapping implements ViewMapping {
     }
 
     @Override
+    public Method getPostLoadMethod() {
+        return delegate.getPostLoadMethod();
+    }
+
+    @Override
     public Method getPrePersistMethod() {
         return delegate.getPrePersistMethod();
     }
@@ -210,6 +215,11 @@ public class ConvertedViewMapping implements ViewMapping {
     @Override
     public void setPostConvertMethod(Method postConvertMethod) {
         delegate.setPostConvertMethod(postConvertMethod);
+    }
+
+    @Override
+    public void setPostLoadMethod(Method postLoadMethod) {
+        delegate.setPostLoadMethod(postLoadMethod);
     }
 
     @Override

@@ -103,6 +103,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
     private final ManagedType<?> jpaManagedType;
     private final Method postCreateMethod;
     private final Method postConvertMethod;
+    private final Method postLoadMethod;
     private final Method prePersistMethod;
     private final Method postPersistMethod;
     private final Method preUpdateMethod;
@@ -146,6 +147,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
         this.jpaManagedType = managedType;
         this.postCreateMethod = viewMapping.getPostCreateMethod();
         this.postConvertMethod = viewMapping.getPostConvertMethod();
+        this.postLoadMethod = viewMapping.getPostLoadMethod();
         this.prePersistMethod = viewMapping.getPrePersistMethod();
         this.postPersistMethod = viewMapping.getPostPersistMethod();
         this.preUpdateMethod = viewMapping.getPreUpdateMethod();
@@ -783,6 +785,12 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
                 context.addError("Invalid signature for post convert method at '" + javaType.getName() + "." + postConvertMethod.getName() + "'! A method annotated with @PostConvert must return void and accept at most 2 arguments, an EntityViewManager and the source entity view argument of type Object!");
             }
         }
+        if (postLoadMethod != null) {
+            Class<?>[] parameterTypes = postLoadMethod.getParameterTypes();
+            if (!void.class.equals(postLoadMethod.getReturnType()) || parameterTypes.length > 1 || parameterTypes.length == 1 && !EntityViewManager.class.equals(parameterTypes[0])) {
+                context.addError("Invalid signature for post load method at '" + javaType.getName() + "." + postLoadMethod.getName() + "'! A method annotated with @PostLoad must return void and accept no or a single EntityViewManager argument!");
+            }
+        }
         if (prePersistMethod != null) {
             superTypes = jpaManagedSuperTypes(superTypes);
             allowedParameterTypes = allowedParameterTypes(allowedParameterTypes, superTypes);
@@ -966,6 +974,11 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
     @Override
     public Method getPostConvertMethod() {
         return postConvertMethod;
+    }
+
+    @Override
+    public Method getPostLoadMethod() {
+        return postLoadMethod;
     }
 
     @Override

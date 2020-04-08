@@ -46,6 +46,8 @@ import java.util.Set;
         EntityViewAnnotationProcessor.STRICT_CASCADING_CHECK,
         EntityViewAnnotationProcessor.DEFAULT_VERSION_ATTRIBUTE_NAME,
         EntityViewAnnotationProcessor.DEFAULT_VERSION_ATTRIBUTE_TYPE,
+        EntityViewAnnotationProcessor.GENERATE_IMPLEMENTATIONS,
+        EntityViewAnnotationProcessor.GENERATE_BUILDERS,
 })
 public class EntityViewAnnotationProcessor extends AbstractProcessor {
 
@@ -56,6 +58,8 @@ public class EntityViewAnnotationProcessor extends AbstractProcessor {
     public static final String STRICT_CASCADING_CHECK = "strictCascadingCheck";
     public static final String DEFAULT_VERSION_ATTRIBUTE_NAME = "defaultVersionAttributeName";
     public static final String DEFAULT_VERSION_ATTRIBUTE_TYPE = "defaultVersionAttributeType";
+    public static final String GENERATE_IMPLEMENTATIONS = "generateImplementations";
+    public static final String GENERATE_BUILDERS = "generateBuilders";
 
     private Context context;
 
@@ -75,6 +79,8 @@ public class EntityViewAnnotationProcessor extends AbstractProcessor {
         context.setAddGenerationDate(getOption(processingEnvironment, ADD_GENERATION_DATE, false));
         context.setAddSuppressWarningsAnnotation(getOption(processingEnvironment, ADD_SUPPRESS_WARNINGS_ANNOTATION, false));
         context.setStrictCascadingCheck(getOption(processingEnvironment, STRICT_CASCADING_CHECK, true));
+        context.setGenerateImplementations(getOption(processingEnvironment, GENERATE_IMPLEMENTATIONS, true));
+        context.setGenerateBuilders(getOption(processingEnvironment, GENERATE_BUILDERS, true));
 
         context.setDefaultVersionAttributeName(processingEnvironment.getOptions().get(DEFAULT_VERSION_ATTRIBUTE_NAME));
         context.setDefaultVersionAttributeType(processingEnvironment.getOptions().get(DEFAULT_VERSION_ATTRIBUTE_TYPE));
@@ -121,9 +127,13 @@ public class EntityViewAnnotationProcessor extends AbstractProcessor {
             }
             context.logMessage(Diagnostic.Kind.OTHER, "Writing meta model for entity view " + entityView);
             MetamodelClassWriter.writeFile(sb, entityView, context);
-            ForeignPackageAdapterClassWriter.writeFiles(sb, entityView, context);
-            ImplementationClassWriter.writeFile(sb, entityView, context);
-            BuilderClassWriter.writeFile(sb, entityView, context);
+            if (context.isGenerateImplementations()) {
+                ForeignPackageAdapterClassWriter.writeFiles(sb, entityView, context);
+                ImplementationClassWriter.writeFile(sb, entityView, context);
+                if (context.isGenerateBuilders()) {
+                    BuilderClassWriter.writeFile(sb, entityView, context);
+                }
+            }
             context.markGenerated(entityView.getQualifiedName());
         }
     }

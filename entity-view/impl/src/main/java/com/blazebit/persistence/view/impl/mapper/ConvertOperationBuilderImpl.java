@@ -78,6 +78,11 @@ public class ConvertOperationBuilderImpl<T> implements ConvertOperationBuilder<T
 
     @Override
     public ConvertOperationBuilder<T> convertAttribute(String attributePath, Class<?> attributeViewClass, ConvertOption... convertOptions) {
+        return convertAttribute(attributePath, attributeViewClass, null, convertOptions);
+    }
+
+    @Override
+    public ConvertOperationBuilder<T> convertAttribute(String attributePath, Class<?> attributeViewClass, String constructorName, ConvertOption... convertOptions) {
         AbstractMethodAttribute<? super Object, ?> sourceAttribute = key.getSourceType().getRecursiveSubviewAttributes().get(attributePath);
         if (sourceAttribute == null) {
             throw new IllegalArgumentException("Attribute '" + attributePath + "' could not be found on type: " + key.getSourceType().getJavaType().getName());
@@ -89,7 +94,7 @@ public class ConvertOperationBuilderImpl<T> implements ConvertOperationBuilder<T
         if (!elementType.isAssignableFrom(attributeViewClass)) {
             throw new IllegalArgumentException("The given type '" + attributeViewClass.getName() + "' is not assignable to the declared type of '" + key.getSourceType().getJavaType().getName() + "." + attributePath + "': " + elementType.getName());
         }
-        subMappers.put(attributePath, (ViewMapper.Key<Object, Object>) ViewMapper.Key.create(entityViewManager.getMetamodel(), elementType, attributeViewClass, convertOptions));
+        subMappers.put(attributePath, (ViewMapper.Key<Object, Object>) ViewMapper.Key.create(entityViewManager.getMetamodel(), elementType, attributeViewClass, constructorName, convertOptions));
         return this;
     }
 }

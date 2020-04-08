@@ -169,6 +169,11 @@ public class EmbeddedInheritanceTest extends AbstractEntityViewTest {
     }
 
     public static <T> void assertTypeMatches(T o, EntityViewManager evm, Class<T> baseType, Class<? extends T> subtype) {
-        assertEquals(subtype.getName() + "Impl", o.getClass().getName());
+        String name = o.getClass().getName();
+        if (name.endsWith("_")) {
+            assertEquals(subtype.getName() + "_$$_javassist_entityview_", name);
+        } else {
+            assertEquals(subtype.getName() + "Impl", name);
+        }
     }
 }

@@ -20,6 +20,7 @@ import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.MappingParameter;
+import com.blazebit.persistence.view.Self;
 
 import java.io.Serializable;
 
@@ -33,8 +34,8 @@ public abstract class DocumentCloneParentView implements Serializable {
 
     private final String param2;
 
-    public DocumentCloneParentView() {
-        this.param2 = getParam();
+    public DocumentCloneParentView(@Self DocumentCloneParentView self) {
+        this.param2 = self.getParam();
     }
 
     @IdMapping

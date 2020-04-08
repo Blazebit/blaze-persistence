@@ -20,6 +20,7 @@ import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.InverseRemoveStrategy;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingParameter;
+import com.blazebit.persistence.view.Self;
 import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.spi.EntityViewAttributeMapping;
@@ -523,7 +524,7 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
     public void initializeViewMappings(MetamodelBuildingContext context) {
         if (!resolvedTypeMappings) {
             // No need to check parameter attributes
-            if (mapping.annotationType() == MappingParameter.class) {
+            if (mapping.annotationType() == MappingParameter.class || mapping.annotationType() == Self.class) {
                 resolvedTypeMappings = true;
                 return;
             }
@@ -545,7 +546,7 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
 
     public boolean validateDependencies(MetamodelBuildingContext context, Set<Class<?>> dependencies, boolean reportError) {
         // No need to check parameter attributes
-        if (mapping.annotationType() == MappingParameter.class) {
+        if (mapping.annotationType() == MappingParameter.class || mapping.annotationType() == Self.class) {
             return false;
         }
         boolean error = false;

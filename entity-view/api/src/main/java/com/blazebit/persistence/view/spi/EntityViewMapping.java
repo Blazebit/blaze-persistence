@@ -155,6 +155,22 @@ public interface EntityViewMapping {
     public void setPostConvertMethod(Method postConvertMethod);
 
     /**
+     * Returns the post load method or <code>null</code> if there is none.
+     *
+     * @return The post load method
+     * @since 1.5.0
+     */
+    public Method getPostLoadMethod();
+
+    /**
+     * Sets the post load method.
+     *
+     * @param postLoadMethod The method
+     * @since 1.5.0
+     */
+    public void setPostLoadMethod(Method postLoadMethod);
+
+    /**
      * Returns the pre persist method or <code>null</code> if there is none.
      *
      * @return The pre persist method

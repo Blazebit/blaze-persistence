@@ -119,7 +119,7 @@ otherwise to the _read-only_ state. If it is used within an updatable view, it i
                        +--------+                          +--------+
                        |        |                          |        |
                        | remove |                          | remove |
-                       |        v                          v        |
+          @PostLoad    |        v                          v        |    @PostLoad
             load     +-+--------+-+                      +-+--------+-+     load
 -------------------->|            |                      |            +<--------------------
           create     |            |                      |            |     create
@@ -146,7 +146,7 @@ otherwise to the _read-only_ state. If it is used within an updatable view, it i
 ....
 
 *load*::: An entity view is loaded by applying an `EntityViewSetting` to a `CriteriaBuilder` which also happens implicitly when using `EntityViewManager.find()`.
-Another way to _load_ is to get a _reference_ for an entity view via `EntityViewManager.getReference()`.
+Another way to _load_ is to get a _reference_ for an entity view via `EntityViewManager.getReference()` but note that this does not invoke the `@PostLoad` lifecycle listener.
 
 *remove*::: Removing is done explicitly by calling `EntityViewManager.remove()` or implicitly when <<updatable-entity-view-delete-cascading-orphan-removal,delete cascading or orphan removal>> is activated.
 
@@ -227,6 +227,41 @@ interface CatUpdateView {
     @PostConvert
     default void postConvert(Object source) {
         setSource((CatUpdateView) source);
+    }
+}
+----
+
+==== Post load listener
+
+Within an entity view type a concrete method annotated with `@PostLoad` is considered to be a post load listener.
+It may optionally define a parameter of the type `EntityViewManager` and must have a return type of `void`.
+
+Such a listener is usually used for computing values based on the entity view state.
+
+[source,java]
+----
+enum LifeState {
+    ALIVE,
+    DEAD;
+}
+
+@EntityView(Cat.class)
+abstract class CatUpdateView {
+
+    private String shortName;
+
+    @IdMapping
+    public abstract Long getId();
+
+    public abstract String getName();
+
+    public String getShortName() {
+        return shortName;
+    }
+
+    @PostLoad
+    void init() {
+        this.shortName = getName().substring(0, 10) + "...";
     }
 }
 ----

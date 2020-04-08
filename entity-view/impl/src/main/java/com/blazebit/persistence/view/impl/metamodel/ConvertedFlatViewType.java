@@ -252,6 +252,11 @@ public class ConvertedFlatViewType<X> implements FlatViewTypeImplementor<X> {
     }
 
     @Override
+    public Method getPostLoadMethod() {
+        return delegate.getPostLoadMethod();
+    }
+
+    @Override
     public Method getPrePersistMethod() {
         return delegate.getPrePersistMethod();
     }

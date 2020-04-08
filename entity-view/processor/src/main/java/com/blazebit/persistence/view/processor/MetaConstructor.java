@@ -28,5 +28,9 @@ public interface MetaConstructor {
 
     String getName();
 
+    boolean isReal();
+
+    boolean hasSelfParameter();
+
     List<MetaAttribute> getParameters();
 }

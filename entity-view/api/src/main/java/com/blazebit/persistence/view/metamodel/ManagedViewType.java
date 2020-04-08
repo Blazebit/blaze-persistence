@@ -143,6 +143,14 @@ public interface ManagedViewType<X> extends Type<X> {
     public Method getPostConvertMethod();
 
     /**
+     * Returns the method to be invoked after loading an entity view.
+     *
+     * @return The method to be invoked after loading.
+     * @since 1.5.0
+     */
+    public Method getPostLoadMethod();
+
+    /**
      * Returns the pre persist method or <code>null</code> if there is none.
      *
      * @return The pre persist method

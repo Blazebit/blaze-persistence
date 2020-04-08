@@ -52,6 +52,7 @@ import com.blazebit.persistence.view.PrePersistListener;
 import com.blazebit.persistence.view.PreRemoveListener;
 import com.blazebit.persistence.view.PreUpdateListener;
 import com.blazebit.persistence.view.SerializableEntityViewManager;
+import com.blazebit.persistence.view.StaticBuilder;
 import com.blazebit.persistence.view.StaticMetamodel;
 import com.blazebit.persistence.view.ViewFilterProvider;
 import com.blazebit.persistence.view.ViewTransition;
@@ -98,8 +99,6 @@ import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContextImpl
 import com.blazebit.persistence.view.impl.metamodel.ViewMetamodelImpl;
 import com.blazebit.persistence.view.impl.metamodel.ViewTypeImpl;
 import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
-import com.blazebit.persistence.view.spi.type.DirtyStateTrackable;
-import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
 import com.blazebit.persistence.view.impl.type.DefaultBasicUserTypeRegistry;
 import com.blazebit.persistence.view.impl.update.DefaultUpdateContext;
@@ -128,7 +127,9 @@ import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.spi.TransactionSupport;
 import com.blazebit.persistence.view.spi.ViewJpqlMacro;
+import com.blazebit.persistence.view.spi.type.DirtyStateTrackable;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
+import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 import com.blazebit.reflection.ReflectionUtils;
 
 import javax.persistence.EntityManager;
@@ -159,6 +160,7 @@ import java.util.concurrent.ConcurrentMap;
 public class EntityViewManagerImpl implements EntityViewManager {
 
     private static final String META_MODEL_CLASS_NAME_SUFFIX = "_";
+    private static final String BUILDER_CLASS_NAME_SUFFIX = "Builder";
     private static final Set<ViewTransition> VIEW_TRANSITIONS = EnumSet.allOf(ViewTransition.class);
 
     private final CriteriaBuilderFactory cbf;
@@ -185,6 +187,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     private final Map<Class<?>, Set<Class<?>>> javaTypeToManagedTypeJavaTypes;
     private final Map<Class<?>, Listeners> listeners; // A mapping from JPA managed type java type and entity view java type to listeners
     private final Map<Class<?>, Set<Class<?>>> convertibleManagedViewTypes;
+    private final Map<ViewBuilderKey, Constructor<? extends EntityViewBuilder<?>>> viewBuilderClasses;
     private final boolean unsafeDisabled;
     private final boolean strictCascadingCheck;
 
@@ -290,6 +293,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
         Map<Class<?>, Set<Class<?>>> convertibleManagedViewTypes = new HashMap<>();
         Map<Class<?>, Listeners> listeners = new HashMap<>();
+        Map<ViewBuilderKey, Constructor<? extends EntityViewBuilder<?>>> viewBuilderConstructors = new HashMap<>();
         for (ManagedViewType<?> managedView : viewMetamodel.getManagedViews()) {
             Class<?> javaType = managedView.getJavaType();
             Listeners l = new Listeners(managedView.getEntityClass());
@@ -325,6 +329,9 @@ public class EntityViewManagerImpl implements EntityViewManager {
             if (scanStaticMetamodels) {
                 initializeStaticMetamodel(errors, managedView);
             }
+            if (scanStaticBuilder) {
+                initializeStaticBuilder(errors, managedView, viewBuilderConstructors);
+            }
 
             HashSet<Class<?>> classes = new HashSet<>();
             convertibleManagedViewTypes.put(javaType, classes);
@@ -349,6 +356,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         }
 
         this.convertibleManagedViewTypes = convertibleManagedViewTypes;
+        this.viewBuilderClasses = viewBuilderConstructors;
 
         for (Map.Entry<EntityViewListenerClassKey, EntityViewListenerFactory<?>> entry : config.getBootContext().getViewListeners().entrySet()) {
             for (Class<?> clazz : javaTypeToManagedTypeJavaTypes.get(entry.getKey().getEntityClass())) {
@@ -459,6 +467,60 @@ public class EntityViewManagerImpl implements EntityViewManager {
             StringWriter sw = new StringWriter();
             e.printStackTrace(new PrintWriter(sw));
             errors.add("The initialization of the static metamodel class '" + metamodelClass.getName() + "' failed: " + sw.toString());
+        }
+    }
+
+    private static String getBuilderClassName(Class<?> javaType) {
+        String packageName = javaType.getPackage().getName();
+        String fqcn = javaType.getName();
+        StringBuilder sb = new StringBuilder(fqcn.length() + BUILDER_CLASS_NAME_SUFFIX.length());
+        sb.append(packageName).append('.');
+        for (int i = packageName.length() + 1; i < fqcn.length(); i++) {
+            final char c = fqcn.charAt(i);
+            if (c != '$') {
+                sb.append(c);
+            }
+        }
+        sb.append(BUILDER_CLASS_NAME_SUFFIX);
+        return sb.toString();
+    }
+
+    private static void initializeStaticBuilder(Set<String> errors, ManagedViewType<?> managedView, Map<ViewBuilderKey, Constructor<? extends EntityViewBuilder<?>>> viewBuilderConstructors) {
+        Class<?> javaType = managedView.getJavaType();
+        Class<?> builderClass;
+        try {
+            builderClass = javaType.getClassLoader().loadClass(getBuilderClassName(javaType));
+            StaticBuilder annotation = builderClass.getAnnotation(StaticBuilder.class);
+            if (annotation != null) {
+                if (annotation.value() != javaType) {
+                    errors.add("The static builder class '" + builderClass.getName() + "' was expected to be defined for the entity view type '" + javaType.getName() + "' but was defined for: " + annotation.value().getName());
+                    return;
+                }
+            }
+        } catch (ClassNotFoundException e) {
+            // Ignore
+            return;
+        }
+        try {
+            int size = managedView.getConstructors().size();
+            if (size == 0) {
+                Class<?> constructorClass = javaType.getClassLoader().loadClass(builderClass.getName() + "$Init");
+                viewBuilderConstructors.put(new ViewBuilderKey(managedView, null), (Constructor<? extends EntityViewBuilder<?>>) constructorClass.getDeclaredConstructor(Map.class));
+            } else if (size == 1) {
+                MappingConstructor<?> constructor = managedView.getConstructors().iterator().next();
+                Class<?> constructorClass = javaType.getClassLoader().loadClass(builderClass.getName() + "$" + Character.toUpperCase(constructor.getName().charAt(0)) + constructor.getName().substring(1));
+                viewBuilderConstructors.put(new ViewBuilderKey(managedView, null), (Constructor<? extends EntityViewBuilder<?>>) constructorClass.getDeclaredConstructor(Map.class));
+                viewBuilderConstructors.put(new ViewBuilderKey(managedView, constructor), (Constructor<? extends EntityViewBuilder<?>>) constructorClass.getDeclaredConstructor(Map.class));
+            } else {
+                for (MappingConstructor<?> constructor : managedView.getConstructors()) {
+                    Class<?> constructorClass = javaType.getClassLoader().loadClass(builderClass.getName() + "$" + Character.toUpperCase(constructor.getName().charAt(0)) + constructor.getName().substring(1));
+                    viewBuilderConstructors.put(new ViewBuilderKey(managedView, constructor), (Constructor<? extends EntityViewBuilder<?>>) constructorClass.getDeclaredConstructor(Map.class));
+                }
+            }
+        } catch (Exception e) {
+            StringWriter sw = new StringWriter();
+            e.printStackTrace(new PrintWriter(sw));
+            errors.add("The initialization of the static builder class '" + builderClass.getName() + "' failed: " + sw.toString());
         }
     }
 
@@ -716,7 +778,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
 
     @Override
-    public <X> EntityViewBuilderImpl<X> createBuilder(Class<X> clazz, Map<String, Object> optionalParameters, String constructorName) {
+    public <X> EntityViewBuilder<X> createBuilder(Class<X> clazz, Map<String, Object> optionalParameters, String constructorName) {
         ManagedViewTypeImplementor<X> managedViewTypeImplementor = metamodel.managedView(clazz);
         MappingConstructorImpl<X> mappingConstructor = null;
         if (constructorName != null) {
@@ -730,7 +792,15 @@ public class EntityViewManagerImpl implements EntityViewManager {
             optionalParameters.putAll(this.optionalParameters);
             optionalParameters.putAll(tempOptionalParameters);
         }
-        return new EntityViewBuilderImpl<>(this, managedViewTypeImplementor, mappingConstructor, optionalParameters);
+        Constructor<? extends EntityViewBuilder<?>> viewBuilderConstructor = viewBuilderClasses.get(new ViewBuilderKey(managedViewTypeImplementor, mappingConstructor));
+        if (viewBuilderConstructor == null) {
+            return new EntityViewBuilderImpl<>(this, managedViewTypeImplementor, mappingConstructor, optionalParameters);
+        }
+        try {
+            return (EntityViewBuilder<X>) viewBuilderConstructor.newInstance(optionalParameters);
+        } catch (Exception e) {
+            throw new RuntimeException("Could not construct view builder for entity view: " + clazz.getName(), e);
+        }
     }
 
     @Override
@@ -750,64 +820,103 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
     @Override
     public <X> EntityViewBuilder<X> createBuilder(X view, Map<String, Object> optionalParameters, String constructorName) {
-        EntityViewBuilderImpl<X> builder = (EntityViewBuilderImpl<X>) createBuilder(((EntityViewProxy) view).$$_getEntityViewClass(), optionalParameters, constructorName);
-        ManagedViewTypeImpl.InheritanceSubtypeConfiguration<X> inheritanceSubtypeConfiguration = builder.getManagedViewType().getInheritanceSubtypeConfiguration(null);
-        Object[] tuple = builder.getTuple();
-        for (ConstrainedAttribute<AbstractMethodAttribute<? super X, ?>> value : inheritanceSubtypeConfiguration.getAttributesClosure().values()) {
-            Object newValue;
-            if (value.getAttribute() instanceof MapAttribute<?, ?, ?>) {
-                if (value.getAttribute().needsDirtyTracker()) {
-                    RecordingMap<?, Object, Object> recordingMap = (RecordingMap<?, Object, Object>) value.getAttribute().getMapInstantiator().createRecordingMap(0);
-                    recordingMap.getDelegate().putAll((Map<Object, Object>) value.getAttribute().getValue(view));
-                    newValue = recordingMap;
-                } else {
-                    Map<Object, Object> map = (Map<Object, Object>) value.getAttribute().getMapInstantiator().createMap(0);
-                    map.putAll((Map<Object, Object>) value.getAttribute().getValue(view));
-                    newValue = map;
-                }
-            } else if (value.getAttribute() instanceof PluralAttribute<?, ?, ?>) {
-                if (value.getAttribute().needsDirtyTracker()) {
-                    RecordingCollection<?, Object> recordingCollection = (RecordingCollection<?, Object>) value.getAttribute().getCollectionInstantiator().createRecordingCollection(0);
-                    recordingCollection.getDelegate().addAll((Collection<Object>) value.getAttribute().getValue(view));
-                    newValue = recordingCollection;
-                } else {
-                    Collection<Object> collection = (Collection<Object>) value.getAttribute().getCollectionInstantiator().createCollection(0);
-                    collection.addAll((Collection<Object>) value.getAttribute().getValue(view));
-                    newValue = collection;
-                }
-            } else {
-                newValue = value.getAttribute().getValue(view);
-                if (newValue == null && value.getAttribute().getMappingType() == Attribute.MappingType.PARAMETER) {
-                    newValue = optionalParameters.get(value.getAttribute().getMapping());
-                }
+        @SuppressWarnings("unchecked")
+        Class<X> clazz = (Class<X>) ((EntityViewProxy) view).$$_getEntityViewClass();
+        EntityViewBuilder<X> builder = createBuilder(clazz, optionalParameters, constructorName);
+        if (builder instanceof EntityViewBuilderImpl<?>) {
+            EntityViewBuilderImpl<X> builderImpl = (EntityViewBuilderImpl<X>) builder;
+            ManagedViewTypeImpl.InheritanceSubtypeConfiguration<X> inheritanceSubtypeConfiguration = builderImpl.getManagedViewType().getInheritanceSubtypeConfiguration(null);
+            Object[] tuple = builderImpl.getTuple();
+            for (ConstrainedAttribute<AbstractMethodAttribute<? super X, ?>> value : inheritanceSubtypeConfiguration.getAttributesClosure().values()) {
+                tuple[value.getAttribute().getAttributeIndex()] = getValueForBuilder(value, view, optionalParameters);
             }
-            tuple[value.getAttribute().getAttributeIndex()] = newValue;
+        } else {
+            ManagedViewTypeImplementor<X> managedViewTypeImplementor = metamodel.managedView(clazz);
+            ManagedViewTypeImpl.InheritanceSubtypeConfiguration<X> inheritanceSubtypeConfiguration = managedViewTypeImplementor.getInheritanceSubtypeConfiguration(null);
+            for (ConstrainedAttribute<AbstractMethodAttribute<? super X, ?>> value : inheritanceSubtypeConfiguration.getAttributesClosure().values()) {
+                builder.with(value.getAttribute().getName(), getValueForBuilder(value, view, optionalParameters));
+            }
         }
         return builder;
     }
 
+    private static <X> Object getValueForBuilder(ConstrainedAttribute<AbstractMethodAttribute<? super X, ?>> value, X view, Map<String, Object> optionalParameters) {
+        Object newValue;
+        if (value.getAttribute() instanceof MapAttribute<?, ?, ?>) {
+            if (value.getAttribute().needsDirtyTracker()) {
+                RecordingMap<?, Object, Object> recordingMap = (RecordingMap<?, Object, Object>) value.getAttribute().getMapInstantiator().createRecordingMap(0);
+                recordingMap.getDelegate().putAll((Map<Object, Object>) value.getAttribute().getValue(view));
+                newValue = recordingMap;
+            } else {
+                Map<Object, Object> map = (Map<Object, Object>) value.getAttribute().getMapInstantiator().createMap(0);
+                map.putAll((Map<Object, Object>) value.getAttribute().getValue(view));
+                newValue = map;
+            }
+        } else if (value.getAttribute() instanceof PluralAttribute<?, ?, ?>) {
+            if (value.getAttribute().needsDirtyTracker()) {
+                RecordingCollection<?, Object> recordingCollection = (RecordingCollection<?, Object>) value.getAttribute().getCollectionInstantiator().createRecordingCollection(0);
+                recordingCollection.getDelegate().addAll((Collection<Object>) value.getAttribute().getValue(view));
+                newValue = recordingCollection;
+            } else {
+                Collection<Object> collection = (Collection<Object>) value.getAttribute().getCollectionInstantiator().createCollection(0);
+                collection.addAll((Collection<Object>) value.getAttribute().getValue(view));
+                newValue = collection;
+            }
+        } else {
+            newValue = value.getAttribute().getValue(view);
+            if (newValue == null && value.getAttribute().getMappingType() == Attribute.MappingType.PARAMETER) {
+                newValue = optionalParameters.get(value.getAttribute().getMapping());
+            }
+        }
+        return newValue;
+    }
+
     @Override
     public <T> T convert(Object source, Class<T> entityViewClass, ConvertOption... convertOptions) {
-        return getViewMapper(ViewMapper.Key.create(metamodel, source, entityViewClass, convertOptions)).map(source, optionalParameters);
+        return getViewMapper(ViewMapper.Key.create(metamodel, source, entityViewClass, null, convertOptions)).map(source, optionalParameters);
+    }
+
+    @Override
+    public <T> T convert(Object source, Class<T> entityViewClass, String constructorName, ConvertOption... convertOptions) {
+        return getViewMapper(ViewMapper.Key.create(metamodel, source, entityViewClass, constructorName, convertOptions)).map(source, optionalParameters);
     }
 
     @Override
     public <T> T convert(Object source, Class<T> entityViewClass, Map<String, Object> optionalParameters, ConvertOption... convertOptions) {
         Map<String, Object> map = new HashMap<>(this.optionalParameters);
         map.putAll(optionalParameters);
-        return getViewMapper(ViewMapper.Key.create(metamodel, source, entityViewClass, convertOptions)).map(source, Collections.unmodifiableMap(map));
+        return getViewMapper(ViewMapper.Key.create(metamodel, source, entityViewClass, null, convertOptions)).map(source, Collections.unmodifiableMap(map));
+    }
+
+    @Override
+    public <T> T convert(Object source, Class<T> entityViewClass, String constructorName, Map<String, Object> optionalParameters, ConvertOption... convertOptions) {
+        Map<String, Object> map = new HashMap<>(this.optionalParameters);
+        map.putAll(optionalParameters);
+        return getViewMapper(ViewMapper.Key.create(metamodel, source, entityViewClass, constructorName, convertOptions)).map(source, Collections.unmodifiableMap(map));
     }
 
     @Override
     public <T> ConvertOperationBuilder<T> convertWith(Object source, Class<T> entityViewClass, ConvertOption... convertOptions) {
-        return new ConvertOperationBuilderImpl<>(this, ViewMapper.Key.create(metamodel, source, entityViewClass, convertOptions), source, optionalParameters);
+        return new ConvertOperationBuilderImpl<>(this, ViewMapper.Key.create(metamodel, source, entityViewClass, null, convertOptions), source, optionalParameters);
+    }
+
+    @Override
+    public <T> ConvertOperationBuilder<T> convertWith(Object source, Class<T> entityViewClass, String constructorName, ConvertOption... convertOptions) {
+        return new ConvertOperationBuilderImpl<>(this, ViewMapper.Key.create(metamodel, source, entityViewClass, constructorName, convertOptions), source, optionalParameters);
     }
 
     @Override
     public <T> ConvertOperationBuilder<T> convertWith(Object source, Class<T> entityViewClass, Map<String, Object> optionalParameters, ConvertOption... convertOptions) {
         Map<String, Object> map = new HashMap<>(this.optionalParameters);
         map.putAll(optionalParameters);
-        return new ConvertOperationBuilderImpl<>(this, ViewMapper.Key.create(metamodel, source, entityViewClass, convertOptions), source, Collections.unmodifiableMap(map));
+        return new ConvertOperationBuilderImpl<>(this, ViewMapper.Key.create(metamodel, source, entityViewClass, null, convertOptions), source, Collections.unmodifiableMap(map));
+    }
+
+    @Override
+    public <T> ConvertOperationBuilder<T> convertWith(Object source, Class<T> entityViewClass, String constructorName, Map<String, Object> optionalParameters, ConvertOption... convertOptions) {
+        Map<String, Object> map = new HashMap<>(this.optionalParameters);
+        map.putAll(optionalParameters);
+        return new ConvertOperationBuilderImpl<>(this, ViewMapper.Key.create(metamodel, source, entityViewClass, constructorName, convertOptions), source, Collections.unmodifiableMap(map));
     }
 
     @SuppressWarnings("unchecked")
@@ -1343,6 +1452,44 @@ public class EntityViewManagerImpl implements EntityViewManager {
         public int hashCode() {
             int result = key.hashCode();
             result = 31 * result + subMappers.hashCode();
+            return result;
+        }
+    }
+
+    /**
+     * @author Christian Beikov
+     * @since 1.5.0
+     */
+    private static class ViewBuilderKey {
+        private final ManagedViewType<?> managedViewType;
+        private final MappingConstructor<?> constructor;
+
+        public ViewBuilderKey(ManagedViewType<?> managedViewType, MappingConstructor<?> constructor) {
+            this.managedViewType = managedViewType;
+            this.constructor = constructor;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof ViewBuilderKey)) {
+                return false;
+            }
+
+            ViewBuilderKey that = (ViewBuilderKey) o;
+
+            if (!managedViewType.equals(that.managedViewType)) {
+                return false;
+            }
+            return constructor != null ? constructor.equals(that.constructor) : that.constructor == null;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = managedViewType.hashCode();
+            result = 31 * result + (constructor != null ? constructor.hashCode() : 0);
             return result;
         }
     }

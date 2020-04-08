@@ -21,7 +21,6 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
@@ -207,11 +206,11 @@ public final class ForeignPackageAdapterClassWriter {
                     if (first) {
                         first = false;
                         sb.append(NEW_LINE);
-                        sb.append("        ").append(parameter.toString());
+                        sb.append("        ").append(parameter.asType()).append(" ").append(parameter.getSimpleName());
                     } else {
                         sb.append(",");
                         sb.append(NEW_LINE);
-                        sb.append("        ").append(parameter.toString());
+                        sb.append("        ").append(parameter.asType()).append(" ").append(parameter.getSimpleName());
                         sb.append(NEW_LINE);
                     }
                 }
@@ -222,15 +221,9 @@ public final class ForeignPackageAdapterClassWriter {
                     sb.append("    ) {");
                     sb.append(NEW_LINE);
                 }
-            }
-        }
-
-        for (Element enclosedElement : entity.getTypeElement().getEnclosedElements()) {
-            if (!enclosedElement.getModifiers().contains(Modifier.PRIVATE) && enclosedElement.getKind() == ElementKind.CONSTRUCTOR) {
-                ExecutableElement constructor = (ExecutableElement) enclosedElement;
                 sb.append("        super(");
 
-                boolean first = true;
+                first = true;
                 for (VariableElement parameter : constructor.getParameters()) {
                     if (first) {
                         first = false;
@@ -250,9 +243,9 @@ public final class ForeignPackageAdapterClassWriter {
                     sb.append("        );");
                     sb.append(NEW_LINE);
                 }
+                sb.append("    }");
+                sb.append(NEW_LINE);
             }
         }
-        sb.append("    }");
-        sb.append(NEW_LINE);
     }
 }

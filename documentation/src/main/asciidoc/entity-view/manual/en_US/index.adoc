@@ -51,6 +51,8 @@ include::17_serialization_support.adoc[]
 
 include::18_metamodel.adoc[]
 
-include::19_configuration.adoc[]
+include::19_annotation_processor.adoc[]
 
-include::20_faq.adoc[]
+include::20_configuration.adoc[]
+
+include::21_faq.adoc[]

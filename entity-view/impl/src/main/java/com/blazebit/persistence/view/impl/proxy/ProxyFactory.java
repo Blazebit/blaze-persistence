@@ -64,6 +64,7 @@ import javassist.CtClass;
 import javassist.CtConstructor;
 import javassist.CtField;
 import javassist.CtMethod;
+import javassist.CtPrimitiveType;
 import javassist.Modifier;
 import javassist.NotFoundException;
 import javassist.bytecode.AccessFlag;
@@ -90,8 +91,14 @@ import javassist.compiler.ast.Stmnt;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectStreamClass;
+import java.io.ObjectStreamConstants;
+import java.io.ObjectStreamField;
 import java.io.PrintWriter;
+import java.io.Serializable;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -100,6 +107,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -120,6 +128,7 @@ import java.util.logging.Logger;
 public class ProxyFactory {
 
     private static final String IMPL_CLASS_NAME_SUFFIX = "Impl";
+    private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
     private static final Logger LOG = Logger.getLogger(ProxyFactory.class.getName());
     // This has to be static since runtime generated correlation providers can't be matched in a later run, so we always create a new one with a unique name
     private static final ConcurrentMap<Class<?>, AtomicInteger> CORRELATION_PROVIDER_CLASS_COUNT = new ConcurrentHashMap<>();
@@ -204,7 +213,6 @@ public class ProxyFactory {
                 entityViewImplementationClass.getDeclaredField(attribute.getName());
             }
             proxyClasses.put(javaType, entityViewImplementationClass);
-            unsafeProxyClasses.put(javaType, entityViewImplementationClass);
         } catch (Exception e) {
             StringWriter sw = new StringWriter();
             e.printStackTrace(new PrintWriter(sw));
@@ -397,6 +405,7 @@ public class ProxyFactory {
             CtField initialStateField = null;
             CtField mutableStateField = null;
             CtMethod markDirtyStub = null;
+            long alwaysDirtyMask = 0L;
             cc.addInterface(pool.get(EntityViewProxy.class.getName()));
             addGetJpaManagedClass(cc, managedViewType.getEntityClass());
             addGetJpaManagedBaseClass(cc, getJpaManagedBaseClass(managedViewType));
@@ -535,6 +544,7 @@ public class ProxyFactory {
                                 supportsDirtyTracking[mutableAttributeIndex++] = true;
                             } else {
                                 allSupportDirtyTracking = false;
+                                alwaysDirtyMask |= 1 << mutableAttributeIndex;
                                 supportsDirtyTracking[mutableAttributeIndex++] = false;
                             }
                         }
@@ -543,38 +553,42 @@ public class ProxyFactory {
                     addIsDirty(cc, dirtyField, allSupportDirtyTracking);
                     addIsDirtyAttribute(cc, dirtyField, supportsDirtyTracking, allSupportDirtyTracking);
                     addMarkDirty(cc, dirtyField);
-                    addUnmarkDirty(cc, dirtyField);
-                    addSetDirty(cc, dirtyField);
-                    addResetDirty(cc, dirtyField, supportsDirtyTracking, allSupportDirtyTracking);
-                    addGetDirty(cc, dirtyField, supportsDirtyTracking, allSupportDirtyTracking);
-                    addGetSimpleDirty(cc, dirtyField, supportsDirtyTracking, allSupportDirtyTracking);
+                    addUnmarkDirty(cc, dirtyField, alwaysDirtyMask);
+                    addSetDirty(cc, dirtyField, alwaysDirtyMask);
+                    addResetDirty(cc, dirtyField, alwaysDirtyMask);
+                    addGetDirty(cc, dirtyField);
+                    addGetSimpleDirty(cc, dirtyField);
                     addCopyDirty(cc, dirtyField, supportsDirtyTracking, allSupportDirtyTracking);
                 }
             }
 
             createEqualsHashCodeMethods(viewType, managedViewType, cc, superCc, attributeFields, idField);
             cc.addMethod(createToString(managedViewType, cc, viewType != null, attributeFields));
-            createSpecialMethods(managedViewType, cc);
+            createSpecialMethods(managedViewType, cc, cc);
+            createSerializationSubclass(managedViewType, cc);
 
             Set<MappingConstructorImpl<T>> constructors = (Set<MappingConstructorImpl<T>>) (Set<?>) managedViewType.getConstructors();
             boolean hasEmptyConstructor = managedViewType.hasEmptyConstructor();
 
             if (hasEmptyConstructor) {
                 // Create constructor for create models
-                cc.addConstructor(createCreateConstructor(entityViewManager, managedViewType, cc, attributeFields, attributeTypes, idField, initialStateField, mutableStateField, methodAttributes, mutableAttributeCount, unsafe));
+                cc.addConstructor(createCreateConstructor(entityViewManager, managedViewType, cc, attributeFields, attributeTypes, idField, initialStateField, mutableStateField, methodAttributes, mutableAttributeCount, alwaysDirtyMask, unsafe));
             }
 
             boolean addedReferenceConstructor = false;
             if (idField != null && hasEmptyConstructor) {
                 // Id only constructor for reference models
-                cc.addConstructor(createReferenceConstructor(entityViewManager, managedViewType, cc, attributeFields, idField, initialStateField, mutableStateField, methodAttributes, mutableAttributeCount, unsafe));
+                cc.addConstructor(createReferenceConstructor(entityViewManager, managedViewType, cc, attributeFields, idField, initialStateField, mutableStateField, methodAttributes, mutableAttributeCount, alwaysDirtyMask, unsafe));
                 addedReferenceConstructor = true;
             }
 
             if (shouldAddDefaultConstructor(hasEmptyConstructor, addedReferenceConstructor, attributeFields)) {
-                cc.addConstructor(createNormalConstructor(entityViewManager, managedViewType, cc, attributeFields, attributeTypes, initialStateField, mutableStateField, methodAttributes, mutableAttributeCount, unsafe));
-                cc.addConstructor(createTupleConstructor(cc, attributeFields.length, attributeFields.length, attributeFields, attributeTypes, initialStateField, mutableStateField, methodAttributes, mutableAttributeCount, false, unsafe));
-                cc.addConstructor(createTupleConstructor(cc, attributeFields.length, attributeFields.length, attributeFields, attributeTypes, initialStateField, mutableStateField, methodAttributes, mutableAttributeCount, true, unsafe));
+                cc.addConstructor(createNormalConstructor(entityViewManager, managedViewType, null, cc, attributeFields, attributeTypes, initialStateField, mutableStateField, methodAttributes, mutableAttributeCount, alwaysDirtyMask, unsafe));
+                cc.addConstructor(createTupleConstructor(managedViewType, null, cc, attributeFields.length, attributeFields.length, attributeFields, attributeTypes, initialStateField, mutableStateField, methodAttributes, mutableAttributeCount, false, alwaysDirtyMask, unsafe));
+                cc.addConstructor(createTupleConstructor(managedViewType, null, cc, attributeFields.length, attributeFields.length, attributeFields, attributeTypes, initialStateField, mutableStateField, methodAttributes, mutableAttributeCount, true, alwaysDirtyMask, unsafe));
+            } else if (hasEmptyConstructor) {
+                cc.addConstructor(createTupleConstructor(managedViewType, null, cc, attributeFields.length, attributeFields.length, attributeFields, attributeTypes, initialStateField, mutableStateField, methodAttributes, mutableAttributeCount, false, alwaysDirtyMask, unsafe));
+                cc.addConstructor(createTupleConstructor(managedViewType, null, cc, attributeFields.length, attributeFields.length, attributeFields, attributeTypes, initialStateField, mutableStateField, methodAttributes, mutableAttributeCount, true, alwaysDirtyMask, unsafe));
             }
 
             for (MappingConstructorImpl<?> constructor : constructors) {
@@ -590,9 +604,9 @@ public class ProxyFactory {
                 CtConstructor superConstructor = findConstructor(superCc, constructor);
                 System.arraycopy(superConstructor.getParameterTypes(), 0, constructorAttributeTypes, attributeFields.length, superConstructor.getParameterTypes().length);
 
-                cc.addConstructor(createNormalConstructor(entityViewManager, managedViewType, cc, attributeFields, constructorAttributeTypes, initialStateField, mutableStateField, methodAttributes, mutableAttributeCount, unsafe));
-                cc.addConstructor(createTupleConstructor(cc, attributeFields.length, constructorAttributeTypes.length, attributeFields, constructorAttributeTypes, initialStateField, mutableStateField, methodAttributes, mutableAttributeCount, false, unsafe));
-                cc.addConstructor(createTupleConstructor(cc, attributeFields.length, constructorAttributeTypes.length, attributeFields, constructorAttributeTypes, initialStateField, mutableStateField, methodAttributes, mutableAttributeCount, true, unsafe));
+                cc.addConstructor(createNormalConstructor(entityViewManager, managedViewType, constructor, cc, attributeFields, constructorAttributeTypes, initialStateField, mutableStateField, methodAttributes, mutableAttributeCount, alwaysDirtyMask, unsafe));
+                cc.addConstructor(createTupleConstructor(managedViewType, constructor, cc, attributeFields.length, constructorAttributeTypes.length, attributeFields, constructorAttributeTypes, initialStateField, mutableStateField, methodAttributes, mutableAttributeCount, false, alwaysDirtyMask, unsafe));
+                cc.addConstructor(createTupleConstructor(managedViewType, constructor, cc, attributeFields.length, constructorAttributeTypes.length, attributeFields, constructorAttributeTypes, initialStateField, mutableStateField, methodAttributes, mutableAttributeCount, true, alwaysDirtyMask, unsafe));
             }
 
             return defineOrGetClass(entityViewManager, unsafe, clazz, cc);
@@ -601,6 +615,363 @@ public class ProxyFactory {
         } finally {
             pool.removeClassPath(classPath);
         }
+    }
+
+    private void createSerializationSubclass(ManagedViewTypeImplementor<?> managedViewType, CtClass cc) throws Exception {
+        boolean hasSelfConstructor = false;
+        OUTER: for (MappingConstructor<?> constructor : managedViewType.getConstructors()) {
+            for (ParameterAttribute<?, ?> parameterAttribute : constructor.getParameterAttributes()) {
+                if (parameterAttribute.isSelfParameter()) {
+                    hasSelfConstructor = true;
+                    break OUTER;
+                }
+            }
+        }
+        if (hasSelfConstructor) {
+            String serializableClassName = cc.getName() + "Ser";
+            Set<AbstractMethodAttribute<?, ?>> attributes = (Set<AbstractMethodAttribute<?, ?>>) (Set<?>) managedViewType.getAttributes();
+            CtClass[] attributeTypes = new CtClass[attributes.size()];
+            createSerializableClass(managedViewType, cc, serializableClassName, attributes, attributeTypes);
+
+            ConstPool cp = cc.getClassFile().getConstPool();
+            MethodInfo minfo = new MethodInfo(cp, "createSelf", Descriptor.ofMethod(pool.get(managedViewType.getJavaType().getName()), attributeTypes));
+            CtMethod method = CtMethod.make(minfo, cc);
+            minfo.setAccessFlags(AccessFlag.PUBLIC | AccessFlag.STATIC);
+            StringBuilder sb = new StringBuilder();
+            sb.append("{\n");
+            sb.append("\t").append(serializableClassName).append(" self = (").append(serializableClassName).append(") new java.io.ObjectInputStream(new java.io.ByteArrayInputStream(");
+            sb.append(serializableClassName).append(".EMPTY_INSTANCE_BYTES)).readObject();\n");
+            int index = 1;
+            for (MethodAttribute<?, ?> attribute : attributes) {
+                sb.append("\tself.").append(attribute.getName()).append(" = $").append(index).append(";\n");
+                index++;
+            }
+            sb.append("\treturn self;\n");
+            sb.append("}");
+            method.setBody(sb.toString());
+            cc.addMethod(method);
+        }
+    }
+
+    private void createSerializableClass(ManagedViewTypeImplementor<?> managedViewType, CtClass cc, String serializableClassName, Set<AbstractMethodAttribute<?, ?>> attributes, CtClass[] attributeTypes) throws Exception {
+        CtClass serializableClass = pool.makeClass(serializableClassName);
+        Class<?> clazz = managedViewType.getJavaType();
+        if (clazz.isInterface()) {
+            serializableClass.addInterface(cc.getSuperclass());
+        } else {
+            serializableClass.setSuperclass(cc.getSuperclass());
+        }
+        serializableClass.addInterface(pool.get(Serializable.class.getName()));
+        int index = 0;
+        for (AbstractMethodAttribute<?, ?> attribute : attributes) {
+            CtClass attributeType = pool.get(attribute.getJavaType().getName());
+            attributeTypes[index] = attributeType;
+            CtField field = addMembersForAttribute(attribute, clazz, serializableClass, null, false, false, true);
+            field.setModifiers((field.getModifiers() & ~Modifier.PRIVATE) | Modifier.PUBLIC);
+            index++;
+        }
+        createSpecialMethods(managedViewType, cc, serializableClass);
+
+        CtField serialVersionUidField = new CtField(CtPrimitiveType.longType, "serialVersionUID", serializableClass);
+        serialVersionUidField.setModifiers(Modifier.PRIVATE | Modifier.STATIC | Modifier.FINAL);
+        serializableClass.addField(serialVersionUidField, CtField.Initializer.constant(1L));
+
+        if (!clazz.isInterface()) {
+            StringBuilder sb = new StringBuilder();
+            for (CtConstructor superConstructor : cc.getDeclaredConstructors()) {
+                CtClass[] parameterTypes = superConstructor.getParameterTypes();
+                CtConstructor constructor = new CtConstructor(parameterTypes, serializableClass);
+                constructor.setModifiers(Modifier.PRIVATE);
+                sb.setLength(0);
+                sb.append("super(");
+                if (parameterTypes.length != 0) {
+                    for (int i = 0; i < parameterTypes.length; i++) {
+                        sb.append('$').append(i + 1).append(',');
+                    }
+                    sb.setLength(sb.length() - 1);
+                }
+
+                sb.append(");");
+                constructor.setBody(sb.toString());
+            }
+        }
+
+        byte[] emptyInstanceBytes = generateEmptyInstanceBytes(serializableClassName, managedViewType);
+        StringBuilder emptyInstanceByteBuilder = new StringBuilder();
+        emptyInstanceByteBuilder.append("new byte[]{ ");
+        appendBytesAsHex(emptyInstanceByteBuilder, emptyInstanceBytes);
+        emptyInstanceByteBuilder.setCharAt(emptyInstanceByteBuilder.length() - 1, '}');
+        CtField emptyBytesField = new CtField(pool.get("byte[]"), "EMPTY_INSTANCE_BYTES", serializableClass);
+        emptyBytesField.setModifiers(Modifier.STATIC | Modifier.FINAL);
+        serializableClass.addField(emptyBytesField, CtField.Initializer.byExpr(emptyInstanceByteBuilder.toString()));
+        defineOrGetClass(clazz, serializableClass);
+    }
+
+    private static void appendBytesAsHex(StringBuilder sb, byte[] bytes) {
+        for ( int j = 0; j < bytes.length; j++ ) {
+            int v = bytes[j] & 0xFF;
+            sb.append(" (byte) 0x");
+            sb.append(HEX_ARRAY[v >>> 4]);
+            sb.append(HEX_ARRAY[v & 0x0F]);
+            sb.append(',');
+        }
+    }
+
+    private static byte[] generateEmptyInstanceBytes(String serializableClassName, ManagedViewTypeImplementor<?> managedViewTypeImplementor) {
+        // Generate empty object serialization bytes according to https://www.javaworld.com/article/2072752/the-java-serialization-algorithm-revealed.html
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try {
+            DataOutputStream oos = new DataOutputStream(baos);
+            oos.writeShort(ObjectStreamConstants.STREAM_MAGIC);
+            oos.writeShort(ObjectStreamConstants.STREAM_VERSION);
+
+            // Start object
+            oos.writeByte(ObjectStreamConstants.TC_OBJECT);
+            // Class descriptor
+            oos.writeByte(ObjectStreamConstants.TC_CLASSDESC);
+            // Class name
+            oos.writeUTF(serializableClassName);
+            // Serial version UID of the class
+            oos.writeLong(1L);
+            // Supported flags
+            oos.writeByte(ObjectStreamConstants.SC_SERIALIZABLE);
+
+            List<List<SerializationField>> serializationFieldHierarchy = new ArrayList<>();
+            List<SerializationField> serializationFields = new ArrayList<>();
+            for (MethodAttribute<?, ?> attribute : managedViewTypeImplementor.getAttributes()) {
+                serializationFields.add(new MetaSerializationField((AbstractMethodAttribute<?, ?>) attribute));
+            }
+            serializationFieldHierarchy.add(serializationFields);
+            writeFields(serializationFields, oos);
+            oos.writeByte(ObjectStreamConstants.TC_ENDBLOCKDATA);
+
+            // TODO: foreign package supertypes?
+            Class<?> superclass = managedViewTypeImplementor.getJavaType();
+            if (!superclass.isInterface()) {
+                while (superclass != Object.class) {
+                    // Class descriptor
+                    oos.writeByte(ObjectStreamConstants.TC_CLASSDESC);
+                    // Class name
+                    oos.writeUTF(superclass.getName());
+                    List<SerializationField> fields = new ArrayList<>();
+                    ObjectStreamClass objectStreamClass = ObjectStreamClass.lookup(superclass);
+                    for (ObjectStreamField field : objectStreamClass.getFields()) {
+                        fields.add(new ObjectStreamFieldSerializationField(field));
+                    }
+
+                    if (Serializable.class.isAssignableFrom(superclass)) {
+                        // Serial version UID of the class
+                        oos.writeLong(objectStreamClass.getSerialVersionUID());
+                        // Supported flags
+                        oos.writeByte(ObjectStreamConstants.SC_SERIALIZABLE);
+                    } else {
+                        // Serial version UID of the class
+                        oos.writeLong(0L);
+                        // Supported flags
+                        oos.writeByte(0);
+                    }
+
+                    serializationFieldHierarchy.add(fields);
+                    writeFields(fields, oos);
+                    oos.writeByte(ObjectStreamConstants.TC_ENDBLOCKDATA);
+
+                    superclass = superclass.getSuperclass();
+                }
+            }
+            oos.writeByte(ObjectStreamConstants.TC_NULL);
+            for (List<SerializationField> fields : serializationFieldHierarchy) {
+                for (SerializationField serializationField : fields) {
+                    if (serializationField.isPrimitive()) {
+                        switch (serializationField.getType().getName()) {
+                            case "int":
+                                oos.writeInt(0);
+                                break;
+                            case "byte":
+                                oos.writeByte(0);
+                                break;
+                            case "long":
+                                oos.writeLong(0);
+                                break;
+                            case "float":
+                                oos.writeFloat(0);
+                                break;
+                            case "double":
+                                oos.writeDouble(0);
+                                break;
+                            case "short":
+                                oos.writeShort(0);
+                                break;
+                            case "char":
+                                oos.writeChar(0);
+                                break;
+                            case "boolean":
+                                oos.writeBoolean(false);
+                                break;
+                            default:
+                                throw new UnsupportedOperationException("Unsupported primitive type: " + serializationField.getType().getName());
+                        }
+                    } else {
+                        oos.writeByte(ObjectStreamConstants.TC_NULL);
+                    }
+                }
+            }
+            oos.flush();
+            return baos.toByteArray();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    private static void writeFields(List<SerializationField> serializationFields, DataOutputStream oos) throws Exception {
+        Collections.sort(serializationFields);
+        oos.writeShort(serializationFields.size());
+        for (SerializationField serializationField : serializationFields) {
+            oos.writeByte(serializationField.getTypeCode());
+            oos.writeUTF(serializationField.getName());
+            if (!serializationField.isPrimitive()) {
+                oos.writeByte(ObjectStreamConstants.TC_STRING);
+                oos.writeUTF(serializationField.getTypeString());
+//                oos.writeTypeString(serializationField.getTypeString());
+            }
+        }
+    }
+
+    /**
+     * @author Christian Beikov
+     * @since 1.5.0
+     */
+    private abstract static class SerializationField implements Comparable<SerializationField> {
+
+        public abstract String getName();
+
+        public abstract Class<?> getType();
+
+        public abstract char getTypeCode();
+
+        public abstract String getTypeString();
+
+        public abstract boolean isPrimitive();
+
+        @Override
+        public int compareTo(SerializationField other) {
+            boolean isPrim = isPrimitive();
+            if (isPrim != other.isPrimitive()) {
+                return isPrim ? -1 : 1;
+            }
+            return getName().compareTo(other.getName());
+        }
+    }
+
+    /**
+     * @author Christian Beikov
+     * @since 1.5.0
+     */
+    private static class MetaSerializationField extends SerializationField {
+
+        private final AbstractMethodAttribute<?, ?> attribute;
+        private final String signature;
+
+        public MetaSerializationField(AbstractMethodAttribute<?, ?> attribute) {
+            this.attribute = attribute;
+            this.signature = getClassSignature(attribute.getJavaType());
+        }
+
+        @Override
+        public String getName() {
+            return attribute.getName();
+        }
+
+        @Override
+        public Class<?> getType() {
+            return attribute.getJavaType();
+        }
+
+        @Override
+        public char getTypeCode() {
+            return signature.charAt(0);
+        }
+
+        @Override
+        public String getTypeString() {
+            return isPrimitive() ? null : signature;
+        }
+
+        @Override
+        public boolean isPrimitive() {
+            return attribute.getJavaType().isPrimitive();
+        }
+    }
+
+    /**
+     * @author Christian Beikov
+     * @since 1.5.0
+     */
+    private static class ObjectStreamFieldSerializationField extends SerializationField {
+
+        private final ObjectStreamField field;
+
+        public ObjectStreamFieldSerializationField(ObjectStreamField field) {
+            this.field = field;
+        }
+
+        @Override
+        public String getName() {
+            return field.getName();
+        }
+
+        @Override
+        public Class<?> getType() {
+            return field.getType();
+        }
+
+        @Override
+        public char getTypeCode() {
+            return field.getTypeCode();
+        }
+
+        @Override
+        public String getTypeString() {
+            return field.getTypeString();
+        }
+
+        @Override
+        public boolean isPrimitive() {
+            return field.isPrimitive();
+        }
+    }
+
+    private static String getClassSignature(Class<?> cl) {
+        StringBuilder sbuf = new StringBuilder();
+        while (cl.isArray()) {
+            sbuf.append('[');
+            cl = cl.getComponentType();
+        }
+        if (cl.isPrimitive()) {
+            if (cl == Integer.TYPE) {
+                sbuf.append('I');
+            } else if (cl == Byte.TYPE) {
+                sbuf.append('B');
+            } else if (cl == Long.TYPE) {
+                sbuf.append('J');
+            } else if (cl == Float.TYPE) {
+                sbuf.append('F');
+            } else if (cl == Double.TYPE) {
+                sbuf.append('D');
+            } else if (cl == Short.TYPE) {
+                sbuf.append('S');
+            } else if (cl == Character.TYPE) {
+                sbuf.append('C');
+            } else if (cl == Boolean.TYPE) {
+                sbuf.append('Z');
+            } else if (cl == Void.TYPE) {
+                sbuf.append('V');
+            } else {
+                throw new InternalError();
+            }
+        } else {
+            sbuf.append('L' + cl.getName().replace('.', '/') + ';');
+        }
+        return sbuf.toString();
     }
 
     private Class<?> getJpaManagedBaseClass(ManagedViewTypeImplementor<?> managedViewType) {
@@ -707,18 +1078,18 @@ public class ProxyFactory {
         }
     }
 
-    private void createSpecialMethods(ManagedViewTypeImplementor<?> viewType, CtClass cc) throws CannotCompileException {
+    private void createSpecialMethods(ManagedViewTypeImplementor<?> viewType, CtClass cc, CtClass target) throws CannotCompileException {
         for (Method method : viewType.getSpecialMethods()) {
             if (method.getReturnType() == EntityViewManager.class) {
-                addEntityViewManagerGetter(cc, method);
+                addEntityViewManagerGetter(cc, method, target);
             } else {
                 throw new IllegalArgumentException("Unsupported special method: " + method);
             }
         }
     }
 
-    private void addEntityViewManagerGetter(CtClass cc, Method method) throws CannotCompileException {
-        ConstPool cp = cc.getClassFile2().getConstPool();
+    private void addEntityViewManagerGetter(CtClass cc, Method method, CtClass target) throws CannotCompileException {
+        ConstPool cp = target.getClassFile2().getConstPool();
         String desc = Descriptor.of(method.getReturnType().getName());
         MethodInfo minfo = new MethodInfo(cp, method.getName(), "()" + desc);
         minfo.setAccessFlags(AccessFlag.PUBLIC);
@@ -728,7 +1099,7 @@ public class ProxyFactory {
         code.addOpcode(Bytecode.ARETURN);
 
         minfo.setCodeAttribute(code.toCodeAttribute());
-        cc.addMethod(CtMethod.make(minfo, cc));
+        target.addMethod(CtMethod.make(minfo, target));
     }
 
     private void addGetJpaManagedClass(CtClass cc, Class<?> entityClass) throws CannotCompileException {
@@ -1001,7 +1372,7 @@ public class ProxyFactory {
         return method;
     }
 
-    private CtMethod addSetDirty(CtClass cc, CtField dirtyField) throws CannotCompileException {
+    private CtMethod addSetDirty(CtClass cc, CtField dirtyField, long alwaysDirtyMask) throws CannotCompileException {
         FieldInfo dirtyFieldInfo = dirtyField.getFieldInfo2();
         String desc = "([" + Descriptor.of("long") + ")V";
         ConstPool cp = dirtyFieldInfo.getConstPool();
@@ -1012,7 +1383,11 @@ public class ProxyFactory {
         StringBuilder sb = new StringBuilder();
 
         sb.append("{\n");
-        sb.append("\t$0.").append(dirtyFieldName).append(" = $1[0];\n");
+        if (alwaysDirtyMask == 0L) {
+            sb.append("\t$0.").append(dirtyFieldName).append(" = $1[0];\n");
+        } else {
+            sb.append("\t$0.").append(dirtyFieldName).append(" = $1[0] | ").append(alwaysDirtyMask).append("L;\n");
+        }
 
         sb.append("\tif ($0.").append(dirtyFieldName).append(" != 0 && $0.$$_parent != null) {\n");
         sb.append("\t\t$0.$$_parent.$$_markDirty($0.$$_parentIndex);\n");
@@ -1025,7 +1400,7 @@ public class ProxyFactory {
         return method;
     }
 
-    private CtMethod addUnmarkDirty(CtClass cc, CtField dirtyField) throws CannotCompileException {
+    private CtMethod addUnmarkDirty(CtClass cc, CtField dirtyField, long alwaysDirtyMask) throws CannotCompileException {
         FieldInfo dirtyFieldInfo = dirtyField.getFieldInfo2();
         String desc = "()" + Descriptor.of("void");
         ConstPool cp = dirtyFieldInfo.getConstPool();
@@ -1036,7 +1411,7 @@ public class ProxyFactory {
         StringBuilder sb = new StringBuilder();
 
         sb.append("{\n");
-        sb.append("\t$0.").append(dirtyFieldName).append(" = 0;\n");
+        sb.append("\t$0.").append(dirtyFieldName).append(" = ").append(alwaysDirtyMask).append("L;\n");
         sb.append('}');
 
         CtMethod method = CtMethod.make(minfo, cc);
@@ -1045,7 +1420,7 @@ public class ProxyFactory {
         return method;
     }
 
-    private CtMethod addResetDirty(CtClass cc, CtField dirtyField, boolean[] supportsDirtyTracking, boolean allSupportDirtyTracking) throws CannotCompileException {
+    private CtMethod addResetDirty(CtClass cc, CtField dirtyField, long alwaysDirtyMask) throws CannotCompileException {
         FieldInfo dirtyFieldInfo = dirtyField.getFieldInfo2();
         String desc = "()[" + Descriptor.of("long");
         ConstPool cp = dirtyFieldInfo.getConstPool();
@@ -1057,23 +1432,8 @@ public class ProxyFactory {
 
         sb.append("{\n");
         sb.append("\tlong[] dirty = new long[1];\n");
-        sb.append("\tdirty[0] = $0.").append(dirtyFieldName);
-
-        if (!allSupportDirtyTracking) {
-            long mask = 0;
-            for (int i = 0; i < supportsDirtyTracking.length; i++) {
-                if (!supportsDirtyTracking[i]) {
-                    mask |= 1 << i;
-                }
-            }
-
-            sb.append(" | ").append(mask);
-        }
-
-        sb.append(";\n");
-
-        sb.append("\t$0.").append(dirtyFieldName).append(" = 0;\n");
-
+        sb.append("\tdirty[0] = $0.").append(dirtyFieldName).append(";\n");
+        sb.append("\t$0.").append(dirtyFieldName).append(" = ").append(alwaysDirtyMask).append("L;\n");
         sb.append("\treturn dirty;\n");
         sb.append('}');
 
@@ -1083,7 +1443,7 @@ public class ProxyFactory {
         return method;
     }
 
-    private CtMethod addGetDirty(CtClass cc, CtField dirtyField, boolean[] supportsDirtyTracking, boolean allSupportDirtyTracking) throws CannotCompileException {
+    private CtMethod addGetDirty(CtClass cc, CtField dirtyField) throws CannotCompileException {
         FieldInfo dirtyFieldInfo = dirtyField.getFieldInfo2();
         String desc = "()[" + Descriptor.of("long");
         ConstPool cp = dirtyFieldInfo.getConstPool();
@@ -1095,20 +1455,7 @@ public class ProxyFactory {
 
         sb.append("{\n");
         sb.append("\tlong[] dirty = new long[1];\n");
-        sb.append("\tdirty[0] = $0.").append(dirtyFieldName);
-
-        if (!allSupportDirtyTracking) {
-            long mask = 0;
-            for (int i = 0; i < supportsDirtyTracking.length; i++) {
-                if (!supportsDirtyTracking[i]) {
-                    mask |= 1 << i;
-                }
-            }
-
-            sb.append(" | ").append(mask);
-        }
-
-        sb.append(";\n");
+        sb.append("\tdirty[0] = $0.").append(dirtyFieldName).append(";\n");
         sb.append("\treturn dirty;\n");
         sb.append('}');
 
@@ -1118,7 +1465,7 @@ public class ProxyFactory {
         return method;
     }
 
-    private CtMethod addGetSimpleDirty(CtClass cc, CtField dirtyField, boolean[] supportsDirtyTracking, boolean allSupportDirtyTracking) throws CannotCompileException {
+    private CtMethod addGetSimpleDirty(CtClass cc, CtField dirtyField) throws CannotCompileException {
         FieldInfo dirtyFieldInfo = dirtyField.getFieldInfo2();
         String desc = "()" + Descriptor.of("long");
         ConstPool cp = dirtyFieldInfo.getConstPool();
@@ -1129,20 +1476,7 @@ public class ProxyFactory {
         StringBuilder sb = new StringBuilder();
 
         sb.append("{\n");
-        sb.append("\treturn $0.").append(dirtyFieldName);
-
-        if (!allSupportDirtyTracking) {
-            long mask = 0;
-            for (int i = 0; i < supportsDirtyTracking.length; i++) {
-                if (!supportsDirtyTracking[i]) {
-                    mask |= 1 << i;
-                }
-            }
-
-            sb.append(" | ").append(mask);
-        }
-
-        sb.append(";\n");
+        sb.append("\treturn $0.").append(dirtyFieldName).append(";\n");
         sb.append('}');
 
         CtMethod method = CtMethod.make(minfo, cc);
@@ -1656,7 +1990,7 @@ public class ProxyFactory {
             if (mutableStateField != null) {
                 // this.mutableState[mutableStateIndex] = $1
                 sb.append("\t$0.").append(mutableStateField.getName()).append("[").append(mutableStateIndex).append("] = ");
-                renderValueForArray(sb, attributeField.getType(), 1);
+                renderValueForArray(sb, attributeField.getType(), "$1");
             }
             if (dirtyChecking) {
                 // this.dirty = true
@@ -2020,22 +2354,22 @@ public class ProxyFactory {
         return CtMethod.make(bridge, cc);
     }
 
-    private CtConstructor createNormalConstructor(EntityViewManager evm, ManagedViewType<?> managedViewType, CtClass cc, CtField[] attributeFields, CtClass[] attributeTypes, CtField initialStateField, CtField mutableStateField,
-                                                  AbstractMethodAttribute<?, ?>[] attributes, int mutableAttributeCount, boolean unsafe) throws CannotCompileException, NotFoundException, BadBytecode {
+    private CtConstructor createNormalConstructor(EntityViewManager evm, ManagedViewType<?> managedViewType, MappingConstructor<?> constructor, CtClass cc, CtField[] attributeFields, CtClass[] attributeTypes, CtField initialStateField, CtField mutableStateField,
+                                                  AbstractMethodAttribute<?, ?>[] attributes, int mutableAttributeCount, long alwaysDirtyMask, boolean unsafe) throws CannotCompileException, NotFoundException, BadBytecode {
         int superConstructorStart = attributeFields.length;
         int superConstructorEnd = attributeTypes.length;
-        return createConstructor(evm, managedViewType, cc, superConstructorStart, superConstructorEnd, attributeFields, attributeTypes, initialStateField, mutableStateField, attributes, mutableAttributeCount, ConstructorKind.NORMAL, null, unsafe);
+        return createConstructor(evm, managedViewType, constructor, cc, superConstructorStart, superConstructorEnd, attributeFields, attributeTypes, initialStateField, mutableStateField, attributes, mutableAttributeCount, ConstructorKind.NORMAL, null, alwaysDirtyMask, unsafe);
     }
 
     private CtConstructor createCreateConstructor(EntityViewManager evm, ManagedViewType<?> managedViewType, CtClass cc, CtField[] attributeFields, CtClass[] attributeTypes, CtField idField, CtField initialStateField, CtField mutableStateField,
-                                                  AbstractMethodAttribute<?, ?>[] attributes, int mutableAttributeCount, boolean unsafe) throws CannotCompileException, NotFoundException, BadBytecode {
-        return createConstructor(evm, managedViewType, cc, 0, 0, attributeFields, attributeTypes, initialStateField, mutableStateField, attributes, mutableAttributeCount, ConstructorKind.CREATE, idField, unsafe);
+                                                  AbstractMethodAttribute<?, ?>[] attributes, int mutableAttributeCount, long alwaysDirtyMask, boolean unsafe) throws CannotCompileException, NotFoundException, BadBytecode {
+        return createConstructor(evm, managedViewType, null, cc, 0, 0, attributeFields, attributeTypes, initialStateField, mutableStateField, attributes, mutableAttributeCount, ConstructorKind.CREATE, idField, alwaysDirtyMask, unsafe);
     }
 
     private CtConstructor createReferenceConstructor(EntityViewManager evm, ManagedViewType<?> managedViewType, CtClass cc, CtField[] attributeFields, CtField idField, CtField initialStateField, CtField mutableStateField,
-                                                     AbstractMethodAttribute<?, ?>[] attributes, int mutableAttributeCount, boolean unsafe) throws CannotCompileException, NotFoundException, BadBytecode {
+                                                     AbstractMethodAttribute<?, ?>[] attributes, int mutableAttributeCount, long alwaysDirtyMask, boolean unsafe) throws CannotCompileException, NotFoundException, BadBytecode {
         CtClass[] attributeTypes = new CtClass[]{ idField.getType() };
-        return createConstructor(evm, managedViewType, cc, 0, 0, attributeFields, attributeTypes, initialStateField, mutableStateField, attributes, mutableAttributeCount, ConstructorKind.REFERENCE, idField, unsafe);
+        return createConstructor(evm, managedViewType, null, cc, 0, 0, attributeFields, attributeTypes, initialStateField, mutableStateField, attributes, mutableAttributeCount, ConstructorKind.REFERENCE, idField, alwaysDirtyMask, unsafe);
     }
 
     /**
@@ -2048,8 +2382,8 @@ public class ProxyFactory {
         REFERENCE;
     }
 
-    private CtConstructor createConstructor(EntityViewManager evm, ManagedViewType<?> managedViewType, CtClass cc, int superConstructorStart, int superConstructorEnd, CtField[] attributeFields, CtClass[] attributeTypes, CtField initialStateField, CtField mutableStateField,
-                                            AbstractMethodAttribute<?, ?>[] attributes, int mutableAttributeCount, ConstructorKind kind, CtField idField, boolean unsafe) throws CannotCompileException, NotFoundException, BadBytecode {
+    private CtConstructor createConstructor(EntityViewManager evm, ManagedViewType<?> managedViewType, MappingConstructor<?> constructor, CtClass cc, int superConstructorStart, int superConstructorEnd, CtField[] attributeFields, CtClass[] attributeTypes, CtField initialStateField, CtField mutableStateField,
+                                            AbstractMethodAttribute<?, ?>[] attributes, int mutableAttributeCount, ConstructorKind kind, CtField idField, long alwaysDirtyMask, boolean unsafe) throws CannotCompileException, NotFoundException, BadBytecode {
         CtClass[] parameterTypes;
         if (kind == ConstructorKind.CREATE) {
             parameterTypes = new CtClass[]{ cc, pool.get(Map.class.getName()) };
@@ -2062,104 +2396,22 @@ public class ProxyFactory {
         StringBuilder sb = new StringBuilder();
         sb.append("{\n");
         if (unsafe) {
-            renderFieldInitialization(evm, managedViewType, attributeFields, initialStateField, mutableStateField, attributes, mutableAttributeCount, kind, sb, idField);
-            renderSuperCall(cc, superConstructorStart, superConstructorEnd, sb);
+            renderFieldInitialization(evm, managedViewType, constructor, attributeFields, initialStateField, mutableStateField, attributes, mutableAttributeCount, kind, alwaysDirtyMask, sb, unsafe, idField);
+            renderSuperCall(constructor, cc, superConstructorStart, superConstructorEnd, sb);
         } else {
-            renderSuperCall(cc, superConstructorStart, superConstructorEnd, sb);
-            renderFieldInitialization(evm, managedViewType, attributeFields, initialStateField, mutableStateField, attributes, mutableAttributeCount, kind, sb, idField);
+            renderSuperCall(constructor, cc, superConstructorStart, superConstructorEnd, sb);
+            renderFieldInitialization(evm, managedViewType, constructor, attributeFields, initialStateField, mutableStateField, attributes, mutableAttributeCount, kind, alwaysDirtyMask, sb, unsafe, idField);
         }
 
         // Always register dirty tracker after super call
         renderDirtyTrackerRegistration(attributeFields, mutableStateField, attributes, kind, sb);
-        Method postCreateMethod = null;
-        if (kind == ConstructorKind.CREATE && managedViewType.getPostCreateMethod() != null) {
-            postCreateMethod = managedViewType.getPostCreateMethod();
-            // Skip invocation of postCreate method if the type is an interface
-            // Note that if you change the invocation here, the invocation below has to be changed as well
-            if (!managedViewType.getJavaType().isInterface()) {
-                if (Modifier.isPublic(postCreateMethod.getModifiers()) || Modifier.isProtected(postCreateMethod.getModifiers()) || !Modifier.isPrivate(postCreateMethod.getModifiers()) && postCreateMethod.getDeclaringClass().getPackage().getName().equals(cc.getPackageName())) {
-                    if (postCreateMethod.getParameterTypes().length == 1) {
-                        sb.append("\t$0.").append(postCreateMethod.getName()).append("(").append(cc.getName()).append("#").append(SerializableEntityViewManager.SERIALIZABLE_EVM_FIELD_NAME).append(");\n");
-                    } else {
-                        sb.append("\t$0.").append(postCreateMethod.getName()).append("();\n");
-                    }
-                } else {
-                    String args;
-                    if (postCreateMethod.getParameterTypes().length == 1) {
-                        args = "new Class[]{ " + EntityViewManager.class.getName() + ".class }";
-                    } else {
-                        args = "new Class[0]";
-                    }
-                    final String postCreateField = "POST_CREATE";
-                    try {
-                        cc.getField(postCreateField);
-                    } catch (NotFoundException ex) {
-                        cc.addMethod(CtMethod.make("private static java.lang.reflect.Method $$_getPostConstruct() { java.lang.reflect.Method m = " + postCreateMethod.getDeclaringClass().getName() + ".class.getDeclaredMethod(\"" + postCreateMethod.getName() + "\", " + args + "); m.setAccessible(true); return m; }", cc));
-                        CtField postCreate = new CtField(pool.get(Method.class.getName()), postCreateField, cc);
-                        postCreate.setModifiers(Modifier.PRIVATE | Modifier.STATIC | Modifier.FINAL);
-                        cc.addField(postCreate, CtField.Initializer.byCall(cc, "$$_getPostConstruct"));
-                    }
-                    sb.append("\t").append(cc.getName()).append("#").append(postCreateField).append(".invoke($0");
-                    if (postCreateMethod.getParameterTypes().length == 1) {
-                        sb.append(", new Object[]{ ").append(cc.getName()).append("#").append(SerializableEntityViewManager.SERIALIZABLE_EVM_FIELD_NAME).append(" }");
-                    } else {
-                        sb.append(", new Object[0]");
-                    }
-                    sb.append(");");
-                }
-                postCreateMethod = null;
-            }
-        }
-        sb.append("}");
-        if (unsafe) {
-            compileUnsafe(ctConstructor, sb.toString());
-        } else {
-            ctConstructor.setBody(sb.toString());
-        }
-
-        // If the method invocation was generated for the abstract class, we set the method to null in the above code
-        if (postCreateMethod != null) {
-            // Invoke default method on interface
-            // The javac included in the currently used Javassist version does not support the required Java syntax
-            // so we add the invocation directly via bytecode.
-
-            CodeAttribute codeAttribute = ctConstructor.getMethodInfo().getCodeAttribute();
-            Bytecode bc = new Bytecode(codeAttribute.getConstPool(), codeAttribute.getMaxStack(), codeAttribute.getMaxLocals());
-
-            byte[] instructions = codeAttribute.getCode();
-            // Add all existing instructions except for return
-            for (int i = 0; i < codeAttribute.getCodeLength() - 1; i++) {
-                bc.add(instructions[i]);
-            }
-
-            String postCreateMethodDescriptor;
-            bc.addAload(0);
-            if (postCreateMethod.getParameterTypes().length == 1) {
-                bc.addGetstatic(cc, SerializableEntityViewManager.SERIALIZABLE_EVM_FIELD_NAME, Descriptor.of(EntityViewManager.class.getName()));
-                postCreateMethodDescriptor = "(L" + Descriptor.toJvmName(EntityViewManager.class.getName()) + ";)V";
-            } else {
-                postCreateMethodDescriptor = "()V";
-            }
-            // Since we implement this default method, we must use invokevirtual
-            bc.addInvokevirtual(cc, postCreateMethod.getName(), postCreateMethodDescriptor);
-            bc.addReturn(null);
-
-            CodeAttribute newCodeAttribute = bc.toCodeAttribute();
-            StackMap stackMap = (StackMap) codeAttribute.getAttribute(StackMap.tag);
-            newCodeAttribute.setAttribute(stackMap);
-            newCodeAttribute.setAttribute((StackMapTable) codeAttribute.getAttribute(StackMapTable.tag));
-            ctConstructor.getMethodInfo().setCodeAttribute(bc.toCodeAttribute());
-            // Apparently, the stack map is sometimes not properly built, so we instruct it explicitly to build it
-            if (stackMap == null) {
-                ctConstructor.getMethodInfo().rebuildStackMap(cc.getClassPool());
-            }
-        }
+        finishConstructorWithPostConstruct(managedViewType, cc, kind, unsafe, ctConstructor, sb);
 
         return ctConstructor;
     }
 
-    private CtConstructor createTupleConstructor(CtClass cc, int superConstructorStart, int superConstructorEnd, CtField[] attributeFields, CtClass[] attributeTypes, CtField initialStateField, CtField mutableStateField,
-                                            AbstractMethodAttribute<?, ?>[] attributes, int mutableAttributeCount, boolean assignment, boolean unsafe) throws CannotCompileException, NotFoundException {
+    private CtConstructor createTupleConstructor(ManagedViewType<?> managedViewType, MappingConstructor<?> constructor, CtClass cc, int superConstructorStart, int superConstructorEnd, CtField[] attributeFields, CtClass[] attributeTypes, CtField initialStateField, CtField mutableStateField,
+                                                 AbstractMethodAttribute<?, ?>[] attributes, int mutableAttributeCount, boolean assignment, long alwaysDirtyMask, boolean unsafe) throws CannotCompileException, NotFoundException, BadBytecode {
         CtClass[] parameterTypes;
         if (assignment) {
             parameterTypes = new CtClass[(superConstructorEnd - superConstructorStart) + 4];
@@ -2181,15 +2433,69 @@ public class ProxyFactory {
         StringBuilder sb = new StringBuilder();
         sb.append("{\n");
         if (unsafe) {
-            renderFieldInitialization(attributeFields, initialStateField, mutableStateField, attributes, mutableAttributeCount, assignment, sb);
-            renderTupleSuperCall(cc, superConstructorStart, superConstructorEnd, assignment, attributeTypes, sb);
+            renderFieldInitialization(constructor, attributeFields, initialStateField, mutableStateField, attributes, mutableAttributeCount, assignment, alwaysDirtyMask, unsafe, sb);
+            renderTupleSuperCall(constructor, cc, superConstructorStart, superConstructorEnd, assignment, attributeTypes, sb);
         } else {
-            renderTupleSuperCall(cc, superConstructorStart, superConstructorEnd, assignment, attributeTypes, sb);
-            renderFieldInitialization(attributeFields, initialStateField, mutableStateField, attributes, mutableAttributeCount, assignment, sb);
+            renderTupleSuperCall(constructor, cc, superConstructorStart, superConstructorEnd, assignment, attributeTypes, sb);
+            renderFieldInitialization(constructor, attributeFields, initialStateField, mutableStateField, attributes, mutableAttributeCount, assignment, alwaysDirtyMask, unsafe, sb);
         }
 
         // Always register dirty tracker after super call
         renderDirtyTrackerRegistration(attributeFields, mutableStateField, attributes, ConstructorKind.NORMAL, sb);
+        finishConstructorWithPostConstruct(managedViewType, cc, ConstructorKind.NORMAL, unsafe, ctConstructor, sb);
+
+        return ctConstructor;
+    }
+
+    private void finishConstructorWithPostConstruct(ManagedViewType<?> managedViewType, CtClass cc, ConstructorKind kind, boolean unsafe, CtConstructor ctConstructor, StringBuilder sb) throws CannotCompileException, NotFoundException, BadBytecode {
+        Method postConstructMethod = null;
+        String postConstructField = null;
+        String postConstructMethodName = null;
+        if (kind == ConstructorKind.CREATE && managedViewType.getPostCreateMethod() != null) {
+            postConstructMethod = managedViewType.getPostCreateMethod();
+            postConstructField = "POST_CREATE";
+            postConstructMethodName = "$$_getPostCreate";
+        } else if (kind == ConstructorKind.NORMAL && managedViewType.getPostLoadMethod() != null) {
+            postConstructMethod = managedViewType.getPostLoadMethod();
+            postConstructField = "POST_LOAD";
+            postConstructMethodName = "$$_getPostLoad";
+        }
+        if (postConstructMethod != null) {
+            // Skip invocation of post-construct method if the type is an interface
+            // Note that if you change the invocation here, the invocation below has to be changed as well
+            if (!managedViewType.getJavaType().isInterface()) {
+                if (Modifier.isPublic(postConstructMethod.getModifiers()) || Modifier.isProtected(postConstructMethod.getModifiers()) || !Modifier.isPrivate(postConstructMethod.getModifiers()) && postConstructMethod.getDeclaringClass().getPackage().getName().equals(cc.getPackageName())) {
+                    if (postConstructMethod.getParameterTypes().length == 1) {
+                        sb.append("\t$0.").append(postConstructMethod.getName()).append("(").append(cc.getName()).append("#").append(SerializableEntityViewManager.SERIALIZABLE_EVM_FIELD_NAME).append(");\n");
+                    } else {
+                        sb.append("\t$0.").append(postConstructMethod.getName()).append("();\n");
+                    }
+                } else {
+                    String args;
+                    if (postConstructMethod.getParameterTypes().length == 1) {
+                        args = "new Class[]{ " + EntityViewManager.class.getName() + ".class }";
+                    } else {
+                        args = "new Class[0]";
+                    }
+                    try {
+                        cc.getField(postConstructField);
+                    } catch (NotFoundException ex) {
+                        cc.addMethod(CtMethod.make("private static java.lang.reflect.Method " + postConstructMethodName + "() { java.lang.reflect.Method m = " + postConstructMethod.getDeclaringClass().getName() + ".class.getDeclaredMethod(\"" + postConstructMethod.getName() + "\", " + args + "); m.setAccessible(true); return m; }", cc));
+                        CtField postConstruct = new CtField(pool.get(Method.class.getName()), postConstructField, cc);
+                        postConstruct.setModifiers(Modifier.PRIVATE | Modifier.STATIC | Modifier.FINAL);
+                        cc.addField(postConstruct, CtField.Initializer.byCall(cc, postConstructMethodName));
+                    }
+                    sb.append("\t").append(cc.getName()).append("#").append(postConstructField).append(".invoke($0");
+                    if (postConstructMethod.getParameterTypes().length == 1) {
+                        sb.append(", new Object[]{ ").append(cc.getName()).append("#").append(SerializableEntityViewManager.SERIALIZABLE_EVM_FIELD_NAME).append(" }");
+                    } else {
+                        sb.append(", new Object[0]");
+                    }
+                    sb.append(");");
+                }
+                postConstructMethod = null;
+            }
+        }
         sb.append("}");
         if (unsafe) {
             compileUnsafe(ctConstructor, sb.toString());
@@ -2197,7 +2503,43 @@ public class ProxyFactory {
             ctConstructor.setBody(sb.toString());
         }
 
-        return ctConstructor;
+        // If the method invocation was generated for the abstract class, we set the method to null in the above code
+        if (postConstructMethod != null) {
+            // Invoke default method on interface
+            // The javac included in the currently used Javassist version does not support the required Java syntax
+            // so we add the invocation directly via bytecode.
+
+            CodeAttribute codeAttribute = ctConstructor.getMethodInfo().getCodeAttribute();
+            Bytecode bc = new Bytecode(codeAttribute.getConstPool(), codeAttribute.getMaxStack(), codeAttribute.getMaxLocals());
+
+            byte[] instructions = codeAttribute.getCode();
+            // Add all existing instructions except for return
+            for (int i = 0; i < codeAttribute.getCodeLength() - 1; i++) {
+                bc.add(instructions[i]);
+            }
+
+            String postConstructMethodDescriptor;
+            bc.addAload(0);
+            if (postConstructMethod.getParameterTypes().length == 1) {
+                bc.addGetstatic(cc, SerializableEntityViewManager.SERIALIZABLE_EVM_FIELD_NAME, Descriptor.of(EntityViewManager.class.getName()));
+                postConstructMethodDescriptor = "(L" + Descriptor.toJvmName(EntityViewManager.class.getName()) + ";)V";
+            } else {
+                postConstructMethodDescriptor = "()V";
+            }
+            // Since we implement this default method, we must use invokevirtual
+            bc.addInvokevirtual(cc, postConstructMethod.getName(), postConstructMethodDescriptor);
+            bc.addReturn(null);
+
+            CodeAttribute newCodeAttribute = bc.toCodeAttribute();
+            StackMap stackMap = (StackMap) codeAttribute.getAttribute(StackMap.tag);
+            newCodeAttribute.setAttribute(stackMap);
+            newCodeAttribute.setAttribute((StackMapTable) codeAttribute.getAttribute(StackMapTable.tag));
+            ctConstructor.getMethodInfo().setCodeAttribute(bc.toCodeAttribute());
+            // Apparently, the stack map is sometimes not properly built, so we instruct it explicitly to build it
+            if (stackMap == null) {
+                ctConstructor.getMethodInfo().rebuildStackMap(cc.getClassPool());
+            }
+        }
     }
 
     private void compileUnsafe(CtConstructor ctConstructor, String src) throws CannotCompileException {
@@ -2240,13 +2582,19 @@ public class ProxyFactory {
         }
     }
 
-    private void renderFieldInitialization(EntityViewManager entityViewManager, ManagedViewType<?> managedViewType, CtField[] attributeFields, CtField initialStateField, CtField mutableStateField, AbstractMethodAttribute<?, ?>[] methodAttributes, int mutableAttributeCount, ConstructorKind kind, StringBuilder sb, CtField idField) throws NotFoundException, CannotCompileException {
+    private void renderFieldInitialization(EntityViewManager entityViewManager, ManagedViewType<?> managedViewType, MappingConstructor<?> constructor, CtField[] attributeFields, CtField initialStateField, CtField mutableStateField,
+                                           AbstractMethodAttribute<?, ?>[] methodAttributes, int mutableAttributeCount, ConstructorKind kind, long alwaysDirtyMask, StringBuilder sb, boolean unsafe, CtField idField) throws NotFoundException, CannotCompileException {
         if (initialStateField != null) {
             sb.append("\tObject[] initialStateArr = new Object[").append(mutableAttributeCount).append("];\n");
         }
 
         if (mutableStateField != null) {
             sb.append("\tObject[] mutableStateArr = new Object[").append(mutableAttributeCount).append("];\n");
+            if (unsafe) {
+                sb.append("\t$0.$$_dirty = ").append(alwaysDirtyMask).append("L;\n");
+            } else {
+                sb.append("\t$0.$$_dirty |= ").append(alwaysDirtyMask).append("L;\n");
+            }
         }
 
         if (kind == ConstructorKind.CREATE && managedViewType.isCreatable()) {
@@ -2260,22 +2608,53 @@ public class ProxyFactory {
 
             AbstractMethodAttribute<?, ?> methodAttribute = methodAttributes[i];
 
-            // this.$(attributeField[i]) = $(fieldSlot)
+            boolean possiblyInitialized = !unsafe && appendPossiblyInitialized(sb, constructor, methodAttribute, attributeFields[i]);
+            if (possiblyInitialized) {
+                sb.append('\t');
+            }
             sb.append("\t$0.").append(attributeFields[i].getName()).append(" = ");
             if (kind != ConstructorKind.CREATE && attributeFields[i] == idField) {
                 // The id field for the reference and normal constructor are never empty
                 sb.append('$').append(i + 1).append(";\n");
+                if (possiblyInitialized) {
+                    sb.append("\t}\n");
+                }
             } else if (kind != ConstructorKind.NORMAL) {
                 CtClass type = attributeFields[i].getType();
                 if (type.isPrimitive()) {
                     sb.append(getDefaultValue(type)).append(";\n");
                     if (mutableStateField != null && methodAttribute != null && methodAttribute.hasDirtyStateIndex()) {
+                        if (possiblyInitialized) {
+                            sb.append("\t");
+                        }
                         sb.append("\tmutableStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
+                        if (initialStateField != null) {
+                            sb.append("initialStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
+                        }
                         sb.append(getDefaultValueForObject(type)).append(";\n");
+
+                        if (possiblyInitialized) {
+                            sb.append("\t} else {\n");
+                            sb.append("\t\tmutableStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = $");
+                            renderValueForArray(sb, type, "$0." + attributeFields[i].getName());
+                            sb.append(";\n");
+                            sb.append("\t}\n");
+                        }
+
+                        if (initialStateField != null) {
+                            sb.append("initialStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
+                            sb.append(getDefaultValueForObject(type)).append(";\n");
+                        }
+                    } else if (possiblyInitialized) {
+                        sb.append("\t}\n");
                     }
                 } else if (methodAttribute != null && methodAttribute.hasDirtyStateIndex()) {
                     if (mutableStateField != null) {
                         sb.append("mutableStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
+
+                        if (initialStateField != null) {
+                            sb.append("initialStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
+                        }
                     }
                     if (kind == ConstructorKind.CREATE) {
                         // init embeddables and collections
@@ -2357,6 +2736,20 @@ public class ProxyFactory {
                         // Attributes for reference constructors don't initialize objects
                         sb.append("null;\n");
                     }
+                    if (possiblyInitialized) {
+                        if (mutableStateField != null) {
+                            sb.append("\t} else {\n");
+                            sb.append("\t\tmutableStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
+                            renderValueForArray(sb, type, "$0." + attributeFields[i].getName());
+                            sb.append(";\n");
+
+                            if (initialStateField != null) {
+                                sb.append("\t\tinitialStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
+                                sb.append(getDefaultValueForObject(type)).append(";\n");
+                            }
+                        }
+                        sb.append("\t}\n");
+                    }
                 } else {
                     // For create constructors we initialize embedded ids
                     if (kind == ConstructorKind.CREATE) {
@@ -2422,29 +2815,140 @@ public class ProxyFactory {
                     } else {
                         sb.append("null;\n");
                     }
+                    if (possiblyInitialized) {
+                        sb.append("\t}\n");
+                    }
                 }
             } else {
                 sb.append('$').append(i + 1).append(";\n");
+                if (methodAttribute != null && methodAttribute.hasDirtyStateIndex()) {
+                    CtClass type = attributeFields[i].getType();
+                    if (mutableStateField != null) {
+                        if (possiblyInitialized) {
+                            sb.append("\t\tmutableStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
+
+                            if (initialStateField != null) {
+                                sb.append("initialStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
+                            }
+
+                            renderValueForArray(sb, type, "$" + (i + 1));
+                            sb.append("\t} else {\n");
+                            sb.append("\t\tmutableStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
+                            renderValueForArray(sb, type, "$0." + attributeFields[i].getName());
+                            sb.append(";\n");
+                            sb.append("\t}\n\t");
+                        } else {
+                            sb.append("\tmutableStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
+                        }
+                        if (initialStateField != null) {
+                            sb.append("initialStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
+                        }
+
+                        renderValueForArray(sb, type, "$" + (i + 1));
+                    }
+                } else if (possiblyInitialized) {
+                    sb.append("\t}\n");
+                }
             }
 
-            if ((kind == ConstructorKind.NORMAL || kind == ConstructorKind.CREATE && !managedViewType.isCreatable()) && methodAttribute != null && methodAttribute.hasDirtyStateIndex()) {
-                CtClass type = attributeFields[i].getType();
-                if (mutableStateField != null) {
-                    // locvar2[j] = $(i + 1)
-                    sb.append("\tmutableStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
-                }
+        }
 
-                if (initialStateField != null) {
-                    // locvar1[j] = $(i + 1)
-                    sb.append("initialStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
-                }
+        if (initialStateField != null) {
+            sb.append("\t$0.").append(initialStateField.getName()).append(" = initialStateArr;\n");
+        }
+        if (mutableStateField != null) {
+            sb.append("\t$0.").append(mutableStateField.getName()).append(" = mutableStateArr;\n");
+        }
+    }
 
-                if (mutableStateField != null) {
-                    if (kind == ConstructorKind.NORMAL) {
-                        renderValueForArray(sb, type, i + 1);
+    private void renderFieldInitialization(MappingConstructor<?> constructor, CtField[] attributeFields, CtField initialStateField, CtField mutableStateField, AbstractMethodAttribute<?, ?>[] methodAttributes, int mutableAttributeCount, boolean assignment, long alwaysDirtyMask, boolean unsafe, StringBuilder sb) throws NotFoundException {
+        if (initialStateField != null) {
+            sb.append("\tObject[] initialStateArr = new Object[").append(mutableAttributeCount).append("];\n");
+        }
+
+        if (mutableStateField != null) {
+            sb.append("\tObject[] mutableStateArr = new Object[").append(mutableAttributeCount).append("];\n");
+            if (unsafe) {
+                sb.append("\t$0.$$_dirty = ").append(alwaysDirtyMask).append("L;\n");
+            } else {
+                sb.append("\t$0.$$_dirty |= ").append(alwaysDirtyMask).append("L;\n");
+            }
+        }
+
+        for (int i = 0; i < attributeFields.length; i++) {
+            if (attributeFields[i] == null) {
+                continue;
+            }
+
+            AbstractMethodAttribute<?, ?> methodAttribute = methodAttributes[i];
+
+            if (methodAttribute != null) {
+                boolean possiblyInitialized = !unsafe && appendPossiblyInitialized(sb, constructor, methodAttribute, attributeFields[i]);
+                if (possiblyInitialized) {
+                    sb.append('\t');
+                }
+                if (methodAttribute.getConvertedJavaType().isPrimitive()) {
+                    sb.append("\t$0.").append(attributeFields[i].getName()).append(" = ");
+                    if (assignment) {
+                        appendUnwrap(sb, methodAttribute.getConvertedJavaType(),"$4[$2 + $3[" + methodAttribute.getAttributeIndex() + "]]");
                     } else {
-                        sb.append(getDefaultValueForObject(type)).append(";\n");
+                        appendUnwrap(sb, methodAttribute.getConvertedJavaType(),"$3[$2 + " + methodAttribute.getAttributeIndex() + "]");
                     }
+                    sb.append(";\n");
+                } else {
+                    sb.append("\t$0.").append(attributeFields[i].getName()).append(" = (").append(attributeFields[i].getType().getName());
+                    if (assignment) {
+                        sb.append(") $4[$2 + $3[").append(methodAttribute.getAttributeIndex()).append("]");
+                    } else {
+                        sb.append(") $3[$2 + ").append(methodAttribute.getAttributeIndex());
+                    }
+                    sb.append("];\n");
+                }
+
+                if (methodAttribute.hasDirtyStateIndex()) {
+                    if (possiblyInitialized) {
+                        if (mutableStateField != null) {
+                            sb.append("\t\tmutableStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
+
+                            if (assignment) {
+                                sb.append("$4[$2 + $3[").append(methodAttribute.getAttributeIndex()).append("]");
+                            } else {
+                                sb.append("$3[$2 + ").append(methodAttribute.getAttributeIndex());
+                            }
+                            sb.append("];\n");
+                            sb.append("\t} else {\n");
+                            sb.append("\t\tmutableStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = $0.").append(attributeFields[i].getName()).append(";\n");
+                            sb.append("\t}\n");
+                        }
+
+                        if (initialStateField != null) {
+                            sb.append("\tinitialStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
+                        }
+
+                        if (assignment) {
+                            sb.append("$4[$2 + $3[").append(methodAttribute.getAttributeIndex()).append("]");
+                        } else {
+                            sb.append("$3[$2 + ").append(methodAttribute.getAttributeIndex());
+                        }
+                        sb.append("];\n");
+                    } else {
+                        if (mutableStateField != null) {
+                            sb.append("\tmutableStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
+                        }
+
+                        if (initialStateField != null) {
+                            sb.append("initialStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
+                        }
+
+                        if (assignment) {
+                            sb.append("$4[$2 + $3[").append(methodAttribute.getAttributeIndex()).append("]");
+                        } else {
+                            sb.append("$3[$2 + ").append(methodAttribute.getAttributeIndex());
+                        }
+                        sb.append("];\n");
+                    }
+                } else if (possiblyInitialized) {
+                    sb.append("\t}\n");
                 }
             }
         }
@@ -2457,59 +2961,27 @@ public class ProxyFactory {
         }
     }
 
-    private void renderFieldInitialization(CtField[] attributeFields, CtField initialStateField, CtField mutableStateField, AbstractMethodAttribute<?, ?>[] methodAttributes, int mutableAttributeCount, boolean assignment, StringBuilder sb) throws NotFoundException {
-        if (initialStateField != null) {
-            sb.append("\tObject[] initialStateArr = new Object[").append(mutableAttributeCount).append("];\n");
-        }
-
-        if (mutableStateField != null) {
-            sb.append("\tObject[] mutableStateArr = new Object[").append(mutableAttributeCount).append("];\n");
-        }
-
-        for (int i = 0; i < attributeFields.length; i++) {
-            if (attributeFields[i] == null) {
-                continue;
-            }
-
-            AbstractMethodAttribute<?, ?> methodAttribute = methodAttributes[i];
-
-            if (methodAttribute != null) {
-                sb.append("\t$0.").append(attributeFields[i].getName()).append(" = (").append(attributeFields[i].getType().getName());
-                if (assignment) {
-                    sb.append(") $4[$2 + $3[").append(methodAttribute.getAttributeIndex()).append("]");
-                } else {
-                    sb.append(") $3[$2 + ").append(methodAttribute.getAttributeIndex());
-                }
-                sb.append("];\n");
-
-                if (methodAttribute.hasDirtyStateIndex()) {
-                    CtClass type = attributeFields[i].getType();
-                    if (mutableStateField != null) {
-                        // locvar2[j] = $(i + 1)
-                        sb.append("\tmutableStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
-                    }
-
-                    if (initialStateField != null) {
-                        // locvar1[j] = $(i + 1)
-                        sb.append("initialStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
-                    }
-
-                    if (assignment) {
-                        sb.append("$4[$2 + $3[").append(methodAttribute.getAttributeIndex()).append("]");
-                    } else {
-                        sb.append("$3[$2 + ").append(methodAttribute.getAttributeIndex());
-                    }
-                    sb.append("];\n");
+    private boolean appendPossiblyInitialized(StringBuilder sb, MappingConstructor<?> constructor, AbstractMethodAttribute<?, ?> methodAttribute, CtField attributeField) throws NotFoundException {
+        if (constructor == null) {
+            for (MappingConstructor<?> viewConstructor : methodAttribute.getDeclaringType().getConstructors()) {
+                if (viewConstructor.getParameterAttributes().isEmpty()) {
+                    constructor = viewConstructor;
+                    break;
                 }
             }
         }
-
-        if (initialStateField != null) {
-            sb.append("\t$0.").append(initialStateField.getName()).append(" = initialStateArr;\n");
+        boolean hasRealConstructor = constructor != null || !methodAttribute.getDeclaringType().getJavaType().isInterface();
+        boolean possiblyInitialized = hasRealConstructor && !Modifier.isFinal(attributeField.getModifiers());
+        if (possiblyInitialized) {
+            sb.append("\tif ($0.").append(attributeField.getName()).append(" == ");
+            if (methodAttribute.getConvertedJavaType().isPrimitive()) {
+                sb.append(getDefaultValue(attributeField.getType()));
+            } else {
+                sb.append("null");
+            }
+            sb.append(") {\n");
         }
-        if (mutableStateField != null) {
-            sb.append("\t$0.").append(mutableStateField.getName()).append(" = mutableStateArr;\n");
-        }
+        return possiblyInitialized;
     }
 
     private String getDefaultValue(CtClass type) {
@@ -2556,27 +3028,27 @@ public class ProxyFactory {
         }
     }
 
-    private void renderValueForArray(StringBuilder sb, CtClass type, int index) {
+    private void renderValueForArray(StringBuilder sb, CtClass type, String argument) {
         if (type.isPrimitive()) {
             if (type == CtClass.longType) {
-                sb.append("Long.valueOf($").append(index).append(");\n");
+                sb.append("Long.valueOf(").append(argument).append(");\n");
             } else if (type == CtClass.floatType) {
-                sb.append("Float.valueOf($").append(index).append(");\n");
+                sb.append("Float.valueOf(").append(argument).append(");\n");
             } else if (type == CtClass.doubleType) {
-                sb.append("Double.valueOf($").append(index).append(");\n");
+                sb.append("Double.valueOf(").append(argument).append(");\n");
             } else if (type == CtClass.shortType) {
-                sb.append("Short.valueOf($").append(index).append(");\n");
+                sb.append("Short.valueOf(").append(argument).append(");\n");
             } else if (type == CtClass.byteType) {
-                sb.append("Byte.valueOf($").append(index).append(");\n");
+                sb.append("Byte.valueOf(").append(argument).append(");\n");
             } else if (type == CtClass.booleanType) {
-                sb.append("Boolean.valueOf($").append(index).append(");\n");
+                sb.append("Boolean.valueOf(").append(argument).append(");\n");
             } else if (type == CtClass.charType) {
-                sb.append("Character.valueOf($").append(index).append(");\n");
+                sb.append("Character.valueOf(").append(argument).append(");\n");
             } else {
-                sb.append("Integer.valueOf($").append(index).append(");\n");
+                sb.append("Integer.valueOf(").append(argument).append(");\n");
             }
         } else {
-            sb.append("$").append(index).append(";\n");
+            sb.append(argument).append(";\n");
         }
     }
 
@@ -2870,11 +3342,21 @@ public class ProxyFactory {
         return "long".equals(name) || "double".equals(name);
     }
 
-    private void renderSuperCall(CtClass cc, int superStart, int superEnd, StringBuilder sb) throws NotFoundException {
+    private void renderSuperCall(MappingConstructor<?> constructor, CtClass cc, int superStart, int superEnd, StringBuilder sb) throws NotFoundException {
         sb.append("\tsuper(");
         if (superStart < superEnd) {
+            List<ParameterAttribute<?, ?>> parameterAttributes = (List<ParameterAttribute<?, ?>>) constructor.getParameterAttributes();
             for (int i = superStart; i < superEnd; i++) {
-                sb.append('$').append(i + 1).append(',');
+                if (parameterAttributes.get(i - superStart).isSelfParameter()) {
+                    sb.append("createSelf(");
+                    for (int j = 0; j < superStart; j++) {
+                        sb.append('$').append(j + 1).append(',');
+                    }
+                    sb.setCharAt(sb.length() - 1, ')');
+                    sb.append(",");
+                } else {
+                    sb.append('$').append(i + 1).append(',');
+                }
             }
             sb.setCharAt(sb.length() - 1, ')');
         } else {
@@ -2883,17 +3365,33 @@ public class ProxyFactory {
         sb.append(";\n");
     }
 
-    private void renderTupleSuperCall(CtClass cc, int superStart, int superEnd, boolean assignment, CtClass[] attributeTypes, StringBuilder sb) throws NotFoundException {
+    private void renderTupleSuperCall(MappingConstructor<?> constructor, CtClass cc, int superStart, int superEnd, boolean assignment, CtClass[] attributeTypes, StringBuilder sb) throws NotFoundException {
         sb.append("\tsuper(");
         if (superStart < superEnd) {
+            List<ParameterAttribute<?, ?>> parameterAttributes = (List<ParameterAttribute<?, ?>>) constructor.getParameterAttributes();
             for (int i = superStart; i < superEnd; i++) {
-                sb.append("(").append(attributeTypes[i].getName());
-                if (assignment) {
-                    sb.append(") $4[$2 + $3[").append(i).append("]");
+                if (parameterAttributes.get(i - superStart).isSelfParameter()) {
+                    sb.append("createSelf(");
+                    for (int j = 0; j < superStart; j++) {
+                        sb.append("(").append(attributeTypes[j].getName());
+                        if (assignment) {
+                            sb.append(") $4[$2 + $3[").append(j).append("]");
+                        } else {
+                            sb.append(") $3[$2 + ").append(j);
+                        }
+                        sb.append("],");
+                    }
+                    sb.setCharAt(sb.length() - 1, ')');
+                    sb.append(",");
                 } else {
-                    sb.append(") $3[$2 + ").append(i);
+                    sb.append("(").append(attributeTypes[i].getName());
+                    if (assignment) {
+                        sb.append(") $4[$2 + $3[").append(i).append("]");
+                    } else {
+                        sb.append(") $3[$2 + ").append(i);
+                    }
+                    sb.append("],");
                 }
-                sb.append("],");
             }
             sb.setCharAt(sb.length() - 1, ')');
         } else {

@@ -49,6 +49,21 @@ The required dependencies for the entity view module are
 
 Depending on the environment, there are some integrations that help you with configuration
 
+[[maven-setup-apt]]
+===== Annotation processor
+
+The annotation processor will generate static entity view metamodels, static entity view implementations and also static entity view builders.
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-entity-view-processor</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>provided</scope>
+</dependency>
+----
+
 [[maven-setup-cdi-integration]]
 ===== CDI integration
 

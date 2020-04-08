@@ -17,16 +17,9 @@
 package com.blazebit.persistence.view.testsuite.convert.view.model;
 
 import com.blazebit.persistence.testsuite.entity.Document;
-import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.IdMapping;
-import com.blazebit.persistence.view.MappingParameter;
+import com.blazebit.persistence.view.Self;
 import com.blazebit.persistence.view.testsuite.convert.view.model.sub.DocumentCloneParentView;
-
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  *
@@ -35,5 +28,7 @@ import java.util.Set;
  */
 @EntityView(Document.class)
 public abstract class DocumentCloneView2 extends DocumentCloneParentView {
-
+    public DocumentCloneView2(@Self DocumentCloneParentView self) {
+        super(self);
+    }
 }

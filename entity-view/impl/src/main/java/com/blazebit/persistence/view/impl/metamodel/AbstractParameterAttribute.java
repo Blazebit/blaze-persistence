@@ -21,6 +21,7 @@ import com.blazebit.persistence.view.MappingCorrelated;
 import com.blazebit.persistence.view.MappingCorrelatedSimple;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSubquery;
+import com.blazebit.persistence.view.Self;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.ParameterAttribute;
 import com.blazebit.reflection.ReflectionUtils;
@@ -40,11 +41,16 @@ public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute
 
     private final int index;
     private final MappingConstructor<X> declaringConstructor;
+    private final boolean selfParameter;
 
     public AbstractParameterAttribute(MappingConstructorImpl<X> constructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
         super(constructor.getDeclaringType(), mapping, context, embeddableMapping);
         this.index = mapping.getIndex();
         this.declaringConstructor = constructor;
+        this.selfParameter = mapping.getMapping() instanceof Self;
+        if (selfParameter && !getJavaType().isAssignableFrom(getDeclaringType().getJavaType())) {
+            context.addError("@Self mapping must refer to a view type compatible with the current view type '" + getDeclaringType().getJavaType().getName() + "' but was referring to '" + getJavaType().getName() + "' at the " + mapping.getErrorLocation());
+        }
 
         if (this.mapping != null && this.mapping.isEmpty()) {
             context.addError("Illegal empty mapping for the " + mapping.getErrorLocation());
@@ -68,7 +74,8 @@ public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute
                     || Mapping.class.isInstance(a)
                     || MappingSubquery.class.isInstance(a)
                     || MappingCorrelated.class.isInstance(a)
-                    || MappingCorrelatedSimple.class.isInstance(a)) {
+                    || MappingCorrelatedSimple.class.isInstance(a)
+                    || Self.class.isInstance(a)) {
                 return a;
             }
         }
@@ -85,6 +92,11 @@ public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute
     @Override
     public int getIndex() {
         return index;
+    }
+
+    @Override
+    public boolean isSelfParameter() {
+        return selfParameter;
     }
 
     @Override
