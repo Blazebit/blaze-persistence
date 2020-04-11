@@ -2719,7 +2719,7 @@ public class ProxyFactory {
                             sb.append(");\n");
                         } else {
                             SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) methodAttribute;
-                            if (singularAttribute.getType().getMappingType() == Type.MappingType.FLAT_VIEW) {
+                            if (singularAttribute.isCreateEmptyFlatView()) {
                                 ManagedViewTypeImplementor<Object> attributeManagedViewType = (ManagedViewTypeImplementor<Object>) singularAttribute.getType();
                                 String proxyClassName = getProxy(entityViewManager, attributeManagedViewType).getName();
                                 sb.append("new ");
@@ -2799,7 +2799,7 @@ public class ProxyFactory {
                             } else {
                                 singularAttribute = (SingularAttribute<?, ?>) methodAttribute;
                             }
-                            if (singularAttribute != null && singularAttribute.getType().getMappingType() == Type.MappingType.FLAT_VIEW) {
+                            if (singularAttribute != null && singularAttribute.isCreateEmptyFlatView()) {
                                 ManagedViewTypeImplementor<Object> attributeManagedViewType = (ManagedViewTypeImplementor<Object>) singularAttribute.getType();
                                 String proxyClassName = getProxy(entityViewManager, attributeManagedViewType).getName();
                                 sb.append("new ");

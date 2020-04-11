@@ -95,6 +95,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
     private final boolean disallowOwnedUpdatableSubview;
     private final boolean strictCascadingCheck;
     private final boolean errorOnInvalidPluralSetter;
+    private final boolean createEmptyFlatViews;
     private final FlushMode flushModeOverride;
     private final Map<String, FlushMode> flushModeOverrides;
     private final FlushStrategy flushStrategyOverride;
@@ -117,6 +118,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
         this.disallowOwnedUpdatableSubview = "true".equals(properties.getProperty(ConfigurationProperties.UPDATER_DISALLOW_OWNED_UPDATABLE_SUBVIEW));
         this.strictCascadingCheck = Boolean.valueOf(String.valueOf(properties.getProperty(ConfigurationProperties.UPDATER_STRICT_CASCADING_CHECK)));
         this.errorOnInvalidPluralSetter = Boolean.valueOf(String.valueOf(properties.getProperty(ConfigurationProperties.UPDATER_ERROR_ON_INVALID_PLURAL_SETTER)));
+        this.createEmptyFlatViews = Boolean.valueOf(String.valueOf(properties.getProperty(ConfigurationProperties.CREATE_EMPTY_FLAT_VIEWS)));
         this.flushModeOverride = getFlushMode(properties.getProperty(ConfigurationProperties.UPDATER_FLUSH_MODE), "global property '" + ConfigurationProperties.UPDATER_FLUSH_MODE + "'");
         this.flushModeOverrides = getFlushModeOverrides(properties);
         this.flushStrategyOverride = getFlushStrategy(properties.getProperty(ConfigurationProperties.UPDATER_FLUSH_STRATEGY), "global property '" + ConfigurationProperties.UPDATER_FLUSH_STRATEGY + "'");
@@ -484,6 +486,11 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
     @Override
     public boolean isErrorOnInvalidPluralSetter() {
         return errorOnInvalidPluralSetter;
+    }
+
+    @Override
+    public boolean isCreateEmptyFlatViews() {
+        return createEmptyFlatViews;
     }
 
     @Override

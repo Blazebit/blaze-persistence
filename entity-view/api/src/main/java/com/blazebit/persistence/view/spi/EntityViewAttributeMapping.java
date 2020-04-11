@@ -125,6 +125,22 @@ public interface EntityViewAttributeMapping {
     public void setDefaultBatchSize(Integer defaultBatchSize);
 
     /**
+     * Returns whether to create empty flat views or not.
+     *
+     * @return whether to create empty flat views or not
+     * @since 1.5.0
+     */
+    public Boolean getCreateEmptyFlatViews();
+
+    /**
+     * Sets whether to create empty flat views.
+     *
+     * @param createEmptyFlatViews whether to create empty flat views
+     * @since 1.5.0
+     */
+    public void setCreateEmptyFlatViews(Boolean createEmptyFlatViews);
+
+    /**
      * Returns the attribute type.
      *
      * @return The attribute type

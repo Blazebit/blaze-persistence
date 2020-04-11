@@ -62,7 +62,7 @@ So far, you have mostly seen basic attribute mappings in entity views, but there
 
 * Basic mappings - maps basic attributes from entities into entity views
 * Subview mappings - maps a *ToOne relation of an entity to an entity view
-* Flat view mappings - maps an embeddable of an entity to a flat entity view
+* Flat view mappings - maps an embeddable or association of an entity to a flat entity view
 * Subquery mappings - maps the result of a subquery to a basic attribute into entity views
 * Parameter mappings - maps named query parameters into an entity view
 * Entity mappings - maps *ToOne or *ToMany relations of an entity as is into an entity view
@@ -285,6 +285,10 @@ FROM Person person
 Such a flat view can also be used with the <<this,`this` expression>> which is similar to JPAs `@Embedded`.
 
 NOTE: A limitation in Hibernate actually requires the use of flat entity views for mapping of element collections i.e. you can map the element collection 1:1 to the entity view.
+
+Flat views for singular attributes are by default always created, even if all attributes of a flat view are `null` i.e. the flat view is empty.
+This can be overridden by annotating the attribute with `@EmptyFlatViewCreation(false)` or globally by specifying the configuration option <<CREATE_EMPTY_FLAT_VIEWS>>.
+When empty flat view creation is disabled, the attribute value will be set to `null` instead of an empty flat view.
 
 [[anchor-subquery-mappings]]
 === Subquery mappings
@@ -1454,7 +1458,7 @@ public abstract class CatView {
 <1> If the unsafe proxy is used, `getAge()` will return the actual value, otherwise it will return `null`
 
 Note that instead of using this unsafe approach which can't be used when generating entity view implementations through the annotation processor,
-you can make use of the `@Self` annotation to inject a view of the state to a constructor. The previous example defined in a safe way would look like this:
+one can make use of the `@Self` annotation to inject a view of the state to a constructor. The previous example defined in a safe way would look like this:
 
 [source,java]
 ----

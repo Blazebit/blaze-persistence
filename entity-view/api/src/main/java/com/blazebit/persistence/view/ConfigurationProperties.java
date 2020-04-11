@@ -225,6 +225,15 @@ public final class ConfigurationProperties {
      */
     public static final String STATIC_METAMODEL_SCANNING_DISABLED = "com.blazebit.persistence.view.static_metamodel_scanning_disabled";
 
+    /**
+     * A boolean flag that allows to specify if empty flat views should be created by default if not specified via {@link EmptyFlatViewCreation}.
+     * By default the creation of empty flat views is enabled i.e. the default value is <code>true</code>.
+     * Valid values for this property are <code>true</code> or <code>false</code>.
+     *
+     * @since 1.5.0
+     */
+    public static final String CREATE_EMPTY_FLAT_VIEWS = "com.blazebit.persistence.view.create_empty_flat_views";
+
     private ConfigurationProperties() {
     }
 }

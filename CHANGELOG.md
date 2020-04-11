@@ -14,6 +14,7 @@ Not yet released
 * Introduce experimental annotation processor for entity view implementations, static entity view metamodels and entity view builders
 * Add support for `@Self` injection into entity view constructors to allow safe access to entity view state
 * Add support for `@PostLoad` entity view lifecycle listeners
+* Support controlling whether empty flat views or null should be produced via `@EmptyFlatViewCreation`
 
 ### Bug fixes
 

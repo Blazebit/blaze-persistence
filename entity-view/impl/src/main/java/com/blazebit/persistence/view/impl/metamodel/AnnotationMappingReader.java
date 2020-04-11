@@ -259,7 +259,7 @@ public class AnnotationMappingReader implements MappingReader {
                                 }
                             }
                         }
-                    } else if (!concreteMethods.contains(methodName)) {
+                    } else if (!concreteMethods.contains(methodName) && method.getReturnType() != EntityViewManager.class) {
                         // Check if the attribute definition is conflicting
                         String attributeName = AbstractMethodAttribute.getAttributeName(method);
                         Annotation mapping = AbstractMethodAttribute.getMapping(attributeName, method, context);

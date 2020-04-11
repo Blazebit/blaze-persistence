@@ -59,4 +59,11 @@ public interface SingularAttribute<X, Y> extends Attribute<X, Y> {
      */
     public boolean isId();
 
+    /**
+     * Returns true if an empty flat view should be created for this attribute, otherwise false.
+     *
+     * @return True if an empty flat view should be created for this attribute, otherwise false
+     * @since 1.5.0
+     */
+    public boolean isCreateEmptyFlatView();
 }

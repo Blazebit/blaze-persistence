@@ -281,3 +281,17 @@ By default the scanning is enabled i.e. the default value is `false`.
 | Default | false
 | Applicable | Configuration only
 |====================
+
+==== CREATE_EMPTY_FLAT_VIEWS
+
+Defines whether empty flat views should be created by default if not specified via `@EmptyFlatViewCreation`.
+When `false`, null will be set for an attribute if the flat view would be empty, otherwise an empty flat view is set.
+By default the creation of empty flat views is enabled i.e. the default value is `true`.
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.view.create_empty_flat_views
+| Type | boolean
+| Default | true
+| Applicable | Configuration only
+|====================

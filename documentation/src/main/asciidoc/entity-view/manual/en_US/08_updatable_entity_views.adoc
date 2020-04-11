@@ -119,7 +119,7 @@ otherwise to the _read-only_ state. If it is used within an updatable view, it i
                        +--------+                          +--------+
                        |        |                          |        |
                        | remove |                          | remove |
-          @PostLoad    |        v                          v        |    @PostLoad
+          @PostLoad    |        v                          v        |     @PostLoad
             load     +-+--------+-+                      +-+--------+-+     load
 -------------------->|            |                      |            +<--------------------
           create     |            |                      |            |     create
@@ -240,11 +240,6 @@ Such a listener is usually used for computing values based on the entity view st
 
 [source,java]
 ----
-enum LifeState {
-    ALIVE,
-    DEAD;
-}
-
 @EntityView(Cat.class)
 abstract class CatUpdateView {
 

@@ -14,6 +14,7 @@ The annotation processor supports the following annotation processor options:
 * `defaultVersionAttributeType` the type the entity view version attribute should have to be considered the version attribute. No default
 * `generateImplementations` whether to generate entity view implementations. If `false`, the `generateBuilders` option is meaningless. Default `true`
 * `generateBuilders` whether to generate entity view builders. Default `true`
+* `createEmptyFlatViews` whether to create empty flat views by default unless specified via `@EmptyFlatViewCreation`. Default is `true`
 
 === Static metamodel
 

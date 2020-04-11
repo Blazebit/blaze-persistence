@@ -202,7 +202,9 @@ public class EntityViewBuilderBaseImpl<T, X extends EntityViewBuilderBase<T, X>>
                         value = 0;
                     }
                 } else {
-                    // TODO: Handle flat views based on nullness setting
+                    if (((SingularAttribute<?, ?>) attr).isCreateEmptyFlatView()) {
+                        value = evm.create(attr.getConvertedJavaType(), optionalParameters);
+                    }
                 }
             }
         } else {
