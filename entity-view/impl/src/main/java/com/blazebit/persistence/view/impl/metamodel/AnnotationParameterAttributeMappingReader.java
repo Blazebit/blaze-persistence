@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.persistence.view.BatchFetch;
 import com.blazebit.persistence.view.CollectionMapping;
+import com.blazebit.persistence.view.EmptyFlatViewCreation;
 import com.blazebit.persistence.view.MappingInheritance;
 import com.blazebit.persistence.view.MappingInheritanceMapKey;
 import com.blazebit.persistence.view.MappingInheritanceSubtype;
@@ -89,6 +90,11 @@ public class AnnotationParameterAttributeMappingReader extends AbstractAnnotatio
         BatchFetch batchFetch = (BatchFetch) parameterAnnotations.get(BatchFetch.class);
         if (batchFetch != null) {
             parameterMapping.setDefaultBatchSize(batchFetch.size());
+        }
+
+        EmptyFlatViewCreation emptyFlatViewCreation = (EmptyFlatViewCreation) parameterAnnotations.get(EmptyFlatViewCreation.class);
+        if (emptyFlatViewCreation != null) {
+            parameterMapping.setCreateEmptyFlatViews(emptyFlatViewCreation.value());
         }
 
         return parameterMapping;

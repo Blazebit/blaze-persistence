@@ -64,6 +64,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
     private final EntityViewTypeUtils.SubviewInfo subviewInfo;
     private final boolean mutable;
     private final boolean updatable;
+    private final boolean createEmptyFlatViews;
     private final String generatedTypePrefix;
     private final Element setter;
     private final boolean idMember;
@@ -92,6 +93,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
         Boolean updatable = null;
         Boolean mutable = null;
         boolean self = false;
+        boolean createEmptyFlatViews = context.isCreateEmptyFlatViews();
         if (version) {
             mapping = parent.getEntityVersionAttribute().getSimpleName().toString();
             if (parent.getEntityVersionAttribute().getKind() == ElementKind.METHOD) {
@@ -101,7 +103,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
             updatable = false;
             mutable = false;
         } else {
-            for (AnnotationMirror mirror : TypeUtils.getAnnotationMirrors(element, Constants.ID_MAPPING, Constants.MAPPING, Constants.MAPPING_CORRELATED, Constants.MAPPING_CORRELATED_SIMPLE, Constants.MAPPING_PARAMETER, Constants.MAPPING_SUBQUERY, Constants.UPDATABLE_MAPPING, Constants.SELF)) {
+            for (AnnotationMirror mirror : TypeUtils.getAnnotationMirrors(element, Constants.ID_MAPPING, Constants.MAPPING, Constants.MAPPING_CORRELATED, Constants.MAPPING_CORRELATED_SIMPLE, Constants.MAPPING_PARAMETER, Constants.MAPPING_SUBQUERY, Constants.UPDATABLE_MAPPING, Constants.SELF, Constants.EMPTY_FLAT_VIEW_CREATION)) {
                 switch (mirror.getAnnotationType().toString()) {
                     case Constants.ID_MAPPING:
                         mapping = TypeUtils.getAnnotationValue(mirror, "value");
@@ -152,6 +154,9 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
                     case Constants.SELF:
                         self = true;
                         break;
+                    case Constants.EMPTY_FLAT_VIEW_CREATION:
+                        createEmptyFlatViews = TypeUtils.getAnnotationValue(mirror, "value");
+                        break;
                     default:
                         break;
                 }
@@ -164,6 +169,11 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 
         this.mapping = mapping;
         this.kind = kind;
+        if (subviewInfo != null && subviewInfo.getEntityViewIdElement() == null && subviewInfo.hasEmptyConstructor()) {
+            this.createEmptyFlatViews = createEmptyFlatViews;
+        } else {
+            this.createEmptyFlatViews = false;
+        }
 
         if (version) {
             attributeName = "$$_version";
@@ -298,8 +308,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 
     @Override
     public void appendDefaultValue(StringBuilder sb, boolean createEmpty, ImportContext importContext) {
-        if (createEmpty && subviewInfo != null && subviewInfo.getEntityViewIdElement() == null && subviewInfo.hasEmptyConstructor()) {
-            // TODO: Handle flat views based on nullness setting
+        if (createEmpty && createEmptyFlatViews) {
             String attributeImplementationType = importContext.importType(getGeneratedTypePrefix() + ImplementationClassWriter.IMPL_CLASS_NAME_SUFFIX);
             sb.append("new ").append(attributeImplementationType).append("((")
                     .append(attributeImplementationType).append(") null, optionalParameters)");

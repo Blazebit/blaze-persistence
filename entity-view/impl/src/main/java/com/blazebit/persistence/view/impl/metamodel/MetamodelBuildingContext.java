@@ -83,6 +83,8 @@ public interface MetamodelBuildingContext {
 
     public boolean isErrorOnInvalidPluralSetter();
 
+    public boolean isCreateEmptyFlatViews();
+
     public ProxyFactory getProxyFactory();
 
     public FlushMode getFlushMode(Class<?> clazz, FlushMode defaultValue);

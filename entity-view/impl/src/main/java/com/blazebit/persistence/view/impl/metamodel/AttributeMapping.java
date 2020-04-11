@@ -74,6 +74,7 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
 
     // Other configs
     protected Integer defaultBatchSize;
+    protected Boolean createEmptyFlatViews;
 
     // Resolved types
     protected boolean resolvedTypeMappings;
@@ -201,6 +202,16 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
     @Override
     public void setDefaultBatchSize(Integer defaultBatchSize) {
         this.defaultBatchSize = defaultBatchSize;
+    }
+
+    @Override
+    public Boolean getCreateEmptyFlatViews() {
+        return createEmptyFlatViews;
+    }
+
+    @Override
+    public void setCreateEmptyFlatViews(Boolean createEmptyFlatViews) {
+        this.createEmptyFlatViews = createEmptyFlatViews;
     }
 
     public abstract String getErrorLocation();

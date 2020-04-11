@@ -48,6 +48,7 @@ import java.util.Set;
         EntityViewAnnotationProcessor.DEFAULT_VERSION_ATTRIBUTE_TYPE,
         EntityViewAnnotationProcessor.GENERATE_IMPLEMENTATIONS,
         EntityViewAnnotationProcessor.GENERATE_BUILDERS,
+        EntityViewAnnotationProcessor.CREATE_EMPTY_FLAT_VIEWS,
 })
 public class EntityViewAnnotationProcessor extends AbstractProcessor {
 
@@ -60,6 +61,7 @@ public class EntityViewAnnotationProcessor extends AbstractProcessor {
     public static final String DEFAULT_VERSION_ATTRIBUTE_TYPE = "defaultVersionAttributeType";
     public static final String GENERATE_IMPLEMENTATIONS = "generateImplementations";
     public static final String GENERATE_BUILDERS = "generateBuilders";
+    public static final String CREATE_EMPTY_FLAT_VIEWS = "createEmptyFlatViews";
 
     private Context context;
 
@@ -81,6 +83,7 @@ public class EntityViewAnnotationProcessor extends AbstractProcessor {
         context.setStrictCascadingCheck(getOption(processingEnvironment, STRICT_CASCADING_CHECK, true));
         context.setGenerateImplementations(getOption(processingEnvironment, GENERATE_IMPLEMENTATIONS, true));
         context.setGenerateBuilders(getOption(processingEnvironment, GENERATE_BUILDERS, true));
+        context.setCreateEmptyFlatViews(getOption(processingEnvironment, CREATE_EMPTY_FLAT_VIEWS, true));
 
         context.setDefaultVersionAttributeName(processingEnvironment.getOptions().get(DEFAULT_VERSION_ATTRIBUTE_NAME));
         context.setDefaultVersionAttributeType(processingEnvironment.getOptions().get(DEFAULT_VERSION_ATTRIBUTE_TYPE));

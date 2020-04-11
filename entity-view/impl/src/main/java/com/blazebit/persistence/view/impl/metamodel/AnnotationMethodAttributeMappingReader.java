@@ -23,6 +23,7 @@ import com.blazebit.persistence.view.AttributeFilterProvider;
 import com.blazebit.persistence.view.AttributeFilters;
 import com.blazebit.persistence.view.BatchFetch;
 import com.blazebit.persistence.view.CollectionMapping;
+import com.blazebit.persistence.view.EmptyFlatViewCreation;
 import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.MappingInheritance;
 import com.blazebit.persistence.view.MappingInheritanceMapKey;
@@ -118,6 +119,11 @@ public class AnnotationMethodAttributeMappingReader extends AbstractAnnotationAt
         BatchFetch batchFetch = AnnotationUtils.findAnnotation(method, BatchFetch.class);
         if (batchFetch != null) {
             attributeMapping.setDefaultBatchSize(batchFetch.size());
+        }
+
+        EmptyFlatViewCreation emptyFlatViewCreation = AnnotationUtils.findAnnotation(method, EmptyFlatViewCreation.class);
+        if (emptyFlatViewCreation != null) {
+            attributeMapping.setCreateEmptyFlatViews(emptyFlatViewCreation.value());
         }
 
         UpdatableMapping updatableMapping = AnnotationUtils.findAnnotation(method, UpdatableMapping.class);

@@ -61,6 +61,7 @@ public final class Constants {
     public static final String MAPPING_PARAMETER = "com.blazebit.persistence.view.MappingParameter";
     public static final String MAPPING_SINGULAR = "com.blazebit.persistence.view.MappingSingular";
     public static final String UPDATABLE_MAPPING = "com.blazebit.persistence.view.UpdatableMapping";
+    public static final String EMPTY_FLAT_VIEW_CREATION = "com.blazebit.persistence.view.EmptyFlatViewCreation";
 
     public static final String VIEW_CONSTRUCTOR = "com.blazebit.persistence.view.ViewConstructor";
 

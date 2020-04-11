@@ -64,6 +64,7 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
     private final Set<Class<?>> parentRequiringUpdateSubtypes;
     private final Set<Class<?>> parentRequiringCreateSubtypes;
     private final Map<ManagedViewType<? extends Y>, String> inheritanceSubtypes;
+    private final boolean createEmptyFlatView;
 
     @SuppressWarnings("unchecked")
     public AbstractMethodSingularAttribute(ManagedViewTypeImplementor<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int attributeIndex, int dirtyStateIndex, EmbeddableOwner embeddableMapping) {
@@ -226,6 +227,11 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
                 context.addError("The flat view type '" + type.getJavaType().getName() + "' must provide an empty constructor since empty instances might be created through the  " + mapping.getErrorLocation() + "!");
             }
         }
+        if (type.getMappingType() == Type.MappingType.FLAT_VIEW && (mapping.getCreateEmptyFlatViews() == null && context.isCreateEmptyFlatViews() || Boolean.TRUE.equals(mapping.getCreateEmptyFlatViews()))) {
+            this.createEmptyFlatView = true;
+        } else {
+            this.createEmptyFlatView = false;
+        }
     }
 
     private boolean determineUpdatable(Type<?> elementType) {
@@ -246,6 +252,11 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
 
         // We exclude entity types from this since there is no clear intent
         return hasSetter;
+    }
+
+    @Override
+    public boolean isCreateEmptyFlatView() {
+        return createEmptyFlatView;
     }
 
     @Override

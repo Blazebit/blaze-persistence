@@ -51,6 +51,7 @@ public class Context {
     private boolean strictCascadingCheck;
     private boolean generateImplementations;
     private boolean generateBuilders;
+    private boolean createEmptyFlatViews;
     private String defaultVersionAttributeName;
     private String defaultVersionAttributeType;
 
@@ -182,5 +183,13 @@ public class Context {
 
     public void setDefaultVersionAttributeType(String defaultVersionAttributeType) {
         this.defaultVersionAttributeType = defaultVersionAttributeType;
+    }
+
+    public boolean isCreateEmptyFlatViews() {
+        return createEmptyFlatViews;
+    }
+
+    public void setCreateEmptyFlatViews(boolean createEmptyFlatViews) {
+        this.createEmptyFlatViews = createEmptyFlatViews;
     }
 }

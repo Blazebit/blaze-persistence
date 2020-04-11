@@ -481,16 +481,16 @@ public class ViewTypeObjectBuilderTemplate<T> {
                     } else {
                         MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) attribute;
                         ManagedViewTypeImplementor<Object[]> managedViewType = (ManagedViewTypeImplementor<Object[]>) pluralAttribute.getElementType();
+                        boolean nullIfEmpty = managedViewType instanceof ViewType<?> || !listKey && !mapKey;
                         if (pluralAttribute.getFetchStrategy() == FetchStrategy.MULTISET) {
                             boolean updatableObjectCache = managedViewType.isUpdatable() || managedViewType.isCreatable();
-                            boolean nullIfEmpty = managedViewType instanceof ViewType<?> || !listKey && !mapKey;
                             String mapping = mapperBuilder.getMapping(mappingAttribute);
                             ViewTypeObjectBuilderTemplate<Object[]> subviewTemplate = applySubviewMapping(mappingAttribute, attributePath, newTupleIdDescriptor, managedViewType, mapperBuilder, viewJpqlMacro, embeddingViewJpqlMacro, ef, false, nullIfEmpty);
                             mapperBuilder.setTupleListTransformerFactory(new CollectionMultisetTupleListTransformerFactory(startIndex, mapping, attributePath, valueConverter, attribute.getCollectionInstantiator(), dirtyTracking, subviewTemplate, managedViewType.hasSelectOrSubselectFetchedAttributes(), new SubviewTupleTransformerFactory(subviewTemplate, updatableObjectCache, nullIfEmpty)));
                         } else {
                             // Obviously, we produce null if the object type is identifiable i.e. a ViewType and it is empty = null id
                             // Additionally, we also consider empty embeddables as null when we have a non-indexed collection so we can filter out these elements
-                            applySubviewMapping(mappingAttribute, attributePath, newTupleIdDescriptor, managedViewType, mapperBuilder, viewJpqlMacro, embeddingViewJpqlMacro, ef, false, managedViewType instanceof ViewType<?> || !listKey && !mapKey);
+                            applySubviewMapping(mappingAttribute, attributePath, newTupleIdDescriptor, managedViewType, mapperBuilder, viewJpqlMacro, embeddingViewJpqlMacro, ef, false, nullIfEmpty);
                         }
                     }
                 } else if (mapKey) {
@@ -540,12 +540,12 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 applyQueryParameterMapping(mappingAttribute, mapperBuilder);
             } else if (attribute.isSubview()) {
                 featuresFound[FEATURE_SUBVIEWS] = true;
+                boolean nullIfEmpty = !((SingularAttribute<?, ?>) attribute).isCreateEmptyFlatView();
                 if (attribute.isCorrelated() || attribute.getFetchStrategy() != FetchStrategy.JOIN && attribute.getFetchStrategy() != FetchStrategy.MULTISET) {
                     ManagedViewTypeImplementor<Object> managedViewType = (ManagedViewTypeImplementor<Object>) ((SingularAttribute<?, ?>) attribute).getType();
                     if (attribute.getFetchStrategy() == FetchStrategy.MULTISET) {
                         int startIndex = tupleOffset + mapperBuilder.mapperIndex();
                         boolean updatableObjectCache = managedViewType.isUpdatable() || managedViewType.isCreatable();
-                        boolean nullIfEmpty = managedViewType instanceof ViewType<?>;
                         ViewTypeObjectBuilderTemplate<Object[]> subviewTemplate = applyCorrelatedSubviewMapping(attribute, attributePath, tupleIdDescriptor, (ManagedViewTypeImplementor<Object[]>) (ManagedViewTypeImplementor<?>) managedViewType, mapperBuilder, featuresFound, viewJpqlMacro, embeddingViewJpqlMacro, ef, batchSize, false);
                         TypeConverter<Object, Object> elementConverter = (TypeConverter<Object, Object>) (TypeConverter<?, ?>) managedViewType.getConverter();
                         mapperBuilder.setTupleListTransformerFactory(new SingularMultisetTupleListTransformerFactory(startIndex, null, attributePath, elementConverter, subviewTemplate, managedViewType.hasSelectOrSubselectFetchedAttributes(), new SubviewTupleTransformerFactory(subviewTemplate, updatableObjectCache, nullIfEmpty)));
@@ -558,13 +558,12 @@ public class ViewTypeObjectBuilderTemplate<T> {
                     if (attribute.getFetchStrategy() == FetchStrategy.MULTISET) {
                         int startIndex = tupleOffset + mapperBuilder.mapperIndex();
                         boolean updatableObjectCache = managedViewType.isUpdatable() || managedViewType.isCreatable();
-                        boolean nullIfEmpty = managedViewType instanceof ViewType<?>;
                         String mapping = mapperBuilder.getMapping(mappingAttribute);
                         ViewTypeObjectBuilderTemplate<Object[]> subviewTemplate = applySubviewMapping(mappingAttribute, attributePath, tupleIdDescriptor, managedViewType, mapperBuilder, viewJpqlMacro, embeddingViewJpqlMacro, ef, false, nullIfEmpty);
                         TypeConverter<Object, Object> elementConverter = (TypeConverter<Object, Object>) (TypeConverter<?, ?>) managedViewType.getConverter();
                         mapperBuilder.setTupleListTransformerFactory(new SingularMultisetTupleListTransformerFactory(startIndex, mapping, attributePath, elementConverter, subviewTemplate, managedViewType.hasSelectOrSubselectFetchedAttributes(), new SubviewTupleTransformerFactory(subviewTemplate, updatableObjectCache, nullIfEmpty)));
                     } else {
-                        applySubviewMapping(mappingAttribute, attributePath, tupleIdDescriptor, managedViewType, mapperBuilder, viewJpqlMacro, embeddingViewJpqlMacro, ef, false, managedViewType instanceof ViewType<?>);
+                        applySubviewMapping(mappingAttribute, attributePath, tupleIdDescriptor, managedViewType, mapperBuilder, viewJpqlMacro, embeddingViewJpqlMacro, ef, false, nullIfEmpty);
                     }
                 }
             } else {

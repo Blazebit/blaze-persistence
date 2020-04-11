@@ -34,12 +34,23 @@ public abstract class AbstractParameterSingularAttribute<X, Y> extends AbstractP
 
     private final Type<Y> type;
     private final Map<ManagedViewType<? extends Y>, String> inheritanceSubtypes;
+    private final boolean createEmptyFlatView;
 
     @SuppressWarnings("unchecked")
     public AbstractParameterSingularAttribute(MappingConstructorImpl<X> constructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
         super(constructor, mapping, context, embeddableMapping);
         this.type = (Type<Y>) mapping.getType(context, embeddableMapping);
         this.inheritanceSubtypes = (Map<ManagedViewType<? extends Y>, String>) (Map<?, ?>) mapping.getInheritanceSubtypes(context, embeddableMapping);
+        if (type.getMappingType() == Type.MappingType.FLAT_VIEW && (mapping.getCreateEmptyFlatViews() == null && context.isCreateEmptyFlatViews() || Boolean.TRUE.equals(mapping.getCreateEmptyFlatViews()))) {
+            this.createEmptyFlatView = true;
+        } else {
+            this.createEmptyFlatView = false;
+        }
+    }
+
+    @Override
+    public boolean isCreateEmptyFlatView() {
+        return createEmptyFlatView;
     }
 
     @Override

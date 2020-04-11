@@ -75,6 +75,7 @@ public class EntityViewConfigurationImpl implements EntityViewConfiguration {
         properties.put(ConfigurationProperties.STATIC_BUILDER_SCANNING_DISABLED, "false");
         properties.put(ConfigurationProperties.STATIC_IMPLEMENTATION_SCANNING_DISABLED, "false");
         properties.put(ConfigurationProperties.STATIC_METAMODEL_SCANNING_DISABLED, "false");
+        properties.put(ConfigurationProperties.CREATE_EMPTY_FLAT_VIEWS, "true");
 
         typeTestValues.put(boolean.class, true);
         typeTestValues.put(byte.class, Byte.MAX_VALUE);
