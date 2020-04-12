@@ -27,6 +27,7 @@ Not yet released
 * Only expose `Serializable` `EntityViewManager` wrapper in special methods or callbacks
 * Support `@PostCreate` and other lifecycle methods with default and even private visibility
 * Support `@ViewFilter` inheritance
+* Fix collection deserialization issues with Jackson
 
 ### Backwards-incompatible changes
 

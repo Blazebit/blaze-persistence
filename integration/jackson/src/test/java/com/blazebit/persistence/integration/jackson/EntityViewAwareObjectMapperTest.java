@@ -36,6 +36,7 @@ import javax.persistence.Persistence;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author Christian Beikov
@@ -232,5 +233,50 @@ public class EntityViewAwareObjectMapperTest {
         void setName(String name);
         CreatableAndUpdatableViewWithSetters getParent();
         void setParent(CreatableAndUpdatableViewWithSetters parent);
+    }
+
+    @Test
+    public void testCreatableWithCollection() throws Exception {
+        EntityViewAwareObjectMapper mapper = mapper(CreatableWithCollection.class, CreatableAndUpdatableViewWithSetters.class, NameView.class);
+        ObjectReader objectReader = mapper.readerFor(mapper.getObjectMapper().constructType(CreatableWithCollection.class));
+        CreatableWithCollection view = objectReader.readValue("{\"name\": \"test\", \"children\": [{\"name\": \"parent\"}]}");
+        Assert.assertTrue(((EntityViewProxy) view).$$_isNew());
+        Assert.assertEquals("test", view.getName());
+        Assert.assertEquals(mapper.getEntityViewManager().getChangeModel(view).get("children").getInitialState(), view.getChildren());
+        Assert.assertEquals(1, view.getChildren().size());
+    }
+
+    @EntityView(SomeEntity.class)
+    @CreatableEntityView
+    @UpdatableEntityView
+    interface CreatableWithCollection {
+        @IdMapping
+        long getId();
+        String getName();
+        void setName(String name);
+        Set<CreatableAndUpdatableViewWithSetters> getChildren();
+    }
+
+    @Test
+    public void testCreatableWithCollectionWithSetter() throws Exception {
+        EntityViewAwareObjectMapper mapper = mapper(CreatableWithCollectionWithSetter.class, CreatableAndUpdatableViewWithSetters.class, NameView.class);
+        ObjectReader objectReader = mapper.readerFor(mapper.getObjectMapper().constructType(CreatableWithCollectionWithSetter.class));
+        CreatableWithCollectionWithSetter view = objectReader.readValue("{\"name\": \"test\", \"children\": [{\"name\": \"parent\"}]}");
+        Assert.assertTrue(((EntityViewProxy) view).$$_isNew());
+        Assert.assertEquals("test", view.getName());
+        Assert.assertEquals(mapper.getEntityViewManager().getChangeModel(view).get("children").getInitialState(), view.getChildren());
+        Assert.assertEquals(1, view.getChildren().size());
+    }
+
+    @EntityView(SomeEntity.class)
+    @CreatableEntityView
+    @UpdatableEntityView
+    interface CreatableWithCollectionWithSetter {
+        @IdMapping
+        long getId();
+        String getName();
+        void setName(String name);
+        Set<CreatableAndUpdatableViewWithSetters> getChildren();
+        void setChildren(Set<CreatableAndUpdatableViewWithSetters> children);
     }
 }
