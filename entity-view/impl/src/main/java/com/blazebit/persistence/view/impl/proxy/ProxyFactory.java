@@ -63,11 +63,13 @@ import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtConstructor;
 import javassist.CtField;
+import javassist.CtMember;
 import javassist.CtMethod;
 import javassist.CtPrimitiveType;
 import javassist.Modifier;
 import javassist.NotFoundException;
 import javassist.bytecode.AccessFlag;
+import javassist.bytecode.AnnotationsAttribute;
 import javassist.bytecode.AttributeInfo;
 import javassist.bytecode.BadBytecode;
 import javassist.bytecode.Bytecode;
@@ -81,6 +83,8 @@ import javassist.bytecode.Opcode;
 import javassist.bytecode.SignatureAttribute;
 import javassist.bytecode.StackMap;
 import javassist.bytecode.StackMapTable;
+import javassist.bytecode.annotation.Annotation;
+import javassist.bytecode.annotation.EnumMemberValue;
 import javassist.compiler.CompileError;
 import javassist.compiler.JvstCodeGen;
 import javassist.compiler.Lex;
@@ -385,6 +389,13 @@ public class ProxyFactory {
         CtClass cc = pool.makeClass(proxyClassName);
         CtClass superCc;
 
+//        ConstPool constPool = cc.getClassFile().getConstPool();
+//        AnnotationsAttribute annotationsAttribute = new AnnotationsAttribute(constPool, AnnotationsAttribute.visibleTag);
+//        Annotation annotation = new Annotation("javax.xml.bind.annotation.XmlAccessorType", constPool);
+//        annotation.addMemberValue("value", new EnumMemberValue(constPool.addUtf8Info("javax.xml.bind.annotation.XmlAccessType"), constPool.addUtf8Info("PROPERTY"), constPool));
+//        annotationsAttribute.addAnnotation(annotation);
+//        cc.getClassFile().addAttribute(annotationsAttribute);
+
         ClassPath classPath = new ClassClassPath(clazz);
         pool.insertClassPath(classPath);
 
@@ -423,6 +434,7 @@ public class ProxyFactory {
                     cc.addInterface(pool.get(DirtyStateTrackable.class.getName()));
                     initialStateField = new CtField(pool.get(Object[].class.getName()), "$$_initialState", cc);
                     initialStateField.setModifiers(getModifiers(false));
+                    annotateInternalField(initialStateField);
                     cc.addField(initialStateField);
 
                     addGetter(cc, initialStateField, "$$_getInitialState");
@@ -432,6 +444,7 @@ public class ProxyFactory {
                 cc.addInterface(pool.get(DirtyTracker.class.getName()));
                 mutableStateField = new CtField(pool.get(Object[].class.getName()), "$$_mutableState", cc);
                 mutableStateField.setModifiers(getModifiers(false));
+                annotateInternalField(mutableStateField);
                 cc.addField(mutableStateField);
 
                 CtField initializedField = new CtField(CtClass.booleanType, "$$_initialized", cc);
@@ -441,12 +454,15 @@ public class ProxyFactory {
                 readOnlyParentsField = new CtField(pool.get(List.class.getName()), "$$_readOnlyParents", cc);
                 readOnlyParentsField.setModifiers(getModifiers(true));
                 readOnlyParentsField.setGenericSignature(Descriptor.of(List.class.getName()) + "<" + Descriptor.of(Object.class.getName()) + ">;");
+                annotateInternalField(readOnlyParentsField);
                 cc.addField(readOnlyParentsField);
                 parentField = new CtField(pool.get(DirtyTracker.class.getName()), "$$_parent", cc);
                 parentField.setModifiers(getModifiers(true));
+                annotateInternalField(parentField);
                 cc.addField(parentField);
                 parentIndexField = new CtField(CtClass.intType, "$$_parentIndex", cc);
                 parentIndexField.setModifiers(getModifiers(true));
+                annotateInternalField(parentIndexField);
                 cc.addField(parentIndexField);
 
                 dirtyChecking = true;
@@ -479,6 +495,8 @@ public class ProxyFactory {
                 idAttribute = (AbstractMethodAttribute<? super T, ?>) viewType.getIdAttribute();
                 versionAttribute = (AbstractMethodAttribute<? super T, ?>) viewType.getVersionAttribute();
                 idField = addMembersForAttribute(idAttribute, clazz, cc, null, false, true, mutableStateField != null);
+                // TODO: Copy JAXB annotations from getter and setter?
+                annotateField(idField, "javax.xml.bind.annotation.XmlElement");
                 fieldMap.put(idAttribute.getName(), idField);
                 attributeFields[0] = idField;
                 attributeTypes[0] = idField.getType();
@@ -533,6 +551,7 @@ public class ProxyFactory {
                 } else {
                     dirtyField = new CtField(CtClass.longType, "$$_dirty", cc);
                     dirtyField.setModifiers(getModifiers(true));
+                    annotateInternalField(dirtyField);
                     cc.addField(dirtyField);
 
                     boolean allSupportDirtyTracking = true;
@@ -572,6 +591,7 @@ public class ProxyFactory {
 
             if (hasEmptyConstructor) {
                 // Create constructor for create models
+                cc.addConstructor(createEmptyConstructor(cc));
                 cc.addConstructor(createCreateConstructor(entityViewManager, managedViewType, cc, attributeFields, attributeTypes, idField, initialStateField, mutableStateField, methodAttributes, mutableAttributeCount, alwaysDirtyMask, unsafe));
             }
 
@@ -615,6 +635,13 @@ public class ProxyFactory {
         } finally {
             pool.removeClassPath(classPath);
         }
+    }
+
+    private CtConstructor createEmptyConstructor(CtClass cc) throws CannotCompileException {
+        CtConstructor constructor = new CtConstructor(new CtClass[0], cc);
+        constructor.setModifiers(Modifier.PUBLIC);
+        constructor.setBody("this((" + cc.getName() + ") null, " + cc.getName() + "#" + SerializableEntityViewManager.EVM_FIELD_NAME + ".getOptionalParameters());");
+        return constructor;
     }
 
     private void createSerializationSubclass(ManagedViewTypeImplementor<?> managedViewType, CtClass cc) throws Exception {
@@ -1148,6 +1175,7 @@ public class ProxyFactory {
         if (managedViewType.isCreatable()) {
             CtField isNewField = new CtField(CtClass.booleanType, "$$_isNew", cc);
             isNewField.setModifiers(getModifiers(true));
+            annotateInternalField(isNewField);
             cc.addField(isNewField);
 
             addGetter(cc, isNewField, "$$_isNew");
@@ -1161,6 +1189,21 @@ public class ProxyFactory {
                 throw new CannotCompileException(e);
             }
         }
+    }
+
+    private void annotateInternalField(CtMember member) {
+        annotateField(member, "javax.xml.bind.annotation.XmlTransient");
+    }
+
+    private void annotateField(CtMember member, String fqn) {
+//        ConstPool constPool = member.getDeclaringClass().getClassFile().getConstPool();
+//        AnnotationsAttribute annotationsAttribute = new AnnotationsAttribute(constPool, AnnotationsAttribute.visibleTag);
+//        annotationsAttribute.addAnnotation(new Annotation(fqn, constPool));
+//        if (member instanceof CtField) {
+//            ((CtField) member).getFieldInfo().addAttribute(annotationsAttribute);
+//        } else {
+//            ((CtMethod) member).getMethodInfo().addAttribute(annotationsAttribute);
+//        }
     }
     
     private CtMethod addGetter(CtClass cc, CtField field, String methodName) throws CannotCompileException {
@@ -1240,6 +1283,9 @@ public class ProxyFactory {
         List<Method> bridgeGetters = getBridgeGetters(clazz, attribute, getter);
         
         CtMethod attributeGetter = addGetter(cc, attributeField, getter.getName());
+        if (isId) {
+            annotateInternalField(attributeGetter);
+        }
         
         if (genericSignature != null) {
             String getterGenericSignature = "()" + genericSignature;

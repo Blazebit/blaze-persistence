@@ -20,12 +20,16 @@ import com.blazebit.persistence.examples.spring.data.webmvc.model.Cat;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.UpdatableEntityView;
 
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
+
 /**
  * @author Christian Beikov
  * @since 1.4.0
  */
 @UpdatableEntityView
 @EntityView(Cat.class)
+@XmlRootElement(name = "cat")
 public interface CatUpdateView extends CatSimpleView {
 
     void setName(String name);

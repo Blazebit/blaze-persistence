@@ -1434,6 +1434,7 @@ public final class ImplementationClassWriter {
         boolean postLoadReflection = preparePostLoad(sb, entity, context);
         if (entity.hasEmptyConstructor()) {
             if (entity.getMembers().size() > 0) {
+                printEmptyConstructor(sb, entity, context);
                 printCreateConstructor(sb, entity, context);
                 sb.append(NEW_LINE);
             }
@@ -1758,6 +1759,12 @@ public final class ImplementationClassWriter {
         printPostLoad(sb, entity, postLoadReflection, context);
         sb.append("    }");
         sb.append(NEW_LINE);
+    }
+
+    private static void printEmptyConstructor(StringBuilder sb, MetaEntityView entity, Context context) {
+        sb.append("    public ").append(entity.getSimpleName()).append(IMPL_CLASS_NAME_SUFFIX).append("() {").append(NEW_LINE);
+        sb.append("        super((").append(entity.getSimpleName()).append(IMPL_CLASS_NAME_SUFFIX).append(") null, ").append(EVM_FIELD_NAME).append(".getOptionalParameters());").append(NEW_LINE);
+        sb.append("    }").append(NEW_LINE);
     }
 
     private static void printCreateConstructor(StringBuilder sb, MetaEntityView entity, Context context) {
