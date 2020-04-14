@@ -118,7 +118,7 @@ public interface EntityViewMethodAttributeMapping extends EntityViewAttributeMap
      * @return The attribute filter providers
      * @since 1.5.0
      */
-    Map<String, Class<? extends AttributeFilterProvider>> getAttributeFilterProviders();
+    Map<String, Class<? extends AttributeFilterProvider<?>>> getAttributeFilterProviders();
 
     /**
      * Sets the attribute filter providers.
@@ -126,5 +126,5 @@ public interface EntityViewMethodAttributeMapping extends EntityViewAttributeMap
      * @param attributeFilterProviders The attribute filter providers
      * @since 1.5.0
      */
-    void setAttributeFilterProviders(Map<String, Class<? extends AttributeFilterProvider>> attributeFilterProviders);
+    void setAttributeFilterProviders(Map<String, Class<? extends AttributeFilterProvider<?>>> attributeFilterProviders);
 }

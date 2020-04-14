@@ -26,8 +26,9 @@ import com.blazebit.persistence.view.AttributeFilterProvider;
  * A contains ignore case filter accepts an object. The {@linkplain Object#toString()} representation of that object will be
  * used as value for the contains restriction.
  *
+ * @param <FilterValue> The type of the filter value i.e. the attribute type
  * @author Christian Beikov
  * @since 1.0.0
  */
-public abstract class ContainsIgnoreCaseFilter extends AttributeFilterProvider {
+public abstract class ContainsIgnoreCaseFilter<FilterValue> extends AttributeFilterProvider<FilterValue> {
 }

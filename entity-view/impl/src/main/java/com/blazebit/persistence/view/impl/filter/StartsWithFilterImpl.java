@@ -24,7 +24,7 @@ import com.blazebit.persistence.view.filter.StartsWithFilter;
  * @author Christian Beikov
  * @since 1.0.0
  */
-public class StartsWithFilterImpl extends StartsWithFilter {
+public class StartsWithFilterImpl<FilterValue> extends StartsWithFilter<FilterValue> {
 
     private final String value;
 

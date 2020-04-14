@@ -9,7 +9,7 @@ except for constructor expressions. The reason for this is
 . The use of a fully qualified class name and pass elements by position makes the query hard to read
 
 Instead of constructor expressions, {projectname} introduces the concept of an link:{core_jdoc}/persistence/ObjectBuilder.html[`ObjectBuilder`]
-which, as you will see in the <<Select new support>> and <<Object builder>> chapters, are a lot mightier.
+which, as you will see in the <<select-new-support,Select new support>> and <<object-builder,Object builder>> chapters, are a lot mightier.
 
 Note that by default most types of queries have a default select clause that fits most of the needs.
 
@@ -253,7 +253,7 @@ FROM Cat cat
 === Select new support
 
 Like already explained in the <<select-clause,beginning>>, constructor expressions are supported differently in {projectname}.
-Instead of having to use the fully qualified class name in the query, {projectname} offers a concept called <<Object builder>>.
+Instead of having to use the fully qualified class name in the query, {projectname} offers a concept called <<object-builder,Object builder>>.
 On top of that API, it implements features similar to the constructor expression of JPQL.
 
 The link:{core_jdoc}/persistence/FullQueryBuilder.html#selectNew(java.lang.reflect.Constructor)[`selectNew(Constructor)`] variant is probably the one that comes closest

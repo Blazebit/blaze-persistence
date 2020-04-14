@@ -99,10 +99,11 @@ NOTE: At most one attribute filter can be enabled per attribute.
 |===
 |Built-in filters           | Supported filter value types
 
-|GreaterOrEqualFilter       | Number, Date
-|LessOrEqualFilter          | Number, Date
-|GreaterThanFilter          | Number, Date
-|LessThanFilter             | Number, Date
+|GreaterOrEqualFilter       | Number, Date, String
+|LessOrEqualFilter          | Number, Date, String
+|GreaterThanFilter          | Number, Date, String
+|LessThanFilter             | Number, Date, String
+|BetweenFilter              | Range<?> or Object[] with: Number, Date, String
 |EqualFilter                | Any
 |StartsWithFilter           | String
 |EndsWithFilter             | String

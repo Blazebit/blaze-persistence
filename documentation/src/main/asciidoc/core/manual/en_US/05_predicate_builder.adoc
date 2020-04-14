@@ -2,9 +2,9 @@
 
 The Predicate Builder API tries to simplify construction but also the reuse of predicates. There are multiple clauses and expressions that support entering the API:
 
-* <<Where clause>>
-* <<Having clause>>
-* <<On clause>>
+* <<where-clause,Where clause>>
+* <<having-clause,Having clause>>
+* <<on-clause,On clause>>
 * <<case-when-expression-builder,Case When expression>>
 
 Every predicate builder follows the same scheme:

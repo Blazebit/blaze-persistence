@@ -43,7 +43,7 @@ public class AnnotationMetaMap extends AnnotationMetaCollection {
         super(parent, element, collectionType, collectionJavaType, elementType, realElementType, context);
         this.keyType = keyType;
         this.realKeyType = realKeyType;
-        this.keySubviewElement = getSubview(realKeyType, context);
+        this.keySubviewElement = getSubview(keyType, context);
         if (keySubviewElement != null) {
             this.generatedKeyTypePrefix = TypeUtils.getDerivedTypeName(context.getElementUtils().getTypeElement(keyType));
         } else {
@@ -81,7 +81,11 @@ public class AnnotationMetaMap extends AnnotationMetaCollection {
             } else {
                 sb.append("(").append(getImplementationTypeString()).append(") (").append(collectionJavaType).append("<?, ?>) ");
                 sb.append(importContext.importType(TypeUtils.getDerivedTypeName(getHostingEntity().getTypeElement()) + MetamodelClassWriter.META_MODEL_CLASS_NAME_SUFFIX)).append('.')
-                        .append(getPropertyName()).append(".getMapInstantiator().");
+                        .append(getPropertyName());
+                if (isSubview()) {
+                    sb.append(".attr()");
+                }
+                sb.append(".getMapInstantiator().");
                 if (getDirtyStateIndex() == -1) {
                     sb.append("createMap(0)");
                 } else {
@@ -113,18 +117,15 @@ public class AnnotationMetaMap extends AnnotationMetaCollection {
     }
 
     @Override
-    public void appendMetamodelAttributeDeclarationString(StringBuilder sb) {
-        sb.append("    public static volatile ")
-                .append(getHostingEntity().metamodelImportType(getMetaType()))
-                .append("<")
+    public void appendMetamodelAttributeType(StringBuilder sb, ImportContext importContext) {
+        sb.append(importContext.importType(getMetaType()))
+                .append('<')
                 .append(getHostingEntity().importType(getHostingEntity().getQualifiedName()))
                 .append(", ")
                 .append(getHostingEntity().importType(keyType))
                 .append(", ")
                 .append(getHostingEntity().importType(getType()))
-                .append("> ")
-                .append(getPropertyName())
-                .append(";");
+                .append('>');
     }
 
 }

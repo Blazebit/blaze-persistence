@@ -23,6 +23,9 @@ import com.blazebit.persistence.view.change.SingularChangeModel;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
 import com.blazebit.persistence.view.impl.metamodel.BasicTypeImpl;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
+import com.blazebit.persistence.view.metamodel.MethodMapAttribute;
+import com.blazebit.persistence.view.metamodel.MethodPluralAttribute;
+import com.blazebit.persistence.view.metamodel.MethodSingularAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
 
@@ -134,6 +137,21 @@ public class BasicSingularChangeModel<V> extends AbstractChangeModel<V, V> imple
 
     @Override
     public <K, V1> MapChangeModel<K, V1> get(MapAttribute<V, K, V1> attribute) {
+        throw illegalDereference();
+    }
+
+    @Override
+    public <X> SingularChangeModel<X> get(MethodSingularAttribute<V, X> attribute) {
+        throw illegalDereference();
+    }
+
+    @Override
+    public <E, C extends Collection<E>> PluralChangeModel<C, E> get(MethodPluralAttribute<V, C, E> attribute) {
+        throw illegalDereference();
+    }
+
+    @Override
+    public <K, V1> MapChangeModel<K, V1> get(MethodMapAttribute<V, K, V1> attribute) {
         throw illegalDereference();
     }
 

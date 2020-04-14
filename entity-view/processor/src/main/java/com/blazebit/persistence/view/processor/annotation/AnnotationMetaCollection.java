@@ -79,7 +79,11 @@ public class AnnotationMetaCollection extends AnnotationMetaAttribute {
             } else {
                 sb.append("(").append(getImplementationTypeString()).append(") (").append(collectionJavaType).append("<?>) ");
                 sb.append(importContext.importType(TypeUtils.getDerivedTypeName(getHostingEntity().getTypeElement()) + MetamodelClassWriter.META_MODEL_CLASS_NAME_SUFFIX)).append('.')
-                        .append(getPropertyName()).append(".getCollectionInstantiator().");
+                        .append(getPropertyName());
+                if (isSubview()) {
+                    sb.append(".attr()");
+                }
+                sb.append(".getCollectionInstantiator().");
                 if (getDirtyStateIndex() == -1) {
                     sb.append("createCollection(0)");
                 } else {

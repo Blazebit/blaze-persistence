@@ -24,6 +24,9 @@ import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
 import com.blazebit.persistence.view.impl.metamodel.BasicTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
+import com.blazebit.persistence.view.metamodel.MethodMapAttribute;
+import com.blazebit.persistence.view.metamodel.MethodPluralAttribute;
+import com.blazebit.persistence.view.metamodel.MethodSingularAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
 
@@ -91,6 +94,21 @@ public class AbstractEmptyPluralChangeModel<C, V> extends AbstractChangeModel<C,
 
     @Override
     public <K, E> List<MapChangeModel<K, E>> get(MapAttribute<V, K, E> attribute) {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public <X> List<SingularChangeModel<X>> get(MethodSingularAttribute<V, X> attribute) {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public <E, C extends Collection<E>> List<PluralChangeModel<C, E>> get(MethodPluralAttribute<V, C, E> attribute) {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public <K, E> List<MapChangeModel<K, E>> get(MethodMapAttribute<V, K, E> attribute) {
         return Collections.emptyList();
     }
 

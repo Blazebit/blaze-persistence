@@ -108,7 +108,7 @@ NOTE: Hibernate still lacks support for this https://hibernate.atlassian.net/bro
 
 === Having clause
 
-The `HAVING` clause is similar to the <<where_clause,`WHERE` clause>> and most of the inner workings are described in the <<Predicate Builder>> chapter.
+The `HAVING` clause is similar to the <<where-clause,`WHERE` clause>> and most of the inner workings are described in the <<predicate-builder,Predicate Builder>> chapter.
 The only difference is that the `HAVING` clause in contrast to the `WHERE` clause can contain aggregate functions and is logically executed after the `GROUP BY` clause.
 
 The API for using the `HAVING` clause is the same as for the `WHERE` clause, except that it uses `having` instead of the `where` prefix.

@@ -11,10 +11,11 @@ Not yet released
 * Introduce a way to do global mapping parameter registration
 * Introduce entity view builders
 * Support Spring `PathVariable` and JAX-RS `PathParam` in the integrations for updatable entity views
-* Introduce experimental annotation processor for entity view implementations, static entity view metamodels and entity view builders
+* Introduce annotation processor for entity view implementations, static entity view metamodels and entity view builders
 * Add support for `@Self` injection into entity view constructors to allow safe access to entity view state
 * Add support for `@PostLoad` entity view lifecycle listeners
 * Support controlling whether empty flat views or null should be produced via `@EmptyFlatViewCreation`
+* Support type-safe usage of filters and sorters based on static entity view metamodel
 
 ### Bug fixes
 
@@ -31,7 +32,8 @@ Not yet released
 
 ### Backwards-incompatible changes
 
-None
+* `AttributeFilterProvider` was change in a source incompatible way because it introduced a type variable for the filter value. Subclasses should specify the type or pass through the type variable if the filter value type is like the attribute type
+* `SubGraph` and thus also `EntityViewSetting` methods for typed fetching `fetch(Attribute)` was replaced by `fetch(MethodSingularAttribute)` and `fetch(MethodPluralAttribute)` which was probably not used yet anyway
 
 ## 1.5.0-Alpha1
 

@@ -35,9 +35,10 @@ import com.blazebit.persistence.view.SubqueryProvider;
  * <li>If the parsing of the object fails, an {@link IllegalArgumentException} is thrown.</li>
  * </ul>
  *
+ * @param <FilterValue> The type of the filter value i.e. the attribute type
  * @author Christian Beikov
  * @since 1.0.0
  */
-public abstract class GreaterOrEqualFilter extends AttributeFilterProvider {
+public abstract class GreaterOrEqualFilter<FilterValue> extends AttributeFilterProvider<FilterValue> {
 
 }

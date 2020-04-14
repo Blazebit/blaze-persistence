@@ -33,4 +33,9 @@ public class AnnotationMetaVersionAttribute extends AnnotationMetaAttribute {
     public final String getMetaType() {
         return Constants.SINGULAR_ATTRIBUTE;
     }
+
+    @Override
+    public boolean isSynthetic() {
+        return true;
+    }
 }

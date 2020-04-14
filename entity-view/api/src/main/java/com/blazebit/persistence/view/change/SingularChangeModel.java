@@ -17,6 +17,9 @@
 package com.blazebit.persistence.view.change;
 
 import com.blazebit.persistence.view.metamodel.MapAttribute;
+import com.blazebit.persistence.view.metamodel.MethodMapAttribute;
+import com.blazebit.persistence.view.metamodel.MethodPluralAttribute;
+import com.blazebit.persistence.view.metamodel.MethodSingularAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
 
@@ -67,7 +70,9 @@ public interface SingularChangeModel<E> extends ChangeModel<E> {
      * @param attribute The singular attribute
      * @param <X> The element type of the singular attribute
      * @return The change model for the attribute
+     * @deprecated Use {@link #get(MethodSingularAttribute)}
      */
+    @Deprecated
     public <X> SingularChangeModel<X> get(SingularAttribute<E, X> attribute);
 
     /**
@@ -77,7 +82,9 @@ public interface SingularChangeModel<E> extends ChangeModel<E> {
      * @param <C> The container type of the plural attribute
      * @param <V> The value type of the plural attribute
      * @return The change model for the attribute
+     * @deprecated Use {@link #get(MethodPluralAttribute)}
      */
+    @Deprecated
     public <V, C extends java.util.Collection<V>> PluralChangeModel<C, V> get(PluralAttribute<E, C, V> attribute);
 
     /**
@@ -87,8 +94,42 @@ public interface SingularChangeModel<E> extends ChangeModel<E> {
      * @param <K> The key type of the map attribute
      * @param <V> The value type of the map attribute
      * @return The change model for the attribute
+     * @deprecated Use {@link #get(MethodMapAttribute)}
      */
+    @Deprecated
     public <K, V> MapChangeModel<K, V> get(MapAttribute<E, K, V> attribute);
+
+    /**
+     * Returns the change model for the attribute.
+     *
+     * @param attribute The singular attribute
+     * @param <X> The element type of the singular attribute
+     * @return The change model for the attribute
+     * @since 1.5.0
+     */
+    public <X> SingularChangeModel<X> get(MethodSingularAttribute<E, X> attribute);
+
+    /**
+     * Returns the change model for the attribute.
+     *
+     * @param attribute The collection attribute
+     * @param <C> The container type of the plural attribute
+     * @param <V> The value type of the plural attribute
+     * @return The change model for the attribute
+     * @since 1.5.0
+     */
+    public <V, C extends java.util.Collection<V>> PluralChangeModel<C, V> get(MethodPluralAttribute<E, C, V> attribute);
+
+    /**
+     * Returns the change model for the attribute.
+     *
+     * @param attribute The map attribute
+     * @param <K> The key type of the map attribute
+     * @param <V> The value type of the map attribute
+     * @return The change model for the attribute
+     * @since 1.5.0
+     */
+    public <K, V> MapChangeModel<K, V> get(MethodMapAttribute<E, K, V> attribute);
 
     /**
      * Returns whether the change model for the attribute is dirty.

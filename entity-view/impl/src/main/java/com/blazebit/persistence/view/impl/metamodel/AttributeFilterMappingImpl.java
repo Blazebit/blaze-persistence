@@ -25,13 +25,13 @@ import com.blazebit.persistence.view.metamodel.MethodAttribute;
  * @author Christian Beikov
  * @since 1.0.0
  */
-public class AttributeFilterMappingImpl implements AttributeFilterMapping {
+public class AttributeFilterMappingImpl<X, FilterValue> implements AttributeFilterMapping<X, FilterValue> {
 
-    private final MethodAttribute<?, ?> declaringAttribute;
+    private final MethodAttribute<X, ?> declaringAttribute;
     private final String name;
-    private final Class<? extends AttributeFilterProvider> filterClass;
+    private final Class<? extends AttributeFilterProvider<FilterValue>> filterClass;
 
-    public AttributeFilterMappingImpl(MethodAttribute<?, ?> declaringAttribute, String name, Class<? extends AttributeFilterProvider> filterClass) {
+    public AttributeFilterMappingImpl(MethodAttribute<X, ?> declaringAttribute, String name, Class<? extends AttributeFilterProvider<FilterValue>> filterClass) {
         this.declaringAttribute = declaringAttribute;
         this.name = name;
         this.filterClass = filterClass;
@@ -42,7 +42,7 @@ public class AttributeFilterMappingImpl implements AttributeFilterMapping {
     }
 
     @Override
-    public MethodAttribute<?, ?> getDeclaringAttribute() {
+    public MethodAttribute<X, ?> getDeclaringAttribute() {
         return declaringAttribute;
     }
 
@@ -52,7 +52,7 @@ public class AttributeFilterMappingImpl implements AttributeFilterMapping {
     }
 
     @Override
-    public Class<? extends AttributeFilterProvider> getFilterClass() {
+    public Class<? extends AttributeFilterProvider<FilterValue>> getFilterClass() {
         return filterClass;
     }
 

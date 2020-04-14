@@ -15,6 +15,8 @@ The annotation processor supports the following annotation processor options:
 * `generateImplementations` whether to generate entity view implementations. If `false`, the `generateBuilders` option is meaningless. Default `true`
 * `generateBuilders` whether to generate entity view builders. Default `true`
 * `createEmptyFlatViews` whether to create empty flat views by default unless specified via `@EmptyFlatViewCreation`. Default is `true`
+* `generateDeepConstants` whether to create nested classes for subview attributes that allow deep static referencing into a model. Default is `true`
+* `optionalParameters` a semicolon separated list of names with optional types in the format `NAME=java.lang.String`, for globally registered optional parameters
 
 === Static metamodel
 

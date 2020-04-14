@@ -23,7 +23,7 @@ import com.blazebit.persistence.view.impl.metamodel.EmbeddableOwner;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 import com.blazebit.persistence.view.impl.metamodel.MethodAttributeMapping;
-import com.blazebit.persistence.view.metamodel.SetAttribute;
+import com.blazebit.persistence.view.metamodel.MethodSetAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 
 import java.util.Map;
@@ -34,7 +34,7 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public abstract class AbstractMethodSetAttribute<X, Y> extends AbstractMethodPluralAttribute<X, Set<Y>, Y> implements SetAttribute<X, Y> {
+public abstract class AbstractMethodSetAttribute<X, Y> extends AbstractMethodPluralAttribute<X, Set<Y>, Y> implements MethodSetAttribute<X, Y> {
 
     private final CollectionInstantiatorImplementor<?, ?> collectionInstantiator;
 

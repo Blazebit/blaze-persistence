@@ -33,6 +33,6 @@ public class AnnotationMetaSingularAttribute extends AnnotationMetaAttribute {
 
     @Override
     public final String getMetaType() {
-        return Constants.SINGULAR_ATTRIBUTE;
+        return Constants.METHOD_SINGULAR_ATTRIBUTE;
     }
 }

@@ -25,7 +25,7 @@ import com.blazebit.persistence.view.filter.LessOrEqualFilter;
  * @author Christian Beikov
  * @since 1.0.0
  */
-public class LessOrEqualFilterImpl extends LessOrEqualFilter implements ComparisonFilter {
+public class LessOrEqualFilterImpl<FilterValue> extends LessOrEqualFilter<FilterValue> implements ComparisonFilter {
 
     private final ComparisonFilterHelper helper;
 

@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.processor.annotation;
 
+import com.blazebit.persistence.view.processor.AttributeFilter;
 import com.blazebit.persistence.view.processor.Constants;
 import com.blazebit.persistence.view.processor.Context;
 import com.blazebit.persistence.view.processor.EntityViewTypeUtils;
@@ -25,6 +26,8 @@ import com.blazebit.persistence.view.processor.MappingKind;
 import com.blazebit.persistence.view.processor.MetaAttribute;
 import com.blazebit.persistence.view.processor.MetaEntityView;
 import com.blazebit.persistence.view.processor.MetamodelClassWriter;
+import com.blazebit.persistence.view.processor.OptionalParameterUtils;
+import com.blazebit.persistence.view.processor.RelationClassWriter;
 import com.blazebit.persistence.view.processor.TypeUtils;
 
 import javax.lang.model.element.AnnotationMirror;
@@ -40,7 +43,9 @@ import javax.tools.Diagnostic;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -62,6 +67,8 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
     private final String mapping;
     private final TypeElement subviewElement;
     private final EntityViewTypeUtils.SubviewInfo subviewInfo;
+    private final Map<String, AttributeFilter> filters;
+    private final Map<String, TypeElement> optionalParameters;
     private final boolean mutable;
     private final boolean updatable;
     private final boolean createEmptyFlatViews;
@@ -79,14 +86,6 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
         this.parent = parent;
         this.type = type;
         this.realType = realType;
-        this.subviewElement = getSubview(realType, context);
-        if (subviewElement != null) {
-            this.generatedTypePrefix = TypeUtils.getDerivedTypeName(context.getElementUtils().getTypeElement(type));
-            this.subviewInfo = EntityViewTypeUtils.getSubviewInfo(realType, context);
-        } else {
-            this.generatedTypePrefix = type;
-            this.subviewInfo = null;
-        }
 
         String mapping = null;
         MappingKind kind = null;
@@ -94,6 +93,8 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
         Boolean mutable = null;
         boolean self = false;
         boolean createEmptyFlatViews = context.isCreateEmptyFlatViews();
+        Map<String, AttributeFilter> filters;
+        Map<String, TypeElement> optionalParameters;
         if (version) {
             mapping = parent.getEntityVersionAttribute().getSimpleName().toString();
             if (parent.getEntityVersionAttribute().getKind() == ElementKind.METHOD) {
@@ -102,35 +103,73 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
             kind = MappingKind.MAPPING;
             updatable = false;
             mutable = false;
+            filters = Collections.emptyMap();
+            optionalParameters = Collections.emptyMap();
         } else {
-            for (AnnotationMirror mirror : TypeUtils.getAnnotationMirrors(element, Constants.ID_MAPPING, Constants.MAPPING, Constants.MAPPING_CORRELATED, Constants.MAPPING_CORRELATED_SIMPLE, Constants.MAPPING_PARAMETER, Constants.MAPPING_SUBQUERY, Constants.UPDATABLE_MAPPING, Constants.SELF, Constants.EMPTY_FLAT_VIEW_CREATION)) {
+            filters = new HashMap<>();
+            optionalParameters = new HashMap<>();
+            for (AnnotationMirror mirror : TypeUtils.getAnnotationMirrors(element, Constants.ID_MAPPING, Constants.MAPPING, Constants.MAPPING_CORRELATED, Constants.MAPPING_CORRELATED_SIMPLE, Constants.MAPPING_PARAMETER, Constants.MAPPING_SUBQUERY, Constants.UPDATABLE_MAPPING, Constants.SELF, Constants.EMPTY_FLAT_VIEW_CREATION, Constants.ATTRIBUTE_FILTER, Constants.ATTRIBUTE_FILTERS)) {
                 switch (mirror.getAnnotationType().toString()) {
                     case Constants.ID_MAPPING:
                         mapping = TypeUtils.getAnnotationValue(mirror, "value");
                         kind = MappingKind.MAPPING;
                         updatable = false;
                         mutable = false;
+                        OptionalParameterUtils.addOptionalParameters(optionalParameters, mapping, context);
                         break;
                     case Constants.MAPPING:
                         mapping = TypeUtils.getAnnotationValue(mirror, "value");
                         kind = MappingKind.MAPPING;
+                        OptionalParameterUtils.addOptionalParameters(optionalParameters, mapping, context);
                         break;
                     case Constants.MAPPING_CORRELATED:
                         kind = MappingKind.CORRELATED;
+                        for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : mirror.getElementValues().entrySet()) {
+                            //CHECKSTYLE:OFF: FallThrough
+                            switch (entry.getKey().getSimpleName().toString()) {
+                                case "correlationBasis":
+                                case "correlationResult":
+                                    OptionalParameterUtils.addOptionalParameters(optionalParameters, (String) entry.getValue().getValue(), context);
+                                    break;
+                                default:
+                                    break;
+                            }
+                            //CHECKSTYLE:ON: FallThrough
+                        }
                         break;
                     case Constants.MAPPING_CORRELATED_SIMPLE:
                         kind = MappingKind.CORRELATED;
+                        for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : mirror.getElementValues().entrySet()) {
+                            //CHECKSTYLE:OFF: FallThrough
+                            switch (entry.getKey().getSimpleName().toString()) {
+                                case "correlationBasis":
+                                case "correlationResult":
+                                case "correlationExpression":
+                                    OptionalParameterUtils.addOptionalParameters(optionalParameters, (String) entry.getValue().getValue(), context);
+                                    break;
+                                default:
+                                    break;
+                            }
+                            //CHECKSTYLE:ON: FallThrough
+                        }
                         break;
                     case Constants.MAPPING_PARAMETER:
                         mapping = TypeUtils.getAnnotationValue(mirror, "value");
                         kind = MappingKind.PARAMETER;
                         updatable = false;
                         mutable = false;
+                        TypeElement existingTypeElement = context.getOptionalParameters().get(mapping);
+                        if (existingTypeElement == null) {
+                            optionalParameters.put(mapping, context.getElementUtils().getTypeElement(type));
+                        } else {
+                            optionalParameters.put(mapping, existingTypeElement);
+                        }
                         break;
                     case Constants.MAPPING_SUBQUERY:
                         kind = MappingKind.SUBQUERY;
                         updatable = false;
                         mutable = false;
+                        OptionalParameterUtils.addOptionalParameters(optionalParameters, TypeUtils.getAnnotationValue(mirror, "expression"), context);
                         break;
                     case Constants.UPDATABLE_MAPPING:
                         updatable = true;
@@ -157,6 +196,14 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
                     case Constants.EMPTY_FLAT_VIEW_CREATION:
                         createEmptyFlatViews = TypeUtils.getAnnotationValue(mirror, "value");
                         break;
+                    case Constants.ATTRIBUTE_FILTER:
+                        addAttributeFilter(filters, mirror, context);
+                        break;
+                    case Constants.ATTRIBUTE_FILTERS:
+                        for (AnnotationMirror value : TypeUtils.<List<AnnotationMirror>>getAnnotationValue(mirror, "value")) {
+                            addAttributeFilter(filters, value, context);
+                        }
+                        break;
                     default:
                         break;
                 }
@@ -169,6 +216,20 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 
         this.mapping = mapping;
         this.kind = kind;
+        this.filters = filters;
+        this.optionalParameters = optionalParameters;
+        if (kind == MappingKind.PARAMETER || kind == MappingKind.SUBQUERY) {
+            this.subviewElement = null;
+        } else {
+            this.subviewElement = getSubview(type, context);
+        }
+        if (subviewElement != null) {
+            this.generatedTypePrefix = TypeUtils.getDerivedTypeName(context.getElementUtils().getTypeElement(type));
+            this.subviewInfo = EntityViewTypeUtils.getSubviewInfo(type, context);
+        } else {
+            this.generatedTypePrefix = type;
+            this.subviewInfo = null;
+        }
         if (subviewInfo != null && subviewInfo.getEntityViewIdElement() == null && subviewInfo.hasEmptyConstructor()) {
             this.createEmptyFlatViews = createEmptyFlatViews;
         } else {
@@ -283,6 +344,24 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
         this(parent, null, TypeUtils.getType(parent.getEntityVersionAttribute(), context), TypeUtils.getRealType(parent.getEntityVersionAttribute(), context), context, true);
     }
 
+    private static void addAttributeFilter(Map<String, AttributeFilter> filters, AnnotationMirror mirror, Context context) {
+        String name = "";
+        TypeMirror type = null;
+        for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : mirror.getElementValues().entrySet()) {
+            switch (entry.getKey().getSimpleName().toString()) {
+                case "name":
+                    name = (String) entry.getValue().getValue();
+                    break;
+                case "value":
+                    type = (TypeMirror) entry.getValue().getValue();
+                    break;
+                default:
+                    break;
+            }
+        }
+        filters.put(name, new AttributeFilter(name, (TypeElement) ((DeclaredType) type).asElement(), context));
+    }
+
     protected static TypeElement getSubview(String realType, Context context) {
         //CHECKSTYLE:OFF: FallThrough
         //CHECKSTYLE:OFF: MissingSwitchDefault
@@ -309,12 +388,19 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
     @Override
     public void appendDefaultValue(StringBuilder sb, boolean createEmpty, ImportContext importContext) {
         if (createEmpty && createEmptyFlatViews) {
+            if (!type.equals(realType)) {
+                sb.append("(").append(realType).append(") ");
+            }
             String attributeImplementationType = importContext.importType(getGeneratedTypePrefix() + ImplementationClassWriter.IMPL_CLASS_NAME_SUFFIX);
             sb.append("new ").append(attributeImplementationType).append("((")
                     .append(attributeImplementationType).append(") null, optionalParameters)");
         } else {
             sb.append(TypeUtils.getDefaultValue(typeMirror.getKind()));
         }
+    }
+
+    public Map<String, TypeElement> getOptionalParameters() {
+        return optionalParameters;
     }
 
     public boolean isIdMember() {
@@ -326,16 +412,31 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
     }
 
     @Override
-    public void appendMetamodelAttributeDeclarationString(StringBuilder sb) {
-        sb.append("    public static volatile ")
-                .append(parent.metamodelImportType(getMetaType()))
-                .append("<")
+    public void appendMetamodelAttributeType(StringBuilder sb, ImportContext importContext) {
+        sb.append(importContext.importType(getMetaType()))
+                .append('<')
                 .append(parent.importType(parent.getQualifiedName()))
                 .append(", ")
                 .append(parent.importType(getType()))
-                .append("> ")
+                .append('>');
+    }
+
+    @Override
+    public void appendMetamodelAttributeDeclarationString(StringBuilder sb) {
+        sb.append("    public static volatile ");
+        if (isSubview()) {
+            sb.append(parent.metamodelImportType(generatedTypePrefix + RelationClassWriter.RELATION_CLASS_NAME_SUFFIX))
+                .append('<')
+                .append(parent.importType(parent.getQualifiedName()))
+                .append(", ");
+        }
+        appendMetamodelAttributeType(sb, parent.getMetamodelImportContext());
+        if (isSubview()) {
+            sb.append('>');
+        }
+        sb.append(' ')
                 .append(getPropertyName())
-                .append(";");
+                .append(';');
     }
 
     @Override
@@ -437,7 +538,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
                             sb.append("()))");
                         }
                     } else {
-                        entityIdAttributes = EntityViewTypeUtils.getEntityIdAttributes(realType, context);
+                        entityIdAttributes = EntityViewTypeUtils.getEntityIdAttributes(type, context);
                         if (!entityIdAttributes.isEmpty()) {
                             for (Element entityIdAttribute : entityIdAttributes) {
                                 String idAttributeName;
@@ -475,7 +576,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
                 } else {
                     if (subviewElement != null) {
                         sb.append("        ").append(parent.implementationImportType(Constants.METHOD_ATTRIBUTE)).append("<?, ?> m = (").append(parent.implementationImportType(Constants.METHOD_ATTRIBUTE)).append("<?, ?>) ")
-                                .append(parent.implementationImportType(TypeUtils.getDerivedTypeName(parent.getTypeElement()) + MetamodelClassWriter.META_MODEL_CLASS_NAME_SUFFIX)).append(".").append(getPropertyName()).append(";").append(NEW_LINE);
+                                .append(parent.implementationImportType(TypeUtils.getDerivedTypeName(parent.getTypeElement()) + MetamodelClassWriter.META_MODEL_CLASS_NAME_SUFFIX)).append(".").append(getPropertyName()).append(".attr();").append(NEW_LINE);
                         needsMethodAttribute = false;
                         sb.append("        if (").append(getPropertyName()).append(" != null) {").append(NEW_LINE);
                         sb.append("            Class<?> c;").append(NEW_LINE);
@@ -515,7 +616,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
                     } else if (subviewElement != null) {
                         if (needsMethodAttribute) {
                             sb.append("        ").append(parent.implementationImportType(Constants.METHOD_ATTRIBUTE)).append("<?, ?> m = (").append(parent.implementationImportType(Constants.METHOD_ATTRIBUTE)).append("<?, ?>) ")
-                                    .append(parent.implementationImportType(TypeUtils.getDerivedTypeName(parent.getTypeElement()) + MetamodelClassWriter.META_MODEL_CLASS_NAME_SUFFIX)).append(".").append(getPropertyName()).append(";").append(NEW_LINE);
+                                    .append(parent.implementationImportType(TypeUtils.getDerivedTypeName(parent.getTypeElement()) + MetamodelClassWriter.META_MODEL_CLASS_NAME_SUFFIX)).append(".").append(getPropertyName()).append(".attr();").append(NEW_LINE);
                         }
                         if (kind != MappingKind.CORRELATED) {
                             sb.append("        if (!m.isPersistCascaded() && !m.isUpdateCascaded() && this.").append(getPropertyName()).append(" != ").append(getPropertyName()).append(" && this.").append(getPropertyName()).append(" instanceof ").append(parent.implementationImportType(Constants.MUTABLE_STATE_TRACKABLE)).append(") {").append(NEW_LINE);
@@ -566,7 +667,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 
             sb.append("    }");
 
-            if (!entityIdAttributes.isEmpty() && parent.addAccessorForType(realType)) {
+            if (!entityIdAttributes.isEmpty() && parent.addAccessorForType(type)) {
                 for (Element entityIdAttribute : entityIdAttributes) {
                     String idAttributeName;
                     if (entityIdAttribute.getKind() == ElementKind.METHOD) {
@@ -586,7 +687,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
                         sb.append("    private static final ").append(parent.implementationImportType(Method.class.getName())).append(" ").append(accessor).append(";").append(NEW_LINE);
                         sb.append("    static {").append(NEW_LINE);
                         sb.append("        try {").append(NEW_LINE);
-                        sb.append("            Method m = ").append(parent.implementationImportType(realType)).append(".class.getDeclaredMethod(\"").append(entityIdAttribute.getSimpleName()).append("\");").append(NEW_LINE);
+                        sb.append("            Method m = ").append(parent.implementationImportType(type)).append(".class.getDeclaredMethod(\"").append(entityIdAttribute.getSimpleName()).append("\");").append(NEW_LINE);
                         sb.append("            m.setAccessible(true);").append(NEW_LINE);
                         sb.append("            ").append(accessor).append(" = m;").append(NEW_LINE);
                         sb.append("        } catch (Exception ex) {").append(NEW_LINE);
@@ -597,7 +698,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
                         sb.append("    private static final ").append(parent.implementationImportType(Field.class.getName())).append(" ").append(accessor).append(";").append(NEW_LINE);
                         sb.append("    static {").append(NEW_LINE);
                         sb.append("        try {").append(NEW_LINE);
-                        sb.append("            Field f = ").append(parent.implementationImportType(realType)).append(".class.getDeclaredField(\"").append(entityIdAttribute.getSimpleName()).append("\");").append(NEW_LINE);
+                        sb.append("            Field f = ").append(parent.implementationImportType(type)).append(".class.getDeclaredField(\"").append(entityIdAttribute.getSimpleName()).append("\");").append(NEW_LINE);
                         sb.append("            f.setAccessible(true);").append(NEW_LINE);
                         sb.append("            ").append(accessor).append(" = f;").append(NEW_LINE);
                         sb.append("        } catch (Exception ex) {").append(NEW_LINE);
@@ -692,6 +793,11 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
     }
 
     @Override
+    public Collection<AttributeFilter> getFilters() {
+        return filters.values();
+    }
+
+    @Override
     public Element getElement() {
         return element;
     }
@@ -756,8 +862,8 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
     }
 
     @Override
-    public boolean isFlatSubview() {
-        return subviewElement != null && subviewInfo.getEntityViewIdElement() == null;
+    public boolean isSynthetic() {
+        return false;
     }
 
     @Override

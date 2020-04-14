@@ -25,7 +25,7 @@ import com.blazebit.persistence.view.filter.GreaterThanFilter;
  * @author Christian Beikov
  * @since 1.0.0
  */
-public class GreaterThanFilterImpl extends GreaterThanFilter implements ComparisonFilter {
+public class GreaterThanFilterImpl<FilterValue> extends GreaterThanFilter<FilterValue> implements ComparisonFilter {
 
     private final ComparisonFilterHelper helper;
 

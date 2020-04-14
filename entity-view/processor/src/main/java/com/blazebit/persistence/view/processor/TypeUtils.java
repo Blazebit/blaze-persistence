@@ -160,7 +160,7 @@ public final class TypeUtils {
         }
         StringBuilder sb = new StringBuilder();
         while (parent.getKind() != ElementKind.PACKAGE) {
-            sb.append(parent.getSimpleName().toString());
+            sb.insert(0, parent.getSimpleName().toString());
             parent = parent.getEnclosingElement();
         }
         sb.append(element.getSimpleName().toString());
@@ -173,12 +173,11 @@ public final class TypeUtils {
             return element.getQualifiedName().toString();
         }
         StringBuilder sb = new StringBuilder();
-        sb.append('.');
         while (parent.getKind() != ElementKind.PACKAGE) {
-            sb.append(parent.getSimpleName().toString());
+            sb.insert(0, parent.getSimpleName().toString());
             parent = parent.getEnclosingElement();
         }
-        sb.insert(0, parent.toString());
+        sb.insert(0, parent.toString() + ".");
         sb.append(element.getSimpleName().toString());
         return sb.toString();
     }

@@ -176,6 +176,7 @@ public class AttributeFilterTest extends AbstractEntityViewTest {
         EntityViewSetting<ViewFilterPrimitiveDocumentView, CriteriaBuilder<ViewFilterPrimitiveDocumentView>> setting = EntityViewSetting.create(ViewFilterPrimitiveDocumentView.class);
         setting.addViewFilter("viewFilter1");
         setting.addViewFilter("viewFilter2");
+        setting.withOptionalParameter("viewFilterParam", "Jack");
         List<ViewFilterPrimitiveDocumentView> results = evm.applySetting(setting, cbf.create(em, PrimitiveDocument.class)).getResultList();
         assertEquals(0, results.size());
     }

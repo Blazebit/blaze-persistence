@@ -410,7 +410,7 @@ The `ON` clause is used when using array joins to restrict the key of a join to 
 
 WARNING: Since the `ON` clause is only supported as of JPA 2.1, the usage with JPA 2.0 providers that have no equivalent vendor extension will fail.
 
-The `ON` clause can be constructed by setting a JPQL predicate expression with `setOnExpression()` or by using the <<predicate builder>, Predicate Builder API>>.
+The `ON` clause can be constructed by setting a JPQL predicate expression with `setOnExpression()` or by using the <<predicate-builder,predicate builder>, Predicate Builder API>>.
 
 [cols="a,a"]
 |===

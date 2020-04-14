@@ -20,8 +20,12 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.KeysetPage;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
-import com.blazebit.persistence.view.metamodel.Attribute;
+import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
+import com.blazebit.persistence.view.metamodel.AttributeFilterMappingPath;
+import com.blazebit.persistence.view.metamodel.AttributePath;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
+import com.blazebit.persistence.view.metamodel.MethodPluralAttribute;
+import com.blazebit.persistence.view.metamodel.MethodSingularAttribute;
 
 import java.util.*;
 
@@ -108,7 +112,7 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> implem
     }
 
     /**
-     * Like {@link EntityViewSetting#create(java.lang.Class, java.lang.String)} but with the <code>viewConstructorname</code> set to null.
+     * Like {@link EntityViewSetting#create(java.lang.Class, java.lang.String)} but with the <code>viewConstructorName</code> set to null.
      *
      * @param entityViewClass The entity view class that should be used for the object builder
      * @param <T>             The type of the entity view
@@ -132,7 +136,7 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> implem
     }
 
     /**
-     * Like {@link EntityViewSetting#create(java.lang.Class, int, int, java.lang.String)} but with the <code>viewConstructorname</code> set to null.
+     * Like {@link EntityViewSetting#create(java.lang.Class, int, int, java.lang.String)} but with the <code>viewConstructorName</code> set to null.
      *
      * @param entityViewClass The entity view class that should be used for the object builder
      * @param firstResult     The position of the first result to retrieve, numbered from 0
@@ -145,7 +149,7 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> implem
     }
     
     /**
-     * Like {@link EntityViewSetting#create(java.lang.Class, java.lang.Object, int, java.lang.String)} but with the <code>viewConstructorname</code> set to null.
+     * Like {@link EntityViewSetting#create(java.lang.Class, java.lang.Object, int, java.lang.String)} but with the <code>viewConstructorName</code> set to null.
      *
      * @param entityViewClass The entity view class that should be used for the object builder
      * @param entityId        The id of the entity which should be located on a page
@@ -326,6 +330,58 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> implem
     }
 
     /**
+     * Adds the given attribute sorter to the attribute sorters of this setting.
+     * Note that the attribute sorter order is retained.
+     *
+     * @param attribute     The attribute for the attribute sorter
+     * @param sorter        The sorter for the attribute sorter
+     * @since 1.5.0
+     */
+    public void addAttributeSorter(MethodAttribute<T, ?> attribute, Sorter sorter) {
+        this.attributeSorters.put(attribute.getName(), sorter);
+    }
+
+    /**
+     * Adds the given attribute sorter to the attribute sorters of this setting.
+     * Note that the attribute sorter order is retained.
+     *
+     * @param attribute     The attribute for the attribute sorter
+     * @param sorter        The sorter for the attribute sorter
+     * @return <code>this</code> for method chaining
+     * @since 1.5.0
+     */
+    public EntityViewSetting<T, Q> withAttributeSorter(MethodAttribute<T, ?> attribute, Sorter sorter) {
+        addAttributeSorter(attribute.getName(), sorter);
+        return this;
+    }
+
+    /**
+     * Adds the given attribute sorter to the attribute sorters of this setting.
+     * Note that the attribute sorter order is retained.
+     *
+     * @param attributePath The attribute path for the attribute sorter
+     * @param sorter        The sorter for the attribute sorter
+     * @since 1.5.0
+     */
+    public void addAttributeSorter(AttributePath<T, ?> attributePath, Sorter sorter) {
+        this.attributeSorters.put(attributePath.getPath(), sorter);
+    }
+
+    /**
+     * Adds the given attribute sorter to the attribute sorters of this setting.
+     * Note that the attribute sorter order is retained.
+     *
+     * @param attributePath The attribute path for the attribute sorter
+     * @param sorter        The sorter for the attribute sorter
+     * @return <code>this</code> for method chaining
+     * @since 1.5.0
+     */
+    public EntityViewSetting<T, Q> withAttributeSorter(AttributePath<T, ?> attributePath, Sorter sorter) {
+        addAttributeSorter(attributePath.getPath(), sorter);
+        return this;
+    }
+
+    /**
      * Returns true if sorters have been added, otherwise false.
      *
      * @return true if sorters have been added, otherwise false
@@ -406,6 +462,65 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> implem
      */
     public EntityViewSetting<T, Q> withAttributeFilter(String attributeName, String filterName, Object filterValue) {
         addAttributeFilter(attributeName, filterName, filterValue);
+        return this;
+    }
+
+    /**
+     * Adds the attribute's default attribute filter to the attribute filters of this setting
+     * or overwrites the filter value of an existing default attribute filter.
+     *
+     * @param attributeFilter The attribute filter
+     * @param filterValue     The filter value for the attribute filter
+     * @param <FilterValue>   The filter value type
+     * @since 1.5.0
+     */
+    public <FilterValue> void addAttributeFilter(AttributeFilterMapping<T, FilterValue> attributeFilter, FilterValue filterValue) {
+        checkExistingFiltersForAttribute(attributeFilter.getDeclaringAttribute().getName(), attributeFilter.getName());
+        this.attributeFilters.put(attributeFilter.getDeclaringAttribute().getName(), new AttributeFilterActivation(attributeFilter.getName(), filterValue));
+    }
+
+    /**
+     * Adds the attribute's default attribute filter to the attribute filters of this setting
+     * or overwrites the filter value of an existing default attribute filter.
+     *
+     * @param attributeFilter The attribute filter
+     * @param filterValue     The filter value for the attribute filter
+     * @param <FilterValue>   The filter value type
+     * @return <code>this</code> for method chaining
+     * @since 1.5.0
+     */
+    public <FilterValue> EntityViewSetting<T, Q> withAttributeFilter(AttributeFilterMapping<T, FilterValue> attributeFilter, FilterValue filterValue) {
+        addAttributeFilter(attributeFilter, filterValue);
+        return this;
+    }
+
+    /**
+     * Adds the attribute's default attribute filter to the attribute filters of this setting
+     * or overwrites the filter value of an existing default attribute filter.
+     *
+     * @param attributeFilter The attribute filter mapping path
+     * @param filterValue     The filter value for the attribute filter
+     * @param <FilterValue>   The filter value type
+     * @since 1.5.0
+     */
+    public <FilterValue> void addAttributeFilter(AttributeFilterMappingPath<T, FilterValue> attributeFilter, FilterValue filterValue) {
+        String path = attributeFilter.getAttributePath().getPath();
+        checkExistingFiltersForAttribute(path, attributeFilter.getFilterName());
+        this.attributeFilters.put(path, new AttributeFilterActivation(attributeFilter.getFilterName(), filterValue));
+    }
+
+    /**
+     * Adds the attribute's default attribute filter to the attribute filters of this setting
+     * or overwrites the filter value of an existing default attribute filter.
+     *
+     * @param attributeFilter The attribute filter mapping path
+     * @param filterValue     The filter value for the attribute filter
+     * @param <FilterValue>   The filter value type
+     * @return <code>this</code> for method chaining
+     * @since 1.5.0
+     */
+    public <FilterValue> EntityViewSetting<T, Q> withAttributeFilter(AttributeFilterMappingPath<T, FilterValue> attributeFilter, FilterValue filterValue) {
+        addAttributeFilter(attributeFilter, filterValue);
         return this;
     }
 
@@ -555,7 +670,7 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> implem
     /**
      * Get the properties and hints and associated values that are in effect
      * for the entity view setting.
-     * @return map of properties and hints in effect for entity view stting
+     * @return map of properties and hints in effect for entity view setting
      * @since 1.2.0
      */
     public Map<String, Object> getProperties() {
@@ -569,8 +684,13 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> implem
     }
 
     @Override
-    public <X> SubGraph<X> fetch(Attribute<T, X> attribute) {
-        return fetch(((MethodAttribute<?, ?>) attribute).getName());
+    public <X> SubGraph<X> fetch(MethodSingularAttribute<T, X> attribute) {
+        return fetch(attribute.getName());
+    }
+
+    @Override
+    public <X> SubGraph<X> fetch(MethodPluralAttribute<T, ?, X> attribute) {
+        return fetch(attribute.getName());
     }
 
     /**
@@ -632,8 +752,13 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> implem
         }
 
         @Override
-        public <Y> SubGraph<Y> fetch(Attribute<X, Y> attribute) {
-            return fetch(((MethodAttribute<?, ?>) attribute).getName());
+        public <Y> SubGraph<Y> fetch(MethodSingularAttribute<X, Y> attribute) {
+            return fetch(attribute.getName());
+        }
+
+        @Override
+        public <Y> SubGraph<Y> fetch(MethodPluralAttribute<X, ?, Y> attribute) {
+            return fetch(attribute.getName());
         }
     }
 }

@@ -1,8 +1,11 @@
 package com.blazebit.persistence.view.processor.model;
 
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.PaginatedCriteriaBuilder;
+import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.StaticMetamodel;
-import com.blazebit.persistence.view.metamodel.ListAttribute;
-import com.blazebit.persistence.view.metamodel.SingularAttribute;
+import com.blazebit.persistence.view.metamodel.MethodListAttribute;
+import com.blazebit.persistence.view.metamodel.MethodSingularAttribute;
 
 import java.io.Serializable;
 import javax.annotation.Generated;
@@ -11,16 +14,24 @@ import javax.annotation.Generated;
 @StaticMetamodel(AView.class)
 public abstract class AView_ {
 
-    public static volatile SingularAttribute<AView, Integer> age;
-    public static volatile SingularAttribute<AView, Integer> id;
-    public static volatile SingularAttribute<AView, String> name;
-    public static volatile ListAttribute<AView, String> names;
-    public static volatile ListAttribute<AView, Serializable> test;
+    public static volatile MethodSingularAttribute<AView, Integer> age;
+    public static volatile MethodSingularAttribute<AView, Integer> id;
+    public static volatile MethodSingularAttribute<AView, String> name;
+    public static volatile MethodListAttribute<AView, String> names;
+    public static volatile MethodListAttribute<AView, Serializable> test;
 
     public static final String AGE = "age";
     public static final String ID = "id";
     public static final String NAME = "name";
     public static final String NAMES = "names";
     public static final String TEST = "test";
+
+    public static EntityViewSetting<AView, CriteriaBuilder<AView>> createSettingInit() {
+        return EntityViewSetting.create(AView.class, "init");
+    }
+
+    public static EntityViewSetting<AView, PaginatedCriteriaBuilder<AView>> createPaginatedSettingInit(int firstResult, int maxResults) {
+        return EntityViewSetting.create(AView.class, firstResult, maxResults, "init");
+    }
 
 }

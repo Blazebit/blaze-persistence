@@ -51,7 +51,7 @@ public interface ViewFilterPrimitiveDocumentView {
 
         @Override
         public <T extends WhereBuilder<T>> T apply(T whereBuilder) {
-            return whereBuilder.where("owner.name").eqExpression("'Jack'");
+            return whereBuilder.where("owner.name").eqExpression(":viewFilterParam");
         }
     }
 }

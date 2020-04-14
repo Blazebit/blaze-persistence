@@ -89,7 +89,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
             TypeMirror elementTypeMirror = typeArguments.get(typeArguments.size() - 1);
             String elementType = TypeUtils.extractClosestRealTypeAsString(elementTypeMirror, context);
             String realElementType = TypeUtils.toTypeString(entityDeclaredType, elementTypeMirror, context);
-            if (collection.equals(Constants.MAP_ATTRIBUTE)) {
+            if (collection.equals(Constants.METHOD_MAP_ATTRIBUTE)) {
                 TypeMirror keyTypeMirror = typeArguments.get(0);
                 String keyType = TypeUtils.extractClosestRealTypeAsString(keyTypeMirror, context);
                 String realKeyType = TypeUtils.toTypeString(entityDeclaredType, keyTypeMirror, context);

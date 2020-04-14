@@ -172,12 +172,12 @@ public interface MethodAttribute<X, Y> extends Attribute<X, Y> {
      * @param filterName The name of the attribute filter mapping which should be returned
      * @return The attribute filter mapping of this attribute with the given name
      */
-    public AttributeFilterMapping getFilter(String filterName);
+    public AttributeFilterMapping<X, ?> getFilter(String filterName);
     
     /**
      * Returns the attribute filter mappings of this attribute.
      * 
      * @return The attribute filter mappings of this attribute
      */
-    public Set<AttributeFilterMapping> getFilters();
+    public Set<AttributeFilterMapping<X, ?>> getFilters();
 }
