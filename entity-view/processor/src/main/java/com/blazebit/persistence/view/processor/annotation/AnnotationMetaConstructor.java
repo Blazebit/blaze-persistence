@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.processor.annotation;
 
 import com.blazebit.persistence.view.processor.Constants;
+import com.blazebit.persistence.view.processor.Context;
 import com.blazebit.persistence.view.processor.MetaAttribute;
 import com.blazebit.persistence.view.processor.MetaConstructor;
 import com.blazebit.persistence.view.processor.MetaEntityView;
@@ -32,6 +33,7 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -47,6 +49,7 @@ public class AnnotationMetaConstructor implements MetaConstructor {
     private final boolean hasSelfParameter;
     private final String name;
     private final List<MetaAttribute> parameters;
+    private final Map<String, TypeElement> optionalParameters;
 
     public AnnotationMetaConstructor(AnnotationMetaEntityView parent) {
         this.parent = parent;
@@ -55,6 +58,7 @@ public class AnnotationMetaConstructor implements MetaConstructor {
         this.parameters = Collections.emptyList();
         this.hasSelfParameter = false;
         boolean isReal = false;
+        Map<String, TypeElement> optionalParameters = new HashMap<>();
         TypeMirror superclassMirror = parent.getTypeElement().getSuperclass();
         while (superclassMirror.getKind() != TypeKind.NONE) {
             TypeElement superclass = (TypeElement) ((DeclaredType) superclassMirror).asElement();
@@ -74,9 +78,10 @@ public class AnnotationMetaConstructor implements MetaConstructor {
             superclassMirror = superclass.getSuperclass();
         }
         this.isReal = isReal;
+        this.optionalParameters = optionalParameters;
     }
 
-    public AnnotationMetaConstructor(AnnotationMetaEntityView parent, ExecutableElement element, MetaAttributeGenerationVisitor visitor) {
+    public AnnotationMetaConstructor(AnnotationMetaEntityView parent, ExecutableElement element, MetaAttributeGenerationVisitor visitor, Context context) {
         this.parent = parent;
         this.element = element;
         this.isReal = true;
@@ -96,15 +101,24 @@ public class AnnotationMetaConstructor implements MetaConstructor {
         List<MetaAttribute> parameters = new ArrayList<>(element.getParameters().size());
         List<? extends VariableElement> elementParameters = element.getParameters();
         boolean hasSelfParameter = false;
+        Map<String, TypeElement> optionalParameters = new HashMap<>();
         for (int i = 0; i < elementParameters.size(); i++) {
             VariableElement parameter = elementParameters.get(i);
             AnnotationMetaAttribute result = parameter.asType().accept(visitor, parameter);
             result.setAttributeIndex(i);
             parameters.add(result);
+            for (Map.Entry<String, TypeElement> entry : result.getOptionalParameters().entrySet()) {
+                TypeElement typeElement = entry.getValue();
+                TypeElement existingTypeElement = optionalParameters.get(entry.getKey());
+                if (existingTypeElement == null || context.getTypeUtils().isAssignable(typeElement.asType(), existingTypeElement.asType())) {
+                    optionalParameters.put(entry.getKey(), entry.getValue());
+                }
+            }
             hasSelfParameter = hasSelfParameter || result.isSelf();
         }
         this.parameters = parameters;
         this.hasSelfParameter = hasSelfParameter;
+        this.optionalParameters = optionalParameters;
     }
 
     @Override
@@ -130,5 +144,10 @@ public class AnnotationMetaConstructor implements MetaConstructor {
     @Override
     public List<MetaAttribute> getParameters() {
         return parameters;
+    }
+
+    @Override
+    public Map<String, TypeElement> getOptionalParameters() {
+        return optionalParameters;
     }
 }

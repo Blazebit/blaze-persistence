@@ -83,7 +83,7 @@ public final class ImplementationClassWriter {
             sb.append(NEW_LINE);
         }
 
-        sb.append("@").append(entity.implementationImportType(Constants.STATIC_IMPLEMENTATION)).append("(").append(entity.metamodelImportType(entity.getQualifiedName())).append(".class)");
+        sb.append("@").append(entity.implementationImportType(Constants.STATIC_IMPLEMENTATION)).append("(").append(entity.implementationImportType(entity.getQualifiedName())).append(".class)");
         sb.append(NEW_LINE);
         printClassDeclaration(sb, entity, context);
 

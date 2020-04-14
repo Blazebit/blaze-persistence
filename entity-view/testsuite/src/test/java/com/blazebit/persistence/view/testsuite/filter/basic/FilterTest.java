@@ -44,48 +44,48 @@ public class FilterTest {
 
     @Test
     public void testContains() {
-        AttributeFilterProvider filter = new ContainsFilterImpl(value);
+        AttributeFilterProvider<?> filter = new ContainsFilterImpl<>(value);
         Mockito.verify(verifyLikeFilter(filter, expression).like()).value("%" + value + "%");
     }
 
     @Test
     public void testContainsIgnoreCase() {
-        AttributeFilterProvider filter = new ContainsIgnoreCaseFilterImpl(value);
+        AttributeFilterProvider<?> filter = new ContainsIgnoreCaseFilterImpl<>(value);
         Mockito.verify(verifyLikeFilter(filter, expression).like(false)).value("%" + value + "%");
     }
 
     @Test
     public void testEndsWith() {
-        AttributeFilterProvider filter = new EndsWithFilterImpl(value);
+        AttributeFilterProvider<?> filter = new EndsWithFilterImpl<>(value);
         Mockito.verify(verifyLikeFilter(filter, expression).like()).value("%" + value);
     }
 
     @Test
     public void testEndsWithIgnoreCase() {
-        AttributeFilterProvider filter = new EndsWithIgnoreCaseFilterImpl(value);
+        AttributeFilterProvider<?> filter = new EndsWithIgnoreCaseFilterImpl<>(value);
         Mockito.verify(verifyLikeFilter(filter, expression).like(false)).value("%" + value);
     }
 
     @Test
     public void testStartsWith() {
-        AttributeFilterProvider filter = new StartsWithFilterImpl(value);
+        AttributeFilterProvider<?> filter = new StartsWithFilterImpl<>(value);
         Mockito.verify(verifyLikeFilter(filter, expression).like()).value(value + "%");
     }
 
     @Test
     public void testStartsWithIgnoreCase() {
-        AttributeFilterProvider filter = new StartsWithIgnoreCaseFilterImpl(value);
+        AttributeFilterProvider<?> filter = new StartsWithIgnoreCaseFilterImpl<>(value);
         Mockito.verify(verifyLikeFilter(filter, expression).like(false)).value(value + "%");
     }
 
     @Test
     public void testExact() {
-        AttributeFilterProvider filter = new EqualFilterImpl(String.class, value);
+        AttributeFilterProvider<?> filter = new EqualFilterImpl<>(String.class, value);
         verifyFilter(filter, expression).eq(value);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public RestrictionBuilder<?> verifyFilter(AttributeFilterProvider filter, String expression) {
+    public RestrictionBuilder<?> verifyFilter(AttributeFilterProvider<?> filter, String expression) {
         WhereBuilder whereBuilder = Mockito.mock(WhereBuilder.class);
         RestrictionBuilder<?> rb = Mockito.mock(RestrictionBuilder.class);
         Mockito.when(whereBuilder.where(expression)).thenReturn(rb);
@@ -94,7 +94,7 @@ public class FilterTest {
     }
     
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public RestrictionBuilder<?> verifyLikeFilter(AttributeFilterProvider filter, String expression) {
+    public RestrictionBuilder<?> verifyLikeFilter(AttributeFilterProvider<?> filter, String expression) {
         WhereBuilder whereBuilder = Mockito.mock(WhereBuilder.class);
         RestrictionBuilder rb = Mockito.mock(RestrictionBuilder.class, Mockito.RETURNS_DEEP_STUBS);
         EscapeBuilder eb = Mockito.mock(EscapeBuilder.class);

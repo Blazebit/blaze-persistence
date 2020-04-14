@@ -18,7 +18,7 @@ These functions have a deeper integration with the query building process and do
 
 ==== SIZE function
 
-The `SIZE` function, which was already briefly explained in the <<Collection functions>> section, returns the number of elements of a mapped collection.
+The `SIZE` function, which was already briefly explained in the <<collection-functions,Collection functions>> section, returns the number of elements of a mapped collection.
 This function is defined by JPQL and {projectname} chose to improve the performance by applying custom query transformations when encountering it.
 Normally, a JPA provider will not care to optimize the `SIZE` function for you and will simply generate a correlated subquery for any uses.
 

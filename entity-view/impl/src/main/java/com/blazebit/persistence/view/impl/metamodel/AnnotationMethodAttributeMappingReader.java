@@ -89,12 +89,12 @@ public class AnnotationMethodAttributeMappingReader extends AbstractAnnotationAt
             viewMapping.setIdAttributeMapping(attributeMapping);
         }
 
-        Map<String, Class<? extends AttributeFilterProvider>> attributeFilterProviders = new HashMap<>();
+        Map<String, Class<? extends AttributeFilterProvider<?>>> attributeFilterProviders = new HashMap<>();
         AttributeFilter filterMapping = AnnotationUtils.findAnnotation(method, AttributeFilter.class);
         AttributeFilters filtersMapping = AnnotationUtils.findAnnotation(method, AttributeFilters.class);
 
         if (filterMapping != null) {
-            attributeFilterProviders.put(filterMapping.name(), filterMapping.value());
+            attributeFilterProviders.put(filterMapping.name(), (Class<? extends AttributeFilterProvider<?>>) filterMapping.value());
         }
         if (filtersMapping != null) {
             for (AttributeFilter f : filtersMapping.value()) {
@@ -102,7 +102,7 @@ public class AnnotationMethodAttributeMappingReader extends AbstractAnnotationAt
                 if (attributeFilterProviders.containsKey(filterName)) {
                     context.addError("Illegal duplicate filter name mapping '" + filterName + "' at " + attributeMapping.getErrorLocation());
                 }
-                attributeFilterProviders.put(filterName, f.value());
+                attributeFilterProviders.put(filterName, (Class<? extends AttributeFilterProvider<?>>) f.value());
             }
         }
         attributeMapping.setAttributeFilterProviders(attributeFilterProviders);

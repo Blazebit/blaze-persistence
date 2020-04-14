@@ -16,7 +16,9 @@
 
 package com.blazebit.persistence.view.processor;
 
+import javax.lang.model.element.TypeElement;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Christian Beikov
@@ -33,4 +35,6 @@ public interface MetaConstructor {
     boolean hasSelfParameter();
 
     List<MetaAttribute> getParameters();
+
+    Map<String, TypeElement> getOptionalParameters();
 }

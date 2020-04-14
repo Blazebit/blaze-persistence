@@ -30,6 +30,6 @@ import com.blazebit.persistence.view.AttributeFilterProvider;
  * @author Christian Beikov
  * @since 1.0.0
  */
-public abstract class NullFilter extends AttributeFilterProvider {
+public abstract class NullFilter extends AttributeFilterProvider<Object> {
 
 }

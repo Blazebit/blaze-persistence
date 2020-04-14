@@ -267,7 +267,7 @@ public final class EntityViewSettingHelper {
             Class<?> expectedType;
 
             MethodAttribute<?, ?> attribute = entry.getValue();
-            AttributeFilterMapping filterMapping = attribute.getFilter(filterActivation.getAttributeFilterName());
+            AttributeFilterMapping<?, ?> filterMapping = attribute.getFilter(filterActivation.getAttributeFilterName());
 
             if (filterMapping == null) {
                 throw new IllegalArgumentException("Could not find attribute filter mapping with filter name '" + filterActivation.getAttributeFilterName()
@@ -291,7 +291,7 @@ public final class EntityViewSettingHelper {
                         .getName() + "'");
             }
 
-            AttributeFilterProvider filter = evm.createAttributeFilter(filterClass, expectedType, filterActivation.getFilterValue());
+            AttributeFilterProvider<?> filter = evm.createAttributeFilter(filterClass, expectedType, filterActivation.getFilterValue());
             if (sb == null) {
                 sb = new StringBuilder(name.length() + attributeName.length() + 1);
             } else {

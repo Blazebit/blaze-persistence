@@ -23,6 +23,9 @@ import com.blazebit.persistence.view.change.SingularChangeModel;
 import com.blazebit.persistence.view.impl.metamodel.BasicTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
+import com.blazebit.persistence.view.metamodel.MethodMapAttribute;
+import com.blazebit.persistence.view.metamodel.MethodPluralAttribute;
+import com.blazebit.persistence.view.metamodel.MethodSingularAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
 
@@ -76,6 +79,21 @@ public class ImmutableMapChangeModel<K, V> extends AbstractImmutablePluralChange
 
     @Override
     public <K1, V1> List<MapChangeModel<K1, V1>> keyGet(MapAttribute<K, K1, V1> attribute) {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public <X> List<SingularChangeModel<X>> keyGet(MethodSingularAttribute<K, X> attribute) {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public <E, C extends Collection<E>> List<PluralChangeModel<C, E>> keyGet(MethodPluralAttribute<K, C, E> attribute) {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public <K1, V1> List<MapChangeModel<K1, V1>> keyGet(MethodMapAttribute<K, K1, V1> attribute) {
         return Collections.emptyList();
     }
 

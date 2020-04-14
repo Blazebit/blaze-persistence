@@ -360,7 +360,7 @@ FROM Cat cat
 ----
 
 
-The functions `SIZE` and `INDEX` also return numeric values but are described in <<Collection functions>>
+The functions `SIZE` and `INDEX` also return numeric values but are described in <<collection-functions,Collection functions>>
 
 ==== Date & Time functions
 
@@ -472,12 +472,12 @@ GROUP BY cat.id
 
 NOTE: The implementation for `SIZE` is highly optimized and tries to avoid subqueries to improve performance. It *does not* delegate to the `SIZE` implementation of the JPA provider.
 
-For more information go to the <<SIZE function>> chapter.
+For more information go to the <<size-function,SIZE function>> chapter.
 
 ==== Aggregate functions
 
 {projectname} supports all aggregates as defined by JPQL and some non-standard aggregates. On top of that, it also has support for defining custom aggregate functions.
-For further information on custom aggregates take a look at the <<Custom JPQL functions>> chapter.
+For further information on custom aggregates take a look at the <<custom-jpql-function,Custom JPQL functions>> chapter.
 
 `COUNT ( DISTINCT? arg )`::
 Returns the number of elements that are not null as `Long`.
@@ -728,7 +728,7 @@ FROM Cat cat
 
 === Predicate expressions
 
-{projectname} supports constructing predicates via a builder API as has been shown in the <<Predicate Builder>> chapter,
+{projectname} supports constructing predicates via a builder API as has been shown in the <<predicate-builder,Predicate Builder>> chapter,
 but sometimes it is necessary to define predicates as strings.
 It is necessary for `CASE WHEN` expressions or when wanting to replace a whole predicate via e.g. `setWhereExpression(String)`.
 

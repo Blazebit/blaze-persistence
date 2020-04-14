@@ -17,6 +17,9 @@
 package com.blazebit.persistence.view.change;
 
 import com.blazebit.persistence.view.metamodel.MapAttribute;
+import com.blazebit.persistence.view.metamodel.MethodMapAttribute;
+import com.blazebit.persistence.view.metamodel.MethodPluralAttribute;
+import com.blazebit.persistence.view.metamodel.MethodSingularAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
 
@@ -106,7 +109,9 @@ public interface MapChangeModel<K, V> extends PluralChangeModel<Map<K, V>, V> {
      * @param attribute The singular attribute
      * @param <X> The element type of the singular attribute
      * @return The change model for the attribute
+     * @deprecated Use {@link #keyGet(MethodSingularAttribute)}
      */
+    @Deprecated
     public <X> List<SingularChangeModel<X>> keyGet(SingularAttribute<K, X> attribute);
 
     /**
@@ -116,7 +121,9 @@ public interface MapChangeModel<K, V> extends PluralChangeModel<Map<K, V>, V> {
      * @param <C> The container type of the plural attribute
      * @param <E> The value type of the plural attribute
      * @return The change model for the attribute
+     * @deprecated Use {@link #keyGet(MethodPluralAttribute)}
      */
+    @Deprecated
     public <E, C extends java.util.Collection<E>> List<PluralChangeModel<C, E>> keyGet(PluralAttribute<K, C, E> attribute);
 
     /**
@@ -126,8 +133,42 @@ public interface MapChangeModel<K, V> extends PluralChangeModel<Map<K, V>, V> {
      * @param <K1> The key type of the map attribute
      * @param <V1> The value type of the map attribute
      * @return The change model for the attribute
+     * @deprecated Use {@link #keyGet(MethodMapAttribute)}
      */
+    @Deprecated
     public <K1, V1> List<MapChangeModel<K1, V1>> keyGet(MapAttribute<K, K1, V1> attribute);
+
+    /**
+     * Returns the change models for the keys attribute.
+     *
+     * @param attribute The singular attribute
+     * @param <X> The element type of the singular attribute
+     * @return The change model for the attribute
+     * @since 1.5.0
+     */
+    public <X> List<SingularChangeModel<X>> keyGet(MethodSingularAttribute<K, X> attribute);
+
+    /**
+     * Returns the change models for the keys attribute.
+     *
+     * @param attribute The collection attribute
+     * @param <C> The container type of the plural attribute
+     * @param <E> The value type of the plural attribute
+     * @return The change model for the attribute
+     * @since 1.5.0
+     */
+    public <E, C extends java.util.Collection<E>> List<PluralChangeModel<C, E>> keyGet(MethodPluralAttribute<K, C, E> attribute);
+
+    /**
+     * Returns the change models for the keys attribute.
+     *
+     * @param attribute The map attribute
+     * @param <K1> The key type of the map attribute
+     * @param <V1> The value type of the map attribute
+     * @return The change model for the attribute
+     * @since 1.5.0
+     */
+    public <K1, V1> List<MapChangeModel<K1, V1>> keyGet(MethodMapAttribute<K, K1, V1> attribute);
 
     /**
      * Returns whether the change model for the keys attribute is dirty.

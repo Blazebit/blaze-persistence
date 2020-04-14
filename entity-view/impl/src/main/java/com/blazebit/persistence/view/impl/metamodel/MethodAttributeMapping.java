@@ -70,7 +70,7 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
     private final String attributeName;
     private final Method method;
 
-    private Map<String, Class<? extends AttributeFilterProvider>> attributeFilterProviders;
+    private Map<String, Class<? extends AttributeFilterProvider<?>>> attributeFilterProviders;
 
     // Updatable configs
     private Boolean isUpdatable;
@@ -186,12 +186,12 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
     }
 
     @Override
-    public Map<String, Class<? extends AttributeFilterProvider>> getAttributeFilterProviders() {
+    public Map<String, Class<? extends AttributeFilterProvider<?>>> getAttributeFilterProviders() {
         return attributeFilterProviders;
     }
 
     @Override
-    public void setAttributeFilterProviders(Map<String, Class<? extends AttributeFilterProvider>> attributeFilterProviders) {
+    public void setAttributeFilterProviders(Map<String, Class<? extends AttributeFilterProvider<?>>> attributeFilterProviders) {
         this.attributeFilterProviders = attributeFilterProviders;
     }
 

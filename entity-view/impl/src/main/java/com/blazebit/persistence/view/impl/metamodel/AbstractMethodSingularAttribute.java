@@ -24,7 +24,7 @@ import com.blazebit.persistence.view.metamodel.BasicType;
 import com.blazebit.persistence.view.metamodel.FlatViewType;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
-import com.blazebit.persistence.view.metamodel.SingularAttribute;
+import com.blazebit.persistence.view.metamodel.MethodSingularAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.spi.type.VersionBasicUserType;
 import com.blazebit.reflection.ReflectionUtils;
@@ -42,7 +42,7 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.0.0
  */
-public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMethodAttribute<X, Y> implements SingularAttribute<X, Y> {
+public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMethodAttribute<X, Y> implements MethodSingularAttribute<X, Y> {
 
     private final Type<Y> type;
     private final int dirtyStateIndex;

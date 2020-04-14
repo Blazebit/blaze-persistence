@@ -34,6 +34,7 @@ public final class Constants {
     public static final String DIRTY_TRACKER = "com.blazebit.persistence.view.spi.type.DirtyTracker";
     public static final String DIRTY_STATE_TRACKABLE = "com.blazebit.persistence.view.spi.type.DirtyStateTrackable";
     public static final String STATIC_METAMODEL = "com.blazebit.persistence.view.StaticMetamodel";
+    public static final String STATIC_RELATION = "com.blazebit.persistence.view.StaticRelation";
     public static final String STATIC_IMPLEMENTATION = "com.blazebit.persistence.view.StaticImplementation";
     public static final String STATIC_BUILDER = "com.blazebit.persistence.view.StaticBuilder";
     public static final String ENTITY_VIEW_BUILDER_BASE = "com.blazebit.persistence.view.EntityViewBuilderBase";
@@ -45,6 +46,7 @@ public final class Constants {
     public static final String ENTITY_VIEW_BUILDER_LIST_LISTENER = "com.blazebit.persistence.view.ListEntityViewBuilderListener";
     public static final String ENTITY_VIEW_BUILDER_MAP_LISTENER = "com.blazebit.persistence.view.MapEntityViewBuilderListener";
     public static final String ENTITY_VIEW_BUILDER_MAP_KEY_LISTENER = "com.blazebit.persistence.view.MapKeyEntityViewBuilderListener";
+    public static final String ENTITY_VIEW_SETTING = "com.blazebit.persistence.view.EntityViewSetting";
 
     public static final String ENTITY_VIEW = "com.blazebit.persistence.view.EntityView";
     public static final String UPDATABLE_ENTITY_VIEW = "com.blazebit.persistence.view.UpdatableEntityView";
@@ -62,8 +64,17 @@ public final class Constants {
     public static final String MAPPING_SINGULAR = "com.blazebit.persistence.view.MappingSingular";
     public static final String UPDATABLE_MAPPING = "com.blazebit.persistence.view.UpdatableMapping";
     public static final String EMPTY_FLAT_VIEW_CREATION = "com.blazebit.persistence.view.EmptyFlatViewCreation";
+    public static final String VIEW_FILTER = "com.blazebit.persistence.view.ViewFilter";
+    public static final String VIEW_FILTERS = "com.blazebit.persistence.view.ViewFilters";
+    public static final String ATTRIBUTE_FILTER = "com.blazebit.persistence.view.AttributeFilter";
+    public static final String ATTRIBUTE_FILTERS = "com.blazebit.persistence.view.AttributeFilters";
 
     public static final String VIEW_CONSTRUCTOR = "com.blazebit.persistence.view.ViewConstructor";
+
+    public static final String ATTRIBUTE_PATH = "com.blazebit.persistence.view.metamodel.AttributePath";
+    public static final String ATTRIBUTE_PATH_WRAPPER = "com.blazebit.persistence.view.metamodel.AttributePathWrapper";
+    public static final String ATTRIBUTE_FILTER_MAPPING = "com.blazebit.persistence.view.metamodel.AttributeFilterMapping";
+    public static final String ATTRIBUTE_FILTER_MAPPING_PATH = "com.blazebit.persistence.view.metamodel.AttributeFilterMappingPath";
 
     public static final String ATTRIBUTE = "com.blazebit.persistence.view.metamodel.Attribute";
     public static final String METHOD_ATTRIBUTE = "com.blazebit.persistence.view.metamodel.MethodAttribute";
@@ -74,11 +85,19 @@ public final class Constants {
     public static final String SET_ATTRIBUTE = "com.blazebit.persistence.view.metamodel.SetAttribute";
     public static final String COLLECTION_ATTRIBUTE = "com.blazebit.persistence.view.metamodel.CollectionAttribute";
     public static final String MAP_ATTRIBUTE = "com.blazebit.persistence.view.metamodel.MapAttribute";
+    public static final String METHOD_SINGULAR_ATTRIBUTE = "com.blazebit.persistence.view.metamodel.MethodSingularAttribute";
+    public static final String METHOD_LIST_ATTRIBUTE = "com.blazebit.persistence.view.metamodel.MethodListAttribute";
+    public static final String METHOD_SET_ATTRIBUTE = "com.blazebit.persistence.view.metamodel.MethodSetAttribute";
+    public static final String METHOD_COLLECTION_ATTRIBUTE = "com.blazebit.persistence.view.metamodel.MethodCollectionAttribute";
+    public static final String METHOD_MAP_ATTRIBUTE = "com.blazebit.persistence.view.metamodel.MethodMapAttribute";
 
     public static final String ENTITY = "javax.persistence.Entity";
     public static final String ID = "javax.persistence.Id";
     public static final String EMBEDDED_ID = "javax.persistence.EmbeddedId";
     public static final String VERSION = "javax.persistence.Version";
+
+    public static final String CRITERIA_BUILDER = "com.blazebit.persistence.CriteriaBuilder";
+    public static final String PAGINATED_CRITERIA_BUILDER = "com.blazebit.persistence.PaginatedCriteriaBuilder";
 
     public static final String LIST = "java.util.List";
     public static final String SET = "java.util.Set";
@@ -90,6 +109,7 @@ public final class Constants {
     public static final String NAVIGABLE_MAP = "java.util.NavigableMap";
 
     public static final String RECORDING_CONTAINER = "com.blazebit.persistence.view.RecordingContainer";
+    public static final String ATTRIBUTE_FILTER_PROVIDER = "com.blazebit.persistence.view.AttributeFilterProvider";
 
     public static final String SORTED = "java.util.Sorted";
     public static final String NAVIGABLE = "java.util.Navigable";
@@ -106,13 +126,13 @@ public final class Constants {
     public static final Set<String> SPECIAL = new HashSet<>();
 
     static {
-        COLLECTIONS.put(COLLECTION, COLLECTION_ATTRIBUTE);
-        COLLECTIONS.put(SET, SET_ATTRIBUTE);
-        COLLECTIONS.put(LIST, LIST_ATTRIBUTE);
-        COLLECTIONS.put(MAP, MAP_ATTRIBUTE);
+        COLLECTIONS.put(COLLECTION, METHOD_COLLECTION_ATTRIBUTE);
+        COLLECTIONS.put(SET, METHOD_SET_ATTRIBUTE);
+        COLLECTIONS.put(LIST, METHOD_LIST_ATTRIBUTE);
+        COLLECTIONS.put(MAP, METHOD_MAP_ATTRIBUTE);
 
-        COLLECTIONS.put(SORTED_SET, SET_ATTRIBUTE);
-        COLLECTIONS.put(SORTED_MAP, MAP_ATTRIBUTE);
+        COLLECTIONS.put(SORTED_SET, METHOD_SET_ATTRIBUTE);
+        COLLECTIONS.put(SORTED_MAP, METHOD_MAP_ATTRIBUTE);
 
         SPECIAL.add(ENTITY_VIEW_MANAGER);
     }

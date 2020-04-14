@@ -49,6 +49,8 @@ import java.util.Set;
         EntityViewAnnotationProcessor.GENERATE_IMPLEMENTATIONS,
         EntityViewAnnotationProcessor.GENERATE_BUILDERS,
         EntityViewAnnotationProcessor.CREATE_EMPTY_FLAT_VIEWS,
+        EntityViewAnnotationProcessor.GENERATE_DEEP_CONSTANTS,
+        EntityViewAnnotationProcessor.OPTIONAL_PARAMETERS,
 })
 public class EntityViewAnnotationProcessor extends AbstractProcessor {
 
@@ -62,6 +64,8 @@ public class EntityViewAnnotationProcessor extends AbstractProcessor {
     public static final String GENERATE_IMPLEMENTATIONS = "generateImplementations";
     public static final String GENERATE_BUILDERS = "generateBuilders";
     public static final String CREATE_EMPTY_FLAT_VIEWS = "createEmptyFlatViews";
+    public static final String GENERATE_DEEP_CONSTANTS = "generateDeepConstants";
+    public static final String OPTIONAL_PARAMETERS = "optionalParameters";
 
     private Context context;
 
@@ -84,9 +88,27 @@ public class EntityViewAnnotationProcessor extends AbstractProcessor {
         context.setGenerateImplementations(getOption(processingEnvironment, GENERATE_IMPLEMENTATIONS, true));
         context.setGenerateBuilders(getOption(processingEnvironment, GENERATE_BUILDERS, true));
         context.setCreateEmptyFlatViews(getOption(processingEnvironment, CREATE_EMPTY_FLAT_VIEWS, true));
+        context.setGenerateDeepConstants(getOption(processingEnvironment, GENERATE_DEEP_CONSTANTS, true));
 
         context.setDefaultVersionAttributeName(processingEnvironment.getOptions().get(DEFAULT_VERSION_ATTRIBUTE_NAME));
         context.setDefaultVersionAttributeType(processingEnvironment.getOptions().get(DEFAULT_VERSION_ATTRIBUTE_TYPE));
+
+        String s = processingEnvironment.getOptions().get(OPTIONAL_PARAMETERS);
+        if (s != null) {
+            for (String part : s.split("\\s*;\\s*")) {
+                int idx = part.lastIndexOf('=');
+                String name;
+                String type;
+                if (idx == -1) {
+                    name = part;
+                    type = "java.lang.Object";
+                } else {
+                    name = part.substring(0, idx);
+                    type = part.substring(idx + 1);
+                }
+                context.getOptionalParameters().put(name, context.getElementUtils().getTypeElement(type));
+            }
+        }
     }
 
     private static Boolean getOption(ProcessingEnvironment processingEnvironment, String option, boolean defaultValue) {
@@ -129,6 +151,7 @@ public class EntityViewAnnotationProcessor extends AbstractProcessor {
                 continue;
             }
             context.logMessage(Diagnostic.Kind.OTHER, "Writing meta model for entity view " + entityView);
+            RelationClassWriter.writeFile(sb, entityView, context);
             MetamodelClassWriter.writeFile(sb, entityView, context);
             if (context.isGenerateImplementations()) {
                 ForeignPackageAdapterClassWriter.writeFiles(sb, entityView, context);

@@ -23,7 +23,7 @@ import com.blazebit.persistence.view.impl.metamodel.EmbeddableOwner;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 import com.blazebit.persistence.view.impl.metamodel.MethodAttributeMapping;
-import com.blazebit.persistence.view.metamodel.ListAttribute;
+import com.blazebit.persistence.view.metamodel.MethodListAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 
 import java.util.List;
@@ -34,7 +34,7 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public abstract class AbstractMethodListAttribute<X, Y> extends AbstractMethodPluralAttribute<X, List<Y>, Y> implements ListAttribute<X, Y> {
+public abstract class AbstractMethodListAttribute<X, Y> extends AbstractMethodPluralAttribute<X, List<Y>, Y> implements MethodListAttribute<X, Y> {
 
     private final boolean isIndexed;
     private final CollectionInstantiatorImplementor<?, ?> collectionInstantiator;

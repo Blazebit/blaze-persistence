@@ -1,6 +1,6 @@
 == Where clause
 
-The `WHERE` clause has mostly been described already in the <<Predicate Builder>> chapter.
+The `WHERE` clause has mostly been described already in the <<predicate-builder,Predicate Builder>> chapter.
 The clause is applicable to all statement types, but <<implicit-joins,implicit joins>> are only possible in `SELECT` statements,
 therefore it is advised to move relation access to an exists subquery in DML statements like
 

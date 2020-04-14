@@ -67,7 +67,7 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
     private final int attributeIndex;
     private final String name;
     private final Method javaMethod;
-    private final Map<String, AttributeFilterMapping> filterMappings;
+    private final Map<String, AttributeFilterMapping<X, ?>> filterMappings;
 
     protected AbstractMethodAttribute(ManagedViewTypeImplementor<X> viewType, MethodAttributeMapping mapping, int attributeIndex, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
         super(viewType, mapping, context, embeddableMapping);
@@ -78,9 +78,9 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
         if (mapping.getAttributeFilterProviders() == null) {
             this.filterMappings = Collections.emptyMap();
         } else {
-            Map<String, AttributeFilterMapping> filterMappings = new HashMap<String, AttributeFilterMapping>();
-            for (Map.Entry<String, Class<? extends AttributeFilterProvider>> entry : mapping.getAttributeFilterProviders().entrySet()) {
-                filterMappings.put(entry.getKey(), new AttributeFilterMappingImpl(this, entry.getKey(), entry.getValue()));
+            Map<String, AttributeFilterMapping<X, ?>> filterMappings = new HashMap<>();
+            for (Map.Entry<String, Class<? extends AttributeFilterProvider<?>>> entry : mapping.getAttributeFilterProviders().entrySet()) {
+                filterMappings.put(entry.getKey(), new AttributeFilterMappingImpl<>(this, entry.getKey(), (Class<? extends AttributeFilterProvider<Object>>) entry.getValue()));
             }
 
             this.filterMappings = Collections.unmodifiableMap(filterMappings);
@@ -459,19 +459,15 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
     }
 
     @Override
-    public AttributeFilterMapping getFilter(String filterName) {
+    public AttributeFilterMapping<X, ?> getFilter(String filterName) {
         return filterMappings.get(filterName);
     }
 
     @Override
-    public Set<AttributeFilterMapping> getFilters() {
-        return new SetView<AttributeFilterMapping>(filterMappings.values());
+    public Set<AttributeFilterMapping<X, ?>> getFilters() {
+        return new SetView<AttributeFilterMapping<X, ?>>(filterMappings.values());
     }
     
-    public Map<String, AttributeFilterMapping> getFilterMappings() {
-        return filterMappings;
-    }
-
     public static String extractAttributeName(Class<?> viewType, Method m, MetamodelBootContext context) {
         String attributeName;
 

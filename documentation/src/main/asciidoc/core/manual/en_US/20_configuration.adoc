@@ -216,7 +216,7 @@ Dbms dialect implementations provide SQL-level abstractions for a specific dbms.
 * microsoft
 
 By registering a custom implementation for a specific dbms via `registerDialect(String, DbmsDialect)` the default implementation will be overridden.
-For more information refer to the <<Customize DBMS dialect>> section.
+For more information refer to the <<customize-dbms-dialect,Customize DBMS dialect>> section.
 
 [[configuration-entity-manager-factory-integrators]]
 === Entity manager factory integrators

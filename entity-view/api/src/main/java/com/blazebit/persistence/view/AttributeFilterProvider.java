@@ -32,10 +32,11 @@ import com.blazebit.persistence.WhereBuilder;
  *
  * The {@linkplain Class} argument refers to the expected type i.e. the attribute type. The object argument refers to the filter value.
  *
+ * @param <FilterValue> The filter value type
  * @author Christian Beikov
  * @since 1.0.0
  */
-public abstract class AttributeFilterProvider {
+public abstract class AttributeFilterProvider<FilterValue> {
 
     /**
      * Applies restrictions for the given attributeExpression on the given where builder.

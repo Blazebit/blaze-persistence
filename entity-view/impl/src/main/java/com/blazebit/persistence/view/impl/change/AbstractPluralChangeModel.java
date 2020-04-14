@@ -23,12 +23,15 @@ import com.blazebit.persistence.view.change.SingularChangeModel;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
 import com.blazebit.persistence.view.impl.metamodel.BasicTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
-import com.blazebit.persistence.view.spi.type.DirtyStateTrackable;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
+import com.blazebit.persistence.view.metamodel.MethodMapAttribute;
+import com.blazebit.persistence.view.metamodel.MethodPluralAttribute;
+import com.blazebit.persistence.view.metamodel.MethodSingularAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
+import com.blazebit.persistence.view.spi.type.DirtyStateTrackable;
 
 import java.util.Collection;
 import java.util.IdentityHashMap;
@@ -107,6 +110,21 @@ public abstract class AbstractPluralChangeModel<C, V, D extends DirtyChecker<C>>
 
     @Override
     public <K, E> List<MapChangeModel<K, E>> get(MapAttribute<V, K, E> attribute) {
+        return (List<MapChangeModel<K, E>>) (List<?>) this.getAll(getMutableAttribute(attribute));
+    }
+
+    @Override
+    public <X> List<SingularChangeModel<X>> get(MethodSingularAttribute<V, X> attribute) {
+        return (List<SingularChangeModel<X>>) (List<?>) getAll(getMutableAttribute(attribute));
+    }
+
+    @Override
+    public <E, C extends Collection<E>> List<PluralChangeModel<C, E>> get(MethodPluralAttribute<V, C, E> attribute) {
+        return (List<PluralChangeModel<C, E>>) (List<?>) getAll(getMutableAttribute(attribute));
+    }
+
+    @Override
+    public <K, E> List<MapChangeModel<K, E>> get(MethodMapAttribute<V, K, E> attribute) {
         return (List<MapChangeModel<K, E>>) (List<?>) this.getAll(getMutableAttribute(attribute));
     }
 

@@ -34,6 +34,8 @@ public interface MetaEntityView {
 
     boolean hasSelfConstructor();
 
+    boolean hasSubviews();
+
     boolean isValid();
 
     boolean isUpdatable();
@@ -76,6 +78,8 @@ public interface MetaEntityView {
 
     ImportContext getMetamodelImportContext();
 
+    ImportContext getRelationImportContext();
+
     ImportContext getImplementationImportContext();
 
     ImportContext getBuilderImportContext();
@@ -86,11 +90,17 @@ public interface MetaEntityView {
 
     String metamodelImportType(String fqcn);
 
+    String relationImportType(String fqcn);
+
     String implementationImportType(String fqcn);
 
     String builderImportType(String fqcn);
 
     TypeElement getTypeElement();
+
+    Map<String, TypeElement> getOptionalParameters();
+
+    Map<String, ViewFilter> getViewFilters();
 
     int getDefaultDirtyMask();
 }

@@ -54,9 +54,11 @@ import com.blazebit.persistence.view.PreUpdateListener;
 import com.blazebit.persistence.view.SerializableEntityViewManager;
 import com.blazebit.persistence.view.StaticBuilder;
 import com.blazebit.persistence.view.StaticMetamodel;
+import com.blazebit.persistence.view.StaticRelation;
 import com.blazebit.persistence.view.ViewFilterProvider;
 import com.blazebit.persistence.view.ViewTransition;
 import com.blazebit.persistence.view.change.SingularChangeModel;
+import com.blazebit.persistence.view.filter.BetweenFilter;
 import com.blazebit.persistence.view.filter.ContainsFilter;
 import com.blazebit.persistence.view.filter.ContainsIgnoreCaseFilter;
 import com.blazebit.persistence.view.filter.EndsWithFilter;
@@ -74,6 +76,7 @@ import com.blazebit.persistence.view.impl.accessor.EntityIdAttributeAccessor;
 import com.blazebit.persistence.view.impl.change.ViewChangeModel;
 import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.impl.collection.RecordingMap;
+import com.blazebit.persistence.view.impl.filter.BetweenFilterImpl;
 import com.blazebit.persistence.view.impl.filter.ContainsFilterImpl;
 import com.blazebit.persistence.view.impl.filter.ContainsIgnoreCaseFilterImpl;
 import com.blazebit.persistence.view.impl.filter.EndsWithFilterImpl;
@@ -117,10 +120,15 @@ import com.blazebit.persistence.view.impl.update.listener.ViewInstancePrePersist
 import com.blazebit.persistence.view.impl.update.listener.ViewInstancePreRemoveListener;
 import com.blazebit.persistence.view.impl.update.listener.ViewInstancePreUpdateListener;
 import com.blazebit.persistence.view.metamodel.Attribute;
+import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
+import com.blazebit.persistence.view.metamodel.AttributePath;
+import com.blazebit.persistence.view.metamodel.AttributePaths;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
+import com.blazebit.persistence.view.metamodel.MethodPluralAttribute;
+import com.blazebit.persistence.view.metamodel.MethodSingularAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
@@ -160,6 +168,7 @@ import java.util.concurrent.ConcurrentMap;
 public class EntityViewManagerImpl implements EntityViewManager {
 
     private static final String META_MODEL_CLASS_NAME_SUFFIX = "_";
+    private static final String RELATION_CLASS_NAME_SUFFIX = "Relation";
     private static final String BUILDER_CLASS_NAME_SUFFIX = "Builder";
     private static final Set<ViewTransition> VIEW_TRANSITIONS = EnumSet.allOf(ViewTransition.class);
 
@@ -294,6 +303,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         Map<Class<?>, Set<Class<?>>> convertibleManagedViewTypes = new HashMap<>();
         Map<Class<?>, Listeners> listeners = new HashMap<>();
         Map<ViewBuilderKey, Constructor<? extends EntityViewBuilder<?>>> viewBuilderConstructors = new HashMap<>();
+        Map<Class<?>, Constructor<?>> relationConstructors = new HashMap<>(viewMetamodel.getManagedViews().size());
         for (ManagedViewType<?> managedView : viewMetamodel.getManagedViews()) {
             Class<?> javaType = managedView.getJavaType();
             Listeners l = new Listeners(managedView.getEntityClass());
@@ -327,7 +337,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
                 proxyFactory.loadImplementation(errors, managedView, this);
             }
             if (scanStaticMetamodels) {
-                initializeStaticMetamodel(errors, managedView);
+                initializeStaticMetamodel(errors, managedView, relationConstructors);
             }
             if (scanStaticBuilder) {
                 initializeStaticBuilder(errors, managedView, viewBuilderConstructors);
@@ -443,7 +453,22 @@ public class EntityViewManagerImpl implements EntityViewManager {
         return sb.toString();
     }
 
-    private void initializeStaticMetamodel(Set<String> errors, ManagedViewType<?> managedView) {
+    private static String getRelationClassName(Class<?> javaType) {
+        String packageName = javaType.getPackage().getName();
+        String fqcn = javaType.getName();
+        StringBuilder sb = new StringBuilder(fqcn.length() + RELATION_CLASS_NAME_SUFFIX.length());
+        sb.append(packageName).append('.');
+        for (int i = packageName.length() + 1; i < fqcn.length(); i++) {
+            final char c = fqcn.charAt(i);
+            if (c != '$') {
+                sb.append(c);
+            }
+        }
+        sb.append(RELATION_CLASS_NAME_SUFFIX);
+        return sb.toString();
+    }
+
+    private void initializeStaticMetamodel(Set<String> errors, ManagedViewType<?> managedView, Map<Class<?>, Constructor<?>> relationConstructors) {
         Class<?> javaType = managedView.getJavaType();
         Class<?> metamodelClass;
         try {
@@ -455,13 +480,58 @@ public class EntityViewManagerImpl implements EntityViewManager {
                     return;
                 }
             }
+            Class<?> relationClass = javaType.getClassLoader().loadClass(getRelationClassName(javaType));
+            StaticRelation staticRelation = relationClass.getAnnotation(StaticRelation.class);
+            if (staticRelation != null) {
+                if (staticRelation.value() != javaType) {
+                    errors.add("The static relation class '" + relationClass.getName() + "' was expected to be defined for the entity view type '" + javaType.getName() + "' but was defined for: " + annotation.value().getName());
+                    return;
+                }
+            }
+            if (!relationConstructors.containsKey(javaType)) {
+                try {
+                    relationConstructors.put(javaType, relationClass.getConstructor(AttributePath.class));
+                } catch (NoSuchMethodException e) {
+                    StringWriter sw = new StringWriter();
+                    e.printStackTrace(new PrintWriter(sw));
+                    errors.add("The initialization of the static relation class '" + relationClass.getName() + "' failed: " + sw.toString());
+                }
+            }
         } catch (ClassNotFoundException e) {
             // Ignore
             return;
         }
         try {
             for (MethodAttribute<?, ?> attribute : managedView.getAttributes()) {
-                metamodelClass.getDeclaredField(attribute.getName()).set(null, attribute);
+                if (attribute.isSubview()) {
+                    AttributePath<?, ?> path;
+                    Class<?> elementType;
+                    if (attribute instanceof PluralAttribute<?, ?, ?>) {
+                        elementType = ((PluralAttribute) attribute).getElementType().getJavaType();
+                        path = AttributePaths.of((MethodPluralAttribute<?, ?, ?>) attribute);
+                    } else {
+                        elementType = attribute.getConvertedJavaType();
+                        path = AttributePaths.of((MethodSingularAttribute<?, ?>) attribute);
+                    }
+                    Constructor<?> relationConstructor = relationConstructors.get(elementType);
+                    if (relationConstructor == null) {
+                        Class<?> relationClass = javaType.getClassLoader().loadClass(getRelationClassName(elementType));
+                        relationConstructor = relationClass.getConstructor(AttributePath.class);
+                        relationConstructors.put(elementType, relationConstructor);
+                    }
+                    metamodelClass.getDeclaredField(attribute.getName()).set(null, relationConstructor.newInstance(path));
+                } else {
+                    metamodelClass.getDeclaredField(attribute.getName()).set(null, attribute);
+                }
+                for (AttributeFilterMapping<?, ?> filter : attribute.getFilters()) {
+                    String name = attribute.getName() + "_";
+                    if (filter.getName().isEmpty()) {
+                        name += "filter";
+                    } else {
+                        name += filter.getName();
+                    }
+                    metamodelClass.getDeclaredField(name).set(null, filter);
+                }
             }
         } catch (Exception e) {
             StringWriter sw = new StringWriter();
@@ -1179,7 +1249,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
      * @param argument     The filter argument which is passed to the filter constructor
      * @return An instance of the given filter class
      */
-    public <T extends AttributeFilterProvider> T createAttributeFilter(Class<T> filterClass, Class<?> expectedType, Object argument) {
+    public <T extends AttributeFilterProvider<?>> T createAttributeFilter(Class<T> filterClass, Class<?> expectedType, Object argument) {
         @SuppressWarnings("unchecked")
         Class<T> filterClassImpl = (Class<T>) filterMappings.get(filterClass.getName());
 
@@ -1190,7 +1260,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         }
     }
 
-    private <T extends AttributeFilterProvider> T createFilterInstance(Class<T> filterClass, Class<?> expectedType, Object argument) {
+    private <T extends AttributeFilterProvider<?>> T createFilterInstance(Class<T> filterClass, Class<?> expectedType, Object argument) {
         try {
             @SuppressWarnings("unchecked")
             Constructor<T>[] constructors = (Constructor<T>[]) filterClass.getDeclaredConstructors();
@@ -1348,6 +1418,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         filterMappings.put(GreaterOrEqualFilter.class.getName(), GreaterOrEqualFilterImpl.class);
         filterMappings.put(LessThanFilter.class.getName(), LessThanFilterImpl.class);
         filterMappings.put(LessOrEqualFilter.class.getName(), LessOrEqualFilterImpl.class);
+        filterMappings.put(BetweenFilter.class.getName(), BetweenFilterImpl.class);
     }
 
     public EntityViewManager getSerializableDelegate(Class<?> entityViewClass) {

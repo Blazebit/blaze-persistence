@@ -24,6 +24,7 @@ import com.blazebit.persistence.view.processor.MetaAttribute;
 import com.blazebit.persistence.view.processor.MetaConstructor;
 import com.blazebit.persistence.view.processor.MetaEntityView;
 import com.blazebit.persistence.view.processor.TypeUtils;
+import com.blazebit.persistence.view.processor.ViewFilter;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -41,6 +42,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -56,6 +58,7 @@ import java.util.TreeMap;
 public class AnnotationMetaEntityView implements MetaEntityView {
 
     private final ImportContext metamodelImportContext;
+    private final ImportContext relationImportContext;
     private final ImportContext implementationImportContext;
     private final ImportContext builderImportContext;
     private final TypeElement element;
@@ -70,6 +73,8 @@ public class AnnotationMetaEntityView implements MetaEntityView {
     private final Map<String, ExecutableElement> specialMembers;
     private final Map<String, TypeElement> foreignPackageSuperTypes;
     private final List<TypeMirror> foreignPackageSuperTypeVariables;
+    private final Map<String, TypeElement> optionalParameters;
+    private final Map<String, ViewFilter> viewFilters;
     private final boolean updatable;
     private final boolean creatable;
     private final boolean allSupportDirtyTracking;
@@ -77,6 +82,7 @@ public class AnnotationMetaEntityView implements MetaEntityView {
     private final int defaultDirtyMask;
     private final boolean hasEmptyConstructor;
     private final boolean hasSelfConstructor;
+    private final boolean hasSubviews;
     private final boolean valid;
     private final Context context;
     private final Set<String> addedAccessors = new HashSet<>();
@@ -85,6 +91,7 @@ public class AnnotationMetaEntityView implements MetaEntityView {
         this.element = element;
         this.context = context;
         this.metamodelImportContext = new ImportContextImpl(getPackageName());
+        this.relationImportContext = new ImportContextImpl(getPackageName());
         this.implementationImportContext = new ImportContextImpl(getPackageName());
         this.builderImportContext = new ImportContextImpl(getPackageName());
         getContext().logMessage(Diagnostic.Kind.OTHER, "Initializing type " + getQualifiedName() + ".");
@@ -93,19 +100,33 @@ public class AnnotationMetaEntityView implements MetaEntityView {
         boolean updatable = false;
         boolean creatable = false;
         boolean allSupportDirtyTracking = true;
+        Map<String, ViewFilter> viewFilters = new HashMap<>();
         for (AnnotationMirror annotationMirror : element.getAnnotationMirrors()) {
-            String annotationFqcn = annotationMirror.getAnnotationType().toString();
-            if (annotationFqcn.equals(Constants.ENTITY_VIEW)) {
-                for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : annotationMirror.getElementValues().entrySet()) {
-                    if ("value".equals(entry.getKey().getSimpleName().toString())) {
-                        entityClass = entry.getValue().getValue().toString();
-                        break;
+            switch (annotationMirror.getAnnotationType().toString()) {
+                case Constants.ENTITY_VIEW:
+                    for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : annotationMirror.getElementValues().entrySet()) {
+                        if ("value".equals(entry.getKey().getSimpleName().toString())) {
+                            entityClass = entry.getValue().getValue().toString();
+                            break;
+                        }
                     }
-                }
-            } else if (annotationFqcn.equals(Constants.UPDATABLE_ENTITY_VIEW)) {
-                updatable = true;
-            } else if (annotationFqcn.equals(Constants.CREATABLE_ENTITY_VIEW)) {
-                creatable = true;
+                    break;
+                case Constants.UPDATABLE_ENTITY_VIEW:
+                    updatable = true;
+                    break;
+                case Constants.CREATABLE_ENTITY_VIEW:
+                    creatable = true;
+                    break;
+                case Constants.VIEW_FILTER:
+                    addViewFilter(viewFilters, annotationMirror, context);
+                    break;
+                case Constants.VIEW_FILTERS:
+                    for (AnnotationMirror value : TypeUtils.<List<AnnotationMirror>>getAnnotationValue(annotationMirror, "value")) {
+                        addViewFilter(viewFilters, value, context);
+                    }
+                    break;
+                default:
+                    break;
             }
         }
 
@@ -120,6 +141,7 @@ public class AnnotationMetaEntityView implements MetaEntityView {
         this.entityClass = entityClass;
         this.updatable = updatable;
         this.creatable = creatable;
+        this.viewFilters = viewFilters;
 
         Collection<Element> allMembers = TypeUtils.getAllMembers(element, context);
         MetaAttribute idMember = null;
@@ -128,9 +150,11 @@ public class AnnotationMetaEntityView implements MetaEntityView {
         Map<String, ExecutableElement> specialMembers = new TreeMap<>();
         List<MetaConstructor> constructors = new ArrayList<>();
         MetaAttributeGenerationVisitor visitor = new MetaAttributeGenerationVisitor(this, context);
+        Map<String, TypeElement> optionalParameters = new HashMap<>();
         boolean valid = true;
         boolean hasEmptyConstructor = false;
         boolean hasSelfConstructor = false;
+        boolean hasSubviews = false;
         ExecutableElement postCreate = null;
         ExecutableElement postLoad = null;
         for (Element memberOfClass : allMembers) {
@@ -149,12 +173,30 @@ public class AnnotationMetaEntityView implements MetaEntityView {
                                 versionMember = result;
                             }
                             members.put(result.getPropertyName(), result);
+                            for (Map.Entry<String, TypeElement> entry : result.getOptionalParameters().entrySet()) {
+                                TypeElement typeElement = entry.getValue();
+                                TypeElement existingTypeElement = optionalParameters.get(entry.getKey());
+                                if (existingTypeElement == null || context.getTypeUtils().isAssignable(typeElement.asType(), existingTypeElement.asType())) {
+                                    optionalParameters.put(entry.getKey(), entry.getValue());
+                                }
+                            }
+
+                            if (result.isSubview()) {
+                                hasSubviews = true;
+                            }
                         }
                     } else if (!modifiers.contains(Modifier.PRIVATE) && memberOfClass.getKind() == ElementKind.CONSTRUCTOR) {
-                        AnnotationMetaConstructor constructor = new AnnotationMetaConstructor(this, executableElement, visitor);
+                        AnnotationMetaConstructor constructor = new AnnotationMetaConstructor(this, executableElement, visitor, context);
                         hasEmptyConstructor = hasEmptyConstructor || constructor.getParameters().isEmpty();
                         hasSelfConstructor = hasSelfConstructor || constructor.hasSelfParameter();
                         constructors.add(constructor);
+                        for (Map.Entry<String, TypeElement> entry : constructor.getOptionalParameters().entrySet()) {
+                            TypeElement existingTypeElement = optionalParameters.get(entry.getKey());
+                            TypeElement typeElement = entry.getValue();
+                            if (existingTypeElement != null && context.getTypeUtils().isAssignable(typeElement.asType(), existingTypeElement.asType())) {
+                                optionalParameters.put(entry.getKey(), entry.getValue());
+                            }
+                        }
                     } else if (TypeUtils.containsAnnotation(executableElement, Constants.POST_CREATE, Constants.POST_LOAD)) {
                         if (TypeUtils.containsAnnotation(executableElement, Constants.POST_CREATE)) {
                             if (postCreate == null) {
@@ -206,6 +248,7 @@ public class AnnotationMetaEntityView implements MetaEntityView {
 
         this.hasEmptyConstructor = hasEmptyConstructor || constructors.isEmpty();
         this.hasSelfConstructor = hasSelfConstructor;
+        this.hasSubviews = hasSubviews;
         this.valid = valid;
         this.allSupportDirtyTracking = allSupportDirtyTracking;
         this.mutableAttributeCount = dirtyStateIndex;
@@ -241,8 +284,27 @@ public class AnnotationMetaEntityView implements MetaEntityView {
         this.specialMembers = specialMembers;
         this.foreignPackageSuperTypes = foreignPackageSuperTypes;
         this.foreignPackageSuperTypeVariables = foreignPackageSuperTypeVariables;
+        this.optionalParameters = optionalParameters;
         this.postCreate = postCreate;
         this.postLoad = postLoad;
+    }
+
+    private static void addViewFilter(Map<String, ViewFilter> filters, AnnotationMirror mirror, Context context) {
+        String name = "";
+        TypeMirror type = null;
+        for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : mirror.getElementValues().entrySet()) {
+            switch (entry.getKey().getSimpleName().toString()) {
+                case "name":
+                    name = (String) entry.getValue().getValue();
+                    break;
+                case "value":
+                    type = (TypeMirror) entry.getValue().getValue();
+                    break;
+                default:
+                    break;
+            }
+        }
+        filters.put(name, new ViewFilter(name, (TypeElement) ((DeclaredType) type).asElement(), context));
     }
 
     public final Context getContext() {
@@ -287,6 +349,11 @@ public class AnnotationMetaEntityView implements MetaEntityView {
     @Override
     public boolean hasSelfConstructor() {
         return hasSelfConstructor;
+    }
+
+    @Override
+    public boolean hasSubviews() {
+        return hasSubviews;
     }
 
     @Override
@@ -375,6 +442,11 @@ public class AnnotationMetaEntityView implements MetaEntityView {
     }
 
     @Override
+    public ImportContext getRelationImportContext() {
+        return relationImportContext;
+    }
+
+    @Override
     public ImportContext getImplementationImportContext() {
         return implementationImportContext;
     }
@@ -388,6 +460,7 @@ public class AnnotationMetaEntityView implements MetaEntityView {
     public final String importType(String fqcn) {
         implementationImportContext.importType(fqcn);
         metamodelImportContext.importType(fqcn);
+        relationImportContext.importType(fqcn);
         return builderImportContext.importType(fqcn);
     }
 
@@ -403,6 +476,11 @@ public class AnnotationMetaEntityView implements MetaEntityView {
     }
 
     @Override
+    public String relationImportType(String fqcn) {
+        return relationImportContext.importType(fqcn);
+    }
+
+    @Override
     public String implementationImportType(String fqcn) {
         return implementationImportContext.importType(fqcn);
     }
@@ -415,6 +493,16 @@ public class AnnotationMetaEntityView implements MetaEntityView {
     @Override
     public final TypeElement getTypeElement() {
         return element;
+    }
+
+    @Override
+    public Map<String, TypeElement> getOptionalParameters() {
+        return optionalParameters;
+    }
+
+    @Override
+    public Map<String, ViewFilter> getViewFilters() {
+        return viewFilters;
     }
 
     private boolean isGetterOrSetter(Element methodOfClass) {

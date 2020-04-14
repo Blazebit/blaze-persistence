@@ -52,8 +52,10 @@ public class Context {
     private boolean generateImplementations;
     private boolean generateBuilders;
     private boolean createEmptyFlatViews;
+    private boolean generateDeepConstants;
     private String defaultVersionAttributeName;
     private String defaultVersionAttributeType;
+    private Map<String, TypeElement> optionalParameters = new HashMap<>();
 
     public Context(ProcessingEnvironment pe) {
         this.pe = pe;
@@ -107,6 +109,13 @@ public class Context {
 
     public Collection<MetaEntityView> getMetaEntityViews() {
         return metaEntityViews.values();
+    }
+    public Map<String, MetaEntityView> getMetaEntityViewMap() {
+        return metaEntityViews;
+    }
+
+    public MetaEntityView getMetaEntityView(String fqcn) {
+        return metaEntityViews.get(fqcn);
     }
 
     public void markGenerated(String name) {
@@ -191,5 +200,17 @@ public class Context {
 
     public void setCreateEmptyFlatViews(boolean createEmptyFlatViews) {
         this.createEmptyFlatViews = createEmptyFlatViews;
+    }
+
+    public boolean isGenerateDeepConstants() {
+        return generateDeepConstants;
+    }
+
+    public void setGenerateDeepConstants(boolean generateDeepConstants) {
+        this.generateDeepConstants = generateDeepConstants;
+    }
+
+    public Map<String, TypeElement> getOptionalParameters() {
+        return optionalParameters;
     }
 }

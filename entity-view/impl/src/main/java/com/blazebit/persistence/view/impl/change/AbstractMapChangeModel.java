@@ -28,6 +28,9 @@ import com.blazebit.persistence.view.impl.type.TypedValue;
 import com.blazebit.persistence.view.metamodel.Attribute;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
+import com.blazebit.persistence.view.metamodel.MethodMapAttribute;
+import com.blazebit.persistence.view.metamodel.MethodPluralAttribute;
+import com.blazebit.persistence.view.metamodel.MethodSingularAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.persistence.view.spi.type.BasicUserType;
@@ -1142,6 +1145,21 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
 
     @Override
     public <K1, V1> List<MapChangeModel<K1, V1>> keyGet(MapAttribute<K, K1, V1> attribute) {
+        return (List<MapChangeModel<K1, V1>>) (List<?>) this.<Map<K1, V1>>keyGetAll(getMutableKeyAttribute(attribute));
+    }
+
+    @Override
+    public <X> List<SingularChangeModel<X>> keyGet(MethodSingularAttribute<K, X> attribute) {
+        return (List<SingularChangeModel<X>>) (List<?>) keyGetAll(getMutableKeyAttribute(attribute));
+    }
+
+    @Override
+    public <E, C extends Collection<E>> List<PluralChangeModel<C, E>> keyGet(MethodPluralAttribute<K, C, E> attribute) {
+        return (List<PluralChangeModel<C, E>>) (List<?>) keyGetAll(getMutableKeyAttribute(attribute));
+    }
+
+    @Override
+    public <K1, V1> List<MapChangeModel<K1, V1>> keyGet(MethodMapAttribute<K, K1, V1> attribute) {
         return (List<MapChangeModel<K1, V1>>) (List<?>) this.<Map<K1, V1>>keyGetAll(getMutableKeyAttribute(attribute));
     }
 

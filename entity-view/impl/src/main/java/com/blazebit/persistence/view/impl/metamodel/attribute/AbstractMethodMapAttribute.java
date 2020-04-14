@@ -24,7 +24,7 @@ import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 import com.blazebit.persistence.view.impl.metamodel.MethodAttributeMapping;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
-import com.blazebit.persistence.view.metamodel.MapAttribute;
+import com.blazebit.persistence.view.metamodel.MethodMapAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 
 import java.util.Map;
@@ -34,7 +34,7 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public abstract class AbstractMethodMapAttribute<X, K, V> extends AbstractMethodPluralAttribute<X, Map<K, V>, V> implements MapAttribute<X, K, V> {
+public abstract class AbstractMethodMapAttribute<X, K, V> extends AbstractMethodPluralAttribute<X, Map<K, V>, V> implements MethodMapAttribute<X, K, V> {
 
     private final Type<K> keyType;
     private final Map<ManagedViewType<? extends K>, String> keyInheritanceSubtypes;

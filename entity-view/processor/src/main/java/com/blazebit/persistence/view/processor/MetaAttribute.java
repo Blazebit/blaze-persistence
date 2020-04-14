@@ -19,12 +19,15 @@ package com.blazebit.persistence.view.processor;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
+import java.util.Collection;
 
 /**
  * @author Christian Beikov
  * @since 1.5.0
  */
 public interface MetaAttribute {
+
+    void appendMetamodelAttributeType(StringBuilder sb, ImportContext importContext);
 
     void appendMetamodelAttributeDeclarationString(StringBuilder sb);
 
@@ -76,11 +79,13 @@ public interface MetaAttribute {
 
     String getImplementationTypeString();
 
+    Collection<AttributeFilter> getFilters();
+
     MetaEntityView getHostingEntity();
 
     boolean isSubview();
 
-    boolean isFlatSubview();
+    boolean isSynthetic();
 
     boolean isMutable();
 

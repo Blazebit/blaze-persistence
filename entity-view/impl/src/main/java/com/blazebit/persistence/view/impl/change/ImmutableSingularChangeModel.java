@@ -23,6 +23,9 @@ import com.blazebit.persistence.view.change.SingularChangeModel;
 import com.blazebit.persistence.view.impl.metamodel.BasicTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
+import com.blazebit.persistence.view.metamodel.MethodMapAttribute;
+import com.blazebit.persistence.view.metamodel.MethodPluralAttribute;
+import com.blazebit.persistence.view.metamodel.MethodSingularAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
 
@@ -82,6 +85,21 @@ public class ImmutableSingularChangeModel<V> extends AbstractImmutableChangeMode
 
     @Override
     public <K, V1> MapChangeModel<K, V1> get(MapAttribute<V, K, V1> attribute) {
+        return (MapChangeModel<K, V1>) this.<Map<K, V1>>get(getMutableAttribute(attribute));
+    }
+
+    @Override
+    public <X> SingularChangeModel<X> get(MethodSingularAttribute<V, X> attribute) {
+        return (SingularChangeModel<X>) get(getMutableAttribute(attribute));
+    }
+
+    @Override
+    public <E, C extends Collection<E>> PluralChangeModel<C, E> get(MethodPluralAttribute<V, C, E> attribute) {
+        return (PluralChangeModel<C, E>) (ChangeModel<?>) get(getMutableAttribute(attribute));
+    }
+
+    @Override
+    public <K, V1> MapChangeModel<K, V1> get(MethodMapAttribute<V, K, V1> attribute) {
         return (MapChangeModel<K, V1>) this.<Map<K, V1>>get(getMutableAttribute(attribute));
     }
 }

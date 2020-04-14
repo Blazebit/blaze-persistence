@@ -26,9 +26,10 @@ import com.blazebit.persistence.view.AttributeFilterProvider;
  * An ends with ignore case filter accepts an object. The {@linkplain Object#toString()} representation of that object will be
  * used as value for the ends with restriction.
  *
+ * @param <FilterValue> The type of the filter value i.e. the attribute type
  * @author Christian Beikov
  * @since 1.0.0
  */
-public abstract class EndsWithIgnoreCaseFilter extends AttributeFilterProvider {
+public abstract class EndsWithIgnoreCaseFilter<FilterValue> extends AttributeFilterProvider<FilterValue> {
 
 }
