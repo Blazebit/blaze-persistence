@@ -36,6 +36,9 @@
         <maven.compiler.target>1.8</maven.compiler.target>
 
         <start-class>com.blazebit.persistence.examples.spring.data.webflux.Application</start-class>
+
+        <version.spring>${version.spring-data-2.0-spring}</version.spring>
+        <version.spring.boot>${version.spring-data-2.0-spring-boot}</version.spring.boot>
     </properties>
 
     <dependencyManagement>
@@ -105,10 +108,6 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-orm</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.data</groupId>
-            <artifactId>spring-data-jpa</artifactId>
         </dependency>
 
         <!-- Test dependencies -->
@@ -182,10 +181,6 @@
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
-            <properties>
-                <version.spring>${version.spring-data-2.0-spring}</version.spring>
-                <version.spring.boot>${version.spring-data-2.0-spring-boot}</version.spring.boot>
-            </properties>
             <dependencies>
                 <dependency>
                     <groupId>org.springframework.data</groupId>
