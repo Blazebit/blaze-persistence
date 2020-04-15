@@ -19,6 +19,7 @@ package com.blazebit.persistence.integration.jackson;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
+import com.blazebit.persistence.view.metamodel.ViewType;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.BeanDescription;
 import com.fasterxml.jackson.databind.DeserializationConfig;
@@ -44,11 +45,9 @@ public class EntityViewAwareObjectMapper {
 
     private final EntityViewManager entityViewManager;
     private final ObjectMapper objectMapper;
-    private final EntityViewIdValueAccessor entityViewIdValueAccessor;
 
-    public EntityViewAwareObjectMapper(final EntityViewManager entityViewManager, final ObjectMapper objectMapper, EntityViewIdValueAccessor entityViewIdValueAccessor) {
+    public EntityViewAwareObjectMapper(final EntityViewManager entityViewManager, final ObjectMapper objectMapper, final EntityViewIdValueAccessor entityViewIdValueAccessor) {
         this.entityViewManager = entityViewManager;
-        this.entityViewIdValueAccessor = entityViewIdValueAccessor;
         final ViewMetamodel metamodel = entityViewManager.getMetamodel();
         SimpleModule module = new SimpleModule();
 
@@ -57,7 +56,7 @@ public class EntityViewAwareObjectMapper {
             public JsonDeserializer<?> modifyDeserializer(DeserializationConfig config, BeanDescription beanDesc, JsonDeserializer<?> deserializer) {
                 ManagedViewType<?> view = metamodel.managedView(beanDesc.getBeanClass());
                 if (view != null) {
-                    return new EntityViewReferenceDeserializer(entityViewManager, view, objectMapper, EntityViewAwareObjectMapper.this.entityViewIdValueAccessor);
+                    return new EntityViewReferenceDeserializer(entityViewManager, view, objectMapper, beanDesc.getIgnoredPropertyNames(), entityViewIdValueAccessor);
                 }
                 return deserializer;
             }
@@ -68,14 +67,22 @@ public class EntityViewAwareObjectMapper {
         // Obviously, we don't want fields to be set which are final because these are read-only
         objectMapper.configure(MapperFeature.ALLOW_FINAL_FIELDS_AS_MUTATORS, false);
         objectMapper.setVisibility(new VisibilityChecker.Std(JsonAutoDetect.Visibility.DEFAULT) {
+
+            // This is for de-serialization so we do metamodel.managedView(m.getDeclaringClass()) == null because de-serialization is only supported when setters are available
+            // The id attribute is the exception. We also consider the id a property even if it doesn't have a setter
+
             @Override
             public boolean isGetterVisible(Method m) {
-                return metamodel.managedView(m.getDeclaringClass()) == null && super.isGetterVisible(m);
+                ManagedViewType<?> managedViewType = metamodel.managedView(m.getDeclaringClass());
+                return (managedViewType == null || managedViewType instanceof ViewType<?> && ((ViewType<?>) managedViewType).getIdAttribute().getJavaMethod().getName().equals(m.getName()))
+                        && super.isGetterVisible(m);
             }
 
             @Override
             public boolean isGetterVisible(AnnotatedMethod m) {
-                return metamodel.managedView(m.getDeclaringClass()) == null && super.isGetterVisible(m);
+                ManagedViewType<?> managedViewType = metamodel.managedView(m.getDeclaringClass());
+                return (managedViewType == null || managedViewType instanceof ViewType<?> && ((ViewType<?>) managedViewType).getIdAttribute().getJavaMethod().getName().equals(m.getName()))
+                        && super.isGetterVisible(m);
             }
 
             @Override

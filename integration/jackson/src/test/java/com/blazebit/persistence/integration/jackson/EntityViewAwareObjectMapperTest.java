@@ -25,8 +25,11 @@ import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.UpdatableEntityView;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.exc.IgnoredPropertyException;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -278,5 +281,28 @@ public class EntityViewAwareObjectMapperTest {
         void setName(String name);
         Set<CreatableAndUpdatableViewWithSetters> getChildren();
         void setChildren(Set<CreatableAndUpdatableViewWithSetters> children);
+    }
+
+    @Test
+    public void testCreatableWithIgnoreId() throws Exception {
+        EntityViewAwareObjectMapper mapper = mapper(CreatableWithIgnoreId.class);
+        mapper.getObjectMapper().configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, true);
+        ObjectReader objectReader = mapper.readerFor(mapper.getObjectMapper().constructType(CreatableWithIgnoreId.class));
+        try {
+            objectReader.readValue("{\"id\": 1, \"name\": \"test\"}");
+            Assert.fail("Expected failure");
+        } catch (IgnoredPropertyException ex) {
+            Assert.assertEquals("id", ex.getPropertyName());
+        }
+    }
+
+    @EntityView(SomeEntity.class)
+    @CreatableEntityView
+    interface CreatableWithIgnoreId {
+        @IdMapping
+        @JsonIgnore
+        long getId();
+        String getName();
+        void setName(String name);
     }
 }

@@ -30,6 +30,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.io.IOException;
+import java.util.Set;
 
 /**
  * @author Christian Beikov
@@ -42,23 +43,27 @@ public class EntityViewReferenceDeserializer extends JsonDeserializer {
     private final Class<?> entityViewClass;
     private final MethodAttribute<?, ?> idAttribute;
     private final JavaType idType;
+    private final boolean deserializeIdFromJson;
     private final boolean updatable;
     private final boolean creatable;
 
-    public EntityViewReferenceDeserializer(EntityViewManager entityViewManager, ManagedViewType<?> view, ObjectMapper objectMapper, EntityViewIdValueAccessor entityViewIdValueAccessor) {
+    public EntityViewReferenceDeserializer(EntityViewManager entityViewManager, ManagedViewType<?> view, ObjectMapper objectMapper, Set<String> ignoredProperties, EntityViewIdValueAccessor entityViewIdValueAccessor) {
         this.entityViewManager = entityViewManager;
         this.entityViewClass = view.getJavaType();
         this.entityViewIdValueAccessor = entityViewIdValueAccessor;
         if (view instanceof ViewType<?>) {
-            this.idAttribute = ((ViewType<?>) view).getIdAttribute();
-            JavaType idType = objectMapper.getTypeFactory().constructType(idAttribute.getJavaType());
+            MethodAttribute<?, ?> idAttribute = ((ViewType<?>) view).getIdAttribute();
+            this.deserializeIdFromJson = !ignoredProperties.contains(idAttribute.getName());
+            this.idAttribute = idAttribute;
+            JavaType idType = objectMapper.getTypeFactory().constructType(this.idAttribute.getJavaType());
             if (!objectMapper.canDeserialize(idType)) {
-                throw new IllegalArgumentException("Can't create entity view reference deserializer for entity view '" + entityViewClass.getName() + "' because id attribute '" + idAttribute.getName() + "' has an unsupported id type: " + idAttribute.getJavaType().getName());
+                throw new IllegalArgumentException("Can't create entity view reference deserializer for entity view '" + entityViewClass.getName() + "' because id attribute '" + this.idAttribute.getName() + "' has an unsupported id type: " + this.idAttribute.getJavaType().getName());
             }
             this.idType = idType;
         } else {
             this.idAttribute = null;
             this.idType = null;
+            this.deserializeIdFromJson = false;
         }
         this.updatable = view.isUpdatable();
         this.creatable = view.isCreatable();
@@ -96,7 +101,7 @@ public class EntityViewReferenceDeserializer extends JsonDeserializer {
         } else {
             String idAttributeName = idAttribute.getName();
             JsonNode jsonNode;
-            if ((jsonNode = treeNode.get(idAttributeName)) != null) {
+            if (deserializeIdFromJson && (jsonNode = treeNode.get(idAttributeName)) != null) {
                 if (jsonNode.isNull()) {
                     id = null;
                 } else {

@@ -29,6 +29,7 @@ Not yet released
 * Support `@PostCreate` and other lifecycle methods with default and even private visibility
 * Support `@ViewFilter` inheritance
 * Fix collection deserialization issues with Jackson
+* Allow to use `@JsonIgnore` for the id property of an entity view
 
 ### Backwards-incompatible changes
 
