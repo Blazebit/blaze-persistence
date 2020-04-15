@@ -19,6 +19,9 @@
         <version.spring.boot/>
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.source>1.8</maven.compiler.source>
+
+        <version.spring>${version.spring-data-2.0-spring}</version.spring>
+        <version.spring.boot>${version.spring-data-2.0-spring-boot}</version.spring.boot>
     </properties>
 
     <dependencyManagement>

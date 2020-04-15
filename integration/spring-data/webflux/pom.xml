@@ -17,6 +17,9 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <spring.activeProfiles />
         <test.argLine />
+
+        <version.spring>${version.spring-data-2.0-spring}</version.spring>
+        <version.spring-data>${version.spring-data-2.0}</version.spring-data>
     </properties>
 
     <dependencyManagement>
@@ -42,6 +45,12 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-webflux</artifactId>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-commons</artifactId>
+            <version>${version.spring-data}</version>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -101,20 +110,29 @@
     <profiles>
         <!-- Profiles for various Spring-Data versions -->
         <profile>
+            <!--
+            Even though spring-data-1.11.x is not supported for webflux, we need this profile so that everything compiles
+            in IDEA.
+            -->
+            <id>spring-data-1.11.x</id>
+            <dependencies>
+                <dependency>
+                    <groupId>com.blazebit</groupId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.0</artifactId>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
             <id>spring-data-2.0.x</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
                 <version.spring>${version.spring-data-2.0-spring}</version.spring>
+                <version.spring-data>${version.spring-data-2.0}</version.spring-data>
             </properties>
             <dependencies>
-                <dependency>
-                    <groupId>org.springframework.data</groupId>
-                    <artifactId>spring-data-commons</artifactId>
-                    <version>${version.spring-data-2.0}</version>
-                    <optional>true</optional>
-                </dependency>
                 <dependency>
                     <groupId>com.blazebit</groupId>
                     <artifactId>blaze-persistence-integration-spring-data-2.0</artifactId>
@@ -126,6 +144,7 @@
             <id>spring-data-2.1.x</id>
             <properties>
                 <version.spring>${version.spring-data-2.1-spring}</version.spring>
+                <version.spring-data>${version.spring-data-2.1}</version.spring-data>
             </properties>
             <repositories>
                 <repository>
@@ -134,12 +153,6 @@
                 </repository>
             </repositories>
             <dependencies>
-                <dependency>
-                    <groupId>org.springframework.data</groupId>
-                    <artifactId>spring-data-commons</artifactId>
-                    <version>${version.spring-data-2.1}</version>
-                    <optional>true</optional>
-                </dependency>
                 <dependency>
                     <groupId>com.blazebit</groupId>
                     <artifactId>blaze-persistence-integration-spring-data-2.1</artifactId>
@@ -151,6 +164,7 @@
             <id>spring-data-2.2.x</id>
             <properties>
                 <version.spring>${version.spring-data-2.2-spring}</version.spring>
+                <version.spring-data>${version.spring-data-2.2}</version.spring-data>
             </properties>
             <repositories>
                 <repository>
@@ -159,12 +173,6 @@
                 </repository>
             </repositories>
             <dependencies>
-                <dependency>
-                    <groupId>org.springframework.data</groupId>
-                    <artifactId>spring-data-commons</artifactId>
-                    <version>${version.spring-data-2.2}</version>
-                    <optional>true</optional>
-                </dependency>
                 <dependency>
                     <groupId>com.blazebit</groupId>
                     <artifactId>blaze-persistence-integration-spring-data-2.2</artifactId>
