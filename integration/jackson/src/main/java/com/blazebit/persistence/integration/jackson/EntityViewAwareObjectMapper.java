@@ -18,7 +18,6 @@ package com.blazebit.persistence.integration.jackson;
 
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
-import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.BeanDescription;
@@ -48,13 +47,12 @@ public class EntityViewAwareObjectMapper {
 
     public EntityViewAwareObjectMapper(final EntityViewManager entityViewManager, final ObjectMapper objectMapper, final EntityViewIdValueAccessor entityViewIdValueAccessor) {
         this.entityViewManager = entityViewManager;
-        final ViewMetamodel metamodel = entityViewManager.getMetamodel();
         SimpleModule module = new SimpleModule();
 
         module.setDeserializerModifier(new BeanDeserializerModifier() {
             @Override
             public JsonDeserializer<?> modifyDeserializer(DeserializationConfig config, BeanDescription beanDesc, JsonDeserializer<?> deserializer) {
-                ManagedViewType<?> view = metamodel.managedView(beanDesc.getBeanClass());
+                ManagedViewType<?> view = entityViewManager.getMetamodel().managedView(beanDesc.getBeanClass());
                 if (view != null) {
                     return new EntityViewReferenceDeserializer(entityViewManager, view, objectMapper, beanDesc.getIgnoredPropertyNames(), entityViewIdValueAccessor);
                 }
@@ -73,26 +71,26 @@ public class EntityViewAwareObjectMapper {
 
             @Override
             public boolean isGetterVisible(Method m) {
-                ManagedViewType<?> managedViewType = metamodel.managedView(m.getDeclaringClass());
+                ManagedViewType<?> managedViewType = entityViewManager.getMetamodel().managedView(m.getDeclaringClass());
                 return (managedViewType == null || managedViewType instanceof ViewType<?> && ((ViewType<?>) managedViewType).getIdAttribute().getJavaMethod().getName().equals(m.getName()))
                         && super.isGetterVisible(m);
             }
 
             @Override
             public boolean isGetterVisible(AnnotatedMethod m) {
-                ManagedViewType<?> managedViewType = metamodel.managedView(m.getDeclaringClass());
+                ManagedViewType<?> managedViewType = entityViewManager.getMetamodel().managedView(m.getDeclaringClass());
                 return (managedViewType == null || managedViewType instanceof ViewType<?> && ((ViewType<?>) managedViewType).getIdAttribute().getJavaMethod().getName().equals(m.getName()))
                         && super.isGetterVisible(m);
             }
 
             @Override
             public boolean isIsGetterVisible(Method m) {
-                return metamodel.managedView(m.getDeclaringClass()) == null && super.isGetterVisible(m);
+                return entityViewManager.getMetamodel().managedView(m.getDeclaringClass()) == null && super.isGetterVisible(m);
             }
 
             @Override
             public boolean isIsGetterVisible(AnnotatedMethod m) {
-                return metamodel.managedView(m.getDeclaringClass()) == null && super.isGetterVisible(m);
+                return entityViewManager.getMetamodel().managedView(m.getDeclaringClass()) == null && super.isGetterVisible(m);
             }
 
             // We make setters for collections "invisible" so that is uses a SetterlessProperty to always merge values into existing collections

@@ -15,44 +15,46 @@ Blaze Persistence - Entity View Module
 :numbered:
 :linkattrs:
 
-include::01_general.adoc[]
+include::general.adoc[]
 
-include::02_getting_started.adoc[]
+include::getting_started.adoc[]
 
-include::03_architecture.adoc[]
+include::architecture.adoc[]
 
-include::04_mappings.adoc[]
+include::mappings.adoc[]
 
-include::05_fetch_strategies.adoc[]
+include::fetch_strategies.adoc[]
 
-include::06_filter_and_sorter_api.adoc[]
+include::filter_and_sorter_api.adoc[]
 
-include::07_querying_and_pagination_api.adoc[]
+include::querying_and_pagination_api.adoc[]
 
-include::08_updatable_entity_views.adoc[]
+include::updatable_entity_views.adoc[]
 
-include::09_basic_user_type.adoc[]
+include::basic_user_type.adoc[]
 
-include::10_type_converter.adoc[]
+include::type_converter.adoc[]
 
-include::11_change_model.adoc[]
+include::change_model.adoc[]
 
-include::12_builder_api.adoc[]
+include::builder_api.adoc[]
 
-include::13_spring_data.adoc[]
+include::spring_data.adoc[]
 
-include::14_deltaspike_data.adoc[]
+include::deltaspike_data.adoc[]
 
-include::15_jaxrs.adoc[]
+include::jaxrs.adoc[]
 
-include::16_graphql.adoc[]
+include::graphql.adoc[]
 
-include::17_serialization_support.adoc[]
+include::quarkus.adoc[]
 
-include::18_metamodel.adoc[]
+include::serialization_support.adoc[]
 
-include::19_annotation_processor.adoc[]
+include::metamodel.adoc[]
 
-include::20_configuration.adoc[]
+include::annotation_processor.adoc[]
 
-include::21_faq.adoc[]
+include::configuration.adoc[]
+
+include::faq.adoc[]

@@ -15,44 +15,44 @@ Blaze Persistence - Criteria API for JPA backends
 :numbered:
 :linkattrs:
 
-include::01_general.adoc[]
+include::general.adoc[]
 
-include::02_getting_started.adoc[]
+include::getting_started.adoc[]
 
-include::03_architecture.adoc[]
+include::architecture.adoc[]
 
-include::04_from_clause.adoc[]
+include::from_clause.adoc[]
 
-include::05_predicate_builder.adoc[]
+include::predicate_builder.adoc[]
 
-include::06_where_clause.adoc[]
+include::where_clause.adoc[]
 
-include::07_group_by_having_clause.adoc[]
+include::group_by_having_clause.adoc[]
 
-include::08_order_by_clause.adoc[]
+include::order_by_clause.adoc[]
 
-include::09_select_clause.adoc[]
+include::select_clause.adoc[]
 
-include::10_polymorphism.adoc[]
+include::polymorphism.adoc[]
 
-include::11_expressions.adoc[]
+include::expressions.adoc[]
 
-include::12_query_api.adoc[]
+include::query_api.adoc[]
 
-include::13_pagination.adoc[]
+include::pagination.adoc[]
 
-include::14_dml_statements.adoc[]
+include::dml_statements.adoc[]
 
-include::15_cte.adoc[]
+include::cte.adoc[]
 
-include::16_set_operations.adoc[]
+include::set_operations.adoc[]
 
-include::17_entity_functions.adoc[]
+include::entity_functions.adoc[]
 
-include::18_jpql_functions.adoc[]
+include::jpql_functions.adoc[]
 
-include::19_customize_dbms_dialect.adoc[]
+include::customize_dbms_dialect.adoc[]
 
-include::20_configuration.adoc[]
+include::configuration.adoc[]
 
-include::21_window_functions.adoc[]
+include::window_functions.adoc[]

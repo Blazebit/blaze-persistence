@@ -1,0 +1,10 @@
+name: "Blaze-Persistence"
+metadata:
+  keywords:
+  - "jpa"
+  - "blaze-persistence"
+  - "entity-views"
+  guide: ""
+  categories:
+  - "data"
+  status: "stable"

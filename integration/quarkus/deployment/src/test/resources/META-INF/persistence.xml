@@ -16,9 +16,8 @@
   -->
 <persistence version="2.0" xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
-    <persistence-unit name="TestsuiteBase" transaction-type="RESOURCE_LOCAL">
-        <class>com.blazebit.persistence.integration.jaxrs.testsuite.entity.Document</class>
-        <class>com.blazebit.persistence.integration.jaxrs.testsuite.entity.Person</class>
+    <persistence-unit name="TestsuiteBase" transaction-type="JTA">
+        <class>com.blazebit.persistence.integration.quarkus.deployment.entity.Document</class>
         <exclude-unlisted-classes>true</exclude-unlisted-classes>
         <properties>
             <property name="javax.persistence.jdbc.url" value="jdbc:h2:mem:test;DB_CLOSE_DELAY=-1"/>
@@ -26,6 +25,8 @@
             <property name="javax.persistence.jdbc.password" value="password"/>
             <property name="javax.persistence.jdbc.driver" value="org.h2.Driver"/>
             <property name="javax.persistence.sharedCache.mode" value="NONE"/>
+            <property name="javax.persistence.schema-generation.database.action" value="drop-and-create"/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>
         </properties>
     </persistence-unit>
 </persistence>
