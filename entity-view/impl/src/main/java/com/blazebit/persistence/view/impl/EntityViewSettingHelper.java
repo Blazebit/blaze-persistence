@@ -251,7 +251,7 @@ public final class EntityViewSettingHelper {
     private static void applyAttributeFilters(EntityViewSetting<?, ?> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> cb, ExpressionFactory ef, ViewMetamodel metamodel, Metamodel jpaMetamodel, ManagedViewTypeImplementor<?> entityViewRoot) throws IllegalArgumentException {
         String name = entityViewRoot.getJavaType().getSimpleName();
         StringBuilder sb = null;
-        for (Map.Entry<String, EntityViewSetting.AttributeFilterActivation> attributeFilterEntry : setting.getAttributeFilters().entrySet()) {
+        for (Map.Entry<String, List<EntityViewSetting.AttributeFilterActivation>> attributeFilterEntry : setting.getAttributeFilterActivations().entrySet()) {
             String attributeName = attributeFilterEntry.getKey();
             NavigableMap<String, AbstractMethodAttribute<?, ?>> recursiveAttributes = (NavigableMap<String, AbstractMethodAttribute<?, ?>>) entityViewRoot.getRecursiveAttributes();
             Map.Entry<String, AbstractMethodAttribute<?, ?>> entry = recursiveAttributes.floorEntry(attributeName);
@@ -261,43 +261,43 @@ public final class EntityViewSettingHelper {
             if (attributeName.length() != entry.getKey().length()) {
                 throw new IllegalArgumentException("No support yet for entity attribute filtering!");
             }
-            EntityViewSetting.AttributeFilterActivation filterActivation = attributeFilterEntry.getValue();
+            for (EntityViewSetting.AttributeFilterActivation filterActivation : attributeFilterEntry.getValue()) {
+                Class<? extends AttributeFilterProvider> filterClass;
+                Class<?> expectedType;
 
-            Class<? extends AttributeFilterProvider> filterClass;
-            Class<?> expectedType;
+                MethodAttribute<?, ?> attribute = entry.getValue();
+                AttributeFilterMapping<?, ?> filterMapping = attribute.getFilter(filterActivation.getAttributeFilterName());
 
-            MethodAttribute<?, ?> attribute = entry.getValue();
-            AttributeFilterMapping<?, ?> filterMapping = attribute.getFilter(filterActivation.getAttributeFilterName());
+                if (filterMapping == null) {
+                    throw new IllegalArgumentException("Could not find attribute filter mapping with filter name '" + filterActivation.getAttributeFilterName()
+                            + "' for attribute '" + attributeName + "' in the entity view type '" + attribute.getDeclaringType().getJavaType()
+                            .getName() + "'");
+                }
 
-            if (filterMapping == null) {
-                throw new IllegalArgumentException("Could not find attribute filter mapping with filter name '" + filterActivation.getAttributeFilterName()
-                    + "' for attribute '" + attributeName + "' in the entity view type '" + attribute.getDeclaringType().getJavaType()
-                        .getName() + "'");
+                filterClass = filterMapping.getFilterClass();
+                // TODO: determining the expected type probably should be the job of the filter
+                // Consider a filter that implements intersection between sets, in that case a collection might be expected
+                // TODO: support converters here
+                if (attribute.isCollection()) {
+                    expectedType = ((PluralAttribute<?, ?, ?>) attribute).getElementType().getJavaType();
+                } else {
+                    expectedType = attribute.getJavaType();
+                }
+
+                if (filterClass == null) {
+                    throw new IllegalArgumentException("No filter mapping given for the attribute '" + attributeName
+                            + "' in the entity view type '" + entityViewRoot.getJavaType()
+                            .getName() + "'");
+                }
+
+                AttributeFilterProvider<?> filter = evm.createAttributeFilter(filterClass, expectedType, filterActivation.getFilterValue());
+                if (sb == null) {
+                    sb = new StringBuilder(name.length() + attributeName.length() + 1);
+                } else {
+                    sb.setLength(0);
+                }
+                filter.apply(cb, buildAlias(sb, name, attributeName));
             }
-
-            filterClass = filterMapping.getFilterClass();
-            // TODO: determining the expected type probably should be the job of the filter
-            // Consider a filter that implements intersection between sets, in that case a collection might be expected
-            // TODO: support converters here
-            if (attribute.isCollection()) {
-                expectedType = ((PluralAttribute<?, ?, ?>) attribute).getElementType().getJavaType();
-            } else {
-                expectedType = attribute.getJavaType();
-            }
-
-            if (filterClass == null) {
-                throw new IllegalArgumentException("No filter mapping given for the attribute '" + attributeName
-                    + "' in the entity view type '" + entityViewRoot.getJavaType()
-                        .getName() + "'");
-            }
-
-            AttributeFilterProvider<?> filter = evm.createAttributeFilter(filterClass, expectedType, filterActivation.getFilterValue());
-            if (sb == null) {
-                sb = new StringBuilder(name.length() + attributeName.length() + 1);
-            } else {
-                sb.setLength(0);
-            }
-            filter.apply(cb, buildAlias(sb, name, attributeName));
         }
     }
 

@@ -117,15 +117,7 @@ public class AttributeFilterTest extends AbstractEntityViewTest {
 
         EntityViewSetting<AttributeFilterPrimitiveDocumentView, CriteriaBuilder<AttributeFilterPrimitiveDocumentView>> setting = EntityViewSetting.create(AttributeFilterPrimitiveDocumentView.class);
         setting.addAttributeFilter("name", "pete");
-        IllegalArgumentException caughtException;
-        try {
-            setting.addAttributeFilter("name", "caseSensitiveNameFilter", "pete");
-            Assert.fail("Expected " + IllegalArgumentException.class.getName());
-            caughtException = null;
-        } catch (IllegalArgumentException e) {
-            caughtException = e;
-        }
-        assertMessageContains("At most one active attribute filter per attribute is allowed!", caughtException);
+        setting.addAttributeFilter("name", "caseSensitiveNameFilter", "pete");
     }
 
     @Test
@@ -138,7 +130,7 @@ public class AttributeFilterTest extends AbstractEntityViewTest {
         setting.addAttributeFilter("name", "pete");
         setting.addAttributeFilter("name", "pete2");
 
-        assertEquals("pete2", setting.getAttributeFilters().get("name").getFilterValue());
+        assertEquals(2, setting.getAttributeFilterActivations().get("name").size());
     }
 
     @Test
@@ -151,7 +143,7 @@ public class AttributeFilterTest extends AbstractEntityViewTest {
         setting.addAttributeFilter("name", "caseSensitiveNameFilter", "pete");
         setting.addAttributeFilter("name", "caseSensitiveNameFilter", "pete2");
 
-        assertEquals("pete2", setting.getAttributeFilters().get("name").getFilterValue());
+        assertEquals(2, setting.getAttributeFilterActivations().get("name").size());
     }
 
     @Test

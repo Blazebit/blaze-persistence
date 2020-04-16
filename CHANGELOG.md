@@ -16,6 +16,7 @@ Not yet released
 * Add support for `@PostLoad` entity view lifecycle listeners
 * Support controlling whether empty flat views or null should be produced via `@EmptyFlatViewCreation`
 * Support type-safe usage of filters and sorters based on static entity view metamodel
+* Support multiple attribute filter activations per attribute
 
 ### Bug fixes
 
