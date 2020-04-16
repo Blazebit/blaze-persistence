@@ -310,7 +310,10 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
                     i = 1;
                 }
             }
+        } else if (expressions.get(0) instanceof PropertyExpression && "this".equals(((PropertyExpression) expressions.get(0)).getProperty())) {
+            return;
         }
+
         for (; i < size; i++) {
             expressions.get(i).accept(this);
         }

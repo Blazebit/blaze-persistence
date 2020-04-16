@@ -16,6 +16,10 @@
 
 package com.blazebit.persistence.view.testsuite.basic;
 
+import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.Mapping;
+import com.blazebit.persistence.view.testsuite.basic.model.IdHolderView;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -70,5 +74,27 @@ public class ValidationTest extends AbstractEntityViewTest {
                 throw ex;
             }
         }
+    }
+
+    @Test
+    public void testValidationInvalidCaseMapping() {
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        cfg.addEntityView(PersonInvalidCaseMappingValidationView.class);
+
+        try {
+            cfg.createEntityViewManager(cbf);
+            Assert.fail("Expected validation exception!");
+        } catch (IllegalArgumentException ex) {
+            if (!ex.getMessage().contains(PersonInvalidCaseMappingValidationView.class.getSimpleName() + ".getValid") || !ex.getCause().getMessage().contains("'invalid'")) {
+                throw ex;
+            }
+        }
+    }
+
+    @EntityView(Person.class)
+    public interface PersonInvalidCaseMappingValidationView extends IdHolderView<Long> {
+
+        @Mapping("CASE WHEN partnerDocument.invalid = 1 THEN true ELSE false END")
+        public boolean getValid();
     }
 }

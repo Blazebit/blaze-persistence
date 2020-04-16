@@ -32,6 +32,7 @@ Not yet released
 * Support `@ViewFilter` inheritance
 * Fix collection deserialization issues with Jackson
 * Allow to use `@JsonIgnore` for the id property of an entity view
+* Properly validate the condition expression of `CASE` expressions in entity views
 
 ### Backwards-incompatible changes
 

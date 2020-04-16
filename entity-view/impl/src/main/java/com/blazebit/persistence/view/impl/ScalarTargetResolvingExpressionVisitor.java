@@ -72,9 +72,14 @@ import javax.persistence.metamodel.ListAttribute;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.Type;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.sql.Clob;
+import java.sql.NClob;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -85,6 +90,36 @@ import java.util.Map;
  * @since 1.0.0
  */
 public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingExpressionVisitor {
+
+    private static final Map<Class<?>, TypeKind> TYPE_KINDS;
+
+    static {
+        Map<Class<?>, TypeKind> typeKinds = new HashMap<>();
+        typeKinds.put(boolean.class, TypeKind.BOOLEAN);
+        typeKinds.put(Boolean.class, TypeKind.BOOLEAN);
+        typeKinds.put(byte.class, TypeKind.NUMERIC);
+        typeKinds.put(Byte.class, TypeKind.NUMERIC);
+        typeKinds.put(short.class, TypeKind.NUMERIC);
+        typeKinds.put(Short.class, TypeKind.NUMERIC);
+        typeKinds.put(int.class, TypeKind.NUMERIC);
+        typeKinds.put(Integer.class, TypeKind.NUMERIC);
+        typeKinds.put(long.class, TypeKind.NUMERIC);
+        typeKinds.put(Long.class, TypeKind.NUMERIC);
+        typeKinds.put(float.class, TypeKind.NUMERIC);
+        typeKinds.put(Float.class, TypeKind.NUMERIC);
+        typeKinds.put(double.class, TypeKind.NUMERIC);
+        typeKinds.put(Double.class, TypeKind.NUMERIC);
+        typeKinds.put(BigInteger.class, TypeKind.NUMERIC);
+        typeKinds.put(BigDecimal.class, TypeKind.NUMERIC);
+        typeKinds.put(char.class, TypeKind.STRING);
+        typeKinds.put(Character.class, TypeKind.STRING);
+        typeKinds.put(char[].class, TypeKind.STRING);
+        typeKinds.put(Character[].class, TypeKind.STRING);
+        typeKinds.put(Clob.class, TypeKind.STRING);
+        typeKinds.put(NClob.class, TypeKind.STRING);
+        typeKinds.put(String.class, TypeKind.STRING);
+        TYPE_KINDS = typeKinds;
+    }
 
     private final ManagedType<?> managedType;
     private final Map<String, JpqlFunction> functions;
@@ -214,6 +249,10 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
 
     @Override
     public void visit(GeneralCaseExpression expression) {
+        visit(expression, metamodel.type(Boolean.class));
+    }
+
+    private void visit(GeneralCaseExpression expression, Type<?> conditionType) {
         List<PathPosition> currentPositions = pathPositions;
         List<PathPosition> newPositions = new ArrayList<>();
         
@@ -222,10 +261,14 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
             List<WhenClauseExpression> expressions = expression.getWhenClauses();
             int size = expressions.size();
             EXPRESSION_LOOP: for (int i = 0; i < size; i++) {
+                PathPosition pathPosition = resolve(expressions.get(i).getCondition());
+                if (conditionType != null && pathPosition != null && !isCompatible(conditionType, pathPosition.getCurrentType())) {
+                    invalid(expression, "The case predicate compares different types: [" + conditionType + ", " + pathPosition.getCurrentType() + "]");
+                }
                 PathPosition position = currentPositions.get(j).copy();
                 pathPositions = new ArrayList<>();
                 pathPositions.add(currentPosition = position);
-                expressions.get(i).accept(this);
+                expressions.get(i).getResult().accept(this);
 
                 // We just use the type of the first path position that we find
                 for (PathPosition newPosition : pathPositions) {
@@ -492,12 +535,13 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
 
     @Override
     public void visit(SimpleCaseExpression expression) {
-        visit((GeneralCaseExpression) expression);
+        PathPosition pathPosition = resolve(expression.getCaseOperand());
+        visit(expression, pathPosition == null ? null : pathPosition.getCurrentType());
     }
 
     @Override
     public void visit(WhenClauseExpression expression) {
-        expression.getResult().accept(this);
+        invalid(expression, "Should be handled by case expression");
     }
 
     @Override
@@ -534,6 +578,8 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
         for (int i = 0; i < children.size(); i++) {
             children.get(i).accept(this);
         }
+        currentPosition.setAttribute(null);
+        currentPosition.setCurrentType(metamodel.type(Boolean.class));
     }
 
     @Override
@@ -574,10 +620,11 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
     public void visit(BinaryExpressionPredicate predicate) {
         PathPosition left = resolve(predicate.getLeft());
         PathPosition right = resolve(predicate.getRight());
-        if (left != null && left.getCurrentType() != null && right != null && right.getCurrentType() != null && left.getCurrentType() != right.getCurrentType()) {
-            invalid(predicate, "The binary predicate compares different types!");
+        if (left != null && right != null && !isCompatible(left.getCurrentType(), right.getCurrentType())) {
             invalid(predicate, "The binary predicate compares different types: [" + left.getCurrentType() + ", " + right.getCurrentType() + "]");
         }
+        currentPosition.setAttribute(null);
+        currentPosition.setCurrentType(metamodel.type(Boolean.class));
     }
 
     private PathPosition resolve(Expression expression) {
@@ -602,11 +649,15 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
     @Override
     public void visit(IsNullPredicate predicate) {
         predicate.getExpression().accept(this);
+        currentPosition.setAttribute(null);
+        currentPosition.setCurrentType(metamodel.type(Boolean.class));
     }
 
     @Override
     public void visit(IsEmptyPredicate predicate) {
         predicate.getExpression().accept(this);
+        currentPosition.setAttribute(null);
+        currentPosition.setCurrentType(metamodel.type(Boolean.class));
     }
 
     @Override
@@ -614,10 +665,11 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
         PathPosition left = resolve(predicate.getLeft());
         PathPosition start = resolve(predicate.getStart());
         PathPosition end = resolve(predicate.getEnd());
-        if (left != null && left.getCurrentType() != null && start != null && start.getCurrentType() != null && end != null && end.getCurrentType() != null
-                && (left.getCurrentType() != start.getCurrentType() || left.getCurrentType() != end.getCurrentType())) {
+        if (left != null && start != null && end != null && (!isCompatible(left.getCurrentType(), start.getCurrentType()) || !isCompatible(left.getCurrentType(), end.getCurrentType()))) {
             invalid(predicate, "The between predicate compares different types: [" + left.getCurrentType() + ", " + start.getCurrentType() + ", " + end.getCurrentType() + "]");
         }
+        currentPosition.setAttribute(null);
+        currentPosition.setCurrentType(metamodel.type(Boolean.class));
     }
 
     @Override
@@ -632,7 +684,7 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
             for (int i = 0; i < expressions.size(); i++) {
                 PathPosition pathPosition = resolve(expressions.get(i));
                 if (pathPosition != null) {
-                    if (left.getCurrentType() != pathPosition.getCurrentType()) {
+                    if (!isCompatible(left.getCurrentType(), pathPosition.getCurrentType())) {
                         invalid = true;
                     }
                     expressionTypes.add(pathPosition.getCurrentType());
@@ -643,10 +695,41 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
                 invalid(predicate, "The in predicate compares the left type '" + left.getCurrentType() + "' with different item types: " + expressionTypes);
             }
         }
+        currentPosition.setAttribute(null);
+        currentPosition.setCurrentType(metamodel.type(Boolean.class));
     }
 
     @Override
     public void visit(ExistsPredicate predicate) {
-        // No-op
+        currentPosition.setAttribute(null);
+        currentPosition.setCurrentType(metamodel.type(Boolean.class));
     }
+
+    private boolean isCompatible(Type<?> t1, Type<?> t2) {
+        if (t1 == null || t2 == null) {
+            return true;
+        }
+        if (t1 == t2) {
+            return true;
+        }
+
+        Class<?> t1Type = t1.getJavaType();
+        Class<?> t2Type = t2.getJavaType();
+        TypeKind typeKind1 = TYPE_KINDS.get(t1Type);
+        TypeKind typeKind2 = TYPE_KINDS.get(t2Type);
+        return typeKind1 == typeKind2 || t1Type == t2Type;
+    }
+
+    /**
+     * Type kinds.
+     *
+     * @author Christian Beikov
+     * @since 1.5.0
+     */
+    private static enum TypeKind {
+        BOOLEAN,
+        NUMERIC,
+        STRING;
+    }
+
 }
