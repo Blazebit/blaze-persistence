@@ -18,6 +18,7 @@ Not yet released
 * Support type-safe usage of filters and sorters based on static entity view metamodel
 * Support multiple attribute filter activations per attribute
 * Validate expression in `@EntityViewInheritanceMapping`
+* Fail validation on startup when formula is used in CTE entity
 
 ### Bug fixes
 

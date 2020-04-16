@@ -719,7 +719,7 @@ public abstract class AbstractJpaPersistenceTest {
         String newline = System.getProperty("line.separator");
         StringWriter strWriter = new StringWriter();
         strWriter.append(msg);
-        if (failures.size() <= 1) {
+        if (failures.size() <= 1 || failures.size() == 2 && failures.containsKey("org.hibernate.ejb.HibernatePersistence") && failures.containsKey("org.hibernate.jpa.HibernatePersistenceProvider")) {
             // we caught an exception, so include it as the cause
             Throwable t = null;
             for (String providerName : failures.keySet()) {
