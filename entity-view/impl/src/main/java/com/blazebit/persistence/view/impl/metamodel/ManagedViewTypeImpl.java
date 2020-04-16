@@ -26,6 +26,7 @@ import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.LockMode;
 import com.blazebit.persistence.view.ViewTransition;
 import com.blazebit.persistence.view.impl.PrefixingQueryGenerator;
+import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.view.impl.SimpleCTEProviderFactory;
 import com.blazebit.persistence.view.impl.proxy.AbstractReflectionInstantiator;
 import com.blazebit.persistence.view.impl.type.NormalMapUserTypeWrapper;
@@ -864,6 +865,15 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
 
     @Override
     public void checkAttributes(MetamodelBuildingContext context) {
+        if (inheritanceMapping != null) {
+            ScalarTargetResolvingExpressionVisitor visitor = new ScalarTargetResolvingExpressionVisitor(jpaManagedType, context.getEntityMetamodel(), context.getJpqlFunctions());
+            try {
+                context.getExpressionFactory().createBooleanExpression(inheritanceMapping, false).accept(visitor);
+            } catch (RuntimeException ex) {
+                context.addError("Invalid inheritance mapping expression '" + inheritanceMapping + "' on the entity view " + javaType.getName() + ". Encountered error: " + ex.getMessage());
+            }
+        }
+
         // Ensure that a plural entity attribute is not used multiple times in different plural entity view attributes
         // If it were used multiple times, the second collection would not receive all expected elements, because both are based on the same join
         // and the first collection will already cause a "fold" of the results for materializing the collection in the entity view

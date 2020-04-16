@@ -17,6 +17,7 @@ Not yet released
 * Support controlling whether empty flat views or null should be produced via `@EmptyFlatViewCreation`
 * Support type-safe usage of filters and sorters based on static entity view metamodel
 * Support multiple attribute filter activations per attribute
+* Validate expression in `@EntityViewInheritanceMapping`
 
 ### Bug fixes
 
