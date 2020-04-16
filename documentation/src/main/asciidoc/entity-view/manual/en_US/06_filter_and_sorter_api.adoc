@@ -92,8 +92,6 @@ setting.addAttributeFilter("name", "containsCaseSensitive", "kitty"); # <2>
 <1> Enables the default filter `ContainsIgnoreCaseFilter`, so e.g. 'KITTY' matches
 <2> Enables the named filter `ContainsFilter`, so e.g. 'KITTY' doesn't match
 
-NOTE: At most one attribute filter can be enabled per attribute.
-
 {projectname} provides a number of built-in filter providers in the `com.blazebit.persistence.view.filter` package:
 
 |===
