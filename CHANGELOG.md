@@ -19,6 +19,7 @@ Not yet released
 * Support multiple attribute filter activations per attribute
 * Validate expression in `@EntityViewInheritanceMapping`
 * Fail validation on startup when formula is used in CTE entity
+* Throw validation error when encountering entity view annotations on setter
 
 ### Bug fixes
 

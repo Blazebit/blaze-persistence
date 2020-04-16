@@ -487,6 +487,14 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
                 return null;
             }
 
+            for (Annotation annotation : m.getAnnotations()) {
+                if (annotation.annotationType().getPackage().getName().startsWith("com.blazebit.persistence.view")) {
+                    context.addError("The setter '" + m.getName() + "' of the class '" + viewType.getName()
+                            + "' has entity view annotations, but these annotations must be on the getter only!");
+                    break;
+                }
+            }
+
             return null;
         } else if (!ReflectionUtils.isGetter(m)) {
             context.addError("The given method '" + m.getName() + "' from the entity view '" + viewType.getName()
