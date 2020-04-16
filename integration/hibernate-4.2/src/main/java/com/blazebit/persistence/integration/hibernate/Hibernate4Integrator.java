@@ -29,6 +29,7 @@ import org.hibernate.hql.spi.TemporaryTableBulkIdStrategy;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.ServiceContributingIntegrator;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.metamodel.spi.TypeContributions;
 import org.hibernate.metamodel.spi.TypeContributor;
@@ -102,6 +103,7 @@ public class Hibernate4Integrator implements ServiceContributingIntegrator, Type
 
         Iterator<PersistentClass> iter = configuration.getClassMappings();
         List<PersistentClass> invalidPolymorphicCtes = new ArrayList<>();
+        List<String> invalidFormulaCtes = new ArrayList<>();
         while (iter.hasNext()) {
             PersistentClass clazz = iter.next();
             Class<?> entityClass = clazz.getMappedClass();
@@ -113,6 +115,13 @@ public class Hibernate4Integrator implements ServiceContributingIntegrator, Type
                 if (clazz.isPolymorphic()) {
                     invalidPolymorphicCtes.add(clazz);
                 }
+                Iterator<Property> iterator = clazz.getSubclassPropertyClosureIterator();
+                while (iterator.hasNext()) {
+                    Property property = iterator.next();
+                    if (property.getValue().hasFormula()) {
+                        invalidFormulaCtes.add(clazz.getClassName() + "#" + property.getName());
+                    }
+                }
                 clazz.getTable().setSubselect("select * from " + clazz.getJpaEntityName());
             }
         }
@@ -122,6 +131,15 @@ public class Hibernate4Integrator implements ServiceContributingIntegrator, Type
             sb.append("Found invalid polymorphic CTE entity definitions. CTE entities may not extend other entities:");
             for (PersistentClass invalidPolymorphicCte : invalidPolymorphicCtes) {
                 sb.append("\n - ").append(invalidPolymorphicCte.getMappedClass().getName());
+            }
+
+            throw new RuntimeException(sb.toString());
+        }
+        if (!invalidFormulaCtes.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("Found uses of @Formula in CTE entity definitions. CTE entities can't use @Formula:");
+            for (String invalidFormulaCte : invalidFormulaCtes) {
+                sb.append("\n - ").append(invalidFormulaCte);
             }
 
             throw new RuntimeException(sb.toString());
