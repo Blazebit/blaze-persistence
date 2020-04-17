@@ -91,6 +91,11 @@ public class DelegatingDbmsDialect implements DbmsDialect {
     }
 
     @Override
+    public boolean supportsLimitWithoutOrderBy() {
+        return delegate.supportsLimitWithoutOrderBy();
+    }
+
+    @Override
     public boolean supportsWithClauseInModificationQuery() {
         return delegate.supportsWithClauseInModificationQuery();
     }

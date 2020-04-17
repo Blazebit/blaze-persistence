@@ -119,6 +119,23 @@ public interface PaginatedCriteriaBuilder<T> extends FullQueryBuilder<T, Paginat
     public boolean isWithCountQuery();
 
     /**
+     * Sets the maximum value up to which a count query should count.
+     *
+     * @param maximumCount the maximum value up to which should be counted
+     * @return The query builder for chaining calls
+     * @since 1.5.0
+     */
+    public PaginatedCriteriaBuilder<T> withBoundedCount(long maximumCount);
+
+    /**
+     * Returns the maximum value up to which a count query should count.
+     *
+     * @return the maximum value up to which a count query should count
+     * @since 1.5.0
+     */
+    public long getBoundedCount();
+
+    /**
      * Forces the use of an id query even if the pagination would not need it.
      *
      * @param withForceIdQuery true to force id query use, false otherwise

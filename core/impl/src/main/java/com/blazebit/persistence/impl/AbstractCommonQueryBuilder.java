@@ -44,6 +44,7 @@ import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.WhereOrBuilder;
 import com.blazebit.persistence.WindowBuilder;
 import com.blazebit.persistence.impl.function.entity.ValuesEntity;
+import com.blazebit.persistence.impl.function.limit.LimitFunction;
 import com.blazebit.persistence.impl.keyset.KeysetBuilderImpl;
 import com.blazebit.persistence.impl.keyset.KeysetLink;
 import com.blazebit.persistence.impl.keyset.KeysetManager;
@@ -844,10 +845,8 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         if (bindFrom) {
             builder.from(criteriaBuilder.cteType, subqueryAlias == null ? alias : subqueryAlias);
         }
-        for (Map.Entry<String, ExtendedAttribute<?, ?>> entry : criteriaBuilder.attributeEntries.entrySet()) {
-            if (!JpaMetamodelUtils.isAssociation(entry.getValue().getAttribute())) {
-                builder.bind(entry.getKey()).select(entry.getKey());
-            }
+        for (String propertyPath : JpaUtils.getEmbeddedPropertyPaths(criteriaBuilder.attributeEntries, null, false, false)) {
+            builder.bind(propertyPath).select(propertyPath);
         }
         return builder;
     }
@@ -2419,6 +2418,10 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     protected List<EntityFunctionNode> getEntityFunctionNodes(Query baseQuery, List<JoinNode> valuesNodes, List<JoinNode> lateInlineNodes) {
+        return getEntityFunctionNodes(baseQuery, valuesNodes, lateInlineNodes, mainQuery.getQueryConfiguration().isValuesClauseFilterNullsEnabled());
+    }
+
+    protected List<EntityFunctionNode> getEntityFunctionNodes(Query baseQuery, List<JoinNode> valuesNodes, List<JoinNode> lateInlineNodes, boolean filterNulls) {
         List<EntityFunctionNode> entityFunctionNodes = new ArrayList<>();
 
         DbmsDialect dbmsDialect = mainQuery.dbmsDialect;
@@ -2448,7 +2451,6 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             StringBuilder whereClauseSb = new StringBuilder(exampleQuerySql.length());
             String filterNullsTableAlias = "fltr_nulls_tbl_als_";
             String valuesAliases = getValuesAliases(exampleQuerySqlAlias, attributes.length, exampleQuerySql, whereClauseSb, filterNullsTableAlias, strategy, dummyTable);
-            boolean filterNulls = mainQuery.getQueryConfiguration().isValuesClauseFilterNullsEnabled();
 
             if (strategy == ValuesStrategy.SELECT_VALUES) {
                 valuesSb.insert(0, valuesAliases);
@@ -3152,7 +3154,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     protected String buildLateralBaseQueryString(StringBuilder sbSelectFrom, JoinNode lateralJoinNode) {
         sbSelectFrom.append(" WHERE ");
         if (hasLimit()) {
-            sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation("LIMIT", 1));
+            sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(LimitFunction.FUNCTION_NAME, 1));
             sbSelectFrom.append('(');
         } else {
             sbSelectFrom.append("EXISTS(");
@@ -3222,7 +3224,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             final boolean hasFirstResult = queryBuilder.getFirstResult() != 0;
             final boolean hasMaxResults = queryBuilder.getMaxResults() != Integer.MAX_VALUE;
             List<Expression> arguments = new ArrayList<>(2);
-            arguments.add(new StringLiteral("LIMIT"));
+            arguments.add(new StringLiteral(LimitFunction.FUNCTION_NAME));
             arguments.add(expression);
 
             if (!hasMaxResults) {

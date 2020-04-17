@@ -17,7 +17,10 @@
 package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.impl.function.alias.AliasFunction;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
@@ -27,7 +30,6 @@ import org.junit.experimental.categories.Category;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
-import javax.persistence.TypedQuery;
 
 import static org.junit.Assert.assertEquals;
 
@@ -137,5 +139,38 @@ public class CountQueryTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.groupBy("d.id").having("COUNT(partners.id)").eqExpression("1");
         CatchException.verifyException(crit, IllegalStateException.class).getCountQuery();
+    }
+
+    @Test
+    @Category({ NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
+    // TODO: report eclipselink does not support subqueries in functions
+    public void boundedCountQueryFromSimpleQuery() {
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
+
+        // do not include joins that are only needed for the select clause
+        String expectedCountQuery = "SELECT COUNT(*) FROM (SELECT " + function(AliasFunction.FUNCTION_NAME, "1", " 'c'") + " FROM Document d LIMIT 2)";
+        String expectedQueryRootCountQuery = "SELECT COUNT(*) FROM (SELECT " + countPaginatedBounded(function(AliasFunction.FUNCTION_NAME, "d.id", " 'c0'"), false) + " FROM Document d LIMIT 2)";
+        assertEquals(expectedCountQuery, crit.getCountQueryString(2));
+        assertEquals(expectedQueryRootCountQuery, crit.getQueryRootCountQueryString(2));
+        crit.getCountQuery(2).getResultList();
+        crit.getQueryRootCountQuery(2).getResultList();
+    }
+
+    @Test
+    @Category({ NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
+    // TODO: report eclipselink does not support subqueries in functions
+    public void boundedCountQueryFromCollectionJoinQuery() {
+        CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class)
+                .from(Document.class, "d")
+                .select("d.id")
+                .select("partners.id");
+
+        // do not include joins that are only needed for the select clause
+        String expectedCountQuery = "SELECT COUNT(*) FROM (SELECT " + function(AliasFunction.FUNCTION_NAME, "1", " 'c'") + " FROM Document d LEFT JOIN d.partners partners_1 LIMIT 2)";
+        String expectedQueryRootCountQuery = "SELECT COUNT(*) FROM (SELECT " + countPaginatedBounded(function(AliasFunction.FUNCTION_NAME, "d.id", " 'c0'"), false) + " FROM Document d LIMIT 2)";
+        assertEquals(expectedCountQuery, crit.getCountQueryString(2));
+        assertEquals(expectedQueryRootCountQuery, crit.getQueryRootCountQueryString(2));
+        crit.getCountQuery(2).getResultList();
+        crit.getQueryRootCountQuery(2).getResultList();
     }
 }

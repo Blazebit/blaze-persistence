@@ -57,6 +57,24 @@ public interface FullQueryBuilder<T, X extends FullQueryBuilder<T, X>> extends Q
     public String getCountQueryString();
 
     /**
+     * Returns a query that counts the results and counts up to the maximum value that is given that would be produced if the current query was run.
+     *
+     * @param maximumCount the maximum value up to which should be counted
+     * @return A query for determining the count of the result list represented by this query builder
+     * @since 1.5.0
+     */
+    public TypedQuery<Long> getCountQuery(long maximumCount);
+
+    /**
+     * Returns the query string that selects the count of elements and counts up to the maximum value that is given.
+     *
+     * @param maximumCount the maximum value up to which should be counted
+     * @return The query string
+     * @since 1.5.0
+     */
+    public String getCountQueryString(long maximumCount);
+
+    /**
      * Invokes {@link FullQueryBuilder#pageBy(int, int, String, String...)} with the identifiers of the query root entity.
      *
      * @param firstResult The position of the first result to retrieve, numbered from 0

@@ -41,6 +41,7 @@ import com.blazebit.persistence.impl.function.count.AbstractCountFunction;
 import com.blazebit.persistence.impl.function.count.CountTupleEmulationFunction;
 import com.blazebit.persistence.impl.function.count.CountTupleFunction;
 import com.blazebit.persistence.impl.function.count.MySQLCountTupleFunction;
+import com.blazebit.persistence.impl.function.countwrapper.CountWrapperFunction;
 import com.blazebit.persistence.impl.function.dateadd.day.DB2DayAddFunction;
 import com.blazebit.persistence.impl.function.dateadd.day.DayAddFunction;
 import com.blazebit.persistence.impl.function.dateadd.day.H2DayAddFunction;
@@ -349,6 +350,7 @@ import com.blazebit.persistence.impl.function.least.MinLeastFunction;
 import com.blazebit.persistence.impl.function.least.SelectMinUnionLeastFunction;
 import com.blazebit.persistence.impl.function.limit.LimitFunction;
 import com.blazebit.persistence.impl.function.nullfn.NullfnFunction;
+import com.blazebit.persistence.impl.function.nullsubquery.NullSubqueryFunction;
 import com.blazebit.persistence.impl.function.oragg.FallbackOrAggFunction;
 import com.blazebit.persistence.impl.function.oragg.OrAggFunction;
 import com.blazebit.persistence.impl.function.pageposition.MySQLPagePositionFunction;
@@ -540,7 +542,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         
         // limit
 
-        jpqlFunctionGroup = new JpqlFunctionGroup("limit", false);
+        jpqlFunctionGroup = new JpqlFunctionGroup(LimitFunction.FUNCTION_NAME, false);
         jpqlFunctionGroup.add(null, new LimitFunction(dbmsDialects.get(null)));
         jpqlFunctionGroup.add("mysql", new LimitFunction(dbmsDialects.get("mysql")));
         jpqlFunctionGroup.add("mysql8", new LimitFunction(dbmsDialects.get("mysql8")));
@@ -1368,6 +1370,16 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         // column trunc function
         jpqlFunctionGroup = new JpqlFunctionGroup(ColumnTruncFunction.FUNCTION_NAME, false);
         jpqlFunctionGroup.add(null, new ColumnTruncFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        // count wrapper function
+        jpqlFunctionGroup = new JpqlFunctionGroup(CountWrapperFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup.add(null, new CountWrapperFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        // null subquery function
+        jpqlFunctionGroup = new JpqlFunctionGroup(NullSubqueryFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup.add(null, new NullSubqueryFunction());
         registerFunction(jpqlFunctionGroup);
 
         // greatest

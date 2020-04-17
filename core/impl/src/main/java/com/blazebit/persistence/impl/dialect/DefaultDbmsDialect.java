@@ -253,6 +253,11 @@ public class DefaultDbmsDialect implements DbmsDialect {
         return new DefaultDbmsLimitHandler();
     }
 
+    @Override
+    public boolean supportsLimitWithoutOrderBy() {
+        return true;
+    }
+
     protected String getWindowFunctionDummyOrderBy() {
         return null;
     }

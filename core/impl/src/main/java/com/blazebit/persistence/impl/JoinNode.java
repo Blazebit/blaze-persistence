@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.From;
 import com.blazebit.persistence.JoinType;
+import com.blazebit.persistence.impl.function.entity.ValuesEntity;
 import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
 import com.blazebit.persistence.parser.expression.BaseNode;
 import com.blazebit.persistence.parser.expression.Expression;
@@ -200,6 +201,13 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
 
     public static JoinNode createRootNode(EntityType<?> nodeType, JoinAliasInfo aliasInfo) {
         return new JoinNode(null, null, null, null, null, nodeType, null, null, aliasInfo, false);
+    }
+
+    public static JoinNode createSimpleValuesRootNode(MainQuery mainQuery, Class<?> nodeType, int valueCount, JoinAliasInfo aliasInfo) {
+        String sqlType = mainQuery.dbmsDialect.getSqlType(Long.class);
+        String valuesTypeName = mainQuery.cbf.getNamedTypes().get(Long.class);
+        String valuesCastedParameter = mainQuery.dbmsDialect.cast("?", sqlType);
+        return new JoinNode(mainQuery.metamodel.type(nodeType), mainQuery.metamodel.entity(ValuesEntity.class), valuesTypeName, valueCount, null, null, null, true, true, "value", valuesCastedParameter, new String[] { "value" }, aliasInfo);
     }
 
     public static JoinNode createValuesRootNode(Type<?> nodeType, EntityType<?> valueType, String valuesTypeName, int valueCount, Set<String> valuesIdName, String valuesLikeClause, String qualificationExpression, boolean valueClazzAttributeSingular, boolean valueClazzSimpleValue, String valuesLikeAttribute, String valuesCastedParameter, String[] valuesAttributes, JoinAliasInfo aliasInfo) {

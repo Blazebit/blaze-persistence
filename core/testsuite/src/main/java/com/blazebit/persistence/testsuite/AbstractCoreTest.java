@@ -212,6 +212,23 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
         return sb.toString();
     }
 
+    protected String countPaginatedBounded(String string, boolean distinct) {
+        StringBuilder sb = new StringBuilder(20 + string.length());
+        sb.append("DISTINCT ").append(string);
+
+        if (!distinct) {
+            for (int i = 0; i < sb.length() - 1; i++) {
+                sb.setCharAt(i, ' ');
+            }
+            String suffix = "1, 'c')";
+            String aliasFunctionInvocation = jpaProvider.getCustomFunctionInvocation("alias", 1);
+            sb.replace(sb.length() - (aliasFunctionInvocation.length() + suffix.length()), sb.length() - suffix.length(), aliasFunctionInvocation);
+            sb.replace(sb.length() - suffix.length(), sb.length(), suffix);
+        }
+
+        return sb.toString();
+    }
+
     private static List<EntityType<?>> subtypes(EntityType<?> t, Metamodel metamodel) {
         List<EntityType<?>> list = new ArrayList<>();
         if (t.getJavaType() == null) {

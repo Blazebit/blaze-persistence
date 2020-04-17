@@ -100,7 +100,7 @@ public class RecordingList<E> extends RecordingCollection<List<E>, E> implements
         if (indexed) {
             addAction(new ListAddAllAction<List<E>, E>(index, delegate.size() == index, c));
         } else {
-            addAddAllAction(c);
+            super.addAddAllAction(c);
         }
     }
 
@@ -146,7 +146,7 @@ public class RecordingList<E> extends RecordingCollection<List<E>, E> implements
         if (indexed) {
             addAction(new ListRemoveAction<List<E>, E>(index, index == delegate.size() - 1, delegate));
         } else {
-            addRemoveAction(delegate.get(index));
+            super.addRemoveAction(delegate.get(index));
         }
     }
 

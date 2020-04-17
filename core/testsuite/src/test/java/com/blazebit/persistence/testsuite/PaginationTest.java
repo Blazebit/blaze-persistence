@@ -22,6 +22,7 @@ import static org.junit.Assert.fail;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -33,6 +34,7 @@ import com.blazebit.persistence.DefaultKeyset;
 import com.blazebit.persistence.DefaultKeysetPage;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -1125,5 +1127,71 @@ public class PaginationTest extends AbstractCoreTest {
                 ).end();
         assertEquals("SELECT doc FROM Document doc WHERE doc.id IN (SELECT d.id FROM Document d WHERE d.name = :param_0 ORDER BY d.id ASC LIMIT 10)", cb.getQueryString());
         cb.getResultList();
+    }
+
+    @Test
+    @Category({ NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
+    // TODO: report eclipselink does not support subqueries in functions
+    public void testBoundedCountSimpleExternal() {
+        PaginatedCriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d")
+                .where("owner.name").eq("Karl1")
+                .orderByAsc("id")
+                .page(0, 1)
+                .withInlineCountQuery(false)
+                .withBoundedCount(2);
+        PagedList<Document> result = cb.getResultList();
+        assertEquals(1, result.size());
+        assertEquals("doc1", result.get(0).getName());
+        assertEquals(2, result.getTotalSize());
+    }
+
+    @Test
+    @Category({ NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
+    // TODO: report eclipselink does not support subqueries in functions
+    public void testBoundedCountSimpleInline() {
+        PaginatedCriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d")
+                .where("owner.name").eq("Karl1")
+                .orderByAsc("id")
+                .page(0, 1)
+                .withBoundedCount(2);
+        PagedList<Document> result = cb.getResultList();
+        assertEquals(1, result.size());
+        assertEquals("doc1", result.get(0).getName());
+        assertEquals(2, result.getTotalSize());
+    }
+
+    @Test
+    @Category({ NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
+    // TODO: report eclipselink does not support subqueries in functions
+    public void testBoundedCountAdvancedExternal() {
+        PaginatedCriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d")
+                .innerJoinOnEntitySubquery(Document.class, "d2").end().setOnExpression("d2 = d")
+                .select("d")
+                .where("d.owner.name").eq("Karl1")
+                .orderByAsc("d.id")
+                .page(0, 1)
+                .withInlineCountQuery(false)
+                .withBoundedCount(2);
+        PagedList<Document> result = cb.getResultList();
+        assertEquals(1, result.size());
+        assertEquals("doc1", result.get(0).getName());
+        assertEquals(2, result.getTotalSize());
+    }
+
+    @Test
+    @Category({ NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
+    // TODO: report eclipselink does not support subqueries in functions
+    public void testBoundedCountAdvancedInline() {
+        PaginatedCriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d")
+                .innerJoinOnEntitySubquery(Document.class, "d2").end().setOnExpression("d2 = d")
+                .select("d")
+                .where("d.owner.name").eq("Karl1")
+                .orderByAsc("d.id")
+                .page(0, 1)
+                .withBoundedCount(2);
+        PagedList<Document> result = cb.getResultList();
+        assertEquals(1, result.size());
+        assertEquals("doc1", result.get(0).getName());
+        assertEquals(2, result.getTotalSize());
     }
 }
