@@ -28,6 +28,7 @@ import com.blazebit.persistence.spi.JpqlFunction;
  */
 public class LimitFunction implements JpqlFunction {
 
+    public static final String FUNCTION_NAME = "limit";
     protected final DbmsDialect dbmsDialect;
     protected final boolean limitIncludesOffset;
 

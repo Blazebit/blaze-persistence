@@ -457,9 +457,9 @@ public class InlineCTETest extends AbstractCoreTest {
                     .orderByAsc("name")
                     .setMaxResults(1)
                 .end();
-        String subquery = "SELECT t.name, t.parent.id, t.id FROM RecursiveEntity t LEFT JOIN t.parent parent_1 WHERE parent_1.name = :param_0 ORDER BY t.name ASC LIMIT 1";
+        String subquery = "SELECT t.id, t.name, t.parent.id FROM RecursiveEntity t LEFT JOIN t.parent parent_1 WHERE parent_1.name = :param_0 ORDER BY t.name ASC LIMIT 1";
         String expected = ""
-                + "SELECT t FROM RecursiveEntity(" + subquery + ") t(name, parent.id, id)";
+                + "SELECT t FROM RecursiveEntity(" + subquery + ") t(id, name, parent.id)";
 
         assertEquals(expected, cb.getQueryString());
         List<RecursiveEntity> resultList = cb.getResultList();
@@ -487,14 +487,14 @@ public class InlineCTETest extends AbstractCoreTest {
                     .orderByAsc("name")
                     .setMaxResults(1)
                 .end().setOnExpression("t = subT2");
-        String subquery = "SELECT t.name, t.parent.id, t.id FROM RecursiveEntity t LEFT JOIN t.parent parent_1 " +
+        String subquery = "SELECT t.id, t.name, t.parent.id FROM RecursiveEntity t LEFT JOIN t.parent parent_1 " +
                 "LEFT JOIN RecursiveEntity(" +
-                "SELECT subT.name, subT.parent.id, subT.id FROM RecursiveEntity subT LEFT JOIN subT.parent parent_1 WHERE parent_1.name = :param_0 ORDER BY subT.name ASC LIMIT 1" +
-                ") subT(name, parent.id, id) ON (t = subT) WHERE parent_1.name = :param_1 ORDER BY t.name ASC LIMIT 1";
+                "SELECT subT.id, subT.name, subT.parent.id FROM RecursiveEntity subT LEFT JOIN subT.parent parent_1 WHERE parent_1.name = :param_0 ORDER BY subT.name ASC LIMIT 1" +
+                ") subT(id, name, parent.id) ON (t = subT) WHERE parent_1.name = :param_1 ORDER BY t.name ASC LIMIT 1";
         String expected = ""
-                + "SELECT t FROM RecursiveEntity(" + subquery + ") t(name, parent.id, id) LEFT JOIN RecursiveEntity(" +
-                "SELECT subT2.name, subT2.parent.id, subT2.id FROM RecursiveEntity subT2 LEFT JOIN subT2.parent parent_1 WHERE parent_1.name = :param_2 ORDER BY subT2.name ASC LIMIT 1" +
-                ") subT2(name, parent.id, id) ON (t = subT2)";
+                + "SELECT t FROM RecursiveEntity(" + subquery + ") t(id, name, parent.id) LEFT JOIN RecursiveEntity(" +
+                "SELECT subT2.id, subT2.name, subT2.parent.id FROM RecursiveEntity subT2 LEFT JOIN subT2.parent parent_1 WHERE parent_1.name = :param_2 ORDER BY subT2.name ASC LIMIT 1" +
+                ") subT2(id, name, parent.id) ON (t = subT2)";
 
         assertEquals(expected, cb.getQueryString());
         List<RecursiveEntity> resultList = cb.getResultList();
@@ -515,9 +515,9 @@ public class InlineCTETest extends AbstractCoreTest {
                     .on("val").eqExpression("t.name")
                 .end()
                 .select("t");
-        String subquery = "SELECT t.name, t.parent.id, t.id FROM RecursiveEntity t LEFT JOIN t.parent parent_1 WHERE parent_1.name = :param_0 ORDER BY t.name ASC LIMIT 1";
+        String subquery = "SELECT t.id, t.name, t.parent.id FROM RecursiveEntity t LEFT JOIN t.parent parent_1 WHERE parent_1.name = :param_0 ORDER BY t.name ASC LIMIT 1";
         String expected = ""
-                + "SELECT t FROM String(1 VALUES LIKE RecursiveEntity.name) val LEFT JOIN RecursiveEntity(" + subquery + ") t(name, parent.id, id)" + onClause("val = t.name");
+                + "SELECT t FROM String(1 VALUES LIKE RecursiveEntity.name) val LEFT JOIN RecursiveEntity(" + subquery + ") t(id, name, parent.id)" + onClause("val = t.name");
 
         assertEquals(expected, cb.getQueryString());
         List<RecursiveEntity> resultList = cb.getResultList();
@@ -541,9 +541,9 @@ public class InlineCTETest extends AbstractCoreTest {
                     .on("1").eqExpression("1")
                 .end()
                 .select("t");
-        String subquery = "SELECT r.name, r.parent.id, r.id FROM RecursiveEntity r LEFT JOIN r.parent parent_1 WHERE parent_1.name = :param_0 AND val = r.name ORDER BY r.name ASC LIMIT 1";
+        String subquery = "SELECT r.id, r.name, r.parent.id FROM RecursiveEntity r LEFT JOIN r.parent parent_1 WHERE parent_1.name = :param_0 AND val = r.name ORDER BY r.name ASC LIMIT 1";
         String expected = ""
-                + "SELECT t FROM String(1 VALUES LIKE RecursiveEntity.name) val LEFT JOIN LATERAL RecursiveEntity(" + subquery + ") t(name, parent.id, id)" + onClause("1 = 1");
+                + "SELECT t FROM String(1 VALUES LIKE RecursiveEntity.name) val LEFT JOIN LATERAL RecursiveEntity(" + subquery + ") t(id, name, parent.id)" + onClause("1 = 1");
 
         assertEquals(expected, cb.getQueryString());
         List<RecursiveEntity> resultList = cb.getResultList();
@@ -566,9 +566,9 @@ public class InlineCTETest extends AbstractCoreTest {
                     .on("1").eqExpression("1")
                 .end()
                 .select("t");
-        String expectedSubquery = "SELECT r.name, r.parent.id, r.id FROM RecursiveEntity r WHERE r.parent.id = x.id ORDER BY r.name ASC LIMIT 1";
+        String expectedSubquery = "SELECT r.id, r.name, r.parent.id FROM RecursiveEntity r WHERE r.parent.id = x.id ORDER BY r.name ASC LIMIT 1";
         String expected = ""
-                + "SELECT t FROM RecursiveEntity x LEFT JOIN LATERAL RecursiveEntity(" + expectedSubquery + ") t(name, parent.id, id)" + onClause("1 = 1") + " WHERE x.name = :param_0";
+                + "SELECT t FROM RecursiveEntity x LEFT JOIN LATERAL RecursiveEntity(" + expectedSubquery + ") t(id, name, parent.id)" + onClause("1 = 1") + " WHERE x.name = :param_0";
 
         assertEquals(expected, cb.getQueryString());
         List<RecursiveEntity> resultList = cb.getResultList();
@@ -591,9 +591,9 @@ public class InlineCTETest extends AbstractCoreTest {
                     .on("1").eqExpression("1")
                 .end()
                 .select("t");
-        String expectedSubquery = "SELECT r.name, r.parent.id, r.id FROM x.children2 r ORDER BY r.name ASC LIMIT 1";
+        String expectedSubquery = "SELECT r.id, r.name, r.parent.id FROM x.children2 r ORDER BY r.name ASC LIMIT 1";
         String expected = ""
-                + "SELECT t FROM RecursiveEntity x LEFT JOIN LATERAL RecursiveEntity(" + expectedSubquery + ") t(name, parent.id, id)" + onClause("1 = 1") + " WHERE x.name = :param_0";
+                + "SELECT t FROM RecursiveEntity x LEFT JOIN LATERAL RecursiveEntity(" + expectedSubquery + ") t(id, name, parent.id)" + onClause("1 = 1") + " WHERE x.name = :param_0";
 
         assertEquals(expected, cb.getQueryString());
         List<RecursiveEntity> resultList = cb.getResultList();

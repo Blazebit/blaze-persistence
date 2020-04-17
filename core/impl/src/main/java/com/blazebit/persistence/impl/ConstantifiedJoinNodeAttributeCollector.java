@@ -118,6 +118,13 @@ class ConstantifiedJoinNodeAttributeCollector extends VisitorAdapter {
     }
 
     public boolean isConstantified(JoinNode node) {
+        if (node.isTreatedJoinNode()) {
+            node = ((TreatedJoinAliasInfo) node.getAliasInfo()).getTreatedJoinNode();
+        }
+        // The first root node is not considered to be a collection, all others are
+        if (node == firstRootNode) {
+            return true;
+        }
         Map<String, Boolean> constantifiedAttributes = constantifiedJoinNodeAttributes.get(node);
         if (constantifiedAttributes == null) {
             return false;
@@ -160,12 +167,23 @@ class ConstantifiedJoinNodeAttributeCollector extends VisitorAdapter {
 
         JoinNode baseNode = (JoinNode) pathReference.getBaseNode();
 
-        // We constantify collection as a whole to a single element when reaching this point
         if (pathReference.getField() == null) {
             if (inKey) {
+                // We constantify collection as a whole to a single element when reaching this point
                 Map<String, Boolean> attributes = new HashMap<>(1);
                 attributes.put(KEY_FUNCTION, innerJoin);
                 constantifiedJoinNodeAttributes.put(baseNode, attributes);
+            } else if (baseNode.getType() instanceof ManagedType<?>) {
+                // Here we have a predicate like `d = d2` which is the same as `d.id = d2.id`
+                Map<String, Boolean> attributes = constantifiedJoinNodeAttributes.get(baseNode);
+                if (attributes == null) {
+                    attributes = new HashMap<>();
+                    constantifiedJoinNodeAttributes.put(baseNode, attributes);
+                }
+                ExtendedManagedType<?> managedType = metamodel.getManagedType(ExtendedManagedType.class, baseNode.getManagedType());
+                for (SingularAttribute<?, ?> idAttribute : managedType.getIdAttributes()) {
+                    addAttribute("", idAttribute, attributes);
+                }
             }
             return;
         }
@@ -444,8 +462,7 @@ class ConstantifiedJoinNodeAttributeCollector extends VisitorAdapter {
             JoinNode baseNode = (JoinNode) pathReference.getBaseNode();
             do {
                 if (baseNode.getParentTreeNode() == null) {
-                    // The first root node is not considered to be a collection, all others are
-                    return baseNode == firstRootNode || isConstantified(baseNode);
+                    return isConstantified(baseNode);
                 } else {
                     if (baseNode.getParentTreeNode().getAttribute().isCollection()) {
                         return false;

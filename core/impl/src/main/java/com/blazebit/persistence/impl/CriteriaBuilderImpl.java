@@ -35,6 +35,7 @@ import javax.persistence.TypedQuery;
  */
 public class CriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T, CriteriaBuilder<T>, LeafOngoingSetOperationCriteriaBuilder<T>, StartOngoingSetOperationCriteriaBuilder<T, LeafOngoingFinalSetOperationCriteriaBuilder<T>>, BaseFinalSetOperationCriteriaBuilderImpl<T, ?>> implements CriteriaBuilder<T> {
 
+    protected long cachedQueryRootMaximumCount;
     protected String cachedQueryRootCountQueryString;
     protected String cachedExternalQueryRootCountQueryString;
 
@@ -45,6 +46,7 @@ public class CriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T, Criteria
     @Override
     protected void prepareForModification(ClauseType changedClause) {
         super.prepareForModification(changedClause);
+        cachedQueryRootMaximumCount = Long.MAX_VALUE;
         cachedQueryRootCountQueryString = null;
         cachedExternalQueryRootCountQueryString = null;
     }
@@ -54,25 +56,52 @@ public class CriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T, Criteria
         if (!havingManager.isEmpty()) {
             throw new IllegalStateException("Cannot count a HAVING query yet!");
         }
-        return getCountQuery(getCountQueryRootQueryStringWithoutCheck());
+        prepareAndCheck();
+        return getCountQuery(getCountQueryRootQueryStringWithoutCheck(Long.MAX_VALUE));
+    }
+
+    @Override
+    public TypedQuery<Long> getQueryRootCountQuery(long maximumCount) {
+        if (!havingManager.isEmpty()) {
+            throw new IllegalStateException("Cannot count a HAVING query yet!");
+        }
+        prepareAndCheck();
+        return getCountQuery(getCountQueryRootQueryStringWithoutCheck(maximumCount));
     }
 
     @Override
     public String getQueryRootCountQueryString() {
-        return getExternalQueryRootCountQueryString();
+        prepareAndCheck();
+        return getExternalQueryRootCountQueryString(Long.MAX_VALUE);
     }
 
-    private String getCountQueryRootQueryStringWithoutCheck() {
+    @Override
+    public String getQueryRootCountQueryString(long maximumCount) {
+        prepareAndCheck();
+        return getExternalQueryRootCountQueryString(maximumCount);
+    }
+
+    private String getCountQueryRootQueryStringWithoutCheck(long maximumCount) {
+        if (cachedQueryRootMaximumCount != maximumCount) {
+            cachedQueryRootMaximumCount = maximumCount;
+            cachedQueryRootCountQueryString = null;
+            cachedExternalQueryRootCountQueryString = null;
+        }
         if (cachedQueryRootCountQueryString == null) {
-            cachedQueryRootCountQueryString = buildPageCountQueryString(false, false);
+            cachedQueryRootCountQueryString = buildPageCountQueryString(false, false, cachedQueryRootMaximumCount);
         }
 
         return cachedQueryRootCountQueryString;
     }
 
-    private String getExternalQueryRootCountQueryString() {
+    private String getExternalQueryRootCountQueryString(long maximumCount) {
+        if (cachedQueryRootMaximumCount != maximumCount) {
+            cachedQueryRootMaximumCount = maximumCount;
+            cachedQueryRootCountQueryString = null;
+            cachedExternalQueryRootCountQueryString = null;
+        }
         if (cachedExternalQueryRootCountQueryString == null) {
-            cachedExternalQueryRootCountQueryString = buildPageCountQueryString(true, false);
+            cachedExternalQueryRootCountQueryString = buildPageCountQueryString(true, false, cachedQueryRootMaximumCount);
         }
 
         return cachedExternalQueryRootCountQueryString;

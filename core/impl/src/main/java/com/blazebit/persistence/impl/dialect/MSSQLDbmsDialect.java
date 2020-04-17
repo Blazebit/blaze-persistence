@@ -198,4 +198,9 @@ public class MSSQLDbmsDialect extends DefaultDbmsDialect {
     public DbmsLimitHandler createLimitHandler() {
         return new MSSQL2012DbmsLimitHandler();
     }
+
+    @Override
+    public boolean supportsLimitWithoutOrderBy() {
+        return false;
+    }
 }

@@ -30,7 +30,12 @@ import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
+import com.blazebit.persistence.impl.function.alias.AliasFunction;
 import com.blazebit.persistence.impl.function.count.AbstractCountFunction;
+import com.blazebit.persistence.impl.function.countwrapper.CountWrapperFunction;
+import com.blazebit.persistence.impl.function.entity.EntityFunction;
+import com.blazebit.persistence.impl.function.limit.LimitFunction;
+import com.blazebit.persistence.impl.function.nullsubquery.NullSubqueryFunction;
 import com.blazebit.persistence.impl.keyset.KeysetMode;
 import com.blazebit.persistence.impl.keyset.KeysetPaginationHelper;
 import com.blazebit.persistence.impl.keyset.SimpleKeysetLink;
@@ -43,8 +48,11 @@ import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
+import com.blazebit.persistence.parser.util.TypeUtils;
+import com.blazebit.persistence.spi.AttributeAccessor;
 import com.blazebit.persistence.spi.JpaMetamodelAccessor;
 
+import javax.persistence.Parameter;
 import javax.persistence.TypedQuery;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EmbeddableType;
@@ -82,6 +90,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
     protected static final Set<ClauseType> ID_QUERY_CLAUSE_EXCLUSIONS = EnumSet.of(ClauseType.SELECT);
     protected static final Set<ClauseType> ID_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS = EnumSet.of(ClauseType.SELECT, ClauseType.GROUP_BY);
 
+    protected long cachedMaximumCount;
     protected String cachedCountQueryString;
     protected String cachedExternalCountQueryString;
     protected Set<JoinNode> cachedIdentifierExpressionsToUseNonRootJoinNodes;
@@ -117,6 +126,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
     @Override
     protected void prepareForModification(ClauseType changedClause) {
         super.prepareForModification(changedClause);
+        cachedMaximumCount = Long.MAX_VALUE;
         cachedCountQueryString = null;
         cachedExternalCountQueryString = null;
         cachedIdentifierExpressionsToUseNonRootJoinNodes = null;
@@ -225,120 +235,254 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         return newBuilder;
     }
 
-    private String getCountQueryStringWithoutCheck() {
+    private String getCountQueryStringWithoutCheck(long maximumCount) {
+        if (cachedMaximumCount != maximumCount) {
+            cachedMaximumCount = maximumCount;
+            cachedCountQueryString = null;
+            cachedExternalCountQueryString = null;
+        }
         if (cachedCountQueryString == null) {
-            cachedCountQueryString = buildPageCountQueryString(false, true);
+            cachedCountQueryString = buildPageCountQueryString(false, true, cachedMaximumCount);
         }
 
         return cachedCountQueryString;
     }
 
-    private String getExternalCountQueryString() {
+    private String getExternalCountQueryString(long maximumCount) {
+        if (cachedMaximumCount != maximumCount) {
+            cachedMaximumCount = maximumCount;
+            cachedCountQueryString = null;
+            cachedExternalCountQueryString = null;
+        }
         if (cachedExternalCountQueryString == null) {
-            cachedExternalCountQueryString = buildPageCountQueryString(true, true);
+            cachedExternalCountQueryString = buildPageCountQueryString(true, true, cachedMaximumCount);
         }
 
         return cachedExternalCountQueryString;
     }
 
-    protected String buildPageCountQueryString(boolean externalRepresentation, boolean countAll) {
+    protected String buildPageCountQueryString(boolean externalRepresentation, boolean countAll, long maximumCount) {
         StringBuilder sbSelectFrom = new StringBuilder();
         if (externalRepresentation && isMainQuery) {
             mainQuery.cteManager.buildClause(sbSelectFrom);
         }
-        buildPageCountQueryString(sbSelectFrom, externalRepresentation, countAll && !hasGroupBy);
+        buildPageCountQueryString(sbSelectFrom, externalRepresentation, countAll && !hasGroupBy, maximumCount);
         return sbSelectFrom.toString();
     }
 
-    protected final void buildPageCountQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, boolean countAll) {
+    protected final String getDualNodeAlias() {
+        return "dual_";
+    }
+
+    protected final JoinNode createDualNode() {
+        return JoinNode.createSimpleValuesRootNode(mainQuery, Long.class, 1, new JoinAliasInfo(getDualNodeAlias(), getDualNodeAlias(), false, true, null));
+    }
+
+    protected final void buildPageCountQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, boolean countAll, long maximumCount) {
         sbSelectFrom.append("SELECT ");
         int countStartIdx = sbSelectFrom.length();
         int countEndIdx;
         boolean isResultUnique;
-        if (countAll) {
-            if (mainQuery.jpaProvider.supportsCountStar()) {
+
+        if (maximumCount != Long.MAX_VALUE) {
+            // bounded counting
+            Set<JoinNode> alwaysIncludedNodes = getIdentifierExpressionsToUseNonRootJoinNodes();
+            Set<ClauseType> clauseExclusions = countAll ? NO_CLAUSE_EXCLUSION : COUNT_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS;
+            List<JoinNode> entityFunctions = joinManager.getEntityFunctions(clauseExclusions, true, alwaysIncludedNodes);
+            List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(null, entityFunctions);
+
+            JoinNode valuesNode = createDualNode();
+            if (externalRepresentation) {
                 sbSelectFrom.append("COUNT(*)");
-            } else if (mainQuery.jpaProvider.supportsCustomFunctions()) {
-                sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation("count_star", 0)).append(')');
+                appendPageCountQueryStringExtensions(sbSelectFrom);
+                sbSelectFrom.append(" FROM ");
             } else {
-                sbSelectFrom.append("COUNT(");
-                appendIdentifierExpressions(sbSelectFrom);
-                sbSelectFrom.append(")");
-            }
-            countEndIdx = sbSelectFrom.length() - 1;
-            isResultUnique = true;
-        } else if (mainQuery.jpaProvider.supportsCustomFunctions()) {
-            sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(AbstractCountFunction.FUNCTION_NAME, 1));
-            sbSelectFrom.append("'DISTINCT',");
+                sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(CountWrapperFunction.FUNCTION_NAME, 1));
+                sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(LimitFunction.FUNCTION_NAME, 1));
 
-            isResultUnique = appendIdentifierExpressions(sbSelectFrom);
-
-            sbSelectFrom.append(")");
-            countEndIdx = sbSelectFrom.length() - 1;
-
-            appendPageCountQueryStringExtensions(sbSelectFrom);
-        } else {
-            sbSelectFrom.append("COUNT(");
-            sbSelectFrom.append("DISTINCT ");
-            isResultUnique = appendIdentifierExpressions(sbSelectFrom);
-
-            sbSelectFrom.append(")");
-            countEndIdx = sbSelectFrom.length() - 1;
-
-            appendPageCountQueryStringExtensions(sbSelectFrom);
-        }
-
-        List<String> whereClauseConjuncts = new ArrayList<>();
-        List<String> optionalWhereClauseConjuncts = new ArrayList<>();
-        // The count query does not have any fetch owners
-        Set<JoinNode> countNodesToFetch = Collections.emptySet();
-
-        if (countAll) {
-            joinManager.buildClause(sbSelectFrom, NO_CLAUSE_EXCLUSION, null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, countNodesToFetch, Collections.<JoinNode>emptySet());
-            whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts);
-        } else {
-            // Collect usage of collection join nodes to optimize away the count distinct
-            // Note that we always exclude the nodes with group by dependency. We consider just the ones from the identifiers
-            Set<JoinNode> identifierExpressionsToUseNonRootJoinNodes = getIdentifierExpressionsToUseNonRootJoinNodes();
-            Set<JoinNode> collectionJoinNodes = joinManager.buildClause(sbSelectFrom, COUNT_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, null, true, externalRepresentation, true, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, countNodesToFetch, identifierExpressionsToUseNonRootJoinNodes);
-            boolean hasCollectionJoinUsages = collectionJoinNodes.size() > 0;
-
-            whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts);
-
-            // Instead of a count distinct, we render a count(*) if we have no collection joins and the identifier expression is result unique
-            // It is result unique when it contains the query root primary key or a unique key that of a uniqueness preserving association of that
-            if (!hasCollectionJoinUsages && isResultUnique) {
-                if (mainQuery.jpaProvider.supportsCustomFunctions()) {
-                    String countStar;
-                    if (mainQuery.jpaProvider.supportsCountStar()) {
-                        countStar = "COUNT(*";
-                    } else {
-                        countStar = mainQuery.jpaProvider.getCustomFunctionInvocation("count_star", 0);
-                    }
-                    for (int i = countStartIdx, j = 0; i < countEndIdx; i++, j++) {
-                        if (j < countStar.length()) {
-                            sbSelectFrom.setCharAt(i, countStar.charAt(j));
-                        } else {
-                            sbSelectFrom.setCharAt(i, ' ');
-                        }
-                    }
-                } else {
-                    // Strip off the distinct part
-                    int i = countStartIdx + "COUNT(".length();
-                    countEndIdx = i + "DISTINCT ".length();
-                    for (; i < countEndIdx; i++) {
-                        sbSelectFrom.setCharAt(i, ' ');
-                    }
-
+                for (int i = 0; i < entityFunctionNodes.size(); i++) {
+                    sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(EntityFunction.FUNCTION_NAME, 1));
                 }
             }
+
+            // Start of the content of the count query wrapper
+            sbSelectFrom.append("(SELECT ");
+            countStartIdx = sbSelectFrom.length();
+            String aliasFunctionInvocation = mainQuery.jpaProvider.getCustomFunctionInvocation(AliasFunction.FUNCTION_NAME, 1);
+            if (countAll) {
+                sbSelectFrom.append(aliasFunctionInvocation);
+                sbSelectFrom.append("1, 'c')");
+                countEndIdx = sbSelectFrom.length() - 1;
+                isResultUnique = true;
+            } else {
+                sbSelectFrom.append("DISTINCT ");
+                isResultUnique = appendIdentifierExpressions(sbSelectFrom, true);
+                countEndIdx = sbSelectFrom.length() - 1;
+            }
+
+            List<String> whereClauseConjuncts = new ArrayList<>();
+            List<String> optionalWhereClauseConjuncts = new ArrayList<>();
+            // The count query does not have any fetch owners
+            Set<JoinNode> countNodesToFetch = Collections.emptySet();
+
+            if (countAll) {
+                joinManager.buildClause(sbSelectFrom, clauseExclusions, null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, countNodesToFetch, Collections.<JoinNode>emptySet());
+                whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts);
+            } else {
+                // Collect usage of collection join nodes to optimize away the count distinct
+                // Note that we always exclude the nodes with group by dependency. We consider just the ones from the identifiers
+                Set<JoinNode> identifierExpressionsToUseNonRootJoinNodes = getIdentifierExpressionsToUseNonRootJoinNodes();
+                Set<JoinNode> collectionJoinNodes = joinManager.buildClause(sbSelectFrom, clauseExclusions, null, true, externalRepresentation, true, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, countNodesToFetch, identifierExpressionsToUseNonRootJoinNodes);
+                boolean hasCollectionJoinUsages = collectionJoinNodes.size() > 0;
+
+                whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts);
+
+                // Instead of a count distinct, we render a 1 if we have no collection joins and the identifier expression is result unique
+                // It is result unique when it contains the query root primary key or a unique key that of a uniqueness preserving association of that
+                if (!hasCollectionJoinUsages && isResultUnique) {
+                    for (int i = countStartIdx, j = 0; i < countEndIdx; i++, j++) {
+                        sbSelectFrom.setCharAt(i, ' ');
+                    }
+                    String suffix = "1, 'c'";
+                    sbSelectFrom.replace(countEndIdx - (aliasFunctionInvocation.length() + suffix.length()), countEndIdx - suffix.length(), aliasFunctionInvocation);
+                    sbSelectFrom.replace(countEndIdx - suffix.length(), countEndIdx, suffix);
+                }
+            }
+
+            if (externalRepresentation) {
+                sbSelectFrom.append(" LIMIT ").append(maximumCount).append(')');
+            } else {
+                if (!mainQuery.dbmsDialect.supportsLimitWithoutOrderBy()) {
+                    sbSelectFrom.append(" ORDER BY ");
+                    sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(NullSubqueryFunction.FUNCTION_NAME, 0));
+                    sbSelectFrom.append(')');
+                }
+                // Close subquery
+                sbSelectFrom.append(')');
+
+                finishEntityFunctionNodes(sbSelectFrom, entityFunctionNodes);
+
+                // Limit
+                sbSelectFrom.append(", ").append(maximumCount).append(")");
+                // Count wrapper
+                sbSelectFrom.append(")");
+
+                appendPageCountQueryStringExtensions(sbSelectFrom);
+                sbSelectFrom.append(" FROM ").append(valuesNode.getValueType().getName()).append(" ").append(valuesNode.getAlias());
+                // Values predicate
+                sbSelectFrom.append(" WHERE ");
+                joinManager.renderPlaceholderRequiringPredicate(sbSelectFrom, valuesNode, valuesNode.getAlias(), externalRepresentation, true);
+            }
+        } else {
+            if (countAll) {
+                if (mainQuery.jpaProvider.supportsCountStar()) {
+                    sbSelectFrom.append("COUNT(*)");
+                } else if (mainQuery.jpaProvider.supportsCustomFunctions()) {
+                    sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation("count_star", 0)).append(')');
+                } else {
+                    sbSelectFrom.append("COUNT(");
+                    appendIdentifierExpressions(sbSelectFrom, false);
+                    sbSelectFrom.append(")");
+                }
+                countEndIdx = sbSelectFrom.length() - 1;
+                isResultUnique = true;
+            } else if (mainQuery.jpaProvider.supportsCustomFunctions()) {
+                sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(AbstractCountFunction.FUNCTION_NAME, 1));
+                sbSelectFrom.append("'DISTINCT',");
+
+                isResultUnique = appendIdentifierExpressions(sbSelectFrom, false);
+
+                sbSelectFrom.append(")");
+                countEndIdx = sbSelectFrom.length() - 1;
+
+                appendPageCountQueryStringExtensions(sbSelectFrom);
+            } else {
+                sbSelectFrom.append("COUNT(");
+                sbSelectFrom.append("DISTINCT ");
+                isResultUnique = appendIdentifierExpressions(sbSelectFrom, false);
+
+                sbSelectFrom.append(")");
+                countEndIdx = sbSelectFrom.length() - 1;
+
+                appendPageCountQueryStringExtensions(sbSelectFrom);
+            }
+
+            List<String> whereClauseConjuncts = new ArrayList<>();
+            List<String> optionalWhereClauseConjuncts = new ArrayList<>();
+            // The count query does not have any fetch owners
+            Set<JoinNode> countNodesToFetch = Collections.emptySet();
+
+            if (countAll) {
+                joinManager.buildClause(sbSelectFrom, NO_CLAUSE_EXCLUSION, null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, countNodesToFetch, Collections.<JoinNode>emptySet());
+                whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts);
+            } else {
+                // Collect usage of collection join nodes to optimize away the count distinct
+                // Note that we always exclude the nodes with group by dependency. We consider just the ones from the identifiers
+                Set<JoinNode> identifierExpressionsToUseNonRootJoinNodes = getIdentifierExpressionsToUseNonRootJoinNodes();
+                Set<JoinNode> collectionJoinNodes = joinManager.buildClause(sbSelectFrom, COUNT_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, null, true, externalRepresentation, true, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, countNodesToFetch, identifierExpressionsToUseNonRootJoinNodes);
+                boolean hasCollectionJoinUsages = collectionJoinNodes.size() > 0;
+
+                whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts);
+
+                // Instead of a count distinct, we render a count(*) if we have no collection joins and the identifier expression is result unique
+                // It is result unique when it contains the query root primary key or a unique key that of a uniqueness preserving association of that
+                if (!hasCollectionJoinUsages && isResultUnique) {
+                    if (mainQuery.jpaProvider.supportsCustomFunctions()) {
+                        String countStar;
+                        if (mainQuery.jpaProvider.supportsCountStar()) {
+                            countStar = "COUNT(*";
+                        } else {
+                            countStar = mainQuery.jpaProvider.getCustomFunctionInvocation("count_star", 0);
+                        }
+                        for (int i = countStartIdx, j = 0; i < countEndIdx; i++, j++) {
+                            if (j < countStar.length()) {
+                                sbSelectFrom.setCharAt(i, countStar.charAt(j));
+                            } else {
+                                sbSelectFrom.setCharAt(i, ' ');
+                            }
+                        }
+                    } else {
+                        // Strip off the distinct part
+                        int i = countStartIdx + "COUNT(".length();
+                        countEndIdx = i + "DISTINCT ".length();
+                        for (; i < countEndIdx; i++) {
+                            sbSelectFrom.setCharAt(i, ' ');
+                        }
+
+                    }
+                }
+            }
+        }
+    }
+
+    protected void finishEntityFunctionNodes(StringBuilder sbSelectFrom, List<EntityFunctionNode> entityFunctionNodes) {
+        for (EntityFunctionNode node : entityFunctionNodes) {
+            String subquery = node.getSubquery();
+            String aliases = node.getAliases();
+            String syntheticPredicate = node.getSyntheticPredicate();
+
+            // TODO: this is a hibernate specific integration detail
+            // Replace the subview subselect that is generated for this subselect
+            sbSelectFrom.append(",'");
+            sbSelectFrom.append(node.getEntityName());
+            sbSelectFrom.append("',");
+            TypeUtils.STRING_CONVERTER.appendTo(subquery, sbSelectFrom);
+            sbSelectFrom.append(",'");
+            if (aliases != null) {
+                sbSelectFrom.append(aliases);
+            }
+            sbSelectFrom.append("','");
+            if (syntheticPredicate != null) {
+                sbSelectFrom.append(syntheticPredicate);
+            }
+            sbSelectFrom.append("')");
         }
     }
 
     protected void appendPageCountQueryStringExtensions(StringBuilder sbSelectFrom) {
     }
 
-    protected boolean appendIdentifierExpressions(StringBuilder sbSelectFrom) {
+    protected boolean appendIdentifierExpressions(StringBuilder sbSelectFrom, boolean alias) {
         boolean isResultUnique;
         ResolvedExpression[] identifierExpressions = getIdentifierExpressions();
         ResolvedExpression[] resultUniqueExpressions = getUniqueIdentifierExpressions();
@@ -353,7 +497,13 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
 
         queryGenerator.setQueryBuffer(sbSelectFrom);
         for (int i = 0; i < identifierExpressions.length; i++) {
+            if (alias) {
+                sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(AliasFunction.FUNCTION_NAME, 1));
+            }
             identifierExpressions[i].getExpression().accept(queryGenerator);
+            if (alias) {
+                sbSelectFrom.append(", 'c").append(i).append("')");
+            }
             sbSelectFrom.append(", ");
         }
         sbSelectFrom.setLength(sbSelectFrom.length() - 2);
@@ -428,7 +578,16 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
             throw new IllegalStateException("Cannot count a HAVING query yet!");
         }
         prepareAndCheck();
-        return getExternalCountQueryString();
+        return getExternalCountQueryString(Long.MAX_VALUE);
+    }
+
+    @Override
+    public String getCountQueryString(long maximumCount) {
+        if (!havingManager.isEmpty()) {
+            throw new IllegalStateException("Cannot count a HAVING query yet!");
+        }
+        prepareAndCheck();
+        return getExternalCountQueryString(maximumCount);
     }
 
     @Override
@@ -436,24 +595,51 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         if (!havingManager.isEmpty()) {
             throw new IllegalStateException("Cannot count a HAVING query yet!");
         }
-        return getCountQuery(getCountQueryStringWithoutCheck());
+        prepareAndCheck();
+        return getCountQuery(getCountQueryStringWithoutCheck(Long.MAX_VALUE));
+    }
+
+    @Override
+    public TypedQuery<Long> getCountQuery(long maximumCount) {
+        if (!havingManager.isEmpty()) {
+            throw new IllegalStateException("Cannot count a HAVING query yet!");
+        }
+        prepareAndCheck();
+        return getCountQuery(getCountQueryStringWithoutCheck(maximumCount));
     }
 
     protected TypedQuery<Long> getCountQuery(String countQueryString) {
-        prepareAndCheck();
         // We can only use the query directly if we have no ctes, entity functions or hibernate bugs
         Set<JoinNode> keyRestrictedLeftJoins = getKeyRestrictedLeftJoins();
         Set<JoinNode> alwaysIncludedNodes = getIdentifierExpressionsToUseNonRootJoinNodes();
         List<JoinNode> entityFunctions = null;
         boolean normalQueryMode = !isMainQuery || (!mainQuery.cteManager.hasCtes() && (entityFunctions = joinManager.getEntityFunctions(COUNT_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, true, alwaysIncludedNodes)).isEmpty() && keyRestrictedLeftJoins.isEmpty());
 
-        if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, COUNT_QUERY_CLAUSE_EXCLUSIONS)) {
-            TypedQuery<Long> countQuery = em.createQuery(countQueryString, Long.class);
-            if (isCacheable()) {
-                mainQuery.jpaProvider.setCacheable(countQuery);
+        Set<Parameter<?>> parameters = parameterManager.getParameters();
+        Map<String, String> valuesParameters = parameterManager.getValuesParameters();
+        Map<String, ValuesParameterBinder> valuesBinders = parameterManager.getValuesBinders();
+        JoinNode dualNode = null;
+        if (cachedMaximumCount == Long.MAX_VALUE) {
+            if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, COUNT_QUERY_CLAUSE_EXCLUSIONS)) {
+                TypedQuery<Long> countQuery = em.createQuery(countQueryString, Long.class);
+                if (isCacheable()) {
+                    mainQuery.jpaProvider.setCacheable(countQuery);
+                }
+                parameterManager.parameterizeQuery(countQuery);
+                return countQuery;
             }
-            parameterManager.parameterizeQuery(countQuery);
-            return countQuery;
+        } else {
+            dualNode = createDualNode();
+            entityFunctions = new ArrayList<>();
+            entityFunctions.add(dualNode);
+            String valueParameterName = dualNode.getAlias() + "_value_0";
+            String[][] parameterNames = new String[1][1];
+            parameterNames[0][0] = valueParameterName;
+            ParameterManager.ValuesParameterWrapper valuesParameterWrapper = new ParameterManager.ValuesParameterWrapper(dualNode.getJavaType(), parameterNames, new AttributeAccessor[1]);
+            parameters.add(new ParameterManager.ParameterImpl<Object>(dualNode.getAlias(), false, null, null, valuesParameterWrapper));
+            valuesParameters = new HashMap<>(valuesParameters);
+            valuesParameters.put(valueParameterName, dualNode.getAlias());
+            valuesBinders.put(dualNode.getAlias(), valuesParameterWrapper.getBinder());
         }
         if (entityFunctions == null) {
             entityFunctions = joinManager.getEntityFunctions(COUNT_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, true, alwaysIncludedNodes);
@@ -462,22 +648,32 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         TypedQuery<Long> baseQuery = em.createQuery(countQueryString, Long.class);
         Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery);
         List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, COUNT_QUERY_CLAUSE_EXCLUSIONS);
-        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery, entityFunctions);
+        List<EntityFunctionNode> entityFunctionNodes;
+        if (dualNode == null) {
+            entityFunctionNodes = getEntityFunctionNodes(baseQuery, entityFunctions);
+        } else {
+            entityFunctionNodes = getEntityFunctionNodes(baseQuery, entityFunctions, Collections.<JoinNode>emptyList(), false);
+        }
         boolean shouldRenderCteNodes = renderCteNodes(false);
         List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.EMPTY_LIST;
         QuerySpecification querySpecification = new CustomQuerySpecification(
-                this, baseQuery, parameterManager.getParameters(), parameterListNames, null, null, keyRestrictedLeftJoinAliases, entityFunctionNodes, mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes
+                this, baseQuery, parameters, parameterListNames, null, null, keyRestrictedLeftJoinAliases, entityFunctionNodes, mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes
         );
 
         TypedQuery<Long> countQuery = new CustomSQLTypedQuery<>(
                 querySpecification,
                 baseQuery,
                 parameterManager.getTransformers(),
-                parameterManager.getValuesParameters(),
-                parameterManager.getValuesBinders()
+                valuesParameters,
+                valuesBinders
         );
 
-        parameterManager.parameterizeQuery(countQuery);
+        if (dualNode == null) {
+            parameterManager.parameterizeQuery(countQuery);
+        } else {
+            parameterManager.parameterizeQuery(countQuery, dualNode.getAlias());
+            countQuery.setParameter(dualNode.getAlias(), Collections.singleton(0L));
+        }
         return countQuery;
     }
 

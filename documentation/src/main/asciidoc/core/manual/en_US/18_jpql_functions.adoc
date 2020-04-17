@@ -479,6 +479,22 @@ Just renders `null`.
 
 WARNING: This is an internal function that is used to implement inlining of CTEs or subqueries in the FROM clause.
 
+==== NULL_SUBQUERY function
+
+Syntax: `NULL_SUBQUERY ()`
+
+Just renders `(select null)`.
+
+WARNING: This is an internal function that is used to implement bounded counting for SQL Server.
+
+==== COUNT_WRAPPER function
+
+Syntax: `COUNT_WRAPPER ( subquery )`
+
+Just renders `(select count(*) form (<subquery>)`.
+
+WARNING: This is an internal function that is used to implement bounded counting.
+
 ==== EXIST function
 
 Syntax: `EXIST ( subquery, (any)? )`

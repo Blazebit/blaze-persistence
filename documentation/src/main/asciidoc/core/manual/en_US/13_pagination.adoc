@@ -456,6 +456,49 @@ WHERE cat.id IN (LIMIT(
 ORDER BY cat.name, cat.id
 ----
 
+=== Bounded counting
+
+Oftentimes it is not necessary to determine an exact row count so it would be better to determine the count up to a certain threshold.
+{projectname} supports bounded counting in the `PaginatedCriteriaBuilder` API through the
+link:{core_jdoc}/persistence/PaginatedCriteriaBuilder.html#withBoundedCount(long)[`withBoundedCount(long maximumCount)`] method
+which will count up to the given value, but not further. This improves performance drastically for large data sets because the database
+has to do less work. A query like the following
+
+[source, java]
+----
+PagedList<Cat> page = cbf.create(em, Cat.class)
+    .fetch("kittens")
+    .orderByAsc("id") // unique ordering is required for pagination
+    .page(0, 5)
+    .getResultList();
+----
+
+will execute a count query that looks similar to this
+
+[source,sql]
+----
+SELECT
+    COUNT_WRAPPER((
+        SELECT 1
+        FROM Cat cat
+        LIMIT 10
+    ))
+FROM Long(1 VALUES) dual_
+----
+
+which results in SQL simialar to this
+
+[source,sql]
+----
+SELECT
+    (SELECT COUNT(*) FROM (
+        SELECT 1
+        FROM Cat cat
+        LIMIT 10
+    ) tmp)
+FROM VALUES(1) v
+----
+
 [[pagination-limitations]]
 === Limitations
 

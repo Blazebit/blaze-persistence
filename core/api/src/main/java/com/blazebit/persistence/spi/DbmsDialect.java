@@ -111,6 +111,13 @@ public interface DbmsDialect {
      * @since 1.2.0
      */
     public DbmsLimitHandler createLimitHandler();
+
+    /**
+     * Returns true if the dbms supports a limit without an order by clause, false otherwise.
+     *
+     * @return Whether a limit without an order by clause is supported by the dbms
+     */
+    public boolean supportsLimitWithoutOrderBy();
     
     /**
      * Returns true if the dbms supports the with clause in modification queries, false otherwise.
