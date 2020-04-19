@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl.metamodel;
 import com.blazebit.persistence.view.BatchFetch;
 import com.blazebit.persistence.view.CollectionMapping;
 import com.blazebit.persistence.view.EmptyFlatViewCreation;
+import com.blazebit.persistence.view.Limit;
 import com.blazebit.persistence.view.MappingInheritance;
 import com.blazebit.persistence.view.MappingInheritanceMapKey;
 import com.blazebit.persistence.view.MappingInheritanceSubtype;
@@ -30,6 +31,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -95,6 +97,11 @@ public class AnnotationParameterAttributeMappingReader extends AbstractAnnotatio
         EmptyFlatViewCreation emptyFlatViewCreation = (EmptyFlatViewCreation) parameterAnnotations.get(EmptyFlatViewCreation.class);
         if (emptyFlatViewCreation != null) {
             parameterMapping.setCreateEmptyFlatViews(emptyFlatViewCreation.value());
+        }
+
+        Limit limit = (Limit) parameterAnnotations.get(Limit.class);
+        if (limit != null) {
+            parameterMapping.setLimit(limit.limit(), Arrays.asList(limit.order()));
         }
 
         return parameterMapping;

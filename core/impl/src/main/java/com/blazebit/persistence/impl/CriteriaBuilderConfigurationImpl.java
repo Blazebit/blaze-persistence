@@ -358,6 +358,7 @@ import com.blazebit.persistence.impl.function.pageposition.OraclePagePositionFun
 import com.blazebit.persistence.impl.function.pageposition.PagePositionFunction;
 import com.blazebit.persistence.impl.function.pageposition.TransactSQLPagePositionFunction;
 import com.blazebit.persistence.impl.function.param.ParamFunction;
+import com.blazebit.persistence.impl.function.querywrapper.QueryWrapperFunction;
 import com.blazebit.persistence.impl.function.repeat.AbstractRepeatFunction;
 import com.blazebit.persistence.impl.function.repeat.DefaultRepeatFunction;
 import com.blazebit.persistence.impl.function.repeat.LpadRepeatFunction;
@@ -489,6 +490,7 @@ import com.blazebit.persistence.spi.ExtendedQuerySupport;
 import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
 import com.blazebit.persistence.spi.JpqlMacro;
+import com.blazebit.persistence.spi.LateralStyle;
 import com.blazebit.persistence.spi.PackageOpener;
 import com.blazebit.persistence.spi.SetOperationType;
 
@@ -1377,6 +1379,11 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add(null, new CountWrapperFunction());
         registerFunction(jpqlFunctionGroup);
 
+        // query wrapper function
+        jpqlFunctionGroup = new JpqlFunctionGroup(QueryWrapperFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup.add(null, new QueryWrapperFunction());
+        registerFunction(jpqlFunctionGroup);
+
         // null subquery function
         jpqlFunctionGroup = new JpqlFunctionGroup(NullSubqueryFunction.FUNCTION_NAME, false);
         jpqlFunctionGroup.add(null, new NullSubqueryFunction());
@@ -1532,12 +1539,17 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
                 if (concatFunction == null) {
                     concatFunction = (ConcatFunction) concatFunctionGroup.get(null);
                 }
-                jpqlFunctionGroup.add(dialectEntry.getKey(), new GroupConcatBasedToStringJsonFunction((AbstractGroupConcatFunction) groupConcatFunctionGroup.get(dialectEntry.getKey()), chrFunction, replaceFunction, concatFunction));
+                jpqlFunctionGroup.add(dialectEntry.getKey(), new GroupConcatBasedToStringJsonFunction((AbstractGroupConcatFunction) groupConcatFunctionGroup.get(dialectEntry.getKey()), chrFunction, replaceFunction, concatFunction, dialectEntry.getValue().getLateralStyle()));
             }
         }
         jpqlFunctionGroup.add("postgresql", new PostgreSQLToStringJsonFunction());
         jpqlFunctionGroup.add("microsoft", new ForJsonPathToStringJsonFunction((CastFunction) findFunction("cast_string", "microsoft")));
-        jpqlFunctionGroup.add("oracle", new OracleToStringJsonFunction((AbstractGroupConcatFunction) findFunction(AbstractGroupConcatFunction.FUNCTION_NAME, "oracle"), (ChrFunction) findFunction(ChrFunction.FUNCTION_NAME, "oracle"), (ReplaceFunction) findFunction(ReplaceFunction.FUNCTION_NAME, "oracle"), (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME, "oracle")));
+        jpqlFunctionGroup.add("oracle", new OracleToStringJsonFunction(
+                (AbstractGroupConcatFunction) findFunction(AbstractGroupConcatFunction.FUNCTION_NAME, "oracle"),
+                (ChrFunction) findFunction(ChrFunction.FUNCTION_NAME, "oracle"),
+                (ReplaceFunction) findFunction(ReplaceFunction.FUNCTION_NAME, "oracle"),
+                (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME, "oracle")
+        ));
         jpqlFunctionGroup.add("mysql", new MySQLToStringJsonFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLToStringJsonFunction());
         registerFunction(jpqlFunctionGroup);
@@ -1558,12 +1570,17 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
                 if (concatFunction == null) {
                     concatFunction = (ConcatFunction) concatFunctionGroup.get(null);
                 }
-                jpqlFunctionGroup.add(dialectEntry.getKey(), new GroupConcatBasedToStringXmlFunction((AbstractGroupConcatFunction) groupConcatFunctionGroup.get(dialectEntry.getKey()), replaceFunction, concatFunction));
+                jpqlFunctionGroup.add(dialectEntry.getKey(), new GroupConcatBasedToStringXmlFunction((AbstractGroupConcatFunction) groupConcatFunctionGroup.get(dialectEntry.getKey()), replaceFunction, concatFunction, dialectEntry.getValue().getLateralStyle()));
             }
         }
         jpqlFunctionGroup.add("postgresql", new PostgreSQLToStringXmlFunction());
         jpqlFunctionGroup.add("microsoft", new ForXmlPathToStringXmlFunction((CastFunction) findFunction("cast_string", "microsoft")));
-        jpqlFunctionGroup.add("oracle", new OracleGroupConcatBasedToStringXmlFunction((AbstractGroupConcatFunction) findFunction(AbstractGroupConcatFunction.FUNCTION_NAME, "oracle"), (ReplaceFunction) findFunction(ReplaceFunction.FUNCTION_NAME, "oracle"), (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME, "oracle")));
+        jpqlFunctionGroup.add("oracle", new OracleGroupConcatBasedToStringXmlFunction(
+                (AbstractGroupConcatFunction) findFunction(AbstractGroupConcatFunction.FUNCTION_NAME, "oracle"),
+                (ReplaceFunction) findFunction(ReplaceFunction.FUNCTION_NAME, "oracle"),
+                (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME, "oracle"),
+                LateralStyle.LATERAL
+        ));
         registerFunction(jpqlFunctionGroup);
 
         // to_multiset

@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.spring.data.testsuite.webflux.controller;
 
+import com.blazebit.persistence.spring.data.testsuite.webflux.repository.ModificationPersonRepository;
 import com.blazebit.persistence.spring.data.testsuite.webflux.repository.PersonRepository;
 import com.blazebit.persistence.spring.data.testsuite.webflux.view.PersonUpdateView;
 import com.blazebit.persistence.spring.data.testsuite.webflux.view.PersonView;
@@ -34,9 +35,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class PersonController {
 
     private final PersonRepository personRepository;
+    private final ModificationPersonRepository modificationPersonRepository;
 
-    public PersonController(PersonRepository personRepository) {
+    public PersonController(PersonRepository personRepository, ModificationPersonRepository modificationPersonRepository) {
         this.personRepository = personRepository;
+        this.modificationPersonRepository = modificationPersonRepository;
     }
 
     @PutMapping(
@@ -49,8 +52,8 @@ public class PersonController {
     }
 
     private ResponseEntity<PersonView> updatePerson0(PersonUpdateView personUpdate) {
-        personRepository.updatePerson(personUpdate);
-        PersonView personView = personRepository.findOne(personUpdate.getId());
+        modificationPersonRepository.updatePerson(personUpdate);
+        PersonView personView = personRepository.findOne(personUpdate.getId().toString());
         return ResponseEntity.ok(personView);
     }
 }

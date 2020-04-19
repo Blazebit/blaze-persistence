@@ -21,7 +21,9 @@ import com.blazebit.persistence.impl.function.chr.ChrFunction;
 import com.blazebit.persistence.impl.function.concat.ConcatFunction;
 import com.blazebit.persistence.impl.function.groupconcat.AbstractGroupConcatFunction;
 import com.blazebit.persistence.impl.function.replace.ReplaceFunction;
+import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.FunctionRenderContext;
+import com.blazebit.persistence.spi.LateralStyle;
 
 import java.util.Collections;
 
@@ -38,17 +40,19 @@ public class GroupConcatBasedToStringJsonFunction extends AbstractToStringJsonFu
     protected final String end;
     private final boolean coalesceNestedMultiset;
     private final AbstractGroupConcatFunction groupConcatFunction;
+    private final LateralStyle lateralStyle;
 
-    public GroupConcatBasedToStringJsonFunction(AbstractGroupConcatFunction groupConcatFunction, ChrFunction chrFunction, ReplaceFunction replaceFunction, ConcatFunction concatFunction) {
-        this(getPreChunk(concatFunction), getPostChunk(concatFunction), true, groupConcatFunction, chrFunction, replaceFunction, concatFunction);
+    public GroupConcatBasedToStringJsonFunction(AbstractGroupConcatFunction groupConcatFunction, ChrFunction chrFunction, ReplaceFunction replaceFunction, ConcatFunction concatFunction, LateralStyle lateralStyle) {
+        this(getPreChunk(concatFunction), getPostChunk(concatFunction), true, groupConcatFunction, chrFunction, replaceFunction, concatFunction, lateralStyle);
     }
 
-    protected GroupConcatBasedToStringJsonFunction(String preChunk, String postChunk, boolean coalesceNestedMultiset, AbstractGroupConcatFunction groupConcatFunction, ChrFunction chrFunction, ReplaceFunction replaceFunction, ConcatFunction concatFunction) {
+    protected GroupConcatBasedToStringJsonFunction(String preChunk, String postChunk, boolean coalesceNestedMultiset, AbstractGroupConcatFunction groupConcatFunction, ChrFunction chrFunction, ReplaceFunction replaceFunction, ConcatFunction concatFunction, LateralStyle lateralStyle) {
         this.preChunk = preChunk;
         this.postChunk = postChunk;
         this.coalesceNestedMultiset = coalesceNestedMultiset;
         this.groupConcatFunction = groupConcatFunction;
         this.concatFunction = concatFunction;
+        this.lateralStyle = lateralStyle;
         String backslash = chrFunction.getEncodedString(Integer.toString('\\'));
         String backslashB = chrFunction.getEncodedString(Integer.toString('\b'));
         String backslashF = chrFunction.getEncodedString(Integer.toString('\f'));
@@ -88,15 +92,75 @@ public class GroupConcatBasedToStringJsonFunction extends AbstractToStringJsonFu
 
     @Override
     public void render(FunctionRenderContext context, String[] fields, String[] selectItemExpressions, String subquery, int fromIndex) {
-        context.addChunk(preChunk);
+        int orderByIndex = SqlUtils.indexOfOrderBy(subquery, fromIndex);
+        if (orderByIndex == -1) {
+            context.addChunk(preChunk);
+            groupConcatFunction.render(context, new AbstractGroupConcatFunction.GroupConcat(false, createGroupConcatArgument(fields, selectItemExpressions, fromIndex), Collections.<Order>emptyList(), ","));
+            context.addChunk(postChunk);
+            context.addChunk(subquery.substring(fromIndex));
+        } else {
+            String limitText = SqlUtils.LIMIT;
+            int limitIndex = SqlUtils.indexOfLimit(subquery, orderByIndex);
+            if (limitIndex == -1) {
+                limitText = SqlUtils.FETCH_FIRST;
+                limitIndex = SqlUtils.indexOfFetchFirst(subquery, orderByIndex);
+            }
+            if (limitIndex == -1) {
+                context.addChunk(preChunk);
+                groupConcatFunction.render(context, new AbstractGroupConcatFunction.GroupConcat(false, createGroupConcatArgument(fields, selectItemExpressions, fromIndex), Collections.<Order>emptyList(), ","));
+                context.addChunk(" OVER (");
+                context.addChunk(subquery.substring(orderByIndex));
+                context.addChunk(postChunk);
+                context.addChunk(subquery.substring(fromIndex, orderByIndex));
+                context.addChunk(")");
+            } else {
+                if (lateralStyle == LateralStyle.NONE) {
+                    context.addChunk(preChunk);
+                    groupConcatFunction.render(context, new AbstractGroupConcatFunction.GroupConcat(false, createGroupConcatArgument(fields, selectItemExpressions, fromIndex), Collections.<Order>emptyList(), ","));
+                    context.addChunk(" OVER (");
+                    context.addChunk(subquery.substring(orderByIndex, limitIndex));
+                    String limitClause = subquery.substring(limitIndex + limitText.length(), subquery.length() - 1);
+                    String offsetText = " offset ";
+                    int offsetIndex = limitClause.indexOf(offsetText);
+                    if (offsetIndex == -1) {
+                        context.addChunk(" ROWS BETWEEN CURRENT ROW AND (");
+                        context.addChunk(limitClause);
+                        context.addChunk(" - 1) FOLLOWING");
+                    } else {
+                        context.addChunk(" ROWS BETWEEN ");
+                        context.addChunk(limitClause.substring(offsetIndex + offsetText.length()));
+                        context.addChunk(" FOLLOWING AND ");
+                        context.addChunk(limitClause.substring(0, offsetIndex));
+                        context.addChunk(" FOLLOWING");
+                    }
+                    context.addChunk(")");
+                    context.addChunk(postChunk);
+                    context.addChunk(subquery.substring(fromIndex, limitIndex));
+                    context.addChunk(" limit 1)");
+                } else {
+                    context.addChunk(preChunk);
+                    groupConcatFunction.render(context, new AbstractGroupConcatFunction.GroupConcat(false, createGroupConcatArgument(fields, fields, fromIndex), Collections.<Order>emptyList(), ","));
+                    context.addChunk(postChunk);
+                    context.addChunk(" from lateral(select ");
+                    for (int i = 0; i < fields.length; i++) {
+                        if (i != 0) {
+                            context.addChunk(",");
+                        }
+                        context.addChunk(selectItemExpressions[i]);
+                        context.addChunk(" ");
+                        context.addChunk(fields[i]);
+                    }
+                    context.addChunk(subquery.substring(fromIndex));
+                    context.addChunk(" tmp)");
+                }
+            }
+        }
+    }
 
+    private String createGroupConcatArgument(String[] fields, String[] selectItemExpressions, int fromIndex) {
         StringBuilder sb = new StringBuilder(fromIndex);
         render(sb, fields, selectItemExpressions);
-
-        groupConcatFunction.render(context, new AbstractGroupConcatFunction.GroupConcat(false, sb.toString(), Collections.<Order>emptyList(), ","));
-
-        context.addChunk(postChunk);
-        context.addChunk(subquery.substring(fromIndex));
+        return sb.toString();
     }
 
     protected void render(StringBuilder sb, String[] fields, String[] selectItemExpressions) {

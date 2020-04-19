@@ -45,6 +45,7 @@ import com.blazebit.persistence.WhereOrBuilder;
 import com.blazebit.persistence.WindowBuilder;
 import com.blazebit.persistence.impl.function.entity.ValuesEntity;
 import com.blazebit.persistence.impl.function.limit.LimitFunction;
+import com.blazebit.persistence.impl.function.querywrapper.QueryWrapperFunction;
 import com.blazebit.persistence.impl.keyset.KeysetBuilderImpl;
 import com.blazebit.persistence.impl.keyset.KeysetLink;
 import com.blazebit.persistence.impl.keyset.KeysetManager;
@@ -111,6 +112,7 @@ import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
+import javax.persistence.metamodel.Type;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -468,7 +470,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     @SuppressWarnings("unchecked")
     public StartOngoingSetOperationCTECriteriaBuilder<BuilderType, LeafOngoingFinalSetOperationCTECriteriaBuilder<BuilderType>> withStartSet(Class<?> cteClass) {
         Boolean inlineCtesEnabled = mainQuery.getQueryConfiguration().getInlineCtesEnabled();
-        return mainQuery.cteManager.withStartSet(cteClass, (BuilderType) this, inlineCtesEnabled == null ? !mainQuery.dbmsDialect.supportsWithClause() : inlineCtesEnabled, null, null);
+        return mainQuery.cteManager.withStartSet(mainQuery.metamodel.entity(cteClass), (BuilderType) this, inlineCtesEnabled == null ? !mainQuery.dbmsDialect.supportsWithClause() : inlineCtesEnabled, null, null);
     }
 
     public StartOngoingSetOperationCTECriteriaBuilder<BuilderType, LeafOngoingFinalSetOperationCTECriteriaBuilder<BuilderType>> withStartSet(Class<?> cteClass, boolean inline) {
@@ -481,11 +483,11 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new UnsupportedOperationException("The database does not support the with clause, so the CTE must be inlined!");
         }
         prepareForModification(ClauseType.CTE);
-        return mainQuery.cteManager.withStartSet(cteClass, (BuilderType) this, inline, lateral ? aliasManager : null, lateral ? joinManager : null);
+        return mainQuery.cteManager.withStartSet(mainQuery.metamodel.entity(cteClass), (BuilderType) this, inline, lateral ? aliasManager : null, lateral ? joinManager : null);
     }
 
     public boolean hasCte(Class<?> cte) {
-        return mainQuery.cteManager.hasCte(cte);
+        return mainQuery.cteManager.hasCte(mainQuery.metamodel.entity(cte));
     }
 
     public FullSelectCTECriteriaBuilder<BuilderType> with(Class<?> cteClass) {
@@ -514,11 +516,73 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new UnsupportedOperationException("The database does not support the with clause, so the CTE must be inlined!");
         }
         prepareForModification(ClauseType.CTE);
-        return mainQuery.cteManager.with(cteClass, name, result, inline, inlineOwner, lateral ? aliasManager : null, lateral ? joinManager : null);
+        return mainQuery.cteManager.with(mainQuery.metamodel.entity(cteClass), name, result, inline, inlineOwner, lateral ? aliasManager : null, lateral ? joinManager : null);
     }
 
     @SuppressWarnings("unchecked")
     public <X> FullSelectCTECriteriaBuilder<X> with(Class<?> cteClass, CriteriaBuilder<?> criteriaBuilder, boolean inline, JoinManager inlineOwner, boolean lateral, X result) {
+        if (!inline && !mainQuery.dbmsDialect.supportsWithClause()) {
+            throw new UnsupportedOperationException("The database does not support the with clause, so the CTE must be inlined!");
+        }
+
+        prepareForModification(ClauseType.CTE);
+        return mainQuery.cteManager.with(mainQuery.metamodel.entity(cteClass), result, (AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) criteriaBuilder, inline, inlineOwner, lateral ? aliasManager : null, lateral ? joinManager : null);
+    }
+
+    @SuppressWarnings("unchecked")
+    public StartOngoingSetOperationCTECriteriaBuilder<BuilderType, LeafOngoingFinalSetOperationCTECriteriaBuilder<BuilderType>> withStartSet(EntityType<?> cteClass) {
+        Boolean inlineCtesEnabled = mainQuery.getQueryConfiguration().getInlineCtesEnabled();
+        return mainQuery.cteManager.withStartSet(cteClass, (BuilderType) this, inlineCtesEnabled == null ? !mainQuery.dbmsDialect.supportsWithClause() : inlineCtesEnabled, null, null);
+    }
+
+    public StartOngoingSetOperationCTECriteriaBuilder<BuilderType, LeafOngoingFinalSetOperationCTECriteriaBuilder<BuilderType>> withStartSet(EntityType<?> cteClass, boolean inline) {
+        return withStartSet(cteClass, inline, false);
+    }
+
+    @SuppressWarnings("unchecked")
+    public StartOngoingSetOperationCTECriteriaBuilder<BuilderType, LeafOngoingFinalSetOperationCTECriteriaBuilder<BuilderType>> withStartSet(EntityType<?> cteClass, boolean inline, boolean lateral) {
+        if (!inline && !mainQuery.dbmsDialect.supportsWithClause()) {
+            throw new UnsupportedOperationException("The database does not support the with clause, so the CTE must be inlined!");
+        }
+        prepareForModification(ClauseType.CTE);
+        return mainQuery.cteManager.withStartSet(cteClass, (BuilderType) this, inline, lateral ? aliasManager : null, lateral ? joinManager : null);
+    }
+
+    public boolean hasCte(EntityType<?> cte) {
+        return mainQuery.cteManager.hasCte(cte);
+    }
+
+    public FullSelectCTECriteriaBuilder<BuilderType> with(EntityType<?> cteClass) {
+        Boolean inlineCtesEnabled = mainQuery.getQueryConfiguration().getInlineCtesEnabled();
+        return with(cteClass, inlineCtesEnabled == null ? !mainQuery.dbmsDialect.supportsWithClause() : inlineCtesEnabled);
+    }
+
+    public FullSelectCTECriteriaBuilder<BuilderType> with(EntityType<?> cteClass, CriteriaBuilder<?> criteriaBuilder) {
+        Boolean inlineCtesEnabled = mainQuery.getQueryConfiguration().getInlineCtesEnabled();
+        return with(cteClass, criteriaBuilder, inlineCtesEnabled == null ? !mainQuery.dbmsDialect.supportsWithClause() : inlineCtesEnabled);
+    }
+
+    @SuppressWarnings("unchecked")
+    public FullSelectCTECriteriaBuilder<BuilderType> with(EntityType<?> cteClass, boolean inline) {
+        return with(cteClass, (String) null, inline, null, false, (BuilderType) this);
+    }
+
+    @SuppressWarnings("unchecked")
+    public FullSelectCTECriteriaBuilder<BuilderType> with(EntityType<?> cteClass, CriteriaBuilder<?> criteriaBuilder, boolean inline) {
+        return with(cteClass, criteriaBuilder, inline, null, false, (BuilderType) this);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <X> FullSelectCTECriteriaBuilder<X> with(EntityType<?> cteClass, String name, boolean inline, JoinManager inlineOwner, boolean lateral, X result) {
+        if (!inline && !mainQuery.dbmsDialect.supportsWithClause()) {
+            throw new UnsupportedOperationException("The database does not support the with clause, so the CTE must be inlined!");
+        }
+        prepareForModification(ClauseType.CTE);
+        return mainQuery.cteManager.with(cteClass, name, result, inline, inlineOwner, lateral ? aliasManager : null, lateral ? joinManager : null);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <X> FullSelectCTECriteriaBuilder<X> with(EntityType<?> cteClass, CriteriaBuilder<?> criteriaBuilder, boolean inline, JoinManager inlineOwner, boolean lateral, X result) {
         if (!inline && !mainQuery.dbmsDialect.supportsWithClause()) {
             throw new UnsupportedOperationException("The database does not support the with clause, so the CTE must be inlined!");
         }
@@ -555,11 +619,34 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         }
 
         prepareForModification(ClauseType.CTE);
-        return mainQuery.cteManager.withRecursive(cteClass, (BuilderType) this);
+        return mainQuery.cteManager.withRecursive(mainQuery.metamodel.entity(cteClass), (BuilderType) this);
     }
 
     @SuppressWarnings("unchecked")
     public ReturningModificationCriteriaBuilderFactory<BuilderType> withReturning(Class<?> cteClass) {
+        if (!mainQuery.dbmsDialect.supportsWithClause()) {
+            throw new UnsupportedOperationException("The database does not support the with clause!");
+        }
+        if (!mainQuery.dbmsDialect.supportsModificationQueryInWithClause()) {
+            throw new UnsupportedOperationException("The database does not support modification queries in the with clause!");
+        }
+
+        prepareForModification(ClauseType.CTE);
+        return mainQuery.cteManager.withReturning(mainQuery.metamodel.entity(cteClass), (BuilderType) this);
+    }
+
+    @SuppressWarnings("unchecked")
+    public SelectRecursiveCTECriteriaBuilder<BuilderType> withRecursive(EntityType<?> cteClass) {
+        if (!mainQuery.dbmsDialect.supportsWithClause()) {
+            throw new UnsupportedOperationException("The database does not support the with clause!");
+        }
+
+        prepareForModification(ClauseType.CTE);
+        return mainQuery.cteManager.withRecursive(cteClass, (BuilderType) this);
+    }
+
+    @SuppressWarnings("unchecked")
+    public ReturningModificationCriteriaBuilderFactory<BuilderType> withReturning(EntityType<?> cteClass) {
         if (!mainQuery.dbmsDialect.supportsWithClause()) {
             throw new UnsupportedOperationException("The database does not support the with clause!");
         }
@@ -1784,6 +1871,62 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     @SuppressWarnings("unchecked")
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> joinOnSubquery(EntityType<?> clazz, String alias, JoinType type) {
+        return joinOnSubquery(joinManager.getRootNodeOrFail("An explicit base join node is required when multiple root nodes are used!").getAlias(), clazz, alias, type);
+    }
+
+    @SuppressWarnings("unchecked")
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> joinOnSubquery(String base, EntityType<?> entityClass, String alias, JoinType type) {
+        prepareForModification(ClauseType.JOIN);
+        checkJoinPreconditions(base, alias, type);
+        if (entityClass == null) {
+            throw new NullPointerException("entityClass");
+        }
+        return with(entityClass, alias, true, joinManager, false, joinManager.joinOn((BuilderType) this, base, entityClass, alias, type, false));
+    }
+
+    @SuppressWarnings("unchecked")
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> joinOnEntitySubquery(EntityType<?> clazz, String alias, JoinType type) {
+        return joinOnEntitySubquery(joinManager.getRootNodeOrFail("An explicit base join node is required when multiple root nodes are used!").getAlias(), clazz, alias, null, type);
+    }
+
+    @SuppressWarnings("unchecked")
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> joinOnEntitySubquery(String base, EntityType<?> entityClass, String alias, JoinType type) {
+        return joinOnEntitySubquery(base, entityClass, alias, null, type);
+    }
+
+    @SuppressWarnings("unchecked")
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> joinOnEntitySubquery(EntityType<?> clazz, String alias, String subqueryAlias, JoinType type) {
+        return joinOnEntitySubquery(joinManager.getRootNodeOrFail("An explicit base join node is required when multiple root nodes are used!").getAlias(), clazz, alias, subqueryAlias, type);
+    }
+
+    @SuppressWarnings("unchecked")
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> joinOnEntitySubquery(String base, EntityType<?> entityClass, String alias, String subqueryAlias, JoinType type) {
+        return bindEntityAttributes(alias, subqueryAlias, joinOnSubquery(base, entityClass, alias, type), false, true);
+    }
+
+    @SuppressWarnings("unchecked")
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> joinLateralOnSubquery(EntityType<?> clazz, String alias, JoinType type) {
+        return joinLateralOnSubquery(joinManager.getRootNodeOrFail("An explicit base join node is required when multiple root nodes are used!").getAlias(), clazz, alias, type);
+    }
+
+    @SuppressWarnings("unchecked")
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> joinLateralOnSubquery(String base, EntityType<?> entityClass, String alias, JoinType type) {
+        if (type != JoinType.INNER && type != JoinType.LEFT) {
+            throw new IllegalArgumentException("Lateral joins are only possible with inner or left joins!");
+        }
+        if (mainQuery.dbmsDialect.getLateralStyle() == LateralStyle.NONE) {
+            throw new IllegalStateException("The dbms dialect does not support lateral joins!");
+        }
+        prepareForModification(ClauseType.JOIN);
+        checkJoinPreconditions(base, alias, type);
+        if (entityClass == null) {
+            throw new NullPointerException("entityClass");
+        }
+        return with(entityClass, alias, true, joinManager, true, joinManager.joinOn((BuilderType) this, base, entityClass, alias, type, true));
+    }
+
+    @SuppressWarnings("unchecked")
     public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> joinLateralOnSubquery(String correlationPath, String alias, String subqueryAlias, JoinType type) {
         if (type != JoinType.INNER && type != JoinType.LEFT) {
             throw new IllegalArgumentException("Lateral joins are only possible with inner or left joins!");
@@ -1833,6 +1976,37 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     @SuppressWarnings("unchecked")
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> joinLateralOnEntitySubquery(EntityType<?> clazz, String alias, String subqueryAlias, JoinType type) {
+        return joinLateralOnEntitySubquery(joinManager.getRootNodeOrFail("An explicit base join node is required when multiple root nodes are used!").getAlias(), clazz, alias, subqueryAlias, type);
+    }
+
+    @SuppressWarnings("unchecked")
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> joinLateralOnEntitySubquery(String base, EntityType<?> entityClass, String alias, String subqueryAlias, JoinType type) {
+        return bindEntityAttributes(alias, subqueryAlias, joinLateralOnSubquery(base, entityClass, alias, type), true, true);
+    }
+
+    @SuppressWarnings("unchecked")
+    public FullSelectCTECriteriaBuilder<BuilderType> joinLateralSubquery(EntityType<?> clazz, String alias, JoinType type) {
+        return joinLateralSubquery(joinManager.getRootNodeOrFail("An explicit base join node is required when multiple root nodes are used!").getAlias(), clazz, alias, type);
+    }
+
+    @SuppressWarnings("unchecked")
+    public FullSelectCTECriteriaBuilder<BuilderType> joinLateralSubquery(String base, EntityType<?> entityClass, String alias, JoinType type) {
+        if (type != JoinType.INNER && type != JoinType.LEFT) {
+            throw new IllegalArgumentException("Lateral joins are only possible with inner or left joins!");
+        }
+        if (mainQuery.dbmsDialect.getLateralStyle() == LateralStyle.NONE) {
+            throw new IllegalStateException("The dbms dialect does not support lateral joins!");
+        }
+        prepareForModification(ClauseType.JOIN);
+        checkJoinPreconditions(base, alias, type);
+        if (entityClass == null) {
+            throw new NullPointerException("entityClass");
+        }
+        return with(entityClass, alias, true, joinManager, true, joinManager.joinOn((BuilderType) this, base, entityClass, alias, type, true).onExpression("1=1").end());
+    }
+
+    @SuppressWarnings("unchecked")
     public FullSelectCTECriteriaBuilder<BuilderType> joinLateralSubquery(String correlationPath, String alias, String subqueryAlias, JoinType type) {
         if (type != JoinType.INNER && type != JoinType.LEFT) {
             throw new IllegalArgumentException("Lateral joins are only possible with inner or left joins!");
@@ -1852,6 +2026,16 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     @SuppressWarnings("unchecked")
     public FullSelectCTECriteriaBuilder<BuilderType> joinLateralEntitySubquery(String base, Class<?> entityClass, String alias, String subqueryAlias, JoinType type) {
+        return bindEntityAttributes(alias, subqueryAlias, joinLateralSubquery(base, entityClass, alias, type), true, true);
+    }
+
+    @SuppressWarnings("unchecked")
+    public FullSelectCTECriteriaBuilder<BuilderType> joinLateralEntitySubquery(EntityType<?> clazz, String alias, String subqueryAlias, JoinType type) {
+        return joinLateralEntitySubquery(joinManager.getRootNodeOrFail("An explicit base join node is required when multiple root nodes are used!").getAlias(), clazz, alias, subqueryAlias, type);
+    }
+
+    @SuppressWarnings("unchecked")
+    public FullSelectCTECriteriaBuilder<BuilderType> joinLateralEntitySubquery(String base, EntityType<?> entityClass, String alias, String subqueryAlias, JoinType type) {
         return bindEntityAttributes(alias, subqueryAlias, joinLateralSubquery(base, entityClass, alias, type), true, true);
     }
 
@@ -1924,6 +2108,46 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return joinLateralOnEntitySubquery(base, clazz, alias, subqueryAlias, JoinType.INNER);
     }
 
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> innerJoinOnSubquery(EntityType<?> clazz, String alias) {
+        return joinOnSubquery(clazz, alias, JoinType.INNER);
+    }
+
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> innerJoinOnSubquery(String base, EntityType<?> clazz, String alias) {
+        return joinOnSubquery(base, clazz, alias, JoinType.INNER);
+    }
+
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> innerJoinOnEntitySubquery(EntityType<?> clazz, String alias) {
+        return joinOnEntitySubquery(clazz, alias, JoinType.INNER);
+    }
+
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> innerJoinOnEntitySubquery(String base, EntityType<?> clazz, String alias) {
+        return joinOnEntitySubquery(base, clazz, alias, JoinType.INNER);
+    }
+
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> innerJoinOnEntitySubquery(EntityType<?> clazz, String alias, String subqueryAlias) {
+        return joinOnEntitySubquery(clazz, alias, subqueryAlias, JoinType.INNER);
+    }
+
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> innerJoinOnEntitySubquery(String base, EntityType<?> clazz, String alias, String subqueryAlias) {
+        return joinOnEntitySubquery(base, clazz, alias, subqueryAlias, JoinType.INNER);
+    }
+
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> innerJoinLateralOnSubquery(EntityType<?> clazz, String alias) {
+        return joinLateralOnSubquery(clazz, alias, JoinType.INNER);
+    }
+
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> innerJoinLateralOnSubquery(String base, EntityType<?> clazz, String alias) {
+        return joinLateralOnSubquery(base, clazz, alias, JoinType.INNER);
+    }
+
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> innerJoinLateralOnEntitySubquery(EntityType<?> clazz, String alias, String subqueryAlias) {
+        return joinLateralOnEntitySubquery(clazz, alias, subqueryAlias, JoinType.INNER);
+    }
+
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> innerJoinLateralOnEntitySubquery(String base, EntityType<?> clazz, String alias, String subqueryAlias) {
+        return joinLateralOnEntitySubquery(base, clazz, alias, subqueryAlias, JoinType.INNER);
+    }
+
     public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> innerJoinLateralOnSubquery(String correlationPath, String alias, String subqueryAlias) {
         return joinLateralOnSubquery(correlationPath, alias, subqueryAlias, JoinType.INNER);
     }
@@ -1945,6 +2169,22 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     public FullSelectCTECriteriaBuilder<BuilderType> innerJoinLateralEntitySubquery(String base, Class<?> clazz, String alias, String subqueryAlias) {
+        return joinLateralEntitySubquery(base, clazz, alias, subqueryAlias, JoinType.INNER);
+    }
+
+    public FullSelectCTECriteriaBuilder<BuilderType> innerJoinLateralSubquery(EntityType<?> clazz, String alias) {
+        return joinLateralSubquery(clazz, alias, JoinType.INNER);
+    }
+
+    public FullSelectCTECriteriaBuilder<BuilderType> innerJoinLateralSubquery(String base, EntityType<?> clazz, String alias) {
+        return joinLateralSubquery(base, clazz, alias, JoinType.INNER);
+    }
+
+    public FullSelectCTECriteriaBuilder<BuilderType> innerJoinLateralEntitySubquery(EntityType<?> clazz, String alias, String subqueryAlias) {
+        return joinLateralEntitySubquery(clazz, alias, subqueryAlias, JoinType.INNER);
+    }
+
+    public FullSelectCTECriteriaBuilder<BuilderType> innerJoinLateralEntitySubquery(String base, EntityType<?> clazz, String alias, String subqueryAlias) {
         return joinLateralEntitySubquery(base, clazz, alias, subqueryAlias, JoinType.INNER);
     }
 
@@ -2020,6 +2260,46 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return joinLateralOnEntitySubquery(base, clazz, alias, subqueryAlias, JoinType.LEFT);
     }
 
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> leftJoinOnSubquery(EntityType<?> clazz, String alias) {
+        return joinOnSubquery(clazz, alias, JoinType.LEFT);
+    }
+
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> leftJoinOnSubquery(String base, EntityType<?> clazz, String alias) {
+        return joinOnSubquery(base, clazz, alias, JoinType.LEFT);
+    }
+
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> leftJoinOnEntitySubquery(EntityType<?> clazz, String alias) {
+        return joinOnEntitySubquery(clazz, alias, JoinType.LEFT);
+    }
+
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> leftJoinOnEntitySubquery(String base, EntityType<?> clazz, String alias) {
+        return joinOnEntitySubquery(base, clazz, alias, JoinType.LEFT);
+    }
+
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> leftJoinOnEntitySubquery(EntityType<?> clazz, String alias, String subqueryAlias) {
+        return joinOnEntitySubquery(clazz, alias, subqueryAlias, JoinType.LEFT);
+    }
+
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> leftJoinOnEntitySubquery(String base, EntityType<?> clazz, String alias, String subqueryAlias) {
+        return joinOnEntitySubquery(base, clazz, alias, subqueryAlias, JoinType.LEFT);
+    }
+
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> leftJoinLateralOnSubquery(EntityType<?> clazz, String alias) {
+        return joinLateralOnSubquery(clazz, alias, JoinType.LEFT);
+    }
+
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> leftJoinLateralOnSubquery(String base, EntityType<?> clazz, String alias) {
+        return joinLateralOnSubquery(base, clazz, alias, JoinType.LEFT);
+    }
+
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> leftJoinLateralOnEntitySubquery(EntityType<?> clazz, String alias, String subqueryAlias) {
+        return joinLateralOnEntitySubquery(clazz, alias, subqueryAlias, JoinType.LEFT);
+    }
+
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> leftJoinLateralOnEntitySubquery(String base, EntityType<?> clazz, String alias, String subqueryAlias) {
+        return joinLateralOnEntitySubquery(base, clazz, alias, subqueryAlias, JoinType.LEFT);
+    }
+
     public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> leftJoinLateralOnSubquery(String correlationPath, String alias, String subqueryAlias) {
         return joinLateralOnSubquery(correlationPath, alias, subqueryAlias, JoinType.LEFT);
     }
@@ -2041,6 +2321,22 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     public FullSelectCTECriteriaBuilder<BuilderType> leftJoinLateralEntitySubquery(String base, Class<?> clazz, String alias, String subqueryAlias) {
+        return joinLateralEntitySubquery(base, clazz, alias, subqueryAlias, JoinType.LEFT);
+    }
+
+    public FullSelectCTECriteriaBuilder<BuilderType> leftJoinLateralSubquery(EntityType<?> clazz, String alias) {
+        return joinLateralSubquery(clazz, alias, JoinType.LEFT);
+    }
+
+    public FullSelectCTECriteriaBuilder<BuilderType> leftJoinLateralSubquery(String base, EntityType<?> clazz, String alias) {
+        return joinLateralSubquery(base, clazz, alias, JoinType.LEFT);
+    }
+
+    public FullSelectCTECriteriaBuilder<BuilderType> leftJoinLateralEntitySubquery(EntityType<?> clazz, String alias, String subqueryAlias) {
+        return joinLateralEntitySubquery(clazz, alias, subqueryAlias, JoinType.LEFT);
+    }
+
+    public FullSelectCTECriteriaBuilder<BuilderType> leftJoinLateralEntitySubquery(String base, EntityType<?> clazz, String alias, String subqueryAlias) {
         return joinLateralEntitySubquery(base, clazz, alias, subqueryAlias, JoinType.LEFT);
     }
 
@@ -2097,6 +2393,30 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> rightJoinOnEntitySubquery(String base, Class<?> clazz, String alias, String subqueryAlias) {
+        return joinOnEntitySubquery(base, clazz, alias, subqueryAlias, JoinType.RIGHT);
+    }
+
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> rightJoinOnSubquery(EntityType<?> clazz, String alias) {
+        return joinOnSubquery(clazz, alias, JoinType.RIGHT);
+    }
+
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> rightJoinOnSubquery(String base, EntityType<?> clazz, String alias) {
+        return joinOnSubquery(base, clazz, alias, JoinType.RIGHT);
+    }
+
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> rightJoinOnEntitySubquery(EntityType<?> clazz, String alias) {
+        return joinOnEntitySubquery(clazz, alias, JoinType.RIGHT);
+    }
+
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> rightJoinOnEntitySubquery(String base, EntityType<?> clazz, String alias) {
+        return joinOnEntitySubquery(base, clazz, alias, JoinType.RIGHT);
+    }
+
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> rightJoinOnEntitySubquery(EntityType<?> clazz, String alias, String subqueryAlias) {
+        return joinOnEntitySubquery(clazz, alias, subqueryAlias, JoinType.RIGHT);
+    }
+
+    public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> rightJoinOnEntitySubquery(String base, EntityType<?> clazz, String alias, String subqueryAlias) {
         return joinOnEntitySubquery(base, clazz, alias, subqueryAlias, JoinType.RIGHT);
     }
 
@@ -3049,11 +3369,11 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         joinManager.acceptVisitor(new JoinNodeVisitor() {
             @Override
             public void visit(JoinNode node) {
-                Class<?> cteType = node.getJavaType();
-                if (cteType != null) {
-                    CTEInfo cte = mainQuery.cteManager.getCte(cteType, node.getAlias(), joinManager);
+                Type<?> cteType = node.getType();
+                if (cteType instanceof EntityType<?>) {
+                    CTEInfo cte = mainQuery.cteManager.getCte((EntityType<?>) cteType, node.getAlias(), joinManager);
                     if (cte == null) {
-                        cte = mainQuery.cteManager.getCte(cteType);
+                        cte = mainQuery.cteManager.getCte((EntityType<?>) cteType);
                     }
                     if (cte != null) {
                         if (cte.inline) {
@@ -3064,9 +3384,9 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                         }
                     }
                     // Except for VALUES clause from nodes, every cte type must be defined
-                    if (node.getValueCount() == 0 && mainQuery.metamodel.getCte(cteType) != null) {
+                    if (node.getValueCount() == 0 && mainQuery.metamodel.getCte(cteType.getJavaType()) != null) {
                         if (cte == null) {
-                            throw new IllegalStateException("Usage of CTE '" + cteType.getName() + "' without definition!");
+                            throw new IllegalStateException("Usage of CTE '" + cteType.getJavaType().getName() + "' without definition!");
                         }
                     }
                 }
@@ -3178,13 +3498,13 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return sbSelectFrom.toString();
     }
 
-    public Expression asExpression(boolean externalRepresentation) {
-        return asExpression(this, externalRepresentation);
+    public Expression asExpression(boolean externalRepresentation, boolean quantifiedPredicate) {
+        return asExpression(this, externalRepresentation, quantifiedPredicate);
     }
 
-    protected Expression asExpression(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder, boolean externalRepresentation) {
+    protected Expression asExpression(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder, boolean externalRepresentation, boolean quantifiedPredicate) {
         if (queryBuilder instanceof BaseFinalSetOperationBuilderImpl<?, ?, ?>) {
-            return queryBuilder.asExpression(externalRepresentation);
+            return queryBuilder.asExpression(externalRepresentation, quantifiedPredicate);
         }
 
         final String queryString = queryBuilder.buildBaseQueryString(externalRepresentation);
@@ -3238,6 +3558,12 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             }
 
             expression = new FunctionExpression("FUNCTION", arguments);
+            if (quantifiedPredicate && !mainQuery.dbmsDialect.supportsLimitInQuantifiedPredicateSubquery()) {
+                arguments = new ArrayList<>(2);
+                arguments.add(new StringLiteral(QueryWrapperFunction.FUNCTION_NAME));
+                arguments.add(expression);
+                expression = new FunctionExpression("FUNCTION", arguments);
+            }
         }
 
         return expression;

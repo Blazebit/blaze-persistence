@@ -126,6 +126,16 @@ public class MySQLDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
+    public boolean supportsLimitInQuantifiedPredicateSubquery() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsNestedCorrelations() {
+        return false;
+    }
+
+    @Override
     public void appendOrderByElement(StringBuilder sqlSb, OrderByElement element, String[] aliases) {
         if (!element.isNullable()) {
             super.appendOrderByElement(sqlSb, element, aliases);

@@ -685,6 +685,7 @@ interface CatView extends SimpleCatView {
 ----
 SELECT
     cat.id,
+    cat.name,
 
     INDEX(indexedKittens_1),
     indexedKittens_1.id,
@@ -715,7 +716,7 @@ interface CatView extends SimpleCatView {
 
 [source,sql]
 ----
-SELECT cat.id, KEY(kittensBestFriends_1).id, KEY(kittensBestFriends_1).name
+SELECT cat.id, cat.name, KEY(kittensBestFriends_1).id, KEY(kittensBestFriends_1).name
 FROM Cat cat
 LEFT JOIN cat.kittensBestFriends kittensBestFriends_1
 ----
@@ -735,7 +736,7 @@ interface CatView extends SimpleCatView {
 
 [source,sql]
 ----
-SELECT cat.id, kittensBestFriends_1.id, kittensBestFriends_1.name
+SELECT cat.id, cat.name, kittensBestFriends_1.id, kittensBestFriends_1.name
 FROM Cat cat
 LEFT JOIN cat.kittensBestFriends kittensBestFriends_1
 ----
@@ -756,7 +757,7 @@ interface CatView extends SimpleCatView {
 
 [source,sql]
 ----
-SELECT cat.id, indexedKittens_1.id, indexedKittens_1.name
+SELECT cat.id, cat.name, indexedKittens_1.id, indexedKittens_1.name
 FROM Cat cat
 LEFT JOIN cat.indexedKittens indexedKittens_1
 ----
@@ -802,6 +803,38 @@ The query will not generate a join but simply select the `tags` since it's a sin
 ----
 SELECT cat.id, cat.tags
 FROM Cat cat
+----
+
+=== Limit mapping
+
+Oftentimes it is not necessary to fetch all elements of a collection or correlation but only the top N values.
+To achieve that, the `@Limit` annotation can be used like in the following example:
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface CatView extends SimpleCatView {
+
+    @Mapping("kittens")
+    @Limit(limit = 5, order = {"age DESC", "id DESC"})
+    List<SimpleCatView> getKittens();
+}
+----
+
+This will fetch only the 5 oldest kittens per cat, regardless of the used fetch strategy.
+A possible query for this view could look like this:
+
+[source,sql]
+----
+SELECT cat.id, cat.name, kittens.id, kittens.name
+FROM Cat cat
+LEFT JOIN LATERAL Cat(
+    SELECT kitten.age, kitten.father.id, kitten.id, kitten.mother.id, kitten.name
+    FROM Cat kitten
+    WHERE kitten MEMBER OF cat.kittens
+    ORDER BY kitten.age DESC, kitten.id DESC
+    LIMIT 5
+) kittens(age, father.id, id, mother.id, name) ON 1=1
 ----
 
 [[anchor-correlation-mappings]]

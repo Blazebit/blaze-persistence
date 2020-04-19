@@ -50,7 +50,7 @@ public class PersonController {
 
     private ResponseEntity<PersonView> updatePerson0(PersonUpdateView personUpdate) {
         personRepository.updatePerson(personUpdate);
-        PersonView personView = personRepository.findOne(personUpdate.getId());
+        PersonView personView = personRepository.findOne(personUpdate.getId().toString());
         return ResponseEntity.ok(personView);
     }
 }

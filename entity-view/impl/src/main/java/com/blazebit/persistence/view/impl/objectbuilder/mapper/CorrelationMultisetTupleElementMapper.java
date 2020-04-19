@@ -23,6 +23,7 @@ import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.spi.ServiceProvider;
 import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.CorrelationProviderFactory;
+import com.blazebit.persistence.view.impl.objectbuilder.Limiter;
 import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.MultisetCorrelationBuilder;
 import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
@@ -44,14 +45,16 @@ public class CorrelationMultisetTupleElementMapper implements TupleElementMapper
     protected final String correlationAlias;
     protected final String attributePath;
     protected final String embeddingViewPath;
+    protected final Limiter limiter;
 
-    public CorrelationMultisetTupleElementMapper(ViewTypeObjectBuilderTemplate<Object[]> subviewTemplate, CorrelationProviderFactory correlationProviderFactory, String correlationBasis, String correlationAlias, String attributePath, String embeddingViewPath) {
+    public CorrelationMultisetTupleElementMapper(ViewTypeObjectBuilderTemplate<Object[]> subviewTemplate, CorrelationProviderFactory correlationProviderFactory, String correlationBasis, String correlationAlias, String attributePath, String embeddingViewPath, Limiter limiter) {
         this.subviewTemplate = subviewTemplate;
         this.correlationProviderFactory = correlationProviderFactory;
         this.correlationBasis = correlationBasis;
         this.correlationAlias = correlationAlias;
         this.attributePath = attributePath;
         this.embeddingViewPath = embeddingViewPath;
+        this.limiter = limiter;
     }
 
     @Override
@@ -65,6 +68,10 @@ public class CorrelationMultisetTupleElementMapper implements TupleElementMapper
         SubqueryBuilder<?> subqueryBuilder = correlationBuilder.getSubqueryBuilder();
         for (TupleElementMapper mapper : subviewTemplate.getMappers()) {
             mapper.applyMapping(subqueryBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro, true);
+        }
+
+        if (limiter != null) {
+            limiter.apply(parameterHolder, optionalParameters, subqueryBuilder);
         }
 
         subqueryBuilder.end();

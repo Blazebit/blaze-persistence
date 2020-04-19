@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.spi;
 
 import java.util.Comparator;
+import java.util.List;
 
 /**
  * Mapping of an entity view attribute.
@@ -139,6 +140,31 @@ public interface EntityViewAttributeMapping {
      * @since 1.5.0
      */
     public void setCreateEmptyFlatViews(Boolean createEmptyFlatViews);
+
+    /**
+     * Returns the limit expression.
+     *
+     * @return the limit expression
+     * @since 1.5.0
+     */
+    public String getLimitExpression();
+
+    /**
+     * Returns the order by item expressions.
+     *
+     * @return The order by item expressions
+     * @since 1.5.0
+     */
+    public List<String> getOrderByItems();
+
+    /**
+     * Sets the limit expression along with the order by expressions.
+     *
+     * @param limitExpression The limit expression
+     * @param orderByExpressions The order by item expressions
+     * @since 1.5.0
+     */
+    public void setLimit(String limitExpression, List<String> orderByExpressions);
 
     /**
      * Returns the attribute type.

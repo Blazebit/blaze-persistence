@@ -10,9 +10,9 @@
     <packaging>pom</packaging>
 
     <name>Blazebit Persistence Integration Spring-Data Testsuite</name>
+    <artifactId>blaze-persistence-integration-spring-data-testsuite</artifactId>
     <modules>
         <module>webmvc</module>
         <module>webflux</module>
     </modules>
-    <artifactId>blaze-persistence-integration-spring-data-testsuite</artifactId>
 </project>

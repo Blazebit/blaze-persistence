@@ -22,6 +22,7 @@ Not yet released
 * Throw validation error when encountering entity view annotations on setter
 * Add support for bounded counting in pagination i.e. counting up to a specific value
 * Rewrite temporal literals to parameters for hibernate
+* Add `@Limit` annotation for entity views to limit elements of collections and correlations
 
 ### Bug fixes
 
@@ -37,11 +38,13 @@ Not yet released
 * Fix collection deserialization issues with Jackson
 * Allow to use `@JsonIgnore` for the id property of an entity view
 * Properly validate the condition expression of `CASE` expressions in entity views
+* Better support for MySQL subquery `LIMIT` handling in quantified predicates e.g. `IN` 
 
 ### Backwards-incompatible changes
 
 * `AttributeFilterProvider` was change in a source incompatible way because it introduced a type variable for the filter value. Subclasses should specify the type or pass through the type variable if the filter value type is like the attribute type
 * `SubGraph` and thus also `EntityViewSetting` methods for typed fetching `fetch(Attribute)` was replaced by `fetch(MethodSingularAttribute)` and `fetch(MethodPluralAttribute)` which was probably not used yet anyway
+* The validation of `CASE` expression might lead to deployment failures due to unsafe expressions or when expression types can't be determined. Enum comparison should be done through the fully qualified name e.g. `com.test.MyEnum.MY_KEY`
 
 ## 1.5.0-Alpha1
 

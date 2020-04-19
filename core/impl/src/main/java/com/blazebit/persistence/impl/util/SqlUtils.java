@@ -29,26 +29,30 @@ import java.util.Set;
  */
 public class SqlUtils {
 
-    private static final String SELECT = "select ";
-    private static final String SET = " set ";
-    private static final String FROM = " from ";
-    private static final String JOIN = " join ";
-    private static final String WITH = "with ";
-    private static final String WHERE = " where ";
-    private static final String ORDER_BY = " order by ";
-    private static final String AS = " as ";
-    private static final String FROM_FINAL_TABLE = " from final table (";
-    private static final String NEXT_VALUE_FOR = "next value for ";
-    private static final PatternFinder SELECT_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(SELECT));
-    private static final PatternFinder SET_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(SET));
-    private static final PatternFinder FROM_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(FROM));
-    private static final PatternFinder JOIN_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(JOIN));
-    private static final PatternFinder WITH_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(WITH));
-    private static final PatternFinder WHERE_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(WHERE));
-    private static final PatternFinder ORDER_BY_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(ORDER_BY));
-    private static final PatternFinder AS_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiLastPatternFinder(AS));
-    private static final PatternFinder FROM_FINAL_TABLE_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(FROM_FINAL_TABLE));
-    private static final PatternFinder NEXT_VALUE_FOR_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(NEXT_VALUE_FOR));
+    public static final String SELECT = "select ";
+    public static final String SET = " set ";
+    public static final String FROM = " from ";
+    public static final String JOIN = " join ";
+    public static final String WITH = "with ";
+    public static final String WHERE = " where ";
+    public static final String ORDER_BY = " order by ";
+    public static final String LIMIT = " limit ";
+    public static final String FETCH_FIRST = " fetch first ";
+    public static final String AS = " as ";
+    public static final String FROM_FINAL_TABLE = " from final table (";
+    public static final String NEXT_VALUE_FOR = "next value for ";
+    public static final PatternFinder SELECT_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(SELECT));
+    public static final PatternFinder SET_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(SET));
+    public static final PatternFinder FROM_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(FROM));
+    public static final PatternFinder JOIN_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(JOIN));
+    public static final PatternFinder WITH_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(WITH));
+    public static final PatternFinder WHERE_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(WHERE));
+    public static final PatternFinder ORDER_BY_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(ORDER_BY));
+    public static final PatternFinder LIMIT_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(LIMIT));
+    public static final PatternFinder FETCH_FIRST_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(FETCH_FIRST));
+    public static final PatternFinder AS_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiLastPatternFinder(AS));
+    public static final PatternFinder FROM_FINAL_TABLE_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(FROM_FINAL_TABLE));
+    public static final PatternFinder NEXT_VALUE_FOR_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(NEXT_VALUE_FOR));
 
     /**
      * @author Christian Beikov
@@ -242,6 +246,10 @@ public class SqlUtils {
         return getExpressionItems(sql, 0, sql.length(), EXPRESSION_EXTRACTOR);
     }
 
+    public static List<String> getExpressionItems(CharSequence sql, int i, int end) {
+        return getExpressionItems(sql, i, end, EXPRESSION_EXTRACTOR);
+    }
+
     public static List<String> getExpressionItems(CharSequence sql, int i, int end, SelectItemExtractor extractor) {
         List<String> selectItems = new ArrayList<>();
         StringBuilder sb = new StringBuilder();
@@ -339,10 +347,32 @@ public class SqlUtils {
      * Finds the toplevel ORDER BY keyword in an arbitrary query.
      *
      * @param sql The SQL query
-     * @return The index of the SELECT keyword if found, or -1
+     * @return The index of the ORDER BY keyword if found, or -1
      */
     public static int indexOfOrderBy(CharSequence sql) {
         return indexOf(ORDER_BY_FINDER, sql, 0, 0);
+    }
+
+    public static int indexOfOrderBy(CharSequence sql, int start) {
+        return indexOf(ORDER_BY_FINDER, sql, start, start);
+    }
+
+    /**
+     * Finds the toplevel LIMIT keyword in an arbitrary query.
+     *
+     * @param sql The SQL query
+     * @return The index of the LIMIT keyword if found, or -1
+     */
+    public static int indexOfLimit(CharSequence sql) {
+        return indexOf(LIMIT_FINDER, sql, 0, 0);
+    }
+
+    public static int indexOfLimit(CharSequence sql, int start) {
+        return indexOf(LIMIT_FINDER, sql, start, start);
+    }
+
+    public static int indexOfFetchFirst(CharSequence sql, int start) {
+        return indexOf(FETCH_FIRST_FINDER, sql, start, start);
     }
 
     private static int indexOf(PatternFinder patternFinder, CharSequence sql, int start, int checkStart) {

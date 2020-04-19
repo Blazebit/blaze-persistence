@@ -96,6 +96,16 @@ public class DelegatingDbmsDialect implements DbmsDialect {
     }
 
     @Override
+    public boolean supportsLimitInQuantifiedPredicateSubquery() {
+        return delegate.supportsLimitInQuantifiedPredicateSubquery();
+    }
+
+    @Override
+    public boolean supportsNestedCorrelations() {
+        return delegate.supportsNestedCorrelations();
+    }
+
+    @Override
     public boolean supportsWithClauseInModificationQuery() {
         return delegate.supportsWithClauseInModificationQuery();
     }

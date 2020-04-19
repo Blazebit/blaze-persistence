@@ -1467,10 +1467,15 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
                 parameterTypes.add(baseType.getAttribute(baseTypeViewMapping.getIdAttribute().getName()).getConvertedJavaType());
             }
             for (Map.Entry<AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<? super X, ?>>> attributeEntry : attributesClosure.entrySet()) {
+                ConstrainedAttribute<AbstractMethodAttribute<? super X, ?>> constrainedAttribute = attributeEntry.getValue();
                 if (attributeEntry.getKey().attributeName.equals(idName)) {
+                    AbstractMethodAttribute<? super X, ?> idAttribute = constrainedAttribute.getAttribute();
+                    TypeConverter<Object, Object> converter = (TypeConverter<Object, Object>) idAttribute.getElementType().getConverter();
+                    if (converter != null) {
+                        typeConverterEntries.add(new AbstractReflectionInstantiator.TypeConverterEntry(idAttribute.getAttributeIndex(), converter));
+                    }
                     continue;
                 }
-                ConstrainedAttribute<AbstractMethodAttribute<? super X, ?>> constrainedAttribute = attributeEntry.getValue();
                 parameterTypes.add(constrainedAttribute.getAttribute().getConvertedJavaType());
 
                 if (!constrainedAttribute.requiresCaseWhen()) {

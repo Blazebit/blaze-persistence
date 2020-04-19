@@ -79,10 +79,15 @@ public class ParameterExpression extends AbstractExpression {
 
     @Override
     public String toString() {
-        if (Character.isDigit(name.charAt(0))) {
-            return "?" + name;
+        if (!collectionValued && value instanceof Enum<?>) {
+            Enum value = (Enum) this.value;
+            return value.getDeclaringClass().getName() + "." + value.name();
         } else {
-            return ":" + name;
+            if (Character.isDigit(name.charAt(0))) {
+                return "?" + name;
+            } else {
+                return ":" + name;
+            }
         }
     }
 

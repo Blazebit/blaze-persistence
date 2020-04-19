@@ -35,27 +35,28 @@ public class ConvertReflectionInstantiator<T> implements ObjectInstantiator<T> {
     private static final boolean TUPLE_STYLE = true;
     private final boolean resetInitialState;
     private final Constructor<T> constructor;
-    private final int size;
+    private final Object[] defaultObject;
     private final AbstractReflectionInstantiator.TypeConverterEntry[] typeConverterEntries;
 
     public ConvertReflectionInstantiator(ProxyFactory proxyFactory, ManagedViewType<T> viewType, Class<?>[] parameterTypes, int constructorParameterCount, boolean resetInitialState, EntityViewManager entityViewManager) {
         @SuppressWarnings("unchecked")
         Class<T> proxyClazz = (Class<T>) proxyFactory.getProxy(entityViewManager, (ManagedViewTypeImplementor<Object>) viewType);
         Constructor<T> javaConstructor;
-        int size;
+        Object[] defaultObject;
 
         try {
             if (TUPLE_STYLE) {
-                size = constructorParameterCount + 3;
                 Class[] types = new Class[constructorParameterCount + 3];
                 types[0] = proxyClazz;
                 types[1] = int.class;
                 types[2] = Object[].class;
                 System.arraycopy(parameterTypes, parameterTypes.length - constructorParameterCount, types, 3, constructorParameterCount);
                 javaConstructor = proxyClazz.getDeclaredConstructor(types);
+                defaultObject = AbstractReflectionInstantiator.createDefaultObject(3, parameterTypes, constructorParameterCount);
+                defaultObject[1] = 0;
             } else {
-                size = parameterTypes.length;
                 javaConstructor = proxyClazz.getDeclaredConstructor(parameterTypes);
+                defaultObject = null;
             }
         } catch (NoSuchMethodException | SecurityException ex) {
             throw new IllegalArgumentException("Couldn't find expected constructor of the proxy class: " + proxyClazz.getName(), ex);
@@ -63,7 +64,7 @@ public class ConvertReflectionInstantiator<T> implements ObjectInstantiator<T> {
 
         this.resetInitialState = resetInitialState && DirtyStateTrackable.class.isAssignableFrom(proxyClazz);
         this.constructor = javaConstructor;
-        this.size = size;
+        this.defaultObject = defaultObject;
         this.typeConverterEntries = AbstractReflectionInstantiator.withPrimitiveConverters(Collections.<AbstractReflectionInstantiator.TypeConverterEntry>emptyList(), parameterTypes);
     }
 
@@ -78,8 +79,7 @@ public class ConvertReflectionInstantiator<T> implements ObjectInstantiator<T> {
             }
             T t;
             if (TUPLE_STYLE) {
-                Object[] array = new Object[size];
-                array[1] = 0;
+                Object[] array = Arrays.copyOf(defaultObject, defaultObject.length);
                 array[2] = tuple;
                 t = constructor.newInstance(array);
             } else {

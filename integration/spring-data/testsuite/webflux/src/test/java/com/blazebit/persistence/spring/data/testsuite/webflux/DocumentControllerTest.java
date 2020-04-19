@@ -21,7 +21,6 @@ import com.blazebit.persistence.spring.data.testsuite.webflux.entity.Document;
 import com.blazebit.persistence.spring.data.testsuite.webflux.entity.Person;
 import com.blazebit.persistence.spring.data.testsuite.webflux.tx.TransactionalWorkService;
 import com.blazebit.persistence.spring.data.testsuite.webflux.view.DocumentUpdateView;
-import com.blazebit.persistence.spring.data.testsuite.webflux.view.DocumentView;
 import com.blazebit.persistence.spring.data.webflux.impl.BlazePersistenceWebConfiguration;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,11 +28,10 @@ import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.ImportResource;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import reactor.core.publisher.Mono;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author Moritz Becker
@@ -56,18 +54,16 @@ public class DocumentControllerTest extends AbstractSpringTest {
             return evm.find(em, DocumentUpdateView.class, d1.getId());
         });
         updateView.setName("D2");
-        DocumentView updatedView = webTestClient.put()
+        webTestClient.put()
                 .uri("/documents/{id}", d1.getId())
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .accept(MediaType.parseMediaType("application/vnd.blazebit.update1+json"))
                 .body(Mono.just(toJsonWithoutId(updateView)), byte[].class)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(DocumentView.class)
-                .returnResult().getResponseBody();
-
-        // Then
-        assertEquals(updatedView.getName(), updateView.getName());
+                .expectBody()
+                // Then
+                .jsonPath("$.name").isEqualTo(updateView.getName());
     }
 
     @Test
@@ -80,18 +76,16 @@ public class DocumentControllerTest extends AbstractSpringTest {
             return evm.find(em, DocumentUpdateView.class, d1.getId());
         });
         updateView.setName("D2");
-        DocumentView updatedView = webTestClient.put()
+        webTestClient.put()
                 .uri("/documents/{id}", d1.getId())
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .accept(MediaType.parseMediaType("application/vnd.blazebit.update2+json"))
                 .body(Mono.just(toJsonWithoutId(updateView)), byte[].class)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(DocumentView.class)
-                .returnResult().getResponseBody();
-
-        // Then
-        assertEquals(updatedView.getName(), updateView.getName());
+                .expectBody()
+                // Then
+                .jsonPath("$.name").isEqualTo(updateView.getName());
     }
 
     @Test
@@ -104,17 +98,15 @@ public class DocumentControllerTest extends AbstractSpringTest {
             return evm.find(em, DocumentUpdateView.class, d1.getId());
         });
         updateView.setName("D2");
-        DocumentView updatedView = webTestClient.put()
+        webTestClient.put()
                 .uri("/documents")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .body(Mono.just(toJsonWithId(updateView)), byte[].class)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(DocumentView.class)
-                .returnResult().getResponseBody();
-
-        // Then
-        assertEquals(updatedView.getName(), updateView.getName());
+                .expectBody()
+                // Then
+                .jsonPath("$.name").isEqualTo(updateView.getName());
     }
 
     private Document createDocument(String name) {
@@ -137,6 +129,7 @@ public class DocumentControllerTest extends AbstractSpringTest {
     }
 
     @Configuration
+    @ImportResource("classpath:/com/blazebit/persistence/spring/data/testsuite/webflux/application-config.xml")
     @ComponentScan(excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = ".*TestConfig"))
     static class TestConfig {
     }

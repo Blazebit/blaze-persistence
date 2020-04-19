@@ -19,6 +19,7 @@ package com.blazebit.persistence.impl.function.tostringxml;
 import com.blazebit.persistence.impl.function.concat.ConcatFunction;
 import com.blazebit.persistence.impl.function.groupconcat.AbstractGroupConcatFunction;
 import com.blazebit.persistence.impl.function.replace.ReplaceFunction;
+import com.blazebit.persistence.spi.LateralStyle;
 
 /**
  * @author Christian Beikov
@@ -26,8 +27,8 @@ import com.blazebit.persistence.impl.function.replace.ReplaceFunction;
  */
 public class OracleGroupConcatBasedToStringXmlFunction extends GroupConcatBasedToStringXmlFunction {
 
-    public OracleGroupConcatBasedToStringXmlFunction(AbstractGroupConcatFunction groupConcatFunction, ReplaceFunction replaceFunction, ConcatFunction concatFunction) {
-        super(groupConcatFunction, replaceFunction, concatFunction);
+    public OracleGroupConcatBasedToStringXmlFunction(AbstractGroupConcatFunction groupConcatFunction, ReplaceFunction replaceFunction, ConcatFunction concatFunction, LateralStyle lateralStyle) {
+        super(groupConcatFunction, replaceFunction, concatFunction, lateralStyle);
     }
 
     @Override

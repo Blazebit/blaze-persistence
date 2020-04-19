@@ -30,7 +30,6 @@ import org.springframework.data.domain.SliceImpl;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * @author Moritz Becker
@@ -100,10 +99,6 @@ public class DocumentAccessors {
             return document.getAge();
         }
 
-        @Override
-        public UUID getOwnerId() {
-            return document.getOwner().getId();
-        }
     }
 
     static class DocumentViewAccessor implements DocumentAccessor {
@@ -134,11 +129,6 @@ public class DocumentAccessors {
             throw new UnsupportedOperationException();
         }
 
-        @Override
-        public UUID getOwnerId() {
-            return documentView.getOwner().getId();
-        }
     }
-
 
 }

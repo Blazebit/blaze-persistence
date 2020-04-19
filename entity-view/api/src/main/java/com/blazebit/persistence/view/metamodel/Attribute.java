@@ -18,6 +18,8 @@ package com.blazebit.persistence.view.metamodel;
 
 import com.blazebit.persistence.view.FetchStrategy;
 
+import java.util.List;
+
 /**
  * Represents an attribute of a view type.
  *
@@ -126,6 +128,22 @@ public interface Attribute<X, Y> {
      * @since 1.2.0
      */
     public int getBatchSize();
+
+    /**
+     * Returns the order by items for the limit expression.
+     *
+     * @return The order by items for the limit expression
+     * @since 1.5.0
+     */
+    public List<OrderByItem> getOrderByItems();
+
+    /**
+     * Returns the limit expression.
+     *
+     * @return The limit expression
+     * @since 1.5.0
+     */
+    public String getLimitExpression();
 
     /**
      * The different attribute types.

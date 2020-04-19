@@ -38,6 +38,10 @@ public abstract class AbstractTestExpressionFactory extends AbstractExpressionFa
         super(functions, entityTypes, enumTypes, enumTypes, optimize);
     }
 
+    public AbstractTestExpressionFactory(Map<String, Boolean> functions, Map<String, Class<?>> entityTypes, Map<String, Class<Enum<?>>> enumTypes, Map<String, Class<Enum<?>>> enumTypesForLiterals, boolean optimize) {
+        super(functions, entityTypes, enumTypes, enumTypesForLiterals, optimize);
+    }
+
     @Override
     protected void configureLexer(JPQLNextLexer lexer) {
         lexer.removeErrorListeners();

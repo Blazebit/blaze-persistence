@@ -32,5 +32,4 @@ public interface DocumentAccessor {
 
     long getAge();
 
-    UUID getOwnerId();
 }

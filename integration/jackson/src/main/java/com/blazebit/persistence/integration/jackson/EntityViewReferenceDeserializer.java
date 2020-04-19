@@ -55,7 +55,7 @@ public class EntityViewReferenceDeserializer extends JsonDeserializer {
             MethodAttribute<?, ?> idAttribute = ((ViewType<?>) view).getIdAttribute();
             this.deserializeIdFromJson = !ignoredProperties.contains(idAttribute.getName());
             this.idAttribute = idAttribute;
-            JavaType idType = objectMapper.getTypeFactory().constructType(this.idAttribute.getJavaType());
+            JavaType idType = objectMapper.getTypeFactory().constructType(this.idAttribute.getConvertedJavaType());
             if (!objectMapper.canDeserialize(idType)) {
                 throw new IllegalArgumentException("Can't create entity view reference deserializer for entity view '" + entityViewClass.getName() + "' because id attribute '" + this.idAttribute.getName() + "' has an unsupported id type: " + this.idAttribute.getJavaType().getName());
             }

@@ -34,8 +34,7 @@ import java.util.Map;
  */
 public interface DbmsDialect {
 
-    /* With clause handling */
-    
+
     /**
      * Returns true if the dbms supports the with clause, false otherwise.
      * 
@@ -116,8 +115,25 @@ public interface DbmsDialect {
      * Returns true if the dbms supports a limit without an order by clause, false otherwise.
      *
      * @return Whether a limit without an order by clause is supported by the dbms
+     * @since 1.5.0
      */
     public boolean supportsLimitWithoutOrderBy();
+
+    /**
+     * Returns true if the dbms supports limit for a subquery in a quantified predicate, false otherwise.
+     *
+     * @return Whether limit for a subquery in a quantified predicate is supported by the dbms
+     * @since 1.5.0
+     */
+    public boolean supportsLimitInQuantifiedPredicateSubquery();
+
+    /**
+     * Returns true if the dbms supports nested correlations, false otherwise.
+     *
+     * @return Whether nested correlations are supported by the dbms
+     * @since 1.5.0
+     */
+    public boolean supportsNestedCorrelations();
     
     /**
      * Returns true if the dbms supports the with clause in modification queries, false otherwise.
@@ -139,8 +155,6 @@ public interface DbmsDialect {
      * @return Whether the JDBC executeUpdate method should be used when using the with clause is in modification queries
      */
     public boolean usesExecuteUpdateWhenWithClauseInModificationQuery();
-    
-    /* Returning clause handling */
 
     /**
      * Returns true if the dbms supports returning generated keys, false otherwise.

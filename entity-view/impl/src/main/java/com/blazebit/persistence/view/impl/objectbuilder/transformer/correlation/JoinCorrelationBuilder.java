@@ -19,10 +19,17 @@ package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation
 import com.blazebit.persistence.CorrelationQueryBuilder;
 import com.blazebit.persistence.FromProvider;
 import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
 import com.blazebit.persistence.JoinOnBuilder;
+import com.blazebit.persistence.ParameterHolder;
+import com.blazebit.persistence.SubqueryBuilder;
+import com.blazebit.persistence.spi.DbmsDialect;
+import com.blazebit.persistence.spi.LateralStyle;
 import com.blazebit.persistence.view.CorrelationBuilder;
+import com.blazebit.persistence.view.impl.objectbuilder.Limiter;
 
 import javax.persistence.metamodel.EntityType;
+import java.util.Map;
 
 /**
  *
@@ -31,15 +38,26 @@ import javax.persistence.metamodel.EntityType;
  */
 public class JoinCorrelationBuilder implements CorrelationBuilder {
 
+    private final ParameterHolder<?> parameterHolder;
+    private final Map<String, Object> optionalParameters;
     private final FullQueryBuilder<?, ?> criteriaBuilder;
     private final String joinBase;
     private final String correlationAlias;
+    private final String correlationExternalAlias;
+    private final String attributePath;
+    private final Limiter limiter;
     private boolean correlated;
+    private Object correlationBuilder;
 
-    public JoinCorrelationBuilder(FullQueryBuilder<?, ?> criteriaBuilder, String joinBase, String correlationAlias) {
+    public JoinCorrelationBuilder(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, FullQueryBuilder<?, ?> criteriaBuilder, String joinBase, String correlationAlias, String correlationExternalAlias, String attributePath, Limiter limiter) {
+        this.parameterHolder = parameterHolder;
+        this.optionalParameters = optionalParameters;
         this.criteriaBuilder = criteriaBuilder;
         this.joinBase = joinBase;
         this.correlationAlias = correlationAlias;
+        this.correlationExternalAlias = correlationExternalAlias;
+        this.attributePath = attributePath;
+        this.limiter = limiter;
     }
 
     @Override
@@ -57,6 +75,14 @@ public class JoinCorrelationBuilder implements CorrelationBuilder {
         return correlationAlias;
     }
 
+    public void finish() {
+        if (correlationBuilder instanceof SubqueryBuilder<?>) {
+            ((SubqueryBuilder<?>) correlationBuilder).end();
+        } else  if (correlationBuilder instanceof FullSelectCTECriteriaBuilder<?>) {
+            ((FullSelectCTECriteriaBuilder<?>) correlationBuilder).end();
+        }
+    }
+
     @Override
     public JoinOnBuilder<CorrelationQueryBuilder> correlate(Class<?> entityClass) {
         if (correlated) {
@@ -64,7 +90,23 @@ public class JoinCorrelationBuilder implements CorrelationBuilder {
         }
 
         correlated = true;
-        return (JoinOnBuilder<CorrelationQueryBuilder>) (JoinOnBuilder<?>) criteriaBuilder.leftJoinOn(joinBase, entityClass, correlationAlias);
+        if (limiter == null) {
+            return (JoinOnBuilder<CorrelationQueryBuilder>) (JoinOnBuilder<?>) criteriaBuilder.leftJoinOn(joinBase, entityClass, correlationAlias);
+        } else {
+            if (getService(DbmsDialect.class).getLateralStyle() == LateralStyle.NONE) {
+                checkLimitSupport();
+                criteriaBuilder.from(entityClass, correlationExternalAlias);
+                SubqueryBuilder<?> subqueryBuilder = criteriaBuilder.where(correlationExternalAlias).in().from(entityClass, correlationAlias);
+                limiter.apply(parameterHolder, optionalParameters, subqueryBuilder);
+                this.correlationBuilder = subqueryBuilder;
+                return subqueryBuilder.getService(JoinOnBuilder.class);
+            } else {
+                FullSelectCTECriteriaBuilder<?> lateralBuilder = criteriaBuilder.leftJoinLateralEntitySubquery(joinBase, entityClass, correlationExternalAlias, correlationAlias);
+                limiter.apply(parameterHolder, optionalParameters, lateralBuilder);
+                this.correlationBuilder = lateralBuilder;
+                return lateralBuilder.getService(JoinOnBuilder.class);
+            }
+        }
     }
 
     @Override
@@ -74,6 +116,28 @@ public class JoinCorrelationBuilder implements CorrelationBuilder {
         }
 
         correlated = true;
-        return (JoinOnBuilder<CorrelationQueryBuilder>) (JoinOnBuilder<?>) criteriaBuilder.leftJoinOn(joinBase, entityType, correlationAlias);
+        if (limiter == null) {
+            return (JoinOnBuilder<CorrelationQueryBuilder>) (JoinOnBuilder<?>) criteriaBuilder.leftJoinOn(joinBase, entityType, correlationAlias);
+        } else {
+            if (getService(DbmsDialect.class).getLateralStyle() == LateralStyle.NONE) {
+                checkLimitSupport();
+                criteriaBuilder.from(entityType, correlationExternalAlias);
+                SubqueryBuilder<?> subqueryBuilder = criteriaBuilder.where(correlationExternalAlias).in().from(entityType, correlationAlias);
+                limiter.apply(parameterHolder, optionalParameters, subqueryBuilder);
+                this.correlationBuilder = subqueryBuilder;
+                return subqueryBuilder.getService(JoinOnBuilder.class);
+            } else {
+                FullSelectCTECriteriaBuilder<?> lateralBuilder = criteriaBuilder.leftJoinLateralEntitySubquery(joinBase, entityType, correlationExternalAlias, correlationAlias);
+                limiter.apply(parameterHolder, optionalParameters, lateralBuilder);
+                this.correlationBuilder = lateralBuilder;
+                return lateralBuilder.getService(JoinOnBuilder.class);
+            }
+        }
+    }
+
+    private void checkLimitSupport() {
+        if (!getService(DbmsDialect.class).supportsLimitInQuantifiedPredicateSubquery()) {
+            throw new IllegalStateException("Can't limit the amount of elements for the attribute path " + attributePath + " because the DBMS doesn't support lateral or the use of LIMIT in quantified predicates! Use the SELECT strategy with batch size 1 if you really need this.");
+        }
     }
 }

@@ -781,9 +781,7 @@ public class ReadOnlyDocumentRepositoryTest extends AbstractSpringTest {
                 d.setAge(age);
                 em.persist(d);
                 if (owner != null) {
-                    d.setOwner(owner);
-                    owner.getDocuments().add(d);
-                    em.merge(owner);
+                    d.setOwner(em.getReference(Person.class, owner.getId()));
                 }
                 return d;
             }

@@ -32,30 +32,42 @@ import java.util.Arrays;
 public class AssignmentConstructorReflectionInstantiator<T> extends AbstractReflectionInstantiator<T> {
 
     private final Constructor<T> constructor;
-    private final int size;
-    private final int[] assignment;
+    private final Object[] defaultObject;
 
     public AssignmentConstructorReflectionInstantiator(MappingConstructorImpl<T> mappingConstructor, ProxyFactory proxyFactory, ManagedViewTypeImplementor<T> viewType, Class<?>[] parameterTypes,
                                                        EntityViewManager entityViewManager, ManagedViewTypeImpl.InheritanceSubtypeConfiguration<T> configuration, MappingConstructorImpl.InheritanceSubtypeConstructorConfiguration<T> subtypeConstructorConfiguration) {
         super(configuration.getMutableBasicUserTypes(), configuration.getTypeConverterEntries(), parameterTypes);
         Class<T> proxyClazz = (Class<T>) proxyFactory.getProxy(entityViewManager, viewType);
         Constructor<T> javaConstructor;
-        int size;
-
+        Object[] defaultObject;
+        int[] assignment;
+        int[] overallPositionAssignment = configuration.getOverallPositionAssignment(viewType);
+        if (mappingConstructor == null) {
+            assignment = overallPositionAssignment;
+        } else {
+            int[] overallConstructorPositionAssignment = subtypeConstructorConfiguration.getOverallPositionAssignment(viewType);
+            assignment = new int[overallPositionAssignment.length + overallConstructorPositionAssignment.length];
+            System.arraycopy(overallPositionAssignment, 0, assignment, 0, overallPositionAssignment.length);
+            for (int i = 0; i < overallConstructorPositionAssignment.length; i++) {
+                assignment[overallPositionAssignment.length + i] = overallPositionAssignment.length + overallConstructorPositionAssignment[i];
+            }
+        }
         try {
             if (mappingConstructor == null) {
-                size = 4;
                 javaConstructor = proxyClazz.getDeclaredConstructor(proxyClazz, int.class, int[].class, Object[].class);
+                defaultObject = new Object[] { null, 0, assignment, null };
             } else {
                 int parameterSize = subtypeConstructorConfiguration.getOverallPositionAssignment(viewType).length;
-                size = parameterSize + 4;
-                Class[] types = new Class[size];
+                Class[] types = new Class[parameterSize + 4];
                 types[0] = proxyClazz;
                 types[1] = int.class;
                 types[2] = int[].class;
                 types[3] = Object[].class;
                 System.arraycopy(parameterTypes, parameterTypes.length - parameterSize, types, 4, parameterSize);
                 javaConstructor = proxyClazz.getDeclaredConstructor(types);
+                defaultObject = AbstractReflectionInstantiator.createDefaultObject(4, parameterTypes, parameterSize);
+                defaultObject[1] = 0;
+                defaultObject[2] = assignment;
             }
         } catch (NoSuchMethodException | SecurityException ex) {
             throw new IllegalArgumentException("The given mapping constructor '" + mappingConstructor + "' does not map to a constructor of the proxy class: " + proxyClazz
@@ -68,28 +80,14 @@ public class AssignmentConstructorReflectionInstantiator<T> extends AbstractRefl
         }
 
         this.constructor = javaConstructor;
-        this.size = size;
-        int[] overallPositionAssignment = configuration.getOverallPositionAssignment(viewType);
-        if (mappingConstructor == null) {
-            this.assignment = overallPositionAssignment;
-        } else {
-            int[] overallConstructorPositionAssignment = subtypeConstructorConfiguration.getOverallPositionAssignment(viewType);
-            int[] assignment = new int[overallPositionAssignment.length + overallConstructorPositionAssignment.length];
-            System.arraycopy(overallPositionAssignment, 0, assignment, 0, overallPositionAssignment.length);
-            for (int i = 0; i < overallConstructorPositionAssignment.length; i++) {
-                assignment[overallPositionAssignment.length + i] = overallPositionAssignment.length + overallConstructorPositionAssignment[i];
-            }
-            this.assignment = assignment;
-        }
+        this.defaultObject = defaultObject;
     }
 
     @Override
     public T newInstance(Object[] tuple) {
         try {
             prepareTuple(tuple);
-            Object[] array = new Object[size];
-            array[1] = 0;
-            array[2] = assignment;
+            Object[] array = Arrays.copyOf(defaultObject, defaultObject.length);
             array[3] = tuple;
             T instance = constructor.newInstance(array);
             finalizeInstance(instance);

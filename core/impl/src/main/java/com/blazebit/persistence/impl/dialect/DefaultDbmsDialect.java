@@ -258,6 +258,16 @@ public class DefaultDbmsDialect implements DbmsDialect {
         return true;
     }
 
+    @Override
+    public boolean supportsLimitInQuantifiedPredicateSubquery() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsNestedCorrelations() {
+        return true;
+    }
+
     protected String getWindowFunctionDummyOrderBy() {
         return null;
     }

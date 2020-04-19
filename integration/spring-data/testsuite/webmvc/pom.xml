@@ -1359,6 +1359,11 @@
                     <version>${version.eclipselink}</version>
                     <scope>provided</scope>
                 </dependency>
+                <dependency>
+                    <groupId>javax.transaction</groupId>
+                    <artifactId>javax.transaction-api</artifactId>
+                    <version>${version.jta}</version>
+                </dependency>
             </dependencies>
             <build>
                 <plugins>
@@ -1518,6 +1523,11 @@
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-integration-datanucleus</artifactId>
                 </dependency>
+                <dependency>
+                    <groupId>javax.transaction</groupId>
+                    <artifactId>javax.transaction-api</artifactId>
+                    <version>${version.jta}</version>
+                </dependency>
             </dependencies>
             <build>
                 <plugins>
@@ -1527,7 +1537,7 @@
                         <version>4.0.0-release</version>
                         <configuration>
                             <api>JPA</api>
-                            <persistenceUnitName>TEST-PU</persistenceUnitName>
+                            <persistenceUnitName>TestsuiteBase</persistenceUnitName>
                             <verbose>false</verbose>
                             <fork>true</fork>
                             <log4jConfiguration>${basedir}/log4j.properties</log4jConfiguration>
@@ -1672,6 +1682,11 @@
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-integration-datanucleus</artifactId>
                 </dependency>
+                <dependency>
+                    <groupId>javax.transaction</groupId>
+                    <artifactId>javax.transaction-api</artifactId>
+                    <version>${version.jta}</version>
+                </dependency>
             </dependencies>
             <build>
                 <plugins>
@@ -1681,7 +1696,7 @@
                         <version>4.0.0-release</version>
                         <configuration>
                             <api>JPA</api>
-                            <persistenceUnitName>TEST-PU</persistenceUnitName>
+                            <persistenceUnitName>TestsuiteBase</persistenceUnitName>
                             <verbose>false</verbose>
                             <fork>true</fork>
                             <log4jConfiguration>${basedir}/log4j.properties</log4jConfiguration>
@@ -1820,6 +1835,11 @@
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-integration-datanucleus-5.1</artifactId>
                 </dependency>
+                <dependency>
+                    <groupId>javax.transaction</groupId>
+                    <artifactId>javax.transaction-api</artifactId>
+                    <version>${version.jta}</version>
+                </dependency>
             </dependencies>
             <build>
                 <plugins>
@@ -1829,7 +1849,7 @@
                         <version>4.0.0-release</version>
                         <configuration>
                             <api>JPA</api>
-                            <persistenceUnitName>TEST-PU</persistenceUnitName>
+                            <persistenceUnitName>TestsuiteBase</persistenceUnitName>
                             <verbose>false</verbose>
                             <fork>true</fork>
                             <log4jConfiguration>${basedir}/log4j.properties</log4jConfiguration>
