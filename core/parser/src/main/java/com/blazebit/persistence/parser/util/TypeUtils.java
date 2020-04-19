@@ -24,6 +24,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -590,6 +591,7 @@ public class TypeUtils {
     };
 
     private static final Map<Class<?>, TypeConverter<?>> CONVERTERS;
+    private static final Set<TypeConverter<?>> TEMPORAL_CONVERTERS;
 
     /**
      * Abstract type converter.
@@ -755,7 +757,16 @@ public class TypeUtils {
         c.put(java.sql.Timestamp.class, TIMESTAMP_CONVERTER);
         c.put(java.util.Date.class, DATE_TIMESTAMP_CONVERTER);
         c.put(java.util.Calendar.class, CALENDAR_CONVERTER);
+        Set<TypeConverter<?>> temporalConverters = new HashSet<>();
+        temporalConverters.add(TIME_CONVERTER);
+        temporalConverters.add(DATE_CONVERTER);
+        temporalConverters.add(TIMESTAMP_CONVERTER);
+        temporalConverters.add(DATE_TIMESTAMP_CONVERTER);
+        temporalConverters.add(CALENDAR_CONVERTER);
+        // Maybe support Java 8 time types if JPA provider can handle it? See https://github.com/Blazebit/blaze-persistence/issues/1050
+        // LocalDate, LocalTime, LocalDateTime, Instant, ZoneDateTime, OffsetDateTime, OffsetTime
         CONVERTERS = Collections.unmodifiableMap(c);
+        TEMPORAL_CONVERTERS = temporalConverters;
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -807,6 +818,10 @@ public class TypeUtils {
 
     public static boolean isBoolean(Object value) {
         return Boolean.class.isInstance(value);
+    }
+
+    public static boolean isTemporalConverter(TypeConverter<?> c) {
+        return TEMPORAL_CONVERTERS.contains(c);
     }
 
     @SuppressWarnings({ "unchecked" })

@@ -21,6 +21,7 @@ Not yet released
 * Fail validation on startup when formula is used in CTE entity
 * Throw validation error when encountering entity view annotations on setter
 * Add support for bounded counting in pagination i.e. counting up to a specific value
+* Rewrite temporal literals to parameters for hibernate
 
 ### Bug fixes
 
