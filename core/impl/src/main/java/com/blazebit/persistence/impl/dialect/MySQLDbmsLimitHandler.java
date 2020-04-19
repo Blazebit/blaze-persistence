@@ -49,18 +49,8 @@ public class MySQLDbmsLimitHandler extends AbstractDbmsLimitHandler {
         return true;
     }
 
-    /**
-     * Uses a workaround for limit in IN predicates because of an limitation of MySQL.
-     * See http://dev.mysql.com/doc/refman/5.0/en/subquery-restrictions.html for reference.
-     *
-     */
     @Override
     public void applySql(StringBuilder sqlSb, boolean isSubquery, String limit, String offset) {
-        if (isSubquery) {
-            // Insert it after the open bracket
-            sqlSb.insert(1, "select * from (");
-        }
-
         if (limit != null) {
             if (offset != null) {
                 sqlSb.append(" limit ").append(offset).append(',').append(limit);
@@ -70,11 +60,6 @@ public class MySQLDbmsLimitHandler extends AbstractDbmsLimitHandler {
         } else if (offset != null) {
             // The biggest possible limit to be able to make an OFFSET only query
             sqlSb.append(" limit ").append(offset).append(",18446744073709551610");
-        }
-
-        if (isSubquery) {
-            String limitSubqueryAlias = "_tmp_" + threadLocalCounter.get().incrementAndGet();
-            sqlSb.append(") as ").append(limitSubqueryAlias);
         }
     }
 

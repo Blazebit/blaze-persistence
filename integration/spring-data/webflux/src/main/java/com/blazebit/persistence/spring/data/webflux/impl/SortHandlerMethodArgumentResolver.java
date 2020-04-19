@@ -55,7 +55,7 @@ public class SortHandlerMethodArgumentResolver implements SortArgumentResolver {
 	private static final String DEFAULT_PARAMETER = "sort";
 	private static final String DEFAULT_PROPERTY_DELIMITER = ",";
 	private static final String DEFAULT_QUALIFIER_DELIMITER = "_";
-	private static final Sort DEFAULT_SORT = Sort.unsorted();
+	private static final Sort DEFAULT_SORT = com.blazebit.persistence.spring.data.webflux.impl.Sort.UNSORTED;
 
 	private static final String SORT_DEFAULTS_NAME = SortDefaults.class.getSimpleName();
 	private static final String SORT_DEFAULT_NAME = SortDefault.class.getSimpleName();
@@ -146,12 +146,12 @@ public class SortHandlerMethodArgumentResolver implements SortArgumentResolver {
 		}
 
 		if (annotatedDefault != null) {
-			return appendOrCreateSortTo(annotatedDefault, Sort.unsorted());
+			return appendOrCreateSortTo(annotatedDefault, com.blazebit.persistence.spring.data.webflux.impl.Sort.UNSORTED);
 		}
 
 		if (annotatedDefaults != null) {
 
-			Sort sort = Sort.unsorted();
+			Sort sort = com.blazebit.persistence.spring.data.webflux.impl.Sort.UNSORTED;
 
 			for (SortDefault currentAnnotatedDefault : annotatedDefaults.value()) {
 				sort = appendOrCreateSortTo(currentAnnotatedDefault, sort);
@@ -176,7 +176,7 @@ public class SortHandlerMethodArgumentResolver implements SortArgumentResolver {
 		String[] fields = getSpecificPropertyOrDefaultFromValue(sortDefault, "sort");
 
 		if (fields.length == 0) {
-			return Sort.unsorted();
+			return com.blazebit.persistence.spring.data.webflux.impl.Sort.UNSORTED;
 		}
 
 		return sortOrNull.and(Sort.by(sortDefault.direction(), fields));
@@ -248,7 +248,7 @@ public class SortHandlerMethodArgumentResolver implements SortArgumentResolver {
 			}
 		}
 
-		return allOrders.isEmpty() ? Sort.unsorted() : Sort.by(allOrders);
+		return allOrders.isEmpty() ? com.blazebit.persistence.spring.data.webflux.impl.Sort.UNSORTED : Sort.by(allOrders);
 	}
 
 	private static Optional<Order> toOrder(String property, Optional<Direction> direction) {

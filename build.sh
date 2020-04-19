@@ -52,5 +52,5 @@ else
     : # do nothing right now
   fi
   
-  eval exec mvn -B -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-1.11.x},${DELTASPIKE:-deltaspike-1.7} clean install --projects "core/testsuite,entity-view/testsuite,jpa-criteria/testsuite,integration/deltaspike-data/testsuite,integration/spring-data/testsuite,examples/spring-data-webmvc,examples/spring-data-webflux,examples/showcase/runner/spring,examples/showcase/runner/cdi" -am -V $PROPERTIES
+  eval exec mvn -B -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-1.11.x},${DELTASPIKE:-deltaspike-1.7} clean install --projects "core/testsuite,entity-view/testsuite,jpa-criteria/testsuite,integration/deltaspike-data/testsuite,integration/spring-data/testsuite/webflux,integration/spring-data/testsuite/webmvc,examples/spring-data-webmvc,examples/spring-data-webflux,examples/showcase/runner/spring,examples/showcase/runner/cdi" -am -V $PROPERTIES
 fi

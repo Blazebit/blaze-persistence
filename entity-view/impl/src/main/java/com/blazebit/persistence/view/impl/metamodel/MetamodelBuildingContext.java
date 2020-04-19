@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
+import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.view.CTEProvider;
@@ -68,6 +69,8 @@ public interface MetamodelBuildingContext {
     public EntityMetamodel getEntityMetamodel();
 
     public JpaProvider getJpaProvider();
+
+    public DbmsDialect getDbmsDialect();
 
     public ExpressionFactory getExpressionFactory();
 

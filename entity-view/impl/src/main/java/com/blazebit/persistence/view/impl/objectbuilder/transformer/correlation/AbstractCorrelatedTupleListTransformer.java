@@ -26,6 +26,7 @@ import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.PrefixingQueryGenerator;
 import com.blazebit.persistence.view.impl.collection.CollectionInstantiatorImplementor;
 import com.blazebit.persistence.view.impl.collection.RecordingCollection;
+import com.blazebit.persistence.view.impl.objectbuilder.Limiter;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformer;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
@@ -53,17 +54,19 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
     protected final int viewRootIndex;
     protected final int embeddingViewIndex;
     protected final String correlationAlias;
+    protected final String correlationExternalAlias;
     protected final String correlationResult;
     protected final CorrelationProviderFactory correlationProviderFactory;
     protected final Class<?> correlationBasisType;
     protected final Class<?> correlationBasisEntity;
     protected final String attributePath;
     protected final String[] fetches;
+    protected final Limiter limiter;
 
     protected final EntityViewConfiguration entityViewConfiguration;
 
     public AbstractCorrelatedTupleListTransformer(ExpressionFactory ef, Correlator correlator, ManagedViewType<?> viewRootType, ManagedViewType<?> embeddingViewType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
-                                                  int viewRootIndex, int embeddingViewIndex, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
+                                                  int viewRootIndex, int embeddingViewIndex, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, Limiter limiter, EntityViewConfiguration entityViewConfiguration) {
         super(tupleIndex);
         this.jpaProvider = entityViewConfiguration.getCriteriaBuilder().getService(JpaProvider.class);
         this.correlator = correlator;
@@ -76,12 +79,18 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
         this.correlationBasisEntity = correlationBasisEntity;
         this.attributePath = attributePath;
         this.fetches = fetches;
+        this.limiter = limiter;
         this.entityViewConfiguration = entityViewConfiguration;
         this.correlationAlias = CorrelationProviderHelper.getDefaultCorrelationAlias(attributePath);
-        if (correlationResult.isEmpty()) {
-            this.correlationResult = correlationAlias;
+        if (limiter == null) {
+            this.correlationExternalAlias = correlationAlias;
         } else {
-            this.correlationResult = PrefixingQueryGenerator.prefix(ef, correlationResult, correlationAlias, true);
+            this.correlationExternalAlias = CorrelationProviderHelper.getDefaultExternalCorrelationAlias(attributePath);
+        }
+        if (correlationResult.isEmpty()) {
+            this.correlationResult = correlationExternalAlias;
+        } else {
+            this.correlationResult = PrefixingQueryGenerator.prefix(ef, correlationResult, correlationExternalAlias, true);
         }
     }
 

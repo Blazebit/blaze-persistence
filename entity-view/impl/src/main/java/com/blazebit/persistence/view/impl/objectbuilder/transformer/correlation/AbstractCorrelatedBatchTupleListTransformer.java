@@ -27,6 +27,7 @@ import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.macro.CorrelatedSubqueryEmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.impl.macro.CorrelatedSubqueryViewRootJpqlMacro;
 import com.blazebit.persistence.view.impl.macro.MutableViewJpqlMacro;
+import com.blazebit.persistence.view.impl.objectbuilder.Limiter;
 import com.blazebit.persistence.view.impl.objectbuilder.TupleReuse;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.ViewType;
@@ -64,8 +65,8 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
     protected Query query;
 
     public AbstractCorrelatedBatchTupleListTransformer(ExpressionFactory ef, Correlator correlator, ManagedViewType<?> viewRootType, ManagedViewType<?> embeddingViewType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
-                                                       boolean correlatesThis, int viewRootIndex, int embeddingViewIndex, int tupleIndex, int defaultBatchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
-        super(ef, correlator, viewRootType, embeddingViewType, correlationResult, correlationProviderFactory, attributePath, fetches, viewRootIndex, embeddingViewIndex, tupleIndex, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
+                                                       boolean correlatesThis, int viewRootIndex, int embeddingViewIndex, int tupleIndex, int defaultBatchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, Limiter limiter, EntityViewConfiguration entityViewConfiguration) {
+        super(ef, correlator, viewRootType, embeddingViewType, correlationResult, correlationProviderFactory, attributePath, fetches, viewRootIndex, embeddingViewIndex, tupleIndex, correlationBasisType, correlationBasisEntity, limiter, entityViewConfiguration);
         this.batchSize = entityViewConfiguration.getBatchSize(attributePath, defaultBatchSize);
         this.correlatesThis = correlatesThis;
         this.expectBatchCorrelationMode = entityViewConfiguration.getExpectBatchCorrelationValues(attributePath);
@@ -129,7 +130,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
         this.criteriaBuilder.registerMacro("embedding_view", embeddingViewJpqlMacro);
 
         String joinBase = CORRELATION_KEY_ALIAS;
-        SubqueryCorrelationBuilder correlationBuilder = new SubqueryCorrelationBuilder(criteriaBuilder, correlationAlias, correlationResult, correlationBasisType, correlationBasisEntityType, CORRELATION_KEY_ALIAS, joinBase, batchSize, false, attributePath);
+        SubqueryCorrelationBuilder correlationBuilder = new SubqueryCorrelationBuilder(queryBuilder, optionalParameters, criteriaBuilder, correlationAlias, correlationExternalAlias, correlationResult, correlationBasisType, correlationBasisEntityType, joinBase, attributePath, batchSize, limiter, false);
         CorrelationProvider provider = correlationProviderFactory.create(entityViewConfiguration.getCriteriaBuilder(), entityViewConfiguration.getOptionalParameters());
 
         String correlationKeyExpression;

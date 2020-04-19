@@ -18,7 +18,6 @@ package com.blazebit.persistence.spring.data.webflux.impl;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -60,7 +59,7 @@ public class PageableHandlerMethodArgumentResolver implements HandlerMethodArgum
 	private static final String DEFAULT_PREFIX = "";
 	private static final String DEFAULT_QUALIFIER_DELIMITER = "_";
 	private static final int DEFAULT_MAX_PAGE_SIZE = 2000;
-	static final Pageable DEFAULT_PAGE_REQUEST = PageRequest.of(0, 20);
+	static final Pageable DEFAULT_PAGE_REQUEST = new PageRequest(0, 20);
 
 	private Pageable fallbackPageable = DEFAULT_PAGE_REQUEST;
 	private SortArgumentResolver sortResolver;

@@ -237,7 +237,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
                 new DefaultBasicUserTypeRegistry(config.getUserTypeRegistry(), cbf),
                 entityMetamodel,
                 jpaProvider,
-                cbf.getRegisteredFunctions(),
+                dbmsDialect, cbf.getRegisteredFunctions(),
                 expressionFactory,
                 proxyFactory,
                 config.getBootContext().getViewMappingMap(),

@@ -25,6 +25,7 @@ import com.blazebit.persistence.view.BatchFetch;
 import com.blazebit.persistence.view.CollectionMapping;
 import com.blazebit.persistence.view.EmptyFlatViewCreation;
 import com.blazebit.persistence.view.IdMapping;
+import com.blazebit.persistence.view.Limit;
 import com.blazebit.persistence.view.MappingInheritance;
 import com.blazebit.persistence.view.MappingInheritanceMapKey;
 import com.blazebit.persistence.view.MappingInheritanceSubtype;
@@ -39,6 +40,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -124,6 +126,11 @@ public class AnnotationMethodAttributeMappingReader extends AbstractAnnotationAt
         EmptyFlatViewCreation emptyFlatViewCreation = AnnotationUtils.findAnnotation(method, EmptyFlatViewCreation.class);
         if (emptyFlatViewCreation != null) {
             attributeMapping.setCreateEmptyFlatViews(emptyFlatViewCreation.value());
+        }
+
+        Limit limit = AnnotationUtils.findAnnotation(method, Limit.class);
+        if (limit != null) {
+            attributeMapping.setLimit(limit.limit(), Arrays.asList(limit.order()));
         }
 
         UpdatableMapping updatableMapping = AnnotationUtils.findAnnotation(method, UpdatableMapping.class);

@@ -52,6 +52,7 @@ import org.junit.BeforeClass;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.LogManager;
@@ -84,6 +85,24 @@ public class AbstractParserTest {
     };
     protected ExpressionFactory ef() {
         return new AbstractTestExpressionFactory(functionsDelegate, entityTypesDelegate, enumTypesDelegate, false) {
+
+            private final AbstractExpressionFactory.RuleInvoker simpleExpressionRuleInvoker = new AbstractExpressionFactory.RuleInvoker() {
+
+                @Override
+                public ParserRuleContext invokeRule(JPQLNextParser parser) {
+                    return parser.parseExpression();
+                }
+            };
+
+            @Override
+            protected AbstractExpressionFactory.RuleInvoker getSimpleExpressionRuleInvoker() {
+                return simpleExpressionRuleInvoker;
+            }
+
+        };
+    }
+    protected ExpressionFactory efNoEnumLiteral() {
+        return new AbstractTestExpressionFactory(functionsDelegate, entityTypesDelegate, enumTypesDelegate, Collections.<String, Class<Enum<?>>>emptyMap(), false) {
 
             private final AbstractExpressionFactory.RuleInvoker simpleExpressionRuleInvoker = new AbstractExpressionFactory.RuleInvoker() {
 

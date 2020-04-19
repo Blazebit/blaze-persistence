@@ -24,6 +24,7 @@ import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.parser.expression.MacroConfiguration;
 import com.blazebit.persistence.parser.expression.MacroFunction;
 import com.blazebit.persistence.parser.expression.NullExpression;
+import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.view.CTEProvider;
@@ -83,6 +84,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
     private final BasicUserTypeRegistry basicUserTypeRegistry;
     private final EntityMetamodel entityMetamodel;
     private final JpaProvider jpaProvider;
+    private final DbmsDialect dbmsDialect;
     private final Map<String, JpqlFunction> jpqlFunctions;
     private final ExpressionFactory expressionFactory;
     private final MacroConfigurationExpressionFactory typeValidationExpressionFactory;
@@ -103,10 +105,11 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
 
     private final Map<Class<?>, CTEProvider> cteProviders = new LinkedHashMap<>();
 
-    public MetamodelBuildingContextImpl(Properties properties, BasicUserTypeRegistry basicUserTypeRegistry, EntityMetamodel entityMetamodel, JpaProvider jpaProvider, Map<String, JpqlFunction> jpqlFunctions, ExpressionFactory expressionFactory, ProxyFactory proxyFactory, Map<Class<?>, ViewMapping> viewMappings, Set<String> errors) {
+    public MetamodelBuildingContextImpl(Properties properties, BasicUserTypeRegistry basicUserTypeRegistry, EntityMetamodel entityMetamodel, JpaProvider jpaProvider, DbmsDialect dbmsDialect, Map<String, JpqlFunction> jpqlFunctions, ExpressionFactory expressionFactory, ProxyFactory proxyFactory, Map<Class<?>, ViewMapping> viewMappings, Set<String> errors) {
         this.basicUserTypeRegistry = basicUserTypeRegistry;
         this.entityMetamodel = entityMetamodel;
         this.jpaProvider = jpaProvider;
+        this.dbmsDialect = dbmsDialect;
         this.jpqlFunctions = jpqlFunctions;
         this.expressionFactory = expressionFactory;
         this.typeValidationExpressionFactory = createTypeValidationExpressionFactory();
@@ -433,6 +436,11 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
     @Override
     public JpaProvider getJpaProvider() {
         return jpaProvider;
+    }
+
+    @Override
+    public DbmsDialect getDbmsDialect() {
+        return dbmsDialect;
     }
 
     @Override

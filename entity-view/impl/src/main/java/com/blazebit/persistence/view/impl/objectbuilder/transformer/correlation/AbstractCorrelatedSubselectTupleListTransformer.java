@@ -26,6 +26,7 @@ import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.macro.CorrelatedSubqueryViewRootJpqlMacro;
 import com.blazebit.persistence.view.impl.macro.MutableViewJpqlMacro;
+import com.blazebit.persistence.view.impl.objectbuilder.Limiter;
 import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.impl.macro.MutableEmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
@@ -67,8 +68,8 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
     protected MutableEmbeddingViewJpqlMacro embeddingViewJpqlMacro;
 
     public AbstractCorrelatedSubselectTupleListTransformer(ExpressionFactory ef, Correlator correlator, EntityViewManagerImpl evm, ManagedViewType<?> viewRootType, String viewRootAlias, ManagedViewType<?> embeddingViewType, String embeddingViewPath, String correlationResult, String correlationBasisExpression, String correlationKeyExpression,
-                                                           CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches, int viewRootIndex, int embeddingViewIndex, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
-        super(ef, correlator, viewRootType, embeddingViewType, correlationResult, correlationProviderFactory, attributePath, fetches, viewRootIndex, embeddingViewIndex, tupleIndex, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
+                                                           CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches, int viewRootIndex, int embeddingViewIndex, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, Limiter limiter, EntityViewConfiguration entityViewConfiguration) {
+        super(ef, correlator, viewRootType, embeddingViewType, correlationResult, correlationProviderFactory, attributePath, fetches, viewRootIndex, embeddingViewIndex, tupleIndex, correlationBasisType, correlationBasisEntity, limiter, entityViewConfiguration);
         this.evm = evm;
         this.viewRootAlias = viewRootAlias;
         String viewRootAliasPrefix = viewRootAlias + ".";
@@ -151,7 +152,7 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
         embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
 
         String joinBase = embeddingViewPath;
-        SubqueryCorrelationBuilder correlationBuilder = new SubqueryCorrelationBuilder(criteriaBuilder, correlationAlias, correlationResult, correlationBasisType, correlationBasisEntityType, null, joinBase, 1, true, attributePath);
+        SubqueryCorrelationBuilder correlationBuilder = new SubqueryCorrelationBuilder(queryBuilder, optionalParameters, criteriaBuilder, correlationAlias, correlationExternalAlias, correlationResult, correlationBasisType, correlationBasisEntityType, joinBase, attributePath, 1, limiter, true);
         CorrelationProvider provider = correlationProviderFactory.create(entityViewConfiguration.getCriteriaBuilder(), entityViewConfiguration.getOptionalParameters());
 
         provider.applyCorrelation(correlationBuilder, correlationBasisExpression);

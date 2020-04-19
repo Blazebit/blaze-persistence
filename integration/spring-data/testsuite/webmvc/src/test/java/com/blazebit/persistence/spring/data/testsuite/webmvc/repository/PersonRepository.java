@@ -27,5 +27,5 @@ import java.util.UUID;
  * @since 1.5.0
  */
 @Transactional(readOnly = true)
-public interface PersonRepository extends EntityViewRepository<PersonView, UUID>, PersonRepositoryCustom {
+public interface PersonRepository extends EntityViewRepository<PersonView, String>, PersonRepositoryCustom {
 }

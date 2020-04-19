@@ -29,6 +29,7 @@ import com.blazebit.persistence.view.PreUpdateListener;
 import com.blazebit.persistence.view.ViewTransition;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
+import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
@@ -54,7 +55,8 @@ public class ListenerManager {
         this.customListeners = new HashMap<>();
     }
 
-    public void onPrePersist(Class<?> entityViewClass, Class<?> entityClass, PrePersistListener<?> listener) {
+    public void onPrePersist(ManagedViewType<?> managedViewType, Class<?> entityClass, PrePersistListener<?> listener) {
+        Class<?> entityViewClass = managedViewType.getJavaType();
         for (Class<?> javaType : evm.getJavaTypeToManagedTypeJavaTypes(entityClass)) {
             Listeners listeners = customListeners.get(javaType);
             if (listeners == null) {
@@ -65,7 +67,8 @@ public class ListenerManager {
         }
     }
 
-    public void onPrePersist(Class<?> entityViewClass, Class<?> entityClass, PrePersistEntityListener<?, ?> listener) {
+    public void onPrePersist(ManagedViewType<?> managedViewType, Class<?> entityClass, PrePersistEntityListener<?, ?> listener) {
+        Class<?> entityViewClass = managedViewType.getJavaType();
         for (Class<?> javaType : evm.getJavaTypeToManagedTypeJavaTypes(entityClass)) {
             Listeners listeners = customListeners.get(javaType);
             if (listeners == null) {
@@ -76,7 +79,8 @@ public class ListenerManager {
         }
     }
 
-    public void onPostPersist(Class<?> entityViewClass, Class<?> entityClass, PostPersistListener<?> listener) {
+    public void onPostPersist(ManagedViewType<?> managedViewType, Class<?> entityClass, PostPersistListener<?> listener) {
+        Class<?> entityViewClass = managedViewType.getJavaType();
         for (Class<?> javaType : evm.getJavaTypeToManagedTypeJavaTypes(entityClass)) {
             Listeners listeners = customListeners.get(javaType);
             if (listeners == null) {
@@ -87,7 +91,8 @@ public class ListenerManager {
         }
     }
 
-    public void onPostPersist(Class<?> entityViewClass, Class<?> entityClass, PostPersistEntityListener<?, ?> listener) {
+    public void onPostPersist(ManagedViewType<?> managedViewType, Class<?> entityClass, PostPersistEntityListener<?, ?> listener) {
+        Class<?> entityViewClass = managedViewType.getJavaType();
         for (Class<?> javaType : evm.getJavaTypeToManagedTypeJavaTypes(entityClass)) {
             Listeners listeners = customListeners.get(javaType);
             if (listeners == null) {
@@ -98,7 +103,8 @@ public class ListenerManager {
         }
     }
 
-    public void onPreUpdate(Class<?> entityViewClass, Class<?> entityClass, PreUpdateListener<?> listener) {
+    public void onPreUpdate(ManagedViewType<?> managedViewType, Class<?> entityClass, PreUpdateListener<?> listener) {
+        Class<?> entityViewClass = managedViewType.getJavaType();
         for (Class<?> javaType : evm.getJavaTypeToManagedTypeJavaTypes(entityClass)) {
             Listeners listeners = customListeners.get(javaType);
             if (listeners == null) {
@@ -109,7 +115,8 @@ public class ListenerManager {
         }
     }
 
-    public void onPostUpdate(Class<?> entityViewClass, Class<?> entityClass, PostUpdateListener<?> listener) {
+    public void onPostUpdate(ManagedViewType<?> managedViewType, Class<?> entityClass, PostUpdateListener<?> listener) {
+        Class<?> entityViewClass = managedViewType.getJavaType();
         for (Class<?> javaType : evm.getJavaTypeToManagedTypeJavaTypes(entityClass)) {
             Listeners listeners = customListeners.get(javaType);
             if (listeners == null) {
@@ -120,7 +127,8 @@ public class ListenerManager {
         }
     }
 
-    public void onPreRemove(Class<?> entityViewClass, Class<?> entityClass, PreRemoveListener<?> listener) {
+    public void onPreRemove(ManagedViewType<?> managedViewType, Class<?> entityClass, PreRemoveListener<?> listener) {
+        Class<?> entityViewClass = managedViewType.getJavaType();
         for (Class<?> javaType : evm.getJavaTypeToManagedTypeJavaTypes(entityClass)) {
             Listeners listeners = customListeners.get(javaType);
             if (listeners == null) {
@@ -131,7 +139,8 @@ public class ListenerManager {
         }
     }
 
-    public void onPostRemove(Class<?> entityViewClass, Class<?> entityClass, PostRemoveListener<?> listener) {
+    public void onPostRemove(ManagedViewType<?> managedViewType, Class<?> entityClass, PostRemoveListener<?> listener) {
+        Class<?> entityViewClass = managedViewType.getJavaType();
         for (Class<?> javaType : evm.getJavaTypeToManagedTypeJavaTypes(entityClass)) {
             Listeners listeners = customListeners.get(javaType);
             if (listeners == null) {
@@ -142,7 +151,8 @@ public class ListenerManager {
         }
     }
 
-    public void onPostCommit(Class<?> entityViewClass, Class<?> entityClass, PostCommitListener<?> listener, Set<ViewTransition> viewTransitions) {
+    public void onPostCommit(ManagedViewType<?> managedViewType, Class<?> entityClass, PostCommitListener<?> listener, Set<ViewTransition> viewTransitions) {
+        Class<?> entityViewClass = managedViewType.getJavaType();
         for (Class<?> javaType : evm.getJavaTypeToManagedTypeJavaTypes(entityClass)) {
             Listeners listeners = customListeners.get(javaType);
             if (listeners == null) {
@@ -153,7 +163,8 @@ public class ListenerManager {
         }
     }
 
-    public void onPostRollback(Class<?> entityViewClass, Class<?> entityClass, PostRollbackListener<?> listener, Set<ViewTransition> viewTransitions) {
+    public void onPostRollback(ManagedViewType<?> managedViewType, Class<?> entityClass, PostRollbackListener<?> listener, Set<ViewTransition> viewTransitions) {
+        Class<?> entityViewClass = managedViewType.getJavaType();
         for (Class<?> javaType : evm.getJavaTypeToManagedTypeJavaTypes(entityClass)) {
             Listeners listeners = customListeners.get(javaType);
             if (listeners == null) {

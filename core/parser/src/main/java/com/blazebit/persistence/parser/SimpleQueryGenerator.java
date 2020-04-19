@@ -462,7 +462,9 @@ public class SimpleQueryGenerator implements Expression.Visitor {
         }
 
         String value;
-        if (ParameterRenderingMode.LITERAL == parameterRenderingMode && (value = getLiteralParameterValue(expression)) != null) {
+        // When getSupportedEnumTypes() returns null yet we have an enum here, we still render it as literal as the consumer of this string can't know the value for the parameter
+        // This is important for intermediate processing i.e. when prefixing paths etc.
+        if ((ParameterRenderingMode.LITERAL == parameterRenderingMode || getSupportedEnumTypes() == null && expression.getValue() instanceof Enum<?>) && (value = getLiteralParameterValue(expression)) != null) {
             sb.append(value);
         } else {
             if (Character.isDigit(paramName.charAt(0))) {

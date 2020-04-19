@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation
 
 import com.blazebit.persistence.view.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
+import com.blazebit.persistence.view.impl.objectbuilder.Limiter;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformerFactory;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
@@ -45,9 +46,10 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformerFactory imp
     protected final int correlationBasisIndex;
     protected final Class<?> correlationBasisType;
     protected final Class<?> correlationBasisEntity;
+    protected final Limiter limiter;
 
     public AbstractCorrelatedSubselectTupleListTransformerFactory(Correlator correlator, EntityViewManagerImpl evm, ManagedViewType<?> viewRootType, String viewRootAlias, ManagedViewType<?> embeddingViewType, String embeddingViewPath, String correlationResult, String correlationBasisExpression, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory,
-                                                                  String attributePath, String[] fetches, int viewRootIndex, int embeddingViewIndex, int correlationBasisIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity) {
+                                                                  String attributePath, String[] fetches, int viewRootIndex, int embeddingViewIndex, int correlationBasisIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, Limiter limiter) {
         this.correlator = correlator;
         this.evm = evm;
         this.viewRootType = viewRootType;
@@ -65,6 +67,7 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformerFactory imp
         this.correlationBasisIndex = correlationBasisIndex;
         this.correlationBasisType = correlationBasisType;
         this.correlationBasisEntity = correlationBasisEntity;
+        this.limiter = limiter;
     }
 
     @Override

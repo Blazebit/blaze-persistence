@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl.objectbuilder.mapper;
 import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
+import com.blazebit.persistence.view.impl.objectbuilder.Limiter;
 import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
 import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.spi.ViewJpqlMacro;
@@ -37,12 +38,14 @@ public class MultisetTupleElementMapper implements TupleElementMapper {
     protected final String correlationExpression;
     protected final String attributePath;
     protected final String embeddingViewPath;
+    protected final Limiter limiter;
 
-    public MultisetTupleElementMapper(ViewTypeObjectBuilderTemplate<Object[]> subviewTemplate, String correlationExpression, String attributePath, String embeddingViewPath) {
+    public MultisetTupleElementMapper(ViewTypeObjectBuilderTemplate<Object[]> subviewTemplate, String correlationExpression, String attributePath, String embeddingViewPath, Limiter limiter) {
         this.subviewTemplate = subviewTemplate;
         this.correlationExpression = correlationExpression.intern();
         this.attributePath = attributePath;
         this.embeddingViewPath = embeddingViewPath;
+        this.limiter = limiter;
     }
 
     @Override
@@ -53,6 +56,10 @@ public class MultisetTupleElementMapper implements TupleElementMapper {
                 .from(correlationExpression, "multiset_" + attributePath.replace('.', '_'));
         for (TupleElementMapper mapper : subviewTemplate.getMappers()) {
             mapper.applyMapping(subqueryBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro, true);
+        }
+
+        if (limiter != null) {
+            limiter.apply(parameterHolder, optionalParameters, subqueryBuilder);
         }
 
         subqueryBuilder.end();

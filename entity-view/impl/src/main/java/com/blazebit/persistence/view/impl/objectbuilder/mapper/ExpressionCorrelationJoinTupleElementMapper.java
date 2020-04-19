@@ -21,10 +21,10 @@ import com.blazebit.persistence.LimitBuilder;
 import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
-import com.blazebit.persistence.view.CorrelationBuilder;
 import com.blazebit.persistence.view.CorrelationProvider;
-import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
+import com.blazebit.persistence.view.impl.objectbuilder.Limiter;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.JoinCorrelationBuilder;
+import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.spi.ViewJpqlMacro;
 
 import java.util.Map;
@@ -38,8 +38,8 @@ public class ExpressionCorrelationJoinTupleElementMapper extends AbstractCorrela
 
     private final CorrelationProvider provider;
 
-    public ExpressionCorrelationJoinTupleElementMapper(CorrelationProvider provider, ExpressionFactory ef, String joinBase, String correlationBasis, String correlationResult, String alias, String attributePath, String embeddingViewPath, String[] fetches) {
-        super(ef, joinBase, correlationBasis, correlationResult, alias, attributePath, embeddingViewPath, fetches);
+    public ExpressionCorrelationJoinTupleElementMapper(CorrelationProvider provider, ExpressionFactory ef, String joinBase, String correlationBasis, String correlationResult, String alias, String attributePath, String embeddingViewPath, String[] fetches, Limiter limiter) {
+        super(ef, joinBase, correlationBasis, correlationResult, alias, attributePath, embeddingViewPath, fetches, limiter);
         this.provider = provider;
     }
 
@@ -62,7 +62,7 @@ public class ExpressionCorrelationJoinTupleElementMapper extends AbstractCorrela
             originalMaxResults = ((LimitBuilder<?>) queryBuilder).getMaxResults();
         }
 
-        CorrelationBuilder correlationBuilder = new JoinCorrelationBuilder(fullQueryBuilder, joinBase, correlationAlias);
+        JoinCorrelationBuilder correlationBuilder = new JoinCorrelationBuilder(parameterHolder, optionalParameters, fullQueryBuilder, joinBase, correlationAlias, correlationExternalAlias, attributePath, limiter);
         provider.applyCorrelation(correlationBuilder, correlationBasis);
 
         // Basic element has an alias, subviews don't
@@ -79,6 +79,7 @@ public class ExpressionCorrelationJoinTupleElementMapper extends AbstractCorrela
                 throw new IllegalArgumentException("Correlation provider '" + provider + "' wrongly uses setFirstResult() or setMaxResults() on the query builder which might lead to wrong results. Use SELECT fetching with batch size 1 or reformulate the correlation provider to use the limit/offset in a subquery!");
             }
         }
+        correlationBuilder.finish();
         if (fetches.length != 0) {
             for (int i = 0; i < fetches.length; i++) {
                 fullQueryBuilder.fetch(correlationBuilder.getCorrelationAlias() + "." + fetches[i]);

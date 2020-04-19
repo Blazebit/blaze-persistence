@@ -22,6 +22,7 @@ import com.blazebit.persistence.parser.expression.EnumLiteral;
 import com.blazebit.persistence.parser.expression.NullExpression;
 import com.blazebit.persistence.parser.expression.NumericLiteral;
 import com.blazebit.persistence.parser.expression.NumericType;
+import com.blazebit.persistence.parser.expression.ParameterExpression;
 import com.blazebit.persistence.parser.expression.StringLiteral;
 import com.blazebit.persistence.parser.expression.SyntaxErrorException;
 import com.blazebit.persistence.parser.expression.TimeLiteral;
@@ -55,6 +56,18 @@ public class TestLiterals extends AbstractParserTest {
         enumTypes.put(TestEnum.class.getName(), (Class<Enum<?>>) (Class<?>) TestEnum.class);
         EnumLiteral result = (EnumLiteral) parse(TestEnum.class.getName() + "." + "DEF");
         assertEquals(_enum(TestEnum.DEF), result);
+    }
+
+    @Test
+    public void testEnumLiteral3(){
+        String expression = TestEnum.class.getName() + "." + "DEF";
+        enumTypes.put(TestEnum.class.getName(), (Class<Enum<?>>) (Class<?>) TestEnum.class);
+        ParameterExpression result = (ParameterExpression) efNoEnumLiteral().createSimpleExpression(expression, false, false, false, macroConfiguration, null);
+        assertEquals(TestEnum.DEF, result.getValue());
+        SimpleQueryGenerator simpleQueryGenerator = new SimpleQueryGenerator();
+        simpleQueryGenerator.setQueryBuffer(new StringBuilder());
+        result.accept(simpleQueryGenerator);
+        assertEquals(expression, simpleQueryGenerator.getQueryBuffer().toString());
     }
 
     @Test(expected = IllegalArgumentException.class)

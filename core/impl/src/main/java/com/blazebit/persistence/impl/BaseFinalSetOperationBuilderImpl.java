@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.BaseFinalSetOperationBuilder;
 import com.blazebit.persistence.BaseOngoingFinalSetOperationBuilder;
+import com.blazebit.persistence.impl.function.querywrapper.QueryWrapperFunction;
 import com.blazebit.persistence.impl.query.CTENode;
 import com.blazebit.persistence.impl.query.CustomSQLQuery;
 import com.blazebit.persistence.impl.query.CustomSQLTypedQuery;
@@ -212,22 +213,22 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
         }
     }
 
-    public Expression asExpression(boolean externalRepresentation) {
+    public Expression asExpression(boolean externalRepresentation, boolean quantifiedPredicate) {
         SetOperationManager operationManager = setOperationManager;
 
         if (operationManager.getOperator() == null || !operationManager.hasSetOperations()) {
-            return asExpression(operationManager.getStartQueryBuilder(), externalRepresentation);
+            return asExpression(operationManager.getStartQueryBuilder(), externalRepresentation, quantifiedPredicate);
         }
 
         List<Expression> setOperationArgs = new ArrayList<Expression>(operationManager.getSetOperations().size() + 2);
         // Use prefix because hibernate uses UNION as keyword
         setOperationArgs.add(new StringLiteral("SET_" + operationManager.getOperator().name()));
-        setOperationArgs.add(asExpression(operationManager.getStartQueryBuilder(), externalRepresentation));
+        setOperationArgs.add(asExpression(operationManager.getStartQueryBuilder(), externalRepresentation, quantifiedPredicate));
 
         List<AbstractCommonQueryBuilder<?, ?, ?, ?, ?>> setOperands = operationManager.getSetOperations();
         int operandsSize = setOperands.size();
         for (int i = 0; i < operandsSize; i++) {
-            setOperationArgs.add(asExpression(setOperands.get(i), externalRepresentation));
+            setOperationArgs.add(asExpression(setOperands.get(i), externalRepresentation, quantifiedPredicate));
         }
 
         List<? extends OrderByElement> orderByElements = getOrderByElements();
@@ -251,7 +252,14 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
             }
         }
 
-        return new FunctionExpression("FUNCTION", setOperationArgs);
+        Expression expression = new FunctionExpression("FUNCTION", setOperationArgs);
+        if (quantifiedPredicate && hasLimit() && !mainQuery.dbmsDialect.supportsLimitInQuantifiedPredicateSubquery()) {
+            List<Expression> arguments = new ArrayList<>(2);
+            arguments.add(new StringLiteral(QueryWrapperFunction.FUNCTION_NAME));
+            arguments.add(expression);
+            expression = new FunctionExpression("FUNCTION", arguments);
+        }
+        return expression;
     }
 
     @Override

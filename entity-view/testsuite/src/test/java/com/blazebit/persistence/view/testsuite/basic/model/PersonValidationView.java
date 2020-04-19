@@ -45,6 +45,6 @@ public interface PersonValidationView extends IdHolderView<Long> {
     @Mapping("COALESCE(partnerDocument.contacts[:firstContact].name, partnerDocument.contacts[partnerDocument.defaultContact].name)")
     public String getName();
     
-    @Mapping("CASE WHEN age = 9 THEN 0 ELSE 1 END")
+    @Mapping("CASE WHEN age = 9 and id IS NOT NULL THEN 0 ELSE 1 END")
     public abstract Integer getNestedCaseWhen();
 }

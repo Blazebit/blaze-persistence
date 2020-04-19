@@ -40,6 +40,7 @@ import com.blazebit.persistence.impl.function.coltrunc.ColumnTruncFunction;
 import com.blazebit.persistence.impl.function.entity.EntityFunction;
 import com.blazebit.persistence.impl.function.limit.LimitFunction;
 import com.blazebit.persistence.impl.function.pageposition.PagePositionFunction;
+import com.blazebit.persistence.impl.function.querywrapper.QueryWrapperFunction;
 import com.blazebit.persistence.impl.function.rowvalue.RowValueSubqueryComparisonFunction;
 import com.blazebit.persistence.impl.keyset.KeysetMode;
 import com.blazebit.persistence.impl.keyset.KeysetPaginationHelper;
@@ -1346,8 +1347,12 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
                 sbSelectFrom.append(" IN ");
                 sbSelectFrom.append('(');
 
-                if (needsNewIdList && !externalRepresentation) {
-                    sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(ColumnTruncFunction.FUNCTION_NAME, 1));
+                if (!externalRepresentation) {
+                    if (needsNewIdList) {
+                        sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(ColumnTruncFunction.FUNCTION_NAME, 1));
+                    } else if (!mainQuery.dbmsDialect.supportsLimitInQuantifiedPredicateSubquery()) {
+                        sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(QueryWrapperFunction.FUNCTION_NAME, 1));
+                    }
                 }
 
                 sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(LimitFunction.FUNCTION_NAME, 1));
@@ -1357,8 +1362,12 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
                     sbSelectFrom.append(',').append(firstResult);
                 }
                 sbSelectFrom.append(')');
-                if (needsNewIdList && !externalRepresentation) {
-                    sbSelectFrom.append(",").append(identifierExpressions.length).append(')');
+                if (!externalRepresentation) {
+                    if (needsNewIdList) {
+                        sbSelectFrom.append(",").append(identifierExpressions.length).append(')');
+                    } else if (!mainQuery.dbmsDialect.supportsLimitInQuantifiedPredicateSubquery()) {
+                        sbSelectFrom.append(')');
+                    }
                 }
                 sbSelectFrom.append(')');
             } else {
@@ -1371,8 +1380,12 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
                 }
                 sbSelectFrom.append(',');
 
-                if (needsNewIdList && !externalRepresentation) {
-                    sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(ColumnTruncFunction.FUNCTION_NAME, 1));
+                if (!externalRepresentation) {
+                    if (needsNewIdList) {
+                        sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(ColumnTruncFunction.FUNCTION_NAME, 1));
+                    } else if (!mainQuery.dbmsDialect.supportsLimitInQuantifiedPredicateSubquery()) {
+                        sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(QueryWrapperFunction.FUNCTION_NAME, 1));
+                    }
                 }
 
                 sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(LimitFunction.FUNCTION_NAME, 1));
@@ -1382,8 +1395,12 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
                     sbSelectFrom.append(',').append(firstResult);
                 }
                 sbSelectFrom.append(')');
-                if (needsNewIdList && !externalRepresentation) {
-                    sbSelectFrom.append(",").append(identifierExpressions.length).append(')');
+                if (!externalRepresentation) {
+                    if (needsNewIdList) {
+                        sbSelectFrom.append(",").append(identifierExpressions.length).append(')');
+                    } else if (!mainQuery.dbmsDialect.supportsLimitInQuantifiedPredicateSubquery()) {
+                        sbSelectFrom.append(')');
+                    }
                 }
                 sbSelectFrom.append(") = 0");
             }

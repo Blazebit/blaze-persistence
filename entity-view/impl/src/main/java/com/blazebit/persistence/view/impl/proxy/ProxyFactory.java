@@ -136,6 +136,7 @@ public class ProxyFactory {
     private final ConcurrentMap<Class<?>, Class<?>> baseClasses = new ConcurrentHashMap<>();
     private final ConcurrentMap<Class<?>, Class<?>> proxyClasses = new ConcurrentHashMap<>();
     private final ConcurrentMap<Class<?>, Class<?>> unsafeProxyClasses = new ConcurrentHashMap<>();
+    private final ConcurrentMap<Class<?>, Class<?>> proxyClassesToViewClasses = new ConcurrentHashMap<>();
     private final Object proxyLock = new Object();
     private final ClassPool pool;
     private final boolean unsafeDisabled;
@@ -170,6 +171,10 @@ public class ProxyFactory {
         } else {
             return getProxy(entityViewManager, viewType, true);
         }
+    }
+
+    public <T> Class<T> getEntityViewClass(Class<? extends T> implementationClass) {
+        return (Class<T>) proxyClassesToViewClasses.get(implementationClass);
     }
 
     private static String getImplementationClassName(Class<?> javaType, Class<?> baseJavaType) {
@@ -213,6 +218,7 @@ public class ProxyFactory {
                 entityViewImplementationClass.getDeclaredField(attribute.getName());
             }
             proxyClasses.put(javaType, entityViewImplementationClass);
+            proxyClassesToViewClasses.put(entityViewImplementationClass, javaType);
         } catch (Exception e) {
             StringWriter sw = new StringWriter();
             e.printStackTrace(new PrintWriter(sw));
@@ -289,6 +295,7 @@ public class ProxyFactory {
                 if (proxyClass == null) {
                     proxyClass = createProxyClass(entityViewManager, viewType, unsafe);
                     classes.put(clazz, proxyClass);
+                    proxyClassesToViewClasses.put(proxyClass, clazz);
                 }
             }
         }
@@ -2622,6 +2629,12 @@ public class ProxyFactory {
             } else if (kind != ConstructorKind.NORMAL) {
                 CtClass type = attributeFields[i].getType();
                 if (type.isPrimitive()) {
+                    if (kind == ConstructorKind.CREATE && methodAttribute.getMappingType() == Attribute.MappingType.PARAMETER) {
+                        String value = "$2.get(\"" + ((MappingAttribute<?, ?>) methodAttribute).getMapping() + "\")";
+                        sb.append(value).append(" != null ? ");
+                        appendUnwrap(sb, type, value);
+                        sb.append(" : ");
+                    }
                     sb.append(getDefaultValue(type)).append(";\n");
                     if (mutableStateField != null && methodAttribute != null && methodAttribute.hasDirtyStateIndex()) {
                         if (possiblyInitialized) {
@@ -3373,24 +3386,44 @@ public class ProxyFactory {
                 if (parameterAttributes.get(i - superStart).isSelfParameter()) {
                     sb.append("createSelf(");
                     for (int j = 0; j < superStart; j++) {
-                        sb.append("(").append(attributeTypes[j].getName());
-                        if (assignment) {
-                            sb.append(") $4[$2 + $3[").append(j).append("]");
+                        if (attributeTypes[j].isPrimitive()) {
+                            if (assignment) {
+                                appendUnwrap(sb, attributeTypes[j], "$4[$2 + $3[" + j + "]]");
+                            } else {
+                                appendUnwrap(sb, attributeTypes[j], "$3[$2 + " + j + "]");
+                            }
+
+                            sb.append(",");
                         } else {
-                            sb.append(") $3[$2 + ").append(j);
+                            sb.append("(").append(attributeTypes[j].getName());
+                            if (assignment) {
+                                sb.append(") $4[$2 + $3[").append(j).append("]");
+                            } else {
+                                sb.append(") $3[$2 + ").append(j);
+                            }
+                            sb.append("],");
                         }
-                        sb.append("],");
                     }
                     sb.setCharAt(sb.length() - 1, ')');
                     sb.append(",");
                 } else {
-                    sb.append("(").append(attributeTypes[i].getName());
-                    if (assignment) {
-                        sb.append(") $4[$2 + $3[").append(i).append("]");
+                    if (attributeTypes[i].isPrimitive()) {
+                        if (assignment) {
+                            appendUnwrap(sb, attributeTypes[i], "$4[$2 + $3[" + i + "]]");
+                        } else {
+                            appendUnwrap(sb, attributeTypes[i], "$3[$2 + " + i + "]");
+                        }
+
+                        sb.append(",");
                     } else {
-                        sb.append(") $3[$2 + ").append(i);
+                        sb.append("(").append(attributeTypes[i].getName());
+                        if (assignment) {
+                            sb.append(") $4[$2 + $3[").append(i).append("]");
+                        } else {
+                            sb.append(") $3[$2 + ").append(i);
+                        }
+                        sb.append("],");
                     }
-                    sb.append("],");
                 }
             }
             sb.setCharAt(sb.length() - 1, ')');

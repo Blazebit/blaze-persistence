@@ -42,6 +42,7 @@ import java.util.Map;
 public abstract class AbstractReflectionInstantiator<T> implements ObjectInstantiator<T> {
 
     private static final Map<Class<?>, TypeConverter<Object, Object>> PRIMITIVE_TYPE_CONVERTERS;
+    private static final Map<Class<?>, Object> DEFAULT_VALUES;
 
     static {
         Map<Class<?>, TypeConverter<Object, Object>> primitiveTypeConverters = new HashMap<>();
@@ -54,6 +55,16 @@ public abstract class AbstractReflectionInstantiator<T> implements ObjectInstant
         primitiveTypeConverters.put(float.class, PrimitiveFloatTypeConverter.INSTANCE);
         primitiveTypeConverters.put(double.class, PrimitiveDoubleTypeConverter.INSTANCE);
         PRIMITIVE_TYPE_CONVERTERS = primitiveTypeConverters;
+        Map<Class<?>, Object> defaultValues = new HashMap<>();
+        defaultValues.put(boolean.class, false);
+        defaultValues.put(byte.class, (byte) 0);
+        defaultValues.put(char.class, (char) 0);
+        defaultValues.put(short.class, (short) 0);
+        defaultValues.put(int.class, 0);
+        defaultValues.put(long.class, 0L);
+        defaultValues.put(float.class, 0F);
+        defaultValues.put(double.class, 0D);
+        DEFAULT_VALUES = defaultValues;
     }
 
     protected final MutableBasicUserTypeEntry[] mutableBasicUserTypes;
@@ -62,6 +73,15 @@ public abstract class AbstractReflectionInstantiator<T> implements ObjectInstant
     public AbstractReflectionInstantiator(List<MutableBasicUserTypeEntry> mutableBasicUserTypes, List<TypeConverterEntry> typeConverterEntries, Class<?>[] parameterTypes) {
         this.mutableBasicUserTypes = mutableBasicUserTypes.toArray(new MutableBasicUserTypeEntry[mutableBasicUserTypes.size()]);
         this.typeConverters = withPrimitiveConverters(typeConverterEntries, parameterTypes);
+    }
+
+    public static Object[] createDefaultObject(int offset, Class<?>[] parameterTypes, int constructorParameterCount) {
+        Object[] array = new Object[offset + constructorParameterCount];
+        int parameterOffset = parameterTypes.length - constructorParameterCount;
+        for (int i = 0; i < constructorParameterCount; i++) {
+            array[offset + i] = DEFAULT_VALUES.get(parameterTypes[parameterOffset + i]);
+        }
+        return array;
     }
 
     /**

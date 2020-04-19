@@ -47,6 +47,10 @@ public class CorrelationProviderHelper {
         return ("correlated_" + attributePath.replaceAll("\\.", "_")).intern();
     }
 
+    public static String getDefaultExternalCorrelationAlias(String attributePath) {
+        return ("correlated_ext_" + attributePath.replaceAll("\\.", "_")).intern();
+    }
+
     @SuppressWarnings("unchecked")
     public static CorrelationProviderFactory getFactory(Class<? extends CorrelationProvider> clazz) {
         Constructor<? extends CorrelationProvider>[] constructors = (Constructor<? extends CorrelationProvider>[]) clazz.getConstructors();

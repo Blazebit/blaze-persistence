@@ -261,13 +261,13 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
             List<WhenClauseExpression> expressions = expression.getWhenClauses();
             int size = expressions.size();
             EXPRESSION_LOOP: for (int i = 0; i < size; i++) {
-                PathPosition pathPosition = resolve(expressions.get(i).getCondition());
-                if (conditionType != null && pathPosition != null && !isCompatible(conditionType, pathPosition.getCurrentType())) {
-                    invalid(expression, "The case predicate compares different types: [" + conditionType + ", " + pathPosition.getCurrentType() + "]");
-                }
                 PathPosition position = currentPositions.get(j).copy();
                 pathPositions = new ArrayList<>();
                 pathPositions.add(currentPosition = position);
+                PathPosition pathPosition = resolve(expressions.get(i).getCondition());
+                if (conditionType != null && pathPosition != null && pathPosition.getCurrentType() != null && !isCompatible(conditionType, pathPosition.getCurrentType())) {
+                    invalid(expression, "The case predicate compares different types: [" + conditionType.getJavaType().getName() + ", " + typeName(pathPosition) + "]");
+                }
                 expressions.get(i).getResult().accept(this);
 
                 // We just use the type of the first path position that we find
@@ -519,11 +519,17 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
         List<PathPosition> currentPositions = pathPositions;
         int positionsSize = currentPositions.size();
 
-        for (int i = 0; i < positionsSize; i++) {
-            PathPosition position = currentPositions.get(i);
-            Class<?> returnType = function.getReturnType(position.getCurrentClass());
-            position.setAttribute(null);
-            position.setCurrentType(metamodel.type(returnType));
+        if (positionsSize == 0) {
+            Class<?> returnType = function.getReturnType(null);
+            Type<?> t = returnType == null ? null : metamodel.type(returnType);
+            currentPositions.add(new PathPosition(t, null));
+        } else {
+            for (int i = 0; i < positionsSize; i++) {
+                PathPosition position = currentPositions.get(i);
+                Class<?> returnType = function.getReturnType(position.getCurrentClass());
+                position.setAttribute(null);
+                position.setCurrentType(metamodel.type(returnType));
+            }
         }
     }
 
@@ -575,9 +581,15 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
     @Override
     public void visit(CompoundPredicate predicate) {
         List<Predicate> children = predicate.getChildren();
+        PathPosition position = currentPosition;
+        List<PathPosition> currentPositions = pathPositions;
         for (int i = 0; i < children.size(); i++) {
+            pathPositions = new ArrayList<>();
+            pathPositions.add(currentPosition = position.copy());
             children.get(i).accept(this);
         }
+        pathPositions = currentPositions;
+        currentPosition = position;
         currentPosition.setAttribute(null);
         currentPosition.setCurrentType(metamodel.type(Boolean.class));
     }
@@ -620,8 +632,8 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
     public void visit(BinaryExpressionPredicate predicate) {
         PathPosition left = resolve(predicate.getLeft());
         PathPosition right = resolve(predicate.getRight());
-        if (left != null && right != null && !isCompatible(left.getCurrentType(), right.getCurrentType())) {
-            invalid(predicate, "The binary predicate compares different types: [" + left.getCurrentType() + ", " + right.getCurrentType() + "]");
+        if (left != null && right != null && left.getCurrentType() != null && right.getCurrentType() != null && !isCompatible(left.getCurrentType(), right.getCurrentType())) {
+            invalid(predicate, "The binary predicate compares different types: [" + typeName(left) + ", " + typeName(right) + "]");
         }
         currentPosition.setAttribute(null);
         currentPosition.setCurrentType(metamodel.type(Boolean.class));
@@ -665,8 +677,8 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
         PathPosition left = resolve(predicate.getLeft());
         PathPosition start = resolve(predicate.getStart());
         PathPosition end = resolve(predicate.getEnd());
-        if (left != null && start != null && end != null && (!isCompatible(left.getCurrentType(), start.getCurrentType()) || !isCompatible(left.getCurrentType(), end.getCurrentType()))) {
-            invalid(predicate, "The between predicate compares different types: [" + left.getCurrentType() + ", " + start.getCurrentType() + ", " + end.getCurrentType() + "]");
+        if (left != null && start != null && end != null && left.getCurrentType() != null && start.getCurrentType() != null && end.getCurrentType() != null && (!isCompatible(left.getCurrentType(), start.getCurrentType()) || !isCompatible(left.getCurrentType(), end.getCurrentType()))) {
+            invalid(predicate, "The between predicate compares different types: [" + typeName(left) + ", " + typeName(start) + ", " + typeName(end) + "]");
         }
         currentPosition.setAttribute(null);
         currentPosition.setCurrentType(metamodel.type(Boolean.class));
@@ -676,7 +688,7 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
     public void visit(InPredicate predicate) {
         PathPosition left = resolve(predicate.getLeft());
         List<Expression> expressions = predicate.getRight();
-        List<Type<?>> expressionTypes = new ArrayList<>(expressions.size());
+        List<String> expressionTypes = new ArrayList<>(expressions.size());
 
         if (left != null && left.getCurrentType() != null) {
             boolean invalid = false;
@@ -687,12 +699,12 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
                     if (!isCompatible(left.getCurrentType(), pathPosition.getCurrentType())) {
                         invalid = true;
                     }
-                    expressionTypes.add(pathPosition.getCurrentType());
+                    expressionTypes.add(typeName(pathPosition));
                 }
             }
 
             if (invalid) {
-                invalid(predicate, "The in predicate compares the left type '" + left.getCurrentType() + "' with different item types: " + expressionTypes);
+                invalid(predicate, "The in predicate compares the left type '" + typeName(left) + "' with different item types: " + expressionTypes);
             }
         }
         currentPosition.setAttribute(null);
@@ -703,6 +715,13 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
     public void visit(ExistsPredicate predicate) {
         currentPosition.setAttribute(null);
         currentPosition.setCurrentType(metamodel.type(Boolean.class));
+    }
+
+    private static String typeName(PathPosition p) {
+        if (p == null || p.getCurrentType() == null) {
+            return "null";
+        }
+        return p.getCurrentType().getJavaType().getName();
     }
 
     private boolean isCompatible(Type<?> t1, Type<?> t2) {

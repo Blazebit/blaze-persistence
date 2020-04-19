@@ -32,6 +32,8 @@ import com.blazebit.persistence.view.ViewListener;
 import com.blazebit.persistence.view.ViewTransition;
 import com.blazebit.persistence.view.ViewTransitionListener;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
+import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.tx.TransactionHelper;
 import com.blazebit.persistence.view.impl.update.flush.PostFlushDeleter;
 import com.blazebit.persistence.view.impl.update.listener.ViewAndEntityPostPersistListenerImpl;
@@ -49,7 +51,6 @@ import com.blazebit.persistence.view.impl.update.listener.ViewTransitionPostRoll
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.spi.TransactionAccess;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
-import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Synchronization;
@@ -289,7 +290,7 @@ public class DefaultUpdateContext implements UpdateContext, FlushOperationBuilde
     @Override
     public FlushOperationBuilder onPrePersist(PrePersistListener<?> listener) {
         ManagedViewType<?> managedView = evm.getListenerManagedView(listener.getClass(), PrePersistListener.class);
-        listenerManager.onPrePersist(managedView.getJavaType(), managedView.getEntityClass(), listener);
+        listenerManager.onPrePersist(managedView, managedView.getEntityClass(), listener);
         return this;
     }
 
@@ -297,14 +298,14 @@ public class DefaultUpdateContext implements UpdateContext, FlushOperationBuilde
     public FlushOperationBuilder onPrePersist(PrePersistEntityListener<?, ?> listener) {
         ManagedViewType<?> managedView = evm.getListenerManagedView(listener.getClass(), PrePersistEntityListener.class);
         Class<?> listenerEntityClass = evm.getListenerEntityClass(listener.getClass(), PrePersistEntityListener.class);
-        listenerManager.onPrePersist(managedView.getJavaType(), listenerEntityClass, listener);
+        listenerManager.onPrePersist(managedView, listenerEntityClass, listener);
         return this;
     }
 
     @Override
     public FlushOperationBuilder onPostPersist(PostPersistListener<?> listener) {
         ManagedViewType<?> managedView = evm.getListenerManagedView(listener.getClass(), PostPersistListener.class);
-        listenerManager.onPostPersist(managedView.getJavaType(), managedView.getEntityClass(), listener);
+        listenerManager.onPostPersist(managedView, managedView.getEntityClass(), listener);
         return this;
     }
 
@@ -312,207 +313,244 @@ public class DefaultUpdateContext implements UpdateContext, FlushOperationBuilde
     public FlushOperationBuilder onPostPersist(PostPersistEntityListener<?, ?> listener) {
         ManagedViewType<?> managedView = evm.getListenerManagedView(listener.getClass(), PostPersistEntityListener.class);
         Class<?> listenerEntityClass = evm.getListenerEntityClass(listener.getClass(), PostPersistEntityListener.class);
-        listenerManager.onPostPersist(managedView.getJavaType(), listenerEntityClass, listener);
+        listenerManager.onPostPersist(managedView, listenerEntityClass, listener);
         return this;
     }
 
     @Override
     public FlushOperationBuilder onPreUpdate(PreUpdateListener<?> listener) {
         ManagedViewType<?> managedView = evm.getListenerManagedView(listener.getClass(), PreUpdateListener.class);
-        listenerManager.onPreUpdate(managedView.getJavaType(), managedView.getEntityClass(), listener);
+        listenerManager.onPreUpdate(managedView, managedView.getEntityClass(), listener);
         return this;
     }
 
     @Override
     public FlushOperationBuilder onPostUpdate(PostUpdateListener<?> listener) {
         ManagedViewType<?> managedView = evm.getListenerManagedView(listener.getClass(), PostUpdateListener.class);
-        listenerManager.onPostUpdate(managedView.getJavaType(), managedView.getEntityClass(), listener);
+        listenerManager.onPostUpdate(managedView, managedView.getEntityClass(), listener);
         return this;
     }
 
     @Override
     public FlushOperationBuilder onPreRemove(PreRemoveListener<?> listener) {
         ManagedViewType<?> managedView = evm.getListenerManagedView(listener.getClass(), PreRemoveListener.class);
-        listenerManager.onPreRemove(managedView.getJavaType(), managedView.getEntityClass(), listener);
+        listenerManager.onPreRemove(managedView, managedView.getEntityClass(), listener);
         return this;
     }
 
     @Override
     public FlushOperationBuilder onPostRemove(PostRemoveListener<?> listener) {
         ManagedViewType<?> managedView = evm.getListenerManagedView(listener.getClass(), PostRemoveListener.class);
-        listenerManager.onPostRemove(managedView.getJavaType(), managedView.getEntityClass(), listener);
+        listenerManager.onPostRemove(managedView, managedView.getEntityClass(), listener);
         return this;
     }
 
     @Override
     public FlushOperationBuilder onPostCommit(PostCommitListener<?> listener) {
         ManagedViewType<?> managedView = evm.getListenerManagedView(listener.getClass(), PostCommitListener.class);
-        listenerManager.onPostCommit(managedView.getJavaType(), managedView.getEntityClass(), listener, VIEW_TRANSITIONS);
+        listenerManager.onPostCommit(managedView, managedView.getEntityClass(), listener, VIEW_TRANSITIONS);
         return this;
     }
 
     @Override
     public FlushOperationBuilder onPostCommit(Set<ViewTransition> viewTransitions, PostCommitListener<?> listener) {
         ManagedViewType<?> managedView = evm.getListenerManagedView(listener.getClass(), PostCommitListener.class);
-        listenerManager.onPostCommit(managedView.getJavaType(), managedView.getEntityClass(), listener, viewTransitions);
+        listenerManager.onPostCommit(managedView, managedView.getEntityClass(), listener, viewTransitions);
         return this;
     }
 
     @Override
     public FlushOperationBuilder onPostRollback(PostRollbackListener<?> listener) {
         ManagedViewType<?> managedView = evm.getListenerManagedView(listener.getClass(), PostRollbackListener.class);
-        listenerManager.onPostRollback(managedView.getJavaType(), managedView.getEntityClass(), listener, VIEW_TRANSITIONS);
+        listenerManager.onPostRollback(managedView, managedView.getEntityClass(), listener, VIEW_TRANSITIONS);
         return this;
     }
 
     @Override
     public FlushOperationBuilder onPostRollback(Set<ViewTransition> viewTransitions, PostRollbackListener<?> listener) {
         ManagedViewType<?> managedView = evm.getListenerManagedView(listener.getClass(), PostRollbackListener.class);
-        listenerManager.onPostRollback(managedView.getJavaType(), managedView.getEntityClass(), listener, viewTransitions);
+        listenerManager.onPostRollback(managedView, managedView.getEntityClass(), listener, viewTransitions);
         return this;
+    }
+
+    private <T> ManagedViewTypeImplementor<T> managedView(Class<T> entityViewClass) {
+        ManagedViewTypeImplementor<T> managedView = evm.getMetamodel().managedView(entityViewClass);
+        if (managedView == null) {
+            // It could be the implementation class
+            managedView = evm.getMetamodel().managedView(evm.getProxyFactory().getEntityViewClass(entityViewClass));
+            if (managedView == null) {
+                throw new IllegalArgumentException("Can't add a listener for the non-view type: " + entityViewClass.getName());
+            }
+        }
+
+        return managedView;
     }
 
     @Override
     public <T> FlushOperationBuilder onPrePersist(Class<T> entityViewClass, PrePersistListener<T> listener) {
-        listenerManager.onPrePersist(entityViewClass, evm.getMetamodel().managedView(entityViewClass).getEntityClass(), listener);
+        ManagedViewTypeImplementor<T> managedView = managedView(entityViewClass);
+        listenerManager.onPrePersist(managedView, managedView.getEntityClass(), listener);
         return this;
     }
 
     @Override
     public <T> FlushOperationBuilder onPrePersist(Class<T> entityViewClass, PrePersistEntityListener<T, ?> listener) {
-        listenerManager.onPrePersist(entityViewClass, evm.getMetamodel().managedView(entityViewClass).getEntityClass(), listener);
+        ManagedViewTypeImplementor<T> managedView = managedView(entityViewClass);
+        listenerManager.onPrePersist(managedView, managedView.getEntityClass(), listener);
         return this;
     }
 
     @Override
     public <T> FlushOperationBuilder onPostPersist(Class<T> entityViewClass, PostPersistListener<T> listener) {
-        listenerManager.onPostPersist(entityViewClass, evm.getMetamodel().managedView(entityViewClass).getEntityClass(), listener);
+        ManagedViewTypeImplementor<T> managedView = managedView(entityViewClass);
+        listenerManager.onPostPersist(managedView, managedView.getEntityClass(), listener);
         return this;
     }
 
     @Override
     public <T> FlushOperationBuilder onPostPersist(Class<T> entityViewClass, PostPersistEntityListener<T, ?> listener) {
-        listenerManager.onPostPersist(entityViewClass, evm.getMetamodel().managedView(entityViewClass).getEntityClass(), listener);
+        ManagedViewTypeImplementor<T> managedView = managedView(entityViewClass);
+        listenerManager.onPostPersist(managedView, managedView.getEntityClass(), listener);
         return this;
     }
 
     @Override
     public <T> FlushOperationBuilder onPreUpdate(Class<T> entityViewClass, PreUpdateListener<T> listener) {
-        listenerManager.onPreUpdate(entityViewClass, evm.getMetamodel().managedView(entityViewClass).getEntityClass(), listener);
+        ManagedViewTypeImplementor<T> managedView = managedView(entityViewClass);
+        listenerManager.onPreUpdate(managedView, managedView.getEntityClass(), listener);
         return this;
     }
 
     @Override
     public <T> FlushOperationBuilder onPostUpdate(Class<T> entityViewClass, PostUpdateListener<T> listener) {
-        listenerManager.onPostUpdate(entityViewClass, evm.getMetamodel().managedView(entityViewClass).getEntityClass(), listener);
+        ManagedViewTypeImplementor<T> managedView = managedView(entityViewClass);
+        listenerManager.onPostUpdate(managedView, managedView.getEntityClass(), listener);
         return this;
     }
 
     @Override
     public <T> FlushOperationBuilder onPreRemove(Class<T> entityViewClass, PreRemoveListener<T> listener) {
-        listenerManager.onPreRemove(entityViewClass, evm.getMetamodel().managedView(entityViewClass).getEntityClass(), listener);
+        ManagedViewTypeImplementor<T> managedView = managedView(entityViewClass);
+        listenerManager.onPreRemove(managedView, managedView.getEntityClass(), listener);
         return this;
     }
 
     @Override
     public <T> FlushOperationBuilder onPostRemove(Class<T> entityViewClass, PostRemoveListener<T> listener) {
-        listenerManager.onPostRemove(entityViewClass, evm.getMetamodel().managedView(entityViewClass).getEntityClass(), listener);
+        ManagedViewTypeImplementor<T> managedView = managedView(entityViewClass);
+        listenerManager.onPostRemove(managedView, managedView.getEntityClass(), listener);
         return this;
     }
 
     @Override
     public <T> FlushOperationBuilder onPostCommit(Class<T> entityViewClass, PostCommitListener<T> listener) {
-        listenerManager.onPostCommit(entityViewClass, evm.getMetamodel().managedView(entityViewClass).getEntityClass(), listener, VIEW_TRANSITIONS);
+        ManagedViewTypeImplementor<T> managedView = managedView(entityViewClass);
+        listenerManager.onPostCommit(managedView, managedView.getEntityClass(), listener, VIEW_TRANSITIONS);
         return this;
     }
 
     @Override
     public <T> FlushOperationBuilder onPostCommit(Class<T> entityViewClass, Set<ViewTransition> viewTransitions, PostCommitListener<T> listener) {
-        listenerManager.onPostCommit(entityViewClass, evm.getMetamodel().managedView(entityViewClass).getEntityClass(), listener, viewTransitions);
+        ManagedViewTypeImplementor<T> managedView = managedView(entityViewClass);
+        listenerManager.onPostCommit(managedView, managedView.getEntityClass(), listener, viewTransitions);
         return this;
     }
 
     @Override
     public <T> FlushOperationBuilder onPostRollback(Class<T> entityViewClass, PostRollbackListener<T> listener) {
-        listenerManager.onPostRollback(entityViewClass, evm.getMetamodel().managedView(entityViewClass).getEntityClass(), listener, VIEW_TRANSITIONS);
+        ManagedViewTypeImplementor<T> managedView = managedView(entityViewClass);
+        listenerManager.onPostRollback(managedView, managedView.getEntityClass(), listener, VIEW_TRANSITIONS);
         return this;
     }
 
     @Override
     public <T> FlushOperationBuilder onPostRollback(Class<T> entityViewClass, Set<ViewTransition> viewTransitions, PostRollbackListener<T> listener) {
-        listenerManager.onPostRollback(entityViewClass, evm.getMetamodel().managedView(entityViewClass).getEntityClass(), listener, viewTransitions);
+        ManagedViewTypeImplementor<T> managedView = managedView(entityViewClass);
+        listenerManager.onPostRollback(managedView, managedView.getEntityClass(), listener, viewTransitions);
         return this;
     }
 
     @Override
     public <T, E> FlushOperationBuilder onPrePersist(Class<T> entityViewClass, Class<E> entityClass, PrePersistListener<T> listener) {
-        listenerManager.onPrePersist(entityViewClass, entityClass, listener);
+        ManagedViewTypeImplementor<T> managedView = managedView(entityViewClass);
+        listenerManager.onPrePersist(managedView, entityClass, listener);
         return this;
     }
 
     @Override
     public <T, E> FlushOperationBuilder onPrePersist(Class<T> entityViewClass, Class<E> entityClass, PrePersistEntityListener<T, E> listener) {
-        listenerManager.onPrePersist(entityViewClass, entityClass, listener);
+        ManagedViewTypeImplementor<T> managedView = managedView(entityViewClass);
+        listenerManager.onPrePersist(managedView, entityClass, listener);
         return this;
     }
 
     @Override
     public <T, E> FlushOperationBuilder onPostPersist(Class<T> entityViewClass, Class<E> entityClass, PostPersistListener<T> listener) {
-        listenerManager.onPostPersist(entityViewClass, entityClass, listener);
+        ManagedViewTypeImplementor<T> managedView = managedView(entityViewClass);
+        listenerManager.onPostPersist(managedView, entityClass, listener);
         return this;
     }
 
     @Override
     public <T, E> FlushOperationBuilder onPostPersist(Class<T> entityViewClass, Class<E> entityClass, PostPersistEntityListener<T, E> listener) {
-        listenerManager.onPostPersist(entityViewClass, entityClass, listener);
+        ManagedViewTypeImplementor<T> managedView = managedView(entityViewClass);
+        listenerManager.onPostPersist(managedView, entityClass, listener);
         return this;
     }
 
     @Override
     public <T, E> FlushOperationBuilder onPreUpdate(Class<T> entityViewClass, Class<E> entityClass, PreUpdateListener<T> listener) {
-        listenerManager.onPreUpdate(entityViewClass, entityClass, listener);
+        ManagedViewTypeImplementor<T> managedView = managedView(entityViewClass);
+        listenerManager.onPreUpdate(managedView, entityClass, listener);
         return this;
     }
 
     @Override
     public <T, E> FlushOperationBuilder onPostUpdate(Class<T> entityViewClass, Class<E> entityClass, PostUpdateListener<T> listener) {
-        listenerManager.onPostUpdate(entityViewClass, entityClass, listener);
+        ManagedViewTypeImplementor<T> managedView = managedView(entityViewClass);
+        listenerManager.onPostUpdate(managedView, entityClass, listener);
         return this;
     }
 
     @Override
     public <T, E> FlushOperationBuilder onPreRemove(Class<T> entityViewClass, Class<E> entityClass, PreRemoveListener<T> listener) {
-        listenerManager.onPreRemove(entityViewClass, entityClass, listener);
+        ManagedViewTypeImplementor<T> managedView = managedView(entityViewClass);
+        listenerManager.onPreRemove(managedView, entityClass, listener);
         return this;
     }
 
     @Override
     public <T, E> FlushOperationBuilder onPostRemove(Class<T> entityViewClass, Class<E> entityClass, PostRemoveListener<T> listener) {
-        listenerManager.onPostRemove(entityViewClass, entityClass, listener);
+        ManagedViewTypeImplementor<T> managedView = managedView(entityViewClass);
+        listenerManager.onPostRemove(managedView, entityClass, listener);
         return this;
     }
 
     @Override
     public <T, E> FlushOperationBuilder onPostCommit(Class<T> entityViewClass, Class<E> entityClass, PostCommitListener<T> listener) {
-        listenerManager.onPostCommit(entityViewClass, entityClass, listener, VIEW_TRANSITIONS);
+        ManagedViewTypeImplementor<T> managedView = managedView(entityViewClass);
+        listenerManager.onPostCommit(managedView, entityClass, listener, VIEW_TRANSITIONS);
         return this;
     }
 
     @Override
     public <T, E> FlushOperationBuilder onPostCommit(Class<T> entityViewClass, Class<E> entityClass, Set<ViewTransition> viewTransitions, PostCommitListener<T> listener) {
-        listenerManager.onPostCommit(entityViewClass, entityClass, listener, viewTransitions);
+        ManagedViewTypeImplementor<T> managedView = managedView(entityViewClass);
+        listenerManager.onPostCommit(managedView, entityClass, listener, viewTransitions);
         return this;
     }
 
     @Override
     public <T, E> FlushOperationBuilder onPostRollback(Class<T> entityViewClass, Class<E> entityClass, PostRollbackListener<T> listener) {
-        listenerManager.onPostRollback(entityViewClass, entityClass, listener, VIEW_TRANSITIONS);
+        ManagedViewTypeImplementor<T> managedView = managedView(entityViewClass);
+        listenerManager.onPostRollback(managedView, entityClass, listener, VIEW_TRANSITIONS);
         return this;
     }
 
     @Override
     public <T, E> FlushOperationBuilder onPostRollback(Class<T> entityViewClass, Class<E> entityClass, Set<ViewTransition> viewTransitions, PostRollbackListener<T> listener) {
-        listenerManager.onPostRollback(entityViewClass, entityClass, listener, viewTransitions);
+        ManagedViewTypeImplementor<T> managedView = managedView(entityViewClass);
+        listenerManager.onPostRollback(managedView, entityClass, listener, viewTransitions);
         return this;
     }
 

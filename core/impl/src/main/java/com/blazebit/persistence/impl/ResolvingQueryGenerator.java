@@ -88,6 +88,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     protected String aliasPrefix;
     private boolean resolveSelectAliases = true;
     private boolean externalRepresentation;
+    private boolean quantifiedPredicate;
     private Set<JoinNode> renderedJoinNodes;
     private ClauseType clauseType;
     private Map<JoinNode, Boolean> treatedJoinNodesForConstraints;
@@ -276,7 +277,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                 if (!externalRepresentation) {
                     sb.append('(');
                 }
-                Expression subqueryExpression = subquery.asExpression(externalRepresentation);
+                Expression subqueryExpression = subquery.asExpression(externalRepresentation, quantifiedPredicate);
                 if (!externalRepresentation && subqueryExpression instanceof SubqueryExpression) {
                     sb.append(((SubqueryExpression) subqueryExpression).getSubquery().getQueryString());
                 } else {
@@ -712,6 +713,8 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
     @Override
     public void visit(InPredicate predicate) {
+        boolean quantifiedPredicate = this.quantifiedPredicate;
+        this.quantifiedPredicate = true;
         if (predicate.getRight().size() == 1 && jpaProvider.needsAssociationToIdRewriteInOnClause() && clauseType == ClauseType.JOIN) {
             Expression right = predicate.getRight().get(0);
             if (right instanceof ParameterExpression) {
@@ -732,6 +735,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         } else {
             super.visit(predicate);
         }
+        this.quantifiedPredicate = quantifiedPredicate;
     }
 
     private Type<?> getAssociationType(Expression expression1, Expression expression2) {
@@ -744,10 +748,13 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
     @Override
     public void visit(final EqPredicate predicate) {
+        boolean quantifiedPredicate = this.quantifiedPredicate;
+        this.quantifiedPredicate = predicate.getQuantifier() != PredicateQuantifier.ONE;
         renderEquality(predicate.getLeft(), predicate.getRight(), predicate.isNegated(), predicate.getQuantifier());
         if (predicate.isNegated()) {
             flipTreatedJoinNodeConstraints();
         }
+        this.quantifiedPredicate = quantifiedPredicate;
     }
 
     private void renderEquality(Expression left, Expression right, boolean negated, PredicateQuantifier quantifier) {
@@ -963,34 +970,46 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
     @Override
     public void visit(GtPredicate predicate) {
+        boolean quantifiedPredicate = this.quantifiedPredicate;
+        this.quantifiedPredicate = predicate.getQuantifier() != PredicateQuantifier.ONE;
         super.visit(predicate);
         if (predicate.isNegated()) {
             flipTreatedJoinNodeConstraints();
         }
+        this.quantifiedPredicate = quantifiedPredicate;
     }
 
     @Override
     public void visit(GePredicate predicate) {
+        boolean quantifiedPredicate = this.quantifiedPredicate;
+        this.quantifiedPredicate = predicate.getQuantifier() != PredicateQuantifier.ONE;
         super.visit(predicate);
         if (predicate.isNegated()) {
             flipTreatedJoinNodeConstraints();
         }
+        this.quantifiedPredicate = quantifiedPredicate;
     }
 
     @Override
     public void visit(LtPredicate predicate) {
+        boolean quantifiedPredicate = this.quantifiedPredicate;
+        this.quantifiedPredicate = predicate.getQuantifier() != PredicateQuantifier.ONE;
         super.visit(predicate);
         if (predicate.isNegated()) {
             flipTreatedJoinNodeConstraints();
         }
+        this.quantifiedPredicate = quantifiedPredicate;
     }
 
     @Override
     public void visit(LePredicate predicate) {
+        boolean quantifiedPredicate = this.quantifiedPredicate;
+        this.quantifiedPredicate = predicate.getQuantifier() != PredicateQuantifier.ONE;
         super.visit(predicate);
         if (predicate.isNegated()) {
             flipTreatedJoinNodeConstraints();
         }
+        this.quantifiedPredicate = quantifiedPredicate;
     }
 
     protected void visitWhenClauseCondition(Expression condition) {

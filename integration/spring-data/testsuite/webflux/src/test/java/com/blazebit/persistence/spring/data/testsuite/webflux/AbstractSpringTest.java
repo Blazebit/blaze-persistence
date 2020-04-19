@@ -17,6 +17,7 @@
 package com.blazebit.persistence.spring.data.testsuite.webflux;
 
 import com.blazebit.persistence.spring.data.testsuite.webflux.config.CustomLocalContainerEntityManagerFactoryBean;
+import com.blazebit.persistence.spring.data.testsuite.webflux.config.SystemPropertyBasedActiveProfilesResolver;
 import com.blazebit.persistence.spring.data.testsuite.webflux.entity.Document;
 import com.blazebit.persistence.spring.data.testsuite.webflux.entity.Person;
 import com.blazebit.persistence.spring.data.webflux.impl.json.EntityViewAwareJackson2JsonDecoder;
@@ -36,6 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestContextManager;
 import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
 import org.springframework.test.context.support.DirtiesContextTestExecutionListener;
@@ -48,6 +50,7 @@ import org.springframework.web.server.adapter.WebHttpHandlerBuilder;
  * @author Moritz Becker
  * @since 1.5.0
  */
+@ActiveProfiles(resolver = SystemPropertyBasedActiveProfilesResolver.class)
 public abstract class AbstractSpringTest extends AbstractPersistenceTest {
 
     @Autowired

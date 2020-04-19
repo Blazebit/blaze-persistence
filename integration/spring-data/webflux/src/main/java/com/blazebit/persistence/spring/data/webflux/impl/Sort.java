@@ -17,6 +17,7 @@
 package com.blazebit.persistence.spring.data.webflux.impl;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /**
@@ -25,7 +26,32 @@ import java.lang.reflect.Method;
  */
 public class Sort {
 
+    public static final org.springframework.data.domain.Sort UNSORTED;
+
+    static {
+        org.springframework.data.domain.Sort unsorted = null;
+        try {
+            for (Method unsortedCandidate : org.springframework.data.domain.Sort.class.getDeclaredMethods()) {
+                if ("unsorted".equals(unsortedCandidate.getName())) {
+                    unsorted = (org.springframework.data.domain.Sort) unsortedCandidate.invoke(null);
+                    break;
+                }
+            }
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException(e);
+        }
+        UNSORTED = unsorted;
+    }
+
     private Sort() {
+    }
+
+    public static org.springframework.data.domain.Sort asc(String... properties) {
+        return of(org.springframework.data.domain.Sort.Direction.ASC, properties);
+    }
+
+    public static org.springframework.data.domain.Sort desc(String... properties) {
+        return of(org.springframework.data.domain.Sort.Direction.DESC, properties);
     }
 
     public static org.springframework.data.domain.Sort of(org.springframework.data.domain.Sort.Direction direction, String... properties) {

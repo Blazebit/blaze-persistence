@@ -24,6 +24,7 @@ import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.parser.expression.SyntaxErrorException;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
+import com.blazebit.persistence.spi.LateralStyle;
 import com.blazebit.persistence.spi.ServiceProvider;
 import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.CorrelationProviderFactory;
@@ -59,6 +60,7 @@ import com.blazebit.persistence.view.impl.collection.UnorderedSetCollectionInsta
 import com.blazebit.persistence.view.impl.macro.CorrelatedSubqueryEmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.metamodel.Attribute;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
+import com.blazebit.persistence.view.metamodel.OrderByItem;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.metamodel.ViewType;
@@ -71,6 +73,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -100,6 +103,8 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     protected final String[] fetches;
     protected final FetchStrategy fetchStrategy;
     protected final int batchSize;
+    protected final List<OrderByItem> orderByItems;
+    protected final String limitExpression;
     protected final SubqueryProviderFactory subqueryProviderFactory;
     protected final Class<? extends SubqueryProvider> subqueryProvider;
     protected final String subqueryExpression;
@@ -129,15 +134,47 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         }
 
         this.possibleTargetTypes = mapping.getPossibleTargetTypes(context);
-        Integer defaultbatchSize = mapping.getDefaultBatchSize();
+        Integer defaultBatchSize = mapping.getDefaultBatchSize();
         int batchSize;
-        if (defaultbatchSize == null || defaultbatchSize == -1) {
+        if (defaultBatchSize == null || defaultBatchSize == -1) {
             batchSize = -1;
-        } else if (defaultbatchSize < 1) {
+        } else if (defaultBatchSize < 1) {
             context.addError("Illegal batch fetch size lower than 1 defined at '" + mapping.getErrorLocation() + "'!");
             batchSize = Integer.MIN_VALUE;
         } else {
-            batchSize = defaultbatchSize;
+            batchSize = defaultBatchSize;
+        }
+
+        String limitExpression;
+        List<OrderByItem> orderByItems;
+        if (mapping.getLimitExpression() == null) {
+            limitExpression = null;
+            orderByItems = Collections.emptyList();
+        } else {
+            limitExpression = mapping.getLimitExpression();
+            List<String> orderByItemExpressions = mapping.getOrderByItems();
+            orderByItems = new ArrayList<>(orderByItemExpressions.size());
+            for (int i = 0; i < orderByItemExpressions.size(); i++) {
+                String expression = orderByItemExpressions.get(i);
+                String upperExpression = expression.toUpperCase();
+                boolean ascending = true;
+                boolean nullsFirst = false;
+                if (upperExpression.endsWith(" NULLS LAST")) {
+                    upperExpression = upperExpression.substring(0, upperExpression.length() - " NULLS LAST".length());
+                } else if (upperExpression.endsWith(" NULLS FIRST")) {
+                    nullsFirst = true;
+                    upperExpression = upperExpression.substring(0, upperExpression.length() - " NULLS FIRST".length());
+                }
+                if (upperExpression.endsWith(" ASC")) {
+                    upperExpression = upperExpression.substring(0, upperExpression.length() - " ASC".length());
+                } else if (upperExpression.endsWith(" DESC")) {
+                    ascending = false;
+                    upperExpression = upperExpression.substring(0, upperExpression.length() - " DESC".length());
+                }
+                expression = expression.substring(0, upperExpression.length());
+                orderByItems.add(new OrderByItem(expression, ascending, nullsFirst));
+            }
+            orderByItems = Collections.unmodifiableList(orderByItems);
         }
 
         this.declaringType = declaringType;
@@ -150,6 +187,8 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.fetches = EMPTY;
             this.fetchStrategy = FetchStrategy.JOIN;
             this.batchSize = -1;
+            this.orderByItems = Collections.emptyList();
+            this.limitExpression = null;
             this.subqueryProviderFactory = null;
             this.subqueryProvider = null;
             this.id = true;
@@ -170,6 +209,8 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.fetches = m.fetches();
             this.fetchStrategy = m.fetch();
             this.batchSize = batchSize;
+            this.orderByItems = orderByItems;
+            this.limitExpression = limitExpression;
             this.subqueryProviderFactory = null;
             this.subqueryProvider = null;
             this.id = false;
@@ -177,7 +218,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.mappingType = MappingType.BASIC;
             this.subqueryExpression = null;
             this.subqueryAlias = null;
-            if (fetchStrategy == FetchStrategy.JOIN) {
+            if (fetchStrategy == FetchStrategy.JOIN && limitExpression == null) {
                 this.correlationProvider = null;
                 this.correlationProviderFactory = null;
                 this.correlationResult = null;
@@ -223,6 +264,8 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.fetches = EMPTY;
             this.fetchStrategy = FetchStrategy.JOIN;
             this.batchSize = -1;
+            this.orderByItems = Collections.emptyList();
+            this.limitExpression = null;
             this.subqueryProviderFactory = null;
             this.subqueryProvider = null;
             this.id = false;
@@ -243,6 +286,8 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.fetches = EMPTY;
             this.fetchStrategy = FetchStrategy.JOIN;
             this.batchSize = -1;
+            this.orderByItems = Collections.emptyList();
+            this.limitExpression = null;
             this.subqueryProviderFactory = null;
             this.subqueryProvider = null;
             this.id = false;
@@ -265,6 +310,8 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.subqueryProviderFactory = SubqueryProviderHelper.getFactory(subqueryProvider);
             this.fetchStrategy = FetchStrategy.JOIN;
             this.batchSize = -1;
+            this.orderByItems = Collections.emptyList();
+            this.limitExpression = null;
             this.id = false;
             // Subqueries are never update mappable
             this.updateMappableAttribute = null;
@@ -296,6 +343,8 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             } else {
                 this.batchSize = -1;
             }
+            this.orderByItems = orderByItems;
+            this.limitExpression = limitExpression;
 
             this.subqueryProviderFactory = null;
             this.subqueryProvider = null;
@@ -326,6 +375,8 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             } else {
                 this.batchSize = -1;
             }
+            this.orderByItems = orderByItems;
+            this.limitExpression = limitExpression;
 
             this.subqueryProviderFactory = null;
             this.subqueryProvider = null;
@@ -357,6 +408,8 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.fetches = EMPTY;
             this.fetchStrategy = null;
             this.batchSize = Integer.MIN_VALUE;
+            this.orderByItems = null;
+            this.limitExpression = null;
             this.subqueryProviderFactory = null;
             this.subqueryProvider = null;
             this.id = false;
@@ -371,6 +424,10 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.correlated = null;
             this.correlationKeyAlias = null;
             this.correlationExpression = null;
+        }
+
+        if (limitExpression != null && fetchStrategy == FetchStrategy.MULTISET && context.getDbmsDialect().getLateralStyle() == LateralStyle.NONE && !context.getDbmsDialect().supportsWindowFunctions()) {
+            context.addError("The use of the MULTISET fetch strategy with a limit in the '" + mapping.getErrorLocation() + "' requires lateral joins or window functions which are unsupported by the DBMS!");
         }
     }
 
@@ -816,6 +873,27 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             }
         }
 
+        if (limitExpression != null) {
+            try {
+                context.getTypeValidationExpressionFactory().createInItemExpression(limitExpression);
+            } catch (SyntaxErrorException ex) {
+                context.addError("Syntax error in the limit expression '" + limitExpression + "' of the " + getLocation() + ": " + ex.getMessage());
+            } catch (IllegalArgumentException ex) {
+                context.addError("An error occurred while trying to resolve the limit expression of the " + getLocation() + ": " + ex.getMessage());
+            }
+            for (int i = 0; i < orderByItems.size(); i++) {
+                OrderByItem orderByItem = orderByItems.get(i);
+                String expression = orderByItem.getExpression();
+                try {
+                    context.getTypeValidationExpressionFactory().createSimpleExpression(expression, false);
+                } catch (SyntaxErrorException ex) {
+                    context.addError("Syntax error in the " + (i + 1) + "th order by expression '" + expression + "' of the " + getLocation() + ": " + ex.getMessage());
+                } catch (IllegalArgumentException ex) {
+                    context.addError("An error occurred while trying to resolve the " + (i + 1) + "th order by expression of the " + getLocation() + ": " + ex.getMessage());
+                }
+            }
+        }
+
         if (fetchStrategy == FetchStrategy.MULTISET) {
             if (getElementType() instanceof ManagedViewTypeImplementor<?> && ((ManagedViewTypeImplementor<?>) getElementType()).hasJpaManagedAttributes()) {
                 context.addError("Using the MULTISET fetch strategy is not allowed when the subview contains attributes with entity types. MULTISET at the " + getLocation() + " is not allowed!");
@@ -1146,6 +1224,14 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     public final int getBatchSize() {
         return batchSize;
+    }
+
+    public final List<OrderByItem> getOrderByItems() {
+        return orderByItems;
+    }
+
+    public final String getLimitExpression() {
+        return limitExpression;
     }
 
     public final String getMapping() {

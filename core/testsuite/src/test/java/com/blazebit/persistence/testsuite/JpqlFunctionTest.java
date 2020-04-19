@@ -99,14 +99,13 @@ public class JpqlFunctionTest extends AbstractCoreTest {
     public void testLimit() {
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d");
         cb.where("d.id").nonPortable()
-            .in("subqueryAlias", "(FUNCTION('LIMIT', subqueryAlias, 1))")
+            .in()
                 .from(Document.class, "subDoc")
                 .select("subDoc.id")
                 .orderByAsc("subDoc.name")
-                .end();
-        String expected = "SELECT d FROM Document d WHERE d.id IN (" + function("LIMIT",
-                "(SELECT subDoc.id FROM Document subDoc ORDER BY subDoc.name ASC)"
-                ,"1") + ")";
+                .setMaxResults(1)
+            .end();
+        String expected = "SELECT d FROM Document d WHERE d.id IN (SELECT subDoc.id FROM Document subDoc ORDER BY subDoc.name ASC LIMIT 1)";
         
         assertEquals(expected, cb.getQueryString());
         List<Document> resultList = cb.getResultList();
@@ -120,14 +119,14 @@ public class JpqlFunctionTest extends AbstractCoreTest {
     public void testLimitOffset() {
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d");
         cb.where("d.id").nonPortable()
-            .in("subqueryAlias", "(FUNCTION('LIMIT', subqueryAlias, 1, 1))")
+            .in()
                 .from(Document.class, "subDoc")
                 .select("subDoc.id")
                 .orderByAsc("subDoc.name")
-                .end();
-        String expected = "SELECT d FROM Document d WHERE d.id IN (" + function("LIMIT",
-                "(SELECT subDoc.id FROM Document subDoc ORDER BY subDoc.name ASC)"
-                ,"1", "1") + ")";
+                .setMaxResults(1)
+                .setFirstResult(1)
+            .end();
+        String expected = "SELECT d FROM Document d WHERE d.id IN (SELECT subDoc.id FROM Document subDoc ORDER BY subDoc.name ASC LIMIT 1 OFFSET 1)";
         
         assertEquals(expected, cb.getQueryString());
         List<Document> resultList = cb.getResultList();
