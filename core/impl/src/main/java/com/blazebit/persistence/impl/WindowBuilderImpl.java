@@ -89,7 +89,9 @@ public class WindowBuilderImpl<T> extends PredicateManager<WindowBuilderImpl<T>>
     @Override
     public WindowBuilder<T> partitionBy(String... partitionExpressions) {
         for (String partitionExpression : partitionExpressions) {
-            this.partitionExpressions.add(expressionFactory.createSimpleExpression(partitionExpression, false));
+            Expression expr = expressionFactory.createSimpleExpression(partitionExpression, false);
+            parameterManager.collectParameterRegistrations(expr, ClauseType.WINDOW, subqueryInitFactory.getQueryBuilder());
+            this.partitionExpressions.add(expr);
         }
 
         return this;
@@ -97,7 +99,9 @@ public class WindowBuilderImpl<T> extends PredicateManager<WindowBuilderImpl<T>>
 
     @Override
     public WindowBuilder<T> partitionBy(String partitionExpression) {
-        partitionExpressions.add(expressionFactory.createSimpleExpression(partitionExpression, false));
+        Expression expr = expressionFactory.createSimpleExpression(partitionExpression, false);
+        parameterManager.collectParameterRegistrations(expr, ClauseType.WINDOW, subqueryInitFactory.getQueryBuilder());
+        partitionExpressions.add(expr);
         return this;
     }
 
@@ -126,6 +130,7 @@ public class WindowBuilderImpl<T> extends PredicateManager<WindowBuilderImpl<T>>
     @Override
     public WindowBuilder<T> orderBy(String expression, boolean ascending, boolean nullFirst) {
         Expression expr = expressionFactory.createSimpleExpression(expression, false);
+        parameterManager.collectParameterRegistrations(expr, ClauseType.WINDOW, subqueryInitFactory.getQueryBuilder());
         orderByExpressions.add(new OrderByItem(ascending, nullFirst, expr));
         return this;
     }
@@ -159,6 +164,7 @@ public class WindowBuilderImpl<T> extends PredicateManager<WindowBuilderImpl<T>>
     @Override
     public WindowFrameBetweenBuilder<T> betweenPreceding(String expression) {
         this.frameStartExpression = expressionFactory.createSimpleExpression(expression, false);
+        parameterManager.collectParameterRegistrations(frameStartExpression, ClauseType.WINDOW, subqueryInitFactory.getQueryBuilder());
         this.frameStartType = WindowFramePositionType.BOUNDED_PRECEDING;
         return this;
     }
@@ -166,6 +172,7 @@ public class WindowBuilderImpl<T> extends PredicateManager<WindowBuilderImpl<T>>
     @Override
     public WindowFrameBetweenBuilder<T> betweenFollowing(String expression) {
         this.frameStartExpression = expressionFactory.createSimpleExpression(expression, false);
+        parameterManager.collectParameterRegistrations(frameStartExpression, ClauseType.WINDOW, subqueryInitFactory.getQueryBuilder());
         this.frameStartType = WindowFramePositionType.BOUNDED_FOLLOWING;
         return this;
     }
@@ -185,6 +192,7 @@ public class WindowBuilderImpl<T> extends PredicateManager<WindowBuilderImpl<T>>
     @Override
     public WindowFrameExclusionBuilder<T> preceding(String expression) {
         this.frameStartExpression = expressionFactory.createSimpleExpression(expression, false);
+        parameterManager.collectParameterRegistrations(frameStartExpression, ClauseType.WINDOW, subqueryInitFactory.getQueryBuilder());
         this.frameStartType = WindowFramePositionType.BOUNDED_PRECEDING;
         return this;
     }
@@ -204,6 +212,7 @@ public class WindowBuilderImpl<T> extends PredicateManager<WindowBuilderImpl<T>>
     @Override
     public WindowFrameExclusionBuilder<T> andPreceding(String expression) {
         this.frameEndExpression = expressionFactory.createSimpleExpression(expression, false);
+        parameterManager.collectParameterRegistrations(frameEndExpression, ClauseType.WINDOW, subqueryInitFactory.getQueryBuilder());
         this.frameEndType = WindowFramePositionType.BOUNDED_PRECEDING;
         return this;
     }
@@ -211,6 +220,7 @@ public class WindowBuilderImpl<T> extends PredicateManager<WindowBuilderImpl<T>>
     @Override
     public WindowFrameExclusionBuilder<T> andFollowing(String expression) {
         this.frameEndExpression = expressionFactory.createSimpleExpression(expression, false);
+        parameterManager.collectParameterRegistrations(frameEndExpression, ClauseType.WINDOW, subqueryInitFactory.getQueryBuilder());
         this.frameEndType = WindowFramePositionType.BOUNDED_FOLLOWING;
         return this;
     }

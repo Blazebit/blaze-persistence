@@ -393,6 +393,11 @@ public final class CachingJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsTemporalLiteral() {
+        return jpaProvider.supportsTemporalLiteral();
+    }
+
+    @Override
     public Object getIdentifier(Object entity) {
         return jpaProvider.getIdentifier(entity);
     }

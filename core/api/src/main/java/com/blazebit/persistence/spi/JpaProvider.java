@@ -606,8 +606,17 @@ public interface JpaProvider {
      * @param attributeName The name of the attribute to check
      * @param key Whether the key part of a map attribute should be checked or the attribute element type
      * @return <code>true</code> if supported, <code>false</code> otherwise
+     * @since 1.5.0
      */
     public boolean supportsEnumLiteral(ManagedType<?> ownerType, String attributeName, boolean key);
+
+    /**
+     * Whether the JPA provider supports the temporal literal.
+     *
+     * @return <code>true</code> if supported, <code>false</code> otherwise
+     * @since 1.5.0
+     */
+    public boolean supportsTemporalLiteral();
 
     /**
      * Returns the identifier of the entity object.

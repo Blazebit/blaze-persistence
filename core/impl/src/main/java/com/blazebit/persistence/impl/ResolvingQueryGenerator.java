@@ -651,9 +651,15 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
         if (value != null) {
             final TypeConverter<Object> converter = (TypeConverter<Object>) TypeUtils.getConverter(value.getClass(), getSupportedEnumTypes());
-            // We can't render enum values as literals directly, only in the context of a predicate, so we need the BooleanLiteralRenderingContext.PLAIN
-            if (converter != null && (!(value instanceof Enum<?>) || getBooleanLiteralRenderingContext() == BooleanLiteralRenderingContext.PLAIN)) {
-                return converter.toString(value);
+            if (converter != null) {
+                // We can't render enum values as literals directly, only in the context of a predicate, so we need the BooleanLiteralRenderingContext.PLAIN
+                if (value instanceof Enum<?>) {
+                    if (getBooleanLiteralRenderingContext() == BooleanLiteralRenderingContext.PLAIN) {
+                        return converter.toString(value);
+                    }
+                } else if (jpaProvider.supportsTemporalLiteral() || !TypeUtils.isTemporalConverter(converter)) {
+                    return converter.toString(value);
+                }
             }
         }
 
