@@ -17,10 +17,10 @@
 package com.blazebit.persistence.view.impl.update;
 
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
-import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
-import com.blazebit.persistence.view.spi.TransactionAccess;
 import com.blazebit.persistence.view.impl.update.flush.PostFlushDeleter;
+import com.blazebit.persistence.view.spi.TransactionAccess;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
+import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 
 import javax.persistence.EntityManager;
 import java.util.List;
@@ -138,12 +138,12 @@ public class SimpleUpdateContext implements UpdateContext {
     }
 
     @Override
-    public Object getEntityView(Class<?> viewType, Class<?> entityClass, Object updatableProxy, boolean convertOnly, boolean prePhase) {
+    public EntityViewProxy getEntityView(Class<?> viewType, Class<?> entityClass, Object updatableProxy, boolean convertOnly, boolean prePhase) {
         return null;
     }
 
     @Override
-    public Object getEntityView(Class<?> viewType, Class<?> entityClass, Object updatableProxy, boolean convertOnly, boolean prePhase, EntityManager entityManager) {
+    public EntityViewProxy getEntityView(Class<?> viewType, Class<?> entityClass, Object updatableProxy, boolean convertOnly, boolean prePhase, EntityManager entityManager) {
         return null;
     }
 

@@ -114,25 +114,68 @@ public class AnnotationMappingReader implements MappingReader {
         if (entityViewListener == null) {
             EntityViewListeners entityViewListeners = AnnotationUtils.findAnnotation(entityViewListenerClass, EntityViewListeners.class);
             if (entityViewListeners == null) {
-                TypeVariable<? extends Class<?>>[] typeParameters = factory.getListenerKind().getTypeParameters();
-                if (typeParameters.length > 0) {
-                    Class<?>[] typeArguments = new Class<?>[typeParameters.length];
-                    for (int i = 0; i < typeParameters.length; i++) {
-                        typeArguments[i] = ReflectionUtils.resolveTypeVariable(entityViewListenerClass, typeParameters[i]);
-                    }
-                    if (typeArguments.length > 1) {
-                        context.addEntityViewListener(typeArguments[0], typeArguments[1], factory);
-                    } else {
-                        context.addEntityViewListener(typeArguments[0], Object.class, factory);
-                    }
-                }
+                context.addEntityViewListener(
+                    resolveEntityViewClass(null, entityViewListenerClass, factory),
+                    resolveEntityClass(null, entityViewListenerClass, factory), factory
+                );
             } else {
                 for (EntityViewListener viewListener : entityViewListeners.value()) {
-                    context.addEntityViewListener(viewListener.entityView(), viewListener.entity(), factory);
+                    context.addEntityViewListener(
+                        resolveEntityViewClass(viewListener, entityViewListenerClass, factory),
+                        resolveEntityClass(viewListener, entityViewListenerClass, factory), factory
+                    );
                 }
             }
         } else {
-            context.addEntityViewListener(entityViewListener.entityView(), entityViewListener.entity(), factory);
+            context.addEntityViewListener(
+                    resolveEntityViewClass(entityViewListener, entityViewListenerClass, factory),
+                    resolveEntityClass(entityViewListener, entityViewListenerClass, factory),
+                    factory
+            );
+        }
+    }
+
+    private Class<?> resolveEntityViewClass(EntityViewListener annotation, Class<?> entityViewListenerClass, EntityViewListenerFactory<?> factory) {
+        Class<?> entityViewClass = resolveEntityViewClassFromTypeParameters(entityViewListenerClass, factory);
+        if (annotation == null || annotation.entityView() == Object.class) {
+            return entityViewClass;
+        } else {
+            if (!entityViewClass.isAssignableFrom(annotation.entityView())) {
+                context.addError("The entity view type parameter for listener class " + entityViewListenerClass + " must " +
+                        "be at least as general as the value of the entityView property in the EntityViewListener annotation  " + annotation.entityView());
+            }
+            return annotation.entityView();
+        }
+    }
+
+    private Class<?> resolveEntityClass(EntityViewListener annotation, Class<?> entityViewListenerClass, EntityViewListenerFactory<?> factory) {
+        Class<?> entityClass = resolveEntityClassFromTypeParameters(entityViewListenerClass, factory);
+        if (annotation == null || annotation.entity() == Object.class) {
+            return entityClass;
+        } else {
+            if (!entityClass.isAssignableFrom(annotation.entity())) {
+                context.addError("The entity type parameter for listener class " + entityViewListenerClass + " must " +
+                        "be at least as general as the value of the entity property in the EntityViewListener annotation  " + annotation.entity());
+            }
+            return annotation.entity();
+        }
+    }
+
+    private Class<?> resolveEntityViewClassFromTypeParameters(Class<?> entityViewListenerClass, EntityViewListenerFactory<?> factory) {
+        TypeVariable<? extends Class<?>>[] typeParameters = factory.getListenerKind().getTypeParameters();
+        if (typeParameters.length > 0) {
+            return ReflectionUtils.resolveTypeVariable(entityViewListenerClass, typeParameters[0]);
+        } else {
+            return Object.class;
+        }
+    }
+
+    private Class<?> resolveEntityClassFromTypeParameters(Class<?> entityViewListenerClass, EntityViewListenerFactory<?> factory) {
+        TypeVariable<? extends Class<?>>[] typeParameters = factory.getListenerKind().getTypeParameters();
+        if (typeParameters.length > 1) {
+            return ReflectionUtils.resolveTypeVariable(entityViewListenerClass, typeParameters[1]);
+        } else {
+            return Object.class;
         }
     }
 

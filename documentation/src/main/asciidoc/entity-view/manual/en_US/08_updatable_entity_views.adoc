@@ -166,8 +166,21 @@ the entity view type must declare a listener to disambiguate the situation. The 
 
 Most listeners can be defined for a specific update or remove operation to react to change events in a particular manner for a specific use case,
 but it is also possible to register listeners globally. The globally registered listeners can be used to implement cross cutting concerns like soft-deletion, auditing, etc.
-Global listeners are registered via one of the `EntityViewConfiguration.registerListener` methods or discovered in a CDI or Spring environment
+Global listeners are registered via one of the `EntityViewConfiguration.addEntityViewListener` methods or discovered in a CDI or Spring environment
 if the classes are annotated with `@EntityViewListener` or `@EntityViewListeners`.
+
+A global listener must implement one or more of the following interfaces:
+
+* link:{entity_view_jdoc}/persistence/view/PostPersistEntityListener.html[`PostPersistEntityListener`]
+* link:{entity_view_jdoc}/persistence/view/PostPersistListener.html[`PostPersistListener`]
+* link:{entity_view_jdoc}/persistence/view/PostRemoveListener.html[`PostRemoveListener`]
+* link:{entity_view_jdoc}/persistence/view/PostRollbackListener.html[`PostRollbackListener`]
+* link:{entity_view_jdoc}/persistence/view/PostUpdateListener.html[`PostUpdateListener`]
+* link:{entity_view_jdoc}/persistence/view/PrePersistEntityListener.html[`PrePersistEntityListener`]
+* link:{entity_view_jdoc}/persistence/view/PrePersistListener.html[`PrePersistListener`]
+* link:{entity_view_jdoc}/persistence/view/PreRemoveListener.html[`PreRemoveListener`]
+* link:{entity_view_jdoc}/persistence/view/PreUpdateListener.html[`PreUpdateListener`]
+* link:{entity_view_jdoc}/persistence/view/PostCommitListener.html[`PostCommitListener`]
 
 ==== Post create listener
 

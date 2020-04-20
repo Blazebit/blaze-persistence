@@ -68,87 +68,87 @@ public class Listeners {
         this.postRollbackListeners = new ArrayList<>();
     }
 
-    public void invokePrePersist(UpdateContext context, Object updatableProxy, Object entity) {
+    public void invokePrePersist(UpdateContext context, EntityViewProxy updatableProxy, Object entity) {
         for (int i = 0; i < prePersistListeners.size(); i++) {
             ListenerEntry<PrePersistListener<Object>> entry = prePersistListeners.get(i);
             if (entry.entityViewClass.isInstance(updatableProxy)) {
-                entry.listener.prePersist(context.getEntityViewManager().getSerializableDelegate(entry.entityViewClass), context.getEntityManager(), updatableProxy);
+                entry.listener.prePersist(context.getEntityViewManager().getSerializableDelegate(updatableProxy.$$_getEntityViewClass()), context.getEntityManager(), updatableProxy);
             } else {
-                Object view = context.getEntityView(entry.entityViewClass, entityClass, updatableProxy, true, true);
+                EntityViewProxy view = context.getEntityView(entry.entityViewClass, entityClass, updatableProxy, true, true);
                 if (view != null) {
-                    entry.listener.prePersist(context.getEntityViewManager().getSerializableDelegate(entry.entityViewClass), context.getEntityManager(), view);
+                    entry.listener.prePersist(context.getEntityViewManager().getSerializableDelegate(view.$$_getEntityViewClass()), context.getEntityManager(), view);
                 }
             }
         }
         for (int i = 0; i < prePersistEntityListeners.size(); i++) {
             ListenerEntry<PrePersistEntityListener<Object, Object>> entry = prePersistEntityListeners.get(i);
             if (entry.entityViewClass.isInstance(updatableProxy)) {
-                entry.listener.prePersist(context.getEntityViewManager().getSerializableDelegate(entry.entityViewClass), context.getEntityManager(), updatableProxy, entity);
+                entry.listener.prePersist(context.getEntityViewManager().getSerializableDelegate(updatableProxy.$$_getEntityViewClass()), context.getEntityManager(), updatableProxy, entity);
             } else {
-                Object view = context.getEntityView(entry.entityViewClass, entityClass, updatableProxy, true, true);
+                EntityViewProxy view = context.getEntityView(entry.entityViewClass, entityClass, updatableProxy, true, true);
                 if (view != null) {
-                    entry.listener.prePersist(context.getEntityViewManager().getSerializableDelegate(entry.entityViewClass), context.getEntityManager(), view, entity);
+                    entry.listener.prePersist(context.getEntityViewManager().getSerializableDelegate(view.$$_getEntityViewClass()), context.getEntityManager(), view, entity);
                 }
             }
         }
     }
 
-    public void invokePostPersist(UpdateContext context, Object updatableProxy, Object entity) {
+    public void invokePostPersist(UpdateContext context, EntityViewProxy updatableProxy, Object entity) {
         for (int i = 0; i < postPersistListeners.size(); i++) {
             ListenerEntry<PostPersistListener<Object>> entry = postPersistListeners.get(i);
             if (entry.entityViewClass.isInstance(updatableProxy)) {
-                entry.listener.postPersist(context.getEntityViewManager().getSerializableDelegate(entry.entityViewClass), context.getEntityManager(), updatableProxy);
+                entry.listener.postPersist(context.getEntityViewManager().getSerializableDelegate(updatableProxy.$$_getEntityViewClass()), context.getEntityManager(), updatableProxy);
             } else {
-                Object view = context.getEntityView(entry.entityViewClass, entityClass, updatableProxy, false, false);
-                entry.listener.postPersist(context.getEntityViewManager().getSerializableDelegate(entry.entityViewClass), context.getEntityManager(), view);
+                EntityViewProxy view = context.getEntityView(entry.entityViewClass, entityClass, updatableProxy, false, false);
+                entry.listener.postPersist(context.getEntityViewManager().getSerializableDelegate(view.$$_getEntityViewClass()), context.getEntityManager(), view);
             }
         }
         for (int i = 0; i < postPersistEntityListeners.size(); i++) {
             ListenerEntry<PostPersistEntityListener<Object, Object>> entry = postPersistEntityListeners.get(i);
             if (entry.entityViewClass.isInstance(updatableProxy)) {
-                entry.listener.postPersist(context.getEntityViewManager().getSerializableDelegate(entry.entityViewClass), context.getEntityManager(), updatableProxy, entity);
+                entry.listener.postPersist(context.getEntityViewManager().getSerializableDelegate(updatableProxy.$$_getEntityViewClass()), context.getEntityManager(), updatableProxy, entity);
             } else {
-                Object view = context.getEntityView(entry.entityViewClass, entityClass, updatableProxy, false, false);
-                entry.listener.postPersist(context.getEntityViewManager().getSerializableDelegate(entry.entityViewClass), context.getEntityManager(), view, entity);
+                EntityViewProxy view = context.getEntityView(entry.entityViewClass, entityClass, updatableProxy, false, false);
+                entry.listener.postPersist(context.getEntityViewManager().getSerializableDelegate(view.$$_getEntityViewClass()), context.getEntityManager(), view, entity);
             }
         }
     }
 
-    public boolean invokePreUpdate(UpdateContext context, Object updatableProxy) {
+    public boolean invokePreUpdate(UpdateContext context, EntityViewProxy updatableProxy) {
         for (int i = 0; i < preUpdateListeners.size(); i++) {
             ListenerEntry<PreUpdateListener<Object>> entry = preUpdateListeners.get(i);
             if (entry.entityViewClass.isInstance(updatableProxy)) {
-                entry.listener.preUpdate(context.getEntityViewManager().getSerializableDelegate(entry.entityViewClass), context.getEntityManager(), updatableProxy);
+                entry.listener.preUpdate(context.getEntityViewManager().getSerializableDelegate(updatableProxy.$$_getEntityViewClass()), context.getEntityManager(), updatableProxy);
             } else {
-                Object view = context.getEntityView(entry.entityViewClass, entityClass, updatableProxy, false, true);
-                entry.listener.preUpdate(context.getEntityViewManager().getSerializableDelegate(entry.entityViewClass), context.getEntityManager(), view);
+                EntityViewProxy view = context.getEntityView(entry.entityViewClass, entityClass, updatableProxy, false, true);
+                entry.listener.preUpdate(context.getEntityViewManager().getSerializableDelegate(view.$$_getEntityViewClass()), context.getEntityManager(), view);
             }
         }
         return !preUpdateListeners.isEmpty();
     }
 
-    public void invokePostUpdate(UpdateContext context, Object updatableProxy) {
+    public void invokePostUpdate(UpdateContext context, EntityViewProxy updatableProxy) {
         for (int i = 0; i < postUpdateListeners.size(); i++) {
             ListenerEntry<PostUpdateListener<Object>> entry = postUpdateListeners.get(i);
             if (entry.entityViewClass.isInstance(updatableProxy)) {
-                entry.listener.postUpdate(context.getEntityViewManager().getSerializableDelegate(entry.entityViewClass), context.getEntityManager(), updatableProxy);
+                entry.listener.postUpdate(context.getEntityViewManager().getSerializableDelegate(updatableProxy.$$_getEntityViewClass()), context.getEntityManager(), updatableProxy);
             } else {
-                Object view = context.getEntityView(entry.entityViewClass, entityClass, updatableProxy, false, false);
-                entry.listener.postUpdate(context.getEntityViewManager().getSerializableDelegate(entry.entityViewClass), context.getEntityManager(), view);
+                EntityViewProxy view = context.getEntityView(entry.entityViewClass, entityClass, updatableProxy, false, false);
+                entry.listener.postUpdate(context.getEntityViewManager().getSerializableDelegate(view.$$_getEntityViewClass()), context.getEntityManager(), view);
             }
         }
     }
 
-    public boolean invokePreRemove(UpdateContext context, Object entityView, Object entityId) {
+    public boolean invokePreRemove(UpdateContext context, EntityViewProxy entityView, Object entityId) {
         for (int i = 0; i < preRemoveListeners.size(); i++) {
             PreRemoveListenerEntry<Object> entry = preRemoveListeners.get(i);
             if (entry.entityViewClass.isInstance(entityView)) {
-                if (!entry.listener.preRemove(context.getEntityViewManager().getSerializableDelegate(entry.entityViewClass), context.getEntityManager(), entityView)) {
+                if (!entry.listener.preRemove(context.getEntityViewManager().getSerializableDelegate(entityView.$$_getEntityViewClass()), context.getEntityManager(), entityView)) {
                     return false;
                 }
             } else {
-                Object view = context.getEntityView(entry.entityViewClass, entityClass, entityView == null ? entityId : entityView, false, true);
-                if (!entry.listener.preRemove(context.getEntityViewManager().getSerializableDelegate(entry.entityViewClass), context.getEntityManager(), view)) {
+                EntityViewProxy view = context.getEntityView(entry.entityViewClass, entityClass, entityView == null ? entityId : entityView, false, true);
+                if (!entry.listener.preRemove(context.getEntityViewManager().getSerializableDelegate(view.$$_getEntityViewClass()), context.getEntityManager(), view)) {
                     return false;
                 }
             }
@@ -171,42 +171,42 @@ public class Listeners {
         }
     }
 
-    public void invokePostRemove(UpdateContext context, Object entityView, Object entityId) {
+    public void invokePostRemove(UpdateContext context, EntityViewProxy entityView, Object entityId) {
         for (int i = 0; i < postRemoveListeners.size(); i++) {
             ListenerEntry<PostRemoveListener<Object>> entry = postRemoveListeners.get(i);
             if (entry.entityViewClass.isInstance(entityView)) {
-                entry.listener.postRemove(context.getEntityViewManager().getSerializableDelegate(entry.entityViewClass), context.getEntityManager(), entityView);
+                entry.listener.postRemove(context.getEntityViewManager().getSerializableDelegate(entityView.$$_getEntityViewClass()), context.getEntityManager(), entityView);
             } else {
-                Object view = context.getEntityView(entry.entityViewClass, entityClass, entityView == null ? entityId : entityView, false, false);
-                entry.listener.postRemove(context.getEntityViewManager().getSerializableDelegate(entry.entityViewClass), context.getEntityManager(), view);
+                EntityViewProxy view = context.getEntityView(entry.entityViewClass, entityClass, entityView == null ? entityId : entityView, false, false);
+                entry.listener.postRemove(context.getEntityViewManager().getSerializableDelegate(view.$$_getEntityViewClass()), context.getEntityManager(), view);
             }
         }
     }
 
-    public void invokePostCommit(UpdateContext context, Object entityView, ViewTransition viewTransition) {
+    public void invokePostCommit(UpdateContext context, EntityViewProxy entityView, ViewTransition viewTransition) {
         for (int i = 0; i < postCommitListeners.size(); i++) {
             ListenerTransitionEntry<PostCommitListener<Object>> entry = postCommitListeners.get(i);
             if (entry.viewTransitions.contains(viewTransition)) {
                 if (entry.entityViewClass.isInstance(entityView)) {
-                    entry.listener.postCommit(context.getEntityViewManager().getSerializableDelegate(entry.entityViewClass), context.getEntityManager(), entityView, viewTransition);
+                    entry.listener.postCommit(context.getEntityViewManager().getSerializableDelegate(entityView.$$_getEntityViewClass()), context.getEntityManager(), entityView, viewTransition);
                 } else {
-                    Object view = context.getEntityView(entry.entityViewClass, entityClass, entityView, false, false);
-                    entry.listener.postCommit(context.getEntityViewManager().getSerializableDelegate(entry.entityViewClass), context.getEntityManager(), view, viewTransition);
+                    EntityViewProxy view = context.getEntityView(entry.entityViewClass, entityClass, entityView, false, false);
+                    entry.listener.postCommit(context.getEntityViewManager().getSerializableDelegate(view.$$_getEntityViewClass()), context.getEntityManager(), view, viewTransition);
                 }
             }
         }
     }
 
-    public void invokePostRollback(UpdateContext context, Object entityView, ViewTransition viewTransition, EntityManager em) {
+    public void invokePostRollback(UpdateContext context, EntityViewProxy entityView, ViewTransition viewTransition, EntityManager em) {
         for (int i = 0; i < postRollbackListeners.size(); i++) {
             ListenerTransitionEntry<PostRollbackListener<Object>> entry = postRollbackListeners.get(i);
             if (entry.viewTransitions.contains(viewTransition)) {
                 if (entry.entityViewClass.isInstance(entityView)) {
-                    entry.listener.postRollback(context.getEntityViewManager().getSerializableDelegate(entry.entityViewClass), context.getEntityManager(), entityView, viewTransition);
+                    entry.listener.postRollback(context.getEntityViewManager().getSerializableDelegate(entityView.$$_getEntityViewClass()), context.getEntityManager(), entityView, viewTransition);
                 } else if (viewTransition != ViewTransition.PERSIST) {
                     // We can't load something that wasn't persisted
-                    Object view = context.getEntityView(entry.entityViewClass, entityClass, entityView, false, false, em);
-                    entry.listener.postRollback(context.getEntityViewManager().getSerializableDelegate(entry.entityViewClass), context.getEntityManager(), view, viewTransition);
+                    EntityViewProxy view = context.getEntityView(entry.entityViewClass, entityClass, entityView, false, false, em);
+                    entry.listener.postRollback(context.getEntityViewManager().getSerializableDelegate(view.$$_getEntityViewClass()), context.getEntityManager(), view, viewTransition);
                 }
             }
         }
