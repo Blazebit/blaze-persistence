@@ -32,8 +32,8 @@ import com.blazebit.persistence.view.ViewListener;
 import com.blazebit.persistence.view.ViewTransition;
 import com.blazebit.persistence.view.ViewTransitionListener;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
-import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.tx.TransactionHelper;
+import com.blazebit.persistence.view.impl.update.flush.PostFlushDeleter;
 import com.blazebit.persistence.view.impl.update.listener.ViewAndEntityPostPersistListenerImpl;
 import com.blazebit.persistence.view.impl.update.listener.ViewAndEntityPrePersistListenerImpl;
 import com.blazebit.persistence.view.impl.update.listener.ViewPostCommitListenerImpl;
@@ -44,12 +44,12 @@ import com.blazebit.persistence.view.impl.update.listener.ViewPostUpdateListener
 import com.blazebit.persistence.view.impl.update.listener.ViewPrePersistListenerImpl;
 import com.blazebit.persistence.view.impl.update.listener.ViewPreRemoveListenerImpl;
 import com.blazebit.persistence.view.impl.update.listener.ViewPreUpdateListenerImpl;
-import com.blazebit.persistence.view.impl.update.flush.PostFlushDeleter;
 import com.blazebit.persistence.view.impl.update.listener.ViewTransitionPostCommitListenerImpl;
 import com.blazebit.persistence.view.impl.update.listener.ViewTransitionPostRollbackListenerImpl;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.spi.TransactionAccess;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
+import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Synchronization;
@@ -123,12 +123,12 @@ public class DefaultUpdateContext implements UpdateContext, FlushOperationBuilde
     }
 
     @Override
-    public Object getEntityView(Class<?> viewType, Class<?> entityClass, Object o, boolean convertOnly, boolean prePhase) {
+    public EntityViewProxy getEntityView(Class<?> viewType, Class<?> entityClass, Object o, boolean convertOnly, boolean prePhase) {
         return getEntityView(viewType, entityClass, o, convertOnly, prePhase, em);
     }
 
     @Override
-    public Object getEntityView(Class<?> viewType, Class<?> entityClass, Object o, boolean convertOnly, boolean prePhase, EntityManager em) {
+    public EntityViewProxy getEntityView(Class<?> viewType, Class<?> entityClass, Object o, boolean convertOnly, boolean prePhase, EntityManager em) {
         EntityViewProxy view;
         Object entityId;
         if (o instanceof EntityViewProxy) {

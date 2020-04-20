@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.persistence.view.PostCommitListener;
+import com.blazebit.persistence.view.PostPersistEntityListener;
 import com.blazebit.persistence.view.PostPersistListener;
 import com.blazebit.persistence.view.PostRemoveListener;
 import com.blazebit.persistence.view.PostRollbackListener;
@@ -48,6 +49,7 @@ public class MetamodelBootContextImpl implements MetamodelBootContext {
     private static final Class[] LISTENER_CLASSES = {
         PostCommitListener.class,
         PostPersistListener.class,
+        PostPersistEntityListener.class,
         PostRemoveListener.class,
         PostRollbackListener.class,
         PostUpdateListener.class,
