@@ -20,7 +20,13 @@ To use the Quarkus extension you need to add the following Maven dependency to y
 [[quarkus-features]]
 === Features
 
-The extension enables entity view scanning at deployment time while the remainder of the bootstrapping is performed
-at runtime. It also includes default CDI producers for the link:{core_jdoc}/persistence/CriteriaBuilderFactory.html[`CriteriaBuilderFactory`]
+The extension includes:
+
+* entity view and entity view listener scanning at deployment time while the remainder of the bootstrapping is performed
+at runtime
+
+* default CDI producers for the link:{core_jdoc}/persistence/CriteriaBuilderFactory.html[`CriteriaBuilderFactory`]
 and link:{entity_view_jdoc}/persistence/view/EntityViewManager.html[`EntityViewManager`] that can be overridden as documented
-in the Quarkus user guide.
+in the Quarkus user guide
+
+* support for hot reload

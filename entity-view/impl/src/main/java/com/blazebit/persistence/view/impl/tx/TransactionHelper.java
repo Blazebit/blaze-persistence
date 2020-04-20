@@ -22,6 +22,10 @@ import com.blazebit.persistence.view.spi.TransactionAccessFactory;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.persistence.EntityManager;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.ServiceLoader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -73,7 +77,17 @@ public class TransactionHelper {
             }
         }
 
+        List<TransactionAccessFactory> transactionAccessFactories = new ArrayList<>();
         for (TransactionAccessFactory transactionAccessFactory : ServiceLoader.load(TransactionAccessFactory.class)) {
+            transactionAccessFactories.add(transactionAccessFactory);
+        }
+        Collections.sort(transactionAccessFactories, new Comparator<TransactionAccessFactory>() {
+            @Override
+            public int compare(TransactionAccessFactory o1, TransactionAccessFactory o2) {
+                return Integer.compare(o1.getPriority(), o2.getPriority());
+            }
+        });
+        for (TransactionAccessFactory transactionAccessFactory : transactionAccessFactories) {
             try {
                 TransactionAccess transactionAccess = transactionAccessFactory.createTransactionAccess(em);
                 if (transactionAccess != null) {
@@ -85,27 +99,6 @@ public class TransactionHelper {
             }
         }
 
-        try {
-            String version = Class.forName("org.hibernate.Session")
-                    .getPackage().getImplementationVersion();
-            String[] versionParts = version.split("\\.");
-            int major = Integer.parseInt(versionParts[0]);
-
-            if (major >= 5) {
-                Object jtaPlatform = Hibernate5JtaPlatformTransactionAccessFactory.getHibernate5JtaPlatformPresent(em);
-                if (jtaPlatform == null || jtaPlatform.getClass() == Class.forName("org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform")) {
-                    TransactionHelper.factory = new Hibernate5EntityTransactionAccessFactory();
-                    return new Hibernate5EntityTransactionSynchronizationStrategy(em);
-                } else {
-                    TransactionHelper.factory = new Hibernate5JtaPlatformTransactionAccessFactory();
-                    return new Hibernate5JtaPlatformTransactionSynchronizationStrategy(jtaPlatform);
-                }
-            } else {
-                TransactionHelper.factory = new Hibernate4TransactionAccessFactory();
-                return new Hibernate4TransactionSynchronizationStrategy(em);
-            }
-        } catch (ClassNotFoundException ex) {
-            throw new IllegalArgumentException("Unsupported jpa provider!", ex);
-        }
+        throw new IllegalArgumentException("Unsupported jpa provider!");
     }
 }

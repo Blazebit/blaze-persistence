@@ -18,6 +18,8 @@ package com.blazebit.persistence.integration.quarkus.deployment;
 
 import com.blazebit.persistence.integration.jackson.EntityViewAwareObjectMapper;
 import com.blazebit.persistence.integration.quarkus.deployment.entity.Document;
+import com.blazebit.persistence.integration.quarkus.deployment.entity.Person;
+import com.blazebit.persistence.integration.quarkus.deployment.listener.DocumentPostPersistEntityListener;
 import com.blazebit.persistence.integration.quarkus.deployment.resource.DocumentResource;
 import com.blazebit.persistence.integration.quarkus.deployment.view.DocumentCreateView;
 import com.blazebit.persistence.integration.quarkus.deployment.view.DocumentView;
@@ -52,7 +54,8 @@ public class QuarkusTest {
     @RegisterExtension
     final static QuarkusUnitTest RUNNER = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClasses(Document.class, DocumentCreateView.class, DocumentView.class)
+                    .addClasses(Document.class, Person.class, DocumentCreateView.class, DocumentView.class)
+                    .addClasses(DocumentPostPersistEntityListener.class)
                     .addClasses(DocumentResource.class)
                     .addAsResource("application.properties")
                     .addAsResource("META-INF/persistence.xml")
@@ -87,6 +90,7 @@ public class QuarkusTest {
                 .when().post("/documents")
                 .then().contentType(ContentType.JSON).extract().response().asString(), DocumentView.class);
         assertEquals(documentCreateView.getName(), result.getName());
+        assertEquals(1, DocumentPostPersistEntityListener.PERSIST_COUNTER);
     }
 
     private byte[] toJsonWithoutId(Object entityView) throws JsonProcessingException {

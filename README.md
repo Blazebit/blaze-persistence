@@ -759,6 +759,22 @@ When using the DB2 docker container via `docker_db.sh mssql` you might want to s
 
 Since the JDBC driver is officially available in Maven central, you don't have to separately install it.
 
+## GraalVM for native images with Quarkus
+
+The general setup required for building native images with GraalVM is described in https://quarkus.io/guides/building-native-image.
+
+* Install GraalVM 20.0.0 and make sure you install the native-image tool and set `GRAALVM_HOME` environment variable
+* Install required packages for a C development environment
+  *  Under Windows, install [Visual Studio 2017 Visual C++ Build Tools](https://aka.ms/vs/15/release/vs_buildtools.exe)
+
+For example, run the following maven build to execute native image tests for H2:
+
+```
+mvn -pl examples/quarkus/testsuite/native/h2 -am integration-test -Ph2 -Pnative
+```
+
+Under Windows, make sure you run maven builds that use native image from the VS2017 native tools command line.
+
 ## Website deployment
 
 You can use `build-deploy-website.sh` to deploy to the target environment but need to configure in ~/.m2/settings.xml the following servers.

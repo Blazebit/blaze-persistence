@@ -18,7 +18,6 @@ package com.blazebit.persistence.integration.jaxrs.testsuite.entity;
 
 import javax.persistence.Basic;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import java.io.Serializable;
@@ -35,30 +34,31 @@ import java.util.UUID;
 public class Person implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private UUID id;
+    private String id;
     private String name;
     private long age;
     private Set<Document> documents = new HashSet<>(0);
 
     public Person() {
+        id = UUID.randomUUID().toString();
     }
 
     public Person(String name) {
+        this();
         this.name = name;
     }
 
     public Person(String name, long age) {
-        this.name = name;
+        this(name);
         this.age = age;
     }
 
     @Id
-    @GeneratedValue
-    public UUID getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(UUID id) {
+    public void setId(String id) {
         this.id = id;
     }
 

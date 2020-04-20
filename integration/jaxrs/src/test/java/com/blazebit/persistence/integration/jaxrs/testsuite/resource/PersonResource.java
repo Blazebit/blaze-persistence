@@ -53,6 +53,6 @@ public class PersonResource {
 
     private PersonView updatePerson0(PersonUpdateView personUpdate) {
         evm.save(entityManagerHolder.getEntityManager(), personUpdate);
-        return evm.find(entityManagerHolder.getEntityManager(), PersonView.class, personUpdate.getId());
+        return evm.find(entityManagerHolder.getEntityManager(), PersonView.class, personUpdate.getId().toString());
     }
 }

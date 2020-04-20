@@ -34,6 +34,7 @@
         <module>spring-data-webflux</module>
         <module>spring-data-graphql</module>
         <module>it-service-management</module>
+        <module>quarkus</module>
     </modules>
 
 </project>

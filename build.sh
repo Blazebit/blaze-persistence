@@ -40,6 +40,7 @@ if [ "$TRAVIS_REPO_SLUG" == "Blazebit/blaze-persistence" ] &&
     [ "$RDBMS" == "h2" ]; then
   exec mvn -B -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-1.11.x},${DELTASPIKE:-deltaspike-1.7} clean install -V $PROPERTIES
 else
+  PROJECT_LIST="core/testsuite,entity-view/testsuite,jpa-criteria/testsuite,integration/deltaspike-data/testsuite,integration/jaxrs,integration/spring-data/testsuite/webflux,integration/spring-data/testsuite/webmvc,examples/spring-data-webmvc,examples/spring-data-webflux,examples/showcase/runner/spring,examples/showcase/runner/cdi"
   if [ "$TRAVIS_REPO_SLUG" == "Blazebit/blaze-persistence" ] &&
     [ "$TRAVIS_BRANCH" == "master" ] &&
     [ "$TRAVIS_PULL_REQUEST" == "false" ] &&
@@ -50,7 +51,21 @@ else
     #cd hibernate6
     #./gradlew clean build publishToMavenLocal -x :documentation:buildDocs -x :documentation:aggregateJavadocs -x test -x findbugsMain -x findbugsTest -x checkStyleMain -x checkStyleTest
     : # do nothing right now
+  elif [ "$TRAVIS_REPO_SLUG" == "Blazebit/blaze-persistence" ] &&
+    [ "$TRAVIS_BRANCH" == "master" ] &&
+    [ "$JPAPROVIDER" == "hibernate-5.4" ]; then
+    PROJECT_LIST="$PROJECT_LIST,integration/quarkus/deployment,examples/quarkus/testsuite/base"
+    if [ "$NATIVE" == "true" ]; then
+      if [ "$RDBMS" == "mysql8" ]; then
+        PROJECT_LIST="$PROJECT_LIST,examples/quarkus/testsuite/native/mysql"
+      else
+        PROJECT_LIST="$PROJECT_LIST,examples/quarkus/testsuite/native/$RDBMS"
+      fi
+      eval exec travis-pls mvn -B -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-1.11.x},${DELTASPIKE:-deltaspike-1.7},native clean install --projects $PROJECT_LIST -am -V $PROPERTIES
+    else
+      eval exec mvn -B -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-1.11.x},${DELTASPIKE:-deltaspike-1.7} clean install --projects $PROJECT_LIST -am -V $PROPERTIES
+    fi
+  else
+    eval exec mvn -B -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-1.11.x},${DELTASPIKE:-deltaspike-1.7} clean install --projects $PROJECT_LIST -am -V $PROPERTIES
   fi
-  
-  eval exec mvn -B -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-1.11.x},${DELTASPIKE:-deltaspike-1.7} clean install --projects "core/testsuite,entity-view/testsuite,jpa-criteria/testsuite,integration/deltaspike-data/testsuite,integration/spring-data/testsuite/webflux,integration/spring-data/testsuite/webmvc,examples/spring-data-webmvc,examples/spring-data-webflux,examples/showcase/runner/spring,examples/showcase/runner/cdi" -am -V $PROPERTIES
 fi

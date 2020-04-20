@@ -19,6 +19,7 @@ package com.blazebit.persistence.integration.jaxrs.testsuite.config;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
+import com.blazebit.persistence.view.spi.type.TypeConverter;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
@@ -26,6 +27,8 @@ import javax.enterprise.context.Initialized;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
+import java.lang.reflect.Type;
+import java.util.UUID;
 
 /**
  * @author Christian Beikov
@@ -49,6 +52,22 @@ public class EntityViewManagerProducer {
 
     @PostConstruct
     public void createEntityViewManager() {
+        evmConfig.registerTypeConverter(String.class, UUID.class, new TypeConverter<String, UUID>() {
+            @Override
+            public Class<?> getUnderlyingType(Class<?> owningClass, Type declaredType) {
+                return String.class;
+            }
+
+            @Override
+            public UUID convertToViewType(String object) {
+                return object == null ? null : UUID.fromString(object);
+            }
+
+            @Override
+            public String convertToUnderlyingType(UUID object) {
+                return object == null ? null : object.toString();
+            }
+        });
         evm = evmConfig.createEntityViewManager(criteriaBuilderFactory);
     }
 

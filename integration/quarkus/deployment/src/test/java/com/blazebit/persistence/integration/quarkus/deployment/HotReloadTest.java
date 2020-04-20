@@ -16,16 +16,23 @@
 package com.blazebit.persistence.integration.quarkus.deployment;
 
 import com.blazebit.persistence.integration.quarkus.deployment.entity.Document;
+import com.blazebit.persistence.integration.quarkus.deployment.entity.Person;
 import com.blazebit.persistence.integration.quarkus.deployment.resource.DocumentResource;
+import com.blazebit.persistence.integration.quarkus.deployment.resource.PersonResource;
 import com.blazebit.persistence.integration.quarkus.deployment.view.DocumentCreateView;
 import com.blazebit.persistence.integration.quarkus.deployment.view.DocumentView;
+import com.blazebit.persistence.integration.quarkus.deployment.view.PersonCreateView;
+import com.blazebit.persistence.integration.quarkus.deployment.view.PersonView;
 import io.quarkus.test.QuarkusDevModeTest;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
+import io.restassured.path.json.JsonPath;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Moritz Becker
@@ -36,27 +43,29 @@ public class HotReloadTest {
     @RegisterExtension
     final static QuarkusDevModeTest RUNNER = new QuarkusDevModeTest()
             .setArchiveProducer(() -> {
-                        Class<?>[] views = {DocumentCreateView.class};
+                        Class<?>[] views = {DocumentView.class, DocumentCreateView.class};
                         JavaArchive javaArchive = ShrinkWrap.create(JavaArchive.class)
-                                .addClasses(Document.class)
+                                .addClasses(Document.class, Person.class)
                                 .addClasses(views)
                                 .addClasses(DocumentResource.class)
                                 .addAsResource("application.properties")
                                 .addAsResource("META-INF/persistence.xml");
                         for (Class<?> view : views) {
-                            addStaticGeneratedClass(javaArchive, view, "_");
-                            addStaticGeneratedClass(javaArchive, view, "Relation");
-                            addStaticGeneratedClass(javaArchive, view, "Impl");
-                            addStaticGeneratedClass(javaArchive, view, "Builder");
+                            addStaticGeneratedClasses(javaArchive, view);
                         }
 
                         return javaArchive;
                     }
             );
 
-    private static void addStaticGeneratedClass(JavaArchive javaArchive, Class<?> view, String suffix) {
+    private static void addStaticGeneratedClasses(JavaArchive javaArchive, Class<?> view) {
         try {
-            javaArchive.addClass(view.getClassLoader().loadClass(view.getPackage().getName() + "." + view.getSimpleName().replace("$", "") + suffix));
+            javaArchive.addClasses(
+                    view.getClassLoader().loadClass(view.getPackage().getName() + "." + view.getSimpleName().replace("$", "") + "_"),
+                    view.getClassLoader().loadClass(view.getPackage().getName() + "." + view.getSimpleName().replace("$", "") + "Relation"),
+                    view.getClassLoader().loadClass(view.getPackage().getName() + "." + view.getSimpleName().replace("$", "") + "Impl"),
+                    view.getClassLoader().loadClass(view.getPackage().getName() + "." + view.getSimpleName().replace("$", "") + "Builder")
+            );
         } catch (ClassNotFoundException e) {
             // Ignore
         }
@@ -64,21 +73,23 @@ public class HotReloadTest {
 
     @Test
     public void testAddNewEntityView() {
-        RUNNER.addSourceFile(DocumentView.class);
-        try {
-            System.out.println("sleeping");
-            Thread.sleep(20000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
         String documentName = "test1";
-//        JsonPath result = RestAssured.given().body("{ \"name\": \"" + documentName + "\" }").contentType(ContentType.JSON)
-//                .when().post("/documents")
-//                .then().contentType(ContentType.JSON).extract().response().jsonPath();
-        String result = RestAssured.given().body("{ \"name\": \"" + documentName + "\" }").contentType(ContentType.JSON)
+        System.out.println(RestAssured.given().body("{ \"name\": \"" + documentName + "\" }").contentType(ContentType.JSON)
                 .when().post("/documents")
-                .then().extract().response().asString();
-        System.out.println(result);
-//        assertEquals(documentName, result.getString("name"));
+                .then().extract().asString());
+        JsonPath result = RestAssured.given().body("{ \"name\": \"" + documentName + "\" }").contentType(ContentType.JSON)
+                .when().post("/documents")
+                .then().contentType(ContentType.JSON).extract().response().jsonPath();
+        assertEquals(documentName, result.getString("name"));
+
+        RUNNER.addSourceFile(PersonCreateView.class);
+        RUNNER.addSourceFile(PersonView.class);
+        RUNNER.addSourceFile(PersonResource.class);
+
+        String personName = "person1";
+        result = RestAssured.given().body("{ \"name\": \"" + personName + "\" }").contentType(ContentType.JSON)
+                .when().post("/persons")
+                .then().contentType(ContentType.JSON).extract().response().jsonPath();
+        assertEquals(personName, result.getString("name"));
     }
 }

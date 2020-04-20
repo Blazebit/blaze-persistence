@@ -48,7 +48,7 @@ public class DocumentResourceTest extends AbstractJaxrsTest {
                 .resolveTemplate("id", d1.getId())
                 .request()
                 .buildPut(Entity.entity(toJsonWithoutId(updateView), "application/vnd.blazebit.update1+json"))
-                .invoke(DocumentView.class);
+                .invoke(DocumentViewImpl.class);
 
         // Then
         assertEquals(updateView.getName(), updatedView.getName());
@@ -68,7 +68,7 @@ public class DocumentResourceTest extends AbstractJaxrsTest {
                 .resolveTemplate("id", d1.getId())
                 .request()
                 .buildPut(Entity.entity(toJsonWithoutId(updateView), "application/vnd.blazebit.update2+json"))
-                .invoke(DocumentView.class);
+                .invoke(DocumentViewImpl.class);
 
         // Then
         assertEquals(updateView.getName(), updatedView.getName());
@@ -87,7 +87,7 @@ public class DocumentResourceTest extends AbstractJaxrsTest {
         DocumentView updatedView = webTarget.path("/documents")
                 .request()
                 .buildPut(Entity.entity(toJsonWithId(updateView), MediaType.APPLICATION_JSON_TYPE))
-                .invoke(DocumentView.class);
+                .invoke(DocumentViewImpl.class);
 
         // Then
         assertEquals(updateView.getName(), updatedView.getName());

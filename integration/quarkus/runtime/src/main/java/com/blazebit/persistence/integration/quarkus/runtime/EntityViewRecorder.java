@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.integration.quarkus.runtime;
 
+import com.blazebit.persistence.view.ConfigurationProperties;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import io.quarkus.arc.runtime.BeanContainerListener;
@@ -31,19 +32,28 @@ import java.util.List;
 @Recorder
 public class EntityViewRecorder {
 
-    private List<Class<?>> entitiesViews = new ArrayList<>();
+    private List<Class<?>> entityViews = new ArrayList<>();
+    private List<Class<?>> entityViewListeners = new ArrayList<>();
 
     public void addEntityView(Class<?> entityView) {
-        this.entitiesViews.add(entityView);
+        this.entityViews.add(entityView);
+    }
+
+    public void addEntityViewListener(Class<?> entityViewListener) {
+        this.entityViewListeners.add(entityViewListener);
     }
 
     public BeanContainerListener setEntityViewConfiguration() {
         return beanContainer -> {
             EntityViewConfigurationHolder configurationHolder = beanContainer.instance(EntityViewConfigurationHolder.class);
             EntityViewConfiguration entityViewConfiguration = EntityViews.createDefaultConfiguration();
-            for (Class<?> entityView : entitiesViews) {
+            for (Class<?> entityView : entityViews) {
                 entityViewConfiguration.addEntityView(entityView);
             }
+            for (Class<?> entityViewListener : entityViewListeners) {
+                entityViewConfiguration.addEntityViewListener(entityViewListener);
+            }
+            entityViewConfiguration.setProperty(ConfigurationProperties.PROXY_UNSAFE_ALLOWED, Boolean.FALSE.toString());
             configurationHolder.setEntityViewConfiguration(entityViewConfiguration);
         };
     }

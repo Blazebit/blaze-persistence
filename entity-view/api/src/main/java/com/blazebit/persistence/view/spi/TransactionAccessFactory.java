@@ -33,6 +33,13 @@ public interface TransactionAccessFactory {
      * @param entityManager The entity manager associated with the transaction.
      * @return The transaction access object
      */
-    public TransactionAccess createTransactionAccess(EntityManager entityManager);
-    
+    TransactionAccess createTransactionAccess(EntityManager entityManager);
+
+    /**
+     * Returns a priority value that is used to select among multiple implementations.
+     * The lower the returned value, the higher the priority.
+     *
+     * @return the priority value
+     */
+    int getPriority();
 }

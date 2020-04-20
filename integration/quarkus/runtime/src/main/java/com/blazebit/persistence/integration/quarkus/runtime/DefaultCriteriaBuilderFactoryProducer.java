@@ -22,6 +22,7 @@ import io.quarkus.arc.DefaultBean;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.Dependent;
+import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.Produces;
 import javax.persistence.EntityManagerFactory;
 
@@ -35,7 +36,7 @@ public class DefaultCriteriaBuilderFactoryProducer {
     @DefaultBean
     @Produces
     @ApplicationScoped
-    public CriteriaBuilderFactory produceCriteriaBuilderFactory(EntityManagerFactory entityManagerFactory) {
-        return Criteria.getDefault().createCriteriaBuilderFactory(entityManagerFactory);
+    public CriteriaBuilderFactory produceCriteriaBuilderFactory(Instance<EntityManagerFactory> entityManagerFactory) {
+        return Criteria.getDefault().createCriteriaBuilderFactory(entityManagerFactory.get());
     }
 }

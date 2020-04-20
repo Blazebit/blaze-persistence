@@ -17,8 +17,10 @@
 package com.blazebit.persistence.integration.quarkus.deployment.entity;
 
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import java.io.Serializable;
 
 /**
@@ -32,6 +34,7 @@ public class Document implements Serializable {
     private String name;
     private String description;
     private long age;
+    private Person owner;
 
     public Document() {
     }
@@ -72,5 +75,14 @@ public class Document implements Serializable {
 
     public void setAge(long age) {
         this.age = age;
+    }
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    public Person getOwner() {
+        return owner;
+    }
+
+    public void setOwner(Person owner) {
+        this.owner = owner;
     }
 }

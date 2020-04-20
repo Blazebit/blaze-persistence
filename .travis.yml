@@ -12,6 +12,14 @@ install:
 # Skip the first maven execution for downloading dependencies by using this command
   - /bin/true
 before_script:
+  - |
+    if [ "$NATIVE" = "true" ]; then
+      sudo add-apt-repository -y ppa:jonathonf/python-3.6
+      sudo apt-get update
+      sudo apt-get install -y python3-pip
+      yes | sudo pip3 install git+https://github.com/naftulikay/travis-pls
+      source setup-graalvm.sh
+    fi
   - bash -c "if [ '$RDBMS' = 'mysql' ]; then MYSQL_VERSION=5.7 bash travis/before_script_mysql.sh; fi"
   - bash -c "if [ '$RDBMS' = 'mysql8' ]; then MYSQL_VERSION=8.0 bash travis/before_script_mysql.sh; fi"
   - bash -c "if [ '$RDBMS' = 'postgresql' ]; then psql -c 'create database test;' -U postgres; fi"
@@ -210,16 +218,16 @@ matrix:
 ################################################
 # hibernate-5.4
 ################################################
-    - env: JPAPROVIDER=hibernate-5.4 RDBMS=h2
+    - env: JPAPROVIDER=hibernate-5.4 RDBMS=h2 NATIVE=true
       jdk: oraclejdk8
-    - env: JPAPROVIDER=hibernate-5.4 RDBMS=mysql
+    - env: JPAPROVIDER=hibernate-5.4 RDBMS=mysql8 NATIVE=true
       jdk: oraclejdk8
       sudo: required
-    - env: JPAPROVIDER=hibernate-5.4 RDBMS=postgresql
+    - env: JPAPROVIDER=hibernate-5.4 RDBMS=postgresql NATIVE=true
       jdk: oraclejdk8
       addons:
         postgresql: "9.4"
-    - env: JPAPROVIDER=hibernate-5.4 RDBMS=mssql
+    - env: JPAPROVIDER=hibernate-5.4 RDBMS=mssql NATIVE=true
       jdk: oraclejdk8
       sudo: true
       services:
