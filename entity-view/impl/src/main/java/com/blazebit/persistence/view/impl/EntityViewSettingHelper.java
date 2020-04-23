@@ -176,6 +176,35 @@ public final class EntityViewSettingHelper {
             boolean disableCountQuery = getBooleanProperty(properties, ConfigurationProperties.PAGINATION_DISABLE_COUNT_QUERY, false);
             if (disableCountQuery) {
                 builder.withCountQuery(false);
+            } else {
+                Integer boundedCount = null;
+                Object o = properties.get(ConfigurationProperties.PAGINATION_BOUNDED_COUNT);
+                if (o != null) {
+                    if (o instanceof Integer || o instanceof Long) {
+                        boundedCount = ((Number) o).intValue();
+                    } else if (o instanceof String) {
+                        boundedCount = Integer.parseInt((String) o);
+                    } else {
+                        throw new IllegalArgumentException("Invalid value of type " + o.getClass().getName() + " given for the integer property: " + ConfigurationProperties.PAGINATION_BOUNDED_COUNT);
+                    }
+                }
+                if (boundedCount != null) {
+                    builder.withBoundedCount(boundedCount);
+                }
+            }
+            Integer highestKeyOffset = null;
+            Object o = properties.get(ConfigurationProperties.PAGINATION_HIGHEST_KEYSET_OFFSET);
+            if (o != null) {
+                if (o instanceof Integer) {
+                    highestKeyOffset = ((Number) o).intValue();
+                } else if (o instanceof String) {
+                    highestKeyOffset = Integer.parseInt((String) o);
+                } else {
+                    throw new IllegalArgumentException("Invalid value of type " + o.getClass().getName() + " given for the integer property: " + ConfigurationProperties.PAGINATION_HIGHEST_KEYSET_OFFSET);
+                }
+            }
+            if (highestKeyOffset != null) {
+                builder.withHighestKeysetOffset(highestKeyOffset);
             }
             boolean extractAllKeysets = getBooleanProperty(properties, ConfigurationProperties.PAGINATION_EXTRACT_ALL_KEYSETS, false);
             if (extractAllKeysets) {

@@ -16,11 +16,11 @@
 
 package com.blazebit.persistence.impl.builder.object;
 
-import java.util.List;
-
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.impl.keyset.KeysetMode;
+
+import java.util.List;
 
 /**
  *
@@ -31,8 +31,8 @@ public class DelegatingKeysetExtractionObjectBuilder<T> extends KeysetExtraction
 
     private final ObjectBuilder<T> objectBuilder;
 
-    public DelegatingKeysetExtractionObjectBuilder(ObjectBuilder<T> objectBuilder, int[] keysetToSelectIndexMapping, KeysetMode keysetMode, boolean extractAll, boolean extractCount) {
-        super(keysetToSelectIndexMapping, keysetMode, false, extractAll, extractCount);
+    public DelegatingKeysetExtractionObjectBuilder(ObjectBuilder<T> objectBuilder, int[] keysetToSelectIndexMapping, KeysetMode keysetMode, int pageSize, int highestOffset, boolean extractAll, boolean extractCount) {
+        super(keysetToSelectIndexMapping, keysetMode, pageSize, highestOffset, false, extractAll, extractCount);
         this.objectBuilder = objectBuilder;
     }
 
