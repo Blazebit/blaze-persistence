@@ -493,7 +493,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         TypedQuery<T> objectQuery;
         ObjectBuilder<T> objectBuilder;
         boolean inlinedIdQuery;
-        boolean inlinedCountQuery = withCountQuery && withInlineCountQuery;
+        boolean inlinedCountQuery = firstResult < maximumCount && withCountQuery && withInlineCountQuery;
         if (!isWithInlineIdQuery() && (hasCollections || withForceIdQuery)) {
             String idQueryString = getPageIdQueryStringWithoutCheck();
             if (normalQueryMode) {
@@ -523,7 +523,8 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
         PaginatedTypedQueryImpl<T> query = new PaginatedTypedQueryImpl<>(
                 withExtractAllKeysets,
-                withCountQuery,
+                firstResult < maximumCount && withCountQuery,
+                maximumCount != Long.MAX_VALUE,
                 highestOffset,
                 countQuery,
                 idQuery,
@@ -832,7 +833,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         Class<?> expectedResultType;
 
         // When the keyset is included the query obviously produces an array
-        if (keysetExtraction || withCountQuery && withInlineCountQuery) {
+        if (keysetExtraction || firstResult < maximumCount && withCountQuery && withInlineCountQuery) {
             expectedResultType = Object[].class;
         } else {
             expectedResultType = selectManager.getExpectedQueryResultType();
@@ -854,7 +855,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
                 mainQuery.jpaProvider.setCacheable(query);
             }
             boolean externalIdQuery = !isWithInlineIdQuery() && (hasCollections || withForceIdQuery);
-            if (!externalIdQuery && withCountQuery && withInlineCountQuery && maximumCount != Long.MAX_VALUE) {
+            if (!externalIdQuery && firstResult < maximumCount && withCountQuery && withInlineCountQuery && maximumCount != Long.MAX_VALUE) {
                 parameterManager.parameterizeQuery(query, getDualNodeAlias());
                 query.setParameter(getDualNodeAlias() + "_value_0", 0L);
             } else {
@@ -875,7 +876,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
             boolean externalIdQuery = !isWithInlineIdQuery() && (hasCollections || withForceIdQuery);
             JoinNode dualNode = null;
-            if (!externalIdQuery && withCountQuery && withInlineCountQuery && maximumCount != Long.MAX_VALUE) {
+            if (!externalIdQuery && firstResult < maximumCount && withCountQuery && withInlineCountQuery && maximumCount != Long.MAX_VALUE) {
                 dualNode = createDualNode();
                 String valueParameterName = dualNode.getAlias() + "_value_0";
                 String[][] parameterNames = new String[1][1];
@@ -909,13 +910,13 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
         ObjectBuilder<T> objectBuilder = null;
         ObjectBuilder<T> transformerObjectBuilder = selectManager.getSelectObjectBuilder();
-        boolean inlinedCountQuery = withCountQuery && withInlineCountQuery;
+        boolean inlinedCountQuery = firstResult < maximumCount && withCountQuery && withInlineCountQuery;
 
         if (keysetExtraction) {
             if (transformerObjectBuilder == null) {
-                objectBuilder = new KeysetExtractionObjectBuilder<T>(keysetToSelectIndexMapping, keysetMode, selectManager.getExpectedQueryResultType() != Object[].class, withExtractAllKeysets, inlinedCountQuery);
+                objectBuilder = new KeysetExtractionObjectBuilder<T>(keysetToSelectIndexMapping, keysetMode, maxResults, highestOffset, selectManager.getExpectedQueryResultType() != Object[].class, withExtractAllKeysets, inlinedCountQuery);
             } else {
-                objectBuilder = new DelegatingKeysetExtractionObjectBuilder<T>(transformerObjectBuilder, keysetToSelectIndexMapping, keysetMode, withExtractAllKeysets, inlinedCountQuery);
+                objectBuilder = new DelegatingKeysetExtractionObjectBuilder<T>(transformerObjectBuilder, keysetToSelectIndexMapping, keysetMode, maxResults, highestOffset, withExtractAllKeysets, inlinedCountQuery);
             }
 
             transformerObjectBuilder = objectBuilder;
@@ -936,7 +937,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             if (isCacheable()) {
                 mainQuery.jpaProvider.setCacheable(idQuery);
             }
-            if (withCountQuery && withInlineCountQuery && maximumCount != Long.MAX_VALUE) {
+            if (firstResult < maximumCount && withCountQuery && withInlineCountQuery && maximumCount != Long.MAX_VALUE) {
                 parameterManager.parameterizeQuery(idQuery, getDualNodeAlias());
                 idQuery.setParameter(getDualNodeAlias() + "_value_0", 0L);
             } else {
@@ -964,7 +965,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
                 parameterManager.getValuesBinders()
         );
 
-        if (withCountQuery && withInlineCountQuery && maximumCount != Long.MAX_VALUE) {
+        if (firstResult < maximumCount && withCountQuery && withInlineCountQuery && maximumCount != Long.MAX_VALUE) {
             parameterManager.parameterizeQuery(idQuery, getDualNodeAlias());
             idQuery.setParameter(getDualNodeAlias() + "_value_0", 0L);
         } else {
@@ -1115,7 +1116,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             }
         }
 
-        if (!aliasFunction && withCountQuery && withInlineCountQuery) {
+        if (!aliasFunction && firstResult < maximumCount && withCountQuery && withInlineCountQuery) {
             sbSelectFrom.append(", ");
             appendPageCountQueryAsSubquery(sbSelectFrom, externalRepresentation);
         }
@@ -1322,7 +1323,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             }
         }
 
-        if (withCountQuery && withInlineCountQuery) {
+        if (firstResult < maximumCount && withCountQuery && withInlineCountQuery) {
             sbSelectFrom.append(", ");
             appendPageCountQueryAsSubquery(sbSelectFrom, externalRepresentation);
         }

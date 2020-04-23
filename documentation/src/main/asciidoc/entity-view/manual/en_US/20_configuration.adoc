@@ -240,6 +240,32 @@ By default only the first and last keysets are extracted i.e. the default value 
 | Applicable | EntityViewSetting only
 |====================
 
+==== PAGINATION_HIGHEST_KEYSET_OFFSET
+
+Defines the offset from the `maxResults` at which to find the highest keyset i.e. the highest keyset will be at position `Math.min(size, maxResults - offset)`.
+Setting 1 along with a maxResults + 1 allows to look ahead one element to check if there are more elements which is useful for pagination with lazy page count or endless scrolling.
+By default the offset is disabled i.e. the default value is `null`.
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.view.pagination.highest_keyset_offset
+| Type | integer
+| Default | null
+| Applicable | EntityViewSetting only
+|====================
+
+==== PAGINATION_BOUNDED_COUNT
+Defines the maximum value up to which the count query should count.
+By default the bounded count is disabled i.e. all rows are counted.
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.view.pagination.bounded_count
+| Type | integer
+| Default | null
+| Applicable | EntityViewSetting only
+|====================
+
 ==== STATIC_BUILDER_SCANNING_DISABLED
 
 Defines whether the scanning for `@StaticBuilder` classes for the registered entity views should be disabled.

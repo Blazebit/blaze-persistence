@@ -36,20 +36,28 @@ public class KeysetExtractionObjectBuilder<T> implements ObjectBuilder<T> {
     private final int[] keysetToSelectIndexMapping;
     private final int keysetSuffix;
     private final KeysetMode keysetMode;
+    private final int keysetSize;
+    private final int highestPosition;
     private final boolean unwrap;
     private final boolean extractCount;
+    private final List<Object[]> keysets;
     private Object[] first;
     private Object[] last;
-    private ArrayList<Object[]> keysets;
+    private Object[] highest;
+    private int size;
     private long count = -1;
 
-    public KeysetExtractionObjectBuilder(int[] keysetToSelectIndexMapping, KeysetMode keysetMode, boolean unwrap, boolean extractAll, boolean extractCount) {
+    public KeysetExtractionObjectBuilder(int[] keysetToSelectIndexMapping, KeysetMode keysetMode, int pageSize, int highestOffset, boolean unwrap, boolean extractAll, boolean extractCount) {
         this.keysetToSelectIndexMapping = keysetToSelectIndexMapping;
         this.keysetMode = keysetMode;
+        this.keysetSize = pageSize - highestOffset;
+        this.highestPosition = keysetMode == KeysetMode.PREVIOUS ? (highestOffset + 1) : (pageSize - highestOffset);
         this.unwrap = unwrap;
         this.extractCount = extractCount;
         if (extractAll) {
-            this.keysets = new ArrayList<>();
+            this.keysets = new ArrayList<>(keysetSize);
+        } else {
+            this.keysets = null;
         }
         int suffix = 0;
         for (int i = 0; i < keysetToSelectIndexMapping.length; i++) {
@@ -64,10 +72,21 @@ public class KeysetExtractionObjectBuilder<T> implements ObjectBuilder<T> {
     @Override
     public T build(Object[] tuple) {
         if (keysetMode == KeysetMode.PREVIOUS) {
-            if (keysets != null) {
+            if (keysets == null) {
+                if (last == null) {
+                    size = 1;
+                } else if (!equals(last, tuple)) {
+                    size++;
+                }
+            } else {
                 if (keysets.isEmpty()) {
                     keysets.add(tuple);
+                    size = 1;
                 } else if (!equals(keysets.get(0), tuple)) {
+                    size++;
+                    if (keysets.size() == keysetSize) {
+                        keysets.remove(keysets.size() - 1);
+                    }
                     keysets.add(0, tuple);
                 }
             }
@@ -78,8 +97,15 @@ public class KeysetExtractionObjectBuilder<T> implements ObjectBuilder<T> {
                 first = tuple;
             }
         } else {
-            if (keysets != null) {
-                if (keysets.isEmpty() || !equals(keysets.get(keysets.size() - 1), tuple)) {
+            if (keysets == null) {
+                if (last == null) {
+                    size = 1;
+                } else if (!equals(last, tuple)) {
+                    size++;
+                }
+            } else {
+                size++;
+                if ((keysets.isEmpty() || !equals(keysets.get(keysets.size() - 1), tuple)) && keysets.size() < keysetSize) {
                     keysets.add(tuple);
                 }
             }
@@ -89,6 +115,9 @@ public class KeysetExtractionObjectBuilder<T> implements ObjectBuilder<T> {
             } else {
                 last = tuple;
             }
+        }
+        if (highestPosition == size) {
+            highest = tuple;
         }
         if (extractCount) {
             count = (long) tuple[tuple.length - 1];
@@ -124,8 +153,14 @@ public class KeysetExtractionObjectBuilder<T> implements ObjectBuilder<T> {
         if (last == null) {
             return null;
         }
+        Object[] keyset;
+        if (size > keysetSize) {
+            keyset = highest;
+        } else {
+            keyset = last;
+        }
 
-        return KeysetPaginationHelper.extractKey(last, keysetToSelectIndexMapping, keysetSuffix + (extractCount ? 1 : 0));
+        return KeysetPaginationHelper.extractKey(keyset, keysetToSelectIndexMapping, keysetSuffix + (extractCount ? 1 : 0));
     }
 
     public Serializable[][] getKeysets() {

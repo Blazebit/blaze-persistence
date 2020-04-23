@@ -174,6 +174,7 @@ public final class ConfigurationProperties {
      * Valid values for this property are <code>true</code> or <code>false</code>.
      *
      * @since 1.4.0
+     * @see com.blazebit.persistence.PaginatedCriteriaBuilder#withCountQuery(boolean)
      */
     public static final String PAGINATION_DISABLE_COUNT_QUERY = "com.blazebit.persistence.view.pagination.disable_count_query";
 
@@ -184,6 +185,7 @@ public final class ConfigurationProperties {
      * Valid values for this property are <code>true</code> or <code>false</code>.
      *
      * @since 1.4.0
+     * @see com.blazebit.persistence.PaginatedCriteriaBuilder#withExtractAllKeysets(boolean)
      */
     public static final String PAGINATION_EXTRACT_ALL_KEYSETS = "com.blazebit.persistence.view.pagination.extract_all_keysets";
 
@@ -197,6 +199,27 @@ public final class ConfigurationProperties {
      * @since 1.4.0
      */
     public static final String PAGINATION_FORCE_USE_KEYSET = "com.blazebit.persistence.view.pagination.force_use_keyset";
+
+    /**
+     * The offset from the maxResults at which to find the highest keyset i.e. the highest keyset will be at position <code>Math.min(size, maxResults - offset)</code>.
+     * Setting 1 along with a maxResults + 1 allows to look ahead one element to check if there are more elements which is useful for pagination with lazy page count or endless scrolling.
+     *
+     * By default the offset is disabled i.e. the default value is <code>null</code>.
+     *
+     * @since 1.5.0
+     * @see com.blazebit.persistence.PaginatedCriteriaBuilder#withHighestKeysetOffset(int)
+     */
+    public static final String PAGINATION_HIGHEST_KEYSET_OFFSET = "com.blazebit.persistence.view.pagination.highest_keyset_offset";
+
+    /**
+     * The maximum value up to which the count query should count i.e. see {@link com.blazebit.persistence.PaginatedCriteriaBuilder#withBoundedCount(long)}.
+     *
+     * By default the bounded count is disabled i.e. all rows are counted.
+     *
+     * @since 1.5.0
+     * @see com.blazebit.persistence.PaginatedCriteriaBuilder#withBoundedCount(long)
+     */
+    public static final String PAGINATION_BOUNDED_COUNT = "com.blazebit.persistence.view.pagination.bounded_count";
 
     /**
      * A boolean flag to make it possible to disable the scanning for static builders annotated with {@link StaticBuilder}.

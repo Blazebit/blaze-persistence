@@ -105,6 +105,21 @@ public class KeysetPaginationTest extends AbstractCoreTest {
     }
 
     @Test
+    public void testHighestKeysetOffset() {
+        CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(Document.class, "d")
+                .select("d.name").select("d.owner.name");
+        crit.orderByDesc("d.owner.name")
+                .orderByAsc("d.name")
+                .orderByAsc("d.id");
+
+        PaginatedCriteriaBuilder<Tuple> pcb = crit.page(null, 1, 2).withHighestKeysetOffset(1);
+        PagedList<Tuple> result = pcb.getResultList();
+        assertEquals(2, result.size());
+        assertEquals("doc5", result.get(0).get(0));
+        assertEquals("doc5", result.getKeysetPage().getHighest().getTuple()[1]);
+    }
+
+    @Test
     // Test for #641
     public void testChangingLimit() {
         CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(Document.class, "d")

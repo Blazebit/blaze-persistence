@@ -57,6 +57,7 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
 
     private final boolean withExtractAllKeysets;
     private final boolean withCount;
+    private final boolean boundedCount;
     private final int highestOffset;
     private final TypedQuery<?> countQuery;
     private final TypedQuery<?> idQuery;
@@ -78,10 +79,11 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
     private final boolean inlinedIdQuery;
     private final boolean inlinedCountQuery;
 
-    public PaginatedTypedQueryImpl(boolean withExtractAllKeysets, boolean withCount, int highestOffset, TypedQuery<?> countQuery, TypedQuery<?> idQuery, TypedQuery<X> objectQuery, ObjectBuilder<X> objectBuilder, Set<Parameter<?>> parameters,
+    public PaginatedTypedQueryImpl(boolean withExtractAllKeysets, boolean withCount, boolean boundedCount, int highestOffset, TypedQuery<?> countQuery, TypedQuery<?> idQuery, TypedQuery<X> objectQuery, ObjectBuilder<X> objectBuilder, Set<Parameter<?>> parameters,
                                    Object entityId, int firstResult, int pageSize, int identifierCount, boolean needsNewIdList, int[] keysetToSelectIndexMapping, KeysetMode keysetMode, KeysetPage keysetPage, boolean forceFirstResult, boolean inlinedIdQuery, boolean inlinedCountQuery) {
         this.withExtractAllKeysets = withExtractAllKeysets;
         this.withCount = withCount;
+        this.boundedCount = boundedCount;
         this.highestOffset = highestOffset;
         this.countQuery = countQuery;
         this.idQuery = idQuery;
@@ -219,8 +221,20 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
                     // When we scroll over the last page to a non existing one, we reuse the current keyset
                     newKeysetPage = keysetPage;
                 }
-
-                return new PagedArrayList<X>(newKeysetPage, withCount && totalSize == -1 ? getTotalCount() : totalSize, queryFirstResult, pageSize);
+                long size;
+                if (withCount && totalSize == -1) {
+                    size = getTotalCount();
+                } else {
+                    size = totalSize;
+                }
+                if (boundedCount) {
+                    if (keysetMode == KeysetMode.NEXT) {
+                        size = Math.max(size, keysetPage.getFirstResult() + keysetPage.getMaxResults());
+                    } else if (forceFirstResult || keysetMode == KeysetMode.NONE) {
+                        size = Math.max(size, firstRow);
+                    }
+                }
+                return new PagedArrayList<X>(newKeysetPage, size, queryFirstResult, pageSize);
             }
 
             Serializable[] lowest = null;
@@ -230,42 +244,48 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
             if (needsNewIdList) {
                 if (keysetToSelectIndexMapping != null) {
                     int keysetPageSize = pageSize - highestOffset;
+                    int size = Math.min(ids.size(), keysetPageSize);
+                    int lowestIndex;
+                    int highestIndex;
+                    // Swap keysets as we have inverse ordering when going to the previous page
+                    if (keysetMode == KeysetMode.PREVIOUS) {
+                        lowestIndex = size - 1;
+                        highestIndex = 0;
+                    } else {
+                        lowestIndex = 0;
+                        highestIndex = size - 1;
+                    }
                     if (ids.get(0) instanceof Object[]) {
                         if (withExtractAllKeysets) {
-                            int size = ids.size() >= keysetPageSize ? keysetPageSize : ids.size();
-                            keysets = new Serializable[ids.size()][];
+                            keysets = new Serializable[size][];
                             for (int i = 0; i < size; i++) {
                                 keysets[i] = KeysetPaginationHelper.extractKey((Object[]) ids.get(i), keysetToSelectIndexMapping, keysetSuffix);
                             }
-                            lowest = keysets[0];
-                            highest = keysets[size - 1];
+                            lowest = keysets[lowestIndex];
+                            highest = keysets[highestIndex];
                         } else {
-                            lowest = KeysetPaginationHelper.extractKey((Object[]) ids.get(0), keysetToSelectIndexMapping, keysetSuffix);
-                            highest = KeysetPaginationHelper.extractKey((Object[]) (ids.size() >= keysetPageSize ? ids.get(keysetPageSize - 1) : ids.get(ids.size() - 1)), keysetToSelectIndexMapping, keysetSuffix);
+                            lowest = KeysetPaginationHelper.extractKey((Object[]) ids.get(lowestIndex), keysetToSelectIndexMapping, keysetSuffix);
+                            highest = KeysetPaginationHelper.extractKey((Object[]) ids.get(highestIndex), keysetToSelectIndexMapping, keysetSuffix);
                         }
                     } else {
                         if (withExtractAllKeysets) {
-                            int size = ids.size() >= keysetPageSize ? keysetPageSize : ids.size();
-                            keysets = new Serializable[ids.size()][];
+                            keysets = new Serializable[size][];
                             for (int i = 0; i < size; i++) {
                                 keysets[i] = new Serializable[]{ (Serializable) (ids.get(i)) };
                             }
-                            lowest = keysets[0];
-                            highest = keysets[size - 1];
+                            lowest = keysets[lowestIndex];
+                            highest = keysets[highestIndex];
                         } else {
-                            lowest = new Serializable[]{ (Serializable) ids.get(0) };
-                            highest = new Serializable[]{ (Serializable) (ids.size() >= keysetPageSize ? ids.get(keysetPageSize - 1) : ids.get(ids.size() - 1)) };
+                            lowest = new Serializable[]{ (Serializable) ids.get(lowestIndex) };
+                            highest = new Serializable[]{ (Serializable) ids.get(highestIndex) };
                         }
                     }
 
                     // Swap keysets as we have inverse ordering when going to the previous page
                     if (keysetMode == KeysetMode.PREVIOUS) {
-                        Serializable[] tmp = lowest;
-                        lowest = highest;
-                        highest = tmp;
                         if (withExtractAllKeysets) {
-                            int size = keysets.length;
                             // Reverse the keysets
+                            Serializable[] tmp;
                             for (int i = 0, mid = size >> 1, j = size - 1; i < mid; i++, j--) {
                                 tmp = keysets[i];
                                 keysets[i] = keysets[j];
@@ -349,6 +369,7 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
                 newKeyset = new DefaultKeysetPage(firstRow, pageSize, lowest, highest, keysets);
             }
 
+            totalSize = Math.max(totalSize, firstRow + ids.size());
             List<X> queryResultList = objectQuery.getResultList();
 
             PagedList<X> pagedResultList = new PagedArrayList<X>(queryResultList, newKeyset, totalSize, queryFirstResult, pageSize);
@@ -378,6 +399,13 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
                         totalSize = 0L;
                     } else if (withCount) {
                         totalSize = getTotalCount();
+                    }
+                }
+                if (boundedCount) {
+                    if (keysetMode == KeysetMode.NEXT) {
+                        totalSize = Math.max(totalSize, keysetPage.getFirstResult() + keysetPage.getMaxResults());
+                    } else if (forceFirstResult || keysetMode == KeysetMode.NONE) {
+                        totalSize = Math.max(totalSize, firstRow);
                     }
                 }
 
@@ -419,6 +447,8 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
                     totalSize = ((CountExtractionObjectBuilder<X>) objectBuilder).getCount();
                 }
             }
+
+            totalSize = Math.max(totalSize, firstRow + result.size());
 
             PagedList<X> pagedResultList = new PagedArrayList<X>(result, newKeyset, totalSize, queryFirstResult, pageSize);
             return pagedResultList;
