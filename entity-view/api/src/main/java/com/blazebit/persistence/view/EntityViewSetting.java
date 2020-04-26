@@ -27,6 +27,7 @@ import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.MethodPluralAttribute;
 import com.blazebit.persistence.view.metamodel.MethodSingularAttribute;
 
+import java.io.Serializable;
 import java.util.*;
 
 /**
@@ -720,7 +721,7 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> implem
      * @author Moritz Becker
      * @since 1.2.0
      */
-    public static class AttributeFilterActivation {
+    public static class AttributeFilterActivation implements Serializable {
         private final String attributeFilterName;
         private final Object filterValue;
 
@@ -739,6 +740,30 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> implem
 
         public Object getFilterValue() {
             return filterValue;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof AttributeFilterActivation)) {
+                return false;
+            }
+
+            AttributeFilterActivation that = (AttributeFilterActivation) o;
+
+            if (!getAttributeFilterName().equals(that.getAttributeFilterName())) {
+                return false;
+            }
+            return Objects.deepEquals(getFilterValue(), that.getFilterValue());
+        }
+
+        @Override
+        public int hashCode() {
+            int result = getAttributeFilterName().hashCode();
+            result = 31 * result + getFilterValue().hashCode();
+            return result;
         }
     }
 

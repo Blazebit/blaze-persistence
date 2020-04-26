@@ -84,8 +84,11 @@ public class DeleteTest extends AbstractCoreTest {
                 Person o1 = new Person("P1");
 
                 doc1.setOwner(o1);
+                doc1.setResponsiblePerson(o1);
                 doc2.setOwner(o1);
+                doc2.setResponsiblePerson(o1);
                 doc3.setOwner(o1);
+                doc3.setResponsiblePerson(o1);
 
                 em.persist(o1);
 
@@ -103,6 +106,53 @@ public class DeleteTest extends AbstractCoreTest {
             public void work(EntityManager em) {
                 final DeleteCriteriaBuilder<Document> cb = cbf.delete(em, Document.class, "d").where("d.name").eq("D1");
                 String expected = "DELETE FROM Document d WHERE d.name = :param_0";
+
+                assertEquals(expected, cb.getQueryString());
+
+                int updateCount = cb.executeUpdate();
+                assertEquals(1, updateCount);
+            }
+        });
+    }
+
+    @Test
+    public void testImplicitJoin() {
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                final DeleteCriteriaBuilder<Document> cb = cbf.delete(em, Document.class, "d")
+                        .where("d.name").eq("D1")
+                        .where("owner.name").eq("P1");
+                String expected = "DELETE FROM Document d WHERE EXISTS (SELECT 1 FROM d.owner owner_1 WHERE d.name = :param_0 AND owner_1.name = :param_1)";
+
+                assertEquals(expected, cb.getQueryString());
+
+                int updateCount = cb.executeUpdate();
+                assertEquals(1, updateCount);
+            }
+        });
+    }
+
+    // NOTE: MySQL doesn't allow referencing the same table that is deleted again
+    @Test
+    @Category({ NoMySQL.class }) // Requires https://github.com/Blazebit/blaze-persistence/issues/693
+    public void testMultipleDeepImplicitJoin() {
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                final DeleteCriteriaBuilder<Document> cb = cbf.delete(em, Document.class, "d")
+                        .where("d.name").eq("D1")
+                        .where("owner.name").eq("P1")
+                        .where("responsiblePerson.ownedDocuments.name").eq("D1");
+                String expected = "DELETE FROM Document d WHERE EXISTS (" +
+                            "SELECT 1 " +
+                            "FROM d.owner owner_1, " +
+                            "d.responsiblePerson responsiblePerson_1 " +
+                            "LEFT JOIN responsiblePerson_1.ownedDocuments ownedDocuments_1 " +
+                            "WHERE d.name = :param_0 " +
+                            "AND owner_1.name = :param_1 " +
+                            "AND ownedDocuments_1.name = :param_2" +
+                        ")";
 
                 assertEquals(expected, cb.getQueryString());
 

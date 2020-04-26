@@ -23,6 +23,7 @@ Not yet released
 * Add support for bounded counting in pagination i.e. counting up to a specific value
 * Rewrite temporal literals to parameters for hibernate
 * Add `@Limit` annotation for entity views to limit elements of collections and correlations
+* Support automatic translation of implicit joins for `DELETE` and `UPDATE` statements
 
 ### Bug fixes
 
@@ -38,7 +39,9 @@ Not yet released
 * Fix collection deserialization issues with Jackson
 * Allow to use `@JsonIgnore` for the id property of an entity view
 * Properly validate the condition expression of `CASE` expressions in entity views
-* Better support for MySQL subquery `LIMIT` handling in quantified predicates e.g. `IN` 
+* Better support for MySQL subquery `LIMIT` handling in quantified predicates e.g. `IN`
+* Fix NPE in `JpaUtils#expandBindings` caused by non-determinism of example attribute resolving
+* Fix concurrency issue that cause class cast exceptions during equality comparisons
 
 ### Backwards-incompatible changes
 

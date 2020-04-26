@@ -101,6 +101,9 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
     private CompoundPredicate onPredicate;
     private List<JoinNode> joinNodesNeedingTreatConjunct;
     private String deReferenceFunction;
+    private Set<String> allowedAttributes;
+    private String disallowedDeReferenceAlias;
+    private boolean disallowedDeReferenceUsed;
     
     // Cache
     private boolean dirty = true;
@@ -564,6 +567,10 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         this.fetch = fetch;
     }
 
+    public boolean hasChildNodes() {
+        return !nodes.isEmpty() || !treatedJoinNodes.isEmpty() || !entityJoinNodes.isEmpty();
+    }
+
     public NavigableMap<String, JoinTreeNode> getNodes() {
         return nodes;
     }
@@ -790,6 +797,22 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         return inlineCte != null;
     }
 
+    public void setAllowedDeReferences(Set<String> allowedAttributes) {
+        this.allowedAttributes = allowedAttributes;
+    }
+
+    public void setDisallowedDeReferenceAlias(String disallowedDeReferenceAlias) {
+        this.disallowedDeReferenceAlias = disallowedDeReferenceAlias;
+    }
+
+    public String getDisallowedDeReferenceAlias() {
+        return disallowedDeReferenceAlias;
+    }
+
+    public boolean isDisallowedDeReferenceUsed() {
+        return disallowedDeReferenceUsed;
+    }
+
     /**
      * @author Christian Beikov
      * @since 1.2.0
@@ -839,11 +862,16 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
 
     public void appendDeReference(StringBuilder sb, String property, boolean renderTreat, boolean externalRepresentation, boolean requiresElementCollectionIdCutoff) {
         boolean wrapperFunction = false;
-        if (!externalRepresentation && deReferenceFunction != null) {
-            wrapperFunction = true;
-            sb.append(deReferenceFunction);
+        if (externalRepresentation || allowedAttributes == null || allowedAttributes.contains(property)) {
+            if (!externalRepresentation && deReferenceFunction != null) {
+                wrapperFunction = true;
+                sb.append(deReferenceFunction);
+            }
+            appendAlias(sb, renderTreat, externalRepresentation);
+        } else {
+            sb.append(disallowedDeReferenceAlias);
+            disallowedDeReferenceUsed = true;
         }
-        appendAlias(sb, renderTreat, externalRepresentation);
         // If we have a valuesTypeName, the property can only be "value" which is already handled in appendAlias
         if (property != null && valuesTypeName == null) {
             if (requiresElementCollectionIdCutoff && parentTreeNode != null && parentTreeNode.getAttribute().getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION
@@ -924,6 +952,19 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         }
     }
 
+    boolean needsDisallowedDeReferenceAlias(boolean externalRepresentation) {
+        if (externalRepresentation || disallowedDeReferenceAlias == null) {
+            return false;
+        } else if (disallowedDeReferenceUsed) {
+            return true;
+        }
+        if (parent == null) {
+            return nodes.size() > 1 || !treatedJoinNodes.isEmpty() || !entityJoinNodes.isEmpty() || nodes.firstEntry().getValue().getJoinNodes().size() > 1 || nodes.firstEntry().getValue().getDefaultNode().needsDisallowedDeReferenceAlias(externalRepresentation);
+        } else {
+            return parent.disallowedDeReferenceAlias != null && parent.disallowedDeReferenceUsed || hasChildNodes();
+        }
+    }
+
     public String getDeReferenceFunction() {
         return deReferenceFunction;
     }
@@ -931,6 +972,12 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
     public void setDeReferenceFunction(String deReferenceFunction) {
         this.deReferenceFunction = deReferenceFunction;
     }
+
+    public boolean isCollectionDmlNode(boolean externalRepresentation) {
+        // For the external representation we temporarily set the alias to "parentAlias.relationName" which is normally illegal
+        return externalRepresentation && getAlias().indexOf('.') != -1;
+    }
+
     /* Implementation of Root interface */
 
     @Override

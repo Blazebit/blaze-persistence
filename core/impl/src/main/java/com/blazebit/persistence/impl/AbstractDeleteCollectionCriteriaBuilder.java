@@ -42,10 +42,13 @@ import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -65,14 +68,40 @@ public abstract class AbstractDeleteCollectionCriteriaBuilder<T, X extends BaseD
     public AbstractDeleteCollectionCriteriaBuilder(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, Class<T> clazz, String alias, CTEManager.CTEKey cteKey, Class<?> cteClass, Y result, CTEBuilderListener listener, String collectionName) {
         super(mainQuery, queryContext, isMainQuery, clazz, alias, cteKey, cteClass, result, listener);
         this.collectionName = collectionName;
-        ExtendedManagedType extendedManagedType = mainQuery.metamodel.getManagedType(ExtendedManagedType.class, entityType);
+        ExtendedManagedType<?> extendedManagedType = mainQuery.metamodel.getManagedType(ExtendedManagedType.class, entityType);
         this.collectionAttribute = extendedManagedType.getAttribute(collectionName);
         // Add the join here so that references in the where clause goes the the expected join node
         // Also, this validates the collection actually exists
-        JoinNode join = joinManager.join(entityAlias + "." + collectionName, CollectionDeleteModificationQuerySpecification.COLLECTION_BASE_QUERY_ALIAS, JoinType.LEFT, false, true, null);
+        JoinNode join = joinManager.join(entityAlias + "." + collectionName, JoinManager.COLLECTION_DML_BASE_QUERY_ALIAS, JoinType.LEFT, false, true, null);
         if (collectionAttribute.getJoinTable() != null) {
             join.setDeReferenceFunction(mainQuery.jpaProvider.getCustomFunctionInvocation(CollectionDmlSupportFunction.FUNCTION_NAME, 1));
             join.getParent().setDeReferenceFunction(mainQuery.jpaProvider.getCustomFunctionInvocation(CollectionDmlSupportFunction.FUNCTION_NAME, 1));
+
+            JoinTable joinTable = collectionAttribute.getJoinTable();
+            Set<String> idAttributeNames = joinTable.getIdAttributeNames();
+            Set<String> ownerAttributes = new HashSet<>(idAttributeNames.size());
+            for (String idAttributeName : idAttributeNames) {
+                ownerAttributes.add(idAttributeName);
+                int dotIdx = -1;
+                while ((dotIdx = idAttributeName.indexOf('.', dotIdx + 1)) != -1) {
+                    ownerAttributes.add(idAttributeName.substring(0, dotIdx));
+                }
+            }
+
+            join.getParent().setAllowedDeReferences(ownerAttributes);
+            join.getParent().setDisallowedDeReferenceAlias(aliasManager.generateRootAlias(join.getParent().getAlias()));
+
+            Set<String> elementAttributes = new HashSet<>();
+            if (((PluralAttribute<?, ?, ?>) collectionAttribute.getAttribute()).getElementType() instanceof ManagedType<?>) {
+                String prefix = collectionAttribute.getAttributePathString() + ".";
+                for (Map.Entry<String, ? extends ExtendedAttribute<?, ?>> entry : extendedManagedType.getAttributes().entrySet()) {
+                    if (entry.getKey().startsWith(prefix)) {
+                        elementAttributes.add(entry.getKey().substring(prefix.length()));
+                    }
+                }
+            }
+            join.setAllowedDeReferences(elementAttributes);
+            join.setDisallowedDeReferenceAlias(aliasManager.generateRootAlias(join.getAlias()));
         }
         this.elementType = join.getType();
         if (collectionAttribute.getJoinTable() == null && "".equals(collectionAttribute.getMappedBy())) {
@@ -82,7 +111,7 @@ public abstract class AbstractDeleteCollectionCriteriaBuilder<T, X extends BaseD
         if (collectionAttribute.getMappedBy() != null) {
             // Use a different alias to properly prefix paths with the collection role alias
             JoinNode rootNode = joinManager.getRootNodeOrFail(null);
-            rootNode.getAliasInfo().setAlias(CollectionDeleteModificationQuerySpecification.COLLECTION_BASE_QUERY_ALIAS + "." + collectionAttribute.getMappedBy());
+            rootNode.getAliasInfo().setAlias(JoinManager.COLLECTION_DML_BASE_QUERY_ALIAS + "." + collectionAttribute.getMappedBy());
         }
     }
 
@@ -95,28 +124,70 @@ public abstract class AbstractDeleteCollectionCriteriaBuilder<T, X extends BaseD
 
     @Override
     protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, JoinNode lateralJoinNode) {
+        JoinNode rootNode = joinManager.getRoots().get(0);
+
         if (externalRepresentation) {
-            sbSelectFrom.append("DELETE FROM ");
-            sbSelectFrom.append(entityType.getName());
-            sbSelectFrom.append('(').append(collectionName).append(") ");
-            sbSelectFrom.append(entityAlias);
+            sbSelectFrom.append("DELETE");
+            if (collectionAttribute.getJoinTable() == null) {
+                rootNode.getAliasInfo().setAlias(entityAlias);
+            }
+            rootNode.getNodes().get(collectionName).getDefaultNode().getAliasInfo().setAlias(entityAlias + "." + collectionName);
+            List<String> whereClauseConjuncts = new ArrayList<>();
+            List<String> optionalWhereClauseConjuncts = new ArrayList<>();
+            joinManager.buildClause(sbSelectFrom, Collections.<ClauseType>emptySet(), null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, nodesToFetch, Collections.<JoinNode>emptySet(), rootNode);
             appendWhereClause(sbSelectFrom, externalRepresentation);
+            for (String whereClauseConjunct : whereClauseConjuncts) {
+                sbSelectFrom.append(" AND ").append(whereClauseConjunct);
+            }
+            if (collectionAttribute.getJoinTable() == null) {
+                rootNode.getAliasInfo().setAlias(JoinManager.COLLECTION_DML_BASE_QUERY_ALIAS + "." + collectionAttribute.getMappedBy());
+            }
+            rootNode.getNodes().get(collectionName).getDefaultNode().getAliasInfo().setAlias(JoinManager.COLLECTION_DML_BASE_QUERY_ALIAS);
         } else if (collectionAttribute.getJoinTable() == null) {
             sbSelectFrom.append("DELETE FROM ");
             sbSelectFrom.append(((EntityType<?>) elementType).getName());
             sbSelectFrom.append(' ');
-            sbSelectFrom.append(CollectionDeleteModificationQuerySpecification.COLLECTION_BASE_QUERY_ALIAS);
+            sbSelectFrom.append(JoinManager.COLLECTION_DML_BASE_QUERY_ALIAS);
             appendWhereClause(sbSelectFrom, externalRepresentation);
         } else {
             // The internal representation is just a "hull" to hold the parameters at the appropriate positions
-            sbSelectFrom.append("SELECT 1 FROM ");
-            sbSelectFrom.append(entityType.getName());
-            sbSelectFrom.append(' ');
-            sbSelectFrom.append(entityAlias);
-            sbSelectFrom.append(" LEFT JOIN ");
-            sbSelectFrom.append(entityAlias).append('.').append(collectionName)
-                    .append(' ').append(CollectionDeleteModificationQuerySpecification.COLLECTION_BASE_QUERY_ALIAS);
-            appendWhereClause(sbSelectFrom, externalRepresentation);
+            sbSelectFrom.append("SELECT 1");
+            StringBuilder tempSb = new StringBuilder();
+            appendWhereClause(tempSb, externalRepresentation);
+
+            JoinTreeNode collectionTreeNode = rootNode.getNodes().get(collectionName);
+            boolean hasOtherJoinNodes = joinManager.getRoots().size() > 1
+                    || rootNode.getNodes().size() > 1
+                    || !rootNode.getTreatedJoinNodes().isEmpty()
+                    || !rootNode.getEntityJoinNodes().isEmpty()
+                    || collectionTreeNode.getJoinNodes().size() > 1
+                    || collectionTreeNode.getDefaultNode().hasChildNodes();
+            if (hasOtherJoinNodes || rootNode.isDisallowedDeReferenceUsed() || collectionTreeNode.getDefaultNode().isDisallowedDeReferenceUsed()) {
+                sbSelectFrom.append(" FROM ");
+                sbSelectFrom.append(entityType.getName());
+                sbSelectFrom.append(' ');
+                sbSelectFrom.append(entityAlias);
+                sbSelectFrom.append(" LEFT JOIN ");
+                sbSelectFrom.append(entityAlias).append('.').append(collectionName)
+                        .append(' ').append(JoinManager.COLLECTION_DML_BASE_QUERY_ALIAS);
+                sbSelectFrom.append(" WHERE EXISTS (SELECT 1");
+                List<String> whereClauseConjuncts = new ArrayList<>();
+                List<String> optionalWhereClauseConjuncts = new ArrayList<>();
+                joinManager.buildClause(sbSelectFrom, Collections.<ClauseType>emptySet(), null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, nodesToFetch, Collections.<JoinNode>emptySet(), rootNode);
+                sbSelectFrom.append(tempSb);
+                for (String whereClauseConjunct : whereClauseConjuncts) {
+                    sbSelectFrom.append(" AND ").append(whereClauseConjunct);
+                }
+                sbSelectFrom.append(')');
+            } else {
+                List<String> whereClauseConjuncts = new ArrayList<>();
+                List<String> optionalWhereClauseConjuncts = new ArrayList<>();
+                joinManager.buildClause(sbSelectFrom, Collections.<ClauseType>emptySet(), null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, nodesToFetch, Collections.<JoinNode>emptySet(), null);
+                sbSelectFrom.append(tempSb);
+                for (String whereClauseConjunct : whereClauseConjuncts) {
+                    sbSelectFrom.append(" AND ").append(whereClauseConjunct);
+                }
+            }
         }
     }
 
@@ -175,7 +246,7 @@ public abstract class AbstractDeleteCollectionCriteriaBuilder<T, X extends BaseD
         ExtendedQuerySupport extendedQuerySupport = getService(ExtendedQuerySupport.class);
         String sql = extendedQuerySupport.getSql(em, baseQuery);
         String ownerAlias = extendedQuerySupport.getSqlAlias(em, baseQuery, entityAlias);
-        String targetAlias = extendedQuerySupport.getSqlAlias(em, baseQuery, CollectionDeleteModificationQuerySpecification.COLLECTION_BASE_QUERY_ALIAS);
+        String targetAlias = extendedQuerySupport.getSqlAlias(em, baseQuery, JoinManager.COLLECTION_DML_BASE_QUERY_ALIAS);
         JoinTable joinTable = collectionAttribute.getJoinTable();
         if (joinTable == null) {
             throw new IllegalStateException("Deleting inverse collections is not supported!");

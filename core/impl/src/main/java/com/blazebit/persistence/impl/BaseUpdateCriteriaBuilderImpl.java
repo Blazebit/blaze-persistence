@@ -30,6 +30,8 @@ import com.blazebit.persistence.parser.expression.SubqueryExpression;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.JpaMetamodelAccessor;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -212,7 +214,17 @@ public abstract class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCrite
         sbSelectFrom.append(entityType.getName()).append(' ');
         sbSelectFrom.append(entityAlias);
         appendSetClause(sbSelectFrom, externalRepresentation);
-        appendWhereClause(sbSelectFrom, externalRepresentation);
+        JoinNode rootNode = joinManager.getRoots().get(0);
+        if (joinManager.getRoots().size() > 1 || !rootNode.getNodes().isEmpty() || !rootNode.getTreatedJoinNodes().isEmpty() || !rootNode.getEntityJoinNodes().isEmpty()) {
+            sbSelectFrom.append(" WHERE EXISTS (SELECT 1");
+            List<String> whereClauseConjuncts = new ArrayList<>();
+            List<String> optionalWhereClauseConjuncts = new ArrayList<>();
+            joinManager.buildClause(sbSelectFrom, Collections.<ClauseType>emptySet(), null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, nodesToFetch, Collections.<JoinNode>emptySet(), rootNode);
+            appendWhereClause(sbSelectFrom, externalRepresentation);
+            sbSelectFrom.append(')');
+        } else {
+            appendWhereClause(sbSelectFrom, externalRepresentation);
+        }
     }
 
     protected void appendSetClause(StringBuilder sbSelectFrom, boolean externalRepresentation) {
@@ -232,7 +244,7 @@ public abstract class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCrite
                 appendSetElement(sbSelectFrom, attributeEntry.getKey(), selectInfos.get(attributeEntry.getValue()).getExpression());
                 while (setAttributeIter.hasNext()) {
                     attributeEntry = setAttributeIter.next();
-                    sbSelectFrom.append(',');
+                    sbSelectFrom.append(", ");
                     appendSetElement(sbSelectFrom, attributeEntry.getKey(), selectInfos.get(attributeEntry.getValue()).getExpression());
                 }
             }

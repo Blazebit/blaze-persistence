@@ -75,7 +75,12 @@ import java.util.Objects;
  */
 public class EqualityCheckingVisitor implements Expression.ResultVisitor<Boolean> {
 
-    public static final EqualityCheckingVisitor INSTANCE = new EqualityCheckingVisitor();
+    public static final ThreadLocal<EqualityCheckingVisitor> INSTANCE = new ThreadLocal<EqualityCheckingVisitor>() {
+        @Override
+        protected EqualityCheckingVisitor initialValue() {
+            return new EqualityCheckingVisitor();
+        }
+    };
 
     private String alias;
     private Expression referenceExpression;

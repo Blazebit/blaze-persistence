@@ -46,11 +46,13 @@ import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ListAttribute;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.MapAttribute;
+import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -77,11 +79,11 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
     public AbstractUpdateCollectionCriteriaBuilder(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, Class<T> clazz, String alias, CTEManager.CTEKey cteName, Class<?> cteClass, Y result, CTEBuilderListener listener, String collectionName) {
         super(mainQuery, queryContext, isMainQuery, clazz, alias, cteName, cteClass, result, listener);
         this.collectionName = collectionName;
-        ExtendedManagedType extendedManagedType = mainQuery.metamodel.getManagedType(ExtendedManagedType.class, entityType);
+        ExtendedManagedType<?> extendedManagedType = mainQuery.metamodel.getManagedType(ExtendedManagedType.class, entityType);
         this.collectionAttribute = extendedManagedType.getAttribute(collectionName);
         // Add the join here so that references in the where clause go the the expected join node
         // Also, this validates the collection actually exists
-        JoinNode join = joinManager.join(entityAlias + "." + collectionName, CollectionUpdateModificationQuerySpecification.COLLECTION_BASE_QUERY_ALIAS, JoinType.LEFT, false, true, null);
+        JoinNode join = joinManager.join(entityAlias + "." + collectionName, JoinManager.COLLECTION_DML_BASE_QUERY_ALIAS, JoinType.LEFT, false, true, null);
         join.setDeReferenceFunction(mainQuery.jpaProvider.getCustomFunctionInvocation(CollectionDmlSupportFunction.FUNCTION_NAME, 1));
         join.getParent().setDeReferenceFunction(mainQuery.jpaProvider.getCustomFunctionInvocation(CollectionDmlSupportFunction.FUNCTION_NAME, 1));
         this.elementType = join.getType();
@@ -91,7 +93,32 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
         if (collectionAttribute.getMappedBy() != null) {
             // Use a different alias to properly prefix paths with the collection role alias
             JoinNode rootNode = joinManager.getRootNodeOrFail(null);
-            rootNode.getAliasInfo().setAlias(CollectionUpdateModificationQuerySpecification.COLLECTION_BASE_QUERY_ALIAS + "." + collectionAttribute.getMappedBy());
+            rootNode.getAliasInfo().setAlias(JoinManager.COLLECTION_DML_BASE_QUERY_ALIAS + "." + collectionAttribute.getMappedBy());
+        } else {
+            JoinTable joinTable = collectionAttribute.getJoinTable();
+            Set<String> idAttributeNames = joinTable.getIdAttributeNames();
+            Set<String> ownerAttributes = new HashSet<>(idAttributeNames.size());
+            for (String idAttributeName : idAttributeNames) {
+                ownerAttributes.add(idAttributeName);
+                int dotIdx = -1;
+                while ((dotIdx = idAttributeName.indexOf('.', dotIdx + 1)) != -1) {
+                    ownerAttributes.add(idAttributeName.substring(0, dotIdx));
+                }
+            }
+            join.getParent().setAllowedDeReferences(ownerAttributes);
+            join.getParent().setDisallowedDeReferenceAlias(aliasManager.generateRootAlias(join.getParent().getAlias()));
+
+            Set<String> elementAttributes = new HashSet<>();
+            if (((PluralAttribute<?, ?, ?>) collectionAttribute.getAttribute()).getElementType() instanceof ManagedType<?>) {
+                String prefix = collectionAttribute.getAttributePathString() + ".";
+                for (Map.Entry<String, ? extends ExtendedAttribute<?, ?>> entry : extendedManagedType.getAttributes().entrySet()) {
+                    if (entry.getKey().startsWith(prefix)) {
+                        elementAttributes.add(entry.getKey().substring(prefix.length()));
+                    }
+                }
+            }
+            join.setAllowedDeReferences(elementAttributes);
+            join.setDisallowedDeReferenceAlias(aliasManager.generateRootAlias(join.getAlias()));
         }
 
         Map<String, ExtendedAttribute<?, ?>> collectionAttributeEntries = JpaUtils.getCollectionAttributeEntries(mainQuery.metamodel, entityType, collectionAttribute);
@@ -154,30 +181,73 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
 
     @Override
     protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, JoinNode lateralJoinNode) {
+        JoinNode rootNode = joinManager.getRoots().get(0);
+        JoinTreeNode collectionTreeNode = rootNode.getNodes().get(collectionName);
+        boolean hasOtherJoinNodes = joinManager.getRoots().size() > 1
+                || rootNode.getNodes().size() > 1
+                || !rootNode.getTreatedJoinNodes().isEmpty()
+                || !rootNode.getEntityJoinNodes().isEmpty()
+                || collectionTreeNode.getJoinNodes().size() > 1
+                || collectionTreeNode.getDefaultNode().hasChildNodes();
         if (externalRepresentation) {
             sbSelectFrom.append("UPDATE ");
             sbSelectFrom.append(entityType.getName());
             sbSelectFrom.append('(').append(collectionName).append(") ");
             sbSelectFrom.append(entityAlias);
+            if (collectionAttribute.getJoinTable() == null) {
+                rootNode.getAliasInfo().setAlias(entityAlias);
+            }
+            collectionTreeNode.getDefaultNode().getAliasInfo().setAlias(entityAlias + "." + collectionName);
             appendSetClause(sbSelectFrom, externalRepresentation);
+            if (hasOtherJoinNodes) {
+                List<String> whereClauseConjuncts = new ArrayList<>();
+                List<String> optionalWhereClauseConjuncts = new ArrayList<>();
+                joinManager.buildClause(sbSelectFrom, Collections.<ClauseType>emptySet(), null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, nodesToFetch, Collections.<JoinNode>emptySet(), rootNode);
+            }
             appendWhereClause(sbSelectFrom, externalRepresentation);
+            if (collectionAttribute.getJoinTable() == null) {
+                rootNode.getAliasInfo().setAlias(JoinManager.COLLECTION_DML_BASE_QUERY_ALIAS + "." + collectionAttribute.getMappedBy());
+            }
+            collectionTreeNode.getDefaultNode().getAliasInfo().setAlias(JoinManager.COLLECTION_DML_BASE_QUERY_ALIAS);
         } else if (collectionAttribute.getJoinTable() == null) {
             sbSelectFrom.append("UPDATE ");
             sbSelectFrom.append(((EntityType<?>) elementType).getName());
             sbSelectFrom.append(' ');
-            sbSelectFrom.append(CollectionUpdateModificationQuerySpecification.COLLECTION_BASE_QUERY_ALIAS);
+            sbSelectFrom.append(JoinManager.COLLECTION_DML_BASE_QUERY_ALIAS);
             appendSetClause(sbSelectFrom, externalRepresentation);
             appendWhereClause(sbSelectFrom, externalRepresentation);
         } else {
             // The internal representation is just a "hull" to hold the parameters at the appropriate positions
-            sbSelectFrom.append("SELECT 1 FROM ");
-            sbSelectFrom.append(entityType.getName());
-            sbSelectFrom.append(' ');
-            sbSelectFrom.append(entityAlias);
-            sbSelectFrom.append(" LEFT JOIN ");
-            sbSelectFrom.append(entityAlias).append('.').append(collectionName)
-                    .append(' ').append(CollectionUpdateModificationQuerySpecification.COLLECTION_BASE_QUERY_ALIAS);
-            appendWhereClause(sbSelectFrom, externalRepresentation);
+            sbSelectFrom.append("SELECT 1");
+            StringBuilder tempSb = new StringBuilder();
+            appendWhereClause(tempSb, externalRepresentation);
+
+            if (hasOtherJoinNodes || rootNode.needsDisallowedDeReferenceAlias(externalRepresentation) || collectionTreeNode.getDefaultNode().needsDisallowedDeReferenceAlias(externalRepresentation)) {
+                sbSelectFrom.append(" FROM ");
+                sbSelectFrom.append(entityType.getName());
+                sbSelectFrom.append(' ');
+                sbSelectFrom.append(entityAlias);
+                sbSelectFrom.append(" LEFT JOIN ");
+                sbSelectFrom.append(entityAlias).append('.').append(collectionName)
+                        .append(' ').append(JoinManager.COLLECTION_DML_BASE_QUERY_ALIAS);
+                sbSelectFrom.append(" WHERE EXISTS (SELECT 1");
+                List<String> whereClauseConjuncts = new ArrayList<>();
+                List<String> optionalWhereClauseConjuncts = new ArrayList<>();
+                joinManager.buildClause(sbSelectFrom, Collections.<ClauseType>emptySet(), null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, nodesToFetch, Collections.<JoinNode>emptySet(), rootNode);
+                sbSelectFrom.append(tempSb);
+                for (String whereClauseConjunct : whereClauseConjuncts) {
+                    sbSelectFrom.append(" AND ").append(whereClauseConjunct);
+                }
+                sbSelectFrom.append(')');
+            } else {
+                List<String> whereClauseConjuncts = new ArrayList<>();
+                List<String> optionalWhereClauseConjuncts = new ArrayList<>();
+                joinManager.buildClause(sbSelectFrom, Collections.<ClauseType>emptySet(), null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, nodesToFetch, Collections.<JoinNode>emptySet(), null);
+                sbSelectFrom.append(tempSb);
+                for (String whereClauseConjunct : whereClauseConjuncts) {
+                    sbSelectFrom.append(" AND ").append(whereClauseConjunct);
+                }
+            }
 
             // Create the select query strings that are used for the set items
             // The idea is to encode a set item as an equality predicate in a dedicated query
@@ -195,7 +265,7 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
                 } else {
                     StringBuilder sb = new StringBuilder();
                     sb.append(expression, 0, collectionIndex);
-                    sb.append(CollectionUpdateModificationQuerySpecification.COLLECTION_BASE_QUERY_ALIAS);
+                    sb.append(JoinManager.COLLECTION_DML_BASE_QUERY_ALIAS);
                     sb.append(expression, collectionIndex + collectionName.length(), expression.length());
                     expression = sb.toString();
                 }
@@ -217,7 +287,7 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
         sbSetExpressionQuery.append(entityAlias);
         sbSetExpressionQuery.append(" LEFT JOIN ");
         sbSetExpressionQuery.append(entityAlias).append('.').append(collectionName)
-                .append(' ').append(CollectionUpdateModificationQuerySpecification.COLLECTION_BASE_QUERY_ALIAS);
+                .append(' ').append(JoinManager.COLLECTION_DML_BASE_QUERY_ALIAS);
         sbSetExpressionQuery.append(" WHERE ");
         sbSetExpressionQuery.append(attributePath).append('=');
         value.accept(queryGenerator);
@@ -231,7 +301,7 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
     @Override
     protected boolean appendSetElementEntityPrefix(String trimmedPath) {
         // Prevent collection aliases to be prefixed
-        return !trimmedPath.startsWith(CollectionUpdateModificationQuerySpecification.COLLECTION_BASE_QUERY_ALIAS) && super.appendSetElementEntityPrefix(trimmedPath);
+        return !trimmedPath.startsWith(JoinManager.COLLECTION_DML_BASE_QUERY_ALIAS) && super.appendSetElementEntityPrefix(trimmedPath);
     }
 
     @Override
@@ -297,7 +367,7 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
         ExtendedQuerySupport extendedQuerySupport = getService(ExtendedQuerySupport.class);
         String sql = extendedQuerySupport.getSql(em, baseQuery);
         String ownerAlias = extendedQuerySupport.getSqlAlias(em, baseQuery, entityAlias);
-        String targetAlias = extendedQuerySupport.getSqlAlias(em, baseQuery, CollectionUpdateModificationQuerySpecification.COLLECTION_BASE_QUERY_ALIAS);
+        String targetAlias = extendedQuerySupport.getSqlAlias(em, baseQuery, JoinManager.COLLECTION_DML_BASE_QUERY_ALIAS);
         JoinTable joinTable = collectionAttribute.getJoinTable();
         int joinTableIndex = SqlUtils.indexOfTableName(sql, joinTable.getTableName());
         String collectionAlias = SqlUtils.extractAlias(sql, joinTableIndex + joinTable.getTableName().length());

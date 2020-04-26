@@ -3465,7 +3465,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             sb.append("SELECT 1");
             List<String> whereClauseConjuncts = new ArrayList<>();
             List<String> optionalWhereClauseConjuncts = new ArrayList<>();
-            joinManager.buildClause(sb, EnumSet.noneOf(ClauseType.class), null, false, false, false, true, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, nodesToFetch, Collections.EMPTY_SET);
+            joinManager.buildClause(sb, EnumSet.noneOf(ClauseType.class), null, false, false, false, true, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, nodesToFetch, Collections.EMPTY_SET, null);
         } finally {
             queryGenerator.setExternalRepresentation(originalExternalRepresentation);
         }
@@ -3583,7 +3583,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
             List<String> whereClauseConjuncts = new ArrayList<>();
             List<String> optionalWhereClauseConjuncts = new ArrayList<>();
-            joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, nodesToFetch, Collections.<JoinNode>emptySet());
+            joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, nodesToFetch, Collections.<JoinNode>emptySet(), null);
 
             appendWhereClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, lateralJoinNode);
             appendGroupByClause(sbSelectFrom);
