@@ -75,7 +75,9 @@ import com.blazebit.persistence.spi.JpaProvider;
 
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.BasicType;
+import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ListAttribute;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.MapAttribute;
@@ -104,6 +106,7 @@ import java.util.logging.Logger;
  */
 public class JoinManager extends AbstractManager<ExpressionModifier> {
 
+    public static final String COLLECTION_DML_BASE_QUERY_ALIAS = "_collection";
     private static final Logger LOG = Logger.getLogger(JoinManager.class.getName());
 
     // we might have multiple nodes that depend on the same unresolved alias,
@@ -1262,7 +1265,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
     }
 
     Set<JoinNode> buildClause(StringBuilder sb, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes, boolean externalRepresentation, boolean ignoreCardinality, boolean lateralExample, List<String> optionalWhereConjuncts,
-                              List<String> whereConjuncts, Map<Class<?>, Map<String, DbmsModificationState>> explicitVersionEntities, Set<JoinNode> nodesToFetch, Set<JoinNode> alwaysIncludedNodes) {
+                              List<String> whereConjuncts, Map<Class<?>, Map<String, DbmsModificationState>> explicitVersionEntities, Set<JoinNode> nodesToFetch, Set<JoinNode> alwaysIncludedNodes, JoinNode virtualRootNode) {
         final boolean renderFetches = !clauseExclusions.contains(ClauseType.SELECT);
         collectionJoinNodes.clear();
         renderedJoins.clear();
@@ -1277,7 +1280,43 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         boolean firstRootNode = true;
         while (!stack.isEmpty()) {
             JoinNode node = stack.remove(stack.size() - 1);
-            if (node.isRootJoinNode()) {
+            boolean isRootNode;
+            if (virtualRootNode == null) {
+                isRootNode = node.isRootJoinNode();
+            } else {
+                if (virtualRootNode == node) {
+                    if (node.isDisallowedDeReferenceUsed()) {
+                        isRootNode = true;
+                    } else {
+                        renderedJoins.add(node);
+                        // TODO: not sure if needed since applyImplicitJoins will already invoke that
+                        node.registerDependencies();
+                        addDefaultJoinsAndRenderJoinNode(sb, null, stack, node, false, clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, placeholderRequiringNodes, alwaysIncludedNodes, externalRepresentation, lateralExample);
+                        continue;
+                    }
+                } else {
+                    if (virtualRootNode.isDisallowedDeReferenceUsed()) {
+                        // When we render the virtual root node due to de-reference usage, we have to treat this like a "normal join"
+                        isRootNode = false;
+                    } else {
+                        if (externalRepresentation && queryBuilder instanceof AbstractUpdateCollectionCriteriaBuilder<?, ?, ?>) {
+                            // Special rendering for the collection UPDATE statement
+                            if (node.getParent() == virtualRootNode) {
+                                renderedJoins.add(node);
+                                // TODO: not sure if needed since applyImplicitJoins will already invoke that
+                                node.registerDependencies();
+                                addDefaultJoinsAndRenderJoinNode(sb, null, stack, node, false, clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, placeholderRequiringNodes, alwaysIncludedNodes, externalRepresentation, lateralExample);
+                                continue;
+                            } else {
+                                isRootNode = node.getParent() == null || node.getParent().getParent() == virtualRootNode;
+                            }
+                        } else {
+                            isRootNode = node.getParent() == virtualRootNode;
+                        }
+                    }
+                }
+            }
+            if (isRootNode) {
                 if (firstRootNode) {
                     firstRootNode = false;
                 } else {
@@ -1344,7 +1383,15 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                     sb.append(')');
                 } else {
                     if (correlationParent != null && !node.isLateral()) {
-                        renderAlias = renderCorrelationJoinPath(sb, correlationParent.getAliasInfo(), node, whereConjuncts, optionalWhereConjuncts, externalRepresentation);
+                        renderAlias = renderCorrelationJoinPath(sb, correlationParent, node, node.getCorrelationPath(), whereConjuncts, optionalWhereConjuncts, externalRepresentation);
+                    } else if (virtualRootNode != null && (virtualRootNode == node.getParent() || externalRepresentation && queryBuilder instanceof AbstractUpdateCollectionCriteriaBuilder<?, ?, ?> && node.getParent() != null && node.getParent().getParent() == virtualRootNode)) {
+                        if (node.isCollectionDmlNode(externalRepresentation)) {
+                            sb.append(node.getParent().getInternalEntityType().getName());
+                            sb.append('(').append(node.getParentTreeNode().getRelationName()).append(") ").append(node.getParent().getAlias());
+                            renderAlias = false;
+                        } else {
+                            renderAlias = renderCorrelationJoinPath(sb, node.getParent(), node, node.getParentTreeNode().getRelationName(), whereConjuncts, optionalWhereConjuncts, externalRepresentation);
+                        }
                     } else {
                         EntityType<?> type = node.getInternalEntityType();
                         sb.append(type.getName());
@@ -1363,7 +1410,12 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                         sb.append(aliasPrefix);
                     }
 
-                    sb.append(node.getAliasInfo().getAlias());
+                    if (node.needsDisallowedDeReferenceAlias(externalRepresentation)) {
+                        sb.append(node.getDisallowedDeReferenceAlias());
+                        addDeReferenceAliasMatchPredicate(node, whereConjuncts);
+                    } else {
+                        sb.append(node.getAliasInfo().getAlias());
+                    }
                     if (externalRepresentation && node.isInlineCte()) {
                         renderInlineCteAttributes(sb, node);
                     }
@@ -1688,7 +1740,11 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                     sb.append(aliasPrefix);
                 }
 
-                sb.append(node.getAliasInfo().getAlias());
+                if (node.needsDisallowedDeReferenceAlias(externalRepresentation)) {
+                    sb.append(node.getDisallowedDeReferenceAlias());
+                } else {
+                    sb.append(node.getAliasInfo().getAlias());
+                }
                 if (externalRepresentation && node.isInlineCte()) {
                     renderInlineCteAttributes(sb, node);
                 }
@@ -1754,7 +1810,8 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         sb.append(')');
     }
 
-    private boolean renderCorrelationJoinPath(StringBuilder sb, JoinAliasInfo joinBase, JoinNode node, List<String> whereConjuncts, List<String> optionalWhereConjuncts, boolean externalRepresentation) {
+    private boolean renderCorrelationJoinPath(StringBuilder sb, JoinNode joinBase, JoinNode node, String correlationPath, List<String> whereConjuncts, List<String> optionalWhereConjuncts, boolean externalRepresentation) {
+        JoinAliasInfo joinBaseAliasInfo = joinBase.getAliasInfo();
         StringBuilder whereSb = null;
         if (node.getJoinNodesNeedingTreatConjunct() != null) {
             whereSb = new StringBuilder();
@@ -1771,17 +1828,17 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         final boolean renderTreat = mainQuery.jpaProvider.supportsTreatJoin() &&
                 (!mainQuery.jpaProvider.supportsSubtypeRelationResolving() || node.getJoinType() == JoinType.INNER);
         if (mainQuery.jpaProvider.needsCorrelationPredicateWhenCorrelatingWithWhereClause() || node.getTreatType() != null && !renderTreat && !mainQuery.jpaProvider.supportsSubtypeRelationResolving()) {
-            ExtendedManagedType<?> extendedManagedType = metamodel.getManagedType(ExtendedManagedType.class, node.getCorrelationParent().getManagedType());
-            ExtendedAttribute attribute = extendedManagedType.getAttribute(node.getCorrelationPath());
+            ExtendedManagedType<?> extendedManagedType = metamodel.getManagedType(ExtendedManagedType.class, joinBase.getManagedType());
+            ExtendedAttribute attribute = extendedManagedType.getAttribute(correlationPath);
             if (StringUtils.isEmpty(attribute.getMappedBy())) {
                 if (attribute.getAttribute() instanceof ListAttribute<?, ?> && !attribute.isBag()) {
                     // What the hell Hibernate? Why just for indexed lists?
-                    sb.append(node.getCorrelationParent().getEntityType().getName());
+                    sb.append(joinBase.getEntityType().getName());
                     sb.append(" _synthetic_");
                     sb.append(node.getAlias());
                     sb.append(" JOIN _synthetic_");
                     sb.append(node.getAlias());
-                    sb.append('.').append(node.getCorrelationPath());
+                    sb.append('.').append(correlationPath);
 
                     if (whereSb == null) {
                         whereSb = new StringBuilder();
@@ -1795,7 +1852,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                     }
 
                     whereSb.append(" = ");
-                    node.getCorrelationParent().appendAlias(whereSb, false, externalRepresentation);
+                    joinBase.appendAlias(whereSb, false, externalRepresentation);
                     if (singleValuedAssociationId) {
                         whereSb.append('.').append(extendedManagedType.getIdAttribute().getName());
                     }
@@ -1830,7 +1887,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                     whereSb.append('.').append(extendedManagedType.getIdAttribute().getName());
                 }
                 whereSb.append(" = ");
-                node.getCorrelationParent().appendAlias(whereSb, false, externalRepresentation);
+                joinBase.appendAlias(whereSb, false, externalRepresentation);
                 if (singleValuedAssociationId) {
                     whereSb.append('.').append(extendedManagedType.getIdAttribute().getName());
                 }
@@ -1841,19 +1898,19 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         if (node.getTreatType() != null) {
             if (renderTreat) {
                 sb.append("TREAT(");
-                renderAlias(sb, joinBase.getJoinNode(), mainQuery.jpaProvider.supportsRootTreat(), externalRepresentation);
+                renderAlias(sb, joinBaseAliasInfo.getJoinNode(), mainQuery.jpaProvider.supportsRootTreat(), externalRepresentation);
                 sb.append('.');
-                sb.append(node.getCorrelationPath());
+                sb.append(correlationPath);
                 sb.append(" AS ");
                 sb.append(node.getTreatType().getName());
                 sb.append(')');
             } else if (mainQuery.jpaProvider.supportsSubtypeRelationResolving()) {
-                sb.append(joinBase.getAlias()).append('.').append(node.getCorrelationPath());
+                sb.append(joinBaseAliasInfo.getAlias()).append('.').append(correlationPath);
             } else {
                 throw new IllegalArgumentException("Treat should not be used as the JPA provider does not support subtype property access!");
             }
         } else {
-            JoinNode baseNode = joinBase.getJoinNode();
+            JoinNode baseNode = joinBaseAliasInfo.getJoinNode();
             if (baseNode.getTreatType() != null) {
                 if (mainQuery.jpaProvider.supportsRootTreatJoin()) {
                     baseNode.appendAlias(sb, true, externalRepresentation);
@@ -1866,7 +1923,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 baseNode.appendAlias(sb, false, externalRepresentation);
             }
 
-            sb.append('.').append(node.getCorrelationPath());
+            sb.append('.').append(correlationPath);
         }
 
         return true;
@@ -1921,11 +1978,47 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             sb.append(joinBase.getJoinNode().getAlias());
             sb.append(')');
         } else {
-            renderAlias(sb, joinBase.getJoinNode(), mainQuery.jpaProvider.supportsRootTreatJoin(), externalRepresentation);
+            if (joinBase.getJoinNode().needsDisallowedDeReferenceAlias(externalRepresentation)) {
+                sb.append(joinBase.getJoinNode().getDisallowedDeReferenceAlias());
+                if (node.getDisallowedDeReferenceAlias() != null) {
+                    if (node.getParentTreeNode().isMap()) {
+                        whereConjuncts.add("KEY(" + node.getDisallowedDeReferenceAlias() + ") = " + node.getDeReferenceFunction() + "KEY(" + node.getAlias() + "))");
+                    } else if (node.getParentTreeNode().getAttribute() instanceof ListAttribute<?, ?>) {
+                        whereConjuncts.add("INDEX(" + node.getDisallowedDeReferenceAlias() + ") = " + node.getDeReferenceFunction() + "INDEX(" + node.getAlias() + "))");
+                    } else {
+                        addDeReferenceAliasMatchPredicate(node, whereConjuncts);
+                    }
+                }
+            } else {
+                renderAlias(sb, joinBase.getJoinNode(), mainQuery.jpaProvider.supportsRootTreatJoin(), externalRepresentation);
+            }
             sb.append('.').append(node.getParentTreeNode().getRelationName());
         }
 
         return null;
+    }
+
+    private void addDeReferenceAliasMatchPredicate(JoinNode node, List<String> whereConjuncts) {
+        Type<?> type = node.getType();
+        if (type instanceof ManagedType<?>) {
+            if (JpaMetamodelUtils.isIdentifiable((ManagedType<?>) type)) {
+                for (SingularAttribute<?, ?> idAttribute : JpaMetamodelUtils.getIdAttributes((IdentifiableType<?>) type)) {
+                    if (idAttribute.getType() instanceof EmbeddableType<?>) {
+                        for (String propertyName : JpaMetamodelUtils.getEmbeddedPropertyNames((EmbeddableType<?>) idAttribute.getType())) {
+                            whereConjuncts.add(node.getDisallowedDeReferenceAlias() + "." + idAttribute.getName() + "." + propertyName + " = " + node.getDeReferenceFunction() + node.getAlias() + "." + idAttribute.getName() + "." + propertyName + ")");
+                        }
+                    } else {
+                        whereConjuncts.add(node.getDisallowedDeReferenceAlias() + "." + idAttribute.getName() + " = " + node.getDeReferenceFunction() + node.getAlias() + "." + idAttribute.getName() + ")");
+                    }
+                }
+            } else {
+                for (String propertyName : JpaMetamodelUtils.getEmbeddedPropertyNames((EmbeddableType<?>) type)) {
+                    whereConjuncts.add(node.getDisallowedDeReferenceAlias() + "." + propertyName + " = " + node.getDeReferenceFunction() + node.getAlias() + "." + propertyName + ")");
+                }
+            }
+        } else {
+            whereConjuncts.add(node.getDisallowedDeReferenceAlias() + " = " + node.getDeReferenceFunction() + node.getAlias() + ")");
+        }
     }
 
     private void renderAlias(StringBuilder sb, JoinNode baseNode, boolean supportsTreat, boolean externalRepresentation) {
@@ -3512,10 +3605,11 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
     private boolean findPredicate(CompoundPredicate compoundPredicate, Predicate pred, String elementAlias) {
         if (compoundPredicate != null) {
+            EqualityCheckingVisitor equalityCheckingVisitor = EqualityCheckingVisitor.INSTANCE.get();
             List<Predicate> children = compoundPredicate.getChildren();
             int size = children.size();
             for (int i = 0; i < size; i++) {
-                if (EqualityCheckingVisitor.INSTANCE.isEqual(children.get(i), pred, elementAlias)) {
+                if (equalityCheckingVisitor.isEqual(children.get(i), pred, elementAlias)) {
                     return true;
                 }
             }

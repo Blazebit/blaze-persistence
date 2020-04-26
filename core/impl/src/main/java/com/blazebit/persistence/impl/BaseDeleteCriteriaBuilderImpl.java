@@ -20,6 +20,9 @@ import com.blazebit.persistence.BaseDeleteCriteriaBuilder;
 import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.spi.DbmsStatementType;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -43,7 +46,17 @@ public abstract class BaseDeleteCriteriaBuilderImpl<T, X extends BaseDeleteCrite
         sbSelectFrom.append("DELETE FROM ");
         sbSelectFrom.append(entityType.getName()).append(' ');
         sbSelectFrom.append(entityAlias);
-        appendWhereClause(sbSelectFrom, externalRepresentation);
+        JoinNode rootNode = joinManager.getRoots().get(0);
+        if (joinManager.getRoots().size() > 1 || rootNode.hasChildNodes()) {
+            sbSelectFrom.append(" WHERE EXISTS (SELECT 1");
+            List<String> whereClauseConjuncts = new ArrayList<>();
+            List<String> optionalWhereClauseConjuncts = new ArrayList<>();
+            joinManager.buildClause(sbSelectFrom, Collections.<ClauseType>emptySet(), null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, nodesToFetch, Collections.<JoinNode>emptySet(), rootNode);
+            appendWhereClause(sbSelectFrom, externalRepresentation);
+            sbSelectFrom.append(')');
+        } else {
+            appendWhereClause(sbSelectFrom, externalRepresentation);
+        }
     }
 
 }

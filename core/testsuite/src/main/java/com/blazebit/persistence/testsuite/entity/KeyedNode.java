@@ -44,6 +44,11 @@ public class KeyedNode {
         this.id = id;
     }
 
+    public KeyedNode(Integer id, Root parent) {
+        this.id = id;
+        this.parent = parent;
+    }
+
     public Integer getId() {
         return id;
     }

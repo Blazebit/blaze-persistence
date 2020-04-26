@@ -24,4 +24,5 @@ package com.blazebit.persistence;
  * @since 1.1.0
  */
 public interface BaseModificationCriteriaBuilder<X extends BaseModificationCriteriaBuilder<X>> extends WhereBuilder<X> {
+    // TODO: Add from and join methods
 }

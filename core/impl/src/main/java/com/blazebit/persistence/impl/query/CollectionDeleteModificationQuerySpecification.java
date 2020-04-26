@@ -35,8 +35,6 @@ import java.util.Set;
  */
 public class CollectionDeleteModificationQuerySpecification<T> extends ModificationQuerySpecification<T> {
 
-    public static final String COLLECTION_BASE_QUERY_ALIAS = "_collection";
-
     private final Query deleteExampleQuery;
     private final String deleteSql;
     private final Map<String, String> columnExpressionRemappings;

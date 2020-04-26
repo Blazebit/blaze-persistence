@@ -105,7 +105,7 @@ public class CollectionRoleInverseDeleteTest extends AbstractCoreTest {
                             .where("personSub.name").eq("P1")
                         .end()
                         .where("p.ownedDocuments.name").eq("D1");
-                String expected = "DELETE FROM Person(ownedDocuments) p WHERE EXISTS (SELECT 1 FROM Person personSub WHERE personSub.id = _collection.owner.id AND personSub.name = :param_0) AND _collection.name = :param_1";
+                String expected = "DELETE FROM Person(ownedDocuments) p WHERE EXISTS (SELECT 1 FROM Person personSub WHERE personSub.id = p.id AND personSub.name = :param_0) AND p.ownedDocuments.name = :param_1";
 
                 assertEquals(expected, cb.getQueryString());
 
@@ -131,7 +131,7 @@ public class CollectionRoleInverseDeleteTest extends AbstractCoreTest {
                             .where("personSub.name").eq("P1")
                         .end()
                         .where("p.ownedDocuments.id").in(doc1.getId(), doc2.getId());
-                String expected = "DELETE FROM Person(ownedDocuments) p WHERE EXISTS (SELECT 1 FROM Person personSub WHERE personSub.id = _collection.owner.id AND personSub.name = :param_0) AND _collection.id IN (:param_1)";
+                String expected = "DELETE FROM Person(ownedDocuments) p WHERE EXISTS (SELECT 1 FROM Person personSub WHERE personSub.id = p.id AND personSub.name = :param_0) AND p.ownedDocuments.id IN (:param_1)";
 
                 assertEquals(expected, cb.getQueryString());
 
@@ -159,7 +159,7 @@ public class CollectionRoleInverseDeleteTest extends AbstractCoreTest {
                             .where("personSub.name").eq("P1")
                         .end()
                         .where("p.ownedDocuments.id").in(doc1.getId(), doc2.getId());
-                String expected = "DELETE FROM Person(ownedDocuments) p WHERE EXISTS (SELECT 1 FROM Person personSub WHERE personSub.id = _collection.owner.id AND personSub.name = :param_0) AND _collection.id IN (:param_1)";
+                String expected = "DELETE FROM Person(ownedDocuments) p WHERE EXISTS (SELECT 1 FROM Person personSub WHERE personSub.id = p.id AND personSub.name = :param_0) AND p.ownedDocuments.id IN (:param_1)";
 
                 assertEquals(expected, cb.getQueryString());
 
@@ -204,7 +204,7 @@ public class CollectionRoleInverseDeleteTest extends AbstractCoreTest {
                             .where("personSub.name").eq("P1")
                         .end()
                         .where("p.ownedDocuments.id").in(doc1.getId(), doc2.getId());
-                String expected = "DELETE FROM Person(ownedDocuments) p WHERE EXISTS (SELECT 1 FROM Person personSub WHERE personSub.id = _collection.owner.id AND personSub.name = :param_0) AND _collection.id IN (:param_1)";
+                String expected = "DELETE FROM Person(ownedDocuments) p WHERE EXISTS (SELECT 1 FROM Person personSub WHERE personSub.id = p.id AND personSub.name = :param_0) AND p.ownedDocuments.id IN (:param_1)";
 
                 assertEquals(expected, cb.getQueryString());
 
@@ -242,7 +242,7 @@ public class CollectionRoleInverseDeleteTest extends AbstractCoreTest {
                 cb.where("doc.id").eqExpression("idHolder.id");
 
                 String expected = "WITH IdHolderCTE(id) AS(\n"
-                        + "DELETE FROM Person(ownedDocuments) p WHERE EXISTS (SELECT 1 FROM Person personSub WHERE personSub.id = _collection.owner.id AND personSub.name = :param_0) AND _collection.id = :param_1 RETURNING ownedDocuments.id\n"
+                        + "DELETE FROM Person(ownedDocuments) p WHERE EXISTS (SELECT 1 FROM Person personSub WHERE personSub.id = p.id AND personSub.name = :param_0) AND p.ownedDocuments.id = :param_1 RETURNING ownedDocuments.id\n"
                         + ")\n"
                         + "SELECT doc FROM OLD(Document) doc, IdHolderCTE idHolder WHERE doc.id = idHolder.id";
 
@@ -283,7 +283,7 @@ public class CollectionRoleInverseDeleteTest extends AbstractCoreTest {
                 cb.where("doc.id").eqExpression("idHolder.id");
 
                 String expected = "WITH IdHolderCTE(id) AS(\n"
-                        + "DELETE FROM Person(ownedDocuments) p WHERE EXISTS (SELECT 1 FROM Person personSub WHERE personSub.id = _collection.owner.id AND personSub.name = :param_0) AND _collection.id = :param_1 RETURNING ownedDocuments.id\n"
+                        + "DELETE FROM Person(ownedDocuments) p WHERE EXISTS (SELECT 1 FROM Person personSub WHERE personSub.id = p.id AND personSub.name = :param_0) AND p.ownedDocuments.id = :param_1 RETURNING ownedDocuments.id\n"
                         + ")\n"
                         + "SELECT doc FROM NEW(Document) doc, IdHolderCTE idHolder WHERE doc.id = idHolder.id";
 

@@ -57,7 +57,6 @@ import java.util.TreeSet;
  */
 public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseInsertCriteriaBuilder<T, X>, Y> extends BaseInsertCriteriaBuilderImpl<T, X, Y> {
 
-    private static final String COLLECTION_BASE_QUERY_ALIAS = "_collection";
     private final String collectionName;
     private final String keyFunctionExpression;
     private final Map<String, ExtendedAttribute<?, ?>> collectionAttributeEntries;
@@ -208,7 +207,7 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
         Query insertExampleQuery = getInsertExampleQuery();
         String insertExampleSql = extendedQuerySupport.getSql(em, insertExampleQuery);
         String ownerAlias = extendedQuerySupport.getSqlAlias(em, insertExampleQuery, entityAlias);
-        String targetAlias = extendedQuerySupport.getSqlAlias(em, insertExampleQuery, COLLECTION_BASE_QUERY_ALIAS);
+        String targetAlias = extendedQuerySupport.getSqlAlias(em, insertExampleQuery, JoinManager.COLLECTION_DML_BASE_QUERY_ALIAS);
         JoinTable joinTable = mainQuery.jpaProvider.getJoinTable(entityType, collectionName);
         int joinTableIndex = SqlUtils.indexOfTableName(insertExampleSql, joinTable.getTableName());
         String collectionAlias = SqlUtils.extractAlias(insertExampleSql, joinTableIndex + joinTable.getTableName().length());
@@ -304,7 +303,7 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
                 sb.append(entityAlias).append('.').append(expression);
             } else {
                 sb.append(expression, 0, collectionIndex);
-                sb.append(COLLECTION_BASE_QUERY_ALIAS);
+                sb.append(JoinManager.COLLECTION_DML_BASE_QUERY_ALIAS);
                 sb.append(expression, collectionIndex + collectionName.length(), expression.length());
             }
             sb.append(',');
@@ -317,7 +316,7 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
         sb.append(entityAlias);
         sb.append(" LEFT JOIN ");
         sb.append(entityAlias).append('.').append(collectionName)
-                .append(' ').append(COLLECTION_BASE_QUERY_ALIAS);
+                .append(' ').append(JoinManager.COLLECTION_DML_BASE_QUERY_ALIAS);
         return em.createQuery(sb.toString());
     }
 

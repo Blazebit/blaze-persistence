@@ -326,13 +326,13 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
             Set<JoinNode> countNodesToFetch = Collections.emptySet();
 
             if (countAll) {
-                joinManager.buildClause(sbSelectFrom, clauseExclusions, null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, countNodesToFetch, Collections.<JoinNode>emptySet());
+                joinManager.buildClause(sbSelectFrom, clauseExclusions, null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, countNodesToFetch, Collections.<JoinNode>emptySet(), null);
                 whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts);
             } else {
                 // Collect usage of collection join nodes to optimize away the count distinct
                 // Note that we always exclude the nodes with group by dependency. We consider just the ones from the identifiers
                 Set<JoinNode> identifierExpressionsToUseNonRootJoinNodes = getIdentifierExpressionsToUseNonRootJoinNodes();
-                Set<JoinNode> collectionJoinNodes = joinManager.buildClause(sbSelectFrom, clauseExclusions, null, true, externalRepresentation, true, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, countNodesToFetch, identifierExpressionsToUseNonRootJoinNodes);
+                Set<JoinNode> collectionJoinNodes = joinManager.buildClause(sbSelectFrom, clauseExclusions, null, true, externalRepresentation, true, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, countNodesToFetch, identifierExpressionsToUseNonRootJoinNodes, null);
                 boolean hasCollectionJoinUsages = collectionJoinNodes.size() > 0;
 
                 whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts);
@@ -413,13 +413,13 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
             Set<JoinNode> countNodesToFetch = Collections.emptySet();
 
             if (countAll) {
-                joinManager.buildClause(sbSelectFrom, NO_CLAUSE_EXCLUSION, null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, countNodesToFetch, Collections.<JoinNode>emptySet());
+                joinManager.buildClause(sbSelectFrom, NO_CLAUSE_EXCLUSION, null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, countNodesToFetch, Collections.<JoinNode>emptySet(), null);
                 whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts);
             } else {
                 // Collect usage of collection join nodes to optimize away the count distinct
                 // Note that we always exclude the nodes with group by dependency. We consider just the ones from the identifiers
                 Set<JoinNode> identifierExpressionsToUseNonRootJoinNodes = getIdentifierExpressionsToUseNonRootJoinNodes();
-                Set<JoinNode> collectionJoinNodes = joinManager.buildClause(sbSelectFrom, COUNT_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, null, true, externalRepresentation, true, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, countNodesToFetch, identifierExpressionsToUseNonRootJoinNodes);
+                Set<JoinNode> collectionJoinNodes = joinManager.buildClause(sbSelectFrom, COUNT_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, null, true, externalRepresentation, true, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, countNodesToFetch, identifierExpressionsToUseNonRootJoinNodes, null);
                 boolean hasCollectionJoinUsages = collectionJoinNodes.size() > 0;
 
                 whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts);

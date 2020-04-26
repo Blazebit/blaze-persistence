@@ -56,8 +56,8 @@ public class CollectionRoleDeleteTest extends AbstractCoreTest {
             @Override
             public void work(EntityManager em) {
                 Root r = new Root(1, "r");
-                IndexedNode i1 = new IndexedNode(2);
-                KeyedNode k1 = new KeyedNode(3);
+                IndexedNode i1 = new IndexedNode(2, r);
+                KeyedNode k1 = new KeyedNode(3, r);
 
                 r.getIndexedNodes().add(i1);
                 r.getIndexedNodesMany().add(i1);
@@ -99,17 +99,6 @@ public class CollectionRoleDeleteTest extends AbstractCoreTest {
     }
 
     @Test
-    @Ignore("#501")
-    public void deleteIndexedAccessOtherAttributes() {
-        DeleteCriteriaBuilder<Root> criteria = cbf.deleteCollection(em, Root.class, "r", "indexedNodes");
-        try {
-            criteria.where("r.name");
-        } catch (IllegalArgumentException ex) {
-            assertTrue(ex.getMessage().contains("Only access to the owner type's id attribute"));
-        }
-    }
-
-    @Test
     public void deleteIndexed() {
         transactional(new TxVoidWork() {
             @Override
@@ -120,7 +109,7 @@ public class CollectionRoleDeleteTest extends AbstractCoreTest {
                 criteria.where("r.indexedNodes.id").eq(2);
 
                 assertEquals("DELETE FROM Root(indexedNodes) r"
-                        + " WHERE INDEX(_collection) = :param_0 AND r.id = :param_1 AND _collection.id = :param_2", criteria.getQueryString());
+                        + " WHERE INDEX(r.indexedNodes) = :param_0 AND r.id = :param_1 AND r.indexedNodes.id = :param_2", criteria.getQueryString());
                 int updated = criteria.executeUpdate();
                 Root r = getRoot(em);
 
@@ -132,6 +121,45 @@ public class CollectionRoleDeleteTest extends AbstractCoreTest {
             }
         });
     }
+
+    // NOTE: MySQL doesn't allow referencing the same table that is deleted again
+    @Test
+    @Category({ NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class }) // Requires https://github.com/Blazebit/blaze-persistence/issues/693
+    public void deleteIndexedImplicitJoin() {
+        DeleteCriteriaBuilder<Root> criteria = cbf.deleteCollection(em, Root.class, "r", "indexedNodes");
+        criteria.where("r.name").eq("r");
+
+        assertEquals("DELETE FROM Root(indexedNodes) r WHERE r.name = :param_0", criteria.getQueryString());
+        int updated = criteria.executeUpdate();
+        Root r = getRoot(em);
+
+        assertEquals(1, updated);
+        assertEquals(0, r.getIndexedNodes().size());
+        assertEquals(1, r.getIndexedNodesMany().size());
+        assertEquals(1, r.getIndexedNodesManyDuplicate().size());
+        assertEquals(1, r.getIndexedNodesElementCollection().size());
+    }
+
+    // NOTE: MySQL doesn't allow referencing the same table that is deleted again
+    @Test
+    @Category({ NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class }) // Requires https://github.com/Blazebit/blaze-persistence/issues/693
+    public void deleteIndexedMultipleDeepImplicitJoin() {
+        DeleteCriteriaBuilder<Root> criteria = cbf.deleteCollection(em, Root.class, "r", "indexedNodes");
+        criteria.where("r.name").eq("r");
+        criteria.where("r.indexedNodes.parent.name").eq("r");
+
+        assertEquals("DELETE FROM Root(indexedNodes) r LEFT JOIN r.indexedNodes.parent parent_1 WHERE r.name = :param_0 AND parent_1.name = :param_1", criteria.getQueryString());
+        int updated = criteria.executeUpdate();
+        Root r = getRoot(em);
+
+        assertEquals(1, updated);
+        assertEquals(0, r.getIndexedNodes().size());
+        assertEquals(1, r.getIndexedNodesMany().size());
+        assertEquals(1, r.getIndexedNodesManyDuplicate().size());
+        assertEquals(1, r.getIndexedNodesElementCollection().size());
+    }
+
+    // TODO: Add tests for collection functions/predicates SIZE, IS EMPTY and MEMBER OF against a collection of the source "r" or target "r.indexedNodes"
 
     // NOTE: H2 and MySQL only support returning generated keys
     @Test
@@ -145,7 +173,7 @@ public class CollectionRoleDeleteTest extends AbstractCoreTest {
                 criteria.where("r.id").eq(1);
 
                 assertEquals("DELETE FROM Root(indexedNodes) r"
-                        + " WHERE INDEX(_collection) = :param_0 AND r.id = :param_1", criteria.getQueryString());
+                        + " WHERE INDEX(r.indexedNodes) = :param_0 AND r.id = :param_1", criteria.getQueryString());
                 ReturningResult<Tuple> returningResult = criteria.executeWithReturning("indexedNodes.id");
                 Root r = getRoot(em);
 
@@ -175,7 +203,7 @@ public class CollectionRoleDeleteTest extends AbstractCoreTest {
                     .end();
 
                 assertEquals("DELETE FROM Root(indexedNodes) r"
-                        + " WHERE EXISTS (SELECT 1 FROM Root subRoot WHERE subRoot.id = r.id AND subRoot.name = :param_0 AND INDEX(_collection) = :param_1 AND r.id = :param_2 AND _collection.id = :param_3)", criteria.getQueryString());
+                        + " WHERE EXISTS (SELECT 1 FROM Root subRoot WHERE subRoot.id = r.id AND subRoot.name = :param_0 AND INDEX(r.indexedNodes) = :param_1 AND r.id = :param_2 AND r.indexedNodes.id = :param_3)", criteria.getQueryString());
                 int updated = criteria.executeUpdate();
                 Root r = getRoot(em);
 
@@ -199,7 +227,7 @@ public class CollectionRoleDeleteTest extends AbstractCoreTest {
                 criteria.where("r.indexedNodesMany.id").eq(2);
 
                 assertEquals("DELETE FROM Root(indexedNodesMany) r"
-                        + " WHERE INDEX(_collection) = :param_0 AND r.id = :param_1 AND _collection.id = :param_2", criteria.getQueryString());
+                        + " WHERE INDEX(r.indexedNodesMany) = :param_0 AND r.id = :param_1 AND r.indexedNodesMany.id = :param_2", criteria.getQueryString());
                 int updated = criteria.executeUpdate();
                 Root r = getRoot(em);
 
@@ -223,7 +251,7 @@ public class CollectionRoleDeleteTest extends AbstractCoreTest {
                 criteria.where("r.indexedNodesManyDuplicate.id").eq(2);
 
                 assertEquals("DELETE FROM Root(indexedNodesManyDuplicate) r"
-                        + " WHERE INDEX(_collection) = :param_0 AND r.id = :param_1 AND _collection.id = :param_2", criteria.getQueryString());
+                        + " WHERE INDEX(r.indexedNodesManyDuplicate) = :param_0 AND r.id = :param_1 AND r.indexedNodesManyDuplicate.id = :param_2", criteria.getQueryString());
                 int updated = criteria.executeUpdate();
                 Root r = getRoot(em);
 
@@ -248,7 +276,7 @@ public class CollectionRoleDeleteTest extends AbstractCoreTest {
                 criteria.where("r.indexedNodesElementCollection.value2").eq("b");
 
                 assertEquals("DELETE FROM Root(indexedNodesElementCollection) r"
-                        + " WHERE INDEX(_collection) = :param_0 AND r.id = :param_1 AND _collection.value = :param_2 AND _collection.value2 = :param_3", criteria.getQueryString());
+                        + " WHERE INDEX(r.indexedNodesElementCollection) = :param_0 AND r.id = :param_1 AND r.indexedNodesElementCollection.value = :param_2 AND r.indexedNodesElementCollection.value2 = :param_3", criteria.getQueryString());
                 int updated = criteria.executeUpdate();
                 Root r = getRoot(em);
 
@@ -272,7 +300,7 @@ public class CollectionRoleDeleteTest extends AbstractCoreTest {
                 criteria.where("r.keyedNodes.id").eq(3);
 
                 assertEquals("DELETE FROM Root(keyedNodes) r"
-                        + " WHERE KEY(_collection) = :param_0 AND r.id = :param_1 AND _collection.id = :param_2", criteria.getQueryString());
+                        + " WHERE KEY(r.keyedNodes) = :param_0 AND r.id = :param_1 AND r.keyedNodes.id = :param_2", criteria.getQueryString());
                 int updated = criteria.executeUpdate();
                 Root r = getRoot(em);
 
@@ -296,7 +324,7 @@ public class CollectionRoleDeleteTest extends AbstractCoreTest {
                 criteria.where("r.keyedNodesMany.id").eq(3);
 
                 assertEquals("DELETE FROM Root(keyedNodesMany) r"
-                        + " WHERE KEY(_collection) = :param_0 AND r.id = :param_1 AND _collection.id = :param_2", criteria.getQueryString());
+                        + " WHERE KEY(r.keyedNodesMany) = :param_0 AND r.id = :param_1 AND r.keyedNodesMany.id = :param_2", criteria.getQueryString());
                 int updated = criteria.executeUpdate();
                 Root r = getRoot(em);
 
@@ -320,7 +348,7 @@ public class CollectionRoleDeleteTest extends AbstractCoreTest {
                 criteria.where("r.keyedNodesManyDuplicate.id").eq(3);
 
                 assertEquals("DELETE FROM Root(keyedNodesManyDuplicate) r"
-                        + " WHERE KEY(_collection) = :param_0 AND r.id = :param_1 AND _collection.id = :param_2", criteria.getQueryString());
+                        + " WHERE KEY(r.keyedNodesManyDuplicate) = :param_0 AND r.id = :param_1 AND r.keyedNodesManyDuplicate.id = :param_2", criteria.getQueryString());
                 int updated = criteria.executeUpdate();
                 Root r = getRoot(em);
 
@@ -345,7 +373,7 @@ public class CollectionRoleDeleteTest extends AbstractCoreTest {
                 criteria.where("r.keyedNodesElementCollection.value2").eq("b");
 
                 assertEquals("DELETE FROM Root(keyedNodesElementCollection) r"
-                        + " WHERE KEY(_collection) = :param_0 AND r.id = :param_1 AND _collection.value = :param_2 AND _collection.value2 = :param_3", criteria.getQueryString());
+                        + " WHERE KEY(r.keyedNodesElementCollection) = :param_0 AND r.id = :param_1 AND r.keyedNodesElementCollection.value = :param_2 AND r.keyedNodesElementCollection.value2 = :param_3", criteria.getQueryString());
                 int updated = criteria.executeUpdate();
                 Root r = getRoot(em);
 

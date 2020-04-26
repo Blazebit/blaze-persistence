@@ -44,6 +44,11 @@ public class IndexedNode {
         this.id = id;
     }
 
+    public IndexedNode(Integer id, Root parent) {
+        this.id = id;
+        this.parent = parent;
+    }
+
     public Integer getId() {
         return id;
     }
