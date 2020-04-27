@@ -191,7 +191,9 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         Map<Class<?>, AttributeExample> exampleAttributes = new HashMap<>();
         for (ExtendedManagedTypeImpl<?> extendedManagedType : extendedManagedTypes.values()) {
             for (AttributeEntry<?, ?> attributeEntry : extendedManagedType.ownedSingularAttributes.values()) {
-                if (!exampleAttributes.containsKey(attributeEntry.getElementClass()) && classMap.get(attributeEntry.getElementClass()) == null) {
+                if (attributeEntry.ownerType instanceof EntityType<?> &&
+                        !exampleAttributes.containsKey(attributeEntry.getElementClass()) &&
+                        classMap.get(attributeEntry.getElementClass()) == null) {
                     exampleAttributes.put(attributeEntry.getElementClass(), new AttributeExample(attributeEntry, "SELECT e." + attributeEntry.attributePathString + " FROM " + JpaMetamodelUtils.getTypeName(attributeEntry.ownerType) + " e WHERE e." + attributeEntry.attributePathString + "="));
                 }
             }
