@@ -46,12 +46,11 @@ public class ExistFunction implements JpqlFunction {
     @Override
     public void render(FunctionRenderContext functionRenderContext) {
         if (functionRenderContext.getArgumentsSize() == 2) {
-            functionRenderContext.addChunk("(case when not exists");
+            functionRenderContext.addChunk("1 and not exists");
         } else {
-            functionRenderContext.addChunk("(case when exists");
+            functionRenderContext.addChunk("1 and exists");
         }
         functionRenderContext.addArgument(0);
-        functionRenderContext.addChunk(" then 1 else 0 end)");
     }
 
 }
