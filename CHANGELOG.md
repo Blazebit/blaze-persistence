@@ -24,6 +24,7 @@ Not yet released
 * Rewrite temporal literals to parameters for hibernate
 * Add `@Limit` annotation for entity views to limit elements of collections and correlations
 * Support automatic translation of implicit joins for `DELETE` and `UPDATE` statements
+* Fix rendering of extended `EXISTS` predicate for performance
 
 ### Bug fixes
 
@@ -42,6 +43,7 @@ Not yet released
 * Better support for MySQL subquery `LIMIT` handling in quantified predicates e.g. `IN`
 * Fix NPE in `JpaUtils#expandBindings` caused by non-determinism of example attribute resolving
 * Fix concurrency issue that cause class cast exceptions during equality comparisons
+* Fix exceptions when using `remove` on recording collection with a non-existing element
 
 ### Backwards-incompatible changes
 

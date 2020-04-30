@@ -854,7 +854,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
     private Limiter createLimiter(Attribute<?, ?> attribute) {
         if (attribute.getLimitExpression() != null) {
-            return new Limiter(attribute.getLimitExpression(), attribute.getOrderByItems());
+            return new Limiter(attribute.getLimitExpression(), attribute.getOffsetExpression(), attribute.getOrderByItems());
         }
         return null;
     }

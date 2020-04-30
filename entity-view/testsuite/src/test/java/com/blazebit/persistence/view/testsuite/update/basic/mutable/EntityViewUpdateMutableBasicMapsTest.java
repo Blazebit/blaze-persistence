@@ -168,6 +168,34 @@ public class EntityViewUpdateMutableBasicMapsTest extends AbstractEntityViewUpda
         assertEquals(doc1.getVersion(), docView.getVersion());
     }
 
+    @Test
+    public void testUpdateRemoveNonExisting() {
+        // Given
+        final UpdatableDocumentBasicWithMapsView docView = updateRemoveNonExisting();
+
+        // When
+        update(docView);
+
+        // Then
+        assertNoUpdateAndReload(docView);
+        assertEquals(doc1.getStringMap(), docView.getStringMap());
+        assertEquals(doc1.getVersion(), docView.getVersion());
+    }
+
+    @Test
+    public void testUpdateRemoveNull() {
+        // Given
+        final UpdatableDocumentBasicWithMapsView docView = updateRemoveNull();
+
+        // When
+        update(docView);
+
+        // Then
+        assertNoUpdateAndReload(docView);
+        assertEquals(doc1.getStringMap(), docView.getStringMap());
+        assertEquals(doc1.getVersion(), docView.getVersion());
+    }
+
     protected void assertChangesUpdateAndFlush(UpdatableDocumentBasicWithMapsView docView) {
         if (!isFullMode()) {
             SingularChangeModel<UpdatableDocumentBasicWithMapsView> changeModel = evm.getChangeModel(docView);

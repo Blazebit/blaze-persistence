@@ -20,6 +20,7 @@ import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuil
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
@@ -105,6 +106,48 @@ public class EntityViewUpdateSubviewInverseSimpleTest extends AbstractEntityView
         restartTransaction();
         Document newDocument = em.find(Document.class, document.getId());
         Assert.assertEquals(newPerson.getId(), newDocument.getResponsiblePerson().getId());
+    }
+
+    @Test
+    public void testUpdateRemoveNonExisting() {
+        // Given
+        UpdatablePersonView newPerson = evm.create(UpdatablePersonView.class);
+        newPerson.setName("newPers1");
+        UpdatableDocumentView document = evm.create(UpdatableDocumentView.class);
+        document.setName("newDoc123");
+        document.setOwner(getP1View(PersonIdView.class));
+        newPerson.getOwnedDocuments2().add(document);
+        update(newPerson);
+
+        // When
+        newPerson.getOwnedDocuments2().remove("non-existing");
+        update(newPerson);
+
+        // Then
+        restartTransaction();
+        Person pers = em.find(Person.class, newPerson.getId());
+        Assert.assertEquals(1, pers.getOwnedDocuments2().size());
+    }
+
+    @Test
+    public void testUpdateRemoveNull() {
+        // Given
+        UpdatablePersonView newPerson = evm.create(UpdatablePersonView.class);
+        newPerson.setName("newPers1");
+        UpdatableDocumentView document = evm.create(UpdatableDocumentView.class);
+        document.setName("newDoc123");
+        document.setOwner(getP1View(PersonIdView.class));
+        newPerson.getOwnedDocuments2().add(document);
+        update(newPerson);
+
+        // When
+        newPerson.getOwnedDocuments2().remove(null);
+        update(newPerson);
+
+        // Then
+        restartTransaction();
+        Person pers = em.find(Person.class, newPerson.getId());
+        Assert.assertEquals(1, pers.getOwnedDocuments2().size());
     }
 
     @Override

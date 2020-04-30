@@ -78,4 +78,24 @@ public abstract class AbstractEntityViewUpdateBasicMapsTest<T extends UpdatableD
         return docView;
     }
 
+    public T updateRemoveNonExisting() {
+        // Given
+        final T docView = getDoc1View();
+        clearQueries();
+
+        // When
+        docView.getStringMap().remove("non-existing");
+        return docView;
+    }
+
+    public T updateRemoveNull() {
+        // Given
+        final T docView = getDoc1View();
+        clearQueries();
+
+        // When
+        docView.getStringMap().remove(null);
+        return docView;
+    }
+
 }

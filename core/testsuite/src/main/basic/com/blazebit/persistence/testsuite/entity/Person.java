@@ -29,6 +29,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -51,6 +52,7 @@ public class Person extends LongSequenceEntity {
     private Person friend;
     private Document partnerDocument;
     private Set<Document> ownedDocuments = new HashSet<Document>();
+    private Set<Document> ownedDocuments2 = new HashSet<Document>();
     private Set<Document> favoriteDocuments = new HashSet<Document>();
     private Integer defaultLanguage;
     private Map<Integer, String> localized = new HashMap<Integer, String>();
@@ -87,6 +89,16 @@ public class Person extends LongSequenceEntity {
 
     public void setOwnedDocuments(Set<Document> ownedDocuments) {
         this.ownedDocuments = ownedDocuments;
+    }
+
+    // This is just here so it compiles
+    @Transient
+    public Set<Document> getOwnedDocuments2() {
+        return ownedDocuments2;
+    }
+
+    public void setOwnedDocuments2(Set<Document> ownedDocuments2) {
+        this.ownedDocuments2 = ownedDocuments2;
     }
 
     @OneToMany

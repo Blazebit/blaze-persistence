@@ -79,4 +79,14 @@ public abstract class AbstractEntityViewUpdateEmbeddableMapsTest<T extends Updat
         return docView;
     }
 
+    public T updateRemoveNonExisting() {
+        // Given
+        final T docView = getDoc1View();
+        clearQueries();
+
+        // When
+        docView.getNameMap().remove("non-existing");
+        return docView;
+    }
+
 }

@@ -56,7 +56,6 @@ public class RecordingList<E> extends RecordingCollection<List<E>, E> implements
     @Override
     public boolean removeAll(Collection<?> c) {
         if (indexed) {
-            checkType(c, "Removing");
             boolean modified = false;
             for (Object o : c) {
                 if (remove(indexOf(o)) != null) {

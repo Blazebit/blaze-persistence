@@ -21,6 +21,9 @@ import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.parser.SimpleQueryGenerator;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.expression.NumericLiteral;
+import com.blazebit.persistence.parser.expression.NumericType;
+import com.blazebit.persistence.parser.expression.ParameterExpression;
 import com.blazebit.persistence.parser.expression.SyntaxErrorException;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
@@ -105,6 +108,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     protected final int batchSize;
     protected final List<OrderByItem> orderByItems;
     protected final String limitExpression;
+    protected final String offsetExpression;
     protected final SubqueryProviderFactory subqueryProviderFactory;
     protected final Class<? extends SubqueryProvider> subqueryProvider;
     protected final String subqueryExpression;
@@ -146,12 +150,18 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         }
 
         String limitExpression;
+        String offsetExpression;
         List<OrderByItem> orderByItems;
         if (mapping.getLimitExpression() == null) {
             limitExpression = null;
+            offsetExpression = null;
             orderByItems = Collections.emptyList();
         } else {
             limitExpression = mapping.getLimitExpression();
+            offsetExpression = mapping.getOffsetExpression();
+            if (offsetExpression == null || offsetExpression.isEmpty()) {
+                offsetExpression = "0";
+            }
             List<String> orderByItemExpressions = mapping.getOrderByItems();
             orderByItems = new ArrayList<>(orderByItemExpressions.size());
             for (int i = 0; i < orderByItemExpressions.size(); i++) {
@@ -189,6 +199,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.batchSize = -1;
             this.orderByItems = Collections.emptyList();
             this.limitExpression = null;
+            this.offsetExpression = null;
             this.subqueryProviderFactory = null;
             this.subqueryProvider = null;
             this.id = true;
@@ -211,6 +222,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.batchSize = batchSize;
             this.orderByItems = orderByItems;
             this.limitExpression = limitExpression;
+            this.offsetExpression = offsetExpression;
             this.subqueryProviderFactory = null;
             this.subqueryProvider = null;
             this.id = false;
@@ -266,6 +278,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.batchSize = -1;
             this.orderByItems = Collections.emptyList();
             this.limitExpression = null;
+            this.offsetExpression = null;
             this.subqueryProviderFactory = null;
             this.subqueryProvider = null;
             this.id = false;
@@ -288,6 +301,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.batchSize = -1;
             this.orderByItems = Collections.emptyList();
             this.limitExpression = null;
+            this.offsetExpression = null;
             this.subqueryProviderFactory = null;
             this.subqueryProvider = null;
             this.id = false;
@@ -312,6 +326,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.batchSize = -1;
             this.orderByItems = Collections.emptyList();
             this.limitExpression = null;
+            this.offsetExpression = null;
             this.id = false;
             // Subqueries are never update mappable
             this.updateMappableAttribute = null;
@@ -345,6 +360,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             }
             this.orderByItems = orderByItems;
             this.limitExpression = limitExpression;
+            this.offsetExpression = offsetExpression;
 
             this.subqueryProviderFactory = null;
             this.subqueryProvider = null;
@@ -377,6 +393,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             }
             this.orderByItems = orderByItems;
             this.limitExpression = limitExpression;
+            this.offsetExpression = offsetExpression;
 
             this.subqueryProviderFactory = null;
             this.subqueryProvider = null;
@@ -410,6 +427,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.batchSize = Integer.MIN_VALUE;
             this.orderByItems = null;
             this.limitExpression = null;
+            this.offsetExpression = null;
             this.subqueryProviderFactory = null;
             this.subqueryProvider = null;
             this.id = false;
@@ -875,11 +893,24 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
         if (limitExpression != null) {
             try {
-                context.getTypeValidationExpressionFactory().createInItemExpression(limitExpression);
+                Expression inItemExpression = context.getTypeValidationExpressionFactory().createInItemExpression(limitExpression);
+                if (!(inItemExpression instanceof ParameterExpression) && !(inItemExpression instanceof NumericLiteral) || inItemExpression instanceof NumericLiteral && ((NumericLiteral) inItemExpression).getNumericType() != NumericType.INTEGER) {
+                    context.addError("Syntax error in the limit expression '" + limitExpression + "' of the " + getLocation() + ": The expression must be a integer literal or a parameter expression");
+                }
             } catch (SyntaxErrorException ex) {
                 context.addError("Syntax error in the limit expression '" + limitExpression + "' of the " + getLocation() + ": " + ex.getMessage());
             } catch (IllegalArgumentException ex) {
                 context.addError("An error occurred while trying to resolve the limit expression of the " + getLocation() + ": " + ex.getMessage());
+            }
+            try {
+                Expression inItemExpression = context.getTypeValidationExpressionFactory().createInItemExpression(offsetExpression);
+                if (!(inItemExpression instanceof ParameterExpression) && !(inItemExpression instanceof NumericLiteral) || inItemExpression instanceof NumericLiteral && ((NumericLiteral) inItemExpression).getNumericType() != NumericType.INTEGER) {
+                    context.addError("Syntax error in the offset expression '" + offsetExpression + "' of the " + getLocation() + ": The expression must be a integer literal or a parameter expression");
+                }
+            } catch (SyntaxErrorException ex) {
+                context.addError("Syntax error in the offset expression '" + offsetExpression + "' of the " + getLocation() + ": " + ex.getMessage());
+            } catch (IllegalArgumentException ex) {
+                context.addError("An error occurred while trying to resolve the offset expression of the " + getLocation() + ": " + ex.getMessage());
             }
             for (int i = 0; i < orderByItems.size(); i++) {
                 OrderByItem orderByItem = orderByItems.get(i);
@@ -1232,6 +1263,10 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     public final String getLimitExpression() {
         return limitExpression;
+    }
+
+    public final String getOffsetExpression() {
+        return offsetExpression;
     }
 
     public final String getMapping() {

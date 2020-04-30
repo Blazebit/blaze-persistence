@@ -610,9 +610,11 @@ public class RecordingCollection<C extends Collection<E>, E> implements Recordin
 
     @Override
     public boolean remove(Object o) {
-        checkType(o, "Removing");
-        addRemoveAction(o);
-        return delegate.remove(o);
+        if (delegate.remove(o)) {
+            addRemoveAction(o);
+            return true;
+        }
+        return false;
     }
 
     void addAddAllAction(Collection<? extends E> c) {
@@ -628,7 +630,6 @@ public class RecordingCollection<C extends Collection<E>, E> implements Recordin
 
     @Override
     public boolean removeAll(Collection<?> c) {
-        checkType(c, "Removing");
         addAction(new CollectionRemoveAllAction<C, E>(c, allowDuplicates()));
         return delegate.removeAll(c);
     }

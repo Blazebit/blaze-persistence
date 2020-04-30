@@ -78,4 +78,24 @@ public abstract class AbstractEntityViewUpdateBasicCollectionsTest<T extends Upd
         return docView;
     }
 
+    public T updateRemoveNonExisting() {
+        // Given
+        final T docView = getDoc1View();
+        clearQueries();
+
+        // When
+        docView.getStrings().remove("non-existing");
+        return docView;
+    }
+
+    public T updateRemoveNull() {
+        // Given
+        final T docView = getDoc1View();
+        clearQueries();
+
+        // When
+        docView.getStrings().remove(null);
+        return docView;
+    }
+
 }

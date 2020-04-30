@@ -147,6 +147,36 @@ public class EntityViewUpdateSimpleMutableFlatViewMapsTest extends AbstractEntit
         assertSubviewEquals(doc1.getNameMap(), docView.getNameMap());
     }
 
+    @Test
+    public void testUpdateRemoveNonExisting() {
+        // Given
+        final UpdatableDocumentWithMapsView docView = getDoc1View();
+        clearQueries();
+
+        // When
+        docView.getNameMap().remove("non-existing");
+        update(docView);
+
+        // Then
+        assertNoUpdateAndReload(docView);
+        assertSubviewEquals(doc1.getNameMap(), docView.getNameMap());
+    }
+
+    @Test
+    public void testUpdateRemoveNull() {
+        // Given
+        final UpdatableDocumentWithMapsView docView = getDoc1View();
+        clearQueries();
+
+        // When
+        docView.getNameMap().remove(null);
+        update(docView);
+
+        // Then
+        assertNoUpdateAndReload(docView);
+        assertSubviewEquals(doc1.getNameMap(), docView.getNameMap());
+    }
+
     public static void assertSubviewEquals(Map<String, NameObject> persons, Map<String, ? extends UpdatableNameObjectView> personSubviews) {
         if (persons == null) {
             assertNull(personSubviews);

@@ -1025,6 +1025,9 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private Expression createEnumLiteral(String enumStr) {
         int lastDotIdx = enumStr.lastIndexOf('.');
+        if (lastDotIdx == -1) {
+            return null;
+        }
         String enumTypeStr = enumStr.substring(0, lastDotIdx);
         String enumValueStr = enumStr.substring(lastDotIdx + 1);
         Class<Enum<?>> enumType = enums.get(enumTypeStr);

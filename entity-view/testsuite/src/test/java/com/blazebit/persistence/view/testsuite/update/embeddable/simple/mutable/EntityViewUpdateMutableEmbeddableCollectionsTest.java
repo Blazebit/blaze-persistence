@@ -329,6 +329,19 @@ public class EntityViewUpdateMutableEmbeddableCollectionsTest extends AbstractEn
         assertEquals(doc1.getNames(), docView.getNames());
     }
 
+    @Test
+    public void testUpdateRemoveNonExisting() {
+        // Given
+        final UpdatableDocumentEmbeddableWithCollectionsView docView = updateRemoveNonExisting();
+
+        // When
+        update(docView);
+
+        // Then
+        restartTransactionAndReload();
+        assertEquals(doc1.getNames(), docView.getNames());
+    }
+
     protected void assertChangesUpdateAndFlush(UpdatableDocumentEmbeddableWithCollectionsView docView) {
         if (!isFullMode()) {
             SingularChangeModel<UpdatableDocumentEmbeddableWithCollectionsView> changeModel = evm.getChangeModel(docView);
