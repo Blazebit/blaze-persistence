@@ -40,6 +40,7 @@ public class CollectionMultisetTupleListTransformerFactory implements TupleListT
     private final int startIndex;
     private final String mapping;
     private final String attributePath;
+    private final String multisetResultAlias;
     private final BasicUserTypeStringSupport<Object>[] fieldConverters;
     private final TypeConverter<Object, Object> elementConverter;
     private final CollectionInstantiatorImplementor<?, ?> collectionInstantiator;
@@ -48,10 +49,12 @@ public class CollectionMultisetTupleListTransformerFactory implements TupleListT
     private final TupleTransformerFactory subviewTupleTransformerFactory;
     private final boolean hasSelectOrSubselectFetchedAttributes;
 
-    public CollectionMultisetTupleListTransformerFactory(int startIndex, String mapping, String attributePath, TypeConverter<Object, Object> elementConverter, CollectionInstantiatorImplementor<?, ?> collectionInstantiator, boolean dirtyTracking, ViewTypeObjectBuilderTemplate<Object[]> template, boolean hasSelectOrSubselectFetchedAttributes, TupleTransformerFactory subviewTupleTransformerFactory) {
+    public CollectionMultisetTupleListTransformerFactory(int startIndex, String mapping, String attributePath, String multisetResultAlias, TypeConverter<Object, Object> elementConverter, CollectionInstantiatorImplementor<?, ?> collectionInstantiator, boolean dirtyTracking, ViewTypeObjectBuilderTemplate<Object[]> template,
+                                                         boolean hasSelectOrSubselectFetchedAttributes, TupleTransformerFactory subviewTupleTransformerFactory) {
         this.startIndex = startIndex;
         this.mapping = mapping;
         this.attributePath = attributePath;
+        this.multisetResultAlias = multisetResultAlias;
         this.elementConverter = elementConverter;
         this.collectionInstantiator = collectionInstantiator;
         this.dirtyTracking = dirtyTracking;
@@ -78,7 +81,7 @@ public class CollectionMultisetTupleListTransformerFactory implements TupleListT
                 FullQueryBuilder<?, ?> queryBuilder = (FullQueryBuilder<?, ?>) parameterHolder;
                 if (hasSelectOrSubselectFetchedAttributes) {
                     queryBuilder = queryBuilder.copy(Object[].class);
-                    queryBuilder.innerJoin(mapping, "multiset_" + attributePath.replace('.', '_'));
+                    queryBuilder.innerJoin(mapping, multisetResultAlias);
                     parameterHolder = queryBuilder;
                 }
                 entityViewConfiguration = entityViewConfiguration.forSubview(queryBuilder, attributePath, entityViewConfiguration.getEmbeddingViewJpqlMacro());

@@ -21,9 +21,9 @@ import com.blazebit.persistence.parser.SimpleQueryGenerator;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
+import com.blazebit.persistence.spi.ServiceProvider;
+import com.blazebit.persistence.view.impl.ExpressionUtils;
 import com.blazebit.persistence.view.impl.PrefixingQueryGenerator;
-import com.blazebit.persistence.view.impl.macro.CorrelatedSubqueryEmbeddingViewJpqlMacro;
-import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.impl.metamodel.AbstractAttribute;
 import com.blazebit.persistence.view.impl.objectbuilder.transformator.TupleTransformatorFactory;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformer;
@@ -33,6 +33,7 @@ import com.blazebit.persistence.view.metamodel.Attribute;
 import com.blazebit.persistence.view.metamodel.MappingAttribute;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.ParameterAttribute;
+import com.blazebit.persistence.view.metamodel.SubqueryAttribute;
 
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
@@ -48,7 +49,7 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class TupleElementMapperBuilder {
+public class TupleElementMapperBuilder implements ServiceProvider {
 
     private static final ExpressionTupleElementMapper NULL_MAPPER = new ExpressionTupleElementMapper(null, "NULL", null, null, null, new String[0]);
     private final int mapperIndex;
@@ -85,6 +86,14 @@ public class TupleElementMapperBuilder {
         this.mappers = mappers;
         this.parameterMappings = parameterMappings;
         this.tupleTransformatorFactory = tupleTransformatorFactory;
+    }
+
+    @Override
+    public <T> T getService(Class<T> serviceClass) {
+        if (serviceClass == ExpressionFactory.class) {
+            return (T) ef;
+        }
+        return null;
     }
 
     public String constraint() {
@@ -143,46 +152,58 @@ public class TupleElementMapperBuilder {
         }
     }
 
-    public String getMapping(String mapping, Class<?> expressionType) {
-        return getMapping(mappingPrefix, mapping, expressionType);
-    }
-
-    private String getMapping(String prefixParts, String mapping, Class<?> expressionType) {
+    public String getMapping(Expression expression, Class<?> expressionType) {
         if (expressionType == null) {
-            return getMapping(prefixParts, mapping);
+            return getMapping(expression);
         }
 
         ManagedType<?> managedType = metamodel.getManagedType(expressionType);
         Set<SingularAttribute<?, ?>> idAttributes;
         if (managedType == null || !JpaMetamodelUtils.isIdentifiable(managedType) || (idAttributes = JpaMetamodelUtils.getIdAttributes((IdentifiableType<?>) managedType)).size() > 1) {
-            return getMapping(prefixParts, mapping);
+            return getMapping(expression);
         }
 
         javax.persistence.metamodel.SingularAttribute<?, ?> idAttr = idAttributes.iterator().next();
-        if (mapping.isEmpty()) {
-            return getMapping(prefixParts, idAttr.getName());
+        if (ExpressionUtils.isEmptyOrThis(expression)) {
+            return getMapping(mappingPrefix, idAttr.getName());
         } else {
-            return getMapping(prefixParts, mapping + '.' + idAttr.getName());
+            return getMapping(expression) + '.' + idAttr.getName();
         }
+    }
+
+    public String getMapping() {
+        return mappingPrefix;
     }
 
     public String getMapping(String mapping) {
         return getMapping(mappingPrefix, mapping);
     }
 
-    public String getMappingWithSkipAlias(String mapping, String skippedAlias) {
+    public String getMapping(SubqueryAttribute<?, ?> subqueryAttribute) {
         StringBuilder sb = new StringBuilder();
-        applyMapping(sb, mappingPrefix, mapping, skippedAlias);
+        subqueryAttribute.renderSubqueryExpression(mappingPrefix, this, sb);
+        return sb.toString().intern();
+    }
+
+    public String getMapping(Expression expression) {
+        StringBuilder sb = new StringBuilder();
+        if (mappingPrefix != null && !mappingPrefix.isEmpty()) {
+            SimpleQueryGenerator generator = new PrefixingQueryGenerator(ef, mappingPrefix, null, null, PrefixingQueryGenerator.DEFAULT_QUERY_ALIASES, true, false);
+            generator.setQueryBuffer(sb);
+            expression.accept(generator);
+        } else {
+            sb.append(expression);
+        }
         return sb.toString().intern();
     }
 
     private String getMapping(String prefixParts, String mapping) {
         StringBuilder sb = new StringBuilder();
-        applyMapping(sb, prefixParts, mapping, null);
+        applyMapping(sb, prefixParts, mapping);
         return sb.toString().intern();
     }
 
-    private void applyMapping(StringBuilder sb, String prefixParts, String mapping, String skippedAlias) {
+    private void applyMapping(StringBuilder sb, String prefixParts, String mapping) {
         if (mapping.isEmpty()) {
             if (prefixParts != null && !prefixParts.isEmpty()) {
                 sb.append(AbstractAttribute.stripThisFromMapping(prefixParts));
@@ -192,8 +213,7 @@ public class TupleElementMapperBuilder {
         }
         if (prefixParts != null && !prefixParts.isEmpty()) {
             Expression expr = ef.createSimpleExpression(mapping, false, false, true);
-            EmbeddingViewJpqlMacro embeddingViewJpqlMacro = (EmbeddingViewJpqlMacro) ef.getDefaultMacroConfiguration().get("EMBEDDING_VIEW").getState()[0];
-            SimpleQueryGenerator generator = new PrefixingQueryGenerator(Collections.singletonList(prefixParts), embeddingViewJpqlMacro.getEmbeddingViewPath(), CorrelatedSubqueryEmbeddingViewJpqlMacro.CORRELATION_EMBEDDING_VIEW_ALIAS, skippedAlias);
+            SimpleQueryGenerator generator = new PrefixingQueryGenerator(ef, prefixParts, null, null, PrefixingQueryGenerator.DEFAULT_QUERY_ALIASES, true, false);
             generator.setQueryBuffer(sb);
             expr.accept(generator);
         } else {
@@ -206,7 +226,9 @@ public class TupleElementMapperBuilder {
     }
 
     private String getMapping(String prefixParts, MappingAttribute<?, ?> mappingAttribute) {
-        return getMapping(prefixParts, AbstractAttribute.stripThisFromMapping(mappingAttribute.getMapping()));
+        StringBuilder sb = new StringBuilder();
+        mappingAttribute.renderMapping(prefixParts, this, sb);
+        return sb.toString().intern();
     }
 
     public String getIdMapping(MappingAttribute<?, ?> mappingAttribute, boolean isKey) {
@@ -219,12 +241,11 @@ public class TupleElementMapperBuilder {
 
     private String getMapping(String prefixParts, MappingAttribute<?, ?> mappingAttribute, boolean isKey) {
         StringBuilder sb = new StringBuilder();
-        String mapping = AbstractAttribute.stripThisFromMapping(mappingAttribute.getMapping());
         if (isKey) {
             sb.append("KEY(");
         }
 
-        applyMapping(sb, prefixParts, mapping, null);
+        mappingAttribute.renderMapping(prefixParts, this, sb);
 
         if (isKey) {
             sb.append(')');

@@ -24,6 +24,7 @@ Not yet released
 * Rewrite temporal literals to parameters for hibernate
 * Add `@Limit` annotation for entity views to limit elements of collections and correlations
 * Support automatic translation of implicit joins for `DELETE` and `UPDATE` statements
+* Add Quarkus integration with support for native compilation
 * Fix rendering of extended `EXISTS` predicate for performance
 
 ### Bug fixes
@@ -44,6 +45,7 @@ Not yet released
 * Fix NPE in `JpaUtils#expandBindings` caused by non-determinism of example attribute resolving
 * Fix concurrency issue that cause class cast exceptions during equality comparisons
 * Fix exceptions when using `remove` on recording collection with a non-existing element
+* Rework entity view expression prefixing to work regardless of query aliases
 
 ### Backwards-incompatible changes
 

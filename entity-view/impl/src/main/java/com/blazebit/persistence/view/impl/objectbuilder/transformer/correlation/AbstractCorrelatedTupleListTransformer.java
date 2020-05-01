@@ -17,12 +17,14 @@
 package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
 
 import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.view.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
+import com.blazebit.persistence.view.impl.ExpressionUtils;
 import com.blazebit.persistence.view.impl.PrefixingQueryGenerator;
 import com.blazebit.persistence.view.impl.collection.CollectionInstantiatorImplementor;
 import com.blazebit.persistence.view.impl.collection.RecordingCollection;
@@ -65,7 +67,7 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
 
     protected final EntityViewConfiguration entityViewConfiguration;
 
-    public AbstractCorrelatedTupleListTransformer(ExpressionFactory ef, Correlator correlator, ManagedViewType<?> viewRootType, ManagedViewType<?> embeddingViewType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
+    public AbstractCorrelatedTupleListTransformer(ExpressionFactory ef, Correlator correlator, ManagedViewType<?> viewRootType, ManagedViewType<?> embeddingViewType, Expression correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
                                                   int viewRootIndex, int embeddingViewIndex, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, Limiter limiter, EntityViewConfiguration entityViewConfiguration) {
         super(tupleIndex);
         this.jpaProvider = entityViewConfiguration.getCriteriaBuilder().getService(JpaProvider.class);
@@ -87,7 +89,7 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
         } else {
             this.correlationExternalAlias = CorrelationProviderHelper.getDefaultExternalCorrelationAlias(attributePath);
         }
-        if (correlationResult.isEmpty()) {
+        if (ExpressionUtils.isEmptyOrThis(correlationResult)) {
             this.correlationResult = correlationExternalAlias;
         } else {
             this.correlationResult = PrefixingQueryGenerator.prefix(ef, correlationResult, correlationExternalAlias, true);

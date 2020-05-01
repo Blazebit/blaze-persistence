@@ -234,9 +234,9 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
         }
     }
 
-    public void checkNestedParameters(List<AbstractAttribute<?, ?>> parents, ManagedType<?> managedType, MetamodelBuildingContext context) {
+    public void checkNestedParameters(List<AbstractAttribute<?, ?>> parents, ManagedType<?> managedType, MetamodelBuildingContext context, boolean hasMultisetParent) {
         for (AbstractParameterAttribute<? super X, ?> parameter : parameters) {
-            parameter.checkNestedAttribute(parents, managedType, context);
+            parameter.checkNestedAttribute(parents, managedType, context, hasMultisetParent);
         }
     }
 

@@ -44,6 +44,7 @@ public class AliasExpressionTupleElementMapper extends ExpressionTupleElementMap
         String oldViewPath = viewJpqlMacro.getViewPath();
         String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
         viewJpqlMacro.setViewPath(viewPath);
+        embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
         queryBuilder.select(expression, alias);
         if (fetches.length != 0) {
             final FetchBuilder<?> fetchBuilder = (FetchBuilder<?>) queryBuilder;

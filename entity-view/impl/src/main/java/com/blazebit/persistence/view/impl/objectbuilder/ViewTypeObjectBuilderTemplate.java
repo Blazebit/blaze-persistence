@@ -33,7 +33,9 @@ import com.blazebit.persistence.view.SubqueryProviderFactory;
 import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
+import com.blazebit.persistence.view.impl.ExpressionUtils;
 import com.blazebit.persistence.view.impl.MacroConfigurationExpressionFactory;
+import com.blazebit.persistence.view.impl.PrefixingQueryGenerator;
 import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.view.impl.metamodel.AbstractAttribute;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
@@ -75,10 +77,10 @@ import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.CorrelatedSingularSubselectTupleListTransformerFactory;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.CorrelatedSubviewJoinTupleTransformerFactory;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.SubviewCorrelator;
+import com.blazebit.persistence.view.impl.proxy.AssignmentConstructorReflectionInstantiator;
 import com.blazebit.persistence.view.impl.proxy.ConstructorReflectionInstantiator;
 import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
-import com.blazebit.persistence.view.impl.proxy.AssignmentConstructorReflectionInstantiator;
 import com.blazebit.persistence.view.impl.type.IntegerBasicUserType;
 import com.blazebit.persistence.view.metamodel.Attribute;
 import com.blazebit.persistence.view.metamodel.ListAttribute;
@@ -87,6 +89,7 @@ import com.blazebit.persistence.view.metamodel.MapAttribute;
 import com.blazebit.persistence.view.metamodel.MappingAttribute;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
+import com.blazebit.persistence.view.metamodel.OrderByItem;
 import com.blazebit.persistence.view.metamodel.ParameterAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
@@ -474,7 +477,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
                             boolean updatableObjectCache = managedViewType.isUpdatable() || managedViewType.isCreatable();
                             boolean nullIfEmpty = managedViewType instanceof ViewType<?>;
                             ViewTypeObjectBuilderTemplate<Object[]> subviewTemplate = applyCorrelatedSubviewMapping(attribute, attributePath, tupleIdDescriptor, (ManagedViewTypeImplementor<Object[]>) (ManagedViewTypeImplementor<?>) managedViewType, mapperBuilder, featuresFound, viewJpqlMacro, embeddingViewJpqlMacro, ef, batchSize, false);
-                            mapperBuilder.setTupleListTransformerFactory(new CollectionMultisetTupleListTransformerFactory(startIndex, null, attributePath, valueConverter, attribute.getCollectionInstantiator(), dirtyTracking, subviewTemplate, managedViewType.hasSelectOrSubselectFetchedAttributes(), new SubviewTupleTransformerFactory(subviewTemplate, updatableObjectCache, nullIfEmpty)));
+                            mapperBuilder.setTupleListTransformerFactory(new CollectionMultisetTupleListTransformerFactory(startIndex, null, attributePath, getMultisetResultAlias(attributePath), valueConverter, attribute.getCollectionInstantiator(), dirtyTracking,
+                                    subviewTemplate, managedViewType.hasSelectOrSubselectFetchedAttributes(), new SubviewTupleTransformerFactory(subviewTemplate, updatableObjectCache, nullIfEmpty)));
                         } else {
                             applyCorrelatedSubviewMapping(attribute, attributePath, newTupleIdDescriptor, (ManagedViewTypeImplementor<Object[]>) (ManagedViewTypeImplementor<?>) managedViewType, mapperBuilder, featuresFound, viewJpqlMacro, embeddingViewJpqlMacro, ef, batchSize, dirtyTracking);
                         }
@@ -486,7 +490,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
                             boolean updatableObjectCache = managedViewType.isUpdatable() || managedViewType.isCreatable();
                             String mapping = mapperBuilder.getMapping(mappingAttribute);
                             ViewTypeObjectBuilderTemplate<Object[]> subviewTemplate = applySubviewMapping(mappingAttribute, attributePath, newTupleIdDescriptor, managedViewType, mapperBuilder, viewJpqlMacro, embeddingViewJpqlMacro, ef, false, nullIfEmpty);
-                            mapperBuilder.setTupleListTransformerFactory(new CollectionMultisetTupleListTransformerFactory(startIndex, mapping, attributePath, valueConverter, attribute.getCollectionInstantiator(), dirtyTracking, subviewTemplate, managedViewType.hasSelectOrSubselectFetchedAttributes(), new SubviewTupleTransformerFactory(subviewTemplate, updatableObjectCache, nullIfEmpty)));
+                            mapperBuilder.setTupleListTransformerFactory(new CollectionMultisetTupleListTransformerFactory(startIndex, mapping, attributePath, getMultisetResultAlias(attributePath), valueConverter, attribute.getCollectionInstantiator(), dirtyTracking,
+                                    subviewTemplate, managedViewType.hasSelectOrSubselectFetchedAttributes(), new SubviewTupleTransformerFactory(subviewTemplate, updatableObjectCache, nullIfEmpty)));
                         } else {
                             // Obviously, we produce null if the object type is identifiable i.e. a ViewType and it is empty = null id
                             // Additionally, we also consider empty embeddables as null when we have a non-indexed collection so we can filter out these elements
@@ -548,7 +553,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         boolean updatableObjectCache = managedViewType.isUpdatable() || managedViewType.isCreatable();
                         ViewTypeObjectBuilderTemplate<Object[]> subviewTemplate = applyCorrelatedSubviewMapping(attribute, attributePath, tupleIdDescriptor, (ManagedViewTypeImplementor<Object[]>) (ManagedViewTypeImplementor<?>) managedViewType, mapperBuilder, featuresFound, viewJpqlMacro, embeddingViewJpqlMacro, ef, batchSize, false);
                         TypeConverter<Object, Object> elementConverter = (TypeConverter<Object, Object>) (TypeConverter<?, ?>) managedViewType.getConverter();
-                        mapperBuilder.setTupleListTransformerFactory(new SingularMultisetTupleListTransformerFactory(startIndex, null, attributePath, elementConverter, subviewTemplate, managedViewType.hasSelectOrSubselectFetchedAttributes(), new SubviewTupleTransformerFactory(subviewTemplate, updatableObjectCache, nullIfEmpty)));
+                        mapperBuilder.setTupleListTransformerFactory(new SingularMultisetTupleListTransformerFactory(startIndex, null, attributePath, getMultisetResultAlias(attributePath), elementConverter, subviewTemplate, managedViewType.hasSelectOrSubselectFetchedAttributes(), new SubviewTupleTransformerFactory(subviewTemplate, updatableObjectCache, nullIfEmpty)));
                     } else {
                         applyCorrelatedSubviewMapping(attribute, attributePath, tupleIdDescriptor, (ManagedViewTypeImplementor<Object[]>) (ManagedViewTypeImplementor<?>) managedViewType, mapperBuilder, featuresFound, viewJpqlMacro, embeddingViewJpqlMacro, ef, batchSize, false);
                     }
@@ -561,7 +566,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         String mapping = mapperBuilder.getMapping(mappingAttribute);
                         ViewTypeObjectBuilderTemplate<Object[]> subviewTemplate = applySubviewMapping(mappingAttribute, attributePath, tupleIdDescriptor, managedViewType, mapperBuilder, viewJpqlMacro, embeddingViewJpqlMacro, ef, false, nullIfEmpty);
                         TypeConverter<Object, Object> elementConverter = (TypeConverter<Object, Object>) (TypeConverter<?, ?>) managedViewType.getConverter();
-                        mapperBuilder.setTupleListTransformerFactory(new SingularMultisetTupleListTransformerFactory(startIndex, mapping, attributePath, elementConverter, subviewTemplate, managedViewType.hasSelectOrSubselectFetchedAttributes(), new SubviewTupleTransformerFactory(subviewTemplate, updatableObjectCache, nullIfEmpty)));
+                        mapperBuilder.setTupleListTransformerFactory(new SingularMultisetTupleListTransformerFactory(startIndex, mapping, attributePath, getMultisetResultAlias(attributePath), elementConverter, subviewTemplate, managedViewType.hasSelectOrSubselectFetchedAttributes(), new SubviewTupleTransformerFactory(subviewTemplate, updatableObjectCache, nullIfEmpty)));
                     } else {
                         applySubviewMapping(mappingAttribute, attributePath, tupleIdDescriptor, managedViewType, mapperBuilder, viewJpqlMacro, embeddingViewJpqlMacro, ef, false, nullIfEmpty);
                     }
@@ -582,9 +587,9 @@ public class ViewTypeObjectBuilderTemplate<T> {
         String alias = mapperBuilder.getAlias(mappingAttribute, false);
         TupleElementMapper mapper;
         if (alias == null) {
-            mapper = createMapper(basicUserTypeStringSupport, expression, null, attributePath, mapperBuilder.getMapping(""), embeddingViewJpqlMacro.getEmbeddingViewPath(), fetches);
+            mapper = createMapper(basicUserTypeStringSupport, expression, null, attributePath, mapperBuilder.getMapping(), embeddingViewJpqlMacro.getEmbeddingViewPath(), fetches);
         } else {
-            mapper = createMapper(basicUserTypeStringSupport, expression, alias + aliasSuffix, attributePath, mapperBuilder.getMapping(""), embeddingViewJpqlMacro.getEmbeddingViewPath(), fetches);
+            mapper = createMapper(basicUserTypeStringSupport, expression, alias + aliasSuffix, attributePath, mapperBuilder.getMapping(), embeddingViewJpqlMacro.getEmbeddingViewPath(), fetches);
         }
         mapperBuilder.addMapper(mapper);
     }
@@ -592,6 +597,10 @@ public class ViewTypeObjectBuilderTemplate<T> {
     private void applySubviewIdMapping(MappingAttribute<? super T, ?> mappingAttribute, String parentAttributePath, TupleIdDescriptor tupleIdDescriptor, ManagedViewTypeImplementor<Object[]> managedViewType, TupleElementMapperBuilder mapperBuilder, ViewJpqlMacro viewJpqlMacro, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, ExpressionFactory ef, boolean isKey) {
         String attributePath = getAttributePath(parentAttributePath, mappingAttribute, false);
         applySubviewMapping(mappingAttribute, attributePath, tupleIdDescriptor, managedViewType, mapperBuilder, viewJpqlMacro, embeddingViewJpqlMacro, ef, isKey, true);
+    }
+
+    private String getMultisetResultAlias(String attributePath) {
+        return "multiset_" + attributePath.replace('.', '_');
     }
 
     @SuppressWarnings("unchecked")
@@ -617,8 +626,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
             multisetCorrelationExpression = null;
         } else {
             // Must be in sync with com.blazebit.persistence.view.impl.objectbuilder.mapper.MultisetTupleElementMapper.applyMapping
-            subviewMappingPrefix = "multiset_" + subviewAttributePath.replace('.', '_');
-            subviewIdPrefix = "multiset_" + subviewAttributePath.replace('.', '_');
+            subviewMappingPrefix = getMultisetResultAlias(subviewAttributePath);
+            subviewIdPrefix = subviewMappingPrefix;
             multisetCorrelationExpression = mapperBuilder.getMapping(mappingAttribute);
         }
         String oldViewPath = viewJpqlMacro.getViewPath();
@@ -648,13 +657,14 @@ public class ViewTypeObjectBuilderTemplate<T> {
             inheritanceSubtypeMappings = (Map<ManagedViewType<? extends Object[]>, String>) (Map<?, ?>) ((SingularAttribute<?, ?>) mappingAttribute).getInheritanceSubtypeMappings();
         }
 
-        String embeddingViewPath = mapperBuilder.getMapping("");
+        String embeddingViewPath = mapperBuilder.getMapping();
         String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
         embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
         ViewTypeObjectBuilderTemplate<Object[]> template = new ViewTypeObjectBuilderTemplate<Object[]>(viewRoot, viewRootAlias, subviewAttributePath, subviewAliasPrefix, subviewMappingPrefix, subviewIdPrefix, subviewTupleIdDescriptor, subviewIdDescriptor,
                 startIndex, viewJpqlMacro, embeddingViewJpqlMacro, inheritanceSubtypeMappings, evm, ef, managedViewType, null, proxyFactory);
         if (mappingAttribute.getFetchStrategy() == FetchStrategy.MULTISET) {
-            mapperBuilder.addMapper(new MultisetTupleElementMapper(template, multisetCorrelationExpression, subviewAttributePath, embeddingViewPath, createLimiter(mappingAttribute)));
+            String multisetResultAlias = getMultisetResultAlias(subviewAttributePath);
+            mapperBuilder.addMapper(new MultisetTupleElementMapper(template, multisetCorrelationExpression, subviewAttributePath, multisetResultAlias, embeddingViewPath, createLimiter(multisetResultAlias, mappingAttribute)));
         } else {
             mapperBuilder.addMappers(template.mappers);
             mapperBuilder.addTupleTransformatorFactory(template.tupleTransformatorFactory);
@@ -668,16 +678,16 @@ public class ViewTypeObjectBuilderTemplate<T> {
     @SuppressWarnings("unchecked")
     private ViewTypeObjectBuilderTemplate<Object[]> applyCorrelatedSubviewMapping(AbstractAttribute<?, ?> attribute, String attributePath, TupleIdDescriptor tupleIdDescriptor, ManagedViewTypeImplementor<Object[]> managedViewType, TupleElementMapperBuilder mapperBuilder, boolean[] featuresFound, ViewJpqlMacro viewJpqlMacro, EmbeddingViewJpqlMacro embeddingViewJpqlMacro,
                                                                                   ExpressionFactory ef, int batchSize, boolean dirtyTracking) {
-        String correlationResult = attribute.getCorrelationResult();
+        Expression correlationResult = attribute.getCorrelationResultExpression();
         String correlationBasis = attribute.getCorrelationBasis();
         CorrelationProviderFactory factory = attribute.getCorrelationProviderFactory();
+        String correlationAlias = CorrelationProviderHelper.getDefaultCorrelationAlias(attributePath);
 
         if (attribute.getFetchStrategy() == FetchStrategy.JOIN || attribute.getFetchStrategy() == FetchStrategy.MULTISET) {
             @SuppressWarnings("unchecked")
             String subviewAliasPrefix = mapperBuilder.getAlias(attribute, false);
-            correlationBasis = mapperBuilder.getMapping(AbstractAttribute.stripThisFromMapping(correlationBasis));
-            String correlationAlias = CorrelationProviderHelper.getDefaultCorrelationAlias(attributePath);
-            Limiter limiter = createLimiter(attribute);
+            correlationBasis = mapperBuilder.getMapping(attribute.getCorrelationBasisExpression());
+            Limiter limiter = createLimiter(correlationAlias, attribute);
             String correlationExternalAlias;
             if (limiter == null) {
                 correlationExternalAlias = correlationAlias;
@@ -685,8 +695,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 correlationExternalAlias = CorrelationProviderHelper.getDefaultExternalCorrelationAlias(attributePath);
             }
             String subviewIdPrefix = correlationExternalAlias;
-            if (!correlationResult.isEmpty()) {
-                subviewIdPrefix += "." + correlationResult;
+            if (!ExpressionUtils.isEmptyOrThis(correlationResult)) {
+                subviewIdPrefix = PrefixingQueryGenerator.prefix(ef, correlationResult, correlationExternalAlias, true);
             }
             String subviewMappingPrefix = subviewIdPrefix;
 
@@ -721,7 +731,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 inheritanceSubtypeMappings = (Map<ManagedViewType<? extends Object[]>, String>) (Map<?, ?>) ((SingularAttribute<?, ?>) attribute).getInheritanceSubtypeMappings();
             }
 
-            String embeddingViewPath = mapperBuilder.getMapping("");
+            String embeddingViewPath = mapperBuilder.getMapping();
             String oldViewPath = viewJpqlMacro.getViewPath();
             String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
             viewJpqlMacro.setViewPath(subviewMappingPrefix);
@@ -730,11 +740,11 @@ public class ViewTypeObjectBuilderTemplate<T> {
             ViewTypeObjectBuilderTemplate<Object[]> template = new ViewTypeObjectBuilderTemplate<Object[]>(viewRoot, viewRootAlias, attributePath, subviewAliasPrefix, subviewMappingPrefix, subviewIdPrefix, subviewTupleIdDescriptor, subviewIdDescriptor,
                     startIndex, viewJpqlMacro, embeddingViewJpqlMacro, inheritanceSubtypeMappings, evm, ef, managedViewType, null, proxyFactory);
             if (attribute.getFetchStrategy() == FetchStrategy.MULTISET) {
-                mapperBuilder.addMapper(new CorrelationMultisetTupleElementMapper(template, factory, correlationBasis, correlationExternalAlias, attributePath, mapperBuilder.getMapping(""), limiter));
+                mapperBuilder.addMapper(new CorrelationMultisetTupleElementMapper(template, factory, correlationBasis, correlationExternalAlias, attributePath, mapperBuilder.getMapping(), limiter));
             } else {
                 mapperBuilder.addMappers(template.mappers);
                 mapperBuilder.addTupleTransformatorFactory(template.tupleTransformatorFactory);
-                mapperBuilder.addTupleTransformerFactory(new CorrelatedSubviewJoinTupleTransformerFactory(template, factory, correlationAlias, mapperBuilder.getMapping(""), correlationBasis, correlationExternalAlias, attributePath, embeddingViewPath, attribute.getFetches(), limiter));
+                mapperBuilder.addTupleTransformerFactory(new CorrelatedSubviewJoinTupleTransformerFactory(template, factory, correlationAlias, mapperBuilder.getMapping(), correlationBasis, correlationExternalAlias, attributePath, embeddingViewPath, attribute.getFetches(), limiter));
             }
             embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
             viewJpqlMacro.setViewPath(oldViewPath);
@@ -744,12 +754,12 @@ public class ViewTypeObjectBuilderTemplate<T> {
             int viewRootIndex = viewRoot.hasSubtypes() ? 1 : 0;
             int embeddingViewIndex = (viewType.hasSubtypes() ? 1 : 0) + tupleOffset;
             int startIndex = tupleOffset + mapperBuilder.mapperIndex();
-            Class<?> correlationBasisType = getCorrelationBasisType(AbstractAttribute.stripThisFromMapping(correlationBasis), ef);
+            Class<?> correlationBasisType = getCorrelationBasisType(attribute.getCorrelationBasisExpression(), AbstractAttribute.stripThisFromMapping(correlationBasis), ef);
             Class<?> correlationBasisEntity = getCorrelationBasisEntityType(correlationBasisType);
             String correlationBasisExpression = AbstractAttribute.stripThisFromMapping(correlationBasis);
-            String correlationKeyExpression = mapperBuilder.getMapping(correlationBasis, correlationBasisEntity);
-            String embeddingViewPath = mapperBuilder.getMapping("");
-            boolean correlatesThis = correlatesThis(evm, ef, managedTypeClass, attribute.getCorrelated(), correlationBasisExpression, attribute.getCorrelationExpression(), attribute.getCorrelationKeyAlias());
+            String correlationKeyExpression = mapperBuilder.getMapping(attribute.getCorrelationBasisExpression(), correlationBasisEntity);
+            String embeddingViewPath = mapperBuilder.getMapping();
+            boolean correlatesThis = correlatesThis(evm, ef, managedTypeClass, attribute.getCorrelated(), correlationBasisExpression, attribute.getCorrelationPredicate(), attribute.getCorrelationKeyAlias());
             BasicUserTypeStringSupport<Object> correlationKeyExpressionBasicTypeType = getCorrelationKeyExpressionBasicTypeSupport(correlationBasisType, correlationBasisEntity);
 
             mapperBuilder.addMapper(createMapper(correlationKeyExpressionBasicTypeType, correlationKeyExpression, subviewAliasPrefix, attributePath, embeddingViewPath, embeddingViewJpqlMacro.getEmbeddingViewPath(), attribute.getFetches()));
@@ -785,7 +795,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 mapperBuilder.setTupleListTransformerFactory(new CorrelatedCollectionBatchTupleListTransformerFactory(
                         new SubviewCorrelator(managedViewType, null, evm, subviewAliasPrefix, attributePath),
                         viewRoot, viewType, correlationResult, factory, attributePath, attribute.getFetches(), correlatesThis, viewRootIndex, embeddingViewIndex, startIndex, batchSize, correlationBasisType, correlationBasisEntity,
-                        createLimiter(attribute),
+                        createLimiter(correlationAlias, attribute),
                         attribute.getCollectionInstantiator(),
                         !attribute.isCorrelated(),
                         dirtyTracking
@@ -794,20 +804,20 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 mapperBuilder.setTupleListTransformerFactory(new CorrelatedSingularBatchTupleListTransformerFactory(
                         new SubviewCorrelator(managedViewType, null, evm, subviewAliasPrefix, attributePath),
                         viewRoot, viewType, correlationResult, factory, attributePath, attribute.getFetches(), correlatesThis, viewRootIndex, embeddingViewIndex, startIndex, batchSize, correlationBasisType, correlationBasisEntity,
-                        createLimiter(attribute)));
+                        createLimiter(correlationAlias, attribute)));
             }
         } else if (attribute.getFetchStrategy() == FetchStrategy.SUBSELECT) {
             String subviewAliasPrefix = mapperBuilder.getAlias(attribute, false);
             int viewRootIndex = viewRoot.hasSubtypes() ? 1 : 0;
             int embeddingViewIndex = (viewType.hasSubtypes() ? 1 : 0) + tupleOffset;
             int startIndex = tupleOffset + mapperBuilder.mapperIndex();
-            Class<?> correlationBasisType = getCorrelationBasisType(AbstractAttribute.stripThisFromMapping(correlationBasis), ef);
+            Class<?> correlationBasisType = getCorrelationBasisType(attribute.getCorrelationBasisExpression(), AbstractAttribute.stripThisFromMapping(correlationBasis), ef);
             Class<?> correlationBasisEntity = getCorrelationBasisEntityType(correlationBasisType);
-            String correlationBasisExpression = mapperBuilder.getMapping(AbstractAttribute.stripThisFromMapping(correlationBasis));
-            String correlationKeyExpression = mapperBuilder.getMapping(AbstractAttribute.stripThisFromMapping(correlationBasis), correlationBasisEntity);
+            String correlationBasisExpression = mapperBuilder.getMapping(attribute.getCorrelationBasisExpression());
+            String correlationKeyExpression = mapperBuilder.getMapping(attribute.getCorrelationBasisExpression(), correlationBasisEntity);
             BasicUserTypeStringSupport<Object> correlationKeyExpressionBasicTypeType = getCorrelationKeyExpressionBasicTypeSupport(correlationBasisType, correlationBasisEntity);
 
-            String embeddingViewPath = mapperBuilder.getMapping("");
+            String embeddingViewPath = mapperBuilder.getMapping();
             mapperBuilder.addMapper(createMapper(correlationKeyExpressionBasicTypeType, correlationKeyExpression, subviewAliasPrefix, attributePath, embeddingViewPath, embeddingViewJpqlMacro.getEmbeddingViewPath(), attribute.getFetches()));
 
             if (attribute.isCollection()) {
@@ -834,7 +844,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 mapperBuilder.setTupleListTransformerFactory(new CorrelatedCollectionSubselectTupleListTransformerFactory(
                         new SubviewCorrelator(managedViewType, null, evm, subviewAliasPrefix, attributePath),
                         evm, viewRoot, viewRootAlias, viewType, embeddingViewPath, correlationResult, correlationBasisExpression, correlationKeyExpression, factory, attributePath, attribute.getFetches(), viewRootIndex, embeddingViewIndex, startIndex, correlationBasisType, correlationBasisEntity,
-                        createLimiter(attribute),
+                        createLimiter(correlationAlias, attribute),
                         attribute.getCollectionInstantiator(),
                         !attribute.isCorrelated(),
                         dirtyTracking
@@ -843,7 +853,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 mapperBuilder.setTupleListTransformerFactory(new CorrelatedSingularSubselectTupleListTransformerFactory(
                         new SubviewCorrelator(managedViewType, null, evm, subviewAliasPrefix, attributePath),
                         evm, viewRoot, viewRootAlias, viewType, embeddingViewPath, correlationResult, correlationBasisExpression, correlationKeyExpression, factory, attributePath, attribute.getFetches(), viewRootIndex, embeddingViewIndex, startIndex, correlationBasisType, correlationBasisEntity,
-                        createLimiter(attribute)));
+                        createLimiter(correlationAlias, attribute)));
             }
         } else {
             throw new UnsupportedOperationException("Unknown fetch strategy: " + attribute.getFetchStrategy());
@@ -852,9 +862,27 @@ public class ViewTypeObjectBuilderTemplate<T> {
         return null;
     }
 
-    private Limiter createLimiter(Attribute<?, ?> attribute) {
+    private Limiter createLimiter(String prefix, Attribute<?, ?> attribute) {
         if (attribute.getLimitExpression() != null) {
-            return new Limiter(attribute.getLimitExpression(), attribute.getOffsetExpression(), attribute.getOrderByItems());
+            List<OrderByItem> orderByItems = attribute.getOrderByItems();
+            List<OrderByItem> items;
+            if (orderByItems.isEmpty()) {
+                items = Collections.emptyList();
+            } else {
+                ExpressionFactory expressionFactory = evm.getService(ExpressionFactory.class);
+                PrefixingQueryGenerator prefixingQueryGenerator = new PrefixingQueryGenerator(expressionFactory, prefix, null, null, PrefixingQueryGenerator.DEFAULT_QUERY_ALIASES, true, false);
+                StringBuilder sb = new StringBuilder();
+                prefixingQueryGenerator.setQueryBuffer(sb);
+                items = new ArrayList<>(attribute.getOrderByItems().size());
+                for (int i = 0; i < orderByItems.size(); i++) {
+                    OrderByItem orderByItem = orderByItems.get(i);
+                    Expression expr = expressionFactory.createSimpleExpression(orderByItem.getExpression(), false, false, true);
+                    sb.setLength(0);
+                    expr.accept(prefixingQueryGenerator);
+                    items.add(new OrderByItem(sb.toString(), orderByItem.isAscending(), orderByItem.isNullsFirst()));
+                }
+            }
+            return new Limiter(attribute.getLimitExpression(), attribute.getOffsetExpression(), items);
         }
         return null;
     }
@@ -900,7 +928,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         return embeddingViewIndex;
     }
 
-    private boolean correlatesThis(EntityViewManagerImpl evm, ExpressionFactory ef, Class<?> managedTypeClass, Class<?> correlationBasisEntity, String correlationBasisExpression, String correlationExpression, String correlationKeyAlias) {
+    private boolean correlatesThis(EntityViewManagerImpl evm, ExpressionFactory ef, Class<?> managedTypeClass, Class<?> correlationBasisEntity, String correlationBasisExpression, Predicate correlationPredicate, String correlationKeyAlias) {
         if (correlationBasisEntity == null || !correlationBasisEntity.isAssignableFrom(managedTypeClass)) {
             return false;
         }
@@ -917,15 +945,14 @@ public class ViewTypeObjectBuilderTemplate<T> {
             return false;
         }
 
-        Predicate booleanExpression = ef.createBooleanExpression(correlationExpression, false);
         String left;
         String right;
-        if (booleanExpression instanceof EqPredicate) {
-            left = ((EqPredicate) booleanExpression).getLeft().toString();
-            right = ((EqPredicate) booleanExpression).getRight().toString();
-        } else if (booleanExpression instanceof InPredicate) {
-            left = ((InPredicate) booleanExpression).getLeft().toString();
-            List<Expression> list = ((InPredicate) booleanExpression).getRight();
+        if (correlationPredicate instanceof EqPredicate) {
+            left = ((EqPredicate) correlationPredicate).getLeft().toString();
+            right = ((EqPredicate) correlationPredicate).getRight().toString();
+        } else if (correlationPredicate instanceof InPredicate) {
+            left = ((InPredicate) correlationPredicate).getLeft().toString();
+            List<Expression> list = ((InPredicate) correlationPredicate).getRight();
             if (list.size() > 1) {
                 return false;
             }
@@ -977,11 +1004,11 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
     private void applyBasicIdMapping(MappingAttribute<? super T, ?> mappingAttribute, String parentAttributePath, TupleElementMapperBuilder mapperBuilder, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
         String attributePath = getAttributePath(parentAttributePath, mappingAttribute, false);
-        mapperBuilder.addMapper(createMapper(getType(mappingAttribute), mapperBuilder.getIdMapping(mappingAttribute, false), mapperBuilder.getAlias(mappingAttribute, false), attributePath, mapperBuilder.getMapping(""), embeddingViewJpqlMacro.getEmbeddingViewPath(), mappingAttribute.getFetches()));
+        mapperBuilder.addMapper(createMapper(getType(mappingAttribute), mapperBuilder.getIdMapping(mappingAttribute, false), mapperBuilder.getAlias(mappingAttribute, false), attributePath, mapperBuilder.getMapping(), embeddingViewJpqlMacro.getEmbeddingViewPath(), mappingAttribute.getFetches()));
     }
 
     private void applyBasicMapping(MappingAttribute<? super T, ?> mappingAttribute, String attributePath, TupleElementMapperBuilder mapperBuilder, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
-        mapperBuilder.addMapper(createMapper(getType(mappingAttribute), mapperBuilder.getMapping(mappingAttribute), mapperBuilder.getAlias(mappingAttribute, false), attributePath, mapperBuilder.getMapping(""), embeddingViewJpqlMacro.getEmbeddingViewPath(), mappingAttribute.getFetches()));
+        mapperBuilder.addMapper(createMapper(getType(mappingAttribute), mapperBuilder.getMapping(mappingAttribute), mapperBuilder.getAlias(mappingAttribute, false), attributePath, mapperBuilder.getMapping(), embeddingViewJpqlMacro.getEmbeddingViewPath(), mappingAttribute.getFetches()));
     }
 
     private void applyQueryParameterMapping(MappingAttribute<? super T, ?> mappingAttribute, TupleElementMapperBuilder mapperBuilder) {
@@ -993,7 +1020,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         SubqueryProviderFactory factory = attribute.getSubqueryProviderFactory();
         String alias = mapperBuilder.getAlias(attribute, false);
         String subqueryAlias = attribute.getSubqueryAlias();
-        String viewPath = mapperBuilder.getMapping("");
+        String viewPath = mapperBuilder.getMapping();
         String subqueryExpression = attribute.getSubqueryExpression();
 
         TupleElementMapper mapper;
@@ -1012,7 +1039,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 }
             }
         } else {
-            subqueryExpression = mapperBuilder.getMappingWithSkipAlias(subqueryExpression, subqueryAlias);
+            subqueryExpression = mapperBuilder.getMapping(attribute);
             if (alias != null) {
                 if (factory.isParameterized()) {
                     mapper = new ParameterizedAliasExpressionSubqueryTupleElementMapper(attribute.getType(), factory, subqueryExpression, subqueryAlias, attributePath, viewPath, embeddingViewJpqlMacro.getEmbeddingViewPath(), alias);
@@ -1031,21 +1058,22 @@ public class ViewTypeObjectBuilderTemplate<T> {
     }
 
     private void applyBasicCorrelatedMapping(AbstractAttribute<?, ?> attribute, String attributePath, TupleElementMapperBuilder mapperBuilder, boolean[] featuresFound, ExpressionFactory ef, int batchSize, boolean dirtyTracking, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
-        String correlationResult = attribute.getCorrelationResult();
+        Expression correlationResult = attribute.getCorrelationResultExpression();
         CorrelationProviderFactory factory = attribute.getCorrelationProviderFactory();
         String correlationBasis = attribute.getCorrelationBasis();
+        String correlationAlias = CorrelationProviderHelper.getDefaultCorrelationAlias(attributePath);
         if (attribute.getFetchStrategy() == FetchStrategy.JOIN) {
             String alias = mapperBuilder.getAlias(attribute, false);
-            correlationBasis = mapperBuilder.getMapping(AbstractAttribute.stripThisFromMapping(correlationBasis));
+            correlationBasis = mapperBuilder.getMapping(attribute.getCorrelationBasisExpression());
 
             TupleElementMapper mapper;
-            String joinBase = mapperBuilder.getMapping("");
+            String joinBase = mapperBuilder.getMapping();
             String joinCorrelationAttributePath = mapperBuilder.getJoinCorrelationAttributePath(attributePath);
             String embeddingViewPath = joinBase;
             if (factory.isParameterized()) {
-                mapper = new ParameterizedExpressionCorrelationJoinTupleElementMapper(factory, ef, joinBase, correlationBasis, correlationResult, alias, joinCorrelationAttributePath, embeddingViewPath, attribute.getFetches(), createLimiter(attribute));
+                mapper = new ParameterizedExpressionCorrelationJoinTupleElementMapper(factory, ef, joinBase, correlationBasis, attribute.getCorrelationResultExpression(), alias, joinCorrelationAttributePath, embeddingViewPath, attribute.getFetches(), createLimiter(correlationAlias, attribute));
             } else {
-                mapper = new ExpressionCorrelationJoinTupleElementMapper(factory.create(null, null), ef, joinBase, correlationBasis, correlationResult, alias, joinCorrelationAttributePath, embeddingViewPath, attribute.getFetches(), createLimiter(attribute));
+                mapper = new ExpressionCorrelationJoinTupleElementMapper(factory.create(null, null), ef, joinBase, correlationBasis, attribute.getCorrelationResultExpression(), alias, joinCorrelationAttributePath, embeddingViewPath, attribute.getFetches(), createLimiter(correlationAlias, attribute));
             }
             mapperBuilder.addMapper(mapper);
         } else if (attribute.getFetchStrategy() == FetchStrategy.SELECT) {
@@ -1053,12 +1081,12 @@ public class ViewTypeObjectBuilderTemplate<T> {
             int viewRootIndex = viewRoot.hasSubtypes() ? 1 : 0;
             int embeddingViewIndex = tupleOffset;
             int startIndex = tupleOffset + mapperBuilder.mapperIndex();
-            Class<?> correlationBasisType = getCorrelationBasisType(AbstractAttribute.stripThisFromMapping(correlationBasis), ef);
+            Class<?> correlationBasisType = getCorrelationBasisType(attribute.getCorrelationBasisExpression(), AbstractAttribute.stripThisFromMapping(correlationBasis), ef);
             Class<?> correlationBasisEntity = getCorrelationBasisEntityType(correlationBasisType);
             String correlationBasisExpression = AbstractAttribute.stripThisFromMapping(correlationBasis);
-            String correlationKeyExpression = mapperBuilder.getMapping(correlationBasisExpression, correlationBasisEntity);
-            String embeddingViewPath = mapperBuilder.getMapping("");
-            boolean correlatesThis = correlatesThis(evm, ef, managedTypeClass, attribute.getCorrelated(), correlationBasisExpression, attribute.getCorrelationExpression(), attribute.getCorrelationKeyAlias());
+            String correlationKeyExpression = mapperBuilder.getMapping(attribute.getCorrelationBasisExpression(), correlationBasisEntity);
+            String embeddingViewPath = mapperBuilder.getMapping();
+            boolean correlatesThis = correlatesThis(evm, ef, managedTypeClass, attribute.getCorrelated(), correlationBasisExpression, attribute.getCorrelationPredicate(), attribute.getCorrelationKeyAlias());
             BasicUserTypeStringSupport<Object> correlationKeyExpressionBasicTypeType = getCorrelationKeyExpressionBasicTypeSupport(correlationBasisType, correlationBasisEntity);
 
             mapperBuilder.addMapper(createMapper(correlationKeyExpressionBasicTypeType, correlationKeyExpression, subviewAliasPrefix, attributePath, embeddingViewPath, embeddingViewJpqlMacro.getEmbeddingViewPath(), attribute.getFetches()));
@@ -1094,30 +1122,29 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 mapperBuilder.setTupleListTransformerFactory(new CorrelatedCollectionBatchTupleListTransformerFactory(
                         new BasicCorrelator(),
                         viewRoot, viewType, correlationResult, factory, attributePath, attribute.getFetches(), correlatesThis, viewRootIndex, embeddingViewIndex, startIndex, batchSize, correlationBasisType, correlationBasisEntity,
-                        createLimiter(attribute),
+                        createLimiter(correlationAlias, attribute),
                         attribute.getCollectionInstantiator(),
                         !attribute.isCorrelated(),
                         dirtyTracking
                 ));
             } else {
-                // TODO: shouldn't we embed this query no matter what strategy is used?
                 mapperBuilder.setTupleListTransformerFactory(new CorrelatedSingularBatchTupleListTransformerFactory(
                         new BasicCorrelator(),
                         viewRoot, viewType, correlationResult, factory, attributePath, attribute.getFetches(), correlatesThis, viewRootIndex, embeddingViewIndex, startIndex, batchSize, correlationBasisType, correlationBasisEntity,
-                        createLimiter(attribute)));
+                        createLimiter(correlationAlias, attribute)));
             }
         } else if (attribute.getFetchStrategy() == FetchStrategy.SUBSELECT) {
             String subviewAliasPrefix = mapperBuilder.getAlias(attribute, false);
             int viewRootIndex = viewRoot.hasSubtypes() ? 1 : 0;
             int embeddingViewIndex = tupleOffset;
             int startIndex = tupleOffset + mapperBuilder.mapperIndex();
-            Class<?> correlationBasisType = getCorrelationBasisType(AbstractAttribute.stripThisFromMapping(correlationBasis), ef);
+            Class<?> correlationBasisType = getCorrelationBasisType(attribute.getCorrelationBasisExpression(), AbstractAttribute.stripThisFromMapping(correlationBasis), ef);
             Class<?> correlationBasisEntity = getCorrelationBasisEntityType(correlationBasisType);
-            String correlationBasisExpression = mapperBuilder.getMapping(AbstractAttribute.stripThisFromMapping(correlationBasis));
-            String correlationKeyExpression = mapperBuilder.getMapping(AbstractAttribute.stripThisFromMapping(correlationBasis), correlationBasisEntity);
+            String correlationBasisExpression = mapperBuilder.getMapping(attribute.getCorrelationBasisExpression());
+            String correlationKeyExpression = mapperBuilder.getMapping(attribute.getCorrelationBasisExpression(), correlationBasisEntity);
             BasicUserTypeStringSupport<Object> correlationKeyExpressionBasicTypeType = getCorrelationKeyExpressionBasicTypeSupport(correlationBasisType, correlationBasisEntity);
 
-            String embeddingViewPath = mapperBuilder.getMapping("");
+            String embeddingViewPath = mapperBuilder.getMapping();
             mapperBuilder.addMapper(createMapper(correlationKeyExpressionBasicTypeType, correlationKeyExpression, subviewAliasPrefix, attributePath, embeddingViewPath, embeddingViewJpqlMacro.getEmbeddingViewPath(), attribute.getFetches()));
 
             if (attribute.isCollection()) {
@@ -1143,7 +1170,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 mapperBuilder.setTupleListTransformerFactory(new CorrelatedCollectionSubselectTupleListTransformerFactory(
                         new BasicCorrelator(),
                         evm, viewRoot, viewRootAlias, viewType, embeddingViewPath, correlationResult, correlationBasisExpression, correlationKeyExpression, factory, attributePath, attribute.getFetches(), viewRootIndex, embeddingViewIndex, startIndex, correlationBasisType, correlationBasisEntity,
-                        createLimiter(attribute),
+                        createLimiter(correlationAlias, attribute),
                         attribute.getCollectionInstantiator(),
                         !attribute.isCorrelated(),
                         dirtyTracking
@@ -1152,20 +1179,20 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 mapperBuilder.setTupleListTransformerFactory(new CorrelatedSingularSubselectTupleListTransformerFactory(
                         new BasicCorrelator(),
                         evm, viewRoot, viewRootAlias, viewType, embeddingViewPath, correlationResult, correlationBasisExpression, correlationKeyExpression, factory, attributePath, attribute.getFetches(), viewRootIndex, embeddingViewIndex, startIndex, correlationBasisType, correlationBasisEntity,
-                        createLimiter(attribute)));
+                        createLimiter(correlationAlias, attribute)));
             }
         } else {
             throw new UnsupportedOperationException("Unknown fetch strategy: " + attribute.getFetchStrategy());
         }
     }
 
-    private Class<?> getCorrelationBasisType(String correlationBasis, ExpressionFactory ef) {
+    private Class<?> getCorrelationBasisType(Expression correlationBasisExpression, String correlationBasis, ExpressionFactory ef) {
         if (correlationBasis.isEmpty()) {
             return managedTypeClass;
         }
         EntityMetamodel entityMetamodel = evm.getMetamodel().getEntityMetamodel();
         ScalarTargetResolvingExpressionVisitor visitor = new ScalarTargetResolvingExpressionVisitor(managedTypeClass, entityMetamodel, evm.getCriteriaBuilderFactory().getRegisteredFunctions());
-        ef.createSimpleExpression(correlationBasis, false, false, true).accept(visitor);
+        correlationBasisExpression.accept(visitor);
         Collection<ScalarTargetResolvingExpressionVisitor.TargetType> possibleTypes = visitor.getPossibleTargetTypes();
         if (possibleTypes.size() > 1) {
             throw new IllegalArgumentException("The correlation basis '" + correlationBasis + "' is ambiguous in the context of the managed type '" + managedTypeClass.getName() + "'!");

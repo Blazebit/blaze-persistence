@@ -105,7 +105,7 @@ public class ViewMetamodelImpl implements ViewMetamodel {
                 List<AbstractAttribute<?, ?>> parents = new ArrayList<>();
                 for (ManagedViewTypeImplementor<?> t : managedViews.values()) {
                     t.checkAttributes(context);
-                    t.checkNestedAttributes(parents, context);
+                    t.checkNestedAttributes(parents, context, false);
                 }
             }
         }

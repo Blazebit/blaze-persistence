@@ -20,6 +20,7 @@ import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.LimitBuilder;
 import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.SelectBuilder;
+import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.impl.objectbuilder.Limiter;
@@ -38,7 +39,7 @@ public class ExpressionCorrelationJoinTupleElementMapper extends AbstractCorrela
 
     private final CorrelationProvider provider;
 
-    public ExpressionCorrelationJoinTupleElementMapper(CorrelationProvider provider, ExpressionFactory ef, String joinBase, String correlationBasis, String correlationResult, String alias, String attributePath, String embeddingViewPath, String[] fetches, Limiter limiter) {
+    public ExpressionCorrelationJoinTupleElementMapper(CorrelationProvider provider, ExpressionFactory ef, String joinBase, String correlationBasis, Expression correlationResult, String alias, String attributePath, String embeddingViewPath, String[] fetches, Limiter limiter) {
         super(ef, joinBase, correlationBasis, correlationResult, alias, attributePath, embeddingViewPath, fetches, limiter);
         this.provider = provider;
     }

@@ -19,7 +19,6 @@ package com.blazebit.persistence.view.impl;
 import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.CorrelationProviderFactory;
 import com.blazebit.persistence.view.MappingParameter;
-import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
@@ -37,10 +36,6 @@ public class CorrelationProviderHelper {
     private static final String NON_IDENTIFIER_CHARS = "\\s\\,+\\-/*%<>=";
 
     private CorrelationProviderHelper() {
-    }
-
-    public static Class<? extends CorrelationProvider> createCorrelationProvider(Class<?> correlated, String correlationKeyAlias, String correlationExpression, MetamodelBuildingContext context) {
-        return context.getProxyFactory().getCorrelationProviderProxy(correlated, correlationKeyAlias, correlationExpression);
     }
 
     public static String getDefaultCorrelationAlias(String attributePath) {

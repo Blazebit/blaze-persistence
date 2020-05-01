@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
 
+import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.view.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.objectbuilder.Limiter;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformerFactory;
@@ -31,7 +32,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformerFactory impleme
     protected final Correlator correlator;
     protected final ManagedViewType<?> viewRootType;
     protected final ManagedViewType<?> embeddingViewType;
-    protected final String correlationResult;
+    protected final Expression correlationResult;
     protected final CorrelationProviderFactory correlationProviderFactory;
     protected final String attributePath;
     protected final String[] fetches;
@@ -44,7 +45,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformerFactory impleme
     protected final Class<?> correlationBasisEntity;
     protected final Limiter limiter;
 
-    public AbstractCorrelatedBatchTupleListTransformerFactory(Correlator correlator, ManagedViewType<?> viewRootType, ManagedViewType<?> embeddingViewType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
+    public AbstractCorrelatedBatchTupleListTransformerFactory(Correlator correlator, ManagedViewType<?> viewRootType, ManagedViewType<?> embeddingViewType, Expression correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
                                                               boolean correlatesThis, int viewRootIndex, int embeddingViewIndex, int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, Limiter limiter) {
         this.correlator = correlator;
         this.viewRootType = viewRootType;

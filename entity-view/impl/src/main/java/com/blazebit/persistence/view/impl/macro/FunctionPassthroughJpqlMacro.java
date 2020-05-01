@@ -20,19 +20,27 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.JpqlMacro;
 
 /**
- * This is a macro used just for type validation. We render NULL since that expression is compatible with all types.
+ * This is a macro used just for type validation.
  *
  * @author Christian Beikov
- * @since 1.3.0
+ * @since 1.5.0
  */
-public class TypeValidationViewRootJpqlMacro implements JpqlMacro {
+public class FunctionPassthroughJpqlMacro implements JpqlMacro {
+
+    private final String name;
+
+    public FunctionPassthroughJpqlMacro(String name) {
+        this.name = "FUNCTION('" + name + "'";
+    }
 
     @Override
     public void render(FunctionRenderContext context) {
-        if (context.getArgumentsSize() > 1) {
-            throw new IllegalArgumentException("The VIEW_ROOT macro allows maximally one argument: <expression>!");
+        context.addChunk(name);
+        int size = context.getArgumentsSize();
+        for (int i = 0; i < size; i++) {
+            context.addChunk(", ");
+            context.addArgument(i);
         }
-
-        context.addChunk("NULL");
+        context.addChunk(")");
     }
 }

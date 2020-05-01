@@ -7,7 +7,7 @@ A release involves various steps which are outlined here and should be kept up-t
 . Make sure you have GPG installed and the executable is available on PATH
 . Make sure your Maven settings.xml has credentials for the server `sonatype-nexus-staging` configured
 . Make sure your Maven settings.xml has a profile called `blazebit-release` with the property `gpg.passphrase`
-. Make sure your `JAVA_HOME` points to a JDK 8 with e.g. `set JAVA_HOME="C:\Program Files\Java\jdk-9.0.4"` or `$env:JAVA_HOME="C:\Program Files\Java\jdk-9.0.4"`
+. Make sure your `JAVA_HOME` points to a JDK 8 with e.g. `set JAVA_HOME="C:\Program Files\Java\jdk-9.0.4"` or `$env:JAVA_HOME="C:\Program Files\Java\jdk-10.0.2"`
 . Make sure your `MAVEN_OPTS` contain a memory configuration with a big heap size with e.g. `set MAVEN_OPTS="-Xmx1536m -XX:MaxMetaspaceSize=512m"` or `$env:MAVEN_OPTS="-Xmx1536m -XX:MaxMetaspaceSize=512m"`
 . Edit the `README.md` and update the property `blaze-persistence.version` to the latest released version, also update the archetype versions for the quick-starts
 . Make sure `CHANGELOG.md` contains all relevant changes and links to the release tags in GitHub, prepare the next changelog entry for the next version

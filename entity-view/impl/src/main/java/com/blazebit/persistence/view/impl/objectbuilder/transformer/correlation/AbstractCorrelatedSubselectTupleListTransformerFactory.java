@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
 
+import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.view.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.objectbuilder.Limiter;
@@ -35,7 +36,7 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformerFactory imp
     protected final ManagedViewType<?> embeddingViewType;
     protected final String viewRootAlias;
     protected final String embeddingViewPath;
-    protected final String correlationResult;
+    protected final Expression correlationResult;
     protected final String correlationBasisExpression;
     protected final String correlationKeyExpression;
     protected final CorrelationProviderFactory correlationProviderFactory;
@@ -48,7 +49,7 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformerFactory imp
     protected final Class<?> correlationBasisEntity;
     protected final Limiter limiter;
 
-    public AbstractCorrelatedSubselectTupleListTransformerFactory(Correlator correlator, EntityViewManagerImpl evm, ManagedViewType<?> viewRootType, String viewRootAlias, ManagedViewType<?> embeddingViewType, String embeddingViewPath, String correlationResult, String correlationBasisExpression, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory,
+    public AbstractCorrelatedSubselectTupleListTransformerFactory(Correlator correlator, EntityViewManagerImpl evm, ManagedViewType<?> viewRootType, String viewRootAlias, ManagedViewType<?> embeddingViewType, String embeddingViewPath, Expression correlationResult, String correlationBasisExpression, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory,
                                                                   String attributePath, String[] fetches, int viewRootIndex, int embeddingViewIndex, int correlationBasisIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, Limiter limiter) {
         this.correlator = correlator;
         this.evm = evm;

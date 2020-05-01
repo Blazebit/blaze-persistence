@@ -719,7 +719,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         } else if (CriteriaBuilderFactory.class.isAssignableFrom(serviceClass)) {
             return (T) cbf;
         }
-        return null;
+        return cbf.getService(serviceClass);
     }
 
     @Override

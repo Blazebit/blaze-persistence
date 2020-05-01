@@ -409,7 +409,8 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
                 String functionName = ((StringLiteral) arguments.get(0)).getValue();
                 aggregate = functions.get(functionName.toLowerCase());
                 if (aggregate == null) {
-                    throw new SyntaxErrorException("No function with the name '" + functionName + "' exists!");
+                    // We pass through the function syntax to the JPA provider
+                    aggregate = false;
                 }
                 break;
             default:

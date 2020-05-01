@@ -77,8 +77,8 @@ public class ConvertedFlatViewType<X> implements FlatViewTypeImplementor<X> {
     }
 
     @Override
-    public void checkNestedAttributes(List<AbstractAttribute<?, ?>> parents, MetamodelBuildingContext context) {
-        delegate.checkNestedAttributes(parents, context);
+    public void checkNestedAttributes(List<AbstractAttribute<?, ?>> parents, MetamodelBuildingContext context, boolean hasMultisetParent) {
+        delegate.checkNestedAttributes(parents, context, hasMultisetParent);
     }
 
     @Override

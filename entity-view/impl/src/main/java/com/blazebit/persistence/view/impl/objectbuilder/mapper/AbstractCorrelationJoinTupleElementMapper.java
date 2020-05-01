@@ -19,13 +19,12 @@ package com.blazebit.persistence.view.impl.objectbuilder.mapper;
 import com.blazebit.persistence.parser.SimpleQueryGenerator;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
 import com.blazebit.persistence.view.impl.PrefixingQueryGenerator;
 import com.blazebit.persistence.view.impl.objectbuilder.Limiter;
 import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.spi.type.BasicUserTypeStringSupport;
-
-import java.util.Collections;
 
 /**
  *
@@ -45,7 +44,7 @@ public abstract class AbstractCorrelationJoinTupleElementMapper implements Alias
     protected final String[] fetches;
     protected final Limiter limiter;
 
-    public AbstractCorrelationJoinTupleElementMapper(ExpressionFactory ef, String joinBase, String correlationBasis, String correlationResult, String alias, String attributePath, String embeddingViewPath, String[] fetches, Limiter limiter) {
+    public AbstractCorrelationJoinTupleElementMapper(ExpressionFactory ef, String joinBase, String correlationBasis, Expression correlationResult, String alias, String attributePath, String embeddingViewPath, String[] fetches, Limiter limiter) {
         this.correlationBasis = correlationBasis.intern();
         this.alias = alias;
         this.attributePath = attributePath;
@@ -59,18 +58,17 @@ public abstract class AbstractCorrelationJoinTupleElementMapper implements Alias
         } else {
             this.correlationExternalAlias = CorrelationProviderHelper.getDefaultExternalCorrelationAlias(attributePath);
         }
-        if (correlationResult.isEmpty()) {
+        if (correlationResult == null || correlationResult instanceof PathExpression && ((PathExpression) correlationResult).getExpressions().isEmpty()) {
             this.correlationResult = correlationExternalAlias;
         } else {
-            StringBuilder sb = new StringBuilder(correlationExternalAlias.length() + correlationResult.length() + 1);
+            StringBuilder sb = new StringBuilder(correlationExternalAlias.length() + 20);
             EmbeddingViewJpqlMacro embeddingViewJpqlMacro = (EmbeddingViewJpqlMacro) ef.getDefaultMacroConfiguration().get("EMBEDDING_VIEW").getState()[0];
             String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
             embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
-            Expression expr = ef.createSimpleExpression(correlationResult, false, false, true);
-            embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
-            SimpleQueryGenerator generator = new PrefixingQueryGenerator(Collections.singletonList(correlationExternalAlias), joinBase, null, null);
+            SimpleQueryGenerator generator = new PrefixingQueryGenerator(ef, correlationExternalAlias, joinBase, null, PrefixingQueryGenerator.DEFAULT_QUERY_ALIASES, true, false);
             generator.setQueryBuffer(sb);
-            expr.accept(generator);
+            correlationResult.accept(generator);
+            embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
             this.correlationResult = sb.toString().intern();
         }
     }

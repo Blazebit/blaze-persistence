@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl.metamodel;
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.PathTargetResolvingExpressionVisitor;
+import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.view.CollectionMapping;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
@@ -116,9 +117,12 @@ public final class MetamodelUtils {
         if (mapping == null || mapping.isEmpty()) {
             return false;
         }
+        return isIndexedList(metamodel, entityClass, expressionFactory.createSimpleExpression(mapping, false, false, false), mapping);
+    }
 
+    public static boolean isIndexedList(EntityMetamodel metamodel, Class<?> entityClass, Expression expression, String mapping) {
         PathTargetResolvingExpressionVisitor visitor = new PathTargetResolvingExpressionVisitor(metamodel, metamodel.managedType(entityClass), null);
-        expressionFactory.createSimpleExpression(mapping, false).accept(visitor);
+        expression.accept(visitor);
         Map<Attribute<?, ?>, javax.persistence.metamodel.Type<?>> possibleTargets = visitor.getPossibleTargets();
         Iterator<Map.Entry<Attribute<?, ?>, javax.persistence.metamodel.Type<?>>> iter = possibleTargets.entrySet().iterator();
         // It must have one, otherwise a parse error would have been thrown already

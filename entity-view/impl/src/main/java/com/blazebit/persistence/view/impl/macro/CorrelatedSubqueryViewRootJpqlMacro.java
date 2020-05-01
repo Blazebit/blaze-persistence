@@ -114,6 +114,10 @@ public class CorrelatedSubqueryViewRootJpqlMacro implements ViewRootJpqlMacro {
         return viewRootExpression;
     }
 
+    protected String getViewRootExpression() {
+        return viewRootExpression;
+    }
+
     public Class<?> getViewRootEntityType() {
         return viewRootEntityType;
     }
@@ -202,6 +206,7 @@ public class CorrelatedSubqueryViewRootJpqlMacro implements ViewRootJpqlMacro {
         }
 
         this.used = true;
+        String viewRootExpression = getViewRootExpression();
         if (context.getArgumentsSize() > 0) {
             if (viewRootExpression != null) {
                 String firstArgument = context.getArgument(0);

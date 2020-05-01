@@ -34,16 +34,18 @@ import java.util.Map;
  */
 public class MultisetTupleElementMapper implements TupleElementMapper {
 
-    protected final ViewTypeObjectBuilderTemplate<Object[]> subviewTemplate;
-    protected final String correlationExpression;
-    protected final String attributePath;
-    protected final String embeddingViewPath;
-    protected final Limiter limiter;
+    private final ViewTypeObjectBuilderTemplate<Object[]> subviewTemplate;
+    private final String correlationExpression;
+    private final String attributePath;
+    private final String multisetResultAlias;
+    private final String embeddingViewPath;
+    private final Limiter limiter;
 
-    public MultisetTupleElementMapper(ViewTypeObjectBuilderTemplate<Object[]> subviewTemplate, String correlationExpression, String attributePath, String embeddingViewPath, Limiter limiter) {
+    public MultisetTupleElementMapper(ViewTypeObjectBuilderTemplate<Object[]> subviewTemplate, String correlationExpression, String attributePath, String multisetResultAlias, String embeddingViewPath, Limiter limiter) {
         this.subviewTemplate = subviewTemplate;
         this.correlationExpression = correlationExpression.intern();
         this.attributePath = attributePath;
+        this.multisetResultAlias = multisetResultAlias;
         this.embeddingViewPath = embeddingViewPath;
         this.limiter = limiter;
     }
@@ -53,7 +55,7 @@ public class MultisetTupleElementMapper implements TupleElementMapper {
         String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
         embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
         SubqueryBuilder<?> subqueryBuilder = queryBuilder.selectSubquery("subquery", "TO_MULTISET(subquery)")
-                .from(correlationExpression, "multiset_" + attributePath.replace('.', '_'));
+                .from(correlationExpression, multisetResultAlias);
         for (TupleElementMapper mapper : subviewTemplate.getMappers()) {
             mapper.applyMapping(subqueryBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro, true);
         }

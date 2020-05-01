@@ -29,6 +29,7 @@ import java.util.Map;
  */
 public class CorrelatedSubqueryEmbeddingViewJpqlMacro extends CorrelatedSubqueryViewRootJpqlMacro implements EmbeddingViewJpqlMacro {
 
+    // This alias is one of the internal query aliases that we assign. It is assigned for the from node for the embedding view macro when using the SELECT fetch strategy
     public static final String CORRELATION_EMBEDDING_VIEW_ALIAS = "correlationEmbeddingViewAlias_";
     private static final String CORRELATION_EMBEDDING_VIEW_PARAM_PREFIX = "correlationEmbeddingViewParam_";
     private static final String CORRELATION_EMBEDDING_VIEW_ID_PARAM_PREFIX = "correlationEmbeddingViewIdParam_";
@@ -48,6 +49,14 @@ public class CorrelatedSubqueryEmbeddingViewJpqlMacro extends CorrelatedSubquery
     @Override
     public boolean usesEmbeddingView() {
         return embeddingViewPath != null || viewRootExpression != null;
+    }
+
+    @Override
+    protected String getViewRootExpression() {
+        if (embeddingViewPathSet) {
+            return embeddingViewPath;
+        }
+        return viewRootExpression;
     }
 
     @Override
