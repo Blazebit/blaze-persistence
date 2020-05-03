@@ -55,5 +55,6 @@
         <module>jpa-base-jar</module>
         <module>openjpa-jar</module>
         <module>entity-view-cdi-jar</module>
+        <module>quarkus</module>
     </modules>
 </project>

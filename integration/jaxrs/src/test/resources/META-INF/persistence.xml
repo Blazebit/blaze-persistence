@@ -26,7 +26,6 @@
             <property name="javax.persistence.jdbc.password" value="password"/>
             <property name="javax.persistence.jdbc.driver" value="org.h2.Driver"/>
             <property name="javax.persistence.sharedCache.mode" value="NONE"/>
-<!--            <property name="javax.persistence.schema-generation.database.action" value="drop-and-create"/>-->
         </properties>
     </persistence-unit>
 </persistence>

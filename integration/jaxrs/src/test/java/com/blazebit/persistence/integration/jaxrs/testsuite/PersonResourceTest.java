@@ -46,7 +46,7 @@ public class PersonResourceTest extends AbstractJaxrsTest {
                 .resolveTemplate("id", p1.getId())
                 .request()
                 .buildPut(Entity.entity(toJsonWithoutId(updateView), MediaType.APPLICATION_JSON_TYPE))
-                .invoke(PersonView.class);
+                .invoke(PersonViewImpl.class);
 
         // Then
         assertEquals(updateView.getName(), updatedView.getName());

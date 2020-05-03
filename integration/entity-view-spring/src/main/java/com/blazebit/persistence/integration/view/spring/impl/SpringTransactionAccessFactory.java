@@ -34,4 +34,9 @@ public class SpringTransactionAccessFactory implements TransactionAccessFactory 
         }
         return null;
     }
+
+    @Override
+    public int getPriority() {
+        return 99;
+    }
 }

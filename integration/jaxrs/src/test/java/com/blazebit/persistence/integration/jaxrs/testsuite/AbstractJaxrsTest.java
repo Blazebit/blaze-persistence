@@ -16,9 +16,10 @@
 
 package com.blazebit.persistence.integration.jaxrs.testsuite;
 
-import com.blazebit.persistence.integration.jaxrs.EntityViewMessageBodyReader;
 import com.blazebit.persistence.integration.jaxrs.testsuite.config.EntityManagerFactoryHolder;
 import com.blazebit.persistence.integration.jaxrs.testsuite.resource.Application;
+import com.blazebit.persistence.integration.jaxrs.testsuite.view.DocumentView;
+import com.blazebit.persistence.integration.jaxrs.testsuite.view.PersonView;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.IdMapping;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -26,6 +27,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.introspect.AnnotatedMethod;
 import com.fasterxml.jackson.databind.introspect.VisibilityChecker;
+import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import org.eclipse.jetty.server.Server;
 import org.glassfish.jersey.jetty.JettyHttpContainer;
 import org.glassfish.jersey.jetty.JettyHttpContainerFactory;
@@ -46,6 +48,7 @@ import java.net.BindException;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.LogManager;
@@ -114,7 +117,7 @@ public abstract class AbstractJaxrsTest {
         ((JettyHttpContainer) SERVER.getHandler()).getApplicationHandler().getInjectionManager().inject(this);
         dropAndCreateSchema();
         this.webTarget = ClientBuilder.newClient()
-                .register(EntityViewMessageBodyReader.class)
+                .register(JacksonJsonProvider.class)
                 .target(SERVER.getURI());
         this.em = emfHolder.getEntityManagerFactory().createEntityManager();
     }
@@ -171,5 +174,54 @@ public abstract class AbstractJaxrsTest {
         byte[] result = objectMapper.writeValueAsBytes(entityView);
         objectMapper.setVisibility(old);
         return result;
+    }
+
+    protected static final class DocumentViewImpl implements DocumentView {
+
+        private Long id;
+        private String name;
+        private PersonViewImpl owner;
+        private long ownerDocumentCount;
+        private String optionalParameter;
+
+        @Override
+        public Long getId() {
+            return id;
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
+
+        @Override
+        public PersonViewImpl getOwner() {
+            return owner;
+        }
+
+        @Override
+        public long getOwnerDocumentCount() {
+            return ownerDocumentCount;
+        }
+
+        @Override
+        public String getOptionalParameter() {
+            return optionalParameter;
+        }
+    }
+
+    protected static final class PersonViewImpl implements PersonView {
+        private UUID id;
+        private String name;
+
+        @Override
+        public UUID getId() {
+            return id;
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
     }
 }

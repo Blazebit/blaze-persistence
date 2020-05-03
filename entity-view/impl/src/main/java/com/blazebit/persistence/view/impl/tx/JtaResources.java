@@ -110,6 +110,11 @@ public class JtaResources implements TransactionAccessFactory {
         return new JtaTransactionSynchronizationStrategy(this);
     }
 
+    @Override
+    public int getPriority() {
+        throw new UnsupportedOperationException();
+    }
+
     public TransactionManager getTransactionManager() {
         return transactionManager;
     }
