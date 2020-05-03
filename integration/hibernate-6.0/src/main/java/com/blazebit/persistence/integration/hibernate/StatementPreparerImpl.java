@@ -35,22 +35,20 @@ import java.sql.Statement;
 
 /**
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.5.0
  */
 public class StatementPreparerImpl implements StatementPreparer {
 
     private JdbcCoordinator jdbcCoordinator;
     private SessionFactoryImplementor sessionFactoryImplementor;
     private DbmsDialect dbmsDialect;
-    private String[][] columns;
     private int[] returningSqlTypes;
     private HibernateReturningResult<?> returningResult;
 
-    public StatementPreparerImpl(JdbcCoordinator jdbcCoordinator, SessionFactoryImplementor sessionFactoryImplementor, DbmsDialect dbmsDialect, String[][] columns, int[] returningSqlTypes, HibernateReturningResult<?> returningResult) {
+    public StatementPreparerImpl(JdbcCoordinator jdbcCoordinator, SessionFactoryImplementor sessionFactoryImplementor, DbmsDialect dbmsDialect, int[] returningSqlTypes, HibernateReturningResult<?> returningResult) {
         this.jdbcCoordinator = jdbcCoordinator;
         this.sessionFactoryImplementor = sessionFactoryImplementor;
         this.dbmsDialect = dbmsDialect;
-        this.columns = columns;
         this.returningSqlTypes = returningSqlTypes;
         this.returningResult = returningResult;
     }
@@ -78,7 +76,7 @@ public class StatementPreparerImpl implements StatementPreparer {
 
     @Override
     public PreparedStatement prepareStatement(String sql) {
-        throw new UnsupportedOperationException("Not yet implemented!");
+        return prepareQueryStatement(sql, false, null);
     }
 
     @Override
@@ -115,14 +113,14 @@ public class StatementPreparerImpl implements StatementPreparer {
                 return dbmsDialect.prepare(ps, returningSqlTypes);
             }
         }.prepareStatement();
-        ps = (PreparedStatement) Proxy.newProxyInstance(ps.getClass().getClassLoader(), new Class[]{ PreparedStatement.class }, new PreparedStatementInvocationHandler(ps, dbmsDialect, columns, returningResult));
+        ps = (PreparedStatement) Proxy.newProxyInstance(ps.getClass().getClassLoader(), new Class[]{ PreparedStatement.class }, new PreparedStatementInvocationHandler(ps, dbmsDialect, returningResult));
         jdbcCoordinator.registerLastQuery(ps);
         return ps;
     }
 
     /**
      * @author Christian Beikov
-     * @since 1.2.0
+     * @since 1.5.0
      */
     private abstract class StatementPreparationTemplate {
 

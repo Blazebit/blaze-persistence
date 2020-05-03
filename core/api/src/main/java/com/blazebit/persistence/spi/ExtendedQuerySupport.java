@@ -40,6 +40,14 @@ public interface ExtendedQuerySupport {
     public boolean supportsAdvancedSql();
 
     /**
+     * Returns whether the JPA provider needs an example query for advanced sql DML queries.
+     *
+     * @return Whether advanced sql DML queries need an example query
+     * @since 1.5.0
+     */
+    public boolean needsExampleQueryForAdvancedDml();
+
+    /**
      * Returns the SQL query for the given query object.
      *
      * @param em The entity manager the query is associated to

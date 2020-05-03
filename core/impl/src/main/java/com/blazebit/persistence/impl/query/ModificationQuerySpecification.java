@@ -104,7 +104,7 @@ public class ModificationQuerySpecification<T> extends CustomQuerySpecification<
 
         // Some dbms like DB2 will need to wrap modification queries in select queries when using CTEs
         boolean hasCtes = withClause != null && withClause.length() != 0 || addedCtes != null && !addedCtes.isEmpty();
-        if (hasCtes && returningAttributeBindingMap.isEmpty() && !dbmsDialect.usesExecuteUpdateWhenWithClauseInModificationQuery()) {
+        if (extendedQuerySupport.needsExampleQueryForAdvancedDml() || hasCtes && returningAttributeBindingMap.isEmpty() && !dbmsDialect.usesExecuteUpdateWhenWithClauseInModificationQuery()) {
             query = exampleQuery;
         } else {
             query = baseQuery;

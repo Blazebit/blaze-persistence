@@ -31,7 +31,9 @@ import org.hibernate.dialect.LobMergeStrategy;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.unique.UniqueDelegate;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
@@ -39,32 +41,49 @@ import org.hibernate.engine.jdbc.env.spi.SchemaNameResolver;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.loader.BatchLoadSizingStrategy;
 import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.SqlExpressable;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.query.CastType;
+import org.hibernate.query.TemporalUnit;
+import org.hibernate.query.TrimSpec;
+import org.hibernate.query.hql.HqlTranslator;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.JoinFragment;
+import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.CaseExpressionWalker;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
+import javax.persistence.TemporalType;
 import java.sql.CallableStatement;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 /**
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.5.0
  */
 public class Hibernate60DelegatingDialect extends Dialect {
 
@@ -75,8 +94,98 @@ public class Hibernate60DelegatingDialect extends Dialect {
     }
 
     @Override
+    public void initializeFunctionRegistry(QueryEngine queryEngine) {
+        delegate.initializeFunctionRegistry(queryEngine);
+    }
+
+    @Override
+    public String currentDate() {
+        return delegate.currentDate();
+    }
+
+    @Override
+    public String currentTime() {
+        return delegate.currentTime();
+    }
+
+    @Override
+    public String currentTimestamp() {
+        return delegate.currentTimestamp();
+    }
+
+    @Override
+    public String currentLocalTime() {
+        return delegate.currentLocalTime();
+    }
+
+    @Override
+    public String currentLocalTimestamp() {
+        return delegate.currentLocalTimestamp();
+    }
+
+    @Override
+    public String currentTimestampWithTimeZone() {
+        return delegate.currentTimestampWithTimeZone();
+    }
+
+    @Override
+    public String extractPattern(TemporalUnit unit) {
+        return delegate.extractPattern(unit);
+    }
+
+    @Override
+    public String castPattern(CastType from, CastType to) {
+        return delegate.castPattern(from, to);
+    }
+
+    @Override
+    public String trimPattern(TrimSpec specification, char character) {
+        return delegate.trimPattern(specification, character);
+    }
+
+    @Override
+    public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+        return delegate.timestampdiffPattern(unit, fromTimestamp, toTimestamp);
+    }
+
+    @Override
+    public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
+        return delegate.timestampaddPattern(unit, timestamp);
+    }
+
+    @Deprecated
+    public static Dialect getDialect() throws HibernateException {
+        return Dialect.getDialect();
+    }
+
+    @Deprecated
+    public static Dialect getDialect(Properties props) throws HibernateException {
+        return Dialect.getDialect(props);
+    }
+
+    @Override
+    public String toString() {
+        return delegate.toString();
+    }
+
+    @Override
     public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
         delegate.contributeTypes(typeContributions, serviceRegistry);
+    }
+
+    @Override
+    public String getRawTypeName(int code) throws HibernateException {
+        return delegate.getRawTypeName(code);
+    }
+
+    @Override
+    public String getRawTypeName(SqlTypeDescriptor sqlTypeDescriptor) throws HibernateException {
+        return delegate.getRawTypeName(sqlTypeDescriptor);
+    }
+
+    @Override
+    public String getTypeName(SqlTypeDescriptor sqlTypeDescriptor) throws HibernateException {
+        return delegate.getTypeName(sqlTypeDescriptor);
     }
 
     @Override
@@ -85,28 +194,18 @@ public class Hibernate60DelegatingDialect extends Dialect {
     }
 
     @Override
-    public String getTypeName(int code, long length, int precision, int scale) throws HibernateException {
-        return delegate.getTypeName(code, length, precision, scale);
+    public String getTypeName(int code, Size size) throws HibernateException {
+        return delegate.getTypeName(code, size);
     }
 
     @Override
-    public String getCastTypeName(int code) {
-        return delegate.getCastTypeName(code);
+    public String getTypeName(SqlTypeDescriptor sqlTypeDescriptor, Size size) {
+        return delegate.getTypeName(sqlTypeDescriptor, size);
     }
 
     @Override
-    public String cast(String value, int jdbcTypeCode, int length, int precision, int scale) {
-        return delegate.cast(value, jdbcTypeCode, length, precision, scale);
-    }
-
-    @Override
-    public String cast(String value, int jdbcTypeCode, int length) {
-        return delegate.cast(value, jdbcTypeCode, length);
-    }
-
-    @Override
-    public String cast(String value, int jdbcTypeCode, int precision, int scale) {
-        return delegate.cast(value, jdbcTypeCode, precision, scale);
+    public String getCastTypeName(SqlExpressable type, Long length, Integer precision, Integer scale) {
+        return delegate.getCastTypeName(type, length, precision, scale);
     }
 
     @Override
@@ -130,14 +229,19 @@ public class Hibernate60DelegatingDialect extends Dialect {
     }
 
     @Override
-    public String getHibernateTypeName(int code, int length, int precision, int scale) throws HibernateException {
+    public String getHibernateTypeName(int code, Integer length, Integer precision, Integer scale) throws HibernateException {
         return delegate.getHibernateTypeName(code, length, precision, scale);
     }
 
     @Override
-    @SuppressWarnings("rawtypes")
+    @Deprecated
     public Class getNativeIdentifierGeneratorClass() {
         return delegate.getNativeIdentifierGeneratorClass();
+    }
+
+    @Override
+    public String getNativeIdentifierGeneratorStrategy() {
+        return delegate.getNativeIdentifierGeneratorStrategy();
     }
 
     @Override
@@ -146,39 +250,8 @@ public class Hibernate60DelegatingDialect extends Dialect {
     }
 
     @Override
-    public boolean supportsSequences() {
-        return delegate.supportsSequences();
-    }
-
-    @Override
-    public boolean supportsPooledSequences() {
-        return delegate.supportsPooledSequences();
-    }
-
-    @Override
-    public String getSequenceNextValString(String sequenceName) throws MappingException {
-        return delegate.getSequenceNextValString(sequenceName);
-    }
-
-    @Override
-    public String getSelectSequenceNextValString(String sequenceName) throws MappingException {
-        return delegate.getSelectSequenceNextValString(sequenceName);
-    }
-
-    @Override
-    @Deprecated
-    public String[] getCreateSequenceStrings(String sequenceName) throws MappingException {
-        return delegate.getCreateSequenceStrings(sequenceName);
-    }
-
-    @Override
-    public String[] getCreateSequenceStrings(String sequenceName, int initialValue, int incrementSize) throws MappingException {
-        return delegate.getCreateSequenceStrings(sequenceName, initialValue, incrementSize);
-    }
-
-    @Override
-    public String[] getDropSequenceStrings(String sequenceName) throws MappingException {
-        return delegate.getDropSequenceStrings(sequenceName);
+    public SequenceSupport getSequenceSupport() {
+        return delegate.getSequenceSupport();
     }
 
     @Override
@@ -197,62 +270,13 @@ public class Hibernate60DelegatingDialect extends Dialect {
     }
 
     @Override
+    public String getFromDual() {
+        return delegate.getFromDual();
+    }
+
+    @Override
     public LimitHandler getLimitHandler() {
         return delegate.getLimitHandler();
-    }
-
-    @Override
-    @Deprecated
-    public boolean supportsLimit() {
-        return delegate.supportsLimit();
-    }
-
-    @Override
-    @Deprecated
-    public boolean supportsLimitOffset() {
-        return delegate.supportsLimitOffset();
-    }
-
-    @Override
-    @Deprecated
-    public boolean supportsVariableLimit() {
-        return delegate.supportsVariableLimit();
-    }
-
-    @Override
-    @Deprecated
-    public boolean bindLimitParametersInReverseOrder() {
-        return delegate.bindLimitParametersInReverseOrder();
-    }
-
-    @Override
-    @Deprecated
-    public boolean bindLimitParametersFirst() {
-        return delegate.bindLimitParametersFirst();
-    }
-
-    @Override
-    @Deprecated
-    public boolean useMaxForLimit() {
-        return delegate.useMaxForLimit();
-    }
-
-    @Override
-    @Deprecated
-    public boolean forceLimitUsage() {
-        return delegate.forceLimitUsage();
-    }
-
-    @Override
-    @Deprecated
-    public String getLimitString(String query, int offset, int limit) {
-        return delegate.getLimitString(query, offset, limit);
-    }
-
-    @Override
-    @Deprecated
-    public int convertToFirstRowValue(int zeroBasedFirstResult) {
-        return delegate.convertToFirstRowValue(zeroBasedFirstResult);
     }
 
     @Override
@@ -291,8 +315,18 @@ public class Hibernate60DelegatingDialect extends Dialect {
     }
 
     @Override
+    public String getWriteLockString(String aliases, int timeout) {
+        return delegate.getWriteLockString(aliases, timeout);
+    }
+
+    @Override
     public String getReadLockString(int timeout) {
         return delegate.getReadLockString(timeout);
+    }
+
+    @Override
+    public String getReadLockString(String aliases, int timeout) {
+        return delegate.getReadLockString(aliases, timeout);
     }
 
     @Override
@@ -357,13 +391,18 @@ public class Hibernate60DelegatingDialect extends Dialect {
     }
 
     @Override
+    public String getAlterTableString(String tableName) {
+        return delegate.getAlterTableString(tableName);
+    }
+
+    @Override
     public String getCreateMultisetTableString() {
         return delegate.getCreateMultisetTableString();
     }
 
     @Override
-    public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
-        return delegate.getDefaultMultiTableBulkIdStrategy();
+    public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(EntityMappingType entityDescriptor, RuntimeModelCreationContext runtimeModelCreationContext) {
+        return delegate.getFallbackSqmMutationStrategy(entityDescriptor, runtimeModelCreationContext);
     }
 
     @Override
@@ -392,21 +431,25 @@ public class Hibernate60DelegatingDialect extends Dialect {
     }
 
     @Override
+    @Deprecated
     public boolean supportsCurrentTimestampSelection() {
         return delegate.supportsCurrentTimestampSelection();
     }
 
     @Override
+    @Deprecated
     public boolean isCurrentTimestampSelectStringCallable() {
         return delegate.isCurrentTimestampSelectStringCallable();
     }
 
     @Override
+    @Deprecated
     public String getCurrentTimestampSelectString() {
         return delegate.getCurrentTimestampSelectString();
     }
 
     @Override
+    @Deprecated
     public String getCurrentTimestampSQLFunctionName() {
         return delegate.getCurrentTimestampSQLFunctionName();
     }
@@ -438,18 +481,30 @@ public class Hibernate60DelegatingDialect extends Dialect {
     }
 
     @Override
+    @Deprecated
     public JoinFragment createOuterJoinFragment() {
         return delegate.createOuterJoinFragment();
     }
 
     @Override
+    @Deprecated
     public CaseFragment createCaseFragment() {
         return delegate.createCaseFragment();
     }
 
     @Override
+    public CaseExpressionWalker getCaseExpressionWalker() {
+        return delegate.getCaseExpressionWalker();
+    }
+
+    @Override
     public String getNoColumnsInsertString() {
         return delegate.getNoColumnsInsertString();
+    }
+
+    @Override
+    public boolean supportsNoColumnsInsert() {
+        return delegate.supportsNoColumnsInsert();
     }
 
     @Override
@@ -614,6 +669,11 @@ public class Hibernate60DelegatingDialect extends Dialect {
     }
 
     @Override
+    public String getAddForeignKeyConstraintString(String constraintName, String foreignKeyDefinition) {
+        return delegate.getAddForeignKeyConstraintString(constraintName, foreignKeyDefinition);
+    }
+
+    @Override
     public String getAddPrimaryKeyConstraintString(String constraintName) {
         return delegate.getAddPrimaryKeyConstraintString(constraintName);
     }
@@ -664,6 +724,11 @@ public class Hibernate60DelegatingDialect extends Dialect {
     }
 
     @Override
+    public boolean supportsIfExistsAfterAlterTable() {
+        return delegate.supportsIfExistsAfterAlterTable();
+    }
+
+    @Override
     public String getDropTableString(String tableName) {
         return delegate.getDropTableString(tableName);
     }
@@ -691,6 +756,11 @@ public class Hibernate60DelegatingDialect extends Dialect {
     @Override
     public String getCrossJoinSeparator() {
         return delegate.getCrossJoinSeparator();
+    }
+
+    @Override
+    public String getTableAliasSeparator() {
+        return delegate.getTableAliasSeparator();
     }
 
     @Override
@@ -824,8 +894,13 @@ public class Hibernate60DelegatingDialect extends Dialect {
     }
 
     @Override
-    public boolean useFollowOnLocking() {
-        return delegate.useFollowOnLocking();
+    public boolean isEmptyStringTreatedAsNull() {
+        return delegate.isEmptyStringTreatedAsNull();
+    }
+
+    @Override
+    public boolean useFollowOnLocking(String sql, QueryOptions queryOptions) {
+        return delegate.useFollowOnLocking(sql, queryOptions);
     }
 
     @Override
@@ -863,7 +938,12 @@ public class Hibernate60DelegatingDialect extends Dialect {
     }
 
     @Override
-    public String getQueryHintString(String query, List<String> hints) {
+    public String getQueryHintString(String query, List<String> hintList) {
+        return delegate.getQueryHintString(query, hintList);
+    }
+
+    @Override
+    public String getQueryHintString(String query, String hints) {
         return delegate.getQueryHintString(query, hints);
     }
 
@@ -906,4 +986,247 @@ public class Hibernate60DelegatingDialect extends Dialect {
     public boolean supportsPartitionBy() {
         return delegate.supportsPartitionBy();
     }
+
+    @Override
+    public boolean supportsNamedParameters(DatabaseMetaData databaseMetaData) throws SQLException {
+        return delegate.supportsNamedParameters(databaseMetaData);
+    }
+
+    @Override
+    public boolean supportsNationalizedTypes() {
+        return delegate.supportsNationalizedTypes();
+    }
+
+    @Override
+    public int getPreferredSqlTypeCodeForBoolean() {
+        return delegate.getPreferredSqlTypeCodeForBoolean();
+    }
+
+    @Override
+    public boolean supportsNonQueryWithCTE() {
+        return delegate.supportsNonQueryWithCTE();
+    }
+
+    @Override
+    public boolean supportsValuesList() {
+        return delegate.supportsValuesList();
+    }
+
+    @Override
+    public boolean supportsSkipLocked() {
+        return delegate.supportsSkipLocked();
+    }
+
+    @Override
+    public boolean supportsNoWait() {
+        return delegate.supportsNoWait();
+    }
+
+    @Override
+    public String inlineLiteral(String literal) {
+        return delegate.inlineLiteral(literal);
+    }
+
+    @Override
+    public boolean supportsJdbcConnectionLobCreation(DatabaseMetaData databaseMetaData) {
+        return delegate.supportsJdbcConnectionLobCreation(databaseMetaData);
+    }
+
+    @Override
+    public String addSqlHintOrComment(String sql, boolean commentsEnabled) {
+        return delegate.addSqlHintOrComment(sql, commentsEnabled);
+    }
+
+    @Override
+    public HqlTranslator getHqlTranslator() {
+        return delegate.getHqlTranslator();
+    }
+
+    @Override
+    public SqmTranslatorFactory getSqmTranslatorFactory() {
+        return delegate.getSqmTranslatorFactory();
+    }
+
+    @Override
+    public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
+        return delegate.getSqlAstTranslatorFactory();
+    }
+
+    @Override
+    public boolean supportsSelectAliasInGroupByClause() {
+        return delegate.supportsSelectAliasInGroupByClause();
+    }
+
+    @Override
+    public DefaultSizeStrategy getDefaultSizeStrategy() {
+        return delegate.getDefaultSizeStrategy();
+    }
+
+    @Override
+    public void setDefaultSizeStrategy(DefaultSizeStrategy defaultSizeStrategy) {
+        delegate.setDefaultSizeStrategy(defaultSizeStrategy);
+    }
+
+    @Override
+    public long getDefaultLobLength() {
+        return delegate.getDefaultLobLength();
+    }
+
+    @Override
+    public int getDefaultDecimalPrecision() {
+        return delegate.getDefaultDecimalPrecision();
+    }
+
+    @Override
+    public int getDefaultTimestampPrecision() {
+        return delegate.getDefaultTimestampPrecision();
+    }
+
+    @Override
+    public int getFloatPrecision() {
+        return delegate.getFloatPrecision();
+    }
+
+    @Override
+    public int getDoublePrecision() {
+        return delegate.getDoublePrecision();
+    }
+
+    @Override
+    public long getFractionalSecondPrecisionInNanos() {
+        return delegate.getFractionalSecondPrecisionInNanos();
+    }
+
+    @Override
+    public boolean supportsBitType() {
+        return delegate.supportsBitType();
+    }
+
+    @Override
+    public String translateDatetimeFormat(String format) {
+        return delegate.translateDatetimeFormat(format);
+    }
+
+    @Override
+    public String translateExtractField(TemporalUnit unit) {
+        return delegate.translateExtractField(unit);
+    }
+
+    @Override
+    public String translateDurationField(TemporalUnit unit) {
+        return delegate.translateDurationField(unit);
+    }
+
+    @Override
+    public String formatDateTimeLiteral(TemporalAccessor temporalAccessor, TemporalType precision) {
+        return delegate.formatDateTimeLiteral(temporalAccessor, precision);
+    }
+
+    @Override
+    public String formatDateTimeLiteral(Date date, TemporalType precision) {
+        return delegate.formatDateTimeLiteral(date, precision);
+    }
+
+    @Override
+    public String formatDateTimeLiteral(Calendar calendar, TemporalType precision) {
+        return delegate.formatDateTimeLiteral(calendar, precision);
+    }
+
+    @Override
+    @Deprecated
+    public boolean supportsLimit() {
+        return delegate.supportsLimit();
+    }
+
+    @Override
+    @Deprecated
+    public boolean supportsLimitOffset() {
+        return delegate.supportsLimitOffset();
+    }
+
+    @Override
+    @Deprecated
+    public boolean supportsVariableLimit() {
+        return delegate.supportsVariableLimit();
+    }
+
+    @Override
+    @Deprecated
+    public boolean bindLimitParametersInReverseOrder() {
+        return delegate.bindLimitParametersInReverseOrder();
+    }
+
+    @Override
+    @Deprecated
+    public boolean bindLimitParametersFirst() {
+        return delegate.bindLimitParametersFirst();
+    }
+
+    @Override
+    @Deprecated
+    public boolean useMaxForLimit() {
+        return delegate.useMaxForLimit();
+    }
+
+    @Override
+    @Deprecated
+    public boolean forceLimitUsage() {
+        return delegate.forceLimitUsage();
+    }
+
+    @Override
+    @Deprecated
+    public String getLimitString(String query, int offset, int limit) {
+        return delegate.getLimitString(query, offset, limit);
+    }
+
+    @Override
+    @Deprecated
+    public int convertToFirstRowValue(int zeroBasedFirstResult) {
+        return delegate.convertToFirstRowValue(zeroBasedFirstResult);
+    }
+
+    @Override
+    @Deprecated
+    public boolean supportsSequences() {
+        return delegate.supportsSequences();
+    }
+
+    @Override
+    @Deprecated
+    public boolean supportsPooledSequences() {
+        return delegate.supportsPooledSequences();
+    }
+
+    @Override
+    @Deprecated
+    public String getSequenceNextValString(String sequenceName) throws MappingException {
+        return delegate.getSequenceNextValString(sequenceName);
+    }
+
+    @Override
+    @Deprecated
+    public String getSelectSequenceNextValString(String sequenceName) throws MappingException {
+        return delegate.getSelectSequenceNextValString(sequenceName);
+    }
+
+    @Override
+    @Deprecated
+    public String getSequenceNextValString(String sequenceName, int increment) throws MappingException {
+        return delegate.getSequenceNextValString(sequenceName, increment);
+    }
+
+    @Override
+    @Deprecated
+    public String[] getCreateSequenceStrings(String sequenceName, int initialValue, int incrementSize) throws MappingException {
+        return delegate.getCreateSequenceStrings(sequenceName, initialValue, incrementSize);
+    }
+
+
+    @Override
+    @Deprecated
+    public String[] getDropSequenceStrings(String sequenceName) throws MappingException {
+        return delegate.getDropSequenceStrings(sequenceName);
+    }
+
 }

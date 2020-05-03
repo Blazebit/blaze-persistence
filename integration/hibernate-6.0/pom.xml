@@ -32,6 +32,8 @@
 
     <properties>
         <module.name>com.blazebit.persistence.integration.hibernate</module.name>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>1.8</maven.compiler.source>
     </properties>
     
     <repositories>
@@ -49,7 +51,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-hibernate-base</artifactId>
+            <artifactId>blaze-persistence-integration-hibernate6-base</artifactId>
         </dependency>
 
         <dependency>
@@ -61,10 +63,7 @@
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-core</artifactId>
-            <!-- Minimum version is 6.0.0-SNAPSHOT -->
-            <!--<version>6.0.0-SNAPSHOT</version>-->
-            <!-- Use 5.2.0 for now until there is a milestone release because the maven release always messes up setting the appropriate version.. -->
-            <version>5.2.0.Final</version>
+            <version>${version.hibernate-6.0}</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

@@ -27,23 +27,21 @@ import java.lang.reflect.Method;
 
 /**
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.5.0
  */
 public class JdbcCoordinatorInvocationHandler implements InvocationHandler {
     
     private final JdbcCoordinator delegate;
     private final SessionFactoryImplementor sessionFactoryImplementor;
     private final DbmsDialect dbmsDialect;
-    private final String[][] columns;
     private final int[] returningSqlTypes;
     private final HibernateReturningResult<?> returningResult;
     private transient StatementPreparer statementPreparer;
 
-    public JdbcCoordinatorInvocationHandler(JdbcCoordinator delegate, SessionFactoryImplementor sessionFactoryImplementor, DbmsDialect dbmsDialect, String[][] columns, int[] returningSqlTypes, HibernateReturningResult<?> returningResult) {
+    public JdbcCoordinatorInvocationHandler(JdbcCoordinator delegate, SessionFactoryImplementor sessionFactoryImplementor, DbmsDialect dbmsDialect, int[] returningSqlTypes, HibernateReturningResult<?> returningResult) {
         this.delegate = delegate;
         this.sessionFactoryImplementor = sessionFactoryImplementor;
         this.dbmsDialect = dbmsDialect;
-        this.columns = columns;
         this.returningSqlTypes = returningSqlTypes;
         this.returningResult = returningResult;
     }
@@ -52,7 +50,7 @@ public class JdbcCoordinatorInvocationHandler implements InvocationHandler {
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         if ("getStatementPreparer".equals(method.getName())) {
             if (statementPreparer == null) {
-                statementPreparer = new StatementPreparerImpl(delegate, sessionFactoryImplementor, dbmsDialect, columns, returningSqlTypes, returningResult);
+                statementPreparer = new StatementPreparerImpl(delegate, sessionFactoryImplementor, dbmsDialect, returningSqlTypes, returningResult);
             }
             
             return statementPreparer;

@@ -27,7 +27,7 @@ import java.sql.SQLException;
 
 /**
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.5.0
  */
 public class Hibernate60LimitHandler implements LimitHandler {
 
@@ -42,6 +42,11 @@ public class Hibernate60LimitHandler implements LimitHandler {
     @Override
     public boolean supportsLimit() {
         return limitHandler.supportsLimit();
+    }
+
+    @Override
+    public boolean supportsOffset() {
+        return limitHandler.supportsLimitOffset();
     }
 
     @Override

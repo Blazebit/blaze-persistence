@@ -24,7 +24,7 @@ import org.hibernate.mapping.Table;
 /**
  *
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.5.0
  */
 public class NativeTableNameFormatter implements TableNameFormatter {
 

@@ -23,7 +23,7 @@ import java.lang.reflect.Method;
 
 /**
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.5.0
  */
 public class Hibernate60SessionFactoryInvocationHandler implements InvocationHandler {
 

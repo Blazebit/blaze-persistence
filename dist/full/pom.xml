@@ -83,6 +83,10 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-persistence-integration-hibernate6-base</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-integration-hibernate-4.2</artifactId>
         </dependency>
         <dependency>

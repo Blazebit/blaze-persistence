@@ -38,7 +38,7 @@ import java.util.Map;
 /**
  *
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.5.0
  */
 @ServiceProvider(EntityManagerFactoryIntegrator.class)
 public class Hibernate60EntityManagerFactoryIntegrator extends AbstractHibernateEntityManagerFactoryIntegrator {
@@ -97,10 +97,10 @@ public class Hibernate60EntityManagerFactoryIntegrator extends AbstractHibernate
                         factory = entityManagerFactory.unwrap(SessionFactoryImplementor.class);
                     }
                     if (factory != null) {
-                        return new HibernateJpa21Provider(persistenceUnitUtil, getDbmsName(entityManagerFactory, em, factory.getDialect()), factory.getEntityPersisters(), factory.getCollectionPersisters(), MAJOR, MINOR, FIX, TYPE);
+                        return new HibernateJpa21Provider(persistenceUnitUtil, getDbmsName(entityManagerFactory, em, factory.getDialect()), factory.getEntityPersisters(), factory.getCollectionPersisters());
                     }
                 }
-                return new HibernateJpa21Provider(persistenceUnitUtil, getDbms(em), getEntityPersisters(em), getCollectionPersisters(em), MAJOR, MINOR, FIX, TYPE);
+                return new HibernateJpa21Provider(persistenceUnitUtil, getDbms(em), getEntityPersisters(em), getCollectionPersisters(em));
             }
         };
     }

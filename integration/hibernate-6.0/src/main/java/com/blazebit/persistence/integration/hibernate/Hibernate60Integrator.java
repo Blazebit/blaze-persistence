@@ -38,7 +38,7 @@ import java.util.List;
 
 /**
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.5.0
  */
 @ServiceProvider(Integrator.class)
 public class Hibernate60Integrator implements Integrator {

@@ -439,8 +439,8 @@ matrix:
 ################################################
 # hibernate-6.0
 ################################################
-#    - env: JPAPROVIDER=hibernate-6.0 RDBMS=h2
-#      jdk: oraclejdk8
+    - env: JPAPROVIDER=hibernate-6.0 RDBMS=h2
+      jdk: oraclejdk8
 
 # Add new certificates for JDK10
 # https://www.deps.co/guides/travis-ci-latest-java/
@@ -547,6 +547,8 @@ matrix:
   allow_failures:
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=15 BUILD_JDK=15 DELTASPIKE=deltaspike-1.9
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=15
+    - env: JPAPROVIDER=hibernate-6.0 RDBMS=h2
+      jdk: oraclejdk8
 #    - env: JPAPROVIDER=datanucleus-5.1 RDBMS=h2 JDK=9
 #      before_install:
 #        - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh

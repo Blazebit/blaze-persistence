@@ -23,8 +23,8 @@ import org.hibernate.persister.internal.StandardPersisterClassResolver;
 import org.hibernate.persister.spi.PersisterClassResolver;
 
 /**
- * @author Jan-Willem Gmelig Meyling
- * @since 1.2.0
+ * @author Christian Beikov
+ * @since 1.5.0
  */
 @ServiceProvider(PersisterClassResolver.class)
 public class CustomPersisterClassResolver extends StandardPersisterClassResolver implements PersisterClassResolver {

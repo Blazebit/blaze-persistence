@@ -22,7 +22,7 @@ import org.hibernate.dialect.pagination.LimitHandler;
 
 /**
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.5.0
  */
 public class Hibernate60LimitHandlingDialect extends Hibernate60DelegatingDialect {
 
