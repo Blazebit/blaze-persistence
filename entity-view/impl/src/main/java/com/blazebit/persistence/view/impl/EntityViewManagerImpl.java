@@ -31,6 +31,7 @@ import com.blazebit.persistence.parser.expression.MacroFunction;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.JpaProvider;
+import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.JpqlMacro;
 import com.blazebit.persistence.spi.PackageOpener;
 import com.blazebit.persistence.view.AttributeFilterProvider;
@@ -231,13 +232,19 @@ public class EntityViewManagerImpl implements EntityViewManager {
         boolean scanStaticMetamodels = !Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.STATIC_METAMODEL_SCANNING_DISABLED)));
 
         Set<String> errors = config.getBootContext().getErrors();
+        Map<String, JpqlFunction> functions = cbf.getRegisteredFunctions();
+        Map<String, JpqlFunction> registeredFunctions = new HashMap<>(functions.size());
+        for (Map.Entry<String, JpqlFunction> entry : functions.entrySet()) {
+            registeredFunctions.put(entry.getKey().toLowerCase(), entry.getValue());
+        }
 
         MetamodelBuildingContext context = new MetamodelBuildingContextImpl(
                 config.getProperties(),
                 new DefaultBasicUserTypeRegistry(config.getUserTypeRegistry(), cbf),
                 entityMetamodel,
                 jpaProvider,
-                dbmsDialect, cbf.getRegisteredFunctions(),
+                dbmsDialect,
+                registeredFunctions,
                 expressionFactory,
                 proxyFactory,
                 config.getBootContext().getViewMappingMap(),

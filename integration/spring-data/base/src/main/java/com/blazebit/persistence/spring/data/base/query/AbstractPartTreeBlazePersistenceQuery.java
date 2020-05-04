@@ -120,7 +120,8 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
         boolean hasEntityViewSettingProcessorParameter = parameters.hasEntityViewSettingProcessorParameter();
         boolean hasSpecificationParameter = parameters.hasSpecificationParameter();
         boolean hasCriteriaBuilderProcessorParameter = parameters.hasBlazeSpecificationParameter();
-        boolean recreateQueries = parameters.potentiallySortsDynamically() || entityViewClass != null
+        boolean recreateQueries = parameters.hasDynamicProjection() || parameters.potentiallySortsDynamically()
+                || entityViewClass != null
                 || skipMethodNamePredicateMatching
                 || hasEntityViewSettingProcessorParameter
                 || hasSpecificationParameter
@@ -225,6 +226,16 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
 
             processBlazeSpecification(cb, values);
 
+            Class<?> entityViewClass = AbstractPartTreeBlazePersistenceQuery.this.entityViewClass;
+            if (parameters.hasDynamicProjection()) {
+                // If the dynamic projection is an entity view, we use that and null it for the result processor
+                entityViewClass = (Class<?>) values[parameters.getDynamicProjectionIndex()];
+                if (evm.getMetamodel().managedView(entityViewClass) == null) {
+                    entityViewClass = null;
+                } else {
+                    values[parameters.getDynamicProjectionIndex()] = null;
+                }
+            }
             if (entityViewClass == null) {
                 return cb.getQuery();
             } else {
@@ -236,7 +247,7 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
                 Map<String, Sorter> settingProcessorAttributeSorters = new HashMap<>(setting.getAttributeSorters());
                 setting.getAttributeSorters().clear();
                 FullQueryBuilder<?, ?> fqb = evm.applySetting(setting, cb);
-                processSort(fqb, values, settingProcessorAttributeSorters);
+                processSort(fqb, values, entityViewClass, settingProcessorAttributeSorters);
                 return fqb.getQuery();
             }
         }
@@ -248,7 +259,7 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
 
             if (cachedCriteriaQuery == null || accessor.hasBindableNullValue()) {
                 FixedJpaQueryCreator creator = createCreator(accessor, persistenceProvider);
-                criteriaQuery = invokeQueryCreator(creator, entityViewClass == null ? getDynamicSort(values) : null);
+                criteriaQuery = invokeQueryCreator(creator, appliesSortThroughAttributeSorters() ? null : getDynamicSort(values));
                 expressions = creator.getParameterExpressions();
             }
 
@@ -262,6 +273,16 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
             ParameterBinder binder = getBinder(values, expressions);
             int firstResult = getOffset(binder.getPageable());
             int maxResults = getLimit(binder.getPageable());
+            Class<?> entityViewClass = AbstractPartTreeBlazePersistenceQuery.this.entityViewClass;
+            if (parameters.hasDynamicProjection()) {
+                // If the dynamic projection is an entity view, we use that and null it for the result processor
+                entityViewClass = (Class<?>) values[parameters.getDynamicProjectionIndex()];
+                if (evm.getMetamodel().managedView(entityViewClass) == null) {
+                    entityViewClass = null;
+                } else {
+                    values[parameters.getDynamicProjectionIndex()] = null;
+                }
+            }
             if (entityViewClass == null) {
                 if (withCount) {
                     jpaQuery = (TypedQuery<Object>) cb.page(firstResult, maxResults).withCountQuery(true).getQuery();
@@ -275,13 +296,13 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
                     Map<String, Sorter> settingProcessorAttributeSorters = new HashMap<>(setting.getAttributeSorters());
                     setting.getAttributeSorters().clear();
                     PaginatedCriteriaBuilder<?> pcb = ((PaginatedCriteriaBuilder<?>) evm.applySetting(setting, cb)).withCountQuery(true);
-                    processSort(pcb, values, settingProcessorAttributeSorters);
+                    processSort(pcb, values, entityViewClass, settingProcessorAttributeSorters);
                     jpaQuery = (TypedQuery<Object>) pcb.getQuery();
                 } else {
                     EntityViewSetting<?, ?> setting = EntityViewSetting.create(entityViewClass, firstResult, maxResults + 1);
                     setting = processSetting(setting, values);
                     PaginatedCriteriaBuilder<?> pcb = ((PaginatedCriteriaBuilder<?>) evm.applySetting(setting, cb)).withHighestKeysetOffset(1).withCountQuery(false);
-                    processSort(pcb, values, Collections.<String, Sorter>emptyMap());
+                    processSort(pcb, values, entityViewClass, Collections.<String, Sorter>emptyMap());
                     jpaQuery = (TypedQuery<Object>) pcb.getQuery();
                 }
             }
@@ -307,7 +328,7 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
             return setting;
         }
 
-        protected void processSort(FullQueryBuilder<?, ?> cb, Object[] values, Map<String, Sorter> evsAttributeSorter) {
+        protected void processSort(FullQueryBuilder<?, ?> cb, Object[] values, Class<?> entityViewClass, Map<String, Sorter> evsAttributeSorter) {
             Sort sort;
             int sortIndex;
             int pageableIndex;
@@ -372,13 +393,17 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
 
             if (cachedCriteriaQuery == null || accessor.hasBindableNullValue()) {
                 FixedJpaQueryCreator creator = createCreator(accessor, persistenceProvider);
-                criteriaQuery = invokeQueryCreator(creator, entityViewClass == null ? getDynamicSort(values) : null);
+                criteriaQuery = invokeQueryCreator(creator, appliesSortThroughAttributeSorters() ? null : getDynamicSort(values));
                 expressions = creator.getParameterExpressions();
             }
 
             TypedQuery<?> jpaQuery = createQuery(criteriaQuery, values);
 
             return restrictMaxResultsIfNecessary(invokeBinding(getBinder(values, expressions), jpaQuery));
+        }
+
+        private boolean appliesSortThroughAttributeSorters() {
+            return entityViewClass != null || parameters.hasDynamicProjection();
         }
 
         protected CriteriaQuery<?> invokeQueryCreator(FixedJpaQueryCreator creator, Sort sort) {

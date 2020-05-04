@@ -44,6 +44,8 @@ As a side note, we are naming releases after http://marvel.com/comics/characters
 ** Support for mapping List index and Map key through separate expression in Entity Views
 ** Support fetching Entity View attributes through JSON/XML functions
 ** Entity View builder API
+** Entity View annotation processor for static metamodel, implementation and builder implementations
+** Quarkus integration and support for native compilation
 
 = 1.4 Coulson *[RELEASED]*
 

@@ -26,6 +26,7 @@ Not yet released
 * Support automatic translation of implicit joins for `DELETE` and `UPDATE` statements
 * Add Quarkus integration with support for native compilation
 * Fix rendering of extended `EXISTS` predicate for performance
+* Support spring-data dynamic projections for entity views
 
 ### Bug fixes
 
