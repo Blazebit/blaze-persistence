@@ -38,6 +38,7 @@ import org.springframework.data.repository.query.parser.PartTree;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import javax.persistence.criteria.CriteriaBuilder;
 import java.util.Collections;
 import java.util.List;
 
@@ -50,7 +51,17 @@ import java.util.List;
 public class PartTreeBlazePersistenceQuery extends AbstractPartTreeBlazePersistenceQuery {
 
     public PartTreeBlazePersistenceQuery(EntityViewAwareJpaQueryMethod method, EntityManager em, PersistenceProvider persistenceProvider, CriteriaBuilderFactory cbf, EntityViewManager evm) {
-        super(method, em, persistenceProvider, cbf, evm);
+        super(method, em, persistenceProvider, null, cbf, evm);
+    }
+
+    @Override
+    protected ParameterMetadataProvider createParameterMetadataProvider(CriteriaBuilder builder, ParametersParameterAccessor accessor, PersistenceProvider provider, Object escape) {
+        return new ParameterMetadataProviderImpl(builder, accessor, provider);
+    }
+
+    @Override
+    protected ParameterMetadataProvider createParameterMetadataProvider(CriteriaBuilder builder, JpaParameters parameters, PersistenceProvider provider, Object escape) {
+        return new ParameterMetadataProviderImpl(builder, parameters, provider);
     }
 
     @Override

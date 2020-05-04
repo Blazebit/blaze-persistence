@@ -35,6 +35,7 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.jpa.provider.PersistenceProvider;
 import org.springframework.data.jpa.provider.QueryExtractor;
+import org.springframework.data.jpa.repository.query.EscapeCharacter;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
 import org.springframework.data.jpa.repository.support.JpaRepositoryFactory;
 import org.springframework.data.jpa.repository.support.JpaRepositoryImplementation;
@@ -87,6 +88,7 @@ public class BlazePersistenceRepositoryFactory extends JpaRepositoryFactory {
     private List<RepositoryProxyPostProcessor> postProcessors;
     private EntityViewAwareCrudMethodMetadataPostProcessor crudMethodMetadataPostProcessor;
     private Optional<Class<?>> repositoryBaseClass;
+    private EscapeCharacter escapeCharacter = EscapeCharacter.DEFAULT;
     private ClassLoader classLoader;
     private BeanFactory beanFactory;
 
@@ -119,6 +121,11 @@ public class BlazePersistenceRepositoryFactory extends JpaRepositoryFactory {
             }
             this.postProcessors.add(processor);
         }
+    }
+
+    @Override
+    public void setEscapeCharacter(EscapeCharacter escapeCharacter) {
+        this.escapeCharacter = escapeCharacter;
     }
 
     protected EntityViewAwareCrudMethodMetadata getCrudMethodMetadata() {
@@ -169,11 +176,11 @@ public class BlazePersistenceRepositoryFactory extends JpaRepositoryFactory {
     protected Optional<QueryLookupStrategy> getQueryLookupStrategy(QueryLookupStrategy.Key key, QueryMethodEvaluationContextProvider evaluationContextProvider) {
         switch (key != null ? key : QueryLookupStrategy.Key.CREATE_IF_NOT_FOUND) {
             case CREATE:
-                return Optional.of(new CreateQueryLookupStrategy(entityManager, extractor, cbf, evm));
+                return Optional.of(new CreateQueryLookupStrategy(entityManager, extractor, escapeCharacter, cbf, evm));
             case USE_DECLARED_QUERY:
                 return Optional.of(new DelegateQueryLookupStrategy(super.getQueryLookupStrategy(key, evaluationContextProvider).get()));
             case CREATE_IF_NOT_FOUND:
-                return Optional.of(new CreateIfNotFoundQueryLookupStrategy(entityManager, extractor, new CreateQueryLookupStrategy(entityManager, extractor, cbf, evm),
+                return Optional.of(new CreateIfNotFoundQueryLookupStrategy(entityManager, extractor, new CreateQueryLookupStrategy(entityManager, extractor, escapeCharacter, cbf, evm),
                         new DelegateQueryLookupStrategy(super.getQueryLookupStrategy(QueryLookupStrategy.Key.USE_DECLARED_QUERY, evaluationContextProvider).get())));
             default:
                 throw new IllegalArgumentException(String.format("Unsupported query lookup strategy %s!", key));
@@ -185,13 +192,15 @@ public class BlazePersistenceRepositoryFactory extends JpaRepositoryFactory {
         private final EntityManager em;
         private final QueryExtractor provider;
         private final PersistenceProvider persistenceProvider;
+        private final EscapeCharacter escapeCharacter;
         private final CriteriaBuilderFactory cbf;
         private final EntityViewManager evm;
 
-        public CreateQueryLookupStrategy(EntityManager em, QueryExtractor extractor, CriteriaBuilderFactory cbf, EntityViewManager evm) {
+        public CreateQueryLookupStrategy(EntityManager em, QueryExtractor extractor, EscapeCharacter escapeCharacter, CriteriaBuilderFactory cbf, EntityViewManager evm) {
             this.em = em;
             this.provider = extractor;
             this.persistenceProvider = PersistenceProvider.fromEntityManager(em);
+            this.escapeCharacter = escapeCharacter;
             this.cbf = cbf;
             this.evm = evm;
         }
@@ -200,7 +209,7 @@ public class BlazePersistenceRepositoryFactory extends JpaRepositoryFactory {
         public RepositoryQuery resolveQuery(Method method, RepositoryMetadata metadata, ProjectionFactory factory, NamedQueries namedQueries) {
             try {
                 // TODO: at some point, we might want to switch to the default if the repository doesn't contain entity views or keyset pagination
-                return new PartTreeBlazePersistenceQuery(new EntityViewAwareJpaQueryMethod(method, (EntityViewAwareRepositoryMetadata) metadata, factory, provider), em, persistenceProvider, cbf, evm);
+                return new PartTreeBlazePersistenceQuery(new EntityViewAwareJpaQueryMethod(method, (EntityViewAwareRepositoryMetadata) metadata, factory, provider), em, persistenceProvider, escapeCharacter, cbf, evm);
             } catch (RuntimeException e) {
                 throw new IllegalArgumentException(
                         String.format("Could not create query metamodel for method %s!", method.toString()), e);

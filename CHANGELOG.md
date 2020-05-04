@@ -46,6 +46,7 @@ Not yet released
 * Fix concurrency issue that cause class cast exceptions during equality comparisons
 * Fix exceptions when using `remove` on recording collection with a non-existing element
 * Rework entity view expression prefixing to work regardless of query aliases
+* Fix a method not found error happening in the spring-data 2.2 integration
 
 ### Backwards-incompatible changes
 

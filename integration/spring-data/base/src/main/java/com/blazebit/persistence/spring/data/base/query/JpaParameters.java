@@ -230,7 +230,7 @@ public class JpaParameters extends Parameters<JpaParameters, JpaParameter> {
      * @author Thomas Darimont
      * @author Oliver Gierke
      */
-    static class JpaParameter extends Parameter {
+    public static class JpaParameter extends Parameter {
 
         private final MethodParameter parameter;
         private final OptionalParam optional;

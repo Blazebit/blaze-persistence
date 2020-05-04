@@ -96,13 +96,15 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
 
     private final AbstractPartTreeBlazePersistenceQuery.QueryPreparer query;
     private final CriteriaBuilderFactory cbf;
+    private final Object escape;
     protected final EntityViewManager evm;
 
-    public AbstractPartTreeBlazePersistenceQuery(EntityViewAwareJpaQueryMethod method, EntityManager em, PersistenceProvider persistenceProvider, CriteriaBuilderFactory cbf, EntityViewManager evm) {
+    public AbstractPartTreeBlazePersistenceQuery(EntityViewAwareJpaQueryMethod method, EntityManager em, PersistenceProvider persistenceProvider, Object escape, CriteriaBuilderFactory cbf, EntityViewManager evm) {
 
         super(method, em);
 
         this.method = method;
+        this.escape = escape;
         this.cbf = cbf;
         this.evm = evm;
 
@@ -126,6 +128,10 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
         this.query = isCountProjection(tree) ? new AbstractPartTreeBlazePersistenceQuery.CountQueryPreparer(persistenceProvider,
             recreateQueries) : new AbstractPartTreeBlazePersistenceQuery.QueryPreparer(persistenceProvider, recreateQueries);
     }
+
+    protected abstract ParameterMetadataProvider createParameterMetadataProvider(CriteriaBuilder builder, ParametersParameterAccessor accessor, PersistenceProvider provider, Object escape);
+
+    protected abstract ParameterMetadataProvider createParameterMetadataProvider(CriteriaBuilder builder, JpaParameters parameters, PersistenceProvider provider, Object escape);
 
     protected abstract boolean isCountProjection(PartTree tree);
 
@@ -344,8 +350,8 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
             CriteriaBuilder builder = cq.getCriteriaBuilder();
 
             ParameterMetadataProvider provider = accessor == null
-                    ? new ParameterMetadataProvider(builder, parameters, persistenceProvider)
-                    : new ParameterMetadataProvider(builder, accessor, persistenceProvider);
+                    ? createParameterMetadataProvider(builder, parameters, persistenceProvider, escape)
+                    : createParameterMetadataProvider(builder, accessor, persistenceProvider, escape);
 
             return new FixedJpaQueryCreator(tree, domainClass, builder, provider);
         }
@@ -451,8 +457,8 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
             CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 
             ParameterMetadataProvider provider = accessor == null
-                    ? new ParameterMetadataProvider(builder, parameters, persistenceProvider)
-                    : new ParameterMetadataProvider(builder, accessor, persistenceProvider);
+                    ? createParameterMetadataProvider(builder, parameters, persistenceProvider, escape)
+                    : createParameterMetadataProvider(builder, accessor, persistenceProvider, escape);
 
             return new FixedJpaCountQueryCreator(tree, domainClass, builder, provider);
         }
