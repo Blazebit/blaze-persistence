@@ -36,7 +36,7 @@ public interface ManagedViewTypeImplementor<X> extends ManagedViewType<X> {
 
     void checkAttributes(MetamodelBuildingContext context);
 
-    void checkNestedAttributes(List<AbstractAttribute<?, ?>> parents, MetamodelBuildingContext context);
+    void checkNestedAttributes(List<AbstractAttribute<?, ?>> parents, MetamodelBuildingContext context, boolean hasMultisetParent);
 
     NavigableMap<String, AbstractMethodAttribute<? super X, ?>> getRecursiveAttributes();
 

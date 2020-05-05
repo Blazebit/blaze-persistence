@@ -325,6 +325,7 @@
                         <exclude>**/src/main/java/com/blazebit/persistence/spring/data/base/query/AbstractPartTreeBlazePersistenceQuery.java</exclude>
                         <exclude>**/src/main/java/com/blazebit/persistence/spring/data/base/repository/EntityViewAwareCrudMethodMetadataPostProcessor.java</exclude>
                         <exclude>**/src/main/java/com/blazebit/persistence/spring/data/base/SharedEntityManagerCreator.java</exclude>
+                        <exclude>**/src/main/java/com/blazebit/persistence/spring/data/impl/query/ParameterMetadataProviderImpl.java</exclude>
                         <exclude>**/src/main/java/com/blazebit/persistence/spring/data/impl/repository/DefaultRepositoryInformation.java</exclude>
                         <exclude>**/src/main/java/com/blazebit/persistence/spring/data/impl/repository/MethodLookups.java</exclude>
                         <exclude>**/src/main/java/com/blazebit/persistence/spring/data/webflux/impl/PageableHandlerMethodArgumentResolver.java</exclude>

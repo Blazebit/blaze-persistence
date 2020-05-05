@@ -409,7 +409,8 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
                 String functionName = ((StringLiteral) arguments.get(0)).getValue();
                 aggregate = functions.get(functionName.toLowerCase());
                 if (aggregate == null) {
-                    throw new SyntaxErrorException("No function with the name '" + functionName + "' exists!");
+                    // We pass through the function syntax to the JPA provider
+                    aggregate = false;
                 }
                 break;
             default:
@@ -1025,6 +1026,9 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private Expression createEnumLiteral(String enumStr) {
         int lastDotIdx = enumStr.lastIndexOf('.');
+        if (lastDotIdx == -1) {
+            return null;
+        }
         String enumTypeStr = enumStr.substring(0, lastDotIdx);
         String enumValueStr = enumStr.substring(lastDotIdx + 1);
         Class<Enum<?>> enumType = enums.get(enumTypeStr);

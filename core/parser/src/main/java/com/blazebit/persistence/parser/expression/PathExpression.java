@@ -137,6 +137,18 @@ public class PathExpression extends AbstractExpression implements Expression {
         this.collectionQualifiedPath = collectionQualifiedPath;
     }
 
+    public PathExpression withoutFirst() {
+        int size = pathProperties.size();
+        if (size == 0) {
+            return this;
+        }
+        List<PathElementExpression> list = new ArrayList<>(size - 1);
+        for (int i = 1; i < size; i++) {
+            list.add(pathProperties.get(i));
+        }
+        return new PathExpression(list);
+    }
+
     /*
      * The following equals and hashCode implementation makes it possible that expressions which have different path properties but
      * reference the same object, are equal.

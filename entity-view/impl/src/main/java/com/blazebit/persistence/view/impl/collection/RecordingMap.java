@@ -746,8 +746,12 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements RecordingContain
     }
 
     public V remove(Object key) {
-        addRemoveAction(key);
-        return delegate.remove(key);
+        V removedValue = delegate.remove(key);
+        if (removedValue == null) {
+            return null;
+        }
+        addAction(new MapRemoveAction<C, K, V>(key, removedValue));
+        return removedValue;
     }
 
     public void putAll(Map<? extends K, ? extends V> m) {

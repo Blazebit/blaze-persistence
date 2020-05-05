@@ -24,6 +24,9 @@ Not yet released
 * Rewrite temporal literals to parameters for hibernate
 * Add `@Limit` annotation for entity views to limit elements of collections and correlations
 * Support automatic translation of implicit joins for `DELETE` and `UPDATE` statements
+* Add Quarkus integration with support for native compilation
+* Fix rendering of extended `EXISTS` predicate for performance
+* Support spring-data dynamic projections for entity views
 
 ### Bug fixes
 
@@ -42,6 +45,9 @@ Not yet released
 * Better support for MySQL subquery `LIMIT` handling in quantified predicates e.g. `IN`
 * Fix NPE in `JpaUtils#expandBindings` caused by non-determinism of example attribute resolving
 * Fix concurrency issue that cause class cast exceptions during equality comparisons
+* Fix exceptions when using `remove` on recording collection with a non-existing element
+* Rework entity view expression prefixing to work regardless of query aliases
+* Fix a method not found error happening in the spring-data 2.2 integration
 
 ### Backwards-incompatible changes
 

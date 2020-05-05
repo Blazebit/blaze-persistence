@@ -18,7 +18,6 @@ package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.parser.PathTargetResolvingExpressionVisitor;
-import com.blazebit.persistence.parser.expression.SyntaxErrorException;
 import com.blazebit.persistence.view.AttributeFilterProvider;
 import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.InverseRemoveStrategy;
@@ -233,26 +232,19 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
                         return null;
                 }
             }
-            UpdatableExpressionVisitor visitor = new UpdatableExpressionVisitor(context.getEntityMetamodel(), getDeclaringType().getEntityClass(), isUpdatable());
-            try {
-                context.getExpressionFactory().createPathExpression(mapping).accept(visitor);
-                Map<Attribute<?, ?>, javax.persistence.metamodel.Type<?>> possibleTargets = visitor.getPossibleTargets();
-
-                if (possibleTargets.size() > 1) {
-                    context.addError("Multiple possible target type for the mapping in the " + getLocation() + ": " + possibleTargets);
-                }
-                return possibleTargets.values().iterator().next().getJavaType();
-            } catch (SyntaxErrorException ex) {
+            if (mappingExpression != null) {
+                UpdatableExpressionVisitor visitor = new UpdatableExpressionVisitor(context.getEntityMetamodel(), getDeclaringType().getEntityClass(), isUpdatable());
                 try {
-                    context.getExpressionFactory().createSimpleExpression(mapping, false);
-                    // The used expression is not usable for updatable mappings
-                    context.addError("Invalid mapping expression '" + mapping + "' of the " + getLocation() + " for an updatable attribute. Consider annotating the attribute with @UpdatableMapping(updatable = false) or simplify the mapping expression to a simple path expression. Encountered error: " + ex.getMessage());
-                } catch (SyntaxErrorException ex2) {
-                    // This is a real syntax error
-                    context.addError("Syntax error in mapping expression '" + mapping + "' of the " + getLocation() + ": " + ex.getMessage());
+                    mappingExpression.accept(visitor);
+                    Map<Attribute<?, ?>, javax.persistence.metamodel.Type<?>> possibleTargets = visitor.getPossibleTargets();
+
+                    if (possibleTargets.size() > 1) {
+                        context.addError("Multiple possible target type for the mapping in the " + getLocation() + ": " + possibleTargets);
+                    }
+                    return possibleTargets.values().iterator().next().getJavaType();
+                } catch (IllegalArgumentException ex) {
+                    context.addError("There is an error for the " + getLocation() + ": " + ex.getMessage());
                 }
-            } catch (IllegalArgumentException ex) {
-                context.addError("There is an error for the " + getLocation() + ": " + ex.getMessage());
             }
         }
 

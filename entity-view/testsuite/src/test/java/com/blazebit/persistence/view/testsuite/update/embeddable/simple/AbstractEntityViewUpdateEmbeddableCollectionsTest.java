@@ -79,4 +79,14 @@ public abstract class AbstractEntityViewUpdateEmbeddableCollectionsTest<T extend
         return docView;
     }
 
+    public T updateRemoveNonExisting() {
+        // Given
+        final T docView = getDoc1View();
+        clearQueries();
+
+        // When
+        docView.getNames().remove(new NameObject());
+        return docView;
+    }
+
 }

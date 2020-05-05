@@ -150,6 +150,14 @@ public interface EntityViewAttributeMapping {
     public String getLimitExpression();
 
     /**
+     * Returns the offset expression.
+     *
+     * @return the offset expression
+     * @since 1.5.0
+     */
+    public String getOffsetExpression();
+
+    /**
      * Returns the order by item expressions.
      *
      * @return The order by item expressions
@@ -161,10 +169,11 @@ public interface EntityViewAttributeMapping {
      * Sets the limit expression along with the order by expressions.
      *
      * @param limitExpression The limit expression
+     * @param offsetExpression The offset expression
      * @param orderByExpressions The order by item expressions
      * @since 1.5.0
      */
-    public void setLimit(String limitExpression, List<String> orderByExpressions);
+    public void setLimit(String limitExpression, String offsetExpression, List<String> orderByExpressions);
 
     /**
      * Returns the attribute type.

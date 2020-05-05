@@ -28,6 +28,8 @@ import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.view.CTEProvider;
+import com.blazebit.persistence.view.ConfigurationProperties;
+import com.blazebit.persistence.view.FetchStrategy;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.IdMapping;
@@ -35,15 +37,13 @@ import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingCorrelated;
 import com.blazebit.persistence.view.MappingCorrelatedSimple;
 import com.blazebit.persistence.view.MappingSubquery;
-import com.blazebit.persistence.view.ConfigurationProperties;
 import com.blazebit.persistence.view.impl.JpqlMacroAdapter;
 import com.blazebit.persistence.view.impl.MacroConfigurationExpressionFactory;
 import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.view.impl.macro.DefaultViewRootJpqlMacro;
+import com.blazebit.persistence.view.impl.macro.FunctionPassthroughJpqlMacro;
 import com.blazebit.persistence.view.impl.macro.MutableEmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.impl.macro.MutableViewJpqlMacro;
-import com.blazebit.persistence.view.impl.macro.TypeValidationEmbeddingViewJpqlMacro;
-import com.blazebit.persistence.view.impl.macro.TypeValidationViewRootJpqlMacro;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
 import com.blazebit.persistence.view.impl.type.BasicUserTypeRegistry;
 import com.blazebit.persistence.view.metamodel.Type;
@@ -81,6 +81,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
 
     private final Map<TypeRegistryKey, Type<?>> basicTypeRegistry = new HashMap<>();
     private final Map<TypeRegistryKey, Map<Class<?>, Type<?>>> convertedTypeRegistry = new HashMap<>();
+    private final Map<BasicUserType<?>, Boolean> multisetSupport = new HashMap<>();
     private final BasicUserTypeRegistry basicUserTypeRegistry;
     private final EntityMetamodel entityMetamodel;
     private final JpaProvider jpaProvider;
@@ -291,7 +292,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
         } else if (mapping instanceof MappingSubquery) {
             MappingSubquery mappingSubquery = (MappingSubquery) mapping;
             if (!mappingSubquery.expression().isEmpty()) {
-                Expression simpleExpression = typeValidationExpressionFactory.createSimpleExpression(((MappingSubquery) mapping).expression(), true);
+                Expression simpleExpression = typeValidationExpressionFactory.createSimpleExpression(((MappingSubquery) mapping).expression(), false, true, false);
                 AliasReplacementVisitor aliasReplacementVisitor = new AliasReplacementVisitor(NullExpression.INSTANCE, mappingSubquery.subqueryAlias());
                 simpleExpression.accept(aliasReplacementVisitor);
                 ScalarTargetResolvingExpressionVisitor visitor = new ScalarTargetResolvingExpressionVisitor(entityMetamodel.getManagedType(entityClass), entityMetamodel, jpqlFunctions);
@@ -321,7 +322,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
                     null
             ));
         }
-        Expression simpleExpression = typeValidationExpressionFactory.createSimpleExpression(expression, false, true, true);
+        Expression simpleExpression = typeValidationExpressionFactory.createSimpleExpression(expression, false, false, true);
         ScalarTargetResolvingExpressionVisitor visitor = new ScalarTargetResolvingExpressionVisitor(managedType, entityMetamodel, jpqlFunctions);
         simpleExpression.accept(visitor);
         return visitor.getPossibleTargetTypes();
@@ -403,6 +404,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
                     classType = typeConverter.getUnderlyingType(viewMapping.getEntityViewClass(), type);
                     BasicUserType<X> userType = (BasicUserType<X>) basicUserTypeRegistry.getBasicUserType(ReflectionUtils.resolveType(viewMapping.getEntityViewClass(), type));
                     ManagedType<X> managedType = (ManagedType<X>) entityMetamodel.getManagedType(classType);
+                    registerMultisetSupport(userType);
                     t = new BasicTypeImpl<>((Class<X>) classType, managedType, userType, type, (TypeConverter<?, X>) typeConverter);
                     if (convertedTypeMap == null) {
                         convertedTypeMap = new HashMap<>();
@@ -414,6 +416,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
                     // Create a normal type
                     BasicUserType<X> userType = (BasicUserType<X>) basicUserTypeRegistry.getBasicUserType(classType);
                     ManagedType<X> managedType = (ManagedType<X>) entityMetamodel.getManagedType(classType);
+                    registerMultisetSupport(userType);
                     t = new BasicTypeImpl<>((Class<X>) classType, managedType, userType);
                     basicTypeRegistry.put(key, t);
                     return t;
@@ -421,6 +424,35 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
             }
         }
         return t;
+    }
+
+    private void registerMultisetSupport(BasicUserType<?> userType) {
+        if (multisetSupport.get(userType) == null) {
+            boolean supportsMultiset = false;
+            try {
+                userType.toStringExpression("NULL");
+                supportsMultiset = true;
+            } catch (Exception ex) {
+                // Ignore
+            }
+            multisetSupport.put(userType, supportsMultiset);
+        }
+    }
+
+    @Override
+    public void checkMultisetSupport(List<AbstractAttribute<?, ?>> parents, AbstractAttribute<?, ?> attribute, BasicUserType<?> userType) {
+        if (!multisetSupport.get(userType)) {
+            AbstractAttribute<?, ?> multisetAttribute = null;
+            for (AbstractAttribute<?, ?> parent : parents) {
+                if (parent.getFetchStrategy() == FetchStrategy.MULTISET) {
+                    multisetAttribute = parent;
+                    break;
+                }
+            }
+
+            addError("The basic type " + userType.getClass().getName() + " of the " + attribute.getLocation() + " does not support MULTISET fetching! Please switch to a different fetch strategy at " + multisetAttribute.getLocation() +
+                    " or register a custom user type as described in https://persistence.blazebit.com/documentation/entity-view/manual/en_US/index.html#entity-view-basic-user-type-spi");
+        }
     }
 
     @Override
@@ -474,9 +506,9 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
         MacroConfiguration originalMacroConfiguration = expressionFactory.getDefaultMacroConfiguration();
         ExpressionFactory cachingExpressionFactory = expressionFactory.unwrap(AbstractCachingExpressionFactory.class);
         Map<String, MacroFunction> macros = new HashMap<>();
-        macros.put("view", new JpqlMacroAdapter(new TypeValidationViewRootJpqlMacro(), cachingExpressionFactory));
-        macros.put("view_root", new JpqlMacroAdapter(new TypeValidationViewRootJpqlMacro(), cachingExpressionFactory));
-        macros.put("embedding_view", new JpqlMacroAdapter(new TypeValidationEmbeddingViewJpqlMacro(), cachingExpressionFactory));
+        macros.put("view", new JpqlMacroAdapter(new FunctionPassthroughJpqlMacro("VIEW"), cachingExpressionFactory));
+        macros.put("view_root", new JpqlMacroAdapter(new FunctionPassthroughJpqlMacro("VIEW_ROOT"), cachingExpressionFactory));
+        macros.put("embedding_view", new JpqlMacroAdapter(new FunctionPassthroughJpqlMacro("EMBEDDING_VIEW"), cachingExpressionFactory));
         MacroConfiguration macroConfiguration = originalMacroConfiguration.with(macros);
         return new MacroConfigurationExpressionFactory(cachingExpressionFactory, macroConfiguration);
     }

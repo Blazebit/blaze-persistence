@@ -63,7 +63,6 @@ import com.blazebit.persistence.parser.predicate.LikePredicate;
 import com.blazebit.persistence.parser.predicate.LtPredicate;
 import com.blazebit.persistence.parser.predicate.MemberOfPredicate;
 import com.blazebit.persistence.parser.predicate.Predicate;
-import com.blazebit.persistence.parser.util.ExpressionUtils;
 import com.blazebit.persistence.spi.JpqlFunction;
 
 import javax.persistence.metamodel.Attribute;
@@ -462,36 +461,57 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
 
     @Override
     public void visit(FunctionExpression expression) {
-        String name = expression.getFunctionName();
-        if ("FUNCTION".equalsIgnoreCase(name)) {
-            // Skip the function name
-            resolveFirst(expression.getExpressions().subList(1, expression.getExpressions().size()), true);
-            resolveToFunctionReturnType(((StringLiteral) expression.getExpressions().get(0)).getValue());
-        } else if (ExpressionUtils.isSizeFunction(expression)) {
-            // According to our grammar, we can only get a path here
-            currentPosition.setAttribute(null);
-            currentPosition.setCurrentType(metamodel.type(Long.class));
-        } else {
-            resolveFirst(expression.getExpressions(), true);
-            resolveToFunctionReturnType(name);
+        String name = expression.getFunctionName().toLowerCase();
+        switch (name) {
+            case "function":
+                String functionName = ((StringLiteral) expression.getExpressions().get(0)).getValue();
+                JpqlFunction jpqlFunction = functions.get(functionName.toLowerCase());
+                if (jpqlFunction == null) {
+                    // Can't reliably resolve the type
+                    currentPosition.setAttribute(null);
+                    currentPosition.setCurrentType(null);
+                } else {
+                    // Skip the function name
+                    resolveFirst(expression.getExpressions().subList(1, expression.getExpressions().size()), true);
+                    resolveToFunctionReturnType(functionName);
+                }
+                break;
+            case "size":
+                // According to our grammar, we can only get a path here
+                currentPosition.setAttribute(null);
+                currentPosition.setCurrentType(metamodel.type(Long.class));
+                break;
+            case "coalesce":
+                resolveAny(expression.getExpressions(), true);
+                resolveToFunctionReturnType(name);
+                break;
+            default:
+                resolveFirst(expression.getExpressions(), true);
+                resolveToFunctionReturnType(name);
+                break;
         }
     }
 
-    private void resolveFirst(List<Expression> expressions, boolean allowParams) {
+    private void resolveAny(List<Expression> expressions, boolean allowParams) {
         List<PathPosition> currentPositions = pathPositions;
         List<PathPosition> newPositions = new ArrayList<>();
 
         int positionsSize = currentPositions.size();
-        for (int j = 0; j < positionsSize; j++) {
-            int size = expressions.size();
-            EXPRESSION_LOOP: for (int i = 0; i < size; i++) {
+        int expressionsSize = expressions.size();
+        POSITION_LOOP: for (int j = 0; j < positionsSize; j++) {
+            for (int i = 0; i < expressionsSize; i++) {
                 PathPosition position = currentPositions.get(j).copy();
                 pathPositions = new ArrayList<>();
                 pathPositions.add(currentPosition = position);
                 if (allowParams) {
                     parametersAllowed = true;
                 }
-                expressions.get(i).accept(this);
+                if (expressions.isEmpty()) {
+                    position.setCurrentType(null);
+                    position.setAttribute(null);
+                } else {
+                    expressions.get(i).accept(this);
+                }
                 if (allowParams) {
                     parametersAllowed = false;
                 }
@@ -500,10 +520,47 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
                 for (PathPosition newPosition : pathPositions) {
                     if (newPosition.getCurrentClass() != null) {
                         newPositions.add(newPosition);
-                        break EXPRESSION_LOOP;
+                        continue POSITION_LOOP;
                     }
                 }
             }
+            newPositions.add(new PathPosition(null, null));
+        }
+
+        currentPosition = null;
+        pathPositions = newPositions;
+    }
+
+    private void resolveFirst(List<Expression> expressions, boolean allowParams) {
+        List<PathPosition> currentPositions = pathPositions;
+        List<PathPosition> newPositions = new ArrayList<>();
+
+        int positionsSize = currentPositions.size();
+        POSITION_LOOP: for (int j = 0; j < positionsSize; j++) {
+            PathPosition position = currentPositions.get(j).copy();
+            pathPositions = new ArrayList<>();
+            pathPositions.add(currentPosition = position);
+            if (allowParams) {
+                parametersAllowed = true;
+            }
+            if (expressions.isEmpty()) {
+                position.setCurrentType(null);
+                position.setAttribute(null);
+            } else {
+                expressions.get(0).accept(this);
+            }
+            if (allowParams) {
+                parametersAllowed = false;
+            }
+
+            // We just use the type of the first path position that we find
+            for (PathPosition newPosition : pathPositions) {
+                if (newPosition.getCurrentClass() != null) {
+                    newPositions.add(newPosition);
+                    continue POSITION_LOOP;
+                }
+            }
+            newPositions.add(new PathPosition(null, null));
         }
 
         currentPosition = null;
@@ -512,23 +569,30 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
 
     private void resolveToFunctionReturnType(String functionName) {
         JpqlFunction function = functions.get(functionName.toLowerCase());
-        if (function == null) {
-            return;
-        }
-
         List<PathPosition> currentPositions = pathPositions;
         int positionsSize = currentPositions.size();
 
-        if (positionsSize == 0) {
-            Class<?> returnType = function.getReturnType(null);
-            Type<?> t = returnType == null ? null : metamodel.type(returnType);
-            currentPositions.add(new PathPosition(t, null));
+        if (function == null) {
+            if (positionsSize == 0) {
+                currentPositions.add(new PathPosition(null, null));
+            } else {
+                for (int i = 0; i < positionsSize; i++) {
+                    PathPosition position = currentPositions.get(i);
+                    position.setAttribute(null);
+                    position.setCurrentType(null);
+                }
+            }
         } else {
-            for (int i = 0; i < positionsSize; i++) {
-                PathPosition position = currentPositions.get(i);
-                Class<?> returnType = function.getReturnType(position.getCurrentClass());
-                position.setAttribute(null);
-                position.setCurrentType(metamodel.type(returnType));
+            if (positionsSize == 0) {
+                Class<?> returnType = function.getReturnType(null);
+                currentPositions.add(new PathPosition(returnType == null ? null : metamodel.type(returnType), null));
+            } else {
+                for (int i = 0; i < positionsSize; i++) {
+                    PathPosition position = currentPositions.get(i);
+                    Class<?> returnType = function.getReturnType(position.getCurrentClass());
+                    position.setAttribute(null);
+                    position.setCurrentType(returnType == null ? null : metamodel.type(returnType));
+                }
             }
         }
     }

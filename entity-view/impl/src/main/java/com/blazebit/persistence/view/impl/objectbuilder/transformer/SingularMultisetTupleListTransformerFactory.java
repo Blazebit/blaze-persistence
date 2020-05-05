@@ -39,16 +39,18 @@ public class SingularMultisetTupleListTransformerFactory implements TupleListTra
     private final int startIndex;
     private final String mapping;
     private final String attributePath;
+    private final String multisetResultAlias;
     private final BasicUserTypeStringSupport<Object>[] fieldConverters;
     private final TypeConverter<Object, Object> elementConverter;
     private final ViewTypeObjectBuilderTemplate<Object[]> template;
     private final TupleTransformerFactory subviewTupleTransformerFactory;
     private final boolean hasSelectOrSubselectFetchedAttributes;
 
-    public SingularMultisetTupleListTransformerFactory(int startIndex, String mapping, String attributePath, TypeConverter<Object, Object> elementConverter, ViewTypeObjectBuilderTemplate<Object[]> template, boolean hasSelectOrSubselectFetchedAttributes, TupleTransformerFactory subviewTupleTransformerFactory) {
+    public SingularMultisetTupleListTransformerFactory(int startIndex, String mapping, String attributePath, String multisetResultAlias, TypeConverter<Object, Object> elementConverter, ViewTypeObjectBuilderTemplate<Object[]> template, boolean hasSelectOrSubselectFetchedAttributes, TupleTransformerFactory subviewTupleTransformerFactory) {
         this.startIndex = startIndex;
         this.mapping = mapping;
         this.attributePath = attributePath;
+        this.multisetResultAlias = multisetResultAlias;
         this.elementConverter = elementConverter;
         this.template = template;
         this.hasSelectOrSubselectFetchedAttributes = hasSelectOrSubselectFetchedAttributes;
@@ -73,7 +75,7 @@ public class SingularMultisetTupleListTransformerFactory implements TupleListTra
                 FullQueryBuilder<?, ?> queryBuilder = (FullQueryBuilder<?, ?>) parameterHolder;
                 if (hasSelectOrSubselectFetchedAttributes) {
                     queryBuilder = queryBuilder.copy(Object[].class);
-                    queryBuilder.innerJoin(mapping, "multiset_" + attributePath.replace('.', '_'));
+                    queryBuilder.innerJoin(mapping, multisetResultAlias);
                     parameterHolder = queryBuilder;
                 }
                 entityViewConfiguration = entityViewConfiguration.forSubview(queryBuilder, attributePath, entityViewConfiguration.getEmbeddingViewJpqlMacro());

@@ -358,6 +358,19 @@ public class EntityViewUpdateMutableEmbeddableMapsTest extends AbstractEntityVie
         assertEquals(doc1.getNameMap(), docView.getNameMap());
     }
 
+    @Test
+    public void testUpdateRemoveNonExisting() {
+        // Given
+        final UpdatableDocumentEmbeddableWithMapsView docView = updateRemoveNonExisting();
+
+        // When
+        update(docView);
+
+        // Then
+        restartTransactionAndReload();
+        assertEquals(doc1.getNameMap(), docView.getNameMap());
+    }
+
     protected void assertChangesUpdateAndFlush(UpdatableDocumentEmbeddableWithMapsView docView) {
         if (!isFullMode()) {
             SingularChangeModel<UpdatableDocumentEmbeddableWithMapsView> changeModel = evm.getChangeModel(docView);

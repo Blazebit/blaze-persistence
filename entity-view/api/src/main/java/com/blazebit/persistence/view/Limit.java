@@ -33,10 +33,19 @@ public @interface Limit {
 
     /**
      * The maximum amount of elements to fetch for the annotated attribute.
+     * Can be an integer literal e.g. <code>5</code> or a parameter expression <code>:myParam</code>.
      *
      * @return The limit
      */
     String limit();
+
+    /**
+     * The amount of elements to skip for the annotated attribute.
+     * Can be an integer literal e.g. <code>5</code> or a parameter expression <code>:myParam</code>.
+     *
+     * @return The offset
+     */
+    String offset() default "";
 
     /**
      * The order to use for the elements for the limit. This will not necessarily order the elements in a collection!

@@ -101,7 +101,7 @@ public class AnnotationParameterAttributeMappingReader extends AbstractAnnotatio
 
         Limit limit = (Limit) parameterAnnotations.get(Limit.class);
         if (limit != null) {
-            parameterMapping.setLimit(limit.limit(), Arrays.asList(limit.order()));
+            parameterMapping.setLimit(limit.limit(), limit.offset(), Arrays.asList(limit.order()));
         }
 
         return parameterMapping;

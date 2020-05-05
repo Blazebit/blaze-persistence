@@ -15,7 +15,6 @@
  */
 package com.blazebit.persistence.integration.quarkus.runtime;
 
-import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.oracle.svm.core.annotate.Substitute;
 import com.oracle.svm.core.annotate.TargetClass;
@@ -36,8 +35,4 @@ final class ProxyFactory {
         throw new RuntimeException("Unsupported in the native compiler.");
     }
 
-    @Substitute
-    public Class<? extends CorrelationProvider> getCorrelationProviderProxy(Class<?> correlated, String correlationKeyAlias, String correlationExpression) {
-        throw new RuntimeException("Unsupported in the native compiler.");
-    }
 }

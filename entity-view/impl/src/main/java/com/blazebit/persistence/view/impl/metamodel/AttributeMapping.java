@@ -76,6 +76,7 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
     protected Integer defaultBatchSize;
     protected Boolean createEmptyFlatViews;
     protected String limitExpression;
+    protected String offsetExpression;
     protected List<String> orderByItems;
 
     // Resolved types
@@ -212,17 +213,24 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
     }
 
     @Override
+    public String getOffsetExpression() {
+        return offsetExpression;
+    }
+
+    @Override
     public List<String> getOrderByItems() {
         return orderByItems;
     }
 
     @Override
-    public void setLimit(String limitExpression, List<String> orderByExpressions) {
+    public void setLimit(String limitExpression, String offsetExpression, List<String> orderByExpressions) {
         if (limitExpression == null) {
             this.limitExpression = null;
+            this.offsetExpression = null;
             this.orderByItems = null;
         } else {
             this.limitExpression = limitExpression;
+            this.offsetExpression = offsetExpression;
             this.orderByItems = orderByExpressions;
         }
     }

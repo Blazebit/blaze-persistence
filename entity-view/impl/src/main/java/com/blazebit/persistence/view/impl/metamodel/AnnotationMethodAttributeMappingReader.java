@@ -130,7 +130,7 @@ public class AnnotationMethodAttributeMappingReader extends AbstractAnnotationAt
 
         Limit limit = AnnotationUtils.findAnnotation(method, Limit.class);
         if (limit != null) {
-            attributeMapping.setLimit(limit.limit(), Arrays.asList(limit.order()));
+            attributeMapping.setLimit(limit.limit(), limit.offset(), Arrays.asList(limit.order()));
         }
 
         UpdatableMapping updatableMapping = AnnotationUtils.findAnnotation(method, UpdatableMapping.class);

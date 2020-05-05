@@ -21,19 +21,23 @@ import com.blazebit.persistence.parser.expression.ArrayExpression;
 import com.blazebit.persistence.parser.expression.EntityLiteral;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
-import com.blazebit.persistence.parser.expression.MacroConfiguration;
+import com.blazebit.persistence.parser.expression.FunctionExpression;
 import com.blazebit.persistence.parser.expression.MacroFunction;
 import com.blazebit.persistence.parser.expression.PathElementExpression;
 import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.expression.PropertyExpression;
+import com.blazebit.persistence.parser.expression.StringLiteral;
 import com.blazebit.persistence.parser.expression.TreatExpression;
 import com.blazebit.persistence.parser.predicate.Predicate;
+import com.blazebit.persistence.parser.util.ExpressionUtils;
+import com.blazebit.persistence.view.impl.macro.CorrelatedSubqueryEmbeddingViewJpqlMacro;
+import com.blazebit.persistence.view.impl.macro.CorrelatedSubqueryViewRootJpqlMacro;
 
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.Set;
 
 /**
  *
@@ -42,65 +46,34 @@ import java.util.Objects;
  */
 public class PrefixingQueryGenerator extends SimpleQueryGenerator {
 
+    public static final Set<String> DEFAULT_QUERY_ALIASES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(CorrelatedSubqueryEmbeddingViewJpqlMacro.CORRELATION_EMBEDDING_VIEW_ALIAS, CorrelatedSubqueryViewRootJpqlMacro.CORRELATION_VIEW_ROOT_ALIAS)));
+    private static final Set<String> MACROS = new HashSet<>(Arrays.asList("VIEW", "VIEW_ROOT", "EMBEDDING_VIEW"));
+
+    private final ExpressionFactory expressionFactory;
     private final String prefix;
-    private final String aliasToSkip;
-    private final String aliasToReplaceWithSkipAlias;
-    private final String secondAliasToSkip;
+    private final String substitute;
+    private final String aliasToReplace;
+    private final Set<String> queryAliases;
+    private final boolean expandMacros;
+    private final boolean fromEmbeddingViewScope;
     private boolean doPrefix = true;
 
-    public PrefixingQueryGenerator(List<String> prefixParts) {
-        this(prefixParts, null, null, null);
+    public PrefixingQueryGenerator(ExpressionFactory ef, String prefix, String substitute, String aliasToReplace, Set<String> queryAliases, boolean expandMacros, boolean fromEmbeddingViewScope) {
+        this.expressionFactory = ef;
+        this.prefix = prefix;
+        this.substitute = substitute;
+        this.expandMacros = expandMacros;
+        this.fromEmbeddingViewScope = fromEmbeddingViewScope;
+        this.aliasToReplace = aliasToReplace;
+        this.queryAliases = queryAliases;
     }
 
-    public PrefixingQueryGenerator(List<String> prefixParts, String aliasToSkip, String aliasToReplaceWithSkipAlias, String secondAliasToSkip) {
-        StringBuilder prefixSb = new StringBuilder();
-
-        if (prefixParts != null && !prefixParts.isEmpty()) {
-            prefixSb.append(prefixParts.get(0));
-            for (int i = 1; i < prefixParts.size(); i++) {
-                prefixSb.append('.');
-                prefixSb.append(prefixParts.get(i));
-            }
-        }
-
-        this.prefix = prefixSb.toString();
-        this.aliasToSkip = aliasToSkip;
-        this.aliasToReplaceWithSkipAlias = Objects.equals(aliasToSkip, aliasToReplaceWithSkipAlias) ? null : aliasToReplaceWithSkipAlias;
-        this.secondAliasToSkip = secondAliasToSkip;
-    }
-
-    public static String prefix(ExpressionFactory ef, String mapping, String prefix) {
-        return prefix(ef, mapping, prefix, false);
-    }
-
-    public static String prefix(ExpressionFactory ef, String mapping, String prefix, boolean fromEmbeddingViewScope) {
-        int thisIndex = mapping.indexOf("this");
-        if (thisIndex == 0 && mapping.length() == "this".length()) {
-            return prefix;
-        }
-        // Optimize for simple mappings
-        if (mapping.indexOf('(') == -1 && thisIndex == -1) {
-            return prefix + "." + mapping;
-        } else {
-            // Since we have functions in here, we have to parse an properly prefix the mapping
-            Expression expression;
-            if (fromEmbeddingViewScope) {
-                // When invoking this in the embedding view scope, we have to redirect VIEW to EMBEDDING_VIEW and unregister EMBEDDING_VIEW
-                MacroConfiguration originalMacroConfiguration = ef.getDefaultMacroConfiguration();
-                Map<String, MacroFunction> macros = new HashMap<>();
-                macros.put("view", new PassthroughJpqlMacroAdapter("EMBEDDING_VIEW"));
-                macros.put("embedding_view", null);
-                MacroConfiguration macroConfiguration = originalMacroConfiguration.with(macros);
-                expression = ef.createSimpleExpression(mapping, false, false, true, macroConfiguration, null);
-            } else {
-                expression = ef.createSimpleExpression(mapping, false, false, true);
-            }
-            SimpleQueryGenerator generator = new PrefixingQueryGenerator(Collections.singletonList(prefix));
-            StringBuilder sb = new StringBuilder(mapping.length() + prefix.length() + 1);
-            generator.setQueryBuffer(sb);
-            expression.accept(generator);
-            return sb.toString();
-        }
+    public static String prefix(ExpressionFactory ef, Expression expression, String prefix, boolean fromEmbeddingViewScope) {
+        SimpleQueryGenerator generator = new PrefixingQueryGenerator(ef, prefix, null, null, DEFAULT_QUERY_ALIASES, !fromEmbeddingViewScope, fromEmbeddingViewScope);
+        StringBuilder sb = new StringBuilder(20 + prefix.length());
+        generator.setQueryBuffer(sb);
+        expression.accept(generator);
+        return sb.toString();
     }
 
     @Override
@@ -122,33 +95,73 @@ public class PrefixingQueryGenerator extends SimpleQueryGenerator {
     }
 
     @Override
+    public void visit(FunctionExpression expression) {
+        String macroName;
+        List<Expression> expressions = expression.getExpressions();
+        if (ExpressionUtils.isCustomFunctionInvocation(expression) && MACROS.contains((macroName = ((StringLiteral) expressions.get(0)).getValue()).toUpperCase())) {
+            if (expandMacros) {
+                MacroFunction macroFunction = expressionFactory.getDefaultMacroConfiguration().get(macroName);
+                Expression expandedExpression = macroFunction.apply(expressions.subList(1, expressions.size()));
+                // It makes no sense to prefix a path that was created through a view macro as that is already absolute
+                boolean doPrefix = this.doPrefix;
+                try {
+                    this.doPrefix = false;
+                    expandedExpression.accept(this);
+                } finally {
+                    this.doPrefix = doPrefix;
+                }
+            } else {
+                // When invoking this in the embedding view scope, we have to redirect VIEW to EMBEDDING_VIEW and unregister EMBEDDING_VIEW
+                if (fromEmbeddingViewScope) {
+                    if ("EMBEDDING_VIEW".equalsIgnoreCase(macroName)) {
+                        throw new IllegalArgumentException("Illegal use of EMBEDDING_VIEW!");
+                    } else if ("VIEW".equalsIgnoreCase(macroName)) {
+                        sb.append("EMBEDDING_VIEW");
+                    } else {
+                        sb.append(macroName);
+                    }
+                } else {
+                    sb.append(macroName);
+                }
+                sb.append('(');
+                int size = expressions.size();
+                if (size > 1) {
+                    expressions.get(1).accept(this);
+                    for (int i = 2; i < size; i++) {
+                        sb.append(",");
+                        expressions.get(i).accept(this);
+                    }
+                }
+                sb.append(')');
+            }
+        } else {
+            super.visit(expression);
+        }
+    }
+
+    @Override
     public void visit(PathExpression expression) {
         final List<PathElementExpression> expressions = expression.getExpressions();
         if (expressions.isEmpty()) {
             sb.append(prefix);
         } else {
             final PathElementExpression firstElement = expressions.get(0);
+            final String firstProperty = firstElement instanceof PropertyExpression ? ((PropertyExpression) firstElement).getProperty() : null;
             final int size = expressions.size();
-            // The second alias is skipped unconditionally
-            if (!doPrefix || size == 1 && secondAliasToSkip != null && firstElement instanceof PropertyExpression && secondAliasToSkip.equals(((PropertyExpression) firstElement).getProperty())) {
+            // If we encounter a query alias, we don't prefix
+            if (!doPrefix || queryAliases.contains(firstProperty)) {
                 super.visit(expression);
                 return;
             }
             // This is something special to support the embedding_view macro in subviews where the parent view is correlated
             // Since the correlated alias will not be a prefix of the subview mapping prefix, we have to replace that properly
-            if (aliasToReplaceWithSkipAlias != null && firstElement instanceof PropertyExpression && aliasToReplaceWithSkipAlias.equals(((PropertyExpression) firstElement).getProperty())) {
-                sb.append(aliasToSkip);
+            if (aliasToReplace != null && aliasToReplace.equals(firstProperty)) {
+                sb.append(substitute);
                 for (int i = 1; i < size; i++) {
                     sb.append(".");
                     expressions.get(i).accept(this);
                 }
                 return;
-            }
-            if (size > 1) {
-                if (aliasToSkip != null && firstElement instanceof PropertyExpression && aliasToSkip.equals(((PropertyExpression) firstElement).getProperty())) {
-                    super.visit(expression);
-                    return;
-                }
             }
             if (firstElement instanceof ArrayExpression && ((ArrayExpression) firstElement).getBase() instanceof EntityLiteral) {
                 super.visit(expression);
@@ -185,7 +198,8 @@ public class PrefixingQueryGenerator extends SimpleQueryGenerator {
                     sb.append('.');
                 }
             }
-            if (firstElement instanceof PropertyExpression && "this".equalsIgnoreCase(((PropertyExpression) firstElement).getProperty())) {
+            // Remove the this property
+            if ("this".equalsIgnoreCase(firstProperty)) {
                 if (size > 1) {
                     for (int i = 1; i < size; i++) {
                         expressions.get(i).accept(this);

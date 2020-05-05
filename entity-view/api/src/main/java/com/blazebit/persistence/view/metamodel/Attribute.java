@@ -146,6 +146,14 @@ public interface Attribute<X, Y> {
     public String getLimitExpression();
 
     /**
+     * Returns the offset expression.
+     *
+     * @return The offset expression
+     * @since 1.5.0
+     */
+    public String getOffsetExpression();
+
+    /**
      * The different attribute types.
      * @since 1.2.0
      */

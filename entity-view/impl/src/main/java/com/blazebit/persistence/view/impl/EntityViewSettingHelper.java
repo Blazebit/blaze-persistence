@@ -21,6 +21,7 @@ import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.KeysetPage;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
+import com.blazebit.persistence.spi.ServiceProvider;
 import com.blazebit.persistence.view.AttributeFilterProvider;
 import com.blazebit.persistence.view.ConfigurationProperties;
 import com.blazebit.persistence.view.EntityViewSetting;
@@ -133,22 +134,22 @@ public final class EntityViewSettingHelper {
                 String firstExpression;
                 List<String> expressions;
                 if (idAttribute.isSubview()) {
-                    String prefix = getMapping(entityViewRoot, idAttribute, ef);
+                    String prefix = getMapping(entityViewRoot, idAttribute, criteriaBuilder);
                     ManagedViewTypeImplementor<?> type = (ManagedViewTypeImplementor<?>) ((SingularAttribute<?, ?>) idAttribute).getType();
                     Set<MethodAttribute<?, ?>> attributes = (Set) type.getAttributes();
                     Iterator<MethodAttribute<?, ?>> iterator = attributes.iterator();
-                    firstExpression = getMapping(prefix, iterator.next(), ef);
+                    firstExpression = getMapping(prefix, iterator.next(), criteriaBuilder);
                     if (iterator.hasNext()) {
                         expressions = new ArrayList<>(attributes.size() - 1);
                         while (iterator.hasNext()) {
-                            expressions.add(getMapping(prefix, iterator.next(), ef));
+                            expressions.add(getMapping(prefix, iterator.next(), criteriaBuilder));
                         }
                     } else {
                         expressions = null;
                     }
                 } else {
                     expressions = null;
-                    firstExpression = getMapping(entityViewRoot, idAttribute, ef);
+                    firstExpression = getMapping(entityViewRoot, idAttribute, criteriaBuilder);
                 }
 
                 if (setting.isKeysetPaginated()) {
@@ -230,8 +231,11 @@ public final class EntityViewSettingHelper {
         throw new IllegalArgumentException("Invalid value of type " + o.getClass().getName() + " given for the boolean property: " + key);
     }
 
-    private static String getMapping(String prefix, MethodAttribute<?, ?> attribute, ExpressionFactory ef) {
-        return PrefixingQueryGenerator.prefix(ef, ((MappingAttribute<?, ?>) attribute).getMapping(), prefix);
+    private static String getMapping(String prefix, MethodAttribute<?, ?> attribute, ServiceProvider serviceProvider) {
+        MappingAttribute<?, ?> mappingAttribute = (MappingAttribute<?, ?>) attribute;
+        StringBuilder sb = new StringBuilder(prefix.length() + mappingAttribute.getMapping().length() + 1);
+        mappingAttribute.renderMapping(prefix, serviceProvider, sb);
+        return sb.toString();
     }
 
     private static String[] getExpressionArray(List<String> expressions) {

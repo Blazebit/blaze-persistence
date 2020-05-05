@@ -142,6 +142,36 @@ public class EntityViewUpdateSimpleMutableFlatViewCollectionsTest extends Abstra
         assertSubviewEquals(doc1.getNames(), docView.getNames());
     }
 
+    @Test
+    public void testUpdateRemoveNonExisting() {
+        // Given
+        final UpdatableDocumentWithCollectionsView docView = getDoc1View();
+        clearQueries();
+
+        // When
+        docView.getNames().remove("non-existing");
+        update(docView);
+
+        // Then
+        assertNoUpdateAndReload(docView);
+        assertSubviewEquals(doc1.getNames(), docView.getNames());
+    }
+
+    @Test
+    public void testUpdateRemoveNull() {
+        // Given
+        final UpdatableDocumentWithCollectionsView docView = getDoc1View();
+        clearQueries();
+
+        // When
+        docView.getNames().remove(null);
+        update(docView);
+
+        // Then
+        assertNoUpdateAndReload(docView);
+        assertSubviewEquals(doc1.getNames(), docView.getNames());
+    }
+
     public static void assertSubviewEquals(Collection<NameObject> persons, Collection<? extends UpdatableNameObjectView> personSubviews) {
         if (persons == null) {
             assertNull(personSubviews);

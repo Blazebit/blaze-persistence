@@ -25,7 +25,6 @@ import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.LockMode;
 import com.blazebit.persistence.view.ViewTransition;
-import com.blazebit.persistence.view.impl.PrefixingQueryGenerator;
 import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.view.impl.SimpleCTEProviderFactory;
 import com.blazebit.persistence.view.impl.proxy.AbstractReflectionInstantiator;
@@ -947,14 +946,14 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
     }
 
     @Override
-    public void checkNestedAttributes(List<AbstractAttribute<?, ?>> parents, MetamodelBuildingContext context) {
+    public void checkNestedAttributes(List<AbstractAttribute<?, ?>> parents, MetamodelBuildingContext context, boolean hasMultisetParent) {
         for (AbstractMethodAttribute<? super X, ?> attribute : attributes.values()) {
-            attribute.checkNestedAttribute(parents, jpaManagedType, context);
+            attribute.checkNestedAttribute(parents, jpaManagedType, context, hasMultisetParent);
         }
 
         if (!constructorIndex.isEmpty()) {
             for (MappingConstructorImpl<X> constructor : constructorIndex.values()) {
-                constructor.checkNestedParameters(parents, jpaManagedType, context);
+                constructor.checkNestedParameters(parents, jpaManagedType, context, hasMultisetParent);
             }
         }
     }
@@ -1322,13 +1321,13 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
         public void run() {
             if (elementType.getRecursiveSubviewAttributes() != null) {
                 for (Map.Entry<String, AbstractMethodAttribute<? super Object, ?>> subEntry : elementType.getRecursiveSubviewAttributes().entrySet()) {
-                    recursiveSubviewAttributes.put(PrefixingQueryGenerator.prefix(context.getExpressionFactory(), subEntry.getKey(), attribute.getName()), subEntry.getValue());
+                    recursiveSubviewAttributes.put(attribute.getName() + '.' + subEntry.getKey(), subEntry.getValue());
                 }
             }
             // Cyclic models can run into this condition, but it's ok because we only allow cycles at non-cascading attributes
             if (elementType.getRecursiveAttributes() != null) {
                 for (Map.Entry<String, AbstractMethodAttribute<? super Object, ?>> subEntry : elementType.getRecursiveAttributes().entrySet()) {
-                    recursiveAttributes.put(PrefixingQueryGenerator.prefix(context.getExpressionFactory(), subEntry.getKey(), attribute.getName()), subEntry.getValue());
+                    recursiveAttributes.put(attribute.getName() + '.' + subEntry.getKey(), subEntry.getValue());
                 }
             }
         }
@@ -1361,12 +1360,12 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
         public void run() {
             if (keyType.getRecursiveSubviewAttributes() != null) {
                 for (Map.Entry<String, AbstractMethodAttribute<? super Object, ?>> subEntry : keyType.getRecursiveSubviewAttributes().entrySet()) {
-                    recursiveSubviewAttributes.put("KEY(" + PrefixingQueryGenerator.prefix(context.getExpressionFactory(), subEntry.getKey(), attribute.getName()) + ")", subEntry.getValue());
+                    recursiveSubviewAttributes.put("KEY(" + attribute.getName() + '.' + subEntry.getKey() + ')', subEntry.getValue());
                 }
             }
             if (keyType.getRecursiveAttributes() != null) {
                 for (Map.Entry<String, AbstractMethodAttribute<? super Object, ?>> subEntry : keyType.getRecursiveAttributes().entrySet()) {
-                    recursiveAttributes.put("KEY(" + PrefixingQueryGenerator.prefix(context.getExpressionFactory(), subEntry.getKey(), attribute.getName()) + ")", subEntry.getValue());
+                    recursiveAttributes.put("KEY(" + attribute.getName() + '.' + subEntry.getKey() + ')', subEntry.getValue());
                 }
             }
         }

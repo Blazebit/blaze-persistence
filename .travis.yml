@@ -42,12 +42,10 @@ matrix:
 ################################################
 # hibernate-5.2
 ################################################
-    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=9 SNAPSHOT_PUBLISH=true
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=11 SNAPSHOT_PUBLISH=true
       before_install:
         - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
-        - . ./install-jdk.sh -F 9 -L GPL
-        - rm "${JAVA_HOME}/lib/security/cacerts"
-        - ln -s /etc/ssl/certs/java/cacerts "${JAVA_HOME}/lib/security/cacerts"
+        - . ./install-jdk.sh -F 11 -L GPL
       script:
         - "echo 'Publishing snapshots only, skipping build...'"
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2

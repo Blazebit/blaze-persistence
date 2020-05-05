@@ -29,6 +29,7 @@
     <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]base[\\/]query[\\/]ParameterBinder\.java$"/>
     <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]base[\\/]query[\\/]JpaParameters\.java$"/>
     <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]base[\\/]query[\\/]ParameterMetadataProvider\.java$"/>
+    <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]impl[\\/]query[\\/]ParameterMetadataProviderImpl\.java$"/>
     <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]base[\\/]query[\\/]AbstractCriteriaQueryParameterBinder\.java$"/>
     <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]base[\\/]query[\\/]AbstractPartTreeBlazePersistenceQuery\.java$"/>
     <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]base[\\/]repository[\\/]EntityViewAwareCrudMethodMetadataPostProcessor\.java$"/>

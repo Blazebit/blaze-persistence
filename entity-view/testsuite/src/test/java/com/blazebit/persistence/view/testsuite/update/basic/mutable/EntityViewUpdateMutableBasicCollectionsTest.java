@@ -163,6 +163,34 @@ public class EntityViewUpdateMutableBasicCollectionsTest extends AbstractEntityV
         assertEquals(doc1.getVersion(), docView.getVersion());
     }
 
+    @Test
+    public void testUpdateRemoveNonExisting() {
+        // Given
+        final UpdatableDocumentBasicWithCollectionsView docView = updateRemoveNonExisting();
+
+        // When
+        update(docView);
+
+        // Then
+        assertNoUpdateAndReload(docView);
+        assertEquals(doc1.getStrings(), docView.getStrings());
+        assertEquals(doc1.getVersion(), docView.getVersion());
+    }
+
+    @Test
+    public void testUpdateRemoveNull() {
+        // Given
+        final UpdatableDocumentBasicWithCollectionsView docView = updateRemoveNull();
+
+        // When
+        update(docView);
+
+        // Then
+        assertNoUpdateAndReload(docView);
+        assertEquals(doc1.getStrings(), docView.getStrings());
+        assertEquals(doc1.getVersion(), docView.getVersion());
+    }
+
     protected void assertChangesUpdateAndFlush(UpdatableDocumentBasicWithCollectionsView docView) {
         if (!isFullMode()) {
             SingularChangeModel<UpdatableDocumentBasicWithCollectionsView> changeModel = evm.getChangeModel(docView);

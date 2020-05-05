@@ -40,6 +40,53 @@ If found on the classpath, types for the following classes are registered
 
 If you miss a type you can register it via link:{entity_view_jdoc}/persistence/view/spi/EntityViewConfiguration.html#registerBasicUserType(java.lang.Class,com.blazebit.persistence.view.spi.type.BasicUserType)[`EntityViewConfiguration.registerBasicUserType(Class type, BasicUserType userType)`].
 
+=== Type support for MULTISET fetching
+
+One of the reasons why a custom basic user type might be desirable is the support for `MULTISET` fetching.
+When an entity view attribute defines `MULTISET` fetching, the basic user types of all types connected through that attribute must support `MULTISET` fetching.
+Normally this is not a problem, because well known user types are fully supported. Using embeddable types, custom composite types or JPA converted types in entity views
+is problematic though, because there is no way {projectname} can figure out how to decompose the attribute to a string representation or construct the type from a string representation.
+This is where a custom basic user type implementation is desirable.
+
+Depending on whether the type is mutable or not, you can extend the `com.blazebit.persistence.view.spi.type.AbstractMutableBasicUserType` or `com.blazebit.persistence.view.spi.type.ImmutableBasicUserType`.
+An example implementation for an embeddable type composed of 2 attributes might look like the following:
+
+[source,java]
+----
+public class QuantityBasicUserType extends com.blazebit.persistence.view.spi.type.AbstractMutableBasicUserType<Quantity> {
+
+    @Override
+    public Quantity deepClone(Quantity object) {
+        // Clone the object if it is mutable. For immutable types,
+        // you can extend com.blazebit.persistence.view.spi.type.ImmutableBasicUserType and don't need this method
+        return object == null ? null : new Quantity(object);
+    }
+
+    @Override
+    public String toStringExpression(String expression) {
+        // A JPQL expression that produces a string format which is then parsed
+        return "CONCAT(" + expression + ".value, '/', " + expression + ".unit)";
+    }
+
+    @Override
+    public Quantity fromString(CharSequence sequence) {
+        // The CharSequence has the format as defined through toStringExpression
+        // Now it must be de-serialized to a Quantity
+        String s = sequence.toString();
+        String[] parts = s.split("\\/");
+        return new Quantity(new BigDecimal(parts[0]), parts[1]);
+    }
+}
+----
+
+Note that the `deepClone` method is only relevant for mutable types. Don't forget to register the basic user type via link:{entity_view_jdoc}/persistence/view/spi/EntityViewConfiguration.html#registerBasicUserType(java.lang.Class,com.blazebit.persistence.view.spi.type.BasicUserType)[`EntityViewConfiguration.registerBasicUserType(Class type, BasicUserType userType)`].
+
+[source,java]
+----
+EntityViewConfiguration configuration = ...
+configuration.registerBasicUserType(Quantity.class, new QuantityBasicUserType());
+----
+
 === Type support for write models
 
 When a basic type is used in a write model, it is very important that an appropriate `BasicUserType` is registered.

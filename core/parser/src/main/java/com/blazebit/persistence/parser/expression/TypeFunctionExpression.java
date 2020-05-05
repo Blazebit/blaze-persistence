@@ -34,4 +34,14 @@ public class TypeFunctionExpression extends FunctionExpression {
     public TypeFunctionExpression copy(ExpressionCopyContext copyContext) {
         return new TypeFunctionExpression(expressions.get(0).copy(copyContext));
     }
+
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public <T> T accept(ResultVisitor<T> visitor) {
+        return visitor.visit(this);
+    }
 }

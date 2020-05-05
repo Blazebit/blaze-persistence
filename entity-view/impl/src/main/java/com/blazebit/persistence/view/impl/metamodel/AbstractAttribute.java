@@ -21,7 +21,14 @@ import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.parser.SimpleQueryGenerator;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.expression.NullExpression;
+import com.blazebit.persistence.parser.expression.NumericLiteral;
+import com.blazebit.persistence.parser.expression.NumericType;
+import com.blazebit.persistence.parser.expression.ParameterExpression;
+import com.blazebit.persistence.parser.expression.PathExpression;
+import com.blazebit.persistence.parser.expression.PropertyExpression;
 import com.blazebit.persistence.parser.expression.SyntaxErrorException;
+import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.spi.LateralStyle;
@@ -44,6 +51,7 @@ import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
 import com.blazebit.persistence.view.impl.PrefixingQueryGenerator;
 import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor.TargetType;
+import com.blazebit.persistence.view.impl.StaticCorrelationProvider;
 import com.blazebit.persistence.view.impl.SubqueryProviderHelper;
 import com.blazebit.persistence.view.impl.UpdatableExpressionVisitor;
 import com.blazebit.persistence.view.impl.collection.CollectionInstantiatorImplementor;
@@ -57,14 +65,12 @@ import com.blazebit.persistence.view.impl.collection.SortedMapInstantiator;
 import com.blazebit.persistence.view.impl.collection.SortedSetCollectionInstantiator;
 import com.blazebit.persistence.view.impl.collection.UnorderedMapInstantiator;
 import com.blazebit.persistence.view.impl.collection.UnorderedSetCollectionInstantiator;
-import com.blazebit.persistence.view.impl.macro.CorrelatedSubqueryEmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.metamodel.Attribute;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.OrderByItem;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.metamodel.ViewType;
-import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
 import com.blazebit.reflection.ReflectionUtils;
 
 import javax.persistence.metamodel.ManagedType;
@@ -100,14 +106,17 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     protected final Class<Y> javaType;
     protected final Class<?> convertedJavaType;
     protected final String mapping;
+    protected final Expression mappingExpression;
     protected final String[] fetches;
     protected final FetchStrategy fetchStrategy;
     protected final int batchSize;
     protected final List<OrderByItem> orderByItems;
     protected final String limitExpression;
+    protected final String offsetExpression;
     protected final SubqueryProviderFactory subqueryProviderFactory;
     protected final Class<? extends SubqueryProvider> subqueryProvider;
     protected final String subqueryExpression;
+    protected final Expression subqueryResultExpression;
     protected final String subqueryAlias;
     protected final CorrelationProviderFactory correlationProviderFactory;
     protected final Class<? extends CorrelationProvider> correlationProvider;
@@ -116,6 +125,9 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     protected final Class<?> correlated;
     protected final String correlationKeyAlias;
     protected final String correlationExpression;
+    protected final Expression correlationBasisExpression;
+    protected final Expression correlationResultExpression;
+    protected final Predicate correlationPredicate;
     protected final MappingType mappingType;
     protected final boolean id;
     protected final javax.persistence.metamodel.Attribute<?, ?> updateMappableAttribute;
@@ -146,12 +158,18 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         }
 
         String limitExpression;
+        String offsetExpression;
         List<OrderByItem> orderByItems;
         if (mapping.getLimitExpression() == null) {
             limitExpression = null;
+            offsetExpression = null;
             orderByItems = Collections.emptyList();
         } else {
             limitExpression = mapping.getLimitExpression();
+            offsetExpression = mapping.getOffsetExpression();
+            if (offsetExpression == null || offsetExpression.isEmpty()) {
+                offsetExpression = "0";
+            }
             List<String> orderByItemExpressions = mapping.getOrderByItems();
             orderByItems = new ArrayList<>(orderByItemExpressions.size());
             for (int i = 0; i < orderByItemExpressions.size(); i++) {
@@ -184,17 +202,20 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
         if (mappingAnnotation instanceof IdMapping) {
             this.mapping = ((IdMapping) mappingAnnotation).value();
+            this.mappingExpression = createSimpleExpression(this.mapping, mapping, context, ExpressionLocation.MAPPING);
             this.fetches = EMPTY;
             this.fetchStrategy = FetchStrategy.JOIN;
             this.batchSize = -1;
             this.orderByItems = Collections.emptyList();
             this.limitExpression = null;
+            this.offsetExpression = null;
             this.subqueryProviderFactory = null;
             this.subqueryProvider = null;
             this.id = true;
-            this.updateMappableAttribute = getUpdateMappableAttribute(this.mapping, context);
+            this.updateMappableAttribute = getUpdateMappableAttribute(context);
             this.mappingType = MappingType.BASIC;
             this.subqueryExpression = null;
+            this.subqueryResultExpression = null;
             this.subqueryAlias = null;
             this.correlationBasis = null;
             this.correlationResult = null;
@@ -203,20 +224,26 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.correlated = null;
             this.correlationKeyAlias = null;
             this.correlationExpression = null;
+            this.correlationBasisExpression = null;
+            this.correlationResultExpression = null;
+            this.correlationPredicate = null;
         } else if (mappingAnnotation instanceof Mapping) {
             Mapping m = (Mapping) mappingAnnotation;
             this.mapping = m.value();
+            this.mappingExpression = createSimpleExpression(this.mapping, mapping, context, ExpressionLocation.MAPPING);
             this.fetches = m.fetches();
             this.fetchStrategy = m.fetch();
             this.batchSize = batchSize;
             this.orderByItems = orderByItems;
             this.limitExpression = limitExpression;
+            this.offsetExpression = offsetExpression;
             this.subqueryProviderFactory = null;
             this.subqueryProvider = null;
             this.id = false;
-            this.updateMappableAttribute = getUpdateMappableAttribute(this.mapping, context);
+            this.updateMappableAttribute = getUpdateMappableAttribute(context);
             this.mappingType = MappingType.BASIC;
             this.subqueryExpression = null;
+            this.subqueryResultExpression = null;
             this.subqueryAlias = null;
             if (fetchStrategy == FetchStrategy.JOIN && limitExpression == null) {
                 this.correlationProvider = null;
@@ -226,6 +253,9 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                 this.correlated = null;
                 this.correlationKeyAlias = null;
                 this.correlationExpression = null;
+                this.correlationBasisExpression = null;
+                this.correlationResultExpression = null;
+                this.correlationPredicate = null;
             } else {
                 ExtendedManagedType<?> managedType = context.getEntityMetamodel().getManagedType(ExtendedManagedType.class, declaringType.getJpaManagedType());
                 ExtendedAttribute<?, ?> attribute = managedType.getOwnedAttributes().get(this.mapping);
@@ -237,6 +267,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                     this.correlated = declaringType.getEntityClass();
                     this.correlationExpression = "this IN __correlationAlias";
                     this.correlationResult = this.mapping;
+                    this.correlationResultExpression = mappingExpression;
                 } else {
                     // If the mapping is a deep path expression i.e. contains a dot but no parenthesis, we try to find a mapped by attribute by a prefix
                     int index;
@@ -245,27 +276,38 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                         this.correlated = attribute.getElementClass();
                         this.correlationExpression = attribute.getMappedBy() + " IN __correlationAlias";
                         this.correlationResult = this.mapping.substring(index + 1);
+                        if (mappingExpression instanceof PathExpression) {
+                            this.correlationResultExpression = ((PathExpression) mappingExpression).withoutFirst();
+                        } else {
+                            this.correlationResultExpression = new PathExpression();
+                        }
                     } else if (attribute != null && !StringUtils.isEmpty(attribute.getMappedBy()) && !attribute.hasJoinCondition()) {
                         this.correlated = attribute.getElementClass();
                         this.correlationExpression = attribute.getMappedBy() + " IN __correlationAlias";
                         this.correlationResult = "";
+                        this.correlationResultExpression = new PathExpression();
                     } else {
                         this.correlated = declaringType.getEntityClass();
                         this.correlationExpression = "this IN __correlationAlias";
                         this.correlationResult = this.mapping;
+                        this.correlationResultExpression = mappingExpression;
                     }
                 }
                 this.correlationBasis = "this";
-                this.correlationProvider = CorrelationProviderHelper.createCorrelationProvider(correlated, correlationKeyAlias, correlationExpression, context);
-                this.correlationProviderFactory = CorrelationProviderHelper.getFactory(correlationProvider);
+                this.correlationBasisExpression = new PathExpression(new PropertyExpression("this"));
+                this.correlationPredicate = createPredicate(correlationExpression, mapping, context, ExpressionLocation.CORRELATION_EXPRESSION);
+                this.correlationProvider = null;
+                this.correlationProviderFactory = new StaticCorrelationProvider(correlated, correlationKeyAlias, correlationExpression, correlationPredicate);
             }
         } else if (mappingAnnotation instanceof MappingParameter) {
             this.mapping = ((MappingParameter) mappingAnnotation).value();
+            this.mappingExpression = null;
             this.fetches = EMPTY;
             this.fetchStrategy = FetchStrategy.JOIN;
             this.batchSize = -1;
             this.orderByItems = Collections.emptyList();
             this.limitExpression = null;
+            this.offsetExpression = null;
             this.subqueryProviderFactory = null;
             this.subqueryProvider = null;
             this.id = false;
@@ -273,6 +315,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.updateMappableAttribute = null;
             this.mappingType = MappingType.PARAMETER;
             this.subqueryExpression = null;
+            this.subqueryResultExpression = null;
             this.subqueryAlias = null;
             this.correlationBasis = null;
             this.correlationResult = null;
@@ -281,19 +324,25 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.correlated = null;
             this.correlationKeyAlias = null;
             this.correlationExpression = null;
+            this.correlationBasisExpression = null;
+            this.correlationResultExpression = null;
+            this.correlationPredicate = null;
         } else if (mappingAnnotation instanceof Self) {
             this.mapping = "NULL";
+            this.mappingExpression = NullExpression.INSTANCE;
             this.fetches = EMPTY;
             this.fetchStrategy = FetchStrategy.JOIN;
             this.batchSize = -1;
             this.orderByItems = Collections.emptyList();
             this.limitExpression = null;
+            this.offsetExpression = null;
             this.subqueryProviderFactory = null;
             this.subqueryProvider = null;
             this.id = false;
             this.updateMappableAttribute = null;
             this.mappingType = MappingType.PARAMETER;
             this.subqueryExpression = null;
+            this.subqueryResultExpression = null;
             this.subqueryAlias = null;
             this.correlationBasis = null;
             this.correlationResult = null;
@@ -302,9 +351,13 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.correlated = null;
             this.correlationKeyAlias = null;
             this.correlationExpression = null;
+            this.correlationBasisExpression = null;
+            this.correlationResultExpression = null;
+            this.correlationPredicate = null;
         } else if (mappingAnnotation instanceof MappingSubquery) {
             MappingSubquery mappingSubquery = (MappingSubquery) mappingAnnotation;
             this.mapping = null;
+            this.mappingExpression = null;
             this.fetches = EMPTY;
             this.subqueryProvider = mappingSubquery.value();
             this.subqueryProviderFactory = SubqueryProviderHelper.getFactory(subqueryProvider);
@@ -312,12 +365,14 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.batchSize = -1;
             this.orderByItems = Collections.emptyList();
             this.limitExpression = null;
+            this.offsetExpression = null;
             this.id = false;
             // Subqueries are never update mappable
             this.updateMappableAttribute = null;
             this.mappingType = MappingType.SUBQUERY;
             this.subqueryExpression = mappingSubquery.expression();
             this.subqueryAlias = mappingSubquery.subqueryAlias();
+            this.subqueryResultExpression = createSimpleExpression(subqueryExpression, mapping, context, ExpressionLocation.SUBQUERY_EXPRESSION);
             this.correlationBasis = null;
             this.correlationResult = null;
             this.correlationProvider = null;
@@ -325,6 +380,9 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.correlated = null;
             this.correlationKeyAlias = null;
             this.correlationExpression = null;
+            this.correlationBasisExpression = null;
+            this.correlationResultExpression = null;
+            this.correlationPredicate = null;
 
             if (!subqueryExpression.isEmpty() && subqueryAlias.isEmpty()) {
                 context.addError("The subquery alias is empty although the subquery expression is not " + mapping.getErrorLocation());
@@ -335,6 +393,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         } else if (mappingAnnotation instanceof MappingCorrelated) {
             MappingCorrelated mappingCorrelated = (MappingCorrelated) mappingAnnotation;
             this.mapping = null;
+            this.mappingExpression = null;
             this.fetches = mappingCorrelated.fetches();
             this.fetchStrategy = mappingCorrelated.fetch();
 
@@ -345,6 +404,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             }
             this.orderByItems = orderByItems;
             this.limitExpression = limitExpression;
+            this.offsetExpression = offsetExpression;
 
             this.subqueryProviderFactory = null;
             this.subqueryProvider = null;
@@ -352,6 +412,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.updateMappableAttribute = null;
             this.mappingType = MappingType.CORRELATED;
             this.subqueryExpression = null;
+            this.subqueryResultExpression = null;
             this.subqueryAlias = null;
             this.correlationBasis = mappingCorrelated.correlationBasis();
             this.correlationResult = mappingCorrelated.correlationResult();
@@ -359,6 +420,9 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.correlated = null;
             this.correlationKeyAlias = null;
             this.correlationExpression = null;
+            this.correlationBasisExpression = createSimpleExpression(correlationBasis, mapping, context, ExpressionLocation.CORRELATION_BASIS);
+            this.correlationResultExpression = createSimpleExpression(correlationResult, mapping, context, ExpressionLocation.CORRELATION_RESULT);
+            this.correlationPredicate = null;
 
             if (correlationProvider.getEnclosingClass() != null && !Modifier.isStatic(correlationProvider.getModifiers())) {
                 context.addError("The correlation provider is defined as non-static inner class. Make it static, otherwise it can't be instantiated: " + mapping.getErrorLocation());
@@ -367,6 +431,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         } else if (mappingAnnotation instanceof MappingCorrelatedSimple) {
             MappingCorrelatedSimple mappingCorrelated = (MappingCorrelatedSimple) mappingAnnotation;
             this.mapping = null;
+            this.mappingExpression = null;
             this.fetches = mappingCorrelated.fetches();
             this.fetchStrategy = mappingCorrelated.fetch();
 
@@ -377,6 +442,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             }
             this.orderByItems = orderByItems;
             this.limitExpression = limitExpression;
+            this.offsetExpression = offsetExpression;
 
             this.subqueryProviderFactory = null;
             this.subqueryProvider = null;
@@ -384,14 +450,18 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.updateMappableAttribute = null;
             this.mappingType = MappingType.CORRELATED;
             this.subqueryExpression = null;
+            this.subqueryResultExpression = null;
             this.subqueryAlias = null;
-            this.correlationProvider = CorrelationProviderHelper.createCorrelationProvider(mappingCorrelated.correlated(), mappingCorrelated.correlationKeyAlias(), mappingCorrelated.correlationExpression(), context);
-            this.correlationProviderFactory = CorrelationProviderHelper.getFactory(correlationProvider);
+            this.correlationProvider = null;
             this.correlationBasis = mappingCorrelated.correlationBasis();
             this.correlationResult = mappingCorrelated.correlationResult();
             this.correlated = mappingCorrelated.correlated();
             this.correlationKeyAlias = mappingCorrelated.correlationKeyAlias();
             this.correlationExpression = mappingCorrelated.correlationExpression();
+            this.correlationBasisExpression = createSimpleExpression(correlationBasis, mapping, context, ExpressionLocation.CORRELATION_BASIS);
+            this.correlationResultExpression = createSimpleExpression(correlationResult, mapping, context, ExpressionLocation.CORRELATION_RESULT);
+            this.correlationPredicate = createPredicate(correlationExpression, mapping, context, ExpressionLocation.CORRELATION_EXPRESSION);
+            this.correlationProviderFactory = new StaticCorrelationProvider(correlated, correlationKeyAlias, correlationExpression, correlationPredicate);
 
             if (mappingCorrelated.correlationBasis().isEmpty()) {
                 context.addError("Illegal empty correlation basis in the " + mapping.getErrorLocation());
@@ -405,17 +475,20 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         } else {
             context.addError("No mapping annotation could be found " + mapping.getErrorLocation());
             this.mapping = null;
+            this.mappingExpression = null;
             this.fetches = EMPTY;
             this.fetchStrategy = null;
             this.batchSize = Integer.MIN_VALUE;
             this.orderByItems = null;
             this.limitExpression = null;
+            this.offsetExpression = null;
             this.subqueryProviderFactory = null;
             this.subqueryProvider = null;
             this.id = false;
             this.updateMappableAttribute = null;
             this.mappingType = null;
             this.subqueryExpression = null;
+            this.subqueryResultExpression = null;
             this.subqueryAlias = null;
             this.correlationBasis = null;
             this.correlationResult = null;
@@ -424,11 +497,39 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.correlated = null;
             this.correlationKeyAlias = null;
             this.correlationExpression = null;
+            this.correlationBasisExpression = null;
+            this.correlationResultExpression = null;
+            this.correlationPredicate = null;
         }
 
         if (limitExpression != null && fetchStrategy == FetchStrategy.MULTISET && context.getDbmsDialect().getLateralStyle() == LateralStyle.NONE && !context.getDbmsDialect().supportsWindowFunctions()) {
             context.addError("The use of the MULTISET fetch strategy with a limit in the '" + mapping.getErrorLocation() + "' requires lateral joins or window functions which are unsupported by the DBMS!");
         }
+    }
+
+    private static Expression createSimpleExpression(String expression, AttributeMapping mapping, MetamodelBuildingContext context, ExpressionLocation expressionLocation) {
+        if (expression == null || expression.isEmpty()) {
+            return null;
+        }
+        try {
+            return context.getTypeValidationExpressionFactory().createSimpleExpression(expression, false, expressionLocation == ExpressionLocation.SUBQUERY_EXPRESSION, true);
+        } catch (SyntaxErrorException ex) {
+            context.addError("Syntax error in " + expressionLocation + " '" + expression + "' of the " + mapping.getErrorLocation() + ": " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            context.addError("An error occurred while trying to resolve the " + expressionLocation + " of the " + mapping.getErrorLocation() + ": " + ex.getMessage());
+        }
+        return null;
+    }
+
+    private static Predicate createPredicate(String expression, AttributeMapping mapping, MetamodelBuildingContext context, ExpressionLocation expressionLocation) {
+        try {
+            return context.getTypeValidationExpressionFactory().createBooleanExpression(expression, false);
+        } catch (SyntaxErrorException ex) {
+            context.addError("Syntax error in " + expressionLocation + " '" + expression + "' of the " + mapping.getErrorLocation() + ": " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            context.addError("An error occurred while trying to resolve the " + expressionLocation + " of the " + mapping.getErrorLocation() + ": " + ex.getMessage());
+        }
+        return null;
     }
 
     private static Class<?> getConvertedType(Class<?> declaringClass, java.lang.reflect.Type convertedType, Class<?> javaType) {
@@ -438,16 +539,18 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         return ReflectionUtils.resolveType(declaringClass, convertedType);
     }
 
-    private javax.persistence.metamodel.Attribute<?, ?> getUpdateMappableAttribute(String mapping, MetamodelBuildingContext context) {
-        try {
-            UpdatableExpressionVisitor visitor = new UpdatableExpressionVisitor(context.getEntityMetamodel(), declaringType.getEntityClass(), true);
-            context.getExpressionFactory().createPathExpression(mapping).accept(visitor);
-            Iterator<javax.persistence.metamodel.Attribute<?, ?>> iterator = visitor.getPossibleTargets().keySet().iterator();
-            if (iterator.hasNext()) {
-                return iterator.next();
+    private javax.persistence.metamodel.Attribute<?, ?> getUpdateMappableAttribute(MetamodelBuildingContext context) {
+        if (mappingExpression != null) {
+            try {
+                UpdatableExpressionVisitor visitor = new UpdatableExpressionVisitor(context.getEntityMetamodel(), declaringType.getEntityClass(), true);
+                mappingExpression.accept(visitor);
+                Iterator<javax.persistence.metamodel.Attribute<?, ?>> iterator = visitor.getPossibleTargets().keySet().iterator();
+                if (iterator.hasNext()) {
+                    return iterator.next();
+                }
+            } catch (Exception ex) {
+                // Don't care about the actual exception as that will be thrown anyway when validating the expressions later
             }
-        } catch (Exception ex) {
-            // Don't care about the actual exception as that will be thrown anyway when validating the expressions later
         }
 
         return null;
@@ -492,40 +595,33 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     }
 
     public final void renderSubqueryExpression(String parent, ServiceProvider serviceProvider, StringBuilder sb) {
-        renderExpression(parent, subqueryExpression, subqueryAlias, serviceProvider, sb);
+        renderExpression(parent, subqueryResultExpression, subqueryAlias, serviceProvider, sb);
     }
 
     public final void renderSubqueryExpression(String parent, String subqueryExpression, String subqueryAlias, ServiceProvider serviceProvider, StringBuilder sb) {
-        renderExpression(parent, subqueryExpression, subqueryAlias, serviceProvider, sb);
+        ExpressionFactory ef = serviceProvider.getService(ExpressionFactory.class);
+        Expression expr = ef.createSimpleExpression(subqueryExpression, false, false, true);
+        renderExpression(parent, expr, subqueryAlias, serviceProvider, sb);
     }
 
     public final void renderCorrelationBasis(String parent, ServiceProvider serviceProvider, StringBuilder sb) {
-        renderExpression(parent, correlationBasis, null, serviceProvider, sb);
+        renderExpression(parent, correlationBasisExpression, null, serviceProvider, sb);
     }
 
     public final void renderCorrelationResult(String parent, ServiceProvider serviceProvider, StringBuilder sb) {
-        renderExpression(parent, correlationResult, null, serviceProvider, sb);
+        renderExpression(parent, correlationResultExpression, null, serviceProvider, sb);
     }
 
     public final void renderMapping(String parent, ServiceProvider serviceProvider, StringBuilder sb) {
-        renderExpression(parent, mapping, null, serviceProvider, sb);
+        renderExpression(parent, mappingExpression, null, serviceProvider, sb);
     }
 
-    private void renderExpression(String parent, String expression, String aliasToSkip, ServiceProvider serviceProvider, StringBuilder sb) {
-        if (expression.isEmpty()) {
-            if (parent != null && !parent.isEmpty()) {
-                sb.append(AbstractAttribute.stripThisFromMapping(parent));
-            }
-
-            return;
-        }
+    private void renderExpression(String parent, Expression expression, String aliasToSkip, ServiceProvider serviceProvider, StringBuilder sb) {
         if (parent != null && !parent.isEmpty()) {
             ExpressionFactory ef = serviceProvider.getService(ExpressionFactory.class);
-            Expression expr = ef.createSimpleExpression(expression, false, false, true);
-            EmbeddingViewJpqlMacro embeddingViewJpqlMacro = (EmbeddingViewJpqlMacro) ef.getDefaultMacroConfiguration().get("EMBEDDING_VIEW").getState()[0];
-            SimpleQueryGenerator generator = new PrefixingQueryGenerator(Collections.singletonList(parent), embeddingViewJpqlMacro.getEmbeddingViewPath(), CorrelatedSubqueryEmbeddingViewJpqlMacro.CORRELATION_EMBEDDING_VIEW_ALIAS, aliasToSkip);
+            SimpleQueryGenerator generator = new PrefixingQueryGenerator(ef, parent, aliasToSkip, aliasToSkip, PrefixingQueryGenerator.DEFAULT_QUERY_ALIASES, true, false);
             generator.setQueryBuffer(sb);
-            expr.accept(generator);
+            expression.accept(generator);
         } else {
             sb.append(expression);
         }
@@ -539,19 +635,14 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
      * @return The mappings which contain collection attribute uses
      */
     public Map<String, Boolean> getCollectionJoinMappings(ManagedType<?> managedType, MetamodelBuildingContext context) {
-        if (mapping == null || isQueryParameter() || getFetchStrategy() != FetchStrategy.JOIN) {
+        if (mappingExpression == null || isQueryParameter() || getFetchStrategy() != FetchStrategy.JOIN) {
             // Subqueries and parameters can't be checked. When a collection is remapped to a singular attribute, we don't check it
             // When using a non-join fetch strategy, we also don't care about the collection join mappings
             return Collections.emptyMap();
         }
         
         CollectionJoinMappingGathererExpressionVisitor visitor = new CollectionJoinMappingGathererExpressionVisitor(managedType, context.getEntityMetamodel());
-        String expression = stripThisFromMapping(mapping);
-        if (expression.isEmpty()) {
-            return Collections.emptyMap();
-        }
-
-        context.getTypeValidationExpressionFactory().createSimpleExpression(expression, false, false, true).accept(visitor);
+        mappingExpression.accept(visitor);
         Map<String, Boolean> mappings = new HashMap<>();
         boolean aggregate = getAttributeType() == AttributeType.SINGULAR;
         
@@ -586,7 +677,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                 return (((javax.persistence.metamodel.PluralAttribute<?, ?, ?>) attribute.getAttribute()).getCollectionType() != javax.persistence.metamodel.PluralAttribute.CollectionType.MAP)
                         && (!StringUtils.isEmpty(attribute.getMappedBy()) || !attribute.isBag())
                         && (attribute.getJoinTable() == null || attribute.getJoinTable().getKeyColumnMappings() == null)
-                        && !MetamodelUtils.isIndexedList(context.getEntityMetamodel(), context.getExpressionFactory(), managedType.getType().getJavaType(), getMapping());
+                        && !MetamodelUtils.isIndexedList(context.getEntityMetamodel(), managedType.getType().getJavaType(), mappingExpression, mapping);
             }
         }
 
@@ -614,6 +705,10 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         return correlationExpression;
     }
 
+    public Predicate getCorrelationPredicate() {
+        return correlationPredicate;
+    }
+
     public abstract boolean needsDirtyTracker();
 
     public abstract boolean hasDirtyStateIndex();
@@ -624,6 +719,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
      */
     private static enum ExpressionLocation {
         MAPPING("mapping expression"),
+        SUBQUERY_EXPRESSION("subquery expression"),
         CORRELATION_BASIS("correlation basis"),
         CORRELATION_RESULT("correlation result"),
         CORRELATION_EXPRESSION("correlation expression");
@@ -738,29 +834,11 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         }
     }
 
-    private static void validateTypesCompatible(ManagedType<?> managedType, String expression, Class<?> targetType, Class<?> targetElementType, boolean subtypesAllowed, boolean singular, MetamodelBuildingContext context, ExpressionLocation expressionLocation, String location) {
-        if (expression.isEmpty()) {
-            if (isCompatible(managedType.getJavaType(), null, targetType, targetElementType, subtypesAllowed, singular)) {
-                return;
-            }
-            context.addError(typeCompatibilityError(
-                    Arrays.<TargetType>asList(new ScalarTargetResolvingExpressionVisitor.TargetTypeImpl(
-                            false, null, managedType.getJavaType(), null, null
-                    )),
-                    targetType,
-                    targetElementType,
-                    expressionLocation,
-                    location
-            ));
-            return;
-        }
-
+    private static void validateTypesCompatible(ManagedType<?> managedType, Expression expression, Class<?> targetType, Class<?> targetElementType, boolean subtypesAllowed, boolean singular, MetamodelBuildingContext context, ExpressionLocation expressionLocation, String location) {
         ScalarTargetResolvingExpressionVisitor visitor = new ScalarTargetResolvingExpressionVisitor(managedType, context.getEntityMetamodel(), context.getJpqlFunctions());
 
         try {
-            context.getTypeValidationExpressionFactory().createSimpleExpression(expression, false, false, true).accept(visitor);
-        } catch (SyntaxErrorException ex) {
-            context.addError("Syntax error in " + expressionLocation + " '" + expression + "' of the " + location + ": " + ex.getMessage());
+            expression.accept(visitor);
         } catch (IllegalArgumentException ex) {
             context.addError("An error occurred while trying to resolve the " + expressionLocation + " of the " + location + ": " + ex.getMessage());
         }
@@ -859,7 +937,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                         context.getExpressionFactory().createPathExpression(fetch).accept(visitor);
                     } catch (SyntaxErrorException ex) {
                         try {
-                            context.getExpressionFactory().createSimpleExpression(fetch, false);
+                            context.getExpressionFactory().createSimpleExpression(fetch, false, false, true);
                             // The used expression is not usable for fetches
                             context.addError("Invalid fetch expression '" + fetch + "' of the " + getLocation() + ". Simplify the fetch expression to a simple path expression. Encountered error: " + ex.getMessage());
                         } catch (SyntaxErrorException ex2) {
@@ -875,17 +953,32 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
         if (limitExpression != null) {
             try {
-                context.getTypeValidationExpressionFactory().createInItemExpression(limitExpression);
+                Expression inItemExpression = context.getTypeValidationExpressionFactory().createInItemExpression(limitExpression);
+                if (!(inItemExpression instanceof ParameterExpression) && !(inItemExpression instanceof NumericLiteral) || inItemExpression instanceof NumericLiteral && ((NumericLiteral) inItemExpression).getNumericType() != NumericType.INTEGER) {
+                    context.addError("Syntax error in the limit expression '" + limitExpression + "' of the " + getLocation() + ": The expression must be a integer literal or a parameter expression");
+                }
             } catch (SyntaxErrorException ex) {
                 context.addError("Syntax error in the limit expression '" + limitExpression + "' of the " + getLocation() + ": " + ex.getMessage());
             } catch (IllegalArgumentException ex) {
                 context.addError("An error occurred while trying to resolve the limit expression of the " + getLocation() + ": " + ex.getMessage());
             }
+            try {
+                Expression inItemExpression = context.getTypeValidationExpressionFactory().createInItemExpression(offsetExpression);
+                if (!(inItemExpression instanceof ParameterExpression) && !(inItemExpression instanceof NumericLiteral) || inItemExpression instanceof NumericLiteral && ((NumericLiteral) inItemExpression).getNumericType() != NumericType.INTEGER) {
+                    context.addError("Syntax error in the offset expression '" + offsetExpression + "' of the " + getLocation() + ": The expression must be a integer literal or a parameter expression");
+                }
+            } catch (SyntaxErrorException ex) {
+                context.addError("Syntax error in the offset expression '" + offsetExpression + "' of the " + getLocation() + ": " + ex.getMessage());
+            } catch (IllegalArgumentException ex) {
+                context.addError("An error occurred while trying to resolve the offset expression of the " + getLocation() + ": " + ex.getMessage());
+            }
+            ScalarTargetResolvingExpressionVisitor visitor = new ScalarTargetResolvingExpressionVisitor(managedType, context.getEntityMetamodel(), context.getJpqlFunctions());
             for (int i = 0; i < orderByItems.size(); i++) {
                 OrderByItem orderByItem = orderByItems.get(i);
                 String expression = orderByItem.getExpression();
                 try {
-                    context.getTypeValidationExpressionFactory().createSimpleExpression(expression, false);
+                    visitor.clear();
+                    context.getTypeValidationExpressionFactory().createSimpleExpression(expression, false, false, true).accept(visitor);
                 } catch (SyntaxErrorException ex) {
                     context.addError("Syntax error in the " + (i + 1) + "th order by expression '" + expression + "' of the " + getLocation() + ": " + ex.getMessage());
                 } catch (IllegalArgumentException ex) {
@@ -953,25 +1046,23 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
         if (isCorrelated()) {
             // Validate that resolving "correlationBasis" on "managedType" is valid
-            validateTypesCompatible(managedType, stripThisFromMapping(correlationBasis), Object.class, null, true, true, context, ExpressionLocation.CORRELATION_BASIS, getLocation());
+            validateTypesCompatible(managedType, correlationBasisExpression, Object.class, null, true, true, context, ExpressionLocation.CORRELATION_BASIS, getLocation());
 
             if (correlated != null) {
                 // Validate that resolving "correlationResult" on "correlated" is compatible with "expressionType" and "elementType"
-                validateTypesCompatible(context.getEntityMetamodel().managedType(correlated), stripThisFromMapping(correlationResult), expressionType, elementType, true, !isCollection(), context, ExpressionLocation.CORRELATION_RESULT, getLocation());
-
-                // TODO: Validate the "correlationExpression" when https://github.com/Blazebit/blaze-persistence/issues/212 is implemented
-                try {
-                    // Validate the expression parses
-                    context.getTypeValidationExpressionFactory().createBooleanExpression(correlationExpression, false);
-                } catch (SyntaxErrorException ex) {
-                    context.addError("Syntax error in " + ExpressionLocation.CORRELATION_EXPRESSION + " '" + correlationExpression + "' of the " + getLocation() + ": " + ex.getMessage());
-                } catch (IllegalArgumentException ex) {
-                    context.addError("An error occurred while trying to resolve the " + ExpressionLocation.CORRELATION_EXPRESSION + " of the " + getLocation() + ": " + ex.getMessage());
+                validateTypesCompatible(possibleTargetTypes, expressionType, elementType, true, !isCollection(), context, ExpressionLocation.CORRELATION_RESULT, getLocation());
+                if (correlationPredicate != null) {
+                    // TODO: Validate the "correlationExpression" when https://github.com/Blazebit/blaze-persistence/issues/212 is implemented
                 }
             }
-        } else if (isSubquery() || isQueryParameter()) {
-            // Subqueries and parameters can't be checked
-        } else {
+        } else if (isSubquery()) {
+            if (subqueryExpression != null && !subqueryExpression.isEmpty()) {
+                // If a converter is applied, we already know that there was a type match with the underlying type
+                if (getElementType().getConvertedType() == null) {
+                    validateTypesCompatible(possibleTargetTypes, expressionType, elementType, true, !isCollection(), context, ExpressionLocation.SUBQUERY_EXPRESSION, getLocation());
+                }
+            }
+        } else if (!isQueryParameter()) {
             boolean subtypesAllowed = !isUpdatable();
 
             // Forcing singular via @MappingSingular
@@ -994,7 +1085,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                     // But not sure yet if the embeddable attributes would then be modeled as "updatable".
                     // I guess these attributes are not "updatable" but that probably depends on the decision regarding collections as they have a similar problem
                     // A collection itself might not be "updatable" but it's elements could be. This is roughly the same problem
-                    context.getExpressionFactory().createPathExpression(mapping).accept(visitor);
+                    mappingExpression.accept(visitor);
                     Map<javax.persistence.metamodel.Attribute<?, ?>, javax.persistence.metamodel.Type<?>> possibleTargets = visitor.getPossibleTargets();
 
                     if (possibleTargets.size() > 1) {
@@ -1011,15 +1102,6 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                             }
                         }
                     }
-                } catch (SyntaxErrorException ex) {
-                    try {
-                        context.getExpressionFactory().createSimpleExpression(mapping, false);
-                        // The used expression is not usable for updatable mappings
-                        context.addError("Invalid mapping expression '" + mapping + "' of the " + getLocation() + " for an updatable attribute. Consider annotating the attribute with @UpdatableMapping(updatable = false) or simplify the mapping expression to a simple path expression. Encountered error: " + ex.getMessage());
-                    } catch (SyntaxErrorException ex2) {
-                        // This is a real syntax error
-                        context.addError("Syntax error in mapping expression '" + mapping + "' of the " + getLocation() + ": " + ex.getMessage());
-                    }
                 } catch (IllegalArgumentException ex) {
                     context.addError("There is an error for the " + getLocation() + ": " + ex.getMessage());
                 }
@@ -1029,7 +1111,14 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     protected abstract boolean isDisallowOwnedUpdatableSubview();
 
-    public void checkNestedAttribute(List<AbstractAttribute<?, ?>> parents, ManagedType<?> managedType, MetamodelBuildingContext context) {
+    public void checkNestedAttribute(List<AbstractAttribute<?, ?>> parents, ManagedType<?> managedType, MetamodelBuildingContext context, boolean hasMultisetParent) {
+        if (hasMultisetParent) {
+            if (getElementType() instanceof BasicTypeImpl<?>) {
+                context.checkMultisetSupport(parents, this, ((BasicTypeImpl<?>) getElementType()).getUserType());
+            }
+        } else {
+            hasMultisetParent = fetchStrategy == FetchStrategy.MULTISET;
+        }
         if (!parents.isEmpty()) {
             if (getDeclaringType().getMappingType() == Type.MappingType.FLAT_VIEW) {
                 // When this attribute is part of a flat view
@@ -1065,7 +1154,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             }
             for (ManagedViewTypeImplementor<?> subviewType : inheritanceSubtypeMappings.keySet()) {
                 parents.add(this);
-                subviewType.checkNestedAttributes(parents, context);
+                subviewType.checkNestedAttributes(parents, context, hasMultisetParent);
                 parents.remove(parents.size() - 1);
             }
 
@@ -1077,7 +1166,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             }
             for (ManagedViewTypeImplementor<?> subviewType : inheritanceSubtypeMappings.keySet()) {
                 parents.add(this);
-                subviewType.checkNestedAttributes(parents, context);
+                subviewType.checkNestedAttributes(parents, context, hasMultisetParent);
                 parents.remove(parents.size() - 1);
             }
         }
@@ -1218,6 +1307,14 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         return correlationResult;
     }
 
+    public Expression getCorrelationBasisExpression() {
+        return correlationBasisExpression;
+    }
+
+    public Expression getCorrelationResultExpression() {
+        return correlationResultExpression;
+    }
+
     public final FetchStrategy getFetchStrategy() {
         return fetchStrategy;
     }
@@ -1232,6 +1329,10 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     public final String getLimitExpression() {
         return limitExpression;
+    }
+
+    public final String getOffsetExpression() {
+        return offsetExpression;
     }
 
     public final String getMapping() {

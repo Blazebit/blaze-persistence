@@ -29,6 +29,7 @@ import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
 import com.blazebit.persistence.view.impl.type.BasicUserTypeRegistry;
 import com.blazebit.persistence.view.metamodel.Type;
+import com.blazebit.persistence.view.spi.type.BasicUserType;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 
 import java.lang.annotation.Annotation;
@@ -113,4 +114,6 @@ public interface MetamodelBuildingContext {
     public void onViewTypeFinished(ManagedViewTypeImplementor<?> managedViewType, Runnable listener);
 
     public Map<Class<?>, CTEProvider> getCteProviders();
+
+    void checkMultisetSupport(List<AbstractAttribute<?, ?>> parents, AbstractAttribute<?, ?> attribute, BasicUserType<?> userType);
 }

@@ -51,7 +51,7 @@ public class JpqlMacroAdapter implements MacroFunction {
         if (resultExpression.isEmpty()) {
             return new PathExpression();
         }
-        return expressionFactory.createSimpleExpression(resultExpression, false);
+        return expressionFactory.createSimpleExpression(resultExpression, false, false, true);
     }
 
     @Override
