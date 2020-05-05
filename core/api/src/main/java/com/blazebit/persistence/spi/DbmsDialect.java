@@ -245,8 +245,8 @@ public interface DbmsDialect {
     public boolean supportsRowValueConstructor();
 
     /**
-     * Returns true if the dbms supports all <, <=, >, >=, =, <> comparison operations for row values.
-     * Note that some DBMS only support = and <> operators.
+     * Returns true if the dbms supports all &lt;, &lt;=, &gt;, &gt;=, =, &lt;&gt; comparison operations for row values.
+     * Note that some DBMS only support = and &lt;&gt; operators.
      *
      * @return Whether full row value comparison operations are supported by the dbms
      * @since 1.2.0

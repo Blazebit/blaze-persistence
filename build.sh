@@ -34,7 +34,7 @@ if [ "$JDK" != "" ]; then
   PROPERTIES="$PROPERTIES -Djdk8.home=/usr/lib/jvm/java-8-oracle"
 fi
 
-if [ "$JPAPROVIDER" == "hibernate-5.2" || "$JPAPROVIDER" == "hibernate-apt" ] &&
+if [ [ "$JPAPROVIDER" == "hibernate-5.2" ] || [ "$JPAPROVIDER" == "hibernate-apt" ] ] &&
     [ "$RDBMS" == "h2" ]; then
   exec mvn -B -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-1.11.x},${DELTASPIKE:-deltaspike-1.7} clean install -V $PROPERTIES
 else
@@ -54,7 +54,7 @@ else
       else
         PROJECT_LIST="$PROJECT_LIST,examples/quarkus/testsuite/native/$RDBMS"
       fi
-      exec travis-pls mvn -B -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-1.11.x},${DELTASPIKE:-deltaspike-1.7},native clean install --projects $PROJECT_LIST -am -V $PROPERTIES
+      exec mvn -B -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-1.11.x},${DELTASPIKE:-deltaspike-1.7},native clean install --projects $PROJECT_LIST -am -V $PROPERTIES
     else
       exec mvn -B -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-1.11.x},${DELTASPIKE:-deltaspike-1.7} clean install --projects $PROJECT_LIST -am -V $PROPERTIES
     fi
