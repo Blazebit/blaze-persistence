@@ -28,6 +28,7 @@ import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.parser.expression.SubqueryExpression;
 import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.spi.JpaMetamodelAccessor;
 
 import java.util.ArrayList;
@@ -206,6 +207,7 @@ public abstract class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCrite
     @Override
     protected void prepareSelect() {
         // We have an update statement here which supports parameters in SELECT/SET clause
+        JpaUtils.expandBindings(setAttributeBindingMap, null, mainQuery.metamodel.getManagedType(ExtendedManagedType.class, entityType).getOwnedSingularAttributes(), ClauseType.SET, this, null);
     }
 
     @Override

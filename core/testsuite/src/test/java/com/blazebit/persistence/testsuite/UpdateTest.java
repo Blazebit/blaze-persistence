@@ -32,6 +32,7 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoSQLite;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.DocumentNodeCTE;
 import com.blazebit.persistence.testsuite.entity.IdHolderCTE;
+import com.blazebit.persistence.testsuite.entity.NameObject;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
@@ -103,6 +104,26 @@ public class UpdateTest extends AbstractCoreTest {
                 cb.set("name", "NewD1");
                 cb.where("name").eq("D1");
                 String expected = "UPDATE Document d SET d.name = :param_0 WHERE d.name = :param_1";
+
+                assertEquals(expected, cb.getQueryString());
+
+                int updateCount = cb.executeUpdate();
+                assertEquals(1, updateCount);
+            }
+        });
+    }
+
+    // NOTE: EclipseLink can update neither d.nameObject.intIdEntity nor d.nameObject.intIdEntity.id so associations in embeddables don't work here
+    @Test
+    @Category({ NoEclipselink.class })
+    public void testSetEmbeddable() {
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                final UpdateCriteriaBuilder<Document> cb = cbf.update(em, Document.class, "d");
+                cb.set("nameObject", new NameObject("D1", "D2"));
+                cb.where("name").eq("D1");
+                String expected = "UPDATE Document d SET d.nameObject.intIdEntity.id = :_param_0_intIdEntity_id, d.nameObject.primaryName = :_param_0_primaryName, d.nameObject.secondaryName = :_param_0_secondaryName WHERE d.name = :param_1";
 
                 assertEquals(expected, cb.getQueryString());
 

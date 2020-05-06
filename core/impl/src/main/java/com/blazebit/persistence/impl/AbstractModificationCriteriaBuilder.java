@@ -75,7 +75,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
     protected final boolean isReturningEntityAliasAllowed;
     protected final Map<String, List<Attribute<?, ?>>> returningAttributes;
     protected final Map<String, String> returningAttributeBindingMap;
-    protected final Map<String, ExtendedAttribute> attributeEntries;
+    protected final Map<String, ExtendedAttribute<?, ?>> attributeEntries;
     protected final Map<String, String> columnBindingMap;
 
     @SuppressWarnings("unchecked")

@@ -559,6 +559,12 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsUpdateSetAssociationId() {
+        // Not sure why, but it doesn't support it, although it supports setting individual embeddable elements
+        return false;
+    }
+
+    @Override
     public boolean supportsTransientEntityAsParameter() {
         return true;
     }

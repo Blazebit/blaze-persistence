@@ -116,14 +116,16 @@ public final class JpaUtils {
                 final Attribute<?, ?> lastAttribute = attributePath.get(attributePath.size() - 1);
                 splitExpression = lastAttribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED;
 
-                if (!splitExpression && jpaMetamodelAccessor.isJoinable(lastAttribute) && !isBasicElementType(lastAttribute)) {
-                    splitExpression = true;
-                    if (needsElementCollectionIdCutoff) {
-                        for (int i = 0; i < attributePath.size() - 1; i++) {
-                            Attribute<?, ?> attribute = attributePath.get(i);
-                            if (attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION) {
-                                splitExpression = false;
-                                break;
+                if (!splitExpression) {
+                    if ((clause != ClauseType.SET || jpaProvider.supportsUpdateSetAssociationId()) && jpaMetamodelAccessor.isJoinable(lastAttribute) && !isBasicElementType(lastAttribute)) {
+                        splitExpression = true;
+                        if (needsElementCollectionIdCutoff) {
+                            for (int i = 0; i < attributePath.size() - 1; i++) {
+                                Attribute<?, ?> attribute = attributePath.get(i);
+                                if (attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION) {
+                                    splitExpression = false;
+                                    break;
+                                }
                             }
                         }
                     }
@@ -166,8 +168,10 @@ public final class JpaUtils {
                             bindingMap.put(nestedAttributePath, tupleIndex + offset);
                             selectManager.select(offset == 0 ? selectExpression : selectExpression.copy(ExpressionCopyContext.EMPTY), null, tupleIndex + offset);
 
-                            for (String column : nestedAttributeEntry.getColumnNames()) {
-                                columnBindingMap.put(column, nestedAttributePath);
+                            if (columnBindingMap != null) {
+                                for (String column : nestedAttributeEntry.getColumnNames()) {
+                                    columnBindingMap.put(column, nestedAttributePath);
+                                }
                             }
                             offset++;
                         }
@@ -221,8 +225,10 @@ public final class JpaUtils {
                                 firstBinding = false;
                             }
 
-                            for (String column : nestedAttributeEntry.getColumnNames()) {
-                                columnBindingMap.put(column, nestedAttributePath);
+                            if (columnBindingMap != null) {
+                                for (String column : nestedAttributeEntry.getColumnNames()) {
+                                    columnBindingMap.put(column, nestedAttributePath);
+                                }
                             }
                             offset++;
                         }
@@ -269,8 +275,10 @@ public final class JpaUtils {
                             bindingMap.put(nestedAttributePath, tupleIndex + offset);
                             selectManager.select(new ParameterExpression(subParamName), null, tupleIndex + offset);
 
-                            for (String column : nestedAttributeEntry.getColumnNames()) {
-                                columnBindingMap.put(column, nestedAttributePath);
+                            if (columnBindingMap != null) {
+                                for (String column : nestedAttributeEntry.getColumnNames()) {
+                                    columnBindingMap.put(column, nestedAttributePath);
+                                }
                             }
                             offset++;
                         }
@@ -289,17 +297,19 @@ public final class JpaUtils {
                     selectInfo.set(new FunctionExpression("CAST_" + elementType.getSimpleName(), arguments, selectExpression));
                 } else {
                     final EntityMetamodelImpl.AttributeExample attributeExample = metamodel.getBasicTypeExampleAttributes().get(elementType);
-                    List<Expression> arguments = new ArrayList<>(2);
-                    arguments.add(new SubqueryExpression(new Subquery() {
-                        @Override
-                        public String getQueryString() {
-                            return attributeExample.getExampleJpql() + selectExpression;
+                    if (attributeExample != null) {
+                        List<Expression> arguments = new ArrayList<>(2);
+                        arguments.add(new SubqueryExpression(new Subquery() {
+                            @Override
+                            public String getQueryString() {
+                                return attributeExample.getExampleJpql() + selectExpression;
+                            }
+                        }));
+                        if (queryBuilder.statementType != DbmsStatementType.INSERT && needsCastParameters) {
+                            arguments.add(new StringLiteral(attributeExample.getAttribute().getColumnTypes()[0]));
                         }
-                    }));
-                    if (queryBuilder.statementType != DbmsStatementType.INSERT && needsCastParameters) {
-                        arguments.add(new StringLiteral(attributeExample.getAttribute().getColumnTypes()[0]));
+                        selectInfo.set(new FunctionExpression(NullfnFunction.FUNCTION_NAME, arguments, selectExpression));
                     }
-                    selectInfo.set(new FunctionExpression(NullfnFunction.FUNCTION_NAME, arguments, selectExpression));
                 }
             } else if (selectExpression instanceof ParameterExpression && clause != ClauseType.SET) {
                 if (BasicCastTypes.TYPES.contains(elementType) && queryBuilder.statementType != DbmsStatementType.INSERT) {
@@ -310,17 +320,19 @@ public final class JpaUtils {
                     selectInfo.set(new FunctionExpression("CAST_" + elementType.getSimpleName(), arguments, selectExpression));
                 } else {
                     final EntityMetamodelImpl.AttributeExample attributeExample = metamodel.getBasicTypeExampleAttributes().get(elementType);
-                    List<Expression> arguments = new ArrayList<>(2);
-                    arguments.add(new SubqueryExpression(new Subquery() {
-                        @Override
-                        public String getQueryString() {
-                            return attributeExample.getExampleJpql() + selectExpression;
+                    if (attributeExample != null) {
+                        List<Expression> arguments = new ArrayList<>(2);
+                        arguments.add(new SubqueryExpression(new Subquery() {
+                            @Override
+                            public String getQueryString() {
+                                return attributeExample.getExampleJpql() + selectExpression;
+                            }
+                        }));
+                        if (queryBuilder.statementType != DbmsStatementType.INSERT && needsCastParameters) {
+                            arguments.add(new StringLiteral(attributeExample.getAttribute().getColumnTypes()[0]));
                         }
-                    }));
-                    if (queryBuilder.statementType != DbmsStatementType.INSERT && needsCastParameters) {
-                        arguments.add(new StringLiteral(attributeExample.getAttribute().getColumnTypes()[0]));
+                        selectInfo.set(new FunctionExpression(ParamFunction.FUNCTION_NAME, arguments, selectExpression));
                     }
-                    selectInfo.set(new FunctionExpression(ParamFunction.FUNCTION_NAME, arguments, selectExpression));
                 }
             }
         }

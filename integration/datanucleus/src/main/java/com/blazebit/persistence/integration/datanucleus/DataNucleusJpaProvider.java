@@ -456,6 +456,11 @@ public class DataNucleusJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsUpdateSetAssociationId() {
+        return true;
+    }
+
+    @Override
     public boolean supportsTransientEntityAsParameter() {
         return false;
     }
