@@ -933,7 +933,7 @@ public interface CatView {
     @IdMapping
     Long getId();
 
-    @MappingCorrelated(
+    @MappingCorrelatedSimple(
         correlationBasis = "age",
         correlated = Person.class,
         correlationExpression = "age IN correlationKey" # <1>

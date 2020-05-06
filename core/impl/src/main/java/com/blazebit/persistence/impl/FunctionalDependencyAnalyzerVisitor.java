@@ -435,16 +435,12 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
             orderedAttributes = new HashMap<>();
             JoinNode baseNode;
             EntityType<?> entityType;
-            String prefix;
             if (baseNodeKey instanceof Map.Entry<?, ?>) {
                 baseNode = (JoinNode) ((Map.Entry) baseNodeKey).getKey();
-                String associationName = (String) ((Map.Entry) baseNodeKey).getValue();
                 entityType = baseNode.getEntityType();
-                prefix = associationName + ".";
             } else {
                 baseNode = (JoinNode) baseNodeKey;
                 entityType = baseNode.getEntityType();
-                prefix = "";
             }
 
             if (baseNode.getParentTreeNode() == null || baseNode.getParentTreeNode().getAttribute().isCollection()) {
@@ -454,7 +450,11 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
             } else {
                 String fieldPrefix = baseNode.getParentTreeNode().getRelationName();
                 fieldPrefix = fieldPrefix.substring(0, fieldPrefix.length() - baseNode.getParentTreeNode().getAttribute().getName().length());
-                addAttributes(baseNode.getParent().getEntityType(), null, fieldPrefix, prefix, (SingularAttribute<?, ?>) baseNode.getParentTreeNode().getAttribute(), orderedAttributes);
+                if (baseNodeKey instanceof Map.Entry<?, ?>) {
+                    addAttributes(entityType, null, fieldPrefix, "", entityType.getSingularAttribute(((Map.Entry<?, String>) baseNodeKey).getValue()), orderedAttributes);
+                } else {
+                    addAttributes(baseNode.getParent().getEntityType(), null, fieldPrefix, "", (SingularAttribute<?, ?>) baseNode.getParentTreeNode().getAttribute(), orderedAttributes);
+                }
             }
             Map<String, Boolean> constantifiedAttributes = constantifiedJoinNodeAttributeCollector.getConstantifiedJoinNodeAttributes().get(baseNodeKey);
             if (constantifiedAttributes != null) {
