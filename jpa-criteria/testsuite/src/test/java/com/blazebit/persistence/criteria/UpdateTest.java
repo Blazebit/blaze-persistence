@@ -48,7 +48,11 @@ public class UpdateTest extends AbstractCoreTest {
         query.where(cb.equal(root.get(Document_.name), "abc"));
 
         UpdateCriteriaBuilder<Document> criteriaBuilder = query.createCriteriaBuilder(em);
-        assertEquals("UPDATE Document d SET d.name = :param_0, d.age = :param_1, d.idx = :param_2, d.lastModified = CURRENT_DATE, d.creationDate = CURRENT_TIMESTAMP, d.intIdEntity = NULL WHERE d.name = :generated_param_0", criteriaBuilder.getQueryString());
+        if (jpaProvider.supportsUpdateSetAssociationId()) {
+            assertEquals("UPDATE Document d SET d.name = :param_0, d.age = :param_1, d.idx = :param_2, d.lastModified = CURRENT_DATE, d.creationDate = CURRENT_TIMESTAMP, d.intIdEntity.id = NULL WHERE d.name = :generated_param_0", criteriaBuilder.getQueryString());
+        } else {
+            assertEquals("UPDATE Document d SET d.name = :param_0, d.age = :param_1, d.idx = :param_2, d.lastModified = CURRENT_DATE, d.creationDate = CURRENT_TIMESTAMP, d.intIdEntity = NULL WHERE d.name = :generated_param_0", criteriaBuilder.getQueryString());
+        }
         criteriaBuilder.getQuery();
     }
 

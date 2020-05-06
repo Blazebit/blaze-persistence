@@ -49,6 +49,7 @@ Not yet released
 * Fix exceptions when using `remove` on recording collection with a non-existing element
 * Rework entity view expression prefixing to work regardless of query aliases
 * Fix a method not found error happening in the spring-data 2.2 integration
+* Fix support for updating embeddables in update criteria builder
 
 ### Backwards-incompatible changes
 

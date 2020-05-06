@@ -319,6 +319,11 @@ public class OpenJPAJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsUpdateSetAssociationId() {
+        return true;
+    }
+
+    @Override
     public boolean supportsTransientEntityAsParameter() {
         return true;
     }

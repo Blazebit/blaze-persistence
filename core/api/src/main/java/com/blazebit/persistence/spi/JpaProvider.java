@@ -467,6 +467,14 @@ public interface JpaProvider {
      */
     public boolean supportsUpdateSetEmbeddable();
 
+    /**
+     * Indicates whether an association id can be set via an update queries SET clause or if the association has to be set as a whole.
+     *
+     * @return true if supported, else false
+     * @since 1.5.0
+     */
+    public boolean supportsUpdateSetAssociationId();
+
 
     /**
      * Indicates if the provider supports the use of transient entity objects as parameters.

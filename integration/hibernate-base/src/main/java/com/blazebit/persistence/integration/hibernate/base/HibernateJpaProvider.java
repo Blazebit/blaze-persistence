@@ -1478,6 +1478,11 @@ public class HibernateJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsUpdateSetAssociationId() {
+        return true;
+    }
+
+    @Override
     public boolean supportsTransientEntityAsParameter() {
         return true;
     }

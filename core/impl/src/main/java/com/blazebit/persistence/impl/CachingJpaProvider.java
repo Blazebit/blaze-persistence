@@ -310,6 +310,11 @@ public final class CachingJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsUpdateSetAssociationId() {
+        return jpaProvider.supportsUpdateSetAssociationId();
+    }
+
+    @Override
     public boolean supportsTransientEntityAsParameter() {
         return jpaProvider.supportsTransientEntityAsParameter();
     }
