@@ -213,8 +213,7 @@ public class OptimizedKeysetPaginationRowValueConstructorTest extends AbstractCo
                         "(SELECT _page_position_d.id "
                                 + "FROM Document _page_position_d "
                                 + "JOIN _page_position_d.owner _page_position_owner_1 "
-                                + "GROUP BY " + groupBy("_page_position_d.name", "_page_position_owner_1.name", "_page_position_d.id")
-                                + " ORDER BY _page_position_owner_1.name DESC, _page_position_d.name ASC, _page_position_d.id ASC)",
+                                + "ORDER BY _page_position_owner_1.name DESC, _page_position_d.name ASC, _page_position_d.id ASC)",
                         ":_entityPagePositionParameter"
                 )
                         + " FROM Document d";
@@ -249,8 +248,7 @@ public class OptimizedKeysetPaginationRowValueConstructorTest extends AbstractCo
                                 + "FROM Document _page_position_d "
                                 + "JOIN _page_position_d.owner _page_position_owner_1 "
                                 + "WHERE _page_position_d.name <> :param_0 "
-                                + "GROUP BY " + groupBy("_page_position_d.name", "_page_position_owner_1.name", "_page_position_d.id")
-                                + " ORDER BY _page_position_owner_1.name DESC, _page_position_d.name ASC, _page_position_d.id ASC)",
+                                + "ORDER BY _page_position_owner_1.name DESC, _page_position_d.name ASC, _page_position_d.id ASC)",
                         ":_entityPagePositionParameter"
                 )
                         + " FROM Document d "

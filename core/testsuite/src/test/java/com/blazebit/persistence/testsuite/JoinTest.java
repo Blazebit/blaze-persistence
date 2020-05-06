@@ -477,7 +477,7 @@ public class JoinTest extends AbstractCoreTest {
                 .page(0, 10);
 
         String expectedCountQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d";
-        String expectedIdQuery = "SELECT d.id FROM Document d GROUP BY d.id ORDER BY d.id ASC";
+        String expectedIdQuery = "SELECT d.id FROM Document d ORDER BY d.id ASC";
         assertEquals("SELECT d FROM Document d LEFT JOIN FETCH d.contacts c WHERE d.id IN :ids ORDER BY d.id ASC", crit.withInlineIdQuery(false).withInlineCountQuery(false).getQueryString());
         if (jpaProvider.supportsSubqueryInFunction() && jpaProvider.supportsSubqueryAliasShadowing()) {
             assertEquals("SELECT d, (" + expectedCountQuery + ") FROM Document d LEFT JOIN FETCH d.contacts c WHERE d.id IN (" + function("limit", "(" + expectedIdQuery + ")", "10") + ") ORDER BY d.id ASC", crit.withInlineIdQuery(true).withInlineCountQuery(true).getQueryString());

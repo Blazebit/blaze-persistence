@@ -222,8 +222,7 @@ public class OptimizedKeysetPaginationTest extends AbstractCoreTest {
                         "(SELECT _page_position_d.id "
                                 + "FROM DocumentWithNullableName _page_position_d "
                                 + "JOIN _page_position_d.owner _page_position_owner_1 "
-                                + "GROUP BY " + groupBy(renderNullPrecedenceGroupBy("_page_position_d.name"), "_page_position_owner_1.name", "_page_position_d.id")
-                                + " ORDER BY _page_position_owner_1.name DESC, " + renderNullPrecedence("_page_position_d.name", "ASC", "LAST") + ", _page_position_d.id ASC)",
+                                + "ORDER BY _page_position_owner_1.name DESC, " + renderNullPrecedence("_page_position_d.name", "ASC", "LAST") + ", _page_position_d.id ASC)",
                         ":_entityPagePositionParameter"
                 )
                         + " FROM DocumentWithNullableName d";
@@ -258,8 +257,7 @@ public class OptimizedKeysetPaginationTest extends AbstractCoreTest {
                                 + "FROM DocumentWithNullableName _page_position_d "
                                 + "JOIN _page_position_d.owner _page_position_owner_1 "
                                 + "WHERE _page_position_d.name <> :param_0 "
-                                + "GROUP BY " + groupBy(renderNullPrecedenceGroupBy("_page_position_d.name"), "_page_position_owner_1.name", "_page_position_d.id")
-                                + " ORDER BY _page_position_owner_1.name DESC, " + renderNullPrecedence("_page_position_d.name", "ASC", "LAST") + ", _page_position_d.id ASC)",
+                                + "ORDER BY _page_position_owner_1.name DESC, " + renderNullPrecedence("_page_position_d.name", "ASC", "LAST") + ", _page_position_d.id ASC)",
                         ":_entityPagePositionParameter"
                 )
                         + " FROM DocumentWithNullableName d "

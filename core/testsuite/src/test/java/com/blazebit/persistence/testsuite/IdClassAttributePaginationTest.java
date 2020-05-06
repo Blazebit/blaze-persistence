@@ -73,7 +73,7 @@ public class IdClassAttributePaginationTest extends AbstractCoreTest {
     @Test
     public void testPaginateIdClassAttributeWithIdQuery() {
         String expectedCountQuery = "SELECT " + countPaginated("d.key1, d.key2", false) + " FROM IdClassEntity d";
-        String expectedIdQuery = "SELECT d.key1, d.key2 FROM IdClassEntity d GROUP BY d.value, d.key1, d.key2 ORDER BY d.value ASC, d.key1 ASC, d.key2 ASC";
+        String expectedIdQuery = "SELECT d.key1, d.key2 FROM IdClassEntity d ORDER BY d.value ASC, d.key1 ASC, d.key2 ASC";
         String expectedObjectQuery = "SELECT d.value, children_1.value FROM IdClassEntity d " +
                 "LEFT JOIN d.children children_1"
                 + " WHERE (d.key1 = :ids_0_0 AND d.key2 = :ids_1_0) ORDER BY d.value ASC, d.key1 ASC, d.key2 ASC";

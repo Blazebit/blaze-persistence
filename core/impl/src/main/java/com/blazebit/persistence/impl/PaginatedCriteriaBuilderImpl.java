@@ -1051,13 +1051,15 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         // Note that we always exclude the nodes with group by dependency. We consider just the ones from the identifiers
         Set<JoinNode> idNodesToFetch = Collections.emptySet();
         Set<JoinNode> identifierExpressionsToUseNonRootJoinNodes = getIdentifierExpressionsToUseNonRootJoinNodes();
-        joinManager.buildClause(sbSelectFrom, ID_QUERY_CLAUSE_EXCLUSIONS, PAGE_POSITION_ID_QUERY_ALIAS_PREFIX, false, false, true, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, idNodesToFetch, identifierExpressionsToUseNonRootJoinNodes, null);
+        Set<JoinNode> collectionJoins = joinManager.buildClause(sbSelectFrom, ID_QUERY_CLAUSE_EXCLUSIONS, PAGE_POSITION_ID_QUERY_ALIAS_PREFIX, true, false, true, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, idNodesToFetch, identifierExpressionsToUseNonRootJoinNodes, null);
         whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts);
 
         boolean inverseOrder = false;
 
-        groupByManager.buildGroupBy(sbSelectFrom, ID_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, getIdentifierExpressionsToUse());
-        havingManager.buildClause(sbSelectFrom);
+        if (hasGroupBy || havingManager.hasPredicates() || !collectionJoins.isEmpty()) {
+            groupByManager.buildGroupBy(sbSelectFrom, ID_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, getIdentifierExpressionsToUse());
+            havingManager.buildClause(sbSelectFrom);
+        }
 
         // Resolve select aliases because we might omit the select items
         orderByManager.buildOrderBy(sbSelectFrom, inverseOrder, true, false, false);
@@ -1127,7 +1129,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         // Note that we always exclude the nodes with group by dependency. We consider just the ones from the identifiers
         Set<JoinNode> idNodesToFetch = Collections.emptySet();
         Set<JoinNode> identifierExpressionsToUseNonRootJoinNodes = getIdentifierExpressionsToUseNonRootJoinNodes();
-        joinManager.buildClause(sbSelectFrom, ID_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, null, false, externalRepresentation, true, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, idNodesToFetch, identifierExpressionsToUseNonRootJoinNodes, null);
+        Set<JoinNode> collectionJoins = joinManager.buildClause(sbSelectFrom, ID_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, null, true, externalRepresentation, true, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, idNodesToFetch, identifierExpressionsToUseNonRootJoinNodes, null);
 
         if (keysetMode == KeysetMode.NONE || keysetManager.getKeysetLink().getKeyset().getTuple() == null) {
             whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts);
@@ -1149,12 +1151,12 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
         boolean inverseOrder = keysetMode == KeysetMode.PREVIOUS;
 
-        // TODO: Think about optimizing this here
         // We could avoid rendering the group by clause if the collection joins aren't referenced
         // We could also build a minimal group by clause when hasGroupBy == false, otherwise we require the clause
-        // The same optimization can be done in the simplePageIdQueryString
-        groupByManager.buildGroupBy(sbSelectFrom, ID_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, getIdentifierExpressionsToUse());
-        havingManager.buildClause(sbSelectFrom);
+        if (hasGroupBy || havingManager.hasPredicates() || !collectionJoins.isEmpty()) {
+            groupByManager.buildGroupBy(sbSelectFrom, ID_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, getIdentifierExpressionsToUse());
+            havingManager.buildClause(sbSelectFrom);
+        }
 
         // Resolve select aliases to their actual expressions only if the select items aren't included
         orderByManager.buildOrderBy(sbSelectFrom, inverseOrder, !needsNewIdList, needsNewIdList, aliasFunction && !externalRepresentation);
