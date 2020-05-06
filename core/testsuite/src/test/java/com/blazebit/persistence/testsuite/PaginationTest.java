@@ -253,7 +253,7 @@ public class PaginationTest extends AbstractCoreTest {
     @Test
     public void testSelectIndexedWithParameterForceIdQuery() {
         String expectedCountQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d JOIN d.owner owner_1 WHERE owner_1.name = :param_0";
-        String expectedIdQuery = "SELECT d.id FROM Document d JOIN d.owner owner_1 WHERE owner_1.name = :param_0 GROUP BY " + groupBy("d.id", "d.id") + " ORDER BY d.id ASC";
+        String expectedIdQuery = "SELECT d.id FROM Document d JOIN d.owner owner_1 WHERE owner_1.name = :param_0 ORDER BY d.id ASC";
         String expectedObjectQuery = "SELECT " + joinAliasValue("contacts_contactNr_1", "name") + " FROM Document d " +
                 "LEFT JOIN d.contacts contacts_contactNr_1"
                 + onClause("KEY(contacts_contactNr_1) = :contactNr")
@@ -298,8 +298,7 @@ public class PaginationTest extends AbstractCoreTest {
                 + function("PAGE_POSITION",
                         "(SELECT _page_position_d.id "
                         + "FROM Document _page_position_d "
-                        + "GROUP BY " + (jpaProvider.supportsGroupByEntityAlias() ? groupBy("_page_position_d.name", "_page_position_d.id") : groupBy("_page_position_d.id", "_page_position_d.name"))
-                        + " ORDER BY _page_position_d.name ASC, _page_position_d.id ASC)",
+                        + "ORDER BY _page_position_d.name ASC, _page_position_d.id ASC)",
                         ":_entityPagePositionParameter")
                     + " "
                 + "FROM Document d";
@@ -346,8 +345,7 @@ public class PaginationTest extends AbstractCoreTest {
                         "(SELECT _page_position_d.id "
                         + "FROM Document _page_position_d "
                         + "WHERE _page_position_d.name <> :param_0 "
-                        + "GROUP BY " + (jpaProvider.supportsGroupByEntityAlias() ? groupBy("_page_position_d.name", "_page_position_d.id") : groupBy("_page_position_d.id", "_page_position_d.name"))
-                        + " ORDER BY _page_position_d.name ASC, _page_position_d.id ASC)",
+                        + "ORDER BY _page_position_d.name ASC, _page_position_d.id ASC)",
                         ":_entityPagePositionParameter")
                     + " "
                 + "FROM Document d "

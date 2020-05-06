@@ -450,7 +450,7 @@ public class CTETest extends AbstractCoreTest {
                 + expectedSimpleCountQuery;
 
         // TODO: check if we can somehow infer that the order by of children.id is unnecessary and thus be able to omit the join
-        String expectedSimpleIdQuery = "SELECT r.id FROM RecursiveEntity r WHERE r.id IN (SELECT t.id FROM TestCTE t WHERE t.level < 2) GROUP BY r.id ORDER BY r.id ASC";
+        String expectedSimpleIdQuery = "SELECT r.id FROM RecursiveEntity r WHERE r.id IN (SELECT t.id FROM TestCTE t WHERE t.level < 2) ORDER BY r.id ASC";
         String expectedIdQuery = ""
                 + "WITH RECURSIVE TestCTE(id, name, level) AS(\n"
                 + "SELECT e.id, e.name, 0 FROM RecursiveEntity e WHERE e.parent IS NULL"
@@ -547,7 +547,7 @@ public class CTETest extends AbstractCoreTest {
                 + expectedSimpleCountQuery;
 
         String expectedSimpleIdQuery = "SELECT r.id FROM RecursiveEntity r JOIN TestCTE t" + onClause("r.id = t.id AND t.level < 2")
-                        + " GROUP BY r.id ORDER BY r.id ASC";
+                        + " ORDER BY r.id ASC";
         String expectedIdQuery = ""
                 + "WITH RECURSIVE TestCTE(id, name, level) AS(\n"
                 + "SELECT e.id, e.name, 0 FROM RecursiveEntity e WHERE e.parent IS NULL"

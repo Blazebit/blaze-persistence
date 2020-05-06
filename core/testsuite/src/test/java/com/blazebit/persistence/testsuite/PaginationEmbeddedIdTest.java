@@ -263,7 +263,7 @@ public class PaginationEmbeddedIdTest extends AbstractCoreTest {
 
         String expectedCountQuery = "SELECT " + countPaginated("e.id.key, e.id.value", false) + " FROM EmbeddableTestEntity e"
                 + " WHERE e.id.key = :param_0";
-        String expectedIdQuery = "SELECT e.id.key, e.id.value FROM EmbeddableTestEntity e WHERE e.id.key = :param_0 GROUP BY e.id.key, e.id.value ORDER BY e.id.key ASC, e.id.value ASC";
+        String expectedIdQuery = "SELECT e.id.key, e.id.value FROM EmbeddableTestEntity e WHERE e.id.key = :param_0 ORDER BY e.id.key ASC, e.id.value ASC";
         String expectedObjectQuery = "SELECT e.id, elementCollection_1.primaryName FROM EmbeddableTestEntity e LEFT JOIN e.embeddable.elementCollection elementCollection_1"
                 + " WHERE (e.id.key = :ids_0_0 AND e.id.value = :ids_1_0)"
                 + " ORDER BY e.id.key ASC, e.id.value ASC";
