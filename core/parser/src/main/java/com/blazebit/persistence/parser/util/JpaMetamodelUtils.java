@@ -302,7 +302,12 @@ public class JpaMetamodelUtils {
         SingularAttribute<?, ?> next = iterator.next();
 
         if (iterator.hasNext()) {
-            throw new IllegalStateException("Can't access a single id attribute as the entity has multiple id attributes i.e. uses @IdClass!");
+            List<String> attributes = new ArrayList<>();
+            attributes.add(next.getName());
+            do {
+                attributes.add(iterator.next().getName());
+            } while (iterator.hasNext());
+            throw new IllegalStateException("Can't retrieve a single id attribute as the entity " + entityType.getJavaType().getName() + " has multiple id attributes: " + attributes);
         }
 
         return next;

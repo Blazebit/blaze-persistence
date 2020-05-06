@@ -184,7 +184,7 @@ public class TestLiterals extends AbstractParserTest {
         StringLiteral result = (StringLiteral) parse("'a'");
         assertEquals(new StringLiteral("a"), result);
     }
-    
+
     @Test
     public void testIntegerLiteral(){
         assertEquals(new NumericLiteral("1", NumericType.INTEGER), parse("1"));

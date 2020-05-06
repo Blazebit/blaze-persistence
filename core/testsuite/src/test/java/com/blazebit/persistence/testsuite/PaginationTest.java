@@ -1111,6 +1111,18 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
+    public void testOrderBySingleValuesAssociationId() {
+        PaginatedCriteriaBuilder<Tuple> pcb = cbf.create(em, Tuple.class)
+                .from(Document.class, "d")
+                .select("id")
+                .where("d.owner.name").eq("Karl1")
+                .orderByAsc("d.owner.partnerDocument.id")
+                .orderByAsc("d.id")
+                .page(0, 10);
+        pcb.getResultList();
+    }
+
+    @Test
     @Category(NoEclipselink.class)
     // TODO: report eclipselink does not support subqueries in functions
     public void testExtractIdQueryIntoSubquery() {
