@@ -293,7 +293,9 @@ public final class JpaUtils {
                     // We also need a cast for parameter expressions except in the SET clause
                     List<Expression> arguments = new ArrayList<>(2);
                     arguments.add(selectExpression);
-                    arguments.add(new StringLiteral(columnType));
+                    if (columnType != null) {
+                        arguments.add(new StringLiteral(columnType));
+                    }
                     selectInfo.set(new FunctionExpression("CAST_" + elementType.getSimpleName(), arguments, selectExpression));
                 } else {
                     final EntityMetamodelImpl.AttributeExample attributeExample = metamodel.getBasicTypeExampleAttributes().get(elementType);
@@ -316,7 +318,9 @@ public final class JpaUtils {
                     // We also need a cast for parameter expressions except in the SET clause
                     List<Expression> arguments = new ArrayList<>(2);
                     arguments.add(selectExpression);
-                    arguments.add(new StringLiteral(columnType));
+                    if (columnType != null) {
+                        arguments.add(new StringLiteral(columnType));
+                    }
                     selectInfo.set(new FunctionExpression("CAST_" + elementType.getSimpleName(), arguments, selectExpression));
                 } else {
                     final EntityMetamodelImpl.AttributeExample attributeExample = metamodel.getBasicTypeExampleAttributes().get(elementType);

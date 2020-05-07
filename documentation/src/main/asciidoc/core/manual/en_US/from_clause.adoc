@@ -286,7 +286,7 @@ LEFT JOIN cat.kittens kittens_age___18
        ON kittens_age___18.age > 18
 ----
 
-Note that it is also possible to use an entity name as base expression for an array expression.
+Note that it is also possible to use an entity name as base expression for an array expression, which is called an <<entity-array-expressions,_entity array expression_>>.
 
 [source,java]
 ----

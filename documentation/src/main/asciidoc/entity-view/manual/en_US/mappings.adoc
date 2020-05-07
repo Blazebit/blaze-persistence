@@ -948,6 +948,47 @@ public interface CatView {
 Just like the general correlation, by default, the correlated entity type is _projected into_ the view. To map a specific property of the entity type, use the `correlationResult` attribute.
 There is also the possibility to specify a <<anchor-fetch-strategies,_fetch strategy_>> that should be used for the correlation. By default, the `SELECT` strategy is used.
 
+[[entity-array-expression-correlation]]
+=== Correlation mappings via entity array syntax
+
+The easiest way to correlate an entity is by using the entity array syntax `EntityName[predicate]` which is explained in detail in the link:{core_doc}#entity-array-expressions[core documentation].
+
+Such a mapping can be used anywhere with all fetch strategies. Correlating with the current view is usually done with the `VIEW` macro which allows to refer to the current view.
+This is important because within the brackets of an entity array expression, the implicit root for path expressions is the joined entity itself.
+The previous example can be simplified to the following.
+
+[source,java]
+----
+@EntityView(Person.class)
+public interface PersonView {
+
+    @IdMapping
+    Long getId();
+
+    String getName();
+}
+
+@EntityView(Cat.class)
+public interface CatView {
+
+    @IdMapping
+    Long getId();
+
+    @Mapping("Person[age IN VIEW(age)]")
+    Set<PersonView> getSameAgedPersons();
+}
+----
+
+The result is very similar and roughly looks like this
+
+[source,sql]
+----
+SELECT cat.id, Person__age_IN_VIEW_age__.id, Person__age_IN_VIEW_age__.name
+FROM Cat cat
+LEFT JOIN Person Person__age_IN_VIEW_age__
+       ON Person__age_IN_VIEW_age__.age = cat.age
+----
+
 === Special method attributes
 
 There are some special methods that can be declared abstract in an entity view type which have special runtime support.
@@ -1108,6 +1149,15 @@ LEFT JOIN cat.kittens kittens_1
 
 The `OUTER` function doesn't know about the entity view structure and will remain to refer to the *query root*.
 It is often best to make use of the `EMBEDDING_VIEW` function instead, which refers to the relation of the _embedding view_.
+
+==== VIEW
+
+The `VIEW` function can be used to refer to the relation backed by the _current view_.
+Usually this is not necessary as the relation of the current view is the implicit root for path expressions,
+but within the brackets of an <<entity-array-expression-correlation,_entity array expression_>> the implicit root is the joined entity.
+
+In such a case it is necessary to use the `VIEW` function to refer to attributes of the relation of the current view in the predicate.
+For an example usage, go to the <<entity-array-expression-correlation,_entity array expression correlation_>> section.
 
 ==== EMBEDDING_VIEW
 
