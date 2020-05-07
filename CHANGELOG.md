@@ -50,6 +50,7 @@ Not yet released
 * Rework entity view expression prefixing to work regardless of query aliases
 * Fix a method not found error happening in the spring-data 2.2 integration
 * Fix support for updating embeddables in update criteria builder
+* Write core and entity-view documentation about entity array expressions
 
 ### Backwards-incompatible changes
 

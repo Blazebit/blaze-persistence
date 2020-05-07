@@ -20,6 +20,7 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.UpdateCriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus4;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoFirebird;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
@@ -114,8 +115,9 @@ public class UpdateTest extends AbstractCoreTest {
     }
 
     // NOTE: EclipseLink can update neither d.nameObject.intIdEntity nor d.nameObject.intIdEntity.id so associations in embeddables don't work here
+    // NOTE: DN4 also doesn't seem to support this
     @Test
-    @Category({ NoEclipselink.class })
+    @Category({ NoEclipselink.class, NoDatanucleus4.class })
     public void testSetEmbeddable() {
         transactional(new TxVoidWork() {
             @Override
