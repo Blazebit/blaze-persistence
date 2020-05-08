@@ -28,6 +28,7 @@ Not yet released
 * Fix rendering of extended `EXISTS` predicate for performance
 * Support spring-data dynamic projections for entity views
 * Improve pagination id-query performance by omitting unnecessary group by
+* QueryDSL 4 integration module
 
 ### Bug fixes
 

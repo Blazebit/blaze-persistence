@@ -1,0 +1,295 @@
+[[querydsl-integration]]
+== QueryDSL 4 integration
+
+With the `blaze-persistence-querydsl-expressions` features from {projectname} can be used in existing QueryDSL code.
+
+The `blaze-persistence-querydsl-expressions` module implements an extended expression model for JPQL.Next, the query and expression language of {projectname}.
+The module provides a `BlazeJPAQuery` as a default implementation of `JPQLNextQuery`, which extends the all familiar `JPQLQuery`. `BlazeJPAQuery` is analog to `JPAQuery`.
+Users can implement extensions on top of `JPQLNextQuery` by extending `AbstractBlazeJPAQuery`.
+
+`BlazeJPAQuery` can be serialized using the `JPQLNextSerializer`, and may be rendered to a `CriteriaBuilder` using the `BlazeCriteriaBuilderRenderer`.
+This allows for the queries to be executed through {projectname} JPQL.Next query engine.
+Be sure to use the `JPQLNextTemplates` or any `Templates` implementation that includes the extensions from `JPQLNextTemplates` when using JPQL.Next specific features (e.g. window functions, values clauses, set operations, common table expressions).
+
+This module aims to be an API that is as close to the original QueryDSL API as possible.
+Where features did not exist in `querydsl-jpa`, but did exist in `querydsl-sql`, we stayed as close to the existing SQL implementation as possible.
+This includes the implementation for window functions, common table expressions (CTEs) and union queries which was the basis for all types of set expressions.
+
+Staying close to QueryDSL's API however, also means that the API is not as fluent as {projectname} users are accustomed to.
+This means that creating common table expressions or complex set operations may lead to superfluous code.
+
+
+[[querydsl-setup]]
+=== Setup
+
+To setup the project for QueryDSL you have to add dependencies as described in the <<getting-started-setup>> section.
+
+Besides the standard dependencies, the following Maven dependencies are required to use the QueryDSL extension:
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-querydsl-expressions</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
+</dependency>
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-core-impl</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+----
+
+The dependencies for other JPA providers or other versions can be found in the <<maven-setup,core module setup section>>.
+
+[[querydsl-features]]
+=== Features
+
+The QueryDSL integration aims to make the full feature set from {projectname} Core available. This includes:
+
+* Common Table Expressoins (CTEs) and recursive CTEs
+* Subquery joins
+* Lateral joins
+* Values clauses
+* Window functions and named windows
+* `GROUP_CONCAT` support
+* Utility methods for date/time
+* Set operations (`UNION`, `UNION ALL`, `INTERSECT`, `INTERSECT ALL`, `EXCEPT` and `EXCEPT ALL`)
+* `LEAST` / `GREATEST` functions
+* Result set pagination
+
+[[querydsl-examples]]
+=== Examples
+
+The following chapters demonstrate some of the possibilities of the blaze-persistence-querydsl-expressions integration.
+
+Assume we have the following entity:
+
+[source,java]
+----
+@Entity
+public class Cat {
+
+    @Id
+    private Long id;
+
+    private String name;
+
+    private Integer age;
+}
+----
+
+==== Simple query
+
+A very simple query might look like this:
+
+[source,java]
+----
+QCat cat = QCat.cat;
+
+BlazeJPAQuery<Tuple> query = new BlazeJPAQuery<Tuple>(entityManager, criteriaBuilderFactory).from(cat)
+    .select(cat.name.as("name"), cat.name.substring(2))
+    .where(cat.name.length().gt(1));
+
+List<Tuple> fetch = query.fetch();
+----
+
+==== Regular association joins
+
+[source,java]
+----
+QAuthor = QAuthor.author;
+QBook book = QBook.book;
+
+Map<Author, List<Book>> booksByAuthor = new BlazeJPAQuery<>(entityManager, criteriaBuilderFactory)
+    .from(author)
+    .innerJoin(author.books, book)
+    .transform(GroupBy.groupBy(author).as(GroupBy.list(book)));
+----
+
+==== Regular entity joins
+
+[source,java]
+----
+QAuthor otherAuthor = new QAuthor("otherAuthor");
+QBook otherBook = new QBook("otherBook");
+
+Map<Author, List<Book>> booksByAuthor = new BlazeJPAQuery<Tuple>(entityManager, criteriaBuilderFactory)
+    .from(otherAuthor)
+    .innerJoin(otherBook).on(otherBook.author.eq(otherAuthor))
+    .transform(GroupBy.groupBy(otherAuthor).as(GroupBy.list(otherBook)));
+----
+
+=== Managed type value clause
+
+[source,java]
+----
+Cat theCat = new Cat();
+theCat.id = 1337L;
+theCat.name = "Fluffy";
+
+List<Book> fetch = new BlazeJPAQuery<Book>(entityManager, criteriaBuilderFactory)
+    .fromValues(QCat.cat, Collections.singleton(theCat))
+    .select(QCat.cat)
+    .fetch();
+----
+
+=== Managed attribute value clause
+
+[source,java]
+----
+StringPath catName = Expressions.stringPath("catName");
+
+List<String> fetch = new BlazeJPAQuery<>(entityManager, cbf)
+    .fromValues(QCat.cat.name, catName, Collections.singleton("Fluffy"))
+    .select(catName)
+    .fetch();   
+----
+
+==== Window functions
+
+Window functions are available through the various static utility methods in `JPQLNextExpressions`.
+For convenience, its recommended to add a star-import to `com.blazebit.persistence.querydsl.JPQLNextExpressions.*`.
+
+[source,java]
+----
+QCat cat = QCat.cat;
+
+BlazeJPAQuery<Tuple> query = new BlazeJPAQuery<Tuple>(entityManager, criteriaBuilderFactory).from(cat)
+    .select(cat.name, JPQLNextExpressions.rowNumber(), JPQLNextExpressions.lastValue(cat.name).over().partitionBy(cat.id));
+
+ List<Tuple> fetch = query.fetch();
+----
+
+==== Named window functions
+
+[source,java]
+----
+QCat cat = QCat.cat;
+NamedWindow myWindow = new NamedWindow("myWindow").partitionBy(cat.id);
+
+BlazeJPAQuery<Tuple> query = new BlazeJPAQuery<Tuple>(entityManager, criteriaBuilderFactory).from(cat)
+    .select(cat.name, JPQLNextExpressions.rowNumber().over(myWindow), JPQLNextExpressions.lastValue(cat.name).over(myWindow));
+
+ List<Tuple> fetch = query.fetch();
+----
+
+==== Common Table Expressions
+
+First declare your CTE entity:
+
+[source,java]
+----
+@CTE
+@Entity
+public class IdHolderCte {
+
+    @Id
+    Long id;
+
+    String name;
+
+}
+----
+
+Next, it can be queried as such:
+
+[source,java]
+----
+List<Long> fetch = new BlazeJPAQuery<TestEntity>(entityManager, cbf)
+    .with(idHolderCte, JPQLNextExpressions.select(
+        JPQLNextExpressions.bind(idHolderCte.id, book.id),
+        JPQLNextExpressions.bind(idHolderCte.name, book.name)).from(book))
+    .select(idHolderCte.id).from(idHolderCte)
+    .fetch();
+----
+
+Alternatively, you can use the convenience `bind` method on `BlazeJPAQuery`:
+
+[source,java]
+----
+List<Long> fetch = new BlazeJPAQuery<TestEntity>(entityManager, cbf)
+    .with(idHolderCte, new BlazeJPAQuery()
+        .bind(idHolderCte.id, book.id),
+        .bind(idHolderCte.name, book.name)).from(book))
+    .select(idHolderCte.id).from(idHolderCte)
+    .fetch();
+----
+
+===== Recursive CTEs
+
+Set operations are also allowed in CTEs, and through set operations it is also possible to write recursive CTEs.
+
+[source,java]
+----
+QCatCte parentCat = new QCatCte("parentCat");
+
+List<CatCte> result = new BlazeJPAQuery<CatCte>(entityManager, criteriaBuilderFactory)
+    .withRecursive(QCatCte.catCte, new BlazeJPAQuery().unionAll(
+        new BlazeJPAQuery()
+            .from(QCat.cat)
+            .bind(QCatCte.catCte.id, QCat.cat.id)
+            .bind(QCatCte.catCte.ancestor, QCat.cat.ancestor)
+            .where(QCat.cat.id.eq(someCatId)),
+        new BlazeJPAQuery()
+            .from(QCat.cat)
+            .from(QCatCte.catCte, parentCat)
+            .bind(QCatCte.catCte.id, QCat.cat.id)
+            .bind(QCatCte.catCte.ancestor, QCat.cat.ancestor)
+            .where(QCat.cat.id.eq(parentCat.ancestor.id)))
+    )
+    .select(QCatCte.catCte)
+    .from(QCatCte.catCte)
+    .fetch();
+----
+
+==== Subquery joins
+
+A limitation of JPQL frequently stumbled opon, is that subqueries cannot be joined. With {projectname} however, this is perfectly possible:
+
+[source,java]
+----
+QRecursiveEntity recursiveEntity = new QRecursiveEntity("t");
+
+List<RecursiveEntity> fetch = new BlazeJPAQuery<>(entityManager, cbf)
+    .select(recursiveEntity)
+    .from(select(recursiveEntity)
+        .from(recursiveEntity)
+        .where(recursiveEntity.parent.name.eq("root1"))
+        .orderBy(recursiveEntity.name.asc())
+        .limit(1L), recursiveEntity)
+    .fetch();
+----
+
+Subquery joins utilize Common Table Expressions. Therefore also CTE types are allowed for subquery results. In that case,
+the CTE attributes should be bound in a similar fashion as shown in the CTE examples. 
+Whenever the subquery projects an entity path that is also a join target, all owned attributes will be bound implicitly
+if no different bindings are provided.
+
+
+==== Lateral joins
+
+Subquery joins may access outer query variables if a lateral join is used.
+
+[source,java]
+----
+QRecursiveEntity t = new QRecursiveEntity("t");
+QRecursiveEntity subT = new QRecursiveEntity("subT");
+QRecursiveEntity subT2 = new QRecursiveEntity("subT2");
+
+List<Tuple> fetch = new BlazeJPAQuery<>(entityManager, cbf)
+    .select(t, subT2)
+    .from(t)
+    .leftJoin(select(subT).from(t.children, subT).orderBy(subT.id.asc()).limit(1), subT2)
+    .lateral()
+    .fetch();
+----
+

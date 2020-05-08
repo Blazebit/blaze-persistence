@@ -51,6 +51,7 @@
         <module>jaxrs</module>
         <module>jackson</module>
         <module>graphql</module>
+        <module>querydsl</module>
 
         <module>jpa-base-jar</module>
         <module>openjpa-jar</module>
