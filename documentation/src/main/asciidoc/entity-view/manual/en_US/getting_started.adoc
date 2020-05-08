@@ -17,6 +17,8 @@ CDI and Spring users can find integrations in _integration/entity-view_ that giv
 Spring Data users can find a special integration in _integration/entity-view_ which is described in more detail in a later <<spring-data-integration,chapter>>.
 This integration depends on all artifacts of the _jpa-criteria_ module.
 
+For QueryDSL users there is an integration that is described in <<querydsl-integration>>.
+
 ==== Maven setup
 
 We recommend you introduce a version property for {projectname} which can be used for all artifacts.
@@ -142,6 +144,21 @@ If a JPA provider that does not implement the JPA 2.1 specification like Hiberna
 <dependency>
     <groupId>com.blazebit</groupId>
     <artifactId>blaze-persistence-jpa-criteria-jpa-2-compatibility</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
+</dependency>
+----
+
+[[maven-setup-querydsl-integration]]
+===== QueryDSL integration
+
+When you work with QueryDSL you can additionally have first class integration by using the following dependencies.
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-querydsl-expressions</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>compile</scope>
 </dependency>

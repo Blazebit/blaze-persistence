@@ -328,6 +328,17 @@ Blaze-Persistence DeltaSpike Data 1.7 integration
 </dependency>
 ```
 
+Blaze-Persistence QueryDSL 4 integration dependencies
+
+```xml
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-querydsl-expressions</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
+</dependency>
+```
+
 Blaze-Persistence JPA provider integration module dependencies
 
 Hibernate 5.4

@@ -56,3 +56,5 @@ include::customize_dbms_dialect.adoc[]
 include::configuration.adoc[]
 
 include::window_functions.adoc[]
+
+include::querydsl.adoc[]
