@@ -42,6 +42,11 @@ public class HSQLDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
+    public boolean supportsWindowFunctions() {
+        return false;
+    }
+
+    @Override
     public ValuesStrategy getValuesStrategy() {
         // NOTE: this is only supported in HSQL 2.0+
         return ValuesStrategy.VALUES;

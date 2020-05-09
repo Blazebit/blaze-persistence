@@ -64,6 +64,32 @@ public class WindowFunctionTest extends AbstractCoreTest {
     }
 
     @Test
+    public void testCountFilter() {
+        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
+                .from(Person.class, "per")
+                .select("per.age")
+                .select("COUNT(*) FILTER (WHERE friend IS NOT NULL)")
+                .orderByAsc("per.age")
+                ;
+
+        List<Tuple> resultList = criteria.getResultList();
+        assertNotNull(resultList);
+    }
+
+    @Test
+    public void testCountWindowFilter() {
+        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
+                .from(Person.class, "per")
+                .select("per.age")
+                .select("COUNT(*) FILTER (WHERE friend IS NOT NULL) OVER (ORDER BY per.age)")
+                .orderByAsc("per.age")
+                ;
+
+        List<Tuple> resultList = criteria.getResultList();
+        assertNotNull(resultList);
+    }
+
+    @Test
     public void testBasicAggregatesOverRows() {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
             .from(Person.class, "per")
@@ -476,7 +502,6 @@ public class WindowFunctionTest extends AbstractCoreTest {
         assertNotNull(resultList);
     }
 
-
     @Test
     public void testParsedInlineWindowDefinition() {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
@@ -503,7 +528,6 @@ public class WindowFunctionTest extends AbstractCoreTest {
         assertNotNull(resultList);
     }
 
-
     @Test
     public void testParsedNamedWindowDefinition() {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
@@ -517,7 +541,6 @@ public class WindowFunctionTest extends AbstractCoreTest {
         List<Tuple> resultList = criteria.getResultList();
         assertNotNull(resultList);
     }
-
 
     @Test
     public void testParsedCopiedNamedWindowDefinition() {
@@ -546,7 +569,6 @@ public class WindowFunctionTest extends AbstractCoreTest {
         List<Tuple> resultList = criteria.getResultList();
         assertNotNull(resultList);
     }
-
 
     @Test
     public void testWrappedParsedCopiedNamedWindowDefinition() {

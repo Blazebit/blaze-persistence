@@ -45,10 +45,18 @@ public class ListAddAction<C extends List<E>, E> implements ListAction<C> {
     @Override
     @SuppressWarnings("unchecked")
     public void doAction(C list, UpdateContext context, ViewToEntityMapper mapper, CollectionRemoveListener removeListener) {
-        if (mapper != null) {
-            list.add(index, (E) mapper.applyToEntity(context, null, element));
+        if (append) {
+            if (mapper != null) {
+                list.add((E) mapper.applyToEntity(context, null, element));
+            } else {
+                list.add(element);
+            }
         } else {
-            list.add(index, element);
+            if (mapper != null) {
+                list.add(index, (E) mapper.applyToEntity(context, null, element));
+            } else {
+                list.add(index, element);
+            }
         }
     }
 

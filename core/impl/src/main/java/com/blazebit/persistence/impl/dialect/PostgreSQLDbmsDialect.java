@@ -66,6 +66,11 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
+    public boolean supportsFilterClause() {
+        return false;
+    }
+
+    @Override
     public boolean supportsWindowNullPrecedence() {
         return true;
     }

@@ -32,13 +32,13 @@ import com.blazebit.persistence.view.impl.collection.CollectionRemoveAllAction;
 import com.blazebit.persistence.view.impl.collection.CollectionRemoveListener;
 import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
-import com.blazebit.persistence.view.spi.type.DirtyStateTrackable;
-import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.update.EntityViewUpdater;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.update.UpdateQueryFactory;
 import com.blazebit.persistence.view.spi.type.BasicUserType;
+import com.blazebit.persistence.view.spi.type.DirtyStateTrackable;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
+import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -47,7 +47,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -151,7 +150,17 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
             }
         } else {
             if (flushStrategy == FlushStrategy.QUERY && !context.isForceEntity()) {
-                flushCollectionOperations(context, ownerView, view, (V) value, null, collectionActions);
+                FusedCollectionActions fusedCollectionActions = null;
+                // We can't selectively delete/add if duplicates are allowed. Bags always need to be recreated
+                if (canFlushSeparateCollectionOperations()) {
+                    if (collectionActions.isEmpty()) {
+                        return;
+                    } else if (!(collectionActions.get(0) instanceof CollectionClearAction<?, ?>)) {
+                        // The replace action is handled specially
+                        fusedCollectionActions = getFusedOperations(collectionActions);
+                    }
+                }
+                flushCollectionOperations(context, ownerView, view, null, (V) value, null, fusedCollectionActions, true);
             } else {
                 // NOTE: We don't care if the actual collection and the initial collection differ
                 // If an error is desired, a user should configure optimistic locking
@@ -311,11 +320,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                         }
                         recordingCollection.resetActions(context);
                         // If the initial object was null like it happens during full flushing, we can only replace the collection
-                        if (initial == null) {
-                            replaceCollection(context, ownerView, view, null, current, FlushStrategy.QUERY);
-                        } else {
-                            flushCollectionOperations(context, ownerView, view, initial, current, embeddables, (FusedCollectionActions) null);
-                        }
+                        flushCollectionOperations(context, ownerView, view, initial, current, embeddables, (FusedCollectionActions) null, initial != null);
                     }
                 }
             } else {
@@ -330,7 +335,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                     initial = (V) ((RecordingCollection) initial).getInitialVersion();
                 }
                 List<CollectionAction<Collection<?>>> actions;
-                if (initial == null || !elementDescriptor.supportsDeepEqualityCheck() || elementDescriptor.getBasicUserType() != null && !elementDescriptor.getBasicUserType().supportsDeepCloning()) {
+                if (initial == null && replaceWithReferenceContents || !elementDescriptor.supportsDeepEqualityCheck() || elementDescriptor.getBasicUserType() != null && !elementDescriptor.getBasicUserType().supportsDeepCloning()) {
                     actions = replaceActions(current);
                 } else {
                     actions = determineCollectionActions(context, initial, current, equalityChecker);
@@ -348,11 +353,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
 
                 if (entityAttributeAccessor != null && collectionUpdatable) {
                     // If the initial object was null like it happens during full flushing, we can only replace the collection
-                    if (initial == null) {
-                        replaceCollection(context, ownerView, view, null, current, FlushStrategy.QUERY);
-                    } else {
-                        flushCollectionOperations(context, ownerView, view, initial, current, embeddables, (FusedCollectionActions) null);
-                    }
+                    flushCollectionOperations(context, ownerView, view, initial, current, embeddables, (FusedCollectionActions) null, initial != null);
                 }
             }
         }
@@ -381,11 +382,11 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         return entityReferences;
     }
 
-    protected boolean deleteElements(UpdateContext context, Object ownerView, Object view, V initial, V value, boolean removeSpecific, FusedCollectionActions fusedCollectionActions) {
+    protected boolean deleteElements(UpdateContext context, Object ownerView, Object view, V initial, V value, boolean removeSpecific, FusedCollectionActions fusedCollectionActions, boolean deleteAll) {
         DeleteCriteriaBuilder<?> deleteCb = null;
         boolean removedAll = true;
         Collection<Object> removedObjects = Collections.emptyList();
-        if (fusedCollectionActions != null) {
+        if (!deleteAll && fusedCollectionActions != null) {
             if (fusedCollectionActions.getRemoveCount() > 0) {
                 if (inverseFlusher == null) {
                     deleteCb = createCollectionDeleter(context);
@@ -467,7 +468,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         return false;
     }
 
-    protected void addElements(UpdateContext context, Object ownerView, Object view, Collection<Object> removedAllObjects, boolean flushAtOnce, boolean removedAllWithoutCollectionActions, V value, List<Object> embeddablesToUpdate, FusedCollectionActions fusedCollectionActions) {
+    protected void addElements(UpdateContext context, Object ownerView, Object view, Collection<Object> removedAllObjects, boolean flushAtOnce, boolean removedAllWithoutCollectionActions, V value, List<Object> embeddablesToUpdate, FusedCollectionActions fusedCollectionActions, boolean initialKnown) {
         Collection<Object> elementsToAdd;
         if (fusedCollectionActions == null || !removedAllObjects.isEmpty()) {
             if (elementDescriptor.getViewToEntityMapper() == null || inverseFlusher != null) {
@@ -573,28 +574,11 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         throw new UnsupportedOperationException("Not indexed!");
     }
 
-    protected void flushCollectionOperations(UpdateContext context, Object ownerView, Object view, V value, List<Object> embeddablesToUpdate, List<? extends CollectionAction<?>> collectionActions) {
-        FusedCollectionActions fusedCollectionActions = null;
-        // We can't selectively delete/add if duplicates are allowed. Bags always need to be recreated
-        if (canFlushSeparateCollectionOperations()) {
-            if (collectionActions.isEmpty()) {
-                if (embeddablesToUpdate != null) {
-                    addElements(context, ownerView, view, Collections.emptyList(), true, false, value, embeddablesToUpdate, null);
-                }
-                return;
-            } else if (!(collectionActions.get(0) instanceof CollectionClearAction<?, ?>)) {
-                // The replace action is handled specially
-                fusedCollectionActions = getFusedOperations(collectionActions);
-            }
-        }
-        flushCollectionOperations(context, ownerView, view, null, value, embeddablesToUpdate, fusedCollectionActions);
-    }
-
-    protected void flushCollectionOperations(UpdateContext context, Object ownerView, Object view, V initial, V value, List<Object> embeddablesToUpdate, FusedCollectionActions fusedCollectionActions) {
+    protected void flushCollectionOperations(UpdateContext context, Object ownerView, Object view, V initial, V value, List<Object> embeddablesToUpdate, FusedCollectionActions fusedCollectionActions, boolean initialKnown) {
         boolean removeSpecific = fusedCollectionActions != null && fusedCollectionActions.operationCount() < value.size() + 1;
         Collection<Object> removedAllObjects;
         boolean removedAllWithoutCollectionActions = false;
-        if (deleteElements(context, ownerView, view, initial, value, removeSpecific, fusedCollectionActions)) {
+        if (deleteElements(context, ownerView, view, initial, value, removeSpecific, fusedCollectionActions, !initialKnown && replaceWithReferenceContents)) {
             if (fusedCollectionActions == null) {
                 if (initial == null) {
                     removedAllObjects = Collections.emptyList();
@@ -608,7 +592,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         } else {
             removedAllObjects = Collections.emptyList();
         }
-        addElements(context, ownerView, view, removedAllObjects, true, removedAllWithoutCollectionActions, value, embeddablesToUpdate, fusedCollectionActions);
+        addElements(context, ownerView, view, removedAllObjects, true, removedAllWithoutCollectionActions, value, embeddablesToUpdate, fusedCollectionActions, initialKnown);
         if (removeListener != null) {
             for (Object removedObject : removedAllObjects) {
                 removeListener.onCollectionRemove(context, removedObject);
@@ -633,7 +617,8 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
             boolean wasDirty = false;
             boolean isRecording = value instanceof RecordingCollection<?, ?>;
             List<CollectionAction<Collection<?>>> actions = null;
-            if (isRecording) {
+            Object initial = viewAttributeAccessor.getInitialValue(view);
+            if (isRecording && (initial != null || !replaceWithReferenceContents)) {
                 RecordingCollection<Collection<?>, ?> recordingCollection = (RecordingCollection<Collection<?>, ?>) value;
 
                 if (inverseFlusher != null) {
@@ -795,30 +780,6 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         }
     }
 
-    private Map<Object, Object> getViewsFromEntities(UpdateContext context, Collection<?> initialViews, Map<Object, Object> entityMap, EqualityChecker elementEqualityChecker) {
-        if (entityMap.isEmpty()) {
-            return entityMap;
-        }
-        CompositeAttributeFlusher compositeFlusher = (CompositeAttributeFlusher) elementDescriptor.getViewToEntityMapper().getFullGraphNode();
-        Class<?> viewTypeClass = compositeFlusher.getViewTypeClass();
-        Map<Object, Object> map = new HashMap<>(entityMap.size());
-        OUTER: for (Object entity : entityMap.values()) {
-            if (initialViews != null && !initialViews.isEmpty()) {
-                for (Object initialView : initialViews) {
-                    if (elementEqualityChecker.isEqual(context, entity, initialView)) {
-                        map.put(initialView, initialView);
-                        continue OUTER;
-                    }
-                }
-            }
-
-            Object entityId = context.getEntityViewManager().getEntityIdAccessor().getValue(entity);
-            Object initialView = context.getEntityViewManager().getReference(viewTypeClass, compositeFlusher.createViewIdByEntityId(entityId));
-            map.put(initialView, initialView);
-        }
-        return map;
-    }
-
     protected List<CollectionAction<Collection<?>>> replaceActions(V value) {
         List<CollectionAction<Collection<?>>> actions = new ArrayList<>();
         actions.add(new CollectionClearAction());
@@ -903,6 +864,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 } else {
                     elementIds = (List<Object>) evm.getCriteriaBuilderFactory().create(context.getEntityManager(), ownerEntityClass, "e")
                             .where(ownerIdAttributeName).eq(ownerId)
+                            .where("e." + mapping + "." + elementDescriptor.getAttributeIdAttributeName()).isNotNull()
                             .select("e." + mapping + "." + elementDescriptor.getAttributeIdAttributeName())
                             .getResultList();
                     if (!elementIds.isEmpty() && !jpaProviderDeletesCollection) {
@@ -1050,14 +1012,14 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         if (flushStrategy == FlushStrategy.QUERY) {
             Collection<Object> removedAllObjects;
             boolean removedAllWithoutCollectionActions = false;
-            if (deleteElements(context, ownerView, view, null, value, false, null)) {
+            if (deleteElements(context, ownerView, view, null, value, false, null, true)) {
                 // TODO: We should load the initial value
                 removedAllObjects = Collections.emptyList();
                 removedAllWithoutCollectionActions = true;
             } else {
                 removedAllObjects = Collections.emptyList();
             }
-            addElements(context, ownerView, view, removedAllObjects, true, removedAllWithoutCollectionActions, value, null, null);
+            addElements(context, ownerView, view, removedAllObjects, true, removedAllWithoutCollectionActions, value, null, null, true);
             if (removeListener != null) {
                 for (Object removedObject : removedAllObjects) {
                     removeListener.onCollectionRemove(context, removedObject);
@@ -1238,7 +1200,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
             if (initial != current) {
                 // If the new collection is empty, we don't need to load the old one
                 if (current == null || ((Collection<?>) current).isEmpty()) {
-                    if (initial == null || ((Collection<?>) initial).isEmpty()) {
+                    if (initial != null && ((Collection<?>) initial).isEmpty()) {
                         return null;
                     }
                     if (inverseFlusher != null) {
@@ -1255,7 +1217,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                     return partialFlusher(false, PluralFlushOperation.COLLECTION_REPLACE_ONLY, Collections.EMPTY_LIST, Collections.<CollectionElementAttributeFlusher<E, V>>emptyList());
                 }
                 // If the initial collection is empty, we also don't need to load the old one
-                if (initial == null || ((Collection<?>) initial).isEmpty()) {
+                if (initial == null && replaceWithReferenceContents || initial != null && ((Collection<?>) initial).isEmpty()) {
                     // Always reset the actions as that indicates changes
                     if (inverseFlusher != null) {
                         // TODO: Should "replace" mean that we also remove values that were added in the meantime?
@@ -1290,7 +1252,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                                 equalityChecker = new IdentityEqualityChecker(elementDescriptor.getBasicUserType());
                             }
                             List<CollectionAction<Collection<?>>> actions;
-                            if (initial == null) {
+                            if (initial == null && replaceWithReferenceContents) {
                                 actions = replaceActions((V) current);
                             } else {
                                 actions = determineCollectionActions(context, (V) initial, (V) current, equalityChecker);
@@ -1311,7 +1273,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                             equalityChecker = new IdentityEqualityChecker(elementDescriptor.getBasicUserType());
                         }
                         List<CollectionAction<Collection<?>>> actions;
-                        if (initial == null) {
+                        if (initial == null && replaceWithReferenceContents) {
                             actions = replaceActions((V) current);
                         } else {
                             actions = determineCollectionActions(context, (V) initial, (V) current, equalityChecker);
@@ -1326,7 +1288,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 }
             } else {
                 // If the initial and current reference are null or empty, no need to do anything further
-                if (initial == null || !(initial instanceof RecordingCollection<?, ?>) && ((Collection<?>) initial).isEmpty()) {
+                if (initial != null && !(initial instanceof RecordingCollection<?, ?>) && ((Collection<?>) initial).isEmpty()) {
                     return null;
                 }
                 // Skip doing anything if the collections kept being empty
@@ -1437,7 +1399,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
             return partialFlusher(false, PluralFlushOperation.ELEMENT_ONLY, Collections.EMPTY_LIST, elementFlushers);
         }
 
-        if (collectionActions.size() > current.size()) {
+        if (initial == null && replaceWithReferenceContents || initial != null && collectionActions.size() > current.size()) {
             // More collection actions means more statements are issued
             // We'd rather replace in such a case
             if (elementDescriptor.shouldFlushMutations()) {
@@ -1447,7 +1409,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
             }
         } else {
             // Reset the actions since we determined new actions
-            if (current instanceof RecordingCollection<?, ?>) {
+            if (initial != null && current instanceof RecordingCollection<?, ?>) {
                 RecordingCollection<Collection<?>, ?> recordingCollection = (RecordingCollection<Collection<?>, ?>) current;
                 recordingCollection.initiateActionsAgainstState(collectionActions, initial);
             }
@@ -1605,7 +1567,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
 
     @Override
     protected boolean collectionEquals(V initial, V current) {
-        if (initial.size() != current.size()) {
+        if (initial == null || initial.size() != current.size()) {
             return false;
         }
 

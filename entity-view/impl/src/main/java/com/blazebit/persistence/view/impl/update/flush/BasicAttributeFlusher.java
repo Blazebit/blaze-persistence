@@ -127,7 +127,9 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
 
     @Override
     public V cloneDeep(Object view, V oldValue, V newValue) {
-        if (updatable) {
+        if (newValue == null) {
+            return newValue;
+        } else if (updatable) {
             return (V) elementDescriptor.getBasicUserType().deepClone(newValue);
         } else {
             return oldValue;

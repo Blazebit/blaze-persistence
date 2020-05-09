@@ -64,6 +64,8 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
     protected final PluralFlushOperation flushOperation;
     protected final List<? extends A> collectionActions;
     protected final List<CollectionElementAttributeFlusher<E, V>> elementFlushers;
+    // For now, we always replace the collections contents with the ones from the reference view, but at some point we might support an "additive" mode
+    protected final boolean replaceWithReferenceContents = true;
 
     @SuppressWarnings("unchecked")
     public AbstractPluralAttributeFlusher(String attributeName, String mapping, boolean fetch, Class<?> ownerEntityClass, String ownerIdAttributeName, String ownerMapping, DirtyAttributeFlusher<?, ?, ?> ownerIdFlusher, DirtyAttributeFlusher<?, ?, ?> elementFlusher, boolean supportsCollectionDml, FlushStrategy flushStrategy, AttributeAccessor entityAttributeAccessor,

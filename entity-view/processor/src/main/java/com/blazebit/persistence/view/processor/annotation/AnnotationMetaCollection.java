@@ -72,7 +72,7 @@ public class AnnotationMetaCollection extends AnnotationMetaAttribute {
     }
 
     @Override
-    public void appendDefaultValue(StringBuilder sb, boolean createEmpty, ImportContext importContext) {
+    public void appendDefaultValue(StringBuilder sb, boolean createEmpty, boolean createConstructor, ImportContext importContext) {
         if (createEmpty) {
             if (getElement().getKind() == ElementKind.PARAMETER) {
                 sb.append("new ").append(importCollectionType(importContext)).append("<>()");
@@ -91,8 +91,13 @@ public class AnnotationMetaCollection extends AnnotationMetaAttribute {
                 }
             }
         } else {
-            super.appendDefaultValue(sb, createEmpty, importContext);
+            super.appendDefaultValue(sb, createEmpty, createConstructor, importContext);
         }
+    }
+
+    @Override
+    public boolean isCreateEmptyFlatViews() {
+        return false;
     }
 
     private String importCollectionType(ImportContext importContext) {

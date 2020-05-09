@@ -357,7 +357,7 @@ public class ProxyFactory {
             addGetJpaManagedClass(cc, managedViewType.getEntityClass());
             addGetJpaManagedBaseClass(cc, getJpaManagedBaseClass(managedViewType));
             addGetEntityViewClass(cc, clazz);
-            addIsNewMembers(managedViewType, cc, clazz);
+            addIsNewAndReferenceMembers(managedViewType, cc, clazz);
 
             CtField evmField = new CtField(pool.get(EntityViewManager.class.getName()), SerializableEntityViewManager.EVM_FIELD_NAME, cc);
             evmField.setModifiers(Modifier.PUBLIC | Modifier.STATIC | Modifier.VOLATILE);
@@ -1091,14 +1091,14 @@ public class ProxyFactory {
         cc.addMethod(CtMethod.make(minfo, cc));
     }
 
-    private void addIsNewMembers(ManagedViewType<?> managedViewType, CtClass cc, Class<?> clazz) throws CannotCompileException, NotFoundException {
+    private void addIsNewAndReferenceMembers(ManagedViewType<?> managedViewType, CtClass cc, Class<?> clazz) throws CannotCompileException, NotFoundException {
+        CtField kindField = new CtField(CtClass.byteType, "$$_kind", cc);
+        kindField.setModifiers(getModifiers(true));
+        cc.addField(kindField);
+        cc.addMethod(CtMethod.make("public boolean $$_isReference() { return $0.$$_kind == (byte) 1; }", cc));
         if (managedViewType.isCreatable()) {
-            CtField isNewField = new CtField(CtClass.booleanType, "$$_isNew", cc);
-            isNewField.setModifiers(getModifiers(true));
-            cc.addField(isNewField);
-
-            addGetter(cc, isNewField, "$$_isNew");
-            addSetter(null, cc, isNewField, "$$_setIsNew", null, false, false);
+            cc.addMethod(CtMethod.make("public boolean $$_isNew() { return $0.$$_kind == (byte) 2; }", cc));
+            cc.addMethod(CtMethod.make("public void $$_setIsNew(boolean isNew) { if (isNew) { $0.$$_kind = (byte) 2; } else { $0.$$_kind = (byte) 0; } }", cc));
         } else {
             ClassPool classPool = cc.getClassPool();
             try {
@@ -1794,7 +1794,7 @@ public class ProxyFactory {
         // When the declaring type is updatable/creatable we only allow setting the id value on new objects
         if (isId) {
             if (attribute != null && attribute.getDeclaringType().isCreatable()) {
-                sb.append("\tif (!$0.$$_isNew) {\n");
+                sb.append("\tif ($0.$$_kind != (byte) 2) {\n");
                 sb.append("\t\tthrow new IllegalArgumentException(\"Updating the id attribute '").append(attribute.getName()).append("' is only allowed for new entity view objects created via EntityViewManager.create()!\");\n");
                 sb.append("\t}\n");
             } else if (attribute != null && attribute.getDeclaringType().isUpdatable()) {
@@ -2545,7 +2545,9 @@ public class ProxyFactory {
         }
 
         if (kind == ConstructorKind.CREATE && managedViewType.isCreatable()) {
-            sb.append("\t$0.$$_isNew = true;\n");
+            sb.append("\t$0.$$_kind = (byte) 2;\n");
+        } else if (kind == ConstructorKind.REFERENCE) {
+            sb.append("\t$0.$$_kind = (byte) 1;\n");
         }
 
         for (int i = 0; i < attributeFields.length; i++) {
@@ -2581,7 +2583,7 @@ public class ProxyFactory {
                             sb.append("\t");
                         }
                         sb.append("\tmutableStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
-                        if (initialStateField != null) {
+                        if (initialStateField != null && kind != ConstructorKind.REFERENCE) {
                             sb.append("initialStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
                         }
                         sb.append(getDefaultValueForObject(type)).append(";\n");
@@ -2594,7 +2596,7 @@ public class ProxyFactory {
                             sb.append("\t}\n");
                         }
 
-                        if (initialStateField != null) {
+                        if (initialStateField != null && kind != ConstructorKind.REFERENCE) {
                             sb.append("initialStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
                             sb.append(getDefaultValueForObject(type)).append(";\n");
                         }
@@ -2605,89 +2607,89 @@ public class ProxyFactory {
                     if (mutableStateField != null) {
                         sb.append("mutableStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
 
-                        if (initialStateField != null) {
+                        if (initialStateField != null && (kind != ConstructorKind.REFERENCE || methodAttribute instanceof SingularAttribute<?, ?> && ((SingularAttribute) methodAttribute).isCreateEmptyFlatView())) {
                             sb.append("initialStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
                         }
                     }
-                    if (kind == ConstructorKind.CREATE) {
-                        // init embeddables and collections
-                        if (methodAttribute instanceof PluralAttribute<?, ?, ?>) {
-                            PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) methodAttribute;
-                            addAllowedSubtypeField(attributeFields[i].getDeclaringClass(), methodAttribute);
-                            addParentRequiringUpdateSubtypesField(attributeFields[i].getDeclaringClass(), methodAttribute);
-                            addParentRequiringCreateSubtypesField(attributeFields[i].getDeclaringClass(), methodAttribute);
+                    // init embeddables and collections
+                    if (methodAttribute instanceof PluralAttribute<?, ?, ?>) {
+                        PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) methodAttribute;
+                        addAllowedSubtypeField(attributeFields[i].getDeclaringClass(), methodAttribute);
+                        addParentRequiringUpdateSubtypesField(attributeFields[i].getDeclaringClass(), methodAttribute);
+                        addParentRequiringCreateSubtypesField(attributeFields[i].getDeclaringClass(), methodAttribute);
 
-                            switch (pluralAttribute.getCollectionType()) {
-                                case MAP:
-                                    if (pluralAttribute.isSorted()) {
-                                        sb.append("new ").append(RecordingNavigableMap.class.getName()).append('(');
-                                        sb.append("(java.util.NavigableMap) new java.util.TreeMap(");
-                                        if (pluralAttribute.getComparatorClass() != null) {
-                                            sb.append("new ").append(pluralAttribute.getComparatorClass().getName()).append("()");
-                                        }
-                                        sb.append("),");
-                                    } else if (pluralAttribute.isOrdered()) {
-                                        sb.append("new ").append(RecordingMap.class.getName()).append('(');
-                                        sb.append("(java.util.Map) new java.util.LinkedHashMap(),true,");
-                                    } else {
-                                        sb.append("new ").append(RecordingMap.class.getName()).append('(');
-                                        sb.append("(java.util.Map) new java.util.HashMap(),false,");
+                        switch (pluralAttribute.getCollectionType()) {
+                            case MAP:
+                                if (pluralAttribute.isSorted()) {
+                                    sb.append("new ").append(RecordingNavigableMap.class.getName()).append('(');
+                                    sb.append("(java.util.NavigableMap) new java.util.TreeMap(");
+                                    if (pluralAttribute.getComparatorClass() != null) {
+                                        sb.append("new ").append(pluralAttribute.getComparatorClass().getName()).append("()");
                                     }
-                                    break;
-                                case SET:
-                                    if (pluralAttribute.isSorted()) {
-                                        sb.append("new ").append(RecordingNavigableSet.class.getName()).append('(');
-                                        sb.append("(java.util.NavigableSet) new java.util.TreeSet(");
-                                        if (pluralAttribute.getComparatorClass() != null) {
-                                            sb.append("new ").append(pluralAttribute.getComparatorClass().getName()).append("()");
-                                        }
-                                        sb.append("),");
-                                    } else if (pluralAttribute.isOrdered()) {
-                                        sb.append("new ").append(RecordingSet.class.getName()).append('(');
-                                        sb.append("(java.util.Set) new java.util.LinkedHashSet(),true,");
-                                    } else {
-                                        sb.append("new ").append(RecordingSet.class.getName()).append('(');
-                                        sb.append("(java.util.Set) new java.util.HashSet(),false,");
+                                    sb.append("),");
+                                } else if (pluralAttribute.isOrdered()) {
+                                    sb.append("new ").append(RecordingMap.class.getName()).append('(');
+                                    sb.append("(java.util.Map) new java.util.LinkedHashMap(),true,");
+                                } else {
+                                    sb.append("new ").append(RecordingMap.class.getName()).append('(');
+                                    sb.append("(java.util.Map) new java.util.HashMap(),false,");
+                                }
+                                break;
+                            case SET:
+                                if (pluralAttribute.isSorted()) {
+                                    sb.append("new ").append(RecordingNavigableSet.class.getName()).append('(');
+                                    sb.append("(java.util.NavigableSet) new java.util.TreeSet(");
+                                    if (pluralAttribute.getComparatorClass() != null) {
+                                        sb.append("new ").append(pluralAttribute.getComparatorClass().getName()).append("()");
                                     }
-                                    break;
-                                case LIST:
-                                    sb.append("new ").append(RecordingList.class.getName()).append('(');
-                                    sb.append("(java.util.List) new java.util.ArrayList(),");
-                                    sb.append(pluralAttribute.isIndexed()).append(',');
-                                    break;
-                                default:
-                                    sb.append("new ").append(RecordingCollection.class.getName()).append('(');
-                                    sb.append("(java.util.Collection) new java.util.ArrayList(),false,false,");
-                                    break;
-                            }
-                            sb.append(attributeFields[i].getDeclaringClass().getName()).append('#');
-                            sb.append(methodAttribute.getName()).append("_$$_subtypes").append(',');
-                            sb.append(attributeFields[i].getDeclaringClass().getName()).append('#');
-                            sb.append(methodAttribute.getName()).append("_$$_parentRequiringUpdateSubtypes").append(',');
-                            sb.append(attributeFields[i].getDeclaringClass().getName()).append('#');
-                            sb.append(methodAttribute.getName()).append("_$$_parentRequiringCreateSubtypes").append(',');
-                            sb.append(methodAttribute.isUpdatable()).append(',');
-                            sb.append(methodAttribute.isOptimizeCollectionActionsEnabled()).append(',');
-                            sb.append(strictCascadingCheck);
-                            sb.append(");\n");
-                        } else {
-                            SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) methodAttribute;
-                            if (singularAttribute.isCreateEmptyFlatView()) {
-                                ManagedViewTypeImplementor<Object> attributeManagedViewType = (ManagedViewTypeImplementor<Object>) singularAttribute.getType();
-                                String proxyClassName = getProxy(entityViewManager, attributeManagedViewType).getName();
-                                sb.append("new ");
-                                sb.append(proxyClassName);
-                                sb.append("((").append(proxyClassName).append(") null, $2);\n");
-                            } else if (methodAttribute.getMappingType() == Attribute.MappingType.PARAMETER) {
-                                sb.append("(").append(methodAttribute.getJavaType().getName());
-                                sb.append(") $2.get(\"").append(((MappingAttribute<?, ?>) methodAttribute).getMapping()).append("\");\n");
-                            } else {
-                                sb.append("null;\n");
-                            }
+                                    sb.append("),");
+                                } else if (pluralAttribute.isOrdered()) {
+                                    sb.append("new ").append(RecordingSet.class.getName()).append('(');
+                                    sb.append("(java.util.Set) new java.util.LinkedHashSet(),true,");
+                                } else {
+                                    sb.append("new ").append(RecordingSet.class.getName()).append('(');
+                                    sb.append("(java.util.Set) new java.util.HashSet(),false,");
+                                }
+                                break;
+                            case LIST:
+                                sb.append("new ").append(RecordingList.class.getName()).append('(');
+                                sb.append("(java.util.List) new java.util.ArrayList(),");
+                                sb.append(pluralAttribute.isIndexed()).append(',');
+                                break;
+                            default:
+                                sb.append("new ").append(RecordingCollection.class.getName()).append('(');
+                                sb.append("(java.util.Collection) new java.util.ArrayList(),false,false,");
+                                break;
                         }
+                        sb.append(attributeFields[i].getDeclaringClass().getName()).append('#');
+                        sb.append(methodAttribute.getName()).append("_$$_subtypes").append(',');
+                        sb.append(attributeFields[i].getDeclaringClass().getName()).append('#');
+                        sb.append(methodAttribute.getName()).append("_$$_parentRequiringUpdateSubtypes").append(',');
+                        sb.append(attributeFields[i].getDeclaringClass().getName()).append('#');
+                        sb.append(methodAttribute.getName()).append("_$$_parentRequiringCreateSubtypes").append(',');
+                        sb.append(methodAttribute.isUpdatable()).append(',');
+                        sb.append(methodAttribute.isOptimizeCollectionActionsEnabled()).append(',');
+                        sb.append(strictCascadingCheck);
+                        sb.append(");\n");
                     } else {
-                        // Attributes for reference constructors don't initialize objects
-                        sb.append("null;\n");
+                        SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) methodAttribute;
+                        if (singularAttribute.isCreateEmptyFlatView()) {
+                            ManagedViewTypeImplementor<Object> attributeManagedViewType = (ManagedViewTypeImplementor<Object>) singularAttribute.getType();
+                            String proxyClassName = getProxy(entityViewManager, attributeManagedViewType).getName();
+                            sb.append("new ");
+                            sb.append(proxyClassName);
+                            sb.append("((").append(proxyClassName).append(") null, ");
+                            if (kind == ConstructorKind.CREATE) {
+                                sb.append("$2);\n");
+                            } else {
+                                sb.append("java.util.Collections.emptyMap());\n");
+                            }
+                        } else if (kind == ConstructorKind.CREATE && methodAttribute.getMappingType() == Attribute.MappingType.PARAMETER) {
+                            sb.append("(").append(methodAttribute.getJavaType().getName());
+                            sb.append(") $2.get(\"").append(((MappingAttribute<?, ?>) methodAttribute).getMapping()).append("\");\n");
+                        } else {
+                            sb.append("null;\n");
+                        }
                     }
                     if (possiblyInitialized) {
                         if (mutableStateField != null) {
@@ -2696,7 +2698,7 @@ public class ProxyFactory {
                             renderValueForArray(sb, type, "$0." + attributeFields[i].getName());
                             sb.append(";\n");
 
-                            if (initialStateField != null) {
+                            if (initialStateField != null && kind != ConstructorKind.REFERENCE) {
                                 sb.append("\t\tinitialStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
                                 sb.append(getDefaultValueForObject(type)).append(";\n");
                             }
@@ -3009,35 +3011,33 @@ public class ProxyFactory {
         if (mutableStateField != null) {
             sb.append("\t$0.$$_initialized = true;\n");
         }
-        if (kind != ConstructorKind.REFERENCE) {
-            for (int i = 0; i < attributeFields.length; i++) {
-                if (attributeFields[i] == null) {
-                    continue;
-                }
+        for (int i = 0; i < attributeFields.length; i++) {
+            if (attributeFields[i] == null) {
+                continue;
+            }
 
-                AbstractMethodAttribute<?, ?> methodAttribute = attributes[i];
-                if (methodAttribute != null && methodAttribute.hasDirtyStateIndex()) {
-                    if (!methodAttribute.getConvertedJavaType().isPrimitive() && mutableStateField != null && (methodAttribute.isCollection() || methodAttribute.isSubview())) {
-                        sb.append("\tif ($0.").append(attributeFields[i].getName()).append(" != null) {\n");
+            AbstractMethodAttribute<?, ?> methodAttribute = attributes[i];
+            if (methodAttribute != null && methodAttribute.hasDirtyStateIndex()) {
+                if (!methodAttribute.getConvertedJavaType().isPrimitive() && mutableStateField != null && (methodAttribute.isCollection() || methodAttribute.isSubview())) {
+                    sb.append("\tif ($0.").append(attributeFields[i].getName()).append(" != null) {\n");
 
-                        // $(i + 1).setParent(this, attributeIndex)
-                        if (methodAttribute.isCollection()) {
-                            // Collections must be "mutable" for a recording implementation to be used
-                            if (methodAttribute.getDirtyStateIndex() != -1) {
-                                if (methodAttribute instanceof MapAttribute<?, ?, ?>) {
-                                    sb.append("\t\t((").append(RecordingMap.class.getName()).append(") $0.").append(attributeFields[i].getName()).append(").$$_setParent($0, ").append(methodAttribute.getDirtyStateIndex()).append(");\n");
-                                } else {
-                                    sb.append("\t\t((").append(RecordingCollection.class.getName()).append(") $0.").append(attributeFields[i].getName()).append(").$$_setParent($0, ").append(methodAttribute.getDirtyStateIndex()).append(");\n");
-                                }
+                    // $(i + 1).setParent(this, attributeIndex)
+                    if (methodAttribute.isCollection()) {
+                        // Collections must be "mutable" for a recording implementation to be used
+                        if (methodAttribute.getDirtyStateIndex() != -1) {
+                            if (methodAttribute instanceof MapAttribute<?, ?, ?>) {
+                                sb.append("\t\t((").append(RecordingMap.class.getName()).append(") $0.").append(attributeFields[i].getName()).append(").$$_setParent($0, ").append(methodAttribute.getDirtyStateIndex()).append(");\n");
+                            } else {
+                                sb.append("\t\t((").append(RecordingCollection.class.getName()).append(") $0.").append(attributeFields[i].getName()).append(").$$_setParent($0, ").append(methodAttribute.getDirtyStateIndex()).append(");\n");
                             }
-                        } else if (methodAttribute.isSubview()) {
-                            sb.append("\t\tif ($0.").append(attributeFields[i].getName()).append(" instanceof ").append(DirtyTracker.class.getName()).append(") {\n");
-                            sb.append("\t\t\t((").append(DirtyTracker.class.getName()).append(") $0.").append(attributeFields[i].getName()).append(").$$_setParent($0, ").append(methodAttribute.getDirtyStateIndex()).append(");\n");
-                            sb.append("\t\t}\n");
                         }
-
-                        sb.append("\t}\n");
+                    } else if (methodAttribute.isSubview()) {
+                        sb.append("\t\tif ($0.").append(attributeFields[i].getName()).append(" instanceof ").append(DirtyTracker.class.getName()).append(") {\n");
+                        sb.append("\t\t\t((").append(DirtyTracker.class.getName()).append(") $0.").append(attributeFields[i].getName()).append(").$$_setParent($0, ").append(methodAttribute.getDirtyStateIndex()).append(");\n");
+                        sb.append("\t\t}\n");
                     }
+
+                    sb.append("\t}\n");
                 }
             }
         }

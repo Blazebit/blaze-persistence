@@ -22,6 +22,7 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
@@ -87,7 +88,7 @@ public class LimitTest extends AbstractEntityViewTest {
     }
 
     @Test
-    @Category({ NoOracle.class, NoMySQLOld.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
+    @Category({ NoOracle.class, NoMySQLOld.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
     // We need a left entity join for this so Hibernate < 5.1 can't be used
     // Our Oracle version does not support lateral yet, only after 12c
     // MySQL before 8 didn't support lateral and also don't support correlated LIMIT subqueries in quantified predicates

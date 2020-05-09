@@ -45,7 +45,7 @@ public class CountFunction extends AbstractWindowFunction {
     protected void renderArguments(FunctionRenderContext context, WindowFunction windowFunction) {
         if (windowFunction.getArguments().isEmpty()) {
             List<String> filterExpressions = windowFunction.getFilterExpressions();
-            if (filterExpressions.isEmpty()) {
+            if (filterExpressions.isEmpty() || supportsFilterClause) {
                 context.addChunk("*");
             } else {
                 String caseWhenPre = getCaseWhenPre(filterExpressions);

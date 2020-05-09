@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.update.flush;
 
 import com.blazebit.persistence.DeleteCriteriaBuilder;
 import com.blazebit.persistence.InsertCriteriaBuilder;
+import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.UpdateCriteriaBuilder;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.InverseRemoveStrategy;
@@ -73,7 +74,7 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
 
     @Override
     protected boolean collectionEquals(V initial, V current) {
-        if (initial.size() != current.size()) {
+        if (initial == null || initial.size() != current.size()) {
             return false;
         }
 
@@ -184,7 +185,7 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
     }
 
     @Override
-    protected void addElements(UpdateContext context, Object ownerView, Object view, Collection<Object> removedAllObjects, boolean flushAtOnce, boolean removedAllWithoutCollectionActions, V value, List<Object> embeddablesToUpdate, FusedCollectionActions fusedCollectionActions) {
+    protected void addElements(UpdateContext context, Object ownerView, Object view, Collection<Object> removedAllObjects, boolean flushAtOnce, boolean removedAllWithoutCollectionActions, V value, List<Object> embeddablesToUpdate, FusedCollectionActions fusedCollectionActions, boolean initialKnown) {
         Collection<Object> appends;
         int appendIndex;
         String mapping = getMapping();
@@ -269,7 +270,18 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
             } else {
                 insertCb.fromIdentifiableValues((Class<Object>) elementDescriptor.getJpaType(), attributeIdAttributeName, "val", 1);
             }
-            insertCb.bind("INDEX(" + mapping + ")").select("FUNCTION('TREAT_INTEGER', :idx)");
+            if (initialKnown) {
+                insertCb.bind("INDEX(" + mapping + ")").select("FUNCTION('TREAT_INTEGER', :idx)");
+            } else {
+                SubqueryBuilder<? extends InsertCriteriaBuilder<?>> subquery = insertCb.bind("INDEX(" + mapping + ")")
+                        .selectSubquery("subquery", "COALESCE(subquery + 1, 0)")
+                        .from(ownerEntityClass, "sub")
+                        .select("MAX(INDEX(sub." + mapping + "))");
+                for (int i = 0; i < ownerIdBindFragments.length; i += 2) {
+                    subquery.where("sub." + ownerIdBindFragments[i]).eqExpression(ownerIdBindFragments[i + 1]);
+                }
+                subquery.end();
+            }
             for (int i = 0; i < ownerIdBindFragments.length; i += 2) {
                 insertCb.bind(ownerIdBindFragments[i]).select(ownerIdBindFragments[i + 1]);
             }
@@ -288,7 +300,9 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
                             throw new IllegalStateException("Collection " + attributeName + " references an unsaved transient instance - save the transient instance before flushing: " + object);
                         }
                         singletonArray[0] = object;
-                        query.setParameter("idx", appendIndex++);
+                        if (initialKnown) {
+                            query.setParameter("idx", appendIndex++);
+                        }
                         query.setParameter("val", singletonList);
                         query.executeUpdate();
                     }
@@ -298,7 +312,9 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
                 for (Object object : appends) {
                     if (object != null) {
                         singletonArray[0] = loadOnlyViewToEntityMapper.applyToEntity(context, null, object);
-                        query.setParameter("idx", appendIndex++);
+                        if (initialKnown) {
+                            query.setParameter("idx", appendIndex++);
+                        }
                         query.setParameter("val", singletonList);
                         query.executeUpdate();
                     }

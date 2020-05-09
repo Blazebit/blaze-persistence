@@ -382,6 +382,7 @@ public final class InverseFlusher<E> {
         EntityViewManagerImpl evm = context.getEntityViewManager();
         List<Object> elementIds = (List<Object>) evm.getCriteriaBuilderFactory().create(context.getEntityManager(), parentEntityClass, "e")
                 .where(parentIdAttributeName).eq(ownerId)
+                .where("e." + attributeName + "." + childIdAttributeName).isNotNull()
                 .select("e." + attributeName + "." + childIdAttributeName)
                 .getResultList();
         if (!elementIds.isEmpty()) {
@@ -463,7 +464,7 @@ public final class InverseFlusher<E> {
                 int updated = q.executeUpdate();
 
                 if (updated != 1) {
-                    throw new OptimisticLockException(null, element);
+                    throw new OptimisticLockException("The update operation did not return the expected update count!", null, element);
                 }
             }
             context.removeOrphans(orphanRemovalStartIndex);

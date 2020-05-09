@@ -38,4 +38,9 @@ public class PercentRankFunction extends AbstractWindowFunction {
     public Class<?> getReturnType(Class<?> firstArgumentType) {
         return Double.class;
     }
+
+    @Override
+    protected boolean requiresOver() {
+        return true;
+    }
 }

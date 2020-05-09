@@ -33,6 +33,7 @@ public class BViewImpl<X extends Serializable> extends BaseView_com_blazebit_per
     }
 
     public BViewImpl(Integer id) {
+        this.$$_kind = (byte) 1;
         this.id = id;
         if (this.name == null) {
             this.name = null;
@@ -167,6 +168,7 @@ public class BViewImpl<X extends Serializable> extends BaseView_com_blazebit_per
         this.parent = parent;
     }
 
+    private byte $$_kind;
     @Override
     public Class<?> $$_getJpaManagedClass() { return BView.class; }
     @Override
@@ -175,6 +177,10 @@ public class BViewImpl<X extends Serializable> extends BaseView_com_blazebit_per
     public Class<?> $$_getEntityViewClass() { return BView.class; }
     @Override
     public boolean $$_isNew() { return false; }
+    @Override
+    public boolean $$_isReference() {
+        return $$_kind == (byte) 1;
+    }
     @Override
     public Object $$_getId() { return id; }
     @Override

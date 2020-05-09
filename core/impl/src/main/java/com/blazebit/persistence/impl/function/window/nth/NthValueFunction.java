@@ -33,4 +33,9 @@ public class NthValueFunction extends AbstractWindowFunction {
         super(FUNCTION_NAME, dbmsDialect.isNullSmallest(), dbmsDialect.supportsWindowNullPrecedence(), dbmsDialect.supportsFilterClause(), true);
     }
 
+    @Override
+    protected boolean requiresOver() {
+        return true;
+    }
+
 }

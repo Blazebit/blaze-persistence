@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.parser.expression;
 
+import com.blazebit.persistence.parser.predicate.Predicate;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -35,27 +37,25 @@ public class AggregateExpression extends FunctionExpression {
         this.distinct = distinct;
     }
 
-    /**
-     * Constructor for COUNT(*)
-     */
-    public AggregateExpression() {
-        super("COUNT", Collections.<Expression>emptyList());
-        this.distinct = false;
+    public AggregateExpression(boolean distinct, String functionName, List<Expression> expressions, Predicate filterPredicate) {
+        super(functionName, expressions, filterPredicate == null ? null : new WindowDefinition(null, filterPredicate));
+        this.distinct = distinct;
     }
 
     @Override
     public AggregateExpression copy(ExpressionCopyContext copyContext) {
-        if (!distinct && expressions.isEmpty()) {
-            return new AggregateExpression();
+        int size = expressions.size();
+        List<Expression> newExpressions;
+        if (size == 0) {
+            newExpressions = Collections.emptyList();
         } else {
-            int size = expressions.size();
-            List<Expression> newExpressions = new ArrayList<Expression>(size);
+            newExpressions = new ArrayList<>(size);
 
             for (int i = 0; i < size; i++) {
                 newExpressions.add(expressions.get(i).copy(copyContext));
             }
-            return new AggregateExpression(distinct, functionName, newExpressions);
         }
+        return new AggregateExpression(distinct, functionName, newExpressions, windowDefinition == null ? null : windowDefinition.getFilterPredicate().copy(copyContext));
     }
 
     public boolean isDistinct() {

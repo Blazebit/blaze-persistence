@@ -65,7 +65,9 @@ public interface MetaAttribute {
 
     boolean supportsDirtyTracking();
 
-    void appendDefaultValue(StringBuilder sb, boolean forCreateConstructor, ImportContext importContext);
+    void appendDefaultValue(StringBuilder sb, boolean createEmpty, boolean createConstructor, ImportContext importContext);
+
+    boolean isCreateEmptyFlatViews();
 
     String getMetaType();
 

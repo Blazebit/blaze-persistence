@@ -60,8 +60,6 @@ import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
 import com.blazebit.persistence.view.impl.metamodel.BasicTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.ViewTypeImplementor;
-import com.blazebit.persistence.view.spi.type.DirtyStateTrackable;
-import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.update.flush.BasicAttributeFlusher;
 import com.blazebit.persistence.view.impl.update.flush.CollectionAttributeFlusher;
 import com.blazebit.persistence.view.impl.update.flush.CompositeAttributeFlusher;
@@ -89,7 +87,9 @@ import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.metamodel.ViewType;
+import com.blazebit.persistence.view.spi.type.DirtyStateTrackable;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
+import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 import com.blazebit.persistence.view.spi.type.VersionBasicUserType;
 
 import javax.persistence.Query;
@@ -118,7 +118,6 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
 
     public static final String WHERE_CLAUSE_PREFIX = "_";
 
-    private final boolean fullFlush;
     private final boolean rootUpdateAllowed;
     private final ManagedViewTypeImplementor<?> managedViewType;
     private final FlushStrategy flushStrategy;
@@ -135,7 +134,6 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
         evm.addUpdater(viewType, declaredViewType, owner, ownerMapping, this);
         Class<?> entityClass = viewType.getEntityClass();
         this.managedViewType = viewType;
-        this.fullFlush = viewType.getFlushMode() == FlushMode.FULL;
         this.flushStrategy = viewType.getFlushStrategy();
         EntityMetamodel entityMetamodel = evm.getMetamodel().getEntityMetamodel();
         ExtendedManagedType<?> extendedManagedType = entityMetamodel.getManagedType(ExtendedManagedType.class, entityClass);
@@ -598,7 +596,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
     @Override
     @SuppressWarnings("unchecked")
     public <T extends DirtyAttributeFlusher<T, E, V>, E, V> DirtyAttributeFlusher<T, E, V> getNestedDirtyFlusher(UpdateContext context, MutableStateTrackable updatableProxy, DirtyAttributeFlusher<T, E, V> fullFlusher) {
-        if (context.isForceFull() || fullFlush) {
+        if (context.isForceFull() || managedViewType.getFlushMode() == FlushMode.FULL) {
             if (fullFlusher != null) {
                 return fullFlusher;
             } else {
@@ -698,7 +696,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                 int updated = query.executeUpdate();
 
                 if (updated != 1) {
-                    throw new OptimisticLockException(entity, updatableProxy);
+                    throw new OptimisticLockException("The update operation did not return the expected update count!", entity, updatableProxy);
                 }
             }
             context.removeOrphans(orphanRemovalStartIndex);

@@ -180,9 +180,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
                                     break;
                                 case "cascade":
                                     List<AnnotationValue> annotationValues = (List<AnnotationValue>) entry.getValue().getValue();
-                                    if (annotationValues.isEmpty()) {
-                                        mutable = false;
-                                    }
+                                    mutable = !annotationValues.isEmpty();
                                     break;
                                 default:
                                     break;
@@ -386,17 +384,27 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
     }
 
     @Override
-    public void appendDefaultValue(StringBuilder sb, boolean createEmpty, ImportContext importContext) {
+    public void appendDefaultValue(StringBuilder sb, boolean createEmpty, boolean createConstructor, ImportContext importContext) {
         if (createEmpty && createEmptyFlatViews) {
             if (!type.equals(realType)) {
                 sb.append("(").append(realType).append(") ");
             }
             String attributeImplementationType = importContext.importType(getGeneratedTypePrefix() + ImplementationClassWriter.IMPL_CLASS_NAME_SUFFIX);
             sb.append("new ").append(attributeImplementationType).append("((")
-                    .append(attributeImplementationType).append(") null, optionalParameters)");
+                    .append(attributeImplementationType).append(") null, ");
+            if (createConstructor) {
+                sb.append("optionalParameters)");
+            } else {
+                sb.append(importContext.importType(Collections.class.getName())).append(".emptyMap())");
+            }
         } else {
             sb.append(TypeUtils.getDefaultValue(typeMirror.getKind()));
         }
+    }
+
+    @Override
+    public boolean isCreateEmptyFlatViews() {
+        return createEmptyFlatViews;
     }
 
     public Map<String, TypeElement> getOptionalParameters() {
@@ -508,7 +516,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
             if (idMember) {
                 if (parent.isCreatable()) {
 
-                    sb.append("        if (!$$_isNew) {").append(NEW_LINE);
+                    sb.append("        if ($$_kind != (byte) 2) {").append(NEW_LINE);
                     sb.append("            throw new IllegalArgumentException(\"Updating the id attribute '")
                             .append(getPropertyName())
                             .append("' is only allowed for new entity view objects created via EntityViewManager.create()!\");")

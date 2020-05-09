@@ -133,9 +133,7 @@ public final class ImplementationClassWriter {
 
         MetaAttribute version = entity.getVersionMember();
         sb.append(NEW_LINE);
-        if (entity.isCreatable()) {
-            sb.append("    private boolean $$_isNew;").append(NEW_LINE);
-        }
+        sb.append("    private byte $$_kind;").append(NEW_LINE);
         if (entity.isCreatable() || entity.isUpdatable()) {
             sb.append("    private final Object[] $$_initialState;").append(NEW_LINE);
             sb.append("    private final Object[] $$_mutableState;").append(NEW_LINE);
@@ -166,10 +164,14 @@ public final class ImplementationClassWriter {
         sb.append("    @Override").append(NEW_LINE);
         sb.append("    public boolean $$_isNew() {").append(NEW_LINE);
         if (entity.isCreatable()) {
-            sb.append("        return $$_isNew;").append(NEW_LINE);
+            sb.append("        return $$_kind == (byte) 2;").append(NEW_LINE);
         } else {
             sb.append("        return false;").append(NEW_LINE);
         }
+        sb.append("    }").append(NEW_LINE);
+        sb.append("    @Override").append(NEW_LINE);
+        sb.append("    public boolean $$_isReference() {").append(NEW_LINE);
+        sb.append("        return $$_kind == (byte) 1;").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
         sb.append("    @Override").append(NEW_LINE);
@@ -352,7 +354,11 @@ public final class ImplementationClassWriter {
             sb.append("    @Override").append(NEW_LINE);
             sb.append("    public void $$_setIsNew(boolean isNew) {").append(NEW_LINE);
             if (entity.isCreatable()) {
-                sb.append("        this.$$_isNew = isNew;").append(NEW_LINE);
+                sb.append("        if (isNew) {").append(NEW_LINE);
+                sb.append("            this.$$_kind = (byte) 2;").append(NEW_LINE);
+                sb.append("        } else {").append(NEW_LINE);
+                sb.append("            this.$$_kind = (byte) 0;").append(NEW_LINE);
+                sb.append("        }").append(NEW_LINE);
             } else {
                 sb.append("        // No-op").append(NEW_LINE);
             }
@@ -1526,7 +1532,7 @@ public final class ImplementationClassWriter {
                 if (possiblyInitialized) {
                     sb.append("            if (this.").append(member.getPropertyName()).append(" == ");
                     if (member.isPrimitive()) {
-                        member.appendDefaultValue(sb, false, entity.getImplementationImportContext());
+                        member.appendDefaultValue(sb, false, true, entity.getImplementationImportContext());
                     } else {
                         sb.append("null");
                     }
@@ -1619,7 +1625,7 @@ public final class ImplementationClassWriter {
                 if (possiblyInitialized) {
                     sb.append("            if (this.").append(member.getPropertyName()).append(" == ");
                     if (member.isPrimitive()) {
-                        member.appendDefaultValue(sb, false, entity.getImplementationImportContext());
+                        member.appendDefaultValue(sb, false, true, entity.getImplementationImportContext());
                     } else {
                         sb.append("null");
                     }
@@ -1659,7 +1665,7 @@ public final class ImplementationClassWriter {
             MetaEntityView entity = member.getHostingEntity();
             sb.append("        if (this.").append(member.getPropertyName()).append(" == ");
             if (member.isPrimitive()) {
-                member.appendDefaultValue(sb, false, entity.getImplementationImportContext());
+                member.appendDefaultValue(sb, false, true, entity.getImplementationImportContext());
             } else {
                 sb.append("null");
             }
@@ -1734,7 +1740,7 @@ public final class ImplementationClassWriter {
                 if (possiblyInitialized) {
                     sb.append("            if (this.").append(member.getPropertyName()).append(" == ");
                     if (member.isPrimitive()) {
-                        member.appendDefaultValue(sb, false, entity.getImplementationImportContext());
+                        member.appendDefaultValue(sb, false, true, entity.getImplementationImportContext());
                     } else {
                         sb.append("null");
                     }
@@ -1795,7 +1801,7 @@ public final class ImplementationClassWriter {
             sb.append("        Object[] initialStateArr = new Object[").append(entity.getMutableAttributeCount()).append("];").append(NEW_LINE);
             sb.append("        Object[] mutableStateArr = new Object[").append(entity.getMutableAttributeCount()).append("];").append(NEW_LINE);
             if (entity.isCreatable()) {
-                sb.append("        this.$$_isNew = true;").append(NEW_LINE);
+                sb.append("        this.$$_kind = (byte) 2;").append(NEW_LINE);
             }
         }
 
@@ -1809,12 +1815,12 @@ public final class ImplementationClassWriter {
             if (member.getKind() == MappingKind.PARAMETER) {
                 if (member.isPrimitive()) {
                     sb.append("!optionalParameters.containsKey(\"").append(member.getMapping()).append("\") ? ");
-                    member.appendDefaultValue(sb, false, entity.getBuilderImportContext());
+                    member.appendDefaultValue(sb, false, true, entity.getBuilderImportContext());
                     sb.append(" : ");
                 }
                 sb.append("(").append(member.getImplementationTypeString()).append(") optionalParameters.get(\"").append(member.getMapping()).append("\")");
             } else {
-                member.appendDefaultValue(sb, true, entity.getImplementationImportContext());
+                member.appendDefaultValue(sb, true, true, entity.getImplementationImportContext());
             }
 
             if (member.getDirtyStateIndex() != -1) {
@@ -1948,7 +1954,7 @@ public final class ImplementationClassWriter {
         sb.append("        ").append(idMember.getImplementationTypeString()).append(" ").append(idMember.getPropertyName());
         sb.append(") {");
         sb.append(NEW_LINE);
-
+        sb.append("        this.$$_kind = (byte) 1;").append(NEW_LINE);
         if (entity.isCreatable() || entity.isUpdatable()) {
             if (entity.getDefaultDirtyMask() != 0) {
                 sb.append("        this.$$_dirty |= ").append(entity.getDefaultDirtyMask()).append("L;").append(NEW_LINE);
@@ -1966,10 +1972,13 @@ public final class ImplementationClassWriter {
                 sb.append("        this.").append(member.getPropertyName()).append(" = ");
                 if (member.getDirtyStateIndex() != -1) {
                     sb.append("(").append(member.getImplementationTypeString()).append(") (mutableStateArr[").append(member.getDirtyStateIndex()).append("] = ");
-                    sb.append("initialStateArr[").append(member.getDirtyStateIndex()).append("] = ");
+                    // note that we are not initializing the initial state array on purpose because anything that is "dirty" should be considered for flushing
+                    if (member.isCreateEmptyFlatViews()) {
+                        sb.append("initialStateArr[").append(member.getDirtyStateIndex()).append("] = ");
+                    }
                 }
 
-                member.appendDefaultValue(sb, false, entity.getImplementationImportContext());
+                member.appendDefaultValue(sb, true, false, entity.getImplementationImportContext());
                 if (member.getDirtyStateIndex() != -1) {
                     sb.append(")");
                 }
@@ -1981,11 +1990,7 @@ public final class ImplementationClassWriter {
             }
         }
 
-        if (entity.isCreatable() || entity.isUpdatable()) {
-            sb.append("        this.$$_initialState = initialStateArr;").append(NEW_LINE);
-            sb.append("        this.$$_mutableState = mutableStateArr;").append(NEW_LINE);
-            sb.append("        this.$$_initialized = true;").append(NEW_LINE);
-        }
+        printDirtyTrackerRegistration(sb, entity);
         sb.append("    }");
         sb.append(NEW_LINE);
     }

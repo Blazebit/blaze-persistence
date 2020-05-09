@@ -93,8 +93,8 @@ public class VersionAttributeFlusher<E, V> extends BasicAttributeFlusher<E, V> {
     @Override
     public boolean flushEntity(UpdateContext context, E entity, Object ownerView, Object view, V value, Runnable postReplaceListener) {
         Object entityValue = entityAttributeAccessor.getValue(entity);
-        if (value != entityValue && !elementDescriptor.getBasicUserType().isDeepEqual(value, entityValue)) {
-            throw new OptimisticLockException(entity, view);
+        if (value == null || value != entityValue && !elementDescriptor.getBasicUserType().isDeepEqual(value, entityValue)) {
+            throw new OptimisticLockException("The version value of the loaded entity [" + entityValue + "] and the view [" + value + "] do not match!", entity, view);
         }
         V nextValue = nextValue(value);
         // When the attribute is a JPA version we don't update the value
@@ -112,7 +112,7 @@ public class VersionAttributeFlusher<E, V> extends BasicAttributeFlusher<E, V> {
         if (entity != null) {
             Object entityValue = entityAttributeAccessor.getValue(entity);
             if (value != entityValue && !elementDescriptor.getBasicUserType().isDeepEqual(value, entityValue)) {
-                throw new OptimisticLockException(entity, view);
+                throw new OptimisticLockException("The version value of the loaded entity [" + entityValue + "] and the view [" + value + "] do not match!", entity, view);
             }
         }
         return Collections.emptyList();

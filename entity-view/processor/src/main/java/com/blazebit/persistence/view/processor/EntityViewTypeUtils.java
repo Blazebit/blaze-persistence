@@ -106,7 +106,7 @@ public final class EntityViewTypeUtils {
     }
 
     private static void mutable(Map<String, Mutability> mutability, String fqcn) {
-        mutability.put(fqcn, Mutability.IMMUTABLE);
+        mutability.put(fqcn, Mutability.MUTABLE);
     }
 
     private static void trackable(Map<String, Mutability> mutability, String fqcn) {

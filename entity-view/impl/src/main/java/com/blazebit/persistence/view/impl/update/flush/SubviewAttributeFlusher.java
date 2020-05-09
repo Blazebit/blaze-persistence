@@ -224,7 +224,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
                         int updated = q.executeUpdate();
 
                         if (updated != 1) {
-                            throw new OptimisticLockException(null, finalValue);
+                            throw new OptimisticLockException("The update operation did not return the expected update count!", null, finalValue);
                         }
                     }
                     context.removeOrphans(orphanRemovalStartIndex);
@@ -273,7 +273,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
                         int updated = q.executeUpdate();
 
                         if (updated != 1) {
-                            throw new OptimisticLockException(null, value);
+                            throw new OptimisticLockException("The update operation did not return the expected update count!", null, value);
                         }
                     }
                     context.removeOrphans(orphanRemovalStartIndex);
@@ -319,7 +319,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
                     int updated = q.executeUpdate();
 
                     if (updated != 1) {
-                        throw new OptimisticLockException(null, realValue);
+                        throw new OptimisticLockException("The update operation did not return the expected update count!", null, realValue);
                     }
                 }
                 context.removeOrphans(orphanRemovalStartIndex);

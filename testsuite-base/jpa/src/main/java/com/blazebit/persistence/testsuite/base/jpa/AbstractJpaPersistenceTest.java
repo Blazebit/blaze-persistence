@@ -275,6 +275,7 @@ public abstract class AbstractJpaPersistenceTest {
     @Before
     public void init() {
         boolean firstTest = lastTestClass != getClass();
+        boolean veryFirstTest = lastTestClass == null;
         lastTestClass = getClass();
         // If a previous test run resolved the no-op cleaner, we won't be able to resolve any other cleaner
         if (resolvedNoop) {
@@ -331,7 +332,7 @@ public abstract class AbstractJpaPersistenceTest {
         jpaProvider = cbf.getService(JpaProvider.class);
         dbmsDialect = cbf.getService(DbmsDialect.class);
 
-        if (schemaChanged || !databaseCleaner.supportsClearSchema()) {
+        if (veryFirstTest || schemaChanged || !databaseCleaner.supportsClearSchema()) {
             recreateOrClearSchema();
             setUpOnce();
         } else if (firstTest) {

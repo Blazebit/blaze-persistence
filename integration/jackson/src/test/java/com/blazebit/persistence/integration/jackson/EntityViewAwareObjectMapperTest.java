@@ -305,4 +305,27 @@ public class EntityViewAwareObjectMapperTest {
         String getName();
         void setName(String name);
     }
+
+    @Test
+    public void testUpdatableWithCollectionWithSetter() throws Exception {
+        EntityViewAwareObjectMapper mapper = mapper(UpdatableWithCollectionWithSetter.class, NameView.class);
+        ObjectReader objectReader = mapper.readerFor(mapper.getObjectMapper().constructType(UpdatableWithCollectionWithSetter.class));
+        UpdatableWithCollectionWithSetter view = objectReader.readValue("{\"id\":1, \"name\": \"test\", \"children\": [{\"id\": 1}]}");
+        Assert.assertFalse(((EntityViewProxy) view).$$_isNew());
+        Assert.assertEquals(1L, view.getId());
+        Assert.assertEquals("test", view.getName());
+        Assert.assertEquals(1L, view.getChildren().iterator().next().getId());
+        Assert.assertEquals(1, view.getChildren().size());
+    }
+
+    @EntityView(SomeEntity.class)
+    @UpdatableEntityView
+    interface UpdatableWithCollectionWithSetter {
+        @IdMapping
+        long getId();
+        String getName();
+        void setName(String name);
+        Set<NameView> getChildren();
+        void setChildren(Set<NameView> children);
+    }
 }

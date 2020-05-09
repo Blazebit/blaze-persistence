@@ -130,7 +130,7 @@ public final class BuilderClassWriter {
                 if (metaMember.getKind() == MappingKind.PARAMETER) {
                     if (metaMember.isPrimitive()) {
                         sb.append("!optionalParameters.containsKey(\"").append(metaMember.getMapping()).append("\") ? ");
-                        metaMember.appendDefaultValue(sb, false, entity.getBuilderImportContext());
+                        metaMember.appendDefaultValue(sb, false, true, entity.getBuilderImportContext());
                         sb.append(" : ");
                     }
                     sb.append("            this.").append(metaMember.getPropertyName()).append(" = (").append(entity.builderImportType(metaMember.getImplementationTypeString())).append(") optionalParameters.get(\"").append(metaMember.getMapping()).append("\");").append(NEW_LINE);
@@ -172,7 +172,7 @@ public final class BuilderClassWriter {
                 sb.append("                case ").append(i).append(":").append(NEW_LINE);
                 sb.append("                    this.").append(metaMember.getPropertyName()).append(" = ");
                 sb.append("value == null ? ");
-                metaMember.appendDefaultValue(sb, true, entity.getBuilderImportContext());
+                metaMember.appendDefaultValue(sb, true, true, entity.getBuilderImportContext());
                 sb.append(" : ");
                 sb.append("(").append(metaMember.getImplementationTypeString()).append(") value;").append(NEW_LINE);
                 sb.append("                    break;").append(NEW_LINE);
@@ -259,7 +259,7 @@ public final class BuilderClassWriter {
             if (metaMember.getKind() == MappingKind.PARAMETER) {
                 if (metaMember.isPrimitive()) {
                     sb.append("!optionalParameters.containsKey(\"").append(metaMember.getMapping()).append("\") ? ");
-                    metaMember.appendDefaultValue(sb, false, entity.getBuilderImportContext());
+                    metaMember.appendDefaultValue(sb, false, true, entity.getBuilderImportContext());
                     sb.append(" : ");
                 }
                 sb.append("            this.").append(metaMember.getPropertyName()).append(" = (").append(entity.builderImportType(metaMember.getImplementationTypeString())).append(") optionalParameters.get(\"").append(metaMember.getMapping()).append("\");").append(NEW_LINE);
@@ -301,7 +301,7 @@ public final class BuilderClassWriter {
             sb.append("            case ").append(i).append(":").append(NEW_LINE);
             sb.append("                this.").append(metaMember.getPropertyName()).append(" = ");
             sb.append("value == null ? ");
-            metaMember.appendDefaultValue(sb, true, entity.getBuilderImportContext());
+            metaMember.appendDefaultValue(sb, true, true, entity.getBuilderImportContext());
             sb.append(" : ");
             sb.append("(").append(metaMember.getImplementationTypeString()).append(") value;").append(NEW_LINE);
             sb.append("                break;").append(NEW_LINE);
@@ -670,7 +670,7 @@ public final class BuilderClassWriter {
             sb.append("            case \"").append(metaMember.getPropertyName()).append("\":").append(NEW_LINE);
             sb.append("                this.").append(metaMember.getPropertyName()).append(" = ");
             sb.append("value == null ? ");
-            metaMember.appendDefaultValue(sb, true, entity.getBuilderImportContext());
+            metaMember.appendDefaultValue(sb, true, true, entity.getBuilderImportContext());
             sb.append(" : ");
             sb.append("(").append(metaMember.getImplementationTypeString()).append(") value;").append(NEW_LINE);
             sb.append("                break;").append(NEW_LINE);
@@ -1201,12 +1201,12 @@ public final class BuilderClassWriter {
             if (member.getKind() == MappingKind.PARAMETER) {
                 if (member.isPrimitive()) {
                     sb.append("!optionalParameters.containsKey(\"").append(member.getMapping()).append("\") ? ");
-                    member.appendDefaultValue(sb, false, entity.getBuilderImportContext());
+                    member.appendDefaultValue(sb, false, true, entity.getBuilderImportContext());
                     sb.append(" : ");
                 }
                 sb.append("(").append(entity.builderImportType(member.getImplementationTypeString())).append(") optionalParameters.get(\"").append(member.getMapping()).append("\")").append(NEW_LINE);
             } else {
-                member.appendDefaultValue(sb, true, entity.getBuilderImportContext());
+                member.appendDefaultValue(sb, true, true, entity.getBuilderImportContext());
             }
             sb.append(";");
             sb.append(NEW_LINE);
