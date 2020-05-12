@@ -108,6 +108,7 @@
 
         <!-- Plugin versions -->
         <version.processor.plugin>3.3.2</version.processor.plugin>
+        <version.exec.plugin>1.6.0</version.exec.plugin>
         <version.injection.plugin>1.0.2</version.injection.plugin>
         <version.moditect.plugin>1.0.0.Beta1</version.moditect.plugin>
         <version.release.plugin>2.5.1</version.release.plugin>
@@ -117,6 +118,7 @@
         <asmVersion>7.2</asmVersion>
 
         <version.h2>1.4.200</version.h2>
+        <mssql.version>7.2.2.jre8</mssql.version>
 
         <!-- JVM values for surefire plugin -->
         <!-- Has a default value for Travis; MUST be set to smaller for 32-bit environment -->
@@ -535,7 +537,7 @@
             <dependency>
                 <groupId>com.microsoft.sqlserver</groupId>
                 <artifactId>mssql-jdbc</artifactId>
-                <version>7.2.2.jre8</version>
+                <version>${mssql.version}</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>
@@ -548,6 +550,11 @@
                     <groupId>org.bsc.maven</groupId>
                     <artifactId>maven-processor-plugin</artifactId>
                     <version>${version.processor.plugin}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>exec-maven-plugin</artifactId>
+                    <version>${version.exec.plugin}</version>
                 </plugin>
                 <plugin>
                     <groupId>de.m3y.maven</groupId>

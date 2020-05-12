@@ -423,6 +423,59 @@
                             </dependency>
                         </dependencies>
                     </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>recreate-schema</id>
+                                <phase>generate-test-sources</phase>
+                                <goals>
+                                    <goal>java</goal>
+                                </goals>
+                                <configuration>
+                                    <skip>${skipTests}</skip>
+                                    <mainClass>com.blazebit.persistence.testsuite.base.jpa.SchemaClearer</mainClass>
+                                    <systemProperties>
+                                        <systemProperty>
+                                            <key>jdbc.url</key>
+                                            <value>jdbc:sqlserver://localhost:1433</value>
+                                        </systemProperty>
+                                        <systemProperty>
+                                            <key>jdbc.user</key>
+                                            <value>sa</value>
+                                        </systemProperty>
+                                        <systemProperty>
+                                            <key>jdbc.password</key>
+                                            <value>Blaze-Persistence</value>
+                                        </systemProperty>
+                                        <systemProperty>
+                                            <key>jdbc.driver</key>
+                                            <value>com.microsoft.sqlserver.jdbc.SQLServerDriver</value>
+                                        </systemProperty>
+                                    </systemProperties>
+                                    <includePluginDependencies>true</includePluginDependencies>
+                                </configuration>
+                            </execution>
+                        </executions>
+                        <dependencies>
+                            <dependency>
+                                <groupId>${project.groupId}</groupId>
+                                <artifactId>blaze-persistence-testsuite-base-jpa</artifactId>
+                                <version>${project.version}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>org.hibernate</groupId>
+                                <artifactId>hibernate-entitymanager</artifactId>
+                                <version>${version.hibernate-4.3}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>com.microsoft.sqlserver</groupId>
+                                <artifactId>mssql-jdbc</artifactId>
+                                <version>${mssql.version}</version>
+                            </dependency>
+                        </dependencies>
+                    </plugin>
                 </plugins>
             </build>
             <dependencies>
