@@ -45,4 +45,9 @@ public class LeadFunction extends AbstractWindowFunction {
             context.addChunk(caseWhenPost);
         }
     }
+
+    @Override
+    protected boolean requiresOver() {
+        return true;
+    }
 }

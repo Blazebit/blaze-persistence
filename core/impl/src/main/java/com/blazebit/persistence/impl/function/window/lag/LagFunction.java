@@ -46,4 +46,9 @@ public class LagFunction extends AbstractWindowFunction {
         }
     }
 
+    @Override
+    protected boolean requiresOver() {
+        return true;
+    }
+
 }

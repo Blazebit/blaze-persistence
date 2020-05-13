@@ -77,7 +77,7 @@ public class JoinCorrelationBuilder implements CorrelationBuilder {
 
     public void finish() {
         if (correlationBuilder instanceof SubqueryBuilder<?>) {
-            ((SubqueryBuilder<?>) correlationBuilder).end();
+            ((SubqueryBuilder<JoinOnBuilder<?>>) correlationBuilder).end().end();
         } else  if (correlationBuilder instanceof FullSelectCTECriteriaBuilder<?>) {
             ((FullSelectCTECriteriaBuilder<?>) correlationBuilder).end();
         }
@@ -95,8 +95,8 @@ public class JoinCorrelationBuilder implements CorrelationBuilder {
         } else {
             if (getService(DbmsDialect.class).getLateralStyle() == LateralStyle.NONE) {
                 checkLimitSupport();
-                criteriaBuilder.from(entityClass, correlationExternalAlias);
-                SubqueryBuilder<?> subqueryBuilder = criteriaBuilder.where(correlationExternalAlias).in().from(entityClass, correlationAlias);
+                JoinOnBuilder<?> joinOnBuilder = criteriaBuilder.leftJoinOn(joinBase, entityClass, correlationExternalAlias);
+                SubqueryBuilder<?> subqueryBuilder = joinOnBuilder.on(correlationExternalAlias).in().from(entityClass, correlationAlias);
                 limiter.apply(parameterHolder, optionalParameters, subqueryBuilder);
                 this.correlationBuilder = subqueryBuilder;
                 return subqueryBuilder.getService(JoinOnBuilder.class);
@@ -121,8 +121,8 @@ public class JoinCorrelationBuilder implements CorrelationBuilder {
         } else {
             if (getService(DbmsDialect.class).getLateralStyle() == LateralStyle.NONE) {
                 checkLimitSupport();
-                criteriaBuilder.from(entityType, correlationExternalAlias);
-                SubqueryBuilder<?> subqueryBuilder = criteriaBuilder.where(correlationExternalAlias).in().from(entityType, correlationAlias);
+                JoinOnBuilder<?> joinOnBuilder = criteriaBuilder.leftJoinOn(joinBase, entityType, correlationExternalAlias);
+                SubqueryBuilder<?> subqueryBuilder = joinOnBuilder.on(correlationExternalAlias).in().from(entityType, correlationAlias);
                 limiter.apply(parameterHolder, optionalParameters, subqueryBuilder);
                 this.correlationBuilder = subqueryBuilder;
                 return subqueryBuilder.getService(JoinOnBuilder.class);

@@ -105,7 +105,7 @@ public abstract class AbstractDeleteCollectionCriteriaBuilder<T, X extends BaseD
         }
         this.elementType = join.getType();
         if (collectionAttribute.getJoinTable() == null && "".equals(collectionAttribute.getMappedBy())) {
-            throw new IllegalArgumentException("Unsupported collection attribute that doesn't have a join table or a mapped by attribute!");
+            throw new IllegalArgumentException("Cannot delete from the collection attribute '" + collectionName + "' of entity class '" + clazz.getName() + "' because it doesn't have a join table or a mapped by attribute!");
         }
 
         if (collectionAttribute.getMappedBy() != null) {

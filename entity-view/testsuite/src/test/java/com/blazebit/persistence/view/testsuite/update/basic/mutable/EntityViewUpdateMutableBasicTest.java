@@ -24,6 +24,7 @@ import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.change.ChangeModel;
 import com.blazebit.persistence.view.change.SingularChangeModel;
+import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 import com.blazebit.persistence.view.testsuite.update.basic.AbstractEntityViewUpdateBasicTest;
 import com.blazebit.persistence.view.testsuite.update.basic.mutable.model.UpdatableDocumentBasicView;
 import org.junit.Test;
@@ -34,10 +35,7 @@ import org.junit.runners.Parameterized;
 import java.util.Arrays;
 import java.util.Date;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  *
@@ -153,6 +151,28 @@ public class EntityViewUpdateMutableBasicTest extends AbstractEntityViewUpdateBa
         assertVersionDiff(oldVersion, docView.getVersion(), 1, isQueryStrategy() ? 2 : 1);
         assertEquals(0, doc1.getLastModified().getTime());
         assertEquals(doc1.getVersion(), docView.getVersion());
+    }
+
+    @Test
+    public void testUpdateViaReference() {
+        doc1.setArchived(true);
+        final UpdatableDocumentBasicView docView = evm.getReference(UpdatableDocumentBasicView.class, doc1.getId());
+        ((MutableStateTrackable) docView).$$_setVersion(doc1.getVersion());
+
+        // When
+        docView.setName("doc1");
+        docView.setArchived(false);
+        update(docView);
+
+        // Then
+        restartTransactionAndReload();
+        assertEquals("doc1", doc1.getName());
+        assertEquals(false, doc1.isArchived());
+        if (isFullMode()) {
+            assertNull(doc1.getLastModified());
+        } else {
+            assertNotNull(doc1.getLastModified());
+        }
     }
 
     private void fullFetchUpdateAndReload(UpdatableDocumentBasicView docView) {

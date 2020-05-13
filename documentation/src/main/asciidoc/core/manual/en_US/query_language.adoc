@@ -2,7 +2,7 @@
 
 WARNING: Note that this is just a specification work in progress that is not yet implemented.
 
-The query language that can be used with {projectname} is a super-set of JPQL and we like to call it JPQL.next.
+The query language that can be used with {projectname} is a super-set of JPQL and we like to call it JPQL.Next.
 It adds support for various more modern DBMS features that depending on the native DBMS support pass through as expected or are emulated.
 This is a reference overview of the language, the specific features and the support matrices are in other sections that are referenced.
 

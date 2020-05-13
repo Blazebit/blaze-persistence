@@ -56,6 +56,14 @@ public interface EntityViewProxy {
     public boolean $$_isNew();
 
     /**
+     * Whether the instance was created via {@link com.blazebit.persistence.view.EntityViewManager#getReference(Class, Object)}.
+     *
+     * @return True if the instance is a reference, otherwise false
+     * @since 1.5.0
+     */
+    public boolean $$_isReference();
+
+    /**
      * Returns the identifier object of this entity view if it has one, otherwise <code>null</code>.
      *
      * @return The identifier or <code>null</code>

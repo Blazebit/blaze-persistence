@@ -88,7 +88,7 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
         join.getParent().setDeReferenceFunction(mainQuery.jpaProvider.getCustomFunctionInvocation(CollectionDmlSupportFunction.FUNCTION_NAME, 1));
         this.elementType = join.getType();
         if (collectionAttribute.getJoinTable() == null && "".equals(collectionAttribute.getMappedBy())) {
-            throw new IllegalArgumentException("Unsupported collection attribute that doesn't have a join table or a mapped by attribute!");
+            throw new IllegalArgumentException("Cannot update the collection attribute '" + collectionName + "' of entity class '" + clazz.getName() + "' because it doesn't have a join table or a mapped by attribute!");
         }
         if (collectionAttribute.getMappedBy() != null) {
             // Use a different alias to properly prefix paths with the collection role alias

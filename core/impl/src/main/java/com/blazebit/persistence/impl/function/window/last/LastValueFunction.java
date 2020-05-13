@@ -33,4 +33,9 @@ public class LastValueFunction extends AbstractWindowFunction {
         super(FUNCTION_NAME, dbmsDialect.isNullSmallest(), dbmsDialect.supportsWindowNullPrecedence(), dbmsDialect.supportsFilterClause(), true);
     }
 
+    @Override
+    protected boolean requiresOver() {
+        return true;
+    }
+
 }

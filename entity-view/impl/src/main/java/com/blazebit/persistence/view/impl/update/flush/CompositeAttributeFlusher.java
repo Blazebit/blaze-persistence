@@ -30,18 +30,18 @@ import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.impl.collection.RecordingMap;
 import com.blazebit.persistence.view.impl.entity.EntityLoader;
 import com.blazebit.persistence.view.impl.entity.EntityTupleizer;
+import com.blazebit.persistence.view.impl.entity.FlusherBasedEntityLoader;
 import com.blazebit.persistence.view.impl.entity.ReferenceEntityLoader;
+import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.mapper.ViewMapper;
-import com.blazebit.persistence.view.spi.type.DirtyTracker;
 import com.blazebit.persistence.view.impl.update.EntityViewUpdaterImpl;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
-import com.blazebit.persistence.view.impl.entity.FlusherBasedEntityLoader;
-import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
-import com.blazebit.persistence.view.spi.type.DirtyStateTrackable;
-import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.update.UpdateQueryFactory;
 import com.blazebit.persistence.view.spi.type.BasicDirtyTracker;
+import com.blazebit.persistence.view.spi.type.DirtyStateTrackable;
+import com.blazebit.persistence.view.spi.type.DirtyTracker;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
+import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 
 import javax.persistence.Parameter;
 import javax.persistence.Query;
@@ -857,7 +857,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
     @Override
     public List<PostFlushDeleter> remove(UpdateContext context, Object entity, Object view, Object value) {
         EntityViewProxy entityView = (EntityViewProxy) value;
-        if (entityView instanceof MutableStateTrackable) {
+        if (entityView instanceof MutableStateTrackable && !entityView.$$_isReference()) {
             MutableStateTrackable updatableProxy = (MutableStateTrackable) entityView;
 
             // Only remove objects that are
@@ -1013,7 +1013,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                         ReturningResult<Tuple> result = cb.executeWithReturning(returningAttributes.toArray(new String[returningAttributes.size()]));
                         if (version != null && versionFlusher != null) {
                             if (result.getUpdateCount() != 1) {
-                                throw new OptimisticLockException(entity, view);
+                                throw new OptimisticLockException("The remove operation did not return the expected update count!", entity, view);
                             }
                         }
                         returnedValues = result.getLastResult().toArray();
@@ -1044,7 +1044,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                     versionFlusher.flushQueryInitialVersion(context, EntityViewUpdaterImpl.WHERE_CLAUSE_PREFIX, query, view, version);
                     int updated = query.executeUpdate();
                     if (updated != 1) {
-                        throw new OptimisticLockException(entity, view);
+                        throw new OptimisticLockException("The remove operation did not return the expected update count!", entity, view);
                     }
                 } else {
                     Query query = context.getEntityManager().createQuery(deleteQuery);

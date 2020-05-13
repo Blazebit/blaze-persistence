@@ -16,8 +16,11 @@
 
 package com.blazebit.persistence.view.testsuite.update.entity.creatable.model;
 
+import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.view.CascadeType;
+import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.UpdatableEntityView;
 import com.blazebit.persistence.view.UpdatableMapping;
 import com.blazebit.persistence.view.testsuite.update.entity.model.UpdatableDocumentEntityViewBase;
 
@@ -26,6 +29,8 @@ import com.blazebit.persistence.view.testsuite.update.entity.model.UpdatableDocu
  * @author Christian Beikov
  * @since 1.2.0
  */
+@UpdatableEntityView
+@EntityView(Document.class)
 public interface UpdatableDocumentEntityView extends UpdatableDocumentEntityViewBase {
 
     @UpdatableMapping(cascade = { CascadeType.PERSIST })

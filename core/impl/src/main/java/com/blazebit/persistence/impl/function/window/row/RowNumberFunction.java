@@ -46,4 +46,9 @@ public class RowNumberFunction extends AbstractWindowFunction {
     protected void renderArguments(FunctionRenderContext context, WindowFunction windowFunction) {
         // No-op
     }
+
+    @Override
+    protected boolean requiresOver() {
+        return true;
+    }
 }

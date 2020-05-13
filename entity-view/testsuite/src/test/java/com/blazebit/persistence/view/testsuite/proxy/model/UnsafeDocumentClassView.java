@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.view.testsuite.proxy.model;
 
+import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingParameter;
 
@@ -24,6 +26,7 @@ import com.blazebit.persistence.view.MappingParameter;
  * @author Christian Beikov
  * @since 1.0.0
  */
+@EntityView(Document.class)
 public abstract class UnsafeDocumentClassView implements DocumentInterfaceView {
 
     private static final long serialVersionUID = 1L;

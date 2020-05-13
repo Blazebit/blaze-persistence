@@ -44,17 +44,17 @@ public final class TypeUtils {
     private static final Map<TypeKind, String> PRIMITIVE_WRAPPERS = new HashMap<>();
 
     static {
-        PRIMITIVE_WRAPPERS.put(TypeKind.CHAR, "Character");
+        PRIMITIVE_WRAPPERS.put(TypeKind.CHAR, "java.lang.Character");
 
-        PRIMITIVE_WRAPPERS.put(TypeKind.BYTE, "Byte");
-        PRIMITIVE_WRAPPERS.put(TypeKind.SHORT, "Short");
-        PRIMITIVE_WRAPPERS.put(TypeKind.INT, "Integer");
-        PRIMITIVE_WRAPPERS.put(TypeKind.LONG, "Long");
+        PRIMITIVE_WRAPPERS.put(TypeKind.BYTE, "java.lang.Byte");
+        PRIMITIVE_WRAPPERS.put(TypeKind.SHORT, "java.lang.Short");
+        PRIMITIVE_WRAPPERS.put(TypeKind.INT, "java.lang.Integer");
+        PRIMITIVE_WRAPPERS.put(TypeKind.LONG, "java.lang.Long");
 
-        PRIMITIVE_WRAPPERS.put(TypeKind.BOOLEAN, "Boolean");
+        PRIMITIVE_WRAPPERS.put(TypeKind.BOOLEAN, "java.lang.Boolean");
 
-        PRIMITIVE_WRAPPERS.put(TypeKind.FLOAT, "Float");
-        PRIMITIVE_WRAPPERS.put(TypeKind.DOUBLE, "Double");
+        PRIMITIVE_WRAPPERS.put(TypeKind.FLOAT, "java.lang.Float");
+        PRIMITIVE_WRAPPERS.put(TypeKind.DOUBLE, "java.lang.Double");
     }
 
     private TypeUtils() {

@@ -137,7 +137,7 @@ public class DefaultDbmsDialect implements DbmsDialect {
 
     @Override
     public boolean supportsFilterClause() {
-        return true;
+        return false;
     }
 
     @Override

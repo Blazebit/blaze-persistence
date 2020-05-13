@@ -354,8 +354,9 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         if (windowDefinition != null) {
             Predicate filterPredicate = windowDefinition.getFilterPredicate();
             if (filterPredicate != null) {
-                sb.append("'FILTER',");
+                sb.append("'FILTER',CASE WHEN ");
                 filterPredicate.accept(this);
+                sb.append(" THEN 1 ELSE 0 END");
             }
 
             List<Expression> partitionExpressions = windowDefinition.getPartitionExpressions();

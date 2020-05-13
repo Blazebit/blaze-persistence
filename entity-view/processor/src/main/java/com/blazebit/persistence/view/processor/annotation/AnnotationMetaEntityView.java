@@ -239,6 +239,7 @@ public class AnnotationMetaEntityView implements MetaEntityView {
                     value.setDirtyStateIndex(dirtyStateIndex);
                     if (!value.supportsDirtyTracking()) {
                         allSupportDirtyTracking = false;
+                        defaultDirtyMask |= 1 << dirtyStateIndex;
                     }
                     dirtyStateIndex++;
                 }

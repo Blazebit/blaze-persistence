@@ -25,6 +25,7 @@ import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.change.ChangeModel;
 import com.blazebit.persistence.view.change.PluralChangeModel;
 import com.blazebit.persistence.view.change.SingularChangeModel;
+import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 import com.blazebit.persistence.view.testsuite.update.basic.AbstractEntityViewUpdateBasicCollectionsTest;
 import com.blazebit.persistence.view.testsuite.update.basic.mutable.model.UpdatableDocumentBasicWithCollectionsView;
 import org.junit.Test;
@@ -33,6 +34,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import static org.junit.Assert.*;
 
@@ -189,6 +191,23 @@ public class EntityViewUpdateMutableBasicCollectionsTest extends AbstractEntityV
         assertNoUpdateAndReload(docView);
         assertEquals(doc1.getStrings(), docView.getStrings());
         assertEquals(doc1.getVersion(), docView.getVersion());
+    }
+
+    @Test
+    public void testUpdateReferenceAddToCollection() {
+        // Given
+        final UpdatableDocumentBasicWithCollectionsView docView = evm.getReference(UpdatableDocumentBasicWithCollectionsView.class, doc1.getId());
+        ((MutableStateTrackable) docView).$$_setVersion(doc1.getVersion());
+
+        // When
+        docView.setName("doc1");
+        docView.getStrings().add("test");
+        update(docView);
+
+        // Then
+        restartTransactionAndReload();
+        assertEquals("doc1", doc1.getName());
+        assertEquals(Collections.singletonList("test"), doc1.getStrings());
     }
 
     protected void assertChangesUpdateAndFlush(UpdatableDocumentBasicWithCollectionsView docView) {

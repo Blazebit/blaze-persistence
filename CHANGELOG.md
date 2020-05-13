@@ -51,9 +51,13 @@ Not yet released
 * Fix a method not found error happening in the spring-data 2.2 integration
 * Fix support for updating embeddables in update criteria builder
 * Write core and entity-view documentation about entity array expressions
+* Fix `FILTER` clause support for aggregate and window functions
+* Fix flushing of dirty state of entity view references
+* Fix sub-builder support for `JoinOnBuilder` which previously didn't add sub-built predicates to the main conjunct
 
 ### Backwards-incompatible changes
 
+* Entity view annotations on entity view setters now lead to a validation error. Please remove entity view annotations from setters
 * `AttributeFilterProvider` was change in a source incompatible way because it introduced a type variable for the filter value. Subclasses should specify the type or pass through the type variable if the filter value type is like the attribute type
 * `SubGraph` and thus also `EntityViewSetting` methods for typed fetching `fetch(Attribute)` was replaced by `fetch(MethodSingularAttribute)` and `fetch(MethodPluralAttribute)` which was probably not used yet anyway
 * The validation of `CASE` expression might lead to deployment failures due to unsafe expressions or when expression types can't be determined. Enum comparison should be done through the fully qualified name e.g. `com.test.MyEnum.MY_KEY`

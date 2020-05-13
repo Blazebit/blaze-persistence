@@ -54,7 +54,7 @@ public class UpdateCollectionElementAttributeFlusher<E, V> extends CollectionEle
             int updated = q.executeUpdate();
 
             if (updated != 1) {
-                throw new OptimisticLockException(null, element);
+                throw new OptimisticLockException("The update operation did not return the expected update count!", null, element);
             }
         }
         context.removeOrphans(orphanRemovalStartIndex);

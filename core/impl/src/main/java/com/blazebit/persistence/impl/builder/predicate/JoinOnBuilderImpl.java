@@ -230,6 +230,12 @@ public class JoinOnBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedListen
     }
 
     @Override
+    public void onBuilderEnded(PredicateBuilder builder) {
+        super.onBuilderEnded(builder);
+        rootPredicate.getPredicate().getChildren().add(builder.getPredicate());
+    }
+
+    @Override
     public JoinOnOrBuilder<JoinOnBuilder<T>> onOr() {
         return rootPredicate.startBuilder(new JoinOnOrBuilderImpl<JoinOnBuilder<T>>(this, rootPredicate, expressionFactory, parameterManager, subqueryInitFactory));
     }

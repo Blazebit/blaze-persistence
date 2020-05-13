@@ -33,11 +33,12 @@ public class AViewImpl<X extends Serializable> implements AView<X>, EntityViewPr
     }
 
     public AViewImpl(Integer id) {
+        this.$$_kind = (byte) 1;
         this.age = 0;
         this.id = id;
         this.name = null;
-        this.names = null;
-        this.test = null;
+        this.names = (List<String>) (java.util.List<?>) AView_.names.getCollectionInstantiator().createCollection(0);
+        this.test = (List<X>) (java.util.List<?>) AView_.test.getCollectionInstantiator().createCollection(0);
     }
 
     public AViewImpl(Integer id, int age, String name, List<String> names, List<X> test) {
@@ -102,6 +103,7 @@ public class AViewImpl<X extends Serializable> implements AView<X>, EntityViewPr
         return SERIALIZABLE_ENTITY_VIEW_MANAGER;
     }
 
+    private byte $$_kind;
     @Override
     public Class<?> $$_getJpaManagedClass() { return AView.class; }
     @Override
@@ -110,6 +112,10 @@ public class AViewImpl<X extends Serializable> implements AView<X>, EntityViewPr
     public Class<?> $$_getEntityViewClass() { return AView.class; }
     @Override
     public boolean $$_isNew() { return false; }
+    @Override
+    public boolean $$_isReference() {
+        return $$_kind == (byte) 1;
+    }
     @Override
     public Object $$_getId() { return id; }
     @Override

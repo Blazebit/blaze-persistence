@@ -41,6 +41,18 @@ public class OptimisticLockException extends javax.persistence.OptimisticLockExc
     }
 
     /**
+     * Constructs a new <code>OptimisticLockException</code> with given entity and entity view objects.
+     *
+     * @param message The exception message
+     * @param entity The entity that caused the exception
+     * @param entityView The entity view that caused the exception
+     */
+    public OptimisticLockException(String message, Object entity, Object entityView) {
+        super(message, null, entity);
+        this.entityView = entityView;
+    }
+
+    /**
      * Returns the entity view object that caused this exception.
      *
      * @return The entity view

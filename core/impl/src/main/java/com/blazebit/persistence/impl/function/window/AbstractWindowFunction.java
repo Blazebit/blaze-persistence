@@ -118,7 +118,7 @@ public abstract class AbstractWindowFunction implements JpqlFunction {
                             argumentMode = processArgument(argumentMode, windowFunction, argument);
                             break;
                         case FILTER:
-                            windowFunction.filterExpressions.add(argument);
+                            windowFunction.filterExpressions.add(argument.substring("case when ".length(), argument.length() - " then 1 else 0 end".length()));
                             break;
                         case PARTITION_BY:
                             windowFunction.partitionExpressions.add(argument);
@@ -229,22 +229,28 @@ public abstract class AbstractWindowFunction implements JpqlFunction {
 
         return null;
     }
+
+    protected boolean requiresOver() {
+        return false;
+    }
     
     protected void render(FunctionRenderContext context, WindowFunction windowFunction) {
         renderFunction(context, windowFunction);
         renderFilterExpressions(context, windowFunction.getFilterExpressions());
 
-        context.addChunk(" OVER (");
-        renderPartitions(context, windowFunction.getPartitionExpressions());
-        if (!windowFunction.getOrderBys().isEmpty() && !windowFunction.getPartitionExpressions().isEmpty()) {
-            context.addChunk(" ");
+        if (requiresOver() || !windowFunction.getPartitionExpressions().isEmpty() || !windowFunction.getOrderBys().isEmpty() || windowFunction.getFrameMode() != null) {
+            context.addChunk(" OVER (");
+            renderPartitions(context, windowFunction.getPartitionExpressions());
+            if (!windowFunction.getOrderBys().isEmpty() && !windowFunction.getPartitionExpressions().isEmpty()) {
+                context.addChunk(" ");
+            }
+            renderOrderBy(context, windowFunction.getOrderBys());
+            if (windowFunction.getFrameMode() != null && (!windowFunction.getOrderBys().isEmpty() || !windowFunction.getPartitionExpressions().isEmpty())) {
+                context.addChunk(" ");
+            }
+            renderFrame(context, windowFunction);
+            context.addChunk(")");
         }
-        renderOrderBy(context, windowFunction.getOrderBys());
-        if (windowFunction.getFrameMode() != null && (!windowFunction.getOrderBys().isEmpty() || !windowFunction.getPartitionExpressions().isEmpty())) {
-            context.addChunk(" ");
-        }
-        renderFrame(context, windowFunction);
-        context.addChunk(")");
     }
 
     protected void renderFunction(FunctionRenderContext context, WindowFunction windowFunction) {
@@ -311,7 +317,7 @@ public abstract class AbstractWindowFunction implements JpqlFunction {
     protected void renderFilterExpressions(FunctionRenderContext context, List<String> filterExpressions) {
         int size = filterExpressions.size();
         if (size != 0 && supportsFilterClause) {
-            context.addChunk(" FILTER ( WHERE ");
+            context.addChunk(" FILTER (WHERE ");
             context.addChunk(filterExpressions.get(0));
             for (int i = 1; i < size; i++) {
                 context.addChunk(" AND ");

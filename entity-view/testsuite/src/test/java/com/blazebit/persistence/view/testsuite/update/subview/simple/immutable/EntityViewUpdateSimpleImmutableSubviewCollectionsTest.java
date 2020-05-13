@@ -194,24 +194,20 @@ public class EntityViewUpdateSimpleImmutableSubviewCollectionsTest extends Abstr
         docViewReference.setName(docView.getName());
         ((MutableStateTrackable) docViewReference).$$_setVersion(docView.getVersion());
         docViewReference.setPeople(newPeople);
-        update(docViewReference);
+        saveFull(docViewReference);
 
         // Then
         AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
-            if (isFullMode()) {
-                fullFetch(builder);
-            } else {
-                builder.select(Document.class);
-            }
+            fullFetch(builder);
         }
 
         if (isQueryStrategy() || version) {
             builder.update(Document.class);
         }
         builder.delete(Document.class, "people");
-        if (isQueryStrategy() || !isQueryStrategy() && !isFullMode()) {
+        if (isQueryStrategy()) {
             builder.insert(Document.class, "people");
         }
         builder.validate();

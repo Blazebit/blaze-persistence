@@ -427,8 +427,12 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
         }
         if (aggregate) {
             // NOTE: We currently don't support JUST filtering for aggregate functions, but maybe in the future
-            if (whereClauseContext == null && windowName == null && windowDefinitionContext == null) {
-                return new AggregateExpression(distinct, name, arguments);
+            if (windowName == null && windowDefinitionContext == null) {
+                if (whereClauseContext == null) {
+                    return new AggregateExpression(distinct, name, arguments);
+                } else {
+                    return new AggregateExpression(distinct, "window_" + name, arguments, (Predicate) whereClauseContext.predicate().accept(this));
+                }
             } else {
                 failDistinct(distinct, ctx);
                 return new FunctionExpression("window_" + name, arguments, createWindowDefinition(whereClauseContext, windowName, windowDefinitionContext));
@@ -464,7 +468,7 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
     private WindowDefinition createWindowDefinition(JPQLNextParser.WhereClauseContext whereClauseContext, JPQLNextParser.IdentifierContext windowNameIdentifier, JPQLNextParser.WindowDefinitionContext windowDefinitionContext) {
         Predicate filterPredicate = null;
         if (whereClauseContext != null) {
-            filterPredicate = (Predicate) whereClauseContext.accept(this);
+            filterPredicate = (Predicate) whereClauseContext.predicate().accept(this);
         }
 
         String windowName = null;

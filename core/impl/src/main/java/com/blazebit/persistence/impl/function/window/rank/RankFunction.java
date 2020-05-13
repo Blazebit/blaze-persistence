@@ -38,4 +38,9 @@ public class RankFunction extends AbstractWindowFunction {
     public Class<?> getReturnType(Class<?> firstArgumentType) {
         return Integer.class;
     }
+
+    @Override
+    protected boolean requiresOver() {
+        return true;
+    }
 }
