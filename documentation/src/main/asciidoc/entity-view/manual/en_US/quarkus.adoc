@@ -23,6 +23,6 @@ at runtime
 
 * default CDI producers for the link:{core_jdoc}/persistence/CriteriaBuilderFactory.html[`CriteriaBuilderFactory`]
 and link:{entity_view_jdoc}/persistence/view/EntityViewManager.html[`EntityViewManager`] that can be overridden as documented
-in the Quarkus user guide
+in the https://quarkus.io/guides/cdi-reference#default_beans[Quarkus user guide]
 
 * support for hot reload
