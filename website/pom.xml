@@ -31,7 +31,7 @@
 
     <properties>
         <!-- The current stable version -->
-        <stable.version>1.5.0-Alpha1</stable.version>
+        <stable.version>1.5.0-Alpha2</stable.version>
         <series.version>1.5</series.version>
         <!-- The current snapshot version -->
         <snapshot.version>1.5.0-SNAPSHOT</snapshot.version>

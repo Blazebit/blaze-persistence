@@ -18,13 +18,7 @@ This includes the implementation for window functions, common table expressions 
 Staying close to QueryDSL's API however, also means that the API is not as fluent as {projectname} users are accustomed to.
 This means that creating common table expressions or complex set operations may lead to superfluous code.
 
-
-[[querydsl-setup]]
-=== Setup
-
-To setup the project for QueryDSL you have to add dependencies as described in the <<getting-started-setup>> section.
-
-Besides the standard dependencies, the following Maven dependencies are required to use the QueryDSL extension:
+As outlined in the <<maven-querydsl-setup,setup section>> you need the following dependencies for the integration:
 
 [source,xml]
 ----
@@ -36,19 +30,13 @@ Besides the standard dependencies, the following Maven dependencies are required
 </dependency>
 <dependency>
     <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-core-impl</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>runtime</scope>
-</dependency>
-<dependency>
-    <groupId>com.blazebit</groupId>
     <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>runtime</scope>
 </dependency>
 ----
 
-The dependencies for other JPA providers or other versions can be found in the <<maven-setup,core module setup section>>.
+The dependencies for other JPA providers or other versions can be found in the <<maven-setup,setup section>>.
 
 [[querydsl-features]]
 === Features
@@ -80,9 +68,7 @@ public class Cat {
 
     @Id
     private Long id;
-
     private String name;
-
     private Integer age;
 }
 ----

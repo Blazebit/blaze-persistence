@@ -57,7 +57,7 @@ Blaze-Persistence is split up into different modules. We recommend that you defi
 
 ```xml
 <properties>
-    <blaze-persistence.version>1.5.0-Alpha1</blaze-persistence.version>
+    <blaze-persistence.version>1.5.0-Alpha2</blaze-persistence.version>
 </properties>
 ```
 
@@ -84,37 +84,37 @@ If you want a sample application with everything setup where you can poke around
 Core-only archetype:
 
 ```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-core-sample" "-DarchetypeVersion=1.5.0-Alpha1"
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-core-sample" "-DarchetypeVersion=1.5.0-Alpha2"
 ```
 
 Entity view archetype:
 
 ```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-entity-view-sample" "-DarchetypeVersion=1.5.0-Alpha1"
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-entity-view-sample" "-DarchetypeVersion=1.5.0-Alpha2"
 ```
 
 Spring-Data archetype:
 
 ```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-spring-data-sample" "-DarchetypeVersion=1.5.0-Alpha1"
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-spring-data-sample" "-DarchetypeVersion=1.5.0-Alpha2"
 ```
 
 Spring-Boot archetype:
 
 ```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-spring-boot-sample" "-DarchetypeVersion=1.5.0-Alpha1"
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-spring-boot-sample" "-DarchetypeVersion=1.5.0-Alpha2"
 ```
 
 DeltaSpike Data archetype:
 
 ```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-deltaspike-data-sample" "-DarchetypeVersion=1.5.0-Alpha1"
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-deltaspike-data-sample" "-DarchetypeVersion=1.5.0-Alpha2"
 ```
 
 Java EE archetype:
 
 ```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-java-ee-sample" "-DarchetypeVersion=1.5.0-Alpha1"
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-java-ee-sample" "-DarchetypeVersion=1.5.0-Alpha2"
 ```
 
 ## Supported Java runtimes
@@ -189,302 +189,25 @@ DeltaSpike Data integration    | DeltaSpike 1.7                       | 1.7, 1.8
 Spring Data integration        | Spring Data 1.11                     | 1.11, 2.0, 2.1, 2.2
 Spring Data WebMvc integration | Spring Data 1.11, Spring WebMvc 4.3  | Spring Data 1.11 - 2.2, Spring WebMvc 4.3 - 5.2
 Spring Data WebFlux integration| Spring Data 2.0, Spring WebFlux 5.0  | Spring Data 2.0 - 2.2, Spring WebFlux 5.0 - 5.2
+Jackson integration            | 2.8.11                               | 2.8.11+
+GraphQL integration            | 5.2                                  | 5.2+
+JAX-RS integration             | Any JAX-RS version                   | Any JAX-RS version
+Quarkus integration            | 1.4.1                                | 1.4
 
 ## Manual setup
 
 For compiling you will only need API artifacts and for the runtime you need impl and integration artifacts.
-Choose the integration artifacts based on your JPA provider.
 
-Blaze-Persistence Core module dependencies
-
-```xml
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-core-api</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>compile</scope>
-</dependency>
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-core-impl</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>runtime</scope>
-</dependency>
-```
-
-Blaze-Persistence Entity-View module dependencies
-
-```xml
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-entity-view-api</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>compile</scope>
-</dependency>
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-entity-view-impl</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>runtime</scope>
-</dependency>
-```
-
-Blaze-Persistence Entity-View CDI integration dependencies
-
-```xml
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-entity-view-cdi</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>runtime</scope>
-</dependency>
-```
-
-Blaze-Persistence Entity-View Spring integration dependencies
-
-```xml
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-entity-view-spring</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>compile</scope>
-</dependency>
-```
-
-Blaze-Persistence Spring Data 2.2 integration dependencies
-
-```xml
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-spring-data-2.2</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>compile</scope>
-</dependency>
-```
-
-Blaze-Persistence Spring Data 2.1 integration dependencies
-
-```xml
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-spring-data-2.1</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>compile</scope>
-</dependency>
-```
-
-Blaze-Persistence Spring Data 2.0 integration dependencies
-
-```xml
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-spring-data-2.0</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>compile</scope>
-</dependency>
-```
-
-Blaze-Persistence Spring Data 1.x integration dependencies
-
-```xml
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-spring-data-1.x</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>compile</scope>
-</dependency>
-```
-
-Blaze-Persistence DeltaSpike Data integration
-
-```xml
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-deltaspike-data-api</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>compile</scope>
-</dependency>
-```
-
-Blaze-Persistence DeltaSpike Data 1.9 and 1.8 integration
-
-```xml
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-deltaspike-data-impl-1.8</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>runtime</scope>
-</dependency>
-```
-
-Blaze-Persistence DeltaSpike Data 1.7 integration
-
-```xml
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-deltaspike-data-impl-1.7</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>runtime</scope>
-</dependency>
-```
-
-Blaze-Persistence QueryDSL 4 integration dependencies
-
-```xml
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-querydsl-expressions</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>compile</scope>
-</dependency>
-```
-
-Blaze-Persistence JPA provider integration module dependencies
-
-Hibernate 5.4
-
-```xml
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>runtime</scope>
-</dependency>
-```
-
-Hibernate 5.3
-
-```xml
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-hibernate-5.3</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>runtime</scope>
-</dependency>
-```
-
-Hibernate 5.2
-
-```xml
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-hibernate-5.2</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>runtime</scope>
-</dependency>
-```
-
-Hibernate 5.0 or 5.1
-
-```xml
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-hibernate-5</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>runtime</scope>
-</dependency>
-```
-
-Hibernate 4.3
-
-```xml
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-hibernate-4.3</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>runtime</scope>
-</dependency>
-```
-
-Hibernate 4.2
-
-```xml
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-hibernate-4.2</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>runtime</scope>
-</dependency>
-```
-
-Datanucleus 5.1
-
-```xml
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-datanucleus-5.1</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>runtime</scope>
-</dependency>
-```
-
-Datanucleus 4 and 5
-
-```xml
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-datanucleus</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>runtime</scope>
-</dependency>
-```
-
-EclipseLink
-
-```xml
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-eclipselink</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>runtime</scope>
-</dependency>
-```
-
-OpenJPA
-
-```xml
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-openjpa</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>runtime</scope>
-</dependency>
-```
-
-Blaze-Persistence JPA-Criteria module dependencies
-
-```xml
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-jpa-criteria-api</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>compile</scope>
-</dependency>
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-jpa-criteria-impl</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>runtime</scope>
-</dependency>
-```
-
-Blaze-Persistence JPA-Criteria JPA 2.0 provider support dependencies
-
-```xml
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-jpa-criteria-jpa-2-compatibility</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>compile</scope>
-</dependency>
-```
+See the [core documentation](https://persistence.blazebit.com/documentation/core/manual/en_US/index.html#maven-setup) for the necessary dependencies needed to setup
+Blaze-Persistence. If you want to use entity views, the [entity view documentation](https://persistence.blazebit.com/documentation/entity-view/manual/en_US/index.html#maven-setup) 
+contains a similar setup section describing the necessary dependencies.
 
 Documentation
 =========
 
 The current documentation is a reference manual and is split into a reference for the [core module](https://persistence.blazebit.com/documentation/core/manual/en_US/index.html) and for the [entity-view module](https://persistence.blazebit.com/documentation/entity-view/manual/en_US/index.html).
 At some point we might introduce topical documentation, but for now you can find articles on the [Blazebit Blog](https://blazebit.com/blog.html)
- 
+
 Core quick-start
 =================
 
@@ -529,6 +252,41 @@ SELECT cat FROM Cat cat LEFT JOIN FETCH cat.kittens kittens_1 LEFT JOIN FETCH ki
 ```
 
 An additional bonus is that the paths and generally every expression you write will get checked against the metamodel so you can spot typos very early.
+
+JPA Criteria API quick-start
+=================
+
+Blaze-Persistence provides an implementation of the JPA Criteria API what allows you to mostly code against the standard JPA Criteria API,
+but still be able to use the advanced features Blaze-Persistence provides.
+
+All you need is a `CriteriaBuilderFactory` and when constructing the actual query, an `EntityManager`.
+
+```java
+// This is a subclass of the JPA CriteriaBuilder interface
+BlazeCriteriaBuilder cb = BlazeCriteria.get(criteriaBuilderFactory);
+// A subclass of the JPA CriteriaQuery interface
+BlazeCriteriaQuery<Cat> query = cb.createQuery(Cat.class);
+
+// Do your JPA Criteria query logic with cb and query
+Root<Cat> root = query.from(Cat.class);
+query.where(cb.equal(root.get(Cat_.name), "Felix"));
+
+// Finally, transform the BlazeCriteriaQuery to the Blaze-Persistence Core CriteriaBuilder
+CriteriaBuilder<Cat> builder = query.createCriteriaBuilder(entityManager);
+// From here on, you can use all the power of the Blaze-Persistence Core API
+
+// And finally fetch the result
+List<Cat> resultList = builder.getResultList();
+```
+
+This will create a query that looks just about what you would expect:
+
+```sql
+SELECT cat FROM Cat cat WHERE cat.name = :param_0
+```
+
+This alone is not very spectacular. The interesting part is that you can use the Blaze-Persistence `CriteriaBuilder` then to do your advanced SQL things
+or consume your result as entity views as explained in the next part.  
 
 Entity-view usage
 =================

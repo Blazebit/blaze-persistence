@@ -2,11 +2,7 @@
 == Quarkus integration
 
 We provide a basic Quarkus extension that allows to use {projectname} core and entity views in a Quarkus application.
-
-[[quarkus-setup]]
-=== Setup
-
-To use the Quarkus extension you need to add the following Maven dependency to your Quarkus project:
+As outlined in the <<quarkus-setup,setup section>> you need the following dependency for the integration:
 
 [source,xml]
 ----

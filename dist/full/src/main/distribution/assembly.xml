@@ -96,13 +96,27 @@
         </dependencySet>
         <dependencySet>
             <includes>
+                <include>com.blazebit:blaze-persistence-integration-quarkus</include>
+                <include>com.blazebit:blaze-persistence-integration-quarkus-runtime</include>
+            </includes>
+            <outputFileNameMapping>${artifact.artifactId}-${project.version}.${artifact.extension}</outputFileNameMapping>
+            <outputDirectory>lib/integration/quarkus</outputDirectory>
+        </dependencySet>
+        <dependencySet>
+            <includes>
+                <include>com.blazebit:blaze-persistence-integration-querydsl-expressions</include>
+            </includes>
+            <outputFileNameMapping>${artifact.artifactId}-${project.version}.${artifact.extension}</outputFileNameMapping>
+            <outputDirectory>lib/integration/querydsl</outputDirectory>
+        </dependencySet>
+        <dependencySet>
+            <includes>
                 <include>com.blazebit:blaze-persistence-integration-entity-view-*</include>
-                <include>com.blazebit:blaze-persistence-integration-spring-data-base</include>
-                <include>com.blazebit:blaze-persistence-integration-spring-data-1.x</include>
-                <include>com.blazebit:blaze-persistence-integration-spring-data-2.0</include>
-                <include>com.blazebit:blaze-persistence-integration-spring-data-2.1</include>
-                <include>com.blazebit:blaze-persistence-integration-spring-data-2.2</include>
+                <include>com.blazebit:blaze-persistence-integration-spring-data-*</include>
                 <include>com.blazebit:blaze-persistence-integration-deltaspike-data-*</include>
+                <include>com.blazebit:blaze-persistence-integration-jaxrs</include>
+                <include>com.blazebit:blaze-persistence-integration-jackson</include>
+                <include>com.blazebit:blaze-persistence-integration-graphql</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}-${project.version}.${artifact.extension}</outputFileNameMapping>
             <outputDirectory>lib/integration/entity-view</outputDirectory>

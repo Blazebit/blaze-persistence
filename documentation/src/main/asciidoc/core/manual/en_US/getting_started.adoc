@@ -16,9 +16,13 @@ This distribution contains the _required_ artifacts for the {projectname} core m
 * integration/eclipselink - The integration for EclipseLink
 * integration/openjpa - The integration for OpenJPA
 * integration/entity-view - Integrations for the entity view module
+* integration/querydsl - Integrations for using Blaze-Persistence through a QueryDSL like API
+* integration/quarkus - Integration for using Blaze-Persistence with Quarkus
 
 The _required_ artifacts are always necessary. Every other module builds up on that. Based on the JPA provider that is used, one of the integrations should be used.
 Other modules are optional and normally don't have dependencies on each other.
+
+For QueryDSL users there is an integration that is described in the <<querydsl-integration,QueryDSL integration chapter>>.
 
 ==== Maven setup
 
@@ -181,6 +185,21 @@ Depending on the JPA provider that should be used, one of the following integrat
     <artifactId>blaze-persistence-integration-openjpa</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>runtime</scope>
+</dependency>
+----
+
+[[maven-setup-querydsl-integration]]
+===== QueryDSL integration
+
+When you work with QueryDSL you can additionally have first class integration by using the following dependencies.
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-querydsl-expressions</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
 </dependency>
 ----
 

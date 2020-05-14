@@ -1,0 +1,25 @@
+= Blaze-Persistence 1.5.0-Alpha2 Release
+Christian Beikov
+2020-05-14 0
+:description: Blaze-Persistence version 1.5.0-Alpha2 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+Wow, what a big release! There is so much good stuff in 1.5.0-Alpha2, you definitely should update, also because of some important bug fixes!
+Our biggest newcomers are the QueryDSL integration and Quarkus integration with support for native compilation when using our brand new annotation processor,
+which generates entity view implementations during compilation. It also generates static metamodels and builder implementations and is useful also for non-Quarkus projects,
+but more on that in a blog post. Please consider updating soon to avoid running into a concurrency issue+++<!-- PREVIEW-SUFFIX --><!-- </p></div> --><!-- PREVIEW-END -->+++ that
+we discovered recently.
+
+Our Spring WebMvc/WebFlux and JAX-RS integrations support mapping a `PathVariable`/`PathParam` as the id for an entity view payload.
+We improved a few validations to make you aware of configuration issues early and improved performance in various ways.
+The `PaginatedCriteriaBuilder` API is now capable of doing a bounded count i.e. count up to a given value to improve performance.
+In entity views it is now also supported to limit the number of elements to fetch from collections or from correlations through the `@Limit` annotation.
+
+If you want to know more about the new features, take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#150-alpha2[changelog, window="_blank"] for a full list of changes and improvements.
+
+The next release will be the final one for the 1.5 series. Until then, have fun with 1.5.0-Alpha2!
