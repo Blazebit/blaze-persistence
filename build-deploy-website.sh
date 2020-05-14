@@ -17,6 +17,7 @@ else
 	else
 		STAGE=$1
 	fi
+	shift
 fi
 
 if [ "$STAGE" == "staging" ]; then
@@ -28,5 +29,5 @@ else
 	exit 1
 fi
 
-mvn -P $STAGE --projects website -am clean compile
-mvn -P $STAGE --projects website site:deploy -DrepositoryId=$REPO
+mvn -P $STAGE --projects website -am clean compile "$@"
+mvn -P $STAGE --projects website site:deploy -DrepositoryId=$REPO "$@"
