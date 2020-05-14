@@ -74,7 +74,8 @@ public class EntityViewReferenceDeserializer extends JsonDeserializer {
         Object reference = null;
         ObjectCodec codec = jsonParser.getCodec();
         JsonNode treeNode = codec.readTree(jsonParser);
-        Object id = consumeId(jsonParser, codec, treeNode);
+        // Consume (i.e. remove from the payload json tree) the id if we are going to use getReference
+        Object id = retrieveId(jsonParser, codec, treeNode, !creatable || updatable);
 
         // We create also creatable & updatable views if no id is given
         // If an id is given in such a case, we create a reference for updates
@@ -94,7 +95,7 @@ public class EntityViewReferenceDeserializer extends JsonDeserializer {
                 .deserialize(jsonParser, deserializationContext, reference);
     }
 
-    private Object consumeId(JsonParser rootJsonParser, ObjectCodec codec, JsonNode treeNode) throws IOException {
+    private Object retrieveId(JsonParser rootJsonParser, ObjectCodec codec, JsonNode treeNode, boolean consume) throws IOException {
         Object id;
         if (idAttribute == null || idType == null) {
             id = null;
@@ -106,8 +107,9 @@ public class EntityViewReferenceDeserializer extends JsonDeserializer {
                     id = null;
                 } else {
                     id = codec.readValue(codec.treeAsTokens(jsonNode), idType);
-                    // Remove the id attribute since we deserialized it already
-                    ((ObjectNode) treeNode).without(idAttributeName);
+                    if (consume) {
+                        ((ObjectNode) treeNode).without(idAttributeName);
+                    }
                 }
             } else if (entityViewIdValueAccessor != null) {
                 id = entityViewIdValueAccessor.getValue(rootJsonParser, idType.getRawClass());

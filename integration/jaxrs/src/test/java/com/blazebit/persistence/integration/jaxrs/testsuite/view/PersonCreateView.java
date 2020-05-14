@@ -13,17 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.blazebit.persistence.integration.jaxrs.testsuite.view;
 
-package com.blazebit.persistence.integration.quarkus.deployment.view;
-
-import com.blazebit.persistence.integration.quarkus.deployment.entity.Document;
+import com.blazebit.persistence.integration.jaxrs.testsuite.entity.Person;
+import com.blazebit.persistence.view.CreatableEntityView;
 import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.IdMapping;
 
 /**
  * @author Moritz Becker
  * @since 1.5.0
  */
-@EntityView(Document.class)
-public interface DocumentView extends DocumentCreateView {
-    void setId(Long id);
+@CreatableEntityView
+@EntityView(Person.class)
+public interface PersonCreateView {
+
+    @IdMapping
+    String getId();
+    void setId(String id);
+
+    String getName();
+    void setName(String name);
 }
