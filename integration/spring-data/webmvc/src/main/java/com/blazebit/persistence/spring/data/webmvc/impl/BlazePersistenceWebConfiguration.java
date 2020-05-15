@@ -65,6 +65,12 @@ public class BlazePersistenceWebConfiguration extends WebMvcConfigurerAdapter {
 
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
+        for (int i = 0; i < argumentResolvers.size(); i++) {
+            if (argumentResolvers.get(i) instanceof KeysetPageableArgumentResolver) {
+                return;
+            }
+        }
+
         // Add it to the beginning so it has precedence over the builtin
         argumentResolvers.add(0, keysetPageableResolver());
     }

@@ -41,6 +41,8 @@ include::builder_api.adoc[]
 
 include::spring_data.adoc[]
 
+include::spring_hateoas.adoc[]
+
 include::deltaspike_data.adoc[]
 
 include::jaxrs.adoc[]

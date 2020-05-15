@@ -8,7 +8,7 @@ Not yet released
 
 ### New features
 
-None
+* Spring HATEOAS integration for generation of pagination links with keyset information
 
 ### Bug fixes
 

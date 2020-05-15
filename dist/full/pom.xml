@@ -193,6 +193,10 @@
         </dependency>
         <dependency>
             <groupId>com.blazebit</groupId>
+            <artifactId>blaze-persistence-integration-spring-hateoas-webmvc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.blazebit</groupId>
             <artifactId>blaze-persistence-integration-jackson</artifactId>
         </dependency>
         <dependency>
