@@ -227,6 +227,10 @@ public class KeysetPageableHandlerMethodArgumentResolver extends PageableHandler
         return KeysetPageable.class.equals(parameter.getParameterType());
     }
 
+    protected SortHandlerMethodArgumentResolver getSortResolver() {
+        return sortResolver;
+    }
+
     @Override
     public KeysetPageable resolveArgument(MethodParameter methodParameter, ModelAndViewContainer mavContainer,
                                     NativeWebRequest webRequest, WebDataBinderFactory binderFactory) {

@@ -1,0 +1,114 @@
+[[spring-hateoas-integration]]
+== Spring HATEOAS integration
+
+In addition to the Spring Data and Spring WebMvc or WebFlux integration, we also provide an integration for Spring HATEOAS 1.0+ that allows to create keyset aware pagination links.
+
+[[spring-hateoas-setup]]
+=== Setup
+
+To setup the project for Spring HATEOAS you first have to setup the spring data integration as described in the <<spring-data-setup>> section.
+
+In short, the following Maven dependencies are required
+
+[source,xml]
+----
+<dependency>
+    <groupId>${project.groupId}</groupId>
+    <artifactId>blaze-persistence-integration-spring-hateoas-webmvc</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
+</dependency>
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-hibernate-5.2</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+----
+
+The dependencies for other JPA providers or other versions can be found in the link:{core_doc}#maven-setup[core module setup section].
+
+Note that Spring HATEOAS 1.0+ requires at least Spring Data 2.2.
+
+[[spring-hatoas-features]]
+=== Features
+
+The integration provides a custom `PagedResourcesAssembler` that will generate proper keyset aware pagination links when provided with a `KeysetAwarePage` object.
+
+Assume we have the following entity view:
+
+[source,java]
+----
+@EntityView(Cat.class)
+public interface SimpleCatView {
+
+    @IdMapping
+    public getId();
+
+    String getName();
+
+    @Mapping("LOWER(name)")
+    String getLowerCaseName();
+
+    Integer getAge();
+}
+----
+
+A very simple repository might look like this:
+
+[source,java]
+----
+@Transactional(readOnly = true)
+public interface KeysetAwareCatViewRepository extends Repository<Cat, Long> {
+
+    KeysetAwarePage<SimpleCatView> findAll(Pageable pageable);
+}
+----
+
+A controller can then inject the `KeysetPageable` object along with a `KeysetAwarePagedResourcesAssembler` and use it like in the following example:
+
+[source,java]
+----
+@RestController
+public class MyCatController {
+
+    @Autowired
+    private KeysetAwareCatViewRepository simpleCatViewRepository;
+
+    @RequestMapping(path = "/cats", method = RequestMethod.GET, produces = { "application/hal+json" })
+    public PagedModel<EntityModel<SimpleCatView>> getCats(
+            @KeysetConfig(Cat.class) KeysetPageable pageable,
+            KeysetAwarePagedResourcesAssembler<SimpleCatView> assembler) {
+        return assembler.toModel(simpleCatViewRepository.findAll(pageable));
+    }
+}
+----
+
+The `PagedModel` object could also be used to generate a rel HTTP header like this:
+
+[source,java]
+----
+@RestController
+public class MyCatController {
+
+    @Autowired
+    private KeysetAwareCatViewRepository simpleCatViewRepository;
+
+    @RequestMapping(path = "/cats", method = RequestMethod.GET)
+    public PagedModel<EntityModel<SimpleCatView>> getCats(
+            @KeysetConfig(Cat.class) KeysetPageable pageable,
+            KeysetAwarePagedResourcesAssembler<SimpleCatView> assembler) {
+        Page<DocumentView> resultPage = simpleCatViewRepository.findAll(pageable);
+
+        MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
+        for (Link link : assembler.toModel(resultPage).getLinks()) {
+            headers.add(HttpHeaders.LINK, link.toString());
+        }
+
+        return new HttpEntity<>(resultPage, headers);
+    }
+}
+----
+
+For more information about the Spring-Data or Spring WebMvc integration, on which the Spring HATEOAS support is based on, take a look into the <<spring-data-features,Spring-Data chapter>>.
+For a full example see the following https://github.com/Blazebit/blaze-persistence/blob/master/examples/spring-hateoas/[example project].

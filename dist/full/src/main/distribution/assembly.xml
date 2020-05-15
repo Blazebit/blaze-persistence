@@ -112,7 +112,7 @@
         <dependencySet>
             <includes>
                 <include>com.blazebit:blaze-persistence-integration-entity-view-*</include>
-                <include>com.blazebit:blaze-persistence-integration-spring-data-*</include>
+                <include>com.blazebit:blaze-persistence-integration-spring-*</include>
                 <include>com.blazebit:blaze-persistence-integration-deltaspike-data-*</include>
                 <include>com.blazebit:blaze-persistence-integration-jaxrs</include>
                 <include>com.blazebit:blaze-persistence-integration-jackson</include>

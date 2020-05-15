@@ -384,6 +384,11 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-spring-hateoas-webmvc</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.blazebit</groupId>
                 <artifactId>blaze-persistence-integration-deltaspike-data-api</artifactId>
                 <version>${project.version}</version>
@@ -426,6 +431,11 @@
             <dependency>
                 <groupId>com.blazebit</groupId>
                 <artifactId>blaze-persistence-integration-graphql</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-spring-hateoas-webmvc</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

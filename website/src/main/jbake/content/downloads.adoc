@@ -141,6 +141,13 @@ Older releases can be found on https://github.com/Blazebit/blaze-persistence/rel
     <version>${blaze-persistence.version}</version>
 </dependency>
 
+<!-- Spring HATEOAS WebMvc integration module -->
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-spring-hateoas-webmvc</artifactId>
+    <version>${blaze-persistence.version}</version>
+</dependency>
+
 <!-- JAX-RS integration module -->
 <dependency>
     <groupId>com.blazebit</groupId>

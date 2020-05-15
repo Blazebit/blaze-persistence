@@ -47,6 +47,7 @@
         <module>entity-view-cdi</module>
         <module>entity-view-spring</module>
         <module>spring-data</module>
+        <module>spring-hateoas</module>
         <module>deltaspike-data</module>
         <module>jaxrs</module>
         <module>jackson</module>

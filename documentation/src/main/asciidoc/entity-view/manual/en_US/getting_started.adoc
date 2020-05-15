@@ -99,13 +99,14 @@ When you work with Spring Data you can additionally have first class integration
 ----
 <dependency>
     <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-spring-data-2.0</artifactId>
+    <artifactId>blaze-persistence-integration-spring-data-2.2</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>compile</scope>
 </dependency>
 ----
 
-If you still work with Spring Data 1.x you will have to use a different integration as Spring Data 2.x changed quite a bit.
+For Spring-Data version 2.1 use the artifact with the suffix `2.1` instead and for Spring-Data 2.0 the `2.0` suffix.
+If you still work with Spring Data 1.x you will have to use the following dependency.
 
 [source,xml]
 ----
@@ -146,6 +147,23 @@ If a JPA provider that does not implement the JPA 2.1 specification like Hiberna
     <scope>compile</scope>
 </dependency>
 ----
+
+[[maven-setup-spring-hateoas-integration]]
+===== Spring HATEOAS integration
+
+When you work with Spring HATEOAS you can additionally have first class support for generating keyset pagination aware links by using the following dependency.
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-spring-hateoas-webmvc</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
+</dependency>
+----
+
+More information about the integration can be found in the <<spring-hateoas-integration,Spring HATEOAS chapter>>.
 
 [[quarkus-setup]]
 === Quarkus integration
