@@ -98,6 +98,10 @@ public class WindowDefinition {
         return new WindowDefinition(windowName, partitionExpressions, orderByExpressions, filterPredicate, frameMode, frameStartType, frameStartExpression, frameEndType, frameEndExpression, frameExclusionType);
     }
 
+    public boolean isFilterOnly() {
+        return filterPredicate != null && windowName == null && partitionExpressions.isEmpty() && orderByExpressions.isEmpty() && frameMode == null && frameExclusionType == null;
+    }
+
     public String getWindowName() {
         return windowName;
     }

@@ -27,7 +27,7 @@ import java.lang.annotation.Target;
  * @author Christian Beikov
  * @since 1.0.0
  */
-@Target({ ElementType.METHOD })
+@Target({ ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface IdMapping {
     /**

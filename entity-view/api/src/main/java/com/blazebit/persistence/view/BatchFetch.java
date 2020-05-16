@@ -31,7 +31,7 @@ import java.lang.annotation.Target;
  * @author Christian Beikov
  * @since 1.2.0
  */
-@Target({ ElementType.METHOD, ElementType.PARAMETER, ElementType.TYPE })
+@Target({ ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD, ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface BatchFetch {
 

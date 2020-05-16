@@ -728,6 +728,7 @@ public class ViewMappingImpl implements ViewMapping {
                                         this.context,
                                         "$$_version",
                                         EntityViewProxy.class.getMethod("$$_getVersion"),
+                                        -1,
                                         false,
                                         versionAttribute.getJavaType(),
                                         null,

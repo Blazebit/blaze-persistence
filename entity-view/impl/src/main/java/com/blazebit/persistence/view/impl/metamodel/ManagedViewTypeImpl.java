@@ -197,8 +197,8 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
             this.excludedEntityAttributes = Collections.emptySet();
         }
 
-        if (!javaType.isInterface() && !Modifier.isAbstract(javaType.getModifiers())) {
-            context.addError("Only interfaces or abstract classes are allowed as entity views. '" + javaType.getName() + "' is neither of those.");
+        if (!javaType.isInterface() && !Modifier.isAbstract(javaType.getModifiers()) && (creatable || updatable)) {
+            context.addError("Only interfaces or abstract classes are allowed as creatable or updatable entity views. '" + javaType.getName() + "' is neither of those.");
         }
 
         Integer batchSize = viewMapping.getDefaultBatchSize();
@@ -211,17 +211,13 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
             this.defaultBatchSize = batchSize;
         }
 
-        // We use a tree map to get a deterministic attribute order
-        Map<String, AbstractMethodAttribute<? super X, ?>> attributes = new TreeMap<>();
+        Map<String, AbstractMethodAttribute<? super X, ?>> attributes = new LinkedHashMap<>();
         Set<AbstractMethodAttribute<? super X, ?>> updateMappableAttributes = new LinkedHashSet<>(attributes.size());
         List<AbstractMethodAttribute<? super X, ?>> mutableAttributes = new ArrayList<>(attributes.size());
         boolean hasJoinFetchedCollections = false;
         boolean hasSelectOrSubselectFetchedAttributes = false;
         boolean hasJpaManagedAttributes = false;
 
-        // Initialize attribute type and the dirty state index of attributes
-        int index = viewMapping.getIdAttribute() == null ? 0 : 1;
-        int dirtyStateIndex = 0;
         Set<String> requiredUpdatableAttributes;
         Set<String> mappedColumns;
         if (creatable && validatePersistability) {
@@ -260,17 +256,31 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
             removeRequiredUpdatableAttribute(requiredUpdatableAttributes, mappedColumns, extendedManagedType, excludedEntityAttribute);
         }
 
-        for (MethodAttributeMapping mapping : viewMapping.getMethodAttributes().values()) {
+        // Initialize attribute type and the dirty state index of attributes
+        int index = 0;
+        int dirtyStateIndex = 0;
+        Collection<MethodAttributeMapping> methodAttributeMappings = viewMapping.getMethodAttributes().values();
+        AbstractMethodAttribute<? super X, ?>[] attributeArray = new AbstractMethodAttribute[methodAttributeMappings.size()];
+        AbstractMethodAttribute<? super X, ?> idAttribute = null;
+
+        if (viewMapping.getIdAttribute() != null) {
+            // The id and the version always have -1 as dirty state index because they can't be dirty in the traditional sense
+            // Id can only be set on "new" objects and shouldn't be mutable, version acts as optimistic concurrency version
+            idAttribute = viewMapping.getIdAttribute().getMethodAttribute(this, 0, -1, context, embeddableMapping);
+            if (idAttribute.getAttributeIndex() == 0) {
+                index++;
+            }
+        }
+        for (MethodAttributeMapping mapping : methodAttributeMappings) {
             AbstractMethodAttribute<? super X, ?> attribute;
-            if (mapping.isId() || mapping.isVersion()) {
-                // The id and the version always have -1 as dirty state index because they can't be dirty in the traditional sense
-                // Id can only be set on "new" objects and shouldn't be mutable, version acts as optimistic concurrency version
-                if (mapping.isId()) {
-                    attribute = mapping.getMethodAttribute(this, 0, -1, context, embeddableMapping);
-                    index--;
-                } else {
-                    attribute = mapping.getMethodAttribute(this, index, -1, context, embeddableMapping);
+            if (mapping.isId()) {
+                attribute = idAttribute;
+                index--;
+                if (!requiredUpdatableAttributes.isEmpty()) {
+                    removeRequiredUpdatableAttribute(requiredUpdatableAttributes, mappedColumns, extendedManagedType, attribute);
                 }
+            } else if (mapping.isVersion()) {
+                attribute = mapping.getMethodAttribute(this, index, -1, context, embeddableMapping);
                 if (!requiredUpdatableAttributes.isEmpty()) {
                     removeRequiredUpdatableAttribute(requiredUpdatableAttributes, mappedColumns, extendedManagedType, attribute);
                 }
@@ -290,18 +300,18 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
             hasJoinFetchedCollections = hasJoinFetchedCollections || attribute.hasJoinFetchedCollections();
             hasSelectOrSubselectFetchedAttributes = hasSelectOrSubselectFetchedAttributes || attribute.hasSelectOrSubselectFetchedAttributes();
             hasJpaManagedAttributes = hasJpaManagedAttributes || attribute.hasJpaManagedAttributes();
-            attributes.put(mapping.getName(), attribute);
+            attributeArray[attribute.getAttributeIndex()] = attribute;
             index++;
         }
 
-        this.attributes = Collections.unmodifiableMap(attributes);
-
-        for (AbstractMethodAttribute<? super X, ?> attribute : attributes.values()) {
+        for (AbstractMethodAttribute<? super X, ?> attribute : attributeArray) {
+            attributes.put(attribute.getName(), attribute);
             if (attribute.isUpdatable() || attribute.isUpdateMappable()) {
                 updateMappableAttributes.add(attribute);
             }
         }
 
+        this.attributes = Collections.unmodifiableMap(attributes);
         this.mutableAttributes = mutableAttributes.toArray(new AbstractMethodAttribute[mutableAttributes.size()]);
         this.updateMappableAttributes = Collections.unmodifiableSet(updateMappableAttributes);
         Map<Map<ManagedViewType<? extends X>, String>, InheritanceSubtypeConfiguration<X>> inheritanceSubtypeConfigurations = new HashMap<>();
@@ -1458,23 +1468,12 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
             List<Class<?>> parameterTypes = new ArrayList<>(overallAttributesClosure.size());
             int initialStateIndex = 0;
 
-            String idName = null;
             boolean collectMutableBasicTypes = false;
             if (baseType instanceof ViewType<?>) {
-                idName = baseTypeViewMapping.getIdAttribute().getName();
                 collectMutableBasicTypes = (baseType.isUpdatable() || baseType.isCreatable()) && baseType.getFlushMode() != FlushMode.FULL;
-                parameterTypes.add(baseType.getAttribute(baseTypeViewMapping.getIdAttribute().getName()).getConvertedJavaType());
             }
             for (Map.Entry<AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<? super X, ?>>> attributeEntry : attributesClosure.entrySet()) {
                 ConstrainedAttribute<AbstractMethodAttribute<? super X, ?>> constrainedAttribute = attributeEntry.getValue();
-                if (attributeEntry.getKey().attributeName.equals(idName)) {
-                    AbstractMethodAttribute<? super X, ?> idAttribute = constrainedAttribute.getAttribute();
-                    TypeConverter<Object, Object> converter = (TypeConverter<Object, Object>) idAttribute.getElementType().getConverter();
-                    if (converter != null) {
-                        typeConverterEntries.add(new AbstractReflectionInstantiator.TypeConverterEntry(idAttribute.getAttributeIndex(), converter));
-                    }
-                    continue;
-                }
                 parameterTypes.add(constrainedAttribute.getAttribute().getConvertedJavaType());
 
                 if (!constrainedAttribute.requiresCaseWhen()) {
@@ -1488,7 +1487,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
                         }
                     }
 
-                    if (collectMutableBasicTypes && attribute.isMutable()) {
+                    if (collectMutableBasicTypes && attribute.isMutable() && !attribute.isId()) {
                         if (attribute instanceof com.blazebit.persistence.view.metamodel.SingularAttribute<?, ?>) {
                             com.blazebit.persistence.view.metamodel.SingularAttribute<?, ?> singularAttribute = (com.blazebit.persistence.view.metamodel.SingularAttribute<?, ?>) attribute;
                             com.blazebit.persistence.view.metamodel.Type<?> t = singularAttribute.getType();
@@ -1526,14 +1525,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
 
             Map<String, Integer> overallPositionMap = new HashMap<>(overallAttributesClosure.size());
             int index = 0;
-            if (idName != null) {
-                overallPositionMap.put(idName, index);
-                index++;
-            }
             for (AttributeKey attributeKey : overallAttributesClosure.keySet()) {
-                if (attributeKey.attributeName.equals(idName)) {
-                    continue;
-                }
                 overallPositionMap.put(attributeKey.attributeName, index);
                 index++;
             }

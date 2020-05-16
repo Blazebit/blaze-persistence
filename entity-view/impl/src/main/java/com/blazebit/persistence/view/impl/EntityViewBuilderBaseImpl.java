@@ -32,7 +32,6 @@ import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.MappingConstructorImpl;
 import com.blazebit.persistence.view.impl.proxy.AbstractReflectionInstantiator;
-import com.blazebit.persistence.view.impl.proxy.ConstructorReflectionInstantiator;
 import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
 import com.blazebit.persistence.view.metamodel.Attribute;
 import com.blazebit.persistence.view.metamodel.CollectionAttribute;
@@ -101,7 +100,7 @@ public class EntityViewBuilderBaseImpl<T, X extends EntityViewBuilderBase<T, X>>
         }
 
         Class<?>[] constructorParameterTypes = parameterTypes.toArray(new Class[parameterTypes.size()]);
-        this.objectInstantiator = new ConstructorReflectionInstantiator<>(mappingConstructor, evm.getProxyFactory(), managedViewType, constructorParameterTypes, evm, inheritanceSubtypeConfiguration.getMutableBasicUserTypes(), Collections.<AbstractReflectionInstantiator.TypeConverterEntry>emptyList());
+        this.objectInstantiator = AbstractReflectionInstantiator.createInstantiator(mappingConstructor, evm.getProxyFactory(), managedViewType, constructorParameterTypes, evm, inheritanceSubtypeConfiguration.getMutableBasicUserTypes(), Collections.<AbstractReflectionInstantiator.TypeConverterEntry>emptyList());
         this.tuple = new Object[constructorParameterTypes.length];
         for (Map.Entry<ManagedViewTypeImpl.AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<? super T, ?>>> attributeEntry : inheritanceSubtypeConfiguration.getAttributesClosure().entrySet()) {
             if (attributeEntry.getValue().getAttribute().getMappingType() == Attribute.MappingType.PARAMETER) {

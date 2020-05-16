@@ -318,6 +318,7 @@
                     <excludes>
                         <exclude>**/target/**</exclude>
                         <!-- The following files contain modified headers due to copied code and need to be excluded from the check -->
+                        <exclude>**/src/main/java/com/blazebit/persistence/view/impl/metamodel/analysis/**</exclude>
                         <exclude>**/src/main/java/com/blazebit/persistence/integration/view/spring/impl/TypeFilterParser.java</exclude>
                         <exclude>**/src/main/java/com/blazebit/persistence/spring/data/base/query/AbstractCriteriaQueryParameterBinder.java</exclude>
                         <exclude>**/src/main/java/com/blazebit/persistence/spring/data/base/query/ParameterMetadataProvider.java</exclude>

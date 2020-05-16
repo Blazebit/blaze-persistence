@@ -77,8 +77,8 @@ import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.CorrelatedSingularSubselectTupleListTransformerFactory;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.CorrelatedSubviewJoinTupleTransformerFactory;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.SubviewCorrelator;
+import com.blazebit.persistence.view.impl.proxy.AbstractReflectionInstantiator;
 import com.blazebit.persistence.view.impl.proxy.AssignmentConstructorReflectionInstantiator;
-import com.blazebit.persistence.view.impl.proxy.ConstructorReflectionInstantiator;
 import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
 import com.blazebit.persistence.view.impl.type.IntegerBasicUserType;
@@ -378,7 +378,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
     private ObjectInstantiator<T> createInstantiator(ManagedViewType<? extends T> managedViewType, ManagedViewTypeImplementor<T> viewTypeBase, MappingConstructorImpl<? extends T> mappingConstructor, Class<?>[] constructorParameterTypes,
                                                      EntityViewManagerImpl entityViewManager, ManagedViewTypeImpl.InheritanceSubtypeConfiguration<T> configuration, MappingConstructorImpl.InheritanceSubtypeConstructorConfiguration<T> constructorConfiguration) {
         if (viewTypeBase == null) {
-            return new ConstructorReflectionInstantiator<>((MappingConstructorImpl<T>) mappingConstructor, proxyFactory, (ManagedViewTypeImplementor<T>) managedViewType, constructorParameterTypes, entityViewManager, configuration);
+            return AbstractReflectionInstantiator.createInstantiator((MappingConstructorImpl<T>) mappingConstructor, proxyFactory, (ManagedViewTypeImplementor<T>) managedViewType, constructorParameterTypes, entityViewManager, configuration.getMutableBasicUserTypes(), configuration.getTypeConverterEntries());
         } else {
             return new AssignmentConstructorReflectionInstantiator<>((MappingConstructorImpl<T>) mappingConstructor, proxyFactory, (ManagedViewTypeImplementor<T>) managedViewType, constructorParameterTypes, entityViewManager, configuration, constructorConfiguration);
         }
