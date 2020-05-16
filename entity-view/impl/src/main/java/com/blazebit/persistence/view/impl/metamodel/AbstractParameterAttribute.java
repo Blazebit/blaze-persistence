@@ -16,17 +16,11 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.persistence.view.Mapping;
-import com.blazebit.persistence.view.MappingCorrelated;
-import com.blazebit.persistence.view.MappingCorrelatedSimple;
-import com.blazebit.persistence.view.MappingParameter;
-import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.Self;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.ParameterAttribute;
 import com.blazebit.reflection.ReflectionUtils;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
 import java.util.Collections;
@@ -64,24 +58,6 @@ public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute
         Type[] genericParameterTypes = constructor.getGenericParameterTypes();
 
         return ReflectionUtils.resolveTypeArguments(clazz, genericParameterTypes[getIndex()]);
-    }
-
-    public static Annotation getMapping(Constructor<?> constructor, int index, MetamodelBootContext context) {
-        Annotation[] annotations = constructor.getParameterAnnotations()[index];
-
-        for (Annotation a : annotations) {
-            if (MappingParameter.class.isInstance(a)
-                    || Mapping.class.isInstance(a)
-                    || MappingSubquery.class.isInstance(a)
-                    || MappingCorrelated.class.isInstance(a)
-                    || MappingCorrelatedSimple.class.isInstance(a)
-                    || Self.class.isInstance(a)) {
-                return a;
-            }
-        }
-        
-        context.addError("No MappingParameter annotation given for the " + ParameterAttributeMapping.getLocation(constructor, index));
-        return null;
     }
 
     @Override

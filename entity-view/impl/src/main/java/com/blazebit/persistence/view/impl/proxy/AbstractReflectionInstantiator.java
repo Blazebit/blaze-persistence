@@ -16,6 +16,9 @@
 
 package com.blazebit.persistence.view.impl.proxy;
 
+import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
+import com.blazebit.persistence.view.impl.metamodel.MappingConstructorImpl;
 import com.blazebit.persistence.view.impl.type.PrimitiveBooleanTypeConverter;
 import com.blazebit.persistence.view.impl.type.PrimitiveByteTypeConverter;
 import com.blazebit.persistence.view.impl.type.PrimitiveCharTypeConverter;
@@ -29,6 +32,7 @@ import com.blazebit.persistence.view.spi.type.BasicUserType;
 import com.blazebit.persistence.view.spi.type.DirtyStateTrackable;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -82,6 +86,14 @@ public abstract class AbstractReflectionInstantiator<T> implements ObjectInstant
             array[offset + i] = DEFAULT_VALUES.get(parameterTypes[parameterOffset + i]);
         }
         return array;
+    }
+
+    public static <T> ObjectInstantiator<T> createInstantiator(MappingConstructorImpl<T> mappingConstructor, ProxyFactory proxyFactory, ManagedViewTypeImplementor<T> managedViewType, Class<?>[] constructorParameterTypes, EntityViewManagerImpl evm, List<MutableBasicUserTypeEntry> mutableBasicUserTypes, List<TypeConverterEntry> typeConverterEntries) {
+        if (managedViewType.getJavaType().isInterface() || Modifier.isAbstract(managedViewType.getJavaType().getModifiers())) {
+            return new TupleConstructorReflectionInstantiator<>(mappingConstructor, proxyFactory, managedViewType, constructorParameterTypes, evm, mutableBasicUserTypes, typeConverterEntries);
+        } else {
+            return new DirectConstructorReflectionInstantiator<>(mappingConstructor, proxyFactory, managedViewType, constructorParameterTypes, evm, mutableBasicUserTypes, typeConverterEntries);
+        }
     }
 
     /**

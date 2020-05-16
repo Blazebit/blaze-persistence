@@ -16,17 +16,10 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.parser.PathTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.view.AttributeFilterProvider;
-import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.InverseRemoveStrategy;
 import com.blazebit.persistence.view.LockMode;
-import com.blazebit.persistence.view.Mapping;
-import com.blazebit.persistence.view.MappingCorrelated;
-import com.blazebit.persistence.view.MappingCorrelatedSimple;
-import com.blazebit.persistence.view.MappingParameter;
-import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.impl.UpdatableExpressionVisitor;
 import com.blazebit.persistence.view.impl.collection.ListFactory;
 import com.blazebit.persistence.view.impl.collection.MapFactory;
@@ -509,58 +502,5 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
         }
 
         return attributeName;
-    }
-
-    public static Annotation getMapping(String attributeName, Method m, MetamodelBootContext context) {
-        Mapping mapping = AnnotationUtils.findAnnotation(m, Mapping.class);
-
-        if (mapping == null) {
-            IdMapping idMapping = AnnotationUtils.findAnnotation(m, IdMapping.class);
-
-            if (idMapping != null) {
-                if (idMapping.value().isEmpty()) {
-                    idMapping = new IdMappingLiteral(getAttributeName(m));
-                }
-
-                return idMapping;
-            }
-            
-            MappingParameter mappingParameter = AnnotationUtils.findAnnotation(m, MappingParameter.class);
-
-            if (mappingParameter != null) {
-                if (mappingParameter.value().isEmpty()) {
-                    context.addError("Illegal empty mapping parameter for the " + MethodAttributeMapping.getLocation(attributeName, m));
-                }
-
-                return mappingParameter;
-            }
-
-            MappingSubquery mappingSubquery = AnnotationUtils.findAnnotation(m, MappingSubquery.class);
-
-            if (mappingSubquery != null) {
-                return mappingSubquery;
-            }
-
-            MappingCorrelated mappingCorrelated = AnnotationUtils.findAnnotation(m, MappingCorrelated.class);
-
-            if (mappingCorrelated != null) {
-                return mappingCorrelated;
-            }
-
-            MappingCorrelatedSimple mappingCorrelatedSimple = AnnotationUtils.findAnnotation(m, MappingCorrelatedSimple.class);
-
-            if (mappingCorrelatedSimple != null) {
-                return mappingCorrelatedSimple;
-            }
-
-            // Implicit mapping
-            mapping = new MappingLiteral(getAttributeName(m));
-        }
-
-        if (mapping.value().isEmpty()) {
-            mapping = new MappingLiteral(getAttributeName(m), mapping);
-        }
-
-        return mapping;
     }
 }

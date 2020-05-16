@@ -9,10 +9,11 @@ Not yet released
 ### New features
 
 * Spring HATEOAS integration for generation of pagination links with keyset information
+* Add support for custom entity view class implementations which adds support for Java 14 Records
 
 ### Bug fixes
 
-None
+* Fix issues with the `FILTER` clause when using entity views
 
 ### Backwards-incompatible changes
 

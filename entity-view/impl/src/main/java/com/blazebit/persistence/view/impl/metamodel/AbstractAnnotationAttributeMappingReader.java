@@ -16,8 +16,13 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
+import com.blazebit.persistence.view.BatchFetch;
 import com.blazebit.persistence.view.CollectionMapping;
+import com.blazebit.persistence.view.EmptyFlatViewCreation;
+import com.blazebit.persistence.view.Limit;
 
+import java.lang.reflect.AnnotatedElement;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +39,9 @@ public class AbstractAnnotationAttributeMappingReader {
         this.context = context;
     }
 
-    public void applyCollectionMapping(AttributeMapping attributeMapping, CollectionMapping collectionMapping) {
+    protected void applyCommonMappings(AttributeMapping attributeMapping, AnnotatedElement annotatedElement) {
+        CollectionMapping collectionMapping = annotatedElement.getAnnotation(CollectionMapping.class);
+
         Class<?> collectionType = attributeMapping.getDeclaredType();
         if (collectionMapping != null && collectionMapping.ignoreIndex() && Map.class.isAssignableFrom(collectionType)) {
             context.addError("Illegal ignoreIndex mapping for the " + attributeMapping.getErrorLocation());
@@ -77,6 +84,21 @@ public class AbstractAnnotationAttributeMappingReader {
                     attributeMapping.setContainerDefault();
                 }
             }
+        }
+
+        BatchFetch batchFetch = annotatedElement.getAnnotation(BatchFetch.class);
+        if (batchFetch != null) {
+            attributeMapping.setDefaultBatchSize(batchFetch.size());
+        }
+
+        EmptyFlatViewCreation emptyFlatViewCreation = annotatedElement.getAnnotation(EmptyFlatViewCreation.class);
+        if (emptyFlatViewCreation != null) {
+            attributeMapping.setCreateEmptyFlatViews(emptyFlatViewCreation.value());
+        }
+
+        Limit limit = annotatedElement.getAnnotation(Limit.class);
+        if (limit != null) {
+            attributeMapping.setLimit(limit.limit(), limit.offset(), Arrays.asList(limit.order()));
         }
     }
 }

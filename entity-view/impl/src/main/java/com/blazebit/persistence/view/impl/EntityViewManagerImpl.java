@@ -148,6 +148,7 @@ import javax.persistence.metamodel.Metamodel;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.TypeVariable;
 import java.util.Arrays;
 import java.util.Collection;
@@ -340,7 +341,9 @@ public class EntityViewManagerImpl implements EntityViewManager {
                 l.addPostRollbackListener(javaType, new ViewInstancePostRollbackListener(managedView.getPostRollbackMethod()), managedView.getPostCommitTransitions());
             }
 
-            if (scanStaticImplementations) {
+            if (!javaType.isInterface() && !Modifier.isAbstract(javaType.getModifiers())) {
+                proxyFactory.setImplementation(javaType);
+            } else if (scanStaticImplementations) {
                 proxyFactory.loadImplementation(errors, managedView, this);
             }
             if (scanStaticMetamodels) {

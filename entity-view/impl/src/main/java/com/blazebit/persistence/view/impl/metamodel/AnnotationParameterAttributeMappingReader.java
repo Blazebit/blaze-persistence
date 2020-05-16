@@ -16,10 +16,6 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.persistence.view.BatchFetch;
-import com.blazebit.persistence.view.CollectionMapping;
-import com.blazebit.persistence.view.EmptyFlatViewCreation;
-import com.blazebit.persistence.view.Limit;
 import com.blazebit.persistence.view.MappingInheritance;
 import com.blazebit.persistence.view.MappingInheritanceMapKey;
 import com.blazebit.persistence.view.MappingInheritanceSubtype;
@@ -28,10 +24,10 @@ import com.blazebit.persistence.view.MappingSingular;
 import com.blazebit.reflection.ReflectionUtils;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,18 +42,13 @@ public class AnnotationParameterAttributeMappingReader extends AbstractAnnotatio
         super(context);
     }
 
-    public ParameterAttributeMapping readParameterAttributeMapping(ViewMapping viewMapping, Annotation mapping, ConstructorMapping constructorMapping, int index, Annotation[] annotations) {
-        Map<Class<?>, Annotation> parameterAnnotations = new HashMap<>(annotations.length);
-        for (Annotation annotation : annotations) {
-            parameterAnnotations.put(annotation.annotationType(), annotation);
-        }
-
+    public ParameterAttributeMapping readParameterAttributeMapping(ViewMapping viewMapping, Annotation mapping, ConstructorMapping constructorMapping, int index, AnnotatedElement annotatedElement) {
         Constructor<?> constructor = constructorMapping.getConstructor();
 
         Class<?> entityViewClass = viewMapping.getEntityViewClass();
         Type parameterType = ReflectionUtils.resolve(entityViewClass, constructor.getGenericParameterTypes()[index]);
         Class<?> type = ReflectionUtils.resolveType(entityViewClass, parameterType);
-        boolean forceSingular = parameterAnnotations.containsKey(MappingSingular.class) || parameterAnnotations.containsKey(MappingParameter.class);
+        boolean forceSingular = annotatedElement.isAnnotationPresent(MappingSingular.class) || annotatedElement.isAnnotationPresent(MappingParameter.class);
         boolean isCollection = !forceSingular && (Collection.class.isAssignableFrom(type) || Map.class.isAssignableFrom(type));
         Type declaredType;
         Type declaredKeyType;
@@ -79,73 +70,56 @@ public class AnnotationParameterAttributeMappingReader extends AbstractAnnotatio
             elementType = null;
         }
 
-        Map<Class<?>, String> typeMappings = resolveInheritanceSubtypeMappings(parameterAnnotations, type);
-        Map<Class<?>, String> keyTypeMappings = resolveKeyInheritanceSubtypeMappings(parameterAnnotations, keyType);
-        Map<Class<?>, String> elementTypeMappings = resolveElementInheritanceSubtypeMappings(parameterAnnotations, elementType);
+        Map<Class<?>, String> typeMappings = resolveInheritanceSubtypeMappings(annotatedElement, type);
+        Map<Class<?>, String> keyTypeMappings = resolveKeyInheritanceSubtypeMappings(annotatedElement, keyType);
+        Map<Class<?>, String> elementTypeMappings = resolveElementInheritanceSubtypeMappings(annotatedElement, elementType);
 
         ParameterAttributeMapping parameterMapping = new ParameterAttributeMapping(viewMapping, mapping, context, constructorMapping, index, isCollection, type, keyType, elementType, declaredType, declaredKeyType, declaredElementType, typeMappings, keyTypeMappings, elementTypeMappings);
 
-        CollectionMapping collectionMapping = (CollectionMapping) parameterAnnotations.get(CollectionMapping.class);
-
-        applyCollectionMapping(parameterMapping, collectionMapping);
-
-        BatchFetch batchFetch = (BatchFetch) parameterAnnotations.get(BatchFetch.class);
-        if (batchFetch != null) {
-            parameterMapping.setDefaultBatchSize(batchFetch.size());
-        }
-
-        EmptyFlatViewCreation emptyFlatViewCreation = (EmptyFlatViewCreation) parameterAnnotations.get(EmptyFlatViewCreation.class);
-        if (emptyFlatViewCreation != null) {
-            parameterMapping.setCreateEmptyFlatViews(emptyFlatViewCreation.value());
-        }
-
-        Limit limit = (Limit) parameterAnnotations.get(Limit.class);
-        if (limit != null) {
-            parameterMapping.setLimit(limit.limit(), limit.offset(), Arrays.asList(limit.order()));
-        }
+        applyCommonMappings(parameterMapping, annotatedElement);
 
         return parameterMapping;
     }
 
-    private Map<Class<?>, String> resolveInheritanceSubtypeMappings(Map<Class<?>, Annotation> parameterAnnotations, Class<?> type) {
-        MappingInheritance inheritance = (MappingInheritance) parameterAnnotations.get(MappingInheritance.class);
+    private Map<Class<?>, String> resolveInheritanceSubtypeMappings(AnnotatedElement annotatedElement, Class<?> type) {
+        MappingInheritance inheritance = annotatedElement.getAnnotation(MappingInheritance.class);
         if (inheritance != null) {
             Class<?> baseType = null;
             if (!inheritance.onlySubtypes()) {
                 baseType = type;
             }
-            return resolveInheritanceSubtypeMappings(parameterAnnotations, baseType, inheritance.value());
+            return resolveInheritanceSubtypeMappings(annotatedElement, baseType, inheritance.value());
         }
-        return resolveInheritanceSubtypeMappings(parameterAnnotations, null, null);
+        return resolveInheritanceSubtypeMappings(annotatedElement, null, null);
     }
 
-    private Map<Class<?>, String> resolveKeyInheritanceSubtypeMappings(Map<Class<?>, Annotation> parameterAnnotations, Class<?> keyType) {
-        MappingInheritanceMapKey inheritance = (MappingInheritanceMapKey) parameterAnnotations.get(MappingInheritanceMapKey.class);
+    private Map<Class<?>, String> resolveKeyInheritanceSubtypeMappings(AnnotatedElement annotatedElement, Class<?> keyType) {
+        MappingInheritanceMapKey inheritance = annotatedElement.getAnnotation(MappingInheritanceMapKey.class);
         if (inheritance != null) {
             Class<?> baseType = null;
             if (!inheritance.onlySubtypes()) {
                 baseType = keyType;
             }
-            return resolveInheritanceSubtypeMappings(parameterAnnotations, baseType, inheritance.value());
+            return resolveInheritanceSubtypeMappings(annotatedElement, baseType, inheritance.value());
         }
         return null;
     }
 
-    private Map<Class<?>, String> resolveElementInheritanceSubtypeMappings(Map<Class<?>, Annotation> parameterAnnotations, Class<?> elementType) {
-        MappingInheritance inheritance = (MappingInheritance) parameterAnnotations.get(MappingInheritance.class);
+    private Map<Class<?>, String> resolveElementInheritanceSubtypeMappings(AnnotatedElement annotatedElement, Class<?> elementType) {
+        MappingInheritance inheritance = annotatedElement.getAnnotation(MappingInheritance.class);
         if (inheritance != null) {
             Class<?> baseType = null;
             if (!inheritance.onlySubtypes()) {
                 baseType = elementType;
             }
-            return resolveInheritanceSubtypeMappings(parameterAnnotations, baseType, inheritance.value());
+            return resolveInheritanceSubtypeMappings(annotatedElement, baseType, inheritance.value());
         }
-        return resolveInheritanceSubtypeMappings(parameterAnnotations, null, null);
+        return resolveInheritanceSubtypeMappings(annotatedElement, null, null);
     }
 
-    private Map<Class<?>, String> resolveInheritanceSubtypeMappings(Map<Class<?>, Annotation> parameterAnnotations, Class<?> baseType, MappingInheritanceSubtype[] subtypes) {
+    private Map<Class<?>, String> resolveInheritanceSubtypeMappings(AnnotatedElement annotatedElement, Class<?> baseType, MappingInheritanceSubtype[] subtypes) {
         if (subtypes == null) {
-            MappingInheritanceSubtype subtype = (MappingInheritanceSubtype) parameterAnnotations.get(MappingInheritanceSubtype.class);
+            MappingInheritanceSubtype subtype = annotatedElement.getAnnotation(MappingInheritanceSubtype.class);
             if (subtype == null) {
                 return null;
             } else {

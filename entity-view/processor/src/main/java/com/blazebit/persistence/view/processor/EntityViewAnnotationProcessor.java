@@ -26,6 +26,7 @@ import javax.annotation.processing.SupportedOptions;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 import java.util.Collection;
@@ -150,14 +151,16 @@ public class EntityViewAnnotationProcessor extends AbstractProcessor {
             if (context.isAlreadyGenerated(entityView.getQualifiedName()) || !entityView.isValid()) {
                 continue;
             }
-            context.logMessage(Diagnostic.Kind.OTHER, "Writing meta model for entity view " + entityView);
-            RelationClassWriter.writeFile(sb, entityView, context);
-            MetamodelClassWriter.writeFile(sb, entityView, context);
-            if (context.isGenerateImplementations()) {
-                ForeignPackageAdapterClassWriter.writeFiles(sb, entityView, context);
-                ImplementationClassWriter.writeFile(sb, entityView, context);
-                if (context.isGenerateBuilders()) {
-                    BuilderClassWriter.writeFile(sb, entityView, context);
+            if (entityView.getTypeElement().getModifiers().contains(Modifier.ABSTRACT) || entityView.getTypeElement().getKind().isInterface()) {
+                context.logMessage(Diagnostic.Kind.OTHER, "Writing meta model for entity view " + entityView);
+                RelationClassWriter.writeFile(sb, entityView, context);
+                MetamodelClassWriter.writeFile(sb, entityView, context);
+                if (context.isGenerateImplementations()) {
+                    ForeignPackageAdapterClassWriter.writeFiles(sb, entityView, context);
+                    ImplementationClassWriter.writeFile(sb, entityView, context);
+                    if (context.isGenerateBuilders()) {
+                        BuilderClassWriter.writeFile(sb, entityView, context);
+                    }
                 }
             }
             context.markGenerated(entityView.getQualifiedName());

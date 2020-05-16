@@ -16,16 +16,11 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.view.AllowUpdatableEntityViews;
 import com.blazebit.persistence.view.AttributeFilter;
 import com.blazebit.persistence.view.AttributeFilterProvider;
 import com.blazebit.persistence.view.AttributeFilters;
-import com.blazebit.persistence.view.BatchFetch;
-import com.blazebit.persistence.view.CollectionMapping;
-import com.blazebit.persistence.view.EmptyFlatViewCreation;
 import com.blazebit.persistence.view.IdMapping;
-import com.blazebit.persistence.view.Limit;
 import com.blazebit.persistence.view.MappingInheritance;
 import com.blazebit.persistence.view.MappingInheritanceMapKey;
 import com.blazebit.persistence.view.MappingInheritanceSubtype;
@@ -37,10 +32,10 @@ import com.blazebit.persistence.view.UpdatableMapping;
 import com.blazebit.reflection.ReflectionUtils;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -55,11 +50,11 @@ public class AnnotationMethodAttributeMappingReader extends AbstractAnnotationAt
         super(context);
     }
 
-    public MethodAttributeMapping readMethodAttributeMapping(ViewMapping viewMapping, Annotation mapping, String attributeName, Method method) {
+    public MethodAttributeMapping readMethodAttributeMapping(ViewMapping viewMapping, Annotation mapping, String attributeName, Method method, AnnotatedElement annotatedElement, int attributeIndex) {
         Class<?> entityViewClass = viewMapping.getEntityViewClass();
         Type returnType = ReflectionUtils.resolve(entityViewClass, method.getGenericReturnType());
         Class<?> type = ReflectionUtils.resolveType(entityViewClass, returnType);
-        boolean forceSingular = AnnotationUtils.findAnnotation(method, MappingSingular.class) != null || AnnotationUtils.findAnnotation(method, MappingParameter.class) != null;
+        boolean forceSingular = annotatedElement.isAnnotationPresent(MappingSingular.class) || annotatedElement.isAnnotationPresent(MappingParameter.class);
         boolean isCollection = !forceSingular && (Collection.class.isAssignableFrom(type) || Map.class.isAssignableFrom(type));
         Type declaredType;
         Type declaredKeyType;
@@ -81,19 +76,21 @@ public class AnnotationMethodAttributeMappingReader extends AbstractAnnotationAt
             elementType = null;
         }
 
-        Map<Class<?>, String> typeMappings = resolveInheritanceSubtypeMappings(method, type);
-        Map<Class<?>, String> keyTypeMappings = resolveKeyInheritanceSubtypeMappings(method, keyType);
-        Map<Class<?>, String> elementTypeMappings = resolveElementInheritanceSubtypeMappings(method, elementType);
+        Map<Class<?>, String> typeMappings = resolveInheritanceSubtypeMappings(annotatedElement, type);
+        Map<Class<?>, String> keyTypeMappings = resolveKeyInheritanceSubtypeMappings(annotatedElement, keyType);
+        Map<Class<?>, String> elementTypeMappings = resolveElementInheritanceSubtypeMappings(annotatedElement, elementType);
 
-        MethodAttributeMapping attributeMapping = new MethodAttributeMapping(viewMapping, mapping, context, attributeName, method, isCollection, type, keyType, elementType, declaredType, declaredKeyType, declaredElementType, typeMappings, keyTypeMappings, elementTypeMappings);
+        MethodAttributeMapping attributeMapping = new MethodAttributeMapping(viewMapping, mapping, context, attributeName, method, attributeIndex, isCollection, type, keyType, elementType, declaredType, declaredKeyType, declaredElementType, typeMappings, keyTypeMappings, elementTypeMappings);
 
-        if (AnnotationUtils.findAnnotation(method, IdMapping.class) != null) {
+        if (annotatedElement.isAnnotationPresent(IdMapping.class)) {
             viewMapping.setIdAttributeMapping(attributeMapping);
         }
 
+        applyCommonMappings(attributeMapping, annotatedElement);
+
         Map<String, Class<? extends AttributeFilterProvider<?>>> attributeFilterProviders = new HashMap<>();
-        AttributeFilter filterMapping = AnnotationUtils.findAnnotation(method, AttributeFilter.class);
-        AttributeFilters filtersMapping = AnnotationUtils.findAnnotation(method, AttributeFilters.class);
+        AttributeFilter filterMapping = annotatedElement.getAnnotation(AttributeFilter.class);
+        AttributeFilters filtersMapping = annotatedElement.getAnnotation(AttributeFilters.class);
 
         if (filterMapping != null) {
             attributeFilterProviders.put(filterMapping.name(), (Class<? extends AttributeFilterProvider<?>>) filterMapping.value());
@@ -109,40 +106,21 @@ public class AnnotationMethodAttributeMappingReader extends AbstractAnnotationAt
         }
         attributeMapping.setAttributeFilterProviders(attributeFilterProviders);
 
-        OptimisticLock optimisticLock = AnnotationUtils.findAnnotation(method, OptimisticLock.class);
+        OptimisticLock optimisticLock = annotatedElement.getAnnotation(OptimisticLock.class);
         if (optimisticLock != null) {
             attributeMapping.setOptimisticLockProtected(!optimisticLock.exclude());
         }
 
-        CollectionMapping collectionMapping = AnnotationUtils.findAnnotation(method, CollectionMapping.class);
-
-        applyCollectionMapping(attributeMapping, collectionMapping);
-
-        BatchFetch batchFetch = AnnotationUtils.findAnnotation(method, BatchFetch.class);
-        if (batchFetch != null) {
-            attributeMapping.setDefaultBatchSize(batchFetch.size());
-        }
-
-        EmptyFlatViewCreation emptyFlatViewCreation = AnnotationUtils.findAnnotation(method, EmptyFlatViewCreation.class);
-        if (emptyFlatViewCreation != null) {
-            attributeMapping.setCreateEmptyFlatViews(emptyFlatViewCreation.value());
-        }
-
-        Limit limit = AnnotationUtils.findAnnotation(method, Limit.class);
-        if (limit != null) {
-            attributeMapping.setLimit(limit.limit(), limit.offset(), Arrays.asList(limit.order()));
-        }
-
-        UpdatableMapping updatableMapping = AnnotationUtils.findAnnotation(method, UpdatableMapping.class);
+        UpdatableMapping updatableMapping = annotatedElement.getAnnotation(UpdatableMapping.class);
         if (updatableMapping != null) {
             attributeMapping.setUpdatable(updatableMapping.updatable(), updatableMapping.orphanRemoval(), updatableMapping.cascade(), updatableMapping.subtypes(), updatableMapping.persistSubtypes(), updatableMapping.updateSubtypes());
         }
 
-        if (AnnotationUtils.findAnnotation(method, AllowUpdatableEntityViews.class) != null) {
+        if (annotatedElement.getAnnotation(AllowUpdatableEntityViews.class) != null) {
             attributeMapping.setDisallowOwnedUpdatableSubview(false);
         }
 
-        MappingInverse inverseMapping = AnnotationUtils.findAnnotation(method, MappingInverse.class);
+        MappingInverse inverseMapping = annotatedElement.getAnnotation(MappingInverse.class);
         if (inverseMapping != null) {
             attributeMapping.setInverseRemoveStrategy(inverseMapping.removeStrategy());
             String mappedBy = inverseMapping.mappedBy();
@@ -154,45 +132,45 @@ public class AnnotationMethodAttributeMappingReader extends AbstractAnnotationAt
         return attributeMapping;
     }
 
-    private Map<Class<?>, String> resolveInheritanceSubtypeMappings(Method method, Class<?> type) {
-        MappingInheritance inheritance = AnnotationUtils.findAnnotation(method, MappingInheritance.class);
+    private Map<Class<?>, String> resolveInheritanceSubtypeMappings(AnnotatedElement annotatedElement, Class<?> type) {
+        MappingInheritance inheritance = annotatedElement.getAnnotation(MappingInheritance.class);
         if (inheritance != null) {
             Class<?> baseType = null;
             if (!inheritance.onlySubtypes()) {
                 baseType = type;
             }
-            return resolveInheritanceSubtypeMappings(method, baseType, inheritance.value());
+            return resolveInheritanceSubtypeMappings(annotatedElement, baseType, inheritance.value());
         }
-        return resolveInheritanceSubtypeMappings(method, null, null);
+        return resolveInheritanceSubtypeMappings(annotatedElement, null, null);
     }
 
-    private Map<Class<?>, String> resolveKeyInheritanceSubtypeMappings(Method method, Class<?> keyType) {
-        MappingInheritanceMapKey inheritance = AnnotationUtils.findAnnotation(method, MappingInheritanceMapKey.class);
+    private Map<Class<?>, String> resolveKeyInheritanceSubtypeMappings(AnnotatedElement annotatedElement, Class<?> keyType) {
+        MappingInheritanceMapKey inheritance = annotatedElement.getAnnotation(MappingInheritanceMapKey.class);
         if (inheritance != null) {
             Class<?> baseType = null;
             if (!inheritance.onlySubtypes()) {
                 baseType = keyType;
             }
-            return resolveInheritanceSubtypeMappings(method, baseType, inheritance.value());
+            return resolveInheritanceSubtypeMappings(annotatedElement, baseType, inheritance.value());
         }
         return null;
     }
 
-    private Map<Class<?>, String> resolveElementInheritanceSubtypeMappings(Method method, Class<?> elementType) {
-        MappingInheritance inheritance = AnnotationUtils.findAnnotation(method, MappingInheritance.class);
+    private Map<Class<?>, String> resolveElementInheritanceSubtypeMappings(AnnotatedElement annotatedElement, Class<?> elementType) {
+        MappingInheritance inheritance = annotatedElement.getAnnotation(MappingInheritance.class);
         if (inheritance != null) {
             Class<?> baseType = null;
             if (!inheritance.onlySubtypes()) {
                 baseType = elementType;
             }
-            return resolveInheritanceSubtypeMappings(method, baseType, inheritance.value());
+            return resolveInheritanceSubtypeMappings(annotatedElement, baseType, inheritance.value());
         }
-        return resolveInheritanceSubtypeMappings(method, null, null);
+        return resolveInheritanceSubtypeMappings(annotatedElement, null, null);
     }
 
-    private Map<Class<?>, String> resolveInheritanceSubtypeMappings(Method method, Class<?> baseType, MappingInheritanceSubtype[] subtypes) {
+    private Map<Class<?>, String> resolveInheritanceSubtypeMappings(AnnotatedElement annotatedElement, Class<?> baseType, MappingInheritanceSubtype[] subtypes) {
         if (subtypes == null) {
-            MappingInheritanceSubtype subtype = AnnotationUtils.findAnnotation(method, MappingInheritanceSubtype.class);
+            MappingInheritanceSubtype subtype = annotatedElement.getAnnotation(MappingInheritanceSubtype.class);
             if (subtype == null) {
                 return null;
             } else {

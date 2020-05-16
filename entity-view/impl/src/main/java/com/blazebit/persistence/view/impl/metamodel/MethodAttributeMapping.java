@@ -69,6 +69,7 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
 
     private final String attributeName;
     private final Method method;
+    private final int attributeIndex;
 
     private Map<String, Class<? extends AttributeFilterProvider<?>>> attributeFilterProviders;
 
@@ -97,11 +98,12 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
     private Map<EmbeddableOwner, Set<ManagedViewTypeImplementor<?>>> embeddableCascadePersistSubtypesMap;
     private Map<EmbeddableOwner, Set<ManagedViewTypeImplementor<?>>> embeddableCascadeUpdateSubtypesMap;
 
-    public MethodAttributeMapping(ViewMapping viewMapping, Annotation mapping, MetamodelBootContext context, String attributeName, Method method, boolean isCollection, Class<?> declaredTypeClass, Class<?> declaredKeyTypeClass, Class declaredElementTypeClass,
+    public MethodAttributeMapping(ViewMapping viewMapping, Annotation mapping, MetamodelBootContext context, String attributeName, Method method, int attributeIndex, boolean isCollection, Class<?> declaredTypeClass, Class<?> declaredKeyTypeClass, Class declaredElementTypeClass,
                                   java.lang.reflect.Type type, java.lang.reflect.Type keyType, java.lang.reflect.Type elementType, Map<Class<?>, String> inheritanceSubtypeClassMappings, Map<Class<?>, String> keyInheritanceSubtypeClassMappings, Map<Class<?>, String> elementInheritanceSubtypeClassMappings) {
         super(viewMapping, mapping, context, isCollection, declaredTypeClass, declaredKeyTypeClass, declaredElementTypeClass, type, keyType, elementType, inheritanceSubtypeClassMappings, keyInheritanceSubtypeClassMappings, elementInheritanceSubtypeClassMappings);
         this.attributeName = attributeName;
         this.method = method;
+        this.attributeIndex = attributeIndex;
     }
 
     @Override
@@ -117,6 +119,10 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
     @Override
     public Method getMethod() {
         return method;
+    }
+
+    public int getAttributeIndex() {
+        return attributeIndex;
     }
 
     @Override
@@ -668,6 +674,9 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
             attribute = embeddableAttributeMap.get(embeddableMapping);
         }
         if (attribute == null) {
+            if (this.attributeIndex != -1) {
+                attributeIndex = this.attributeIndex;
+            }
             if (mapping instanceof MappingParameter) {
                 if (embeddableMapping == null) {
                     mappedBy = "";

@@ -20,9 +20,9 @@ import com.blazebit.persistence.spi.PackageOpener;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.MappingConstructorImpl;
-import com.blazebit.persistence.view.impl.proxy.ConstructorReflectionInstantiator;
 import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
+import com.blazebit.persistence.view.impl.proxy.TupleConstructorReflectionInstantiator;
 import com.blazebit.persistence.view.metamodel.FlatViewType;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.metamodel.ViewType;
@@ -70,7 +70,7 @@ public class ProxyFactoryTest extends AbstractEntityViewTest {
 
         // The parameter order is _id, contacts, firstContactPerson, id, name
         Class<?>[] parameterTypes = new Class[]{ Long.class, Map.class, Person.class, Person.class, String.class, Long.class, Integer.class};
-        ObjectInstantiator<UnsafeDocumentClassView> instantiator = new ConstructorReflectionInstantiator<>((MappingConstructorImpl<UnsafeDocumentClassView>) viewType.getConstructor(Long.class, Integer.class), proxyFactory, (ManagedViewTypeImplementor<UnsafeDocumentClassView>) viewType, parameterTypes, evm, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
+        ObjectInstantiator<UnsafeDocumentClassView> instantiator = new TupleConstructorReflectionInstantiator<>((MappingConstructorImpl<UnsafeDocumentClassView>) viewType.getConstructor(Long.class, Integer.class), proxyFactory, (ManagedViewTypeImplementor<UnsafeDocumentClassView>) viewType, parameterTypes, evm, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
         Map<Integer, Person> expectedContacts = new HashMap<Integer, Person>();
         Person expectedFirstContactPerson = new Person("pers");
         Long expectedId = 1L;

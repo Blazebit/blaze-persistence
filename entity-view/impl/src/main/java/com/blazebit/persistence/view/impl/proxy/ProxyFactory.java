@@ -221,6 +221,10 @@ public class ProxyFactory {
         }
     }
 
+    public void setImplementation(Class<?> entityViewImplementationClass) {
+        proxyClasses.put(entityViewImplementationClass, entityViewImplementationClass);
+        proxyClassesToViewClasses.put(entityViewImplementationClass, entityViewImplementationClass);
+    }
 
     @SuppressWarnings("unchecked")
     private <T> Class<? extends T> getProxy(EntityViewManager entityViewManager, ManagedViewTypeImplementor<T> viewType, boolean unsafe) {
