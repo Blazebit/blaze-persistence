@@ -10,11 +10,13 @@ Not yet released
 
 * Spring HATEOAS integration for generation of pagination links with keyset information
 * Add support for custom entity view class implementations which adds support for Java 14 Records
+* Support for Spring Boot 2.3 and Spring Data 2.3
 
 ### Bug fixes
 
 * Fix issues with the `FILTER` clause when using entity views
 * Fix deserializing the id from the JSON payload for creatable only entity views
+* Fix support for dynamic projections with entity views
 
 ### Backwards-incompatible changes
 

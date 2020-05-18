@@ -36,7 +36,7 @@ public class TransactionalWorkService {
     @Autowired
     private EntityViewManager evm;
 
-    public <V> V doTxWork(TxWork<V> work) {
+    public <V> V txGet(TxWork<V> work) {
         return work.work(em, evm);
     }
 

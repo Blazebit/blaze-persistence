@@ -43,24 +43,27 @@ import java.util.List;
 @Configuration
 public class BlazePersistenceWebConfiguration extends WebMvcConfigurerAdapter {
 
+    protected final ObjectFactory<ConversionService> conversionService;
     private final EntityViewManager entityViewManager;
-    private final ObjectFactory<ConversionService> conversionService;
-    private final SortHandlerMethodArgumentResolver sortResolver;
 
     @Autowired
     public BlazePersistenceWebConfiguration(
       EntityViewManager entityViewManager,
-      @Qualifier("mvcConversionService") ObjectFactory<ConversionService> conversionService,
-      final SortHandlerMethodArgumentResolver sortResolver
+      @Qualifier("mvcConversionService") ObjectFactory<ConversionService> conversionService
     ) {
         this.entityViewManager = entityViewManager;
         this.conversionService = conversionService;
-        this.sortResolver = sortResolver;
     }
 
     @Bean
     public KeysetPageableArgumentResolver keysetPageableResolver() {
-        return new KeysetPageableHandlerMethodArgumentResolver(sortResolver, conversionService.getObject());
+        return new KeysetPageableHandlerMethodArgumentResolver(keysetSortResolver(), conversionService.getObject());
+    }
+
+    @Bean
+    public SortHandlerMethodArgumentResolver keysetSortResolver() {
+        SortHandlerMethodArgumentResolver sortResolver = new SortHandlerMethodArgumentResolver();
+        return sortResolver;
     }
 
     @Override

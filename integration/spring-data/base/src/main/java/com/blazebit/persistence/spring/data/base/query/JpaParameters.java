@@ -45,7 +45,6 @@ import java.util.List;
  */
 public class JpaParameters extends Parameters<JpaParameters, JpaParameter> {
 
-    private final int dynamicProjectionIndex;
     private final int keysetPageableIndex;
 
     /**
@@ -55,8 +54,7 @@ public class JpaParameters extends Parameters<JpaParameters, JpaParameter> {
      */
     public JpaParameters(Method method) {
         super(method);
-        int dynamicProjectionIndex = -1;
-        if (hasPageableParameter()) {
+        if (super.hasPageableParameter()) {
             this.keysetPageableIndex = -1;
         } else {
             Class<?>[] types = method.getParameterTypes();
@@ -65,10 +63,6 @@ public class JpaParameters extends Parameters<JpaParameters, JpaParameter> {
                 if (types[i] == KeysetPageable.class) {
                     break;
                 }
-                JpaParameter parameter = getParameter(i);
-                if (parameter.isDynamicProjectionParameter()) {
-                    dynamicProjectionIndex = parameter.getIndex();
-                }
             }
             if (i == types.length) {
                 this.keysetPageableIndex = -1;
@@ -76,13 +70,11 @@ public class JpaParameters extends Parameters<JpaParameters, JpaParameter> {
                 this.keysetPageableIndex = i;
             }
         }
-        this.dynamicProjectionIndex = dynamicProjectionIndex;
     }
 
     private JpaParameters(List<JpaParameter> parameters) {
         super(parameters);
-        int dynamicProjectionIndex = -1;
-        if (hasPageableParameter()) {
+        if (super.hasPageableParameter()) {
             this.keysetPageableIndex = -1;
         } else {
             int i = 0;
@@ -91,9 +83,6 @@ public class JpaParameters extends Parameters<JpaParameters, JpaParameter> {
                 if (jpaParameter.getType() == KeysetPageable.class) {
                     break;
                 }
-                if (jpaParameter.isDynamicProjectionParameter()) {
-                    dynamicProjectionIndex = jpaParameter.getIndex();
-                }
             }
             if (i == parameters.size()) {
                 this.keysetPageableIndex = -1;
@@ -101,7 +90,6 @@ public class JpaParameters extends Parameters<JpaParameters, JpaParameter> {
                 this.keysetPageableIndex = i;
             }
         }
-        this.dynamicProjectionIndex = dynamicProjectionIndex;
     }
 
     @Override
@@ -112,16 +100,6 @@ public class JpaParameters extends Parameters<JpaParameters, JpaParameter> {
     @Override
     public int getPageableIndex() {
         return keysetPageableIndex == -1 ? super.getPageableIndex() : keysetPageableIndex;
-    }
-
-    @Override
-    public int getDynamicProjectionIndex() {
-        return dynamicProjectionIndex;
-    }
-
-    @Override
-    public boolean hasDynamicProjection() {
-        return dynamicProjectionIndex != -1;
     }
 
     /**

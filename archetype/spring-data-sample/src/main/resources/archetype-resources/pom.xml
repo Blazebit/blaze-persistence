@@ -31,8 +31,8 @@
         <maven.compiler.target>1.8</maven.compiler.target>
 
         <version.blaze-persistence>${project.version}</version.blaze-persistence>
-        <version.spring-data-2.2>2.2.3.RELEASE</version.spring-data-2.2>
-        <version.spring>${version.spring-data-2.2-spring}</version.spring>
+        <version.spring-data-2.2>2.3.0.RELEASE</version.spring-data-2.2>
+        <version.spring>${version.spring-data-2.3-spring}</version.spring>
     </properties>
 
     <dependencyManagement>
@@ -58,7 +58,7 @@
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-entitymanager</artifactId>
-            <version>5.2.8.Final</version>
+            <version>5.4.6.Final</version>
         </dependency>
 
         <!-- Core dependencies -->
@@ -72,7 +72,7 @@
         </dependency>
         <dependency>
             <groupId>com.blazebit</groupId>
-            <artifactId>blaze-persistence-integration-hibernate-5.2</artifactId>
+            <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
         </dependency>
 
         <!-- Entity View dependencies -->
@@ -107,12 +107,12 @@
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-jpa</artifactId>
-            <version>${version.spring-data-2.2}</version>
+            <version>${version.spring-data-2.3}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.blazebit</groupId>
-            <artifactId>blaze-persistence-integration-spring-data-2.2</artifactId>
+            <artifactId>blaze-persistence-integration-spring-data-2.3</artifactId>
         </dependency>
 
         <!-- JDK9+ dependencies -->
