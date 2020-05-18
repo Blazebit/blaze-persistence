@@ -38,6 +38,15 @@
                 <module>mssql</module>
             </modules>
         </profile>
+        <profile>
+            <id>blazebit-release</id>
+            <modules>
+                <module>postgresql</module>
+                <module>h2</module>
+                <module>mysql</module>
+                <module>mssql</module>
+            </modules>
+        </profile>
     </profiles>
 
     <properties>

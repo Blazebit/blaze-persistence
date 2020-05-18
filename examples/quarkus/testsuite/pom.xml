@@ -21,5 +21,12 @@
                 <module>native</module>
             </modules>
         </profile>
+        <profile>
+            <id>blazebit-release</id>
+            <modules>
+                <module>base</module>
+                <module>native</module>
+            </modules>
+        </profile>
     </profiles>
 </project>
