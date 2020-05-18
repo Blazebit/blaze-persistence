@@ -18,7 +18,6 @@ package com.blazebit.persistence.spring.hateoas.webmvc;
 
 import com.blazebit.persistence.integration.view.spring.EnableEntityViews;
 import com.blazebit.persistence.spring.data.impl.repository.BlazePersistenceRepositoryFactoryBean;
-import com.blazebit.persistence.spring.data.webmvc.impl.BlazePersistenceWebConfiguration;
 import com.blazebit.persistence.spring.hateoas.webmvc.entity.Document;
 import com.blazebit.persistence.spring.hateoas.webmvc.entity.Person;
 import com.blazebit.persistence.spring.hateoas.webmvc.tx.TransactionalWorkService;
@@ -30,13 +29,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.ImportResource;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.data.web.config.SpringDataWebConfiguration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -44,7 +43,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Christian Beikov
  * @since 1.5.0
  */
-@ContextConfiguration(classes = {DocumentControllerTest.TestConfig.class, BlazePersistenceWebConfiguration.class, SpringDataWebConfiguration.class})
+@ContextConfiguration(classes = {DocumentControllerTest.TestConfig.class, HateoasAwareBlazePersistenceWebConfiguration.class})
 public class DocumentControllerTest extends AbstractSpringWebMvcTest {
 
     @Autowired
@@ -59,7 +58,7 @@ public class DocumentControllerTest extends AbstractSpringWebMvcTest {
         // When / Then
         mockMvc.perform(get("/documents?size=1").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(header().stringValues(HttpHeaders.LINK, (Matcher<Iterable<String>>) (Matcher<?>) hasItem(containsString("{\"id\":1}"))));
+                .andExpect(header().stringValues(HttpHeaders.LINK, (Matcher<Iterable<String>>) (Matcher<?>) hasItem(containsString("{\"id\":" + d1.getId() + "}"))));
     }
 
     @Test
@@ -71,7 +70,7 @@ public class DocumentControllerTest extends AbstractSpringWebMvcTest {
         // When / Then
         mockMvc.perform(get("/documents?size=1").accept("application/hal+json"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.links[?(@.rel == 'next')].href", (Matcher<Iterable<String>>) (Matcher<?>) hasItem(containsString("{\"id\":1}"))));
+                .andExpect(jsonPath("$.links[?(@.rel == 'next')].href", (Matcher<Iterable<String>>) (Matcher<?>) hasItem(containsString("{\"id\":" + d1.getId() + "}"))));
     }
 
     private Document createDocument(String name) {
@@ -83,7 +82,7 @@ public class DocumentControllerTest extends AbstractSpringWebMvcTest {
     }
 
     private Document createDocument(final String name, final String description, final long age, final Person owner) {
-        return transactionalWorkService.doTxWork((em, evm) -> {
+        return transactionalWorkService.txGet((em, evm) -> {
             Document d = new Document(name);
             d.setDescription(description);
             d.setAge(age);

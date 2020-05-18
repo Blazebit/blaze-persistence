@@ -87,12 +87,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>2.9.8</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>com.jayway.jsonpath</groupId>
             <artifactId>json-path</artifactId>
             <version>2.4.0</version>
@@ -2292,6 +2286,12 @@
                     <artifactId>blaze-persistence-integration-spring-data-1.x</artifactId>
                     <scope>test</scope>
                 </dependency>
+                <dependency>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-databind</artifactId>
+                    <version>2.9.8</version>
+                    <scope>test</scope>
+                </dependency>
             </dependencies>
         </profile>
         <profile>
@@ -2312,6 +2312,12 @@
                     <artifactId>blaze-persistence-integration-spring-data-2.0</artifactId>
                     <scope>test</scope>
                 </dependency>
+                <dependency>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-databind</artifactId>
+                    <version>2.9.8</version>
+                    <scope>test</scope>
+                </dependency>
             </dependencies>
         </profile>
         <profile>
@@ -2320,12 +2326,6 @@
                 <version.spring>${version.spring-data-2.1-spring}</version.spring>
                 <version.spring.boot>${version.spring-data-2.1-spring-boot}</version.spring.boot>
             </properties>
-            <repositories>
-                <repository>
-                    <id>spring-libs-milestone</id>
-                    <url>https://repo.spring.io/libs-milestone</url>
-                </repository>
-            </repositories>
             <dependencies>
                 <dependency>
                     <groupId>org.springframework.data</groupId>
@@ -2346,12 +2346,6 @@
                 <version.spring>${version.spring-data-2.2-spring}</version.spring>
                 <version.spring.boot>${version.spring-data-2.2-spring-boot}</version.spring.boot>
             </properties>
-            <repositories>
-                <repository>
-                    <id>spring-libs-milestone</id>
-                    <url>https://repo.spring.io/libs-milestone</url>
-                </repository>
-            </repositories>
             <dependencies>
                 <dependency>
                     <groupId>org.springframework.data</groupId>
@@ -2362,6 +2356,26 @@
                 <dependency>
                     <groupId>com.blazebit</groupId>
                     <artifactId>blaze-persistence-integration-spring-data-2.2</artifactId>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>spring-data-2.3.x</id>
+            <properties>
+                <version.spring>${version.spring-data-2.3-spring}</version.spring>
+                <version.spring.boot>${version.spring-data-2.3-spring-boot}</version.spring.boot>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.springframework.data</groupId>
+                    <artifactId>spring-data-jpa</artifactId>
+                    <version>${version.spring-data-2.3}</version>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>com.blazebit</groupId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.3</artifactId>
                     <scope>test</scope>
                 </dependency>
             </dependencies>

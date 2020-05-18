@@ -59,7 +59,8 @@
         <!-- The SQLServer Dialect had a bug before 5.2.9.Final making it impossible to use pagination -->
         <version.hibernate-5.2>5.2.9.Final</version.hibernate-5.2>
         <version.hibernate-5.3>5.3.1.Final</version.hibernate-5.3>
-        <version.hibernate-5.4>5.4.6.Final</version.hibernate-5.4>
+        <!-- Older versions had an issue with rendering NULL in the IN predicate -->
+        <version.hibernate-5.4>5.4.10.Final</version.hibernate-5.4>
         <!-- Use 5.2.9 for now until there is a milestone release because the maven release always messes up setting the appropriate version.. -->
         <!--<version.hibernate-6.0>6.0.0-SNAPSHOT</version.hibernate-6.0>-->
         <version.hibernate-6.0>5.3.1.Final</version.hibernate-6.0>
@@ -98,6 +99,9 @@
         <version.spring-data-2.2>2.2.3.RELEASE</version.spring-data-2.2>
         <version.spring-data-2.2-spring>5.2.2.RELEASE</version.spring-data-2.2-spring>
         <version.spring-data-2.2-spring-boot>2.2.2.RELEASE</version.spring-data-2.2-spring-boot>
+        <version.spring-data-2.3>2.3.0.RELEASE</version.spring-data-2.3>
+        <version.spring-data-2.3-spring>5.2.6.RELEASE</version.spring-data-2.3-spring>
+        <version.spring-data-2.3-spring-boot>2.3.0.RELEASE</version.spring-data-2.3-spring-boot>
 
         <version.openejb>4.7.5</version.openejb>
         <version.openejb.javaee-api>6.0-6</version.openejb.javaee-api>
@@ -371,6 +375,11 @@
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-spring-data-2.2</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-spring-data-2.3</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

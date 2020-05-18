@@ -289,18 +289,6 @@
                 <version.spring>${version.spring-data-2.2-spring}</version.spring>
                 <version.spring.boot>${version.spring-data-2.2-spring-boot}</version.spring.boot>
             </properties>
-            <repositories>
-                <repository>
-                    <id>spring-libs-milestone</id>
-                    <url>https://repo.spring.io/libs-milestone</url>
-                </repository>
-            </repositories>
-            <pluginRepositories>
-                <pluginRepository>
-                    <id>spring-libs-milestone</id>
-                    <url>https://repo.spring.io/libs-milestone</url>
-                </pluginRepository>
-            </pluginRepositories>
             <dependencies>
                 <dependency>
                     <groupId>org.springframework.data</groupId>
@@ -324,28 +312,16 @@
             </dependencies>
         </profile>
         <profile>
-            <id>hibernate-apt</id>
+            <id>spring-data-2.3.x</id>
             <properties>
-                <version.spring>${version.spring-data-2.2-spring}</version.spring>
-                <version.spring.boot>${version.spring-data-2.2-spring-boot}</version.spring.boot>
+                <version.spring>${version.spring-data-2.3-spring}</version.spring>
+                <version.spring.boot>${version.spring-data-2.3-spring-boot}</version.spring.boot>
             </properties>
-            <repositories>
-                <repository>
-                    <id>spring-libs-milestone</id>
-                    <url>https://repo.spring.io/libs-milestone</url>
-                </repository>
-            </repositories>
-            <pluginRepositories>
-                <pluginRepository>
-                    <id>spring-libs-milestone</id>
-                    <url>https://repo.spring.io/libs-milestone</url>
-                </pluginRepository>
-            </pluginRepositories>
             <dependencies>
                 <dependency>
                     <groupId>org.springframework.data</groupId>
                     <artifactId>spring-data-jpa</artifactId>
-                    <version>${version.spring-data-2.2}</version>
+                    <version>${version.spring-data-2.3}</version>
                 </dependency>
                 <dependency>
                     <groupId>org.aspectj</groupId>
@@ -359,7 +335,35 @@
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.2</artifactId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.3</artifactId>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>hibernate-apt</id>
+            <properties>
+                <version.spring>${version.spring-data-2.3-spring}</version.spring>
+                <version.spring.boot>${version.spring-data-2.3-spring-boot}</version.spring.boot>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.springframework.data</groupId>
+                    <artifactId>spring-data-jpa</artifactId>
+                    <version>${version.spring-data-2.3}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.aspectj</groupId>
+                    <artifactId>aspectjweaver</artifactId>
+                    <version>1.9.4</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-core</artifactId>
+                    <version>2.10.1</version>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.3</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>

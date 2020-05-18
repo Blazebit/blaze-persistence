@@ -330,6 +330,8 @@
                         <exclude>**/src/main/java/com/blazebit/persistence/spring/data/impl/query/ParameterMetadataProviderImpl.java</exclude>
                         <exclude>**/src/main/java/com/blazebit/persistence/spring/data/impl/repository/DefaultRepositoryInformation.java</exclude>
                         <exclude>**/src/main/java/com/blazebit/persistence/spring/data/impl/repository/MethodLookups.java</exclude>
+                        <exclude>**/src/main/java/com/blazebit/persistence/spring/data/impl/repository/QueryExecutorMethodInterceptor.java</exclude>
+                        <exclude>**/src/main/java/com/blazebit/persistence/spring/data/impl/repository/QueryExecutionResultHandler.java</exclude>
                         <exclude>**/src/main/java/com/blazebit/persistence/spring/data/webflux/impl/PageableHandlerMethodArgumentResolver.java</exclude>
                         <exclude>**/src/main/java/com/blazebit/persistence/spring/data/webflux/impl/SortHandlerMethodArgumentResolver.java</exclude>
                         <exclude>**/src/main/java/com/blazebit/persistence/spring/data/webflux/impl/SortArgumentResolver.java</exclude>

@@ -16,53 +16,19 @@ In short, the following Maven dependencies are required
 ----
 <dependency>
     <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-spring-data-2.2</artifactId>
+    <artifactId>blaze-persistence-integration-spring-data-2.3</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>compile</scope>
 </dependency>
 <dependency>
     <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-hibernate-5.2</artifactId>
+    <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>runtime</scope>
 </dependency>
 ----
 
-If you still work with Spring Data 2.1 you will have to use a different integration as Spring Data 2.2 changed quite a bit.
-
-[source,xml]
-----
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-spring-data-2.1</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>compile</scope>
-</dependency>
-----
-
-If you still work with Spring Data 2.0 you will have to use a different integration as Spring Data 2.1 changed quite a bit.
-
-[source,xml]
-----
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-spring-data-2.0</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>compile</scope>
-</dependency>
-----
-
-If you still work with Spring Data version 1 you will have to use a different integration.
-
-[source,xml]
-----
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-spring-data-1.x</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>compile</scope>
-</dependency>
-----
+For Spring-Data version 2.2, 2.1, 2.0 or 1.x use the artifact with the respective suffix `2.2`, `2.1`, `2.0`, `1.x`.
 
 The dependencies for other JPA providers or other versions can be found in the link:{core_doc}#maven-setup[core module setup section].
 

@@ -20,7 +20,7 @@ In short, the following Maven dependencies are required
 </dependency>
 <dependency>
     <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-hibernate-5.2</artifactId>
+    <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>runtime</scope>
 </dependency>
@@ -28,7 +28,7 @@ In short, the following Maven dependencies are required
 
 The dependencies for other JPA providers or other versions can be found in the link:{core_doc}#maven-setup[core module setup section].
 
-Note that Spring HATEOAS 1.0+ requires at least Spring Data 2.2.
+Note that Spring HATEOAS 1.0 requires Spring Data 2.2 and Spring HATEOAS 1.1 requires Spring Data 2.3.
 
 [[spring-hatoas-features]]
 === Features

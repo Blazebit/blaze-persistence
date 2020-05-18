@@ -146,12 +146,6 @@
                 <version.spring>${version.spring-data-2.1-spring}</version.spring>
                 <version.spring-data>${version.spring-data-2.1}</version.spring-data>
             </properties>
-            <repositories>
-                <repository>
-                    <id>spring-libs-milestone</id>
-                    <url>https://repo.spring.io/libs-milestone</url>
-                </repository>
-            </repositories>
             <dependencies>
                 <dependency>
                     <groupId>com.blazebit</groupId>
@@ -166,16 +160,24 @@
                 <version.spring>${version.spring-data-2.2-spring}</version.spring>
                 <version.spring-data>${version.spring-data-2.2}</version.spring-data>
             </properties>
-            <repositories>
-                <repository>
-                    <id>spring-libs-milestone</id>
-                    <url>https://repo.spring.io/libs-milestone</url>
-                </repository>
-            </repositories>
             <dependencies>
                 <dependency>
                     <groupId>com.blazebit</groupId>
                     <artifactId>blaze-persistence-integration-spring-data-2.2</artifactId>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>spring-data-2.3.x</id>
+            <properties>
+                <version.spring>${version.spring-data-2.3-spring}</version.spring>
+                <version.spring-data>${version.spring-data-2.3}</version.spring-data>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>com.blazebit</groupId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.3</artifactId>
                     <scope>provided</scope>
                 </dependency>
             </dependencies>

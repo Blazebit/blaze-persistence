@@ -25,7 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.web.HateoasSortHandlerMethodArgumentResolver;
 import org.springframework.hateoas.server.mvc.UriComponentsContributor;
@@ -41,19 +41,14 @@ import java.util.List;
 @Configuration
 public class HateoasAwareBlazePersistenceWebConfiguration extends BlazePersistenceWebConfiguration {
 
-    private final ObjectFactory<ConversionService> conversionService;
-    private final HateoasSortHandlerMethodArgumentResolver sortResolver;
     private final List<? extends UriComponentsContributor> uriComponentsContributors;
 
     @Autowired
     public HateoasAwareBlazePersistenceWebConfiguration(
             EntityViewManager entityViewManager,
             @Qualifier("mvcConversionService") ObjectFactory<ConversionService> conversionService,
-            @Autowired(required = false) HateoasSortHandlerMethodArgumentResolver sortResolver,
-            List<UriComponentsContributor> uriComponentsContributors) {
-        super(entityViewManager, conversionService, sortResolver);
-        this.conversionService = conversionService;
-        this.sortResolver = sortResolver;
+            @Lazy List<UriComponentsContributor> uriComponentsContributors) {
+        super(entityViewManager, conversionService);
         this.uriComponentsContributors = uriComponentsContributors;
     }
 
@@ -77,10 +72,15 @@ public class HateoasAwareBlazePersistenceWebConfiguration extends BlazePersisten
     }
 
     @Bean
-    @Primary
     @Override
     public HateoasKeysetPageableHandlerMethodArgumentResolver keysetPageableResolver() {
-        return new HateoasKeysetPageableHandlerMethodArgumentResolver(sortResolver, conversionService.getObject());
+        return new HateoasKeysetPageableHandlerMethodArgumentResolver(keysetSortResolver(), conversionService.getObject());
+    }
+
+    @Bean
+    @Override
+    public HateoasSortHandlerMethodArgumentResolver keysetSortResolver() {
+        return new HateoasSortHandlerMethodArgumentResolver();
     }
 
     @Bean

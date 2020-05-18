@@ -86,7 +86,9 @@ matrix:
       jdk: oraclejdk8
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 SPRING_DATA=spring-data-2.2.x DELTASPIKE=deltaspike-1.9
       jdk: oraclejdk8
-    - env: JPAPROVIDER=hibernate-apt RDBMS=postgresql SPRING_DATA=spring-data-2.2.x DELTASPIKE=deltaspike-1.9
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 SPRING_DATA=spring-data-2.3.x DELTASPIKE=deltaspike-1.9
+      jdk: oraclejdk8
+    - env: JPAPROVIDER=hibernate-apt RDBMS=postgresql SPRING_DATA=spring-data-2.3.x DELTASPIKE=deltaspike-1.9
       jdk: oraclejdk8
       addons:
         postgresql: "9.4"

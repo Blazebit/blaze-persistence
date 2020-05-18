@@ -321,12 +321,6 @@
             <properties>
                 <version.spring>${version.spring-data-2.1-spring}</version.spring>
             </properties>
-            <repositories>
-                <repository>
-                    <id>spring-libs-milestone</id>
-                    <url>https://repo.spring.io/libs-milestone</url>
-                </repository>
-            </repositories>
             <dependencies>
                 <dependency>
                     <groupId>org.springframework.data</groupId>
@@ -345,12 +339,6 @@
             <properties>
                 <version.spring>${version.spring-data-2.2-spring}</version.spring>
             </properties>
-            <repositories>
-                <repository>
-                    <id>spring-libs-milestone</id>
-                    <url>https://repo.spring.io/libs-milestone</url>
-                </repository>
-            </repositories>
             <dependencies>
                 <dependency>
                     <groupId>org.springframework.data</groupId>
@@ -361,6 +349,24 @@
                 <dependency>
                     <groupId>com.blazebit</groupId>
                     <artifactId>blaze-persistence-integration-spring-data-2.2</artifactId>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>spring-data-2.3.x</id>
+            <properties>
+                <version.spring>${version.spring-data-2.3-spring}</version.spring>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.springframework.data</groupId>
+                    <artifactId>spring-data-jpa</artifactId>
+                    <version>${version.spring-data-2.3}</version>
+                    <scope>provided</scope>
+                </dependency>
+                <dependency>
+                    <groupId>com.blazebit</groupId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.3</artifactId>
                 </dependency>
             </dependencies>
         </profile>
