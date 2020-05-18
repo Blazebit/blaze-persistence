@@ -25,6 +25,7 @@
         <source>src/main/java/view/CatWithOwnerView.java</source>
         <source>src/main/java/view/PersonSimpleView.java</source>
         <source>src/main/java/repository/CatSimpleViewRepository.java</source>
+        <source>src/main/java/config/EntityManagerProducer.java</source>
         <source>src/main/java/config/CriteriaBuilderFactoryProducer.java</source>
         <source>src/main/java/config/EntityViewManagerProducer.java</source>
         <source>src/main/java/controller/SampleController.java</source>
@@ -33,9 +34,13 @@
     <resources>
         <resource>src/main/resources/META-INF/persistence.xml</resource>
         <resource>src/main/resources/META-INF/beans.xml</resource>
+        <resource>src/test/resources/META-INF/beans.xml</resource>
+        <resource>src/test/resources/META-INF/services/javax.enterprise.inject.spi.Extension</resource>
     </resources>
     <testSources>
         <source>src/test/java/sample/AbstractSampleTest.java</source>
         <source>src/test/java/sample/SampleTest.java</source>
+        <source>src/test/java/sample/EntityManagerFactoryHolder.java</source>
+        <source>src/test/java/sample/TestExtension.java</source>
     </testSources>
 </archetype>

@@ -21,7 +21,7 @@ import com.blazebit.persistence.view.*;
 
 import org.apache.deltaspike.data.api.Repository;
 import org.apache.deltaspike.data.api.criteria.CriteriaSupport;
-import com.blazebit.persistence.deltaspike.data.api.EntityViewRepository;
+import com.blazebit.persistence.deltaspike.data.EntityViewRepository;
 
 import java.util.List;
 

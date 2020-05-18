@@ -5,14 +5,7 @@ with and without entity views. Also offers insight into how filters could be imp
 
 ## How to use it?
 
-// TODO 
-Just run `mvn spring-boot:run` and navigate to http://localhost:8080/index.html where you will find a data table.
-You can switch between the *Cats* and *Cat-Views* mode which use the HTTP endpoints `cats` and `cat-views` respectively.
+Just run `mvn spring-boot:run` and use the endpoints http://localhost:8080/cats or http://localhost:8080/cat-views to see the the integration in action.
+When using the content type `application/hal+json`, you can see the pagination links in the JSON payload, otherwise you will see it in the `Link` HTTP response header.
 
-The `cats` endpoint retrieves and returns normal entities whereas the `cat-views` endpoint retrieves and returns entity views.
-In the SQL output you can see the difference. When querying the `cat-views` endpoint, the SQL queries don't contain the *age* column in the select list.
-
-You can see keyset pagination in action in both modes. Instead of using an offset, the last retrieved elements are remembered.
-When switching to the next or previous page, the last known upper or lower bound of the page are used for querying.
-In short, that's what keyset pagination is all about. Using the values of the attributes you sort by of the upper and lower bounds of a result, to query the next or previous page.
 You can take a look at the generated queries to further understand what happens or you take a look into the [documentation](https://persistence.blazebit.com/documentation/core/manual/en_US/index.html#anchor-keyset-pagination) for more information on the topic.

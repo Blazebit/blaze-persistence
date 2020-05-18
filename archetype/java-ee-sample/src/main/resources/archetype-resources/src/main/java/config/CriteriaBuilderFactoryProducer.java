@@ -25,14 +25,13 @@ import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
 import javax.annotation.PostConstruct;
 import javax.persistence.EntityManagerFactory;
-import javax.persistence.PersistenceUnit;
 
 @javax.ejb.Singleton
 @javax.ejb.Startup
 public class CriteriaBuilderFactoryProducer {
 
     // inject your entity manager factory
-    @PersistenceUnit
+    @Inject
     private EntityManagerFactory entityManagerFactory;
 
     private CriteriaBuilderFactory criteriaBuilderFactory;

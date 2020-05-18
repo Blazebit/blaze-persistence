@@ -60,8 +60,8 @@ public interface CatViewRepository {
 
 The integration provides the following base interfaces that you may optionally extend to define entity view repositories:
 
-* `com.blazebit.persistence.deltaspike.data.api.EntityViewRepository` provides simple base methods.
-* `com.blazebit.persistence.deltaspike.data.api.FullEntityViewRepository` adds JPA criteria support to the `com.blazebit.persistence.deltaspike.data.api.EntityViewRepository` interface.
+* `com.blazebit.persistence.deltaspike.data.EntityViewRepository` provides simple base methods.
+* `com.blazebit.persistence.deltaspike.data.FullEntityViewRepository` adds JPA criteria support to the `com.blazebit.persistence.deltaspike.data.EntityViewRepository` interface.
 
 [source,java]
 ----

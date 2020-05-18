@@ -96,13 +96,7 @@ public abstract class AbstractSampleTest {
         });
     }
 
-    protected Class<?>[] getEntityViewClasses() {
-        return new Class[] {
-                CatSimpleView.class,
-                CatWithOwnerView.class,
-                PersonSimpleView.class
-        };
-    }
+    protected abstract Class<?>[] getEntityViewClasses();
     
     protected void transactional(Consumer<EntityManager> consumer) {
         EntityManager em = emf.createEntityManager();

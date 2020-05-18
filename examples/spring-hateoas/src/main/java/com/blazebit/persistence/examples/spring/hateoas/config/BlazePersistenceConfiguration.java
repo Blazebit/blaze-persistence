@@ -41,7 +41,6 @@ import javax.persistence.PersistenceUnit;
 @Configuration
 @EnableEntityViews(basePackages = {"com.blazebit.persistence.examples.spring.hateoas.view"})
 @EnableJpaRepositories(
-        entityManagerFactoryRef = "myEmf",
         basePackages = "com.blazebit.persistence.examples.spring.hateoas.repository",
         repositoryFactoryBeanClass = BlazePersistenceRepositoryFactoryBean.class)
 public class BlazePersistenceConfiguration {

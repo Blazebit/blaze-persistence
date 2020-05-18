@@ -40,7 +40,6 @@ import javax.persistence.PersistenceUnit;
 @Configuration
 @EnableEntityViews(basePackages = {"com.blazebit.persistence.examples.spring.data.webmvc.view"})
 @EnableJpaRepositories(
-        entityManagerFactoryRef = "myEmf",
         basePackages = "com.blazebit.persistence.examples.spring.data.webmvc.repository",
         repositoryFactoryBeanClass = BlazePersistenceRepositoryFactoryBean.class)
 public class BlazePersistenceConfiguration {

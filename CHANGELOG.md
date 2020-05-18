@@ -14,6 +14,7 @@ Not yet released
 ### Bug fixes
 
 * Fix issues with the `FILTER` clause when using entity views
+* Fix deserializing the id from the JSON payload for creatable only entity views
 
 ### Backwards-incompatible changes
 

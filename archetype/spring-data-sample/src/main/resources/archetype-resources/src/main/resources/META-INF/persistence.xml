@@ -19,6 +19,7 @@
     <persistence-unit name="default" transaction-type="RESOURCE_LOCAL">
         <class>${package}.model.Cat</class>
         <class>${package}.model.Person</class>
+        <exclude-unlisted-classes>false</exclude-unlisted-classes>
 
         <properties>
             <property name="javax.persistence.jdbc.url" value="jdbc:h2:mem:test"/>

@@ -51,11 +51,10 @@ public class SampleTest extends AbstractSampleTest {
 
     @Configuration
     @ComponentScan("com.blazebit.persistence.examples.spring.data.webmvc")
-    @ImportResource({"/META-INF/application-config.xml", "/META-INF/test-config.xml"})
+    @ImportResource({"/META-INF/test-config.xml"})
     @EnableEntityViews(basePackages = { "com.blazebit.persistence.examples.spring.data.webmvc.view"})
     @EnableJpaRepositories(
             basePackages = "com.blazebit.persistence.examples.spring.data.webmvc.repository",
-            entityManagerFactoryRef = "myEmf",
             repositoryFactoryBeanClass = BlazePersistenceRepositoryFactoryBean.class)
     static class TestConfig {
     }
