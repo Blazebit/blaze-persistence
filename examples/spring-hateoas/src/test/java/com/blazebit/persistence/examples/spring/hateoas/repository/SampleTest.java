@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.examples.spring.data.webmvc.repository;
+package com.blazebit.persistence.examples.spring.hateoas.repository;
 
 import com.blazebit.persistence.examples.spring.hateoas.model.Cat;
-import com.blazebit.persistence.examples.spring.hateoas.repository.CatRepository;
 import com.blazebit.persistence.integration.view.spring.EnableEntityViews;
 import com.blazebit.persistence.spring.data.impl.repository.BlazePersistenceRepositoryFactoryBean;
 import org.junit.Assert;
@@ -29,6 +28,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.data.web.config.HateoasAwareSpringDataWebConfiguration;
 import org.springframework.data.web.config.SpringDataWebConfiguration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -38,7 +38,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @since 1.2.0
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = {SampleTest.TestConfig.class, SpringDataWebConfiguration.class})
+@ContextConfiguration(classes = {SampleTest.TestConfig.class, HateoasAwareSpringDataWebConfiguration.class})
 public class SampleTest extends AbstractSampleTest {
 
     @Autowired
@@ -51,12 +51,11 @@ public class SampleTest extends AbstractSampleTest {
     }
 
     @Configuration
-    @ComponentScan("com.blazebit.persistence.examples.spring.data.webmvc")
-    @ImportResource({"/META-INF/application-config.xml", "/META-INF/test-config.xml"})
-    @EnableEntityViews(basePackages = { "com.blazebit.persistence.examples.spring.data.webmvc.view"})
+    @ComponentScan("com.blazebit.persistence.examples.spring.hateoas")
+    @ImportResource({"/META-INF/test-config.xml"})
+    @EnableEntityViews(basePackages = { "com.blazebit.persistence.examples.spring.hateoas.view"})
     @EnableJpaRepositories(
-            basePackages = "com.blazebit.persistence.examples.spring.data.webmvc.repository",
-            entityManagerFactoryRef = "myEmf",
+            basePackages = "com.blazebit.persistence.examples.spring.hateoas.repository",
             repositoryFactoryBeanClass = BlazePersistenceRepositoryFactoryBean.class)
     static class TestConfig {
     }

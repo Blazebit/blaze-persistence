@@ -28,6 +28,15 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class SampleTest extends AbstractSampleTest {
+
+    @Override
+    protected Class<?>[] getEntityViewClasses() {
+        return new Class[] {
+                CatSimpleView.class,
+                CatWithOwnerView.class,
+                PersonSimpleView.class
+        };
+    }
     
     @Test
     public void sampleTest() {

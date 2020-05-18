@@ -17,18 +17,20 @@
 package com.blazebit.persistence.spring.hateoas.webmvc;
 
 import com.blazebit.persistence.spring.data.webmvc.KeysetPageableArgumentResolver;
+import com.blazebit.persistence.spring.data.webmvc.impl.BlazePersistenceWebConfiguration;
+import com.blazebit.persistence.view.EntityViewManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.web.HateoasSortHandlerMethodArgumentResolver;
 import org.springframework.hateoas.server.mvc.UriComponentsContributor;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilderFactory;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
 import java.util.List;
 
@@ -37,17 +39,19 @@ import java.util.List;
  * @since 1.5.0
  */
 @Configuration
-public class BlazePersistenceWebConfiguration extends WebMvcConfigurerAdapter {
+public class HateoasAwareBlazePersistenceWebConfiguration extends BlazePersistenceWebConfiguration {
 
     private final ObjectFactory<ConversionService> conversionService;
     private final HateoasSortHandlerMethodArgumentResolver sortResolver;
     private final List<? extends UriComponentsContributor> uriComponentsContributors;
 
     @Autowired
-    public BlazePersistenceWebConfiguration(
+    public HateoasAwareBlazePersistenceWebConfiguration(
+            EntityViewManager entityViewManager,
             @Qualifier("mvcConversionService") ObjectFactory<ConversionService> conversionService,
             @Autowired(required = false) HateoasSortHandlerMethodArgumentResolver sortResolver,
             List<UriComponentsContributor> uriComponentsContributors) {
+        super(entityViewManager, conversionService, sortResolver);
         this.conversionService = conversionService;
         this.sortResolver = sortResolver;
         this.uriComponentsContributors = uriComponentsContributors;
@@ -73,6 +77,8 @@ public class BlazePersistenceWebConfiguration extends WebMvcConfigurerAdapter {
     }
 
     @Bean
+    @Primary
+    @Override
     public HateoasKeysetPageableHandlerMethodArgumentResolver keysetPageableResolver() {
         return new HateoasKeysetPageableHandlerMethodArgumentResolver(sortResolver, conversionService.getObject());
     }

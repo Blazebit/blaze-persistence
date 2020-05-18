@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.examples.spring.data.webmvc.repository;
+package com.blazebit.persistence.examples.spring.hateoas.repository;
 
 import com.blazebit.persistence.examples.spring.hateoas.model.Cat;
 import com.blazebit.persistence.examples.spring.hateoas.model.Person;

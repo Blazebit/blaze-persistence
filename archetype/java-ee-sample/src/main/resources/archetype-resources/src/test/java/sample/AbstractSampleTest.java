@@ -21,7 +21,9 @@ import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.EntityViewManager;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
+import org.apache.deltaspike.cdise.api.CdiContainer;
+import org.apache.deltaspike.cdise.api.CdiContainerLoader;
+import org.apache.deltaspike.core.api.provider.BeanProvider;
 import java.util.function.Consumer;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -32,29 +34,50 @@ import ${package}.model.Person;
 import ${package}.view.CatSimpleView;
 import ${package}.view.CatWithOwnerView;
 import ${package}.view.PersonSimpleView;
+import javax.inject.Inject;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 
 public abstract class AbstractSampleTest {
-    
-    protected EntityManagerFactory emf;
+
+    @Inject
+    private EntityManagerFactoryHolder emfHolder;
+    @Inject
+    private EntityManager em;
+    @Inject
     protected CriteriaBuilderFactory cbf;
+    @Inject
     protected EntityViewManager evm;
+
+    @BeforeClass
+    public static void bootContainer() {
+        CdiContainer container = CdiContainerLoader.getCdiContainer();
+        container.boot();
+    }
+
+    @AfterClass
+    public static void shutdownContainer() {
+        CdiContainer container = CdiContainerLoader.getCdiContainer();
+        container.shutdown();
+    }
+
+    public void startContexts() {
+        CdiContainer container = CdiContainerLoader.getCdiContainer();
+        container.getContextControl().startContexts();
+        BeanProvider.injectFields(this);
+    }
+
+    @After
+    public void stopContexts() {
+        CdiContainer container = CdiContainerLoader.getCdiContainer();
+        container.getContextControl().stopContexts();
+    }
 
     @Before
     public void init() {
-        emf = Persistence.createEntityManagerFactory("default");
-        CriteriaBuilderConfiguration config = Criteria.getDefault();
-        cbf = config.createCriteriaBuilderFactory(emf);
-
-        EntityViewConfiguration entityViewConfiguration = EntityViews.createDefaultConfiguration();
-
-        for (Class<?> entityViewClazz : getEntityViewClasses()) {
-            entityViewConfiguration.addEntityView(entityViewClazz);
-        }
-
-        evm = entityViewConfiguration.createEntityViewManager(cbf);
-        
+        startContexts();
         transactional(em -> {
             Person p1 = new Person("P1");
             Person p2 = new Person("P2");
@@ -96,16 +119,7 @@ public abstract class AbstractSampleTest {
         });
     }
 
-    protected Class<?>[] getEntityViewClasses() {
-        return new Class[] {
-                CatSimpleView.class,
-                CatWithOwnerView.class,
-                PersonSimpleView.class
-        };
-    }
-    
     protected void transactional(Consumer<EntityManager> consumer) {
-        EntityManager em = emf.createEntityManager();
         EntityTransaction tx = em.getTransaction();
         boolean success = false;
         
@@ -114,20 +128,11 @@ public abstract class AbstractSampleTest {
             consumer.accept(em);
             success = true;
         } finally {
-            try {
-                if (success) {
-                    tx.commit();
-                } else {
-                    tx.rollback();
-                }
-            } finally {
-                em.close();
+            if (success) {
+                tx.commit();
+            } else {
+                tx.rollback();
             }
         }
-    }
-
-    @After
-    public void destruct() {
-        emf.close();
     }
 }

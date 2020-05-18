@@ -31,10 +31,8 @@
         <maven.compiler.target>1.8</maven.compiler.target>
 
         <version.blaze-persistence>${project.version}</version.blaze-persistence>
-        <version.spring>4.3.3.RELEASE</version.spring>
-        <version.spring-data-1.x>1.11.10.RELEASE</version.spring-data-1.x>
-        <version.spring-data-2.0>2.0.4.RELEASE</version.spring-data-2.0>
-        <version.spring-data-2.1>2.1.0.RC2</version.spring-data-2.1>
+        <version.spring-data-2.2>2.2.3.RELEASE</version.spring-data-2.2>
+        <version.spring>${version.spring-data-2.2-spring}</version.spring>
     </properties>
 
     <dependencyManagement>
@@ -109,6 +107,50 @@
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-jpa</artifactId>
+            <version>${version.spring-data-2.2}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.blazebit</groupId>
+            <artifactId>blaze-persistence-integration-spring-data-2.2</artifactId>
+        </dependency>
+
+        <!-- JDK9+ dependencies -->
+        <dependency>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+            <version>2.2.11</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.xml.bind</groupId>
+            <artifactId>jaxb-core</artifactId>
+            <version>2.2.11</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.xml.bind</groupId>
+            <artifactId>jaxb-impl</artifactId>
+            <version>2.2.11</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.transaction</groupId>
+            <artifactId>javax.transaction-api</artifactId>
+            <version>1.2</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.activation</groupId>
+            <artifactId>activation</artifactId>
+            <version>1.1.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.annotation</groupId>
+            <artifactId>javax.annotation-api</artifactId>
+            <version>1.3.2</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- Test dependencies -->
@@ -121,7 +163,7 @@
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <version>1.4.178</version>
+            <version>1.4.200</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -131,137 +173,32 @@
         </dependency>
     </dependencies>
     <profiles>
-        <!-- Profiles for various Spring-Data versions -->
         <profile>
-            <id>spring-data-1.11.x</id>
+            <id>jdk11+</id>
             <activation>
-                <activeByDefault>true</activeByDefault>
+                <jdk>[11,)</jdk>
             </activation>
-            <properties>
-                <version.spring>${version.spring-data-1.x-spring}</version.spring>
-            </properties>
-
-            <dependencies>
-                <dependency>
-                    <groupId>org.springframework.data</groupId>
-                    <artifactId>spring-data-jpa</artifactId>
-                    <version>${version.spring-data-1.x}</version>
-                    <scope>provided</scope>
-                </dependency>
-                <dependency>
-                    <groupId>com.blazebit</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-1.x</artifactId>
-                    <scope>compile</scope>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>spring-data-2.0.x</id>
-            <properties>
-                <version.spring>${version.spring-data-2.0-spring}</version.spring>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>org.springframework.data</groupId>
-                    <artifactId>spring-data-jpa</artifactId>
-                    <version>${version.spring-data-2.0}</version>
-                    <scope>provided</scope>
-                </dependency>
-                <dependency>
-                    <groupId>com.blazebit</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.0</artifactId>
-                    <scope>compile</scope>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>spring-data-2.1.x</id>
-            <properties>
-                <version.spring>${version.spring-data-2.1-spring}</version.spring>
-            </properties>
-            <repositories>
-                <repository>
-                    <id>spring-libs-milestone</id>
-                    <url>https://repo.spring.io/libs-milestone</url>
-                </repository>
-            </repositories>
-            <dependencies>
-                <dependency>
-                    <groupId>org.springframework.data</groupId>
-                    <artifactId>spring-data-jpa</artifactId>
-                    <version>${version.spring-data-2.1}</version>
-                    <scope>provided</scope>
-                </dependency>
-                <dependency>
-                    <groupId>com.blazebit</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.1</artifactId>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>spring-data-2.2.x</id>
-            <properties>
-                <version.spring>${version.spring-data-2.2-spring}</version.spring>
-            </properties>
-            <repositories>
-                <repository>
-                    <id>spring-libs-milestone</id>
-                    <url>https://repo.spring.io/libs-milestone</url>
-                </repository>
-            </repositories>
-            <dependencies>
-                <dependency>
-                    <groupId>org.springframework.data</groupId>
-                    <artifactId>spring-data-jpa</artifactId>
-                    <version>${version.spring-data-2.2}</version>
-                    <scope>provided</scope>
-                </dependency>
-                <dependency>
-                    <groupId>com.blazebit</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.2</artifactId>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>jdk9+</id>
-            <activation>
-                <jdk>[1.9,)</jdk>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>javax.xml.bind</groupId>
-                    <artifactId>jaxb-api</artifactId>
-                    <version>2.2.11</version>
-                </dependency>
-                <dependency>
-                    <groupId>com.sun.xml.bind</groupId>
-                    <artifactId>jaxb-core</artifactId>
-                    <version>2.2.11</version>
-                </dependency>
-                <dependency>
-                    <groupId>com.sun.xml.bind</groupId>
-                    <artifactId>jaxb-impl</artifactId>
-                    <version>2.2.11</version>
-                </dependency>
-                <dependency>
-                    <groupId>javax.transaction</groupId>
-                    <artifactId>javax.transaction-api</artifactId>
-                    <version>1.2</version>
-                    <scope>provided</scope>
-                </dependency>
-                <dependency>
-                    <groupId>javax.activation</groupId>
-                    <artifactId>activation</artifactId>
-                    <version>1.1.1</version>
-                    <scope>provided</scope>
-                </dependency>
-                <dependency>
-                    <groupId>javax.annotation</groupId>
-                    <artifactId>javax.annotation-api</artifactId>
-                    <version>1.3.2</version>
-                    <scope>provided</scope>
-                </dependency>
-            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>3.8.0</version>
+                        <configuration>
+                            <compilerArgs>--enable-preview</compilerArgs>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>3.0.0-M3</version>
+                        <configuration>
+                            <trimStackTrace>false</trimStackTrace>
+                            <argLine>--enable-preview</argLine>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
 </project>

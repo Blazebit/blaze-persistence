@@ -43,21 +43,17 @@ public class SampleTest extends AbstractSampleTest {
 
     @Test
     public void sampleTest() {
-        transactional(em -> {
-            final Iterable<CatSimpleView> listIterable = catSimpleViewRepository.findAll();
-            final List<CatSimpleView> list = new ArrayList<>();
-            listIterable.forEach(view -> list.add(view));
-            Assert.assertEquals(6, list.size());
-        });
+        final Iterable<CatSimpleView> listIterable = catSimpleViewRepository.findAll();
+        final List<CatSimpleView> list = new ArrayList<>();
+        listIterable.forEach(view -> list.add(view));
+        Assert.assertEquals(6, list.size());
     }
 
     @Configuration
     @ComponentScan("${package}")
-    @ImportResource("/META-INF/application-config.xml")
     @EnableEntityViews(basePackages = { "${package}.view"})
     @EnableJpaRepositories(
             basePackages = "${package}.repository",
-            entityManagerFactoryRef = "myEmf",
             repositoryFactoryBeanClass = BlazePersistenceRepositoryFactoryBean.class)
     static class TestConfig {
     }

@@ -1,2 +1,2 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.blazebit.persistence.spring.hateoas.webmvc.BlazePersistenceWebConfiguration
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=com.blazebit.persistence.spring.hateoas.webmvc.HateoasAwareBlazePersistenceWebConfiguration
+org.springframework.boot.autoconfigure.AutoConfigurationImportFilter=com.blazebit.persistence.spring.hateoas.webmvc.BlazePersistenceAutoConfigurationImportFilter
