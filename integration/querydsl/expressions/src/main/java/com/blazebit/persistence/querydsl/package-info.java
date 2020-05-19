@@ -15,7 +15,7 @@
  */
 
 /**
- * The <pre>blaze-persistence-querydsl-expressions</pre> module implements an extended expression model for
+ * The <pre>blaze-persistence-integration-querydsl-expressions</pre> module implements an extended expression model for
  * Blaze-Persistence JPQL.Next.
  *
  * <p>
@@ -50,7 +50,7 @@
  * </p>
  *
  * <h2>Examples</h2>
- * The following chapters demonstrate some of the possibilities of the <pre>blaze-persistence-querydsl-expressions</pre>
+ * The following chapters demonstrate some of the possibilities of the <pre>blaze-persistence-integration-querydsl-expressions</pre>
  * integration.
  *
  * <h3>Plain query</h3>

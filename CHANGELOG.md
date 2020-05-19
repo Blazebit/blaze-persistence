@@ -20,7 +20,7 @@ Not yet released
 
 ### Backwards-incompatible changes
 
-None
+* Rename of the Maven artifact `blaze-persistence-querydsl-expressions` to `blaze-persistence-integration-querydsl-expressions` for consistency
 
 ## 1.5.0-Alpha2
 

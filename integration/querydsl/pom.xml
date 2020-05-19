@@ -11,7 +11,7 @@
     <name>Blazebit Persistence Integration QueryDSL</name>
     <packaging>pom</packaging>
     <modules>
-        <module>blaze-persistence-querydsl-expressions</module>
-        <module>blaze-persistence-querydsl-testsuite</module>
+        <module>expressions</module>
+        <module>testsuite</module>
     </modules>
 </project>

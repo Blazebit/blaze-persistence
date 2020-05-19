@@ -1,9 +1,9 @@
 [[querydsl-integration]]
 == QueryDSL 4 integration
 
-With the `blaze-persistence-querydsl-expressions` features from {projectname} can be used in existing QueryDSL code.
+With the `blaze-persistence-integration-querydsl-expressions` features from {projectname} can be used in existing QueryDSL code.
 
-The `blaze-persistence-querydsl-expressions` module implements an extended expression model for JPQL.Next, the query and expression language of {projectname}.
+The `blaze-persistence-integration-querydsl-expressions` module implements an extended expression model for JPQL.Next, the query and expression language of {projectname}.
 The module provides a `BlazeJPAQuery` as a default implementation of `JPQLNextQuery`, which extends the all familiar `JPQLQuery`. `BlazeJPAQuery` is analog to `JPAQuery`.
 Users can implement extensions on top of `JPQLNextQuery` by extending `AbstractBlazeJPAQuery`.
 
@@ -24,7 +24,7 @@ As outlined in the <<maven-querydsl-setup,setup section>> you need the following
 ----
 <dependency>
     <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-querydsl-expressions</artifactId>
+    <artifactId>blaze-persistence-integration-querydsl-expressions</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>compile</scope>
 </dependency>
@@ -57,7 +57,7 @@ The QueryDSL integration aims to make the full feature set from {projectname} Co
 [[querydsl-examples]]
 === Examples
 
-The following chapters demonstrate some of the possibilities of the blaze-persistence-querydsl-expressions integration.
+The following chapters demonstrate some of the possibilities of the blaze-persistence-integration-querydsl-expressions integration.
 
 Assume we have the following entity:
 

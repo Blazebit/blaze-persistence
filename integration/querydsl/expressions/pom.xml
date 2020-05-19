@@ -10,7 +10,7 @@
         <module.name>com.blazebit.persistence.querydsl</module.name>
     </properties>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>blaze-persistence-querydsl-expressions</artifactId>
+    <artifactId>blaze-persistence-integration-querydsl-expressions</artifactId>
     <name>Blazebit Persistence Integration QueryDSL Expressions</name>
     <dependencies>
         <dependency>

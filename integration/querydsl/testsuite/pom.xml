@@ -7,7 +7,7 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>blaze-persistence-querydsl-testsuite</artifactId>
+    <artifactId>blaze-persistence-integration-querydsl-testsuite</artifactId>
     <name>Blazebit Persistence Integration QueryDSL Testsuite</name>
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -17,7 +17,7 @@
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-querydsl-expressions</artifactId>
+            <artifactId>blaze-persistence-integration-querydsl-expressions</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

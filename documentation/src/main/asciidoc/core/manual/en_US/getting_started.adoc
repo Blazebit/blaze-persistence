@@ -197,7 +197,7 @@ When you work with QueryDSL you can additionally have first class integration by
 ----
 <dependency>
     <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-querydsl-expressions</artifactId>
+    <artifactId>blaze-persistence-integration-querydsl-expressions</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>compile</scope>
 </dependency>
