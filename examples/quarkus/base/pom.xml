@@ -10,6 +10,10 @@
 
     <artifactId>blaze-persistence-examples-quarkus-base</artifactId>
 
+    <properties>
+        <module.name>com.blazebit.persistence.examples.quarkus.base</module.name>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>io.quarkus</groupId>

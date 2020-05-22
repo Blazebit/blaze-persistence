@@ -12,6 +12,10 @@
 
     <artifactId>blaze-persistence-examples-quarkus-testsuite-native-mssql</artifactId>
 
+    <properties>
+        <module.name>com.blazebit.persistence.examples.quarkus.testsuite.native.mssql</module.name>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>

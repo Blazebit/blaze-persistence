@@ -10,6 +10,10 @@
 
     <artifactId>blaze-persistence-examples-quarkus-testsuite-base</artifactId>
 
+    <properties>
+        <module.name>com.blazebit.persistence.examples.quarkus.testsuite.base</module.name>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -115,8 +119,8 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <systemProperties>
-                            <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-                        </systemProperties>
+                                <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                            </systemProperties>
                             <systemPropertyVariables>
                                 <quarkus.test.profile>mssql</quarkus.test.profile>
                             </systemPropertyVariables>
@@ -189,6 +193,7 @@
                 <dependency>
                     <groupId>io.quarkus</groupId>
                     <artifactId>quarkus-test-h2</artifactId>
+                    <scope>provided</scope>
                 </dependency>
             </dependencies>
             <build>
@@ -236,6 +241,7 @@
                 <dependency>
                     <groupId>io.quarkus</groupId>
                     <artifactId>quarkus-test-h2</artifactId>
+                    <scope>provided</scope>
                 </dependency>
             </dependencies>
             <build>

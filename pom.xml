@@ -205,7 +205,7 @@
                     <plugin>
                         <groupId>org.codehaus.gmavenplus</groupId>
                         <artifactId>gmavenplus-plugin</artifactId>
-                        <version>1.7.1</version>
+                        <version>1.9.0</version>
                         <executions>
                             <execution>
                                 <id>prepare-escaped-jar-path</id>
@@ -237,15 +237,6 @@
                                 </configuration>
                             </execution>
                         </executions>
-                        <dependencies>
-                            <dependency>
-                                <groupId>org.codehaus.groovy</groupId>
-                                <artifactId>groovy-all</artifactId>
-                                <version>2.5.7</version>
-                                <type>pom</type>
-                                <scope>runtime</scope>
-                            </dependency>
-                        </dependencies>
                     </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
