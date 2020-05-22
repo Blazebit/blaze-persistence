@@ -200,6 +200,16 @@
 <!--        </profile>-->
         <profile>
             <id>blazebit-release</id>
+<!--            <dependencies>-->
+<!--                <dependencies>-->
+<!--                    <dependency>-->
+<!--                        <groupId>org.codehaus.groovy</groupId>-->
+<!--                        <artifactId>groovy-all</artifactId>-->
+<!--                        <version>3.0.2</version>-->
+<!--                        <scope>provided</scope>-->
+<!--                    </dependency>-->
+<!--                </dependencies>-->
+<!--            </dependencies>-->
             <build>
                 <plugins>
                     <plugin>
@@ -237,6 +247,15 @@
                                 </configuration>
                             </execution>
                         </executions>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.codehaus.groovy</groupId>
+                                <artifactId>groovy-all</artifactId>
+                                <version>3.0.2</version>
+                                <type>pom</type>
+                                <scope>runtime</scope>
+                            </dependency>
+                        </dependencies>
                     </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
