@@ -193,7 +193,7 @@ Spring HATEOAS WebMvc integration| Spring Data 2.2, Spring WebMvc 5.2   | Spring
 Jackson integration              | 2.8.11                               | 2.8.11+
 GraphQL integration              | 5.2                                  | 5.2+
 JAX-RS integration               | Any JAX-RS version                   | Any JAX-RS version
-Quarkus integration              | 1.4.1                                | 1.4+
+Quarkus integration              | 1.4.2                                | 1.4+
 
 ## Manual setup
 

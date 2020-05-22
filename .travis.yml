@@ -39,20 +39,20 @@ env:
 matrix:
   fast_finish: true
   include:
-################################################
-# hibernate-5.2
-################################################
     - env: SNAPSHOT_PUBLISH=true
       before_install:
         - wget http://apache.mirror.gtcomm.net/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz
         - tar xzvf apache-maven-3.6.3-bin.tar.gz
         - export PATH=`pwd`/apache-maven-3.6.3/bin:$PATH
         - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
-        - . ./install-jdk.sh -F 11 -L GPL
+        - . ./install-jdk.sh -F 13 -L GPL
         - rm "${JAVA_HOME}/lib/security/cacerts"
         - ln -s /etc/ssl/certs/java/cacerts "${JAVA_HOME}/lib/security/cacerts"
       script:
         - "echo 'Publishing snapshots only, skipping build...'"
+################################################
+# hibernate-5.2
+################################################
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2
       jdk: oraclejdk8
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=mysql

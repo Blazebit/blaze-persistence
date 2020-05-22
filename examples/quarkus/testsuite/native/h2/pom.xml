@@ -34,7 +34,7 @@
             <plugin>
                 <groupId>io.quarkus</groupId>
                 <artifactId>quarkus-maven-plugin</artifactId>
-                <version>${version.quarkus}</version>
+                <version>${quarkus.version}</version>
                 <executions>
                     <execution>
                         <goals>

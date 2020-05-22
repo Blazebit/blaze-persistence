@@ -107,7 +107,7 @@
         <version.openejb.javaee-api>6.0-6</version.openejb.javaee-api>
 
         <version.weld>2.4.5.Final</version.weld>
-        <version.quarkus>1.4.1.Final</version.quarkus>
+        <quarkus.version>1.4.2.Final</quarkus.version>
         <version.jandex>2.0.4.Final</version.jandex>
 
         <!-- Plugin versions -->
