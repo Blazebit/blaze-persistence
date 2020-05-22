@@ -45,9 +45,7 @@ matrix:
         - tar xzvf apache-maven-3.6.3-bin.tar.gz
         - export PATH=`pwd`/apache-maven-3.6.3/bin:$PATH
         - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
-        - . ./install-jdk.sh -F 13 -L GPL
-        - rm "${JAVA_HOME}/lib/security/cacerts"
-        - ln -s /etc/ssl/certs/java/cacerts "${JAVA_HOME}/lib/security/cacerts"
+        - . ./install-jdk.sh -F 14 -L GPL
       script:
         - "echo 'Publishing snapshots only, skipping build...'"
 ################################################
