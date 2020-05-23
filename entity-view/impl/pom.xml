@@ -241,7 +241,7 @@
                                 <inherited>true</inherited>
                                 <configuration>
                                     <!-- When we use a Java 11+ JVM, we need a JDK 8, otherwise we can't compile the old unsafe code -->
-                                    <sourcepath>${jdk8.home}${file.separator}jre${file.separator}lib${file.separator}rt.jar</sourcepath>
+                                    <bootclasspath>${jdk8.home}${file.separator}jre${file.separator}lib${file.separator}rt.jar</bootclasspath>
                                 </configuration>
                             </execution>
                         </executions>
@@ -308,7 +308,7 @@
                                 <inherited>true</inherited>
                                 <configuration>
                                     <!-- When we use a Java 11+ JVM, we need a JDK 8, otherwise we can't compile the old unsafe code -->
-                                    <sourcepath>${jdk8.home}${file.separator}jre${file.separator}lib${file.separator}rt.jar</sourcepath>
+                                    <bootclasspath>${jdk8.home}${file.separator}jre${file.separator}lib${file.separator}rt.jar</bootclasspath>
                                 </configuration>
                             </execution>
                         </executions>
