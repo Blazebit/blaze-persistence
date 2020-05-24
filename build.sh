@@ -27,7 +27,7 @@ mvn -version
 PROPERTIES="$PROPERTIES -Duser.country=US -Duser.language=en"
 
 if [ "$BUILD_JDK" != "" ]; then
-  PROPERTIES="$PROPERTIES -Djava.version=$BUILD_JDK -Dtest.java.version=$BUILD_JDK"
+  PROPERTIES="$PROPERTIES -Djava.version=$BUILD_JDK -Dtest.java.version=$BUILD_JDK -Djdk8.home=/usr/lib/jvm/java-8-oracle"
 fi
 
 if [ "$JDK" != "" ]; then
