@@ -1,0 +1,20 @@
+= Blaze-Persistence 1.5.0-Alpha3 Release
+Christian Beikov
+2020-05-24 0
+:description: Blaze-Persistence version 1.5.0-Alpha3 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+Unfortunately, our Quarkus testsuite didn't work as expected within the Quarkus Ecosystem CI so we had to do another release to be able to get into the Quarkus catalog.
+The nice thing about another release shortly after the previous one is, that we also squeezed a few bug fixes and features into this release.
+
+We added support for Spring HATEOAS and also Spring Boot 2.3 as well as Spring Data 2.3.
+In an upcoming blog post you will hear more about another new feature, the support for custom+++<!-- PREVIEW-SUFFIX --><!-- </p></div> --><!-- PREVIEW-END -->+++classes for entity views which allows using Java 14 records.
+
+If you want to know more about the new features or bug fixes, take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#150-alpha3[changelog, window="_blank"] for a full list of changes and improvements.
+
+If nothing else comes up, next release will really be the final one for the 1.5 series :)

@@ -8,6 +8,22 @@ Not yet released
 
 ### New features
 
+None
+
+### Bug fixes
+
+None
+
+### Backwards-incompatible changes
+
+None
+
+## 1.5.0-Alpha3
+
+24/05/2020 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.5.0-Alpha3) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue+milestone%3A1.5.0+is%3Aclosed+closed%3A%3C2020-05-24+sort%3Aupdated-desc)
+
+### New features
+
 * Spring HATEOAS integration for generation of pagination links with keyset information
 * Add support for custom entity view class implementations which adds support for Java 14 Records
 * Support for Spring Boot 2.3 and Spring Data 2.3
