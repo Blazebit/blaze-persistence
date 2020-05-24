@@ -3,7 +3,7 @@
     <parent>
         <artifactId>blaze-persistence-integration-spring-data-parent</artifactId>
         <groupId>com.blazebit</groupId>
-        <version>1.5.0-Alpha3</version>
+        <version>1.5.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -244,7 +244,7 @@
                     <dependency>
                         <groupId>org.ow2.asm</groupId>
                         <artifactId>asm-debug-all</artifactId>
-                        <version>1.5.0-Alpha3</version>
+                        <version>CUSTOM</version>
                     </dependency>
                     <dependency>
                         <groupId>org.ow2.asm</groupId>
