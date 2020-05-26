@@ -1002,6 +1002,14 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
             if (isUpdatable()) {
                 // Updatable collection attributes currently must have the same collection type
+                // We only allow using sorted variants instead of the normal collections
+                if (isSorted()) {
+                    if (getCollectionType() == PluralAttribute.CollectionType.MAP) {
+                        expressionType = Map.class;
+                    } else if (getCollectionType() == PluralAttribute.CollectionType.SET) {
+                        expressionType = Set.class;
+                    }
+                }
             } else {
                 if (isIndexed()) {
                     if (getCollectionType() == PluralAttribute.CollectionType.MAP) {
@@ -1192,6 +1200,8 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     public abstract Set<Type<?>> getUpdateCascadeAllowedSubtypes();
 
     protected abstract boolean isIndexed();
+
+    protected abstract boolean isSorted();
 
     protected abstract boolean isForcedUnique();
 

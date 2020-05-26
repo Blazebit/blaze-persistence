@@ -59,6 +59,11 @@ public abstract class AbstractParameterSingularAttribute<X, Y> extends AbstractP
     }
 
     @Override
+    protected boolean isSorted() {
+        return false;
+    }
+
+    @Override
     public boolean isIndexed() {
         return false;
     }

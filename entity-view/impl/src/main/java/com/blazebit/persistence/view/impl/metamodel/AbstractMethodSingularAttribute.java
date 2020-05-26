@@ -290,6 +290,11 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
     }
 
     @Override
+    protected boolean isSorted() {
+        return false;
+    }
+
+    @Override
     public boolean isIndexed() {
         return false;
     }
