@@ -349,7 +349,7 @@ For a full AngularJS example see the following https://github.com/Blazebit/blaze
 
 ==== Entity view deserialization
 
-The Spring Data WebMvc integration depends on the <<Jackson integration>> and automatically provides support for deserializing entity views.
+The Spring Data WebMvc integration depends on the <<jackson-integration,Jackson integration>> and automatically provides support for deserializing entity views.
 Currently, there is no support for constructor injection into entity views, so entity view attributes that should be deserializable should have a setter.
 
 [source,java]

@@ -117,12 +117,13 @@ public interface KeysetAwareCatViewRepository {
 
 Note that the `Pageable` should be an instance of `KeysetPageable` if keyset pagination should be used. A `KeysetPageable` can be retrieved through the `KeysetAwarePage` or manually
 by constructing a `KeysetPageRequest`. Note that constructing a `KeysetPageRequest` or actually the contained `KeysetPage` manually is not recommended. When working with JAX-RS,
-the <<DeltaSpike Data Rest>> integration might come in handy. For stateful server side frameworks, it's best to put the `KeysetAwarePage` into a session like storage
+the <<deltaspike-data-rest-integration,DeltaSpike Data Rest>> integration might come in handy. For stateful server side frameworks, it's best to put the `KeysetAwarePage` into a session like storage
 to be able to use the `previousOrFirst()` and `next()` methods for retrieving `KeysetPageable` objects.
 
 All other DeltaSpike Data repository features like restrictions, explicit offset pagination, returning `QueryResult` and others are supported as usual.
 Please consult the https://deltaspike.apache.org/documentation/data.html[DeltaSpike Data documentation] for further information.
 
+[[deltaspike-data-rest-integration]]
 === DeltaSpike Data Rest integration
 
 The DeltaSpike Data Rest integration offers similar pagination features for normal and keyset pagination to what Spring Data offers for normal offset based pagination.
@@ -148,7 +149,7 @@ To setup the project for using DeltaSpike along with JAX-RS you have to add the 
 </dependency>
 ----
 
-This will also pull in the <<jaxrs-integration,JAX-RS integration>> as well as the <<Jackson integration>> that allows for deserializing entity views in JAX-RS controllers.
+This will also pull in the <<jaxrs-integration,JAX-RS integration>> as well as the <<jackson-integration,Jackson integration>> that allows for deserializing entity views in JAX-RS controllers.
 
 ==== Usage
 
@@ -234,7 +235,7 @@ For a full AngularJS example see the following https://github.com/Blazebit/blaze
 
 ==== Entity view deserialization
 
-The DeltaSpike Data Rest integration depends on the <<jaxrs-integration,JAX-RS integration>> and thus also on the <<Jackson integration>> through which it automatically provides support for deserializing entity views.
+The DeltaSpike Data Rest integration depends on the <<jaxrs-integration,JAX-RS integration>> and thus also on the <<jackson-integration,Jackson integration>> through which it automatically provides support for deserializing entity views.
 Currently, there is no support for constructor injection into entity views, so entity view attributes that should be deserializable should have a setter.
 
 [source,java]

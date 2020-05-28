@@ -7,6 +7,7 @@ You can also set configuration properties on a per builder basis via the link:{c
 
 === Configuration properties
 
+[[COMPATIBLE_MODE]]
 ==== COMPATIBLE_MODE
 
 Enables JPA compatibility mode to disallow the usage of vendor specific extensions. This will result in higher portability.
@@ -19,6 +20,7 @@ Enables JPA compatibility mode to disallow the usage of vendor specific extensio
 | Applicable | Configuration only
 |====================
 
+[[RETURNING_CLAUSE_CASE_SENSITIVE]]
 ==== RETURNING_CLAUSE_CASE_SENSITIVE
 
 Defines whether column names should be used with the case in which they are given or as lower case when returning column values from a DML query.
@@ -32,6 +34,7 @@ This is mostly relevant for PostgreSQL which requires `false` to work properly.
 | Applicable | Always
 |====================
 
+[[SIZE_TO_COUNT_TRANSFORMATION]]
 ==== SIZE_TO_COUNT_TRANSFORMATION
 
 Defines whether the SIZE to COUNT tranformation should be applied to queries or not.
@@ -46,6 +49,7 @@ This property exists just so you can turn the transformation off if you encounte
 | Applicable | Always
 |====================
 
+[[IMPLICIT_GROUP_BY_FROM_SELECT]]
 ==== IMPLICIT_GROUP_BY_FROM_SELECT
 
 Defines whether non-aggregate expressions from the SELECT clause should be automatically added to the GROUP BY.
@@ -60,6 +64,7 @@ This feature can make writing queries a lot easier since it will implicitly copy
 | Applicable | Always
 |====================
 
+[[IMPLICIT_GROUP_BY_FROM_HAVING]]
 ==== IMPLICIT_GROUP_BY_FROM_HAVING
 
 Defines whether non-aggregate expressions from the HAVING clause should be automatically added to the GROUP BY.
@@ -74,6 +79,7 @@ This feature can make writing queries a lot easier since it will implicitly copy
 | Applicable | Always
 |====================
 
+[[IMPLICIT_GROUP_BY_FROM_ORDER_BY]]
 ==== IMPLICIT_GROUP_BY_FROM_ORDER_BY
 
 Defines whether non-aggregate expressions from the ORDER BY clause should be automatically added to the GROUP BY.
@@ -88,6 +94,7 @@ This feature can make writing queries a lot easier since it will implicitly copy
 | Applicable | Always
 |====================
 
+[[EXPRESSION_OPTIMIZATION]]
 ==== EXPRESSION_OPTIMIZATION
 
 Defines whether expressions should be optimized.
@@ -100,6 +107,7 @@ Defines whether expressions should be optimized.
 | Applicable | Configuration only
 |====================
 
+[[EXPRESSION_CACHE_CLASS]]
 ==== EXPRESSION_CACHE_CLASS
 
 The full qualified expression cache implementation class name.
@@ -112,6 +120,7 @@ The full qualified expression cache implementation class name.
 | Applicable | Configuration only
 |====================
 
+[[VALUES_CLAUSE_FILTER_NULLS]]
 ==== VALUES_CLAUSE_FILTER_NULLS
 
 Defines whether tuples of a VALUES clause with all NULL values should be filtered out.
@@ -125,6 +134,7 @@ The property can be changed for a criteria builder before using the VALUES claus
 | Applicable | Always
 |====================
 
+[[PARAMETER_AS_LITERAL_RENDERING]]
 ==== PARAMETER_AS_LITERAL_RENDERING
 
 Defines whether parameters should be rendered as literals when the type can not be inferred, or always as parameter.
@@ -138,6 +148,7 @@ The property can be changed for a criteria builder before constructing a query.
 | Applicable | Always
 |====================
 
+[[OPTIMIZED_KEYSET_PREDICATE_RENDERING]]
 ==== OPTIMIZED_KEYSET_PREDICATE_RENDERING
 
 Defines whether the keyset predicate should be rendered in an optimized form so that database optimizers are more likely
@@ -152,6 +163,7 @@ The property can be changed for a criteria builder before constructing a query.
 | Applicable | Always
 |====================
 
+[[INLINE_ID_QUERY]]
 ==== INLINE_ID_QUERY
 
 Defines whether the id query in a `PaginatedCriteriaBuilder` is inlined into the object query as subquery.
@@ -166,6 +178,7 @@ The property can be changed for a criteria builder before generating the query.
 | Applicable | Always
 |====================
 
+[[INLINE_COUNT_QUERY]]
 ==== INLINE_COUNT_QUERY
 
 Defines whether the count query in a `PaginatedCriteriaBuilder` is inlined into the id or object query as select item.
@@ -180,6 +193,7 @@ The property can be changed for a criteria builder before generating the query.
 | Applicable | Always
 |====================
 
+[[INLINE_CTES]]
 ==== INLINE_CTES
 
 Defines whether non-recursive CTEs should be inlined into the query by default.

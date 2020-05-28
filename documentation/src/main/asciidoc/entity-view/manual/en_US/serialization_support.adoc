@@ -6,6 +6,7 @@ and entity views naturally define their state through getters.
 
 The deserialization support is a different thing though for which special integrations are required.
 
+[[jackson-integration]]
 === Jackson integration
 
 [[jackson-setup]]

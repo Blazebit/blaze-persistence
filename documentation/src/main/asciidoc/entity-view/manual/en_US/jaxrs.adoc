@@ -3,7 +3,7 @@
 
 The JAX-RS integration provides `MessageBodyReader` and `ParamConverter` implementations to integrate the following serialization integrations with JAX-RS
 
-* <<Jackson integration>>
+* <<jackson-integration,Jackson integration>>
 * _At some point there will also be support for JAXB_
 
 The integration is discovered automatically through the `javax.ws.rs.ext.Providers` ServiceLoader contract. Simply putting the artifact on the classpath is enough for the integration.

@@ -1,3 +1,4 @@
+[[getting-started]]
 == Getting started
 
 This is a step-by-step introduction about how to get started with the entity view module of {projectname}.
