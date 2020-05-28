@@ -5,6 +5,7 @@
 [[anchor-configuration-properties]]
 === Configuration properties
 
+[[PROXY_EAGER_LOADING]]
 ==== PROXY_EAGER_LOADING
 
 Defines whether proxy classes for entity views should be created eagerly when creating the `EntityViewManager` or on demand.
@@ -18,6 +19,7 @@ To improve startup performance this is deactivated by default. When using entity
 | Applicable | Configuration only
 |====================
 
+[[TEMPLATE_EAGER_LOADING]]
 ==== TEMPLATE_EAGER_LOADING
 
 Defines whether entity view template objects should be created eagerly when creating the `EntityViewManager` or on demand.
@@ -31,6 +33,7 @@ To improve startup performance this is deactivated by default. In a production e
 | Applicable | Configuration only
 |====================
 
+[[PROXY_UNSAFE_ALLOWED]]
 ==== PROXY_UNSAFE_ALLOWED
 
 Defines whether proxy classes that support using the getter methods in a constructor should be allowed.
@@ -45,6 +48,7 @@ Disabling this property makes the use of the getter in the constructor return th
 | Applicable | Configuration only
 |====================
 
+[[EXPRESSION_VALIDATION_DISABLED]]
 ==== EXPRESSION_VALIDATION_DISABLED
 
 Defines whether the expressions of entity view mappings should be validated.
@@ -57,6 +61,7 @@ Defines whether the expressions of entity view mappings should be validated.
 | Applicable | Configuration only
 |====================
 
+[[DEFAULT_BATCH_SIZE]]
 ==== DEFAULT_BATCH_SIZE
 
 Defines the default batch size to be used for attributes that are fetched via the `SELECT` fetch strategy.
@@ -71,6 +76,7 @@ e.g. `com.blazebit.persistence.view.batch_size.subProperty`
 | Applicable | Always
 |====================
 
+[[EXPECT_BATCH_CORRELATION_VALUES]]
 ==== EXPECT_BATCH_CORRELATION_VALUES
 
 WARNING: This was deprecated in favor of `EXPECT_BATCH_MODE`.
@@ -87,7 +93,7 @@ e.g. `com.blazebit.persistence.view.batch_correlation_values.subProperty`
 | Applicable | Always
 |====================
 
-[[anchor-expect-batch-mode]]
+[[EXPECT_BATCH_MODE]]
 ==== EXPECT_BATCH_MODE
 
 Defines the expected batch mode i.e. whether correlation values, view root ids or embedding view ids are expected to be batched for attributes that are fetched via the `SELECT` fetch strategy.
@@ -102,6 +108,7 @@ e.g. `com.blazebit.persistence.view.batch_mode.subProperty`
 | Applicable | Always
 |====================
 
+[[UPDATER_EAGER_LOADING]]
 ==== UPDATER_EAGER_LOADING
 
 Defines whether entity view updater objects should be created eagerly when creating the `EntityViewManager` or on demand.
@@ -115,6 +122,7 @@ To improve startup performance this is deactivated by default. In a production e
 | Applicable | Configuration only
 |====================
 
+[[UPDATER_FLUSH_MODE]]
 ==== UPDATER_FLUSH_MODE
 
 Defines the flush mode the entity view updater objects should be using which is normally defined via `@UpdatableEntityView(mode = ...)`.
@@ -130,6 +138,7 @@ e.g. `com.blazebit.persistence.view.updater.flush_mode.com.test.MyUpdatableCatVi
 | Applicable | Configuration only
 |====================
 
+[[UPDATER_FLUSH_STRATEGY]]
 ==== UPDATER_FLUSH_STRATEGY
 
 Defines the flush strategy the entity view updater objects should be using which is normally defined via `@UpdatableEntityView(strategy = ...)`.
@@ -145,6 +154,7 @@ e.g. `com.blazebit.persistence.view.updater.flush_strategy.com.test.MyUpdatableC
 | Applicable | Configuration only
 |====================
 
+[[UPDATER_DISALLOW_OWNED_UPDATABLE_SUBVIEW]]
 ==== UPDATER_DISALLOW_OWNED_UPDATABLE_SUBVIEW
 
 Defines whether the use of an updatable entity view type for owned relationships is disallowed.
@@ -169,6 +179,7 @@ Beware that allowing updatable entity view types for *ToOne relationships might 
 | Applicable | Configuration only
 |====================
 
+[[UPDATER_STRICT_CASCADING_CHECK]]
 ==== UPDATER_STRICT_CASCADING_CHECK
 
 Defines whether the strict cascading check that disallows setting updatable or creatable entity views on non-cascading attributes
@@ -184,6 +195,7 @@ By default the use is enabled i.e. the default value is `true`.
 | Applicable | Configuration only
 |====================
 
+[[UPDATER_ERROR_ON_INVALID_PLURAL_SETTER]]
 ==== UPDATER_ERROR_ON_INVALID_PLURAL_SETTER
 
 Defines whether warnings or boot time validation errors should be emitted when invalid plural attribute setters are encountered while the strict cascading check is enabled.
@@ -199,6 +211,7 @@ By default the use is disabled i.e. the default value is `false`.
 | Applicable | Configuration only
 |====================
 
+[[PAGINATION_DISABLE_COUNT_QUERY]]
 ==== PAGINATION_DISABLE_COUNT_QUERY
 
 Defines whether the pagination count query should be disabled when applying a `EntityViewSetting` to a `CriteriaBuilder`.
@@ -213,6 +226,7 @@ By default the pagination count query is enabled i.e. the default value is `fals
 | Applicable | EntityViewSetting only
 |====================
 
+[[PAGINATION_EXTRACT_ALL_KEYSETS]]
 ==== PAGINATION_EXTRACT_ALL_KEYSETS
 
 Defines whether the pagination query should extract all keysets rather than just the first and last ones.
@@ -227,6 +241,7 @@ By default only the first and last keysets are extracted i.e. the default value 
 | Applicable | EntityViewSetting only
 |====================
 
+[[PAGINATION_FORCE_USE_KEYSET]]
 ==== PAGINATION_FORCE_USE_KEYSET
 
 Defines whether the pagination query should force the usage of a keyset when available even if page or page size changes.
@@ -240,6 +255,7 @@ By default only the first and last keysets are extracted i.e. the default value 
 | Applicable | EntityViewSetting only
 |====================
 
+[[PAGINATION_HIGHEST_KEYSET_OFFSET]]
 ==== PAGINATION_HIGHEST_KEYSET_OFFSET
 
 Defines the offset from the `maxResults` at which to find the highest keyset i.e. the highest keyset will be at position `Math.min(size, maxResults - offset)`.
@@ -253,7 +269,7 @@ By default the offset is disabled i.e. the default value is `null`.
 | Default | null
 | Applicable | EntityViewSetting only
 |====================
-
+[[PAGINATION_BOUNDED_COUNT]]
 ==== PAGINATION_BOUNDED_COUNT
 Defines the maximum value up to which the count query should count.
 By default the bounded count is disabled i.e. all rows are counted.
@@ -266,6 +282,7 @@ By default the bounded count is disabled i.e. all rows are counted.
 | Applicable | EntityViewSetting only
 |====================
 
+[[STATIC_BUILDER_SCANNING_DISABLED]]
 ==== STATIC_BUILDER_SCANNING_DISABLED
 
 Defines whether the scanning for `@StaticBuilder` classes for the registered entity views should be disabled.
@@ -280,6 +297,7 @@ By default the scanning is enabled i.e. the default value is `false`.
 | Applicable | Configuration only
 |====================
 
+[[STATIC_IMPLEMENTATION_SCANNING_DISABLED]]
 ==== STATIC_IMPLEMENTATION_SCANNING_DISABLED
 
 Defines whether the scanning for `@StaticImplementation` classes for the registered entity views should be disabled.
@@ -294,6 +312,7 @@ By default the scanning is enabled i.e. the default value is `false`.
 | Applicable | Configuration only
 |====================
 
+[[STATIC_METAMODEL_SCANNING_DISABLED]]
 ==== STATIC_METAMODEL_SCANNING_DISABLED
 
 Defines whether the scanning for `@StaticMetamodel` classes for the registered entity views should be disabled.
@@ -308,6 +327,7 @@ By default the scanning is enabled i.e. the default value is `false`.
 | Applicable | Configuration only
 |====================
 
+[[CREATE_EMPTY_FLAT_VIEWS]]
 ==== CREATE_EMPTY_FLAT_VIEWS
 
 Defines whether empty flat views should be created by default if not specified via `@EmptyFlatViewCreation`.

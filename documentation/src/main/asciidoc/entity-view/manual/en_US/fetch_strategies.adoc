@@ -174,7 +174,7 @@ If this assumption fails because the `VIEW_ROOT` or `EMBEDDING_VIEW` function is
 The way the `VIEW_ROOT` and `EMBEDDING_VIEW` functions are implemented, it is required to invoke the `CorrelationProvider` again for building the new query.
 
 To avoid this unnecessary rebuilding of the query, you can specify the batch expectation for all attributes by setting the property
-<<anchor-expect-batch-mode,`com.blazebit.persistence.view.batch_mode`>> via link:{entity_view_jdoc}/persistence/view/EntityViewSetting.html#setProperty(java.lang.String,%20java.lang.Object)[`EntityViewSetting.setProperty()`]
+<<EXPECT_BATCH_MODE,`com.blazebit.persistence.view.batch_mode`>> via link:{entity_view_jdoc}/persistence/view/EntityViewSetting.html#setProperty(java.lang.String,%20java.lang.Object)[`EntityViewSetting.setProperty()`]
 to `view_roots` if batching is expected to be done on a view root id basis or `embedding_views` if batching is expected to be done on a embedding view id basis.
 The value serves as default value and can be overridden on a per attribute basis by suffixing the property name with the attribute name.
 In order to set the batch expectation for an attribute named _someAttribute_ you have to set the property `com.blazebit.persistence.view.batch_mode.someAttribute` via link:{entity_view_jdoc}/persistence/view/EntityViewSetting.html#setProperty(java.lang.String,%20java.lang.Object)[`EntityViewSetting.setProperty()`].

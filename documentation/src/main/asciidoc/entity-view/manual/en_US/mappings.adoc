@@ -1,6 +1,6 @@
 == Mappings
 
-As already mentioned in the <<Getting started>> section, the entity view module builds up on the core module.
+As already mentioned in the <<getting-started,Getting started>> section, the entity view module builds up on the core module.
 Some of the basics like link:{core_doc}#implicit-joins[implicit joins]
 and the basic link:{core_doc}#expressions[expression structure] should be known to understand all of the following mapping examples.
 
@@ -1015,7 +1015,7 @@ public abstract class PersonView {
 }
 ----
 
-This is especially useful for <<Updatable Entity Views>> when a method wants to create a new instance of a subview or get a reference to a subview.
+This is especially useful for <<updatable-entity-views,Updatable Entity Views>> when a method wants to create a new instance of a subview or get a reference to a subview.
 
 === Mapping expression extensions
 
