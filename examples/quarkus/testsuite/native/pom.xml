@@ -3,7 +3,7 @@
     <parent>
         <artifactId>blaze-persistence-examples-quarkus-testsuite</artifactId>
         <groupId>com.blazebit</groupId>
-        <version>1.5.0-SNAPSHOT</version>
+        <version>1.5.0-Alpha4</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -58,7 +58,7 @@
 
     <properties>
         <quarkus.package.type>native</quarkus.package.type>
-        <runnerExtension/>
+        <runnerExtension />
         <skipITs />
     </properties>
 </project>
