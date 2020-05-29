@@ -3,7 +3,7 @@
     <parent>
         <groupId>com.blazebit</groupId>
         <artifactId>blaze-persistence-integration-querydsl-parent</artifactId>
-        <version>1.5.0-Alpha4</version>
+        <version>1.5.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <properties>
