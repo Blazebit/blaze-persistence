@@ -23,6 +23,7 @@ import java.net.URI;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.matchesPattern;
+import static org.hamcrest.core.Is.is;
 
 /**
  * @author Moritz Becker
@@ -36,11 +37,29 @@ public abstract class AbstractQuarkusExampleTest {
     @Test
     public void createDocument() {
         given()
-                .body("{\"name\": \"Doc1\"}")
+                .body("{\"name\": \"Doc1\", \"age\": 0}")
                 .contentType(ContentType.JSON)
                 .when().post("/documents")
                 .then()
                 .statusCode(201)
                 .header("Location", matchesPattern("http://localhost:" + apiBaseUri.getPort() + "/documents/.*"));
+    }
+
+    @Test
+    public void getDocuments() {
+        given()
+                .body("{\"name\": \"Doc1\", \"age\": 1}")
+                .contentType(ContentType.JSON)
+                .when().post("/documents")
+                .then()
+                .statusCode(201)
+                .header("Location", matchesPattern("http://localhost:" + apiBaseUri.getPort() + "/documents/.*"));
+
+        given()
+                .queryParam("age", 1)
+                .when().get("/documents")
+                .then()
+                .statusCode(200)
+                .body("size()", is(1));
     }
 }

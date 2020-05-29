@@ -61,7 +61,7 @@
                         </goals>
                         <configuration>
                             <systemProperties>
-                                <native.image.path>${project.build.directory}/${project.build.finalName}-runner.exe</native.image.path>
+                                <native.image.path>${project.build.directory}/${project.build.finalName}-runner${runnerExtension}</native.image.path>
                             </systemProperties>
                         </configuration>
                     </execution>

@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.integration.quarkus.runtime;
 
+import com.blazebit.persistence.Criteria;
+import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.view.ConfigurationProperties;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
@@ -43,7 +45,16 @@ public class EntityViewRecorder {
         this.entityViewListeners.add(entityViewListener);
     }
 
-    public BeanContainerListener setEntityViewConfiguration() {
+    public BeanContainerListener setCriteriaBuilderConfiguration(BlazePersistenceConfiguration blazePersistenceConfig) {
+        return beanContainer -> {
+            CriteriaBuilderConfiguration criteriaBuilderConfiguration = Criteria.getDefault();
+            blazePersistenceConfig.apply(criteriaBuilderConfiguration);
+            CriteriaBuilderConfigurationHolder configurationHolder = beanContainer.instance(CriteriaBuilderConfigurationHolder.class);
+            configurationHolder.setCriteriaBuilderConfiguration(criteriaBuilderConfiguration);
+        };
+    }
+
+    public BeanContainerListener setEntityViewConfiguration(BlazePersistenceConfiguration blazePersistenceConfig) {
         return beanContainer -> {
             EntityViewConfigurationHolder configurationHolder = beanContainer.instance(EntityViewConfigurationHolder.class);
             EntityViewConfiguration entityViewConfiguration = EntityViews.createDefaultConfiguration();
@@ -53,6 +64,7 @@ public class EntityViewRecorder {
             for (Class<?> entityViewListener : entityViewListeners) {
                 entityViewConfiguration.addEntityViewListener(entityViewListener);
             }
+            blazePersistenceConfig.apply(entityViewConfiguration);
             entityViewConfiguration.setProperty(ConfigurationProperties.PROXY_UNSAFE_ALLOWED, Boolean.FALSE.toString());
             configurationHolder.setEntityViewConfiguration(entityViewConfiguration);
         };

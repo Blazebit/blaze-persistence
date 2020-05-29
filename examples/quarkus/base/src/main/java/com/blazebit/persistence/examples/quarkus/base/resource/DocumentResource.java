@@ -16,22 +16,29 @@
 
 package com.blazebit.persistence.examples.quarkus.base.resource;
 
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.examples.quarkus.base.entity.Document;
 import com.blazebit.persistence.examples.quarkus.base.view.DocumentUpdateView;
 import com.blazebit.persistence.examples.quarkus.base.view.DocumentView;
 import com.blazebit.persistence.integration.jaxrs.EntityViewId;
 import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.EntityViewSetting;
 
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.URI;
+import java.util.List;
 
 /**
  * @author Moritz Becker
@@ -44,6 +51,8 @@ public class DocumentResource {
     EntityManager em;
     @Inject
     EntityViewManager evm;
+    @Inject
+    CriteriaBuilderFactory cbf;
 
     @Transactional
     @PUT
@@ -61,5 +70,14 @@ public class DocumentResource {
     public Response addDocument(DocumentUpdateView view) {
         evm.save(em, view);
         return Response.created(URI.create("/documents/" + view.getId())).build();
+    }
+
+
+    @GET
+    @Transactional
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<DocumentView> getDocuments(@QueryParam("age") List<Long> ages) {
+        CriteriaBuilder<Document> cb = cbf.create(em, Document.class).where("age").in().fromValues(Long.class, "age", ages).end();
+        return evm.applySetting(EntityViewSetting.create(DocumentView.class), cb).getResultList();
     }
 }
