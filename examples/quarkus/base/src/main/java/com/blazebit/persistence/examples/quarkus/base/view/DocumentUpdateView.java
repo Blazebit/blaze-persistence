@@ -36,4 +36,7 @@ public interface DocumentUpdateView {
 
     String getName();
     void setName(String name);
+
+    Long getAge();
+    void setAge(Long age);
 }

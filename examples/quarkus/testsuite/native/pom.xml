@@ -45,10 +45,20 @@
                 <module>mssql</module>
             </modules>
         </profile>
+        <profile>
+            <id>windows</id>
+            <activation>
+                <os><family>windows</family></os>
+            </activation>
+            <properties>
+                <runnerExtension>.exe</runnerExtension>
+            </properties>
+        </profile>
     </profiles>
 
     <properties>
         <quarkus.package.type>native</quarkus.package.type>
+        <runnerExtension/>
         <skipITs />
     </properties>
 </project>
