@@ -76,8 +76,8 @@ public class EntityViewMessageBodyReader implements MessageBodyReader<Object> {
                 @Override
                 public <T> T getValue(JsonParser jsonParser, Class<T> idType) {
                     String value = idValueHolder.get();
-                    if (value == null) {
-                        return null;
+                    if (value == null || String.class.equals(idType)) {
+                        return (T) value;
                     } else {
                         ParamConverter<T> paramConverter = null;
                         for (ParamConverterProvider paramConverterProvider : paramConverterProviders) {
