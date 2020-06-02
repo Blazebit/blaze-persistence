@@ -62,4 +62,23 @@ public abstract class AbstractQuarkusExampleTest {
                 .statusCode(200)
                 .body("size()", is(1));
     }
+
+    @Test
+    public void updateDocumentType() {
+        given()
+                .body("{\"id\": \"1\", \"name\": \"docType1\"}")
+                .contentType(ContentType.JSON)
+                .when().post("/document-types")
+                .then()
+                .statusCode(201)
+                .header("Location", matchesPattern("http://localhost:" + apiBaseUri.getPort() + "/document-types/1"));
+
+        given()
+                .body("{\"name\": \"docType1-new\"}")
+                .contentType(ContentType.JSON)
+                .when().put("/document-types/1")
+                .then()
+                .statusCode(200)
+                .body("name", is("docType1-new"));
+    }
 }

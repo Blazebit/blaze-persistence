@@ -13,11 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.examples.quarkus.base.view;
 
-import com.blazebit.persistence.examples.quarkus.base.entity.Person;
-import com.blazebit.persistence.view.CreatableEntityView;
+import com.blazebit.persistence.examples.quarkus.base.entity.DocumentType;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.UpdatableEntityView;
 
@@ -26,9 +24,7 @@ import com.blazebit.persistence.view.UpdatableEntityView;
  * @since 1.5.0
  */
 @UpdatableEntityView
-@CreatableEntityView
-@EntityView(Person.class)
-public interface PersonUpdateView extends PersonView {
-
+@EntityView(DocumentType.class)
+public interface DocumentTypeUpdateView extends DocumentTypeView {
     void setName(String name);
 }
