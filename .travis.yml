@@ -41,7 +41,7 @@ matrix:
   include:
     - env: SNAPSHOT_PUBLISH=true
       before_install:
-        - wget http://apache.mirror.gtcomm.net/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz
+        - wget https://downloads.apache.org/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz
         - tar xzvf apache-maven-3.6.3-bin.tar.gz
         - export PATH=`pwd`/apache-maven-3.6.3/bin:$PATH
         - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
@@ -224,25 +224,25 @@ matrix:
     - env: JPAPROVIDER=hibernate-5.4 RDBMS=h2 NATIVE=true
       jdk: oraclejdk8
       script:
-        - travis_wait 60 ./build.sh
+        - travis_wait 70 ./build.sh
     - env: JPAPROVIDER=hibernate-5.4 RDBMS=mysql8 NATIVE=true
       jdk: oraclejdk8
       sudo: required
       script:
-        - travis_wait 60 ./build.sh
+        - travis_wait 70 ./build.sh
     - env: JPAPROVIDER=hibernate-5.4 RDBMS=postgresql NATIVE=true
       jdk: oraclejdk8
       addons:
         postgresql: "9.4"
       script:
-        - travis_wait 60 ./build.sh
+        - travis_wait 70 ./build.sh
     - env: JPAPROVIDER=hibernate-5.4 RDBMS=mssql NATIVE=true
       jdk: oraclejdk8
       sudo: true
       services:
         - docker
       script:
-        - travis_wait 60 ./build.sh
+        - travis_wait 70 ./build.sh
     - env: JPAPROVIDER=hibernate-5.4 RDBMS=db2
       jdk: oraclejdk8
       sudo: true
