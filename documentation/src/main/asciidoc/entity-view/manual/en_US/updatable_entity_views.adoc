@@ -51,7 +51,7 @@ interface CatUpdateView {
     @IdMapping
     Long getId();
 
-    @MappingUpdatable(cascade = CascadeType.PERSIST)
+    @UpdatableMapping(cascade = CascadeType.PERSIST)
     OwnerView getOwner();
     void setOwner(OwnerView owner);
 }
