@@ -73,7 +73,9 @@ import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.reflection.ReflectionUtils;
 
+import javax.persistence.metamodel.ListAttribute;
 import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.MapAttribute;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
@@ -736,12 +738,12 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         }
     }
 
-    private static boolean isCompatible(TargetType t, Class<?> targetType, Class<?> targetElementType, boolean subtypesAllowed, boolean singular) {
+    private static boolean isCompatible(TargetType t, Class<?> targetType, Class<?> targetElementType, boolean updatable, boolean singular) {
         if (t.hasCollectionJoin()) {
-            return isCompatible(t.getLeafBaseClass(), t.getLeafBaseValueClass(), targetType, targetElementType, subtypesAllowed, singular);
+            return isCompatible(t.getLeafMethod(), t.getLeafBaseClass(), t.getLeafBaseValueClass(), targetType, targetElementType, updatable, singular);
         } else {
             Class<?> entityAttributeElementType = getElementTypeOrNull(t, singular);
-            return isCompatible(t.getLeafBaseClass(), entityAttributeElementType, targetType, targetElementType, subtypesAllowed, singular);
+            return isCompatible(t.getLeafMethod(), t.getLeafBaseClass(), entityAttributeElementType, targetType, targetElementType, updatable, singular);
         }
     }
 
@@ -767,7 +769,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     /**
      * Checks if <code>entityAttributeType</code> with an optional element type <code>entityAttributeElementType</code>
-     * can be mapped to <code>targetType</code> with the optional element type <code>viewAttributeElementType</code> and the given <code>subtypesAllowed</code> config.
+     * can be mapped to <code>targetType</code> with the optional element type <code>viewAttributeElementType</code> and the given <code>updatable</code> config.
      *
      * A <code>entityAttributeType</code> of <code>NULL</code> represents the <i>any type</i> which makes it always compatible i.e. returning <code>true</code>.
      * A type is compatible if the source types given by <code>entityAttributeType</code>/<code>entityAttributeElementType</code>
@@ -776,21 +778,55 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
      * A source collection type it is also compatible with non-collection targets if the source element type is a subtype of the target type.
      * A source non-collection type is also compatible with a collection target if the source type is a subtype of the target element type.
      *
+     *
+     * @param attribute The resolved JPA attribute
      * @param entityAttributeType The source type
      * @param entityAttributeElementType The optional source element type
      * @param viewAttributeType The target type
      * @param viewAttributeElementType The optional target element type
-     * @param subtypesAllowed Whether a more specific source type is allowed to map to a general target type
+     * @param updatable Whether this is a check for an updatable attribute
      * @param singular Whether the view attribute is singular
      * @return True if mapping from <code>entityAttributeType</code>/<code>entityAttributeElementType</code> to <code>targetType</code>/<code>viewAttributeElementType</code> is possible
      */
-    private static boolean isCompatible(Class<?> entityAttributeType, Class<?> entityAttributeElementType, Class<?> viewAttributeType, Class<?> viewAttributeElementType, boolean subtypesAllowed, boolean singular) {
+    private static boolean isCompatible(javax.persistence.metamodel.Attribute<?, ?> attribute, Class<?> entityAttributeType, Class<?> entityAttributeElementType, Class<?> viewAttributeType, Class<?> viewAttributeElementType, boolean updatable, boolean singular) {
         // Null is the marker for ANY TYPE
         if (entityAttributeType == null) {
             return true;
         }
 
-        if (subtypesAllowed) {
+        if (updatable) {
+            if (entityAttributeElementType != null) {
+                if (viewAttributeElementType != null) {
+                    // Mapping a plural entity attribute to a plural view attribute
+
+                    // Indexed lists or maps must map to indexed lists or maps again if they want to be updatable
+                    if (attribute instanceof ListAttribute<?, ?>) {
+                        if (!List.class.isAssignableFrom(viewAttributeType)) {
+                            return false;
+                        }
+                    } else if (attribute instanceof MapAttribute<?, ?, ?>) {
+                        if (!Map.class.isAssignableFrom(viewAttributeType)) {
+                            return false;
+                        }
+                    } else if (!Collection.class.isAssignableFrom(viewAttributeType)) {
+                        // For all other plural attributes, we allow any collection type
+                        return false;
+                    }
+                    return viewAttributeElementType == entityAttributeElementType;
+                } else {
+                    // Mapping a plural entity attribute to a singular view attribute
+                    return viewAttributeType == entityAttributeElementType;
+                }
+            } else {
+                if (viewAttributeElementType != null) {
+                    // Mapping a singular entity attribute to a plural view attribute
+                    return viewAttributeElementType == entityAttributeType;
+                } else {
+                    // Mapping a singular entity attribute to a singular view attribute
+                    return viewAttributeType == entityAttributeType;
+                }
+            }
+        } else {
             if (entityAttributeElementType != null) {
                 if (viewAttributeElementType != null) {
                     // Mapping a plural entity attribute to a plural view attribute
@@ -812,29 +848,10 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                     return viewAttributeType.isAssignableFrom(entityAttributeType);
                 }
             }
-        } else {
-            if (entityAttributeElementType != null) {
-                if (viewAttributeElementType != null) {
-                    // Mapping a plural entity attribute to a plural view attribute
-                    return viewAttributeType == entityAttributeType
-                            && viewAttributeElementType == entityAttributeElementType;
-                } else {
-                    // Mapping a plural entity attribute to a singular view attribute
-                    return viewAttributeType == entityAttributeElementType;
-                }
-            } else {
-                if (viewAttributeElementType != null) {
-                    // Mapping a singular entity attribute to a plural view attribute
-                    return viewAttributeElementType == entityAttributeType;
-                } else {
-                    // Mapping a singular entity attribute to a singular view attribute
-                    return viewAttributeType == entityAttributeType;
-                }
-            }
         }
     }
 
-    private static void validateTypesCompatible(ManagedType<?> managedType, Expression expression, Class<?> targetType, Class<?> targetElementType, boolean subtypesAllowed, boolean singular, MetamodelBuildingContext context, ExpressionLocation expressionLocation, String location) {
+    private static void validateTypesCompatible(ManagedType<?> managedType, Expression expression, Class<?> targetType, Class<?> targetElementType, boolean updatable, boolean singular, MetamodelBuildingContext context, ExpressionLocation expressionLocation, String location) {
         ScalarTargetResolvingExpressionVisitor visitor = new ScalarTargetResolvingExpressionVisitor(managedType, context.getEntityMetamodel(), context.getJpqlFunctions());
 
         try {
@@ -843,15 +860,15 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             context.addError("An error occurred while trying to resolve the " + expressionLocation + " of the " + location + ": " + ex.getMessage());
         }
 
-        validateTypesCompatible(visitor.getPossibleTargetTypes(), targetType, targetElementType, subtypesAllowed, singular, context, expressionLocation, location);
+        validateTypesCompatible(visitor.getPossibleTargetTypes(), targetType, targetElementType, updatable, singular, context, expressionLocation, location);
     }
 
-    private static void validateTypesCompatible(List<TargetType> possibleTargets, Class<?> targetType, Class<?> targetElementType, boolean subtypesAllowed, boolean singular, MetamodelBuildingContext context, ExpressionLocation expressionLocation, String location) {
+    private static void validateTypesCompatible(List<TargetType> possibleTargets, Class<?> targetType, Class<?> targetElementType, boolean updatable, boolean singular, MetamodelBuildingContext context, ExpressionLocation expressionLocation, String location) {
         final Class<?> expressionType = targetType;
         if (!possibleTargets.isEmpty()) {
             boolean error = true;
             for (TargetType t : possibleTargets) {
-                if (isCompatible(t, targetType, targetElementType, subtypesAllowed, singular)) {
+                if (isCompatible(t, targetType, targetElementType, updatable, singular)) {
                     error = false;
                     break;
                 }
@@ -866,7 +883,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
                 if (targetType != null) {
                     for (TargetType t : possibleTargets) {
-                        if (isCompatible(t, targetType, targetElementType, subtypesAllowed, singular)) {
+                        if (isCompatible(t, targetType, targetElementType, updatable, singular)) {
                             error = false;
                             break;
                         }
@@ -1000,17 +1017,8 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         if (isCollection()) {
             elementType = getElementType().getJavaType();
 
-            if (isUpdatable()) {
-                // Updatable collection attributes currently must have the same collection type
-                // We only allow using sorted variants instead of the normal collections
-                if (isSorted()) {
-                    if (getCollectionType() == PluralAttribute.CollectionType.MAP) {
-                        expressionType = Map.class;
-                    } else if (getCollectionType() == PluralAttribute.CollectionType.SET) {
-                        expressionType = Set.class;
-                    }
-                }
-            } else {
+            if (!isUpdatable()) {
+                // Updatable collection attributes are specially handled in the type compatibility check
                 if (isIndexed()) {
                     if (getCollectionType() == PluralAttribute.CollectionType.MAP) {
                         // All map types can be sourced from a map
@@ -1054,11 +1062,11 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
         if (isCorrelated()) {
             // Validate that resolving "correlationBasis" on "managedType" is valid
-            validateTypesCompatible(managedType, correlationBasisExpression, Object.class, null, true, true, context, ExpressionLocation.CORRELATION_BASIS, getLocation());
+            validateTypesCompatible(managedType, correlationBasisExpression, Object.class, null, false, true, context, ExpressionLocation.CORRELATION_BASIS, getLocation());
 
             if (correlated != null) {
                 // Validate that resolving "correlationResult" on "correlated" is compatible with "expressionType" and "elementType"
-                validateTypesCompatible(possibleTargetTypes, expressionType, elementType, true, !isCollection(), context, ExpressionLocation.CORRELATION_RESULT, getLocation());
+                validateTypesCompatible(possibleTargetTypes, expressionType, elementType, false, !isCollection(), context, ExpressionLocation.CORRELATION_RESULT, getLocation());
                 if (correlationPredicate != null) {
                     // TODO: Validate the "correlationExpression" when https://github.com/Blazebit/blaze-persistence/issues/212 is implemented
                 }
@@ -1067,12 +1075,10 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             if (subqueryExpression != null && !subqueryExpression.isEmpty()) {
                 // If a converter is applied, we already know that there was a type match with the underlying type
                 if (getElementType().getConvertedType() == null) {
-                    validateTypesCompatible(possibleTargetTypes, expressionType, elementType, true, !isCollection(), context, ExpressionLocation.SUBQUERY_EXPRESSION, getLocation());
+                    validateTypesCompatible(possibleTargetTypes, expressionType, elementType, false, !isCollection(), context, ExpressionLocation.SUBQUERY_EXPRESSION, getLocation());
                 }
             }
         } else if (!isQueryParameter()) {
-            boolean subtypesAllowed = !isUpdatable();
-
             // Forcing singular via @MappingSingular
             if (!isCollection() && (Collection.class.isAssignableFrom(expressionType) || Map.class.isAssignableFrom(expressionType))) {
                 Class<?>[] typeArguments = getTypeArguments();
@@ -1082,7 +1088,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             // If a converter is applied, we already know that there was a type match with the underlying type
             if (getElementType().getConvertedType() == null) {
                 // Validate that resolving "mapping" on "managedType" is compatible with "expressionType" and "elementType"
-                validateTypesCompatible(possibleTargetTypes, expressionType, elementType, subtypesAllowed, !isCollection(), context, ExpressionLocation.MAPPING, getLocation());
+                validateTypesCompatible(possibleTargetTypes, expressionType, elementType, isUpdatable(), !isCollection(), context, ExpressionLocation.MAPPING, getLocation());
             }
 
             if (isMutable() && (declaringType.isUpdatable() || declaringType.isCreatable())) {
