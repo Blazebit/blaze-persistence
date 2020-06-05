@@ -846,39 +846,40 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             // Modification queries keep the sql in the executor
             StatementExecutor executor = null;
             
-            Field statementExectuor = null;
+            Field statementExecutor = null;
             boolean madeAccessible = false;
             
             try {
-                statementExectuor = ReflectionUtils.getField(queryTranslator.getClass(), "statementExecutor");
-                madeAccessible = !statementExectuor.isAccessible();
+                statementExecutor = ReflectionUtils.getField(queryTranslator.getClass(), "statementExecutor");
+                madeAccessible = !statementExecutor.isAccessible();
                 
                 if (madeAccessible) {
-                    statementExectuor.setAccessible(true);
+                    statementExecutor.setAccessible(true);
                 }
                 
-                executor = (StatementExecutor) statementExectuor.get(queryTranslator);
+                executor = (StatementExecutor) statementExecutor.get(queryTranslator);
                 
                 if (executor == null && isModification) {
                     // We have to set an executor
-                    org.hibernate.Query lastHibernateQuery = modificationBaseQuery.unwrap(org.hibernate.Query.class);
 
+                    // The last query is our DML statement that contains the executor we need to alter
+                    org.hibernate.Query lastHibernateQuery = modificationBaseQuery.unwrap(org.hibernate.Query.class);
                     Map<String, TypedValue> namedParams = new HashMap<String, TypedValue>(hibernateAccess.getNamedParams(lastHibernateQuery));
                     String queryString = hibernateAccess.expandParameterLists(session, lastHibernateQuery, namedParams);
                     
-                    // Extract the executor from the last query which is the actual main query
-                    HQLQueryPlan lastQueryPlan = session.getFactory().getQueryPlanCache().getHQLQueryPlan(queryString, false, Collections.EMPTY_MAP);
+                    // Create a fresh query to extract the executor which we can use
+                    HQLQueryPlan lastQueryPlan = new HQLQueryPlan(queryString, false, Collections.EMPTY_MAP, session.getFactory());
                     if (lastQueryPlan.getTranslators().length > 1) {
                         throw new IllegalArgumentException("No support for multiple translators yet!");
                     }
                     QueryTranslator lastQueryTranslator = lastQueryPlan.getTranslators()[0];
-                    executor = (StatementExecutor) statementExectuor.get(lastQueryTranslator);
+                    executor = (StatementExecutor) statementExecutor.get(lastQueryTranslator);
                     // Now we use this executor for our example query
-                    statementExectuor.set(queryTranslator, executor);
+                    statementExecutor.set(queryTranslator, executor);
                 }
             } finally {
                 if (madeAccessible) {
-                    statementExectuor.setAccessible(false);
+                    statementExecutor.setAccessible(false);
                 }
             }
 
