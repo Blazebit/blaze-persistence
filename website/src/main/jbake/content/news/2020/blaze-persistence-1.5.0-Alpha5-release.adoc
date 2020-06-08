@@ -1,0 +1,19 @@
+= Blaze-Persistence 1.5.0-Alpha5 Release
+Christian Beikov
+2020-06-08 0
+:description: Blaze-Persistence version 1.5.0-Alpha5 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+We recently switched from using JDK 9 to JDK 14 for our releases and accidentally compiled MR-JAR contents with the Java 14 classfile version.
+This release fixes that, so that you can run Blaze-Persistence again with all Java versions from 9 to 13.
+We also fixed a query plan caching bug for DML queries that are using the `RETURNING` clause along with
++++<!-- PREVIEW-SUFFIX --><!-- </p></div> --><!-- PREVIEW-END -->+++other advanced features like CTEs.
+
+If you want to know more about the new features or bug fixes, take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#150-alpha5[changelog, window="_blank"] for a full list of changes and improvements.
+
+We cut down the plan for the final 1.5 release down to the bare minimum. We will deliver further improvements through bug-fix releases.
