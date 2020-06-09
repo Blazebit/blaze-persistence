@@ -40,8 +40,9 @@ public class CollectionDeleteModificationQuerySpecification<T> extends Modificat
     private final Map<String, String> columnExpressionRemappings;
 
     public CollectionDeleteModificationQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Query exampleQuery, Set<Parameter<?>> parameters, Set<String> parameterListNames, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes,
-                                                          boolean isEmbedded, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates, Map<String, String> returningAttributeBindingMap, Query deleteExampleQuery, String deleteSql, Map<String, String> columnExpressionRemappings) {
-        super(commonQueryBuilder, baseQuery, exampleQuery, parameters, parameterListNames, recursive, ctes, shouldRenderCteNodes, isEmbedded, returningColumns, includedModificationStates, returningAttributeBindingMap);
+                                                          boolean isEmbedded, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates, Map<String, String> returningAttributeBindingMap, Query deleteExampleQuery, String deleteSql, Map<String, String> columnExpressionRemappings,
+                                                          boolean queryPlanCacheEnabled) {
+        super(commonQueryBuilder, baseQuery, exampleQuery, parameters, parameterListNames, recursive, ctes, shouldRenderCteNodes, isEmbedded, returningColumns, includedModificationStates, returningAttributeBindingMap, queryPlanCacheEnabled);
         this.deleteExampleQuery = deleteExampleQuery;
         this.deleteSql = deleteSql;
         this.columnExpressionRemappings = columnExpressionRemappings;

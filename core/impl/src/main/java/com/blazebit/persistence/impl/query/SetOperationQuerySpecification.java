@@ -45,8 +45,9 @@ public class SetOperationQuerySpecification<T> extends CustomQuerySpecification<
 
     public SetOperationQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query leftMostQuery, Query baseQuery, List<Query> setOperands, SetOperationType operator,
                                           List<? extends OrderByElement> orderByElements, boolean nested, Set<Parameter<?>> parameters, Set<String> parameterListNames, String limit, String offset,
-                                          List<String> keyRestrictedLeftJoinAliases, List<EntityFunctionNode> entityFunctionNodes, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes) {
-        super(commonQueryBuilder, baseQuery, parameters, parameterListNames, limit, offset, keyRestrictedLeftJoinAliases, entityFunctionNodes, recursive, ctes, shouldRenderCteNodes);
+                                          List<String> keyRestrictedLeftJoinAliases, List<EntityFunctionNode> entityFunctionNodes, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes,
+                                          boolean queryPlanCacheEnabled) {
+        super(commonQueryBuilder, baseQuery, parameters, parameterListNames, limit, offset, keyRestrictedLeftJoinAliases, entityFunctionNodes, recursive, ctes, shouldRenderCteNodes, queryPlanCacheEnabled);
         this.leftMostQuery = leftMostQuery;
         this.setOperands = setOperands;
         this.operator = operator;
@@ -130,7 +131,7 @@ public class SetOperationQuerySpecification<T> extends CustomQuerySpecification<
     @Override
     public SelectQueryPlan<T> createSelectPlan(int firstResult, int maxResults) {
         final String sql = getSql();
-        return new CustomSelectQueryPlan<>(extendedQuerySupport, serviceProvider, baseQuery, participatingQueries, sql, firstResult, maxResults);
+        return new CustomSelectQueryPlan<>(extendedQuerySupport, serviceProvider, baseQuery, participatingQueries, sql, firstResult, maxResults, queryPlanCacheEnabled);
     }
 
     private void bindListParameters(Query q) {

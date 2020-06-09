@@ -2680,7 +2680,8 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         boolean shouldRenderCteNodes = lateralSb == null && renderCteNodes(false);
         List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.<CTENode>emptyList();
         QuerySpecification querySpecification = new CustomQuerySpecification(
-                this, baseQuery, parameterManager.getParameters(), parameterListNames, limit, offset, keyRestrictedLeftJoinAliases, entityFunctionNodes, mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes
+                this, baseQuery, parameterManager.getParameters(), parameterListNames, limit, offset, keyRestrictedLeftJoinAliases, entityFunctionNodes,
+                mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes, mainQuery.getQueryConfiguration().isQueryPlanCacheEnabled()
         );
 
         TypedQuery<QueryResultType> query = new CustomSQLTypedQuery<QueryResultType>(

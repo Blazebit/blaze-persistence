@@ -40,21 +40,21 @@ public class ReturningCollectionInsertModificationQuerySpecification<T> extends 
     private final ReturningObjectBuilder<T> objectBuilder;
 
     public ReturningCollectionInsertModificationQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Query exampleQuery, Set<Parameter<?>> parameters, Set<String> parameterListNames, List<String> keyRestrictedLeftJoinAliases, List<EntityFunctionNode> entityFunctionNodes, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes,
-                                                                   boolean isEmbedded, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates, Map<String, String> returningAttributeBindingMap, Query insertExampleQuery, String insertSql, int cutoffColumns, ReturningObjectBuilder<T> objectBuilder) {
-        super(commonQueryBuilder, baseQuery, exampleQuery, parameters, parameterListNames, keyRestrictedLeftJoinAliases, entityFunctionNodes, recursive, ctes, shouldRenderCteNodes, isEmbedded, returningColumns, includedModificationStates, returningAttributeBindingMap, insertExampleQuery, insertSql, cutoffColumns);
+                                                                   boolean isEmbedded, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates, Map<String, String> returningAttributeBindingMap, Query insertExampleQuery, String insertSql, int cutoffColumns, ReturningObjectBuilder<T> objectBuilder, boolean queryPlanCacheEnabled) {
+        super(commonQueryBuilder, baseQuery, exampleQuery, parameters, parameterListNames, keyRestrictedLeftJoinAliases, entityFunctionNodes, recursive, ctes, shouldRenderCteNodes, isEmbedded, returningColumns, includedModificationStates, returningAttributeBindingMap, insertExampleQuery, insertSql, cutoffColumns, queryPlanCacheEnabled);
         this.objectBuilder = objectBuilder;
     }
 
     @Override
     public ModificationQueryPlan createModificationPlan(int firstResult, int maxResults) {
         final String sql = getSql();
-        return new CustomReturningModificationQueryPlan<T>(extendedQuerySupport, serviceProvider, baseQuery, exampleQuery, objectBuilder, participatingQueries, sql, firstResult, maxResults, returningColumns.length == 1 && objectBuilder != null);
+        return new CustomReturningModificationQueryPlan<T>(extendedQuerySupport, serviceProvider, baseQuery, exampleQuery, objectBuilder, participatingQueries, sql, firstResult, maxResults, returningColumns.length == 1 && objectBuilder != null, queryPlanCacheEnabled);
     }
 
     @Override
     public SelectQueryPlan<ReturningResult<T>> createSelectPlan(int firstResult, int maxResults) {
         final String sql = getSql();
-        return new CustomReturningModificationQueryPlan<T>(extendedQuerySupport, serviceProvider, baseQuery, exampleQuery, objectBuilder, participatingQueries, sql, firstResult, maxResults, returningColumns.length == 1 && objectBuilder != null);
+        return new CustomReturningModificationQueryPlan<T>(extendedQuerySupport, serviceProvider, baseQuery, exampleQuery, objectBuilder, participatingQueries, sql, firstResult, maxResults, returningColumns.length == 1 && objectBuilder != null, queryPlanCacheEnabled);
     }
 
 }

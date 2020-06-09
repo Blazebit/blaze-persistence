@@ -118,9 +118,11 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
             // The main query will handle that separately
             if (!isMainQuery) {
                 if (firstResult != 0) {
+                    query.setFirstResult(firstResult);
                     offset = Integer.toString(firstResult);
                 }
                 if (maxResults != Integer.MAX_VALUE) {
+                    query.setMaxResults(maxResults);
                     limit = Integer.toString(maxResults);
                 }
             }

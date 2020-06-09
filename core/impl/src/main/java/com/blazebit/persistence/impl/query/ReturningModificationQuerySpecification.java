@@ -43,8 +43,8 @@ public class ReturningModificationQuerySpecification<T> extends CustomQuerySpeci
     private final ReturningObjectBuilder<T> objectBuilder;
 
     public ReturningModificationQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Query exampleQuery, Set<Parameter<?>> parameters, Set<String> parameterListNames, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes,
-                                                   String[] returningColumns, ReturningObjectBuilder<T> objectBuilder) {
-        super(commonQueryBuilder, baseQuery, parameters, parameterListNames, null, null, Collections.EMPTY_LIST, Collections.EMPTY_LIST, recursive, ctes, shouldRenderCteNodes);
+                                                   String[] returningColumns, ReturningObjectBuilder<T> objectBuilder, boolean queryPlanCacheEnabled) {
+        super(commonQueryBuilder, baseQuery, parameters, parameterListNames, null, null, Collections.EMPTY_LIST, Collections.EMPTY_LIST, recursive, ctes, shouldRenderCteNodes, queryPlanCacheEnabled);
         this.exampleQuery = exampleQuery;
         this.returningColumns = returningColumns;
         this.objectBuilder = objectBuilder;
@@ -53,13 +53,13 @@ public class ReturningModificationQuerySpecification<T> extends CustomQuerySpeci
     @Override
     public ModificationQueryPlan createModificationPlan(int firstResult, int maxResults) {
         final String sql = getSql();
-        return new CustomReturningModificationQueryPlan<T>(extendedQuerySupport, serviceProvider, baseQuery, exampleQuery, objectBuilder, participatingQueries, sql, firstResult, maxResults, returningColumns.length == 1 && objectBuilder != null);
+        return new CustomReturningModificationQueryPlan<T>(extendedQuerySupport, serviceProvider, baseQuery, exampleQuery, objectBuilder, participatingQueries, sql, firstResult, maxResults, returningColumns.length == 1 && objectBuilder != null, queryPlanCacheEnabled);
     }
 
     @Override
     public SelectQueryPlan createSelectPlan(int firstResult, int maxResults) {
         final String sql = getSql();
-        return new CustomReturningModificationQueryPlan<T>(extendedQuerySupport, serviceProvider, baseQuery, exampleQuery, objectBuilder, participatingQueries, sql, firstResult, maxResults, returningColumns.length == 1 && objectBuilder != null);
+        return new CustomReturningModificationQueryPlan<T>(extendedQuerySupport, serviceProvider, baseQuery, exampleQuery, objectBuilder, participatingQueries, sql, firstResult, maxResults, returningColumns.length == 1 && objectBuilder != null, queryPlanCacheEnabled);
     }
 
     @Override

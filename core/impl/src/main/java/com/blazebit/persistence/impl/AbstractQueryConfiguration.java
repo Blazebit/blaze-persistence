@@ -44,6 +44,7 @@ public abstract class AbstractQueryConfiguration implements QueryConfiguration {
             case ConfigurationProperties.INLINE_ID_QUERY: return getInlineIdQueryEnabled() == null ? "auto" : Boolean.toString(getInlineIdQueryEnabled());
             case ConfigurationProperties.INLINE_COUNT_QUERY: return getInlineCountQueryEnabled() == null ? "auto" : Boolean.toString(getInlineCountQueryEnabled());
             case ConfigurationProperties.INLINE_CTES: return getInlineCtesEnabled() == null ? "auto" : Boolean.toString(getInlineCtesEnabled());
+            case ConfigurationProperties.QUERY_PLAN_CACHE_ENABLED: return Boolean.toString(isQueryPlanCacheEnabled());
             default: return null;
         }
     }
@@ -64,6 +65,7 @@ public abstract class AbstractQueryConfiguration implements QueryConfiguration {
         properties.put(ConfigurationProperties.INLINE_ID_QUERY, getInlineIdQueryEnabled() == null ? "auto" : Boolean.toString(getInlineIdQueryEnabled()));
         properties.put(ConfigurationProperties.INLINE_COUNT_QUERY, getInlineCountQueryEnabled() == null ? "auto" : Boolean.toString(getInlineCountQueryEnabled()));
         properties.put(ConfigurationProperties.INLINE_CTES, getInlineCtesEnabled() == null ? "auto" : Boolean.toString(getInlineCtesEnabled()));
+        properties.put(ConfigurationProperties.QUERY_PLAN_CACHE_ENABLED, Boolean.toString(isQueryPlanCacheEnabled()));
         return properties;
     }
 

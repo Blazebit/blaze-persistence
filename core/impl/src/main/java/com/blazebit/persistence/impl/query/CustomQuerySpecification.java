@@ -70,9 +70,11 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
     protected String sql;
     protected List<Query> participatingQueries;
     protected Map<String, String> addedCtes;
+    protected boolean queryPlanCacheEnabled;
 
     public CustomQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Set<Parameter<?>> parameters, Set<String> listParameters, String limit, String offset,
-                                    List<String> keyRestrictedLeftJoinAliases, List<EntityFunctionNode> entityFunctionNodes, boolean recursive, List<CTENode> ctes, boolean shouldRenderCtes) {
+                                    List<String> keyRestrictedLeftJoinAliases, List<EntityFunctionNode> entityFunctionNodes, boolean recursive, List<CTENode> ctes, boolean shouldRenderCtes,
+                                    boolean queryPlanCacheEnabled) {
         this.em = commonQueryBuilder.getEntityManager();
         this.dbmsDialect = commonQueryBuilder.getService(DbmsDialect.class);
         this.serviceProvider = commonQueryBuilder;
@@ -94,6 +96,7 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
         this.ctes = ctes;
         this.shouldRenderCtes = shouldRenderCtes;
         this.dirty = true;
+        this.queryPlanCacheEnabled = queryPlanCacheEnabled;
     }
 
     @Override
@@ -104,7 +107,7 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
     @Override
     public SelectQueryPlan<T> createSelectPlan(int firstResult, int maxResults) {
         final String sql = getSql();
-        return new CustomSelectQueryPlan<>(extendedQuerySupport, serviceProvider, baseQuery, participatingQueries, sql, firstResult, maxResults);
+        return new CustomSelectQueryPlan<>(extendedQuerySupport, serviceProvider, baseQuery, participatingQueries, sql, firstResult, maxResults, queryPlanCacheEnabled);
     }
 
     @Override

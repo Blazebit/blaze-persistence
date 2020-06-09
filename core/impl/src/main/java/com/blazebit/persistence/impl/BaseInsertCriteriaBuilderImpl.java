@@ -201,7 +201,8 @@ public abstract class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCrite
                 isEmbedded,
                 returningColumns,
                 includedModificationStates,
-                returningAttributeBindingMap
+                returningAttributeBindingMap,
+                mainQuery.getQueryConfiguration().isQueryPlanCacheEnabled()
         );
 
         query = new CustomSQLQuery(

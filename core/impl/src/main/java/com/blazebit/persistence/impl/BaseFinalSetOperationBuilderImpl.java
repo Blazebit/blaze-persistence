@@ -396,7 +396,8 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
                 entityFunctionNodes,
                 mainQuery.cteManager.isRecursive(),
                 ctes,
-                shouldRenderCteNodes
+                shouldRenderCteNodes,
+                mainQuery.getQueryConfiguration().isQueryPlanCacheEnabled()
         );
         
         // Unfortunately we need this little adapter here

@@ -42,8 +42,9 @@ public class CollectionUpdateModificationQuerySpecification<T> extends Modificat
     private final Map<String, String> columnExpressionRemappings;
 
     public CollectionUpdateModificationQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Query exampleQuery, Set<Parameter<?>> parameters, Set<String> parameterListNames, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes, boolean isEmbedded, String[] returningColumns,
-                                                          Map<DbmsModificationState, String> includedModificationStates, Map<String, String> returningAttributeBindingMap, Query updateExampleQuery, String updateSql, List<Query> setExpressionContainingUpdateQueries, Map<String, String> columnOnlyRemappings, Map<String, String> columnExpressionRemappings) {
-        super(commonQueryBuilder, baseQuery, exampleQuery, parameters, parameterListNames, recursive, ctes, shouldRenderCteNodes, isEmbedded, returningColumns, includedModificationStates, returningAttributeBindingMap);
+                                                          Map<DbmsModificationState, String> includedModificationStates, Map<String, String> returningAttributeBindingMap, Query updateExampleQuery, String updateSql, List<Query> setExpressionContainingUpdateQueries, Map<String, String> columnOnlyRemappings, Map<String, String> columnExpressionRemappings,
+                                                          boolean queryPlanCacheEnabled) {
+        super(commonQueryBuilder, baseQuery, exampleQuery, parameters, parameterListNames, recursive, ctes, shouldRenderCteNodes, isEmbedded, returningColumns, includedModificationStates, returningAttributeBindingMap, queryPlanCacheEnabled);
         this.updateExampleQuery = updateExampleQuery;
         this.updateSql = updateSql;
         this.setExpressionContainingUpdateQueries = setExpressionContainingUpdateQueries;

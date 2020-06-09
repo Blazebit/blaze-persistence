@@ -179,7 +179,19 @@ public final class ConfigurationProperties {
      * @see CTEBuilder#with(Class, CriteriaBuilder, boolean)
      */
     public static final String INLINE_CTES = "com.blazebit.persistence.inline_ctes";
-    
+
+    /**
+     * If set to true, the query plans are cached and reused.
+     * Valid values for this property are <code>true</code> and <code>false</code>.
+     * Default is <code>true</code>.
+     * This configuration option currently only takes effect when Hibernate is used as JPA provider.
+     *
+     * The property can be changed for a criteria builder before constructing a query.
+     *
+     * @since 1.5.0
+     */
+    public static final String QUERY_PLAN_CACHE_ENABLED = "com.blazebit.persistence.query_plan_cache_enabled";
+
     private ConfigurationProperties() {
     }
 }

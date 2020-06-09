@@ -64,4 +64,6 @@ public interface QueryConfiguration {
     public void setCacheable(boolean cacheable);
 
     public boolean isCacheable();
+
+    public boolean isQueryPlanCacheEnabled();
 }

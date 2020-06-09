@@ -44,6 +44,7 @@ public class ImmutableQueryConfiguration extends AbstractQueryConfiguration {
     private final Boolean inlineIdQuery;
     private final Boolean inlineCountQuery;
     private final Boolean inlineCtes;
+    private final boolean queryPlanCacheEnabled;
 
     public ImmutableQueryConfiguration(Map<String, String> properties) {
         this.compatibleModeEnabled = PropertyUtils.getAsBooleanProperty(properties, ConfigurationProperties.COMPATIBLE_MODE, false);
@@ -64,6 +65,7 @@ public class ImmutableQueryConfiguration extends AbstractQueryConfiguration {
         this.inlineIdQuery = "auto".equalsIgnoreCase(inlineIdQuery) ? null : Boolean.parseBoolean(inlineIdQuery);
         this.inlineCountQuery = "auto".equalsIgnoreCase(inlineCountQuery) ? null : Boolean.parseBoolean(inlineCountQuery);
         this.inlineCtes = "auto".equalsIgnoreCase(inlineCtes) ? null : Boolean.parseBoolean(inlineCtes);
+        this.queryPlanCacheEnabled =                        getBooleanProperty(properties, ConfigurationProperties.QUERY_PLAN_CACHE_ENABLED,            "true");
     }
 
     @Override
@@ -147,6 +149,11 @@ public class ImmutableQueryConfiguration extends AbstractQueryConfiguration {
     }
 
     @Override
+    public boolean isQueryPlanCacheEnabled() {
+        return queryPlanCacheEnabled;
+    }
+
+    @Override
     public String getProperty(String name) {
         switch (name) {
             case ConfigurationProperties.COMPATIBLE_MODE: return Boolean.toString(compatibleModeEnabled);
@@ -163,6 +170,7 @@ public class ImmutableQueryConfiguration extends AbstractQueryConfiguration {
             case ConfigurationProperties.INLINE_ID_QUERY: return inlineIdQuery == null ? "auto" : Boolean.toString(inlineIdQuery);
             case ConfigurationProperties.INLINE_COUNT_QUERY: return inlineIdQuery == null ? "auto" : Boolean.toString(inlineIdQuery);
             case ConfigurationProperties.INLINE_CTES: return inlineCtes == null ? "auto" : Boolean.toString(inlineCtes);
+            case ConfigurationProperties.QUERY_PLAN_CACHE_ENABLED: return Boolean.toString(queryPlanCacheEnabled);
             default: return null;
         }
     }
@@ -184,6 +192,7 @@ public class ImmutableQueryConfiguration extends AbstractQueryConfiguration {
         properties.put(ConfigurationProperties.INLINE_ID_QUERY, getInlineIdQueryEnabled() == null ? "auto" : Boolean.toString(getInlineIdQueryEnabled()));
         properties.put(ConfigurationProperties.INLINE_COUNT_QUERY, getInlineCountQueryEnabled() == null ? "auto" : Boolean.toString(getInlineCountQueryEnabled()));
         properties.put(ConfigurationProperties.INLINE_CTES, getInlineCtesEnabled() == null ? "auto" : Boolean.toString(getInlineCtesEnabled()));
+        properties.put(ConfigurationProperties.QUERY_PLAN_CACHE_ENABLED, Boolean.toString(queryPlanCacheEnabled));
         return properties;
     }
 

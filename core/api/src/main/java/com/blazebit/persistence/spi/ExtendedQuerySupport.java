@@ -95,10 +95,11 @@ public interface ExtendedQuerySupport {
      * @param participatingQueries The list of participating queries from which to combine parameters
      * @param query The main query to execute
      * @param sqlOverride The actual SQL query to execute instead of the query's original SQL
+     * @param queryPlanCacheEnabled Designates whether query plans can be cached and reused
      * @return The result of the query
      */
     @SuppressWarnings("rawtypes")
-    public List getResultList(ServiceProvider serviceProvider, List<Query> participatingQueries, Query query, String sqlOverride);
+    public List getResultList(ServiceProvider serviceProvider, List<Query> participatingQueries, Query query, String sqlOverride, boolean queryPlanCacheEnabled);
 
     /**
      * Returns the single result of the Query by replacing the SQL with the given overriding SQL query.
@@ -107,9 +108,10 @@ public interface ExtendedQuerySupport {
      * @param participatingQueries The list of participating queries from which to combine parameters
      * @param query The main query to execute
      * @param sqlOverride The actual SQL query to execute instead of the query's original SQL
+     * @param queryPlanCacheEnabled Designates whether query plans can be cached and reused
      * @return The result of the query
      */
-    public Object getSingleResult(ServiceProvider serviceProvider, List<Query> participatingQueries, Query query, String sqlOverride);
+    public Object getSingleResult(ServiceProvider serviceProvider, List<Query> participatingQueries, Query query, String sqlOverride, boolean queryPlanCacheEnabled);
 
     /**
      * Executes and returns the update count of the Query by replacing the SQL with the given overriding SQL query.
@@ -119,9 +121,10 @@ public interface ExtendedQuerySupport {
      * @param baseQuery The base query which represents the original modification query
      * @param query The main query to execute
      * @param sqlOverride The actual SQL query to execute instead of the query's original SQL
+     * @param queryPlanCacheEnabled Designates whether query plans can be cached and reused
      * @return The update count of the query
      */
-    public int executeUpdate(ServiceProvider serviceProvider, List<Query> participatingQueries, Query baseQuery, Query query, String sqlOverride);
+    public int executeUpdate(ServiceProvider serviceProvider, List<Query> participatingQueries, Query baseQuery, Query query, String sqlOverride, boolean queryPlanCacheEnabled);
 
     /**
      * Executes and returns the returning result of the Query by replacing the SQL with the given overriding SQL query.
@@ -131,7 +134,8 @@ public interface ExtendedQuerySupport {
      * @param baseQuery The base query which represents the original modification query
      * @param exampleQuery The example query providing the result type structure
      * @param sqlOverride The actual SQL query to execute instead of the query's original SQL
+     * @param queryPlanCacheEnabled Designates whether query plans can be cached and reused
      * @return The returning result of the query
      */
-    public ReturningResult<Object[]> executeReturning(ServiceProvider serviceProvider, List<Query> participatingQueries, Query baseQuery, Query exampleQuery, String sqlOverride);
+    public ReturningResult<Object[]> executeReturning(ServiceProvider serviceProvider, List<Query> participatingQueries, Query baseQuery, Query exampleQuery, String sqlOverride, boolean queryPlanCacheEnabled);
 }

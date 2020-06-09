@@ -79,6 +79,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -304,10 +305,10 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
     @Override
     @SuppressWarnings("rawtypes")
-    public List getResultList(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query query, String sqlOverride) {
+    public List getResultList(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query query, String sqlOverride, boolean queryPlanCacheEnabled) {
         EntityManager em = serviceProvider.getService(EntityManager.class);
         try {
-            return list(serviceProvider, em, participatingQueries, query, sqlOverride);
+            return list(serviceProvider, em, participatingQueries, query, sqlOverride, queryPlanCacheEnabled);
         } catch (QueryExecutionRequestException he) {
             LOG.severe("Could not execute the following SQL query: " + sqlOverride);
             throw new IllegalStateException(he);
@@ -322,10 +323,10 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
     
     @Override
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public Object getSingleResult(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query query, String sqlOverride) {
+    public Object getSingleResult(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query query, String sqlOverride, boolean queryPlanCacheEnabled) {
         EntityManager em = serviceProvider.getService(EntityManager.class);
         try {
-            final List result = list(serviceProvider, em, participatingQueries, query, sqlOverride);
+            final List result = list(serviceProvider, em, participatingQueries, query, sqlOverride, queryPlanCacheEnabled);
 
             if (result.size() == 0) {
                 NoResultException nre = new NoResultException("No entity found for query");
@@ -356,7 +357,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
     }
 
     @SuppressWarnings("rawtypes")
-    private List list(com.blazebit.persistence.spi.ServiceProvider serviceProvider, EntityManager em, List<Query> participatingQueries, Query query, String finalSql) {
+    private List list(com.blazebit.persistence.spi.ServiceProvider serviceProvider, EntityManager em, List<Query> participatingQueries, Query query, String finalSql, boolean queryPlanCacheEnabled) {
         SessionImplementor session = em.unwrap(SessionImplementor.class);
         SessionFactoryImplementor sfi = session.getFactory();
 
@@ -370,13 +371,15 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         QueryParamEntry queryParametersEntry = createQueryParameters(em, participatingQueries, queryStrings, querySpaces);
         QueryParameters queryParameters = queryParametersEntry.queryParameters;
 
-        QueryPlanCacheKey cacheKey = createCacheKey(queryStrings);
+        QueryPlanCacheKey cacheKey = queryPlanCacheEnabled ? createCacheKey(participatingQueries, queryStrings) : null;
         CacheEntry<HQLQueryPlan> queryPlanEntry = getQueryPlan(sfi, query, cacheKey);
         HQLQueryPlan queryPlan = queryPlanEntry.getValue();
         
         if (!queryPlanEntry.isFromCache()) {
             prepareQueryPlan(queryPlan, queryParametersEntry.specifications, finalSql, session, null, false, serviceProvider.getService(DbmsDialect.class));
-            queryPlan = putQueryPlanIfAbsent(sfi, cacheKey, queryPlan);
+            if (queryPlanCacheEnabled) {
+                queryPlan = putQueryPlanIfAbsent(sfi, cacheKey, queryPlan);
+            }
         }
 
         autoFlush(querySpaces, session);
@@ -384,7 +387,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
     }
 
     @Override
-    public int executeUpdate(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query baseQuery, Query query, String finalSql) {
+    public int executeUpdate(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query baseQuery, Query query, String finalSql, boolean queryPlanCacheEnabled) {
         DbmsDialect dbmsDialect = serviceProvider.getService(DbmsDialect.class);
         EntityManager em = serviceProvider.getService(EntityManager.class);
         SessionImplementor session = em.unwrap(SessionImplementor.class);
@@ -410,13 +413,15 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         QueryParamEntry queryParametersEntry = createQueryParameters(em, participatingQueries, queryStrings, querySpaces);
         QueryParameters queryParameters = queryParametersEntry.queryParameters;
 
-        QueryPlanCacheKey cacheKey = createCacheKey(queryStrings, firstResult, maxResults);
+        QueryPlanCacheKey cacheKey = queryPlanCacheEnabled ? createCacheKey(participatingQueries, queryStrings, firstResult, maxResults) : null;
         CacheEntry<HQLQueryPlan> queryPlanEntry = getQueryPlan(sfi, query, cacheKey);
         HQLQueryPlan queryPlan = queryPlanEntry.getValue();
 
         if (!queryPlanEntry.isFromCache()) {
             prepareQueryPlan(queryPlan, queryParametersEntry.specifications, finalSql, session, baseQuery, true, dbmsDialect);
-            queryPlan = putQueryPlanIfAbsent(sfi, cacheKey, queryPlan);
+            if (queryPlanCacheEnabled) {
+                queryPlan = putQueryPlanIfAbsent(sfi, cacheKey, queryPlan);
+            }
         }
 
         autoFlush(querySpaces, session);
@@ -455,7 +460,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
     @Override
     @SuppressWarnings("unchecked")
-    public ReturningResult<Object[]> executeReturning(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query modificationBaseQuery, Query exampleQuery, String sqlOverride) {
+    public ReturningResult<Object[]> executeReturning(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query modificationBaseQuery, Query exampleQuery, String sqlOverride, boolean queryPlanCacheEnabled) {
         DbmsDialect dbmsDialect = serviceProvider.getService(DbmsDialect.class);
         EntityManager em = serviceProvider.getService(EntityManager.class);
         SessionImplementor session = em.unwrap(SessionImplementor.class);
@@ -472,7 +477,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         QueryParameters queryParameters = queryParametersEntry.queryParameters;
         
         // Create plan for example query
-        QueryPlanCacheKey cacheKey = createCacheKey(queryStrings);
+        QueryPlanCacheKey cacheKey = queryPlanCacheEnabled ? createCacheKey(participatingQueries, queryStrings) : null;
         CacheEntry<HQLQueryPlan> queryPlanEntry = getQueryPlan(sfi, exampleQuery, cacheKey);
         HQLQueryPlan queryPlan = queryPlanEntry.getValue();
         String exampleQuerySql = queryPlan.getSqlStrings()[0];
@@ -489,7 +494,9 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             HibernateReturningResult<Object[]> returningResult = new HibernateReturningResult<Object[]>();
             if (!queryPlanEntry.isFromCache()) {
                 prepareQueryPlan(queryPlan, queryParametersEntry.specifications, finalSql, session, modificationBaseQuery, true, dbmsDialect);
-                queryPlan = putQueryPlanIfAbsent(sfi, cacheKey, queryPlan);
+                if (queryPlanCacheEnabled) {
+                    queryPlan = putQueryPlanIfAbsent(sfi, cacheKey, queryPlan);
+                }
             }
 
             if (queryPlan.getTranslators().length > 1) {
@@ -1003,14 +1010,22 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
         return i;
     }
-    
+
     private CacheEntry<HQLQueryPlan> getQueryPlan(SessionFactoryImplementor sfi, Query query, QueryPlanCacheKey cacheKey) {
-        BoundedConcurrentHashMap<QueryPlanCacheKey, HQLQueryPlan> queryPlanCache = getQueryPlanCache(sfi);
-        HQLQueryPlan queryPlan = queryPlanCache.get(cacheKey);
-        boolean fromCache = true;
-        if (queryPlan == null) {
+        HQLQueryPlan queryPlan;
+        boolean fromCache;
+        if (cacheKey == null) {
             fromCache = false;
             queryPlan = createQueryPlan(sfi, query);
+        } else {
+            BoundedConcurrentHashMap<QueryPlanCacheKey, HQLQueryPlan> queryPlanCache = getQueryPlanCache(sfi);
+            queryPlan = queryPlanCache.get(cacheKey);
+            if (queryPlan == null) {
+                fromCache = false;
+                queryPlan = createQueryPlan(sfi, query);
+            } else {
+                fromCache = true;
+            }
         }
         
         return new CacheEntry<HQLQueryPlan>(queryPlan, fromCache);
@@ -1045,12 +1060,18 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         return queryPlanCache;
     }
 
-    private QueryPlanCacheKey createCacheKey(List<String> queries) {
-        return createCacheKey(queries, null, null);
+    private QueryPlanCacheKey createCacheKey(List<Query> queries, List<String> queryStrings) {
+        return createCacheKey(queries, queryStrings, null, null);
     }
     
-    private QueryPlanCacheKey createCacheKey(List<String> queries, Integer firstResult, Integer maxResults) {
-        return new QueryPlanCacheKey(queries, firstResult, maxResults);
+    private QueryPlanCacheKey createCacheKey(List<Query> queries, List<String> queryStrings, Integer firstResult, Integer maxResults) {
+        List<QueryPlanCacheKeyComponent> cacheKeyComponents = new ArrayList<>(queries.size());
+        for (int i = 0; i < queries.size(); i++) {
+            Query query = queries.get(i);
+            String queryString = queryStrings.get(i);
+            cacheKeyComponents.add(new QueryPlanCacheKeyComponent(queryString, query.getFirstResult(), query.getMaxResults()));
+        }
+        return new QueryPlanCacheKey(cacheKeyComponents, firstResult, maxResults);
     }
     
     private void addAll(List<Query> queries, List<String> parts) {
@@ -1082,22 +1103,22 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
     }
 
     /**
-     * @author Christian Beikov
-     * @since 1.2.0
+     * @author Moritz Becker
+     * @since 1.5.0
      */
     private static class QueryPlanCacheKey {
-        final List<String> cacheKeyParts;
+        final List<QueryPlanCacheKeyComponent> cacheKeyComponents;
         final Integer firstResult;
         final Integer maxResults;
 
-        public QueryPlanCacheKey(List<String> cacheKeyParts) {
-            this.cacheKeyParts = cacheKeyParts;
+        public QueryPlanCacheKey(List<QueryPlanCacheKeyComponent> cacheKeyComponents) {
+            this.cacheKeyComponents = cacheKeyComponents;
             this.firstResult = null;
             this.maxResults = null;
         }
 
-        public QueryPlanCacheKey(List<String> cacheKeyParts, Integer firstResult, Integer maxResults) {
-            this.cacheKeyParts = cacheKeyParts;
+        public QueryPlanCacheKey(List<QueryPlanCacheKeyComponent> cacheKeyComponents, Integer firstResult, Integer maxResults) {
+            this.cacheKeyComponents = cacheKeyComponents;
             this.firstResult = firstResult;
             this.maxResults = maxResults;
         }
@@ -1107,13 +1128,54 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             if (this == o) {
                 return true;
             }
-            if (!(o instanceof QueryPlanCacheKey)) {
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            QueryPlanCacheKey that = (QueryPlanCacheKey) o;
+            return cacheKeyComponents.equals(that.cacheKeyComponents) &&
+                    Objects.equals(firstResult, that.firstResult) &&
+                    Objects.equals(maxResults, that.maxResults);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(cacheKeyComponents, firstResult, maxResults);
+        }
+    }
+
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
+    private static class QueryPlanCacheKeyComponent {
+        final String query;
+        final Integer firstResult;
+        final Integer maxResults;
+
+        public QueryPlanCacheKeyComponent(String query) {
+            this.query = query;
+            this.firstResult = null;
+            this.maxResults = null;
+        }
+
+        public QueryPlanCacheKeyComponent(String query, Integer firstResult, Integer maxResults) {
+            this.query = query;
+            this.firstResult = firstResult;
+            this.maxResults = maxResults;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof QueryPlanCacheKeyComponent)) {
                 return false;
             }
 
-            QueryPlanCacheKey that = (QueryPlanCacheKey) o;
+            QueryPlanCacheKeyComponent that = (QueryPlanCacheKeyComponent) o;
 
-            if (!cacheKeyParts.equals(that.cacheKeyParts)) {
+            if (!query.equals(that.query)) {
                 return false;
             }
             if (firstResult != null ? !firstResult.equals(that.firstResult) : that.firstResult != null) {
@@ -1125,7 +1187,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
         @Override
         public int hashCode() {
-            int result = cacheKeyParts.hashCode();
+            int result = query.hashCode();
             result = 31 * result + (firstResult != null ? firstResult.hashCode() : 0);
             result = 31 * result + (maxResults != null ? maxResults.hashCode() : 0);
             return result;
