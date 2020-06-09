@@ -748,7 +748,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     }
 
     private static Class<?> getElementTypeOrNull(TargetType t, boolean singular) {
-        if (singular && t.getLeafBaseClass() == t.getLeafBaseValueClass() && (Collection.class.isAssignableFrom(t.getLeafBaseClass()) || Map.class.isAssignableFrom(t.getLeafBaseClass()))) {
+        if (singular && t.getLeafMethod() != null && t.getLeafBaseClass() == t.getLeafBaseValueClass() && (Collection.class.isAssignableFrom(t.getLeafBaseClass()) || Map.class.isAssignableFrom(t.getLeafBaseClass()))) {
             Member javaMember = t.getLeafMethod().getJavaMember();
             Class<?> elementClass;
             if (javaMember instanceof Field) {
