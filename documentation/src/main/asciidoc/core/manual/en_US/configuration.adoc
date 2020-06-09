@@ -208,6 +208,21 @@ The property can be changed for a criteria builder before adding a CTE.
 | Applicable | Always
 |====================
 
+[[QUERY_PLAN_CACHE_ENABLED]]
+==== QUERY_PLAN_CACHE_ENABLED
+
+Enables or disbales the caching and reuse of query plans.
+Valid values for this property are `true` and `false`.
+The property can be changed for a criteria builder before constructing a query.
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.query_plan_cache_enabled
+| Type | String/boolean
+| Default | true
+| Applicable | Always
+|====================
+
 [[configuration-jpql-functions]]
 === Jpql functions
 

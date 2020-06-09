@@ -36,8 +36,9 @@ public class CustomSelectQueryPlan<T> implements SelectQueryPlan<T> {
     private final String sql;
     private final int firstResult;
     private final int maxResults;
+    private final boolean queryPlanCacheEnabled;
 
-    public CustomSelectQueryPlan(ExtendedQuerySupport extendedQuerySupport, ServiceProvider serviceProvider, Query delegate, List<Query> participatingQueries, String sql, int firstResult, int maxResults) {
+    public CustomSelectQueryPlan(ExtendedQuerySupport extendedQuerySupport, ServiceProvider serviceProvider, Query delegate, List<Query> participatingQueries, String sql, int firstResult, int maxResults, boolean queryPlanCacheEnabled) {
         this.extendedQuerySupport = extendedQuerySupport;
         this.serviceProvider = serviceProvider;
         this.delegate = delegate;
@@ -45,19 +46,20 @@ public class CustomSelectQueryPlan<T> implements SelectQueryPlan<T> {
         this.sql = sql;
         this.firstResult = firstResult;
         this.maxResults = maxResults;
+        this.queryPlanCacheEnabled = queryPlanCacheEnabled;
     }
 
     @Override
     public List<T> getResultList() {
         delegate.setFirstResult(firstResult);
         delegate.setMaxResults(maxResults);
-        return extendedQuerySupport.getResultList(serviceProvider, participatingQueries, delegate, sql);
+        return extendedQuerySupport.getResultList(serviceProvider, participatingQueries, delegate, sql, queryPlanCacheEnabled);
     }
 
     @Override
     public T getSingleResult() {
         delegate.setFirstResult(firstResult);
         delegate.setMaxResults(maxResults);
-        return (T) extendedQuerySupport.getSingleResult(serviceProvider, participatingQueries, delegate, sql);
+        return (T) extendedQuerySupport.getSingleResult(serviceProvider, participatingQueries, delegate, sql, queryPlanCacheEnabled);
     }
 }

@@ -46,8 +46,9 @@ public class CustomReturningModificationQueryPlan<T> implements ModificationQuer
     private final int firstResult;
     private final int maxResults;
     private final boolean requiresWrapping;
+    private final boolean queryPlanCacheEnabled;
 
-    public CustomReturningModificationQueryPlan(ExtendedQuerySupport extendedQuerySupport, ServiceProvider serviceProvider, Query modificationBaseQuery, Query delegate, ReturningObjectBuilder<T> objectBuilder, List<Query> participatingQueries, String sql, int firstResult, int maxResults, boolean requiresWrapping) {
+    public CustomReturningModificationQueryPlan(ExtendedQuerySupport extendedQuerySupport, ServiceProvider serviceProvider, Query modificationBaseQuery, Query delegate, ReturningObjectBuilder<T> objectBuilder, List<Query> participatingQueries, String sql, int firstResult, int maxResults, boolean requiresWrapping, boolean queryPlanCacheEnabled) {
         this.extendedQuerySupport = extendedQuerySupport;
         this.serviceProvider = serviceProvider;
         this.dbmsDialect = serviceProvider.getService(DbmsDialect.class);
@@ -59,6 +60,7 @@ public class CustomReturningModificationQueryPlan<T> implements ModificationQuer
         this.firstResult = firstResult;
         this.maxResults = maxResults;
         this.requiresWrapping = requiresWrapping;
+        this.queryPlanCacheEnabled = queryPlanCacheEnabled;
     }
 
     @Override
@@ -66,7 +68,7 @@ public class CustomReturningModificationQueryPlan<T> implements ModificationQuer
         Query baseQuery = participatingQueries.get(0);
         baseQuery.setFirstResult(firstResult);
         baseQuery.setMaxResults(maxResults);
-        ReturningResult<Object[]> result = extendedQuerySupport.executeReturning(serviceProvider, participatingQueries, modificationBaseQuery, delegate, sql);
+        ReturningResult<Object[]> result = extendedQuerySupport.executeReturning(serviceProvider, participatingQueries, modificationBaseQuery, delegate, sql, queryPlanCacheEnabled);
         return result.getUpdateCount();
     }
 
@@ -81,7 +83,7 @@ public class CustomReturningModificationQueryPlan<T> implements ModificationQuer
         baseQuery.setFirstResult(firstResult);
         baseQuery.setMaxResults(maxResults);
 
-        ReturningResult<Object[]> result = extendedQuerySupport.executeReturning(serviceProvider, participatingQueries, modificationBaseQuery, delegate, sql);
+        ReturningResult<Object[]> result = extendedQuerySupport.executeReturning(serviceProvider, participatingQueries, modificationBaseQuery, delegate, sql, queryPlanCacheEnabled);
         List<Object[]> resultList = result.getResultList();
         final int updateCount = result.getUpdateCount();
         if (requiresWrapping) {

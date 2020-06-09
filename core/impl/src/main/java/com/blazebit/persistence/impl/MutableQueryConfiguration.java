@@ -43,6 +43,7 @@ public class MutableQueryConfiguration extends AbstractQueryConfiguration {
     private Boolean inlineIdQuery;
     private Boolean inlineCountQuery;
     private Boolean inlineCtes;
+    private boolean queryPlanCacheEnabled;
 
     public MutableQueryConfiguration(QueryConfiguration queryConfiguration) {
         this.compatibleModeEnabled = queryConfiguration.isCompatibleModeEnabled();
@@ -143,6 +144,11 @@ public class MutableQueryConfiguration extends AbstractQueryConfiguration {
     }
 
     @Override
+    public boolean isQueryPlanCacheEnabled() {
+        return queryPlanCacheEnabled;
+    }
+
+    @Override
     public void setProperties(Map<String, String> properties) {
         for (Map.Entry<String, String> entry : properties.entrySet()) {
             setProperty(entry.getKey(), entry.getValue());
@@ -167,6 +173,7 @@ public class MutableQueryConfiguration extends AbstractQueryConfiguration {
             case ConfigurationProperties.INLINE_ID_QUERY:                       inlineIdQuery = "auto".equalsIgnoreCase(propertyValue) ? null : booleanOrFail(propertyName, propertyValue); break;
             case ConfigurationProperties.INLINE_COUNT_QUERY:                    inlineCountQuery = "auto".equalsIgnoreCase(propertyValue) ? null : booleanOrFail(propertyName, propertyValue); break;
             case ConfigurationProperties.INLINE_CTES:                           inlineCtes = "auto".equalsIgnoreCase(propertyValue) ? null : booleanOrFail(propertyName, propertyValue); break;
+            case ConfigurationProperties.QUERY_PLAN_CACHE_ENABLED:              queryPlanCacheEnabled = booleanOrFail(propertyName, propertyValue); break;
             default: break;
         }
         // CHECKSTYLE:ON: OneStatementPerLine

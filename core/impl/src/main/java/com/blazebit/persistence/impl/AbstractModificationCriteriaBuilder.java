@@ -219,7 +219,8 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
                     isEmbedded,
                     returningColumns,
                     includedModificationStates,
-                    returningAttributeBindingMap
+                    returningAttributeBindingMap,
+                    mainQuery.getQueryConfiguration().isQueryPlanCacheEnabled()
             );
 
             query = new CustomSQLQuery(
@@ -376,7 +377,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         boolean shouldRenderCteNodes = renderCteNodes(false);
         List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.EMPTY_LIST;
         QuerySpecification querySpecification = new ReturningModificationQuerySpecification<R>(
-                this, baseQuery, exampleQuery, parameterManager.getParameters(), parameterListNames, mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes, returningColumns, objectBuilder
+                this, baseQuery, exampleQuery, parameterManager.getParameters(), parameterListNames, mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes, returningColumns, objectBuilder, mainQuery.getQueryConfiguration().isQueryPlanCacheEnabled()
         );
 
         CustomReturningSQLTypedQuery query = new CustomReturningSQLTypedQuery<R>(

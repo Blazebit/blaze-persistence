@@ -305,7 +305,8 @@ public abstract class AbstractDeleteCollectionCriteriaBuilder<T, X extends BaseD
                     returningAttributeBindingMap,
                     getDeleteExampleQuery(),
                     deleteSql,
-                    columnExpressionRemappings
+                    columnExpressionRemappings,
+                    mainQuery.getQueryConfiguration().isQueryPlanCacheEnabled()
             );
         } else {
             return new ReturningCollectionDeleteModificationQuerySpecification<>(
@@ -324,7 +325,8 @@ public abstract class AbstractDeleteCollectionCriteriaBuilder<T, X extends BaseD
                     getDeleteExampleQuery(),
                     deleteSql,
                     columnExpressionRemappings,
-                    objectBuilder
+                    objectBuilder,
+                    mainQuery.getQueryConfiguration().isQueryPlanCacheEnabled()
             );
         }
     }

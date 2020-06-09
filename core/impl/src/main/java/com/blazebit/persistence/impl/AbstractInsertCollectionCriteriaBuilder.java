@@ -265,7 +265,8 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
                     returningAttributeBindingMap,
                     getInsertExecutorQuery(),
                     insertSqlSb.toString(),
-                    cutoffColumns
+                    cutoffColumns,
+                    mainQuery.getQueryConfiguration().isQueryPlanCacheEnabled()
             );
         } else {
             return new ReturningCollectionInsertModificationQuerySpecification(
@@ -286,7 +287,8 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
                     getInsertExecutorQuery(),
                     insertSqlSb.toString(),
                     cutoffColumns,
-                    objectBuilder
+                    objectBuilder,
+                    mainQuery.getQueryConfiguration().isQueryPlanCacheEnabled()
             );
         }
     }

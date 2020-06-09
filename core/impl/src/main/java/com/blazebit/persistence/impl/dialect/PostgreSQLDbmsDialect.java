@@ -171,7 +171,7 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
         if (withClause != null) {
             sqlSb.insert(0, withClause);
         }
-        if (limit != null) {
+        if (limit != null || offset != null) {
             appendLimit(sqlSb, isSubquery, limit, offset);
         }
         

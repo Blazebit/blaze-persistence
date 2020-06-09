@@ -442,7 +442,8 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
                     updateSql,
                     setExpressionContainingUpdateQueries,
                     columnOnlyRemappings,
-                    columnExpressionRemappings
+                    columnExpressionRemappings,
+                    mainQuery.getQueryConfiguration().isQueryPlanCacheEnabled()
             );
         } else {
             return new ReturningCollectionUpdateModificationQuerySpecification(
@@ -463,7 +464,8 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
                     setExpressionContainingUpdateQueries,
                     columnOnlyRemappings,
                     columnExpressionRemappings,
-                    objectBuilder
+                    objectBuilder,
+                    mainQuery.getQueryConfiguration().isQueryPlanCacheEnabled()
             );
         }
     }
