@@ -12,7 +12,7 @@ None
 
 ### Bug fixes
 
-None
+* Fix issues with entity view validation errors when using singular collection attributes
 
 ### Backwards-incompatible changes
 

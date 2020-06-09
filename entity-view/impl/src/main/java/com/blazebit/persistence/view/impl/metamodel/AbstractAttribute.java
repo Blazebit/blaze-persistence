@@ -797,25 +797,33 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         if (updatable) {
             if (entityAttributeElementType != null) {
                 if (viewAttributeElementType != null) {
-                    // Mapping a plural entity attribute to a plural view attribute
+                    if (singular) {
+                        return viewAttributeType == entityAttributeType && viewAttributeElementType == entityAttributeElementType;
+                    } else {
+                        // Mapping a plural entity attribute to a plural view attribute
 
-                    // Indexed lists or maps must map to indexed lists or maps again if they want to be updatable
-                    if (attribute instanceof ListAttribute<?, ?>) {
-                        if (!List.class.isAssignableFrom(viewAttributeType)) {
+                        // Indexed lists or maps must map to indexed lists or maps again if they want to be updatable
+                        if (attribute instanceof ListAttribute<?, ?>) {
+                            if (!List.class.isAssignableFrom(viewAttributeType)) {
+                                return false;
+                            }
+                        } else if (attribute instanceof MapAttribute<?, ?, ?>) {
+                            if (!Map.class.isAssignableFrom(viewAttributeType)) {
+                                return false;
+                            }
+                        } else if (!Collection.class.isAssignableFrom(viewAttributeType)) {
+                            // For all other plural attributes, we allow any collection type
                             return false;
                         }
-                    } else if (attribute instanceof MapAttribute<?, ?, ?>) {
-                        if (!Map.class.isAssignableFrom(viewAttributeType)) {
-                            return false;
-                        }
-                    } else if (!Collection.class.isAssignableFrom(viewAttributeType)) {
-                        // For all other plural attributes, we allow any collection type
-                        return false;
+                        return viewAttributeElementType == entityAttributeElementType;
                     }
-                    return viewAttributeElementType == entityAttributeElementType;
                 } else {
-                    // Mapping a plural entity attribute to a singular view attribute
-                    return viewAttributeType == entityAttributeElementType;
+                    if (singular) {
+                        return viewAttributeType == entityAttributeType;
+                    } else {
+                        // Mapping a plural entity attribute to a singular view attribute
+                        return viewAttributeType == entityAttributeElementType;
+                    }
                 }
             } else {
                 if (viewAttributeElementType != null) {
