@@ -10,9 +10,9 @@ mysql_8_0() {
     docker run --name mysql -e MYSQL_ALLOW_EMPTY_PASSWORD=yes -e MYSQL_DATABASE=test -p3306:3306 -d mysql:8.0 --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
 }
 
-postgresql_9_3() {
+postgresql_9_4() {
     docker rm -f postgres || true
-    docker run --name postgres -e POSTGRES_DB=test -e POSTGRES_PASSWORD=postgres -p5432:5432 -d postgres:9.3
+    docker run --name postgres -e POSTGRES_DB=test -e POSTGRES_PASSWORD=postgres -p5432:5432 -d postgres:9.4
 }
 
 db2() {
@@ -27,12 +27,21 @@ db2() {
     done
     docker exec -t db2 su - db2inst1 bash -c ". /database/config/db2inst1/sqllib/db2profile && /database/config/db2inst1/sqllib/bin/db2 'connect to test' && /database/config/db2inst1/sqllib/bin/db2 'CREATE USER TEMPORARY TABLESPACE usr_tbsp MANAGED BY AUTOMATIC STORAGE'"
 
+  # Linux
 	#docker cp db2:/database/config/db2inst1/sqllib/java/db2jcc4.jar db2jcc4.jar
 	#mvn -q install:install-file -Dfile=db2jcc4.jar -DgroupId=com.ibm.db2 -DartifactId=db2jcc4 -Dversion=9.7 -Dpackaging=jar -DgeneratePom=true
-	#rm db2jcc4.jar
+	#rm -f db2jcc4.jar
 	#docker cp db2:/database/config/db2inst1/sqllib/java/db2jcc_license_cu.jar db2jcc_license_cu.jar
 	#mvn -q install:install-file -Dfile=db2jcc_license_cu.jar -DgroupId=com.ibm.db2 -DartifactId=db2jcc_license_cu -Dversion=9.7 -Dpackaging=jar -DgeneratePom=true
-	#rm db2jcc_license_cu.jar
+	#rm -f db2jcc_license_cu.jar
+
+  # Windows
+	#docker cp db2:/database/config/db2inst1/sqllib/java/db2jcc4.jar db2jcc4.jar
+	#mvn -q install:install-file -D"file=db2jcc4.jar" -D"groupId=com.ibm.db2" -D"artifactId=db2jcc4" -D"version=9.7" -D"packaging=jar" -D"generatePom=true"
+	#rm -Force db2jcc4.jar
+	#docker cp db2:/database/config/db2inst1/sqllib/java/db2jcc_license_cu.jar db2jcc_license_cu.jar
+	#mvn -q install:install-file -D"file=db2jcc_license_cu.jar" -D"groupId=com.ibm.db2" -D"artifactId=db2jcc_license_cu" -D"version=9.7" -D"packaging=jar" -D"generatePom=true"
+	#rm -Force db2jcc_license_cu.jar
 }
 
 mssql() {
@@ -55,7 +64,7 @@ if [ -z ${1} ]; then
     echo "Provide one of:"
     echo -e "\tmysql_5_7"
     echo -e "\tmysql_8_0"
-    echo -e "\tpostgresql_9_3"
+    echo -e "\tpostgresql_9_4"
     echo -e "\tdb2"
     echo -e "\tmssql"
     echo -e "\toracle"

@@ -87,9 +87,7 @@ public class LimitFunction implements JpqlFunction {
             if (limit.contains("?") || offset.contains("?")) {
                 throw new IllegalArgumentException("Limit and offset in subquery can not be a parameter!");
             }
-            Integer limitValue = Integer.parseInt(limit);
-            Integer offsetValue = Integer.parseInt(offset);
-            dbmsDialect.appendExtendedSql(sqlSb, DbmsStatementType.SELECT, true, false, null, Integer.toString(limitValue + offsetValue), offset, null, null);
+            dbmsDialect.appendExtendedSql(sqlSb, DbmsStatementType.SELECT, true, false, null, limit, offset, null, null);
         } else {
             dbmsDialect.appendExtendedSql(sqlSb, DbmsStatementType.SELECT, true, false, null, functionRenderContext.getArgument(1), functionRenderContext.getArgument(2), null, null);
         }

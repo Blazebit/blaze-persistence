@@ -85,7 +85,7 @@ public class OracleDbmsLimitHandler extends AbstractDbmsLimitHandler {
 
         if (offset != null) {
             if (limit != null) {
-                sqlSb.insert(forUpdateIndex, " ) row_ where rownum <= " + limit + ") where rownum_ > " + offset);
+                sqlSb.insert(forUpdateIndex, " ) row_ where rownum <= " + (Integer.parseInt(limit) + Integer.parseInt(offset)) + ") where rownum_ > " + offset);
             } else {
                 sqlSb.insert(forUpdateIndex, " ) where rownum > " + offset);
             }

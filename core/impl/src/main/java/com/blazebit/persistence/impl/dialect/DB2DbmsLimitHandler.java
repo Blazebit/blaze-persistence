@@ -124,7 +124,7 @@ public class DB2DbmsLimitHandler extends AbstractDbmsLimitHandler {
             if (limit != null) {
                 StringBuilder limitSb = new StringBuilder(120);
                 limitSb.append(" fetch first ");
-                limitSb.append(limit);
+                limitSb.append(Integer.parseInt(limit) + Integer.parseInt(offset));
                 limitSb.append(" rows only ) as inner2_ ) as inner1_ where rownumber_ > ");
                 limitSb.append(offset);
                 limitSb.append(" order by rownumber_");
