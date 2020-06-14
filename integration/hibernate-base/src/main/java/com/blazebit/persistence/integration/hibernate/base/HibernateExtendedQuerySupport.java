@@ -368,7 +368,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         // Create combined query parameters
         List<String> queryStrings = new ArrayList<>(participatingQueries.size());
         Set<String> querySpaces = new HashSet<>();
-        QueryParamEntry queryParametersEntry = createQueryParameters(em, participatingQueries, queryStrings, querySpaces);
+        QueryParamEntry queryParametersEntry = createQueryParameters(em, query, participatingQueries, queryStrings, querySpaces);
         QueryParameters queryParameters = queryParametersEntry.queryParameters;
 
         QueryPlanCacheKey cacheKey = queryPlanCacheEnabled ? createCacheKey(participatingQueries, queryStrings) : null;
@@ -410,7 +410,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         // Create combined query parameters
         List<String> queryStrings = new ArrayList<>(participatingQueries.size());
         Set<String> querySpaces = new HashSet<>();
-        QueryParamEntry queryParametersEntry = createQueryParameters(em, participatingQueries, queryStrings, querySpaces);
+        QueryParamEntry queryParametersEntry = createQueryParameters(em, baseQuery, participatingQueries, queryStrings, querySpaces);
         QueryParameters queryParameters = queryParametersEntry.queryParameters;
 
         QueryPlanCacheKey cacheKey = queryPlanCacheEnabled ? createCacheKey(participatingQueries, queryStrings, firstResult, maxResults) : null;
@@ -473,7 +473,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         // Create combined query parameters
         List<String> queryStrings = new ArrayList<>(participatingQueries.size());
         Set<String> querySpaces = new HashSet<>();
-        QueryParamEntry queryParametersEntry = createQueryParameters(em, participatingQueries, queryStrings, querySpaces);
+        QueryParamEntry queryParametersEntry = createQueryParameters(em, modificationBaseQuery, participatingQueries, queryStrings, querySpaces);
         QueryParameters queryParameters = queryParametersEntry.queryParameters;
         
         // Create plan for example query
@@ -661,7 +661,8 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         return sb.substring(0, i + 1);
     }
     
-    private QueryParamEntry createQueryParameters(EntityManager em, List<Query> participatingQueries, List<String> queryStrings, Set<String> querySpaces) {
+    private QueryParamEntry createQueryParameters(EntityManager em, Query query, List<Query> participatingQueries, List<String> queryStrings, Set<String> querySpaces) {
+        org.hibernate.Query hibernateQuery = query.unwrap(org.hibernate.Query.class);
         List<ParameterSpecification> parameterSpecifications = new ArrayList<ParameterSpecification>();
         
         List<Type> types = new ArrayList<Type>();
@@ -669,7 +670,16 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         Map<String, TypedValue> namedParams = new LinkedHashMap<String, TypedValue>();
         Serializable collectionKey = null;
         LockOptions lockOptions = new LockOptions();
+        RowSelection originalRowSelection = hibernateAccess.getQueryParameters(query.unwrap(org.hibernate.Query.class), hibernateAccess.getNamedParams(hibernateQuery)).getRowSelection();
         RowSelection rowSelection = new RowSelection();
+        rowSelection.setTimeout(originalRowSelection.getTimeout());
+        rowSelection.setFetchSize(originalRowSelection.getFetchSize());
+        if (originalRowSelection.getFirstRow() != null && originalRowSelection.getFirstRow() != 0) {
+            rowSelection.setFirstRow(originalRowSelection.getFirstRow());
+        }
+        if (originalRowSelection.getMaxRows() != null && originalRowSelection.getMaxRows() != Integer.MAX_VALUE) {
+            rowSelection.setMaxRows(originalRowSelection.getMaxRows());
+        }
         boolean readOnly = false;
         boolean cacheable = false;
         String cacheRegion = null;
@@ -677,10 +687,10 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         List<String> queryHints = null;
 
         for (Query participatingQuery : participatingQueries) {
-            org.hibernate.Query hibernateQuery = participatingQuery.unwrap(org.hibernate.Query.class);
-            readOnly = readOnly || hibernateQuery.isReadOnly();
-            cacheable = cacheable || hibernateAccess.getQueryParameters(hibernateQuery, namedParams).isCacheable();
-            comment = comment != null ? comment : hibernateAccess.getQueryParameters(hibernateQuery, namedParams).getComment();
+            org.hibernate.Query hibernateParticipatingQuery = participatingQuery.unwrap(org.hibernate.Query.class);
+            readOnly = readOnly || hibernateParticipatingQuery.isReadOnly();
+            cacheable = cacheable || hibernateAccess.getQueryParameters(hibernateParticipatingQuery, namedParams).isCacheable();
+            comment = comment != null ? comment : hibernateAccess.getQueryParameters(hibernateParticipatingQuery, namedParams).getComment();
         }
 
         for (QueryParamEntry queryParamEntry : getQueryParamEntries(em, participatingQueries, querySpaces)) {
@@ -692,39 +702,6 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             Collections.addAll(values, participatingQueryParameters.getPositionalParameterValues());
             namedParams.putAll(participatingQueryParameters.getNamedParameters());
             parameterSpecifications.addAll(queryParamEntry.specifications);
-
-            // Merge row selections
-            if (participatingQueryParameters.hasRowSelection()) {
-                RowSelection original = queryParamEntry.queryParameters.getRowSelection();
-                // Check for defaults
-
-                /***************************************************************************
-                 * TODO: Either we do it like this, or let these values be passed in separately
-                 **************************************************************************/
-
-                if (rowSelection.getFirstRow() == null || rowSelection.getFirstRow() < 1) {
-                    rowSelection.setFirstRow(original.getFirstRow());
-                } else if (original.getFirstRow() != null && original.getFirstRow() > 0 && !original.getFirstRow().equals(rowSelection.getFirstRow())) {
-                    throw new IllegalStateException("Multiple row selections not allowed!");
-                }
-                if (rowSelection.getMaxRows() == null || rowSelection.getMaxRows() == Integer.MAX_VALUE) {
-                    rowSelection.setMaxRows(original.getMaxRows());
-                } else if (original.getMaxRows() != null && original.getMaxRows() != Integer.MAX_VALUE && !original.getMaxRows().equals(rowSelection.getMaxRows())) {
-                    throw new IllegalStateException("Multiple row selections not allowed!");
-                }
-
-
-                if (rowSelection.getFetchSize() == null) {
-                    rowSelection.setFetchSize(original.getFetchSize());
-                } else if (original.getFetchSize() != null && !original.getFetchSize().equals(rowSelection.getFetchSize())) {
-                    throw new IllegalStateException("Multiple row selections not allowed!");
-                }
-                if (rowSelection.getTimeout() == null) {
-                    rowSelection.setTimeout(original.getTimeout());
-                } else if (original.getTimeout() != null && !original.getTimeout().equals(rowSelection.getTimeout())) {
-                    throw new IllegalStateException("Multiple row selections not allowed!");
-                }
-            }
 
             // Merge lock options
             LockOptions originalLockOptions = participatingQueryParameters.getLockOptions();
