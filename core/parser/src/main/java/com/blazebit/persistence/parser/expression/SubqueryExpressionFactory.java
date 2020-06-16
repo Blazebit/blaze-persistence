@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.parser.expression;
 
+import com.blazebit.persistence.parser.FunctionKind;
 import com.blazebit.persistence.parser.JPQLNextParser;
 import com.blazebit.persistence.parser.predicate.Predicate;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -42,7 +43,7 @@ public class SubqueryExpressionFactory extends AbstractExpressionFactory {
 
     private final ExpressionFactory delegate;
 
-    public SubqueryExpressionFactory(Map<String, Boolean> functions, Map<String, Class<?>> entityTypes, Map<String, Class<Enum<?>>> enumTypes, Map<String, Class<Enum<?>>> enumTypesForLiterals, boolean allowTreatJoinExtension, boolean optimize, ExpressionFactory delegate) {
+    public SubqueryExpressionFactory(Map<String, FunctionKind> functions, Map<String, Class<?>> entityTypes, Map<String, Class<Enum<?>>> enumTypes, Map<String, Class<Enum<?>>> enumTypesForLiterals, boolean allowTreatJoinExtension, boolean optimize, ExpressionFactory delegate) {
         super(functions, entityTypes, enumTypes, enumTypesForLiterals, optimize);
         this.delegate = delegate;
     }

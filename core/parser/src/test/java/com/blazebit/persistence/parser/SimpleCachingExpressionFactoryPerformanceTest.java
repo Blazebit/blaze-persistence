@@ -49,8 +49,8 @@ public class SimpleCachingExpressionFactoryPerformanceTest {
 
     @Rule
     public TestRule benchmarkRun = new BenchmarkRule();
-    private final ExpressionFactory cachingExpressionFactory = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl(new HashMap<String, Boolean>(), true, true));
-    private final ExpressionFactory nonCachingExpressionFactory = new ExpressionFactoryImpl(new HashMap<String, Boolean>(), true, true);
+    private final ExpressionFactory cachingExpressionFactory = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl(new HashMap<String, FunctionKind>(), true, true));
+    private final ExpressionFactory nonCachingExpressionFactory = new ExpressionFactoryImpl(new HashMap<String, FunctionKind>(), true, true);
 
     private final MacroConfiguration tenMacros;
     private final MacroConfiguration hundredMacros;

@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.parser.expression;
 
+import com.blazebit.persistence.parser.FunctionKind;
 import com.blazebit.persistence.parser.JPQLNextLexer;
 import com.blazebit.persistence.parser.JPQLNextParser;
 import com.blazebit.persistence.parser.predicate.Predicate;
@@ -103,7 +104,7 @@ public abstract class AbstractExpressionFactory extends AbstractExpressionFactor
     };
 
     private final boolean optimize;
-    private final Map<String, Boolean> functions;
+    private final Map<String, FunctionKind> functions;
     private final Map<String, Class<?>> entityTypes;
     private final Map<String, Class<Enum<?>>> enumTypes;
     private final Map<String, Class<Enum<?>>> enumTypesForLiterals;
@@ -111,7 +112,7 @@ public abstract class AbstractExpressionFactory extends AbstractExpressionFactor
     private final int minEntitySegmentCount;
     private final ExpressionOptimizer optimizer = new ExpressionOptimizer();
 
-    protected AbstractExpressionFactory(Map<String, Boolean> functions, Map<String, Class<?>> entityTypes, Map<String, Class<Enum<?>>> enumTypes, Map<String, Class<Enum<?>>> enumTypesForLiterals, boolean optimize) {
+    protected AbstractExpressionFactory(Map<String, FunctionKind> functions, Map<String, Class<?>> entityTypes, Map<String, Class<Enum<?>>> enumTypes, Map<String, Class<Enum<?>>> enumTypesForLiterals, boolean optimize) {
         this.functions = functions;
         this.entityTypes = entityTypes;
         this.enumTypes = enumTypes;

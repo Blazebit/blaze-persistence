@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.parser.expression;
 
+import com.blazebit.persistence.parser.FunctionKind;
 import com.blazebit.persistence.parser.JPQLNextParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 
@@ -38,11 +39,11 @@ public final class ExpressionFactoryImpl extends AbstractExpressionFactory {
         }
     };
 
-    public ExpressionFactoryImpl(Map<String, Boolean> functions, boolean allowTreatJoinExtension, boolean optimize) {
+    public ExpressionFactoryImpl(Map<String, FunctionKind> functions, boolean allowTreatJoinExtension, boolean optimize) {
         this(functions, Collections.EMPTY_MAP, Collections.EMPTY_MAP, Collections.EMPTY_MAP, allowTreatJoinExtension, optimize);
     }
 
-    public ExpressionFactoryImpl(Map<String, Boolean> functions, Map<String, Class<?>> entityTypes, Map<String, Class<Enum<?>>> enumTypes, Map<String, Class<Enum<?>>> enumTypesForLiterals, boolean allowTreatJoinExtension, boolean optimize) {
+    public ExpressionFactoryImpl(Map<String, FunctionKind> functions, Map<String, Class<?>> entityTypes, Map<String, Class<Enum<?>>> enumTypes, Map<String, Class<Enum<?>>> enumTypesForLiterals, boolean allowTreatJoinExtension, boolean optimize) {
         super(functions, entityTypes, enumTypes, enumTypesForLiterals, optimize);
     }
 

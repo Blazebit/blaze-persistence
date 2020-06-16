@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.parser.expression;
 
+import com.blazebit.persistence.parser.FunctionKind;
 import com.blazebit.persistence.parser.JPQLNextLexer;
 import com.blazebit.persistence.parser.JPQLNextParser;
 import com.blazebit.persistence.parser.JPQLNextParserBaseVisitor;
@@ -57,7 +58,7 @@ import java.util.Set;
  */
 public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Expression> {
 
-    private final Map<String, Boolean> functions;
+    private final Map<String, FunctionKind> functions;
     private final Map<String, Class<Enum<?>>> enums;
     private final Map<String, Class<Enum<?>>> enumsForLiterals;
     private final Map<String, Class<?>> entities;
@@ -70,7 +71,7 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
     private final boolean allowObjectExpression;
     private final CharStream input;
 
-    public JPQLNextExpressionVisitorImpl(Map<String, Boolean> functions, Map<String, Class<Enum<?>>> enums, Map<String, Class<Enum<?>>> enumsForLiterals, Map<String, Class<?>> entities,
+    public JPQLNextExpressionVisitorImpl(Map<String, FunctionKind> functions, Map<String, Class<Enum<?>>> enums, Map<String, Class<Enum<?>>> enumsForLiterals, Map<String, Class<?>> entities,
                                          int minEnumSegmentCount, int minEntitySegmentCount, Map<String, MacroFunction> macros, Set<String> usedMacros, boolean allowOuter, boolean allowQuantifiedPredicates, boolean allowObjectExpression, CharStream input) {
         this.functions = functions;
         this.enums = enums;
@@ -348,7 +349,7 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
 
     private Expression handleFunction(String name, boolean distinct, List<Expression> arguments, ParserRuleContext ctx, JPQLNextParser.WhereClauseContext whereClauseContext, JPQLNextParser.IdentifierContext windowName, JPQLNextParser.WindowDefinitionContext windowDefinitionContext) {
         String lowerName = name.toLowerCase();
-        Boolean aggregate;
+        FunctionKind functionKind;
         // Builtin functions
         switch (lowerName) {
             //CHECKSTYLE:OFF: FallThrough
@@ -407,25 +408,25 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
             case "function":
                 failDistinct(distinct, ctx);
                 String functionName = ((StringLiteral) arguments.get(0)).getValue();
-                aggregate = functions.get(functionName.toLowerCase());
-                if (aggregate == null) {
+                functionKind = functions.get(functionName.toLowerCase());
+                if (functionKind == null) {
                     // We pass through the function syntax to the JPA provider
-                    aggregate = false;
+                    functionKind = FunctionKind.DETERMINISTIC;
                 }
                 break;
             default:
-                aggregate = functions.get(lowerName);
+                functionKind = functions.get(lowerName);
                 break;
             //CHECKSTYLE:ON: FallThrough
         }
-        if (aggregate == null) {
+        if (functionKind == null) {
             if (whereClauseContext == null && windowName == null && windowDefinitionContext == null) {
                 failDistinct(distinct, ctx);
                 return handleMacro(name, arguments, ctx);
             }
             throw new SyntaxErrorException("No function with the name '" + name + "' exists!");
         }
-        if (aggregate) {
+        if (functionKind == FunctionKind.AGGREGATE) {
             // NOTE: We currently don't support JUST filtering for aggregate functions, but maybe in the future
             if (windowName == null && windowDefinitionContext == null) {
                 if (whereClauseContext == null) {
@@ -435,11 +436,11 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
                 }
             } else {
                 failDistinct(distinct, ctx);
-                return new FunctionExpression("window_" + name, arguments, createWindowDefinition(whereClauseContext, windowName, windowDefinitionContext));
+                return new FunctionExpression("window_" + name, arguments, createWindowDefinition(whereClauseContext, windowName, windowDefinitionContext, functionKind));
             }
         } else {
             failDistinct(distinct, ctx);
-            return new FunctionExpression(name, arguments, createWindowDefinition(whereClauseContext, windowName, windowDefinitionContext));
+            return new FunctionExpression(name, arguments, createWindowDefinition(whereClauseContext, windowName, windowDefinitionContext, functionKind));
         }
     }
 
@@ -465,7 +466,7 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
         }
     }
 
-    private WindowDefinition createWindowDefinition(JPQLNextParser.WhereClauseContext whereClauseContext, JPQLNextParser.IdentifierContext windowNameIdentifier, JPQLNextParser.WindowDefinitionContext windowDefinitionContext) {
+    private WindowDefinition createWindowDefinition(JPQLNextParser.WhereClauseContext whereClauseContext, JPQLNextParser.IdentifierContext windowNameIdentifier, JPQLNextParser.WindowDefinitionContext windowDefinitionContext, FunctionKind functionKind) {
         Predicate filterPredicate = null;
         if (whereClauseContext != null) {
             filterPredicate = (Predicate) whereClauseContext.predicate().accept(this);
@@ -477,7 +478,7 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
         }
 
         if (windowDefinitionContext == null) {
-            if (windowName != null || filterPredicate != null) {
+            if (windowName != null || filterPredicate != null || functionKind == FunctionKind.WINDOW) {
                 return new WindowDefinition(windowName, filterPredicate);
             }
             return null;
