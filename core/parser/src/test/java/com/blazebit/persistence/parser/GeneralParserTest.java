@@ -554,7 +554,7 @@ public class GeneralParserTest extends AbstractParserTest {
 
     @Test
     public void testFunctionInvocation() {
-        functions.put("myfunc", false);
+        functions.put("myfunc", FunctionKind.DETERMINISTIC);
         Expression result = parse("FUNCTION('myfunc', a.b, 'b', 12)");
         assertEquals(function("FUNCTION", _string("myfunc"), path("a", "b"), _string("b"), _int("12")), result);
     }

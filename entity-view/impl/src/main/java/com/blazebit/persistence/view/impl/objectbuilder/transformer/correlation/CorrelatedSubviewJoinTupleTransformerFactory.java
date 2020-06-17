@@ -99,9 +99,6 @@ public class CorrelatedSubviewJoinTupleTransformerFactory implements TupleTransf
 
             provider.applyCorrelation(correlationBuilder, correlationBasis);
 
-            viewJpqlMacro.setViewPath(oldViewPath);
-            embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
-
             if (queryBuilder instanceof LimitBuilder<?>) {
                 if (originalFirstResult != ((LimitBuilder<?>) queryBuilder).getFirstResult()
                         || originalMaxResults != ((LimitBuilder<?>) queryBuilder).getMaxResults()) {
@@ -110,6 +107,9 @@ public class CorrelatedSubviewJoinTupleTransformerFactory implements TupleTransf
             }
 
             correlationBuilder.finish();
+
+            viewJpqlMacro.setViewPath(oldViewPath);
+            embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
 
             if (fetches.length != 0) {
                 for (int i = 0; i < fetches.length; i++) {

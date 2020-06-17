@@ -312,7 +312,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         ParameterRenderingMode oldParameterRenderingMode = setParameterRenderingMode(ParameterRenderingMode.PLACEHOLDER);
         int size = arguments.size();
         if (registeredFunctions.containsKey(functionName)) {
-            sb.append(jpaProvider.getCustomFunctionInvocation(functionName, windowDefinition == null ? size : size + 1));
+            sb.append(jpaProvider.getCustomFunctionInvocation(functionName, windowDefinition == null || windowDefinition.isEmpty() ? size : size + 1));
             if (size == 0) {
                 visitWindowDefinition(windowDefinition);
             } else {
@@ -321,7 +321,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                     sb.append(",");
                     arguments.get(i).accept(this);
                 }
-                if (windowDefinition != null) {
+                if (windowDefinition != null && !windowDefinition.isEmpty()) {
                     sb.append(",");
                     visitWindowDefinition(windowDefinition);
                 }
@@ -337,7 +337,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                 sb.append(',');
                 arguments.get(i).accept(this);
             }
-            if (windowDefinition != null) {
+            if (windowDefinition != null && !windowDefinition.isEmpty()) {
                 sb.append(",");
                 visitWindowDefinition(windowDefinition);
             }

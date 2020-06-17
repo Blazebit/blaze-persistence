@@ -63,10 +63,10 @@ import java.util.logging.LogManager;
  */
 public class AbstractParserTest {
 
-    private final MapDelegate<String, Boolean> functionsDelegate = new MapDelegate<String, Boolean>() {
+    private final MapDelegate<String, FunctionKind> functionsDelegate = new MapDelegate<String, FunctionKind>() {
 
         @Override
-        protected Map<String, Boolean> getDelegate() {
+        protected Map<String, FunctionKind> getDelegate() {
             return AbstractParserTest.this.functions;
         }
         
@@ -156,7 +156,7 @@ public class AbstractParserTest {
         };
     }
     
-    protected Map<String, Boolean> functions;
+    protected Map<String, FunctionKind> functions;
     protected Map<String, Class<?>> entityTypes;
     protected Map<String, Class<Enum<?>>> enumTypes;
     protected MacroConfiguration macroConfiguration;
@@ -178,11 +178,11 @@ public class AbstractParserTest {
         enumTypes = new HashMap<>();
         macroConfiguration = null;
         // Register builtin aggregate functions
-        functions.put("sum", true);
-        functions.put("min", true);
-        functions.put("max", true);
-        functions.put("avg", true);
-        functions.put("count", true);
+        functions.put("sum", FunctionKind.AGGREGATE);
+        functions.put("min", FunctionKind.AGGREGATE);
+        functions.put("max", FunctionKind.AGGREGATE);
+        functions.put("avg", FunctionKind.AGGREGATE);
+        functions.put("count", FunctionKind.AGGREGATE);
     }
 
     protected Predicate not(Predicate p) {

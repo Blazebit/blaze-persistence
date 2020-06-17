@@ -102,6 +102,10 @@ public class WindowDefinition {
         return filterPredicate != null && windowName == null && partitionExpressions.isEmpty() && orderByExpressions.isEmpty() && frameMode == null && frameExclusionType == null;
     }
 
+    public boolean isEmpty() {
+        return filterPredicate == null && windowName == null && partitionExpressions.isEmpty() && orderByExpressions.isEmpty() && frameMode == null && frameExclusionType == null;
+    }
+
     public String getWindowName() {
         return windowName;
     }

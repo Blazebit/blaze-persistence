@@ -30,15 +30,15 @@ import java.util.logging.Level;
  */
 public abstract class AbstractTestExpressionFactory extends AbstractExpressionFactory {
 
-    public AbstractTestExpressionFactory(Map<String, Boolean> functions, boolean optimize) {
+    public AbstractTestExpressionFactory(Map<String, FunctionKind> functions, boolean optimize) {
         this(functions, Collections.EMPTY_MAP, Collections.EMPTY_MAP, optimize);
     }
     
-    public AbstractTestExpressionFactory(Map<String, Boolean> functions, Map<String, Class<?>> entityTypes, Map<String, Class<Enum<?>>> enumTypes, boolean optimize) {
+    public AbstractTestExpressionFactory(Map<String, FunctionKind> functions, Map<String, Class<?>> entityTypes, Map<String, Class<Enum<?>>> enumTypes, boolean optimize) {
         super(functions, entityTypes, enumTypes, enumTypes, optimize);
     }
 
-    public AbstractTestExpressionFactory(Map<String, Boolean> functions, Map<String, Class<?>> entityTypes, Map<String, Class<Enum<?>>> enumTypes, Map<String, Class<Enum<?>>> enumTypesForLiterals, boolean optimize) {
+    public AbstractTestExpressionFactory(Map<String, FunctionKind> functions, Map<String, Class<?>> entityTypes, Map<String, Class<Enum<?>>> enumTypes, Map<String, Class<Enum<?>>> enumTypesForLiterals, boolean optimize) {
         super(functions, entityTypes, enumTypes, enumTypesForLiterals, optimize);
     }
 

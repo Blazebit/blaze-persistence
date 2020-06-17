@@ -68,14 +68,6 @@ public class ParameterizedExpressionCorrelationJoinTupleElementMapper extends Ab
         CorrelationProvider provider = providerFactory.create(parameterHolder, optionalParameters);
         provider.applyCorrelation(correlationBuilder, correlationBasis);
 
-        // Basic element has an alias, subviews don't
-        if (alias != null) {
-            viewJpqlMacro.setViewPath(null);
-            queryBuilder.select(correlationResult, alias);
-        }
-        viewJpqlMacro.setViewPath(oldViewPath);
-        embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
-
         if (queryBuilder instanceof LimitBuilder<?>) {
             if (originalFirstResult != ((LimitBuilder<?>) queryBuilder).getFirstResult()
                     || originalMaxResults != ((LimitBuilder<?>) queryBuilder).getMaxResults()) {
@@ -83,6 +75,14 @@ public class ParameterizedExpressionCorrelationJoinTupleElementMapper extends Ab
             }
         }
         correlationBuilder.finish();
+
+        // Basic element has an alias, subviews don't
+        if (alias != null) {
+            viewJpqlMacro.setViewPath(null);
+            queryBuilder.select(correlationResult, alias);
+        }
+        viewJpqlMacro.setViewPath(oldViewPath);
+        embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
         if (fetches.length != 0) {
             for (int i = 0; i < fetches.length; i++) {
                 fullQueryBuilder.fetch(correlationBuilder.getCorrelationAlias() + "." + fetches[i]);

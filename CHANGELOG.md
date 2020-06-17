@@ -13,6 +13,11 @@ None
 ### Bug fixes
 
 * Fix issues with entity view validation errors when using singular collection attributes
+* Fix invalid use of Hibernate query plan cache when participating queries use `LIMIT` or `OFFSET`
+* Fix invalid merging of `RowSelection` in `HibernateExtendedQuerySupport`
+* Fix issue when saving creatable entity view with `null` version
+* Fix implicit group by generation when encountering window functions
+* Fix basic `JOIN` fetched correlation failure due to interleaving builders
 
 ### Backwards-incompatible changes
 

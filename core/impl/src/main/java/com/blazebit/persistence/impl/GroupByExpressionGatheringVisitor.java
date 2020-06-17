@@ -16,11 +16,6 @@
 
 package com.blazebit.persistence.impl;
 
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
 import com.blazebit.persistence.parser.expression.AbortableVisitorAdapter;
 import com.blazebit.persistence.parser.expression.AggregateExpression;
 import com.blazebit.persistence.parser.expression.ArithmeticExpression;
@@ -60,6 +55,11 @@ import com.blazebit.persistence.parser.predicate.IsEmptyPredicate;
 import com.blazebit.persistence.parser.predicate.IsNullPredicate;
 import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.spi.DbmsDialect;
+
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Returns false if expression is required in groupBy, true otherwise
@@ -290,6 +290,10 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
         }
         setCollect(oldCollect);
 
+        // don't add window functions
+        if (expression.getResolvedWindowDefinition() != null) {
+            return true;
+        }
         if (oldCollect) {
             this.expressions.add(expression);
         }

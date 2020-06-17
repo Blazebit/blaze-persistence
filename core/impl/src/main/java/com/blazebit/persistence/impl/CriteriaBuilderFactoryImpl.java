@@ -23,6 +23,7 @@ import com.blazebit.persistence.InsertCriteriaBuilder;
 import com.blazebit.persistence.LeafOngoingFinalSetOperationCriteriaBuilder;
 import com.blazebit.persistence.StartOngoingSetOperationCriteriaBuilder;
 import com.blazebit.persistence.UpdateCriteriaBuilder;
+import com.blazebit.persistence.parser.FunctionKind;
 import com.blazebit.persistence.parser.expression.ExpressionCache;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.parser.expression.ExpressionFactoryImpl;
@@ -37,6 +38,7 @@ import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpaProviderFactory;
 import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
+import com.blazebit.persistence.spi.JpqlFunctionKind;
 import com.blazebit.persistence.spi.PackageOpener;
 
 import javax.persistence.EntityManager;
@@ -59,7 +61,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
     private final EntityMetamodelImpl metamodel;
     private final AssociationParameterTransformerFactory transientEntityParameterTransformerFactory;
     private final ExtendedQuerySupport extendedQuerySupport;
-    private final Map<String, Boolean> functions;
+    private final Map<String, FunctionKind> functions;
     private final Map<Class<?>, String> namedTypes;
     private final ExpressionCache expressionCache;
     private final ExpressionFactory expressionFactory;
@@ -130,25 +132,40 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         }
     }
 
-    private static Map<String, Boolean> resolveFunctions(Map<String, JpqlFunctionGroup> functions, Map<String, JpqlFunction> configuredFunctions) {
-        Map<String, Boolean> map = new HashMap<>();
+    private static Map<String, FunctionKind> resolveFunctions(Map<String, JpqlFunctionGroup> functions, Map<String, JpqlFunction> configuredFunctions) {
+        Map<String, FunctionKind> map = new HashMap<>();
         for (Map.Entry<String, JpqlFunctionGroup> entry : functions.entrySet()) {
-            map.put(entry.getKey().toLowerCase(), entry.getValue().isAggregate());
+            map.put(entry.getKey().toLowerCase(), getKind(entry.getValue().getKind()));
         }
         // add standard JPQL aggregate functions
-        map.put("sum", true);
-        map.put("min", true);
-        map.put("max", true);
-        map.put("avg", true);
-        map.put("count", true);
+        map.put("sum", FunctionKind.AGGREGATE);
+        map.put("min", FunctionKind.AGGREGATE);
+        map.put("max", FunctionKind.AGGREGATE);
+        map.put("avg", FunctionKind.AGGREGATE);
+        map.put("count", FunctionKind.AGGREGATE);
 
         for (Map.Entry<String, JpqlFunction> entry : configuredFunctions.entrySet()) {
             if (!map.containsKey(entry.getKey())) {
-                map.put(entry.getKey(), false);
+                map.put(entry.getKey(), FunctionKind.DETERMINISTIC);
             }
         }
 
         return map;
+    }
+
+    private static FunctionKind getKind(JpqlFunctionKind kind) {
+        switch (kind) {
+            case WINDOW:
+                return FunctionKind.WINDOW;
+            case VOLATILE:
+                return FunctionKind.VOLATILE;
+            case AGGREGATE:
+                return FunctionKind.AGGREGATE;
+            case DETERMINISTIC:
+                return FunctionKind.DETERMINISTIC;
+            default:
+                throw new IllegalArgumentException("Illegal function kind: " + kind);
+        }
     }
 
     private static Map<Class<?>, String> resolveNamedTypes(Map<String, Class<?>> namedTypes) {
@@ -183,7 +200,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         return extendedQuerySupport;
     }
 
-    public Map<String, Boolean> getFunctions() {
+    public Map<String, FunctionKind> getFunctions() {
         return functions;
     }
 

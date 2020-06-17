@@ -239,6 +239,21 @@ public class WindowFunctionTest extends AbstractCoreTest {
     }
 
     @Test
+    public void testImplicitGroupByWithWindowFunction() {
+        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
+                .from(Person.class, "per")
+                .select("per.age")
+                .select("ROW_NUMBER() OVER (ORDER BY per.age)")
+                .select("AVG(per.id) / LAG(AVG(per.id)) OVER (ORDER BY per.age)")
+                .select("AVG(per.id) / (SUM(AVG(per.id)) OVER (ORDER BY per.age) / ROW_NUMBER() OVER (ORDER BY per.age))")
+                .orderByAsc("per.age")
+                ;
+
+        List<Tuple> resultList = criteria.getResultList();
+        assertNotNull(resultList);
+    }
+
+    @Test
     public void testRankOrderedWindow() {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
             .from(Person.class, "per")

@@ -489,6 +489,7 @@ import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
+import com.blazebit.persistence.spi.JpqlFunctionKind;
 import com.blazebit.persistence.spi.JpqlMacro;
 import com.blazebit.persistence.spi.LateralStyle;
 import com.blazebit.persistence.spi.PackageOpener;
@@ -731,7 +732,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         // window_group_concat
 
-        jpqlFunctionGroup = new JpqlFunctionGroup("window_group_concat", false);
+        jpqlFunctionGroup = new JpqlFunctionGroup("window_group_concat", JpqlFunctionKind.WINDOW);
         jpqlFunctionGroup.add("db2", new DB2GroupConcatWindowFunction(dbmsDialects.get("db2")));
         jpqlFunctionGroup.add("oracle", new OracleListaggGroupConcatWindowFunction(dbmsDialects.get("oracle")));
         jpqlFunctionGroup.add("h2", new H2GroupConcatWindowFunction(dbmsDialects.get("h2")));
@@ -1600,7 +1601,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         // window every
 
-        jpqlFunctionGroup = new JpqlFunctionGroup(WindowEveryFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup = new JpqlFunctionGroup(WindowEveryFunction.FUNCTION_NAME, JpqlFunctionKind.WINDOW);
         for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
             jpqlFunctionGroup.add(dialectEntry.getKey(),
                     dialectEntry.getValue().supportsBooleanAggregation() ?
@@ -1611,7 +1612,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         // window andagg
 
-        jpqlFunctionGroup = new JpqlFunctionGroup("AND_AGG", false);
+        jpqlFunctionGroup = new JpqlFunctionGroup("AND_AGG", JpqlFunctionKind.WINDOW);
         for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
             jpqlFunctionGroup.add(dialectEntry.getKey(),
                     dialectEntry.getValue().supportsBooleanAggregation() ?
@@ -1622,7 +1623,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         // window oragg
 
-        jpqlFunctionGroup = new JpqlFunctionGroup(WindowOrAggFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup = new JpqlFunctionGroup(WindowOrAggFunction.FUNCTION_NAME, JpqlFunctionKind.WINDOW);
         for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
             jpqlFunctionGroup.add(dialectEntry.getKey(),
                     dialectEntry.getValue().supportsBooleanAggregation() ?
@@ -1633,7 +1634,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         // window sum
 
-        jpqlFunctionGroup = new JpqlFunctionGroup(SumFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup = new JpqlFunctionGroup(SumFunction.FUNCTION_NAME, JpqlFunctionKind.WINDOW);
         for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
             jpqlFunctionGroup.add(dialectEntry.getKey(), new SumFunction(dialectEntry.getValue()));
         }
@@ -1641,7 +1642,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         // window avg
 
-        jpqlFunctionGroup = new JpqlFunctionGroup(AvgFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup = new JpqlFunctionGroup(AvgFunction.FUNCTION_NAME, JpqlFunctionKind.WINDOW);
         for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
             jpqlFunctionGroup.add(dialectEntry.getKey(), new AvgFunction(dialectEntry.getValue()));
         }
@@ -1649,7 +1650,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         // window min
 
-        jpqlFunctionGroup = new JpqlFunctionGroup(MinFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup = new JpqlFunctionGroup(MinFunction.FUNCTION_NAME, JpqlFunctionKind.WINDOW);
         for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
             jpqlFunctionGroup.add(dialectEntry.getKey(), new MinFunction(dialectEntry.getValue()));
         }
@@ -1657,7 +1658,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         // window max
 
-        jpqlFunctionGroup = new JpqlFunctionGroup(MaxFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup = new JpqlFunctionGroup(MaxFunction.FUNCTION_NAME, JpqlFunctionKind.WINDOW);
         for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
             jpqlFunctionGroup.add(dialectEntry.getKey(), new MaxFunction(dialectEntry.getValue()));
         }
@@ -1665,7 +1666,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         // window count
 
-        jpqlFunctionGroup = new JpqlFunctionGroup(CountFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup = new JpqlFunctionGroup(CountFunction.FUNCTION_NAME, JpqlFunctionKind.WINDOW);
         for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
             jpqlFunctionGroup.add(dialectEntry.getKey(), new CountFunction(dialectEntry.getValue()));
         }
@@ -1673,7 +1674,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         // row number
 
-        jpqlFunctionGroup = new JpqlFunctionGroup(RowNumberFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup = new JpqlFunctionGroup(RowNumberFunction.FUNCTION_NAME, JpqlFunctionKind.WINDOW);
         for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
             jpqlFunctionGroup.add(dialectEntry.getKey(), new RowNumberFunction(dialectEntry.getValue()));
         }
@@ -1681,7 +1682,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         // rank
 
-        jpqlFunctionGroup = new JpqlFunctionGroup(RankFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup = new JpqlFunctionGroup(RankFunction.FUNCTION_NAME, JpqlFunctionKind.WINDOW);
         for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
             jpqlFunctionGroup.add(dialectEntry.getKey(), new RankFunction(dialectEntry.getValue()));
         }
@@ -1689,7 +1690,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         // dense_rank
 
-        jpqlFunctionGroup = new JpqlFunctionGroup(DenseRankFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup = new JpqlFunctionGroup(DenseRankFunction.FUNCTION_NAME, JpqlFunctionKind.WINDOW);
         for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
             jpqlFunctionGroup.add(dialectEntry.getKey(), new DenseRankFunction(dialectEntry.getValue()));
         }
@@ -1697,7 +1698,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         // PERCENT_RANK
 
-        jpqlFunctionGroup = new JpqlFunctionGroup(PercentRankFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup = new JpqlFunctionGroup(PercentRankFunction.FUNCTION_NAME, JpqlFunctionKind.WINDOW);
         for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
             jpqlFunctionGroup.add(dialectEntry.getKey(), new PercentRankFunction(dialectEntry.getValue()));
         }
@@ -1705,7 +1706,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         // CUME_DIST
 
-        jpqlFunctionGroup = new JpqlFunctionGroup(CumeDistFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup = new JpqlFunctionGroup(CumeDistFunction.FUNCTION_NAME, JpqlFunctionKind.WINDOW);
         for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
             jpqlFunctionGroup.add(dialectEntry.getKey(), new CumeDistFunction(dialectEntry.getValue()));
         }
@@ -1713,7 +1714,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         // NTILE
 
-        jpqlFunctionGroup = new JpqlFunctionGroup(NtileFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup = new JpqlFunctionGroup(NtileFunction.FUNCTION_NAME, JpqlFunctionKind.WINDOW);
         for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
             jpqlFunctionGroup.add(dialectEntry.getKey(), new NtileFunction(dialectEntry.getValue()));
         }
@@ -1721,7 +1722,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         // LAG
 
-        jpqlFunctionGroup = new JpqlFunctionGroup(LagFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup = new JpqlFunctionGroup(LagFunction.FUNCTION_NAME, JpqlFunctionKind.WINDOW);
         for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
             jpqlFunctionGroup.add(dialectEntry.getKey(), new LagFunction(dialectEntry.getValue()));
         }
@@ -1729,7 +1730,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         // LEAD
 
-        jpqlFunctionGroup = new JpqlFunctionGroup(LeadFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup = new JpqlFunctionGroup(LeadFunction.FUNCTION_NAME, JpqlFunctionKind.WINDOW);
         for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
             jpqlFunctionGroup.add(dialectEntry.getKey(), new LeadFunction(dialectEntry.getValue()));
         }
@@ -1737,7 +1738,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         // FIRST_VALUE
 
-        jpqlFunctionGroup = new JpqlFunctionGroup(FirstValueFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup = new JpqlFunctionGroup(FirstValueFunction.FUNCTION_NAME, JpqlFunctionKind.WINDOW);
         for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
             jpqlFunctionGroup.add(dialectEntry.getKey(), new FirstValueFunction(dialectEntry.getValue()));
         }
@@ -1745,7 +1746,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         // LAST_VALUE
 
-        jpqlFunctionGroup = new JpqlFunctionGroup(LastValueFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup = new JpqlFunctionGroup(LastValueFunction.FUNCTION_NAME, JpqlFunctionKind.WINDOW);
         for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
             jpqlFunctionGroup.add(dialectEntry.getKey(), new LastValueFunction(dialectEntry.getValue()));
         }
@@ -1753,7 +1754,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         // NTH_VALUE
 
-        jpqlFunctionGroup = new JpqlFunctionGroup(NthValueFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup = new JpqlFunctionGroup(NthValueFunction.FUNCTION_NAME, JpqlFunctionKind.WINDOW);
         for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
             jpqlFunctionGroup.add(dialectEntry.getKey(), new NthValueFunction(dialectEntry.getValue()));
         }

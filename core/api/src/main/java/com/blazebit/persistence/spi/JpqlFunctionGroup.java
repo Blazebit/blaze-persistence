@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.spi;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,7 +29,7 @@ import java.util.Map;
 public final class JpqlFunctionGroup {
 
     private final String name;
-    private final boolean aggregate;
+    private final JpqlFunctionKind kind;
     private final Map<String, JpqlFunction> rdbmsFunctions;
 
     /**
@@ -58,7 +59,7 @@ public final class JpqlFunctionGroup {
      * @param aggregate True if the function is an aggregate function, false otherwise
      */
     public JpqlFunctionGroup(String name, boolean aggregate) {
-        this(name, aggregate, new HashMap<String, JpqlFunction>());
+        this(name, aggregate, Collections.EMPTY_MAP);
     }
 
     /**
@@ -69,8 +70,31 @@ public final class JpqlFunctionGroup {
      * @param rdbmsFunctions The RDBMS functions in a map
      */
     public JpqlFunctionGroup(String name, boolean aggregate, Map<String, JpqlFunction> rdbmsFunctions) {
+        this(name, aggregate ? JpqlFunctionKind.AGGREGATE : JpqlFunctionKind.DETERMINISTIC, rdbmsFunctions);
+    }
+
+    /**
+     * Constructs a function group with the given name.
+     *
+     * @param name The function name
+     * @param kind The function kind
+     * @since 1.5.0
+     */
+    public JpqlFunctionGroup(String name, JpqlFunctionKind kind) {
+        this(name, kind, Collections.EMPTY_MAP);
+    }
+
+    /**
+     * Constructs a function group with the given name and given function mappings.
+     *
+     * @param name The function name
+     * @param kind The function kind
+     * @param rdbmsFunctions The RDBMS functions in a map
+     * @since 1.5.0
+     */
+    public JpqlFunctionGroup(String name, JpqlFunctionKind kind, Map<String, JpqlFunction> rdbmsFunctions) {
         this.name = name;
-        this.aggregate = aggregate;
+        this.kind = kind;
         this.rdbmsFunctions = new HashMap<>(rdbmsFunctions);
     }
 
@@ -89,7 +113,17 @@ public final class JpqlFunctionGroup {
      * @return True if this is an aggregate function, false otherwise
      */
     public boolean isAggregate() {
-        return aggregate;
+        return kind == JpqlFunctionKind.AGGREGATE;
+    }
+
+    /**
+     * Returns the function kind.
+     *
+     * @return The function kind
+     * @since 1.5.0
+     */
+    public JpqlFunctionKind getKind() {
+        return kind;
     }
 
     /**
