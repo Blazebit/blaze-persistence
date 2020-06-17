@@ -17,6 +17,7 @@ None
 * Fix invalid merging of `RowSelection` in `HibernateExtendedQuerySupport`
 * Fix issue when saving creatable entity view with `null` version
 * Fix implicit group by generation when encountering window functions
+* Fix basic `JOIN` fetched correlation failure due to interleaving builders
 
 ### Backwards-incompatible changes
 
