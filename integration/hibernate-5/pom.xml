@@ -125,9 +125,14 @@
                                         requires org.hibernate.orm.core;
                                         requires com.blazebit.persistence.core;
                                         requires com.blazebit.persistence.integration.hibernate.base;
-                                        provides org.hibernate.integrator.spi.ServiceContributingIntegrator with com.blazebit.persistence.integration.hibernate.Hibernate5Integrator;
                                         provides com.blazebit.persistence.integration.hibernate.base.HibernateAccess with com.blazebit.persistence.integration.hibernate.Hibernate5Access;
                                         provides com.blazebit.persistence.spi.EntityManagerFactoryIntegrator with com.blazebit.persistence.integration.hibernate.Hibernate5EntityManagerFactoryIntegrator;
+                                        provides com.blazebit.persistence.view.spi.TransactionAccessFactory with com.blazebit.persistence.integration.hibernate.Hibernate5TransactionAccessFactory;
+                                        provides org.hibernate.integrator.spi.Integrator with com.blazebit.persistence.integration.hibernate.Hibernate5Integrator;
+                                        provides org.hibernate.persister.spi.PersisterClassResolver with com.blazebit.persistence.integration.hibernate.CustomPersisterClassResolver;
+                                        provides org.hibernate.boot.spi.MetadataContributor with com.blazebit.persistence.integration.hibernate.Hibernate5MetadataContributor;
+                                        provides org.hibernate.service.spi.ServiceContributor with com.blazebit.persistence.integration.hibernate.Hibernate5ServiceContributor;
+                                        exports com.blazebit.persistence.integration.hibernate;
                                     }
                                 </moduleInfoSource>
                             </module>

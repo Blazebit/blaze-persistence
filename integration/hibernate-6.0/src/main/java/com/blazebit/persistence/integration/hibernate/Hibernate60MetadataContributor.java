@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.integration.hibernate;
 
+import com.blazebit.apt.service.ServiceProvider;
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -36,6 +37,7 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.2.0
  */
+@ServiceProvider(MetadataContributor.class)
 public class Hibernate60MetadataContributor implements MetadataContributor {
 
     @Override

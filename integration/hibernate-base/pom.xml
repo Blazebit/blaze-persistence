@@ -131,8 +131,10 @@
                                         requires org.hibernate.orm.core;
                                         requires com.blazebit.common.utils;
                                         requires com.blazebit.persistence.core;
+                                        requires com.blazebit.persistence.integration.jpa;
                                         exports com.blazebit.persistence.integration.hibernate.base;
                                         exports com.blazebit.persistence.integration.hibernate.base.spi;
+                                        exports com.blazebit.persistence.integration.hibernate.base.function;
                                         uses com.blazebit.persistence.integration.hibernate.base.HibernateAccess;
                                         uses com.blazebit.persistence.integration.hibernate.base.spi.HibernateVersionProvider;
                                         provides com.blazebit.persistence.spi.ExtendedQuerySupport with com.blazebit.persistence.integration.hibernate.base.HibernateExtendedQuerySupport;

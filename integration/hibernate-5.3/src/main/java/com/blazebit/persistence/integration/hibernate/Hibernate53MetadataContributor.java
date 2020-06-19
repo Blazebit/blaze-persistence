@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.integration.hibernate;
 
+import com.blazebit.apt.service.ServiceProvider;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -39,6 +40,7 @@ import java.util.logging.Logger;
  * @author Christian Beikov
  * @since 1.2.0
  */
+@ServiceProvider(MetadataContributor.class)
 public class Hibernate53MetadataContributor implements MetadataContributor, Service, Configurable {
 
     private static final Logger LOG = Logger.getLogger(Hibernate53MetadataContributor.class.getName());
