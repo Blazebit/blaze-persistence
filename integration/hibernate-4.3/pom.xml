@@ -124,9 +124,13 @@
                                         requires org.hibernate.orm.core;
                                         requires com.blazebit.persistence.core;
                                         requires com.blazebit.persistence.integration.hibernate.base;
-                                        provides org.hibernate.integrator.spi.ServiceContributingIntegrator with com.blazebit.persistence.integration.hibernate.Hibernate43Integrator;
                                         provides com.blazebit.persistence.integration.hibernate.base.HibernateAccess with com.blazebit.persistence.integration.hibernate.Hibernate43Access;
                                         provides com.blazebit.persistence.spi.EntityManagerFactoryIntegrator with com.blazebit.persistence.integration.hibernate.Hibernate43EntityManagerFactoryIntegrator;
+                                        provides com.blazebit.persistence.view.spi.TransactionAccessFactory with com.blazebit.persistence.integration.hibernate.Hibernate4TransactionAccessFactory;
+                                        provides org.hibernate.integrator.spi.Integrator with com.blazebit.persistence.integration.hibernate.Hibernate43Integrator;
+                                        provides org.hibernate.metamodel.spi.TypeContributor with com.blazebit.persistence.integration.hibernate.Hibernate43Integrator;
+                                        provides org.hibernate.persister.spi.PersisterClassResolver with com.blazebit.persistence.integration.hibernate.CustomPersisterClassResolver;
+                                        exports com.blazebit.persistence.integration.hibernate;
                                     }
                                 </moduleInfoSource>
                             </module>

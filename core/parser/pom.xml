@@ -158,6 +158,7 @@
                                         requires com.blazebit.common.utils;
                                         exports com.blazebit.persistence.parser;
                                         exports com.blazebit.persistence.parser.expression;
+                                        exports com.blazebit.persistence.parser.expression.modifier;
                                         exports com.blazebit.persistence.parser.predicate;
                                         exports com.blazebit.persistence.parser.util;
                                     }

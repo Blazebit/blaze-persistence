@@ -214,6 +214,7 @@
                                         requires com.blazebit.common.utils;
                                         requires com.blazebit.persistence.integration.jackson;
                                         exports com.blazebit.persistence.integration.jaxrs;
+                                        provides org.glassfish.jersey.model.internal.spi.ParameterServiceProvider with com.blazebit.persistence.integration.jaxrs.jersey.EntityViewIdAwareParameterServiceProvider;
                                     }
                                 </moduleInfoSource>
                             </module>

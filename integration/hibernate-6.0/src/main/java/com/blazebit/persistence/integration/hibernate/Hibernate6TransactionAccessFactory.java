@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.integration.hibernate;
 
+import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.view.spi.TransactionAccess;
 import com.blazebit.persistence.view.spi.TransactionAccessFactory;
 import org.hibernate.Session;
@@ -30,6 +31,7 @@ import javax.persistence.EntityManager;
  * @author Moritz Becker
  * @since 1.5.0
  */
+@ServiceProvider(TransactionAccessFactory.class)
 public class Hibernate6TransactionAccessFactory implements TransactionAccessFactory {
     @Override
     public TransactionAccess createTransactionAccess(EntityManager entityManager) {
