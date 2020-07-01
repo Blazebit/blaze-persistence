@@ -28,6 +28,8 @@ import com.blazebit.persistence.view.spi.type.TypeConverter;
 
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.ManagedType;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.Collections;
@@ -312,7 +314,15 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
         if (possibleTargets != null) {
             return possibleTargets;
         }
-        return possibleTargets = context.getPossibleTargetTypes(viewMapping.getEntityClass(), getMapping());
+        try {
+            return possibleTargets = context.getPossibleTargetTypes(viewMapping.getEntityClass(), getMapping());
+        } catch (RuntimeException ex) {
+            StringWriter sw = new StringWriter();
+            sw.append("Exception while resolving type for ").append(getErrorLocation()).append(":\n");
+            ex.printStackTrace(new PrintWriter(sw));
+            context.addError(sw.toString());
+            return possibleTargets = Collections.emptyList();
+        }
     }
 
     public Set<Class<?>> getBaseTypes(List<ScalarTargetResolvingExpressionVisitor.TargetType> possibleTargetTypes) {

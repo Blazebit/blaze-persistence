@@ -18,6 +18,8 @@ None
 * Fix issue when saving creatable entity view with `null` version
 * Fix implicit group by generation when encountering window functions
 * Fix basic `JOIN` fetched correlation failure due to interleaving builders
+* Fix issues with type validation in entity views when using entity literal array expressions
+* Report more appropriate errors instead of throwing NPEs when encountering invalid arguments
 
 ### Backwards-incompatible changes
 

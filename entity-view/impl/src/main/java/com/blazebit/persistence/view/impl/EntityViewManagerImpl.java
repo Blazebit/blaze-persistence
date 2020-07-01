@@ -765,7 +765,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
     @Override
     public <T> T find(EntityManager entityManager, EntityViewSetting<T, CriteriaBuilder<T>> entityViewSetting, Object entityId) {
-        ViewTypeImpl<T> managedViewType = metamodel.view(entityViewSetting.getEntityViewClass());
+        ViewTypeImpl<T> managedViewType = metamodel.viewOrError(entityViewSetting.getEntityViewClass());
         EntityType<?> entityType = (EntityType<?>) managedViewType.getJpaManagedType();
         javax.persistence.metamodel.SingularAttribute<?, ?> idAttribute = JpaMetamodelUtils.getSingleIdAttribute(entityType);
         CriteriaBuilder<?> cb = cbf.create(entityManager, managedViewType.getEntityClass())
@@ -778,7 +778,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     public <T> T getReference(Class<T> entityViewClass, Object id) {
         Constructor<T> constructor = (Constructor<T>) referenceConstructorCache.get(entityViewClass);
         try {
-            ViewTypeImpl<T> managedViewType = metamodel.view(entityViewClass);
+            ViewTypeImpl<T> managedViewType = metamodel.viewOrError(entityViewClass);
             if (constructor == null) {
                 Class<? extends T> proxyClass = proxyFactory.getProxy(this, managedViewType);
                 constructor = (Constructor<T>) proxyClass.getConstructor(managedViewType.getIdAttribute().getConvertedJavaType());
@@ -796,7 +796,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     public Object getEntityId(EntityManager entityManager, EntityViewProxy proxy) {
         UpdateContext context = new SimpleUpdateContext(this, entityManager);
         Class<?> entityViewClass = proxy.$$_getEntityViewClass();
-        ManagedViewTypeImplementor<?> viewType = metamodel.managedView(entityViewClass);
+        ManagedViewTypeImplementor<?> viewType = metamodel.managedViewOrError(entityViewClass);
         EntityViewUpdater updater = getUpdater(viewType, null, null, null);
         return ((CompositeAttributeFlusher) updater.getFullGraphNode()).getEntityIdCopy(context, proxy);
     }
@@ -826,7 +826,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         Constructor<T> constructor = (Constructor<T>) createConstructorCache.get(entityViewClass);
         CREATION: try {
             if (constructor == null) {
-                ManagedViewTypeImplementor<T> managedViewType = metamodel.managedView(entityViewClass);
+                ManagedViewTypeImplementor<T> managedViewType = metamodel.managedViewOrError(entityViewClass);
                 if (!managedViewType.isCreatable()) {
                     break CREATION;
                 }
@@ -859,7 +859,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
     @Override
     public <X> EntityViewBuilder<X> createBuilder(Class<X> clazz, Map<String, Object> optionalParameters, String constructorName) {
-        ManagedViewTypeImplementor<X> managedViewTypeImplementor = metamodel.managedView(clazz);
+        ManagedViewTypeImplementor<X> managedViewTypeImplementor = metamodel.managedViewOrError(clazz);
         MappingConstructorImpl<X> mappingConstructor = null;
         if (constructorName != null) {
             mappingConstructor = (MappingConstructorImpl<X>) managedViewTypeImplementor.getConstructor(constructorName);
@@ -911,7 +911,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
                 tuple[value.getAttribute().getAttributeIndex()] = getValueForBuilder(value, view, optionalParameters);
             }
         } else {
-            ManagedViewTypeImplementor<X> managedViewTypeImplementor = metamodel.managedView(clazz);
+            ManagedViewTypeImplementor<X> managedViewTypeImplementor = metamodel.managedViewOrError(clazz);
             ManagedViewTypeImpl.InheritanceSubtypeConfiguration<X> inheritanceSubtypeConfiguration = managedViewTypeImplementor.getInheritanceSubtypeConfiguration(null);
             for (ConstrainedAttribute<AbstractMethodAttribute<? super X, ?>> value : inheritanceSubtypeConfiguration.getAttributesClosure().values()) {
                 builder.with(value.getAttribute().getName(), getValueForBuilder(value, view, optionalParameters));
@@ -1034,7 +1034,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         }
         DirtyStateTrackable updatableProxy = (DirtyStateTrackable) entityView;
         Class<?> entityViewClass = updatableProxy.$$_getEntityViewClass();
-        ManagedViewTypeImplementor<DirtyStateTrackable> viewType = (ManagedViewTypeImplementor<DirtyStateTrackable>) metamodel.managedView(entityViewClass);
+        ManagedViewTypeImplementor<DirtyStateTrackable> viewType = (ManagedViewTypeImplementor<DirtyStateTrackable>) metamodel.managedViewOrError(entityViewClass);
         EntityViewUpdater updater = getUpdater(viewType, null, null, null);
         return (SingularChangeModel<T>) new ViewChangeModel<>(viewType, updatableProxy, updater.getDirtyChecker());
     }
@@ -1080,7 +1080,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         }
         EntityViewProxy proxy = (EntityViewProxy) view;
         Class<?> entityViewClass = proxy.$$_getEntityViewClass();
-        ManagedViewTypeImplementor<?> viewType = metamodel.managedView(entityViewClass);
+        ManagedViewTypeImplementor<?> viewType = metamodel.managedViewOrError(entityViewClass);
         EntityViewUpdater updater = getUpdater(viewType, null, null, null);
         try {
             if (proxy.$$_isNew()) {
@@ -1168,7 +1168,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
         MutableStateTrackable updatableProxy = (MutableStateTrackable) view;
         Class<?> entityViewClass = updatableProxy.$$_getEntityViewClass();
-        ManagedViewTypeImplementor<?> viewType = metamodel.managedView(entityViewClass);
+        ManagedViewTypeImplementor<?> viewType = metamodel.managedViewOrError(entityViewClass);
         EntityViewUpdater updater = getUpdater(viewType, null, null, null);
         try {
             if (updatableProxy.$$_isNew()) {
@@ -1192,7 +1192,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
             throw new IllegalArgumentException("Can't flush new entity view to existing entity: " + view);
         }
         Class<?> entityViewClass = updatableProxy.$$_getEntityViewClass();
-        ManagedViewTypeImplementor<?> viewType = metamodel.managedView(entityViewClass);
+        ManagedViewTypeImplementor<?> viewType = metamodel.managedViewOrError(entityViewClass);
         EntityViewUpdater updater = getUpdater(viewType, null, null, null);
         try {
             updater.executeUpdate(context, entity, updatableProxy);
@@ -1209,7 +1209,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
         MutableStateTrackable updatableProxy = (MutableStateTrackable) view;
         Class<?> entityViewClass = updatableProxy.$$_getEntityViewClass();
-        ManagedViewTypeImplementor<?> viewType = metamodel.managedView(entityViewClass);
+        ManagedViewTypeImplementor<?> viewType = metamodel.managedViewOrError(entityViewClass);
         EntityViewUpdater updater = getUpdater(viewType, null, null, null);
         return updater.executePersist(context, updatableProxy);
     }
@@ -1432,7 +1432,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
 
     public EntityViewManager getSerializableDelegate(Class<?> entityViewClass) {
-        return serializableDelegates.get(proxyFactory.getProxy(this, metamodel.managedView(entityViewClass)));
+        return serializableDelegates.get(proxyFactory.getProxy(this, metamodel.managedViewOrError(entityViewClass)));
     }
 
     /**

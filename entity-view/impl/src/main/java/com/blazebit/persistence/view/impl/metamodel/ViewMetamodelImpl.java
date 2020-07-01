@@ -269,6 +269,15 @@ public class ViewMetamodelImpl implements ViewMetamodel {
     }
 
     @Override
+    public <X> ViewTypeImpl<X> viewOrError(Class<X> clazz) {
+        ViewTypeImpl<X> view = (ViewTypeImpl<X>) views.get(clazz);
+        if (view == null) {
+            throw new IllegalArgumentException("The class " + (clazz == null ? "null" : clazz.getName()) + " is not a view type!");
+        }
+        return view;
+    }
+
+    @Override
     public Set<ViewType<?>> getViews() {
         return new SetView<ViewType<?>>(views.values());
     }
@@ -284,6 +293,15 @@ public class ViewMetamodelImpl implements ViewMetamodel {
     }
 
     @Override
+    public <X> ManagedViewTypeImplementor<X> managedViewOrError(Class<X> clazz) {
+        ManagedViewTypeImplementor<X> view = (ManagedViewTypeImplementor<X>) managedViews.get(clazz);
+        if (view == null) {
+            throw new IllegalArgumentException("The class " + (clazz == null ? "null" : clazz.getName()) + " is not a managed view type!");
+        }
+        return view;
+    }
+
+    @Override
     public Set<ManagedViewType<?>> getManagedViews() {
         return new SetView<ManagedViewType<?>>(managedViews.values());
     }
@@ -292,6 +310,15 @@ public class ViewMetamodelImpl implements ViewMetamodel {
     @SuppressWarnings("unchecked")
     public <X> FlatViewTypeImpl<X> flatView(Class<X> clazz) {
         return (FlatViewTypeImpl<X>) flatViews.get(clazz);
+    }
+
+    @Override
+    public <X> FlatViewTypeImpl<X> flatViewOrError(Class<X> clazz) {
+        FlatViewTypeImpl<X> view = (FlatViewTypeImpl<X>) flatViews.get(clazz);
+        if (view == null) {
+            throw new IllegalArgumentException("The class " + (clazz == null ? "null" : clazz.getName()) + " is not a flat view type!");
+        }
+        return view;
     }
 
     @Override
