@@ -1265,11 +1265,13 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
     }
 
     Set<JoinNode> buildClause(StringBuilder sb, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes, boolean externalRepresentation, boolean ignoreCardinality, boolean lateralExample, List<String> optionalWhereConjuncts,
-                              List<String> whereConjuncts, Map<Class<?>, Map<String, DbmsModificationState>> explicitVersionEntities, Set<JoinNode> nodesToFetch, Set<JoinNode> alwaysIncludedNodes, JoinNode virtualRootNode) {
+                              List<String> whereConjuncts, Map<Class<?>, Map<String, DbmsModificationState>> explicitVersionEntities, Set<JoinNode> nodesToFetch, Set<JoinNode> alwaysIncludedNodes, JoinNode virtualRootNode, boolean renderFrom) {
         final boolean renderFetches = !clauseExclusions.contains(ClauseType.SELECT);
         collectionJoinNodes.clear();
         renderedJoins.clear();
-        sb.append(" FROM ");
+        if (renderFrom) {
+            sb.append(" FROM ");
+        }
 
         StringBuilder noJoinValuesNodesSb = new StringBuilder();
         StringBuilder tempSb = null;
@@ -1302,13 +1304,9 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                         if (externalRepresentation && queryBuilder instanceof AbstractUpdateCollectionCriteriaBuilder<?, ?, ?>) {
                             // Special rendering for the collection UPDATE statement
                             if (node.getParent() == virtualRootNode) {
-                                renderedJoins.add(node);
-                                // TODO: not sure if needed since applyImplicitJoins will already invoke that
-                                node.registerDependencies();
-                                addDefaultJoinsAndRenderJoinNode(sb, null, stack, node, false, clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, placeholderRequiringNodes, alwaysIncludedNodes, externalRepresentation, lateralExample);
-                                continue;
+                                isRootNode = true;
                             } else {
-                                isRootNode = node.getParent() == null || node.getParent().getParent() == virtualRootNode;
+                                isRootNode = node.getParent() == null || node.getParent() == virtualRootNode;
                             }
                         } else {
                             isRootNode = node.getParent() == virtualRootNode;

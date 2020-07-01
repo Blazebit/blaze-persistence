@@ -22,6 +22,7 @@ import javax.persistence.metamodel.ManagedType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.logging.Logger;
 
 /**
@@ -41,9 +42,9 @@ public class FlatViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements FlatV
         boolean supportsInterfaceEquals = true;
         for (AbstractMethodAttribute<?, ?> attribute : (Collection<AbstractMethodAttribute<?, ?>>) (Collection<?>) getAttributes()) {
             Method javaMethod = attribute.getJavaMethod();
-            if (!Modifier.isPublic(javaMethod.getModifiers()) && !getJavaType().getPackage().getName().equals(javaMethod.getDeclaringClass().getPackage().getName())) {
+            if (!Modifier.isPublic(javaMethod.getModifiers()) && !Objects.equals(getJavaType().getPackage(), javaMethod.getDeclaringClass().getPackage())) {
                 supportsInterfaceEquals = false;
-                LOG.warning("The method for the " + attribute.getLocation() + " is non-public and declared in a different package " + javaMethod.getDeclaringClass().getPackage().getName() + " than the view type " + getJavaType().getName() +
+                LOG.warning("The method for the " + attribute.getLocation() + " is non-public and declared in a different package " + javaMethod.getDeclaringClass().getPackage() + " than the view type " + getJavaType().getName() +
                         " which makes it impossible to allow checking for equality with user provided implementations of the view type. If you don't need that, you can ignore this warning.");
             }
         }

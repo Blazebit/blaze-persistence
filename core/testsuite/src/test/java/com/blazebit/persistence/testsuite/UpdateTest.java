@@ -135,7 +135,9 @@ public class UpdateTest extends AbstractCoreTest {
         });
     }
 
+    // NOTE: This requires advanced SQL support
     @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testImplicitJoin() {
         transactional(new TxVoidWork() {
             @Override
@@ -144,7 +146,7 @@ public class UpdateTest extends AbstractCoreTest {
                 cb.set("name", "NewD1");
                 cb.where("name").eq("D1");
                 cb.where("owner.name").eq("P1");
-                String expected = "UPDATE Document d SET d.name = :param_0 WHERE EXISTS (SELECT 1 FROM d.owner owner_1 WHERE d.name = :param_1 AND owner_1.name = :param_2)";
+                String expected = "UPDATE Document d SET d.name = :param_0 FROM Document d JOIN d.owner owner_1 WHERE d.name = :param_1 AND owner_1.name = :param_2";
 
                 assertEquals(expected, cb.getQueryString());
 
@@ -154,9 +156,9 @@ public class UpdateTest extends AbstractCoreTest {
         });
     }
 
-    // NOTE: MySQL doesn't allow referencing the same table that is updated again
+    // NOTE: This requires advanced SQL support
     @Test
-    @Category({ NoMySQL.class }) // Requires https://github.com/Blazebit/blaze-persistence/issues/693
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testMultipleDeepImplicitJoin() {
         transactional(new TxVoidWork() {
             @Override
@@ -166,15 +168,13 @@ public class UpdateTest extends AbstractCoreTest {
                 cb.where("name").eq("D1");
                 cb.where("owner.name").eq("P1");
                 cb.where("responsiblePerson.ownedDocuments.name").eq("D1");
-                String expected = "UPDATE Document d SET d.name = :param_0 WHERE EXISTS (" +
-                            "SELECT 1 " +
-                            "FROM d.owner owner_1, " +
-                            "d.responsiblePerson responsiblePerson_1 " +
-                            "LEFT JOIN responsiblePerson_1.ownedDocuments ownedDocuments_1 " +
-                            "WHERE d.name = :param_1 " +
-                            "AND owner_1.name = :param_2 " +
-                            "AND ownedDocuments_1.name = :param_3" +
-                        ")";
+                String expected = "UPDATE Document d SET d.name = :param_0 " +
+                        "FROM Document d JOIN d.owner owner_1 " +
+                        "LEFT JOIN d.responsiblePerson responsiblePerson_1 " +
+                        "LEFT JOIN responsiblePerson_1.ownedDocuments ownedDocuments_1 " +
+                        "WHERE d.name = :param_1 " +
+                        "AND owner_1.name = :param_2 " +
+                        "AND ownedDocuments_1.name = :param_3";
 
                 assertEquals(expected, cb.getQueryString());
 
@@ -203,7 +203,7 @@ public class UpdateTest extends AbstractCoreTest {
         });
     }
 
-    // NOTE: MySQL does not like subqueries in the set
+    // NOTE: MySQL does not like referencing the table that is being updated in a subquery in the set clause
     @Test
     @Category({ NoMySQL.class, NoEclipselink.class })
     // Eclipselink seems to not support subqueries in update

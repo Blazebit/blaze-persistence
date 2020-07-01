@@ -84,7 +84,7 @@ public class ToMultisetFunction implements JpqlFunction, JpqlFunctionProcessor<C
 
         String subquery = context.getArgument(0);
         int fromIndex = SqlUtils.indexOfFrom(subquery, 1);
-        String[] selectItemExpressions = SqlUtils.getSelectItemExpressions(subquery, SqlUtils.indexOfSelect(subquery));
+        String[] selectItemExpressions = SqlUtils.getSelectItemExpressions(subquery, SqlUtils.SELECT_FINDER.indexIn(subquery));
         String[] fields = createFields(selectItemExpressions.length);
         if (toJsonFunction == null) {
             toXmlFunction.render(context, fields, selectItemExpressions, subquery, fromIndex);

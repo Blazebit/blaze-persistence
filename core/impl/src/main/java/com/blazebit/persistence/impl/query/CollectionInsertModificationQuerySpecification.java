@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl.query;
 
+import com.blazebit.persistence.ReturningObjectBuilder;
 import com.blazebit.persistence.impl.AbstractCommonQueryBuilder;
 import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.DbmsModificationState;
@@ -42,9 +43,9 @@ public class CollectionInsertModificationQuerySpecification<T> extends Modificat
 
     public CollectionInsertModificationQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Query exampleQuery, Set<Parameter<?>> parameters, Set<String> parameterListNames,
                                                           List<String> keyRestrictedLeftJoinAliases, List<EntityFunctionNode> entityFunctionNodes, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes,
-                                                          boolean isEmbedded, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates, Map<String, String> returningAttributeBindingMap, Query insertExampleQuery, String insertSql, int cutoffColumns,
+                                                          boolean isEmbedded, String[] returningColumns, ReturningObjectBuilder<T> objectBuilder, Map<DbmsModificationState, String> includedModificationStates, Map<String, String> returningAttributeBindingMap, Query insertExampleQuery, String insertSql, int cutoffColumns,
                                                           boolean queryPlanCacheEnabled) {
-        super(commonQueryBuilder, baseQuery, exampleQuery, parameters, parameterListNames, keyRestrictedLeftJoinAliases, entityFunctionNodes, recursive, ctes, shouldRenderCteNodes, isEmbedded, returningColumns, includedModificationStates, returningAttributeBindingMap, queryPlanCacheEnabled);
+        super(commonQueryBuilder, baseQuery, exampleQuery, parameters, parameterListNames, keyRestrictedLeftJoinAliases, entityFunctionNodes, recursive, ctes, shouldRenderCteNodes, isEmbedded, returningColumns, objectBuilder, includedModificationStates, returningAttributeBindingMap, queryPlanCacheEnabled);
         this.insertExampleQuery = insertExampleQuery;
         this.insertSql = insertSql;
         this.cutoffColumns = cutoffColumns;
@@ -102,9 +103,11 @@ public class CollectionInsertModificationQuerySpecification<T> extends Modificat
         sqlSb.insert(0, insertSql);
         sqlSb.insert(insertSql.length(), ' ');
 
+        String dmlAffectedTable = insertSql.substring("insert into ".length(), insertSql.indexOf('('));
+
         StringBuilder withClause = applyCtes(sqlSb, baseQuery, participatingQueries);
         // NOTE: CTEs will only be added, if this is a subquery
-        Map<String, String> addedCtes = applyExtendedSql(sqlSb, false, isEmbedded, withClause, returningColumns, includedModificationStates);
+        Map<String, String> addedCtes = applyExtendedSql(sqlSb, false, isEmbedded, withClause, dmlAffectedTable, returningColumns, includedModificationStates);
         participatingQueries.add(baseQuery);
 
         // Some dbms like DB2 will need to wrap modification queries in select queries when using CTEs

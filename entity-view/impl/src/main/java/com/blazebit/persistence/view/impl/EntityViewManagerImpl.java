@@ -449,33 +449,32 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
 
     private static String getMetamodelClassName(Class<?> javaType) {
-        String packageName = javaType.getPackage().getName();
+        return getGeneratedClassName(javaType, META_MODEL_CLASS_NAME_SUFFIX);
+    }
+
+    private static String getGeneratedClassName(Class<?> javaType, String suffix) {
         String fqcn = javaType.getName();
-        StringBuilder sb = new StringBuilder(fqcn.length() + META_MODEL_CLASS_NAME_SUFFIX.length());
-        sb.append(packageName).append('.');
-        for (int i = packageName.length() + 1; i < fqcn.length(); i++) {
+        StringBuilder sb = new StringBuilder(fqcn.length() + suffix.length());
+        int i;
+        if (javaType.getPackage() == null) {
+            i = 0;
+        } else {
+            String packageName = javaType.getPackage().getName();
+            sb.append(packageName).append('.');
+            i = packageName.length() + 1;
+        }
+        for (; i < fqcn.length(); i++) {
             final char c = fqcn.charAt(i);
             if (c != '$') {
                 sb.append(c);
             }
         }
-        sb.append(META_MODEL_CLASS_NAME_SUFFIX);
+        sb.append(suffix);
         return sb.toString();
     }
 
     private static String getRelationClassName(Class<?> javaType) {
-        String packageName = javaType.getPackage().getName();
-        String fqcn = javaType.getName();
-        StringBuilder sb = new StringBuilder(fqcn.length() + RELATION_CLASS_NAME_SUFFIX.length());
-        sb.append(packageName).append('.');
-        for (int i = packageName.length() + 1; i < fqcn.length(); i++) {
-            final char c = fqcn.charAt(i);
-            if (c != '$') {
-                sb.append(c);
-            }
-        }
-        sb.append(RELATION_CLASS_NAME_SUFFIX);
-        return sb.toString();
+        return getGeneratedClassName(javaType, RELATION_CLASS_NAME_SUFFIX);
     }
 
     private void initializeStaticMetamodel(Set<String> errors, ManagedViewType<?> managedView, Map<Class<?>, Constructor<?>> relationConstructors) {
@@ -551,18 +550,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
 
     private static String getBuilderClassName(Class<?> javaType) {
-        String packageName = javaType.getPackage().getName();
-        String fqcn = javaType.getName();
-        StringBuilder sb = new StringBuilder(fqcn.length() + BUILDER_CLASS_NAME_SUFFIX.length());
-        sb.append(packageName).append('.');
-        for (int i = packageName.length() + 1; i < fqcn.length(); i++) {
-            final char c = fqcn.charAt(i);
-            if (c != '$') {
-                sb.append(c);
-            }
-        }
-        sb.append(BUILDER_CLASS_NAME_SUFFIX);
-        return sb.toString();
+        return getGeneratedClassName(javaType, BUILDER_CLASS_NAME_SUFFIX);
     }
 
     private static void initializeStaticBuilder(Set<String> errors, ManagedViewType<?> managedView, Map<ViewBuilderKey, Constructor<? extends EntityViewBuilder<?>>> viewBuilderConstructors) {

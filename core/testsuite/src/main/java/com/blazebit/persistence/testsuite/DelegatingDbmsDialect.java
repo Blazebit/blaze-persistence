@@ -20,9 +20,11 @@ import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.DbmsLimitHandler;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.spi.DeleteJoinStyle;
 import com.blazebit.persistence.spi.LateralStyle;
 import com.blazebit.persistence.spi.OrderByElement;
 import com.blazebit.persistence.spi.SetOperationType;
+import com.blazebit.persistence.spi.UpdateJoinStyle;
 import com.blazebit.persistence.spi.ValuesStrategy;
 
 import java.sql.PreparedStatement;
@@ -73,6 +75,11 @@ public class DelegatingDbmsDialect implements DbmsDialect {
     @Override
     public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
         return delegate.appendExtendedSql(sqlSb, statementType, isSubquery, isEmbedded, withClause, limit, offset, returningColumns, includedModificationStates);
+    }
+
+    @Override
+    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String dmlAffectedTable, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
+        return delegate.appendExtendedSql(sqlSb, statementType, isSubquery, isEmbedded, withClause, limit, offset, dmlAffectedTable, returningColumns, includedModificationStates);
     }
 
     @Override
@@ -208,6 +215,21 @@ public class DelegatingDbmsDialect implements DbmsDialect {
     @Override
     public LateralStyle getLateralStyle() {
         return delegate.getLateralStyle();
+    }
+
+    @Override
+    public String getPhysicalRowId() {
+        return delegate.getPhysicalRowId();
+    }
+
+    @Override
+    public DeleteJoinStyle getDeleteJoinStyle() {
+        return delegate.getDeleteJoinStyle();
+    }
+
+    @Override
+    public UpdateJoinStyle getUpdateJoinStyle() {
+        return delegate.getUpdateJoinStyle();
     }
 
     @Override

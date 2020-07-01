@@ -329,7 +329,10 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         if (distinct) {
             sb.append("DISTINCT ");
         }
+        buildSelectItems(sb, isInsertInto, externalRepresentation);
+    }
 
+    void buildSelectItems(StringBuilder sb, boolean isInsertInto, boolean externalRepresentation) {
         List<SelectInfo> infos = selectInfos;
         int size = selectInfos.size();
         if (size == 0) {

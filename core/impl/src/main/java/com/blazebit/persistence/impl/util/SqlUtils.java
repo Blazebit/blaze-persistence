@@ -16,9 +16,16 @@
 
 package com.blazebit.persistence.impl.util;
 
+import com.blazebit.persistence.parser.SQLParser;
+import com.blazebit.persistence.parser.SQLParserBaseVisitor;
+import com.blazebit.persistence.parser.SqlParserUtils;
+
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -33,8 +40,11 @@ public class SqlUtils {
     public static final String SET = " set ";
     public static final String FROM = " from ";
     public static final String JOIN = " join ";
+    public static final String ON = " on ";
     public static final String WITH = "with ";
     public static final String WHERE = " where ";
+    public static final String GROUP_BY = " group by ";
+    public static final String HAVING = " having ";
     public static final String ORDER_BY = " order by ";
     public static final String LIMIT = " limit ";
     public static final String FETCH_FIRST = " fetch first ";
@@ -45,8 +55,11 @@ public class SqlUtils {
     public static final PatternFinder SET_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(SET));
     public static final PatternFinder FROM_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(FROM));
     public static final PatternFinder JOIN_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(JOIN));
+    public static final PatternFinder ON_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(ON));
     public static final PatternFinder WITH_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(WITH));
     public static final PatternFinder WHERE_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(WHERE));
+    public static final PatternFinder GROUP_BY_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(GROUP_BY));
+    public static final PatternFinder HAVING_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(HAVING));
     public static final PatternFinder ORDER_BY_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(ORDER_BY));
     public static final PatternFinder LIMIT_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(LIMIT));
     public static final PatternFinder FETCH_FIRST_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(FETCH_FIRST));
@@ -159,6 +172,38 @@ public class SqlUtils {
 
             searchIndex = searchIndex + 1;
         }
+    }
+
+    public static void remapColumnExpressions(StringBuilder sqlSb, Map<String, String> columnExpressionRemappings) {
+        remapColumnExpressions(sqlSb, columnExpressionRemappings, 0, sqlSb.length());
+    }
+
+    public static int remapColumnExpressions(StringBuilder sqlSb, Map<String, String> columnExpressionRemappings, int startIndex, int endIndex) {
+        // Replace usages of the owner entities id columns by the corresponding join table id columns
+        for (Map.Entry<String, String> entry : columnExpressionRemappings.entrySet()) {
+            String sourceExpression = entry.getKey();
+            String targetExpression = entry.getValue();
+            if (sourceExpression.equals(targetExpression)) {
+                continue;
+            }
+            int index = startIndex;
+            while ((index = sqlSb.indexOf(sourceExpression, index)) != -1 && index < endIndex) {
+                if (index != 0 && Character.isJavaIdentifierPart(sqlSb.charAt(index - 1))) {
+                    index++;
+                    continue;
+                }
+                int sourceEndIndex = index + sourceExpression.length();
+                if (sourceEndIndex < endIndex && Character.isJavaIdentifierPart(sqlSb.charAt(sourceEndIndex))) {
+                    index++;
+                    continue;
+                }
+                sqlSb.replace(index, sourceEndIndex, targetExpression);
+                int delta = targetExpression.length() - sourceExpression.length();
+                index += delta;
+                endIndex += delta;
+            }
+        }
+        return endIndex;
     }
 
     private static boolean isInMainQuery(StringBuilder sb, int tableNameIndex) {
@@ -290,19 +335,97 @@ public class SqlUtils {
         return selectItems;
     }
 
-    public static CharSequence getSetElementSequence(CharSequence sql) {
-        int setIndex = SET_FINDER.indexIn(sql);
-        if (setIndex == -1) {
-            return null;
-        }
+    public static void buildAliasMappingForTopLevelSelects(CharSequence sql, String alias, Map<String, String> aliasMapping) {
+        final Set<String> definedTableAliases = new HashSet<>();
+        final Map<String, Set<String>> usedColumns = new HashMap<>();
+        try {
+            SqlParserUtils.visitSelectStatement(sql, new SQLParserBaseVisitor<Void>() {
 
-        setIndex += SET.length();
-        int whereIndex = indexOfWhere(sql);
-        if (whereIndex == -1) {
-            whereIndex = sql.length();
-        }
+                Boolean inTopLevelSelect;
+                boolean inSubquery;
 
-        return sql.subSequence(setIndex, whereIndex);
+                @Override
+                public Void visitSelect_list(SQLParser.Select_listContext ctx) {
+                    Boolean select = inTopLevelSelect;
+                    if (inTopLevelSelect == null) {
+                        inTopLevelSelect = true;
+                    } else if (inTopLevelSelect == Boolean.FALSE) {
+                        // We only care about the first select item list, we ignore others
+                        return null;
+                    }
+                    try {
+                        return super.visitSelect_list(ctx);
+                    } finally {
+                        if (select == null) {
+                            inTopLevelSelect = Boolean.FALSE;
+                        }
+                    }
+                }
+
+                @Override
+                public Void visitFull_column_name(SQLParser.Full_column_nameContext ctx) {
+                    SQLParser.Table_nameContext tableNameContext = ctx.table_name();
+                    SQLParser.IdContext idContext = ctx.id();
+                    columnUsage(tableNameContext, idContext);
+                    return super.visitFull_column_name(ctx);
+                }
+
+                @Override
+                public Void visitColumn_elem(SQLParser.Column_elemContext ctx) {
+                    SQLParser.Table_nameContext tableNameContext = ctx.table_name();
+                    SQLParser.IdContext idContext = ctx.id();
+                    columnUsage(tableNameContext, idContext);
+                    return super.visitColumn_elem(ctx);
+                }
+
+                private void columnUsage(SQLParser.Table_nameContext tableNameContext, SQLParser.IdContext idContext) {
+                    if (tableNameContext == null || idContext == null || !inTopLevelSelect) {
+                        return;
+                    }
+                    String tableName = tableNameContext.getText();
+                    Set<String> columns = usedColumns.get(tableName);
+                    if (columns == null) {
+                        usedColumns.put(tableName, columns = new HashSet<>());
+                    }
+                    columns.add(idContext.getText());
+                }
+
+                @Override
+                public Void visitSubquery(SQLParser.SubqueryContext ctx) {
+                    boolean subquery = !inSubquery;
+                    inSubquery = true;
+                    try {
+                        return super.visitSubquery(ctx);
+                    } finally {
+                        if (subquery) {
+                            inSubquery = false;
+                        }
+                    }
+                }
+
+                @Override
+                public Void visitTable_source_item(SQLParser.Table_source_itemContext ctx) {
+                    if (!inSubquery) {
+                        SQLParser.As_table_aliasContext aliasContext = ctx.as_table_alias();
+                        if (aliasContext != null) {
+                            definedTableAliases.add(aliasContext.table_alias().getText());
+                        }
+                    }
+                    return super.visitTable_source_item(ctx);
+                }
+            });
+        } catch (RuntimeException ex) {
+            throw new IllegalArgumentException("Couldn't parse SQL fragment: " + sql, ex);
+        }
+        for (Map.Entry<String, Set<String>> entry : usedColumns.entrySet()) {
+            if (definedTableAliases.contains(entry.getKey())) {
+                for (String column : entry.getValue()) {
+                    if (!aliasMapping.containsKey(entry.getKey() + "." + column)) {
+                        aliasMapping.put(entry.getKey() + "." + column, alias + ".c" + aliasMapping.size());
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -314,11 +437,15 @@ public class SqlUtils {
     public static int indexOfSelect(CharSequence sql) {
         int selectIndex = SELECT_FINDER.indexIn(sql);
         int withIndex = WITH_FINDER.indexIn(sql, 0, selectIndex);
-        if (withIndex == -1) {
+        if (withIndex == -1 && selectIndex == 0) {
             return selectIndex;
         }
 
-        return indexOf(SELECT_FINDER, sql, 0, withIndex);
+        return indexOf(SELECT_FINDER, sql, 0, Math.max(withIndex, 0));
+    }
+
+    public static int indexOfSet(CharSequence sql) {
+        return indexOf(SET_FINDER, sql, 0, 0);
     }
 
     public static int indexOfFrom(CharSequence sql) {
@@ -341,6 +468,14 @@ public class SqlUtils {
 
     public static int indexOfWhere(CharSequence sql, int start) {
         return indexOf(WHERE_FINDER, sql, start, 0);
+    }
+
+    public static int indexOfGroupBy(CharSequence sql, int start) {
+        return indexOf(GROUP_BY_FINDER, sql, start, 0);
+    }
+
+    public static int indexOfHaving(CharSequence sql, int start) {
+        return indexOf(HAVING_FINDER, sql, start, 0);
     }
 
     /**
@@ -373,6 +508,10 @@ public class SqlUtils {
 
     public static int indexOfFetchFirst(CharSequence sql, int start) {
         return indexOf(FETCH_FIRST_FINDER, sql, start, start);
+    }
+
+    public static int indexOfOn(CharSequence sql, int start) {
+        return indexOf(ON_FINDER, sql, start, start);
     }
 
     private static int indexOf(PatternFinder patternFinder, CharSequence sql, int start, int checkStart) {

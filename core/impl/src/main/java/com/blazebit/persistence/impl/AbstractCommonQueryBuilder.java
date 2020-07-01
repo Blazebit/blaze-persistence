@@ -2795,7 +2795,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                         }
                     }
                     valuesSb.setCharAt(valuesSb.length() - 1, ' ');
-                    dbmsDialect.appendExtendedSql(valuesSb, DbmsStatementType.SELECT, false, true, null, Integer.toString(valueCount + 1), "1", null, null);
+                    dbmsDialect.appendExtendedSql(valuesSb, DbmsStatementType.SELECT, false, true, null, Integer.toString(valueCount + 1), "1", null, null, null);
                 }
                 valuesSb.append(')');
                 valuesAliases = null;
@@ -3466,7 +3466,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             sb.append("SELECT 1");
             List<String> whereClauseConjuncts = new ArrayList<>();
             List<String> optionalWhereClauseConjuncts = new ArrayList<>();
-            joinManager.buildClause(sb, EnumSet.noneOf(ClauseType.class), null, false, false, false, true, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, nodesToFetch, Collections.EMPTY_SET, null);
+            joinManager.buildClause(sb, EnumSet.noneOf(ClauseType.class), null, false, false, false, true, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, nodesToFetch, Collections.EMPTY_SET, null, true);
         } finally {
             queryGenerator.setExternalRepresentation(originalExternalRepresentation);
         }
@@ -3577,6 +3577,10 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, JoinNode lateralJoinNode) {
+        buildBaseQueryString0(sbSelectFrom, externalRepresentation, lateralJoinNode);
+    }
+
+    protected final void buildBaseQueryString0(StringBuilder sbSelectFrom, boolean externalRepresentation, JoinNode lateralJoinNode) {
         boolean originalExternalRepresentation = queryGenerator.isExternalRepresentation();
         queryGenerator.setExternalRepresentation(externalRepresentation);
         try {
@@ -3584,7 +3588,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
             List<String> whereClauseConjuncts = new ArrayList<>();
             List<String> optionalWhereClauseConjuncts = new ArrayList<>();
-            joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, nodesToFetch, Collections.<JoinNode>emptySet(), null);
+            joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, nodesToFetch, Collections.<JoinNode>emptySet(), null, true);
 
             appendWhereClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, lateralJoinNode);
             appendGroupByClause(sbSelectFrom);

@@ -122,9 +122,8 @@ public class CollectionRoleDeleteTest extends AbstractCoreTest {
         });
     }
 
-    // NOTE: MySQL doesn't allow referencing the same table that is deleted again
     @Test
-    @Category({ NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class }) // Requires https://github.com/Blazebit/blaze-persistence/issues/693
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void deleteIndexedImplicitJoin() {
         DeleteCriteriaBuilder<Root> criteria = cbf.deleteCollection(em, Root.class, "r", "indexedNodes");
         criteria.where("r.name").eq("r");
@@ -140,15 +139,14 @@ public class CollectionRoleDeleteTest extends AbstractCoreTest {
         assertEquals(1, r.getIndexedNodesElementCollection().size());
     }
 
-    // NOTE: MySQL doesn't allow referencing the same table that is deleted again
     @Test
-    @Category({ NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class }) // Requires https://github.com/Blazebit/blaze-persistence/issues/693
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void deleteIndexedMultipleDeepImplicitJoin() {
         DeleteCriteriaBuilder<Root> criteria = cbf.deleteCollection(em, Root.class, "r", "indexedNodes");
         criteria.where("r.name").eq("r");
         criteria.where("r.indexedNodes.parent.name").eq("r");
 
-        assertEquals("DELETE FROM Root(indexedNodes) r LEFT JOIN r.indexedNodes.parent parent_1 WHERE r.name = :param_0 AND parent_1.name = :param_1", criteria.getQueryString());
+        assertEquals("DELETE FROM Root(indexedNodes) r USING Root(indexedNodes) r LEFT JOIN r.indexedNodes.parent parent_1 WHERE r.name = :param_0 AND parent_1.name = :param_1", criteria.getQueryString());
         int updated = criteria.executeUpdate();
         Root r = getRoot(em);
 

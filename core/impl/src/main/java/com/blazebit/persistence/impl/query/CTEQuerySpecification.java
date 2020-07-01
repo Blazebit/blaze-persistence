@@ -55,7 +55,7 @@ public class CTEQuerySpecification extends CustomQuerySpecification<Object> {
         String sqlQuery = extendedQuerySupport.getSql(em, baseQuery);
         StringBuilder sqlSb = applySqlTransformations(sqlQuery);
         // Need to inline LIMIT and OFFSET
-        dbmsDialect.appendExtendedSql(sqlSb, statementType, false, true, null, limit, offset, null, null);
+        dbmsDialect.appendExtendedSql(sqlSb, statementType, false, true, null, limit, offset, null, null, null);
         participatingQueries.add(baseQuery);
 
         this.sql = sqlSb.toString();

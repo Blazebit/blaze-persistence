@@ -23,7 +23,9 @@ import java.util.Map;
 import com.blazebit.persistence.spi.DbmsLimitHandler;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.spi.DeleteJoinStyle;
 import com.blazebit.persistence.spi.OrderByElement;
+import com.blazebit.persistence.spi.UpdateJoinStyle;
 
 /**
  * @author Christian Beikov
@@ -57,6 +59,16 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
     @Override
     public String getWithClause(boolean recursive) {
         return "with";
+    }
+
+    @Override
+    public DeleteJoinStyle getDeleteJoinStyle() {
+        return DeleteJoinStyle.MERGE;
+    }
+
+    @Override
+    public UpdateJoinStyle getUpdateJoinStyle() {
+        return UpdateJoinStyle.MERGE;
     }
 
     @Override
@@ -108,7 +120,7 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
-    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
+    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String dmlAffectedTable, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
         // since changes in DB2 will be visible to other queries, we need to preserve the old state if required
         boolean requiresOld = includedModificationStates != null && includedModificationStates.containsKey(DbmsModificationState.OLD);
         boolean addParenthesis = isSubquery && sqlSb.length() > 0 && sqlSb.charAt(0) != '(';

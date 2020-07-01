@@ -20,7 +20,9 @@ import java.util.Map;
 
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.spi.DeleteJoinStyle;
 import com.blazebit.persistence.spi.LateralStyle;
+import com.blazebit.persistence.spi.UpdateJoinStyle;
 import com.blazebit.persistence.spi.ValuesStrategy;
 
 /**
@@ -63,7 +65,7 @@ public class H2DbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
-    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
+    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String dmlAffectedTable, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
         boolean addParenthesis = isSubquery && sqlSb.length() > 0 && sqlSb.charAt(0) != '(';
         if (addParenthesis) {
             sqlSb.insert(0, '(');
@@ -118,6 +120,16 @@ public class H2DbmsDialect extends DefaultDbmsDialect {
     @Override
     public LateralStyle getLateralStyle() {
         return LateralStyle.NONE;
+    }
+
+    @Override
+    public DeleteJoinStyle getDeleteJoinStyle() {
+        return DeleteJoinStyle.MERGE;
+    }
+
+    @Override
+    public UpdateJoinStyle getUpdateJoinStyle() {
+        return UpdateJoinStyle.MERGE;
     }
 
     @Override

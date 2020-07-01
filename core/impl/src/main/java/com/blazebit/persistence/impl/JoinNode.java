@@ -100,9 +100,14 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
     private CTEInfo inlineCte;
     private CompoundPredicate onPredicate;
     private List<JoinNode> joinNodesNeedingTreatConjunct;
+    // The function to wrap around a rendered path with this join node as base
     private String deReferenceFunction;
+    // The attributes that are accessible for de-referencing. If other attributes are de-reference, disallowedDeReferenceUsed is set to true
     private Set<String> allowedAttributes;
+    // This is necessary when we re-render a join node into an exists subquery to emulate joins for collection DML statements
+    // We join the disallowedDeReferenceAlias against the original alias in the exists subquery
     private String disallowedDeReferenceAlias;
+    // This is set to true when rendering a path with a disallowed attribute, according to allowedAttributes, with this join node as base
     private boolean disallowedDeReferenceUsed;
     
     // Cache
@@ -869,7 +874,11 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
             }
             appendAlias(sb, renderTreat, externalRepresentation);
         } else {
-            sb.append(disallowedDeReferenceAlias);
+            if (disallowedDeReferenceAlias == null) {
+                appendAlias(sb, renderTreat, externalRepresentation);
+            } else {
+                sb.append(disallowedDeReferenceAlias);
+            }
             disallowedDeReferenceUsed = true;
         }
         // If we have a valuesTypeName, the property can only be "value" which is already handled in appendAlias

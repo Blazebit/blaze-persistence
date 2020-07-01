@@ -205,12 +205,20 @@ insert_statement : INSERT INTO entityName ( '.' collectionName )? '(' dml_attrib
 
 [source,antlr4]
 ----
-update_statement : UPDATE entityName ( '(' collectionName ')' )? ( AS? entityAlias )? SET dml_attribute '=' expression ( ',' dml_attribute '=' expression )* where_clause? returning_clause?
+update_from_clause
+    : FROM ( entityName '(' collectionName ')' ( AS? entityAlias )? ) (',' from_elements)?
+    | FROM from_elements
+    ;
+update_statement : UPDATE entityName ( '(' collectionName ')' )? ( AS? entityAlias )? SET dml_attribute '=' expression ( ',' dml_attribute '=' expression )* update_from_clause? where_clause? returning_clause?
 ----
 
 === Delete statement
 
 [source,antlr4]
 ----
-delete_statement : DELETE FROM? entityName ( '(' collectionName ')' )? ( AS? entityAlias )? where_clause? returning_clause?
+using_clause
+    : USING ( entityName '(' collectionName ')' ( AS? entityAlias )? ) (',' from_elements)?
+    | USING from_elements
+    ;
+delete_statement : DELETE FROM? entityName ( '(' collectionName ')' )? ( AS? entityAlias )? using_clause? where_clause? returning_clause?
 ----

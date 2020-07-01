@@ -123,7 +123,7 @@ public class DeleteTest extends AbstractCoreTest {
                 final DeleteCriteriaBuilder<Document> cb = cbf.delete(em, Document.class, "d")
                         .where("d.name").eq("D1")
                         .where("owner.name").eq("P1");
-                String expected = "DELETE FROM Document d WHERE EXISTS (SELECT 1 FROM d.owner owner_1 WHERE d.name = :param_0 AND owner_1.name = :param_1)";
+                String expected = "DELETE FROM Document d USING Document d JOIN d.owner owner_1 WHERE d.name = :param_0 AND owner_1.name = :param_1";
 
                 assertEquals(expected, cb.getQueryString());
 
@@ -135,7 +135,7 @@ public class DeleteTest extends AbstractCoreTest {
 
     // NOTE: MySQL doesn't allow referencing the same table that is deleted again
     @Test
-    @Category({ NoMySQL.class }) // Requires https://github.com/Blazebit/blaze-persistence/issues/693
+    @Category({ NoMySQL.class })
     public void testMultipleDeepImplicitJoin() {
         transactional(new TxVoidWork() {
             @Override
@@ -144,15 +144,31 @@ public class DeleteTest extends AbstractCoreTest {
                         .where("d.name").eq("D1")
                         .where("owner.name").eq("P1")
                         .where("responsiblePerson.ownedDocuments.name").eq("D1");
-                String expected = "DELETE FROM Document d WHERE EXISTS (" +
-                            "SELECT 1 " +
-                            "FROM d.owner owner_1, " +
-                            "d.responsiblePerson responsiblePerson_1 " +
-                            "LEFT JOIN responsiblePerson_1.ownedDocuments ownedDocuments_1 " +
-                            "WHERE d.name = :param_0 " +
-                            "AND owner_1.name = :param_1 " +
-                            "AND ownedDocuments_1.name = :param_2" +
-                        ")";
+                String expected = "DELETE FROM Document d USING Document d " +
+                        "JOIN d.owner owner_1 " +
+                        "LEFT JOIN d.responsiblePerson responsiblePerson_1 " +
+                        "LEFT JOIN responsiblePerson_1.ownedDocuments ownedDocuments_1 " +
+                        "WHERE d.name = :param_0 " +
+                        "AND owner_1.name = :param_1 " +
+                        "AND ownedDocuments_1.name = :param_2";
+
+                assertEquals(expected, cb.getQueryString());
+
+                int updateCount = cb.executeUpdate();
+                assertEquals(1, updateCount);
+            }
+        });
+    }
+
+    @Test
+    public void testExplicitJoin() {
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                final DeleteCriteriaBuilder<Document> cb = cbf.delete(em, Document.class, "d")
+                        .where("d.name").eq("D1")
+                        .where("owner.name").eq("P1");
+                String expected = "DELETE FROM Document d USING Document d JOIN d.owner owner_1 WHERE d.name = :param_0 AND owner_1.name = :param_1";
 
                 assertEquals(expected, cb.getQueryString());
 

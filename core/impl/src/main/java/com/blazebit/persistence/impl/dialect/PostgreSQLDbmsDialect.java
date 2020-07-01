@@ -25,7 +25,9 @@ import java.util.Map;
 import com.blazebit.persistence.spi.DbmsLimitHandler;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.spi.DeleteJoinStyle;
 import com.blazebit.persistence.spi.SetOperationType;
+import com.blazebit.persistence.spi.UpdateJoinStyle;
 
 /**
  * @author Christian Beikov
@@ -38,6 +40,16 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
 
     public PostgreSQLDbmsDialect(Map<Class<?>, String> childSqlTypes) {
         super(childSqlTypes);
+    }
+
+    @Override
+    public DeleteJoinStyle getDeleteJoinStyle() {
+        return DeleteJoinStyle.USING;
+    }
+
+    @Override
+    public UpdateJoinStyle getUpdateJoinStyle() {
+        return UpdateJoinStyle.FROM;
     }
 
     @Override
@@ -91,7 +103,7 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
-    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
+    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String dmlAffectedTable, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
         // since changes in PostgreSQL won't be visible to other queries, we need to create the new state if required
         boolean requiresNew = includedModificationStates != null && includedModificationStates.containsKey(DbmsModificationState.NEW);
         boolean addParenthesis = isSubquery && sqlSb.length() > 0 && sqlSb.charAt(0) != '(';
@@ -183,6 +195,7 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
                     sqlSb.append(",");
                 }
 
+                sqlSb.append(dmlAffectedTable).append('.');
                 sqlSb.append(returningColumns[i]);
             }
         }

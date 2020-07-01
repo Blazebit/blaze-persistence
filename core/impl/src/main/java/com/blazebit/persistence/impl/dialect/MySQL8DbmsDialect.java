@@ -18,7 +18,9 @@ package com.blazebit.persistence.impl.dialect;
 
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.spi.DeleteJoinStyle;
 import com.blazebit.persistence.spi.LateralStyle;
+import com.blazebit.persistence.spi.UpdateJoinStyle;
 
 import java.util.Map;
 
@@ -59,6 +61,16 @@ public class MySQL8DbmsDialect extends MySQLDbmsDialect {
     }
 
     @Override
+    public DeleteJoinStyle getDeleteJoinStyle() {
+        return DeleteJoinStyle.FROM;
+    }
+
+    @Override
+    public UpdateJoinStyle getUpdateJoinStyle() {
+        return UpdateJoinStyle.REFERENCE;
+    }
+
+    @Override
     public String getWithClause(boolean recursive) {
         if (recursive) {
             return "with recursive";
@@ -68,7 +80,7 @@ public class MySQL8DbmsDialect extends MySQLDbmsDialect {
     }
 
     @Override
-    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
+    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String dmlAffectedTable, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
         boolean addParenthesis = isSubquery && sqlSb.length() > 0 && sqlSb.charAt(0) != '(';
         if (addParenthesis) {
             sqlSb.insert(0, '(');

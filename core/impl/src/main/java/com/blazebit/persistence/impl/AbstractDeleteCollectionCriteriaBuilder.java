@@ -22,17 +22,16 @@ import com.blazebit.persistence.ReturningBuilder;
 import com.blazebit.persistence.ReturningObjectBuilder;
 import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.impl.function.colldml.CollectionDmlSupportFunction;
-import com.blazebit.persistence.impl.function.entity.ValuesEntity;
 import com.blazebit.persistence.impl.query.CTENode;
 import com.blazebit.persistence.impl.query.CollectionDeleteModificationQuerySpecification;
 import com.blazebit.persistence.impl.query.CustomReturningSQLTypedQuery;
 import com.blazebit.persistence.impl.query.CustomSQLQuery;
 import com.blazebit.persistence.impl.query.QuerySpecification;
-import com.blazebit.persistence.impl.query.ReturningCollectionDeleteModificationQuerySpecification;
 import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.DbmsModificationState;
+import com.blazebit.persistence.spi.DeleteJoinStyle;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
@@ -74,9 +73,18 @@ public abstract class AbstractDeleteCollectionCriteriaBuilder<T, X extends BaseD
         // Also, this validates the collection actually exists
         JoinNode join = joinManager.join(entityAlias + "." + collectionName, JoinManager.COLLECTION_DML_BASE_QUERY_ALIAS, JoinType.LEFT, false, true, null);
         if (collectionAttribute.getJoinTable() != null) {
+            // We need to mark the driving table aliases specially to avoid replacing shadowed aliases of subqueries
+            // Since we use a separate select statement for query template generation, we introduce an SQL alias which we need to replace with the table name later
             join.setDeReferenceFunction(mainQuery.jpaProvider.getCustomFunctionInvocation(CollectionDmlSupportFunction.FUNCTION_NAME, 1));
             join.getParent().setDeReferenceFunction(mainQuery.jpaProvider.getCustomFunctionInvocation(CollectionDmlSupportFunction.FUNCTION_NAME, 1));
 
+            // In case we don't support joining in a delete statement, we need a way to reference the driving table in an exists subquery which we do by specially marking the correlation expressions
+            if (mainQuery.dbmsDialect.getDeleteJoinStyle() == DeleteJoinStyle.NONE || mainQuery.dbmsDialect.getDeleteJoinStyle() == DeleteJoinStyle.MERGE) {
+                join.setDisallowedDeReferenceAlias(aliasManager.generateRootAlias(join.getAlias()));
+                join.getParent().setDisallowedDeReferenceAlias(aliasManager.generateRootAlias(join.getParent().getAlias()));
+            }
+
+            // We need to track if "disallowed" attributes are de-referenced which requires a different rendering strategy because a join is needed
             JoinTable joinTable = collectionAttribute.getJoinTable();
             Set<String> idAttributeNames = joinTable.getIdAttributeNames();
             Set<String> ownerAttributes = new HashSet<>(idAttributeNames.size());
@@ -89,7 +97,6 @@ public abstract class AbstractDeleteCollectionCriteriaBuilder<T, X extends BaseD
             }
 
             join.getParent().setAllowedDeReferences(ownerAttributes);
-            join.getParent().setDisallowedDeReferenceAlias(aliasManager.generateRootAlias(join.getParent().getAlias()));
 
             Set<String> elementAttributes = new HashSet<>();
             if (((PluralAttribute<?, ?, ?>) collectionAttribute.getAttribute()).getElementType() instanceof ManagedType<?>) {
@@ -101,7 +108,6 @@ public abstract class AbstractDeleteCollectionCriteriaBuilder<T, X extends BaseD
                 }
             }
             join.setAllowedDeReferences(elementAttributes);
-            join.setDisallowedDeReferenceAlias(aliasManager.generateRootAlias(join.getAlias()));
         }
         this.elementType = join.getType();
         if (collectionAttribute.getJoinTable() == null && "".equals(collectionAttribute.getMappedBy())) {
@@ -125,16 +131,27 @@ public abstract class AbstractDeleteCollectionCriteriaBuilder<T, X extends BaseD
     @Override
     protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, JoinNode lateralJoinNode) {
         JoinNode rootNode = joinManager.getRoots().get(0);
-
+        JoinTreeNode collectionTreeNode = rootNode.getNodes().get(collectionName);
+        boolean hasOtherJoinNodes = joinManager.getRoots().size() > 1
+                || rootNode.getNodes().size() > 1
+                || !rootNode.getTreatedJoinNodes().isEmpty()
+                || !rootNode.getEntityJoinNodes().isEmpty()
+                || collectionTreeNode.getJoinNodes().size() > 1
+                || collectionTreeNode.getDefaultNode().hasChildNodes();
         if (externalRepresentation) {
-            sbSelectFrom.append("DELETE");
+            sbSelectFrom.append("DELETE FROM ");
+            sbSelectFrom.append(entityType.getName());
+            sbSelectFrom.append('(').append(collectionName).append(") ").append(entityAlias);
             if (collectionAttribute.getJoinTable() == null) {
                 rootNode.getAliasInfo().setAlias(entityAlias);
             }
             rootNode.getNodes().get(collectionName).getDefaultNode().getAliasInfo().setAlias(entityAlias + "." + collectionName);
             List<String> whereClauseConjuncts = new ArrayList<>();
             List<String> optionalWhereClauseConjuncts = new ArrayList<>();
-            joinManager.buildClause(sbSelectFrom, Collections.<ClauseType>emptySet(), null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, nodesToFetch, Collections.<JoinNode>emptySet(), rootNode);
+            if (hasOtherJoinNodes) {
+                sbSelectFrom.append(" USING ");
+                joinManager.buildClause(sbSelectFrom, Collections.<ClauseType>emptySet(), null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, nodesToFetch, Collections.<JoinNode>emptySet(), rootNode, false);
+            }
             appendWhereClause(sbSelectFrom, externalRepresentation);
             for (String whereClauseConjunct : whereClauseConjuncts) {
                 sbSelectFrom.append(" AND ").append(whereClauseConjunct);
@@ -153,36 +170,37 @@ public abstract class AbstractDeleteCollectionCriteriaBuilder<T, X extends BaseD
             // The internal representation is just a "hull" to hold the parameters at the appropriate positions
             sbSelectFrom.append("SELECT 1");
             StringBuilder tempSb = new StringBuilder();
+            // During rendering we discover if the a disallowed de-reference is used, so we render this in to a temporary string builder
             appendWhereClause(tempSb, externalRepresentation);
 
-            JoinTreeNode collectionTreeNode = rootNode.getNodes().get(collectionName);
-            boolean hasOtherJoinNodes = joinManager.getRoots().size() > 1
-                    || rootNode.getNodes().size() > 1
-                    || !rootNode.getTreatedJoinNodes().isEmpty()
-                    || !rootNode.getEntityJoinNodes().isEmpty()
-                    || collectionTreeNode.getJoinNodes().size() > 1
-                    || collectionTreeNode.getDefaultNode().hasChildNodes();
             if (hasOtherJoinNodes || rootNode.isDisallowedDeReferenceUsed() || collectionTreeNode.getDefaultNode().isDisallowedDeReferenceUsed()) {
-                sbSelectFrom.append(" FROM ");
-                sbSelectFrom.append(entityType.getName());
-                sbSelectFrom.append(' ');
-                sbSelectFrom.append(entityAlias);
-                sbSelectFrom.append(" LEFT JOIN ");
-                sbSelectFrom.append(entityAlias).append('.').append(collectionName)
-                        .append(' ').append(JoinManager.COLLECTION_DML_BASE_QUERY_ALIAS);
-                sbSelectFrom.append(" WHERE EXISTS (SELECT 1");
-                List<String> whereClauseConjuncts = new ArrayList<>();
-                List<String> optionalWhereClauseConjuncts = new ArrayList<>();
-                joinManager.buildClause(sbSelectFrom, Collections.<ClauseType>emptySet(), null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, nodesToFetch, Collections.<JoinNode>emptySet(), rootNode);
-                sbSelectFrom.append(tempSb);
-                for (String whereClauseConjunct : whereClauseConjuncts) {
-                    sbSelectFrom.append(" AND ").append(whereClauseConjunct);
+                if (mainQuery.dbmsDialect.getDeleteJoinStyle() == DeleteJoinStyle.NONE || mainQuery.dbmsDialect.getDeleteJoinStyle() == DeleteJoinStyle.MERGE) {
+                    sbSelectFrom.append(" FROM ");
+                    sbSelectFrom.append(entityType.getName());
+                    sbSelectFrom.append(' ');
+                    sbSelectFrom.append(entityAlias);
+                    sbSelectFrom.append(" LEFT JOIN ");
+                    sbSelectFrom.append(entityAlias).append('.').append(collectionName)
+                            .append(' ').append(JoinManager.COLLECTION_DML_BASE_QUERY_ALIAS);
+                    sbSelectFrom.append(" WHERE EXISTS (SELECT 1");
+                    List<String> whereClauseConjuncts = new ArrayList<>();
+                    List<String> optionalWhereClauseConjuncts = new ArrayList<>();
+                    joinManager.buildClause(sbSelectFrom, Collections.<ClauseType>emptySet(), null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, nodesToFetch, Collections.<JoinNode>emptySet(), rootNode, true);
+                    sbSelectFrom.append(tempSb);
+                    for (String whereClauseConjunct : whereClauseConjuncts) {
+                        sbSelectFrom.append(" AND ").append(whereClauseConjunct);
+                    }
+                    sbSelectFrom.append(')');
+                } else {
+                    List<String> whereClauseConjuncts = new ArrayList<>();
+                    List<String> optionalWhereClauseConjuncts = new ArrayList<>();
+                    joinManager.buildClause(sbSelectFrom, Collections.<ClauseType>emptySet(), null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, nodesToFetch, Collections.<JoinNode>emptySet(), rootNode, true);
+                    appendWhereClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, lateralJoinNode);
                 }
-                sbSelectFrom.append(')');
             } else {
                 List<String> whereClauseConjuncts = new ArrayList<>();
                 List<String> optionalWhereClauseConjuncts = new ArrayList<>();
-                joinManager.buildClause(sbSelectFrom, Collections.<ClauseType>emptySet(), null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, nodesToFetch, Collections.<JoinNode>emptySet(), null);
+                joinManager.buildClause(sbSelectFrom, Collections.<ClauseType>emptySet(), null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, nodesToFetch, Collections.<JoinNode>emptySet(), null, true);
                 sbSelectFrom.append(tempSb);
                 for (String whereClauseConjunct : whereClauseConjuncts) {
                     sbSelectFrom.append(" AND ").append(whereClauseConjunct);
@@ -254,11 +272,14 @@ public abstract class AbstractDeleteCollectionCriteriaBuilder<T, X extends BaseD
         int joinTableIndex = SqlUtils.indexOfTableName(sql, joinTable.getTableName());
         String collectionAlias = SqlUtils.extractAlias(sql, joinTableIndex + joinTable.getTableName().length());
 
-        String deleteSql = "delete from " + joinTable.getTableName();
+        String tableToDelete = joinTable.getTableName();
+        String tablePrefix = mainQuery.dbmsDialect.getDeleteJoinStyle() == DeleteJoinStyle.FROM ? collectionAlias : tableToDelete;
         Map<String, String> columnExpressionRemappings = new HashMap<>(joinTable.getIdColumnMappings().size());
+        List<String> joinTableIdColumns = new ArrayList<>();
         if (joinTable.getKeyColumnMappings() != null) {
             for (Map.Entry<String, String> entry : joinTable.getKeyColumnMappings().entrySet()) {
-                columnExpressionRemappings.put(CollectionDmlSupportFunction.FUNCTION_NAME + "(" + collectionAlias + "." + entry.getValue() + ")", joinTable.getTableName() + "." + entry.getKey());
+                joinTableIdColumns.add(entry.getKey());
+                columnExpressionRemappings.put(CollectionDmlSupportFunction.FUNCTION_NAME + "(" + collectionAlias + "." + entry.getValue() + ")", tablePrefix + "." + entry.getKey());
             }
         }
 
@@ -267,10 +288,11 @@ public abstract class AbstractDeleteCollectionCriteriaBuilder<T, X extends BaseD
             columnExpressionRemappings.put(ownerAlias + "." + discriminatorColumnCheck[0] + "=" + discriminatorColumnCheck[1], "1=1");
         }
         for (Map.Entry<String, String> entry : joinTable.getIdColumnMappings().entrySet()) {
-            columnExpressionRemappings.put(CollectionDmlSupportFunction.FUNCTION_NAME + "(" + ownerAlias + "." + entry.getValue() + ")", joinTable.getTableName() + "." + entry.getKey());
+            joinTableIdColumns.add(entry.getKey());
+            columnExpressionRemappings.put(CollectionDmlSupportFunction.FUNCTION_NAME + "(" + ownerAlias + "." + entry.getValue() + ")", tablePrefix + "." + entry.getKey());
         }
         for (Map.Entry<String, String> entry : joinTable.getTargetColumnMappings().entrySet()) {
-            columnExpressionRemappings.put(CollectionDmlSupportFunction.FUNCTION_NAME + "(" + targetAlias + "." + entry.getValue() + ")", joinTable.getTableName() + "." + entry.getKey());
+            columnExpressionRemappings.put(CollectionDmlSupportFunction.FUNCTION_NAME + "(" + targetAlias + "." + entry.getValue() + ")", tablePrefix + "." + entry.getKey());
         }
         // If the id attribute is an embedded type, there is the possibility that row value expressions are used which we need to handle as well
         Set<SingularAttribute<?, ?>> idAttributes = JpaMetamodelUtils.getIdAttributes(entityType);
@@ -281,7 +303,7 @@ public abstract class AbstractDeleteCollectionCriteriaBuilder<T, X extends BaseD
             rightSb.append("(");
             for (Map.Entry<String, String> entry : joinTable.getIdColumnMappings().entrySet()) {
                 leftSb.append(ownerAlias).append('.').append(entry.getValue()).append(", ");
-                rightSb.append(joinTable.getTableName()).append('.').append(entry.getKey()).append(',');
+                rightSb.append(tablePrefix).append('.').append(entry.getKey()).append(',');
             }
             leftSb.setLength(leftSb.length() - 2);
             leftSb.append("))");
@@ -289,55 +311,28 @@ public abstract class AbstractDeleteCollectionCriteriaBuilder<T, X extends BaseD
             columnExpressionRemappings.put(leftSb.toString(), rightSb.toString());
         }
 
-        if (returningColumns == null) {
-            return new CollectionDeleteModificationQuerySpecification(
-                    this,
-                    baseQuery,
-                    exampleQuery,
-                    parameterManager.getParameters(),
-                    parameterListNames,
-                    mainQuery.cteManager.isRecursive(),
-                    ctes,
-                    shouldRenderCteNodes,
-                    isEmbedded,
-                    returningColumns,
-                    includedModificationStates,
-                    returningAttributeBindingMap,
-                    getDeleteExampleQuery(),
-                    deleteSql,
-                    columnExpressionRemappings,
-                    mainQuery.getQueryConfiguration().isQueryPlanCacheEnabled()
-            );
-        } else {
-            return new ReturningCollectionDeleteModificationQuerySpecification<>(
-                    this,
-                    baseQuery,
-                    exampleQuery,
-                    parameterManager.getParameters(),
-                    parameterListNames,
-                    mainQuery.cteManager.isRecursive(),
-                    ctes,
-                    shouldRenderCteNodes,
-                    isEmbedded,
-                    returningColumns,
-                    includedModificationStates,
-                    returningAttributeBindingMap,
-                    getDeleteExampleQuery(),
-                    deleteSql,
-                    columnExpressionRemappings,
-                    objectBuilder,
-                    mainQuery.getQueryConfiguration().isQueryPlanCacheEnabled()
-            );
-        }
-    }
-
-    protected Query getDeleteExampleQuery() {
-        // This is the query we use as "hull" to put other sqls into
-        // We chose ValuesEntity as deletion base because it is known to be non-polymorphic
-        // We could have used the owner entity type as well, but at the time of writing,
-        // it wasn't clear if problems might arise when the entity type were polymorphic
-        String exampleQueryString = "DELETE FROM " + ValuesEntity.class.getSimpleName();
-        return em.createQuery(exampleQueryString);
+        return new CollectionDeleteModificationQuerySpecification(
+                this,
+                baseQuery,
+                exampleQuery,
+                parameterManager.getParameters(),
+                parameterListNames,
+                mainQuery.cteManager.isRecursive(),
+                ctes,
+                shouldRenderCteNodes,
+                isEmbedded,
+                returningColumns,
+                objectBuilder,
+                includedModificationStates,
+                returningAttributeBindingMap,
+                mainQuery.getQueryConfiguration().isQueryPlanCacheEnabled(),
+                tableToDelete,
+                collectionAlias,
+                joinTableIdColumns.toArray(new String[0]),
+                false,
+                getDeleteExampleQuery(),
+                columnExpressionRemappings
+        );
     }
 
 }

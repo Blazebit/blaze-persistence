@@ -77,8 +77,28 @@ public interface DbmsDialect {
      * @param returningColumns The columns which the sql should return or null if none
      * @param includedModificationStates The modification states of the returned columns for which additional CTEs should be generated mapped to the expected CTE names
      * @return Generated CTEs queries for the requested modification states
+     * @see #appendExtendedSql(StringBuilder, DbmsStatementType, boolean, boolean, StringBuilder, String, String, String, String[], Map)
+     * @deprecated Use {@link #appendExtendedSql(StringBuilder, DbmsStatementType, boolean, boolean, StringBuilder, String, String, String, String[], Map)} instead
      */
     public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates);
+
+    /**
+     * Appends the with clause to the sql string builder.
+     *
+     * @param sqlSb The sql string builder to which the with clause should be append to
+     * @param statementType The type of the statement in the sql string builder
+     * @param isSubquery True if the query in the sql string builder is a subquery, false otherwise
+     * @param isEmbedded True if the query in the sql string builder will be embedded in a clause, false otherwise
+     * @param withClause The with clause which should be appended, or null if none
+     * @param limit The limit for the limit clause, or null if no limit
+     * @param offset The offset for the offset clause, or null if no offset
+     * @param dmlAffectedTable The table that is affected by a DML statement if this is a DML statement or null
+     * @param returningColumns The columns which the sql should return or null if none
+     * @param includedModificationStates The modification states of the returned columns for which additional CTEs should be generated mapped to the expected CTE names
+     * @return Generated CTEs queries for the requested modification states
+     * @since 1.5.0
+     */
+    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String dmlAffectedTable, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates);
 
     /**
      * Connects the given operands with the given set operation and appends that to the sql string builder.
@@ -320,6 +340,30 @@ public interface DbmsDialect {
     public LateralStyle getLateralStyle();
 
     /**
+     * Returns the name of the physical row id if the DBMS has such a concept, otherwise null.
+     *
+     * @return the name of the physical row id if the DBMS has such a concept, otherwise null
+     * @since 1.5.0
+     */
+    public String getPhysicalRowId();
+
+    /**
+     * Returns the delete join style that is supported by the dbms.
+     *
+     * @return the delete join style that is supported by the dbms
+     * @since 1.5.0
+     */
+    public DeleteJoinStyle getDeleteJoinStyle();
+
+    /**
+     * Returns the update join style that is supported by the dbms.
+     *
+     * @return the update join style that is supported by the dbms
+     * @since 1.5.0
+     */
+    public UpdateJoinStyle getUpdateJoinStyle();
+
+    /**
      * Returns true if the multiset implementation for the dbms supports exists and supports arbitrary length.
      *
      * @return whether the multiset implementation for the dbms supports exists and supports arbitrary length
@@ -379,7 +423,7 @@ public interface DbmsDialect {
     public boolean needsReturningSqlTypes();
 
     /**
-     * TODO: documentation.
+     * Returns the flags to pass to {@link java.sql.Connection#prepareStatement(String, int)} for configuring that column values are returned.
      *
      * @return The prepare flags
      * @since 1.2.0
@@ -387,10 +431,10 @@ public interface DbmsDialect {
     public int getPrepareFlags();
 
     /**
-     * TODO: documentation.
+     * Configures the prepared statement with the return types of the columns to be returned.
      *
-     * @param ps TODO: documentation
-     * @param returningSqlTypes TODO: documentation
+     * @param ps The prepared statement to prepare
+     * @param returningSqlTypes The SQL types of the column values that should be returned
      * @return The prepared statement
      * @throws SQLException When preparing the statement fails
      * @since 1.2.0
@@ -398,9 +442,9 @@ public interface DbmsDialect {
     public PreparedStatement prepare(PreparedStatement ps, int[] returningSqlTypes) throws SQLException;
 
     /**
-     * TODO: documentation.
+     * Extracts the result set for the columns that are returned from a DML statement.
      *
-     * @param ps TODO: documentation
+     * @param ps The prepared statement
      * @return The result set for the returning clause
      * @throws SQLException When extracting from the statement fails
      * @since 1.2.0

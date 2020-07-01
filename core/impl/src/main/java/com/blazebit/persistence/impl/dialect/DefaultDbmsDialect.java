@@ -32,9 +32,11 @@ import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.DbmsLimitHandler;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.spi.DeleteJoinStyle;
 import com.blazebit.persistence.spi.LateralStyle;
 import com.blazebit.persistence.spi.OrderByElement;
 import com.blazebit.persistence.spi.SetOperationType;
+import com.blazebit.persistence.spi.UpdateJoinStyle;
 import com.blazebit.persistence.spi.ValuesStrategy;
 
 /**
@@ -166,8 +168,23 @@ public class DefaultDbmsDialect implements DbmsDialect {
     }
 
     @Override
+    public String getPhysicalRowId() {
+        return null;
+    }
+
+    @Override
     public LateralStyle getLateralStyle() {
         return LateralStyle.LATERAL;
+    }
+
+    @Override
+    public DeleteJoinStyle getDeleteJoinStyle() {
+        return DeleteJoinStyle.NONE;
+    }
+
+    @Override
+    public UpdateJoinStyle getUpdateJoinStyle() {
+        return UpdateJoinStyle.NONE;
     }
 
     @Override
@@ -188,9 +205,13 @@ public class DefaultDbmsDialect implements DbmsDialect {
             return "with";
         }
     }
-
     @Override
     public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
+        return appendExtendedSql(sqlSb, statementType, isSubquery, isEmbedded, withClause, limit, offset, null, returningColumns, includedModificationStates);
+    }
+
+    @Override
+    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String dmlAffectedTable, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
         boolean addParenthesis = isSubquery && sqlSb.length() > 0 && sqlSb.charAt(0) != '(';
         if (addParenthesis) {
             sqlSb.insert(0, '(');
@@ -296,8 +317,7 @@ public class DefaultDbmsDialect implements DbmsDialect {
         String[] aliases = null;
 
         if (needsAliasInSetOrderBy()) {
-            int selectIndex = SqlUtils.indexOfSelect(operands.get(0));
-            aliases = SqlUtils.getSelectItemAliases(operands.get(0), selectIndex);
+            aliases = SqlUtils.getSelectItemAliases(operands.get(0), SqlUtils.SELECT_FINDER.indexIn(operands.get(0)));
         }
 
         for (String operand : operands) {
@@ -307,8 +327,7 @@ public class DefaultDbmsDialect implements DbmsDialect {
                 wasFirst = true;
                 if (emulate) {
                     if (aliases == null) {
-                        int selectIndex = SqlUtils.indexOfSelect(operand);
-                        aliases = SqlUtils.getSelectItemAliases(operand, selectIndex);
+                        aliases = SqlUtils.getSelectItemAliases(operand, SqlUtils.indexOfSelect(operand));
                     }
 
                     sqlSb.append(select);

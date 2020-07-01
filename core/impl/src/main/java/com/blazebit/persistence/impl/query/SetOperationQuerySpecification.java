@@ -118,7 +118,7 @@ public class SetOperationQuerySpecification<T> extends CustomQuerySpecification<
         dbmsDialect.appendSet(sqlSb, operator, nested, setOperands, orderByElements, limit, offset);
         StringBuilder withClause = applyCtes(sqlSb, baseQuery, cteQueries);
         // No limit/offset here since that has been taken care of before
-        Map<String, String> addedCtes = dbmsDialect.appendExtendedSql(sqlSb, statementType, false, false, withClause, null, null, null, null);
+        Map<String, String> addedCtes = dbmsDialect.appendExtendedSql(sqlSb, statementType, false, false, withClause, null, null, null, null, null);
         cteQueries.addAll(participatingQueries);
         participatingQueries = cteQueries;
 
