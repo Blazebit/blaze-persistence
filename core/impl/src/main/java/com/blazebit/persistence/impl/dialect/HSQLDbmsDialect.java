@@ -20,7 +20,9 @@ import java.util.Map;
 
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.spi.DeleteJoinStyle;
 import com.blazebit.persistence.spi.LateralStyle;
+import com.blazebit.persistence.spi.UpdateJoinStyle;
 import com.blazebit.persistence.spi.ValuesStrategy;
 
 /**
@@ -64,12 +66,22 @@ public class HSQLDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
-    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
+    public DeleteJoinStyle getDeleteJoinStyle() {
+        return DeleteJoinStyle.MERGE;
+    }
+
+    @Override
+    public UpdateJoinStyle getUpdateJoinStyle() {
+        return UpdateJoinStyle.MERGE;
+    }
+
+    @Override
+    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String dmlAffectedTable, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
         if (isSubquery && returningColumns != null) {
             throw new IllegalArgumentException("Returning columns in a subquery is not possible for this dbms!");
         }
         
-        return super.appendExtendedSql(sqlSb, statementType, isSubquery, isEmbedded, withClause, limit, offset, returningColumns, includedModificationStates);
+        return super.appendExtendedSql(sqlSb, statementType, isSubquery, isEmbedded, withClause, limit, offset, dmlAffectedTable, returningColumns, includedModificationStates);
     }
     
 }

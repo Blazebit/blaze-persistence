@@ -14,15 +14,29 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence;
+package com.blazebit.persistence.spi;
 
 /**
- * A builder for modification queries.
+ * The possible delete join styles.
  *
- * @param <X> The concrete builder type
  * @author Christian Beikov
- * @since 1.1.0
+ * @since 1.5.0
  */
-public interface BaseModificationCriteriaBuilder<X extends BaseModificationCriteriaBuilder<X>> extends FromBuilder<X>, WhereBuilder<X> {
-
+public enum DeleteJoinStyle {
+    /**
+     * No support for joins in delete statements.
+     */
+    NONE,
+    /**
+     * Requires a USING clause for table references.
+     */
+    USING,
+    /**
+     * Requires a FROM clause for table references.
+     */
+    FROM,
+    /**
+     * Requires a MERGE statement.
+     */
+    MERGE;
 }

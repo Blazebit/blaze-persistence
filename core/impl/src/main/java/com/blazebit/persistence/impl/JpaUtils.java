@@ -74,7 +74,7 @@ public final class JpaUtils {
         return attribute instanceof PluralAttribute<?, ?, ?> && ((PluralAttribute<?, ?, ?>) attribute).getElementType().getPersistenceType() == Type.PersistenceType.BASIC;
     }
 
-    public static void expandBindings(Map<String, Integer> bindingMap, Map<String, String> columnBindingMap, Map<String, ExtendedAttribute<?, ?>> attributeEntries, ClauseType clause, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder, String keyFunctionExpression) {
+    public static void expandBindings(Map<String, Integer> bindingMap, Map<String, String> columnBindingMap, Map<String, ExtendedAttribute<?, ?>> attributeEntries, ClauseType clause, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder, String keyFunctionExpression, boolean enableElementCollectionIdCutoff) {
         SelectManager<?> selectManager = queryBuilder.selectManager;
         JoinManager joinManager = queryBuilder.joinManager;
         ParameterManager parameterManager = queryBuilder.parameterManager;
@@ -84,7 +84,7 @@ public final class JpaUtils {
         boolean needsCastParameters = queryBuilder.mainQuery.dbmsDialect.needsCastParameters();
         JpaMetamodelAccessor jpaMetamodelAccessor = jpaProvider.getJpaMetamodelAccessor();
 
-        boolean needsElementCollectionIdCutoff = jpaProvider.needsElementCollectionIdCutoff();
+        boolean needsElementCollectionIdCutoff = enableElementCollectionIdCutoff && jpaProvider.needsElementCollectionIdCutoff();
         final Queue<String> attributeQueue = new ArrayDeque<>(bindingMap.keySet());
         while (!attributeQueue.isEmpty()) {
             final String attributeName = attributeQueue.remove();

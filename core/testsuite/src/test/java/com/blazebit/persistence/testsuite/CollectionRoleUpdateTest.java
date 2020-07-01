@@ -18,6 +18,7 @@ package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.UpdateCriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDB2;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
@@ -25,6 +26,7 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.entity.IndexedEmbeddable;
 import com.blazebit.persistence.testsuite.entity.IndexedNode;
 import com.blazebit.persistence.testsuite.entity.KeyedEmbeddable;
@@ -150,9 +152,8 @@ public class CollectionRoleUpdateTest extends AbstractCoreTest {
         });
     }
 
-    // NOTE: MySQL doesn't allow referencing the same table that is updated again
     @Test
-    @Category({ NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class }) // Requires https://github.com/Blazebit/blaze-persistence/issues/693
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void updateIndexedImplicitJoin() {
         transactional(new TxVoidWork() {
             @Override
@@ -181,9 +182,8 @@ public class CollectionRoleUpdateTest extends AbstractCoreTest {
         });
     }
 
-    // NOTE: MySQL doesn't allow referencing the same table that is update again
     @Test
-    @Category({ NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class }) // Requires https://github.com/Blazebit/blaze-persistence/issues/693
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void updateIndexedMultipleDeepImplicitJoin() {
         transactional(new TxVoidWork() {
             @Override
@@ -198,7 +198,7 @@ public class CollectionRoleUpdateTest extends AbstractCoreTest {
 
                 assertEquals("UPDATE Root(indexedNodes) r"
                         + " SET INDEX(indexedNodes) = :param_0, r.indexedNodes.id = :param_1"
-                        + " FROM r.indexedNodes.parent parent_1"
+                        + " FROM Root(indexedNodes) r LEFT JOIN r.indexedNodes.parent parent_1"
                         + " WHERE INDEX(r.indexedNodes) = :param_2 AND r.name = :param_3 AND parent_1.name = :param_4 AND r.indexedNodes.id = :param_5", criteria.getQueryString());
                 int updated = criteria.executeUpdate();
                 Root r = getRoot(em);
@@ -217,8 +217,9 @@ public class CollectionRoleUpdateTest extends AbstractCoreTest {
     // TODO: Add tests for collection functions/predicates SIZE, IS EMPTY and MEMBER OF against a collection of the source "r" or target "r.indexedNodes"
 
     // NOTE: H2 and MySQL only support returning generated keys
+    // NOTE: DB2 and Oracle do not support FROM FINAL TABLE or RETURNING with MERGE. Fix this with https://github.com/Blazebit/blaze-persistence/issues/1137
     @Test
-    @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoMySQL.class, NoDB2.class, NoOracle.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void updateIndexedReturning() {
         transactional(new TxVoidWork() {
             @Override

@@ -111,6 +111,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -173,11 +174,17 @@ public class ProxyFactory {
     }
 
     private static String getImplementationClassName(Class<?> javaType, Class<?> baseJavaType) {
-        String packageName = javaType.getPackage().getName();
         String fqcn = javaType.getName();
         StringBuilder sb = new StringBuilder(fqcn.length() + IMPL_CLASS_NAME_SUFFIX.length() + baseJavaType.getSimpleName().length());
-        sb.append(packageName).append('.');
-        for (int i = packageName.length() + 1; i < fqcn.length(); i++) {
+        int i;
+        if (javaType.getPackage() == null) {
+            i = 0;
+        } else {
+            String packageName = javaType.getPackage().getName();
+            sb.append(packageName).append('.');
+            i = packageName.length() + 1;
+        }
+        for (; i < fqcn.length(); i++) {
             final char c = fqcn.charAt(i);
             if (c != '$') {
                 sb.append(c);
@@ -263,12 +270,12 @@ public class ProxyFactory {
     }
 
     private Class<?> createProxyBaseClass(Class<?> baseClass) {
-        String packageName = baseClass.getPackage().getName();
+        String packageName = baseClass.getPackage() == null ? "" : baseClass.getPackage().getName();
         Map<String, Class<?>> classesToBaseProxy = new LinkedHashMap<>();
 
         // Traverse the class hierarchy up and collect abstract classes of packages different than the original package
         for (Class<?> c = baseClass.getSuperclass(); c != Object.class; c = c.getSuperclass()) {
-            if (java.lang.reflect.Modifier.isAbstract(c.getModifiers()) && !packageName.equals(c.getPackage().getName())) {
+            if (java.lang.reflect.Modifier.isAbstract(c.getModifiers()) && !packageName.equals(c.getPackage() == null ? "" : c.getPackage().getName())) {
                 classesToBaseProxy.put(c.getName(), c);
             }
         }
@@ -951,7 +958,9 @@ public class ProxyFactory {
     private <T> Class<? extends T> defineOrGetClass(EntityViewManager entityViewManager, boolean unsafe, Class<?> clazz, CtClass cc) throws IOException, IllegalAccessException, NoSuchFieldException, CannotCompileException {
         try {
             // Ask the package opener to allow deep access, otherwise defining the class will fail
-            packageOpener.openPackageIfNeeded(clazz, clazz.getPackage().getName(), ProxyFactory.class);
+            if (clazz.getPackage() != null) {
+                packageOpener.openPackageIfNeeded(clazz, clazz.getPackage().getName(), ProxyFactory.class);
+            }
 
             if (DEBUG_DUMP_DIRECTORY != null) {
                 cc.writeFile(DEBUG_DUMP_DIRECTORY.toString());
@@ -2415,7 +2424,7 @@ public class ProxyFactory {
             // Skip invocation of post-construct method if the type is an interface
             // Note that if you change the invocation here, the invocation below has to be changed as well
             if (!managedViewType.getJavaType().isInterface()) {
-                if (Modifier.isPublic(postConstructMethod.getModifiers()) || Modifier.isProtected(postConstructMethod.getModifiers()) || !Modifier.isPrivate(postConstructMethod.getModifiers()) && postConstructMethod.getDeclaringClass().getPackage().getName().equals(cc.getPackageName())) {
+                if (Modifier.isPublic(postConstructMethod.getModifiers()) || Modifier.isProtected(postConstructMethod.getModifiers()) || !Modifier.isPrivate(postConstructMethod.getModifiers()) && Objects.equals(postConstructMethod.getDeclaringClass().getPackage() == null ? null : postConstructMethod.getDeclaringClass().getPackage().getName(), cc.getPackageName())) {
                     if (postConstructMethod.getParameterTypes().length == 1) {
                         sb.append("\t$0.").append(postConstructMethod.getName()).append("(").append(cc.getName()).append("#").append(SerializableEntityViewManager.SERIALIZABLE_EVM_FIELD_NAME).append(");\n");
                     } else {

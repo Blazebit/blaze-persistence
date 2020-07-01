@@ -17,8 +17,10 @@
 package com.blazebit.persistence.impl.dialect;
 
 import com.blazebit.persistence.spi.DbmsLimitHandler;
+import com.blazebit.persistence.spi.DeleteJoinStyle;
 import com.blazebit.persistence.spi.LateralStyle;
 import com.blazebit.persistence.spi.OrderByElement;
+import com.blazebit.persistence.spi.UpdateJoinStyle;
 import com.blazebit.persistence.spi.ValuesStrategy;
 
 import java.util.HashMap;
@@ -75,6 +77,16 @@ public class MySQLDbmsDialect extends DefaultDbmsDialect {
     @Override
     public LateralStyle getLateralStyle() {
         return LateralStyle.NONE;
+    }
+
+    @Override
+    public DeleteJoinStyle getDeleteJoinStyle() {
+        return DeleteJoinStyle.FROM;
+    }
+
+    @Override
+    public UpdateJoinStyle getUpdateJoinStyle() {
+        return UpdateJoinStyle.REFERENCE;
     }
 
     @Override

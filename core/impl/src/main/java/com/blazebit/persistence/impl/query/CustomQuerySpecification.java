@@ -164,7 +164,7 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
         String sqlQuery = extendedQuerySupport.getSql(em, baseQuery);
         StringBuilder sqlSb = applySqlTransformations(sqlQuery);
         StringBuilder withClause = applyCtes(sqlSb, baseQuery, participatingQueries);
-        Map<String, String> addedCtes = applyExtendedSql(sqlSb, false, false, withClause, null, null);
+        Map<String, String> addedCtes = applyExtendedSql(sqlSb, false, false, withClause, null, null, null);
         participatingQueries.add(baseQuery);
 
         this.sql = sqlSb.toString();
@@ -173,8 +173,8 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
         this.dirty = false;
     }
 
-    protected Map<String, String> applyExtendedSql(StringBuilder sqlSb, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
-        return dbmsDialect.appendExtendedSql(sqlSb, statementType, isSubquery, isEmbedded, withClause, limit, offset, returningColumns, includedModificationStates);
+    protected Map<String, String> applyExtendedSql(StringBuilder sqlSb, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String dmlAffectedTable, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
+        return dbmsDialect.appendExtendedSql(sqlSb, statementType, isSubquery, isEmbedded, withClause, limit, offset, dmlAffectedTable, returningColumns, includedModificationStates);
     }
 
     protected StringBuilder applyCtes(StringBuilder sqlSb, Query baseQuery, List<Query> participatingQueries) {
@@ -360,7 +360,7 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
 
             cascadingDeleteSqlSb.setLength(0);
             cascadingDeleteSqlSb.append(cascadingDeleteSql);
-            dbmsDialect.appendExtendedSql(cascadingDeleteSqlSb, DbmsStatementType.DELETE, false, true, null, null, null, null, null);
+            dbmsDialect.appendExtendedSql(cascadingDeleteSqlSb, DbmsStatementType.DELETE, false, true, null, null, null, null, null, null);
             sb.append(cascadingDeleteSqlSb);
 
             sb.append(" )");

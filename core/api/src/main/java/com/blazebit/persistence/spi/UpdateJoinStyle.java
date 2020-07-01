@@ -14,15 +14,33 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence;
+package com.blazebit.persistence.spi;
 
 /**
- * A builder for modification queries.
+ * The possible update join styles.
  *
- * @param <X> The concrete builder type
  * @author Christian Beikov
- * @since 1.1.0
+ * @since 1.5.0
  */
-public interface BaseModificationCriteriaBuilder<X extends BaseModificationCriteriaBuilder<X>> extends FromBuilder<X>, WhereBuilder<X> {
-
+public enum UpdateJoinStyle {
+    /**
+     * No support for joins in update statements.
+     */
+    NONE,
+    /**
+     * Requires a FROM clause for table references.
+     */
+    FROM,
+    /**
+     * Requires a FROM clause for table references but the table alias in the UPDATE clause.
+     */
+    FROM_ALIAS,
+    /**
+     * Requires table references to be appended after the update table.
+     */
+    REFERENCE,
+    /**
+     * Requires a MERGE statement.
+     */
+    MERGE;
 }

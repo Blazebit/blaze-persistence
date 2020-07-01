@@ -87,16 +87,16 @@ public class LimitFunction implements JpqlFunction {
             if (limit.contains("?") || offset.contains("?")) {
                 throw new IllegalArgumentException("Limit and offset in subquery can not be a parameter!");
             }
-            dbmsDialect.appendExtendedSql(sqlSb, DbmsStatementType.SELECT, true, false, null, limit, offset, null, null);
+            dbmsDialect.appendExtendedSql(sqlSb, DbmsStatementType.SELECT, true, false, null, limit, offset, null, null, null);
         } else {
-            dbmsDialect.appendExtendedSql(sqlSb, DbmsStatementType.SELECT, true, false, null, functionRenderContext.getArgument(1), functionRenderContext.getArgument(2), null, null);
+            dbmsDialect.appendExtendedSql(sqlSb, DbmsStatementType.SELECT, true, false, null, functionRenderContext.getArgument(1), functionRenderContext.getArgument(2), null, null, null);
         }
         functionRenderContext.addChunk(sqlSb.toString());
     }
 
     protected void renderLimitOnly(FunctionRenderContext functionRenderContext) {
         StringBuilder sqlSb = getSql(functionRenderContext);
-        dbmsDialect.appendExtendedSql(sqlSb, DbmsStatementType.SELECT, true, false, null, functionRenderContext.getArgument(1), null, null, null);
+        dbmsDialect.appendExtendedSql(sqlSb, DbmsStatementType.SELECT, true, false, null, functionRenderContext.getArgument(1), null, null, null, null);
         functionRenderContext.addChunk(sqlSb.toString());
     }
 

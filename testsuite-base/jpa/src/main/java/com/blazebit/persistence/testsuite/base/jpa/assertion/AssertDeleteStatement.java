@@ -33,7 +33,16 @@ public class AssertDeleteStatement extends AbstractAssertStatement {
 
     public void validate(String query) {
         query = query.toLowerCase();
-        if (!query.startsWith("delete ")) {
+        if (query.startsWith("delete ")) {
+            // The parser can't handle the PostgreSQL USING join style, so we need to replace this with DELETE x FROM syntax
+            int usingIndex = query.indexOf(" using ");
+            if (usingIndex != -1) {
+                query = query.replace(" using ", " from ");
+                if (query.startsWith("delete from ")) {
+                    query = "delete " + query.substring("delete from ".length());
+                }
+            }
+        } else {
             int deleteIndex;
             if (!query.startsWith("with ") || (deleteIndex = query.indexOf(") delete ")) == -1) {
                 query = stripReturningClause(query);

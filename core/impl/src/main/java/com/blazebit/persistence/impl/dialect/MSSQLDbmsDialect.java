@@ -20,9 +20,11 @@ import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.DbmsLimitHandler;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.spi.DeleteJoinStyle;
 import com.blazebit.persistence.spi.LateralStyle;
 import com.blazebit.persistence.spi.OrderByElement;
 import com.blazebit.persistence.spi.SetOperationType;
+import com.blazebit.persistence.spi.UpdateJoinStyle;
 
 import java.util.Map;
 
@@ -64,6 +66,16 @@ public class MSSQLDbmsDialect extends DefaultDbmsDialect {
     @Override
     public LateralStyle getLateralStyle() {
         return LateralStyle.APPLY;
+    }
+
+    @Override
+    public DeleteJoinStyle getDeleteJoinStyle() {
+        return DeleteJoinStyle.FROM;
+    }
+
+    @Override
+    public UpdateJoinStyle getUpdateJoinStyle() {
+        return UpdateJoinStyle.FROM_ALIAS;
     }
 
     @Override
@@ -109,7 +121,7 @@ public class MSSQLDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
-    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
+    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String dmlAffectedTable, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
         boolean addParenthesis = isSubquery && sqlSb.length() > 0 && sqlSb.charAt(0) != '(';
         if (addParenthesis) {
             sqlSb.insert(0, '(');
@@ -139,11 +151,14 @@ public class MSSQLDbmsDialect extends DefaultDbmsDialect {
             }
 
             if (statementType == DbmsStatementType.DELETE || statementType == DbmsStatementType.UPDATE) {
-                int whereIndex = SqlUtils.indexOfWhere(sqlSb);
-                if (whereIndex == -1) {
+                int targetIndex = SqlUtils.indexOfFrom(sqlSb);
+                if (targetIndex == -1 || targetIndex == sqlSb.lastIndexOf("delete from ") + "delete".length()) {
+                    targetIndex = SqlUtils.indexOfWhere(sqlSb);
+                }
+                if (targetIndex == -1) {
                     sqlSb.append(outputSb);
                 } else {
-                    sqlSb.insert(whereIndex, outputSb);
+                    sqlSb.insert(targetIndex, outputSb);
                 }
             } else if (statementType == DbmsStatementType.INSERT) {
                 int selectIndex = SqlUtils.indexOfSelect(sqlSb);

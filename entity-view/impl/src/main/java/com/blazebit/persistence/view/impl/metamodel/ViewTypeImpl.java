@@ -27,6 +27,7 @@ import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -82,10 +83,10 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewTypeI
         boolean supportsInterfaceEquals = true;
         boolean supportsUserTypeEquals = true;
         Method javaMethod = idAttribute.getJavaMethod();
-        if (!Modifier.isPublic(javaMethod.getModifiers()) && !getJavaType().getPackage().getName().equals(javaMethod.getDeclaringClass().getPackage().getName())) {
+        if (!Modifier.isPublic(javaMethod.getModifiers()) && !Objects.equals(getJavaType().getPackage(), javaMethod.getDeclaringClass().getPackage())) {
             supportsInterfaceEquals = false;
             supportsUserTypeEquals = false;
-            LOG.warning("The method for the " + ((AbstractMethodAttribute<?, ?>) idAttribute).getLocation() + " is non-public and declared in a different package " + javaMethod.getDeclaringClass().getPackage().getName() + " than the view type " + getJavaType().getName() +
+            LOG.warning("The method for the " + ((AbstractMethodAttribute<?, ?>) idAttribute).getLocation() + " is non-public and declared in a different package " + javaMethod.getDeclaringClass().getPackage() + " than the view type " + getJavaType().getName() +
                     " which makes it impossible to allow checking for equality with user provided implementations of the view type. If you don't need that, you can ignore this warning.");
             // We also disallow interface equality when the view is defined for an abstract entity type
         } else if (getJpaManagedType().getPersistenceType() != javax.persistence.metamodel.Type.PersistenceType.ENTITY || java.lang.reflect.Modifier.isAbstract(getJpaManagedType().getJavaType().getModifiers())) {

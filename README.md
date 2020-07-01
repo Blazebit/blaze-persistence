@@ -475,6 +475,10 @@ After doing that, you should be able to execute any test in IntelliJ.
 
 Note that if you make changes to an entity class or add a new entity class you might need to redo the rebuild and enhancement. 
 
+## MySQL
+
+When using the MySQL docker container via `docker_db.sh mysql_5_7` or  `docker_db.sh mysql_8_0` you might want to specify the following properties when executing tests `-Djdbc.url=jdbc:mysql://192.168.99.100:3306/test?useUnicode=true&characterEncoding=utf8`
+
 ## Firebird
 
 When installing the 3.x version, you also need a 3.x JDBC driver.

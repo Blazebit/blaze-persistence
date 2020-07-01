@@ -116,6 +116,10 @@ public class MainQuery {
         return cbf;
     }
 
+    public boolean supportsAdvancedSql() {
+        return cbf.getExtendedQuerySupport() != null && cbf.getExtendedQuerySupport().supportsAdvancedSql();
+    }
+
     public void assertSupportsAdvancedSql(String message) {
         assertSupportsAdvancedSql(message, false);
     }

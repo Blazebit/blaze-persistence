@@ -27,7 +27,6 @@ import com.blazebit.persistence.impl.query.CustomReturningSQLTypedQuery;
 import com.blazebit.persistence.impl.query.CustomSQLQuery;
 import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.QuerySpecification;
-import com.blazebit.persistence.impl.query.ReturningCollectionInsertModificationQuerySpecification;
 import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.spi.DbmsModificationState;
@@ -147,7 +146,7 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
 
     @Override
     protected void expandBindings() {
-        JpaUtils.expandBindings(bindingMap, collectionColumnBindingMap, collectionAttributeEntries, ClauseType.SELECT, this, keyFunctionExpression);
+        JpaUtils.expandBindings(bindingMap, collectionColumnBindingMap, collectionAttributeEntries, ClauseType.SELECT, this, keyFunctionExpression, true);
     }
 
     @Override
@@ -247,50 +246,27 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
         }
         insertSqlSb.setCharAt(insertSqlSb.length() - 1, ')');
 
-        if (returningColumns == null) {
-            return new CollectionInsertModificationQuerySpecification(
-                    this,
-                    baseQuery,
-                    exampleQuery,
-                    parameterManager.getParameters(),
-                    parameterListNames,
-                    keyRestrictedLeftJoinAliases,
-                    entityFunctionNodes,
-                    mainQuery.cteManager.isRecursive(),
-                    ctes,
-                    shouldRenderCteNodes,
-                    isEmbedded,
-                    returningColumns,
-                    includedModificationStates,
-                    returningAttributeBindingMap,
-                    getInsertExecutorQuery(),
-                    insertSqlSb.toString(),
-                    cutoffColumns,
-                    mainQuery.getQueryConfiguration().isQueryPlanCacheEnabled()
-            );
-        } else {
-            return new ReturningCollectionInsertModificationQuerySpecification(
-                    this,
-                    baseQuery,
-                    exampleQuery,
-                    parameterManager.getParameters(),
-                    parameterListNames,
-                    keyRestrictedLeftJoinAliases,
-                    entityFunctionNodes,
-                    mainQuery.cteManager.isRecursive(),
-                    ctes,
-                    shouldRenderCteNodes,
-                    isEmbedded,
-                    returningColumns,
-                    includedModificationStates,
-                    returningAttributeBindingMap,
-                    getInsertExecutorQuery(),
-                    insertSqlSb.toString(),
-                    cutoffColumns,
-                    objectBuilder,
-                    mainQuery.getQueryConfiguration().isQueryPlanCacheEnabled()
-            );
-        }
+        return new CollectionInsertModificationQuerySpecification(
+                this,
+                baseQuery,
+                exampleQuery,
+                parameterManager.getParameters(),
+                parameterListNames,
+                keyRestrictedLeftJoinAliases,
+                entityFunctionNodes,
+                mainQuery.cteManager.isRecursive(),
+                ctes,
+                shouldRenderCteNodes,
+                isEmbedded,
+                returningColumns,
+                objectBuilder,
+                includedModificationStates,
+                returningAttributeBindingMap,
+                getInsertExecutorQuery(),
+                insertSqlSb.toString(),
+                cutoffColumns,
+                mainQuery.getQueryConfiguration().isQueryPlanCacheEnabled()
+        );
     }
 
     protected Query getInsertExampleQuery() {

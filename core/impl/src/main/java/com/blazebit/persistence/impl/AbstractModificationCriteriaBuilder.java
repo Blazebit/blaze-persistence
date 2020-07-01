@@ -32,7 +32,6 @@ import com.blazebit.persistence.impl.query.CustomReturningSQLTypedQuery;
 import com.blazebit.persistence.impl.query.CustomSQLQuery;
 import com.blazebit.persistence.impl.query.ModificationQuerySpecification;
 import com.blazebit.persistence.impl.query.QuerySpecification;
-import com.blazebit.persistence.impl.query.ReturningModificationQuerySpecification;
 import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.spi.AttributePath;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
@@ -48,6 +47,7 @@ import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.SingularAttribute;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -218,6 +218,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
                     shouldRenderCteNodes,
                     isEmbedded,
                     returningColumns,
+                    null,
                     includedModificationStates,
                     returningAttributeBindingMap,
                     mainQuery.getQueryConfiguration().isQueryPlanCacheEnabled()
@@ -376,8 +377,21 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery);
         boolean shouldRenderCteNodes = renderCteNodes(false);
         List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.EMPTY_LIST;
-        QuerySpecification querySpecification = new ReturningModificationQuerySpecification<R>(
-                this, baseQuery, exampleQuery, parameterManager.getParameters(), parameterListNames, mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes, returningColumns, objectBuilder, mainQuery.getQueryConfiguration().isQueryPlanCacheEnabled()
+        QuerySpecification querySpecification = new ModificationQuerySpecification(
+                this,
+                baseQuery,
+                exampleQuery,
+                parameterManager.getParameters(),
+                parameterListNames,
+                mainQuery.cteManager.isRecursive(),
+                ctes,
+                shouldRenderCteNodes,
+                false,
+                returningColumns,
+                objectBuilder,
+                null,
+                returningAttributeBindingMap,
+                mainQuery.getQueryConfiguration().isQueryPlanCacheEnabled()
         );
 
         CustomReturningSQLTypedQuery query = new CustomReturningSQLTypedQuery<R>(
@@ -683,6 +697,19 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         }
 
         return new ArrayList<>(columnBindingMap.keySet());
+    }
+
+    protected String[] getIdColumns(ExtendedManagedType<?> extendedManagedType) {
+        if (mainQuery.dbmsDialect.getPhysicalRowId() != null) {
+            return new String[]{ mainQuery.dbmsDialect.getPhysicalRowId() };
+        }
+        Map<String, ? extends ExtendedAttribute<?, ?>> attributes = extendedManagedType.getAttributes();
+        Set<String> idColumns = new TreeSet<>();
+        for (SingularAttribute<?, ?> idAttribute : extendedManagedType.getIdAttributes()) {
+            Collections.addAll(idColumns, attributes.get(idAttribute.getName()).getColumnNames());
+        }
+
+        return idColumns.toArray(new String[0]);
     }
 
 }

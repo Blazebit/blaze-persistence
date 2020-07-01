@@ -200,6 +200,7 @@ public abstract class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCrite
                 shouldRenderCteNodes,
                 isEmbedded,
                 returningColumns,
+                null,
                 includedModificationStates,
                 returningAttributeBindingMap,
                 mainQuery.getQueryConfiguration().isQueryPlanCacheEnabled()

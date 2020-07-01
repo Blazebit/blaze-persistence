@@ -24,6 +24,7 @@ import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.delete.Delete;
 import net.sf.jsqlparser.statement.insert.Insert;
+import net.sf.jsqlparser.statement.merge.Merge;
 import net.sf.jsqlparser.statement.select.FromItemVisitor;
 import net.sf.jsqlparser.statement.select.FromItemVisitorAdapter;
 import net.sf.jsqlparser.statement.select.Join;
@@ -79,7 +80,11 @@ public abstract class AbstractAssertStatement implements AssertStatement {
         }
         int outputIndex = query.lastIndexOf(" output ");
         if (outputIndex != -1) {
-            query = query.substring(0, outputIndex) + query.substring(query.indexOf(" where "));
+            int targetIndex = query.indexOf(" from ");
+            if (targetIndex == -1 || targetIndex == query.lastIndexOf("delete from ") + "delete".length()) {
+                targetIndex = query.indexOf(" where ");
+            }
+            query = query.substring(0, outputIndex) + query.substring(targetIndex);
         }
         String oldTableStateQualifier = " from old table (";
         int tableStateIndex = query.lastIndexOf(oldTableStateQualifier);
@@ -188,10 +193,29 @@ public abstract class AbstractAssertStatement implements AssertStatement {
             return Collections.singletonList(insert.getTable());
         } else if (statement instanceof Update) {
             Update update = (Update) statement;
-            return new ArrayList<>(update.getTables());
+            if (update.getJoins() != null && !update.getJoins().isEmpty()) {
+                for (Join join : update.getJoins()) {
+                    if (join.getRightItem().getAlias().getName().equals(update.getTable().getName())) {
+                        return Collections.singletonList((Table) join.getRightItem());
+                    }
+                }
+            }
+            return Collections.singletonList(update.getTable());
         } else if (statement instanceof Delete) {
             Delete delete = (Delete) statement;
+            if (delete.getTables().size() == 1) {
+                Table t = delete.getTables().get(0);
+                for (Join join : delete.getJoins()) {
+                    if (join.getRightItem().getAlias().getName().equals(t.getName())) {
+                        return Collections.singletonList((Table) join.getRightItem());
+                    }
+                }
+                return Collections.singletonList(t);
+            }
             return Collections.singletonList(delete.getTable());
+        } else if (statement instanceof Merge) {
+            Merge merge = (Merge) statement;
+            return Collections.singletonList(merge.getTable());
         }
 
         return Collections.emptyList();

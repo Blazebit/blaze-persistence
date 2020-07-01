@@ -492,6 +492,10 @@ matrix:
       before_install:
         - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
         - . ./install-jdk.sh -F 15 -L GPL
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=16
+      before_install:
+        - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
+        - . ./install-jdk.sh -F 16 -L GPL
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=9 BUILD_JDK=9 DELTASPIKE=deltaspike-1.9
       before_install:
         - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
@@ -522,6 +526,10 @@ matrix:
       before_install:
         - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
         - . ./install-jdk.sh -F 15 -L GPL
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=16 BUILD_JDK=16 DELTASPIKE=deltaspike-1.9
+      before_install:
+        - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
+        - . ./install-jdk.sh -F 16 -L GPL
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=9
       before_install:
         - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
@@ -566,6 +574,8 @@ matrix:
   allow_failures:
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=15 BUILD_JDK=15 DELTASPIKE=deltaspike-1.9
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=15
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=16 BUILD_JDK=16 DELTASPIKE=deltaspike-1.9
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=16
 #    - env: JPAPROVIDER=datanucleus-5.1 RDBMS=h2 JDK=9
 #      before_install:
 #        - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh

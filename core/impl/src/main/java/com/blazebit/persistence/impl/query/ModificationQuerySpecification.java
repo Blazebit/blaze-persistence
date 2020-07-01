@@ -16,12 +16,16 @@
 
 package com.blazebit.persistence.impl.query;
 
+import com.blazebit.persistence.ReturningObjectBuilder;
 import com.blazebit.persistence.impl.AbstractCommonQueryBuilder;
 import com.blazebit.persistence.impl.plan.CustomModificationQueryPlan;
+import com.blazebit.persistence.impl.plan.CustomReturningModificationQueryPlan;
 import com.blazebit.persistence.impl.plan.ModificationQueryPlan;
 import com.blazebit.persistence.impl.plan.SelectQueryPlan;
+import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.DbmsLimitHandler;
 import com.blazebit.persistence.spi.DbmsModificationState;
+import com.blazebit.persistence.spi.DbmsStatementType;
 
 import javax.persistence.Parameter;
 import javax.persistence.Query;
@@ -45,22 +49,24 @@ public class ModificationQuerySpecification<T> extends CustomQuerySpecification<
     protected final String[] returningColumns;
     protected final Map<DbmsModificationState, String> includedModificationStates;
     protected final Map<String, String> returningAttributeBindingMap;
+    protected final ReturningObjectBuilder<T> objectBuilder;
 
     protected Query query;
 
     public ModificationQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Query exampleQuery, Set<Parameter<?>> parameters, Set<String> parameterListNames, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes,
-                                          boolean isEmbedded, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates, Map<String, String> returningAttributeBindingMap, boolean queryPlanCacheEnabled) {
-        this(commonQueryBuilder, baseQuery, exampleQuery, parameters, parameterListNames, Collections.<String>emptyList(), Collections.<EntityFunctionNode>emptyList(), recursive, ctes, shouldRenderCteNodes, isEmbedded, returningColumns, includedModificationStates, returningAttributeBindingMap, queryPlanCacheEnabled);
+                                          boolean isEmbedded, String[] returningColumns, ReturningObjectBuilder<T> objectBuilder, Map<DbmsModificationState, String> includedModificationStates, Map<String, String> returningAttributeBindingMap, boolean queryPlanCacheEnabled) {
+        this(commonQueryBuilder, baseQuery, exampleQuery, parameters, parameterListNames, Collections.<String>emptyList(), Collections.<EntityFunctionNode>emptyList(), recursive, ctes, shouldRenderCteNodes, isEmbedded, returningColumns, objectBuilder, includedModificationStates, returningAttributeBindingMap, queryPlanCacheEnabled);
     }
 
     public ModificationQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Query exampleQuery, Set<Parameter<?>> parameters, Set<String> parameterListNames,
                                           List<String> keyRestrictedLeftJoinAliases, List<EntityFunctionNode> entityFunctionNodes, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes,
-                                          boolean isEmbedded, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates, Map<String, String> returningAttributeBindingMap,
+                                          boolean isEmbedded, String[] returningColumns, ReturningObjectBuilder<T> objectBuilder, Map<DbmsModificationState, String> includedModificationStates, Map<String, String> returningAttributeBindingMap,
                                           boolean queryPlanCacheEnabled) {
         super(commonQueryBuilder, baseQuery, parameters, parameterListNames, null, null, keyRestrictedLeftJoinAliases, entityFunctionNodes, recursive, ctes, shouldRenderCteNodes, queryPlanCacheEnabled);
         this.exampleQuery = exampleQuery;
         this.isEmbedded = isEmbedded;
         this.returningColumns = returningColumns;
+        this.objectBuilder = objectBuilder;
         this.includedModificationStates = includedModificationStates;
         this.returningAttributeBindingMap = new HashMap<>(returningAttributeBindingMap);
     }
@@ -75,12 +81,21 @@ public class ModificationQuerySpecification<T> extends CustomQuerySpecification<
         } else {
             finalSql = sql;
         }
-        return new CustomModificationQueryPlan(extendedQuerySupport, serviceProvider, baseQuery, query, participatingQueries, finalSql, queryPlanCacheEnabled);
+        if (returningColumns == null) {
+            return new CustomModificationQueryPlan(extendedQuerySupport, serviceProvider, baseQuery, query, participatingQueries, finalSql, queryPlanCacheEnabled);
+        } else {
+            return new CustomReturningModificationQueryPlan<T>(extendedQuerySupport, serviceProvider, baseQuery, exampleQuery, objectBuilder, participatingQueries, finalSql, firstResult, maxResults, returningColumns.length == 1 && objectBuilder != null, queryPlanCacheEnabled);
+        }
     }
 
     @Override
     public SelectQueryPlan<T> createSelectPlan(int firstResult, int maxResults) {
-        throw new UnsupportedOperationException();
+        if (returningColumns == null) {
+            throw new UnsupportedOperationException();
+        }
+
+        final String sql = getSql();
+        return new CustomReturningModificationQueryPlan(extendedQuerySupport, serviceProvider, baseQuery, exampleQuery, objectBuilder, participatingQueries, sql, firstResult, maxResults, returningColumns.length == 1 && objectBuilder != null, queryPlanCacheEnabled);
     }
 
     @Override
@@ -97,10 +112,23 @@ public class ModificationQuerySpecification<T> extends CustomQuerySpecification<
         }
 
         String sqlQuery = extendedQuerySupport.getSql(em, baseQuery);
+        String affectedDmlTable;
+        if (statementType == DbmsStatementType.UPDATE) {
+            affectedDmlTable = sqlQuery.substring(sqlQuery.indexOf(' ') + 1, sqlQuery.indexOf(' ', sqlQuery.indexOf(' ') + 1));
+        } else if (statementType == DbmsStatementType.DELETE) {
+            int fromIndex = SqlUtils.indexOfFrom(sqlQuery);
+            int endIndex = sqlQuery.indexOf(' ', fromIndex + SqlUtils.FROM.length() + 1);
+            affectedDmlTable = sqlQuery.substring(fromIndex + SqlUtils.FROM.length(), endIndex == -1 ? sqlQuery.length() : endIndex);
+        } else if (statementType == DbmsStatementType.INSERT) {
+            int intoIndex = sqlQuery.indexOf(" into ");
+            affectedDmlTable = sqlQuery.substring(intoIndex + " into ".length(), sqlQuery.indexOf('(', intoIndex + " into ".length() + 1));
+        } else {
+            throw new UnsupportedOperationException("Unsupported statement type: " + statementType);
+        }
         StringBuilder sqlSb = applySqlTransformations(sqlQuery);
         StringBuilder withClause = applyCtes(sqlSb, baseQuery, participatingQueries);
         // NOTE: CTEs will only be added, if this is a subquery
-        Map<String, String> addedCtes = applyExtendedSql(sqlSb, false, isEmbedded, withClause, returningColumns, includedModificationStates);
+        Map<String, String> addedCtes = applyExtendedSql(sqlSb, false, isEmbedded, withClause, affectedDmlTable, returningColumns, includedModificationStates);
         participatingQueries.add(baseQuery);
 
         // Some dbms like DB2 will need to wrap modification queries in select queries when using CTEs
@@ -117,26 +145,4 @@ public class ModificationQuerySpecification<T> extends CustomQuerySpecification<
         this.dirty = false;
     }
 
-    protected final void remapColumnExpressions(StringBuilder sqlSb, Map<String, String> columnExpressionRemappings) {
-        remapColumnExpressions(sqlSb, columnExpressionRemappings, 0, sqlSb.length());
-    }
-
-    protected final int remapColumnExpressions(StringBuilder sqlSb, Map<String, String> columnExpressionRemappings, int startIndex, int endIndex) {
-        // Replace usages of the owner entities id columns by the corresponding join table id columns
-        for (Map.Entry<String, String> entry : columnExpressionRemappings.entrySet()) {
-            String sourceExpression = entry.getKey();
-            String targetExpression = entry.getValue();
-            if (sourceExpression.equals(targetExpression)) {
-                continue;
-            }
-            int index = startIndex;
-            while ((index = sqlSb.indexOf(sourceExpression, index)) != -1 && index < endIndex) {
-                sqlSb.replace(index, index + sourceExpression.length(), targetExpression);
-                int delta = targetExpression.length() - sourceExpression.length();
-                index += delta;
-                endIndex += delta;
-            }
-        }
-        return endIndex;
-    }
 }
