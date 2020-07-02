@@ -41,14 +41,12 @@ public final class EntityViewSortUtil {
     /**
      * Resolves the deterministic select item alias for an entity view attribute.
      *
-     * @param evm entity view manager
-     * @param entityViewClass entity view class
+     * @param viewType entity view type
      * @param attributePath the absolute attribute path based on the {@code entityViewClass} for which the select alias should be resolved
      * @return the select item alias for the (nested) entity view attribute targeted by {@code attributePath} or {@code null}
      * if the {@code attributePath} cannot be resolved
      */
-    private static String resolveViewAttributeSelectAlias(EntityViewManager evm, Class<?> entityViewClass, String attributePath) {
-        ManagedViewType<?> viewType = evm.getMetamodel().view(entityViewClass);
+    private static String resolveViewAttributeSelectAlias(ManagedViewType<?> viewType, String attributePath) {
         StringBuilder aliasBuilder = new StringBuilder(viewType.getJavaType().getSimpleName());
         for (String pathElement : attributePath.split("\\.")) {
             if (viewType == null) {
@@ -79,9 +77,10 @@ public final class EntityViewSortUtil {
     }
 
     public static void applySort(EntityViewManager evm, Class<?> entityViewClass, FullQueryBuilder<?, ?> cb, Sort sort) {
+        ManagedViewType<?> viewType = evm.getMetamodel().managedViewOrError(entityViewClass);
         for (Sort.Order order : sort) {
             String entityViewAttributeAlias;
-            if ((entityViewAttributeAlias = EntityViewSortUtil.resolveViewAttributeSelectAlias(evm, entityViewClass, order.getProperty())) == null) {
+            if ((entityViewAttributeAlias = EntityViewSortUtil.resolveViewAttributeSelectAlias(viewType, order.getProperty())) == null) {
                 cb.orderBy(order.getProperty(), order.isAscending(), order.getNullHandling() == Sort.NullHandling.NULLS_FIRST);
             } else {
                 cb.orderBy(entityViewAttributeAlias, order.isAscending(), order.getNullHandling() == Sort.NullHandling.NULLS_FIRST);

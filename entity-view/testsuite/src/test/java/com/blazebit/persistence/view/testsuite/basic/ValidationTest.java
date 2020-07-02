@@ -70,7 +70,7 @@ public class ValidationTest extends AbstractEntityViewTest {
             cfg.createEntityViewManager(cbf);
             Assert.fail("Expected validation exception!");
         } catch (IllegalArgumentException ex) {
-            if (!ex.getMessage().contains(PersonInvalidMappingValidationView.class.getSimpleName() + ".getName") || !ex.getCause().getMessage().contains("'defaultContact'")) {
+            if (!ex.getMessage().contains(PersonInvalidMappingValidationView.class.getSimpleName() + ".getName") || !ex.getMessage().contains("'defaultContact'")) {
                 throw ex;
             }
         }
@@ -85,7 +85,7 @@ public class ValidationTest extends AbstractEntityViewTest {
             cfg.createEntityViewManager(cbf);
             Assert.fail("Expected validation exception!");
         } catch (IllegalArgumentException ex) {
-            if (!ex.getMessage().contains(PersonInvalidCaseMappingValidationView.class.getSimpleName() + ".getValid") || !ex.getCause().getMessage().contains("'invalid'")) {
+            if (!ex.getMessage().contains(PersonInvalidCaseMappingValidationView.class.getSimpleName() + ".getValid") || !ex.getMessage().contains("'invalid'")) {
                 throw ex;
             }
         }
