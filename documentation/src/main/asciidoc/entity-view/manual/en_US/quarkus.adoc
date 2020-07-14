@@ -13,6 +13,25 @@ As outlined in the <<quarkus-setup,setup section>> you need the following depend
 </dependency>
 ----
 
+The use in native images also requires a dependency on the entity view annotation processor that may be extracted into a separate `native` profile:
+
+[source,xml]
+----
+<profiles>
+    <profile>
+        <id>native</id>
+        <dependencies>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                <version>${project.version}</version>
+                <scope>provided</scope>
+            </dependency>
+        </dependencies>
+    </profile>
+</profiles>
+----
+
 [[quarkus-features]]
 === Features
 
