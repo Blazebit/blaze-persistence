@@ -59,7 +59,7 @@ public abstract class AbstractToStringXmlFunction implements JpqlFunction {
             throw new RuntimeException("The to_string_xml function <subquery> argument must have at least as many select items as keys are given! args=" + context);
         }
         for (int i = 0; i < fields.length; i++) {
-            fields[i] = JpqlFunctionUtil.unquote(context.getArgument(i + 1));
+            fields[i] = JpqlFunctionUtil.unquoteSingleQuotes(context.getArgument(i + 1));
         }
         render(context, fields, selectItemExpressions, subquery, fromIndex);
     }

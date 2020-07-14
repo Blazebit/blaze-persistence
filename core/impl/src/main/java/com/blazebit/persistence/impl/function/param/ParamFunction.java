@@ -48,7 +48,7 @@ public class ParamFunction implements JpqlFunction {
     public void render(FunctionRenderContext functionRenderContext) {
         if (functionRenderContext.getArgumentsSize() == 2) {
             functionRenderContext.addChunk("cast(? as ");
-            functionRenderContext.addChunk(JpqlFunctionUtil.unquote(functionRenderContext.getArgument(1)));
+            functionRenderContext.addChunk(JpqlFunctionUtil.unquoteSingleQuotes(functionRenderContext.getArgument(1)));
             functionRenderContext.addChunk(")");
         } else {
             functionRenderContext.addChunk("?");

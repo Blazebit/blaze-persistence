@@ -140,6 +140,9 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
             if (isHibernate5()) {
                 properties.put("hibernate.id.new_generator_mappings", "false");
             }
+        } else if (isHibernate5() && properties.get("javax.persistence.jdbc.url").toString().contains("oracle")) {
+            // Apparently the dialect resolver doesn't choose the latest dialect
+            properties.put("hibernate.dialect", "org.hibernate.dialect.Oracle10gDialect");
         }
         if (System.getProperty("hibernate.default_schema") != null) {
             properties.put("hibernate.default_schema", System.getProperty("hibernate.default_schema"));
