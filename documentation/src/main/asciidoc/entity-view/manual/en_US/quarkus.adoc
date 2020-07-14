@@ -22,9 +22,9 @@ The use in native images also requires a dependency on the entity view annotatio
         <id>native</id>
         <dependencies>
             <dependency>
-                <groupId>${project.groupId}</groupId>
+                <groupId>com.blazebit</groupId>
                 <artifactId>blaze-persistence-entity-view-processor</artifactId>
-                <version>${project.version}</version>
+                <version>${blaze-persistence.version}</version>
                 <scope>provided</scope>
             </dependency>
         </dependencies>
