@@ -25,19 +25,30 @@ public class JpqlFunctionUtil {
     private JpqlFunctionUtil() {
     }
 
-    public static String unquote(String s) {
+    public static String unquoteSingleQuotes(String s) {
+        return unquote(s, '\'');
+    }
+
+    public static String unquoteDoubleQuotes(String s) {
+        return unquote(s, '\"');
+    }
+
+    private static String unquote(String s, char quoteCharacter) {
+        if (!s.isEmpty() && s.charAt(0) != quoteCharacter) {
+            return s;
+        }
         StringBuilder sb = new StringBuilder(s.length());
         boolean quote = false;
         for (int i = 1; i < s.length() - 1; i++) {
             final char c = s.charAt(i);
             if (quote) {
                 quote = false;
-                if (c != '\'') {
-                    sb.append('\'');
+                if (c != quoteCharacter) {
+                    sb.append(quoteCharacter);
                 }
                 sb.append(c);
             } else {
-                if (c == '\'') {
+                if (c == quoteCharacter) {
                     quote = true;
                 } else {
                     sb.append(c);
@@ -45,7 +56,7 @@ public class JpqlFunctionUtil {
             }
         }
         if (quote) {
-            sb.append('\'');
+            sb.append(quoteCharacter);
         }
         return sb.toString();
     }

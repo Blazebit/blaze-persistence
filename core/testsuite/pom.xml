@@ -74,6 +74,14 @@
             <scope>compile</scope>
         </dependency>
 
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.11.0</version>
+            <scope>test</scope>
+        </dependency>
+
+
         <!-- Add mockito early to the local maven repo since the Hibernate,DB2 build froze on downloading this dependency -->
         <dependency>
             <groupId>org.mockito</groupId>
@@ -545,13 +553,16 @@
                         <configuration>
                             <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoOracle,${jpa.excludedGroups}</excludedGroups>
                             <systemPropertyVariables>
-                                <jdbc.url>jdbc:oracle:thin:@localhost:1521/xe</jdbc.url>
+                                <jdbc.url>jdbc:oracle:thin:@localhost:1521:XE</jdbc.url>
                                 <jdbc.user>SYSTEM</jdbc.user>
-                                <jdbc.password>oracle</jdbc.password>
+                                <jdbc.password>Oracle18</jdbc.password>
                                 <jdbc.driver>oracle.jdbc.driver.OracleDriver</jdbc.driver>
                                 <!-- Careful, we need this otherwise the ordering will be wrong... -->
                                 <user.country>US</user.country>
                                 <user.language>en</user.language>
+                                <!-- Dumb, dumber, Oracle -->
+                                <!-- See https://stackoverflow.com/questions/33232260/temporaltemporaltype-date-with-oracle-12 -->
+                                <oracle.jdbc.DateZeroTime>true</oracle.jdbc.DateZeroTime>
                             </systemPropertyVariables>
                         </configuration>
                         <dependencies>
@@ -585,8 +596,8 @@
             </build>
             <dependencies>
                 <dependency>
-                    <groupId>com.oracle</groupId>
-                    <artifactId>ojdbc14</artifactId>
+                    <groupId>com.oracle.database.jdbc</groupId>
+                    <artifactId>ojdbc8</artifactId>
                     <scope>test</scope>
                 </dependency>
             </dependencies>

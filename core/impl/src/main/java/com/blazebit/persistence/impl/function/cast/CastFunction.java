@@ -27,9 +27,9 @@ import com.blazebit.persistence.spi.JpqlFunction;
  */
 public class CastFunction implements JpqlFunction {
 
-    private final String functionName;
-    private final Class<?> castType;
-    private final String defaultSqlCastType;
+    protected final String functionName;
+    protected final Class<?> castType;
+    protected final String defaultSqlCastType;
 
     public CastFunction(Class<?> castType, DbmsDialect dbmsDialect) {
         this.functionName = "CAST_" + castType.getSimpleName().toUpperCase();
@@ -64,7 +64,7 @@ public class CastFunction implements JpqlFunction {
         if (context.getArgumentsSize() == 1) {
             context.addChunk(defaultSqlCastType);
         } else {
-            context.addChunk(JpqlFunctionUtil.unquote(context.getArgument(1)));
+            context.addChunk(JpqlFunctionUtil.unquoteSingleQuotes(context.getArgument(1)));
         }
         context.addChunk(")");
     }

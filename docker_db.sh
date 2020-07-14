@@ -7,12 +7,12 @@ mysql_5_7() {
 
 mysql_8_0() {
     docker rm -f mysql || true
-    docker run --name mysql -e MYSQL_ALLOW_EMPTY_PASSWORD=yes -e MYSQL_DATABASE=test -p3306:3306 -d mysql:8.0 --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    docker run --name mysql -e MYSQL_ALLOW_EMPTY_PASSWORD=yes -e MYSQL_DATABASE=test -p3306:3306 -d mysql:8.0.21 --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
 }
 
-postgresql_9_4() {
+postgresql_9_5() {
     docker rm -f postgres || true
-    docker run --name postgres -e POSTGRES_DB=test -e POSTGRES_PASSWORD=postgres -p5432:5432 -d postgres:9.4
+    docker run --name postgres -e POSTGRES_DB=test -e POSTGRES_PASSWORD=postgres -p5432:5432 -d postgres:9.5
 }
 
 db2() {
@@ -51,12 +51,7 @@ mssql() {
 
 oracle() {
     docker rm -f oracle || true
-    docker run --shm-size=1536m --name oracle -d -p 1521:1521 wnameless/oracle-xe-11g || echo "Clone and build the docker image from Github first.
-    git clone https://github.com/wnameless/docker-oracle-xe-11g.git
-    cd docker-oracle-xe-11g
-    docker build -t wnameless/oracle-xe-11g .
-    cd -
-    docker run --shm-size=1536m --name oracle -d -p 1521:1521 wnameless/oracle-xe-11g"
+    docker run --shm-size=1536m --name oracle -d -p 1521:1521 quillbuilduser/oracle-18-xe
 }
 
 if [ -z ${1} ]; then
@@ -64,7 +59,7 @@ if [ -z ${1} ]; then
     echo "Provide one of:"
     echo -e "\tmysql_5_7"
     echo -e "\tmysql_8_0"
-    echo -e "\tpostgresql_9_4"
+    echo -e "\tpostgresql_9_5"
     echo -e "\tdb2"
     echo -e "\tmssql"
     echo -e "\toracle"

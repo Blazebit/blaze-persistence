@@ -38,7 +38,7 @@ public class PostgreSQLStringXmlAggFunction extends AbstractStringXmlAggFunction
                 context.addChunk(")");
             } else {
                 context.addChunk(", xmlelement(name ");
-                context.addChunk(JpqlFunctionUtil.unquote(context.getArgument(i)));
+                context.addChunk(JpqlFunctionUtil.unquoteSingleQuotes(context.getArgument(i)));
             }
         }
         context.addChunk("))");

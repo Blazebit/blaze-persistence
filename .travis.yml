@@ -21,7 +21,7 @@ before_script:
       source setup-graalvm.sh
     fi
   - bash -c "if [ '$RDBMS' = 'mysql' ]; then MYSQL_VERSION=5.7 bash travis/before_script_mysql.sh; fi"
-  - bash -c "if [ '$RDBMS' = 'mysql8' ]; then MYSQL_VERSION=8.0 bash travis/before_script_mysql.sh; fi"
+  - bash -c "if [ '$RDBMS' = 'mysql8' ]; then MYSQL_VERSION=8.0.21 bash travis/before_script_mysql.sh; fi"
   - bash -c "if [ '$RDBMS' = 'postgresql' ]; then psql -c 'create database test;' -U postgres; fi"
   - bash -c "if [ '$RDBMS' = 'db2' ]; then bash travis/before_script_db2.sh; fi"
   - bash -c "if [ '$RDBMS' = 'firebird' ]; then bash travis/before_script_firebird.sh; fi"
@@ -62,7 +62,7 @@ matrix:
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=postgresql
       jdk: oraclejdk8
       addons:
-        postgresql: "9.4"
+        postgresql: "9.5"
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=mssql
       jdk: oraclejdk8
       sudo: true
@@ -89,7 +89,7 @@ matrix:
     - env: JPAPROVIDER=hibernate-apt RDBMS=postgresql SPRING_DATA=spring-data-2.3.x DELTASPIKE=deltaspike-1.9
       jdk: oraclejdk8
       addons:
-        postgresql: "9.4"
+        postgresql: "9.5"
 #    - env: JPAPROVIDER=hibernate-5.2 RDBMS=sqlite
 #      jdk: oraclejdk8
 #    - env: JPAPROVIDER=hibernate-5.2 RDBMS=firebird
@@ -107,7 +107,7 @@ matrix:
     - env: JPAPROVIDER=datanucleus-5 RDBMS=postgresql
       jdk: oraclejdk8
       addons:
-        postgresql: "9.4"
+        postgresql: "9.5"
 #    - env: JPAPROVIDER=datanucleus-5 RDBMS=mssql
 #      jdk: oraclejdk8
 #      sudo: true
@@ -138,7 +138,7 @@ matrix:
 #      sudo: required
 #    - env: JPAPROVIDER=eclipselink RDBMS=postgresql
 #      addons:
-#        postgresql: "9.4"
+#        postgresql: "9.5"
 #    - env: JPAPROVIDER=eclipselink RDBMS=mssql
 #      jdk: oraclejdk8
 #      sudo: true
@@ -166,7 +166,7 @@ matrix:
 #      sudo: required
 #    - env: JPAPROVIDER=openjpa RDBMS=postgresql
 #      addons:
-#        postgresql: "9.4"
+#        postgresql: "9.5"
 #    - env: JPAPROVIDER=openjpa RDBMS=mssql
 #      jdk: oraclejdk8
 #      sudo: true
@@ -197,7 +197,7 @@ matrix:
     - env: JPAPROVIDER=hibernate-5.3 RDBMS=postgresql
       jdk: oraclejdk8
       addons:
-        postgresql: "9.4"
+        postgresql: "9.5"
     - env: JPAPROVIDER=hibernate-5.3 RDBMS=mssql
       jdk: oraclejdk8
       sudo: true
@@ -233,7 +233,7 @@ matrix:
     - env: JPAPROVIDER=hibernate-5.4 RDBMS=postgresql NATIVE=true
       jdk: oraclejdk8
       addons:
-        postgresql: "9.4"
+        postgresql: "9.5"
       script:
         - travis_wait 70 ./build.sh
     - env: JPAPROVIDER=hibernate-5.4 RDBMS=mssql NATIVE=true
@@ -270,7 +270,7 @@ matrix:
 #    - env: JPAPROVIDER=datanucleus-5.1 RDBMS=postgresql
 #      jdk: oraclejdk8
 #      addons:
-#        postgresql: "9.4"
+#        postgresql: "9.5"
 #    - env: JPAPROVIDER=datanucleus-5.1 RDBMS=mssql
 #      jdk: oraclejdk8
 #      sudo: true
@@ -303,7 +303,7 @@ matrix:
     - env: JPAPROVIDER=hibernate-5.1 RDBMS=postgresql
       jdk: oraclejdk8
       addons:
-        postgresql: "9.4"
+        postgresql: "9.5"
 #    - env: JPAPROVIDER=hibernate-5.1 RDBMS=mssql
 #      jdk: oraclejdk8
 #      sudo: true
@@ -336,7 +336,7 @@ matrix:
     - env: JPAPROVIDER=hibernate-5.0 RDBMS=postgresql
       jdk: oraclejdk8
       addons:
-        postgresql: "9.4"
+        postgresql: "9.5"
 #    - env: JPAPROVIDER=hibernate-5.0 RDBMS=mssql
 #      jdk: oraclejdk8
 #      sudo: true
@@ -369,7 +369,7 @@ matrix:
     - env: JPAPROVIDER=hibernate-4.3 RDBMS=postgresql
       jdk: oraclejdk8
       addons:
-        postgresql: "9.4"
+        postgresql: "9.5"
 #    - env: JPAPROVIDER=hibernate-4.3 RDBMS=mssql
 #      jdk: oraclejdk8
 #      sudo: true
@@ -401,7 +401,7 @@ matrix:
     - env: JPAPROVIDER=hibernate RDBMS=postgresql
       jdk: oraclejdk8
       addons:
-        postgresql: "9.4"
+        postgresql: "9.5"
 #    - env: JPAPROVIDER=hibernate RDBMS=mssql
 #      jdk: oraclejdk8
 #      sudo: true
@@ -432,7 +432,7 @@ matrix:
 #      sudo: required
 #    - env: JPAPROVIDER=datanucleus-4 RDBMS=postgresql
 #      addons:
-#        postgresql: "9.4"
+#        postgresql: "9.5"
 #      jdk: oraclejdk8
 #    - env: JPAPROVIDER=datanucleus-4 RDBMS=mssql
 #      jdk: oraclejdk8

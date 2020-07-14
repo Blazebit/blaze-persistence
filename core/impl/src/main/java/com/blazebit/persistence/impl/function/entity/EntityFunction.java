@@ -68,10 +68,10 @@ public class EntityFunction implements JpqlFunction {
             aliasStartIndex--;
         }
 
-        String entityName = JpqlFunctionUtil.unquote(functionRenderContext.getArgument(1));
-        String valuesClause = JpqlFunctionUtil.unquote(functionRenderContext.getArgument(2));
-        String valuesAliases = JpqlFunctionUtil.unquote(functionRenderContext.getArgument(3));
-        String syntheticPredicate = JpqlFunctionUtil.unquote(functionRenderContext.getArgument(4));
+        String entityName = JpqlFunctionUtil.unquoteSingleQuotes(functionRenderContext.getArgument(1));
+        String valuesClause = JpqlFunctionUtil.unquoteSingleQuotes(functionRenderContext.getArgument(2));
+        String valuesAliases = JpqlFunctionUtil.unquoteSingleQuotes(functionRenderContext.getArgument(3));
+        String syntheticPredicate = JpqlFunctionUtil.unquoteSingleQuotes(functionRenderContext.getArgument(4));
         String valuesTableSqlAlias = subquery.substring(aliasStartIndex, aliasEndIndex);
         appendSubqueryPart(sb, subquery, 1, subqueryEndIndex, subquery.length() - 1);
 

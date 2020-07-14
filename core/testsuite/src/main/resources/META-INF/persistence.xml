@@ -150,6 +150,8 @@
         <class>com.blazebit.persistence.testsuite.entity.Sub2Sub1</class>
         <class>com.blazebit.persistence.testsuite.entity.Sub2Sub2</class>
 
+        <class>com.blazebit.persistence.testsuite.entity.JsonDocument</class>
+
         <exclude-unlisted-classes>true</exclude-unlisted-classes>
     </persistence-unit>
 </persistence>

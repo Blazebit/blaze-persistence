@@ -531,6 +531,46 @@ Syntax: `BASE64 ( bytes )`
 
 Returns a Base64 encoded string that represents the passed bytes.
 
+==== JSON_GET
+
+Sytax: `JSON_GET(jsonDocument, pathSegment1, ..., pathSegmentN)`
+
+Where `pathSegmentN` is a quoted literal json key or array index.
+
+Returns the json node (scalar, object or array) within the `jsonDocument` designated by the path segments.
+
+Usage examples:
+
+[source]
+----
+json_get('{ "owner": { "firstName": "John", "lastName": "Smith", hobbies: [ "football", "tennis" ] } }', 'owner', 'firstName')
+--> John
+
+json_get('{ "owner": { "firstName": "John", "lastName": "Smith", hobbies: [ "football", "tennis" ] } }', 'owner', 'hobbies', '1')
+--> tennis
+----
+
+==== JSON_SET
+
+Sytax: `JSON_SET(jsonDocument, newValue, pathSegment1, ..., pathSegmentN)`
+
+Where `newValue` is a quoted json node (scalar, object or array) and `pathSegmentN` is a quoted literal json key or array index.
+
+Returns the modified `jsonDocument` that results from replacing the json node designated by the path segments with `newValue`.
+
+Setting JSON `null` is not supported for Oracle.
+
+Usage examples:
+
+[source]
+----
+json_set('{ "owner": { "firstName": "John", "lastName": "Smith", hobbies: [ "football", "tennis" ] } }', 'James', 'owner', 'firstName')
+--> { "owner": { "firstName": "James", "lastName": "Smith", hobbies: [ "football", "tennis" ] } }
+
+json_set('{ "owner": { "firstName": "John", "lastName": "Smith", hobbies: [ "football", "tennis" ] } }', 'table tennis', 'owner', 'hobbies', '1')
+--> { "owner": { "firstName": "James", "lastName": "Smith", hobbies: [ "football", "table tennis" ] } }
+----
+
 ==== STRING_JSON_AGG function
 
 Syntax: `STRING_JSON_AGG ( key1, value1, ..., keyN, valueN )`

@@ -30,6 +30,7 @@ import com.blazebit.persistence.impl.function.alias.AliasFunction;
 import com.blazebit.persistence.impl.function.base64.Base64Function;
 import com.blazebit.persistence.impl.function.base64.PostgreSQLBase64Function;
 import com.blazebit.persistence.impl.function.cast.CastFunction;
+import com.blazebit.persistence.impl.function.cast.DB2CastFunction;
 import com.blazebit.persistence.impl.function.chr.CharChrFunction;
 import com.blazebit.persistence.impl.function.chr.ChrFunction;
 import com.blazebit.persistence.impl.function.colldml.CollectionDmlSupportFunction;
@@ -344,6 +345,18 @@ import com.blazebit.persistence.impl.function.groupconcat.MSSQLGroupConcatFuncti
 import com.blazebit.persistence.impl.function.groupconcat.MySQLGroupConcatFunction;
 import com.blazebit.persistence.impl.function.groupconcat.OracleListaggGroupConcatFunction;
 import com.blazebit.persistence.impl.function.groupconcat.PostgreSQLGroupConcatFunction;
+import com.blazebit.persistence.impl.function.jsonget.AbstractJsonGetFunction;
+import com.blazebit.persistence.impl.function.jsonget.DB2JsonGetFunction;
+import com.blazebit.persistence.impl.function.jsonget.MSSQLJsonGetFunction;
+import com.blazebit.persistence.impl.function.jsonget.MySQL8JsonGetFunction;
+import com.blazebit.persistence.impl.function.jsonget.OracleJsonGetFunction;
+import com.blazebit.persistence.impl.function.jsonget.PostgreSQLJsonGetFunction;
+import com.blazebit.persistence.impl.function.jsonset.AbstractJsonSetFunction;
+import com.blazebit.persistence.impl.function.jsonset.DB2JsonSetFunction;
+import com.blazebit.persistence.impl.function.jsonset.MSSQLJsonSetFunction;
+import com.blazebit.persistence.impl.function.jsonset.MySQL8JsonSetFunction;
+import com.blazebit.persistence.impl.function.jsonset.OracleJsonSetFunction;
+import com.blazebit.persistence.impl.function.jsonset.PostgreSQLJsonSetFunction;
 import com.blazebit.persistence.impl.function.least.AbstractLeastFunction;
 import com.blazebit.persistence.impl.function.least.DefaultLeastFunction;
 import com.blazebit.persistence.impl.function.least.MinLeastFunction;
@@ -369,9 +382,9 @@ import com.blazebit.persistence.impl.function.rowvalue.RowValueSubqueryCompariso
 import com.blazebit.persistence.impl.function.set.SetFunction;
 import com.blazebit.persistence.impl.function.stringjsonagg.AbstractStringJsonAggFunction;
 import com.blazebit.persistence.impl.function.stringjsonagg.GroupConcatBasedStringJsonAggFunction;
+import com.blazebit.persistence.impl.function.stringjsonagg.MySQLStringJsonAggFunction;
 import com.blazebit.persistence.impl.function.stringjsonagg.OracleStringJsonAggFunction;
 import com.blazebit.persistence.impl.function.stringjsonagg.PostgreSQLStringJsonAggFunction;
-import com.blazebit.persistence.impl.function.stringjsonagg.MySQLStringJsonAggFunction;
 import com.blazebit.persistence.impl.function.stringxmlagg.AbstractStringXmlAggFunction;
 import com.blazebit.persistence.impl.function.stringxmlagg.GroupConcatBasedStringXmlAggFunction;
 import com.blazebit.persistence.impl.function.stringxmlagg.OracleGroupConcatBasedStringXmlAggFunction;
@@ -381,9 +394,9 @@ import com.blazebit.persistence.impl.function.tomultiset.ToMultisetFunction;
 import com.blazebit.persistence.impl.function.tostringjson.AbstractToStringJsonFunction;
 import com.blazebit.persistence.impl.function.tostringjson.ForJsonPathToStringJsonFunction;
 import com.blazebit.persistence.impl.function.tostringjson.GroupConcatBasedToStringJsonFunction;
+import com.blazebit.persistence.impl.function.tostringjson.MySQLToStringJsonFunction;
 import com.blazebit.persistence.impl.function.tostringjson.OracleToStringJsonFunction;
 import com.blazebit.persistence.impl.function.tostringjson.PostgreSQLToStringJsonFunction;
-import com.blazebit.persistence.impl.function.tostringjson.MySQLToStringJsonFunction;
 import com.blazebit.persistence.impl.function.tostringxml.AbstractToStringXmlFunction;
 import com.blazebit.persistence.impl.function.tostringxml.ForXmlPathToStringXmlFunction;
 import com.blazebit.persistence.impl.function.tostringxml.GroupConcatBasedToStringXmlFunction;
@@ -704,7 +717,13 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         for (Map.Entry<String, DbmsDialect> dbmsDialectEntry : dbmsDialects.entrySet()) {
             for (Class<?> type : BasicCastTypes.TYPES) {
-                functions.get("cast_" + type.getSimpleName().toLowerCase()).add(dbmsDialectEntry.getKey(), new CastFunction(type, dbmsDialectEntry.getValue()));
+                CastFunction castFunction;
+                if ("db2".equals(dbmsDialectEntry.getKey())) {
+                    castFunction = new DB2CastFunction(type, dbmsDialectEntry.getValue());
+                } else {
+                    castFunction = new CastFunction(type, dbmsDialectEntry.getValue());
+                }
+                functions.get("cast_" + type.getSimpleName().toLowerCase()).add(dbmsDialectEntry.getKey(), castFunction);
             }
         }
 
@@ -1758,6 +1777,24 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
             jpqlFunctionGroup.add(dialectEntry.getKey(), new NthValueFunction(dialectEntry.getValue()));
         }
+        registerFunction(jpqlFunctionGroup);
+
+        // json_get
+        jpqlFunctionGroup = new JpqlFunctionGroup(AbstractJsonGetFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLJsonGetFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQL8JsonGetFunction());
+        jpqlFunctionGroup.add("oracle", new OracleJsonGetFunction());
+        jpqlFunctionGroup.add("db2", new DB2JsonGetFunction());
+        jpqlFunctionGroup.add("microsoft", new MSSQLJsonGetFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        // json_set
+        jpqlFunctionGroup = new JpqlFunctionGroup(AbstractJsonSetFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLJsonSetFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQL8JsonSetFunction());
+        jpqlFunctionGroup.add("oracle", new OracleJsonSetFunction());
+        jpqlFunctionGroup.add("db2", new DB2JsonSetFunction());
+        jpqlFunctionGroup.add("microsoft", new MSSQLJsonSetFunction());
         registerFunction(jpqlFunctionGroup);
     }
 
