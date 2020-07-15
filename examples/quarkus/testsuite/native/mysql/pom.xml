@@ -40,7 +40,6 @@
                         </goals>
                         <configuration>
                             <skip>${skipITs}</skip>
-                            <uberJar>true</uberJar>
                         </configuration>
                     </execution>
                 </executions>
