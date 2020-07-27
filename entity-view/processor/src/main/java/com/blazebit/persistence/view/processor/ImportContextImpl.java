@@ -73,7 +73,7 @@ public class ImportContextImpl implements ImportContext {
             fqcn = result;
         } else if ((bracketIdx = fqcn.indexOf('[')) != -1) {
             additionalTypePart = result.substring(bracketIdx);
-            result = result.substring(0, fqcn.indexOf(']', bracketIdx));
+            result = result.substring(0, bracketIdx);
             fqcn = result;
         }
 

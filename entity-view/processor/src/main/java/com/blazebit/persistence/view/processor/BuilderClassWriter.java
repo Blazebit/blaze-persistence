@@ -370,7 +370,6 @@ public final class BuilderClassWriter {
     }
 
     private static void appendMember(StringBuilder sb, MetaEntityView entity, MetaAttribute metaMember, String builderType) {
-        String memberBuilderFqn = metaMember.getGeneratedTypePrefix() + BuilderClassWriter.BUILDER_CLASS_NAME_SUFFIX;
         ElementKind kind = metaMember.getElement() == null ? null : metaMember.getElement().getKind();
         metaMember.appendBuilderAttributeGetterAndSetterString(sb);
         sb.append(NEW_LINE);
@@ -398,6 +397,7 @@ public final class BuilderClassWriter {
                 .append("    }");
 
         if (metaMember.isSubview()) {
+            String memberBuilderFqn = metaMember.getGeneratedTypePrefix() + BuilderClassWriter.BUILDER_CLASS_NAME_SUFFIX;
             List<TypeVariable> typeArguments = (List<TypeVariable>) ((DeclaredType) metaMember.getSubviewElement().asType()).getTypeArguments();
             if (metaMember instanceof AnnotationMetaMap) {
                 AnnotationMetaMap mapMember = (AnnotationMetaMap) metaMember;

@@ -19,4 +19,6 @@ public interface AView<X extends Serializable> extends IdHolderView<Integer> {
     List<X> getTest();
 
     EntityViewManager evm();
+
+    byte[] getBytes();
 }

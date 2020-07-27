@@ -25,6 +25,7 @@ Not yet released
 * Fix issue with type validation in entity literal array expression of entity view mapping
 * Fix issue with type validation in array predicate expression of entity view mapping
 * Fix `@Limit` handling for path expressions other than entity literals
+* Fix generation of invalid code in entity view annotation processor for arrays
 
 ### Backwards-incompatible changes
 
