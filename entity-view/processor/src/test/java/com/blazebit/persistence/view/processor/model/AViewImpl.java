@@ -19,6 +19,7 @@ public class AViewImpl<X extends Serializable> implements AView<X>, EntityViewPr
     public static final SerializableEntityViewManager SERIALIZABLE_ENTITY_VIEW_MANAGER = new SerializableEntityViewManager(AViewImpl.class, ENTITY_VIEW_MANAGER);
 
     private final int age;
+    private final byte[] bytes;
     private final Integer id;
     private String name;
     private final List<String> names;
@@ -26,6 +27,7 @@ public class AViewImpl<X extends Serializable> implements AView<X>, EntityViewPr
 
     public AViewImpl(AViewImpl noop, Map<String, Object> optionalParameters) {
         this.age = 0;
+        this.bytes = null;
         this.id = null;
         this.name = null;
         this.names = (List<String>) (java.util.List<?>) AView_.names.getCollectionInstantiator().createCollection(0);
@@ -35,15 +37,17 @@ public class AViewImpl<X extends Serializable> implements AView<X>, EntityViewPr
     public AViewImpl(Integer id) {
         this.$$_kind = (byte) 1;
         this.age = 0;
+        this.bytes = null;
         this.id = id;
         this.name = null;
         this.names = (List<String>) (java.util.List<?>) AView_.names.getCollectionInstantiator().createCollection(0);
         this.test = (List<X>) (java.util.List<?>) AView_.test.getCollectionInstantiator().createCollection(0);
     }
 
-    public AViewImpl(Integer id, int age, String name, List<String> names, List<X> test) {
+    public AViewImpl(Integer id, int age, byte[] bytes, String name, List<String> names, List<X> test) {
         super();
         this.age = age;
+        this.bytes = bytes;
         this.id = id;
         this.name = name;
         this.names = names;
@@ -53,24 +57,31 @@ public class AViewImpl<X extends Serializable> implements AView<X>, EntityViewPr
     public AViewImpl(AViewImpl noop, int offset, Object[] tuple) {
         super();
         this.age = (int) tuple[offset + 1];
+        this.bytes = (byte[]) tuple[offset + 2];
         this.id = (Integer) tuple[offset + 0];
-        this.name = (String) tuple[offset + 2];
-        this.names = (List<String>) tuple[offset + 3];
-        this.test = (List<X>) tuple[offset + 4];
+        this.name = (String) tuple[offset + 3];
+        this.names = (List<String>) tuple[offset + 4];
+        this.test = (List<X>) tuple[offset + 5];
     }
 
     public AViewImpl(AViewImpl noop, int offset, int[] assignment, Object[] tuple) {
         super();
         this.age = (int) tuple[offset + assignment[1]];
+        this.bytes = (byte[]) tuple[offset + assignment[2]];
         this.id = (Integer) tuple[offset + assignment[0]];
-        this.name = (String) tuple[offset + assignment[2]];
-        this.names = (List<String>) tuple[offset + assignment[3]];
-        this.test = (List<X>) tuple[offset + assignment[4]];
+        this.name = (String) tuple[offset + assignment[3]];
+        this.names = (List<String>) tuple[offset + assignment[4]];
+        this.test = (List<X>) tuple[offset + assignment[5]];
     }
 
     @Override
     public int getAge() {
         return age;
+    }
+
+    @Override
+    public byte[] getBytes() {
+        return bytes;
     }
 
     @Override

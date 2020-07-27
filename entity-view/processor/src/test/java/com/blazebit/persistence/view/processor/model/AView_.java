@@ -15,12 +15,14 @@ import javax.annotation.Generated;
 public abstract class AView_ {
 
     public static volatile MethodSingularAttribute<AView, Integer> age;
+    public static volatile MethodSingularAttribute<AView, byte[]> bytes;
     public static volatile MethodSingularAttribute<AView, Integer> id;
     public static volatile MethodSingularAttribute<AView, String> name;
     public static volatile MethodListAttribute<AView, String> names;
     public static volatile MethodListAttribute<AView, Serializable> test;
 
     public static final String AGE = "age";
+    public static final String BYTES = "bytes";
     public static final String ID = "id";
     public static final String NAME = "name";
     public static final String NAMES = "names";
