@@ -36,6 +36,7 @@ import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.limit.model.DocumentLimitView;
+import com.blazebit.persistence.view.testsuite.limit.model.PersonLimitJoinExpressionView;
 import com.blazebit.persistence.view.testsuite.limit.model.PersonLimitJoinView;
 import com.blazebit.persistence.view.testsuite.limit.model.PersonLimitMultisetView;
 import com.blazebit.persistence.view.testsuite.limit.model.PersonLimitSelectView;
@@ -97,6 +98,18 @@ public class LimitTest extends AbstractEntityViewTest {
     // OpenJPA has no function support
     public void testLimitJoin() {
         test(PersonLimitJoinView.class, null);
+    }
+
+    @Test
+    @Category({ NoOracle.class, NoMySQLOld.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
+    // We need a left entity join for this so Hibernate < 5.1 can't be used
+    // Our Oracle version does not support lateral yet, only after 12c
+    // MySQL before 8 didn't support lateral and also don't support correlated LIMIT subqueries in quantified predicates
+    // EclipseLink doesn't support subqueries in functions which is required for LIMIT
+    // Datanucleus fails because of a NPE?
+    // OpenJPA has no function support
+    public void testLimitJoinExpression() {
+        test(PersonLimitJoinExpressionView.class, null);
     }
 
     @Test

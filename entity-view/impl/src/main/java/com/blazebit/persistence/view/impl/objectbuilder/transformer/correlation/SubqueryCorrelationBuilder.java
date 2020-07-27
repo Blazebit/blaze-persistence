@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
 
+import com.blazebit.persistence.BaseFromQueryBuilder;
 import com.blazebit.persistence.CorrelationQueryBuilder;
 import com.blazebit.persistence.FromProvider;
 import com.blazebit.persistence.FullQueryBuilder;
@@ -112,19 +113,11 @@ public class SubqueryCorrelationBuilder implements CorrelationBuilder {
             if (limiter == null) {
                 correlationBuilder = (JoinOnBuilder<CorrelationQueryBuilder>) (JoinOnBuilder<?>) criteriaBuilder.innerJoinOn(correlationJoinBase, entityClass, correlationAlias);
             } else {
-                if (getService(DbmsDialect.class).getLateralStyle() == LateralStyle.NONE) {
-                    checkLimitSupport();
-                    criteriaBuilder.from(entityClass, correlationExternalAlias);
-                    SubqueryBuilder<?> subqueryBuilder = criteriaBuilder.where(correlationExternalAlias).in().from(entityClass, correlationAlias);
-                    limiter.apply(parameterHolder, optionalParameters, subqueryBuilder);
-                    this.correlationBuilder = subqueryBuilder;
-                    correlationBuilder = subqueryBuilder.getService(JoinOnBuilder.class);
-                } else {
-                    FullSelectCTECriteriaBuilder<?> lateralBuilder = criteriaBuilder.innerJoinLateralEntitySubquery(correlationJoinBase, entityClass, correlationExternalAlias, correlationAlias);
-                    limiter.apply(parameterHolder, optionalParameters, lateralBuilder);
-                    this.correlationBuilder = lateralBuilder;
-                    correlationBuilder = lateralBuilder.getService(JoinOnBuilder.class);
-                }
+                checkLimitSupport();
+                BaseFromQueryBuilder<?, ?> lateralBuilder = criteriaBuilder.innerJoinLateralEntitySubquery(correlationJoinBase, entityClass, correlationExternalAlias, correlationAlias);
+                limiter.apply(parameterHolder, optionalParameters, lateralBuilder);
+                this.correlationBuilder = lateralBuilder;
+                correlationBuilder = lateralBuilder.getService(JoinOnBuilder.class);
             }
         } else {
             if (limiter == null) {
@@ -135,37 +128,23 @@ public class SubqueryCorrelationBuilder implements CorrelationBuilder {
                     correlationBuilder = criteriaBuilder.getService(JoinOnBuilder.class);
                 }
             } else {
-                if (getService(DbmsDialect.class).getLateralStyle() == LateralStyle.NONE) {
+                if (correlateJoinBase) {
+                    BaseFromQueryBuilder<?, ?> lateralBuilder = criteriaBuilder.innerJoinLateralEntitySubquery(correlationJoinBase, entityClass, correlationExternalAlias, correlationAlias);
+                    limiter.apply(parameterHolder, optionalParameters, lateralBuilder);
+                    this.correlationBuilder = lateralBuilder;
+                    correlationBuilder = lateralBuilder.getService(JoinOnBuilder.class);
+                } else {
                     criteriaBuilder.from(entityClass, correlationExternalAlias);
                     SubqueryBuilder<?> subqueryBuilder = criteriaBuilder.where(correlationExternalAlias).in().from(entityClass, correlationAlias);
                     limiter.apply(parameterHolder, optionalParameters, subqueryBuilder);
                     this.correlationBuilder = subqueryBuilder;
                     correlationBuilder = subqueryBuilder.getService(JoinOnBuilder.class);
-                } else {
-                    if (correlateJoinBase) {
-                        FullSelectCTECriteriaBuilder<?> lateralBuilder = criteriaBuilder.innerJoinLateralEntitySubquery(correlationJoinBase, entityClass, correlationExternalAlias, correlationAlias);
-                        limiter.apply(parameterHolder, optionalParameters, lateralBuilder);
-                        this.correlationBuilder = lateralBuilder;
-                        correlationBuilder = lateralBuilder.getService(JoinOnBuilder.class);
-                    } else {
-                        criteriaBuilder.from(entityClass, correlationExternalAlias);
-                        SubqueryBuilder<?> subqueryBuilder = criteriaBuilder.where(correlationExternalAlias).in().from(entityClass, correlationAlias);
-                        limiter.apply(parameterHolder, optionalParameters, subqueryBuilder);
-                        this.correlationBuilder = subqueryBuilder;
-                        correlationBuilder = subqueryBuilder.getService(JoinOnBuilder.class);
-                    }
                 }
             }
         }
 
         this.correlationRoot = correlationResult;
         return correlationBuilder;
-    }
-
-    private void checkLimitSupport() {
-        if (!getService(DbmsDialect.class).supportsLimitInQuantifiedPredicateSubquery()) {
-            throw new IllegalStateException("Can't limit the amount of elements for the attribute path " + attributePath + " because the DBMS doesn't support lateral or the use of LIMIT in quantified predicates! Use the SELECT strategy with batch size 1 if you really need this.");
-        }
     }
 
     @Override
@@ -185,19 +164,11 @@ public class SubqueryCorrelationBuilder implements CorrelationBuilder {
             if (limiter == null) {
                 correlationBuilder = (JoinOnBuilder<CorrelationQueryBuilder>) (JoinOnBuilder<?>) criteriaBuilder.innerJoinOn(entityType, correlationAlias);
             } else {
-                if (getService(DbmsDialect.class).getLateralStyle() == LateralStyle.NONE) {
-                    checkLimitSupport();
-                    criteriaBuilder.from(entityType, correlationExternalAlias);
-                    SubqueryBuilder<?> subqueryBuilder = criteriaBuilder.where(correlationExternalAlias).in().from(entityType, correlationAlias);
-                    limiter.apply(parameterHolder, optionalParameters, subqueryBuilder);
-                    this.correlationBuilder = subqueryBuilder;
-                    correlationBuilder = subqueryBuilder.getService(JoinOnBuilder.class);
-                } else {
-                    FullSelectCTECriteriaBuilder<?> lateralBuilder = criteriaBuilder.innerJoinLateralEntitySubquery(correlationJoinBase, entityType, correlationExternalAlias, correlationAlias);
-                    limiter.apply(parameterHolder, optionalParameters, lateralBuilder);
-                    this.correlationBuilder = lateralBuilder;
-                    correlationBuilder = lateralBuilder.getService(JoinOnBuilder.class);
-                }
+                checkLimitSupport();
+                BaseFromQueryBuilder<?, ?> lateralBuilder = criteriaBuilder.innerJoinLateralEntitySubquery(correlationJoinBase, entityType, correlationExternalAlias, correlationAlias);
+                limiter.apply(parameterHolder, optionalParameters, lateralBuilder);
+                this.correlationBuilder = lateralBuilder;
+                correlationBuilder = lateralBuilder.getService(JoinOnBuilder.class);
             }
         } else {
             if (limiter == null) {
@@ -208,27 +179,65 @@ public class SubqueryCorrelationBuilder implements CorrelationBuilder {
                     correlationBuilder = criteriaBuilder.getService(JoinOnBuilder.class);
                 }
             } else {
-                if (getService(DbmsDialect.class).getLateralStyle() == LateralStyle.NONE) {
-                    criteriaBuilder.from(entityType, correlationExternalAlias);
-                    SubqueryBuilder<?> subqueryBuilder = criteriaBuilder.where(correlationExternalAlias).in().from(entityType, correlationAlias);
-                    limiter.apply(parameterHolder, optionalParameters, subqueryBuilder);
-                    this.correlationBuilder = subqueryBuilder;
-                    correlationBuilder = subqueryBuilder.getService(JoinOnBuilder.class);
+                checkLimitSupport();
+                BaseFromQueryBuilder<?, ?> lateralBuilder;
+                if (correlateJoinBase) {
+                    lateralBuilder = criteriaBuilder.innerJoinLateralEntitySubquery(correlationJoinBase, entityType, correlationExternalAlias, correlationAlias);
                 } else {
-                    FullSelectCTECriteriaBuilder<?> lateralBuilder;
-                    if (correlateJoinBase) {
-                        lateralBuilder = criteriaBuilder.innerJoinLateralEntitySubquery(correlationJoinBase, entityType, correlationExternalAlias, correlationAlias);
-                    } else {
-                        lateralBuilder = criteriaBuilder.innerJoinLateralEntitySubquery(entityType, correlationExternalAlias, correlationAlias);
-                    }
-                    limiter.apply(parameterHolder, optionalParameters, lateralBuilder);
-                    this.correlationBuilder = lateralBuilder;
-                    correlationBuilder = lateralBuilder.getService(JoinOnBuilder.class);
+                    lateralBuilder = criteriaBuilder.innerJoinLateralEntitySubquery(entityType, correlationExternalAlias, correlationAlias);
                 }
+                limiter.apply(parameterHolder, optionalParameters, lateralBuilder);
+                this.correlationBuilder = lateralBuilder;
+                correlationBuilder = lateralBuilder.getService(JoinOnBuilder.class);
             }
         }
 
         this.correlationRoot = correlationResult;
         return correlationBuilder;
+    }
+
+    @Override
+    public JoinOnBuilder<CorrelationQueryBuilder> correlate(String correlationPath) {
+        if (correlationRoot != null) {
+            throw new IllegalArgumentException("Can not correlate with multiple entity classes!");
+        }
+
+        JoinOnBuilder<CorrelationQueryBuilder> correlationBuilder;
+        if (batchSize > 1) {
+            if (correlationBasisEntity != null) {
+                criteriaBuilder.fromIdentifiableValues(correlationBasisEntity, correlationJoinBase, batchSize);
+            } else {
+                criteriaBuilder.fromValues(correlationBasisType, correlationJoinBase, batchSize);
+            }
+
+            if (limiter == null) {
+                correlationBuilder = (JoinOnBuilder<CorrelationQueryBuilder>) (JoinOnBuilder<?>) criteriaBuilder.innerJoinOn(correlationPath, correlationAlias);
+            } else {
+                checkLimitSupport();
+                BaseFromQueryBuilder<?, ?> lateralBuilder = criteriaBuilder.innerJoinLateralEntitySubquery(correlationPath, correlationExternalAlias, correlationAlias);
+                limiter.apply(parameterHolder, optionalParameters, lateralBuilder);
+                this.correlationBuilder = lateralBuilder;
+                correlationBuilder = lateralBuilder.getService(JoinOnBuilder.class);
+            }
+        } else {
+            if (limiter == null) {
+                correlationBuilder = (JoinOnBuilder<CorrelationQueryBuilder>) (JoinOnBuilder<?>) criteriaBuilder.innerJoinOn(correlationPath, correlationAlias);
+            } else {
+                checkLimitSupport();
+                BaseFromQueryBuilder<?, ?> lateralBuilder = criteriaBuilder.innerJoinLateralEntitySubquery(correlationPath, correlationExternalAlias, correlationAlias);
+                limiter.apply(parameterHolder, optionalParameters, lateralBuilder);
+                this.correlationBuilder = lateralBuilder;
+                correlationBuilder = lateralBuilder.getService(JoinOnBuilder.class);
+            }
+        }
+
+        this.correlationRoot = correlationResult;
+        return correlationBuilder;
+    }
+
+    private void checkLimitSupport() {
+        if (getService(DbmsDialect.class).getLateralStyle() == LateralStyle.NONE && !getService(DbmsDialect.class).supportsLimitInQuantifiedPredicateSubquery()) {
+            throw new IllegalStateException("Can't limit the amount of elements for the attribute path " + attributePath + " because the DBMS doesn't support lateral or the use of LIMIT in quantified predicates! Use the SELECT strategy with batch size 1 if you really need this.");
+        }
     }
 }

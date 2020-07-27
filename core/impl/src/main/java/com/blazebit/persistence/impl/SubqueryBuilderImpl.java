@@ -16,10 +16,7 @@
 
 package com.blazebit.persistence.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
+import com.blazebit.persistence.JoinOnBuilder;
 import com.blazebit.persistence.LeafOngoingFinalSetOperationSubqueryBuilder;
 import com.blazebit.persistence.LeafOngoingSetOperationSubqueryBuilder;
 import com.blazebit.persistence.StartOngoingSetOperationSubqueryBuilder;
@@ -30,6 +27,9 @@ import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.spi.SetOperationType;
 
 import javax.persistence.Tuple;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -39,8 +39,8 @@ import javax.persistence.Tuple;
  */
 public class SubqueryBuilderImpl<T> extends BaseSubqueryBuilderImpl<T, SubqueryBuilder<T>, LeafOngoingSetOperationSubqueryBuilder<T>, StartOngoingSetOperationSubqueryBuilder<T, LeafOngoingFinalSetOperationSubqueryBuilder<T>>> implements SubqueryBuilder<T>, SubqueryInternalBuilder<T> {
 
-    public SubqueryBuilderImpl(MainQuery mainQuery, QueryContext queryContext, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, T result, SubqueryBuilderListener<T> listener) {
-        super(mainQuery, queryContext, aliasManager, parentJoinManager, expressionFactory, result, listener, null);
+    public SubqueryBuilderImpl(MainQuery mainQuery, QueryContext queryContext, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, T result, boolean endResultAsJoinOnBuilder, SubqueryBuilderListener<T> listener) {
+        super(mainQuery, queryContext, aliasManager, parentJoinManager, expressionFactory, result, endResultAsJoinOnBuilder, listener, null);
     }
 
     public SubqueryBuilderImpl(BaseSubqueryBuilderImpl<T, SubqueryBuilder<T>, LeafOngoingSetOperationSubqueryBuilder<T>, StartOngoingSetOperationSubqueryBuilder<T, LeafOngoingFinalSetOperationSubqueryBuilder<T>>> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
@@ -50,12 +50,6 @@ public class SubqueryBuilderImpl<T> extends BaseSubqueryBuilderImpl<T, SubqueryB
     @Override
     AbstractCommonQueryBuilder<Tuple, SubqueryBuilder<T>, LeafOngoingSetOperationSubqueryBuilder<T>, StartOngoingSetOperationSubqueryBuilder<T, LeafOngoingFinalSetOperationSubqueryBuilder<T>>, BaseFinalSetOperationSubqueryBuilderImpl<T, ?>> copy(QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
         return new SubqueryBuilderImpl<>(this, queryContext.getParent().mainQuery, queryContext, joinManagerMapping, copyContext);
-    }
-
-    public SubqueryBuilderImpl<T> from(Expression expression, String alias) {
-        prepareForModification(ClauseType.JOIN);
-        joinManager.addRoot(null, expression, alias, false, true);
-        return this;
     }
 
     @Override
@@ -72,13 +66,12 @@ public class SubqueryBuilderImpl<T> extends BaseSubqueryBuilderImpl<T, SubqueryB
     @Override
     public T end() {
         listener.onBuilderEnded(this);
+        if (endResultAsJoinOnBuilder) {
+            return (T) ((JoinOnBuilder<?>) result).end();
+        }
         return result;
     }
 
-    public T getResult() {
-        return result;
-    }
-    
     @Override
     protected BaseFinalSetOperationSubqueryBuilderImpl<T, ?> createFinalSetOperationBuilder(SetOperationType operator, boolean nested) {
         return createFinalSetOperationBuilder(operator, nested, nested, this);

@@ -299,13 +299,16 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
 
     @Override
     public void visit(ArrayExpression expression) {
+        if (expression.getBase() instanceof EntityLiteral) {
+            currentPosition.setCurrentType(metamodel.entity(((EntityLiteral) expression.getBase()).getValue()));
+        } else {
+            expression.getBase().accept(this);
+            currentPosition.setCurrentType(currentPosition.getCurrentType());
+        }
+
         boolean wasParamsAllowed = parametersAllowed;
         List<PathPosition> currentPositions = pathPositions;
         PathPosition position = currentPosition;
-
-        if (expression.getBase() instanceof EntityLiteral) {
-            currentPosition.setCurrentType(metamodel.entity(((EntityLiteral) expression.getBase()).getValue()));
-        }
 
         parametersAllowed = true;
         pathPositions = new ArrayList<>();
@@ -321,11 +324,6 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
         parametersAllowed = wasParamsAllowed;
         currentPosition = position;
         pathPositions = currentPositions;
-
-        if (!(expression.getBase() instanceof EntityLiteral)) {
-            expression.getBase().accept(this);
-            currentPosition.setCurrentType(currentPosition.getCurrentType());
-        }
     }
 
     @Override

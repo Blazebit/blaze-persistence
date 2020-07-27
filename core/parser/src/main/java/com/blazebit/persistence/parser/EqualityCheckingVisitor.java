@@ -122,7 +122,7 @@ public class EqualityCheckingVisitor implements Expression.ResultVisitor<Boolean
         PathReference referencePathReference = reference.getPathReference();
         PathReference pathReference = expression.getPathReference();
         if (referencePathReference == null || pathReference == null) {
-            return Boolean.TRUE;
+            return reference.equals(expression) ? Boolean.FALSE : Boolean.TRUE;
         }
         if (referencePathReference.getBaseNode() != pathReference.getBaseNode()) {
             return Boolean.TRUE;

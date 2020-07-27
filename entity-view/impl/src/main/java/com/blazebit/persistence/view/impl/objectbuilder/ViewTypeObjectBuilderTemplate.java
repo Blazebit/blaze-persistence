@@ -502,7 +502,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                     MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) attribute;
                     applyCollectionFunctionMapping(TypeUtils.forType(getType(mappingAttribute)), "VALUE", "", mappingAttribute, attributePath, mapperBuilder, mappingAttribute.getFetches(), embeddingViewJpqlMacro);
                 } else {
-                    if (pluralAttribute.isCorrelated() || pluralAttribute.getFetchStrategy() != FetchStrategy.JOIN && pluralAttribute.getFetchStrategy() != FetchStrategy.MULTISET) {
+                    if (pluralAttribute.isCorrelated() || attribute.getFetchStrategy() == FetchStrategy.JOIN && !attribute.getOrderByItems().isEmpty() || pluralAttribute.getFetchStrategy() != FetchStrategy.JOIN && pluralAttribute.getFetchStrategy() != FetchStrategy.MULTISET) {
                         applyBasicCorrelatedMapping(attribute, attributePath, mapperBuilder, featuresFound, ef, batchSize, dirtyTracking, embeddingViewJpqlMacro);
                     } else {
                         MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) attribute;
@@ -546,7 +546,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
             } else if (attribute.isSubview()) {
                 featuresFound[FEATURE_SUBVIEWS] = true;
                 boolean nullIfEmpty = !((SingularAttribute<?, ?>) attribute).isCreateEmptyFlatView();
-                if (attribute.isCorrelated() || attribute.getFetchStrategy() != FetchStrategy.JOIN && attribute.getFetchStrategy() != FetchStrategy.MULTISET) {
+                if (attribute.isCorrelated() || attribute.getFetchStrategy() == FetchStrategy.JOIN && !attribute.getOrderByItems().isEmpty() || attribute.getFetchStrategy() != FetchStrategy.JOIN && attribute.getFetchStrategy() != FetchStrategy.MULTISET) {
                     ManagedViewTypeImplementor<Object> managedViewType = (ManagedViewTypeImplementor<Object>) ((SingularAttribute<?, ?>) attribute).getType();
                     if (attribute.getFetchStrategy() == FetchStrategy.MULTISET) {
                         int startIndex = tupleOffset + mapperBuilder.mapperIndex();
@@ -572,7 +572,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                     }
                 }
             } else {
-                if (attribute.isCorrelated() || attribute.getFetchStrategy() != FetchStrategy.JOIN && attribute.getFetchStrategy() != FetchStrategy.MULTISET) {
+                if (attribute.isCorrelated() || attribute.getFetchStrategy() == FetchStrategy.JOIN && !attribute.getOrderByItems().isEmpty() || attribute.getFetchStrategy() != FetchStrategy.JOIN && attribute.getFetchStrategy() != FetchStrategy.MULTISET) {
                     applyBasicCorrelatedMapping(attribute, attributePath, mapperBuilder, featuresFound, ef, batchSize, false, embeddingViewJpqlMacro);
                 } else {
                     MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) attribute;

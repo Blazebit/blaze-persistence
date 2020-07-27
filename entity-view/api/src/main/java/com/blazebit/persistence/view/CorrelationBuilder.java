@@ -70,4 +70,13 @@ public interface CorrelationBuilder {
      * @since 1.3.0
      */
     public JoinOnBuilder<CorrelationQueryBuilder> correlate(EntityType<?> entityType);
+
+    /**
+     * Correlates a path expression.
+     *
+     * @param correlationPath The path to correlate
+     * @return The restriction builder for the correlation predicate
+     * @since 1.5.0
+     */
+    public JoinOnBuilder<CorrelationQueryBuilder> correlate(String correlationPath);
 }

@@ -830,6 +830,15 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
 
     @Override
     public Expression createExpression(String field) {
+        return createExpression(field, false);
+    }
+
+    @Override
+    public PathExpression createPathExpression(String field) {
+        return (PathExpression) createExpression(field, true);
+    }
+
+    public Expression createExpression(String field, boolean asPath) {
         List<PathElementExpression> pathElements = new ArrayList<>();
         if (qualificationExpression != null) {
             List<PathElementExpression> pathElementExpressions = new ArrayList<>(1);
@@ -852,7 +861,7 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
             }
         }
 
-        if (valuesTypeName != null) {
+        if (!asPath && valuesTypeName != null) {
             return new FunctionExpression("FUNCTION", Arrays.asList(
                     new StringLiteral("TREAT_" + valuesTypeName.toUpperCase()), new PathExpression(pathElements)
             ));

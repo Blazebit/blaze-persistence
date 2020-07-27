@@ -631,6 +631,13 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         hasDefaultSelect = false;
     }
 
+    void removeDefaultSelectNode(JoinNode node) {
+        if (defaultSelectNodes != null) {
+            defaultSelectNodes.remove(node);
+            defaultSelectNodes.removeAll(node.getDependencies());
+        }
+    }
+
     private void clearDefaultSelects() {
         if (!hasDefaultSelect) {
             return;

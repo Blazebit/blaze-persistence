@@ -38,7 +38,7 @@ public class OngoingSetOperationSubqueryBuilderImpl<T, Z> extends BaseSubqueryBu
     private final Z endSetResult;
 
     public OngoingSetOperationSubqueryBuilderImpl(MainQuery mainQuery, QueryContext queryContext, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, T result, SubqueryBuilderListener<T> listener, OngoingFinalSetOperationSubqueryBuilderImpl<T> finalSetOperationBuilder, Z endSetResult) {
-        super(mainQuery, queryContext, aliasManager, parentJoinManager, expressionFactory, result, listener, finalSetOperationBuilder);
+        super(mainQuery, queryContext, aliasManager, parentJoinManager, expressionFactory, result, false, listener, finalSetOperationBuilder);
         this.endSetResult = endSetResult;
     }
 

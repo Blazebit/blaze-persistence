@@ -268,10 +268,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param entityClass The entity class to join
      * @param alias The alias for the joined element
      * @param type The join type
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> joinOnEntitySubquery(Class<?> entityClass, String alias, JoinType type);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z joinOnEntitySubquery(Class<?> entityClass, String alias, JoinType type);
 
     /**
      * Adds a subquery join with an on-clause to the query and giving the joined element an alias.
@@ -281,10 +282,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param entityClass The entity class to join
      * @param alias The alias for the joined element
      * @param type The join type
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> joinOnEntitySubquery(String base, Class<?> entityClass, String alias, JoinType type);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z joinOnEntitySubquery(String base, Class<?> entityClass, String alias, JoinType type);
 
     /**
      * Like {@link FromBuilder#joinOnEntitySubquery(java.lang.String, java.lang.Class, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -294,10 +296,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
      * @param type The join type
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> joinOnEntitySubquery(Class<?> entityClass, String alias, String subqueryAlias, JoinType type);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z joinOnEntitySubquery(Class<?> entityClass, String alias, String subqueryAlias, JoinType type);
 
     /**
      * Adds a subquery join with an on-clause to the query and giving the joined element an alias.
@@ -308,10 +311,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
      * @param type The join type
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> joinOnEntitySubquery(String base, Class<?> entityClass, String alias, String subqueryAlias, JoinType type);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z joinOnEntitySubquery(String base, Class<?> entityClass, String alias, String subqueryAlias, JoinType type);
 
     /**
      * Like {@link FromBuilder#joinOnEntitySubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -320,10 +324,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param entityType The entity type to join
      * @param alias The alias for the joined element
      * @param type The join type
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.5.0
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> joinOnEntitySubquery(EntityType<?> entityType, String alias, JoinType type);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z joinOnEntitySubquery(EntityType<?> entityType, String alias, JoinType type);
 
     /**
      * Adds a subquery join with an on-clause to the query and giving the joined element an alias.
@@ -333,10 +338,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param entityType The entity type to join
      * @param alias The alias for the joined element
      * @param type The join type
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.5.0
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> joinOnEntitySubquery(String base, EntityType<?> entityType, String alias, JoinType type);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z joinOnEntitySubquery(String base, EntityType<?> entityType, String alias, JoinType type);
 
     /**
      * Like {@link FromBuilder#joinOnEntitySubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -346,10 +352,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
      * @param type The join type
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.5.0
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> joinOnEntitySubquery(EntityType<?> entityType, String alias, String subqueryAlias, JoinType type);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z joinOnEntitySubquery(EntityType<?> entityType, String alias, String subqueryAlias, JoinType type);
 
     /**
      * Adds a subquery join with an on-clause to the query and giving the joined element an alias.
@@ -360,10 +367,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
      * @param type The join type
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.5.0
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> joinOnEntitySubquery(String base, EntityType<?> entityType, String alias, String subqueryAlias, JoinType type);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z joinOnEntitySubquery(String base, EntityType<?> entityType, String alias, String subqueryAlias, JoinType type);
 
     /**
      * Like {@link FromBuilder#joinLateralOnSubquery(java.lang.String, java.lang.Class, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -421,10 +429,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
      * @param type The join type
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> joinLateralOnEntitySubquery(Class<?> entityClass, String alias, String subqueryAlias, JoinType type);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z joinLateralOnEntitySubquery(Class<?> entityClass, String alias, String subqueryAlias, JoinType type);
 
     /**
      * Adds a lateral subquery join with an on-clause to the query and giving the joined element an alias.
@@ -435,10 +444,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
      * @param type The join type
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> joinLateralOnEntitySubquery(String base, Class<?> entityClass, String alias, String subqueryAlias, JoinType type);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z joinLateralOnEntitySubquery(String base, Class<?> entityClass, String alias, String subqueryAlias, JoinType type);
 
     /**
      * Like {@link FromBuilder#joinLateralOnEntitySubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -448,10 +458,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
      * @param type The join type
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.5.0
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> joinLateralOnEntitySubquery(EntityType<?> entityType, String alias, String subqueryAlias, JoinType type);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z joinLateralOnEntitySubquery(EntityType<?> entityType, String alias, String subqueryAlias, JoinType type);
 
     /**
      * Adds a lateral subquery join with an on-clause to the query and giving the joined element an alias.
@@ -462,10 +473,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
      * @param type The join type
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.5.0
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> joinLateralOnEntitySubquery(String base, EntityType<?> entityType, String alias, String subqueryAlias, JoinType type);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z joinLateralOnEntitySubquery(String base, EntityType<?> entityType, String alias, String subqueryAlias, JoinType type);
 
     /**
      * Correlates the given association path in a subquery in the FROM clause and returns a CTE builder for that subquery.
@@ -486,10 +498,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param alias The alias for the FROM clause item
      * @param subqueryAlias The alias for the correlation FROM clause item in the subquery
      * @param type The join type
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> joinLateralOnEntitySubquery(String correlationPath, String alias, String subqueryAlias, JoinType type);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z joinLateralOnEntitySubquery(String correlationPath, String alias, String subqueryAlias, JoinType type);
 
     /**
      * Like {@link FromBuilder#joinLateralSubquery(java.lang.String, java.lang.Class, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -547,10 +560,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
      * @param type The join type
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<X> joinLateralEntitySubquery(Class<?> entityClass, String alias, String subqueryAlias, JoinType type);
+    public <Z extends BaseFromQueryBuilder<X, ? extends Z>> Z joinLateralEntitySubquery(Class<?> entityClass, String alias, String subqueryAlias, JoinType type);
 
     /**
      * Adds a lateral subquery join with an always true on-clause to the query and giving the joined element an alias.
@@ -561,10 +575,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
      * @param type The join type
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<X> joinLateralEntitySubquery(String base, Class<?> entityClass, String alias, String subqueryAlias, JoinType type);
+    public <Z extends BaseFromQueryBuilder<X, ? extends Z>> Z joinLateralEntitySubquery(String base, Class<?> entityClass, String alias, String subqueryAlias, JoinType type);
 
     /**
      * Like {@link FromBuilder#joinLateralEntitySubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -574,10 +589,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
      * @param type The join type
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.5.0
      */
-    public FullSelectCTECriteriaBuilder<X> joinLateralEntitySubquery(EntityType<?> entityType, String alias, String subqueryAlias, JoinType type);
+    public <Z extends BaseFromQueryBuilder<X, ? extends Z>> Z joinLateralEntitySubquery(EntityType<?> entityType, String alias, String subqueryAlias, JoinType type);
 
     /**
      * Adds a lateral subquery join with an always true on-clause to the query and giving the joined element an alias.
@@ -588,10 +604,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
      * @param type The join type
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.5.0
      */
-    public FullSelectCTECriteriaBuilder<X> joinLateralEntitySubquery(String base, EntityType<?> entityType, String alias, String subqueryAlias, JoinType type);
+    public <Z extends BaseFromQueryBuilder<X, ? extends Z>> Z joinLateralEntitySubquery(String base, EntityType<?> entityType, String alias, String subqueryAlias, JoinType type);
 
     /**
      * Correlates the given association path in a subquery in the FROM clause and returns a CTE builder for that subquery.
@@ -612,10 +629,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param alias The alias for the FROM clause item
      * @param subqueryAlias The alias for the correlation FROM clause item in the subquery
      * @param type The join type
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<X> joinLateralEntitySubquery(String correlationPath, String alias, String subqueryAlias, JoinType type);
+    public <Z extends BaseFromQueryBuilder<X, ? extends Z>> Z joinLateralEntitySubquery(String correlationPath, String alias, String subqueryAlias, JoinType type);
 
     /**
      * Like {@link FromBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -755,10 +773,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      *
      * @param entityClass The entity class to join
      * @param alias The alias for the joined element
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> innerJoinOnEntitySubquery(Class<?> entityClass, String alias);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z innerJoinOnEntitySubquery(Class<?> entityClass, String alias);
 
     /**
      * Like {@link FromBuilder#joinOnEntitySubquery(java.lang.String, java.lang.Class, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -767,10 +786,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param base The base node on which to join
      * @param entityClass The entity class to join
      * @param alias The alias for the joined element
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> innerJoinOnEntitySubquery(String base, Class<?> entityClass, String alias);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z innerJoinOnEntitySubquery(String base, Class<?> entityClass, String alias);
 
     /**
      * Like {@link FromBuilder#joinOnEntitySubquery(javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -778,10 +798,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      *
      * @param entityType The entity type to join
      * @param alias The alias for the joined element
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.5.0
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> innerJoinOnEntitySubquery(EntityType<?> entityType, String alias);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z innerJoinOnEntitySubquery(EntityType<?> entityType, String alias);
 
     /**
      * Like {@link FromBuilder#joinOnEntitySubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -790,10 +811,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param base The base node on which to join
      * @param entityType The entity type to join
      * @param alias The alias for the joined element
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.5.0
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> innerJoinOnEntitySubquery(String base, EntityType<?> entityType, String alias);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z innerJoinOnEntitySubquery(String base, EntityType<?> entityType, String alias);
 
     /**
      * Like {@link FromBuilder#joinOnEntitySubquery(java.lang.Class, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -802,10 +824,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param entityClass The entity class to join
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> innerJoinOnEntitySubquery(Class<?> entityClass, String alias, String subqueryAlias);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z innerJoinOnEntitySubquery(Class<?> entityClass, String alias, String subqueryAlias);
 
     /**
      * Like {@link FromBuilder#joinOnEntitySubquery(java.lang.String, java.lang.Class, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -815,10 +838,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param entityClass The entity class to join
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> innerJoinOnEntitySubquery(String base, Class<?> entityClass, String alias, String subqueryAlias);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z innerJoinOnEntitySubquery(String base, Class<?> entityClass, String alias, String subqueryAlias);
 
     /**
      * Like {@link FromBuilder#joinOnEntitySubquery(javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -827,10 +851,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param entityType The entity type to join
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.5.0
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> innerJoinOnEntitySubquery(EntityType<?> entityType, String alias, String subqueryAlias);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z innerJoinOnEntitySubquery(EntityType<?> entityType, String alias, String subqueryAlias);
 
     /**
      * Like {@link FromBuilder#joinOnEntitySubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -840,10 +865,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param entityType The entity type to join
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.5.0
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> innerJoinOnEntitySubquery(String base, EntityType<?> entityType, String alias, String subqueryAlias);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z innerJoinOnEntitySubquery(String base, EntityType<?> entityType, String alias, String subqueryAlias);
 
     /**
      * Like {@link FromBuilder#joinLateralOnSubquery(java.lang.Class, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -898,10 +924,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param entityClass The entity class to join
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> innerJoinLateralOnEntitySubquery(Class<?> entityClass, String alias, String subqueryAlias);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z innerJoinLateralOnEntitySubquery(Class<?> entityClass, String alias, String subqueryAlias);
 
     /**
      * Like {@link FromBuilder#joinLateralOnEntitySubquery(java.lang.String, java.lang.Class, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -911,10 +938,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param entityClass The entity class to join
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> innerJoinLateralOnEntitySubquery(String base, Class<?> entityClass, String alias, String subqueryAlias);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z innerJoinLateralOnEntitySubquery(String base, Class<?> entityClass, String alias, String subqueryAlias);
 
     /**
      * Like {@link FromBuilder#joinLateralOnEntitySubquery(javax.persistence.metamodel.EntityType, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -923,10 +951,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param entityType The entity type to join
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.5.0
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> innerJoinLateralOnEntitySubquery(EntityType<?> entityType, String alias, String subqueryAlias);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z innerJoinLateralOnEntitySubquery(EntityType<?> entityType, String alias, String subqueryAlias);
 
     /**
      * Like {@link FromBuilder#joinLateralOnEntitySubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -936,10 +965,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param entityType The entity type to join
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.5.0
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> innerJoinLateralOnEntitySubquery(String base, EntityType<?> entityType, String alias, String subqueryAlias);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z innerJoinLateralOnEntitySubquery(String base, EntityType<?> entityType, String alias, String subqueryAlias);
 
     /**
      * Like {@link FromBuilder#joinLateralOnSubquery(java.lang.String, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -960,10 +990,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param correlationPath The correlation path which should be queried
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> innerJoinLateralOnEntitySubquery(String correlationPath, String alias, String subqueryAlias);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z innerJoinLateralOnEntitySubquery(String correlationPath, String alias, String subqueryAlias);
 
     /**
      * Like {@link FromBuilder#joinLateralSubquery(java.lang.Class, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -1018,10 +1049,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param entityClass The entity class to join
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<X> innerJoinLateralEntitySubquery(Class<?> entityClass, String alias, String subqueryAlias);
+    public <Z extends BaseFromQueryBuilder<X, ? extends Z>> Z innerJoinLateralEntitySubquery(Class<?> entityClass, String alias, String subqueryAlias);
 
     /**
      * Like {@link FromBuilder#joinLateralEntitySubquery(java.lang.String, java.lang.Class, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -1031,10 +1063,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param entityClass The entity class to join
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<X> innerJoinLateralEntitySubquery(String base, Class<?> entityClass, String alias, String subqueryAlias);
+    public <Z extends BaseFromQueryBuilder<X, ? extends Z>> Z innerJoinLateralEntitySubquery(String base, Class<?> entityClass, String alias, String subqueryAlias);
 
     /**
      * Like {@link FromBuilder#joinLateralEntitySubquery(javax.persistence.metamodel.EntityType, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -1043,10 +1076,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param entityType The entity type to join
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.5.0
      */
-    public FullSelectCTECriteriaBuilder<X> innerJoinLateralEntitySubquery(EntityType<?> entityType, String alias, String subqueryAlias);
+    public <Z extends BaseFromQueryBuilder<X, ? extends Z>> Z innerJoinLateralEntitySubquery(EntityType<?> entityType, String alias, String subqueryAlias);
 
     /**
      * Like {@link FromBuilder#joinLateralEntitySubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -1056,10 +1090,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param entityType The entity type to join
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.5.0
      */
-    public FullSelectCTECriteriaBuilder<X> innerJoinLateralEntitySubquery(String base, EntityType<?> entityType, String alias, String subqueryAlias);
+    public <Z extends BaseFromQueryBuilder<X, ? extends Z>> Z innerJoinLateralEntitySubquery(String base, EntityType<?> entityType, String alias, String subqueryAlias);
 
     /**
      * Like {@link FromBuilder#joinLateralSubquery(java.lang.String, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -1080,10 +1115,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param correlationPath The correlation path which should be queried
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<X> innerJoinLateralEntitySubquery(String correlationPath, String alias, String subqueryAlias);
+    public <Z extends BaseFromQueryBuilder<X, ? extends Z>> Z innerJoinLateralEntitySubquery(String correlationPath, String alias, String subqueryAlias);
 
     /**
      * Like {@link FromBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -1223,10 +1259,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      *
      * @param entityClass The entity class to join
      * @param alias The alias for the joined element
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> leftJoinOnEntitySubquery(Class<?> entityClass, String alias);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z leftJoinOnEntitySubquery(Class<?> entityClass, String alias);
 
     /**
      * Like {@link FromBuilder#joinOnEntitySubquery(java.lang.String, java.lang.Class, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -1235,10 +1272,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param base The base node on which to join
      * @param entityClass The entity class to join
      * @param alias The alias for the joined element
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> leftJoinOnEntitySubquery(String base, Class<?> entityClass, String alias);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z leftJoinOnEntitySubquery(String base, Class<?> entityClass, String alias);
 
     /**
      * Like {@link FromBuilder#joinOnEntitySubquery(javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -1246,10 +1284,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      *
      * @param entityType The entity type to join
      * @param alias The alias for the joined element
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.5.0
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> leftJoinOnEntitySubquery(EntityType<?> entityType, String alias);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z leftJoinOnEntitySubquery(EntityType<?> entityType, String alias);
 
     /**
      * Like {@link FromBuilder#joinOnEntitySubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -1258,10 +1297,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param base The base node on which to join
      * @param entityType The entity type to join
      * @param alias The alias for the joined element
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.5.0
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> leftJoinOnEntitySubquery(String base, EntityType<?> entityType, String alias);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z leftJoinOnEntitySubquery(String base, EntityType<?> entityType, String alias);
 
     /**
      * Like {@link FromBuilder#joinOnEntitySubquery(java.lang.Class, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -1270,10 +1310,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param entityClass The entity class to join
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> leftJoinOnEntitySubquery(Class<?> entityClass, String alias, String subqueryAlias);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z leftJoinOnEntitySubquery(Class<?> entityClass, String alias, String subqueryAlias);
 
     /**
      * Like {@link FromBuilder#joinOnEntitySubquery(java.lang.String, java.lang.Class, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -1283,10 +1324,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param entityClass The entity class to join
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> leftJoinOnEntitySubquery(String base, Class<?> entityClass, String alias, String subqueryAlias);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z leftJoinOnEntitySubquery(String base, Class<?> entityClass, String alias, String subqueryAlias);
 
     /**
      * Like {@link FromBuilder#joinOnEntitySubquery(javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -1295,10 +1337,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param entityType The entity type to join
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.5.0
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> leftJoinOnEntitySubquery(EntityType<?> entityType, String alias, String subqueryAlias);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z leftJoinOnEntitySubquery(EntityType<?> entityType, String alias, String subqueryAlias);
 
     /**
      * Like {@link FromBuilder#joinOnEntitySubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -1308,10 +1351,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param entityType The entity type to join
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.5.0
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> leftJoinOnEntitySubquery(String base, EntityType<?> entityType, String alias, String subqueryAlias);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z leftJoinOnEntitySubquery(String base, EntityType<?> entityType, String alias, String subqueryAlias);
 
     /**
      * Like {@link FromBuilder#joinLateralOnSubquery(java.lang.Class, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -1366,10 +1410,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param entityClass The entity class to join
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> leftJoinLateralOnEntitySubquery(Class<?> entityClass, String alias, String subqueryAlias);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z leftJoinLateralOnEntitySubquery(Class<?> entityClass, String alias, String subqueryAlias);
 
     /**
      * Like {@link FromBuilder#joinLateralOnEntitySubquery(java.lang.String, java.lang.Class, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -1379,10 +1424,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param entityClass The entity class to join
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> leftJoinLateralOnEntitySubquery(String base, Class<?> entityClass, String alias, String subqueryAlias);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z leftJoinLateralOnEntitySubquery(String base, Class<?> entityClass, String alias, String subqueryAlias);
 
     /**
      * Like {@link FromBuilder#joinLateralOnEntitySubquery(javax.persistence.metamodel.EntityType, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -1391,10 +1437,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param entityType The entity type to join
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.5.0
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> leftJoinLateralOnEntitySubquery(EntityType<?> entityType, String alias, String subqueryAlias);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z leftJoinLateralOnEntitySubquery(EntityType<?> entityType, String alias, String subqueryAlias);
 
     /**
      * Like {@link FromBuilder#joinLateralOnEntitySubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -1404,10 +1451,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param entityType The entity type to join
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.5.0
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> leftJoinLateralOnEntitySubquery(String base, EntityType<?> entityType, String alias, String subqueryAlias);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z leftJoinLateralOnEntitySubquery(String base, EntityType<?> entityType, String alias, String subqueryAlias);
 
     /**
      * Like {@link FromBuilder#joinLateralOnSubquery(java.lang.String, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -1428,10 +1476,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param correlationPath The correlation path which should be queried
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> leftJoinLateralOnEntitySubquery(String correlationPath, String alias, String subqueryAlias);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z leftJoinLateralOnEntitySubquery(String correlationPath, String alias, String subqueryAlias);
 
     /**
      * Like {@link FromBuilder#joinLateralSubquery(java.lang.Class, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -1486,10 +1535,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param entityClass The entity class to join
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<X> leftJoinLateralEntitySubquery(Class<?> entityClass, String alias, String subqueryAlias);
+    public <Z extends BaseFromQueryBuilder<X, ? extends Z>> Z leftJoinLateralEntitySubquery(Class<?> entityClass, String alias, String subqueryAlias);
 
     /**
      * Like {@link FromBuilder#joinLateralEntitySubquery(java.lang.String, java.lang.Class, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -1499,10 +1549,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param entityClass The entity class to join
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<X> leftJoinLateralEntitySubquery(String base, Class<?> entityClass, String alias, String subqueryAlias);
+    public <Z extends BaseFromQueryBuilder<X, ? extends Z>> Z leftJoinLateralEntitySubquery(String base, Class<?> entityClass, String alias, String subqueryAlias);
 
     /**
      * Like {@link FromBuilder#joinLateralEntitySubquery(javax.persistence.metamodel.EntityType, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -1511,10 +1562,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param entityType The entity type to join
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.5.0
      */
-    public FullSelectCTECriteriaBuilder<X> leftJoinLateralEntitySubquery(EntityType<?> entityType, String alias, String subqueryAlias);
+    public <Z extends BaseFromQueryBuilder<X, ? extends Z>> Z leftJoinLateralEntitySubquery(EntityType<?> entityType, String alias, String subqueryAlias);
 
     /**
      * Like {@link FromBuilder#joinLateralEntitySubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -1524,10 +1576,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param entityType The entity type to join
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.5.0
      */
-    public FullSelectCTECriteriaBuilder<X> leftJoinLateralEntitySubquery(String base, EntityType<?> entityType, String alias, String subqueryAlias);
+    public <Z extends BaseFromQueryBuilder<X, ? extends Z>> Z leftJoinLateralEntitySubquery(String base, EntityType<?> entityType, String alias, String subqueryAlias);
 
     /**
      * Like {@link FromBuilder#joinLateralSubquery(java.lang.String, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -1548,10 +1601,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param correlationPath The correlation path which should be queried
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<X> leftJoinLateralEntitySubquery(String correlationPath, String alias, String subqueryAlias);
+    public <Z extends BaseFromQueryBuilder<X, ? extends Z>> Z leftJoinLateralEntitySubquery(String correlationPath, String alias, String subqueryAlias);
 
     /**
      * Like {@link FromBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -1691,10 +1745,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      *
      * @param entityClass The entity class to join
      * @param alias The alias for the joined element
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> rightJoinOnEntitySubquery(Class<?> entityClass, String alias);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z rightJoinOnEntitySubquery(Class<?> entityClass, String alias);
 
     /**
      * Like {@link FromBuilder#joinOnEntitySubquery(java.lang.String, java.lang.Class, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -1703,10 +1758,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param base The base node on which to join
      * @param entityClass The entity class to join
      * @param alias The alias for the joined element
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> rightJoinOnEntitySubquery(String base, Class<?> entityClass, String alias);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z rightJoinOnEntitySubquery(String base, Class<?> entityClass, String alias);
 
     /**
      * Like {@link FromBuilder#joinOnEntitySubquery(javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -1714,10 +1770,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      *
      * @param entityType The entity type to join
      * @param alias The alias for the joined element
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.5.0
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> rightJoinOnEntitySubquery(EntityType<?> entityType, String alias);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z rightJoinOnEntitySubquery(EntityType<?> entityType, String alias);
 
     /**
      * Like {@link FromBuilder#joinOnEntitySubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -1726,10 +1783,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param base The base node on which to join
      * @param entityType The entity type to join
      * @param alias The alias for the joined element
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.5.0
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> rightJoinOnEntitySubquery(String base, EntityType<?> entityType, String alias);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z rightJoinOnEntitySubquery(String base, EntityType<?> entityType, String alias);
 
     /**
      * Like {@link FromBuilder#joinOnEntitySubquery(java.lang.Class, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -1738,10 +1796,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param entityClass The entity class to join
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> rightJoinOnEntitySubquery(Class<?> entityClass, String alias, String subqueryAlias);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z rightJoinOnEntitySubquery(Class<?> entityClass, String alias, String subqueryAlias);
 
     /**
      * Like {@link FromBuilder#joinOnEntitySubquery(java.lang.String, java.lang.Class, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -1751,10 +1810,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param entityClass The entity class to join
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> rightJoinOnEntitySubquery(String base, Class<?> entityClass, String alias, String subqueryAlias);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z rightJoinOnEntitySubquery(String base, Class<?> entityClass, String alias, String subqueryAlias);
 
     /**
      * Like {@link FromBuilder#joinOnEntitySubquery(javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -1763,10 +1823,11 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param entityType The entity type to join
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.5.0
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> rightJoinOnEntitySubquery(EntityType<?> entityType, String alias, String subqueryAlias);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z rightJoinOnEntitySubquery(EntityType<?> entityType, String alias, String subqueryAlias);
 
     /**
      * Like {@link FromBuilder#joinOnEntitySubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -1776,9 +1837,10 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      * @param entityType The entity type to join
      * @param alias The alias for the joined element
      * @param subqueryAlias The alias for the FROM clause item in the subquery
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.5.0
      */
-    public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> rightJoinOnEntitySubquery(String base, EntityType<?> entityType, String alias, String subqueryAlias);
+    public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z rightJoinOnEntitySubquery(String base, EntityType<?> entityType, String alias, String subqueryAlias);
 
 }

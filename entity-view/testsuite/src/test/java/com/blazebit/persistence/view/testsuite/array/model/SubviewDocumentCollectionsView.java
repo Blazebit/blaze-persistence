@@ -40,6 +40,10 @@ public interface SubviewDocumentCollectionsView {
 
     public String getName();
 
+    // This is for #1139
+    @Mapping("contacts[partnerDocument.id = VIEW(owner.id)]")
+    public SubviewPersonForCollectionsView getContactTest1();
+
     @Mapping("contacts[LENGTH(name) > 0]")
     public Map<Integer, SubviewPersonForCollectionsView> getContacts();
 

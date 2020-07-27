@@ -249,10 +249,11 @@ public interface FromBaseBuilder<X extends FromBaseBuilder<X>> {
      * alias equivalent to the camel cased result of what {@link Class#getSimpleName()} of the entity class returns.
      *
      * @param entityClass The entity type for the subquery in the FROM clause
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<X> fromEntitySubquery(Class<?> entityClass);
+    public <Z extends BaseFromQueryBuilder<X, ? extends Z>> Z fromEntitySubquery(Class<?> entityClass);
 
     /**
      * Like calling {@link FromBaseBuilder#from(Class, String)} followed by {@link CTEBuilder#with(Class, boolean)} with <code>inline = true</code>.
@@ -260,10 +261,11 @@ public interface FromBaseBuilder<X extends FromBaseBuilder<X>> {
      *
      * @param entityClass The entity type for the subquery in the FROM clause
      * @param alias The alias for the FROM clause item
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<X> fromEntitySubquery(Class<?> entityClass, String alias);
+    public <Z extends BaseFromQueryBuilder<X, ? extends Z>> Z fromEntitySubquery(Class<?> entityClass, String alias);
 
     /**
      * Like calling {@link FromBaseBuilder#from(Class, String)} followed by {@link CTEBuilder#with(Class, boolean)} with <code>inline = true</code>.
@@ -272,9 +274,10 @@ public interface FromBaseBuilder<X extends FromBaseBuilder<X>> {
      * @param entityClass The entity type for the subquery in the FROM clause
      * @param alias The alias for the FROM clause item
      * @param subqueryAlias The alias for the FROM clause item in the subquery
+     * @param <Z> The builder return type
      * @return The CTE builder for the subquery in the FROM clause
      * @since 1.4.1
      */
-    public FullSelectCTECriteriaBuilder<X> fromEntitySubquery(Class<?> entityClass, String alias, String subqueryAlias);
+    public <Z extends BaseFromQueryBuilder<X, ? extends Z>> Z fromEntitySubquery(Class<?> entityClass, String alias, String subqueryAlias);
 
 }

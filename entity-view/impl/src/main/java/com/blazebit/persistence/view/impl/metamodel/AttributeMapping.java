@@ -278,7 +278,7 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
             containerBehavior = ContainerBehavior.DEFAULT;
             return false;
         }
-        if (MetamodelUtils.isIndexedList(context.getEntityMetamodel(), context.getExpressionFactory(), managedType.getJavaType(), AbstractAttribute.stripThisFromMapping(mappingExpression))) {
+        if (MetamodelUtils.isIndexedList(context.getEntityMetamodel(), context.getTypeValidationExpressionFactory(), managedType.getJavaType(), AbstractAttribute.stripThisFromMapping(mappingExpression))) {
             containerBehavior = ContainerBehavior.INDEXED;
             return true;
         } else {

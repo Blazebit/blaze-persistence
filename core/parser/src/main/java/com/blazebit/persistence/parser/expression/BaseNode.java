@@ -27,4 +27,6 @@ public interface BaseNode {
 
     public Expression createExpression(String field);
 
+    public PathExpression createPathExpression(String field);
+
 }
