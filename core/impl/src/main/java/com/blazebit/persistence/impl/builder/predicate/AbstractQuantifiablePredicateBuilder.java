@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl.builder.predicate;
 
+import com.blazebit.persistence.BaseFromQueryBuilder;
 import com.blazebit.persistence.CaseWhenAndThenBuilder;
 import com.blazebit.persistence.CaseWhenBuilder;
 import com.blazebit.persistence.CaseWhenOrThenBuilder;
@@ -376,21 +377,21 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAn
     }
 
     @Override
-    public FullSelectCTECriteriaBuilder<SubqueryBuilder<T>> fromEntitySubquery(Class<?> cteClass) {
+    public <Z extends BaseFromQueryBuilder<SubqueryBuilder<T>, ? extends Z>> Z fromEntitySubquery(Class<?> cteClass) {
         chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
-        return getSubqueryInitiator().fromEntitySubquery(cteClass);
+        return (Z) getSubqueryInitiator().fromEntitySubquery(cteClass);
     }
 
     @Override
-    public FullSelectCTECriteriaBuilder<SubqueryBuilder<T>> fromEntitySubquery(Class<?> cteClass, String alias) {
+    public <Z extends BaseFromQueryBuilder<SubqueryBuilder<T>, ? extends Z>> Z fromEntitySubquery(Class<?> cteClass, String alias) {
         chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
-        return getSubqueryInitiator().fromEntitySubquery(cteClass, alias);
+        return (Z) getSubqueryInitiator().fromEntitySubquery(cteClass, alias);
     }
 
     @Override
-    public FullSelectCTECriteriaBuilder<SubqueryBuilder<T>> fromEntitySubquery(Class<?> cteClass, String alias, String subqueryAlias) {
+    public <Z extends BaseFromQueryBuilder<SubqueryBuilder<T>, ? extends Z>> Z fromEntitySubquery(Class<?> cteClass, String alias, String subqueryAlias) {
         chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
-        return getSubqueryInitiator().fromEntitySubquery(cteClass, alias, subqueryAlias);
+        return (Z) getSubqueryInitiator().fromEntitySubquery(cteClass, alias, subqueryAlias);
     }
 
     @Override

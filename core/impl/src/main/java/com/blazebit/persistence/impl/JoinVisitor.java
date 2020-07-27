@@ -121,6 +121,14 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor, Jo
         this.joinAllowed = fromClause != ClauseType.JOIN;
     }
 
+    public JoinNode getCurrentJoinNode() {
+        return currentJoinNode;
+    }
+
+    public void setCurrentJoinNode(JoinNode currentJoinNode) {
+        this.currentJoinNode = currentJoinNode;
+    }
+
     public boolean setReuseExisting(boolean reuseExisting) {
         boolean old = this.reuseExisting;
         this.reuseExisting = reuseExisting;

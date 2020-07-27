@@ -14,23 +14,26 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence;
+package com.blazebit.persistence.view.testsuite.limit.model;
 
+import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.FetchStrategy;
+import com.blazebit.persistence.view.Limit;
+import com.blazebit.persistence.view.Mapping;
+
+import java.util.List;
 
 /**
- * A builder for subquery criteria queries.
  *
- * @param <T> The parent query builder type
  * @author Christian Beikov
- * @since 1.0.0
+ * @since 1.5.0
  */
-public interface SubqueryBuilder<T> extends BaseSubqueryBuilder<SubqueryBuilder<T>>, SetOperationBuilder<LeafOngoingSetOperationSubqueryBuilder<T>, StartOngoingSetOperationSubqueryBuilder<T, LeafOngoingFinalSetOperationSubqueryBuilder<T>>>, BaseFromQueryBuilder<T, SubqueryBuilder<T>> {
+@EntityView(Person.class)
+public interface PersonLimitJoinExpressionView extends PersonLimitView {
 
-    /**
-     * Finishes the subquery builder.
-     *
-     * @return The parent query builder
-     */
-    public T end();
+    @Limit(limit = "1", order = {"age", "id"})
+    @Mapping("ownedDocuments[owner.name = VIEW(name)]")
+    public List<DocumentLimitView> getOwnedDocuments();
 
 }

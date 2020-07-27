@@ -30,8 +30,8 @@ import java.util.Map;
  */
 public class OngoingFinalSetOperationSubqueryBuilderImpl<T> extends BaseFinalSetOperationSubqueryBuilderImpl<T, OngoingFinalSetOperationSubqueryBuilder<T>> implements OngoingFinalSetOperationSubqueryBuilder<T> {
 
-    public OngoingFinalSetOperationSubqueryBuilderImpl(MainQuery mainQuery, QueryContext queryContext, T result, SetOperationType operator, boolean nested, SubqueryBuilderListener<T> listener, SubqueryBuilderImpl<?> initiator) {
-        super(mainQuery, queryContext, result, operator, nested, listener, initiator);
+    public OngoingFinalSetOperationSubqueryBuilderImpl(MainQuery mainQuery, QueryContext queryContext, T result, boolean endResultAsJoinOnBuilder, SetOperationType operator, boolean nested, SubqueryBuilderListener<T> listener, SubqueryBuilderImpl<?> initiator) {
+        super(mainQuery, queryContext, result, endResultAsJoinOnBuilder, operator, nested, listener, initiator);
     }
 
     public OngoingFinalSetOperationSubqueryBuilderImpl(BaseFinalSetOperationBuilderImpl<T, OngoingFinalSetOperationSubqueryBuilder<T>, BaseFinalSetOperationSubqueryBuilderImpl<T, OngoingFinalSetOperationSubqueryBuilder<T>>> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {

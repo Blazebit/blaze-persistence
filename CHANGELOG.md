@@ -9,6 +9,7 @@ Not yet released
 ### New features
 
 * Support joins through DBMS `USING` clause in `DELETE` and `UPDATE` queries
+* Emulation of lateral entity joins for RDBMS that don't support lateral joins a concept
 
 ### Bug fixes
 
@@ -22,10 +23,12 @@ Not yet released
 * Fix issues with type validation in entity views when using entity literal array expressions
 * Report more appropriate errors instead of throwing NPEs when encountering invalid arguments
 * Fix issue with type validation in entity literal array expression of entity view mapping
+* Fix issue with type validation in array predicate expression of entity view mapping
+* Fix `@Limit` handling for path expressions other than entity literals
 
 ### Backwards-incompatible changes
 
-None
+* Change the result type of `joinEntitySubquery` methods and `fromEntitySubquery` to a more general type for supporting the emulation for RDBMS that don't support lateral joins
 
 ## 1.5.0-Alpha5
 

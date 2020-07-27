@@ -39,15 +39,17 @@ import com.blazebit.persistence.spi.SetOperationType;
 public abstract class BaseFinalSetOperationSubqueryBuilderImpl<T, X extends BaseFinalSetOperationBuilder<T, X>> extends BaseFinalSetOperationBuilderImpl<T, X, BaseFinalSetOperationSubqueryBuilderImpl<T, X>> implements BaseOngoingFinalSetOperationBuilder<T, X>, SubqueryInternalBuilder<T> {
 
     protected final T result;
+    protected final boolean endResultAsJoinOnBuilder;
     protected final SubqueryBuilderListener<T> listener;
     protected final SubqueryBuilderImpl<?> initiator;
 
     protected final SubqueryBuilderListenerImpl<T> subListener;
     
     @SuppressWarnings("unchecked")
-    public BaseFinalSetOperationSubqueryBuilderImpl(MainQuery mainQuery, QueryContext queryContext, T result, SetOperationType operator, boolean nested, SubqueryBuilderListener<T> listener, SubqueryBuilderImpl<?> initiator) {
+    public BaseFinalSetOperationSubqueryBuilderImpl(MainQuery mainQuery, QueryContext queryContext, T result, boolean endResultAsJoinOnBuilder, SetOperationType operator, boolean nested, SubqueryBuilderListener<T> listener, SubqueryBuilderImpl<?> initiator) {
         super(mainQuery, queryContext, false, (Class<T>) Tuple.class, operator, nested, result);
         this.result = result;
+        this.endResultAsJoinOnBuilder = endResultAsJoinOnBuilder;
         this.listener = listener;
         this.initiator = initiator;
         this.subListener = new SubqueryBuilderListenerImpl<T>();
@@ -56,6 +58,7 @@ public abstract class BaseFinalSetOperationSubqueryBuilderImpl<T, X extends Base
     public BaseFinalSetOperationSubqueryBuilderImpl(BaseFinalSetOperationBuilderImpl<T, X, BaseFinalSetOperationSubqueryBuilderImpl<T, X>> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
         super(builder, mainQuery, queryContext, joinManagerMapping, copyContext);
         this.result = null;
+        this.endResultAsJoinOnBuilder = false;
         this.listener = null;
         this.initiator = null;
         this.subListener = null;
@@ -76,6 +79,10 @@ public abstract class BaseFinalSetOperationSubqueryBuilderImpl<T, X extends Base
     @Override
     public T getResult() {
         return result;
+    }
+
+    public boolean isEndResultAsJoinOnBuilder() {
+        return endResultAsJoinOnBuilder;
     }
 
     @Override

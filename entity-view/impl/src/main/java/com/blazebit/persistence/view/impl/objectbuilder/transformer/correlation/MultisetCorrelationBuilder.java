@@ -82,4 +82,14 @@ public class MultisetCorrelationBuilder implements CorrelationBuilder {
         subqueryBuilder = subqueryInitiator.from(entityType, correlationAlias);
         return subqueryBuilder.getService(JoinOnBuilder.class);
     }
+
+    @Override
+    public JoinOnBuilder<CorrelationQueryBuilder> correlate(String correlationPath) {
+        if (subqueryBuilder != null) {
+            throw new IllegalArgumentException("Can not correlate with multiple entity classes!");
+        }
+
+        subqueryBuilder = subqueryInitiator.from(correlationPath, correlationAlias);
+        return subqueryBuilder.getService(JoinOnBuilder.class);
+    }
 }

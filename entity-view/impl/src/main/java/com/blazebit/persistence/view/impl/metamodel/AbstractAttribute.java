@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl.metamodel;
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.parser.SimpleQueryGenerator;
+import com.blazebit.persistence.parser.expression.ArrayExpression;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.parser.expression.NullExpression;
@@ -52,6 +53,7 @@ import com.blazebit.persistence.view.impl.PrefixingQueryGenerator;
 import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor.TargetType;
 import com.blazebit.persistence.view.impl.StaticCorrelationProvider;
+import com.blazebit.persistence.view.impl.StaticPathCorrelationProvider;
 import com.blazebit.persistence.view.impl.SubqueryProviderHelper;
 import com.blazebit.persistence.view.impl.UpdatableExpressionVisitor;
 import com.blazebit.persistence.view.impl.collection.CollectionInstantiatorImplementor;
@@ -173,28 +175,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                 offsetExpression = "0";
             }
             List<String> orderByItemExpressions = mapping.getOrderByItems();
-            orderByItems = new ArrayList<>(orderByItemExpressions.size());
-            for (int i = 0; i < orderByItemExpressions.size(); i++) {
-                String expression = orderByItemExpressions.get(i);
-                String upperExpression = expression.toUpperCase();
-                boolean ascending = true;
-                boolean nullsFirst = false;
-                if (upperExpression.endsWith(" NULLS LAST")) {
-                    upperExpression = upperExpression.substring(0, upperExpression.length() - " NULLS LAST".length());
-                } else if (upperExpression.endsWith(" NULLS FIRST")) {
-                    nullsFirst = true;
-                    upperExpression = upperExpression.substring(0, upperExpression.length() - " NULLS FIRST".length());
-                }
-                if (upperExpression.endsWith(" ASC")) {
-                    upperExpression = upperExpression.substring(0, upperExpression.length() - " ASC".length());
-                } else if (upperExpression.endsWith(" DESC")) {
-                    ascending = false;
-                    upperExpression = upperExpression.substring(0, upperExpression.length() - " DESC".length());
-                }
-                expression = expression.substring(0, upperExpression.length());
-                orderByItems.add(new OrderByItem(expression, ascending, nullsFirst));
-            }
-            orderByItems = Collections.unmodifiableList(orderByItems);
+            orderByItems = parseOrderByItems(orderByItemExpressions);
         }
 
         this.declaringType = declaringType;
@@ -202,189 +183,141 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         this.convertedJavaType = getConvertedType(declaringType.getJavaType(), mapping.getType(context, embeddableMapping).getConvertedType(), javaType);
         Annotation mappingAnnotation = mapping.getMapping();
 
+        String mappingString = null;
+        Expression mappingExpression = null;
+        String[] fetches = EMPTY;
+        FetchStrategy fetchStrategy = FetchStrategy.JOIN;
+        SubqueryProviderFactory subqueryProviderFactory = null;
+        Class<? extends SubqueryProvider> subqueryProvider = null;
+        boolean id = false;
+        javax.persistence.metamodel.Attribute<?, ?> updateMappableAttribute = null;
+        String subqueryExpression = null;
+        Expression subqueryResultExpression = null;
+        String subqueryAlias = null;
+        String correlationBasis = null;
+        String correlationResult = null;
+        Class<? extends CorrelationProvider> correlationProvider = null;
+        CorrelationProviderFactory correlationProviderFactory = null;
+        Class<?> correlated = null;
+        String correlationKeyAlias = null;
+        String correlationExpression = null;
+        Expression correlationBasisExpression = null;
+        Expression correlationResultExpression = null;
+        Predicate correlationPredicate = null;
+
         if (mappingAnnotation instanceof IdMapping) {
-            this.mapping = ((IdMapping) mappingAnnotation).value();
-            this.mappingExpression = createSimpleExpression(this.mapping, mapping, context, ExpressionLocation.MAPPING);
-            this.fetches = EMPTY;
-            this.fetchStrategy = FetchStrategy.JOIN;
-            this.batchSize = -1;
-            this.orderByItems = Collections.emptyList();
-            this.limitExpression = null;
-            this.offsetExpression = null;
-            this.subqueryProviderFactory = null;
-            this.subqueryProvider = null;
-            this.id = true;
-            this.updateMappableAttribute = getUpdateMappableAttribute(context);
+            mappingString = ((IdMapping) mappingAnnotation).value();
+            mappingExpression = createSimpleExpression(mappingString, mapping, context, ExpressionLocation.MAPPING);
+            batchSize = -1;
+            limitExpression = null;
+            offsetExpression = null;
+            orderByItems = Collections.emptyList();
+            fetchStrategy = FetchStrategy.JOIN;
+            id = true;
+            updateMappableAttribute = getUpdateMappableAttribute(context);
             this.mappingType = MappingType.BASIC;
-            this.subqueryExpression = null;
-            this.subqueryResultExpression = null;
-            this.subqueryAlias = null;
-            this.correlationBasis = null;
-            this.correlationResult = null;
-            this.correlationProvider = null;
-            this.correlationProviderFactory = null;
-            this.correlated = null;
-            this.correlationKeyAlias = null;
-            this.correlationExpression = null;
-            this.correlationBasisExpression = null;
-            this.correlationResultExpression = null;
-            this.correlationPredicate = null;
         } else if (mappingAnnotation instanceof Mapping) {
             Mapping m = (Mapping) mappingAnnotation;
-            this.mapping = m.value();
-            this.mappingExpression = createSimpleExpression(this.mapping, mapping, context, ExpressionLocation.MAPPING);
-            this.fetches = m.fetches();
-            this.fetchStrategy = m.fetch();
-            this.batchSize = batchSize;
-            this.orderByItems = orderByItems;
-            this.limitExpression = limitExpression;
-            this.offsetExpression = offsetExpression;
-            this.subqueryProviderFactory = null;
-            this.subqueryProvider = null;
-            this.id = false;
-            this.updateMappableAttribute = getUpdateMappableAttribute(context);
+            mappingString = m.value();
+            mappingExpression = createSimpleExpression(mappingString, mapping, context, ExpressionLocation.MAPPING);
+            fetches = m.fetches();
+            fetchStrategy = m.fetch();
+            updateMappableAttribute = getUpdateMappableAttribute(context);
             this.mappingType = MappingType.BASIC;
-            this.subqueryExpression = null;
-            this.subqueryResultExpression = null;
-            this.subqueryAlias = null;
-            if (fetchStrategy == FetchStrategy.JOIN && limitExpression == null) {
-                this.correlationProvider = null;
-                this.correlationProviderFactory = null;
-                this.correlationResult = null;
-                this.correlationBasis = null;
-                this.correlated = null;
-                this.correlationKeyAlias = null;
-                this.correlationExpression = null;
-                this.correlationBasisExpression = null;
-                this.correlationResultExpression = null;
-                this.correlationPredicate = null;
-            } else {
+            if (fetchStrategy != FetchStrategy.JOIN || limitExpression != null) {
                 ExtendedManagedType<?> managedType = context.getEntityMetamodel().getManagedType(ExtendedManagedType.class, declaringType.getJpaManagedType());
-                ExtendedAttribute<?, ?> attribute = managedType.getOwnedAttributes().get(this.mapping);
+                ExtendedAttribute<?, ?> attribute = managedType.getOwnedAttributes().get(mappingString);
 
-                this.correlationKeyAlias = "__correlationAlias";
+                correlationKeyAlias = "__correlationAlias";
+                String correlationPath = null;
                 // The special case when joining the association results in a different join than when doing it through entity joins
                 // This might be due to a @Where annotation being present on the association
                 if (fetchStrategy == FetchStrategy.SELECT && attribute != null && attribute.hasJoinCondition()) {
-                    this.correlated = declaringType.getEntityClass();
-                    this.correlationExpression = "this IN __correlationAlias";
-                    this.correlationResult = this.mapping;
-                    this.correlationResultExpression = mappingExpression;
+                    correlated = declaringType.getEntityClass();
+                    correlationExpression = "this IN __correlationAlias";
+                    correlationResult = mappingString;
+                    correlationResultExpression = mappingExpression;
                 } else {
                     // If the mapping is a deep path expression i.e. contains a dot but no parenthesis, we try to find a mapped by attribute by a prefix
                     int index;
-                    if (attribute == null && (index = this.mapping.indexOf('.')) != -1 && this.mapping.indexOf('(') == -1
-                            && (attribute = managedType.getOwnedAttributes().get(this.mapping.substring(0, index))) != null && !StringUtils.isEmpty(attribute.getMappedBy()) && !attribute.hasJoinCondition()) {
-                        this.correlated = attribute.getElementClass();
-                        this.correlationExpression = attribute.getMappedBy() + " IN __correlationAlias";
-                        this.correlationResult = this.mapping.substring(index + 1);
+                    if (attribute == null && (index = mappingString.indexOf('.')) != -1 && mappingString.indexOf('(') == -1
+                            && (attribute = managedType.getOwnedAttributes().get(mappingString.substring(0, index))) != null && !StringUtils.isEmpty(attribute.getMappedBy()) && !attribute.hasJoinCondition()) {
+                        correlated = attribute.getElementClass();
+                        correlationExpression = attribute.getMappedBy() + " IN __correlationAlias";
+                        correlationResult = mappingString.substring(index + 1);
                         if (mappingExpression instanceof PathExpression) {
-                            this.correlationResultExpression = ((PathExpression) mappingExpression).withoutFirst();
+                            correlationResultExpression = ((PathExpression) mappingExpression).withoutFirst();
                         } else {
-                            this.correlationResultExpression = new PathExpression();
+                            correlationResultExpression = new PathExpression();
                         }
                     } else if (attribute != null && !StringUtils.isEmpty(attribute.getMappedBy()) && !attribute.hasJoinCondition()) {
-                        this.correlated = attribute.getElementClass();
-                        this.correlationExpression = attribute.getMappedBy() + " IN __correlationAlias";
-                        this.correlationResult = "";
-                        this.correlationResultExpression = new PathExpression();
+                        correlated = attribute.getElementClass();
+                        correlationExpression = attribute.getMappedBy() + " IN __correlationAlias";
+                        correlationResult = "";
+                        correlationResultExpression = new PathExpression();
                     } else {
-                        this.correlated = declaringType.getEntityClass();
-                        this.correlationExpression = "this IN __correlationAlias";
-                        this.correlationResult = this.mapping;
-                        this.correlationResultExpression = mappingExpression;
+                        correlated = declaringType.getEntityClass();
+                        correlationExpression = "this IN __correlationAlias";
+                        correlationResult = mappingString;
+                        correlationResultExpression = mappingExpression;
+                        // When using @Limit in combination with JOIN fetching, we need to adapt the correlation expression when array expressions are used
+                        if (fetchStrategy == FetchStrategy.JOIN && !orderByItems.isEmpty() && mappingExpression instanceof PathExpression) {
+                            PathExpression pathExpression = (PathExpression) mappingExpression;
+                            int arrayIndex = pathExpression.getExpressions().size() - 1;
+                            do {
+                                if (pathExpression.getExpressions().get(arrayIndex) instanceof ArrayExpression) {
+                                    break;
+                                }
+                                arrayIndex--;
+                            } while (arrayIndex > 0);
+
+                            // If we encounter an array, we must correlate the path as a whole instead
+                            if (arrayIndex != -1) {
+                                correlated = null;
+                                correlationPath = mappingString;
+                                correlationResult = "";
+                                correlationResultExpression = new PathExpression();
+                            }
+                        }
                     }
                 }
-                this.correlationBasis = "this";
-                this.correlationBasisExpression = new PathExpression(new PropertyExpression("this"));
-                this.correlationPredicate = createPredicate(correlationExpression, mapping, context, ExpressionLocation.CORRELATION_EXPRESSION);
-                this.correlationProvider = null;
-                this.correlationProviderFactory = new StaticCorrelationProvider(correlated, correlationKeyAlias, correlationExpression, correlationPredicate);
+                correlationBasis = "this";
+                correlationBasisExpression = new PathExpression(new PropertyExpression("this"));
+                correlationPredicate = createPredicate(correlationExpression, mapping, context, ExpressionLocation.CORRELATION_EXPRESSION);
+                if (correlated == null) {
+                    correlationProviderFactory = new StaticPathCorrelationProvider(correlationPath);
+                } else {
+                    correlationProviderFactory = new StaticCorrelationProvider(correlated, correlationKeyAlias, correlationExpression, correlationPredicate);
+                }
             }
         } else if (mappingAnnotation instanceof MappingParameter) {
-            this.mapping = ((MappingParameter) mappingAnnotation).value();
-            this.mappingExpression = null;
-            this.fetches = EMPTY;
-            this.fetchStrategy = FetchStrategy.JOIN;
-            this.batchSize = -1;
-            this.orderByItems = Collections.emptyList();
-            this.limitExpression = null;
-            this.offsetExpression = null;
-            this.subqueryProviderFactory = null;
-            this.subqueryProvider = null;
-            this.id = false;
-            // Parameters are never update mappable
-            this.updateMappableAttribute = null;
+            mappingString = ((MappingParameter) mappingAnnotation).value();
+            fetchStrategy = FetchStrategy.JOIN;
+            batchSize = -1;
+            limitExpression = null;
+            offsetExpression = null;
             this.mappingType = MappingType.PARAMETER;
-            this.subqueryExpression = null;
-            this.subqueryResultExpression = null;
-            this.subqueryAlias = null;
-            this.correlationBasis = null;
-            this.correlationResult = null;
-            this.correlationProvider = null;
-            this.correlationProviderFactory = null;
-            this.correlated = null;
-            this.correlationKeyAlias = null;
-            this.correlationExpression = null;
-            this.correlationBasisExpression = null;
-            this.correlationResultExpression = null;
-            this.correlationPredicate = null;
         } else if (mappingAnnotation instanceof Self) {
-            this.mapping = "NULL";
-            this.mappingExpression = NullExpression.INSTANCE;
-            this.fetches = EMPTY;
-            this.fetchStrategy = FetchStrategy.JOIN;
-            this.batchSize = -1;
-            this.orderByItems = Collections.emptyList();
-            this.limitExpression = null;
-            this.offsetExpression = null;
-            this.subqueryProviderFactory = null;
-            this.subqueryProvider = null;
-            this.id = false;
-            this.updateMappableAttribute = null;
+            mappingString = "NULL";
+            mappingExpression = NullExpression.INSTANCE;
+            batchSize = -1;
+            limitExpression = null;
+            offsetExpression = null;
+            orderByItems = Collections.emptyList();
             this.mappingType = MappingType.PARAMETER;
-            this.subqueryExpression = null;
-            this.subqueryResultExpression = null;
-            this.subqueryAlias = null;
-            this.correlationBasis = null;
-            this.correlationResult = null;
-            this.correlationProvider = null;
-            this.correlationProviderFactory = null;
-            this.correlated = null;
-            this.correlationKeyAlias = null;
-            this.correlationExpression = null;
-            this.correlationBasisExpression = null;
-            this.correlationResultExpression = null;
-            this.correlationPredicate = null;
         } else if (mappingAnnotation instanceof MappingSubquery) {
             MappingSubquery mappingSubquery = (MappingSubquery) mappingAnnotation;
-            this.mapping = null;
-            this.mappingExpression = null;
-            this.fetches = EMPTY;
-            this.subqueryProvider = mappingSubquery.value();
-            this.subqueryProviderFactory = SubqueryProviderHelper.getFactory(subqueryProvider);
-            this.fetchStrategy = FetchStrategy.JOIN;
-            this.batchSize = -1;
-            this.orderByItems = Collections.emptyList();
-            this.limitExpression = null;
-            this.offsetExpression = null;
-            this.id = false;
-            // Subqueries are never update mappable
-            this.updateMappableAttribute = null;
+            subqueryProvider = mappingSubquery.value();
+            subqueryProviderFactory = SubqueryProviderHelper.getFactory(subqueryProvider);
+            fetchStrategy = FetchStrategy.JOIN;
+            batchSize = -1;
+            limitExpression = null;
+            offsetExpression = null;
+            orderByItems = Collections.emptyList();
             this.mappingType = MappingType.SUBQUERY;
-            this.subqueryExpression = mappingSubquery.expression();
-            this.subqueryAlias = mappingSubquery.subqueryAlias();
-            this.subqueryResultExpression = createSimpleExpression(subqueryExpression, mapping, context, ExpressionLocation.SUBQUERY_EXPRESSION);
-            this.correlationBasis = null;
-            this.correlationResult = null;
-            this.correlationProvider = null;
-            this.correlationProviderFactory = null;
-            this.correlated = null;
-            this.correlationKeyAlias = null;
-            this.correlationExpression = null;
-            this.correlationBasisExpression = null;
-            this.correlationResultExpression = null;
-            this.correlationPredicate = null;
+            subqueryExpression = mappingSubquery.expression();
+            subqueryAlias = mappingSubquery.subqueryAlias();
+            subqueryResultExpression = createSimpleExpression(subqueryExpression, mapping, context, ExpressionLocation.SUBQUERY_EXPRESSION);
 
             if (!subqueryExpression.isEmpty() && subqueryAlias.isEmpty()) {
                 context.addError("The subquery alias is empty although the subquery expression is not " + mapping.getErrorLocation());
@@ -394,76 +327,41 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             }
         } else if (mappingAnnotation instanceof MappingCorrelated) {
             MappingCorrelated mappingCorrelated = (MappingCorrelated) mappingAnnotation;
-            this.mapping = null;
-            this.mappingExpression = null;
-            this.fetches = mappingCorrelated.fetches();
-            this.fetchStrategy = mappingCorrelated.fetch();
+            fetches = mappingCorrelated.fetches();
+            fetchStrategy = mappingCorrelated.fetch();
 
-            if (fetchStrategy == FetchStrategy.SELECT) {
-                this.batchSize = batchSize;
-            } else {
-                this.batchSize = -1;
+            if (fetchStrategy != FetchStrategy.SELECT) {
+                batchSize = -1;
             }
-            this.orderByItems = orderByItems;
-            this.limitExpression = limitExpression;
-            this.offsetExpression = offsetExpression;
-
-            this.subqueryProviderFactory = null;
-            this.subqueryProvider = null;
-            this.id = false;
-            this.updateMappableAttribute = null;
             this.mappingType = MappingType.CORRELATED;
-            this.subqueryExpression = null;
-            this.subqueryResultExpression = null;
-            this.subqueryAlias = null;
-            this.correlationBasis = mappingCorrelated.correlationBasis();
-            this.correlationResult = mappingCorrelated.correlationResult();
-            this.correlationProvider = mappingCorrelated.correlator();
-            this.correlated = null;
-            this.correlationKeyAlias = null;
-            this.correlationExpression = null;
-            this.correlationBasisExpression = createSimpleExpression(correlationBasis, mapping, context, ExpressionLocation.CORRELATION_BASIS);
-            this.correlationResultExpression = createSimpleExpression(correlationResult, mapping, context, ExpressionLocation.CORRELATION_RESULT);
-            this.correlationPredicate = null;
+            correlationBasis = mappingCorrelated.correlationBasis();
+            correlationResult = mappingCorrelated.correlationResult();
+            correlationProvider = mappingCorrelated.correlator();
+            correlationBasisExpression = createSimpleExpression(correlationBasis, mapping, context, ExpressionLocation.CORRELATION_BASIS);
+            correlationResultExpression = createSimpleExpression(correlationResult, mapping, context, ExpressionLocation.CORRELATION_RESULT);
 
             if (correlationProvider.getEnclosingClass() != null && !Modifier.isStatic(correlationProvider.getModifiers())) {
                 context.addError("The correlation provider is defined as non-static inner class. Make it static, otherwise it can't be instantiated: " + mapping.getErrorLocation());
             }
-            this.correlationProviderFactory = CorrelationProviderHelper.getFactory(correlationProvider);
+            correlationProviderFactory = CorrelationProviderHelper.getFactory(correlationProvider);
         } else if (mappingAnnotation instanceof MappingCorrelatedSimple) {
             MappingCorrelatedSimple mappingCorrelated = (MappingCorrelatedSimple) mappingAnnotation;
-            this.mapping = null;
-            this.mappingExpression = null;
-            this.fetches = mappingCorrelated.fetches();
-            this.fetchStrategy = mappingCorrelated.fetch();
+            fetches = mappingCorrelated.fetches();
+            fetchStrategy = mappingCorrelated.fetch();
 
-            if (fetchStrategy == FetchStrategy.SELECT) {
-                this.batchSize = batchSize;
-            } else {
-                this.batchSize = -1;
+            if (fetchStrategy != FetchStrategy.SELECT) {
+                batchSize = -1;
             }
-            this.orderByItems = orderByItems;
-            this.limitExpression = limitExpression;
-            this.offsetExpression = offsetExpression;
-
-            this.subqueryProviderFactory = null;
-            this.subqueryProvider = null;
-            this.id = false;
-            this.updateMappableAttribute = null;
             this.mappingType = MappingType.CORRELATED;
-            this.subqueryExpression = null;
-            this.subqueryResultExpression = null;
-            this.subqueryAlias = null;
-            this.correlationProvider = null;
-            this.correlationBasis = mappingCorrelated.correlationBasis();
-            this.correlationResult = mappingCorrelated.correlationResult();
-            this.correlated = mappingCorrelated.correlated();
-            this.correlationKeyAlias = mappingCorrelated.correlationKeyAlias();
-            this.correlationExpression = mappingCorrelated.correlationExpression();
-            this.correlationBasisExpression = createSimpleExpression(correlationBasis, mapping, context, ExpressionLocation.CORRELATION_BASIS);
-            this.correlationResultExpression = createSimpleExpression(correlationResult, mapping, context, ExpressionLocation.CORRELATION_RESULT);
-            this.correlationPredicate = createPredicate(correlationExpression, mapping, context, ExpressionLocation.CORRELATION_EXPRESSION);
-            this.correlationProviderFactory = new StaticCorrelationProvider(correlated, correlationKeyAlias, correlationExpression, correlationPredicate);
+            correlationBasis = mappingCorrelated.correlationBasis();
+            correlationResult = mappingCorrelated.correlationResult();
+            correlated = mappingCorrelated.correlated();
+            correlationKeyAlias = mappingCorrelated.correlationKeyAlias();
+            correlationExpression = mappingCorrelated.correlationExpression();
+            correlationBasisExpression = createSimpleExpression(correlationBasis, mapping, context, ExpressionLocation.CORRELATION_BASIS);
+            correlationResultExpression = createSimpleExpression(correlationResult, mapping, context, ExpressionLocation.CORRELATION_RESULT);
+            correlationPredicate = createPredicate(correlationExpression, mapping, context, ExpressionLocation.CORRELATION_EXPRESSION);
+            correlationProviderFactory = new StaticCorrelationProvider(correlated, correlationKeyAlias, correlationExpression, correlationPredicate);
 
             if (mappingCorrelated.correlationBasis().isEmpty()) {
                 context.addError("Illegal empty correlation basis in the " + mapping.getErrorLocation());
@@ -476,37 +374,63 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             }
         } else {
             context.addError("No mapping annotation could be found " + mapping.getErrorLocation());
-            this.mapping = null;
-            this.mappingExpression = null;
-            this.fetches = EMPTY;
-            this.fetchStrategy = null;
-            this.batchSize = Integer.MIN_VALUE;
-            this.orderByItems = null;
-            this.limitExpression = null;
-            this.offsetExpression = null;
-            this.subqueryProviderFactory = null;
-            this.subqueryProvider = null;
-            this.id = false;
-            this.updateMappableAttribute = null;
             this.mappingType = null;
-            this.subqueryExpression = null;
-            this.subqueryResultExpression = null;
-            this.subqueryAlias = null;
-            this.correlationBasis = null;
-            this.correlationResult = null;
-            this.correlationProvider = null;
-            this.correlationProviderFactory = null;
-            this.correlated = null;
-            this.correlationKeyAlias = null;
-            this.correlationExpression = null;
-            this.correlationBasisExpression = null;
-            this.correlationResultExpression = null;
-            this.correlationPredicate = null;
         }
 
         if (limitExpression != null && fetchStrategy == FetchStrategy.MULTISET && context.getDbmsDialect().getLateralStyle() == LateralStyle.NONE && !context.getDbmsDialect().supportsWindowFunctions()) {
             context.addError("The use of the MULTISET fetch strategy with a limit in the '" + mapping.getErrorLocation() + "' requires lateral joins or window functions which are unsupported by the DBMS!");
         }
+
+        this.mapping = mappingString;
+        this.mappingExpression = mappingExpression;
+        this.fetches = fetches;
+        this.fetchStrategy = fetchStrategy;
+        this.batchSize = batchSize;
+        this.orderByItems = orderByItems;
+        this.limitExpression = limitExpression;
+        this.offsetExpression = offsetExpression;
+        this.subqueryProviderFactory = subqueryProviderFactory;
+        this.subqueryProvider = subqueryProvider;
+        this.id = id;
+        this.updateMappableAttribute = updateMappableAttribute;
+        this.subqueryExpression = subqueryExpression;
+        this.subqueryResultExpression = subqueryResultExpression;
+        this.subqueryAlias = subqueryAlias;
+        this.correlationBasis = correlationBasis;
+        this.correlationResult = correlationResult;
+        this.correlationProvider = correlationProvider;
+        this.correlationProviderFactory = correlationProviderFactory;
+        this.correlated = correlated;
+        this.correlationKeyAlias = correlationKeyAlias;
+        this.correlationExpression = correlationExpression;
+        this.correlationBasisExpression = correlationBasisExpression;
+        this.correlationResultExpression = correlationResultExpression;
+        this.correlationPredicate = correlationPredicate;
+    }
+
+    private static List<OrderByItem> parseOrderByItems(List<String> orderByItemExpressions) {
+        List<OrderByItem> orderByItems = new ArrayList<>(orderByItemExpressions.size());
+        for (int i = 0; i < orderByItemExpressions.size(); i++) {
+            String expression = orderByItemExpressions.get(i);
+            String upperExpression = expression.toUpperCase();
+            boolean ascending = true;
+            boolean nullsFirst = false;
+            if (upperExpression.endsWith(" NULLS LAST")) {
+                upperExpression = upperExpression.substring(0, upperExpression.length() - " NULLS LAST".length());
+            } else if (upperExpression.endsWith(" NULLS FIRST")) {
+                nullsFirst = true;
+                upperExpression = upperExpression.substring(0, upperExpression.length() - " NULLS FIRST".length());
+            }
+            if (upperExpression.endsWith(" ASC")) {
+                upperExpression = upperExpression.substring(0, upperExpression.length() - " ASC".length());
+            } else if (upperExpression.endsWith(" DESC")) {
+                ascending = false;
+                upperExpression = upperExpression.substring(0, upperExpression.length() - " DESC".length());
+            }
+            expression = expression.substring(0, upperExpression.length());
+            orderByItems.add(new OrderByItem(expression, ascending, nullsFirst));
+        }
+        return Collections.unmodifiableList(orderByItems);
     }
 
     private static Expression createSimpleExpression(String expression, AttributeMapping mapping, MetamodelBuildingContext context, ExpressionLocation expressionLocation) {

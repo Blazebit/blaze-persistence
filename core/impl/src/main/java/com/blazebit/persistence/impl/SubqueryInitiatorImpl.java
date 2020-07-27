@@ -16,13 +16,13 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.BaseFromQueryBuilder;
 import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
 import com.blazebit.persistence.LeafOngoingFinalSetOperationSubqueryBuilder;
 import com.blazebit.persistence.StartOngoingSetOperationSubqueryBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
-import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 
@@ -71,7 +71,11 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
 
     @Override
     public SubqueryBuilder<X> from(Class<?> clazz, String alias) {
-        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
+        return from(clazz, alias, false);
+    }
+
+    public SubqueryBuilder<X> from(Class<?> clazz, String alias, boolean endResultAsJoinOnBuilder) {
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, endResultAsJoinOnBuilder, listener);
         if (inExists) {
             subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createSimpleExpression("1"))), ExpressionCopyContext.EMPTY);
         }
@@ -87,7 +91,11 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
 
     @Override
     public SubqueryBuilder<X> from(EntityType<?> entityType, String alias) {
-        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
+        return from(entityType, alias, false);
+    }
+
+    public SubqueryBuilder<X> from(EntityType<?> entityType, String alias, boolean endResultAsJoinOnBuilder) {
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, endResultAsJoinOnBuilder, listener);
         if (inExists) {
             subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createSimpleExpression("1"))), ExpressionCopyContext.EMPTY);
         }
@@ -103,7 +111,11 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
 
     @Override
     public SubqueryBuilder<X> from(String correlationPath, String alias) {
-        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
+        return from(correlationPath, alias, false);
+    }
+
+    public SubqueryBuilder<X> from(String correlationPath, String alias, boolean endResultAsJoinOnBuilder) {
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, endResultAsJoinOnBuilder, listener);
         if (inExists) {
             subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createSimpleExpression("1"))), ExpressionCopyContext.EMPTY);
         }
@@ -112,20 +124,10 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
         return subqueryBuilder;
     }
 
-    public SubqueryBuilder<X> from(Expression correlationExpression, String alias) {
-        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
-        if (inExists) {
-            subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createSimpleExpression("1"))), ExpressionCopyContext.EMPTY);
-        }
-        subqueryBuilder.from(correlationExpression, alias);
-        listener.onBuilderStarted(subqueryBuilder);
-        return subqueryBuilder;
-    }
-
     @Override
     public StartOngoingSetOperationSubqueryBuilder<X, LeafOngoingFinalSetOperationSubqueryBuilder<X>> startSet() {
-        FinalSetOperationSubqueryBuilderImpl<X> parentFinalSetOperationBuilder = new FinalSetOperationSubqueryBuilderImpl<X>(mainQuery, queryContext, result, null, false, listener, null);
-        OngoingFinalSetOperationSubqueryBuilderImpl<X> subFinalSetOperationBuilder = new OngoingFinalSetOperationSubqueryBuilderImpl<X>(mainQuery, queryContext, null, null, true, parentFinalSetOperationBuilder.getSubListener(), null);
+        FinalSetOperationSubqueryBuilderImpl<X> parentFinalSetOperationBuilder = new FinalSetOperationSubqueryBuilderImpl<X>(mainQuery, queryContext, result, false, null, false, listener, null);
+        OngoingFinalSetOperationSubqueryBuilderImpl<X> subFinalSetOperationBuilder = new OngoingFinalSetOperationSubqueryBuilderImpl<X>(mainQuery, queryContext, null, false, null, true, parentFinalSetOperationBuilder.getSubListener(), null);
         listener.onBuilderStarted(parentFinalSetOperationBuilder);
         
         LeafOngoingSetOperationSubqueryBuilderImpl<X> leafCb = new LeafOngoingSetOperationSubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, expressionFactory, result, parentFinalSetOperationBuilder.getSubListener(), parentFinalSetOperationBuilder);
@@ -148,7 +150,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
 
     @Override
     public SubqueryBuilder<X> fromOld(Class<?> entityClass, String alias) {
-        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, false, listener);
         if (inExists) {
             subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createSimpleExpression("1"))), ExpressionCopyContext.EMPTY);
         }
@@ -164,7 +166,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
 
     @Override
     public SubqueryBuilder<X> fromNew(Class<?> entityClass, String alias) {
-        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, false, listener);
         if (inExists) {
             subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createSimpleExpression("1"))), ExpressionCopyContext.EMPTY);
         }
@@ -175,7 +177,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
 
     @Override
     public SubqueryBuilder<X> fromValues(Class<?> valueClass, String alias, int valueCount) {
-        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, false, listener);
         if (inExists) {
             subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createSimpleExpression("1"))), ExpressionCopyContext.EMPTY);
         }
@@ -186,7 +188,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
 
     @Override
     public SubqueryBuilder<X> fromValues(Class<?> entityBaseClass, String attributeName, String alias, int valueCount) {
-        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, false, listener);
         if (inExists) {
             subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createSimpleExpression("1"))), ExpressionCopyContext.EMPTY);
         }
@@ -197,7 +199,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
 
     @Override
     public SubqueryBuilder<X> fromIdentifiableValues(Class<?> valueClass, String alias, int valueCount) {
-        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, false, listener);
         if (inExists) {
             subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createSimpleExpression("1"))), ExpressionCopyContext.EMPTY);
         }
@@ -208,7 +210,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
 
     @Override
     public SubqueryBuilder<X> fromIdentifiableValues(Class<?> valueClass, String identifierAttribute, String alias, int valueCount) {
-        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, false, listener);
         if (inExists) {
             subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createSimpleExpression("1"))), ExpressionCopyContext.EMPTY);
         }
@@ -247,36 +249,36 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
 
     @Override
     public FullSelectCTECriteriaBuilder<SubqueryBuilder<X>> fromSubquery(Class<?> cteClass) {
-        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, false, listener);
         listener.onBuilderStarted(subqueryBuilder);
         return subqueryBuilder.fromSubquery(cteClass);
     }
 
     @Override
     public FullSelectCTECriteriaBuilder<SubqueryBuilder<X>> fromSubquery(Class<?> cteClass, String alias) {
-        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, false, listener);
         listener.onBuilderStarted(subqueryBuilder);
         return subqueryBuilder.fromSubquery(cteClass, alias);
     }
 
     @Override
-    public FullSelectCTECriteriaBuilder<SubqueryBuilder<X>> fromEntitySubquery(Class<?> cteClass) {
-        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
+    public <Z extends BaseFromQueryBuilder<SubqueryBuilder<X>, ? extends Z>> Z fromEntitySubquery(Class<?> cteClass) {
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, false, listener);
         listener.onBuilderStarted(subqueryBuilder);
-        return subqueryBuilder.fromEntitySubquery(cteClass);
+        return (Z) subqueryBuilder.fromEntitySubquery(cteClass);
     }
 
     @Override
-    public FullSelectCTECriteriaBuilder<SubqueryBuilder<X>> fromEntitySubquery(Class<?> cteClass, String alias) {
-        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
+    public <Z extends BaseFromQueryBuilder<SubqueryBuilder<X>, ? extends Z>> Z fromEntitySubquery(Class<?> cteClass, String alias) {
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, false, listener);
         listener.onBuilderStarted(subqueryBuilder);
-        return subqueryBuilder.fromEntitySubquery(cteClass, alias);
+        return (Z) subqueryBuilder.fromEntitySubquery(cteClass, alias);
     }
 
     @Override
-    public FullSelectCTECriteriaBuilder<SubqueryBuilder<X>> fromEntitySubquery(Class<?> cteClass, String alias, String subqueryAlias) {
-        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
+    public <Z extends BaseFromQueryBuilder<SubqueryBuilder<X>, ? extends Z>> Z fromEntitySubquery(Class<?> cteClass, String alias, String subqueryAlias) {
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, queryContext, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, false, listener);
         listener.onBuilderStarted(subqueryBuilder);
-        return subqueryBuilder.fromEntitySubquery(cteClass, alias, subqueryAlias);
+        return (Z) subqueryBuilder.fromEntitySubquery(cteClass, alias, subqueryAlias);
     }
 }

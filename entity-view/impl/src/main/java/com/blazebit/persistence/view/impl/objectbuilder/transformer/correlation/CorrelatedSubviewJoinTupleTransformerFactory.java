@@ -23,6 +23,7 @@ import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
+import com.blazebit.persistence.view.impl.StaticPathCorrelationProvider;
 import com.blazebit.persistence.view.impl.objectbuilder.Limiter;
 import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleTransformer;
@@ -94,8 +95,12 @@ public class CorrelatedSubviewJoinTupleTransformerFactory implements TupleTransf
             EmbeddingViewJpqlMacro embeddingViewJpqlMacro = entityViewConfiguration.getEmbeddingViewJpqlMacro();
             String oldViewPath = viewJpqlMacro.getViewPath();
             String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
-            viewJpqlMacro.setViewPath(correlationBuilder.getCorrelationAlias());
-            embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
+
+            // If this uses a static path, we need to avoid setting the embedding view path etc.
+            if (!(provider instanceof StaticPathCorrelationProvider)) {
+                viewJpqlMacro.setViewPath(correlationBuilder.getCorrelationAlias());
+                embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
+            }
 
             provider.applyCorrelation(correlationBuilder, correlationBasis);
 
@@ -108,8 +113,10 @@ public class CorrelatedSubviewJoinTupleTransformerFactory implements TupleTransf
 
             correlationBuilder.finish();
 
-            viewJpqlMacro.setViewPath(oldViewPath);
-            embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
+            if (!(provider instanceof StaticPathCorrelationProvider)) {
+                viewJpqlMacro.setViewPath(oldViewPath);
+                embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
+            }
 
             if (fetches.length != 0) {
                 for (int i = 0; i < fetches.length; i++) {
