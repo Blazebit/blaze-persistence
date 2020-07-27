@@ -1601,7 +1601,7 @@ public class ProxyFactory {
                     if (attribute.getConvertedJavaType().isPrimitive()) {
                         appendUnwrap(sb, attribute.getConvertedJavaType(), "$3");
                     } else {
-                        sb.append("(").append(attribute.getConvertedJavaType().getName()).append(") $3");
+                        sb.append("(").append(attribute.getConvertedJavaType().getCanonicalName()).append(") $3");
                     }
                     sb.append("); ");
                 }
@@ -2574,8 +2574,8 @@ public class ProxyFactory {
             if (possiblyInitialized) {
                 sb.append('\t');
             }
-            sb.append("\t$0.").append(attributeFields[i].getName()).append(" = ");
             if (kind != ConstructorKind.CREATE && attributeFields[i] == idField) {
+                sb.append("\t$0.").append(attributeFields[i].getName()).append(" = ");
                 // The id field for the reference and normal constructor are never empty
                 sb.append('$').append(i + 1).append(";\n");
                 if (possiblyInitialized) {
@@ -2584,6 +2584,7 @@ public class ProxyFactory {
             } else if (kind != ConstructorKind.NORMAL) {
                 CtClass type = attributeFields[i].getType();
                 if (type.isPrimitive()) {
+                    sb.append("\t$0.").append(attributeFields[i].getName()).append(" = ");
                     if (kind == ConstructorKind.CREATE && methodAttribute.getMappingType() == Attribute.MappingType.PARAMETER) {
                         String value = "$2.get(\"" + ((MappingAttribute<?, ?>) methodAttribute).getMapping() + "\")";
                         sb.append(value).append(" != null ? ");
@@ -2624,6 +2625,7 @@ public class ProxyFactory {
                             sb.append("initialStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
                         }
                     }
+                    sb.append("\t$0.").append(attributeFields[i].getName()).append(" = ");
                     // init embeddables and collections
                     if (methodAttribute instanceof PluralAttribute<?, ?, ?>) {
                         PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) methodAttribute;
@@ -2719,6 +2721,7 @@ public class ProxyFactory {
                         sb.append("\t}\n");
                     }
                 } else {
+                    sb.append("\t$0.").append(attributeFields[i].getName()).append(" = ");
                     // For create constructors we initialize embedded ids
                     if (kind == ConstructorKind.CREATE) {
                         if (methodAttribute instanceof PluralAttribute<?, ?, ?>) {
@@ -2788,6 +2791,7 @@ public class ProxyFactory {
                     }
                 }
             } else {
+                sb.append("\t$0.").append(attributeFields[i].getName()).append(" = ");
                 sb.append('$').append(i + 1).append(";\n");
                 if (methodAttribute != null && methodAttribute.hasDirtyStateIndex()) {
                     CtClass type = attributeFields[i].getType();

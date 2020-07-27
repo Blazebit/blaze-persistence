@@ -24,11 +24,13 @@ import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
 import com.blazebit.persistence.view.impl.proxy.TupleConstructorReflectionInstantiator;
 import com.blazebit.persistence.view.metamodel.FlatViewType;
+import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.proxy.model.DocumentClassView;
 import com.blazebit.persistence.view.testsuite.proxy.model.DocumentCreateView;
+import com.blazebit.persistence.view.testsuite.proxy.model.DocumentCreateViewWithPrimitiveArray;
 import com.blazebit.persistence.view.testsuite.proxy.model.DocumentInterfaceView;
 import com.blazebit.persistence.view.testsuite.proxy.model.NameObjectView;
 import com.blazebit.persistence.view.testsuite.proxy.model.UnsafeDocumentClassView;
@@ -320,6 +322,12 @@ public class ProxyFactoryTest extends AbstractEntityViewTest {
         NameObjectView instance = proxyClass.getConstructor(String.class).newInstance("test");
 
         assertEquals(NameObjectView.class.getSimpleName() + "(primaryName = test)", instance.toString());
+    }
+
+    @Test
+    public void testMutableProxyWithPrimitiveArray() throws Exception {
+        ManagedViewType<DocumentCreateViewWithPrimitiveArray> viewType = build(DocumentCreateViewWithPrimitiveArray.class).managedView(DocumentCreateViewWithPrimitiveArray.class);
+        proxyFactory.getProxy(evm, (ManagedViewTypeImplementor<DocumentCreateViewWithPrimitiveArray>) viewType);
     }
 
     private void assertAttribute(Class<?> proxyClass, String fieldName, int modifiers, Class<?> type, Class<?>... typeArguments) throws Exception {
