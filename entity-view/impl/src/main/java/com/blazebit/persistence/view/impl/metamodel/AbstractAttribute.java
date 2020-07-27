@@ -214,7 +214,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             orderByItems = Collections.emptyList();
             fetchStrategy = FetchStrategy.JOIN;
             id = true;
-            updateMappableAttribute = getUpdateMappableAttribute(context);
+            updateMappableAttribute = getUpdateMappableAttribute(context, mappingExpression);
             this.mappingType = MappingType.BASIC;
         } else if (mappingAnnotation instanceof Mapping) {
             Mapping m = (Mapping) mappingAnnotation;
@@ -222,7 +222,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             mappingExpression = createSimpleExpression(mappingString, mapping, context, ExpressionLocation.MAPPING);
             fetches = m.fetches();
             fetchStrategy = m.fetch();
-            updateMappableAttribute = getUpdateMappableAttribute(context);
+            updateMappableAttribute = getUpdateMappableAttribute(context, mappingExpression);
             this.mappingType = MappingType.BASIC;
             if (fetchStrategy != FetchStrategy.JOIN || limitExpression != null) {
                 ExtendedManagedType<?> managedType = context.getEntityMetamodel().getManagedType(ExtendedManagedType.class, declaringType.getJpaManagedType());
@@ -465,7 +465,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         return ReflectionUtils.resolveType(declaringClass, convertedType);
     }
 
-    private javax.persistence.metamodel.Attribute<?, ?> getUpdateMappableAttribute(MetamodelBuildingContext context) {
+    private javax.persistence.metamodel.Attribute<?, ?> getUpdateMappableAttribute(MetamodelBuildingContext context, Expression mappingExpression) {
         if (mappingExpression != null) {
             try {
                 UpdatableExpressionVisitor visitor = new UpdatableExpressionVisitor(context.getEntityMetamodel(), declaringType.getEntityClass(), true);
