@@ -51,6 +51,7 @@ import org.junit.rules.TestRule;
 import javax.persistence.EntityManager;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -178,7 +179,7 @@ public class MultisetFetchCollectionsBenchmarkTest extends AbstractEntityViewTes
         CriteriaBuilder<PersonForCollections> criteria = cbf.create(em, PersonForCollections.class, "p")
             .where("id").in(pers1.getId())
             .orderByAsc("id");
-        List<? extends PersonForCollectionsMultisetFetchNestedView> results = evm.applySetting(EntityViewSetting.create(view), criteria).getResultList();
+        List<? extends PersonForCollectionsMultisetFetchNestedView> results = evm.applySetting(EntityViewSetting.create(view).withOptionalParameter("test", Locale.ENGLISH), criteria).getResultList();
 
         assertEquals(1, results.size());
         assertSubviewCollectionEquals(pers1.getOwnedDocuments(), results.get(0).getOwnedDocuments());
@@ -205,6 +206,7 @@ public class MultisetFetchCollectionsBenchmarkTest extends AbstractEntityViewTes
                     assertCollectionEquals(doc.getPartners(), docSub.getPartners());
                     assertListEquals(doc.getPersonList(), docSub.getPersonList());
                     assertMapEquals(doc.getContacts(), docSub.getContacts());
+                    assertEquals(Locale.ENGLISH, docSub.getTest());
                     break;
                 }
             }

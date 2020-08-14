@@ -18,10 +18,12 @@ package com.blazebit.persistence.view.testsuite.multiset.model;
 
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.IdMapping;
+import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.UpdatableEntityView;
 import com.blazebit.persistence.view.testsuite.collections.entity.simple.DocumentForCollections;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -38,6 +40,9 @@ public interface SubviewDocumentMultisetFetchView {
     public Long getId();
 
     public String getName();
+
+    @MappingParameter("test")
+    public Locale getTest();
 
     public Set<? extends SubviewPersonForCollectionsMultisetFetchView> getPartners();
 

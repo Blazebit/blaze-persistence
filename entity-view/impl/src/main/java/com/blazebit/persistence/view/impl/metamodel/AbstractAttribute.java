@@ -1059,7 +1059,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     public void checkNestedAttribute(List<AbstractAttribute<?, ?>> parents, ManagedType<?> managedType, MetamodelBuildingContext context, boolean hasMultisetParent) {
         if (hasMultisetParent) {
-            if (getElementType() instanceof BasicTypeImpl<?>) {
+            if (!isQueryParameter() && getElementType() instanceof BasicTypeImpl<?>) {
                 context.checkMultisetSupport(parents, this, ((BasicTypeImpl<?>) getElementType()).getUserType());
             }
         } else {
