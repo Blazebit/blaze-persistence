@@ -27,6 +27,7 @@ Not yet released
 * Fix `@Limit` handling for path expressions other than entity literals
 * Fix generation of invalid code in entity view annotation processor for arrays
 * Fix generation of invalid runtime code for entity view proxy when using primitive arrays
+* Ignore query parameter attributes in `MULTISET` basic type compatibility check
 
 ### Backwards-incompatible changes
 
