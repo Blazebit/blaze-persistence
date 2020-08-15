@@ -313,9 +313,7 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
         if (!needsCheck) {
             return;
         }
-
-        // We only need this when rendering a plain update statement, but not when doing SQL replacement
-        boolean enableElementCollectionIdCutoff = collectionAttribute.getJoinTable() == null;
+        boolean enableElementCollectionIdCutoff = collectionAttribute.getJoinTable() != null && !mainQuery.jpaProvider.needsAssociationToIdRewriteInOnClause();
         JpaUtils.expandBindings(setAttributeBindingMap, collectionColumnBindingMap, collectionAttributeEntries, ClauseType.SET, this, keyFunctionExpression, enableElementCollectionIdCutoff);
         super.prepareAndCheck();
     }

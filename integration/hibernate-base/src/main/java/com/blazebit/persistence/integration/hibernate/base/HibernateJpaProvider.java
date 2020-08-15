@@ -106,6 +106,7 @@ public class HibernateJpaProvider implements JpaProvider {
     private final boolean supportsSingleValuedAssociationNaturalIdExpressions;
     private final boolean supportsTableGroupJoins;
     private final boolean needsElementCollectionIdCutoffForCompositeIdOwner;
+    private final boolean supportsNonDrivingAliasInOnClause;
 
     static {
         Class<?> typeClass = null;
@@ -186,6 +187,7 @@ public class HibernateJpaProvider implements JpaProvider {
             // Since Hibernate 5.0 the physical schema uses quoted identifiers as well
             this.useQuoted = major > 4;
             this.supportsEntityJoin = major > 5 || major == 5 && minor >= 1;
+            this.supportsNonDrivingAliasInOnClause = major > 5 || major == 5 && minor >= 2;
             // Got fixed in 5.2.3: https://hibernate.atlassian.net/browse/HHH-9329 but is still buggy: https://hibernate.atlassian.net/browse/HHH-11401
             this.needsJoinSubqueryRewrite = major < 5 || major == 5 && minor < 2 || major == 5 && minor == 2 && fix < 7;
             // Got fixed in 5.2.8: https://hibernate.atlassian.net/browse/HHH-11450
@@ -1661,6 +1663,11 @@ public class HibernateJpaProvider implements JpaProvider {
     @Override
     public boolean supportsTemporalLiteral() {
         return false;
+    }
+
+    @Override
+    public boolean supportsNonDrivingAliasInOnClause() {
+        return supportsNonDrivingAliasInOnClause;
     }
 
     @Override

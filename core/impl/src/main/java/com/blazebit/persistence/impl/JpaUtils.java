@@ -120,9 +120,16 @@ public final class JpaUtils {
                     if ((clause != ClauseType.SET || jpaProvider.supportsUpdateSetAssociationId()) && jpaMetamodelAccessor.isJoinable(lastAttribute) && !isBasicElementType(lastAttribute)) {
                         splitExpression = true;
                         if (needsElementCollectionIdCutoff) {
-                            for (int i = 0; i < attributePath.size() - 1; i++) {
+                            OUTER: for (int i = 0; i < attributePath.size() - 1; i++) {
                                 Attribute<?, ?> attribute = attributePath.get(i);
                                 if (attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION) {
+                                    // This is a special case, when an embeddable is between an element collection and the association, we still need to split the expression
+                                    for (int j = i + 1; j < attributePath.size() - 1; j++) {
+                                        attribute = attributePath.get(j);
+                                        if (attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED) {
+                                            break OUTER;
+                                        }
+                                    }
                                     splitExpression = false;
                                     break;
                                 }
