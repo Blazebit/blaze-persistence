@@ -818,6 +818,13 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         return disallowedDeReferenceUsed;
     }
 
+    public boolean isParent(JoinNode parent) {
+        if (this.parent != null) {
+            return this.parent == parent || this.parent.isParent(parent);
+        }
+        return false;
+    }
+
     /**
      * @author Christian Beikov
      * @since 1.2.0

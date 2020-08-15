@@ -627,6 +627,14 @@ public interface JpaProvider {
     public boolean supportsTemporalLiteral();
 
     /**
+     * Whether the JPA provider supports the use of an alias other than the driving alias in the ON clause.
+     *
+     * @return <code>true</code> if supported, <code>false</code> otherwise
+     * @since 1.5.0
+     */
+    public boolean supportsNonDrivingAliasInOnClause();
+
+    /**
      * Returns the identifier of the entity object.
      *
      * @param entity The entity

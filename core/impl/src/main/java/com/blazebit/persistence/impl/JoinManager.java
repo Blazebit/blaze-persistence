@@ -1737,7 +1737,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 placeholderRequiringNodes.add(node);
             }
 
-            if (!externalRepresentation && node.isEntityJoinNode() && (emulateJoins || !mainQuery.jpaProvider.supportsEntityJoin())) {
+            if (!externalRepresentation && node.isEntityJoinNode() && (emulateJoins || !mainQuery.jpaProvider.supportsEntityJoin() || shouldEmulateEntityJoin(node))) {
                 if (node.getJoinType() != JoinType.INNER) {
                     throw new IllegalArgumentException("Can't emulate outer join for entity join node: " + node);
                 }
@@ -1865,6 +1865,24 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 }
             }
         }
+    }
+
+    private boolean shouldEmulateEntityJoin(JoinNode node) {
+        if (node.getJoinType() != JoinType.INNER) {
+            return false;
+        }
+        // in Hibernate < 5.1, we weren't able to refer to non-driving table aliases in the ON clause which can be worked around by emulating through a cross join
+        if (!mainQuery.jpaProvider.supportsNonDrivingAliasInOnClause()) {
+            // But this only works when the parent join node has no RIGHT or FULL joins
+            JoinNode parent = node.getParent();
+            for (JoinNode joinNode : explicitJoinNodes) {
+                if ((joinNode.getJoinType() == JoinType.RIGHT || joinNode.getJoinType() == JoinType.FULL) && joinNode.isParent(parent)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
     }
 
     private void renderInlineCteAttributes(StringBuilder sb, JoinNode node) {

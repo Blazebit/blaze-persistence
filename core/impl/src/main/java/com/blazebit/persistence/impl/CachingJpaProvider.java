@@ -403,6 +403,11 @@ public final class CachingJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsNonDrivingAliasInOnClause() {
+        return jpaProvider.supportsNonDrivingAliasInOnClause();
+    }
+
+    @Override
     public Object getIdentifier(Object entity) {
         return jpaProvider.getIdentifier(entity);
     }
