@@ -121,7 +121,6 @@
                                 <jdbc.user>admin</jdbc.user>
                                 <jdbc.password>admin</jdbc.password>
                                 <jdbc.driver>org.h2.Driver</jdbc.driver>
-                                <activeProfiles>${spring.activeProfiles}</activeProfiles>
                             </systemPropertyVariables>
                         </configuration>
                         <dependencies>
@@ -156,7 +155,6 @@
                                 <jdbc.user>root</jdbc.user>
                                 <jdbc.password />
                                 <jdbc.driver>com.mysql.jdbc.Driver</jdbc.driver>
-                                <activeProfiles>${spring.activeProfiles}</activeProfiles>
                             </systemPropertyVariables>
                         </configuration>
                         <dependencies>
@@ -191,7 +189,6 @@
                                 <jdbc.user>root</jdbc.user>
                                 <jdbc.password />
                                 <jdbc.driver>com.mysql.jdbc.Driver</jdbc.driver>
-                                <activeProfiles>${spring.activeProfiles}</activeProfiles>
                             </systemPropertyVariables>
                         </configuration>
                         <dependencies>
@@ -226,7 +223,7 @@
                                 <jdbc.user>postgres</jdbc.user>
                                 <jdbc.password>postgres</jdbc.password>
                                 <jdbc.driver>org.postgresql.Driver</jdbc.driver>
-                                <activeProfiles>${spring.activeProfiles}</activeProfiles>
+                                <hibernate.default_schema>public</hibernate.default_schema>
                             </systemPropertyVariables>
                         </configuration>
                         <dependencies>
@@ -261,7 +258,6 @@
                                 <jdbc.user />
                                 <jdbc.password />
                                 <jdbc.driver>org.sqlite.JDBC</jdbc.driver>
-                                <activeProfiles>${spring.activeProfiles}</activeProfiles>
                             </systemPropertyVariables>
                         </configuration>
                         <dependencies>
@@ -301,7 +297,6 @@
                                 <jdbc.user>db2inst1</jdbc.user>
                                 <jdbc.password>db2inst1-pwd</jdbc.password>
                                 <jdbc.driver>com.ibm.db2.jcc.DB2Driver</jdbc.driver>
-                                <activeProfiles>${spring.activeProfiles}</activeProfiles>
                             </systemPropertyVariables>
                         </configuration>
                         <dependencies>
@@ -343,7 +338,6 @@
                                 <jdbc.user>SYSDBA</jdbc.user>
                                 <jdbc.password>masterkey</jdbc.password>
                                 <jdbc.driver>org.firebirdsql.jdbc.FBDriver</jdbc.driver>
-                                <activeProfiles>${spring.activeProfiles}</activeProfiles>
                             </systemPropertyVariables>
                         </configuration>
                         <dependencies>
@@ -378,7 +372,6 @@
                                 <jdbc.user>SYSTEM</jdbc.user>
                                 <jdbc.password>oracle</jdbc.password>
                                 <jdbc.driver>oracle.jdbc.driver.OracleDriver</jdbc.driver>
-                                <activeProfiles>${spring.activeProfiles}</activeProfiles>
                             </systemPropertyVariables>
                         </configuration>
                         <dependencies>
@@ -492,7 +485,6 @@
             <id>hibernate</id>
             <properties>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42</jpa.excludedGroups>
-                <spring.activeProfiles>hibernate</spring.activeProfiles>
             </properties>
             <dependencies>
                 <dependency>
@@ -603,7 +595,6 @@
             <id>hibernate-4.3</id>
             <properties>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43</jpa.excludedGroups>
-                <spring.activeProfiles>hibernate</spring.activeProfiles>
             </properties>
             <dependencies>
                 <dependency>
@@ -709,7 +700,6 @@
             <id>hibernate-5.0</id>
             <properties>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50</jpa.excludedGroups>
-                <spring.activeProfiles>hibernate</spring.activeProfiles>
             </properties>
             <dependencies>
                 <dependency>
@@ -815,7 +805,6 @@
             <id>hibernate-5.1</id>
             <properties>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51</jpa.excludedGroups>
-                <spring.activeProfiles>hibernate</spring.activeProfiles>
             </properties>
             <dependencies>
                 <dependency>
@@ -921,7 +910,6 @@
             <id>hibernate-5.2</id>
             <properties>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate52</jpa.excludedGroups>
-                <spring.activeProfiles>hibernate</spring.activeProfiles>
             </properties>
             <activation>
                 <activeByDefault>true</activeByDefault>
@@ -1030,7 +1018,6 @@
             <id>hibernate-5.3</id>
             <properties>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate53</jpa.excludedGroups>
-                <spring.activeProfiles>hibernate</spring.activeProfiles>
             </properties>
             <dependencies>
                 <dependency>
@@ -1136,7 +1123,6 @@
             <id>hibernate-5.4</id>
             <properties>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate52</jpa.excludedGroups>
-                <spring.activeProfiles>hibernate</spring.activeProfiles>
             </properties>
             <repositories>
                 <repository>
@@ -1252,7 +1238,6 @@
             <id>hibernate-6.0</id>
             <properties>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate</jpa.excludedGroups>
-                <spring.activeProfiles>hibernate</spring.activeProfiles>
             </properties>
             <repositories>
                 <repository>
@@ -1365,7 +1350,6 @@
             <id>eclipselink</id>
             <properties>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink</jpa.excludedGroups>
-                <spring.activeProfiles>eclipselink</spring.activeProfiles>
             </properties>
             <dependencies>
                 <dependency>
@@ -1474,7 +1458,6 @@
             <id>datanucleus-4</id>
             <properties>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus,com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus4</jpa.excludedGroups>
-                <spring.activeProfiles>datanucleus</spring.activeProfiles>
             </properties>
             <repositories>
                 <repository>
@@ -1633,7 +1616,6 @@
             <id>datanucleus-5</id>
             <properties>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus</jpa.excludedGroups>
-                <spring.activeProfiles>datanucleus</spring.activeProfiles>
             </properties>
             <repositories>
                 <repository>
@@ -1786,7 +1768,6 @@
             <id>datanucleus-5.1</id>
             <properties>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus</jpa.excludedGroups>
-                <spring.activeProfiles>datanucleus</spring.activeProfiles>
             </properties>
             <repositories>
                 <repository>
@@ -1939,7 +1920,6 @@
             <id>openjpa</id>
             <properties>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA</jpa.excludedGroups>
-                <spring.activeProfiles>openjpa</spring.activeProfiles>
             </properties>
             <dependencies>
                 <dependency>
@@ -2035,7 +2015,6 @@
             <id>hibernate-apt</id>
             <properties>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate52</jpa.excludedGroups>
-                <spring.activeProfiles>hibernate</spring.activeProfiles>
             </properties>
             <repositories>
                 <repository>
