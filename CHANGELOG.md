@@ -28,6 +28,7 @@ Not yet released
 * Fix generation of invalid code in entity view annotation processor for arrays
 * Fix generation of invalid runtime code for entity view proxy when using primitive arrays
 * Ignore query parameter attributes in `MULTISET` basic type compatibility check
+* Fix keyset extraction for pagination queries with id query inlining and no explicit select items
 
 ### Backwards-incompatible changes
 

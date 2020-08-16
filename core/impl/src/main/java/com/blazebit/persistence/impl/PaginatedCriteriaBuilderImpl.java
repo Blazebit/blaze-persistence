@@ -713,12 +713,10 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         } else if (keysetExtraction || withInlineCountQuery) {
             if (isWithInlineIdQuery()) {
                 initializeOrderByAliasesWithIdentifierToUse(orderByExpressions);
-                // If we have no select item, this means we implicitly select the root and thus need to offset the index mapping as we will append that
+                // If we have no select item, this means we implicitly select the root and thus append order by items after the root
                 if (selectManager.getSelectInfos().size() == 0) {
                     for (int j = 0; j < keysetToSelectIndexMapping.length; j++) {
-                        if (keysetToSelectIndexMapping[j] != -1) {
-                            keysetToSelectIndexMapping[j] = keysetToSelectIndexMapping[j] + 1;
-                        }
+                        keysetToSelectIndexMapping[j] = j + 1;
                     }
                 }
             } else {
