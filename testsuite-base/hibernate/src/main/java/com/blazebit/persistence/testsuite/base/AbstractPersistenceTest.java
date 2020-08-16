@@ -141,7 +141,9 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
                 properties.put("hibernate.id.new_generator_mappings", "false");
             }
         }
-        
+        if (System.getProperty("hibernate.default_schema") != null) {
+            properties.put("hibernate.default_schema", System.getProperty("hibernate.default_schema"));
+        }
         if (useHbm2ddl()) {
             properties.put("hibernate.connection.url", properties.remove("javax.persistence.jdbc.url"));
             properties.put("hibernate.connection.password", properties.remove("javax.persistence.jdbc.password"));
@@ -249,14 +251,14 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
             public String tableFromEntity(Class<?> entityClass) {
                 SessionImplementor session = em.unwrap(SessionImplementor.class);
                 AbstractEntityPersister persister = (AbstractEntityPersister) session.getFactory().getEntityPersister(entityClass.getName());
-                return persister.getTableName();
+                return persister.getTableName().substring(persister.getTableName().lastIndexOf('.') + 1);
             }
 
             @Override
             public String tableFromEntityRelation(Class<?> entityClass, String relationName) {
                 JoinTable joinTable = jpaProvider.getJoinTable(em.getMetamodel().entity(entityClass), relationName);
                 if (joinTable != null) {
-                    return joinTable.getTableName();
+                    return joinTable.getTableName().substring(joinTable.getTableName().lastIndexOf('.') + 1);
                 }
                 return null;
             }

@@ -921,20 +921,20 @@ public class HibernateJpaProvider implements JpaProvider {
             if (entityPersister instanceof JoinedSubclassEntityPersister) {
                 tables = new Table[((JoinedSubclassEntityPersister) entityPersister).getSubclassTableSpan()];
                 for (int i = 0; i < tables.length; i++) {
-                    tables[i] = database.getTable(entityPersister.getSubclassTableName(i));
+                    tables[i] = getTable(database, entityPersister.getSubclassTableName(i));
                 }
             } else if (entityPersister instanceof UnionSubclassEntityPersister) {
                 tables = new Table[((UnionSubclassEntityPersister) entityPersister).getSubclassTableSpan()];
                 for (int i = 0; i < tables.length; i++) {
-                    tables[i] = database.getTable(unquote(entityPersister.getSubclassTableName(i)));
+                    tables[i] = getTable(database, entityPersister.getSubclassTableName(i));
                 }
             } else if (entityPersister instanceof SingleTableEntityPersister) {
                 tables = new Table[((SingleTableEntityPersister) entityPersister).getSubclassTableSpan()];
                 for (int i = 0; i < tables.length; i++) {
-                    tables[i] = database.getTable(unquote(entityPersister.getSubclassTableName(i)));
+                    tables[i] = getTable(database, entityPersister.getSubclassTableName(i));
                 }
             } else {
-                tables = new Table[]{database.getTable(unquote(entityPersister.getTableName()))};
+                tables = new Table[]{ getTable(database, entityPersister.getTableName()) };
             }
 
             boolean isSubselect = tables.length == 1 && tables[0] == null;
@@ -1105,9 +1105,19 @@ public class HibernateJpaProvider implements JpaProvider {
         }
 
         Database database = sfi.getServiceRegistry().locateServiceBinding(Database.class).getService();
-        Table[] tables = new Table[]{ database.getTable(unquote(persister.getTableName())) };
+        Table[] tables = new Table[]{ getTable(database, persister.getTableName()) };
 
         return getColumnTypesForColumnNames(ownerType, columnNames, tables);
+    }
+
+    private Table getTable(Database database, String tableName) {
+        Table table = database.getTable(unquote(tableName));
+
+        if (table == null) {
+            // It might happen that the boot model does not consider the schema so we skip it here
+            table = database.getTable(unquote(tableName.substring(tableName.lastIndexOf('.') + 1)));
+        }
+        return table;
     }
 
     private boolean isFormula(String[] columnNames) {

@@ -324,6 +324,7 @@
                                 <jdbc.user>postgres</jdbc.user>
                                 <jdbc.password>postgres</jdbc.password>
                                 <jdbc.driver>org.postgresql.Driver</jdbc.driver>
+                                <hibernate.default_schema>public</hibernate.default_schema>
                             </systemPropertyVariables>
                         </configuration>
                         <dependencies>
