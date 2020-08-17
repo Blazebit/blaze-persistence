@@ -56,11 +56,16 @@ import com.blazebit.persistence.parser.expression.PropertyExpression;
 import com.blazebit.persistence.parser.expression.StringLiteral;
 import com.blazebit.persistence.parser.expression.Subquery;
 import com.blazebit.persistence.parser.expression.SubqueryExpression;
+import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.JpqlFunctionProcessor;
 
 import javax.persistence.Tuple;
+import javax.persistence.metamodel.EmbeddableType;
+import javax.persistence.metamodel.IdentifiableType;
+import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.SingularAttribute;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -334,10 +339,21 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
 
     void buildSelectItems(StringBuilder sb, boolean isInsertInto, boolean externalRepresentation) {
         List<SelectInfo> infos = selectInfos;
-        int size = selectInfos.size();
+        int size = infos.size();
+        ExtendedManagedType<?> managedType;
         if (size == 0) {
             JoinNode rootNode = joinManager.getRootNodeOrFail("Empty select not allowed when having multiple roots!");
-            rootNode.appendAlias(sb, externalRepresentation);
+
+            if (!externalRepresentation
+                    && queryBuilder instanceof SubqueryBuilder<?>
+                    && rootNode.getType() instanceof IdentifiableType<?>
+                    && !mainQuery.jpaProvider.supportsSelectCompositeIdEntityInSubquery()
+                    && hasCompositeId(managedType = mainQuery.metamodel.getManagedType(ExtendedManagedType.class, rootNode.getManagedType()))
+            ) {
+                emulateSelectCompositeId(sb, rootNode, managedType);
+            } else {
+                rootNode.appendAlias(sb, externalRepresentation);
+            }
         } else {
             // we must not replace select alias since we would loose the original expressions
             queryGenerator.setClauseType(ClauseType.SELECT);
@@ -350,19 +366,48 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
             } else {
                 oldParameterRenderingMode = queryGenerator.setParameterRenderingMode(SimpleQueryGenerator.ParameterRenderingMode.LITERAL);
             }
-            
-            for (int i = 0; i < size; i++) {
-                if (i != 0) {
-                    sb.append(", ");
+
+            PathExpression pathExpression;
+            if (!externalRepresentation
+                    && queryBuilder instanceof SubqueryBuilder<?>
+                    && size == 1
+                    && !mainQuery.jpaProvider.supportsSelectCompositeIdEntityInSubquery()
+                    && infos.get(0).getExpression() instanceof PathExpression
+                    && (pathExpression = (PathExpression) infos.get(0).getExpression()).getPathReference().getType() instanceof IdentifiableType<?>
+                    && hasCompositeId(managedType = mainQuery.metamodel.getManagedType(ExtendedManagedType.class, (ManagedType<?>) pathExpression.getPathReference().getType()))
+            ) {
+                emulateSelectCompositeId(sb, (JoinNode) pathExpression.getBaseNode(), managedType);
+            } else {
+                for (int i = 0; i < size; i++) {
+                    if (i != 0) {
+                        sb.append(", ");
+                    }
+
+                    applySelect(queryGenerator, sb, infos.get(i));
                 }
-                
-                applySelect(queryGenerator, sb, infos.get(i));
             }
-            
             queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
             queryGenerator.setParameterRenderingMode(oldParameterRenderingMode);
             queryGenerator.setClauseType(null);
         }
+    }
+
+    private void emulateSelectCompositeId(StringBuilder sb, JoinNode rootNode, ExtendedManagedType<?> managedType) {
+        boolean comma = false;
+        for (SingularAttribute<?, ?> idAttribute : managedType.getIdAttributes()) {
+            for (String propertyPath : JpaUtils.getEmbeddedPropertyPaths(managedType.getOwnedSingularAttributes(), idAttribute.getName(), false, false)) {
+                if (comma) {
+                    sb.append(", ");
+                } else {
+                    comma = true;
+                }
+                rootNode.appendDeReference(sb, idAttribute.getName() + "." + propertyPath, false);
+            }
+        }
+    }
+
+    private boolean hasCompositeId(ExtendedManagedType<?> extendedManagedType) {
+        return extendedManagedType.getIdAttributes().size() > 1 || extendedManagedType.getIdAttribute().getType() instanceof EmbeddableType<?>;
     }
 
     @Override

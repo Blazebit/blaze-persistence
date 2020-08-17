@@ -408,6 +408,11 @@ public final class CachingJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsSelectCompositeIdEntityInSubquery() {
+        return jpaProvider.supportsSelectCompositeIdEntityInSubquery();
+    }
+
+    @Override
     public Object getIdentifier(Object entity) {
         return jpaProvider.getIdentifier(entity);
     }

@@ -349,7 +349,7 @@ public final class JpaUtils {
         }
     }
 
-    public static Collection<String> getEmbeddedPropertyPaths(Map<String, ExtendedAttribute<?, ?>> attributeEntries, String attributeName, boolean needsElementCollectionIdCutoff, boolean filterCollections) {
+    public static Collection<String> getEmbeddedPropertyPaths(Map<String, ? extends ExtendedAttribute<?, ?>> attributeEntries, String attributeName, boolean needsElementCollectionIdCutoff, boolean filterCollections) {
         final NavigableSet<String> embeddedPropertyNames = new TreeSet<>();
         String prefix = attributeName == null ? "" : attributeName + ".";
         int dotCount = -1;
@@ -359,7 +359,7 @@ public final class JpaUtils {
             dotIndex = prefix.indexOf('.', dotIndex + 1);
         } while (dotIndex != -1);
 
-        OUTER: for (Map.Entry<String, ExtendedAttribute<?, ?>> entry : attributeEntries.entrySet()) {
+        OUTER: for (Map.Entry<String, ? extends ExtendedAttribute<?, ?>> entry : attributeEntries.entrySet()) {
             if (entry.getKey().startsWith(prefix)) {
                 if (filterCollections) {
                     List<Attribute<?, ?>> attributePath = entry.getValue().getAttributePath();

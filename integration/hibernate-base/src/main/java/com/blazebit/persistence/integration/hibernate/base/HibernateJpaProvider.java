@@ -1681,6 +1681,12 @@ public class HibernateJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsSelectCompositeIdEntityInSubquery() {
+        // Not yet implemented in Hibernate, see https://hibernate.atlassian.net/browse/HHH-14156
+        return false;
+    }
+
+    @Override
     public Object getIdentifier(Object entity) {
         // Pre Hibernate 5.2, accessing the identifier through the PersistenceUnitUtil caused initialization of the proxy
         if (entity instanceof HibernateProxy) {
