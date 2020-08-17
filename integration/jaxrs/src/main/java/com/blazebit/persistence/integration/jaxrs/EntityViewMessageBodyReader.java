@@ -29,6 +29,7 @@ import javax.annotation.Priority;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.WebApplicationException;
@@ -44,7 +45,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author Christian Beikov
@@ -55,6 +61,8 @@ import java.lang.reflect.Type;
 // "*/*" needs to be included since Jersey does not support the "application/*+json" notation
 @Consumes({"application/json", "application/*+json", "text/json", "*/*"})
 public class EntityViewMessageBodyReader implements MessageBodyReader<Object> {
+
+    private static final ParamConverterProvider FROM_STRING_PARAM_CONVERTER_PROVIDER = new FromStringParamConverterProvider();
 
     @Inject
     private Instance<EntityViewManager> entityViewManager;
@@ -85,7 +93,14 @@ public class EntityViewMessageBodyReader implements MessageBodyReader<Object> {
                                 break;
                             }
                         }
-                        return paramConverter == null ? null : paramConverter.fromString(value);
+                        if (paramConverter == null) {
+                            paramConverter = FROM_STRING_PARAM_CONVERTER_PROVIDER.getConverter(idType, idType, null);
+                        }
+                        if (paramConverter == null) {
+                            throw new RuntimeException("No " + ParamConverter.class.getName() + " could be found to convert to type " + idType.getName());
+                        } else {
+                            return paramConverter.fromString(value);
+                        }
                     }
                 }
             });
@@ -168,5 +183,159 @@ public class EntityViewMessageBodyReader implements MessageBodyReader<Object> {
          * that we can at least produce JSON without media type?
          */
         return true;
+    }
+
+    /**
+     * ParamConverterProvider for default parameter conversion using fromString method if present
+     */
+    private static class FromStringParamConverterProvider implements ParamConverterProvider {
+
+        private static final Map<Class<?>, ParamConverter<?>> CACHED_PARAM_CONVERTERS = new ConcurrentHashMap<>();
+
+        @Override
+        public <T> ParamConverter<T> getConverter(Class<T> clazz, Type type, Annotation[] annotations) {
+            ParamConverter<T> converter = (ParamConverter<T>) CACHED_PARAM_CONVERTERS.get(clazz);
+            if (converter == null) {
+                // Follow the logic described in https://docs.jboss.org/resteasy/docs/3.5.0.Final/userguide/html/StringConverter.html#d4e1480
+                Class<?> effectiveClass;
+                if (short.class.equals(clazz)) {
+                    effectiveClass = Short.class;
+                } else if (int.class.equals(clazz)) {
+                    effectiveClass = Integer.class;
+                } else if (long.class.equals(clazz)) {
+                    effectiveClass = Long.class;
+                } else if (float.class.equals(clazz)) {
+                    effectiveClass = Float.class;
+                } else if (double.class.equals(clazz)) {
+                    effectiveClass = Double.class;
+                } else if (boolean.class.equals(clazz)) {
+                    effectiveClass = Boolean.class;
+                } else if (byte.class.equals(clazz)) {
+                    effectiveClass = Byte.class;
+                } else if (char.class.equals(clazz)) {
+                    effectiveClass = Character.class;
+                } else {
+                    effectiveClass = clazz;
+                }
+                Method fromStringMethod = null;
+                try {
+                    fromStringMethod = effectiveClass.getMethod("fromString", String.class);
+                } catch (NoSuchMethodException e) {
+                    // ignore
+                }
+                Method valueOfMethod = null;
+                try {
+                    valueOfMethod = effectiveClass.getMethod("valueOf", String.class);
+                } catch (NoSuchMethodException e) {
+                    // ignore
+                }
+
+                Method effectiveMethod;
+                if (fromStringMethod != null && valueOfMethod != null) {
+                    effectiveMethod = effectiveClass.isEnum() ? fromStringMethod : valueOfMethod;
+                } else if (fromStringMethod != null) {
+                    effectiveMethod = fromStringMethod;
+                } else {
+                    effectiveMethod = valueOfMethod;
+                }
+
+                if (effectiveClass == Character.class) {
+                    converter = (ParamConverter<T>) new CharacterParamConverter();
+                } else if (effectiveMethod == null) {
+                    Constructor<T> constructor = null;
+                    try {
+                        constructor = ((Class<T>) effectiveClass).getConstructor(String.class);
+                    } catch (NoSuchMethodException e) {
+                        // ignore
+                    }
+                    converter = constructor == null ? null : new ConstructorBasedParamConverter<>(constructor);
+                } else {
+                    converter = new MethodBasedParamConverter<>(effectiveMethod);
+                }
+                if (converter != null) {
+                    CACHED_PARAM_CONVERTERS.put(clazz, converter);
+                }
+            }
+            return converter;
+        }
+
+        /**
+         * ParamConverter for default parameter conversion using the given {@link java.lang.String} consuming method
+         *
+         * @param <T> The parameter type
+         */
+        private static class MethodBasedParamConverter<T> implements javax.ws.rs.ext.ParamConverter<T> {
+            private final Method stringConsumingMethod;
+
+            public MethodBasedParamConverter(Method stringConsumingMethod) {
+                this.stringConsumingMethod = stringConsumingMethod;
+            }
+
+            @Override
+            @SuppressWarnings("unchecked")
+            public T fromString(String s) {
+                try {
+                    return (T) stringConsumingMethod.invoke(null, s);
+                } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+                    throw new BadRequestException("Malformed input: " + s);
+                }
+            }
+
+            @Override
+            public String toString(T o) {
+                return o.toString();
+            }
+        }
+
+        /**
+         * ParamConverter for default parameter conversion using the given {@link java.lang.String} consuming constructor
+         *
+         * @param <T> The parameter type
+         */
+        private static class ConstructorBasedParamConverter<T> implements javax.ws.rs.ext.ParamConverter<T> {
+            private final Constructor<T> stringConstructor;
+
+            public ConstructorBasedParamConverter(Constructor<T> stringConstructor) {
+                this.stringConstructor = stringConstructor;
+            }
+
+            @Override
+            @SuppressWarnings("unchecked")
+            public T fromString(String s) {
+                try {
+                    return (T) stringConstructor.newInstance(s);
+                } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                    throw new BadRequestException("Malformed input: " + s);
+                }
+            }
+
+            @Override
+            public String toString(T o) {
+                return o.toString();
+            }
+        }
+
+        /**
+         * ParamConverter for default parameter conversion for {@link java.lang.Character}
+         */
+        private static class CharacterParamConverter implements javax.ws.rs.ext.ParamConverter<Character> {
+
+            @Override
+            @SuppressWarnings("unchecked")
+            public Character fromString(String s) {
+                Character c;
+                if (s == null || s.length() > 1) {
+                    c = null;
+                } else {
+                    c = s.charAt(0);
+                }
+                return c;
+            }
+
+            @Override
+            public String toString(Character o) {
+                return o.toString();
+            }
+        }
     }
 }

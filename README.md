@@ -546,7 +546,7 @@ The general setup required for building native images with GraalVM is described 
 For example, run the following maven build to execute native image tests for H2:
 
 ```
-mvn -pl examples/quarkus/testsuite/native/h2 -am integration-test -Ph2 -Pnative
+mvn -pl examples/quarkus/testsuite/native/h2 -am integration-test -Pnative,h2,spring-data-1.11.x,deltaspike-1.7
 ```
 
 Under Windows, make sure you run maven builds that use native image from the VS2017 native tools command line.

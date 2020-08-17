@@ -1,5 +1,5 @@
 #!/bin/bash
-GRAALVM_VERSION=20.0.0
+GRAALVM_VERSION=20.1.0
 
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6B05F25D762E3157 78BD65473CB3BD13
 sudo apt-get update

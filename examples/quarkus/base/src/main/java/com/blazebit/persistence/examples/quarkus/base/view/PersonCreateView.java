@@ -13,20 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.examples.quarkus.base.view;
 
 import com.blazebit.persistence.examples.quarkus.base.entity.Person;
+import com.blazebit.persistence.view.CreatableEntityView;
 import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.UpdatableEntityView;
+
+import java.util.UUID;
 
 /**
  * @author Moritz Becker
  * @since 1.5.0
  */
-@UpdatableEntityView
+@CreatableEntityView
 @EntityView(Person.class)
-public interface PersonUpdateView extends PersonView {
+public interface PersonCreateView extends PersonView {
+
+    void setId(UUID id);
 
     void setName(String name);
 }

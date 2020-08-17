@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.examples.quarkus.base.resource;
 
+import com.blazebit.persistence.examples.quarkus.base.view.PersonCreateView;
 import com.blazebit.persistence.examples.quarkus.base.view.PersonUpdateView;
 import com.blazebit.persistence.examples.quarkus.base.view.PersonView;
 import com.blazebit.persistence.integration.jaxrs.EntityViewId;
@@ -30,6 +31,8 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.net.URI;
 
 /**
  * @author Moritz Becker
@@ -56,8 +59,8 @@ public class PersonResource {
     @POST
     @Transactional
     @Produces(MediaType.APPLICATION_JSON)
-    public PersonView addPerson(PersonUpdateView view) {
+    public Response addPerson(PersonCreateView view) {
         evm.save(em, view);
-        return evm.find(em, PersonView.class, view.getId());
+        return Response.created(URI.create("/persons/" + view.getId())).build();
     }
 }
