@@ -24,6 +24,9 @@ import com.blazebit.persistence.integration.quarkus.runtime.DefaultEntityViewMan
 import com.blazebit.persistence.integration.quarkus.runtime.EntityViewConfigurationHolder;
 import com.blazebit.persistence.integration.quarkus.runtime.EntityViewRecorder;
 import com.blazebit.persistence.parser.expression.ConcurrentHashMapExpressionCache;
+import com.blazebit.persistence.view.EntityViews;
+import com.blazebit.persistence.view.spi.EntityViewConfiguration;
+import com.blazebit.persistence.view.spi.EntityViewMapping;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.BeanContainerListenerBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -74,6 +77,20 @@ class BlazePersistenceProcessor {
     }
 
     @BuildStep
+    public EntityViewConfigurationBuildItem produceEntityViewConfigurationBuildItem(
+            EntityViewsBuildItem entityViewsBuildItem) {
+        EntityViewConfiguration evc = EntityViews.createDefaultConfiguration();
+        for (String entityViewClassName : entityViewsBuildItem.getEntityViewClassNames()) {
+            try {
+                evc.addEntityView(Class.forName(entityViewClassName));
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return new EntityViewConfigurationBuildItem(evc);
+    }
+
+    @BuildStep
     @Record(STATIC_INIT)
     void registerBeans(EntityViewsBuildItem entityViewsBuildItem,
                        EntityViewListenersBuildItem entityViewListenersBuildItem,
@@ -107,6 +124,7 @@ class BlazePersistenceProcessor {
 
     @BuildStep
     void reflection(EntityViewsBuildItem entityViewsBuildItem,
+                    EntityViewConfigurationBuildItem entityViewConfigurationBuildItem,
                     BuildProducer<ReflectiveClassBuildItem> reflectionProducer) {
         reflectionProducer.produce(new ReflectiveClassBuildItem(true, true, ValuesEntity.class));
         reflectionProducer.produce(new ReflectiveClassBuildItem(true, false, false, ConcurrentHashMapExpressionCache.class));
@@ -147,6 +165,15 @@ class BlazePersistenceProcessor {
                         .build()
                 );
             }
+        }
+
+        // add fromString methods from entity view id types
+        for (EntityViewMapping entityViewMapping : entityViewConfigurationBuildItem.getEntityViewConfiguration().getEntityViewMappings()) {
+            reflectionProducer.produce(ReflectiveClassBuildItem.builder(entityViewMapping.getIdAttribute().getDeclaredType())
+                    .constructors(true)
+                    .methods(true)
+                    .build()
+            );
         }
     }
 

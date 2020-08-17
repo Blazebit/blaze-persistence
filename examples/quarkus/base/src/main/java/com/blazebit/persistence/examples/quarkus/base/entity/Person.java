@@ -17,6 +17,7 @@
 package com.blazebit.persistence.examples.quarkus.base.entity;
 
 import javax.persistence.Basic;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
@@ -54,6 +55,7 @@ public class Person implements Serializable {
     }
 
     @Id
+    @Column(length = 16)
     public UUID getId() {
         return id;
     }

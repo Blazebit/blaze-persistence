@@ -20,6 +20,7 @@ import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
+import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.matchesPattern;
@@ -80,5 +81,25 @@ public abstract class AbstractQuarkusExampleTest {
                 .then()
                 .statusCode(200)
                 .body("name", is("docType1-new"));
+    }
+
+    @Test
+    public void updatePerson() {
+        UUID personId = UUID.randomUUID();
+        given()
+                .body("{\"id\": \"" + personId + "\", \"name\": \"person1\"}")
+                .contentType(ContentType.JSON)
+                .when().post("/persons")
+                .then()
+                .statusCode(201)
+                .header("Location", matchesPattern("http://localhost:" + apiBaseUri.getPort() + "/persons/" + personId));
+
+        given()
+                .body("{\"name\": \"person1-new\"}")
+                .contentType(ContentType.JSON)
+                .when().put("/persons/" + personId)
+                .then()
+                .statusCode(200)
+                .body("name", is("person1-new"));
     }
 }
