@@ -635,6 +635,14 @@ public interface JpaProvider {
     public boolean supportsNonDrivingAliasInOnClause();
 
     /**
+     * Whether the JPA provider supports the use of an entity alias in a subquery for comparison predicates when the entity has an embedded/composite id.
+     *
+     * @return <code>true</code> if supported, <code>false</code> otherwise
+     * @since 1.5.0
+     */
+    public boolean supportsSelectCompositeIdEntityInSubquery();
+
+    /**
      * Returns the identifier of the entity object.
      *
      * @param entity The entity
@@ -655,6 +663,7 @@ public interface JpaProvider {
 
     /**
      * Returns the JpaMetamodelAccessor for this JPA vendor.
+     *
      * @return the JpaMetamodelAccessor for this JPA vendor
      * @since 1.3.0
      */

@@ -10,6 +10,7 @@ Not yet released
 
 * Support joins through DBMS `USING` clause in `DELETE` and `UPDATE` queries
 * Emulation of lateral entity joins for RDBMS that don't support lateral joins a concept
+* Workaround Hibernate issue regarding IN subqueries using composite id entity aliases [HHH-14156](https://hibernate.atlassian.net/browse/HHH-14156)
 
 ### Bug fixes
 
@@ -29,6 +30,7 @@ Not yet released
 * Fix generation of invalid runtime code for entity view proxy when using primitive arrays
 * Ignore query parameter attributes in `MULTISET` basic type compatibility check
 * Fix keyset extraction for pagination queries with id query inlining and no explicit select items
+* Fix issues with `@EntityViewId` from JAX-RS path parameter conversion with Resteasy
 
 ### Backwards-incompatible changes
 
