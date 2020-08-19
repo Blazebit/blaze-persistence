@@ -109,6 +109,7 @@
         <version.weld>2.4.5.Final</version.weld>
         <version.quarkus>1.7.0.Final</version.quarkus>
         <version.jandex>2.0.4.Final</version.jandex>
+        <version.classgraph>4.8.89</version.classgraph>
 
         <!-- Plugin versions -->
         <version.processor.plugin>3.3.2</version.processor.plugin>
@@ -578,6 +579,11 @@
                 <artifactId>mssql-jdbc</artifactId>
                 <version>${mssql.version}</version>
                 <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.github.classgraph</groupId>
+                <artifactId>classgraph</artifactId>
+                <version>${version.classgraph}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

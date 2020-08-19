@@ -22,6 +22,7 @@ import org.datanucleus.ExecutionContext;
 import org.datanucleus.store.StoreManager;
 import org.datanucleus.store.connection.ConnectionManager;
 import org.datanucleus.store.connection.ManagedConnection;
+import org.junit.Before;
 
 import javax.persistence.EntityManager;
 import java.lang.reflect.Method;
@@ -34,6 +35,17 @@ import java.util.Properties;
  * @since 1.0.0
  */
 public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest {
+
+    // We need to recreate the emf because Datanucleus uses messed up metadata otherwise
+    @Before
+    public void recreateEmf() {
+        if (emf != null && emf.isOpen()) {
+            emf.close();
+        }
+        emf = null;
+        em = null;
+        init();
+    }
 
     @Override
     protected Properties applyProperties(Properties properties) {

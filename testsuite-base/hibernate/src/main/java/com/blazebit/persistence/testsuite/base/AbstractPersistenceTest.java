@@ -174,6 +174,11 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
 
         // Needed for Envers tests in Hibernate >= 5.3.5, 5.4.x (HHH-12871)
         properties.put("hibernate.ejb.metamodel.population", "enabled");
+
+        if (isHibernate53Or54()) {
+            properties.put("hibernate.archive.scanner", "org.hibernate.boot.archive.scan.internal.DisabledScanner");
+        }
+
         // We use the following only for debugging purposes
         // Normally these settings should be disabled since the output would be too big TravisCI
 //        properties.put("hibernate.show_sql", "true");
@@ -317,5 +322,13 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
         int minor = Integer.parseInt(versionParts[1]);
         int fix = Integer.parseInt(versionParts[2]);
         return major < 5 || major == 5 && minor < 2 || major == 5 && minor == 2 && fix < 7;
+    }
+
+    private boolean isHibernate53Or54() {
+        String version = org.hibernate.Version.getVersionString();
+        String[] versionParts = version.split("[\\.-]");
+        int major = Integer.parseInt(versionParts[0]);
+        int minor = Integer.parseInt(versionParts[1]);
+        return major == 5 && (minor == 3 || minor == 4);
     }
 }

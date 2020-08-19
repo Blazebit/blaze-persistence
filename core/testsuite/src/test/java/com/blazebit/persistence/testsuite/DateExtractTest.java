@@ -94,7 +94,7 @@ public class DateExtractTest extends AbstractCoreTest {
     protected boolean recreateDataSource() {
         // Some drivers have timezone information bound to the connection
         // So we have to recreate the data source to get the newly configured time zones for connections
-        boolean recreate = previousProducerTimeZone != null && previousClientTimeZone != null && (!producerTimeZone.equals(previousProducerTimeZone) || !clientTimeZone.equals(previousClientTimeZone));
+        boolean recreate = !producerTimeZone.equals(previousProducerTimeZone) || !clientTimeZone.equals(previousClientTimeZone);
         previousProducerTimeZone = producerTimeZone;
         previousClientTimeZone = clientTimeZone;
         return recreate;

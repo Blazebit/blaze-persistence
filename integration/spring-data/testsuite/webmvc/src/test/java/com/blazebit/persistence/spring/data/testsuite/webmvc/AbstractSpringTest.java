@@ -58,8 +58,8 @@ public abstract class AbstractSpringTest extends AbstractPersistenceTest {
         cleanDatabase();
         this.em.getTransaction().rollback();
         this.em.close();
-        this.emf.close();
-        this.emf = null;
+        emf.close();
+        emf = null;
         this.em = null;
         this.cbf = null;
         this.jpaProvider = null;

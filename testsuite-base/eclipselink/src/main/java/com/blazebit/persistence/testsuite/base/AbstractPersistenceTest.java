@@ -23,6 +23,7 @@ import org.eclipse.persistence.internal.jpa.EntityManagerSetupImpl;
 import org.eclipse.persistence.sessions.factories.SessionManager;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import java.sql.Connection;
 import java.util.HashMap;
@@ -93,7 +94,8 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
         }
     }
 
-    protected void recreateOrClearSchema() {
+    @Override
+    protected EntityManagerFactory recreateOrClearSchema() {
         Map<String, EntityManagerSetupImpl> emSetupImpls = EntityManagerFactoryProvider.getEmSetupImpls();
         Map<String, EntityManagerSetupImpl> copy = new HashMap<>(emSetupImpls);
         emSetupImpls.clear();
@@ -102,7 +104,7 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
             manager.getSessions().remove(emSetupImpl.getSessionName());
         }
         try {
-            super.recreateOrClearSchema();
+            return super.recreateOrClearSchema();
         } finally {
             emSetupImpls.putAll(copy);
             for (EntityManagerSetupImpl emSetupImpl : copy.values()) {
