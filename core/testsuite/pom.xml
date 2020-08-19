@@ -35,6 +35,7 @@
         <test.java.version>1.8</test.java.version>
         <java.version>${test.java.version}</java.version>
         <module.name>com.blazebit.persistence.core.testsuite</module.name>
+        <testBasePackage>com.blazebit.persistence.testsuite</testBasePackage>
     </properties>
 
     <dependencies>
@@ -81,7 +82,6 @@
             <scope>test</scope>
         </dependency>
 
-
         <!-- Add mockito early to the local maven repo since the Hibernate,DB2 build froze on downloading this dependency -->
         <dependency>
             <groupId>org.mockito</groupId>
@@ -115,7 +115,6 @@
             <artifactId>activation</artifactId>
             <version>${version.activation}</version>
         </dependency>
-
     </dependencies>
 
     <build>
@@ -167,12 +166,14 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoH2,${jpa.excludedGroups}</excludedGroups>
+                            <test>CoreTestsuite</test>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1</jdbc.url>
                                 <jdbc.user>admin</jdbc.user>
                                 <jdbc.password>admin</jdbc.password>
                                 <jdbc.driver>org.h2.Driver</jdbc.driver>
+                                <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoH2,${jpa.excludedGroups}</excludedGroups>
+                                <testBasePackage>${testBasePackage}</testBasePackage>
                             </systemPropertyVariables>
                         </configuration>
                         <dependencies>
@@ -220,12 +221,14 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL,com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld,${jpa.excludedGroups}</excludedGroups>
+                            <test>CoreTestsuite</test>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:mysql://localhost:3306/test?useUnicode=true&amp;characterEncoding=utf8</jdbc.url>
                                 <jdbc.user>root</jdbc.user>
                                 <jdbc.password />
                                 <jdbc.driver>com.mysql.jdbc.Driver</jdbc.driver>
+                                <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL,com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld,${jpa.excludedGroups}</excludedGroups>
+                                <testBasePackage>${testBasePackage}</testBasePackage>
                             </systemPropertyVariables>
                         </configuration>
                         <dependencies>
@@ -273,12 +276,14 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL,${jpa.excludedGroups}</excludedGroups>
+                            <test>CoreTestsuite</test>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:mysql://localhost:3306/test?useUnicode=true&amp;characterEncoding=utf8</jdbc.url>
                                 <jdbc.user>root</jdbc.user>
                                 <jdbc.password />
                                 <jdbc.driver>com.mysql.jdbc.Driver</jdbc.driver>
+                                <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL,${jpa.excludedGroups}</excludedGroups>
+                                <testBasePackage>${testBasePackage}</testBasePackage>
                             </systemPropertyVariables>
                         </configuration>
                         <dependencies>
@@ -326,13 +331,15 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoPostgreSQL,${jpa.excludedGroups}</excludedGroups>
+                            <test>CoreTestsuite</test>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:postgresql://localhost:5432/test</jdbc.url>
                                 <jdbc.user>postgres</jdbc.user>
                                 <jdbc.password>postgres</jdbc.password>
                                 <jdbc.driver>org.postgresql.Driver</jdbc.driver>
                                 <hibernate.default_schema>public</hibernate.default_schema>
+                                <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoPostgreSQL,${jpa.excludedGroups}</excludedGroups>
+                                <testBasePackage>${testBasePackage}</testBasePackage>
                             </systemPropertyVariables>
                         </configuration>
                         <dependencies>
@@ -380,12 +387,14 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoSQLite,${jpa.excludedGroups}</excludedGroups>
+                            <test>CoreTestsuite</test>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:sqlite:test.db</jdbc.url>
                                 <jdbc.user />
                                 <jdbc.password />
                                 <jdbc.driver>org.sqlite.JDBC</jdbc.driver>
+                                <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoSQLite,${jpa.excludedGroups}</excludedGroups>
+                                <testBasePackage>${testBasePackage}</testBasePackage>
                             </systemPropertyVariables>
                         </configuration>
                         <dependencies>
@@ -438,12 +447,14 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoDB2,${jpa.excludedGroups}</excludedGroups>
+                            <test>CoreTestsuite</test>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:db2://localhost:50000/test</jdbc.url>
                                 <jdbc.user>db2inst1</jdbc.user>
                                 <jdbc.password>db2inst1-pwd</jdbc.password>
                                 <jdbc.driver>com.ibm.db2.jcc.DB2Driver</jdbc.driver>
+                                <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoDB2,${jpa.excludedGroups}</excludedGroups>
+                                <testBasePackage>${testBasePackage}</testBasePackage>
                             </systemPropertyVariables>
                         </configuration>
                         <dependencies>
@@ -498,12 +509,14 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoFirebird,${jpa.excludedGroups}</excludedGroups>
+                            <test>CoreTestsuite</test>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:firebirdsql:localhost:/tmp/test.fdb</jdbc.url>
                                 <jdbc.user>SYSDBA</jdbc.user>
                                 <jdbc.password>masterkey</jdbc.password>
                                 <jdbc.driver>org.firebirdsql.jdbc.FBDriver</jdbc.driver>
+                                <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoFirebird,${jpa.excludedGroups}</excludedGroups>
+                                <testBasePackage>${testBasePackage}</testBasePackage>
                             </systemPropertyVariables>
                         </configuration>
                         <dependencies>
@@ -551,7 +564,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoOracle,${jpa.excludedGroups}</excludedGroups>
+                            <test>CoreTestsuite</test>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:oracle:thin:@localhost:1521:XE</jdbc.url>
                                 <jdbc.user>SYSTEM</jdbc.user>
@@ -563,6 +576,8 @@
                                 <!-- Dumb, dumber, Oracle -->
                                 <!-- See https://stackoverflow.com/questions/33232260/temporaltemporaltype-date-with-oracle-12 -->
                                 <oracle.jdbc.DateZeroTime>true</oracle.jdbc.DateZeroTime>
+                                <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoOracle,${jpa.excludedGroups}</excludedGroups>
+                                <testBasePackage>${testBasePackage}</testBasePackage>
                             </systemPropertyVariables>
                         </configuration>
                         <dependencies>
@@ -610,12 +625,14 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL,${jpa.excludedGroups}</excludedGroups>
+                            <test>CoreTestsuite</test>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:sqlserver://localhost:1433</jdbc.url>
                                 <jdbc.user>sa</jdbc.user>
                                 <jdbc.password>Blaze-Persistence</jdbc.password>
                                 <jdbc.driver>com.microsoft.sqlserver.jdbc.SQLServerDriver</jdbc.driver>
+                                <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL,${jpa.excludedGroups}</excludedGroups>
+                                <testBasePackage>${testBasePackage}</testBasePackage>
                             </systemPropertyVariables>
                         </configuration>
                         <dependencies>

@@ -37,6 +37,7 @@ import net.ttddyy.dsproxy.QueryInfo;
 import net.ttddyy.dsproxy.listener.QueryExecutionListener;
 import net.ttddyy.dsproxy.support.ProxyDataSourceBuilder;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -82,6 +83,7 @@ import static org.junit.Assert.assertTrue;
  */
 public abstract class AbstractJpaPersistenceTest {
 
+    protected static EntityManagerFactory emf;
     private static boolean resolvedNoop = false;
     private static boolean databaseClean = false;
     private static Class<?> lastTestClass;
@@ -99,7 +101,6 @@ public abstract class AbstractJpaPersistenceTest {
             new OracleDatabaseCleaner.Factory()
     );
 
-    protected EntityManagerFactory emf;
     protected EntityManager em;
     protected CriteriaBuilderFactory cbf;
     protected JpaProvider jpaProvider;
@@ -143,33 +144,36 @@ public abstract class AbstractJpaPersistenceTest {
             return;
         }
 
-        boolean wasAutoCommit = false;
-        Connection connection = getConnection(getEm());
-        try {
-            // Turn off auto commit if necessary
-            wasAutoCommit = connection.getAutoCommit();
-            if (wasAutoCommit) {
-                connection.setAutoCommit(false);
-            }
-            // Clear the data with the cleaner
-            databaseCleaner.clearData(connection);
-            databaseClean = true;
-        } catch (SQLException ex) {
+        try (Connection connection = dataSource.getConnection()) {
+            boolean wasAutoCommit = false;
             try {
-                connection.rollback();
-            } catch (SQLException e1) {
-                ex.addSuppressed(e1);
-            }
-
-            throw new RuntimeException(ex);
-        } finally {
-            if (wasAutoCommit) {
+                // Turn off auto commit if necessary
+                wasAutoCommit = connection.getAutoCommit();
+                if (wasAutoCommit) {
+                    connection.setAutoCommit(false);
+                }
+                // Clear the data with the cleaner
+                databaseCleaner.clearData(connection);
+                databaseClean = true;
+            } catch (Exception ex) {
                 try {
-                    connection.setAutoCommit(true);
-                } catch (SQLException ex) {
-                    throw new RuntimeException(ex);
+                    connection.rollback();
+                } catch (SQLException e1) {
+                    ex.addSuppressed(e1);
+                }
+
+                throw new RuntimeException(ex);
+            } finally {
+                if (wasAutoCommit) {
+                    try {
+                        connection.setAutoCommit(true);
+                    } catch (SQLException ex) {
+                        throw new RuntimeException(ex);
+                    }
                 }
             }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -197,36 +201,16 @@ public abstract class AbstractJpaPersistenceTest {
     }
 
     private void clearSchema() {
-        clearSchema(getEm(), databaseCleaner);
+        clearSchema(databaseCleaner);
     }
 
-    public void clearSchema(EntityManager em, DatabaseCleaner databaseCleaner) {
-        boolean wasAutoCommit = false;
-        Connection connection = getConnection(em);
-        try {
-            // Turn off auto commit if necessary
-            wasAutoCommit = connection.getAutoCommit();
-            if (wasAutoCommit) {
-                connection.setAutoCommit(false);
-            }
+    public void clearSchema(DatabaseCleaner databaseCleaner) {
+        try (Connection connection = dataSource.getConnection()) {
+            connection.setAutoCommit(false);
             // Clear the data with the cleaner
             databaseCleaner.clearSchema(connection);
-        } catch (SQLException ex) {
-            try {
-                connection.rollback();
-            } catch (SQLException e1) {
-                ex.addSuppressed(e1);
-            }
-
-            throw new RuntimeException(ex);
-        } finally {
-            if (wasAutoCommit) {
-                try {
-                    connection.setAutoCommit(true);
-                } catch (SQLException ex) {
-                    throw new RuntimeException(ex);
-                }
-            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -293,21 +277,24 @@ public abstract class AbstractJpaPersistenceTest {
             recreateTestClass = getClass();
             dataSource.close();
             dataSource = null;
+            closeEmf();
         } else if (recreateTestClass != null && recreateTestClass != getClass()) {
             recreateTestClass = null;
             if (dataSource != null) {
                 dataSource.close();
                 dataSource = null;
             }
+            closeEmf();
         }
-
-        emf = createEntityManagerFactory("TestsuiteBase", createProperties("none"));
 
         // Disable query collecting
         QueryInspectorListener.enabled = false;
         QueryInspectorListener.collectSequences = false;
 
         if (!resolvedNoop && databaseCleaner == null) {
+            if (dataSource == null) {
+                getDataSource(createProperties("none"));
+            }
             try (Connection c = dataSource.getConnection()) {
                 DatabaseCleaner applicableCleaner = getDatabaseCleaner(c);
 
@@ -326,23 +313,30 @@ public abstract class AbstractJpaPersistenceTest {
             setLastDatabaseCleaner(getDefaultDatabaseCleaner());
         }
 
+        if (veryFirstTest || schemaChanged) {
+            getDataSource(createProperties("none"));
+            emf = recreateOrClearSchema();
+            if (emf == null) {
+                emf = createEntityManagerFactory("TestsuiteBase", createProperties("none"));
+            }
+        } else if (emf == null || !emf.isOpen()) {
+            emf = createEntityManagerFactory("TestsuiteBase", createProperties("none"));
+        }
+
         CriteriaBuilderConfiguration config = Criteria.getDefault();
         config = configure(config);
         cbf = config.createCriteriaBuilderFactory(emf);
         jpaProvider = cbf.getService(JpaProvider.class);
         dbmsDialect = cbf.getService(DbmsDialect.class);
 
-        if (veryFirstTest || schemaChanged || !databaseCleaner.supportsClearSchema()) {
-            recreateOrClearSchema();
-            setUpOnce();
-        } else if (firstTest) {
+        getEm();
+        if (firstTest) {
             setUpOnce();
         }
 
         if (runTestInTransaction() && !getEm().getTransaction().isActive()) {
             getEm().getTransaction().begin();
         }
-        getEm();
     }
 
     private EntityManager getEm() {
@@ -387,15 +381,12 @@ public abstract class AbstractJpaPersistenceTest {
         }
     }
 
-    protected void createSchema() {
+    protected EntityManagerFactory createSchema() {
         EntityManagerFactory entityManagerFactory = createEntityManagerFactory("TestsuiteBase", createProperties("create"));
         if (needsEntityManagerForDbAction()) {
-            try {
-                entityManagerFactory.createEntityManager().close();
-            } finally {
-                entityManagerFactory.close();
-            }
+            entityManagerFactory.createEntityManager().close();
         }
+        return entityManagerFactory;
     }
 
     protected void dropSchema() {
@@ -409,23 +400,20 @@ public abstract class AbstractJpaPersistenceTest {
         }
     }
 
-    protected void dropAndCreateSchema() {
+    protected EntityManagerFactory dropAndCreateSchema() {
         EntityManagerFactory entityManagerFactory = createEntityManagerFactory("TestsuiteBase", createProperties("drop-and-create"));
         if (needsEntityManagerForDbAction()) {
-            try {
-                entityManagerFactory.createEntityManager().close();
-            } finally {
-                entityManagerFactory.close();
-            }
+            entityManagerFactory.createEntityManager().close();
         }
+        return entityManagerFactory;
     }
 
-    protected void recreateOrClearSchema() {
+    protected EntityManagerFactory recreateOrClearSchema() {
         if (databaseCleaner.supportsClearSchema()) {
             clearSchema();
-            createSchema();
+            return createSchema();
         } else {
-            dropAndCreateSchema();
+            return dropAndCreateSchema();
         }
     }
 
@@ -451,21 +439,14 @@ public abstract class AbstractJpaPersistenceTest {
 
     @After
     public void destruct() {
-        EntityManagerFactory factory;
         // NOTE: We need to close the entity manager or else we could run into a deadlock on some dbms platforms
         // I am looking at you MySQL..
         if (em != null && em.isOpen()) {
-            factory = em.getEntityManagerFactory();
             if (em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
             }
             em.close();
             em = null;
-        } else {
-            factory = emf;
-        }
-        if (factory != null && factory.isOpen()) {
-            factory.close();
         }
 
         if (databaseCleaner != null && !databaseCleaner.supportsClearSchema()) {
@@ -475,6 +456,15 @@ public abstract class AbstractJpaPersistenceTest {
         if (dataSource != null && recreateDataSource()) {
             dataSource.close();
             dataSource = null;
+            closeEmf();
+        }
+    }
+
+    @AfterClass
+    public static void closeEmf() {
+        if (emf != null && emf.isOpen()) {
+            emf.close();
+            emf = null;
         }
     }
 
