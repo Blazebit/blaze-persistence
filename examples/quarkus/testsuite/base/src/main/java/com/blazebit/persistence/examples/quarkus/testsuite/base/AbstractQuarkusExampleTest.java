@@ -17,14 +17,19 @@ package com.blazebit.persistence.examples.quarkus.testsuite.base;
 
 import io.quarkus.test.common.http.TestHTTPResource;
 import io.restassured.http.ContentType;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
 import java.net.URI;
+import java.util.Map;
 import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.core.Is.is;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * @author Moritz Becker
@@ -34,6 +39,13 @@ public abstract class AbstractQuarkusExampleTest {
 
     @TestHTTPResource
     protected URI apiBaseUri;
+
+    @AfterEach
+    public void clearData() {
+        given().when().delete("/documents");
+        given().when().delete("/document-types");
+        given().when().delete("/persons");
+    }
 
     @Test
     public void createDocument() {
@@ -58,10 +70,33 @@ public abstract class AbstractQuarkusExampleTest {
 
         given()
                 .queryParam("age", 1)
+                .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON)
                 .when().get("/documents")
                 .then()
                 .statusCode(200)
                 .body("size()", is(1));
+    }
+
+    @Test
+    public void getDocumentsWithJsonIgnoredName() {
+        given()
+                .body("{\"name\": \"Doc1\", \"age\": 1}")
+                .contentType(ContentType.JSON)
+                .when().post("/documents")
+                .then()
+                .statusCode(201)
+                .header("Location", matchesPattern("http://localhost:" + apiBaseUri.getPort() + "/documents/.*"));
+
+        Map<String, String> document = given()
+                .queryParam("age", 1)
+                .header(HttpHeaders.ACCEPT, "application/vnd.blazebit.noname+json")
+                .when().get("/documents")
+                .then()
+                .statusCode(200)
+                .body("size()", is(1))
+                .extract().jsonPath().getMap("[0]");
+
+        assertFalse(document.containsKey("name"));
     }
 
     @Test

@@ -21,6 +21,7 @@ import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.examples.quarkus.base.entity.Document;
 import com.blazebit.persistence.examples.quarkus.base.view.DocumentUpdateView;
 import com.blazebit.persistence.examples.quarkus.base.view.DocumentView;
+import com.blazebit.persistence.examples.quarkus.base.view.DocumentWithJsonIgnoredNameView;
 import com.blazebit.persistence.integration.jaxrs.EntityViewId;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
@@ -29,6 +30,7 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -48,11 +50,11 @@ import java.util.List;
 public class DocumentResource {
 
     @Inject
-    EntityManager em;
+    private EntityManager em;
     @Inject
-    EntityViewManager evm;
+    private EntityViewManager evm;
     @Inject
-    CriteriaBuilderFactory cbf;
+    private CriteriaBuilderFactory cbf;
 
     @Transactional
     @PUT
@@ -79,5 +81,20 @@ public class DocumentResource {
     public List<DocumentView> getDocuments(@QueryParam("age") List<Long> ages) {
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class).where("age").in().fromValues(Long.class, "age", ages).end();
         return evm.applySetting(EntityViewSetting.create(DocumentView.class), cb).getResultList();
+    }
+
+    @GET
+    @Transactional
+    @Produces("application/vnd.blazebit.noname+json")
+    public List<DocumentWithJsonIgnoredNameView> getDocumentsWithJsonIgnoredName(@QueryParam("age") List<Long> ages) {
+        CriteriaBuilder<Document> cb = cbf.create(em, Document.class).where("age").in().fromValues(Long.class, "age", ages).end();
+        return evm.applySetting(EntityViewSetting.create(DocumentWithJsonIgnoredNameView.class), cb).getResultList();
+    }
+
+    @DELETE
+    @Transactional
+    public Response clearDocuments() {
+        cbf.delete(em, Document.class).executeUpdate();
+        return Response.ok().build();
     }
 }
