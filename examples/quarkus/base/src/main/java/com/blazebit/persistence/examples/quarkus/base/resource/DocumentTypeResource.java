@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence.examples.quarkus.base.resource;
 
+import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.examples.quarkus.base.entity.DocumentType;
 import com.blazebit.persistence.examples.quarkus.base.view.DocumentTypeCreateView;
 import com.blazebit.persistence.examples.quarkus.base.view.DocumentTypeUpdateView;
 import com.blazebit.persistence.examples.quarkus.base.view.DocumentTypeView;
@@ -25,6 +27,7 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -41,9 +44,11 @@ import java.net.URI;
 public class DocumentTypeResource {
 
     @Inject
-    EntityManager em;
+    private EntityManager em;
     @Inject
-    EntityViewManager evm;
+    private EntityViewManager evm;
+    @Inject
+    private CriteriaBuilderFactory cbf;
 
     @Transactional
     @POST
@@ -62,5 +67,12 @@ public class DocumentTypeResource {
     public DocumentTypeView updateDocumentType(@EntityViewId("id") DocumentTypeUpdateView documentTypeUpdateView) {
         evm.save(em, documentTypeUpdateView);
         return evm.find(em, DocumentTypeView.class, documentTypeUpdateView.getId());
+    }
+
+    @DELETE
+    @Transactional
+    public Response clearDocumentTypes() {
+        cbf.delete(em, DocumentType.class).executeUpdate();
+        return Response.ok().build();
     }
 }

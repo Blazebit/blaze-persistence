@@ -82,7 +82,7 @@ class BlazePersistenceProcessor {
         EntityViewConfiguration evc = EntityViews.createDefaultConfiguration();
         for (String entityViewClassName : entityViewsBuildItem.getEntityViewClassNames()) {
             try {
-                evc.addEntityView(Class.forName(entityViewClassName));
+                evc.addEntityView(Thread.currentThread().getContextClassLoader().loadClass(entityViewClassName));
             } catch (ClassNotFoundException e) {
                 throw new RuntimeException(e);
             }
@@ -169,11 +169,13 @@ class BlazePersistenceProcessor {
 
         // add fromString methods from entity view id types
         for (EntityViewMapping entityViewMapping : entityViewConfigurationBuildItem.getEntityViewConfiguration().getEntityViewMappings()) {
-            reflectionProducer.produce(ReflectiveClassBuildItem.builder(entityViewMapping.getIdAttribute().getDeclaredType())
-                    .constructors(true)
-                    .methods(true)
-                    .build()
-            );
+            if (entityViewMapping.getIdAttribute() != null) {
+                reflectionProducer.produce(ReflectiveClassBuildItem.builder(entityViewMapping.getIdAttribute().getDeclaredType())
+                        .constructors(true)
+                        .methods(true)
+                        .build()
+                );
+            }
         }
     }
 

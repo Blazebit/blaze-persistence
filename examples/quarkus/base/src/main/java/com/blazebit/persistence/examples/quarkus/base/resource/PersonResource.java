@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.examples.quarkus.base.resource;
 
+import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.examples.quarkus.base.entity.Person;
 import com.blazebit.persistence.examples.quarkus.base.view.PersonCreateView;
 import com.blazebit.persistence.examples.quarkus.base.view.PersonUpdateView;
 import com.blazebit.persistence.examples.quarkus.base.view.PersonView;
@@ -26,6 +28,7 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -42,9 +45,11 @@ import java.net.URI;
 public class PersonResource {
 
     @Inject
-    EntityManager em;
+    private EntityManager em;
     @Inject
-    EntityViewManager evm;
+    private EntityViewManager evm;
+    @Inject
+    private CriteriaBuilderFactory cbf;
 
     @Transactional
     @PUT
@@ -62,5 +67,12 @@ public class PersonResource {
     public Response addPerson(PersonCreateView view) {
         evm.save(em, view);
         return Response.created(URI.create("/persons/" + view.getId())).build();
+    }
+
+    @DELETE
+    @Transactional
+    public Response clearPersons() {
+        cbf.delete(em, Person.class).executeUpdate();
+        return Response.ok().build();
     }
 }

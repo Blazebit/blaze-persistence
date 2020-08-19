@@ -27,6 +27,7 @@ import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.exc.IgnoredPropertyException;
@@ -40,6 +41,9 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Set;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 /**
  * @author Christian Beikov
@@ -71,7 +75,7 @@ public class EntityViewAwareObjectMapperTest {
         EntityViewAwareObjectMapper mapper = mapper(NameView.class);
         ObjectReader objectReader = mapper.readerFor(mapper.getObjectMapper().constructType(NameView.class));
         NameView view = objectReader.readValue("{\"id\": 1}");
-        Assert.assertEquals(1L, view.getId());
+        assertEquals(1L, view.getId());
         Assert.assertNull(view.getName());
     }
 
@@ -95,10 +99,10 @@ public class EntityViewAwareObjectMapperTest {
             }
         }));
         List<NameView> views = objectReader.readValue("[{\"id\": 1}, {\"id\": 2}]");
-        Assert.assertEquals(2, views.size());
-        Assert.assertEquals(1L, views.get(0).getId());
+        assertEquals(2, views.size());
+        assertEquals(1L, views.get(0).getId());
         Assert.assertNull(views.get(0).getName());
-        Assert.assertEquals(2L, views.get(1).getId());
+        assertEquals(2L, views.get(1).getId());
         Assert.assertNull(views.get(0).getName());
     }
 
@@ -114,9 +118,9 @@ public class EntityViewAwareObjectMapperTest {
         EntityViewAwareObjectMapper mapper = mapper(ReadViewWithSetters.class, NameView.class);
         ObjectReader objectReader = mapper.readerFor(mapper.getObjectMapper().constructType(ReadViewWithSetters.class));
         ReadViewWithSetters view = objectReader.readValue("{\"id\": 1, \"name\": \"test\", \"parent\": {\"id\": 2}}");
-        Assert.assertEquals(1L, view.getId());
-        Assert.assertEquals("test", view.getName());
-        Assert.assertEquals(2L, view.getParent().getId());
+        assertEquals(1L, view.getId());
+        assertEquals("test", view.getName());
+        assertEquals(2L, view.getParent().getId());
     }
 
     @EntityView(SomeEntity.class)
@@ -134,9 +138,9 @@ public class EntityViewAwareObjectMapperTest {
         EntityViewAwareObjectMapper mapper = mapper(UpdateViewWithSetters.class, NameView.class);
         ObjectReader objectReader = mapper.readerFor(mapper.getObjectMapper().constructType(UpdateViewWithSetters.class));
         UpdateViewWithSetters view = objectReader.readValue("{\"id\": 1, \"name\": \"test\", \"parent\": {\"id\": 2}}");
-        Assert.assertEquals(1L, view.getId());
-        Assert.assertEquals("test", view.getName());
-        Assert.assertEquals(2L, view.getParent().getId());
+        assertEquals(1L, view.getId());
+        assertEquals("test", view.getName());
+        assertEquals(2L, view.getParent().getId());
     }
 
     @EntityView(SomeEntity.class)
@@ -156,8 +160,8 @@ public class EntityViewAwareObjectMapperTest {
         ObjectReader objectReader = mapper.readerFor(mapper.getObjectMapper().constructType(CreatableViewWithSetters.class));
         CreatableViewWithSetters view = objectReader.readValue("{\"name\": \"test\", \"parent\": {\"id\": 2}}");
         Assert.assertTrue(((EntityViewProxy) view).$$_isNew());
-        Assert.assertEquals("test", view.getName());
-        Assert.assertEquals(2L, view.getParent().getId());
+        assertEquals("test", view.getName());
+        assertEquals(2L, view.getParent().getId());
     }
 
     @EntityView(SomeEntity.class)
@@ -176,10 +180,10 @@ public class EntityViewAwareObjectMapperTest {
         EntityViewAwareObjectMapper mapper = mapper(CreatableAndUpdatableViewWithSetters.class, NameView.class);
         ObjectReader objectReader = mapper.readerFor(mapper.getObjectMapper().constructType(CreatableAndUpdatableViewWithSetters.class));
         CreatableAndUpdatableViewWithSetters view = objectReader.readValue("{\"id\": 1, \"name\": \"test\", \"parent\": {\"id\": 2}}");
-        Assert.assertFalse(((EntityViewProxy) view).$$_isNew());
-        Assert.assertEquals(1L, view.getId());
-        Assert.assertEquals("test", view.getName());
-        Assert.assertEquals(2L, view.getParent().getId());
+        assertFalse(((EntityViewProxy) view).$$_isNew());
+        assertEquals(1L, view.getId());
+        assertEquals("test", view.getName());
+        assertEquals(2L, view.getParent().getId());
     }
 
     @Test
@@ -188,8 +192,8 @@ public class EntityViewAwareObjectMapperTest {
         ObjectReader objectReader = mapper.readerFor(mapper.getObjectMapper().constructType(CreatableAndUpdatableViewWithSetters.class));
         CreatableAndUpdatableViewWithSetters view = objectReader.readValue("{\"name\": \"test\", \"parent\": {\"id\": 2}}");
         Assert.assertTrue(((EntityViewProxy) view).$$_isNew());
-        Assert.assertEquals("test", view.getName());
-        Assert.assertEquals(2L, view.getParent().getId());
+        assertEquals("test", view.getName());
+        assertEquals(2L, view.getParent().getId());
     }
 
     @EntityView(SomeEntity.class)
@@ -210,9 +214,9 @@ public class EntityViewAwareObjectMapperTest {
         ObjectReader objectReader = mapper.readerFor(mapper.getObjectMapper().constructType(CreatableAndUpdatableViewWithNested.class));
         CreatableAndUpdatableViewWithNested view = objectReader.readValue("{\"name\": \"test\", \"parent\": {\"id\": 2, \"name\": \"parent\"}}");
         Assert.assertTrue(((EntityViewProxy) view).$$_isNew());
-        Assert.assertEquals("test", view.getName());
-        Assert.assertEquals(2L, view.getParent().getId());
-        Assert.assertEquals("parent", view.getParent().getName());
+        assertEquals("test", view.getName());
+        assertEquals(2L, view.getParent().getId());
+        assertEquals("parent", view.getParent().getName());
     }
 
     @Test
@@ -221,9 +225,9 @@ public class EntityViewAwareObjectMapperTest {
         ObjectReader objectReader = mapper.readerFor(mapper.getObjectMapper().constructType(CreatableAndUpdatableViewWithNested.class));
         CreatableAndUpdatableViewWithNested view = objectReader.readValue("{\"name\": \"test\", \"parent\": {\"name\": \"parent\"}}");
         Assert.assertTrue(((EntityViewProxy) view).$$_isNew());
-        Assert.assertEquals("test", view.getName());
+        assertEquals("test", view.getName());
         Assert.assertTrue(((EntityViewProxy) view.getParent()).$$_isNew());
-        Assert.assertEquals("parent", view.getParent().getName());
+        assertEquals("parent", view.getParent().getName());
     }
 
     @EntityView(SomeEntity.class)
@@ -244,9 +248,9 @@ public class EntityViewAwareObjectMapperTest {
         ObjectReader objectReader = mapper.readerFor(mapper.getObjectMapper().constructType(CreatableWithCollection.class));
         CreatableWithCollection view = objectReader.readValue("{\"name\": \"test\", \"children\": [{\"name\": \"parent\"}]}");
         Assert.assertTrue(((EntityViewProxy) view).$$_isNew());
-        Assert.assertEquals("test", view.getName());
-        Assert.assertEquals(mapper.getEntityViewManager().getChangeModel(view).get("children").getInitialState(), view.getChildren());
-        Assert.assertEquals(1, view.getChildren().size());
+        assertEquals("test", view.getName());
+        assertEquals(mapper.getEntityViewManager().getChangeModel(view).get("children").getInitialState(), view.getChildren());
+        assertEquals(1, view.getChildren().size());
     }
 
     @EntityView(SomeEntity.class)
@@ -266,9 +270,9 @@ public class EntityViewAwareObjectMapperTest {
         ObjectReader objectReader = mapper.readerFor(mapper.getObjectMapper().constructType(CreatableWithCollectionWithSetter.class));
         CreatableWithCollectionWithSetter view = objectReader.readValue("{\"name\": \"test\", \"children\": [{\"name\": \"parent\"}]}");
         Assert.assertTrue(((EntityViewProxy) view).$$_isNew());
-        Assert.assertEquals("test", view.getName());
-        Assert.assertEquals(mapper.getEntityViewManager().getChangeModel(view).get("children").getInitialState(), view.getChildren());
-        Assert.assertEquals(1, view.getChildren().size());
+        assertEquals("test", view.getName());
+        assertEquals(mapper.getEntityViewManager().getChangeModel(view).get("children").getInitialState(), view.getChildren());
+        assertEquals(1, view.getChildren().size());
     }
 
     @EntityView(SomeEntity.class)
@@ -292,7 +296,7 @@ public class EntityViewAwareObjectMapperTest {
             objectReader.readValue("{\"id\": 1, \"name\": \"test\"}");
             Assert.fail("Expected failure");
         } catch (IgnoredPropertyException ex) {
-            Assert.assertEquals("id", ex.getPropertyName());
+            assertEquals("id", ex.getPropertyName());
         }
     }
 
@@ -311,11 +315,11 @@ public class EntityViewAwareObjectMapperTest {
         EntityViewAwareObjectMapper mapper = mapper(UpdatableWithCollectionWithSetter.class, NameView.class);
         ObjectReader objectReader = mapper.readerFor(mapper.getObjectMapper().constructType(UpdatableWithCollectionWithSetter.class));
         UpdatableWithCollectionWithSetter view = objectReader.readValue("{\"id\":1, \"name\": \"test\", \"children\": [{\"id\": 1}]}");
-        Assert.assertFalse(((EntityViewProxy) view).$$_isNew());
-        Assert.assertEquals(1L, view.getId());
-        Assert.assertEquals("test", view.getName());
-        Assert.assertEquals(1L, view.getChildren().iterator().next().getId());
-        Assert.assertEquals(1, view.getChildren().size());
+        assertFalse(((EntityViewProxy) view).$$_isNew());
+        assertEquals(1L, view.getId());
+        assertEquals("test", view.getName());
+        assertEquals(1L, view.getChildren().iterator().next().getId());
+        assertEquals(1, view.getChildren().size());
     }
 
     @EntityView(SomeEntity.class)
@@ -327,5 +331,27 @@ public class EntityViewAwareObjectMapperTest {
         void setName(String name);
         Set<NameView> getChildren();
         void setChildren(Set<NameView> children);
+    }
+
+    @EntityView(SomeEntity.class)
+    @CreatableEntityView
+    static abstract class ViewWithJsonIgnore {
+        @IdMapping
+        public abstract long getId();
+        public abstract void setId(long id);
+        @JsonIgnore
+        public abstract String getName();
+        public abstract void setName(String name);
+    }
+
+    @Test
+    public void testJsonIgnore() throws Exception {
+        EntityViewAwareObjectMapper mapper = mapper(ViewWithJsonIgnore.class);
+        ViewWithJsonIgnore view = mapper.getEntityViewManager().create(ViewWithJsonIgnore.class);
+        view.setId(1L);
+        view.setName("Joe");
+        JsonNode viewAsJsonTree = mapper.getObjectMapper().readTree(mapper.getObjectMapper().writeValueAsString(view));
+        assertEquals(1L, viewAsJsonTree.get("id").asLong());
+        assertFalse(viewAsJsonTree.has("name"));
     }
 }
