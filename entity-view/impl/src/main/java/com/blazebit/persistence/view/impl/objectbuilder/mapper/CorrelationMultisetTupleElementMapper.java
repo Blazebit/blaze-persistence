@@ -39,21 +39,25 @@ import java.util.Map;
  */
 public class CorrelationMultisetTupleElementMapper implements TupleElementMapper {
 
-    protected final ViewTypeObjectBuilderTemplate<Object[]> subviewTemplate;
-    protected final CorrelationProviderFactory correlationProviderFactory;
-    protected final String correlationBasis;
-    protected final String correlationAlias;
-    protected final String attributePath;
-    protected final String embeddingViewPath;
-    protected final Limiter limiter;
+    private final ViewTypeObjectBuilderTemplate<Object[]> subviewTemplate;
+    private final CorrelationProviderFactory correlationProviderFactory;
+    private final String correlationBasis;
+    private final String correlationAlias;
+    private final String attributePath;
+    private final String embeddingViewPath;
+    private final String indexExpression;
+    private final ViewTypeObjectBuilderTemplate<Object[]> indexTemplate;
+    private final Limiter limiter;
 
-    public CorrelationMultisetTupleElementMapper(ViewTypeObjectBuilderTemplate<Object[]> subviewTemplate, CorrelationProviderFactory correlationProviderFactory, String correlationBasis, String correlationAlias, String attributePath, String embeddingViewPath, Limiter limiter) {
+    public CorrelationMultisetTupleElementMapper(ViewTypeObjectBuilderTemplate<Object[]> subviewTemplate, CorrelationProviderFactory correlationProviderFactory, String correlationBasis, String correlationAlias, String attributePath, String embeddingViewPath, String indexExpression, ViewTypeObjectBuilderTemplate<Object[]> indexTemplate, Limiter limiter) {
         this.subviewTemplate = subviewTemplate;
         this.correlationProviderFactory = correlationProviderFactory;
         this.correlationBasis = correlationBasis;
         this.correlationAlias = correlationAlias;
         this.attributePath = attributePath;
         this.embeddingViewPath = embeddingViewPath;
+        this.indexExpression = indexExpression;
+        this.indexTemplate = indexTemplate;
         this.limiter = limiter;
     }
 
@@ -68,6 +72,13 @@ public class CorrelationMultisetTupleElementMapper implements TupleElementMapper
         SubqueryBuilder<?> subqueryBuilder = correlationBuilder.getSubqueryBuilder();
         for (TupleElementMapper mapper : subviewTemplate.getMappers()) {
             mapper.applyMapping(subqueryBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro, true);
+        }
+        if (indexTemplate != null) {
+            for (TupleElementMapper mapper : indexTemplate.getMappers()) {
+                mapper.applyMapping(subqueryBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro, true);
+            }
+        } else if (indexExpression != null) {
+            subqueryBuilder.select(indexExpression);
         }
 
         if (limiter != null) {

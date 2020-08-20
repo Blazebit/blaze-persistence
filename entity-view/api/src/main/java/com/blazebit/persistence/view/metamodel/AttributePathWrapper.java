@@ -16,26 +16,28 @@
 
 package com.blazebit.persistence.view.metamodel;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
  * A wrapper for an attribute path.
  *
  * @param <X> The type of the entity view that is the base of the path
+ * @param <B> The result base type of attribute path to resolve against
  * @param <Y> The result type of attribute path
  * @author Christian Beikov
  * @since 1.5.0
  */
-public abstract class AttributePathWrapper<X, Y> implements AttributePath<X, Y> {
+public abstract class AttributePathWrapper<X, B, Y> implements AttributePath<X, B, Y> {
 
-    private final AttributePath<X, Y> wrapped;
+    private final AttributePath<X, B, Y> wrapped;
 
     /**
      * Creates a new wrapper.
      *
      * @param wrapped The wrapped path.
      */
-    public AttributePathWrapper(AttributePath<X, Y> wrapped) {
+    public AttributePathWrapper(AttributePath<X, B, Y> wrapped) {
         this.wrapped = wrapped;
     }
 
@@ -44,7 +46,7 @@ public abstract class AttributePathWrapper<X, Y> implements AttributePath<X, Y> 
      *
      * @return the wrapped path
      */
-    public AttributePath<X, Y> getWrapped() {
+    public AttributePath<X, B, Y> getWrapped() {
         return wrapped;
     }
 
@@ -64,22 +66,37 @@ public abstract class AttributePathWrapper<X, Y> implements AttributePath<X, Y> 
     }
 
     @Override
-    public <E> AttributePath<X, E> get(String attributePath) {
+    public <E> AttributePath<X, E, E> get(String attributePath) {
         return wrapped.get(attributePath);
     }
 
     @Override
-    public <E> AttributePath<X, E> get(MethodSingularAttribute<Y, E> attribute) {
+    public <E, C extends Collection<E>> AttributePath<X, E, C> getMulti(String attributePath) {
+        return wrapped.getMulti(attributePath);
+    }
+
+    @Override
+    public <E> AttributePath<X, E, E> get(MethodSingularAttribute<B, E> attribute) {
         return wrapped.get(attribute);
     }
 
     @Override
-    public <E> AttributePath<X, E> get(MethodPluralAttribute<Y, ?, E> attribute) {
+    public <E> AttributePath<X, E, E> get(MethodPluralAttribute<B, ?, E> attribute) {
         return wrapped.get(attribute);
     }
 
     @Override
-    public <E> AttributePath<X, E> get(AttributePath<Y, E> attributePath) {
+    public <C extends Collection<E>, E> AttributePath<X, E, C> get(MethodMultiListAttribute<B, E, C> attribute) {
+        return wrapped.get(attribute);
+    }
+
+    @Override
+    public <C extends Collection<E>, E> AttributePath<X, E, C> get(MethodMultiMapAttribute<B, ?, E, C> attribute) {
+        return wrapped.get(attribute);
+    }
+
+    @Override
+    public <C, E> AttributePath<X, C, E> get(AttributePath<B, C, E> attributePath) {
         return wrapped.get(attributePath);
     }
 

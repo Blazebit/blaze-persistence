@@ -50,6 +50,11 @@ public class UnorderedSetCollectionInstantiator  extends AbstractCollectionInsta
     }
 
     @Override
+    public boolean isIndexed() {
+        return false;
+    }
+
+    @Override
     public Set<?> createCollection(int size) {
         return new HashSet<>(size);
     }

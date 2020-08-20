@@ -26,6 +26,8 @@ import java.util.TreeMap;
  */
 public class SortedMapFactory implements PluralObjectFactory<NavigableMap<?, ?>> {
 
+    public static final SortedMapFactory INSTANCE = new SortedMapFactory();
+
     @Override
     public NavigableMap<?, ?> createCollection(int size) {
         return new TreeMap<>();

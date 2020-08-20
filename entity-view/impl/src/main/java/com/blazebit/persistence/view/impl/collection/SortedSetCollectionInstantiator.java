@@ -54,6 +54,11 @@ public class SortedSetCollectionInstantiator  extends AbstractCollectionInstanti
     }
 
     @Override
+    public boolean isIndexed() {
+        return false;
+    }
+
+    @Override
     public NavigableSet<?> createCollection(int size) {
         return new TreeSet(comparator);
     }

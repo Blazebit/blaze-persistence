@@ -26,6 +26,8 @@ import java.util.Set;
  */
 public class SetFactory implements PluralObjectFactory<Set<?>> {
 
+    public static final SetFactory INSTANCE = new SetFactory();
+
     @Override
     public Set<?> createCollection(int size) {
         return new HashSet<>(size);

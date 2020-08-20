@@ -89,13 +89,28 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
             TypeMirror elementTypeMirror = typeArguments.get(typeArguments.size() - 1);
             String elementType = TypeUtils.extractClosestRealTypeAsString(elementTypeMirror, context);
             String realElementType = TypeUtils.toTypeString(entityDeclaredType, elementTypeMirror, context);
-            if (collection.equals(Constants.METHOD_MAP_ATTRIBUTE)) {
+            String elementCollectionType = null;
+            String realElementCollectionType = null;
+            if (Constants.COLLECTIONS.containsKey(elementType)) {
+                // Multi-collection
+                if (collection.equals(Constants.METHOD_MAP_ATTRIBUTE)) {
+                    collection = Constants.METHOD_MULTI_MAP_ATTRIBUTE;
+                } else {
+                    collection = Constants.METHOD_MULTI_LIST_ATTRIBUTE;
+                }
+                elementCollectionType = elementType;
+                List<? extends TypeMirror> elementTypeArguments = ((DeclaredType) elementTypeMirror).getTypeArguments();
+                realElementCollectionType = TypeUtils.toTypeString(entityDeclaredType, elementTypeMirror, context);
+                elementTypeMirror = elementTypeArguments.get(elementTypeArguments.size() - 1);
+                elementType = TypeUtils.extractClosestRealTypeAsString(elementTypeMirror, context);
+            }
+            if (collection.equals(Constants.METHOD_MAP_ATTRIBUTE) || collection.equals(Constants.METHOD_MULTI_MAP_ATTRIBUTE)) {
                 TypeMirror keyTypeMirror = typeArguments.get(0);
                 String keyType = TypeUtils.extractClosestRealTypeAsString(keyTypeMirror, context);
                 String realKeyType = TypeUtils.toTypeString(entityDeclaredType, keyTypeMirror, context);
-                return new AnnotationMetaMap(entity, element, collection, context.getTypeUtils().asElement(declaredType).toString(), keyType, realKeyType, elementType, realElementType, context);
+                return new AnnotationMetaMap(entity, element, collection, context.getTypeUtils().asElement(declaredType).toString(), elementCollectionType, keyType, realKeyType, elementType, realElementType, context);
             } else {
-                return new AnnotationMetaCollection(entity, element, collection, context.getTypeUtils().asElement(declaredType).toString(), elementType, realElementType, context);
+                return new AnnotationMetaCollection(entity, element, collection, context.getTypeUtils().asElement(declaredType).toString(), elementCollectionType, elementType, realElementType, context);
             }
         } else if (!Constants.SPECIAL.contains(fqNameOfReturnType)) {
             String type = returnedElement.getQualifiedName().toString();

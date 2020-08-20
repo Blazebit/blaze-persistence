@@ -36,7 +36,7 @@ public class CorrelatedSingularBatchTupleListTransformer extends AbstractCorrela
 
     public CorrelatedSingularBatchTupleListTransformer(ExpressionFactory ef, Correlator correlator, ManagedViewType<?> viewRootType, ManagedViewType<?> embeddingViewType, Expression correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
                                                        boolean correlatesThis, int viewRootIndex, int embeddingViewIndex, int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, Limiter limiter, EntityViewConfiguration entityViewConfiguration) {
-        super(ef, correlator, viewRootType, embeddingViewType, correlationResult, correlationProviderFactory, attributePath, fetches, correlatesThis, viewRootIndex, embeddingViewIndex, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, limiter, entityViewConfiguration);
+        super(ef, correlator, null, viewRootType, embeddingViewType, correlationResult, correlationProviderFactory, attributePath, fetches, EMPTY, null, null, correlatesThis, viewRootIndex, embeddingViewIndex, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, limiter, entityViewConfiguration);
     }
 
     @Override
@@ -57,16 +57,5 @@ public class CorrelatedSingularBatchTupleListTransformer extends AbstractCorrela
                 correlationValues.get(element[keyIndex]).onResult(element[valueIndex], this);
             }
         }
-    }
-
-    @Override
-    public Object copy(Object o) {
-        // Nothing to copy here
-        return o;
-    }
-
-    @Override
-    protected Object createDefaultResult() {
-        return null;
     }
 }

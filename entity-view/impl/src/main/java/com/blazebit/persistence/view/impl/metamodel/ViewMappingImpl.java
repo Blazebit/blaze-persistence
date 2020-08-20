@@ -725,21 +725,22 @@ public class ViewMappingImpl implements ViewMapping {
                                 versionAttributeMapping = new MethodAttributeMapping(
                                         this,
                                         new MappingLiteral(versionAttribute.getName()),
+                                        null,
                                         this.context,
                                         "$$_version",
                                         EntityViewProxy.class.getMethod("$$_getVersion"),
                                         -1,
                                         false,
-                                        versionAttribute.getJavaType(),
-                                        null,
                                         null,
                                         versionAttribute.getJavaType(),
                                         null,
                                         null,
+                                        versionAttribute.getJavaType(),
                                         null,
                                         null,
-                                        null
-                                );
+                                        null,
+                                        null,
+                                        null);
                                 attributes.put("$$_version", versionAttributeMapping);
                             } catch (NoSuchMethodException ex) {
                                 throw new RuntimeException(ex);

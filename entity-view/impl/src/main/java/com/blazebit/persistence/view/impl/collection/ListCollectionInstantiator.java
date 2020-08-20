@@ -61,6 +61,11 @@ public class ListCollectionInstantiator extends AbstractCollectionInstantiator<L
     }
 
     @Override
+    public boolean isIndexed() {
+        return indexed;
+    }
+
+    @Override
     public boolean requiresPostConstruct() {
         return forceUnique || comparator != null;
     }

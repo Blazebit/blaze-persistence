@@ -35,6 +35,13 @@ public interface CollectionInstantiatorImplementor<C extends Collection<?>, R ex
     public boolean allowsDuplicates();
 
     /**
+     * Returns whether the collection type is indexed.
+     *
+     * @return whether the collection type is indexed
+     */
+    public boolean isIndexed();
+
+    /**
      * Returns whether the collection requires a post construct call.
      *
      * @return whether the collection requires a post construct call

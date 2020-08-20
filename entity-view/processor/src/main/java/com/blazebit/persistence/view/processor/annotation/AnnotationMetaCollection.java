@@ -40,11 +40,13 @@ public class AnnotationMetaCollection extends AnnotationMetaAttribute {
     protected final boolean sorted;
     protected final String comparator;
     protected final String collectionJavaType;
+    protected final String elementCollectionJavaType;
     private final String collectionType;
     private final String implementationTypeString;
 
-    public AnnotationMetaCollection(AnnotationMetaEntityView parent, Element element, String collectionType, String collectionJavaType, String elementType, String realElementType, Context context) {
+    public AnnotationMetaCollection(AnnotationMetaEntityView parent, Element element, String collectionType, String collectionJavaType, String elementCollectionJavaType, String elementType, String realElementType, Context context) {
         super(parent, element, elementType, realElementType, context);
+        this.elementCollectionJavaType = elementCollectionJavaType;
         boolean ordered = Constants.LIST.equals(collectionJavaType);
         boolean sorted = collectionJavaType.startsWith(Constants.SORTED) || collectionJavaType.startsWith(Constants.NAVIGABLE);
         String comparator = null;
@@ -68,7 +70,11 @@ public class AnnotationMetaCollection extends AnnotationMetaAttribute {
         this.comparator = comparator;
         this.collectionJavaType = collectionJavaType;
         this.collectionType = collectionType;
-        this.implementationTypeString = getHostingEntity().importTypeExceptMetamodel(collectionJavaType) + "<" + getHostingEntity().importType(getRealType()) + ">";
+        if (elementCollectionJavaType == null) {
+            this.implementationTypeString = getHostingEntity().importTypeExceptMetamodel(collectionJavaType) + "<" + getHostingEntity().importType(realElementType) + ">";
+        } else {
+            this.implementationTypeString = getHostingEntity().importTypeExceptMetamodel(collectionJavaType) + "<" + getHostingEntity().importType(elementCollectionJavaType) + "<" + getHostingEntity().importType(elementType) + ">>";
+        }
     }
 
     @Override
@@ -120,6 +126,31 @@ public class AnnotationMetaCollection extends AnnotationMetaAttribute {
     }
 
     @Override
+    public void appendMetamodelAttributeType(StringBuilder sb, ImportContext importContext) {
+        sb.append(importContext.importType(getMetaType()))
+                .append('<')
+                .append(getHostingEntity().importType(getHostingEntity().getQualifiedName()))
+                .append(", ");
+        if (elementCollectionJavaType != null) {
+            sb.append(getHostingEntity().importType(getType())).append(", ");
+        }
+        appendElementType(sb, importContext);
+        sb.append('>');
+    }
+
+    @Override
+    public void appendElementType(StringBuilder sb, ImportContext importContext) {
+        if (elementCollectionJavaType == null) {
+            sb.append(getHostingEntity().importType(getType()));
+        } else {
+            sb.append(getHostingEntity().importType(elementCollectionJavaType))
+                    .append('<')
+                    .append(getHostingEntity().importType(getType()))
+                    .append('>');
+        }
+    }
+
+    @Override
     public String getImplementationTypeString() {
         return implementationTypeString;
     }
@@ -131,5 +162,10 @@ public class AnnotationMetaCollection extends AnnotationMetaAttribute {
 
     public boolean isIndexedList() {
         return Constants.LIST.equals(collectionJavaType);
+    }
+
+    @Override
+    public boolean isMultiCollection() {
+        return elementCollectionJavaType != null;
     }
 }

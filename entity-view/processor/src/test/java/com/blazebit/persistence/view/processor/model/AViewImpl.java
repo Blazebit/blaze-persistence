@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import javax.annotation.Generated;
 
 @Generated(value = "com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor")
@@ -21,6 +22,7 @@ public class AViewImpl<X extends Serializable> implements AView<X>, EntityViewPr
     private final int age;
     private final byte[] bytes;
     private final Integer id;
+    private final List<Set<String>> multiNames;
     private String name;
     private final List<String> names;
     private final List<X> test;
@@ -29,6 +31,7 @@ public class AViewImpl<X extends Serializable> implements AView<X>, EntityViewPr
         this.age = 0;
         this.bytes = null;
         this.id = null;
+        this.multiNames = (List<Set<String>>) (java.util.List<?>) AView_.multiNames.getCollectionInstantiator().createCollection(0);
         this.name = null;
         this.names = (List<String>) (java.util.List<?>) AView_.names.getCollectionInstantiator().createCollection(0);
         this.test = (List<X>) (java.util.List<?>) AView_.test.getCollectionInstantiator().createCollection(0);
@@ -39,16 +42,18 @@ public class AViewImpl<X extends Serializable> implements AView<X>, EntityViewPr
         this.age = 0;
         this.bytes = null;
         this.id = id;
+        this.multiNames = (List<Set<String>>) (java.util.List<?>) AView_.multiNames.getCollectionInstantiator().createCollection(0);
         this.name = null;
         this.names = (List<String>) (java.util.List<?>) AView_.names.getCollectionInstantiator().createCollection(0);
         this.test = (List<X>) (java.util.List<?>) AView_.test.getCollectionInstantiator().createCollection(0);
     }
 
-    public AViewImpl(Integer id, int age, byte[] bytes, String name, List<String> names, List<X> test) {
+    public AViewImpl(Integer id, int age, byte[] bytes, List<Set<String>> multiNames, String name, List<String> names, List<X> test) {
         super();
         this.age = age;
         this.bytes = bytes;
         this.id = id;
+        this.multiNames = multiNames;
         this.name = name;
         this.names = names;
         this.test = test;
@@ -59,9 +64,10 @@ public class AViewImpl<X extends Serializable> implements AView<X>, EntityViewPr
         this.age = (int) tuple[offset + 1];
         this.bytes = (byte[]) tuple[offset + 2];
         this.id = (Integer) tuple[offset + 0];
-        this.name = (String) tuple[offset + 3];
-        this.names = (List<String>) tuple[offset + 4];
-        this.test = (List<X>) tuple[offset + 5];
+        this.multiNames = (List<Set<String>>) tuple[offset + 3];
+        this.name = (String) tuple[offset + 4];
+        this.names = (List<String>) tuple[offset + 5];
+        this.test = (List<X>) tuple[offset + 6];
     }
 
     public AViewImpl(AViewImpl noop, int offset, int[] assignment, Object[] tuple) {
@@ -69,9 +75,10 @@ public class AViewImpl<X extends Serializable> implements AView<X>, EntityViewPr
         this.age = (int) tuple[offset + assignment[1]];
         this.bytes = (byte[]) tuple[offset + assignment[2]];
         this.id = (Integer) tuple[offset + assignment[0]];
-        this.name = (String) tuple[offset + assignment[3]];
-        this.names = (List<String>) tuple[offset + assignment[4]];
-        this.test = (List<X>) tuple[offset + assignment[5]];
+        this.multiNames = (List<Set<String>>) tuple[offset + assignment[3]];
+        this.name = (String) tuple[offset + assignment[4]];
+        this.names = (List<String>) tuple[offset + assignment[5]];
+        this.test = (List<X>) tuple[offset + assignment[6]];
     }
 
     @Override
@@ -87,6 +94,11 @@ public class AViewImpl<X extends Serializable> implements AView<X>, EntityViewPr
     @Override
     public Integer getId() {
         return id;
+    }
+
+    @Override
+    public List<Set<String>> getMultiNames() {
+        return multiNames;
     }
 
     @Override
@@ -116,9 +128,9 @@ public class AViewImpl<X extends Serializable> implements AView<X>, EntityViewPr
 
     private byte $$_kind;
     @Override
-    public Class<?> $$_getJpaManagedClass() { return AView.class; }
+    public Class<?> $$_getJpaManagedClass() { return AEntity.class; }
     @Override
-    public Class<?> $$_getJpaManagedBaseClass() { return AView.class; }
+    public Class<?> $$_getJpaManagedBaseClass() { return AEntity.class; }
     @Override
     public Class<?> $$_getEntityViewClass() { return AView.class; }
     @Override

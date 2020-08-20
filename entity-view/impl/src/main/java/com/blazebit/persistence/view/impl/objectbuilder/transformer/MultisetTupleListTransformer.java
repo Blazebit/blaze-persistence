@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
+import com.blazebit.persistence.view.impl.objectbuilder.ContainerAccumulator;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.MultisetList;
 import com.blazebit.persistence.view.impl.objectbuilder.transformator.TupleTransformator;
 import com.blazebit.persistence.view.impl.objectbuilder.transformator.UpdatableViewMap;
@@ -30,21 +31,30 @@ import java.util.List;
  * @author Christian Beikov
  * @since 1.5.0
  */
-public abstract class AbstractMultisetTupleListTransformer<C> extends TupleListTransformer {
+public class MultisetTupleListTransformer extends TupleListTransformer {
 
     private final boolean hasSelectOrSubselectFetchedAttributes;
     private final TupleTransformator tupleTransformator;
     private final TupleTransformer subviewTupleTransformer;
+    private final TupleTransformer indexSubviewTupleTransformer;
+    private final int indexStartIndex;
     private final BasicUserTypeStringSupport<Object>[] fieldConverters;
     private final TypeConverter<Object, Object> elementConverter;
+    private final ContainerAccumulator<Object> containerAccumulator;
+    private final boolean dirtyTracking;
 
-    public AbstractMultisetTupleListTransformer(int startIndex, boolean hasSelectOrSubselectFetchedAttributes, TupleTransformator tupleTransformator, TupleTransformer subviewTupleTransformer, BasicUserTypeStringSupport<Object>[] fieldConverters, TypeConverter<Object, Object> elementConverter) {
+    public MultisetTupleListTransformer(int startIndex, boolean hasSelectOrSubselectFetchedAttributes, TupleTransformator tupleTransformator, TupleTransformer subviewTupleTransformer, TupleTransformer indexSubviewTupleTransformer, int indexStartIndex,
+                                        BasicUserTypeStringSupport<Object>[] fieldConverters, TypeConverter<Object, Object> elementConverter, ContainerAccumulator<Object> containerAccumulator, boolean dirtyTracking) {
         super(startIndex);
         this.hasSelectOrSubselectFetchedAttributes = hasSelectOrSubselectFetchedAttributes;
         this.tupleTransformator = tupleTransformator;
         this.subviewTupleTransformer = subviewTupleTransformer;
+        this.indexSubviewTupleTransformer = indexSubviewTupleTransformer;
+        this.indexStartIndex = indexStartIndex;
         this.elementConverter = elementConverter;
         this.fieldConverters = fieldConverters;
+        this.containerAccumulator = containerAccumulator;
+        this.dirtyTracking = dirtyTracking;
     }
 
     @Override
@@ -83,20 +93,32 @@ public abstract class AbstractMultisetTupleListTransformer<C> extends TupleListT
                 index++;
             }
 
-            // Apply the tuple transformator on a multiset of the nested sets
-            tupleTransformator.transformAll(nestedTuples);
+            if (tupleTransformator != null) {
+                // Apply the tuple transformator on a multiset of the nested sets
+                tupleTransformator.transformAll(nestedTuples);
+            }
 
             // Build views and add them to collections
             UpdatableViewMap updatableViewMap = new UpdatableViewMap();
             tupleListIter = tuples.iterator();
             while (tupleListIter.hasNext()) {
                 Object[] tuple = tupleListIter.next();
-                Object collection = createCollection();
+                Object collection = containerAccumulator.createContainer(dirtyTracking, 0);
                 if (tuple[startIndex] != null) {
                     List<Object[]> objects = (List<Object[]>) tuple[startIndex];
                     for (int i = 0; i < objects.size(); i++) {
-                        Object[] transformedTuple = subviewTupleTransformer.transform(objects.get(i), updatableViewMap);
-                        add(collection, transformedTuple[0]);
+                        Object indexObject = null;
+                        if (indexSubviewTupleTransformer != null) {
+                            indexObject = indexSubviewTupleTransformer.transform(objects.get(i), updatableViewMap)[indexSubviewTupleTransformer.getConsumeStartIndex()];
+                        } else if (indexStartIndex != -1) {
+                            indexObject = objects.get(i)[indexStartIndex];
+                        }
+                        if (subviewTupleTransformer == null) {
+                            add(collection, indexObject, objects.get(i)[startIndex]);
+                        } else {
+                            Object[] transformedTuple = subviewTupleTransformer.transform(objects.get(i), updatableViewMap);
+                            add(collection, indexObject, transformedTuple[0]);
+                        }
                     }
                 }
                 tuple[startIndex] = collection;
@@ -123,14 +145,26 @@ public abstract class AbstractMultisetTupleListTransformer<C> extends TupleListT
             tupleListIter = tuples.iterator();
             while (tupleListIter.hasNext()) {
                 Object[] tuple = tupleListIter.next();
-                Object collection = createCollection();
+                Object collection = containerAccumulator.createContainer(dirtyTracking, 0);
                 if (tuple[startIndex] != null) {
                     List<Object[]> objects = (List<Object[]>) tuple[startIndex];
-                    // Before building the subviews, apply the tuple transformator on the nested set in isolation
-                    tupleTransformator.transformAll(objects);
+                    if (tupleTransformator != null) {
+                        // Before building the subviews, apply the tuple transformator on the nested set in isolation
+                        tupleTransformator.transformAll(objects);
+                    }
                     for (int i = 0; i < objects.size(); i++) {
-                        Object[] transformedTuple = subviewTupleTransformer.transform(objects.get(i), updatableViewMap);
-                        add(collection, transformedTuple[0]);
+                        Object indexObject = null;
+                        if (indexSubviewTupleTransformer != null) {
+                            indexObject = indexSubviewTupleTransformer.transform(objects.get(i), updatableViewMap)[indexSubviewTupleTransformer.getConsumeStartIndex() - 1];
+                        } else if (indexStartIndex != -1) {
+                            indexObject = objects.get(i)[indexStartIndex];
+                        }
+                        if (subviewTupleTransformer == null) {
+                            add(collection, indexObject, objects.get(i)[startIndex]);
+                        } else {
+                            Object[] transformedTuple = subviewTupleTransformer.transform(objects.get(i), updatableViewMap);
+                            add(collection, indexObject, transformedTuple[0]);
+                        }
                     }
                 }
                 tuple[startIndex] = collection;
@@ -140,18 +174,10 @@ public abstract class AbstractMultisetTupleListTransformer<C> extends TupleListT
         return tuples;
     }
 
-    protected abstract Object createCollection();
-
-    @SuppressWarnings("unchecked")
-    protected void add(Object collection, Object value) {
+    protected void add(Object collection, Object index, Object value) {
         if (elementConverter != null) {
             value = elementConverter.convertToViewType(value);
         }
-        if (value != null) {
-            addToCollection((C) collection, value);
-        }
+        containerAccumulator.add(collection, index, value, dirtyTracking);
     }
-
-    protected abstract void addToCollection(C set, Object value);
-
 }

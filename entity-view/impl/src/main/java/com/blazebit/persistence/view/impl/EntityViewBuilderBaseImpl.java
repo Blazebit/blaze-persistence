@@ -169,18 +169,8 @@ public class EntityViewBuilderBaseImpl<T, X extends EntityViewBuilderBase<T, X>>
     private Object setValue(AbstractAttribute<?, ?> attr, Object value) {
         Class<?> type = attr.getJavaType();
         if (value == null) {
-            if (attr instanceof MapAttribute<?, ?, ?>) {
-                if (attr.needsDirtyTracker()) {
-                    value = attr.getMapInstantiator().createRecordingMap(0);
-                } else {
-                    value = attr.getMapInstantiator().createMap(0);
-                }
-            } else if (attr instanceof PluralAttribute<?, ?, ?>) {
-                if (attr.needsDirtyTracker()) {
-                    value = attr.getCollectionInstantiator().createRecordingCollection(0);
-                } else {
-                    value = attr.getCollectionInstantiator().createCollection(0);
-                }
+            if (attr.isCollection()) {
+                value = attr.getContainerAccumulator().createContainer(attr.needsDirtyTracker(), 0);
             } else {
                 if (type.isPrimitive()) {
                     if (type == long.class) {

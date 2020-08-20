@@ -30,6 +30,8 @@ import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTra
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformerFactory;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleTransformerFactory;
 import com.blazebit.persistence.view.metamodel.Attribute;
+import com.blazebit.persistence.view.metamodel.ListAttribute;
+import com.blazebit.persistence.view.metamodel.MapAttribute;
 import com.blazebit.persistence.view.metamodel.MappingAttribute;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.ParameterAttribute;
@@ -221,35 +223,37 @@ public class TupleElementMapperBuilder implements ServiceProvider {
         }
     }
 
+    public String getIdMapping(MappingAttribute<?, ?> mappingAttribute) {
+        return getMapping(idPrefix, mappingAttribute);
+    }
+
     public String getMapping(MappingAttribute<?, ?> mappingAttribute) {
         return getMapping(mappingPrefix, mappingAttribute);
+    }
+
+    public String getKeyMapping(MapAttribute<?, ?, ?> mappingAttribute) {
+        return getKeyMapping(getMapping((MappingAttribute<?, ?>) mappingAttribute), mappingAttribute);
+    }
+
+    public String getKeyMapping(String prefix, MapAttribute<?, ?, ?> mappingAttribute) {
+        StringBuilder sb = new StringBuilder();
+        mappingAttribute.renderKeyMapping(prefix, this, sb);
+        return sb.toString().intern();
+    }
+
+    public String getIndexMapping(ListAttribute<?, ?> mappingAttribute) {
+        return getIndexMapping(getMapping((MappingAttribute<?, ?>) mappingAttribute), mappingAttribute);
+    }
+
+    public String getIndexMapping(String prefix, ListAttribute<?, ?> mappingAttribute) {
+        StringBuilder sb = new StringBuilder();
+        mappingAttribute.renderIndexMapping(prefix, this, sb);
+        return sb.toString().intern();
     }
 
     private String getMapping(String prefixParts, MappingAttribute<?, ?> mappingAttribute) {
         StringBuilder sb = new StringBuilder();
         mappingAttribute.renderMapping(prefixParts, this, sb);
-        return sb.toString().intern();
-    }
-
-    public String getIdMapping(MappingAttribute<?, ?> mappingAttribute, boolean isKey) {
-        return getMapping(idPrefix, mappingAttribute, isKey);
-    }
-
-    public String getMapping(MappingAttribute<?, ?> mappingAttribute, boolean isKey) {
-        return getMapping(mappingPrefix, mappingAttribute, isKey);
-    }
-
-    private String getMapping(String prefixParts, MappingAttribute<?, ?> mappingAttribute, boolean isKey) {
-        StringBuilder sb = new StringBuilder();
-        if (isKey) {
-            sb.append("KEY(");
-        }
-
-        mappingAttribute.renderMapping(prefixParts, this, sb);
-
-        if (isKey) {
-            sb.append(')');
-        }
         return sb.toString().intern();
     }
 

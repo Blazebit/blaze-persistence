@@ -26,6 +26,8 @@ import java.util.List;
  */
 public class ListFactory implements PluralObjectFactory<List<?>> {
 
+    public static final ListFactory INSTANCE = new ListFactory();
+
     @Override
     public List<?> createCollection(int size) {
         return new ArrayList<>(size);

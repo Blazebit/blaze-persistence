@@ -364,7 +364,7 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> implem
      * @param sorter        The sorter for the attribute sorter
      * @since 1.5.0
      */
-    public void addAttributeSorter(AttributePath<T, ?> attributePath, Sorter sorter) {
+    public void addAttributeSorter(AttributePath<T, ?, ?> attributePath, Sorter sorter) {
         this.attributeSorters.put(attributePath.getPath(), sorter);
     }
 
@@ -377,7 +377,7 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> implem
      * @return <code>this</code> for method chaining
      * @since 1.5.0
      */
-    public EntityViewSetting<T, Q> withAttributeSorter(AttributePath<T, ?> attributePath, Sorter sorter) {
+    public EntityViewSetting<T, Q> withAttributeSorter(AttributePath<T, ?, ?> attributePath, Sorter sorter) {
         addAttributeSorter(attributePath.getPath(), sorter);
         return this;
     }

@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.spi.ServiceProvider;
 import com.blazebit.persistence.view.impl.collection.CollectionInstantiatorImplementor;
 import com.blazebit.persistence.view.impl.collection.MapInstantiatorImplementor;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodPluralAttribute;
@@ -23,6 +25,8 @@ import com.blazebit.persistence.view.impl.metamodel.EmbeddableOwner;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 import com.blazebit.persistence.view.impl.metamodel.MethodAttributeMapping;
+import com.blazebit.persistence.view.impl.objectbuilder.CollectionInstantiatorAccumulator;
+import com.blazebit.persistence.view.impl.objectbuilder.ContainerAccumulator;
 import com.blazebit.persistence.view.metamodel.MethodListAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 
@@ -36,13 +40,31 @@ import java.util.Map;
  */
 public abstract class AbstractMethodListAttribute<X, Y> extends AbstractMethodPluralAttribute<X, List<Y>, Y> implements MethodListAttribute<X, Y> {
 
+    private final String indexMapping;
+    private final Expression indexMappingExpression;
     private final boolean isIndexed;
-    private final CollectionInstantiatorImplementor<?, ?> collectionInstantiator;
+    private final boolean forcedUnique;
+    private final CollectionInstantiatorAccumulator collectionInstantiatorAccumulator;
     
     public AbstractMethodListAttribute(ManagedViewTypeImplementor<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int attributeIndex, int dirtyStateIndex, EmbeddableOwner embeddableMapping) {
         super(viewType, mapping, context, attributeIndex, dirtyStateIndex, embeddableMapping);
-        this.isIndexed = mapping.determineIndexed(context, context.getEntityMetamodel().getManagedType(viewType.getEntityClass()));
-        this.collectionInstantiator = createCollectionInstantiator(context, createCollectionFactory(context), isIndexed(), isSorted(), isOrdered(), getComparator());
+        String indexMapping = determineIndexMapping(mapping);
+        if (indexMapping == null) {
+            this.isIndexed = mapping.determineIndexed(context, context.getEntityMetamodel().getManagedType(viewType.getEntityClass()));
+            if (this.isIndexed) {
+                indexMapping = "INDEX(this)";
+            }
+        } else {
+            this.isIndexed = true;
+        }
+        this.indexMapping = indexMapping;
+        this.indexMappingExpression = createSimpleExpression(indexMapping, mapping, context, ExpressionLocation.MAPPING_INDEX);
+        this.forcedUnique = mapping.isForceUniqueness() || determineForcedUnique(context);
+        this.collectionInstantiatorAccumulator = new CollectionInstantiatorAccumulator(
+                createCollectionInstantiator(context, createCollectionFactory(context), isIndexed(), isSorted(), isOrdered(), getComparator()),
+                createValueContainerAccumulator(),
+                !isCorrelated()
+        );
     }
 
     @Override
@@ -51,8 +73,13 @@ public abstract class AbstractMethodListAttribute<X, Y> extends AbstractMethodPl
     }
 
     @Override
+    public ContainerAccumulator<?> getContainerAccumulator() {
+        return collectionInstantiatorAccumulator;
+    }
+
+    @Override
     public CollectionInstantiatorImplementor<?, ?> getCollectionInstantiator() {
-        return collectionInstantiator;
+        return collectionInstantiatorAccumulator.getCollectionInstantiator();
     }
 
     @Override
@@ -76,6 +103,11 @@ public abstract class AbstractMethodListAttribute<X, Y> extends AbstractMethodPl
     }
 
     @Override
+    public boolean isForcedUnique() {
+        return forcedUnique;
+    }
+
+    @Override
     protected Type<?> getKeyType() {
         return null;
     }
@@ -90,4 +122,18 @@ public abstract class AbstractMethodListAttribute<X, Y> extends AbstractMethodPl
         return false;
     }
 
+    @Override
+    public String getIndexMapping() {
+        return indexMapping;
+    }
+
+    @Override
+    public Expression getMappingIndexExpression() {
+        return indexMappingExpression;
+    }
+
+    @Override
+    public void renderIndexMapping(String parent, ServiceProvider serviceProvider, StringBuilder sb) {
+        renderExpression(parent, indexMappingExpression, null, serviceProvider, sb);
+    }
 }

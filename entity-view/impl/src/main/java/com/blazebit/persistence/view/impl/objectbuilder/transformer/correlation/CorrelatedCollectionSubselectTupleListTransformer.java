@@ -21,15 +21,9 @@ import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.view.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
-import com.blazebit.persistence.view.impl.collection.CollectionInstantiatorImplementor;
-import com.blazebit.persistence.view.impl.collection.RecordingCollection;
+import com.blazebit.persistence.view.impl.objectbuilder.ContainerAccumulator;
 import com.blazebit.persistence.view.impl.objectbuilder.Limiter;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
-
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  *
@@ -38,80 +32,19 @@ import java.util.Map;
  */
 public class CorrelatedCollectionSubselectTupleListTransformer extends AbstractCorrelatedSubselectTupleListTransformer {
 
-    private final CollectionInstantiatorImplementor<?, ?> collectionInstantiator;
-    private final boolean filterNulls;
     private final boolean recording;
 
-    public CorrelatedCollectionSubselectTupleListTransformer(ExpressionFactory ef, Correlator correlator, EntityViewManagerImpl evm, ManagedViewType<?> viewRootType, String viewRootAlias, ManagedViewType<?> embeddingViewType, String embeddingViewPath, Expression correlationResult, String correlationBasisExpression, String correlationKeyExpression,
-                                                             CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches, int viewRootIndex, int embeddingViewIndex, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, Limiter limiter, EntityViewConfiguration entityViewConfiguration,
-                                                             CollectionInstantiatorImplementor<?, ?> collectionInstantiator, boolean filterNulls, boolean recording) {
-        super(ef, correlator, evm, viewRootType, viewRootAlias, embeddingViewType, embeddingViewPath, correlationResult, correlationBasisExpression, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, viewRootIndex, embeddingViewIndex, tupleIndex, correlationBasisType, correlationBasisEntity, limiter, entityViewConfiguration);
-        this.collectionInstantiator = collectionInstantiator;
-        this.filterNulls = filterNulls;
+    public CorrelatedCollectionSubselectTupleListTransformer(ExpressionFactory ef, Correlator correlator, ContainerAccumulator<?> containerAccumulator, EntityViewManagerImpl evm, ManagedViewType<?> viewRootType, String viewRootAlias, ManagedViewType<?> embeddingViewType, String embeddingViewPath, Expression correlationResult, String correlationBasisExpression, String correlationKeyExpression,
+                                                             CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches, String[] indexFetches, Expression indexExpression, Correlator indexCorrelator, int viewRootIndex, int embeddingViewIndex, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity,
+                                                             Limiter limiter, EntityViewConfiguration entityViewConfiguration, boolean recording) {
+        super(ef, correlator, containerAccumulator, evm, viewRootType, viewRootAlias, embeddingViewType, embeddingViewPath, correlationResult, correlationBasisExpression, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, indexFetches, indexExpression, indexCorrelator,
+                viewRootIndex, embeddingViewIndex, tupleIndex, correlationBasisType, correlationBasisEntity, limiter, entityViewConfiguration);
         this.recording = recording;
-    }
-
-    @Override
-    protected void populateResult(Map<Object, Map<Object, TuplePromise>> correlationValues, List<Object[]> list) {
-        Map<Object, Map<Object, Collection<Object>>> collections;
-        collections = new HashMap<>(list.size());
-        for (int i = 0; i < list.size(); i++) {
-            Object[] element = list.get(i);
-            Map<Object, Collection<Object>> viewRootResult = collections.get(element[viewIndex]);
-            if (viewRootResult == null) {
-                viewRootResult = new HashMap<>();
-                collections.put(element[viewIndex], viewRootResult);
-            }
-            Collection<Object> result = viewRootResult.get(element[keyIndex]);
-            if (result == null) {
-                result = (Collection<Object>) createDefaultResult();
-                viewRootResult.put(element[keyIndex], result);
-            }
-
-            if (element[valueIndex] != null) {
-                add(result, element[valueIndex]);
-            }
-        }
-
-        for (Map.Entry<Object, Map<Object, Collection<Object>>> entry : collections.entrySet()) {
-            Map<Object, TuplePromise> tuplePromiseMap = correlationValues.get(entry.getKey());
-            if (tuplePromiseMap != null) {
-                for (Map.Entry<Object, Collection<Object>> correlationEntry : entry.getValue().entrySet()) {
-                    TuplePromise tuplePromise = tuplePromiseMap.get(correlationEntry.getKey());
-                    if (tuplePromise != null) {
-                        tuplePromise.onResult(postConstruct(correlationEntry.getValue()), this);
-                    }
-                }
-            }
-        }
-    }
-
-    private void add(Collection<Object> result, Object o) {
-        if (recording) {
-            ((RecordingCollection<?, Object>) result).getDelegate().add(o);
-        } else {
-            result.add(o);
-        }
-    }
-
-    @Override
-    public Object copy(Object o) {
-        return createCollection((Collection<? extends Object>) o);
     }
 
     @Override
     protected boolean isRecording() {
         return recording;
-    }
-
-    @Override
-    protected boolean isFilterNulls() {
-        return filterNulls;
-    }
-
-    @Override
-    protected CollectionInstantiatorImplementor<?, ?> getCollectionInstantiator() {
-        return collectionInstantiator;
     }
 
 }

@@ -54,10 +54,10 @@ public final class RelationClassWriter {
         sb.append("@").append(entity.relationImportType(Constants.STATIC_RELATION)).append("(").append(entity.relationImportType(entity.getQualifiedName())).append(".class)");
         sb.append(NEW_LINE);
         sb.append("public class ").append(entity.getSimpleName()).append(RELATION_CLASS_NAME_SUFFIX).append("<T, A extends ").append(entity.relationImportType(Constants.METHOD_ATTRIBUTE))
-                .append("<?, ?>> extends ").append(entity.relationImportType(Constants.ATTRIBUTE_PATH_WRAPPER)).append("<T, ").append(entityViewFqcn).append("> {").append(NEW_LINE);
+                .append("<?, ?>> extends ").append(entity.relationImportType(Constants.ATTRIBUTE_PATH_WRAPPER)).append("<T, ").append(entityViewFqcn).append(", ").append(entityViewFqcn).append("> {").append(NEW_LINE);
 
         sb.append(NEW_LINE);
-        sb.append("    public ").append(entity.getSimpleName()).append(RELATION_CLASS_NAME_SUFFIX).append("(").append(entity.relationImportType(Constants.ATTRIBUTE_PATH)).append("<T, ").append(entityViewFqcn).append("> path) {").append(NEW_LINE);
+        sb.append("    public ").append(entity.getSimpleName()).append(RELATION_CLASS_NAME_SUFFIX).append("(").append(entity.relationImportType(Constants.ATTRIBUTE_PATH)).append("<T, ").append(entityViewFqcn).append(", ").append(entityViewFqcn).append("> path) {").append(NEW_LINE);
         sb.append("        super(path);").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
         sb.append(NEW_LINE);
@@ -66,25 +66,56 @@ public final class RelationClassWriter {
         for (MetaAttribute metaMember : members) {
             if (!metaMember.isSynthetic()) {
                 if (metaMember.isSubview()) {
-                    String relationType = entity.relationImportType(metaMember.getGeneratedTypePrefix() + RELATION_CLASS_NAME_SUFFIX);
+                    String relationType = entity.relationImportType(metaMember.getGeneratedTypePrefix() + (metaMember.isMultiCollection() ? MultiRelationClassWriter.MULTI_RELATION_CLASS_NAME_SUFFIX : RelationClassWriter.RELATION_CLASS_NAME_SUFFIX));
                     sb.append("    public ").append(relationType).append("<T, ");
+                    if (metaMember.isMultiCollection()) {
+                        metaMember.appendElementType(sb, entity.getRelationImportContext());
+                        sb.append(", ");
+                    }
                     metaMember.appendMetamodelAttributeType(sb, entity.getRelationImportContext());
                     sb.append("> ").append(metaMember.getPropertyName()).append("() {").append(NEW_LINE);
                     sb.append("        ").append(relationType).append("<").append(entityViewFqcn).append(", ");
+                    if (metaMember.isMultiCollection()) {
+                        metaMember.appendElementType(sb, entity.getRelationImportContext());
+                        sb.append(", ");
+                    }
                     metaMember.appendMetamodelAttributeType(sb, entity.getRelationImportContext());
                     sb.append("> relation = ").append(entity.getSimpleName()).append(MetamodelClassWriter.META_MODEL_CLASS_NAME_SUFFIX);
                     sb.append('.').append(metaMember.getPropertyName()).append(";").append(NEW_LINE);
-                    sb.append("        return new ").append(relationType).append("<>(relation == null ? getWrapped().<").append(entity.relationImportType(metaMember.getType()));
-                    sb.append(">get(\"").append(metaMember.getPropertyName()).append("\") : getWrapped().get(relation));").append(NEW_LINE);
+                    sb.append("        return new ").append(relationType).append("<>(relation == null ? getWrapped().<");
+                    if (metaMember.isMultiCollection()) {
+                        sb.append(entity.relationImportType(metaMember.getType()));
+                        sb.append(", ");
+                    }
+                    metaMember.appendElementType(sb, entity.getRelationImportContext());
+                    if (metaMember.isMultiCollection()) {
+                        sb.append(">getMulti(\"");
+                    } else {
+                        sb.append(">get(\"");
+                    }
+                    sb.append(metaMember.getPropertyName()).append("\") : getWrapped().get(relation));").append(NEW_LINE);
                 } else {
-                    sb.append("    public ").append(entity.relationImportType(Constants.ATTRIBUTE_PATH)).append("<T, ").append(entity.relationImportType(metaMember.getType()));
+                    sb.append("    public ").append(entity.relationImportType(Constants.ATTRIBUTE_PATH)).append("<T, ");
+                    sb.append(entity.relationImportType(metaMember.getType()));
+                    sb.append(", ");
+                    metaMember.appendElementType(sb, entity.getRelationImportContext());
                     sb.append("> ").append(metaMember.getPropertyName()).append("() {").append(NEW_LINE);
                     sb.append("        ");
                     metaMember.appendMetamodelAttributeType(sb, entity.getRelationImportContext());
                     sb.append(" attribute = ").append(entity.getSimpleName()).append(MetamodelClassWriter.META_MODEL_CLASS_NAME_SUFFIX);
                     sb.append('.').append(metaMember.getPropertyName()).append(';').append(NEW_LINE);
-                    sb.append("        return attribute == null ? getWrapped().<").append(entity.relationImportType(metaMember.getType()));
-                    sb.append(">get(\"").append(metaMember.getPropertyName()).append("\") : getWrapped().get(attribute);").append(NEW_LINE);
+                    sb.append("        return attribute == null ? getWrapped().<");
+                    if (metaMember.isMultiCollection()) {
+                        sb.append(entity.relationImportType(metaMember.getType()));
+                        sb.append(", ");
+                    }
+                    metaMember.appendElementType(sb, entity.getRelationImportContext());
+                    if (metaMember.isMultiCollection()) {
+                        sb.append(">getMulti(\"");
+                    } else {
+                        sb.append(">get(\"");
+                    }
+                    sb.append(metaMember.getPropertyName()).append("\") : getWrapped().get(attribute);").append(NEW_LINE);
                 }
                 sb.append("    }").append(NEW_LINE);
                 sb.append(NEW_LINE);
@@ -128,7 +159,7 @@ public final class RelationClassWriter {
                     }
                     sb.append("() {").append(NEW_LINE);
                     if (metaMember.isSubview()) {
-                        String relationType = entity.relationImportType(metaMember.getGeneratedTypePrefix() + RELATION_CLASS_NAME_SUFFIX);
+                        String relationType = entity.relationImportType(metaMember.getGeneratedTypePrefix() + (metaMember.isMultiCollection() ? MultiRelationClassWriter.MULTI_RELATION_CLASS_NAME_SUFFIX : RelationClassWriter.RELATION_CLASS_NAME_SUFFIX));
                         sb.append("        ").append(relationType).append("<").append(entityViewFqcn).append(", ");
                         metaMember.appendMetamodelAttributeType(sb, entity.getRelationImportContext());
                         sb.append("> relation = ").append(entity.getSimpleName()).append(MetamodelClassWriter.META_MODEL_CLASS_NAME_SUFFIX);

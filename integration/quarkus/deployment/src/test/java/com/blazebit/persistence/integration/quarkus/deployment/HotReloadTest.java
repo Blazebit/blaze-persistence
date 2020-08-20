@@ -63,6 +63,7 @@ public class HotReloadTest {
             javaArchive.addClasses(
                     view.getClassLoader().loadClass(view.getPackage().getName() + "." + view.getSimpleName().replace("$", "") + "_"),
                     view.getClassLoader().loadClass(view.getPackage().getName() + "." + view.getSimpleName().replace("$", "") + "Relation"),
+                    view.getClassLoader().loadClass(view.getPackage().getName() + "." + view.getSimpleName().replace("$", "") + "MultiRelation"),
                     view.getClassLoader().loadClass(view.getPackage().getName() + "." + view.getSimpleName().replace("$", "") + "Impl"),
                     view.getClassLoader().loadClass(view.getPackage().getName() + "." + view.getSimpleName().replace("$", "") + "Builder")
             );

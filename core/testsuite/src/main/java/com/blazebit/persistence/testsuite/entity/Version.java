@@ -89,11 +89,13 @@ public class Version implements Serializable {
         this.date = date;
     }
 
-    public int getIdx() {
+    // EclipseLink... https://github.com/eclipse-ee4j/eclipselink/issues/884
+    // and DataNucleus... https://github.com/datanucleus/datanucleus-core/issues/355
+    public Integer getIdx() {
         return idx;
     }
 
-    public void setIdx(int index) {
+    public void setIdx(Integer index) {
         this.idx = index;
     }
 

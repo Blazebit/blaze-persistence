@@ -75,8 +75,6 @@ import com.blazebit.persistence.view.filter.StartsWithIgnoreCaseFilter;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.accessor.EntityIdAttributeAccessor;
 import com.blazebit.persistence.view.impl.change.ViewChangeModel;
-import com.blazebit.persistence.view.impl.collection.RecordingCollection;
-import com.blazebit.persistence.view.impl.collection.RecordingMap;
 import com.blazebit.persistence.view.impl.filter.BetweenFilterImpl;
 import com.blazebit.persistence.view.impl.filter.ContainsFilterImpl;
 import com.blazebit.persistence.view.impl.filter.ContainsIgnoreCaseFilterImpl;
@@ -102,6 +100,7 @@ import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContextImpl;
 import com.blazebit.persistence.view.impl.metamodel.ViewMetamodelImpl;
 import com.blazebit.persistence.view.impl.metamodel.ViewTypeImpl;
+import com.blazebit.persistence.view.impl.objectbuilder.ContainerAccumulator;
 import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
 import com.blazebit.persistence.view.impl.type.DefaultBasicUserTypeRegistry;
@@ -128,6 +127,8 @@ import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
+import com.blazebit.persistence.view.metamodel.MethodMultiListAttribute;
+import com.blazebit.persistence.view.metamodel.MethodMultiMapAttribute;
 import com.blazebit.persistence.view.metamodel.MethodPluralAttribute;
 import com.blazebit.persistence.view.metamodel.MethodSingularAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
@@ -151,7 +152,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.TypeVariable;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -171,6 +171,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
     private static final String META_MODEL_CLASS_NAME_SUFFIX = "_";
     private static final String RELATION_CLASS_NAME_SUFFIX = "Relation";
+    private static final String MULTI_RELATION_CLASS_NAME_SUFFIX = "MultiRelation";
     private static final String BUILDER_CLASS_NAME_SUFFIX = "Builder";
     private static final Set<ViewTransition> VIEW_TRANSITIONS = EnumSet.allOf(ViewTransition.class);
 
@@ -312,6 +313,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         Map<Class<?>, Listeners> listeners = new HashMap<>();
         Map<ViewBuilderKey, Constructor<? extends EntityViewBuilder<?>>> viewBuilderConstructors = new HashMap<>();
         Map<Class<?>, Constructor<?>> relationConstructors = new HashMap<>(viewMetamodel.getManagedViews().size());
+        Map<Class<?>, Constructor<?>> multiRelationConstructors = new HashMap<>(viewMetamodel.getManagedViews().size());
         for (ManagedViewType<?> managedView : viewMetamodel.getManagedViews()) {
             Class<?> javaType = managedView.getJavaType();
             Listeners l = new Listeners(managedView.getEntityClass());
@@ -347,7 +349,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
                 proxyFactory.loadImplementation(errors, managedView, this);
             }
             if (scanStaticMetamodels) {
-                initializeStaticMetamodel(errors, managedView, relationConstructors);
+                initializeStaticMetamodel(errors, managedView, relationConstructors, multiRelationConstructors);
             }
             if (scanStaticBuilder) {
                 initializeStaticBuilder(errors, managedView, viewBuilderConstructors);
@@ -477,7 +479,11 @@ public class EntityViewManagerImpl implements EntityViewManager {
         return getGeneratedClassName(javaType, RELATION_CLASS_NAME_SUFFIX);
     }
 
-    private void initializeStaticMetamodel(Set<String> errors, ManagedViewType<?> managedView, Map<Class<?>, Constructor<?>> relationConstructors) {
+    private static String getMultiRelationClassName(Class<?> javaType) {
+        return getGeneratedClassName(javaType, MULTI_RELATION_CLASS_NAME_SUFFIX);
+    }
+
+    private void initializeStaticMetamodel(Set<String> errors, ManagedViewType<?> managedView, Map<Class<?>, Constructor<?>> relationConstructors, Map<Class<?>, Constructor<?>> multiRelationConstructors) {
         Class<?> javaType = managedView.getJavaType();
         Class<?> metamodelClass;
         try {
@@ -497,6 +503,14 @@ public class EntityViewManagerImpl implements EntityViewManager {
                     return;
                 }
             }
+            Class<?> multiRelationClass = javaType.getClassLoader().loadClass(getMultiRelationClassName(javaType));
+            StaticRelation staticMultiRelation = multiRelationClass.getAnnotation(StaticRelation.class);
+            if (staticMultiRelation != null) {
+                if (staticMultiRelation.value() != javaType) {
+                    errors.add("The static relation class '" + multiRelationClass.getName() + "' was expected to be defined for the entity view type '" + javaType.getName() + "' but was defined for: " + annotation.value().getName());
+                    return;
+                }
+            }
             if (!relationConstructors.containsKey(javaType)) {
                 try {
                     relationConstructors.put(javaType, relationClass.getConstructor(AttributePath.class));
@@ -506,6 +520,15 @@ public class EntityViewManagerImpl implements EntityViewManager {
                     errors.add("The initialization of the static relation class '" + relationClass.getName() + "' failed: " + sw.toString());
                 }
             }
+            if (!multiRelationConstructors.containsKey(javaType)) {
+                try {
+                    multiRelationConstructors.put(javaType, multiRelationClass.getConstructor(AttributePath.class));
+                } catch (NoSuchMethodException e) {
+                    StringWriter sw = new StringWriter();
+                    e.printStackTrace(new PrintWriter(sw));
+                    errors.add("The initialization of the static relation class '" + multiRelationClass.getName() + "' failed: " + sw.toString());
+                }
+            }
         } catch (ClassNotFoundException e) {
             // Ignore
             return;
@@ -513,22 +536,32 @@ public class EntityViewManagerImpl implements EntityViewManager {
         try {
             for (MethodAttribute<?, ?> attribute : managedView.getAttributes()) {
                 if (attribute.isSubview()) {
-                    AttributePath<?, ?> path;
+                    AttributePath<?, ?, ?> path;
                     Class<?> elementType;
                     if (attribute instanceof PluralAttribute<?, ?, ?>) {
-                        elementType = ((PluralAttribute) attribute).getElementType().getJavaType();
+                        elementType = ((PluralAttribute<?, ?, ?>) attribute).getElementType().getJavaType();
                         path = AttributePaths.of((MethodPluralAttribute<?, ?, ?>) attribute);
                     } else {
                         elementType = attribute.getConvertedJavaType();
                         path = AttributePaths.of((MethodSingularAttribute<?, ?>) attribute);
                     }
-                    Constructor<?> relationConstructor = relationConstructors.get(elementType);
-                    if (relationConstructor == null) {
-                        Class<?> relationClass = javaType.getClassLoader().loadClass(getRelationClassName(elementType));
-                        relationConstructor = relationClass.getConstructor(AttributePath.class);
-                        relationConstructors.put(elementType, relationConstructor);
+                    if (attribute instanceof MethodMultiListAttribute<?, ?, ?> || attribute instanceof MethodMultiMapAttribute<?, ?, ?, ?>) {
+                        Constructor<?> multiRelationConstructor = multiRelationConstructors.get(elementType);
+                        if (multiRelationConstructor == null) {
+                            Class<?> relationClass = javaType.getClassLoader().loadClass(getMultiRelationClassName(elementType));
+                            multiRelationConstructor = relationClass.getConstructor(AttributePath.class);
+                            multiRelationConstructors.put(elementType, multiRelationConstructor);
+                        }
+                        metamodelClass.getDeclaredField(attribute.getName()).set(null, multiRelationConstructor.newInstance(path));
+                    } else {
+                        Constructor<?> relationConstructor = relationConstructors.get(elementType);
+                        if (relationConstructor == null) {
+                            Class<?> relationClass = javaType.getClassLoader().loadClass(getRelationClassName(elementType));
+                            relationConstructor = relationClass.getConstructor(AttributePath.class);
+                            relationConstructors.put(elementType, relationConstructor);
+                        }
+                        metamodelClass.getDeclaredField(attribute.getName()).set(null, relationConstructor.newInstance(path));
                     }
-                    metamodelClass.getDeclaredField(attribute.getName()).set(null, relationConstructor.newInstance(path));
                 } else {
                     metamodelClass.getDeclaredField(attribute.getName()).set(null, attribute);
                 }
@@ -910,26 +943,10 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
     private static <X> Object getValueForBuilder(ConstrainedAttribute<AbstractMethodAttribute<? super X, ?>> value, X view, Map<String, Object> optionalParameters) {
         Object newValue;
-        if (value.getAttribute() instanceof MapAttribute<?, ?, ?>) {
-            if (value.getAttribute().needsDirtyTracker()) {
-                RecordingMap<?, Object, Object> recordingMap = (RecordingMap<?, Object, Object>) value.getAttribute().getMapInstantiator().createRecordingMap(0);
-                recordingMap.getDelegate().putAll((Map<Object, Object>) value.getAttribute().getValue(view));
-                newValue = recordingMap;
-            } else {
-                Map<Object, Object> map = (Map<Object, Object>) value.getAttribute().getMapInstantiator().createMap(0);
-                map.putAll((Map<Object, Object>) value.getAttribute().getValue(view));
-                newValue = map;
-            }
-        } else if (value.getAttribute() instanceof PluralAttribute<?, ?, ?>) {
-            if (value.getAttribute().needsDirtyTracker()) {
-                RecordingCollection<?, Object> recordingCollection = (RecordingCollection<?, Object>) value.getAttribute().getCollectionInstantiator().createRecordingCollection(0);
-                recordingCollection.getDelegate().addAll((Collection<Object>) value.getAttribute().getValue(view));
-                newValue = recordingCollection;
-            } else {
-                Collection<Object> collection = (Collection<Object>) value.getAttribute().getCollectionInstantiator().createCollection(0);
-                collection.addAll((Collection<Object>) value.getAttribute().getValue(view));
-                newValue = collection;
-            }
+        if (value.getAttribute().isCollection()) {
+            ContainerAccumulator<Object> containerAccumulator = (ContainerAccumulator<Object>) value.getAttribute().getContainerAccumulator();
+            newValue = containerAccumulator.createContainer(value.getAttribute().needsDirtyTracker(), 0);
+            containerAccumulator.addAll(newValue, value.getAttribute().getValue(view), value.getAttribute().needsDirtyTracker());
         } else {
             newValue = value.getAttribute().getValue(view);
             if (newValue == null && value.getAttribute().getMappingType() == Attribute.MappingType.PARAMETER) {

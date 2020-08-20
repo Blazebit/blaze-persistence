@@ -762,6 +762,154 @@ FROM Cat cat
 LEFT JOIN cat.indexedKittens indexedKittens_1
 ----
 
+==== Custom indexed collection mapping
+
+Mapping an indexed collection like a `java.util.Map` or `java.util.List` in entity views does not necessarily require that the source collection must be of the same type.
+A custom index mapping can be specified by annotating the attribute with `@MappingIndex`. The index mapping is relative to the target mapping.
+Let's consider the following model.
+
+[source,java]
+----
+@Entity
+class Cat {
+    @Id
+    Long id;
+
+    int age;
+
+    @OneToMany
+    Set<Cat> kittens;
+}
+
+@EntityView(Cat.class)
+interface SimpleCatView {
+    @IdMapping
+    Long getId();
+
+    String getName();
+}
+----
+
+Indexed-List mapping::
+An indexed `List` can be mapped by specifying a `@MappingIndex` that resolves to a 0-based integer of the target mapping.
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface CatView extends SimpleCatView {
+
+    @MappingIndex("age")
+    @Mapping("kittens")
+    List<SimpleCatView> getKittensByAge();
+}
+----
+
+[source,sql]
+----
+SELECT
+    cat.id,
+    cat.name,
+
+    kittens_1.age,
+    kittens_1.id,
+    kittens_1.name
+FROM Cat cat
+LEFT JOIN cat.kittens kittens_1
+----
+
+Note that depending on the age values, there can be many `null` entries in the list.
+An indexed `List` is filled up with `null` entries for missing indexes.
+
+Map mapping::
+An `Map` indexed by some value can be mapped by specifying a `@MappingIndex` relative to the target mapping.
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface CatView extends SimpleCatView {
+
+    @MappingIndex("age")
+    @Mapping("kittens")
+    Map<Integer, SimpleCatView> getKittensByAge();
+}
+----
+
+[source,sql]
+----
+SELECT
+    cat.id,
+    cat.name,
+
+    kittens_1.age,
+    kittens_1.id,
+    kittens_1.name
+FROM Cat cat
+LEFT JOIN cat.kittens kittens_1
+----
+
+Since the age might not be unique for the kittens in a collection, some cats could be overwritten, which is prevented by throwing an exception.
+To avoid the exception and instead collect all kittens grouped by the index value, multi-collections can be used.
+
+Multi-collection mapping::
+An indexed `List` or `Map` can specify a collection value to collect all values grouped by their index value.
+Valid types for the collections are `Collection`, `Set`, `SortedSet` and `List`.
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface CatView extends SimpleCatView {
+
+    @MappingIndex("age")
+    @Mapping("kittens")
+    Map<Integer, Set<SimpleCatView>> getKittensByAge();
+}
+----
+
+[source,sql]
+----
+SELECT
+    cat.id,
+    cat.name,
+
+    kittens_1.age,
+    kittens_1.id,
+    kittens_1.name
+FROM Cat cat
+LEFT JOIN cat.kittens kittens_1
+----
+
+Subview key mapping::
+An indexed `Map` can specify a subview as key as well. Note how the `this` mapping is used for the index mapping which allows the key view to be based on the target mapping `kittens`.
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface CatAgeView {
+    int getAge();
+}
+
+@EntityView(Cat.class)
+interface CatView extends SimpleCatView {
+
+    @MappingIndex("this")
+    @Mapping("kittens")
+    Map<CatAgeView, Set<SimpleCatView>> getKittensByAge();
+}
+----
+
+[source,sql]
+----
+SELECT
+    cat.id,
+    cat.name,
+
+    kittens_1.age,
+    kittens_1.id,
+    kittens_1.name
+FROM Cat cat
+LEFT JOIN cat.kittens kittens_1
+----
+
 === Singular collection type mappings
 
 There are cases when the entity model defines a collection that is actually a singular entity attribute. This can happen when you use custom type implementations or JPA 2.1 attribute converters that produce collections.

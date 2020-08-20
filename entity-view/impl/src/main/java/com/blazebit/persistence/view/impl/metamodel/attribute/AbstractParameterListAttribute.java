@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.spi.ServiceProvider;
 import com.blazebit.persistence.view.impl.collection.CollectionInstantiatorImplementor;
 import com.blazebit.persistence.view.impl.collection.MapInstantiatorImplementor;
 import com.blazebit.persistence.view.impl.metamodel.AbstractParameterPluralAttribute;
@@ -24,6 +26,8 @@ import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.MappingConstructorImpl;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 import com.blazebit.persistence.view.impl.metamodel.ParameterAttributeMapping;
+import com.blazebit.persistence.view.impl.objectbuilder.CollectionInstantiatorAccumulator;
+import com.blazebit.persistence.view.impl.objectbuilder.ContainerAccumulator;
 import com.blazebit.persistence.view.metamodel.ListAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 
@@ -37,13 +41,31 @@ import java.util.Map;
  */
 public abstract class AbstractParameterListAttribute<X, Y> extends AbstractParameterPluralAttribute<X, List<Y>, Y> implements ListAttribute<X, Y> {
 
+    private final String indexMapping;
+    private final Expression indexMappingExpression;
     private final boolean isIndexed;
-    private final CollectionInstantiatorImplementor<?, ?> collectionInstantiator;
+    private final boolean forcedUnique;
+    private final CollectionInstantiatorAccumulator collectionInstantiatorAccumulator;
     
     public AbstractParameterListAttribute(MappingConstructorImpl<X> mappingConstructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
         super(mappingConstructor, mapping, context, embeddableMapping);
-        this.isIndexed = mapping.determineIndexed(context, context.getEntityMetamodel().getManagedType(mappingConstructor.getDeclaringType().getEntityClass()));
-        this.collectionInstantiator = createCollectionInstantiator(context, null, isIndexed(), isSorted(), isOrdered(), getComparator());
+        String indexMapping = determineIndexMapping(mapping);
+        if (indexMapping == null) {
+            this.isIndexed = mapping.determineIndexed(context, context.getEntityMetamodel().getManagedType(mappingConstructor.getDeclaringType().getEntityClass()));
+            if (this.isIndexed) {
+                indexMapping = "INDEX(this)";
+            }
+        } else {
+            this.isIndexed = true;
+        }
+        this.indexMapping = indexMapping;
+        this.indexMappingExpression = createSimpleExpression(indexMapping, mapping, context, ExpressionLocation.MAPPING_INDEX);
+        this.forcedUnique = mapping.isForceUniqueness() || determineForcedUnique(context);
+        this.collectionInstantiatorAccumulator = new CollectionInstantiatorAccumulator(
+                createCollectionInstantiator(context, null, isIndexed(), isSorted(), isOrdered(), getComparator()),
+                createValueContainerAccumulator(),
+                !isCorrelated()
+        );
     }
 
     @Override
@@ -52,8 +74,13 @@ public abstract class AbstractParameterListAttribute<X, Y> extends AbstractParam
     }
 
     @Override
+    public ContainerAccumulator<?> getContainerAccumulator() {
+        return collectionInstantiatorAccumulator;
+    }
+
+    @Override
     public CollectionInstantiatorImplementor<?, ?> getCollectionInstantiator() {
-        return collectionInstantiator;
+        return collectionInstantiatorAccumulator.getCollectionInstantiator();
     }
 
     @Override
@@ -77,6 +104,11 @@ public abstract class AbstractParameterListAttribute<X, Y> extends AbstractParam
     }
 
     @Override
+    public boolean isForcedUnique() {
+        return forcedUnique;
+    }
+
+    @Override
     protected Type<?> getKeyType() {
         return null;
     }
@@ -89,6 +121,21 @@ public abstract class AbstractParameterListAttribute<X, Y> extends AbstractParam
     @Override
     protected boolean isKeySubview() {
         return false;
+    }
+
+    @Override
+    public String getIndexMapping() {
+        return indexMapping;
+    }
+
+    @Override
+    public Expression getMappingIndexExpression() {
+        return indexMappingExpression;
+    }
+
+    @Override
+    public void renderIndexMapping(String parent, ServiceProvider serviceProvider, StringBuilder sb) {
+        renderExpression(parent, indexMappingExpression, null, serviceProvider, sb);
     }
 
 }

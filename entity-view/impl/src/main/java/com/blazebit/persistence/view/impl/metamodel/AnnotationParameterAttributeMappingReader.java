@@ -16,11 +16,13 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
+import com.blazebit.persistence.view.MappingIndex;
 import com.blazebit.persistence.view.MappingInheritance;
 import com.blazebit.persistence.view.MappingInheritanceMapKey;
 import com.blazebit.persistence.view.MappingInheritanceSubtype;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSingular;
+import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.reflection.ReflectionUtils;
 
 import java.lang.annotation.Annotation;
@@ -55,6 +57,7 @@ public class AnnotationParameterAttributeMappingReader extends AbstractAnnotatio
         Type declaredElementType;
         Class<?> keyType;
         Class<?> elementType;
+        PluralAttribute.ElementCollectionType elementCollectionType = null;
         if (isCollection) {
             Type[] typeArguments = ((ParameterizedType) parameterType).getActualTypeArguments();
             declaredType = parameterType;
@@ -62,6 +65,12 @@ public class AnnotationParameterAttributeMappingReader extends AbstractAnnotatio
             declaredElementType = typeArguments[typeArguments.length - 1];
             keyType = ReflectionUtils.resolveType(entityViewClass, declaredKeyType);
             elementType = ReflectionUtils.resolveType(entityViewClass, declaredElementType);
+            if (elementType != null && Collection.class.isAssignableFrom(elementType)) {
+                Type[] elementTypeArguments = ((ParameterizedType) declaredElementType).getActualTypeArguments();
+                elementCollectionType = getElementCollectionType(elementType);
+                declaredElementType = elementTypeArguments[0];
+                elementType = ReflectionUtils.resolveType(entityViewClass, declaredElementType);
+            }
         } else {
             declaredType = parameterType;
             declaredKeyType = null;
@@ -74,7 +83,7 @@ public class AnnotationParameterAttributeMappingReader extends AbstractAnnotatio
         Map<Class<?>, String> keyTypeMappings = resolveKeyInheritanceSubtypeMappings(annotatedElement, keyType);
         Map<Class<?>, String> elementTypeMappings = resolveElementInheritanceSubtypeMappings(annotatedElement, elementType);
 
-        ParameterAttributeMapping parameterMapping = new ParameterAttributeMapping(viewMapping, mapping, context, constructorMapping, index, isCollection, type, keyType, elementType, declaredType, declaredKeyType, declaredElementType, typeMappings, keyTypeMappings, elementTypeMappings);
+        ParameterAttributeMapping parameterMapping = new ParameterAttributeMapping(viewMapping, mapping, annotatedElement.getAnnotation(MappingIndex.class), context, constructorMapping, index, isCollection, elementCollectionType, type, keyType, elementType, declaredType, declaredKeyType, declaredElementType, typeMappings, keyTypeMappings, elementTypeMappings);
 
         applyCommonMappings(parameterMapping, annotatedElement);
 

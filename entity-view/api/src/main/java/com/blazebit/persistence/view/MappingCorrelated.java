@@ -56,7 +56,7 @@ public @interface MappingCorrelated {
      * The associations of the entity that should be fetched.
      * This is only valid if the mapping refers to an entity and is mapped as attribute with the original type.
      *
-     * @return The JPQL expression mapping
+     * @return The associations of the entity that should be fetched
      * @since 1.2.0
      */
     String[] fetches() default {};

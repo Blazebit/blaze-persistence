@@ -19,7 +19,7 @@ package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
-import com.blazebit.persistence.view.impl.collection.CollectionInstantiatorImplementor;
+import com.blazebit.persistence.view.impl.objectbuilder.ContainerAccumulator;
 import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleElementMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.transformator.TupleTransformator;
@@ -43,27 +43,50 @@ public class CollectionMultisetTupleListTransformerFactory implements TupleListT
     private final String multisetResultAlias;
     private final BasicUserTypeStringSupport<Object>[] fieldConverters;
     private final TypeConverter<Object, Object> elementConverter;
-    private final CollectionInstantiatorImplementor<?, ?> collectionInstantiator;
+    private final ContainerAccumulator<Object> containerAccumulator;
     private final boolean dirtyTracking;
     private final ViewTypeObjectBuilderTemplate<Object[]> template;
+    private final ViewTypeObjectBuilderTemplate<Object[]> indexTemplate;
     private final TupleTransformerFactory subviewTupleTransformerFactory;
+    private final TupleTransformerFactory indexSubviewTupleTransformerFactory;
+    private final BasicUserTypeStringSupport<?> valueBasicTypeSupport;
+    private final BasicUserTypeStringSupport<?> indexBasicTypeSupport;
     private final boolean hasSelectOrSubselectFetchedAttributes;
 
-    public CollectionMultisetTupleListTransformerFactory(int startIndex, String mapping, String attributePath, String multisetResultAlias, TypeConverter<Object, Object> elementConverter, CollectionInstantiatorImplementor<?, ?> collectionInstantiator, boolean dirtyTracking, ViewTypeObjectBuilderTemplate<Object[]> template,
-                                                         boolean hasSelectOrSubselectFetchedAttributes, TupleTransformerFactory subviewTupleTransformerFactory) {
+    public CollectionMultisetTupleListTransformerFactory(int startIndex, String mapping, String attributePath, String multisetResultAlias, TypeConverter<Object, Object> elementConverter, ContainerAccumulator<?> containerAccumulator, boolean dirtyTracking, ViewTypeObjectBuilderTemplate<Object[]> template,
+                                                         ViewTypeObjectBuilderTemplate<Object[]> indexTemplate, boolean hasSelectOrSubselectFetchedAttributes, TupleTransformerFactory subviewTupleTransformerFactory, TupleTransformerFactory indexSubviewTupleTransformerFactory, BasicUserTypeStringSupport<?> valueBasicTypeSupport, BasicUserTypeStringSupport<?> indexBasicTypeSupport) {
         this.startIndex = startIndex;
         this.mapping = mapping;
         this.attributePath = attributePath;
         this.multisetResultAlias = multisetResultAlias;
         this.elementConverter = elementConverter;
-        this.collectionInstantiator = collectionInstantiator;
+        this.containerAccumulator = (ContainerAccumulator<Object>) containerAccumulator;
         this.dirtyTracking = dirtyTracking;
         this.template = template;
+        this.indexTemplate = indexTemplate;
         this.hasSelectOrSubselectFetchedAttributes = hasSelectOrSubselectFetchedAttributes;
-        List<BasicUserTypeStringSupport<Object>> fieldConverters = new ArrayList<>(template.getMappers().length);
-        TupleElementMapper[] mappers = template.getMappers();
-        for (int i = 0; i < mappers.length; i++) {
-            fieldConverters.add(mappers[i].getBasicTypeStringSupport());
+        this.indexSubviewTupleTransformerFactory = indexSubviewTupleTransformerFactory;
+        this.valueBasicTypeSupport = valueBasicTypeSupport;
+        this.indexBasicTypeSupport = indexBasicTypeSupport;
+        List<BasicUserTypeStringSupport<Object>> fieldConverters = new ArrayList<>();
+        TupleElementMapper[] mappers;
+        if (template == null) {
+            fieldConverters.add((BasicUserTypeStringSupport<Object>) valueBasicTypeSupport);
+        } else {
+            mappers = template.getMappers();
+            for (int i = 0; i < mappers.length; i++) {
+                fieldConverters.add(mappers[i].getBasicTypeStringSupport());
+            }
+        }
+        if (indexTemplate == null) {
+            if (indexBasicTypeSupport != null) {
+                fieldConverters.add((BasicUserTypeStringSupport<Object>) indexBasicTypeSupport);
+            }
+        } else {
+            mappers = indexTemplate.getMappers();
+            for (int i = 0; i < mappers.length; i++) {
+                fieldConverters.add(mappers[i].getBasicTypeStringSupport());
+            }
         }
         this.fieldConverters = fieldConverters.toArray(new BasicUserTypeStringSupport[0]);
         this.subviewTupleTransformerFactory = subviewTupleTransformerFactory;
@@ -89,9 +112,10 @@ public class CollectionMultisetTupleListTransformerFactory implements TupleListT
                 throw new UnsupportedOperationException("Converting views with correlated attributes isn't supported!");
             }
         }
-        TupleTransformator tupleTransformator = template.getTupleTransformatorFactory().create(parameterHolder, optionalParameters, entityViewConfiguration, startIndex);
-        TupleTransformer subviewTupleTransformer = subviewTupleTransformerFactory.create(parameterHolder, optionalParameters, entityViewConfiguration);
-        return new CollectionMultisetTupleListTransformer(startIndex, hasSelectOrSubselectFetchedAttributes, tupleTransformator, subviewTupleTransformer, fieldConverters, collectionInstantiator, dirtyTracking, elementConverter);
+        TupleTransformator tupleTransformator = template == null ? null : template.getTupleTransformatorFactory().create(parameterHolder, optionalParameters, entityViewConfiguration, startIndex);
+        TupleTransformer subviewTupleTransformer = subviewTupleTransformerFactory == null ? null : subviewTupleTransformerFactory.create(parameterHolder, optionalParameters, entityViewConfiguration);
+        TupleTransformer indexSubviewTupleTransformer = indexSubviewTupleTransformerFactory == null ? null : indexSubviewTupleTransformerFactory.create(parameterHolder, optionalParameters, entityViewConfiguration);
+        return new MultisetTupleListTransformer(startIndex, hasSelectOrSubselectFetchedAttributes, tupleTransformator, subviewTupleTransformer, indexSubviewTupleTransformer, indexBasicTypeSupport == null ? -1 : fieldConverters.length - 1, fieldConverters, elementConverter, containerAccumulator, dirtyTracking);
     }
 
 }

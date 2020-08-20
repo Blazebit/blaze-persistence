@@ -58,6 +58,11 @@ public class OrderedCollectionInstantiator extends AbstractCollectionInstantiato
     }
 
     @Override
+    public boolean isIndexed() {
+        return false;
+    }
+
+    @Override
     public boolean requiresPostConstruct() {
         return forceUnique || comparator != null;
     }

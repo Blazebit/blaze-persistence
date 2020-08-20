@@ -19,9 +19,11 @@ package com.blazebit.persistence.view.impl.metamodel;
 import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.InverseRemoveStrategy;
 import com.blazebit.persistence.view.Mapping;
+import com.blazebit.persistence.view.MappingIndex;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.Self;
 import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor;
+import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.spi.EntityViewAttributeMapping;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
@@ -54,6 +56,7 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
 
     protected final ViewMapping viewMapping;
     protected final Annotation mapping;
+    protected final MappingIndex mappingIndex;
     protected final MetamodelBootContext context;
 
     // Java types
@@ -84,6 +87,8 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
     // Resolved types
     protected boolean resolvedTypeMappings;
     protected List<ScalarTargetResolvingExpressionVisitor.TargetType> possibleTargets;
+    protected List<ScalarTargetResolvingExpressionVisitor.TargetType> possibleIndexTargets;
+    protected PluralAttribute.ElementCollectionType elementCollectionType;
     protected Type<?> type;
     protected Type<?> keyType;
     protected Type<?> elementType;
@@ -107,12 +112,14 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
     protected AbstractAttribute<?, ?> attribute;
     protected Map<EmbeddableOwner, AbstractAttribute<?, ?>> embeddableAttributeMap;
 
-    public AttributeMapping(ViewMapping viewMapping, Annotation mapping, MetamodelBootContext context, boolean isCollection, Class<?> declaredTypeClass, Class<?> declaredKeyTypeClass, Class<?> declaredElementTypeClass,
+    public AttributeMapping(ViewMapping viewMapping, Annotation mapping, MappingIndex mappingIndex, MetamodelBootContext context, boolean isCollection, PluralAttribute.ElementCollectionType elementCollectionType, Class<?> declaredTypeClass, Class<?> declaredKeyTypeClass, Class<?> declaredElementTypeClass,
                             java.lang.reflect.Type declaredType, java.lang.reflect.Type declaredKeyType, java.lang.reflect.Type declaredElementType, Map<Class<?>, String> inheritanceSubtypeClassMappings, Map<Class<?>, String> keyInheritanceSubtypeClassMappings, Map<Class<?>, String> elementInheritanceSubtypeClassMappings) {
         this.viewMapping = viewMapping;
         this.mapping = mapping;
+        this.mappingIndex = mappingIndex;
         this.context = context;
         this.isCollection = isCollection;
+        this.elementCollectionType = elementCollectionType;
         this.declaredTypeClass = declaredTypeClass;
         this.declaredKeyTypeClass = declaredKeyTypeClass;
         this.declaredElementTypeClass = declaredElementTypeClass;
@@ -126,6 +133,10 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
 
     public Annotation getMapping() {
         return mapping;
+    }
+
+    public MappingIndex getMappingIndex() {
+        return mappingIndex;
     }
 
     public ViewMapping getKeyViewMapping() {
@@ -302,6 +313,10 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
         return declaredElementTypeClass;
     }
 
+    public PluralAttribute.ElementCollectionType getElementCollectionType() {
+        return elementCollectionType;
+    }
+
     public Class<?> getJavaType(MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
         Type<?> t = getType(context, embeddableMapping);
         if (t == null) {
@@ -322,6 +337,21 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
             ex.printStackTrace(new PrintWriter(sw));
             context.addError(sw.toString());
             return possibleTargets = Collections.emptyList();
+        }
+    }
+
+    public List<ScalarTargetResolvingExpressionVisitor.TargetType> getPossibleIndexTargetTypes(MetamodelBuildingContext context) {
+        if (possibleIndexTargets != null) {
+            return possibleIndexTargets;
+        }
+        try {
+            return possibleIndexTargets = context.getPossibleTargetTypes(viewMapping.getEntityClass(), getMappingIndex());
+        } catch (RuntimeException ex) {
+            StringWriter sw = new StringWriter();
+            sw.append("Exception while resolving index type for ").append(getErrorLocation()).append(":\n");
+            ex.printStackTrace(new PrintWriter(sw));
+            context.addError(sw.toString());
+            return possibleIndexTargets = Collections.emptyList();
         }
     }
 

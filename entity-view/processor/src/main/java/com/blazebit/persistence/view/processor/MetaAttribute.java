@@ -27,6 +27,8 @@ import java.util.Collection;
  */
 public interface MetaAttribute {
 
+    void appendElementType(StringBuilder sb, ImportContext importContext);
+
     void appendMetamodelAttributeType(StringBuilder sb, ImportContext importContext);
 
     void appendMetamodelAttributeDeclarationString(StringBuilder sb);
@@ -86,6 +88,8 @@ public interface MetaAttribute {
     MetaEntityView getHostingEntity();
 
     boolean isSubview();
+
+    boolean isMultiCollection();
 
     boolean isSynthetic();
 

@@ -18,7 +18,6 @@ package com.blazebit.persistence.integration.hibernate;
 
 import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.integration.hibernate.base.HibernateAccess;
-import com.blazebit.persistence.integration.hibernate.base.HibernateExtendedQuerySupport;
 import com.blazebit.persistence.integration.hibernate.base.HibernateReturningResult;
 import com.blazebit.persistence.spi.DbmsDialect;
 import org.hibernate.HibernateException;
@@ -55,7 +54,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
 /**
  * @author Christian Beikov
@@ -64,19 +62,33 @@ import java.util.logging.Logger;
 @ServiceProvider(HibernateAccess.class)
 public class Hibernate53Access implements HibernateAccess {
 
-    private static final Logger LOG = Logger.getLogger(HibernateExtendedQuerySupport.class.getName());
     private static final Method DO_EXECUTE_METHOD;
+    private static final Method DO_EXECUTE_METHOD_NEW;
     private static final Constructor<ParameterTranslationsImpl> PARAMETER_TRANSLATIONS_CONSTRUCTOR;
 
     static {
+        Method m = null;
+        Method mNew = null;
         try {
-            Method m = BasicExecutor.class.getDeclaredMethod("doExecute", QueryParameters.class, SharedSessionContractImplementor.class, String.class, List.class);
+            m = BasicExecutor.class.getDeclaredMethod("doExecute", QueryParameters.class, SharedSessionContractImplementor.class, String.class, List.class);
             m.setAccessible(true);
-            DO_EXECUTE_METHOD = m;
+        } catch (Exception e) {
+            // As of Hibernate 5.4.21 the signature changed...
+            try {
+                mNew = BasicExecutor.class.getDeclaredMethod("doExecute", String.class, QueryParameters.class, List.class, SharedSessionContractImplementor.class);
+                mNew.setAccessible(true);
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+        DO_EXECUTE_METHOD = m;
+        DO_EXECUTE_METHOD_NEW = mNew;
+        try {
             Constructor<ParameterTranslationsImpl> c = ParameterTranslationsImpl.class.getDeclaredConstructor(List.class);
             c.setAccessible(true);
             PARAMETER_TRANSLATIONS_CONSTRUCTOR = c;
         } catch (Exception ex) {
+            // As of Hibernate 5.4.21 the signature changed...
             throw new RuntimeException(ex);
         }
     }
@@ -136,7 +148,11 @@ public class Hibernate53Access implements HibernateAccess {
     @Override
     public void doExecute(StatementExecutor executor, String delete, QueryParameters parameters, SessionImplementor session, List<ParameterSpecification> parameterSpecifications) {
         try {
-            DO_EXECUTE_METHOD.invoke(executor, parameters, session, delete, parameterSpecifications);
+            if (DO_EXECUTE_METHOD == null) {
+                DO_EXECUTE_METHOD_NEW.invoke(executor, parameters, session, delete, parameterSpecifications);
+            } else {
+                DO_EXECUTE_METHOD.invoke(executor, parameters, session, delete, parameterSpecifications);
+            }
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }

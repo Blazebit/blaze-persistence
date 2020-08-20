@@ -24,6 +24,7 @@ import org.datanucleus.ExecutionContext;
 import org.datanucleus.api.jpa.metamodel.AttributeImpl;
 import org.datanucleus.api.jpa.metamodel.EntityTypeImpl;
 import org.datanucleus.api.jpa.metamodel.ManagedTypeImpl;
+import org.datanucleus.identity.SingleFieldId;
 import org.datanucleus.metadata.AbstractMemberMetaData;
 import org.datanucleus.metadata.ColumnMetaData;
 import org.datanucleus.metadata.EmbeddedMetaData;
@@ -618,7 +619,12 @@ public class DataNucleusJpaProvider implements JpaProvider {
 
     @Override
     public Object getIdentifier(Object entity) {
-        return persistenceUnitUtil.getIdentifier(entity);
+        Object identifier = persistenceUnitUtil.getIdentifier(entity);
+        // DataNucleus 4 returns a SingleFieldId object here instead of the real object...
+        if (identifier instanceof SingleFieldId<?>) {
+            return ((SingleFieldId<?>) identifier).getKeyAsObject();
+        }
+        return identifier;
     }
 
     @Override

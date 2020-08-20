@@ -1341,7 +1341,7 @@ public final class ImplementationClassWriter {
         if (isEntity(typeElement)) {
             TypeElement entityElement = typeElement;
             do {
-                typeElement = context.getElementUtils().getTypeElement(entityElement.getSuperclass().toString());
+                typeElement = context.getElementUtils().getTypeElement(TypeUtils.extractClosestRealTypeAsString(entityElement.getSuperclass(), context));
                 if (isEntity(typeElement)) {
                     entityElement = typeElement;
                 } else {

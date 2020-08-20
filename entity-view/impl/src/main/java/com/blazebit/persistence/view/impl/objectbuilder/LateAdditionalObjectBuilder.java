@@ -31,15 +31,19 @@ public class LateAdditionalObjectBuilder implements ObjectBuilder<Object[]> {
 
     private final ObjectBuilder<Object[]> objectBuilder;
     private final ObjectBuilder<Object[]> additionalBuilder;
+    private final boolean apply;
 
-    public LateAdditionalObjectBuilder(ObjectBuilder<Object[]> objectBuilder, ObjectBuilder<Object[]> additionalBuilder) {
-        this.objectBuilder = objectBuilder;
-        this.additionalBuilder = additionalBuilder;
+    public LateAdditionalObjectBuilder(ObjectBuilder<?> objectBuilder, ObjectBuilder<?> additionalBuilder, boolean apply) {
+        this.objectBuilder = (ObjectBuilder<Object[]>) objectBuilder;
+        this.additionalBuilder = (ObjectBuilder<Object[]>) additionalBuilder;
+        this.apply = apply;
     }
 
     @Override
     public <X extends SelectBuilder<X>> void applySelects(X queryBuilder) {
-        additionalBuilder.applySelects(queryBuilder);
+        if (apply) {
+            additionalBuilder.applySelects(queryBuilder);
+        }
     }
 
     @Override

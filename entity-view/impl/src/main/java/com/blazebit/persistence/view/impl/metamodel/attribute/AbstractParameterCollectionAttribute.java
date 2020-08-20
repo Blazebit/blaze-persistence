@@ -24,6 +24,8 @@ import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.MappingConstructorImpl;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 import com.blazebit.persistence.view.impl.metamodel.ParameterAttributeMapping;
+import com.blazebit.persistence.view.impl.objectbuilder.CollectionInstantiatorAccumulator;
+import com.blazebit.persistence.view.impl.objectbuilder.ContainerAccumulator;
 import com.blazebit.persistence.view.metamodel.CollectionAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 
@@ -37,11 +39,17 @@ import java.util.Map;
  */
 public abstract class AbstractParameterCollectionAttribute<X, Y> extends AbstractParameterPluralAttribute<X, Collection<Y>, Y> implements CollectionAttribute<X, Y> {
 
-    private final CollectionInstantiatorImplementor<?, ?> collectionInstantiator;
+    private final boolean forcedUnique;
+    private final CollectionInstantiatorAccumulator collectionInstantiatorAccumulator;
 
     public AbstractParameterCollectionAttribute(MappingConstructorImpl<X> mappingConstructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
         super(mappingConstructor, mapping, context, embeddableMapping);
-        this.collectionInstantiator = createCollectionInstantiator(context, null, isIndexed(), isSorted(), isOrdered(), getComparator());
+        this.forcedUnique = mapping.isForceUniqueness() || determineForcedUnique(context);
+        this.collectionInstantiatorAccumulator = new CollectionInstantiatorAccumulator(
+                createCollectionInstantiator(context, null, isIndexed(), isSorted(), isOrdered(), getComparator()),
+                null,
+                !isCorrelated()
+        );
     }
 
     @Override
@@ -50,8 +58,13 @@ public abstract class AbstractParameterCollectionAttribute<X, Y> extends Abstrac
     }
 
     @Override
+    public ContainerAccumulator<?> getContainerAccumulator() {
+        return collectionInstantiatorAccumulator;
+    }
+
+    @Override
     public CollectionInstantiatorImplementor<?, ?> getCollectionInstantiator() {
-        return collectionInstantiator;
+        return collectionInstantiatorAccumulator.getCollectionInstantiator();
     }
 
     @Override
@@ -72,6 +85,11 @@ public abstract class AbstractParameterCollectionAttribute<X, Y> extends Abstrac
     @Override
     public boolean isOrdered() {
         return true;
+    }
+
+    @Override
+    public boolean isForcedUnique() {
+        return forcedUnique;
     }
 
     @Override

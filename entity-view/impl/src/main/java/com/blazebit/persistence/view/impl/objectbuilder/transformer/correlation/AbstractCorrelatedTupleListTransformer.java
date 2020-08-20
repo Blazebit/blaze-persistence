@@ -26,8 +26,7 @@ import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.ExpressionUtils;
 import com.blazebit.persistence.view.impl.PrefixingQueryGenerator;
-import com.blazebit.persistence.view.impl.collection.CollectionInstantiatorImplementor;
-import com.blazebit.persistence.view.impl.collection.RecordingCollection;
+import com.blazebit.persistence.view.impl.objectbuilder.ContainerAccumulator;
 import com.blazebit.persistence.view.impl.objectbuilder.Limiter;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformer;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
@@ -49,8 +48,11 @@ import java.util.Map;
  */
 public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTransformer implements TupleResultCopier {
 
+    protected static final String[] EMPTY = new String[0];
+
     protected final JpaProvider jpaProvider;
     protected final Correlator correlator;
+    protected final ContainerAccumulator<Object> containerAccumulator;
     protected final ManagedViewType<?> viewRootType;
     protected final ManagedViewType<?> embeddingViewType;
     protected final int viewRootIndex;
@@ -63,13 +65,17 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
     protected final Class<?> correlationBasisEntity;
     protected final String attributePath;
     protected final String[] fetches;
+    protected final String[] indexFetches;
+    protected final String indexExpression;
+    protected final Correlator indexCorrelator;
     protected final Limiter limiter;
 
     protected final EntityViewConfiguration entityViewConfiguration;
 
-    public AbstractCorrelatedTupleListTransformer(ExpressionFactory ef, Correlator correlator, ManagedViewType<?> viewRootType, ManagedViewType<?> embeddingViewType, Expression correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
-                                                  int viewRootIndex, int embeddingViewIndex, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, Limiter limiter, EntityViewConfiguration entityViewConfiguration) {
+    public AbstractCorrelatedTupleListTransformer(ExpressionFactory ef, Correlator correlator, ContainerAccumulator<?> containerAccumulator, ManagedViewType<?> viewRootType, ManagedViewType<?> embeddingViewType, Expression correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
+                                                  String[] indexFetches, Expression indexExpression, Correlator indexCorrelator, int viewRootIndex, int embeddingViewIndex, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, Limiter limiter, EntityViewConfiguration entityViewConfiguration) {
         super(tupleIndex);
+        this.containerAccumulator = (ContainerAccumulator<Object>) containerAccumulator;
         this.jpaProvider = entityViewConfiguration.getCriteriaBuilder().getService(JpaProvider.class);
         this.correlator = correlator;
         this.viewRootType = viewRootType;
@@ -80,10 +86,13 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
         this.correlationBasisType = correlationBasisType;
         this.correlationBasisEntity = correlationBasisEntity;
         this.attributePath = attributePath;
-        this.fetches = fetches;
         this.limiter = limiter;
         this.entityViewConfiguration = entityViewConfiguration;
         this.correlationAlias = CorrelationProviderHelper.getDefaultCorrelationAlias(attributePath);
+        this.indexCorrelator = indexCorrelator;
+        this.indexExpression = indexExpression == null ? null : PrefixingQueryGenerator.prefix(ef, indexExpression, correlationAlias, true);
+        this.fetches = prefix(correlationAlias, fetches);
+        this.indexFetches = prefix(this.indexExpression, indexFetches);
         if (limiter == null) {
             this.correlationExternalAlias = correlationAlias;
         } else {
@@ -94,6 +103,18 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
         } else {
             this.correlationResult = PrefixingQueryGenerator.prefix(ef, correlationResult, correlationExternalAlias, true);
         }
+    }
+
+    private static String[] prefix(String prefix, String[] fetches) {
+        if (fetches == null || fetches.length == 0) {
+            return fetches;
+        }
+        String[] newFetches = new String[fetches.length];
+        for (int i = 0; i < fetches.length; i++) {
+            newFetches[i] = (prefix  + "." + fetches[i]).intern();
+        }
+
+        return newFetches;
     }
 
     protected String getEntityIdName(Class<?> entityClass) {
@@ -121,50 +142,27 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
         return -1;
     }
 
+    @Override
+    public Object copy(Object o) {
+        return containerAccumulator == null ? o : createContainer(o);
+    }
+
     protected boolean isRecording() {
         return false;
     }
 
-    protected boolean isFilterNulls() {
-        return false;
-    }
-
-    protected CollectionInstantiatorImplementor<?, ?> getCollectionInstantiator() {
-        return null;
-    }
-
-    protected Collection<Object> postConstruct(Collection<Object> value) {
-        getCollectionInstantiator().postConstruct(value);
+    protected Object postConstruct(Object value) {
+        containerAccumulator.postConstruct(value);
         return value;
     }
 
     protected Object createDefaultResult() {
-        if (isRecording()) {
-            return getCollectionInstantiator().createRecordingCollection(0);
-        } else {
-            return getCollectionInstantiator().createCollection(0);
-        }
+        return containerAccumulator == null ? null : containerAccumulator.createContainer(isRecording(), 0);
     }
 
-    protected Collection<Object> createCollection(Collection<? extends Object> list) {
-        Collection<Object> result;
-        Collection<Object> collection;
-        if (isRecording()) {
-            RecordingCollection<?, ?> recordingCollection = (RecordingCollection<?, ?>) getCollectionInstantiator().createRecordingCollection(list.size());
-            collection = (Collection<Object>) recordingCollection.getDelegate();
-            result = (Collection<Object>) recordingCollection;
-        } else {
-            result = collection = (Collection<Object>) getCollectionInstantiator().createCollection(list.size());
-        }
-        if (isFilterNulls()) {
-            for (Object o : list) {
-                if (o != null) {
-                    collection.add(o);
-                }
-            }
-        } else {
-            collection.addAll(list);
-        }
+    protected Object createContainer(Object container) {
+        Object result = containerAccumulator.createContainer(isRecording(), 0);
+        containerAccumulator.addAll(result, container, isRecording());
         return result;
     }
 

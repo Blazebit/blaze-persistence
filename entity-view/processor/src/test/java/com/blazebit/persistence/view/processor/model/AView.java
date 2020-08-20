@@ -5,8 +5,9 @@ import com.blazebit.persistence.view.EntityViewManager;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Set;
 
-@EntityView(AView.class)
+@EntityView(AEntity.class)
 public interface AView<X extends Serializable> extends IdHolderView<Integer> {
     String getName();
 
@@ -21,4 +22,6 @@ public interface AView<X extends Serializable> extends IdHolderView<Integer> {
     EntityViewManager evm();
 
     byte[] getBytes();
+
+    List<Set<String>> getMultiNames();
 }

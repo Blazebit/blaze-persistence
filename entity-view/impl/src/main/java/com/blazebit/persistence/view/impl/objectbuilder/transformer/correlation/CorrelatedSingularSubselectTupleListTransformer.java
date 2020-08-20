@@ -36,7 +36,7 @@ public class CorrelatedSingularSubselectTupleListTransformer extends AbstractCor
 
     public CorrelatedSingularSubselectTupleListTransformer(ExpressionFactory ef, Correlator correlator, EntityViewManagerImpl evm, ManagedViewType<?> viewRootType, String viewRootAlias, ManagedViewType<?> embeddingViewType, String embeddingViewPath, Expression correlationResult, String correlationBasisExpression, String correlationKeyExpression,
                                                            CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches, int viewRootIndex, int embeddingViewIndex, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, Limiter limiter, EntityViewConfiguration entityViewConfiguration) {
-        super(ef, correlator, evm, viewRootType, viewRootAlias, embeddingViewType, embeddingViewPath, correlationResult, correlationBasisExpression, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, viewRootIndex, embeddingViewIndex, tupleIndex, correlationBasisType, correlationBasisEntity, limiter, entityViewConfiguration);
+        super(ef, correlator, null, evm, viewRootType, viewRootAlias, embeddingViewType, embeddingViewPath, correlationResult, correlationBasisExpression, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, EMPTY, null, null, viewRootIndex, embeddingViewIndex, tupleIndex, correlationBasisType, correlationBasisEntity, limiter, entityViewConfiguration);
     }
 
     @Override
@@ -50,16 +50,5 @@ public class CorrelatedSingularSubselectTupleListTransformer extends AbstractCor
                 }
             }
         }
-    }
-
-    @Override
-    public Object copy(Object o) {
-        // Nothing to copy here
-        return o;
-    }
-
-    @Override
-    protected Object createDefaultResult() {
-        return null;
     }
 }

@@ -65,6 +65,7 @@ public interface SubqueryAttribute<X, Y> extends SingularAttribute<X, Y> {
      * @param parent The parent expression
      * @param serviceProvider The service provider
      * @param sb The string builder
+     * @since 1.5.0
      */
     public void renderSubqueryExpression(String parent, ServiceProvider serviceProvider, StringBuilder sb);
 
@@ -76,6 +77,7 @@ public interface SubqueryAttribute<X, Y> extends SingularAttribute<X, Y> {
      * @param subqueryAlias The subquery alias
      * @param serviceProvider The service provider
      * @param sb The string builder
+     * @since 1.5.0
      */
     public void renderSubqueryExpression(String parent, String subqueryExpression, String subqueryAlias, ServiceProvider serviceProvider, StringBuilder sb);
 }

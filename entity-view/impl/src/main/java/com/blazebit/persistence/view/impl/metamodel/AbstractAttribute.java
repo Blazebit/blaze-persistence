@@ -22,6 +22,8 @@ import com.blazebit.persistence.parser.SimpleQueryGenerator;
 import com.blazebit.persistence.parser.expression.ArrayExpression;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.expression.ListIndexExpression;
+import com.blazebit.persistence.parser.expression.MapKeyExpression;
 import com.blazebit.persistence.parser.expression.NullExpression;
 import com.blazebit.persistence.parser.expression.NumericLiteral;
 import com.blazebit.persistence.parser.expression.NumericType;
@@ -58,15 +60,21 @@ import com.blazebit.persistence.view.impl.SubqueryProviderHelper;
 import com.blazebit.persistence.view.impl.UpdatableExpressionVisitor;
 import com.blazebit.persistence.view.impl.collection.CollectionInstantiatorImplementor;
 import com.blazebit.persistence.view.impl.collection.ListCollectionInstantiator;
+import com.blazebit.persistence.view.impl.collection.ListFactory;
 import com.blazebit.persistence.view.impl.collection.MapInstantiatorImplementor;
 import com.blazebit.persistence.view.impl.collection.OrderedCollectionInstantiator;
 import com.blazebit.persistence.view.impl.collection.OrderedMapInstantiator;
 import com.blazebit.persistence.view.impl.collection.OrderedSetCollectionInstantiator;
 import com.blazebit.persistence.view.impl.collection.PluralObjectFactory;
+import com.blazebit.persistence.view.impl.collection.SetFactory;
 import com.blazebit.persistence.view.impl.collection.SortedMapInstantiator;
 import com.blazebit.persistence.view.impl.collection.SortedSetCollectionInstantiator;
+import com.blazebit.persistence.view.impl.collection.SortedSetFactory;
 import com.blazebit.persistence.view.impl.collection.UnorderedMapInstantiator;
 import com.blazebit.persistence.view.impl.collection.UnorderedSetCollectionInstantiator;
+import com.blazebit.persistence.view.impl.objectbuilder.ContainerAccumulator;
+import com.blazebit.persistence.view.impl.objectbuilder.NullFilteringCollectionAccumulator;
+import com.blazebit.persistence.view.impl.objectbuilder.SimpleCollectionAccumulator;
 import com.blazebit.persistence.view.metamodel.Attribute;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.OrderByItem;
@@ -102,7 +110,7 @@ import java.util.regex.Pattern;
  */
 public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
-    private static final String[] EMPTY = new String[0];
+    protected static final String[] EMPTY = new String[0];
     private static final String THIS = "this";
     private static final Pattern PREFIX_THIS_REPLACE_PATTERN = Pattern.compile("([^a-zA-Z0-9\\.])this\\.");
 
@@ -136,6 +144,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     protected final boolean id;
     protected final javax.persistence.metamodel.Attribute<?, ?> updateMappableAttribute;
     private final List<TargetType> possibleTargetTypes;
+    private final List<TargetType> possibleIndexTargetTypes;
 
     @SuppressWarnings("unchecked")
     public AbstractAttribute(ManagedViewTypeImplementor<X> declaringType, AttributeMapping mapping, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
@@ -150,6 +159,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         }
 
         this.possibleTargetTypes = mapping.getPossibleTargetTypes(context);
+        this.possibleIndexTargetTypes = mapping.getPossibleIndexTargetTypes(context);
         Integer defaultBatchSize = mapping.getDefaultBatchSize();
         int batchSize;
         if (defaultBatchSize == null || defaultBatchSize == -1) {
@@ -433,7 +443,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         return Collections.unmodifiableList(orderByItems);
     }
 
-    private static Expression createSimpleExpression(String expression, AttributeMapping mapping, MetamodelBuildingContext context, ExpressionLocation expressionLocation) {
+    protected static Expression createSimpleExpression(String expression, AttributeMapping mapping, MetamodelBuildingContext context, ExpressionLocation expressionLocation) {
         if (expression == null || expression.isEmpty()) {
             return null;
         }
@@ -542,7 +552,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         renderExpression(parent, mappingExpression, null, serviceProvider, sb);
     }
 
-    private void renderExpression(String parent, Expression expression, String aliasToSkip, ServiceProvider serviceProvider, StringBuilder sb) {
+    protected final void renderExpression(String parent, Expression expression, String aliasToSkip, ServiceProvider serviceProvider, StringBuilder sb) {
         if (parent != null && !parent.isEmpty()) {
             ExpressionFactory ef = serviceProvider.getService(ExpressionFactory.class);
             SimpleQueryGenerator generator = new PrefixingQueryGenerator(ef, parent, aliasToSkip, aliasToSkip, PrefixingQueryGenerator.DEFAULT_QUERY_ALIASES, true, false);
@@ -594,8 +604,30 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                 getElementType() instanceof ManagedViewTypeImpl<?> && ((ManagedViewTypeImplementor<?>) getElementType()).hasJpaManagedAttributes();
     }
 
+    protected String determineIndexMapping(AttributeMapping mapping) {
+        String indexMapping = null;
+        if (mapping.getMappingIndex() != null) {
+            indexMapping = mapping.getMappingIndex().value();
+            if (indexMapping.isEmpty()) {
+                indexMapping = "INDEX(" + getMapping() + ")";
+            }
+        }
+        return indexMapping;
+    }
+
+    protected String determineKeyMapping(AttributeMapping mapping) {
+        String keyMapping = null;
+        if (mapping.getMappingIndex() != null) {
+            keyMapping = mapping.getMappingIndex().value();
+        }
+        if (keyMapping == null || keyMapping.isEmpty()) {
+            keyMapping = "KEY(this)";
+        }
+        return keyMapping;
+    }
+
     protected boolean determineForcedUnique(MetamodelBuildingContext context) {
-        if (isCollection() && getMapping() != null && getMapping().indexOf('.') == -1) {
+        if (isCollection() && getMapping() != null && getMapping().indexOf('.') == -1 && getMappingIndexExpression() == null && getKeyMappingExpression() == null) {
             ExtendedManagedType<?> managedType = context.getEntityMetamodel().getManagedType(ExtendedManagedType.class, getDeclaringType().getJpaManagedType());
             ExtendedAttribute<?, ?> attribute = managedType.getOwnedAttributes().get(getMapping());
             if (attribute != null && attribute.getAttribute() instanceof javax.persistence.metamodel.PluralAttribute<?, ?, ?>) {
@@ -643,8 +675,9 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
      * @author Christian Beikov
      * @since 1.2.0
      */
-    private static enum ExpressionLocation {
+    protected static enum ExpressionLocation {
         MAPPING("mapping expression"),
+        MAPPING_INDEX("mapping index expression"),
         SUBQUERY_EXPRESSION("subquery expression"),
         CORRELATION_BASIS("correlation basis"),
         CORRELATION_RESULT("correlation result"),
@@ -944,8 +977,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             }
         }
 
-        // TODO: key fetches?
-
+        Expression indexExpression = null;
         if (isCollection()) {
             elementType = getElementType().getJavaType();
 
@@ -953,17 +985,59 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                 // Updatable collection attributes are specially handled in the type compatibility check
                 if (isIndexed()) {
                     if (getCollectionType() == PluralAttribute.CollectionType.MAP) {
-                        // All map types can be sourced from a map
-                        expressionType = Map.class;
+                        expressionType = Collection.class;
                         keyType = getKeyType().getJavaType();
                     } else {
-                        // An indexed list can only be sourced from an indexed list
-                        expressionType = List.class;
+                        expressionType = Collection.class;
                         keyType = Integer.class;
                     }
                 } else {
                     // We can assign e.g. a Set to a List, so let's use the common supertype
                     expressionType = Collection.class;
+                }
+            }
+
+            if (isIndexed()) {
+                if (getCollectionType() == PluralAttribute.CollectionType.MAP) {
+                    indexExpression = getKeyMappingExpression();
+
+                    String[] keyFetches = getKeyFetches();
+                    if (keyFetches.length != 0) {
+                        ManagedType<?> entityType = context.getEntityMetamodel().getManagedType(getKeyType().getJavaType());
+                        if (entityType == null) {
+                            context.addError("Specifying key fetches for non-entity attribute key type [" + Arrays.toString(keyFetches) + "] at the " + getLocation() + " is not allowed!");
+                        } else {
+                            ScalarTargetResolvingExpressionVisitor visitor = new ScalarTargetResolvingExpressionVisitor(entityType, context.getEntityMetamodel(), context.getJpqlFunctions());
+                            for (int i = 0; i < keyFetches.length; i++) {
+                                final String fetch = keyFetches[i];
+                                final String errorLocation;
+                                if (keyFetches.length == 1) {
+                                    errorLocation = "the key fetch expression";
+                                } else {
+                                    errorLocation = "the " + (i + 1) + ". key fetch expression";
+                                }
+                                visitor.clear();
+
+                                try {
+                                    // Validate the fetch expression parses
+                                    context.getExpressionFactory().createPathExpression(fetch).accept(visitor);
+                                } catch (SyntaxErrorException ex) {
+                                    try {
+                                        context.getExpressionFactory().createSimpleExpression(fetch, false, false, true);
+                                        // The used expression is not usable for fetches
+                                        context.addError("Invalid key fetch expression '" + fetch + "' of the " + getLocation() + ". Simplify the key fetch expression to a simple path expression. Encountered error: " + ex.getMessage());
+                                    } catch (SyntaxErrorException ex2) {
+                                        // This is a real syntax error
+                                        context.addError("Syntax error in " + errorLocation + " '" + fetch + "' of the " + getLocation() + ": " + ex.getMessage());
+                                    }
+                                } catch (IllegalArgumentException ex) {
+                                    context.addError("An error occurred while trying to resolve the " + errorLocation + " '" + fetch + "' of the " + getLocation() + ": " + ex.getMessage());
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    indexExpression = getMappingIndexExpression();
                 }
             }
         }
@@ -990,7 +1064,9 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             keyType = ((ManagedViewTypeImplementor<?>) getKeyType()).getEntityClass();
         }
 
-        // TODO: Make use of the key type in type checks
+        if (keyType != null) {
+            validateTypesCompatible(possibleIndexTargetTypes, keyType, null, isUpdatable(), true, context, ExpressionLocation.MAPPING_INDEX, getLocation());
+        }
 
         if (isCorrelated()) {
             // Validate that resolving "correlationBasis" on "managedType" is valid
@@ -1050,6 +1126,22 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                     }
                 } catch (IllegalArgumentException ex) {
                     context.addError("There is an error for the " + getLocation() + ": " + ex.getMessage());
+                }
+                if (isUpdatable()) {
+                    if (isCollection() && getElementCollectionType() != null) {
+                        context.addError("The use of a multi-collection i.e. List<Collection<?>> or Map<?, Collection<?>> at the " + getLocation() + " is unsupported for updatable collections!");
+                    }
+                }
+                if ((isUpdatable() || isKeySubview() && ((ManagedViewTypeImplementor<?>) getKeyType()).isUpdatable()) && indexExpression != null) {
+                    boolean invalid;
+                    if (getCollectionType() == PluralAttribute.CollectionType.MAP) {
+                        invalid = !(indexExpression instanceof MapKeyExpression) || !"this".equals(((MapKeyExpression) indexExpression).getPath().getPath());
+                    } else {
+                        invalid = !(indexExpression instanceof ListIndexExpression) || !"this".equals(((ListIndexExpression) indexExpression).getPath().getPath());
+                    }
+                    if (invalid) {
+                        context.addError("The @MappingIndex at the " + getLocation() + " is a complex mapping and can thus not be updatable!");
+                    }
                 }
             }
         }
@@ -1145,9 +1237,23 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     protected abstract PluralAttribute.CollectionType getCollectionType();
 
+    protected abstract PluralAttribute.ElementCollectionType getElementCollectionType();
+
     public abstract Type<?> getElementType();
 
     protected abstract Map<ManagedViewTypeImplementor<?>, String> elementInheritanceSubtypeMappings();
+
+    protected String[] getKeyFetches() {
+        return EMPTY;
+    }
+
+    public Expression getKeyMappingExpression() {
+        return null;
+    }
+
+    public Expression getMappingIndexExpression() {
+        return null;
+    }
 
     protected abstract Type<?> getKeyType();
 
@@ -1163,9 +1269,39 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     public abstract boolean isOptimizeCollectionActionsEnabled();
 
+    public abstract ContainerAccumulator<?> getContainerAccumulator();
+
     public abstract CollectionInstantiatorImplementor<?, ?> getCollectionInstantiator();
 
     public abstract MapInstantiatorImplementor<?, ?> getMapInstantiator();
+
+    protected final ContainerAccumulator<?> createValueContainerAccumulator() {
+        if (getElementCollectionType() == null) {
+            return null;
+        }
+        PluralObjectFactory<? extends Collection<?>> instance;
+        //CHECKSTYLE:OFF: FallThrough
+        switch (getElementCollectionType()) {
+            case COLLECTION:
+            case LIST:
+                instance = ListFactory.INSTANCE;
+                break;
+            case SET:
+                instance = SetFactory.INSTANCE;
+                break;
+            case SORTED_SET:
+                instance = SortedSetFactory.INSTANCE;
+                break;
+            default:
+                throw new UnsupportedOperationException("Unsupported element collection type: " + getElementCollectionType());
+        }
+        //CHECKSTYLE:ON: FallThrough
+        if (isCorrelated()) {
+            return new SimpleCollectionAccumulator(instance);
+        } else {
+            return new NullFilteringCollectionAccumulator(instance);
+        }
+    }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     protected final CollectionInstantiatorImplementor<?, ?> createCollectionInstantiator(MetamodelBuildingContext context, PluralObjectFactory<? extends Collection<?>> collectionFactory, boolean indexed, boolean sorted, boolean ordered, Comparator comparator) {

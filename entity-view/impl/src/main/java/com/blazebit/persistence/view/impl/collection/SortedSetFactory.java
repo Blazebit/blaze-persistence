@@ -26,6 +26,8 @@ import java.util.TreeSet;
  */
 public class SortedSetFactory implements PluralObjectFactory<NavigableSet<?>> {
 
+    public static final SortedSetFactory INSTANCE = new SortedSetFactory();
+
     @Override
     public NavigableSet<?> createCollection(int size) {
         return new TreeSet<>();

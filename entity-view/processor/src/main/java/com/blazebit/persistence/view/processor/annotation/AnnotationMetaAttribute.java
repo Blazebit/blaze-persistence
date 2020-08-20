@@ -26,6 +26,7 @@ import com.blazebit.persistence.view.processor.MappingKind;
 import com.blazebit.persistence.view.processor.MetaAttribute;
 import com.blazebit.persistence.view.processor.MetaEntityView;
 import com.blazebit.persistence.view.processor.MetamodelClassWriter;
+import com.blazebit.persistence.view.processor.MultiRelationClassWriter;
 import com.blazebit.persistence.view.processor.OptionalParameterUtils;
 import com.blazebit.persistence.view.processor.RelationClassWriter;
 import com.blazebit.persistence.view.processor.TypeUtils;
@@ -424,19 +425,33 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
         sb.append(importContext.importType(getMetaType()))
                 .append('<')
                 .append(parent.importType(parent.getQualifiedName()))
-                .append(", ")
-                .append(parent.importType(getType()))
-                .append('>');
+                .append(", ");
+        appendElementType(sb, importContext);
+        sb.append('>');
+    }
+
+    @Override
+    public void appendElementType(StringBuilder sb, ImportContext importContext) {
+        sb.append(parent.importType(getType()));
     }
 
     @Override
     public void appendMetamodelAttributeDeclarationString(StringBuilder sb) {
         sb.append("    public static volatile ");
         if (isSubview()) {
-            sb.append(parent.metamodelImportType(generatedTypePrefix + RelationClassWriter.RELATION_CLASS_NAME_SUFFIX))
-                .append('<')
-                .append(parent.importType(parent.getQualifiedName()))
-                .append(", ");
+            if (isMultiCollection()) {
+                sb.append(parent.metamodelImportType(generatedTypePrefix + MultiRelationClassWriter.MULTI_RELATION_CLASS_NAME_SUFFIX))
+                        .append('<');
+                sb.append(parent.importType(parent.getQualifiedName()))
+                        .append(", ");
+                appendElementType(sb, parent.getMetamodelImportContext());
+                sb.append(", ");
+            } else {
+                sb.append(parent.metamodelImportType(generatedTypePrefix + RelationClassWriter.RELATION_CLASS_NAME_SUFFIX))
+                        .append('<')
+                        .append(parent.importType(parent.getQualifiedName()))
+                        .append(", ");
+            }
         }
         appendMetamodelAttributeType(sb, parent.getMetamodelImportContext());
         if (isSubview()) {
@@ -862,6 +877,11 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
     @Override
     public boolean isSubview() {
         return subviewElement != null;
+    }
+
+    @Override
+    public boolean isMultiCollection() {
+        return false;
     }
 
     @Override

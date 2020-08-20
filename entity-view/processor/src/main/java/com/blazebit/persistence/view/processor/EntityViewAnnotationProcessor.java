@@ -154,6 +154,7 @@ public class EntityViewAnnotationProcessor extends AbstractProcessor {
             if (entityView.getTypeElement().getModifiers().contains(Modifier.ABSTRACT) || entityView.getTypeElement().getKind().isInterface()) {
                 context.logMessage(Diagnostic.Kind.OTHER, "Writing meta model for entity view " + entityView);
                 RelationClassWriter.writeFile(sb, entityView, context);
+                MultiRelationClassWriter.writeFile(sb, entityView, context);
                 MetamodelClassWriter.writeFile(sb, entityView, context);
                 if (context.isGenerateImplementations()) {
                     ForeignPackageAdapterClassWriter.writeFiles(sb, entityView, context);

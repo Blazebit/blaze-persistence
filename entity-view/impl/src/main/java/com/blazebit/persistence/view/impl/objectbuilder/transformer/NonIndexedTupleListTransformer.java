@@ -16,11 +16,15 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.blazebit.persistence.view.impl.collection.CollectionInstantiatorImplementor;
+import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.impl.objectbuilder.TupleId;
 import com.blazebit.persistence.view.impl.objectbuilder.TupleIndexValue;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
@@ -30,14 +34,18 @@ import com.blazebit.persistence.view.spi.type.TypeConverter;
  * @author Christian Beikov
  * @since 1.0.0
  */
-public abstract class AbstractNonIndexedTupleListTransformer<C> extends TupleListTransformer {
+public class NonIndexedTupleListTransformer extends TupleListTransformer {
 
     private final int[] parentIdPositions;
+    private final CollectionInstantiatorImplementor<?, ?> collectionInstantiator;
+    private final boolean dirtyTracking;
     private final TypeConverter<Object, Object> elementConverter;
 
-    public AbstractNonIndexedTupleListTransformer(int[] parentIdPositions, int startIndex, TypeConverter<Object, Object> elementConverter) {
+    public NonIndexedTupleListTransformer(int[] parentIdPositions, int startIndex, CollectionInstantiatorImplementor<?, ?> collectionInstantiator, boolean dirtyTracking, TypeConverter<Object, Object> elementConverter) {
         super(startIndex);
         this.parentIdPositions = parentIdPositions;
+        this.collectionInstantiator = collectionInstantiator;
+        this.dirtyTracking = dirtyTracking;
         this.elementConverter = elementConverter;
     }
 
@@ -78,11 +86,26 @@ public abstract class AbstractNonIndexedTupleListTransformer<C> extends TupleLis
                 }
             }
         }
+        if (collectionInstantiator.requiresPostConstruct()) {
+            IdentityHashMap<Collection<?>, Boolean> handledCollections = new IdentityHashMap<>(tuples.size());
+            for (Object[] tuple : tuples) {
+                Collection<Object> collection = (Collection<Object>) tuple[startIndex];
+                if (handledCollections.put(collection, Boolean.TRUE) == null) {
+                    collectionInstantiator.postConstruct(collection);
+                }
+            }
+        }
 
         return tuples;
     }
 
-    protected abstract Object createCollection();
+    protected Object createCollection() {
+        if (dirtyTracking) {
+            return collectionInstantiator.createRecordingCollection(0);
+        } else {
+            return collectionInstantiator.createCollection(0);
+        }
+    }
 
     @SuppressWarnings("unchecked")
     protected void add(Object collection, Object value) {
@@ -90,10 +113,12 @@ public abstract class AbstractNonIndexedTupleListTransformer<C> extends TupleLis
             value = elementConverter.convertToViewType(value);
         }
         if (value != null) {
-            addToCollection((C) collection, value);
+            if (dirtyTracking) {
+                ((RecordingCollection<?, Object>) collection).getDelegate().add(value);
+            } else {
+                ((Collection<Object>) collection).add(value);
+            }
         }
     }
-
-    protected abstract void addToCollection(C set, Object value);
 
 }

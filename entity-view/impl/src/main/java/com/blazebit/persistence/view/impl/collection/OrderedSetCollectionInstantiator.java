@@ -50,6 +50,11 @@ public class OrderedSetCollectionInstantiator  extends AbstractCollectionInstant
     }
 
     @Override
+    public boolean isIndexed() {
+        return false;
+    }
+
+    @Override
     public Set<?> createCollection(int size) {
         return new LinkedHashSet<>(size);
     }
